@@ -1,0 +1,118 @@
+/*
+Primary background: 19232d
+Panel borders and normal button: 455364
+Button hover: 54687a
+
+Mod list item hover tile background: 37414f
+
+
+Accent blue: 3688c3
+Accent panel border hover:9da9b5
+Accent alert button: a3c1da
+*/
+
+/* QWidget {
+    color: white;
+    border-style: outset;
+    background-color: #19232d;
+    border-color: #455364;
+    border-width: 1px;
+    border-radius: 3px;
+} */
+
+QMainWindow {
+    background-color: #19232d;
+}
+
+QWidget#MainPanel {
+    border-style: outset;
+    border-color: #455364;
+    border-width: 1px;
+    border-radius: 3px;
+    margin: 7px; /* Space between frame and app edge */
+}
+
+QLineEdit {
+    color: white;
+    background-color: #19232d;
+    border-style: outset;
+    border-color: #455364;
+    border-width: 1px;
+    border-radius: 3px;
+}
+
+/* Styling for the mod lists containers. */
+QListWidget {
+    background-color: #19232d;
+    border-style: outset;
+    border-color: #455364;
+    border-width: 1px;
+    border-radius: 3px;
+}
+
+/* Styling for a selected mod item */
+QListWidget::item:selected {
+    border: 1px solid #6a6ea9;
+}
+
+QListWidget::item:selected:!active {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #ABAFE5, stop: 1 #8588B2);
+}
+
+QListWidget::item:selected:active {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #6a6ea9, stop: 1 #888dd9);
+}
+
+QListWidget::item:hover {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #FAFBFE, stop: 1 #DCDEF1);
+}
+
+QStyle::PE_IndicatorItemViewItemDrop {
+    color: white;
+}
+
+/* Styling for the mod item text */
+QLabel#ListItemLabel {
+    color: white;
+}
+
+QWidget#StatusPanel {
+    background-color: #455364;
+}
+
+QLabel#StatusLabel {
+    color: white;
+    background-color: #455364;
+}
+
+QPushButton {
+    color: white;
+    background-color: #455364;
+    border-style: outset;
+    border-width: 0px;
+    border-radius: 5px;
+    /* border-color: beige; */
+    /* font: bold 14px; */
+    min-width: 6em;
+    padding: 1px;
+}
+
+QPushButton#LeftButton {
+    margin-right: 4px;
+}
+
+QPushButton#RightButton {
+    margin-left: 4px;
+}
+
+QPushButton:hover {
+    background-color: #54687a;
+}
+
+QPushButton:pressed {
+    background-color: #3e4a52;
+    border-style: inset;
+}
