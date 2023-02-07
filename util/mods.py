@@ -113,14 +113,17 @@ def get_known_expansions_from_config_format(path: str) -> Dict[str, Any]:
     mod_data = xml_path_to_json(path)
     try:
         if mod_data:
-            return dict(
-                [
-                    (package_id, {})
-                    for package_id in mod_data["ModsConfigData"]["knownExpansions"][
-                        "li"
+            if mod_data["ModsConfigData"]["knownExpansions"] is None:
+                return {}
+            else:
+                return dict(
+                    [
+                        (package_id, {})
+                        for package_id in mod_data["ModsConfigData"]["knownExpansions"][
+                            "li"
+                        ]
                     ]
-                ]
-            )
+                )
         return {}
     except Exception:
         raise InvalidModsConfigFormat
