@@ -38,7 +38,7 @@ class ModListItemInner(QWidget):
         self.mod_dependencies_by_version = data.get("modDependenciesByVersion")
         self.load_before = data.get("loadBefore")
         self.load_before_by_version = data.get("loadBeforeByVersion")
-        self.forced_load_before = data.get("forceLoadBefore")
+        self.force_load_before = data.get("forceLoadBefore")
         self.load_after = data.get("loadAfter")
         self.load_after_by_version = data.get("loadAfterByVersion")
         self.force_load_after = data.get("forceLoadAfter")
