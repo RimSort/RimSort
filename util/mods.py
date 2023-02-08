@@ -118,7 +118,7 @@ def get_known_expansions_from_config_format(path: str) -> Dict[str, Any]:
             else:
                 return dict(
                     [
-                        (package_id, {})
+                        (package_id.lower(), {})
                         for package_id in mod_data["ModsConfigData"]["knownExpansions"][
                             "li"
                         ]
