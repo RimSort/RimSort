@@ -84,6 +84,19 @@ class ModListWidget(QListWidget):
         :return: a list of mod item widgets
         """
         return [self.itemWidget(self.item(i)) for i in range(self.count())]
+    
+    def get_list_items_by_dict(self) -> Dict[str, Any]:
+        """
+        Get a dict of all row item's widgets data. Equal to `mods` in
+        recreate mod list.
+
+        :return: a dict of mod data
+        """
+        mod_dict = {}
+        for i in range(self.count()):
+            item = self.itemWidget(self.item(i)).json_data
+            mod_dict[item["packageId"]] = item
+        return mod_dict
 
     def focusOutEvent(self, e: QFocusEvent) -> None:
         """
@@ -95,4 +108,4 @@ class ModListWidget(QListWidget):
 
     def mod_clicked(self, item: QListWidgetItem) -> None:
         """Placeholder function to handle clicking on a row"""
-        print(f"Selected a different mod! {item.text()}")
+        print(f"Selected a different mod! {item.data(Qt.UserRole)['packageId']}")

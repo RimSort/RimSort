@@ -1,6 +1,6 @@
 from typing import Any, Dict
 
-from toposort import toposort_flatten
+from toposort import toposort, toposort_flatten
 
 from PySide2.QtCore import *
 from PySide2.QtGui import *
@@ -114,15 +114,38 @@ class MainContent:
             print("clearing")
         if action == "sort":  # User clicked on the sort button
             active_mods = self.active_mods_panel.active_mods_list.get_list_items()
-            dependencies = dict(
-                [
-                    (active_mod.package_id.lower(), set())
-                    for active_mod in active_mods
-                ]
-            )
+            dependencies_graph = {}
             for mod in active_mods:
-                if mod.load_after:
-                    print(mod.load_after.get("li"))
+                # For the initial sorting mechanism, mod.dependencies and mod.soft_dependencies
+                # can be treated as just dependencies. The values are either None (nothing specified
+                # in the About.xml), set() (meaning something was specified but the mod isn't installed),
+                # or a populated set, e.g. {a, b, c, ...}
+                dependencies_graph[mod.package_id] = set()
+                if mod.dependencies:
+                    for dependency in mod.dependencies:
+                        dependencies_graph[mod.package_id].add(dependency)
+                if mod.soft_dependencies:
+                    for dependency in mod.soft_dependencies:
+                        dependencies_graph[mod.package_id].add(dependency)
+            # Get an ordered list of mods
+            topo_result = toposort(dependencies_graph)
+            # TODO: we're getting active mods twice, once in item form and once in json form.
+            # Probably should just decide on one form and do processing on that.
+            active_mods_json = self.active_mods_panel.active_mods_list.get_list_items_by_dict()
+            inactive_mods_json = self.inactive_mods_panel.inactive_mods_list.get_list_items_by_dict()
+            # Re-order active_mod_data before inserting into list
+            reordered_active_mods_data = {}
+            for topo_level_set in topo_result: # These are sets of items where dependency "level" is same 
+                temp_mod_dict = {}
+                for item in topo_level_set:
+                    if item in active_mods_json:
+                        temp_mod_dict[item] = active_mods_json[item]
+                # Sort by name
+                sorted_temp_mod_dict = sorted(temp_mod_dict.items(), key=lambda x:x[1]["name"])
+                for item in sorted_temp_mod_dict: # item is tuple of (packageId, json_data)
+                    if item[0] in active_mods_json: # Note: topo will create items even if they are just dependencies
+                        reordered_active_mods_data[item[0]] = active_mods_json[item[0]]
+            self._insert_data_into_lists(reordered_active_mods_data, inactive_mods_json)
         if action == "save":
             mods_config_data = xml_path_to_json(
                 self.game_configuration.get_mods_config_path()
