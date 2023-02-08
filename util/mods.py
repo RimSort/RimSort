@@ -93,7 +93,7 @@ def get_active_mods_from_config_format(path: str) -> Dict[str, Any]:
         if mod_data:
             return dict(
                 [
-                    (package_id, {})
+                    (package_id.lower(), {})
                     for package_id in mod_data["ModsConfigData"]["activeMods"]["li"]
                 ]
             )
