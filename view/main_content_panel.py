@@ -1,6 +1,4 @@
 from typing import Any, Dict
-import os
-import json
 
 from PySide2.QtCore import *
 from PySide2.QtGui import *
@@ -11,11 +9,6 @@ from panel.actions_panel import Actions
 from panel.active_mods_panel import ActiveModList
 from panel.inactive_mods_panel import InactiveModList
 from panel.mod_info_panel import ModInfo
-from util.data import (
-    get_default_game_executable_path,
-    get_default_mods_config_path,
-    get_default_workshop_path,
-)
 from util.mods import get_active_inactive_mods
 from util.xml import json_to_xml_write, xml_path_to_json
 from view.game_configuration_panel import GameConfiguration
@@ -36,51 +29,46 @@ class MainContent:
 
         :param game_configuration: game configuration panel to get paths
         """
-        self.game_configuration = game_configuration
-
-        # Frame contains base layout to allow for styling
-        self.main_layout_frame = QFrame()
-        self.main_layout_frame.setObjectName("MainPanel")
-
-        # Base layout
+        # BASE LAYOUT
         self.main_layout = QHBoxLayout()
         self.main_layout.setContentsMargins(
             5, 5, 5, 5
         )  # Space between widgets and Frame border
         self.main_layout.setSpacing(5)  # Space beteen mod lists and action buttons
 
-        # Adding layout to frame
+        # FRAME REQUIRED - to allow for styling
+        self.main_layout_frame = QFrame()
+        self.main_layout_frame.setObjectName("MainPanel")
         self.main_layout_frame.setLayout(self.main_layout)
 
-        # Get initial mods
-        active_mods_data, inactive_mods_data = get_active_inactive_mods(
-            self.game_configuration.get_mods_config_path(),
-            self.game_configuration.get_workshop_folder_path(),
-        )
-
-        # Instantiate widgets
+        # INSTANTIATE WIDGETS
         self.mod_info_panel = ModInfo()
-        self.active_mods_panel = ActiveModList(
-            active_mods_data, self.game_configuration.get_mods_config_path()
-        )
-        self.inactive_mods_panel = InactiveModList(inactive_mods_data)
+        self.active_mods_panel = ActiveModList()
+        self.inactive_mods_panel = InactiveModList()
         self.actions_panel = Actions()
 
-        # Add widgets to base layout
+        # WIDGETS INTO BASE LAYOUT
         self.main_layout.addLayout(self.mod_info_panel.panel, 50)
         self.main_layout.addLayout(self.inactive_mods_panel.panel, 20)
         self.main_layout.addLayout(self.active_mods_panel.panel, 20)
         self.main_layout.addLayout(self.actions_panel.panel, 10)
 
-        # Connect signals and slots
+        # SIGNALS AND SLOTS
         self.actions_panel.actions_signal.connect(self.actions_slot)
-        self.actions_panel.actions_signal.connect(self.active_mods_panel.actions_slot)
         self.active_mods_panel.active_mods_list.mod_list_signal.connect(
             self.mod_info_panel.mod_list_slot
         )
         self.inactive_mods_panel.inactive_mods_list.mod_list_signal.connect(
             self.mod_info_panel.mod_list_slot
         )
+
+        # INITIALIZE WIDGETS
+        self.game_configuration = game_configuration
+        active_mods_data, inactive_mods_data = get_active_inactive_mods(
+            self.game_configuration.get_mods_config_path(),
+            self.game_configuration.get_workshop_folder_path(),
+        )
+        self._insert_data_into_lists(active_mods_data, inactive_mods_data)
 
     @property
     def panel(self):

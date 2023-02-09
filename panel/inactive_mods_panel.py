@@ -13,20 +13,18 @@ class InactiveModList:
     inactive mods list panel on the GUI.
     """
 
-    def __init__(self, mods: Dict[str, Any]) -> None:
+    def __init__(self) -> None:
         """
         Initialize the class.
         Create a ListWidget using the dict of mods. This will
         create a row for every key-value pair in the dict.
-
-        :param mods: a dict of mod data
         """
 
         # Base layout type
         self.panel = QVBoxLayout()
 
         # Instantiate widgets
-        self.inactive_mods_list = ModListWidget(mods)
+        self.inactive_mods_list = ModListWidget()
 
         # Add widgets to base layout
         self.panel.addWidget(self.inactive_mods_list)

@@ -16,14 +16,12 @@ class ModListWidget(QListWidget):
 
     mod_list_signal = Signal(str)
 
-    def __init__(self, mods: Dict[str, Any]) -> None:
+    def __init__(self) -> None:
         """
         Initialize the ListWidget with a dict of mods.
         Keys are the package ids and values are a dict of
         mod attributes. See tags:
         https://rimworldwiki.com/wiki/About.xml
-
-        :param mods: dict of mods to add to the list
         """
 
         super(ModListWidget, self).__init__()
@@ -42,9 +40,6 @@ class ModListWidget(QListWidget):
         self.model().rowsInserted.connect(
             self.handle_rows_inserted, Qt.QueuedConnection
         )
-
-        # Custom variables
-        self.recreate_mod_list(mods)
 
     def recreate_mod_list(self, mods: Dict[str, Any]) -> None:
         """
