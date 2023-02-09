@@ -2,7 +2,7 @@ import os
 from typing import Any, Dict, List, Tuple
 import xmltodict
 from PySide2.QtWidgets import *
-
+import json
 from util.error import show_warning
 from util.exception import (
     InvalidModsConfigFormat,
@@ -26,7 +26,7 @@ def get_active_inactive_mods(
     """
     # Get all mods from the workshop folder
     # Each mod is a dict initialized with data from the About.xml
-    workshop_mods = get_workshop_mods(workshop_path)
+    workshop_mods, community_rules = get_workshop_mods(workshop_path)
 
     # Get and populate initial data for known DLCs and base game
     known_expansions = get_known_expansions_from_config_format(config_path)
@@ -34,7 +34,9 @@ def get_active_inactive_mods(
         populate_expansions_static_data(known_expansions, package_id)
 
     # Populate dependencies for mods and expansions
-    workshop_and_expansions = get_dependencies_for_mods(workshop_mods, known_expansions)
+    workshop_and_expansions = get_dependencies_for_mods(
+        workshop_mods, known_expansions, community_rules
+    )
 
     # Get the list of active mods and populate data from workshop + expansions
     active_mods = get_active_mods_from_config_format(config_path)
@@ -55,7 +57,7 @@ def get_active_inactive_mods(
     return active_mods, inactive_mods
 
 
-def get_workshop_mods(path: str) -> Dict[str, Any]:
+def get_workshop_mods(path: str) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
     Given a path to the Rimworld Steam workshop folder, return a dict
     containing data for all the mods keyed to their package ids.
@@ -64,12 +66,22 @@ def get_workshop_mods(path: str) -> Dict[str, Any]:
     will be empty.
 
     :param path: path to the Rimworld workshop mods folder
-    :return: a Dict of workshop mods by package id
+    :return: a Dict of workshop mods by package id, and dict of community rules
     """
     workshop_mods = {}
+    community_rules = {}
     if os.path.exists(path):
         for file in os.scandir(path):
             if not file.is_file():
+                if file.path.endswith("1847679158"):
+                    community_rules_path = os.path.join(
+                        file.path, "db", "communityRules.json"
+                    )
+                    # db_path = os.path.join(file.path, "db", "db.json")
+                    with open(community_rules_path) as f:
+                        rule_data = json.load(f)
+                        community_rules = rule_data["rules"]
+
                 mod_data_path = os.path.join(file.path, "About", "About.xml")
                 mod_data = dict()
                 try:
@@ -90,11 +102,14 @@ def get_workshop_mods(path: str) -> Dict[str, Any]:
                     workshop_mods[case_normalized_package_id] = mod_data["modmetadata"]
                 except:
                     raise InvalidWorkshopModAboutFormat
-    return workshop_mods
+
+    return workshop_mods, community_rules
 
 
 def get_dependencies_for_mods(
-    all_workshop_mods: Dict[str, Any], known_expansions: Dict[str, Any]
+    all_workshop_mods: Dict[str, Any],
+    known_expansions: Dict[str, Any],
+    community_rules: Dict[str, Any],
 ) -> Dict[str, Any]:
     """
     Iterate through each workshop + known expansion + base game and add new key-values
@@ -103,10 +118,12 @@ def get_dependencies_for_mods(
 
     :param all_workshop_mods: dict of all workshop mods
     :param known_expansions: dict of known expansions + base
+    :param community_rules: dict of community established rules
     :return workshop_and_expansions: workshop mods + official modules with dependency data
     """
     workshop_and_expansions = {**all_workshop_mods, **known_expansions}
 
+    # Add dependencies to installed mods based on dependencies listed in About.xml
     for package_id in workshop_and_expansions:
         # Check if there are mods that the current mod needs to be loaded with
         if workshop_and_expansions[package_id].get("modDependencies"):
@@ -163,6 +180,80 @@ def get_dependencies_for_mods(
                     dependencies,
                     workshop_and_expansions,
                 )
+
+    # Add dependencies to installed mods based on dependencies from community rules
+    for package_id in community_rules:
+        for dependency_id in community_rules[package_id][
+            "loadBefore"
+        ]:  # current mod should be loaded before these mods
+            add_value_to_key_or_create_key_set(
+                workshop_and_expansions.get(dependency_id.lower()),
+                "softDependencies",
+                package_id.lower(),
+                workshop_and_expansions,
+            )
+        for dependency_id in community_rules[package_id][
+            "loadAfter"
+        ]:  # current mod should be loaded after these mods
+            add_value_to_key_or_create_key_set(
+                workshop_and_expansions.get(
+                    package_id.lower()
+                ),  # DB json may be referencing non installed mod
+                "softDependencies",
+                dependency_id.lower(),
+                workshop_and_expansions,
+            )
+
+    # Add blanket dependencies for Core game and DLCs if no explicit requirement to be before
+    expansions = {
+        "ludeon.rimworld": set(),
+        "ludeon.rimworld.royalty": set(),
+        "ludeon.rimworld.ideology": set(),
+        "ludeon.rimworld.biotech": set(),
+    }
+    for package_id in expansions:
+        if package_id in workshop_and_expansions:
+            if workshop_and_expansions[package_id].get("softDependencies"):
+                for dependency_id in workshop_and_expansions[package_id][
+                    "softDependencies"
+                ]:
+                    expansions[package_id].add(dependency_id)
+            if workshop_and_expansions[package_id].get("dependencies"):
+                for dependency_id in workshop_and_expansions[package_id][
+                    "dependencies"
+                ]:
+                    expansions[package_id].add(dependency_id)
+
+    for package_id in workshop_and_expansions:
+        if package_id not in expansions:  # For each mod (excluding expansions)
+            if package_id not in expansions["ludeon.rimworld"]:
+                add_value_to_key_or_create_key_set(
+                    workshop_and_expansions[package_id],
+                    "softDependencies",
+                    "ludeon.rimworld",
+                    workshop_and_expansions,
+                )
+                if package_id not in expansions["ludeon.rimworld.royalty"]:
+                    add_value_to_key_or_create_key_set(
+                        workshop_and_expansions[package_id],
+                        "softDependencies",
+                        "ludeon.rimworld.royalty",
+                        workshop_and_expansions,
+                    )
+                    if package_id not in expansions["ludeon.rimworld.ideology"]:
+                        add_value_to_key_or_create_key_set(
+                            workshop_and_expansions[package_id],
+                            "softDependencies",
+                            "ludeon.rimworld.ideology",
+                            workshop_and_expansions,
+                        )
+                        if package_id not in expansions["ludeon.rimworld.biotech"]:
+                            add_value_to_key_or_create_key_set(
+                                workshop_and_expansions[package_id],
+                                "softDependencies",
+                                "ludeon.rimworld.biotech",
+                                workshop_and_expansions,
+                            )
 
     return workshop_and_expansions
 

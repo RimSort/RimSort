@@ -143,8 +143,7 @@ class MainContent:
                 # Sort by name
                 sorted_temp_mod_dict = sorted(temp_mod_dict.items(), key=lambda x:x[1]["name"])
                 for item in sorted_temp_mod_dict: # item is tuple of (packageId, json_data)
-                    if item[0] in active_mods_json: # Note: topo will create items even if they are just dependencies
-                        reordered_active_mods_data[item[0]] = active_mods_json[item[0]]
+                    reordered_active_mods_data[item[0]] = active_mods_json[item[0]]
             self._insert_data_into_lists(reordered_active_mods_data, inactive_mods_json)
         if action == "save":
             mods_config_data = xml_path_to_json(
