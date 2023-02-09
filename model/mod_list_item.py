@@ -50,6 +50,13 @@ class ModListItemInner(QWidget):
         self.dlc = data.get("isDLC")  # True if DLC
         self.error = data.get("error")
 
+        # Entire data
+        self.json_data = data
+
+        # Sorting tags
+        self.dependencies = data.get("dependencies")
+        self.soft_dependencies = data.get("softDependencies")
+
         # Visuals
         self.main_item_layout = QHBoxLayout()
         self.main_item_layout.setContentsMargins(0, 0, 0, 0)

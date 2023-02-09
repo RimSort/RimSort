@@ -14,3 +14,6 @@ class InvalidWorkshopModAboutFormat(Exception):
 
 class UnexpectedModMetaData(Exception):
     pass
+
+class PathDoesNotExist(Exception):
+    pass

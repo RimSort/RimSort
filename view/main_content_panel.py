@@ -1,11 +1,16 @@
 from typing import Any, Dict
-
-from toposort import toposort_flatten
+import os
+import json
 
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
+from toposort import toposort
 
+from panel.actions_panel import Actions
+from panel.active_mods_panel import ActiveModList
+from panel.inactive_mods_panel import InactiveModList
+from panel.mod_info_panel import ModInfo
 from util.data import (
     get_default_game_executable_path,
     get_default_mods_config_path,
@@ -13,44 +18,25 @@ from util.data import (
 )
 from util.mods import get_active_inactive_mods
 from util.xml import json_to_xml_write, xml_path_to_json
-from view.actions_panel import Actions
-from view.active_mods_panel import ActiveModList
 from view.game_configuration_panel import GameConfiguration
-from view.inactive_mods_panel import InactiveModList
-from view.mod_info_panel import ModInfo
 
 
 class MainContent:
     """
     This class controls the layout and functionality of the main content
     panel of the GUI, containing the mod information display, inactive and
-    active mod lists, and the action button panel.
+    active mod lists, and the action button panel. Additionally, it acts
+    as the main temporary datastore of the app, caching workshop mod information
+    and their dependencies. <-- TODO (strip functionality from util files)
     """
 
     def __init__(self, game_configuration: GameConfiguration) -> None:
         """
         Initialize the main content panel.
-        Construct the layout and add widgets.
 
         :param game_configuration: game configuration panel to get paths
         """
         self.game_configuration = game_configuration
-
-        # Get default paths
-        self.default_game_executable_path = get_default_game_executable_path()
-        self.default_mods_config_path = get_default_mods_config_path()
-        self.default_workshop_path = get_default_workshop_path()
-
-        # Set default paths as placeholders
-        self.game_configuration.game_folder_line.setPlaceholderText(
-            self.default_game_executable_path
-        )
-        self.game_configuration.config_folder_line.setPlaceholderText(
-            self.default_mods_config_path
-        )
-        self.game_configuration.workshop_folder_line.setPlaceholderText(
-            self.default_workshop_path
-        )
 
         # Get initial mods
         active_mods_data, inactive_mods_data = get_active_inactive_mods(
@@ -89,6 +75,12 @@ class MainContent:
         # Connect signals and slots
         self.actions_panel.actions_signal.connect(self.actions_slot)
         self.actions_panel.actions_signal.connect(self.active_mods_panel.actions_slot)
+        self.active_mods_panel.active_mods_list.mod_list_signal.connect(
+            self.mod_info_panel.mod_list_slot
+        )
+        self.inactive_mods_panel.inactive_mods_list.mod_list_signal.connect(
+            self.mod_info_panel.mod_list_slot
+        )
 
     @property
     def panel(self):
@@ -114,15 +106,45 @@ class MainContent:
             print("clearing")
         if action == "sort":  # User clicked on the sort button
             active_mods = self.active_mods_panel.active_mods_list.get_list_items()
-            dependencies = dict(
-                [
-                    (active_mod.package_id.lower(), set())
-                    for active_mod in active_mods
-                ]
-            )
+            dependencies_graph = {}
             for mod in active_mods:
-                if mod.load_after:
-                    print(mod.load_after.get("li"))
+                dependencies_graph[mod.package_id] = set()
+                if mod.dependencies:
+                    for dependency in mod.dependencies:
+                        dependencies_graph[mod.package_id].add(dependency)
+                if mod.soft_dependencies:
+                    for dependency in mod.soft_dependencies:
+                        dependencies_graph[mod.package_id].add(dependency)
+            # Get an ordered list of mods
+            topo_result = toposort(dependencies_graph)
+            # TODO: we're getting active mods twice, once in item form and once in json form.
+            # Probably should just decide on one form and do processing on that.
+            active_mods_json = (
+                self.active_mods_panel.active_mods_list.get_list_items_by_dict()
+            )
+            inactive_mods_json = (
+                self.inactive_mods_panel.inactive_mods_list.get_list_items_by_dict()
+            )
+            # Re-order active_mod_data before inserting into list
+            reordered_active_mods_data = {}
+            for (
+                topo_level_set
+            ) in (
+                topo_result
+            ):  # These are sets of items where dependency "level" is same
+                temp_mod_dict = {}
+                for item in topo_level_set:
+                    if item in active_mods_json:
+                        temp_mod_dict[item] = active_mods_json[item]
+                # Sort by name
+                sorted_temp_mod_dict = sorted(
+                    temp_mod_dict.items(), key=lambda x: x[1]["name"]
+                )
+                for (
+                    item
+                ) in sorted_temp_mod_dict:  # item is tuple of (packageId, json_data)
+                    reordered_active_mods_data[item[0]] = active_mods_json[item[0]]
+            self._insert_data_into_lists(reordered_active_mods_data, inactive_mods_json)
         if action == "save":
             mods_config_data = xml_path_to_json(
                 self.game_configuration.get_mods_config_path()
