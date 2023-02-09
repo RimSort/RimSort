@@ -18,7 +18,7 @@ def get_default_game_executable_path() -> str:
     if system_name == "Windows":
         return os.path.join("C:" + os.sep, "Program Files (x86)", "Steam", "steamapps", "common", "Rimworld", "RimWorldWin64.exe")
     if system_name == "Linux":
-        return ""
+        return "not implemented"
     return "Unknown platform"
 
 
@@ -34,7 +34,7 @@ def get_default_mods_config_path() -> str:
     if system_name == "Windows":
         return os.path.join("C:" + os.sep, "Users", getpass.getuser(), "AppData", "LocalLow", "Ludeon Studios", "RimWorld by Ludeon Studios", "Config", "ModsConfig.xml")
     if system_name == "Linux":
-        return ""
+        return "not implemented"
     return "Unknown platform"
 
 
@@ -50,7 +50,7 @@ def get_default_workshop_path() -> str:
     if system_name == "Windows":
         return os.path.join("C:" + os.sep, "Program Files (x86)", "Steam", "steamapps", "workshop", "content", "294100")
     if system_name == "Linux":
-        return ""
+        return "not implemented"
     return "Unknown platform"
 
 

@@ -3,10 +3,13 @@ import platform
 import subprocess
 from functools import partial
 from typing import Any
+import json
 
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
+
+from util.error import show_warning
 
 
 class GameConfiguration(QObject):
@@ -29,11 +32,11 @@ class GameConfiguration(QObject):
 
         # Base layout
         self._panel = QVBoxLayout()
-        # Spacing between edge and layout, 0 on bottom (closer to next layout)
+        # Spacing between edge and layout, 0 on bottom (closer to main content panel)
         self._panel.setContentsMargins(7, 7, 7, 0)
 
         # Container layouts
-        # self.client_settings_row = QHBoxLayout()
+        # self.client_settings_row = QHBoxLayout() # TODO: use
         self.game_folder_row = QHBoxLayout()
         self.config_folder_row = QHBoxLayout()
         self.workshop_folder_row = QHBoxLayout()
@@ -46,8 +49,11 @@ class GameConfiguration(QObject):
         self.game_folder_open_button.setObjectName("LeftButton")
         self.game_folder_line = QLineEdit()
         self.game_folder_line.setDisabled(True)
+        self.game_folder_line.setPlaceholderText(
+            "Unknown, please select the game folder"
+        )
         self.game_folder_select_button = QPushButton("...")
-        self.game_folder_select_button.clicked.connect(self.set_game_executable)
+        self.game_folder_select_button.clicked.connect(self.set_game_exe_folder)
         self.game_folder_select_button.setObjectName("RightButton")
 
         self.config_folder_open_button = QPushButton("Config File")
@@ -57,6 +63,9 @@ class GameConfiguration(QObject):
         self.config_folder_open_button.setObjectName("LeftButton")
         self.config_folder_line = QLineEdit()
         self.config_folder_line.setDisabled(True)
+        self.config_folder_line.setPlaceholderText(
+            "Unknown, please select the ModsConfig.xml folder"
+        )
         self.config_folder_select_button = QPushButton("...")
         self.config_folder_select_button.clicked.connect(self.set_config_folder)
         self.config_folder_select_button.setObjectName("RightButton")
@@ -68,6 +77,9 @@ class GameConfiguration(QObject):
         self.workshop_folder_open_button.setObjectName("LeftButton")
         self.workshop_folder_line = QLineEdit()
         self.workshop_folder_line.setDisabled(True)
+        self.workshop_folder_line.setPlaceholderText(
+            "Unknown, please select the RimWorld workshop folder"
+        )
         self.workshop_folder_select_button = QPushButton("...")
         self.workshop_folder_select_button.clicked.connect(self.set_workshop_folder)
         self.workshop_folder_select_button.setObjectName("RightButton")
@@ -91,9 +103,41 @@ class GameConfiguration(QObject):
         self._panel.addLayout(self.config_folder_row)
         self._panel.addLayout(self.workshop_folder_row)
 
+        # TODO: Autodetect Paths feature?
+        self.initialize_storage()
+
     @property
     def panel(self):
         return self._panel
+
+    def initialize_storage(self) -> None:
+        """
+        Initialize the app's storage feature.
+        If the storage path or settings.json file do not exist,
+        create them. If they do exist, set the path widgets
+        to have paths written on the settings.json.
+        """
+        storage_path = QStandardPaths.writableLocation(
+            QStandardPaths.AppLocalDataLocation
+        )
+        print(storage_path)
+        if not os.path.exists(storage_path):
+            os.makedirs(storage_path)
+        settings_path = os.path.join(storage_path, "settings.json")
+        if not os.path.exists(settings_path):
+            init_settings = {}
+            json_object = json.dumps(init_settings, indent=4)
+            with open(settings_path, "w") as outfile:
+                outfile.write(json_object)
+        else:
+            with open(settings_path) as infile:
+                settings_data = json.load(infile)
+                if settings_data.get("game_folder"):
+                    self.game_folder_line.setText(settings_data["game_folder"])
+                if settings_data.get("config_folder"):
+                    self.config_folder_line.setText(settings_data["config_folder"])
+                if settings_data.get("workshop_folder"):
+                    self.workshop_folder_line.setText(settings_data["workshop_folder"])
 
     def open_directory(self, callable: Any) -> None:
         """
@@ -109,7 +153,7 @@ class GameConfiguration(QObject):
             else:
                 self.platform_specific_open(path)
         else:
-            print("Path is invalid")  # TODO
+            show_warning(f"The path '{path}' does not exist.\nPlease reset the path.")
 
     def platform_specific_open(self, path: str) -> None:
         """
@@ -128,33 +172,39 @@ class GameConfiguration(QObject):
         else:
             print("Unknown System")  # TODO
 
-    def set_game_executable(self) -> None:
+    def set_game_exe_folder(self) -> None:
         """
         Open a file dialog to allow the user to select the game executable.
         """
         start_dir = ""
-        possible_dir = self.get_game_folder_path()
-        if os.path.exists(possible_dir):
-            start_dir = os.path.dirname(possible_dir)
-        game_executable_path = QFileDialog.getOpenFileName(
-            caption="Open RimWorld App",
-            dir=start_dir,
-            filter="APP (*.app);;EXE (*.exe)",
+        if self.game_folder_line.text():
+            possible_dir = self.game_folder_line.text()
+            if os.path.exists(possible_dir):
+                start_dir = possible_dir
+        game_exe_folder_path = str(
+            QFileDialog.getExistingDirectory(
+                caption="Select Game Folder", dir=start_dir
+            )
         )
-        self.game_folder_line.setText(game_executable_path[0])
+        self.game_folder_line.setText(game_exe_folder_path)
+        self.update_persistent_storage("game_folder", game_exe_folder_path)
 
     def set_config_folder(self) -> None:
         """
-        Open a file dialog to allow the user to select the ModsConfig.xml.
+        Open a file dialog to allow the user to select the ModsConfig.xml directory.
         """
         start_dir = ""
-        possible_dir = self.get_mods_config_path()
-        if os.path.exists(possible_dir):
-            start_dir = os.path.dirname(possible_dir)
-        mods_config_path = QFileDialog.getOpenFileName(
-            caption="Select Mods Config", dir=start_dir, filter="XML (*.xml)"
+        if self.config_folder_line.text():
+            possible_dir = self.config_folder_line.text()
+            if os.path.exists(possible_dir):
+                start_dir = possible_dir
+        config_folder_path = str(
+            QFileDialog.getExistingDirectory(
+                caption="Select Mods Config Folder", dir=start_dir
+            )
         )
-        self.config_folder_line.setText(mods_config_path[0])
+        self.config_folder_line.setText(config_folder_path)
+        self.update_persistent_storage("config_folder", config_folder_path)
         # TODO refresh mods
 
     def set_workshop_folder(self) -> None:
@@ -163,49 +213,43 @@ class GameConfiguration(QObject):
         to set as the workshop folder.
         """
         start_dir = ""
-        possible_dir = self.get_workshop_folder_path()
-        if os.path.exists(possible_dir):
-            start_dir = possible_dir
+        if self.workshop_folder_line.text():
+            possible_dir = self.workshop_folder_line.text()
+            if os.path.exists(possible_dir):
+                start_dir = possible_dir
         workshop_path = str(
             QFileDialog.getExistingDirectory(
                 caption="Select Workshop Folder", dir=start_dir
             )
         )
         self.workshop_folder_line.setText(workshop_path)
+        self.update_persistent_storage("workshop_folder", workshop_path)
         # TODO refresh mods
 
-    def get_game_folder_path(self) -> str:
+    def update_persistent_storage(self, key: str, value: str) -> None:
         """
-        Return a manually-entered game folder path if it exists.
-        Otherwise, return the platform-specific placeholder path.
+        Given a key and value, write this key and value to the
+        persistent settings.json.
 
-        :return: path to game folder
+        :param key: key to use
+        :param value: value to replace
         """
-        if self.game_folder_line.text():
-            return self.game_folder_line.text()
-        else:
-            return self.game_folder_line.placeholderText()
+        storage_path = QStandardPaths.writableLocation(
+            QStandardPaths.AppLocalDataLocation
+        )
+        settings_path = os.path.join(storage_path, "settings.json")
+        with open(settings_path) as infile:
+            settings_data = json.load(infile)
+            settings_data[key] = value
+            json_object = json.dumps(settings_data, indent=4)
+            with open(settings_path, "w") as outfile:
+                outfile.write(json_object)
 
-    def get_mods_config_path(self) -> str:
-        """
-        Return a manually-entered ModsConfig.xml path if it exists.
-        Otherwise, return the platform-specific placeholder path.
+    def get_game_folder_path(self):
+        return self.game_folder_line.text()
 
-        :return: path to ModsConfig.xml
-        """
-        if self.config_folder_line.text():
-            return self.config_folder_line.text()
-        else:
-            return self.config_folder_line.placeholderText()
+    def get_mods_config_path(self):
+        return self.config_folder_line.text()
 
-    def get_workshop_folder_path(self) -> str:
-        """
-        Return a manually-entered workshop folder path if it exists.
-        Otherwise, return the platform-specific placeholder path.
-
-        :return: path to workshop folder
-        """
-        if self.workshop_folder_line.text():
-            return self.workshop_folder_line.text()
-        else:
-            return self.workshop_folder_line.placeholderText()
+    def get_workshop_folder_path(self):
+        return self.workshop_folder_line.text()

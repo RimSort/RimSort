@@ -20,7 +20,7 @@ def get_active_inactive_mods(
     to the Rimworld workshop folder, return a list of mods for the active
     list widget and a list of mods for the inactive list widget.
 
-    :param config_path: path to some ModsConfig.xml
+    :param config_path: path to ModsConfig.xml folder
     :param workshop_path: path to workshop mods folder
     :return: a Dict for active mods and a Dict for inactive mods
     """
@@ -29,7 +29,7 @@ def get_active_inactive_mods(
     workshop_mods, community_rules = get_workshop_mods(workshop_path)
 
     # Get and populate initial data for known DLCs and base game
-    known_expansions = get_known_expansions_from_config_format(config_path)
+    known_expansions = get_known_expansions_from_config_format(os.path.join(config_path, "ModsConfig.xml"))
     for package_id in known_expansions.keys():
         populate_expansions_static_data(known_expansions, package_id)
 
@@ -39,7 +39,7 @@ def get_active_inactive_mods(
     )
 
     # Get the list of active mods and populate data from workshop + expansions
-    active_mods = get_active_mods_from_config_format(config_path)
+    active_mods = get_active_mods_from_config_format(os.path.join(config_path, "ModsConfig.xml"))
     active_mods, invalid_mods = populate_active_mods_workshop_data(
         active_mods, workshop_and_expansions
     )

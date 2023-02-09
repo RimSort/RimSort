@@ -1,11 +1,16 @@
 from typing import Any, Dict
-
-from toposort import toposort, toposort_flatten
+import os
+import json
 
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
+from toposort import toposort
 
+from panel.actions_panel import Actions
+from panel.active_mods_panel import ActiveModList
+from panel.inactive_mods_panel import InactiveModList
+from panel.mod_info_panel import ModInfo
 from util.data import (
     get_default_game_executable_path,
     get_default_mods_config_path,
@@ -13,44 +18,25 @@ from util.data import (
 )
 from util.mods import get_active_inactive_mods
 from util.xml import json_to_xml_write, xml_path_to_json
-from view.actions_panel import Actions
-from view.active_mods_panel import ActiveModList
 from view.game_configuration_panel import GameConfiguration
-from view.inactive_mods_panel import InactiveModList
-from view.mod_info_panel import ModInfo
 
 
 class MainContent:
     """
     This class controls the layout and functionality of the main content
     panel of the GUI, containing the mod information display, inactive and
-    active mod lists, and the action button panel.
+    active mod lists, and the action button panel. Additionally, it acts
+    as the main temporary datastore of the app, caching workshop mod information
+    and their dependencies. <-- TODO (strip functionality from util files)
     """
 
     def __init__(self, game_configuration: GameConfiguration) -> None:
         """
         Initialize the main content panel.
-        Construct the layout and add widgets.
 
         :param game_configuration: game configuration panel to get paths
         """
         self.game_configuration = game_configuration
-
-        # Get default paths
-        self.default_game_executable_path = get_default_game_executable_path()
-        self.default_mods_config_path = get_default_mods_config_path()
-        self.default_workshop_path = get_default_workshop_path()
-
-        # Set default paths as placeholders
-        self.game_configuration.game_folder_line.setPlaceholderText(
-            self.default_game_executable_path
-        )
-        self.game_configuration.config_folder_line.setPlaceholderText(
-            self.default_mods_config_path
-        )
-        self.game_configuration.workshop_folder_line.setPlaceholderText(
-            self.default_workshop_path
-        )
 
         # Get initial mods
         active_mods_data, inactive_mods_data = get_active_inactive_mods(
