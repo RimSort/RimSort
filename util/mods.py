@@ -24,6 +24,10 @@ def get_active_inactive_mods(
     :param workshop_path: path to workshop mods folder
     :return: a Dict for active mods and a Dict for inactive mods
     """
+    if not config_path or not workshop_path:
+        show_warning("Please set your paths first.")
+        return {}, {}
+
     # Get all mods from the workshop folder
     # Each mod is a dict initialized with data from the About.xml
     workshop_mods, community_rules = get_workshop_mods(workshop_path)

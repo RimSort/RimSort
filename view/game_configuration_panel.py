@@ -15,8 +15,13 @@ from util.error import show_warning
 class GameConfiguration(QObject):
     """
     This class controls the layout and functionality of the top-most
-    panel of the GUI, containing the paths to ModsConfig.xml, workshop
-    mods, etc. Subclasses QObject to allow emitting signals.
+    panel of the GUI, containing the paths to the ModsConfig.xml folder,
+    workshop folder, and game executable folder. It is also responsible
+    for initializing the storage feature, getting paths data out of
+    the storage feature, and allowing for setting paths and writing those
+    paths to the persistent storage.
+
+    It Subclasses QObject to allow emitting signals.
     """
 
     # Signal emitter for this class
@@ -25,23 +30,22 @@ class GameConfiguration(QObject):
     def __init__(self) -> None:
         """
         Initialize the game configuration.
-        Construct the layout and add widgets.
-        Emit signals where applicable.
         """
         super(GameConfiguration, self).__init__()
 
-        # Base layout
+        # BASE LAYOUT
         self._panel = QVBoxLayout()
-        # Spacing between edge and layout, 0 on bottom (closer to main content panel)
+        # Represents spacing between edge and layout
+        # Set to 0 on the bottom to maintain consistent spacing to the main content panel
         self._panel.setContentsMargins(7, 7, 7, 0)
 
-        # Container layouts
-        # self.client_settings_row = QHBoxLayout() # TODO: use
+        # CONTAINER LAYOUTS
+        # self.client_settings_row = QHBoxLayout() # TODO: NOT IMPLEMENTED
         self.game_folder_row = QHBoxLayout()
         self.config_folder_row = QHBoxLayout()
         self.workshop_folder_row = QHBoxLayout()
 
-        # Instantiate widgets
+        # INSTANTIATE WIDGETS
         self.game_folder_open_button = QPushButton("RimWorld App")
         self.game_folder_open_button.clicked.connect(
             partial(self.open_directory, self.get_game_folder_path)
@@ -84,7 +88,7 @@ class GameConfiguration(QObject):
         self.workshop_folder_select_button.clicked.connect(self.set_workshop_folder)
         self.workshop_folder_select_button.setObjectName("RightButton")
 
-        # Add widgets to container layouts
+        # WIDGETS INTO CONTAINER LAYOUTS
         self.game_folder_row.addWidget(self.game_folder_open_button)
         self.game_folder_row.addWidget(self.game_folder_line)
         self.game_folder_row.addWidget(self.game_folder_select_button)
@@ -97,13 +101,13 @@ class GameConfiguration(QObject):
         self.workshop_folder_row.addWidget(self.workshop_folder_line)
         self.workshop_folder_row.addWidget(self.workshop_folder_select_button)
 
-        # Add container layouts to base layout
-        # self._panel.addLayout(self.client_settings_row)
+        # CONTAINER LAYOUTS INTO BASE LAYOUT
+        # self._panel.addLayout(self.client_settings_row): TODO: NOT IMPLEMENTED
         self._panel.addLayout(self.game_folder_row)
         self._panel.addLayout(self.config_folder_row)
         self._panel.addLayout(self.workshop_folder_row)
 
-        # TODO: Autodetect Paths feature?
+        # INITIALIZE WIDGETS / FEATURES
         self.initialize_storage()
 
     @property

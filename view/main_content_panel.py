@@ -38,12 +38,6 @@ class MainContent:
         """
         self.game_configuration = game_configuration
 
-        # Get initial mods
-        active_mods_data, inactive_mods_data = get_active_inactive_mods(
-            self.game_configuration.get_mods_config_path(),
-            self.game_configuration.get_workshop_folder_path(),
-        )
-
         # Frame contains base layout to allow for styling
         self.main_layout_frame = QFrame()
         self.main_layout_frame.setObjectName("MainPanel")
@@ -57,6 +51,12 @@ class MainContent:
 
         # Adding layout to frame
         self.main_layout_frame.setLayout(self.main_layout)
+
+        # Get initial mods
+        active_mods_data, inactive_mods_data = get_active_inactive_mods(
+            self.game_configuration.get_mods_config_path(),
+            self.game_configuration.get_workshop_folder_path(),
+        )
 
         # Instantiate widgets
         self.mod_info_panel = ModInfo()
