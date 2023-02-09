@@ -73,6 +73,8 @@ def get_workshop_mods(path: str) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     if os.path.exists(path):
         for file in os.scandir(path):
             if not file.is_file():
+
+                # If RimPy is installed, load community rules
                 if file.path.endswith("1847679158"):
                     community_rules_path = os.path.join(
                         file.path, "db", "communityRules.json"

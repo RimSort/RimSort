@@ -14,6 +14,8 @@ class ModListWidget(QListWidget):
     their own lists or moved from one list to another.
     """
 
+    mod_list_signal = Signal(str)
+
     def __init__(self, mods: Dict[str, Any]) -> None:
         """
         Initialize the ListWidget with a dict of mods.
@@ -109,3 +111,4 @@ class ModListWidget(QListWidget):
     def mod_clicked(self, item: QListWidgetItem) -> None:
         """Placeholder function to handle clicking on a row"""
         print(f"Selected a different mod! {item.data(Qt.UserRole)['packageId']}")
+        self.mod_list_signal.emit(item.data(Qt.UserRole)['packageId'])

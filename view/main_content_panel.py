@@ -89,6 +89,12 @@ class MainContent:
         # Connect signals and slots
         self.actions_panel.actions_signal.connect(self.actions_slot)
         self.actions_panel.actions_signal.connect(self.active_mods_panel.actions_slot)
+        self.active_mods_panel.active_mods_list.mod_list_signal.connect(
+            self.mod_info_panel.mod_list_slot
+        )
+        self.inactive_mods_panel.inactive_mods_list.mod_list_signal.connect(
+            self.mod_info_panel.mod_list_slot
+        )
 
     @property
     def panel(self):
@@ -116,10 +122,6 @@ class MainContent:
             active_mods = self.active_mods_panel.active_mods_list.get_list_items()
             dependencies_graph = {}
             for mod in active_mods:
-                # For the initial sorting mechanism, mod.dependencies and mod.soft_dependencies
-                # can be treated as just dependencies. The values are either None (nothing specified
-                # in the About.xml), set() (meaning something was specified but the mod isn't installed),
-                # or a populated set, e.g. {a, b, c, ...}
                 dependencies_graph[mod.package_id] = set()
                 if mod.dependencies:
                     for dependency in mod.dependencies:
@@ -131,18 +133,30 @@ class MainContent:
             topo_result = toposort(dependencies_graph)
             # TODO: we're getting active mods twice, once in item form and once in json form.
             # Probably should just decide on one form and do processing on that.
-            active_mods_json = self.active_mods_panel.active_mods_list.get_list_items_by_dict()
-            inactive_mods_json = self.inactive_mods_panel.inactive_mods_list.get_list_items_by_dict()
+            active_mods_json = (
+                self.active_mods_panel.active_mods_list.get_list_items_by_dict()
+            )
+            inactive_mods_json = (
+                self.inactive_mods_panel.inactive_mods_list.get_list_items_by_dict()
+            )
             # Re-order active_mod_data before inserting into list
             reordered_active_mods_data = {}
-            for topo_level_set in topo_result: # These are sets of items where dependency "level" is same 
+            for (
+                topo_level_set
+            ) in (
+                topo_result
+            ):  # These are sets of items where dependency "level" is same
                 temp_mod_dict = {}
                 for item in topo_level_set:
                     if item in active_mods_json:
                         temp_mod_dict[item] = active_mods_json[item]
                 # Sort by name
-                sorted_temp_mod_dict = sorted(temp_mod_dict.items(), key=lambda x:x[1]["name"])
-                for item in sorted_temp_mod_dict: # item is tuple of (packageId, json_data)
+                sorted_temp_mod_dict = sorted(
+                    temp_mod_dict.items(), key=lambda x: x[1]["name"]
+                )
+                for (
+                    item
+                ) in sorted_temp_mod_dict:  # item is tuple of (packageId, json_data)
                     reordered_active_mods_data[item[0]] = active_mods_json[item[0]]
             self._insert_data_into_lists(reordered_active_mods_data, inactive_mods_json)
         if action == "save":
