@@ -12,11 +12,13 @@ def xml_path_to_json(path: str) -> Dict[str, Any]:
     :param path: path to the xml file
     :return: json dict of xml file contents
     """
-    data = []
+    print("Parsing: " + path)
+    data = {}
     if os.path.exists(path):
         with open(path, encoding="utf-8") as f:
+            print("Opening " + path)
             data = xmltodict.parse(f.read())
-    return data
+        return data
 
 
 def json_to_xml_write(data: Dict[str, Any], path: str) -> None:

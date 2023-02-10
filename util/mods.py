@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from typing import Any, Dict, List, Tuple
 import xmltodict
 from PySide2.QtWidgets import *
@@ -88,8 +89,22 @@ def get_workshop_mods(path: str) -> Tuple[Dict[str, Any], Dict[str, Any]]:
                         rule_data = json.load(f)
                         community_rules = rule_data["rules"]
 
-                mod_data_path = os.path.join(file.path, "About", "About.xml")
-                mod_data = dict()
+                subNodes = ["About", "About.xml"]
+                print("Checking " + file.path + " for [aA]bout/[aA]bout.xml")
+                for parent in [d.name for d in os.scandir(file.path) if d.is_dir()]:
+                    #print(parent)
+                    #print(list(os.scandir(file.path))) 
+                    if parent == subNodes[0] or parent == subNodes[0].lower():
+                        #print("Found " + parent)
+                        for child in [f for f in os.scandir(os.path.join(file.path, parent)) if f.is_file()]:
+                            if child.name == subNodes[1] or child.name == subNodes[1].lower():
+                                print("Found " + child.name)
+                                mod_data_path = child.path
+                            # else:
+                            #     print("error")
+
+                #mod_data_path = os.path.join(file.path, "About", "About.xml")
+                mod_data = {}
                 try:
                     # Default: try to parse About.xml with UTF-8 encodnig
                     mod_data = xml_path_to_json(mod_data_path)
@@ -107,7 +122,10 @@ def get_workshop_mods(path: str) -> Tuple[Dict[str, Any], Dict[str, Any]]:
                     mod_data["modmetadata"]["packageId"] = case_normalized_package_id
                     workshop_mods[case_normalized_package_id] = mod_data["modmetadata"]
                 except:
+                    print("Failed in getting modmetadata for mod:" + mod_data["modmetadata"]["name"])
                     raise InvalidWorkshopModAboutFormat
+                else:
+                    print("Succeeeded in getting modmetadata for mod:" + mod_data["modmetadata"]["name"])
 
     return workshop_mods, community_rules
 
