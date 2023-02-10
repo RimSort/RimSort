@@ -315,7 +315,7 @@ def add_dependency_to_mod(
                         mod_data[package_id].add(dependency["packageId"].lower())
 
 
-def get_active_mods_from_config(config_folder_path: str) -> Dict[str, Any]:
+def get_active_mods_from_config(config_path: str) -> Dict[str, Any]:
     """
     Given a path to a file in the ModsConfig.xml format, return the
     mods in the active mods section.
@@ -323,7 +323,7 @@ def get_active_mods_from_config(config_folder_path: str) -> Dict[str, Any]:
     :param path: path to a ModsConfig.xml file
     :return: a Dict keyed to mod package ids
     """
-    mod_data = xml_path_to_json(os.path.join(config_folder_path, "ModsConfig.xml"))
+    mod_data = xml_path_to_json(config_path)
     try:
         if mod_data:
             return dict(
@@ -337,7 +337,7 @@ def get_active_mods_from_config(config_folder_path: str) -> Dict[str, Any]:
         raise InvalidModsConfigFormat
 
 
-def get_known_expansions_from_config(config_folder_path: str) -> Dict[str, Any]:
+def get_known_expansions_from_config(config_path: str) -> Dict[str, Any]:
     """
     Given a path to a file in the ModsConfig.xml format, return the
     mods in the known expansions section (and add base game).
@@ -345,7 +345,7 @@ def get_known_expansions_from_config(config_folder_path: str) -> Dict[str, Any]:
     :param path: path to a ModsConfig.xml file
     :return: a Dict keyed to mod package ids
     """
-    mod_data = xml_path_to_json(os.path.join(config_folder_path, "ModsConfig.xml"))
+    mod_data = xml_path_to_json(config_path)
     try:
         ret = {"ludeon.rimworld": {}}  # Base game always exists
         if mod_data:

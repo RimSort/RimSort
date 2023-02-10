@@ -1,11 +1,9 @@
-import os
 from typing import Any, Dict
 
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 from toposort import toposort
-import xmltodict
 
 from panel.actions_panel import Actions
 from panel.active_mods_panel import ActiveModList
@@ -97,7 +95,7 @@ class MainContent:
             self.game_configuration.get_workshop_folder_path()
         )
         self.known_expansions = get_known_expansions_from_config(
-            self.game_configuration.get_mods_config_path()
+            self.game_configuration.get_config_path()
         )
         for package_id in self.known_expansions.keys():
             populate_expansions_static_data(self.known_expansions, package_id)
@@ -115,7 +113,7 @@ class MainContent:
             self.static_active_mods_data,
             self.static_inactive_mods_data,
         ) = get_active_inactive_mods(
-            self.game_configuration.get_mods_config_path(),
+            self.game_configuration.get_config_path(),
             self.all_mods_with_dependencies,
         )
 
@@ -179,37 +177,23 @@ class MainContent:
                     reordered_active_mods_data[item[0]] = active_mods_json[item[0]]
             self._insert_data_into_lists(reordered_active_mods_data, inactive_mods_json)
         if action == "save":
-            mods_config_data = xml_path_to_json(
-                self.game_configuration.get_mods_config_path()
-            )
-            new_active_mods_list = [
-                x.package_id.lower()
-                for x in self.active_mods_panel.active_mods_list.get_list_items()
-            ]
-            mods_config_data["ModsConfigData"]["activeMods"][
-                "li"
-            ] = new_active_mods_list
-            json_to_xml_write(
-                mods_config_data, self.game_configuration.get_mods_config_path()
-            )
+            self._do_save()
         if action == "export":
             mods_config_data = xml_path_to_json(
-                self.game_configuration.get_mods_config_path()
+                self.game_configuration.get_config_path()
             )
-            new_active_mods_list = [
+            active_mods = [
                 x.package_id.lower()
                 for x in self.active_mods_panel.active_mods_list.get_list_items()
             ]
-            mods_config_data["ModsConfigData"]["activeMods"][
-                "li"
-            ] = new_active_mods_list
+            mods_config_data["ModsConfigData"]["activeMods"]["li"] = active_mods
             file_path = QFileDialog.getSaveFileName(
                 caption="Save Mod List", selectedFilter="xml"
             )
             json_to_xml_write(mods_config_data, file_path[0])
         if action == "restore":
             active_mods_data, inactive_mods_data = get_active_inactive_mods(
-                self.game_configuration.get_mods_config_path(),
+                self.game_configuration.get_config_path(),
                 self.all_mods_with_dependencies,
             )
             self._insert_data_into_lists(active_mods_data, inactive_mods_data)
@@ -253,3 +237,15 @@ class MainContent:
             else:
                 inactive_mod_data[package_id] = mod_data
         self._insert_data_into_lists(active_mod_data, inactive_mod_data)
+
+    def _do_save(self) -> None:
+        """
+        Method save the current list of active mods to the selected ModsConfig.xml
+        """
+        active_mods = [
+            mod_item.package_id.lower()
+            for mod_item in self.active_mods_panel.active_mods_list.get_list_items()
+        ]
+        mods_config_data = xml_path_to_json(self.game_configuration.get_config_path())
+        mods_config_data["ModsConfigData"]["activeMods"]["li"] = active_mods
+        json_to_xml_write(mods_config_data, self.game_configuration.get_config_path())
