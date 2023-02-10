@@ -55,7 +55,6 @@ class ModListItemInner(QWidget):
 
         # Sorting tags
         self.dependencies = data.get("dependencies")
-        self.soft_dependencies = data.get("softDependencies")
 
         # Visuals
         self.main_item_layout = QHBoxLayout()
