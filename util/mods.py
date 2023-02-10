@@ -286,6 +286,10 @@ def get_dependencies_for_mods(
     new dependencies will be added: base game, and the 3 DLCs. You can verify this
     by printing all mod dependencies before and after this loop runs. The only mod
     with no dependencies after is Harmony.
+
+    TODO: there is a need to do something similar to mods like HugsLib, where sometimes
+    mods do not specify they need it as a dependency but HugsLib works best when it is loaded
+    very early on in the mod list, right after the official modules.
     """
     temp_all_mods = all_mods.copy()
     for expansion_id in temp_expansions:
