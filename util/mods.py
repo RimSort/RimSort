@@ -56,45 +56,87 @@ def get_workshop_mods(workshop_path: str) -> Dict[str, Any]:
     :return: a Dict of workshop mods by package id, and dict of community rules
     """
     workshop_mods = {}
-    community_rules = {}
+    invalid_folders = set()
+    invalid_abouts = set()
     if os.path.exists(workshop_path):
-        for file in os.scandir(
-            workshop_path
-        ): # Iterate through each item in the workshop folder
-            if not file.is_file(): # Mods are contained in folders
-                subNodes = ["About", "About.xml"]
-                # Iterate through each individual mod folder, find ./[aA]bout/
-                for parent in [d.name for d in os.scandir(file.path) if d.is_dir()]:
-                    if parent == subNodes[0] or parent == subNodes[0].lower():
-                        # Iterate through each individual mod ./[aA]bout/ and find [aA]bout.xml
-                        for child in [f for f in os.scandir(os.path.join(file.path, parent)) if f.is_file()]:
-                            if child.name == subNodes[1] or child.name == subNodes[1].lower():
-                                print("Found " + child.name)
-                                mod_data_path = child.path
-                mod_data = (
-                    {}
-                ) # If unable to parse a mod's About.xml received here now for any reason, throws UnexpectedModMetaData later
-                try:
-                    # Default: try to parse About.xml with UTF-8 encodnig
-                    mod_data = xml_path_to_json(mod_data_path)
-                except UnicodeDecodeError:
-                    # It may be necessary to remove all non-UTF-8 characters
-                    mod_data = non_utf8_xml_path_to_json(mod_data_path)
-                # Case-insensitive `ModMetaData` key.
-                mod_data = {k.lower(): v for k, v in mod_data.items()}
-                try:
-                    if not mod_data["modmetadata"]:
-                        raise UnexpectedModMetaData
-                    normalized_package_id = mod_data["modmetadata"]["packageId"].lower()
-                    mod_data["modmetadata"]["packageId"] = normalized_package_id
-                    mod_data["modmetadata"]["folder"] = file.name
-                    mod_data["modmetadata"]["path"] = file.path
-                    workshop_mods[normalized_package_id] = mod_data["modmetadata"]
-                except:
-                    print("Failed in getting modmetadata for mod:" + mod_data["modmetadata"]["name"])
-                    raise InvalidWorkshopModAboutFormat
+        # Iterate through each item in the workshop folder
+        for file in os.scandir(workshop_path):
+            if file.is_dir():  # Mods are contained in folders
+                # Look for a case-insensitive "About" folder
+                invalid_folder_path_found = True
+                about_folder_name = "About"
+                for temp_file in os.scandir(file.path):
+                    if (
+                        temp_file.name.lower() == about_folder_name.lower()
+                        and temp_file.is_dir()
+                    ):
+                        about_folder_name = temp_file.name
+                        invalid_folder_path_found = False
+                        break
+                # Look for a case-insensitive "About.xml" file
+                invalid_file_path_found = True
+                about_file_name = "About.xml"
+                for temp_file in os.scandir(os.path.join(file.path, about_folder_name)):
+                    if (
+                        temp_file.name.lower() == about_file_name.lower()
+                        and temp_file.is_file()
+                    ):
+                        about_file_name = temp_file.name
+                        invalid_file_path_found = False
+                        break
+                # If there was an issue getting the expected path, track and exit
+                if invalid_folder_path_found or invalid_file_path_found:
+                    invalid_folders.add(file.name)
                 else:
-                    print("Succeeeded in getting modmetadata for mod:" + mod_data["modmetadata"]["name"])
+                    mod_data_path = os.path.join(
+                        file.path, about_folder_name, about_file_name
+                    )
+                    mod_data = {}
+                    try:
+                        try:
+                            # Default: try to parse About.xml with UTF-8 encodnig
+                            mod_data = xml_path_to_json(mod_data_path)
+                        except UnicodeDecodeError:
+                            # It may be necessary to remove all non-UTF-8 characters and parse again
+                            mod_data = non_utf8_xml_path_to_json(mod_data_path)
+                    except:
+                        # If there was an issue parsing the About.xml, track and exit
+                        invalid_abouts.add(file.name)
+                    else:
+                        # Case-insensitive `ModMetaData` key.
+                        mod_data = {k.lower(): v for k, v in mod_data.items()}
+                        try:
+                            normalized_package_id = mod_data["modmetadata"][
+                                "packageId"
+                            ].lower()
+                            mod_data["modmetadata"]["packageId"] = normalized_package_id
+                            mod_data["modmetadata"]["folder"] = file.name
+                            mod_data["modmetadata"]["path"] = file.path
+                            workshop_mods[normalized_package_id] = mod_data[
+                                "modmetadata"
+                            ]
+                        except:
+                            print(
+                                "Failed in getting modmetadata for mod:"
+                                + mod_data["modmetadata"]["name"]
+                            )
+                            # If there was an issue with expected About.xml content, track and exit
+                            invalid_abouts.add(file.name)
+                        else:
+                            print(
+                                "Succeeeded in getting modmetadata for mod:"
+                                + mod_data["modmetadata"]["name"]
+                            )
+    if invalid_folders:
+        warning_message = "The following workshop folders could not be loaded:"
+        for invalid_folder in invalid_folders:
+            warning_message = warning_message + f"\n * {invalid_folder}"
+        show_warning(warning_message)
+    if invalid_abouts:
+        warning_message = "The following workshop folders had invalid About.xml:"
+        for invalid_about in invalid_abouts:
+            warning_message = warning_message + f"\n * {invalid_about}"
+        show_warning(warning_message)
     return workshop_mods
 
 
@@ -220,7 +262,7 @@ def get_dependencies_for_mods(
     temp_expansions = {}
     for mod in known_expansions:
         temp_expansions[mod] = known_expansions[mod]["dependencies"]
-    
+
     """
     How does this work?
     IMPORTANT: assumes a particular order with known expansions:
