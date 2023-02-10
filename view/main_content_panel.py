@@ -9,7 +9,7 @@ from panel.actions_panel import Actions
 from panel.active_mods_panel import ActiveModList
 from panel.inactive_mods_panel import InactiveModList
 from panel.mod_info_panel import ModInfo
-from util.mods import get_active_inactive_mods
+from util.mods import *
 from util.xml import json_to_xml_write, xml_path_to_json
 from view.game_configuration_panel import GameConfiguration
 
@@ -54,7 +54,7 @@ class MainContent:
         self.main_layout.addLayout(self.actions_panel.panel, 10)
 
         # SIGNALS AND SLOTS
-        self.actions_panel.actions_signal.connect(self.actions_slot)
+        self.actions_panel.actions_signal.connect(self.actions_slot)  # Actions
         self.active_mods_panel.active_mods_list.mod_list_signal.connect(
             self.mod_info_panel.mod_list_slot
         )
@@ -63,16 +63,59 @@ class MainContent:
         )
 
         # INITIALIZE WIDGETS
+        # Fetch paths dynamically from game configuration panel
         self.game_configuration = game_configuration
-        active_mods_data, inactive_mods_data = get_active_inactive_mods(
-            self.game_configuration.get_mods_config_path(),
-            self.game_configuration.get_workshop_folder_path(),
+
+        # Run expensive calculations to set cache data
+        self.refresh_mod_calculations()
+
+        # Insert mod data into list
+        self._insert_data_into_lists(
+            self.static_active_mods_data, self.static_inactive_mods_data
         )
-        self._insert_data_into_lists(active_mods_data, inactive_mods_data)
 
     @property
     def panel(self):
         return self._panel
+
+    def refresh_mod_calculations(self) -> None:
+        """
+        This function contains expensive calculations for getting workshop
+        mods, known expansions, community rules, and most importantly, calculating
+        dependencies for all mods. It also gets a static version of active and inactive
+        mods that does NOT reflect the live state of the mod lists, but can be used
+        in certain cases like the "clear" action.
+
+        This function should be called on app initialization
+        and whenever the refresh button is pressed (may be after re-setting workshop
+        path, mods config path, or downloading another mod).
+        """
+        # Get and cache workshop mods and base game / DLC data
+        self.workshop_mods = get_workshop_mods(
+            self.game_configuration.get_workshop_folder_path()
+        )
+        self.known_expansions = get_known_expansions_from_config(
+            self.game_configuration.get_config_path()
+        )
+        for package_id in self.known_expansions.keys():
+            populate_expansions_static_data(self.known_expansions, package_id)
+
+        # Get and cache load order data
+        self.community_rules = get_community_rules(self.workshop_mods)
+
+        # Calculate and cache dependencies for ALL mods
+        self.all_mods_with_dependencies = get_dependencies_for_mods(
+            self.workshop_mods, self.known_expansions, self.community_rules
+        )
+
+        # Generate static list of mods
+        (
+            self.static_active_mods_data,
+            self.static_inactive_mods_data,
+        ) = get_active_inactive_mods(
+            self.game_configuration.get_config_path(),
+            self.all_mods_with_dependencies,
+        )
 
     def actions_slot(self, action: str) -> None:
         """
@@ -91,7 +134,7 @@ class MainContent:
         :param action: string indicating action
         """
         if action == "clear":
-            print("clearing")
+            self._do_clear()
         if action == "sort":  # User clicked on the sort button
             active_mods = self.active_mods_panel.active_mods_list.get_list_items()
             dependencies_graph = {}
@@ -134,38 +177,24 @@ class MainContent:
                     reordered_active_mods_data[item[0]] = active_mods_json[item[0]]
             self._insert_data_into_lists(reordered_active_mods_data, inactive_mods_json)
         if action == "save":
-            mods_config_data = xml_path_to_json(
-                self.game_configuration.get_mods_config_path()
-            )
-            new_active_mods_list = [
-                x.package_id.lower()
-                for x in self.active_mods_panel.active_mods_list.get_list_items()
-            ]
-            mods_config_data["ModsConfigData"]["activeMods"][
-                "li"
-            ] = new_active_mods_list
-            json_to_xml_write(
-                mods_config_data, self.game_configuration.get_mods_config_path()
-            )
+            self._do_save()
         if action == "export":
             mods_config_data = xml_path_to_json(
-                self.game_configuration.get_mods_config_path()
+                self.game_configuration.get_config_path()
             )
-            new_active_mods_list = [
+            active_mods = [
                 x.package_id.lower()
                 for x in self.active_mods_panel.active_mods_list.get_list_items()
             ]
-            mods_config_data["ModsConfigData"]["activeMods"][
-                "li"
-            ] = new_active_mods_list
+            mods_config_data["ModsConfigData"]["activeMods"]["li"] = active_mods
             file_path = QFileDialog.getSaveFileName(
                 caption="Save Mod List", selectedFilter="xml"
             )
             json_to_xml_write(mods_config_data, file_path[0])
         if action == "restore":
             active_mods_data, inactive_mods_data = get_active_inactive_mods(
-                self.game_configuration.get_mods_config_path(),
-                self.game_configuration.get_workshop_folder_path(),
+                self.game_configuration.get_config_path(),
+                self.all_mods_with_dependencies,
             )
             self._insert_data_into_lists(active_mods_data, inactive_mods_data)
         if action == "import":
@@ -173,7 +202,7 @@ class MainContent:
                 caption="Open Mod List", filter="XML (*.xml)"
             )
             active_mods_data, inactive_mods_data = get_active_inactive_mods(
-                file_path[0], self.game_configuration.get_workshop_folder_path()
+                file_path[0], self.all_mods_with_dependencies
             )
             self._insert_data_into_lists(active_mods_data, inactive_mods_data)
 
@@ -188,3 +217,35 @@ class MainContent:
         """
         self.active_mods_panel.active_mods_list.recreate_mod_list(active_mods)
         self.inactive_mods_panel.inactive_mods_list.recreate_mod_list(inactive_mods)
+
+    def _do_clear(self) -> None:
+        """
+        Method to clear all the non-base, non-DLC mods from the active
+        list widget and put them all into the inactive list widget.
+        """
+        known_expansions_ids = list(self.known_expansions.keys())
+        active_mod_data = {}
+        inactive_mod_data = {}
+        for package_id, mod_data in self.static_active_mods_data.items():
+            if package_id in known_expansions_ids:
+                active_mod_data[package_id] = mod_data
+            else:
+                inactive_mod_data[package_id] = mod_data
+        for package_id, mod_data in self.static_inactive_mods_data.items():
+            if package_id in known_expansions_ids:
+                active_mod_data[package_id] = mod_data
+            else:
+                inactive_mod_data[package_id] = mod_data
+        self._insert_data_into_lists(active_mod_data, inactive_mod_data)
+
+    def _do_save(self) -> None:
+        """
+        Method save the current list of active mods to the selected ModsConfig.xml
+        """
+        active_mods = [
+            mod_item.package_id.lower()
+            for mod_item in self.active_mods_panel.active_mods_list.get_list_items()
+        ]
+        mods_config_data = xml_path_to_json(self.game_configuration.get_config_path())
+        mods_config_data["ModsConfigData"]["activeMods"]["li"] = active_mods
+        json_to_xml_write(mods_config_data, self.game_configuration.get_config_path())

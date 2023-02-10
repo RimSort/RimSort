@@ -62,7 +62,7 @@ class GameConfiguration(QObject):
 
         self.config_folder_open_button = QPushButton("Config File")
         self.config_folder_open_button.clicked.connect(
-            partial(self.open_directory, self.get_mods_config_path)
+            partial(self.open_directory, self.get_config_folder_path)
         )
         self.config_folder_open_button.setObjectName("LeftButton")
         self.config_folder_line = QLineEdit()
@@ -252,8 +252,11 @@ class GameConfiguration(QObject):
     def get_game_folder_path(self):
         return self.game_folder_line.text()
 
-    def get_mods_config_path(self):
+    def get_config_folder_path(self):
         return self.config_folder_line.text()
+
+    def get_config_path(self):
+        return os.path.join(self.get_config_folder_path(), "ModsConfig.xml")
 
     def get_workshop_folder_path(self):
         return self.workshop_folder_line.text()

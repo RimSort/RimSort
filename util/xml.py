@@ -7,7 +7,7 @@ import xmltodict
 def xml_path_to_json(path: str) -> Dict[str, Any]:
     """
     Return the contents of an xml file as json.
-    If the file does not exist, return an empty list.
+    If the file does not exist, return an empty dict.
 
     :param path: path to the xml file
     :return: json dict of xml file contents
@@ -19,6 +19,20 @@ def xml_path_to_json(path: str) -> Dict[str, Any]:
             print("Opening " + path)
             data = xmltodict.parse(f.read())
         return data
+
+def non_utf8_xml_path_to_json(path: str) -> Dict[str, Any]:
+    """
+    Return the contents of an xml file as json. The xml
+    may have some non utf-8 characters.
+    If the file does not exist, return an empty dict.
+
+    :param path: path to the xml file
+    :return: json dict of xml file contents
+    """
+    data = {}
+    if os.path.exists(path):
+        data = xmltodict.parse(fix_non_utf8_xml(path))
+    return data
 
 
 def json_to_xml_write(data: Dict[str, Any], path: str) -> None:
