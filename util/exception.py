@@ -12,6 +12,9 @@ class InvalidWorkshopModAboutFormat(Exception):
     """
     pass
 
+class InvalidWorkshopModPath(Exception):
+    pass
+
 class UnexpectedModMetaData(Exception):
     pass
 

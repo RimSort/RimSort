@@ -10,6 +10,7 @@ RimSort is built in Python using the [PySide2](https://pypi.org/project/PySide2/
 * [PySide2](https://pypi.org/project/PySide2/): GUI toolkit for building the application. Install version `5.15.2.1` if possible. You can do this by running `pip3 install PySide2==5.15.2.1`.
 * [PyInstaller](https://pyinstaller.org/en/stable/): packages application for distribution. Install version `5.7.0` if possible. You can do this by running `pip3 install PyInstaller==5.7.0`.
 * [xmltodict](https://pypi.org/project/xmltodict/): parse RimWorld `xml` files. Install version `0.13.0` if possible. You can do this by running `pip3 install xmltodict==0.13.0`.
+* [toposort](https://pypi.org/project/toposort/): sort mods! Install version `1.9` if possible. You can do this by running `pip3 install toposort==1.9`.
 
 #### Running the App
 
