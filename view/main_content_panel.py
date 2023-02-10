@@ -101,14 +101,17 @@ class MainContent:
             populate_expansions_static_data(self.known_expansions, package_id)
 
         # One working Dictionary for ALL mods
-        all_mods = merge_mod_data(self.local_mods, self.workshop_mods)
+        mods = merge_mod_data(
+            self.local_mods,
+            self.workshop_mods
+        )
 
         # Get and cache load order data for ALL mods
-        self.community_rules = get_community_rules(all_mods)
+        self.community_rules = get_community_rules(mods)
 
         # Calculate and cache dependencies for ALL mods
         self.all_mods_with_dependencies = get_dependencies_for_mods(
-            all_mods, self.known_expansions, self.community_rules
+            mods, self.known_expansions, self.community_rules
         )
 
     def repopulate_lists(self) -> None:

@@ -174,7 +174,7 @@ def get_community_rules(workshop_mods: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def get_dependencies_for_mods(
-    all_workshop_mods: Dict[str, Any],
+    mods: Dict[str, Any],
     known_expansions: Dict[str, Any],
     community_rules: Dict[str, Any],
 ) -> Dict[str, Any]:
@@ -189,7 +189,7 @@ def get_dependencies_for_mods(
     :return workshop_and_expansions: workshop mods + official modules with dependency data
     """
     # Dependencies will apply to workshop mods and known expansions
-    all_mods = {**all_workshop_mods, **known_expansions}
+    all_mods = {**mods, **known_expansions}
 
     # Add dependencies to installed mods based on dependencies listed in About.xml
     for package_id in all_mods:
