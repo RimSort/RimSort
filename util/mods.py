@@ -267,7 +267,7 @@ def get_dependencies_for_mods(
 
 def add_dependency_to_mod(
     mod_data: Dict[str, Any],
-    package_id: str,
+    new_data_key: str,
     dependency_or_dependency_ids: Any,
     all_mods: Dict[str, Any],
 ) -> None:
@@ -288,18 +288,18 @@ def add_dependency_to_mod(
     """
     if mod_data:
         # Create a new key with empty set as value
-        if package_id not in mod_data:
-            mod_data[package_id] = set()
+        if new_data_key not in mod_data:
+            mod_data[new_data_key] = set()
 
         # If the value is a single string...
         if isinstance(dependency_or_dependency_ids, str):
             if dependency_or_dependency_ids.lower() in all_mods:
-                mod_data[package_id].add(dependency_or_dependency_ids.lower())
+                mod_data[new_data_key].add(dependency_or_dependency_ids.lower())
 
         # If the value is a single dict (for modDependencies)
         elif isinstance(dependency_or_dependency_ids, dict):
             if dependency_or_dependency_ids["packageId"].lower() in all_mods:
-                mod_data[package_id].add(
+                mod_data[new_data_key].add(
                     dependency_or_dependency_ids["packageId"].lower()
                 )
 
@@ -308,11 +308,11 @@ def add_dependency_to_mod(
             if isinstance(dependency_or_dependency_ids[0], str):
                 for dependency in dependency_or_dependency_ids:
                     if dependency.lower() in all_mods:
-                        mod_data[package_id].add(dependency.lower())
+                        mod_data[new_data_key].add(dependency.lower())
             elif isinstance(dependency_or_dependency_ids[0], dict):
                 for dependency in dependency_or_dependency_ids:
                     if dependency["packageId"].lower() in all_mods:
-                        mod_data[package_id].add(dependency["packageId"].lower())
+                        mod_data[new_data_key].add(dependency["packageId"].lower())
 
 
 def get_active_mods_from_config(config_path: str) -> Dict[str, Any]:
