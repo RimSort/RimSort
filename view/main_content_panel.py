@@ -71,28 +71,34 @@ class MainContent:
         # Run expensive calculations to set cache data
         self.refresh_mod_calculations()
 
-        # Generate initial list of mods and insert into lists
-        active_mods_data, inactive_mods_data = get_active_inactive_mods(
-            self.game_configuration.get_mods_config_path(),
-            self.all_mods_with_dependencies,
+        # Insert mod data into list
+        self._insert_data_into_lists(
+            self.static_active_mods_data, self.static_inactive_mods_data
         )
-        self._insert_data_into_lists(active_mods_data, inactive_mods_data)
 
     @property
     def panel(self):
         return self._panel
-    
+
     def refresh_mod_calculations(self) -> None:
         """
         This function contains expensive calculations for getting workshop
         mods, known expansions, community rules, and most importantly, calculating
-        dependencies for all mods. This function should be called on app initialization
+        dependencies for all mods. It also gets a static version of active and inactive
+        mods that does NOT reflect the live state of the mod lists, but can be used
+        in certain cases like the "clear" action.
+
+        This function should be called on app initialization
         and whenever the refresh button is pressed (may be after re-setting workshop
         path, mods config path, or downloading another mod).
         """
         # Get and cache workshop mods and base game / DLC data
-        self.workshop_mods = get_workshop_mods(self.game_configuration.get_workshop_folder_path())
-        self.known_expansions = get_known_expansions_from_config(self.game_configuration.get_mods_config_path())
+        self.workshop_mods = get_workshop_mods(
+            self.game_configuration.get_workshop_folder_path()
+        )
+        self.known_expansions = get_known_expansions_from_config(
+            self.game_configuration.get_mods_config_path()
+        )
         for package_id in self.known_expansions.keys():
             populate_expansions_static_data(self.known_expansions, package_id)
 
@@ -100,7 +106,18 @@ class MainContent:
         self.community_rules = get_community_rules(self.workshop_mods)
 
         # Calculate and cache dependencies for ALL mods
-        self.all_mods_with_dependencies = get_dependencies_for_mods(self.workshop_mods, self.known_expansions, self.community_rules)
+        self.all_mods_with_dependencies = get_dependencies_for_mods(
+            self.workshop_mods, self.known_expansions, self.community_rules
+        )
+
+        # Generate static list of mods
+        (
+            self.static_active_mods_data,
+            self.static_inactive_mods_data,
+        ) = get_active_inactive_mods(
+            self.game_configuration.get_mods_config_path(),
+            self.all_mods_with_dependencies,
+        )
 
     def actions_slot(self, action: str) -> None:
         """
@@ -119,7 +136,7 @@ class MainContent:
         :param action: string indicating action
         """
         if action == "clear":
-            print("clearing")
+            self._do_clear()
         if action == "sort":  # User clicked on the sort button
             active_mods = self.active_mods_panel.active_mods_list.get_list_items()
             dependencies_graph = {}
@@ -216,3 +233,23 @@ class MainContent:
         """
         self.active_mods_panel.active_mods_list.recreate_mod_list(active_mods)
         self.inactive_mods_panel.inactive_mods_list.recreate_mod_list(inactive_mods)
+
+    def _do_clear(self) -> None:
+        """
+        Method to clear all the non-base, non-DLC mods from the active
+        list widget and put them all into the inactive list widget.
+        """
+        known_expansions_ids = list(self.known_expansions.keys())
+        active_mod_data = {}
+        inactive_mod_data = {}
+        for package_id, mod_data in self.static_active_mods_data.items():
+            if package_id in known_expansions_ids:
+                active_mod_data[package_id] = mod_data
+            else:
+                inactive_mod_data[package_id] = mod_data
+        for package_id, mod_data in self.static_inactive_mods_data.items():
+            if package_id in known_expansions_ids:
+                active_mod_data[package_id] = mod_data
+            else:
+                inactive_mod_data[package_id] = mod_data
+        self._insert_data_into_lists(active_mod_data, inactive_mod_data)
