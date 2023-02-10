@@ -56,29 +56,24 @@ def get_workshop_mods(workshop_path: str) -> Dict[str, Any]:
     :return: a Dict of workshop mods by package id, and dict of community rules
     """
     workshop_mods = {}
+    community_rules = {}
     if os.path.exists(workshop_path):
         for file in os.scandir(
             workshop_path
-        ):  # Iterate through each item in the workshop folder
-            if not file.is_file():  # Mods are contained in folders
-                # Case-insensitive About folder
-                about_folder_name = "About"
-                for temp_file in os.scandir(file.path):
-                    if temp_file.name.lower() == about_folder_name.lower():
-                        about_folder_name == temp_file.name
-                        break
-                # Case-insensitive About.xml
-                about_file_name = "About.xml"
-                for temp_file in os.scandir(os.path.join(file.path, about_folder_name)):
-                    if temp_file.name.lower() == about_file_name.lower():
-                        about_file_name == temp_file.name
-                        break
-                mod_data_path = os.path.join(
-                    file.path, about_folder_name, about_file_name
-                )
+        ): # Iterate through each item in the workshop folder
+            if not file.is_file(): # Mods are contained in folders
+                subNodes = ["About", "About.xml"]
+                # Iterate through each individual mod folder, find ./[aA]bout/
+                for parent in [d.name for d in os.scandir(file.path) if d.is_dir()]:
+                    if parent == subNodes[0] or parent == subNodes[0].lower():
+                        # Iterate through each individual mod ./[aA]bout/ and find [aA]bout.xml
+                        for child in [f for f in os.scandir(os.path.join(file.path, parent)) if f.is_file()]:
+                            if child.name == subNodes[1] or child.name == subNodes[1].lower():
+                                print("Found " + child.name)
+                                mod_data_path = child.path
                 mod_data = (
                     {}
-                )  # If unable to parse About.xml for any reason, throws UnexpectedModMetaData later
+                ) # If unable to parse a mod's About.xml received here now for any reason, throws UnexpectedModMetaData later
                 try:
                     # Default: try to parse About.xml with UTF-8 encodnig
                     mod_data = xml_path_to_json(mod_data_path)
@@ -96,7 +91,10 @@ def get_workshop_mods(workshop_path: str) -> Dict[str, Any]:
                     mod_data["modmetadata"]["path"] = file.path
                     workshop_mods[normalized_package_id] = mod_data["modmetadata"]
                 except:
+                    print("Failed in getting modmetadata for mod:" + mod_data["modmetadata"]["name"])
                     raise InvalidWorkshopModAboutFormat
+                else:
+                    print("Succeeeded in getting modmetadata for mod:" + mod_data["modmetadata"]["name"])
     return workshop_mods
 
 
