@@ -43,6 +43,7 @@ class GameConfiguration(QObject):
         # self.client_settings_row = QHBoxLayout() # TODO: NOT IMPLEMENTED
         self.game_folder_row = QHBoxLayout()
         self.config_folder_row = QHBoxLayout()
+        self.local_folder_row = QHBoxLayout()
         self.workshop_folder_row = QHBoxLayout()
 
         # INSTANTIATE WIDGETS
@@ -88,6 +89,20 @@ class GameConfiguration(QObject):
         self.workshop_folder_select_button.clicked.connect(self.set_workshop_folder)
         self.workshop_folder_select_button.setObjectName("RightButton")
 
+        self.local_folder_open_button = QPushButton("Local Mods")
+        self.local_folder_open_button.clicked.connect(
+            partial(self.open_directory, self.get_local_folder_path)
+        )
+        self.local_folder_open_button.setObjectName("LeftButton")
+        self.local_folder_line = QLineEdit()
+        self.local_folder_line.setDisabled(True)
+        self.local_folder_line.setPlaceholderText(
+            "Unknown, please select the RimWorld local mods folder"
+        )
+        self.local_folder_select_button = QPushButton("...")
+        self.local_folder_select_button.clicked.connect(self.set_local_folder)
+        self.local_folder_select_button.setObjectName("RightButton")
+
         # WIDGETS INTO CONTAINER LAYOUTS
         self.game_folder_row.addWidget(self.game_folder_open_button)
         self.game_folder_row.addWidget(self.game_folder_line)
@@ -101,11 +116,16 @@ class GameConfiguration(QObject):
         self.workshop_folder_row.addWidget(self.workshop_folder_line)
         self.workshop_folder_row.addWidget(self.workshop_folder_select_button)
 
+        self.local_folder_row.addWidget(self.local_folder_open_button)
+        self.local_folder_row.addWidget(self.local_folder_line)
+        self.local_folder_row.addWidget(self.local_folder_select_button)
+
         # CONTAINER LAYOUTS INTO BASE LAYOUT
         # self._panel.addLayout(self.client_settings_row): TODO: NOT IMPLEMENTED
         self._panel.addLayout(self.game_folder_row)
         self._panel.addLayout(self.config_folder_row)
         self._panel.addLayout(self.workshop_folder_row)
+        self._panel.addLayout(self.local_folder_row)
 
         # INITIALIZE WIDGETS / FEATURES
         self.initialize_storage()
@@ -142,6 +162,8 @@ class GameConfiguration(QObject):
                     self.config_folder_line.setText(settings_data["config_folder"])
                 if settings_data.get("workshop_folder"):
                     self.workshop_folder_line.setText(settings_data["workshop_folder"])
+                if settings_data.get("local_folder"):
+                    self.local_folder_line.setText(settings_data["local_folder"])
 
     def open_directory(self, callable: Any) -> None:
         """
@@ -192,6 +214,8 @@ class GameConfiguration(QObject):
         )
         self.game_folder_line.setText(game_exe_folder_path)
         self.update_persistent_storage("game_folder", game_exe_folder_path)
+        # TODO
+        # If Local Mods folder is not already set, automatically discern this information here
 
     def set_config_folder(self) -> None:
         """
@@ -230,6 +254,25 @@ class GameConfiguration(QObject):
         self.update_persistent_storage("workshop_folder", workshop_path)
         # TODO refresh mods
 
+    def set_local_folder(self) -> None:
+        """
+        Open a file dialog to allow the user to select a directory
+        to set as the local mods folder.
+        """
+        start_dir = ""
+        if self.local_folder_line.text():
+            possible_dir = self.local_folder_line.text()
+            if os.path.exists(possible_dir):
+                start_dir = possible_dir
+        local_path = str(
+            QFileDialog.getExistingDirectory(
+                caption="Select Local Mods Folder", dir=start_dir
+            )
+        )
+        self.local_folder_line.setText(local_path)
+        self.update_persistent_storage("local_folder", local_path)
+        # TODO refresh mods
+
     def update_persistent_storage(self, key: str, value: str) -> None:
         """
         Given a key and value, write this key and value to the
@@ -260,3 +303,6 @@ class GameConfiguration(QObject):
 
     def get_workshop_folder_path(self):
         return self.workshop_folder_line.text()
+
+    def get_local_folder_path(self):
+        return self.local_folder_line.text()

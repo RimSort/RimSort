@@ -100,7 +100,10 @@ class MainContent:
         somehow, e.g. re-setting workshop path, mods config path, or downloading another mod,
         but also after ModsConfig.xml path has been changed).
         """
-        # Get and cache workshop mods and base game / DLC data
+        # Get and cache local/workshop mods and base game / DLC data
+        self.local_mods = get_local_mods(
+            self.game_configuration.get_local_folder_path()
+        )
         self.workshop_mods = get_workshop_mods(
             self.game_configuration.get_workshop_folder_path()
         )
@@ -110,12 +113,18 @@ class MainContent:
         for package_id in self.known_expansions.keys():
             populate_expansions_static_data(self.known_expansions, package_id)
 
-        # Get and cache load order data
-        self.community_rules = get_community_rules(self.workshop_mods)
+        # One working Dictionary for ALL mods
+        mods = merge_mod_data(
+            self.local_mods,
+            self.workshop_mods
+        )
+
+        # Get and cache load order data for ALL mods
+        self.community_rules = get_community_rules(mods)
 
         # Calculate and cache dependencies for ALL mods
         self.all_mods_with_dependencies = get_dependencies_for_mods(
-            self.workshop_mods, self.known_expansions, self.community_rules
+            mods, self.known_expansions, self.community_rules
         )
 
     def repopulate_lists(self) -> None:
