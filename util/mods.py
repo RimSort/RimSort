@@ -60,15 +60,16 @@ def parse_mod_data(mods_path: str) -> Dict[str, Any]:
                         break
                 # Look for a case-insensitive "About.xml" file
                 invalid_file_path_found = True
-                about_file_name = "About.xml"
-                for temp_file in os.scandir(os.path.join(file.path, about_folder_name)):
-                    if (
-                        temp_file.name.lower() == about_file_name.lower()
-                        and temp_file.is_file()
-                    ):
-                        about_file_name = temp_file.name
-                        invalid_file_path_found = False
-                        break
+                if not invalid_folder_path_found:
+                    about_file_name = "About.xml"
+                    for temp_file in os.scandir(os.path.join(file.path, about_folder_name)):
+                        if (
+                            temp_file.name.lower() == about_file_name.lower()
+                            and temp_file.is_file()
+                        ):
+                            about_file_name = temp_file.name
+                            invalid_file_path_found = False
+                            break
                 # If there was an issue getting the expected path, track and exit
                 if invalid_folder_path_found or invalid_file_path_found:
                     invalid_folders.add(file.name)
