@@ -104,6 +104,5 @@ class ModListWidget(QListWidget):
         return super().focusOutEvent(e)
 
     def mod_clicked(self, item: QListWidgetItem) -> None:
-        """Placeholder function to handle clicking on a row"""
-        print(f"Selected a different mod! {item.data(Qt.UserRole)['packageId']}")
+        """Method to handle clicking on a row"""
         self.mod_list_signal.emit(item.data(Qt.UserRole)['packageId'])
