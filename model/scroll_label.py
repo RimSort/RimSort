@@ -4,45 +4,49 @@ from PySide2.QtWidgets import *
 
 
 class ScrollLabel(QScrollArea):
-    # constructor
-    def __init__(self, *args, **kwargs):
-        QScrollArea.__init__(self, *args, **kwargs)
+    """
+    Subclass for QScrollArea. Creates a read-only
+    text box that scrolls. Used specifically for the description
+    part of the mod ifo panel.
+    """
 
-        # making widget resizable
-        self.setWidgetResizable(True)
+    def __init__(self):
+        """
+        Initialize the class.
+        """
+        super(ScrollLabel, self).__init__()
 
+        # Enable styling
         self.setObjectName("descriptionWidget")
 
-        # making qwidget object
-        content = QFrame(self)
-        content.setObjectName("descriptionContent")
-        self.setWidget(content)
+        # Enabling scrolling
+        self.setWidgetResizable(True)
 
-        # vertical box layout
-        lay = QVBoxLayout(content)
-        lay.setContentsMargins(0,0,0,0) # Right margin is overwritten in styles
+        # QFrame to store content
+        self.content = QFrame(self)
+        self.content.setObjectName("descriptionContent")
+        self.setWidget(self.content)
 
-        # creating label
-        self.label = QLabel(content)
+        # Layout to add label to
+        self.main_layout = QVBoxLayout(self.content)
+        self.main_layout.setContentsMargins(
+            0, 0, 0, 0
+        )  # Right margin is overwritten in styles
+
+        # Label to store text
+        self.label = QLabel(self.content)
         self.label.setObjectName("descriptionLabel")
-
-        # setting alignment to the text
         self.label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
-        # making label multi-line
+        # Making label multi-line
         self.label.setWordWrap(True)
 
-        # adding label to the layout
-        lay.addWidget(self.label)
+        # Adding label to the layout
+        self.main_layout.addWidget(self.label)
 
-    # the setText method
     def setText(self, text):
-        # setting text to the label
         self.label.setText(text)
 
     def text(self):
-        # getting text of the label
         get_text = self.label.text()
-
-        # return the text
         return get_text
