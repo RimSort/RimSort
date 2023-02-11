@@ -43,24 +43,13 @@ def get_active_inactive_mods(
     inactive_mods = get_inactive_mods(workshop_and_expansions, active_mods)
     return active_mods, inactive_mods
 
-
-def get_workshop_mods(workshop_path: str) -> Dict[str, Any]:
-    """
-    Given a path to the Rimworld Steam workshop folder, return a dict
-    containing data for all the mods keyed to their package ids.
-    The root-level key is the package id, and the root-level value
-    is the converted About.xml. If the path does not exist, the dict
-    will be empty.
-
-    :param path: path to the Rimworld workshop mods folder
-    :return: a Dict of workshop mods by package id, and dict of community rules
-    """
-    workshop_mods = {}
+def parse_mod_data(mods_path: str) -> Dict[str, Any]:
+    mods = {}
     invalid_folders = set()
     invalid_abouts = set()
-    if os.path.exists(workshop_path):
+    if os.path.exists(mods_path):
         # Iterate through each item in the workshop folder
-        for file in os.scandir(workshop_path):
+        for file in os.scandir(mods_path):
             if file.is_dir():  # Mods are contained in folders
                 # Look for a case-insensitive "About" folder
                 invalid_folder_path_found = True
@@ -112,7 +101,7 @@ def get_workshop_mods(workshop_path: str) -> Dict[str, Any]:
                             mod_data["modmetadata"]["packageId"] = normalized_package_id
                             mod_data["modmetadata"]["folder"] = file.name
                             mod_data["modmetadata"]["path"] = file.path
-                            workshop_mods[normalized_package_id] = mod_data[
+                            mods[normalized_package_id] = mod_data[
                                 "modmetadata"
                             ]
                         except:
@@ -137,7 +126,33 @@ def get_workshop_mods(workshop_path: str) -> Dict[str, Any]:
         for invalid_about in invalid_abouts:
             warning_message = warning_message + f"\n * {invalid_about}"
         show_warning(warning_message)
-    return workshop_mods
+    return mods
+
+def get_local_mods(local_path: str) -> Dict[str, Any]:
+    """
+    Given a path to the local GAME_INSTALL_DIR/Mods folder, return a dict
+    containing data for all the mods keyed to their package ids.
+    The root-level key is the package id, and the root-level value
+    is the converted About.xml. If the path does not exist, the dict
+    will be empty.
+
+    :param path: path to the Rimworld workshop mods folder
+    :return: a Dict of workshop mods by package id, and dict of community rules
+    """
+    return parse_mod_data(local_path)
+
+def get_workshop_mods(workshop_path: str) -> Dict[str, Any]:
+    """
+    Given a path to the Rimworld Steam workshop folder, return a dict
+    containing data for all the mods keyed to their package ids.
+    The root-level key is the package id, and the root-level value
+    is the converted About.xml. If the path does not exist, the dict
+    will be empty.
+
+    :param path: path to the Rimworld workshop mods folder
+    :return: a Dict of workshop mods by package id, and dict of community rules
+    """
+    return parse_mod_data(workshop_path)
 
 
 def get_community_rules(workshop_mods: Dict[str, Any]) -> Dict[str, Any]:
@@ -159,7 +174,7 @@ def get_community_rules(workshop_mods: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def get_dependencies_for_mods(
-    all_workshop_mods: Dict[str, Any],
+    mods: Dict[str, Any],
     known_expansions: Dict[str, Any],
     community_rules: Dict[str, Any],
 ) -> Dict[str, Any]:
@@ -174,7 +189,7 @@ def get_dependencies_for_mods(
     :return workshop_and_expansions: workshop mods + official modules with dependency data
     """
     # Dependencies will apply to workshop mods and known expansions
-    all_mods = {**all_workshop_mods, **known_expansions}
+    all_mods = {**mods, **known_expansions}
 
     # Add dependencies to installed mods based on dependencies listed in About.xml
     for package_id in all_mods:
@@ -470,6 +485,17 @@ def populate_active_mods_workshop_data(
             del populated_mods[mod_package_id]
             # populated_mods[mod_package_id] = {"name": f"ERROR({mod_package_id})", "packageId": mod_package_id}
     return populated_mods, invalid_mods
+
+
+def merge_mod_data(*dict_args) -> Dict[str, Any]:
+    """
+    Given any number of dictionaries, shallow copy and merge into a new dict,
+    precedence goes to key-value pairs in latter dictionaries.
+    """
+    result = {}
+    for dictionary in dict_args:
+        result.update(dictionary)
+    return result
 
 
 def get_inactive_mods(
