@@ -11,6 +11,7 @@ Accent panel border hover:9da9b5
 Accent alert button: a3c1da
 */
 
+/* Enable this to see UI guidelines */
 /* QWidget {
     color: white;
     border-style: outset;
@@ -30,6 +31,38 @@ QWidget#MainPanel {
     border-width: 1px;
     border-radius: 3px;
     margin: 7px; /* Space between frame and app edge */
+}
+
+/* ===== Mod Info Summary Text ===== */
+
+QLabel#summaryLabel {
+    color: white;
+    font-weight: 500;
+}
+
+QLabel#summaryValue {
+    color: white;
+}
+
+/* ===== Mod Description Scroll Area ===== */
+
+QWidget#descriptionWidget { /* Outer-most encapsulator */
+    background-color: #19232d;
+    border-style: outset;
+    border-color: #455364;
+    border-width: 1px;
+    border-radius: 3px;
+    padding: 2px; /* The sharp corner of the text box clips out */
+}
+
+QWidget#descriptionContent { /* Text, minus scroll bar */
+    background-color: #19232d;
+    padding-right: 10px; /* Make some distance between text and scroll bar */
+}
+
+QLabel#descriptionLabel { /* Description text itself */
+    color: white;
+    background-color: #19232d;
 }
 
 QLineEdit {

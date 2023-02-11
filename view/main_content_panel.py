@@ -56,10 +56,10 @@ class MainContent:
         # SIGNALS AND SLOTS
         self.actions_panel.actions_signal.connect(self.actions_slot)  # Actions
         self.active_mods_panel.active_mods_list.mod_list_signal.connect(
-            self.mod_info_panel.mod_list_slot
+            self.mod_list_slot
         )
         self.inactive_mods_panel.inactive_mods_list.mod_list_signal.connect(
-            self.mod_info_panel.mod_list_slot
+            self.mod_list_slot
         )
 
         # INITIALIZE WIDGETS
@@ -75,6 +75,19 @@ class MainContent:
     @property
     def panel(self):
         return self._panel
+
+    def mod_list_slot(self, package_id: str) -> None:
+        """
+        This slot method is triggered when the user clicks on an item
+        on a mod list. It takes the package_id and gets the
+        complete json mod info for that package_id. It passes
+        this information to the mod info panel to display.
+
+        :param package_id: package id of mod
+        """
+        self.mod_info_panel.display_mod_info(
+            self.all_mods_with_dependencies[package_id]
+        )
 
     def refresh_cache_calculations(self) -> None:
         """

@@ -3,11 +3,7 @@ from typing import Any, Dict, List, Tuple
 from PySide2.QtWidgets import *
 import json
 from util.error import show_warning, show_fatal_error
-from util.exception import (
-    InvalidModsConfigFormat,
-    InvalidWorkshopModAboutFormat,
-    UnexpectedModMetaData,
-)
+from util.exception import InvalidModsConfigFormat
 from util.xml import non_utf8_xml_path_to_json, xml_path_to_json
 
 
@@ -430,6 +426,7 @@ def populate_expansions_static_data(mod_data: Dict[str, Any], package_id: str) -
             "name": "Rimworld",
             "packageId": package_id,
             "isBase": True,
+            "author": "Ludeon Studios",
         }
     if package_id == "ludeon.rimworld.royalty":
         mod_data[package_id] = {
@@ -437,6 +434,7 @@ def populate_expansions_static_data(mod_data: Dict[str, Any], package_id: str) -
             "packageId": package_id,
             "isDLC": True,
             "dependencies": {"ludeon.rimworld"},
+            "author": "Ludeon Studios",
         }
     if package_id == "ludeon.rimworld.ideology":
         mod_data[package_id] = {
@@ -444,6 +442,7 @@ def populate_expansions_static_data(mod_data: Dict[str, Any], package_id: str) -
             "packageId": package_id,
             "isDLC": True,
             "dependencies": {"ludeon.rimworld", "ludeon.rimworld.royalty"},
+            "author": "Ludeon Studios",
         }
     if package_id == "ludeon.rimworld.biotech":
         mod_data[package_id] = {
@@ -455,6 +454,7 @@ def populate_expansions_static_data(mod_data: Dict[str, Any], package_id: str) -
                 "ludeon.rimworld.royalty",
                 "ludeon.rimworld.ideology",
             },
+            "author": "Ludeon Studios",
         }
 
 
