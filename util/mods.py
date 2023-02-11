@@ -39,6 +39,7 @@ def get_active_inactive_mods(
     inactive_mods = get_inactive_mods(workshop_and_expansions, active_mods)
     return active_mods, inactive_mods
 
+
 def parse_mod_data(mods_path: str) -> Dict[str, Any]:
     mods = {}
     invalid_folders = set()
@@ -61,7 +62,9 @@ def parse_mod_data(mods_path: str) -> Dict[str, Any]:
                 # Look for a case-insensitive "About.xml" file
                 invalid_file_path_found = True
                 about_file_name = "About.xml"
-                for temp_file in os.scandir(os.path.join(file.path, about_folder_name)):
+                for temp_file in os.scandir(
+                        os.path.join(file.path, about_folder_name)
+                    ):
                     if (
                         temp_file.name.lower() == about_file_name.lower()
                         and temp_file.is_file()
@@ -97,9 +100,7 @@ def parse_mod_data(mods_path: str) -> Dict[str, Any]:
                             mod_data["modmetadata"]["packageId"] = normalized_package_id
                             mod_data["modmetadata"]["folder"] = file.name
                             mod_data["modmetadata"]["path"] = file.path
-                            mods[normalized_package_id] = mod_data[
-                                "modmetadata"
-                            ]
+                            mods[normalized_package_id] = mod_data["modmetadata"]
                         except:
                             # print(
                             #     "Failed in getting modmetadata for mod:"
@@ -168,6 +169,7 @@ def get_local_mods(local_path: str) -> Dict[str, Any]:
     :return: a Dict of workshop mods by package id, and dict of community rules
     """
     return parse_mod_data(local_path)
+
 
 def get_workshop_mods(workshop_path: str) -> Dict[str, Any]:
     """
@@ -359,6 +361,17 @@ def get_dependencies_for_mods(
     return all_mods
 
 
+def _get_num_dependencies(all_mods: Dict[str, Any], to_print=False) -> None:
+    """Debug func for getting total number of dependencies"""
+    counter = 0
+    for package_id, mod_data in all_mods.items():
+        if mod_data.get("dependencies"):
+            # if to_print:
+            #     print(package_id, mod_data["dependencies"])
+            counter = counter + len(mod_data["dependencies"])
+    return counter
+
+
 def add_dependency_to_mod(
     mod_data: Dict[str, Any],
     new_data_key: str,
@@ -387,26 +400,40 @@ def add_dependency_to_mod(
 
         # If the value is a single string...
         if isinstance(dependency_or_dependency_ids, str):
-            if dependency_or_dependency_ids.lower() in all_mods:
-                mod_data[new_data_key].add(dependency_or_dependency_ids.lower())
+            dependency_id = dependency_or_dependency_ids.lower()
+            if dependency_id in all_mods:
+                mod_data[new_data_key].add(dependency_id)
+                if "isDependencyOf" not in all_mods[dependency_id]:
+                    all_mods[dependency_id]["isDependencyOf"] = set()
+                all_mods[dependency_id]["isDependencyOf"].add(mod_data["packageId"])
 
         # If the value is a single dict (for modDependencies)
         elif isinstance(dependency_or_dependency_ids, dict):
-            if dependency_or_dependency_ids["packageId"].lower() in all_mods:
-                mod_data[new_data_key].add(
-                    dependency_or_dependency_ids["packageId"].lower()
-                )
+            dependency_id = dependency_or_dependency_ids["packageId"].lower()
+            if dependency_id in all_mods:
+                mod_data[new_data_key].add(dependency_id)
+                if "isDependencyOf" not in all_mods[dependency_id]:
+                    all_mods[dependency_id]["isDependencyOf"] = set()
+                all_mods[dependency_id]["isDependencyOf"].add(mod_data["packageId"])
 
         # If the value is a LIST of strings or dicts
         elif isinstance(dependency_or_dependency_ids, list):
             if isinstance(dependency_or_dependency_ids[0], str):
                 for dependency in dependency_or_dependency_ids:
-                    if dependency.lower() in all_mods:
-                        mod_data[new_data_key].add(dependency.lower())
+                    dependency_id = dependency.lower()
+                    if dependency_id in all_mods:
+                        mod_data[new_data_key].add(dependency_id)
+                        if "isDependencyOf" not in all_mods[dependency_id]:
+                            all_mods[dependency_id]["isDependencyOf"] = set()
+                        all_mods[dependency_id]["isDependencyOf"].add(mod_data["packageId"])
             elif isinstance(dependency_or_dependency_ids[0], dict):
                 for dependency in dependency_or_dependency_ids:
-                    if dependency["packageId"].lower() in all_mods:
-                        mod_data[new_data_key].add(dependency["packageId"].lower())
+                    dependency_id = dependency["packageId"].lower()
+                    if dependency_id in all_mods:
+                        mod_data[new_data_key].add(dependency_id)
+                        if "isDependencyOf" not in all_mods[dependency_id]:
+                            all_mods[dependency_id]["isDependencyOf"] = set()
+                        all_mods[dependency_id]["isDependencyOf"].add(mod_data["packageId"])
 
 
 def get_active_mods_from_config(config_path: str) -> Dict[str, Any]:
