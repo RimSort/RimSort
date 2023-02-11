@@ -121,10 +121,11 @@ class MainContent:
 
         # Get and cache load order data for ALL mods
         self.community_rules = get_community_rules(mods)
+        self.db_data = get_rimpy_db(mods)
 
         # Calculate and cache dependencies for ALL mods
         self.all_mods_with_dependencies = get_dependencies_for_mods(
-            mods, self.known_expansions, self.community_rules
+            mods, self.known_expansions, self.community_rules, self.db_data
         )
 
     def repopulate_lists(self) -> None:

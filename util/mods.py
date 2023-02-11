@@ -169,10 +169,29 @@ def get_community_rules(workshop_mods: Dict[str, Any]) -> Dict[str, Any]:
     )
 
 
+def get_rimpy_db(workshop_mods: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Extract the RimPy db, essential for the sort
+    function. Produces an error if the RimPy mod is not found.
+    """
+    for package_id in workshop_mods:
+        if workshop_mods[package_id]["folder"] == "1847679158":
+            db_path = os.path.join(
+                workshop_mods[package_id]["path"], "db", "db.json"
+            )
+            with open(db_path) as f:
+                db_data = json.load(f)
+                return db_data["database"]
+    show_fatal_error(
+        "The RimPy mod was not detected.\nPlease install the mod and restart RimSort."
+    )
+
+
 def get_dependencies_for_mods(
     mods: Dict[str, Any],
     known_expansions: Dict[str, Any],
     community_rules: Dict[str, Any],
+    db_data: Dict[str, Any]
 ) -> Dict[str, Any]:
     """
     Iterate through each workshop mod + known expansion + base game and add new key-values
@@ -268,6 +287,29 @@ def get_dependencies_for_mods(
                 dependency_id.lower(),
                 all_mods,
             )
+    
+    # RimPy's references depdencies based on folder ID, not package ID
+    # Create a temporary folder ID -> package ID dict here
+    # TODO: optimization: maybe everything could be based off folder ID
+    # TODO: optimization: all of this (and rules.json parsing) could probably be done in the first loop
+    folder_to_package_id = {}
+    for package_id, mod_data in all_mods.items():
+        if mod_data.get("folder"):
+            folder_to_package_id[mod_data["folder"]] = mod_data["packageId"]
+
+    for folder_id, mod_data in db_data.items():
+        # We could use `folder_in in folder_to_package_id` too
+        if mod_data["packageId"].lower() in all_mods: 
+            for dependency_folder_id in mod_data["dependencies"]:
+                if dependency_folder_id in folder_to_package_id:
+                    # This means the dependency is in all mods
+                    dependency_package_id = folder_to_package_id[dependency_folder_id]
+                    add_dependency_to_mod(
+                        all_mods.get(mod_data["packageId"].lower()),
+                        "dependencies",
+                        dependency_package_id.lower(),
+                        all_mods
+                    )
 
     # Add blanket dependencies for Core game and DLCs if no explicit requirement to be before
     temp_expansions = {}
@@ -425,6 +467,7 @@ def populate_expansions_static_data(mod_data: Dict[str, Any], package_id: str) -
         mod_data[package_id] = {
             "name": "Rimworld",
             "packageId": package_id,
+            "folder": "294100",
             "isBase": True,
             "author": "Ludeon Studios",
         }
@@ -432,6 +475,7 @@ def populate_expansions_static_data(mod_data: Dict[str, Any], package_id: str) -
         mod_data[package_id] = {
             "name": "Royalty",
             "packageId": package_id,
+            "folder": "1149640",
             "isDLC": True,
             "dependencies": {"ludeon.rimworld"},
             "author": "Ludeon Studios",
@@ -440,6 +484,7 @@ def populate_expansions_static_data(mod_data: Dict[str, Any], package_id: str) -
         mod_data[package_id] = {
             "name": "Ideology",
             "packageId": package_id,
+            "folder": "1392840",
             "isDLC": True,
             "dependencies": {"ludeon.rimworld", "ludeon.rimworld.royalty"},
             "author": "Ludeon Studios",
@@ -448,6 +493,7 @@ def populate_expansions_static_data(mod_data: Dict[str, Any], package_id: str) -
         mod_data[package_id] = {
             "name": "Biotech",
             "packageId": package_id,
+            "folder": "1826140",
             "isDLC": True,
             "dependencies": {
                 "ludeon.rimworld",
