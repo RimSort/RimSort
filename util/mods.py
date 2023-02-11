@@ -39,6 +39,7 @@ def get_active_inactive_mods(
     inactive_mods = get_inactive_mods(workshop_and_expansions, active_mods)
     return active_mods, inactive_mods
 
+
 def parse_mod_data(mods_path: str) -> Dict[str, Any]:
     mods = {}
     invalid_folders = set()
@@ -62,7 +63,9 @@ def parse_mod_data(mods_path: str) -> Dict[str, Any]:
                 invalid_file_path_found = True
                 if not invalid_folder_path_found:
                     about_file_name = "About.xml"
-                    for temp_file in os.scandir(os.path.join(file.path, about_folder_name)):
+                    for temp_file in os.scandir(
+                        os.path.join(file.path, about_folder_name)
+                    ):
                         if (
                             temp_file.name.lower() == about_file_name.lower()
                             and temp_file.is_file()
@@ -98,9 +101,7 @@ def parse_mod_data(mods_path: str) -> Dict[str, Any]:
                             mod_data["modmetadata"]["packageId"] = normalized_package_id
                             mod_data["modmetadata"]["folder"] = file.name
                             mod_data["modmetadata"]["path"] = file.path
-                            mods[normalized_package_id] = mod_data[
-                                "modmetadata"
-                            ]
+                            mods[normalized_package_id] = mod_data["modmetadata"]
                         except:
                             print(
                                 "Failed in getting modmetadata for mod:"
@@ -108,11 +109,11 @@ def parse_mod_data(mods_path: str) -> Dict[str, Any]:
                             )
                             # If there was an issue with expected About.xml content, track and exit
                             invalid_abouts.add(file.name)
-                        else:
-                            print(
-                                "Succeeeded in getting modmetadata for mod:"
-                                + mod_data["modmetadata"]["name"]
-                            )
+                        # else:
+                        #     print(
+                        #         "Succeeeded in getting modmetadata for mod:"
+                        #         + mod_data["modmetadata"]["name"]
+                        #     )
     if invalid_folders:
         warning_message = "The following workshop folders could not be loaded:"
         for invalid_folder in invalid_folders:
@@ -124,6 +125,7 @@ def parse_mod_data(mods_path: str) -> Dict[str, Any]:
             warning_message = warning_message + f"\n * {invalid_about}"
         show_warning(warning_message)
     return mods
+
 
 def get_local_mods(local_path: str) -> Dict[str, Any]:
     """
@@ -137,6 +139,7 @@ def get_local_mods(local_path: str) -> Dict[str, Any]:
     :return: a Dict of workshop mods by package id, and dict of community rules
     """
     return parse_mod_data(local_path)
+
 
 def get_workshop_mods(workshop_path: str) -> Dict[str, Any]:
     """
@@ -177,9 +180,7 @@ def get_rimpy_db(workshop_mods: Dict[str, Any]) -> Dict[str, Any]:
     """
     for package_id in workshop_mods:
         if workshop_mods[package_id]["folder"] == "1847679158":
-            db_path = os.path.join(
-                workshop_mods[package_id]["path"], "db", "db.json"
-            )
+            db_path = os.path.join(workshop_mods[package_id]["path"], "db", "db.json")
             with open(db_path) as f:
                 db_data = json.load(f)
                 return db_data["database"]
@@ -192,7 +193,7 @@ def get_dependencies_for_mods(
     mods: Dict[str, Any],
     known_expansions: Dict[str, Any],
     community_rules: Dict[str, Any],
-    db_data: Dict[str, Any]
+    db_data: Dict[str, Any],
 ) -> Dict[str, Any]:
     """
     Iterate through each workshop mod + known expansion + base game and add new key-values
@@ -206,6 +207,8 @@ def get_dependencies_for_mods(
     """
     # Dependencies will apply to workshop mods and known expansions
     all_mods = {**mods, **known_expansions}
+
+    print("Start: ", _get_num_dependencies(all_mods))
 
     # Add dependencies to installed mods based on dependencies listed in About.xml
     for package_id in all_mods:
@@ -266,6 +269,8 @@ def get_dependencies_for_mods(
                     all_mods,
                 )
 
+    print("About XMLs: ", _get_num_dependencies(all_mods))
+
     # Add dependencies to installed mods based on dependencies from community rules
     for package_id in community_rules:
         for dependency_id in community_rules[package_id][
@@ -288,7 +293,9 @@ def get_dependencies_for_mods(
                 dependency_id.lower(),
                 all_mods,
             )
-    
+
+    print("Community Rules: ", _get_num_dependencies(all_mods, True))
+
     # RimPy's references depdencies based on folder ID, not package ID
     # Create a temporary folder ID -> package ID dict here
     # TODO: optimization: maybe everything could be based off folder ID
@@ -300,7 +307,7 @@ def get_dependencies_for_mods(
 
     for folder_id, mod_data in db_data.items():
         # We could use `folder_in in folder_to_package_id` too
-        if mod_data["packageId"].lower() in all_mods: 
+        if mod_data["packageId"].lower() in all_mods:
             for dependency_folder_id in mod_data["dependencies"]:
                 if dependency_folder_id in folder_to_package_id:
                     # This means the dependency is in all mods
@@ -309,58 +316,26 @@ def get_dependencies_for_mods(
                         all_mods.get(mod_data["packageId"].lower()),
                         "dependencies",
                         dependency_package_id.lower(),
-                        all_mods
-                    )
-
-    # Add blanket dependencies for Core game and DLCs if no explicit requirement to be before
-    temp_expansions = {}
-    for mod in known_expansions:
-        temp_expansions[mod] = known_expansions[mod]["dependencies"]
-
-    """
-    How does this work?
-    IMPORTANT: assumes a particular order with known expansions:
-        royalty -> ideology -> biotech
-
-    For each official expansion, starting with the base game, iterate through
-    all workshop mods. For each workshop mod, if the mod is not a dependency
-    of the current expansion, add the expansion as a dependency of the mod.
-    Why is this needed? Take RimWorld as a case: most mods do not specify that
-    RimWorld is a dependency, or that RimWorld needs to be loaded before it. Yet,
-    if RimWorld is not loaded before most mods, the game will not start. Continuing
-    with the logic, if there IS a mod that is in the current expansion's dependencies,
-    then remove it from consideration. `mod_iterator = temp_all_mods.copy()` is used
-    to work around not being able to remove keys during iteration. Removing it
-    from consideration means there is no chance at introducing a circular dependency
-    with having the next expansion, which depends on the previous expansion, become
-    a dependency for the aforementioned mod, the previous expansion depends on.
-    Mods like `bs_better_log`, which all DLCs depend on but not the base game, will
-    have the base game added as its dependency, while it will be removed from
-    consideration upon hitting Royalty in the loop. For most mods, this means 4
-    new dependencies will be added: base game, and the 3 DLCs. You can verify this
-    by printing all mod dependencies before and after this loop runs. The only mod
-    with no dependencies after is Harmony.
-
-    TODO: there is a need to do something similar to mods like HugsLib, where sometimes
-    mods do not specify they need it as a dependency but HugsLib works best when it is loaded
-    very early on in the mod list, right after the official modules.
-    """
-    temp_all_mods = all_mods.copy()
-    for expansion_id in temp_expansions:
-        mod_iterator = temp_all_mods.copy()
-        for package_id in mod_iterator:
-            if package_id not in temp_expansions:
-                if package_id not in temp_expansions[expansion_id]:
-                    add_dependency_to_mod(
-                        all_mods[package_id],
-                        "dependencies",
-                        expansion_id,
                         all_mods,
                     )
-                else:
-                    del temp_all_mods[package_id]
+
+    print("Rimpy DB: ", _get_num_dependencies(all_mods, True))
+
+    # At this point, `all_mods` contains all install mods keyed to their package_id
+    # and having dependencies from About.xml, communityRules.json, and db.json
 
     return all_mods
+
+
+def _get_num_dependencies(all_mods: Dict[str, Any], to_print=False) -> None:
+    """Debug func for getting total number of dependencies"""
+    counter = 0
+    for package_id, mod_data in all_mods.items():
+        if mod_data.get("dependencies"):
+            # if to_print:
+            #     print(package_id, mod_data["dependencies"])
+            counter = counter + len(mod_data["dependencies"])
+    return counter
 
 
 def add_dependency_to_mod(
@@ -391,26 +366,40 @@ def add_dependency_to_mod(
 
         # If the value is a single string...
         if isinstance(dependency_or_dependency_ids, str):
-            if dependency_or_dependency_ids.lower() in all_mods:
-                mod_data[new_data_key].add(dependency_or_dependency_ids.lower())
+            dependency_id = dependency_or_dependency_ids.lower()
+            if dependency_id in all_mods:
+                mod_data[new_data_key].add(dependency_id)
+                if "isDependencyOf" not in all_mods[dependency_id]:
+                    all_mods[dependency_id]["isDependencyOf"] = set()
+                all_mods[dependency_id]["isDependencyOf"].add(mod_data["packageId"])
 
         # If the value is a single dict (for modDependencies)
         elif isinstance(dependency_or_dependency_ids, dict):
-            if dependency_or_dependency_ids["packageId"].lower() in all_mods:
-                mod_data[new_data_key].add(
-                    dependency_or_dependency_ids["packageId"].lower()
-                )
+            dependency_id = dependency_or_dependency_ids["packageId"].lower()
+            if dependency_id in all_mods:
+                mod_data[new_data_key].add(dependency_id)
+                if "isDependencyOf" not in all_mods[dependency_id]:
+                    all_mods[dependency_id]["isDependencyOf"] = set()
+                all_mods[dependency_id]["isDependencyOf"].add(mod_data["packageId"])
 
         # If the value is a LIST of strings or dicts
         elif isinstance(dependency_or_dependency_ids, list):
             if isinstance(dependency_or_dependency_ids[0], str):
                 for dependency in dependency_or_dependency_ids:
-                    if dependency.lower() in all_mods:
-                        mod_data[new_data_key].add(dependency.lower())
+                    dependency_id = dependency.lower()
+                    if dependency_id in all_mods:
+                        mod_data[new_data_key].add(dependency_id)
+                        if "isDependencyOf" not in all_mods[dependency_id]:
+                            all_mods[dependency_id]["isDependencyOf"] = set()
+                        all_mods[dependency_id]["isDependencyOf"].add(mod_data["packageId"])
             elif isinstance(dependency_or_dependency_ids[0], dict):
                 for dependency in dependency_or_dependency_ids:
-                    if dependency["packageId"].lower() in all_mods:
-                        mod_data[new_data_key].add(dependency["packageId"].lower())
+                    dependency_id = dependency["packageId"].lower()
+                    if dependency_id in all_mods:
+                        mod_data[new_data_key].add(dependency_id)
+                        if "isDependencyOf" not in all_mods[dependency_id]:
+                            all_mods[dependency_id]["isDependencyOf"] = set()
+                        all_mods[dependency_id]["isDependencyOf"].add(mod_data["packageId"])
 
 
 def get_active_mods_from_config(config_path: str) -> Dict[str, Any]:

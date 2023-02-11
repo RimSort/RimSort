@@ -114,10 +114,7 @@ class MainContent:
             populate_expansions_static_data(self.known_expansions, package_id)
 
         # One working Dictionary for ALL mods
-        mods = merge_mod_data(
-            self.local_mods,
-            self.workshop_mods
-        )
+        mods = merge_mod_data(self.local_mods, self.workshop_mods)
 
         # Get and cache load order data for ALL mods
         self.community_rules = get_community_rules(mods)
@@ -207,6 +204,188 @@ class MainContent:
         self._insert_data_into_lists(active_mod_data, inactive_mod_data)
 
     def _do_sort(self) -> None:
+        # Get the live list of active and inactive mods. This is because the user
+        # will likely sort before saving. This is not meant to be used until later
+        # but is useful for getting the ids of the active mods.
+        active_mods_json = (
+            self.active_mods_panel.active_mods_list.get_list_items_by_dict()
+        )
+        active_mod_ids = list(active_mods_json.keys())
+        inactive_mods_json = (
+            self.inactive_mods_panel.inactive_mods_list.get_list_items_by_dict()
+        )
+
+        # Get all active mods and their dependencies (if also active mod)
+        dependencies_graph = {}  # Schema: {item: {dependency1, dependency2, ...}}
+        for package_id, mod_data in active_mods_json.items():
+            dependencies_graph[package_id] = set()
+            if mod_data.get("dependencies"):  # Will either be None, or a set
+                for dependency in mod_data["dependencies"]:
+                    # Only add a dependency if dependency exists in active_mods
+                    # (related to comment about stripping dependencies)
+                    if dependency in active_mod_ids:
+                        dependencies_graph[package_id].add(dependency)
+
+        reverse_dependencies_graph = (
+            {}
+        )  # Schema: {item: {isDependentOn1, isDependentOn2, ...}}
+        for package_id, mod_data in active_mods_json.items():
+            reverse_dependencies_graph[package_id] = set()
+            if mod_data.get("isDependencyOf"):  # Will either be None, or a set
+                for dependent in mod_data["isDependencyOf"]:
+                    if dependent in active_mod_ids:
+                        reverse_dependencies_graph[package_id].add(dependent)
+
+        # Below is a list of mods determined to be "tier one", in the sense that they
+        # should be loaded first before any other regular mod. Tier one mods will have specific
+        # load order needs within themselves, e.g. Harmony before core. There is no guarantee that
+        # this list of mods is exhaustive, so we need to add any other mod that these mods depend on
+        # into this list as well.
+        known_tier_one_mods = {
+            "brrainz.harmony",
+            "ludeon.rimworld",
+            "ludeon.rimworld.royalty",
+            "ludeon.rimworld.ideology",
+            "ludeon.rimworld.biotech",
+            "unlimitedhugs.hugslib",
+        }
+        tier_one_mods = known_tier_one_mods.copy()
+        for known_tier_one_mod in known_tier_one_mods:
+            dependencies_set = self.get_dependencies_recursive(
+                known_tier_one_mod, dependencies_graph
+            )
+            tier_one_mods.update(dependencies_set)
+        tier_one_dependency_graph = {}
+        for tier_one_mod in tier_one_mods:
+            # Tier one mods will only ever reference other tier one mods in their dependencies graph
+            tier_one_dependency_graph[tier_one_mod] = dependencies_graph[tier_one_mod]
+
+        tier_one_sorted = toposort(tier_one_dependency_graph)
+        # Reorder active mods alphabetically by their topological level
+        reordered_tier_one_sorted_with_data = {}
+        for level in tier_one_sorted:
+            temp_mod_dict = {}
+            for package_id in level:
+                temp_mod_dict[package_id] = active_mods_json[package_id]
+            # Sort packages in this topological level by name
+            sorted_temp_mod_dict = sorted(
+                temp_mod_dict.items(), key=lambda x: x[1]["name"], reverse=False
+            )
+            # sorted_mod is tuple of (packageId, json_data)
+            # Add into reordered_active_mods_data (dicts are ordered now)
+            for sorted_mod in sorted_temp_mod_dict:
+                reordered_tier_one_sorted_with_data[sorted_mod[0]] = active_mods_json[
+                    sorted_mod[0]
+                ]
+
+        known_tier_three_mods = {"krkr.rocketman"}
+        tier_three_mods = known_tier_three_mods.copy()
+        for known_tier_three_mod in known_tier_three_mods:
+            rev_dependencies_set = self.get_reverse_dependencies_recursive(
+                known_tier_three_mod, reverse_dependencies_graph
+            )
+            tier_three_mods.update(rev_dependencies_set)
+        tier_three_dependency_graph = {}
+        for tier_three_mod in tier_three_mods:
+            # Tier three mods may reference non-tier-three mods in their dependencies graph,
+            # so it is necessary to trim here
+            tier_three_dependency_graph[tier_three_mod] = set()
+            for possible_add in dependencies_graph[tier_three_mod]:
+                if possible_add in tier_three_mods:
+                    tier_three_dependency_graph[tier_three_mod].add(possible_add)
+
+        tier_three_sorted = toposort(tier_three_dependency_graph)
+        reordered_tier_three_sorted_with_data = {}
+        for level in tier_three_sorted:
+            temp_mod_dict = {}
+            for package_id in level:
+                temp_mod_dict[package_id] = active_mods_json[package_id]
+            # Sort packages in this topological level by name
+            sorted_temp_mod_dict = sorted(
+                temp_mod_dict.items(), key=lambda x: x[1]["name"], reverse=False
+            )
+            # sorted_mod is tuple of (packageId, json_data)
+            # Add into reordered_active_mods_data (dicts are ordered now)
+            for sorted_mod in sorted_temp_mod_dict:
+                reordered_tier_three_sorted_with_data[sorted_mod[0]] = active_mods_json[
+                    sorted_mod[0]
+                ]
+
+        # Now, sort the rest of the mods while removing references to mods in tier one and tier three
+        tier_two_dependency_graph = {}
+        for package_id, mod_data in active_mods_json.items():
+            if package_id not in tier_one_mods and package_id not in tier_three_mods:
+                dependencies = mod_data.get("dependencies")
+                stripped_dependencies = set()
+                if dependencies:
+                    for dependency_id in dependencies:
+                        if (
+                            dependency_id not in tier_one_mods
+                            and dependency_id not in tier_three_mods
+                            and dependency_id in active_mod_ids # Can reference non-active mod
+                        ):
+                            stripped_dependencies.add(dependency_id)
+                tier_two_dependency_graph[package_id] = stripped_dependencies
+
+        tier_two_sorted = toposort(tier_two_dependency_graph)
+        reordered_tier_two_sorted_with_data = {}
+        for level in tier_two_sorted:
+            temp_mod_dict = {}
+            for package_id in level:
+                temp_mod_dict[package_id] = active_mods_json[package_id]
+            # Sort packages in this topological level by name
+            sorted_temp_mod_dict = sorted(
+                temp_mod_dict.items(), key=lambda x: x[1]["name"], reverse=False
+            )
+            # sorted_mod is tuple of (packageId, json_data)
+            # Add into reordered_active_mods_data (dicts are ordered now)
+            for sorted_mod in sorted_temp_mod_dict:
+                reordered_tier_two_sorted_with_data[sorted_mod[0]] = active_mods_json[
+                    sorted_mod[0]
+                ]
+
+        # Add Tier 1, 2, 3 in order
+        combined_tiers = {}
+        for package_id, mod_data in reordered_tier_one_sorted_with_data.items():
+            combined_tiers[package_id] = mod_data
+        for package_id, mod_data in reordered_tier_two_sorted_with_data.items():
+            if package_id in combined_tiers:
+                print("NO")
+            combined_tiers[package_id] = mod_data
+        for package_id, mod_data in reordered_tier_three_sorted_with_data.items():
+            if package_id in combined_tiers:
+                print("NO")
+            combined_tiers[package_id] = mod_data
+
+        self._insert_data_into_lists(combined_tiers, inactive_mods_json)
+
+    def get_reverse_dependencies_recursive(
+        self, package_id, active_mods_rev_dependencies
+    ):
+        reverse_dependencies_set = set()
+        if package_id in active_mods_rev_dependencies:
+            for dependent_id in active_mods_rev_dependencies[package_id]:
+                reverse_dependencies_set.add(dependent_id)
+                reverse_dependencies_set.update(
+                    self.get_reverse_dependencies_recursive(
+                        dependent_id, active_mods_rev_dependencies
+                    )
+                )
+        return reverse_dependencies_set
+
+    def get_dependencies_recursive(self, package_id, active_mods_dependencies):
+        dependencies_set = set()
+        if package_id in active_mods_dependencies:
+            for dependency_id in active_mods_dependencies[package_id]:
+                dependencies_set.add(dependency_id)
+                dependencies_set.update(
+                    self.get_dependencies_recursive(
+                        dependency_id, active_mods_dependencies
+                    )
+                )
+        return dependencies_set
+
+    def _do_sort_dep(self) -> None:
         """
         Sort the active mods list by dependencies and prioritizing alphabetical
         order within topological levels.
