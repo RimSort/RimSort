@@ -101,17 +101,17 @@ def parse_mod_data(mods_path: str) -> Dict[str, Any]:
                                 "modmetadata"
                             ]
                         except:
-                            print(
-                                "Failed in getting modmetadata for mod:"
-                                + mod_data["modmetadata"]["name"]
-                            )
+                            # print(
+                            #     "Failed in getting modmetadata for mod:"
+                            #     + mod_data["modmetadata"]["name"]
+                            # )
                             # If there was an issue with expected About.xml content, track and exit
                             invalid_abouts.add(file.name)
-                        else:
-                            print(
-                                "Succeeeded in getting modmetadata for mod:"
-                                + mod_data["modmetadata"]["name"]
-                            )
+                        # else:
+                        #     print(
+                        #         "Succeeeded in getting modmetadata for mod:"
+                        #         + mod_data["modmetadata"]["name"]
+                        #     )
     if invalid_folders:
         warning_message = "The following workshop folders could not be loaded:"
         for invalid_folder in invalid_folders:
@@ -123,6 +123,38 @@ def parse_mod_data(mods_path: str) -> Dict[str, Any]:
             warning_message = warning_message + f"\n * {invalid_about}"
         show_warning(warning_message)
     return mods
+
+def get_known_expansions_from_config(config_path: str) -> Dict[str, Any]:
+    """
+    Given a path to a file in the ModsConfig.xml format, return the
+    mods in the known expansions section (and add base game).
+
+    :param path: path to a ModsConfig.xml file
+    :return: a Dict keyed to mod package ids
+    """
+    mod_data = xml_path_to_json(config_path)
+    try:
+        ret = {}
+        if mod_data:
+            if mod_data["ModsConfigData"]["knownExpansions"]:
+                for package_id in mod_data["ModsConfigData"]["knownExpansions"]["li"]:
+                    ret[package_id.lower()] = {}
+        return ret
+    except Exception:
+        raise InvalidModsConfigFormat
+
+def get_installed_expansions(game_path: str) -> Dict[str, Any]:
+    """
+    Given a path to the game's install folder, return a dict
+    containing data for all of the installed expansions' keyed to their package ids.
+    The root-level key is the package id, and the root-level value
+    is the converted About.xml. If the path does not exist, the dict
+    will be empty.
+
+    :param path: path to the Rimworld install folder
+    :return: a Dict of expansions by package id
+    """
+    return parse_mod_data(os.path.join(game_path, "Data"))
 
 def get_local_mods(local_path: str) -> Dict[str, Any]:
     """
@@ -150,28 +182,59 @@ def get_workshop_mods(workshop_path: str) -> Dict[str, Any]:
     """
     return parse_mod_data(workshop_path)
 
+def get_steam_db_rules(mods: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Extract the configured DB mod's SteamDB rules, essential for the sort
+    function. Produces an error if the DB mod is not found.
+    """
+    for package_id in mods:
+        if package_id == "rupal.rimpymodmanagerdatabase": # TODO make this a DB mod packageID a configurable preference
+            steam_db_rules_path = os.path.join(
+                mods[package_id]["path"], "db", "db.json"
+            )
+            with open(steam_db_rules_path) as f:
+                db_data = json.load(f)
+                return db_data["database"]
+        elif mods[package_id]["folder"] == "1847679158": # Fallback to RimPy if we can't find the configured DB
+            steam_db_rules_path = os.path.join(
+                mods[package_id]["path"], "db", "db.json"
+            )
+            with open(steam_db_rules_path) as f:
+                db_data = json.load(f)
+                return db_data["database"]
+    show_fatal_error(
+        "The configured DB mod was not detected.\nRimPy DB was also not found.\nPlease install & configure a valid DB mod and restart RimSort."
+    )
 
-def get_community_rules(workshop_mods: Dict[str, Any]) -> Dict[str, Any]:
+def get_community_rules(mods: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Extract the RimPy community rules, essential for the sort
-    function. Produces an error if the RimPy mod is not found.
+    Extract the configured DB mod's community rules, essential for the sort
+    function. Produces an error if the DB mod is not found.
     """
-    for package_id in workshop_mods:
-        if workshop_mods[package_id]["folder"] == "1847679158":
+    for package_id in mods:
+        if package_id == "rupal.rimpymodmanagerdatabase": # TODO make this a DB mod packageID a configurable preference
             community_rules_path = os.path.join(
-                workshop_mods[package_id]["path"], "db", "communityRules.json"
+                mods[package_id]["path"], "db", "communityRules.json"
+            )
+            with open(community_rules_path) as f:
+                rule_data = json.load(f)
+                return rule_data["rules"]
+        elif mods[package_id]["folder"] == "1847679158": # Fallback to RimPy if we can't find the configured DB
+            community_rules_path = os.path.join(
+                mods[package_id]["path"], "db", "communityRules.json"
             )
             with open(community_rules_path) as f:
                 rule_data = json.load(f)
                 return rule_data["rules"]
     show_fatal_error(
-        "The RimPy mod was not detected.\nPlease install the mod and restart RimSort."
+        "The configured DB mod was not detected.\nRimPy DB was also not found.\nPlease install & configure a valid DB mod and restart RimSort."
     )
 
 
 def get_dependencies_for_mods(
+    expansions: Dict[str, Any],
     mods: Dict[str, Any],
-    known_expansions: Dict[str, Any],
+    steam_db_rules: Dict[str, Any],
     community_rules: Dict[str, Any],
 ) -> Dict[str, Any]:
     """
@@ -184,8 +247,8 @@ def get_dependencies_for_mods(
     :param community_rules: dict of community established rules
     :return workshop_and_expansions: workshop mods + official modules with dependency data
     """
-    # Dependencies will apply to workshop mods and known expansions
-    all_mods = {**mods, **known_expansions}
+    # Dependencies will apply to installed expansions, as well as local/workshop mods
+    all_mods = {**expansions, **mods}
 
     # Add dependencies to installed mods based on dependencies listed in About.xml
     for package_id in all_mods:
@@ -246,6 +309,30 @@ def get_dependencies_for_mods(
                     all_mods,
                 )
 
+    # RimPy's references depdencies based on publisher ID, not package ID
+    # Create a temporary publisher ID -> package ID dict here
+    # This cooresponds with the folder name of the folder used to "contain" the mod in the Steam mods directory
+    # TODO: optimization: maybe everything could be based off publisher ID
+    # TODO: optimization: all of this (and communityRules.json parsing) could probably be done in the first loop
+    folder_to_package_id = {}
+    for package_id, mod_data in all_mods.items():
+        if mod_data.get("folder"):
+            folder_to_package_id[mod_data["folder"]] = mod_data["packageId"]
+
+    for folder_id, mod_data in steam_db_rules.items():
+        # We could use `folder_in in folder_to_package_id` too
+        if mod_data["packageId"].lower() in all_mods: 
+            for dependency_folder_id in mod_data["dependencies"]:
+                if dependency_folder_id in folder_to_package_id:
+                    # This means the dependency is in all mods
+                    dependency_package_id = folder_to_package_id[dependency_folder_id]
+                    add_dependency_to_mod(
+                        all_mods.get(mod_data["packageId"].lower()),
+                        "dependencies",
+                        dependency_package_id.lower(),
+                        all_mods
+                    )
+
     # Add dependencies to installed mods based on dependencies from community rules
     for package_id in community_rules:
         for dependency_id in community_rules[package_id][
@@ -268,54 +355,6 @@ def get_dependencies_for_mods(
                 dependency_id.lower(),
                 all_mods,
             )
-
-    # Add blanket dependencies for Core game and DLCs if no explicit requirement to be before
-    temp_expansions = {}
-    for mod in known_expansions:
-        temp_expansions[mod] = known_expansions[mod]["dependencies"]
-
-    """
-    How does this work?
-    IMPORTANT: assumes a particular order with known expansions:
-        royalty -> ideology -> biotech
-
-    For each official expansion, starting with the base game, iterate through
-    all workshop mods. For each workshop mod, if the mod is not a dependency
-    of the current expansion, add the expansion as a dependency of the mod.
-    Why is this needed? Take RimWorld as a case: most mods do not specify that
-    RimWorld is a dependency, or that RimWorld needs to be loaded before it. Yet,
-    if RimWorld is not loaded before most mods, the game will not start. Continuing
-    with the logic, if there IS a mod that is in the current expansion's dependencies,
-    then remove it from consideration. `mod_iterator = temp_all_mods.copy()` is used
-    to work around not being able to remove keys during iteration. Removing it
-    from consideration means there is no chance at introducing a circular dependency
-    with having the next expansion, which depends on the previous expansion, become
-    a dependency for the aforementioned mod, the previous expansion depends on.
-    Mods like `bs_better_log`, which all DLCs depend on but not the base game, will
-    have the base game added as its dependency, while it will be removed from
-    consideration upon hitting Royalty in the loop. For most mods, this means 4
-    new dependencies will be added: base game, and the 3 DLCs. You can verify this
-    by printing all mod dependencies before and after this loop runs. The only mod
-    with no dependencies after is Harmony.
-
-    TODO: there is a need to do something similar to mods like HugsLib, where sometimes
-    mods do not specify they need it as a dependency but HugsLib works best when it is loaded
-    very early on in the mod list, right after the official modules.
-    """
-    temp_all_mods = all_mods.copy()
-    for expansion_id in temp_expansions:
-        mod_iterator = temp_all_mods.copy()
-        for package_id in mod_iterator:
-            if package_id not in temp_expansions:
-                if package_id not in temp_expansions[expansion_id]:
-                    add_dependency_to_mod(
-                        all_mods[package_id],
-                        "dependencies",
-                        expansion_id,
-                        all_mods,
-                    )
-                else:
-                    del temp_all_mods[package_id]
 
     return all_mods
 
@@ -390,73 +429,6 @@ def get_active_mods_from_config(config_path: str) -> Dict[str, Any]:
         return {}
     except:
         raise InvalidModsConfigFormat
-
-
-def get_known_expansions_from_config(config_path: str) -> Dict[str, Any]:
-    """
-    Given a path to a file in the ModsConfig.xml format, return the
-    mods in the known expansions section (and add base game).
-
-    :param path: path to a ModsConfig.xml file
-    :return: a Dict keyed to mod package ids
-    """
-    mod_data = xml_path_to_json(config_path)
-    try:
-        ret = {"ludeon.rimworld": {}}  # Base game always exists
-        if mod_data:
-            if mod_data["ModsConfigData"]["knownExpansions"]:
-                for package_id in mod_data["ModsConfigData"]["knownExpansions"]["li"]:
-                    ret[package_id.lower()] = {}
-        return ret
-    except Exception:
-        raise InvalidModsConfigFormat
-
-
-def populate_expansions_static_data(mod_data: Dict[str, Any], package_id: str) -> None:
-    """
-    Given a dict of mods and a package id, check if the package id belongs
-    to the base game or any of the DLC. If so, populate the relevant key value
-    with the DLC name.
-
-    :param mod_data: dict of mod data keyed to package id
-    :param package_id: package id to check if it is DLC
-    """
-    if package_id == "ludeon.rimworld":
-        mod_data[package_id] = {
-            "name": "Rimworld",
-            "packageId": package_id,
-            "isBase": True,
-            "author": "Ludeon Studios",
-        }
-    if package_id == "ludeon.rimworld.royalty":
-        mod_data[package_id] = {
-            "name": "Royalty",
-            "packageId": package_id,
-            "isDLC": True,
-            "dependencies": {"ludeon.rimworld"},
-            "author": "Ludeon Studios",
-        }
-    if package_id == "ludeon.rimworld.ideology":
-        mod_data[package_id] = {
-            "name": "Ideology",
-            "packageId": package_id,
-            "isDLC": True,
-            "dependencies": {"ludeon.rimworld", "ludeon.rimworld.royalty"},
-            "author": "Ludeon Studios",
-        }
-    if package_id == "ludeon.rimworld.biotech":
-        mod_data[package_id] = {
-            "name": "Biotech",
-            "packageId": package_id,
-            "isDLC": True,
-            "dependencies": {
-                "ludeon.rimworld",
-                "ludeon.rimworld.royalty",
-                "ludeon.rimworld.ideology",
-            },
-            "author": "Ludeon Studios",
-        }
-
 
 def populate_active_mods_workshop_data(
     unpopulated_mods: Dict[str, Any], workshop_and_expansions: Dict[str, Any]

@@ -13,6 +13,7 @@ from util.mods import *
 from util.xml import json_to_xml_write, xml_path_to_json
 from view.game_configuration_panel import GameConfiguration
 
+import json
 
 class MainContent:
     """
@@ -85,6 +86,7 @@ class MainContent:
 
         :param package_id: package id of mod
         """
+        print(self.all_mods_with_dependencies[package_id])
         self.mod_info_panel.display_mod_info(
             self.all_mods_with_dependencies[package_id]
         )
@@ -100,18 +102,29 @@ class MainContent:
         somehow, e.g. re-setting workshop path, mods config path, or downloading another mod,
         but also after ModsConfig.xml path has been changed).
         """
-        # Get and cache local/workshop mods and base game / DLC data
+        # Get and cache installed base game / DLC data
+        self.expansions = get_installed_expansions(
+            self.game_configuration.get_game_folder_path()
+        )
+
+        for package_id in self.expansions.keys(): # hardcode names into official expansions
+            if package_id == "ludeon.rimworld":
+                self.expansions[package_id]["name"] = "Core (Base game)"
+            if package_id == "ludeon.rimworld.royalty":
+                self.expansions[package_id]["name"] = "Royalty (DLC #1)"
+            if package_id == "ludeon.rimworld.ideology":
+                self.expansions[package_id]["name"] = "Ideology (DLC #2)"
+            if package_id == "ludeon.rimworld.biotech":
+                self.expansions[package_id]["name"] = "Biotech (DLC #3)"
+
+        # Get and cache installed local/workshop mods
         self.local_mods = get_local_mods(
             self.game_configuration.get_local_folder_path()
         )
+
         self.workshop_mods = get_workshop_mods(
             self.game_configuration.get_workshop_folder_path()
         )
-        self.known_expansions = get_known_expansions_from_config(
-            self.game_configuration.get_config_path()
-        )
-        for package_id in self.known_expansions.keys():
-            populate_expansions_static_data(self.known_expansions, package_id)
 
         # One working Dictionary for ALL mods
         mods = merge_mod_data(
@@ -119,12 +132,15 @@ class MainContent:
             self.workshop_mods
         )
 
-        # Get and cache load order data for ALL mods
+        # Get and cache steam db rules data for ALL mods
+        self.steam_db_rules = get_steam_db_rules(mods)
+
+        # Get and cache community rules data for ALL mods
         self.community_rules = get_community_rules(mods)
 
         # Calculate and cache dependencies for ALL mods
         self.all_mods_with_dependencies = get_dependencies_for_mods(
-            mods, self.known_expansions, self.community_rules
+            self.expansions, mods, self.steam_db_rules, self.community_rules # TODO add user defined customRules from future customRules.json
         )
 
     def repopulate_lists(self) -> None:
@@ -190,16 +206,16 @@ class MainContent:
             self.game_configuration.get_config_path(),
             self.all_mods_with_dependencies,
         )
-        known_expansions_ids = list(self.known_expansions.keys())
+        expansions_ids = list(self.expansions.keys())
         active_mod_data = {}
         inactive_mod_data = {}
         for package_id, mod_data in active_mods_data.items():
-            if package_id in known_expansions_ids:
+            if package_id in expansions_ids:
                 active_mod_data[package_id] = mod_data
             else:
                 inactive_mod_data[package_id] = mod_data
         for package_id, mod_data in inactive_mods_data.items():
-            if package_id in known_expansions_ids:
+            if package_id in expansions_ids:
                 active_mod_data[package_id] = mod_data
             else:
                 inactive_mod_data[package_id] = mod_data
@@ -237,9 +253,13 @@ class MainContent:
                     if dependency in active_mod_ids:
                         dependencies_graph[mod.package_id].add(dependency)
 
+        print(dependencies_graph)
+
         # Run topological sort
         # The result is a list of sets; each set contains topologically-equivalent items
         topo_result = toposort(dependencies_graph)
+
+        print(topo_result)
 
         # Reorder active mods alphabetically by their topological level before
         # submitting the list back into the widget
