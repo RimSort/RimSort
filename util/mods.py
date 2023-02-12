@@ -61,17 +61,18 @@ def parse_mod_data(mods_path: str) -> Dict[str, Any]:
                         break
                 # Look for a case-insensitive "About.xml" file
                 invalid_file_path_found = True
-                about_file_name = "About.xml"
-                for temp_file in os.scandir(
-                        os.path.join(file.path, about_folder_name)
-                    ):
-                    if (
-                        temp_file.name.lower() == about_file_name.lower()
-                        and temp_file.is_file()
-                    ):
-                        about_file_name = temp_file.name
-                        invalid_file_path_found = False
-                        break
+                if not invalid_folder_path_found:
+                    about_file_name = "About.xml"
+                    for temp_file in os.scandir(
+                            os.path.join(file.path, about_folder_name)
+                        ):
+                        if (
+                            temp_file.name.lower() == about_file_name.lower()
+                            and temp_file.is_file()
+                        ):
+                            about_file_name = temp_file.name
+                            invalid_file_path_found = False
+                            break
                 # If there was an issue getting the expected path, track and exit
                 if invalid_folder_path_found or invalid_file_path_found:
                     invalid_folders.add(file.name)
@@ -194,15 +195,17 @@ def get_steam_db_rules(mods: Dict[str, Any]) -> Dict[str, Any]:
             steam_db_rules_path = os.path.join(
                 mods[package_id]["path"], "db", "db.json"
             )
-            with open(steam_db_rules_path) as f:
-                db_data = json.load(f)
+            with open(steam_db_rules_path, encoding="utf-8") as f:
+                json_string = f.read()
+                db_data = json.loads(json_string)
                 return db_data["database"]
         elif mods[package_id]["folder"] == "1847679158": # Fallback to RimPy if we can't find the configured DB
             steam_db_rules_path = os.path.join(
                 mods[package_id]["path"], "db", "db.json"
             )
-            with open(steam_db_rules_path) as f:
-                db_data = json.load(f)
+            with open(steam_db_rules_path, encoding="utf-8") as f:
+                json_string = f.read()
+                db_data = json.loads(json_string)
                 return db_data["database"]
     show_fatal_error(
         "The configured DB mod was not detected.\nRimPy DB was also not found.\nPlease install & configure a valid DB mod and restart RimSort."
@@ -218,15 +221,17 @@ def get_community_rules(mods: Dict[str, Any]) -> Dict[str, Any]:
             community_rules_path = os.path.join(
                 mods[package_id]["path"], "db", "communityRules.json"
             )
-            with open(community_rules_path) as f:
-                rule_data = json.load(f)
+            with open(community_rules_path, encoding="utf-8") as f:
+                json_string = f.read()
+                rule_data = json.loads(json_string)
                 return rule_data["rules"]
         elif mods[package_id]["folder"] == "1847679158": # Fallback to RimPy if we can't find the configured DB
             community_rules_path = os.path.join(
                 mods[package_id]["path"], "db", "communityRules.json"
             )
-            with open(community_rules_path) as f:
-                rule_data = json.load(f)
+            with open(community_rules_path, encoding="utf-8") as f:
+                json_string = f.read()
+                rule_data = json.loads(json_string)
                 return rule_data["rules"]
     show_fatal_error(
         "The configured DB mod was not detected.\nRimPy DB was also not found.\nPlease install & configure a valid DB mod and restart RimSort."
@@ -316,47 +321,49 @@ def get_dependencies_for_mods(
     # This cooresponds with the folder name of the folder used to "contain" the mod in the Steam mods directory
     # TODO: optimization: maybe everything could be based off publisher ID
     # TODO: optimization: all of this (and communityRules.json parsing) could probably be done in the first loop
-    folder_to_package_id = {}
-    for package_id, mod_data in all_mods.items():
-        if mod_data.get("folder"):
-            folder_to_package_id[mod_data["folder"]] = mod_data["packageId"]
+    if steam_db_rules:
+        folder_to_package_id = {}
+        for package_id, mod_data in all_mods.items():
+            if mod_data.get("folder"):
+                folder_to_package_id[mod_data["folder"]] = mod_data["packageId"]
 
-    for folder_id, mod_data in steam_db_rules.items():
-        # We could use `folder_in in folder_to_package_id` too
-        if mod_data["packageId"].lower() in all_mods: 
-            for dependency_folder_id in mod_data["dependencies"]:
-                if dependency_folder_id in folder_to_package_id:
-                    # This means the dependency is in all mods
-                    dependency_package_id = folder_to_package_id[dependency_folder_id]
-                    add_dependency_to_mod(
-                        all_mods.get(mod_data["packageId"].lower()),
-                        "dependencies",
-                        dependency_package_id.lower(),
-                        all_mods
-                    )
+        for folder_id, mod_data in steam_db_rules.items():
+            # We could use `folder_in in folder_to_package_id` too
+            if mod_data["packageId"].lower() in all_mods: 
+                for dependency_folder_id in mod_data["dependencies"]:
+                    if dependency_folder_id in folder_to_package_id:
+                        # This means the dependency is in all mods
+                        dependency_package_id = folder_to_package_id[dependency_folder_id]
+                        add_dependency_to_mod(
+                            all_mods.get(mod_data["packageId"].lower()),
+                            "dependencies",
+                            dependency_package_id.lower(),
+                            all_mods
+                        )
 
     # Add dependencies to installed mods based on dependencies from community rules
-    for package_id in community_rules:
-        for dependency_id in community_rules[package_id][
-            "loadBefore"
-        ]:  # Current mod should be loaded BEFORE these mods
-            add_dependency_to_mod(
-                all_mods.get(dependency_id.lower()),
-                "dependencies",
-                package_id.lower(),
-                all_mods,
-            )
-        for dependency_id in community_rules[package_id][
-            "loadAfter"
-        ]:  # Current mod should be loaded AFTER these mods
-            add_dependency_to_mod(
-                all_mods.get(
-                    package_id.lower()
-                ),  # Community rules may be referencing not-installed mod
-                "dependencies",
-                dependency_id.lower(),
-                all_mods,
-            )
+    if community_rules:
+        for package_id in community_rules:
+            for dependency_id in community_rules[package_id][
+                "loadBefore"
+            ]:  # Current mod should be loaded BEFORE these mods
+                add_dependency_to_mod(
+                    all_mods.get(dependency_id.lower()),
+                    "dependencies",
+                    package_id.lower(),
+                    all_mods,
+                )
+            for dependency_id in community_rules[package_id][
+                "loadAfter"
+            ]:  # Current mod should be loaded AFTER these mods
+                add_dependency_to_mod(
+                    all_mods.get(
+                        package_id.lower()
+                    ),  # Community rules may be referencing not-installed mod
+                    "dependencies",
+                    dependency_id.lower(),
+                    all_mods,
+                )
 
     return all_mods
 
