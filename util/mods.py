@@ -2,6 +2,7 @@ import os
 from typing import Any, Dict, List, Tuple
 from PySide2.QtWidgets import *
 import json
+import platform
 from util.error import show_warning, show_fatal_error
 from util.exception import InvalidModsConfigFormat
 from util.xml import non_utf8_xml_path_to_json, xml_path_to_json
@@ -156,6 +157,9 @@ def get_installed_expansions(game_path: str) -> Dict[str, Any]:
     :param path: path to the Rimworld install folder
     :return: a Dict of expansions by package id
     """
+    system_name = platform.system()
+    if system_name == "Darwin":
+        game_path = os.path.join(game_path, "RimWorldMac.app")
     return parse_mod_data(os.path.join(game_path, "Data"))
 
 def get_local_mods(local_path: str) -> Dict[str, Any]:
