@@ -319,9 +319,7 @@ def get_dependencies_for_mods(
                 for dependency_folder_id in mod_data["dependencies"]:
                     if dependency_folder_id in folder_to_package_id:
                         # This means the dependency is in all mods
-                        dependency_package_id = folder_to_package_id[
-                            dependency_folder_id
-                        ]
+                        dependency_package_id = folder_to_package_id[dependency_folder_id]
                         add_dependency_to_mod(
                             all_mods.get(mod_data["packageId"].lower()),
                             "dependencies",
