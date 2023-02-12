@@ -451,13 +451,9 @@ class MainContent:
                     if dependency in active_mod_ids:
                         dependencies_graph[mod.package_id].add(dependency)
 
-        print(dependencies_graph)
-
         # Run topological sort
         # The result is a list of sets; each set contains topologically-equivalent items
         topo_result = toposort(dependencies_graph)
-
-        print(topo_result)
 
         # Reorder active mods alphabetically by their topological level before
         # submitting the list back into the widget
