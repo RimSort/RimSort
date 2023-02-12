@@ -302,7 +302,14 @@ class MainContent:
                     sorted_mod[0]
                 ]
 
-        known_tier_three_mods = {"krkr.rocketman"}
+        # Below is a list of mods determined to be "tier three", in the sense that they
+        # should be loaded after any other regular mod, potentially at the very end of the load order.
+        # Tier three mods will have specific load order needs within themselves. There is no guarantee that
+        # this list of mods is exhaustive, so we need to add any other mod that these mods depend on
+        # into this list as well.
+        known_tier_three_mods = {
+            "krkr.rocketman"
+        }
         tier_three_mods = set()
         for known_tier_three_mod in known_tier_three_mods:
             if known_tier_three_mod in dependencies_graph:
