@@ -1,8 +1,10 @@
+import json
 import os
 from typing import Any, Dict, List, Tuple
+
 from PySide2.QtWidgets import *
-import json
-from util.error import show_warning, show_fatal_error
+
+from util.error import show_fatal_error, show_warning
 from util.exception import InvalidModsConfigFormat
 from util.xml import non_utf8_xml_path_to_json, xml_path_to_json
 
@@ -165,8 +167,10 @@ def get_community_rules(workshop_mods: Dict[str, Any]) -> Dict[str, Any]:
             community_rules_path = os.path.join(
                 workshop_mods[package_id]["path"], "db", "communityRules.json"
             )
-            with open(community_rules_path) as f:
-                rule_data = json.load(f)
+            with open(community_rules_path, encoding="utf-8") as f:
+                json_string = f.read()
+                # rule_data = json.load(f)
+                rule_data = json.loads(json_string)
                 return rule_data["rules"]
     show_warning(
         "The RimPy mod was not detected.\nPlease install the mod and restart RimSort."
@@ -181,8 +185,10 @@ def get_rimpy_db(workshop_mods: Dict[str, Any]) -> Dict[str, Any]:
     for package_id in workshop_mods:
         if workshop_mods[package_id]["folder"] == "1847679158":
             db_path = os.path.join(workshop_mods[package_id]["path"], "db", "db.json")
-            with open(db_path) as f:
-                db_data = json.load(f)
+            with open(db_path, encoding="utf-8") as f:
+                json_string = f.read()
+                # db_data = json.load(f)
+                db_data = json.loads(json_string)
                 return db_data["database"]
     show_warning(
         "The RimPy mod was not detected.\nPlease install the mod and restart RimSort."
@@ -272,54 +278,58 @@ def get_dependencies_for_mods(
     print("About XMLs: ", _get_num_dependencies(all_mods))
 
     # Add dependencies to installed mods based on dependencies from community rules
-    for package_id in community_rules:
-        for dependency_id in community_rules[package_id][
-            "loadBefore"
-        ]:  # Current mod should be loaded BEFORE these mods
-            add_dependency_to_mod(
-                all_mods.get(dependency_id.lower()),
-                "dependencies",
-                package_id.lower(),
-                all_mods,
-            )
-        for dependency_id in community_rules[package_id][
-            "loadAfter"
-        ]:  # Current mod should be loaded AFTER these mods
-            add_dependency_to_mod(
-                all_mods.get(
-                    package_id.lower()
-                ),  # Community rules may be referencing not-installed mod
-                "dependencies",
-                dependency_id.lower(),
-                all_mods,
-            )
+    if community_rules:
+        for package_id in community_rules:
+            for dependency_id in community_rules[package_id][
+                "loadBefore"
+            ]:  # Current mod should be loaded BEFORE these mods
+                add_dependency_to_mod(
+                    all_mods.get(dependency_id.lower()),
+                    "dependencies",
+                    package_id.lower(),
+                    all_mods,
+                )
+            for dependency_id in community_rules[package_id][
+                "loadAfter"
+            ]:  # Current mod should be loaded AFTER these mods
+                add_dependency_to_mod(
+                    all_mods.get(
+                        package_id.lower()
+                    ),  # Community rules may be referencing not-installed mod
+                    "dependencies",
+                    dependency_id.lower(),
+                    all_mods,
+                )
 
-    print("Community Rules: ", _get_num_dependencies(all_mods, True))
+        print("Community Rules: ", _get_num_dependencies(all_mods, True))
 
     # RimPy's references depdencies based on folder ID, not package ID
     # Create a temporary folder ID -> package ID dict here
     # TODO: optimization: maybe everything could be based off folder ID
     # TODO: optimization: all of this (and rules.json parsing) could probably be done in the first loop
-    folder_to_package_id = {}
-    for package_id, mod_data in all_mods.items():
-        if mod_data.get("folder"):
-            folder_to_package_id[mod_data["folder"]] = mod_data["packageId"]
+    if db_data:
+        folder_to_package_id = {}
+        for package_id, mod_data in all_mods.items():
+            if mod_data.get("folder"):
+                folder_to_package_id[mod_data["folder"]] = mod_data["packageId"]
 
-    for folder_id, mod_data in db_data.items():
-        # We could use `folder_in in folder_to_package_id` too
-        if mod_data["packageId"].lower() in all_mods:
-            for dependency_folder_id in mod_data["dependencies"]:
-                if dependency_folder_id in folder_to_package_id:
-                    # This means the dependency is in all mods
-                    dependency_package_id = folder_to_package_id[dependency_folder_id]
-                    add_dependency_to_mod(
-                        all_mods.get(mod_data["packageId"].lower()),
-                        "dependencies",
-                        dependency_package_id.lower(),
-                        all_mods,
-                    )
+        for folder_id, mod_data in db_data.items():
+            # We could use `folder_in in folder_to_package_id` too
+            if mod_data["packageId"].lower() in all_mods:
+                for dependency_folder_id in mod_data["dependencies"]:
+                    if dependency_folder_id in folder_to_package_id:
+                        # This means the dependency is in all mods
+                        dependency_package_id = folder_to_package_id[
+                            dependency_folder_id
+                        ]
+                        add_dependency_to_mod(
+                            all_mods.get(mod_data["packageId"].lower()),
+                            "dependencies",
+                            dependency_package_id.lower(),
+                            all_mods,
+                        )
 
-    print("Rimpy DB: ", _get_num_dependencies(all_mods, True))
+        print("Rimpy DB: ", _get_num_dependencies(all_mods, True))
 
     # At this point, `all_mods` contains all install mods keyed to their package_id
     # and having dependencies from About.xml, communityRules.json, and db.json
@@ -391,7 +401,9 @@ def add_dependency_to_mod(
                         mod_data[new_data_key].add(dependency_id)
                         if "isDependencyOf" not in all_mods[dependency_id]:
                             all_mods[dependency_id]["isDependencyOf"] = set()
-                        all_mods[dependency_id]["isDependencyOf"].add(mod_data["packageId"])
+                        all_mods[dependency_id]["isDependencyOf"].add(
+                            mod_data["packageId"]
+                        )
             elif isinstance(dependency_or_dependency_ids[0], dict):
                 for dependency in dependency_or_dependency_ids:
                     dependency_id = dependency["packageId"].lower()
@@ -399,7 +411,9 @@ def add_dependency_to_mod(
                         mod_data[new_data_key].add(dependency_id)
                         if "isDependencyOf" not in all_mods[dependency_id]:
                             all_mods[dependency_id]["isDependencyOf"] = set()
-                        all_mods[dependency_id]["isDependencyOf"].add(mod_data["packageId"])
+                        all_mods[dependency_id]["isDependencyOf"].add(
+                            mod_data["packageId"]
+                        )
 
 
 def get_active_mods_from_config(config_path: str) -> Dict[str, Any]:
