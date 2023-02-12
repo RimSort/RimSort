@@ -15,6 +15,7 @@ from view.game_configuration_panel import GameConfiguration
 
 import json
 
+
 class MainContent:
     """
     This class controls the layout and functionality of the main content
@@ -86,7 +87,7 @@ class MainContent:
 
         :param package_id: package id of mod
         """
-        print(self.all_mods_with_dependencies[package_id])
+        # print(self.all_mods_with_dependencies[package_id])
         self.mod_info_panel.display_mod_info(
             self.all_mods_with_dependencies[package_id]
         )
@@ -107,7 +108,9 @@ class MainContent:
             self.game_configuration.get_game_folder_path()
         )
 
-        for package_id in self.expansions.keys(): # hardcode names into official expansions
+        for (
+            package_id
+        ) in self.expansions.keys():  # hardcode names into official expansions
             if package_id == "ludeon.rimworld":
                 self.expansions[package_id]["name"] = "Core (Base game)"
             if package_id == "ludeon.rimworld.royalty":
@@ -137,7 +140,10 @@ class MainContent:
 
         # Calculate and cache dependencies for ALL mods
         self.all_mods_with_dependencies = get_dependencies_for_mods(
-            self.expansions, mods, self.steam_db_rules, self.community_rules # TODO add user defined customRules from future customRules.json
+            self.expansions,
+            mods,
+            self.steam_db_rules,
+            self.community_rules,  # TODO add user defined customRules from future customRules.json
         )
 
     def repopulate_lists(self) -> None:
@@ -264,12 +270,15 @@ class MainContent:
             "ludeon.rimworld.biotech",
             "unlimitedhugs.hugslib",
         }
-        tier_one_mods = known_tier_one_mods.copy()
+        tier_one_mods = set()
         for known_tier_one_mod in known_tier_one_mods:
-            dependencies_set = self.get_dependencies_recursive(
-                known_tier_one_mod, dependencies_graph
-            )
-            tier_one_mods.update(dependencies_set)
+            if known_tier_one_mod in dependencies_graph:
+                # Some known tier one mods might not actually be active
+                tier_one_mods.add(known_tier_one_mod)
+                dependencies_set = self.get_dependencies_recursive(
+                    known_tier_one_mod, dependencies_graph
+                )
+                tier_one_mods.update(dependencies_set)
         tier_one_dependency_graph = {}
         for tier_one_mod in tier_one_mods:
             # Tier one mods will only ever reference other tier one mods in their dependencies graph
@@ -294,12 +303,15 @@ class MainContent:
                 ]
 
         known_tier_three_mods = {"krkr.rocketman"}
-        tier_three_mods = known_tier_three_mods.copy()
+        tier_three_mods = set()
         for known_tier_three_mod in known_tier_three_mods:
-            rev_dependencies_set = self.get_reverse_dependencies_recursive(
-                known_tier_three_mod, reverse_dependencies_graph
-            )
-            tier_three_mods.update(rev_dependencies_set)
+            if known_tier_three_mod in dependencies_graph:
+                # Some known tier three mods might not actually be active
+                tier_three_mods.add(known_tier_three_mod)
+                rev_dependencies_set = self.get_reverse_dependencies_recursive(
+                    known_tier_three_mod, reverse_dependencies_graph
+                )
+                tier_three_mods.update(rev_dependencies_set)
         tier_three_dependency_graph = {}
         for tier_three_mod in tier_three_mods:
             # Tier three mods may reference non-tier-three mods in their dependencies graph,
@@ -337,7 +349,8 @@ class MainContent:
                         if (
                             dependency_id not in tier_one_mods
                             and dependency_id not in tier_three_mods
-                            and dependency_id in active_mod_ids # Can reference non-active mod
+                            and dependency_id
+                            in active_mod_ids  # Can reference non-active mod
                         ):
                             stripped_dependencies.add(dependency_id)
                 tier_two_dependency_graph[package_id] = stripped_dependencies
@@ -378,10 +391,13 @@ class MainContent:
         self, package_id, active_mods_rev_dependencies
     ):
         reverse_dependencies_set = set()
+        # Should always be true since all active ids get initialized with a set()
         if package_id in active_mods_rev_dependencies:
             for dependent_id in active_mods_rev_dependencies[package_id]:
-                reverse_dependencies_set.add(dependent_id)
-                reverse_dependencies_set.update(
+                reverse_dependencies_set.add(
+                    dependent_id
+                )  # Safe, as should refer to active id
+                reverse_dependencies_set.update(  # Safe, as should refer to active ids
                     self.get_reverse_dependencies_recursive(
                         dependent_id, active_mods_rev_dependencies
                     )
@@ -390,10 +406,13 @@ class MainContent:
 
     def get_dependencies_recursive(self, package_id, active_mods_dependencies):
         dependencies_set = set()
+        # Should always be true since all active ids get initialized with a set()
         if package_id in active_mods_dependencies:
             for dependency_id in active_mods_dependencies[package_id]:
-                dependencies_set.add(dependency_id)
-                dependencies_set.update(
+                dependencies_set.add(
+                    dependency_id
+                )  # Safe, as should refer to active id
+                dependencies_set.update(  # Safe, as should refer to active ids
                     self.get_dependencies_recursive(
                         dependency_id, active_mods_dependencies
                     )
