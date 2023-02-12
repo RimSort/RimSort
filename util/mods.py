@@ -168,7 +168,7 @@ def get_community_rules(workshop_mods: Dict[str, Any]) -> Dict[str, Any]:
             with open(community_rules_path) as f:
                 rule_data = json.load(f)
                 return rule_data["rules"]
-    show_fatal_error(
+    show_warning(
         "The RimPy mod was not detected.\nPlease install the mod and restart RimSort."
     )
 
@@ -184,7 +184,7 @@ def get_rimpy_db(workshop_mods: Dict[str, Any]) -> Dict[str, Any]:
             with open(db_path) as f:
                 db_data = json.load(f)
                 return db_data["database"]
-    show_fatal_error(
+    show_warning(
         "The RimPy mod was not detected.\nPlease install the mod and restart RimSort."
     )
 

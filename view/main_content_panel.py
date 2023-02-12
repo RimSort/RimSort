@@ -259,6 +259,8 @@ class MainContent:
         for tier_one_mod in tier_one_mods:
             # Tier one mods will only ever reference other tier one mods in their dependencies graph
             tier_one_dependency_graph[tier_one_mod] = dependencies_graph[tier_one_mod]
+    
+        print(tier_one_dependency_graph)
 
         tier_one_sorted = toposort(tier_one_dependency_graph)
         # Reorder active mods alphabetically by their topological level
