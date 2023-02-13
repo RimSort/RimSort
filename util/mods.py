@@ -390,25 +390,25 @@ def get_dependencies_for_mods(
     # This cooresponds with the folder name of the folder used to "contain" the mod in the Steam mods directory
     # TODO: optimization: maybe everything could be based off publisher ID
     # TODO: optimization: all of this (and communityRules.json parsing) could probably be done in the first loop
-    if steam_db_rules:
-        folder_to_package_id = {}
-        for package_id, mod_data in all_mods.items():
-            if mod_data.get("folder"):
-                folder_to_package_id[mod_data["folder"]] = mod_data["packageId"]
+    # if steam_db_rules:
+    #     folder_to_package_id = {}
+    #     for package_id, mod_data in all_mods.items():
+    #         if mod_data.get("folder"):
+    #             folder_to_package_id[mod_data["folder"]] = mod_data["packageId"]
 
-        for folder_id, mod_data in steam_db_rules.items():
-            # We could use `folder_in in folder_to_package_id` too
-            if mod_data["packageId"].lower() in all_mods: 
-                for dependency_folder_id in mod_data["dependencies"]:
-                    if dependency_folder_id in folder_to_package_id:
-                        # This means the dependency is in all mods
-                        dependency_package_id = folder_to_package_id[dependency_folder_id]
-                        add_dependency_to_mod(
-                            all_mods.get(mod_data["packageId"].lower()),
-                            "dependencies",
-                            dependency_package_id.lower(),
-                            all_mods
-                        )
+    #     for folder_id, mod_data in steam_db_rules.items():
+    #         # We could use `folder_in in folder_to_package_id` too
+    #         if mod_data["packageId"].lower() in all_mods: 
+    #             for dependency_folder_id in mod_data["dependencies"]:
+    #                 if dependency_folder_id in folder_to_package_id:
+    #                     # This means the dependency is in all mods
+    #                     dependency_package_id = folder_to_package_id[dependency_folder_id]
+    #                     add_dependency_to_mod(
+    #                         all_mods.get(mod_data["packageId"].lower()),
+    #                         "dependencies",
+    #                         dependency_package_id.lower(),
+    #                         all_mods
+    #                     )
 
     # Add dependencies to installed mods based on dependencies from community rules
     if community_rules:
