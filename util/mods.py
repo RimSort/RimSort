@@ -264,15 +264,15 @@ def get_dependencies_for_mods(
     # Add dependencies to installed mods based on dependencies listed in About.xml
     for package_id in all_mods:
         # All modDependencies are dependencies
-        if all_mods[package_id].get("modDependencies"):
-            dependencies = all_mods[package_id]["modDependencies"]["li"]
-            if dependencies:
-                add_dependency_to_mod(
-                    all_mods[package_id],
-                    "dependencies",
-                    dependencies,
-                    all_mods,
-                )
+        # if all_mods[package_id].get("modDependencies"):
+        #     dependencies = all_mods[package_id]["modDependencies"]["li"]
+        #     if dependencies:
+        #         add_dependency_to_mod(
+        #             all_mods[package_id],
+        #             "dependencies",
+        #             dependencies,
+        #             all_mods,
+        #         )
 
         # Current mod should be loaded AFTER these mods
         # These are all dependencies for the current mod
@@ -285,6 +285,27 @@ def get_dependencies_for_mods(
                     dependencies,
                     all_mods,
                 )
+        
+        if all_mods[package_id].get("forceLoadAfter"):
+            dependencies = all_mods[package_id]["forceLoadAfter"]["li"]
+            if dependencies:
+                add_dependency_to_mod(
+                    all_mods[package_id],
+                    "dependencies",
+                    dependencies,
+                    all_mods,
+                )
+        
+        if all_mods[package_id].get("loadAfterByVersion"):
+            if all_mods[package_id]["loadAfterByVersion"].get("v1.4"):
+                dependencies = all_mods[package_id]["loadAfterByVersion"]["v1.4"]["li"]
+                if dependencies:
+                    add_dependency_to_mod(
+                        all_mods[package_id],
+                        "dependencies",
+                        dependencies,
+                        all_mods,
+                    )
 
         # Current mod should be loaded BEFORE these mods
         # The current mod is a dependency for all these mods
@@ -308,6 +329,50 @@ def get_dependencies_for_mods(
                             package_id,
                             all_mods,
                         )
+        
+        if all_mods[package_id].get("forceLoadBefore"):
+            dependencies = all_mods[package_id]["forceLoadBefore"]["li"]
+            if dependencies:
+                if isinstance(dependencies, str):
+                    add_dependency_to_mod(
+                        all_mods.get(
+                            dependencies.lower()
+                        ),  # Will be None if mod does not exist
+                        "dependencies",
+                        package_id,
+                        all_mods,
+                    )
+                elif isinstance(dependencies, list):
+                    for dependency_id in dependencies:
+                        add_dependency_to_mod(
+                            all_mods.get(dependency_id.lower()),
+                            "dependencies",
+                            package_id,
+                            all_mods,
+                        )
+        
+
+        if all_mods[package_id].get("loadBeforeByVersion"):
+            if all_mods[package_id]["loadBeforeByVersion"].get("v1.4"):
+                dependencies = all_mods[package_id]["loadBeforeByVersion"]["v1.4"]["li"]
+                if dependencies:
+                    if isinstance(dependencies, str):
+                        add_dependency_to_mod(
+                            all_mods.get(
+                                dependencies.lower()
+                            ),  # Will be None if mod does not exist
+                            "dependencies",
+                            package_id,
+                            all_mods,
+                        )
+                    elif isinstance(dependencies, list):
+                        for dependency_id in dependencies:
+                            add_dependency_to_mod(
+                                all_mods.get(dependency_id.lower()),
+                                "dependencies",
+                                package_id,
+                                all_mods,
+                            )
 
         # Check for incompatible mods (TODO: currently unused)
         if all_mods[package_id].get("incompatibleWith"):

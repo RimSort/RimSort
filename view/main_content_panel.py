@@ -383,11 +383,15 @@ class MainContent:
                 index_just_appended = rp_list.index(e)
                 self.recursively_force_insert(rp_list, ttdg_alphabetized, e, active_mods_json, index_just_appended)
                 count = count + 1
-                # if count == 20:
-                #     break
+                    # if count == 20:
+                    #     break
         
         for thing in rp_list:
             print(active_mods_json[thing]["name"])
+        
+        # print(len(rp_list))
+        # print(len(reordered_tier_one_sorted_with_data))
+        # print(len(reordered_tier_three_sorted_with_data))
 
 
         tier_two_sorted = toposort(tier_two_dependency_graph)
