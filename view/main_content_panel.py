@@ -361,6 +361,34 @@ class MainContent:
                         ):
                             stripped_dependencies.add(dependency_id)
                 tier_two_dependency_graph[package_id] = stripped_dependencies
+        
+        ttdg = tier_two_dependency_graph.copy()
+        print(len(ttdg))
+        # Get an alphabetized list 
+        am = dict((k, v["name"]) for k, v in active_mods_json.items())
+        am_alphabetized = sorted(
+            am.items(), key=lambda x: x[1], reverse=False
+        )
+        ttdg_alphabetized = {}
+        for tup_id_name in am_alphabetized:
+            if tup_id_name[0] in ttdg:
+                ttdg_alphabetized[tup_id_name[0]] = ttdg[tup_id_name[0]]
+        
+        rp_list = []
+        # print(ttdg_alphabetized)
+        count = 0
+        for e in ttdg_alphabetized:
+            if e not in rp_list:
+                rp_list.append(e) # Add the current mod
+                index_just_appended = rp_list.index(e)
+                self.recursively_force_insert(rp_list, ttdg_alphabetized, e, active_mods_json, index_just_appended)
+                count = count + 1
+                # if count == 20:
+                #     break
+        
+        for thing in rp_list:
+            print(active_mods_json[thing]["name"])
+
 
         tier_two_sorted = toposort(tier_two_dependency_graph)
         reordered_tier_two_sorted_with_data = {}
@@ -383,16 +411,34 @@ class MainContent:
         combined_tiers = {}
         for package_id, mod_data in reordered_tier_one_sorted_with_data.items():
             combined_tiers[package_id] = mod_data
-        for package_id, mod_data in reordered_tier_two_sorted_with_data.items():
-            if package_id in combined_tiers:
-                print("NO")
-            combined_tiers[package_id] = mod_data
+        for package_id in rp_list:
+            combined_tiers[package_id] = active_mods_json[package_id]
+        # for package_id, mod_data in reordered_tier_two_sorted_with_data.items():
+        #     if package_id in combined_tiers:
+        #         print("NO")
+        #     combined_tiers[package_id] = mod_data
         for package_id, mod_data in reordered_tier_three_sorted_with_data.items():
             if package_id in combined_tiers:
                 print("NO")
             combined_tiers[package_id] = mod_data
 
         self._insert_data_into_lists(combined_tiers, inactive_mods_json)
+
+    def recursively_force_insert(self, rp_list, ttdg_alphabetized, e, active_mods_json, index_just_appended):
+        deps_not_alphed = ttdg_alphabetized[e]
+        deps_to_alph  = {}
+        for dep in deps_not_alphed:
+            deps_to_alph[dep] = active_mods_json[dep]["name"]
+        deps_alphed = sorted(
+            deps_to_alph.items(), key=lambda x: x[1], reverse=True
+        )
+        print(f"Calling RFI for {e} with deps {deps_alphed}")
+        for tup_id_name in deps_alphed:
+            if tup_id_name[0] not in rp_list:
+                rp_list.insert(index_just_appended, tup_id_name[0])
+                new_idx = rp_list.index(tup_id_name[0])
+                self.recursively_force_insert(rp_list, ttdg_alphabetized, tup_id_name[0], active_mods_json, new_idx)
+
 
     def get_reverse_dependencies_recursive(
         self, package_id, active_mods_rev_dependencies

@@ -30,11 +30,11 @@ def get_active_inactive_mods(
 
     # Return an error if some active mod was in the ModsConfig but no data
     # could be found for it
-    if invalid_mods:
-        warning_message = "The following list of mods could not be loaded:"
-        for invalid_mod in invalid_mods:
-            warning_message = warning_message + f"\n * {invalid_mod}"
-        show_warning(warning_message)
+    # if invalid_mods:
+    #     warning_message = "The following list of mods could not be loaded:"
+    #     for invalid_mod in invalid_mods:
+    #         warning_message = warning_message + f"\n * {invalid_mod}"
+    #     show_warning(warning_message)
 
     # Get the inactive mods by subtracting active mods from workshop + expansions
     inactive_mods = get_inactive_mods(workshop_and_expansions, active_mods)
