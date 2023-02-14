@@ -1,5 +1,5 @@
 from typing import Any, Dict
-
+import time
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
@@ -108,23 +108,12 @@ class MainContent:
             self.game_configuration.get_game_folder_path()
         )
 
-        for (
-            package_id
-        ) in self.expansions.keys():  # hardcode names into official expansions
-            if package_id == "ludeon.rimworld":
-                self.expansions[package_id]["name"] = "Core (Base game)"
-            if package_id == "ludeon.rimworld.royalty":
-                self.expansions[package_id]["name"] = "Royalty (DLC #1)"
-            if package_id == "ludeon.rimworld.ideology":
-                self.expansions[package_id]["name"] = "Ideology (DLC #2)"
-            if package_id == "ludeon.rimworld.biotech":
-                self.expansions[package_id]["name"] = "Biotech (DLC #3)"
-
-        # Get and cache installed local/workshop mods
+        # Get and cache installed local/custom mods
         self.local_mods = get_local_mods(
             self.game_configuration.get_local_folder_path()
         )
 
+        # Get and cache installed workshop mods
         self.workshop_mods = get_workshop_mods(
             self.game_configuration.get_workshop_folder_path()
         )
@@ -307,9 +296,7 @@ class MainContent:
         # Tier three mods will have specific load order needs within themselves. There is no guarantee that
         # this list of mods is exhaustive, so we need to add any other mod that these mods depend on
         # into this list as well.
-        known_tier_three_mods = {
-            "krkr.rocketman"
-        }
+        known_tier_three_mods = {"krkr.rocketman"}
         tier_three_mods = set()
         for known_tier_three_mod in known_tier_three_mods:
             if known_tier_three_mod in dependencies_graph:
@@ -361,38 +348,37 @@ class MainContent:
                         ):
                             stripped_dependencies.add(dependency_id)
                 tier_two_dependency_graph[package_id] = stripped_dependencies
-        
+
         ttdg = tier_two_dependency_graph.copy()
         print(len(ttdg))
-        # Get an alphabetized list 
+        # Get an alphabetized list
         am = dict((k, v["name"]) for k, v in active_mods_json.items())
-        am_alphabetized = sorted(
-            am.items(), key=lambda x: x[1], reverse=False
-        )
+        am_alphabetized = sorted(am.items(), key=lambda x: x[1], reverse=False)
         ttdg_alphabetized = {}
         for tup_id_name in am_alphabetized:
             if tup_id_name[0] in ttdg:
                 ttdg_alphabetized[tup_id_name[0]] = ttdg[tup_id_name[0]]
-        
+
         rp_list = []
         # print(ttdg_alphabetized)
         count = 0
         for e in ttdg_alphabetized:
             if e not in rp_list:
-                rp_list.append(e) # Add the current mod
+                rp_list.append(e)  # Add the current mod
                 index_just_appended = rp_list.index(e)
-                self.recursively_force_insert(rp_list, ttdg_alphabetized, e, active_mods_json, index_just_appended)
+                self.recursively_force_insert(
+                    rp_list, ttdg_alphabetized, e, active_mods_json, index_just_appended
+                )
                 count = count + 1
-                    # if count == 20:
-                    #     break
-        
+                # if count == 20:
+                #     break
+
         for thing in rp_list:
             print(active_mods_json[thing]["name"])
-        
+
         # print(len(rp_list))
         # print(len(reordered_tier_one_sorted_with_data))
         # print(len(reordered_tier_three_sorted_with_data))
-
 
         tier_two_sorted = toposort(tier_two_dependency_graph)
         reordered_tier_two_sorted_with_data = {}
@@ -428,21 +414,26 @@ class MainContent:
 
         self._insert_data_into_lists(combined_tiers, inactive_mods_json)
 
-    def recursively_force_insert(self, rp_list, ttdg_alphabetized, e, active_mods_json, index_just_appended):
+    def recursively_force_insert(
+        self, rp_list, ttdg_alphabetized, e, active_mods_json, index_just_appended
+    ):
         deps_not_alphed = ttdg_alphabetized[e]
-        deps_to_alph  = {}
+        deps_to_alph = {}
         for dep in deps_not_alphed:
             deps_to_alph[dep] = active_mods_json[dep]["name"]
-        deps_alphed = sorted(
-            deps_to_alph.items(), key=lambda x: x[1], reverse=True
-        )
+        deps_alphed = sorted(deps_to_alph.items(), key=lambda x: x[1], reverse=True)
         print(f"Calling RFI for {e} with deps {deps_alphed}")
         for tup_id_name in deps_alphed:
             if tup_id_name[0] not in rp_list:
                 rp_list.insert(index_just_appended, tup_id_name[0])
                 new_idx = rp_list.index(tup_id_name[0])
-                self.recursively_force_insert(rp_list, ttdg_alphabetized, tup_id_name[0], active_mods_json, new_idx)
-
+                self.recursively_force_insert(
+                    rp_list,
+                    ttdg_alphabetized,
+                    tup_id_name[0],
+                    active_mods_json,
+                    new_idx,
+                )
 
     def get_reverse_dependencies_recursive(
         self, package_id, active_mods_rev_dependencies

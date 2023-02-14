@@ -52,56 +52,100 @@ class GameConfiguration(QObject):
             partial(self.open_directory, self.get_game_folder_path)
         )
         self.game_folder_open_button.setObjectName("LeftButton")
+        self.game_folder_open_button.setToolTip(
+            "Open the game installation directory"
+        )
         self.game_folder_line = QLineEdit()
         self.game_folder_line.setDisabled(True)
         self.game_folder_line.setPlaceholderText(
-            "Unknown, please select the game folder"
+            "Unknown"
+        )
+        self.game_folder_line.setToolTip(
+            "The game installation directory contains the game executable.\n"
+            "Set the game installation directory with the button on the right."
         )
         self.game_folder_select_button = QPushButton("...")
         self.game_folder_select_button.clicked.connect(self.set_game_exe_folder)
         self.game_folder_select_button.setObjectName("RightButton")
+        self.game_folder_select_button.setToolTip(
+            "Set the game installation directory"
+        )
 
         self.config_folder_open_button = QPushButton("Config File")
         self.config_folder_open_button.clicked.connect(
             partial(self.open_directory, self.get_config_folder_path)
         )
         self.config_folder_open_button.setObjectName("LeftButton")
+        self.config_folder_open_button.setToolTip(
+            "Open the ModsConfig.xml directory"
+        )
         self.config_folder_line = QLineEdit()
         self.config_folder_line.setDisabled(True)
         self.config_folder_line.setPlaceholderText(
-            "Unknown, please select the ModsConfig.xml folder"
+            "Unknown"
+        )
+        self.config_folder_line.setToolTip(
+            "The this directory contains the ModsConfig.xml file, which\n"
+            "shows your active mods and their load order."
+            "Set the ModsConfig.xml directory with the button on the right."
         )
         self.config_folder_select_button = QPushButton("...")
         self.config_folder_select_button.clicked.connect(self.set_config_folder)
         self.config_folder_select_button.setObjectName("RightButton")
+        self.config_folder_select_button.setToolTip(
+            "Set the ModsConfig.xml directory"
+        )
 
         self.workshop_folder_open_button = QPushButton("Steam Mods")
         self.workshop_folder_open_button.clicked.connect(
             partial(self.open_directory, self.get_workshop_folder_path)
         )
         self.workshop_folder_open_button.setObjectName("LeftButton")
+        self.workshop_folder_open_button.setToolTip(
+            "Open the Steam Workshop Mods directory"
+        )
         self.workshop_folder_line = QLineEdit()
         self.workshop_folder_line.setDisabled(True)
         self.workshop_folder_line.setPlaceholderText(
-            "Unknown, please select the RimWorld workshop folder"
+            "Unknown"
+        )
+        self.workshop_folder_line.setToolTip(
+            "The Steam Workshop Mods directory contains mods downloaded from Steam.\n"
+            "Set the Steam Workshop Mods directory with the button on the right."
         )
         self.workshop_folder_select_button = QPushButton("...")
         self.workshop_folder_select_button.clicked.connect(self.set_workshop_folder)
         self.workshop_folder_select_button.setObjectName("RightButton")
+        self.workshop_folder_select_button.setToolTip(
+            "Set the Steam Workshop Mods directory"
+        )
 
         self.local_folder_open_button = QPushButton("Local Mods")
         self.local_folder_open_button.clicked.connect(
             partial(self.open_directory, self.get_local_folder_path)
         )
         self.local_folder_open_button.setObjectName("LeftButton")
+        self.local_folder_open_button.setToolTip(
+            "Open the Local Mods directory"
+        )
         self.local_folder_line = QLineEdit()
         self.local_folder_line.setDisabled(True)
         self.local_folder_line.setPlaceholderText(
-            "Unknown, please select the RimWorld local mods folder"
+            "Unknown"
+        )
+        self.local_folder_line.setToolTip(
+            "The Local Mods directory contains downloaded mod folders.\n"
+            "By default, this folder is located in the game install directory.\n"
+            "Set the Local Mods directory with the button on the right."
         )
         self.local_folder_select_button = QPushButton("...")
         self.local_folder_select_button.clicked.connect(self.set_local_folder)
         self.local_folder_select_button.setObjectName("RightButton")
+        self.local_folder_select_button.setToolTip(
+            "Set the Local Mods directory.\n"
+            "On Mac, set this to the game install directory to use the\n"
+            "default game install directory's Mods folder."
+        )
 
         # WIDGETS INTO CONTAINER LAYOUTS
         self.game_folder_row.addWidget(self.game_folder_open_button)
