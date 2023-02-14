@@ -15,6 +15,7 @@ class ModListWidget(QListWidget):
     """
 
     mod_list_signal = Signal(str)
+    list_change_signal = Signal(str)
 
     def __init__(self) -> None:
         """
@@ -39,6 +40,11 @@ class ModListWidget(QListWidget):
         # Allow inserting custom list items
         self.model().rowsInserted.connect(
             self.handle_rows_inserted, Qt.QueuedConnection
+        )
+
+        # Handle removing items to update count
+        self.model().rowsAboutToBeRemoved.connect(
+            self.handle_rows_removed, Qt.QueuedConnection
         )
 
     def recreate_mod_list(self, mods: Dict[str, Any]) -> None:
@@ -72,6 +78,19 @@ class ModListWidget(QListWidget):
                 widget = ModListItemInner(data)
                 item.setSizeHint(widget.sizeHint())
                 self.setItemWidget(item, widget)
+        self.list_change_signal.emit(str(self.count()))
+
+    def handle_rows_removed(self, parent: QModelIndex, first: int, last: int) -> None:
+        """
+        This slot is called when rows are removed.
+        Emit a signal with the count of objects remaining to update
+        the count label.
+
+        :param parent: parent to get rows under (not used)
+        :param first: index of first item removed (not used)
+        :param last: index of last item removed (not used)
+        """
+        self.list_change_signal.emit(str(self.count()))
 
     def get_list_items(self) -> List[ModListItemInner]:
         """
@@ -81,7 +100,7 @@ class ModListWidget(QListWidget):
         :return: a list of mod item widgets
         """
         return [self.itemWidget(self.item(i)) for i in range(self.count())]
-    
+
     def get_list_items_by_dict(self) -> Dict[str, Any]:
         """
         Get a dict of all row item's widgets data. Equal to `mods` in
@@ -105,4 +124,4 @@ class ModListWidget(QListWidget):
 
     def mod_clicked(self, item: QListWidgetItem) -> None:
         """Method to handle clicking on a row"""
-        self.mod_list_signal.emit(item.data(Qt.UserRole)['packageId'])
+        self.mod_list_signal.emit(item.data(Qt.UserRole)["packageId"])

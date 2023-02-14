@@ -24,7 +24,17 @@ class InactiveModList:
         self.panel = QVBoxLayout()
 
         # Instantiate widgets
+        self.num_mods = QLabel("Inactive [0]")
+        self.num_mods.setAlignment(Qt.AlignCenter)
+        self.num_mods.setObjectName("summaryValue")
         self.inactive_mods_list = ModListWidget()
 
         # Add widgets to base layout
+        self.panel.addWidget(self.num_mods)
         self.panel.addWidget(self.inactive_mods_list)
+
+        # Connect signals and slots
+        self.inactive_mods_list.list_change_signal.connect(self.change_mod_num_display)
+
+    def change_mod_num_display(self, count: str) -> None:
+        self.num_mods.setText(f"Inactive [{count}]")

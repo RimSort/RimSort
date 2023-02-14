@@ -5,13 +5,16 @@ from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 from toposort import toposort
 
-from panel.actions_panel import Actions
-from panel.active_mods_panel import ActiveModList
-from panel.inactive_mods_panel import InactiveModList
-from panel.mod_info_panel import ModInfo
+from sub_view.actions_panel import Actions
+from sub_view.active_mods_panel import ActiveModList
+from sub_view.inactive_mods_panel import InactiveModList
+from sub_view.mod_info_panel import ModInfo
 from util.mods import *
 from util.xml import json_to_xml_write, xml_path_to_json
 from view.game_configuration_panel import GameConfiguration
+from sort.dependencies import *
+from sort.rimpy_sort import *
+from sort.topo_sort import *
 
 
 class MainContent:
@@ -85,6 +88,7 @@ class MainContent:
 
         :param package_id: package id of mod
         """
+        # print(self.all_mods_with_dependencies[package_id])
         self.mod_info_panel.display_mod_info(
             self.all_mods_with_dependencies[package_id]
         )
@@ -100,31 +104,41 @@ class MainContent:
         somehow, e.g. re-setting workshop path, mods config path, or downloading another mod,
         but also after ModsConfig.xml path has been changed).
         """
-        # Get and cache local/workshop mods and base game / DLC data
+        # Get and cache installed base game / DLC data
+        self.expansions = get_installed_expansions(
+            self.game_configuration.get_game_folder_path()
+        )
+
+        self.game_version = get_game_version_from_config(
+            self.game_configuration.get_config_path()
+        )
+        self.game_configuration.game_version_line.setText(self.game_version)
+
+        # Get and cache installed local/custom mods
         self.local_mods = get_local_mods(
             self.game_configuration.get_local_folder_path()
         )
+
+        # Get and cache installed workshop mods
         self.workshop_mods = get_workshop_mods(
             self.game_configuration.get_workshop_folder_path()
         )
-        self.known_expansions = get_known_expansions_from_config(
-            self.game_configuration.get_config_path()
-        )
-        for package_id in self.known_expansions.keys():
-            populate_expansions_static_data(self.known_expansions, package_id)
 
         # One working Dictionary for ALL mods
-        mods = merge_mod_data(
-            self.local_mods,
-            self.workshop_mods
-        )
+        mods = merge_mod_data(self.local_mods, self.workshop_mods)
 
-        # Get and cache load order data for ALL mods
+        # Get and cache steam db rules data for ALL mods
+        self.steam_db_rules = get_steam_db_rules(mods)
+
+        # Get and cache community rules data for ALL mods
         self.community_rules = get_community_rules(mods)
 
         # Calculate and cache dependencies for ALL mods
         self.all_mods_with_dependencies = get_dependencies_for_mods(
-            mods, self.known_expansions, self.community_rules
+            self.expansions,
+            mods,
+            self.steam_db_rules,
+            self.community_rules,  # TODO add user defined customRules from future customRules.json
         )
 
     def repopulate_lists(self) -> None:
@@ -190,79 +204,95 @@ class MainContent:
             self.game_configuration.get_config_path(),
             self.all_mods_with_dependencies,
         )
-        known_expansions_ids = list(self.known_expansions.keys())
+        expansions_ids = list(self.expansions.keys())
         active_mod_data = {}
         inactive_mod_data = {}
         for package_id, mod_data in active_mods_data.items():
-            if package_id in known_expansions_ids:
+            if package_id in expansions_ids:
                 active_mod_data[package_id] = mod_data
             else:
                 inactive_mod_data[package_id] = mod_data
         for package_id, mod_data in inactive_mods_data.items():
-            if package_id in known_expansions_ids:
+            if package_id in expansions_ids:
                 active_mod_data[package_id] = mod_data
             else:
                 inactive_mod_data[package_id] = mod_data
         self._insert_data_into_lists(active_mod_data, inactive_mod_data)
 
     def _do_sort(self) -> None:
-        """
-        Sort the active mods list by dependencies and prioritizing alphabetical
-        order within topological levels.
-
-        TODO: we are getting mod items in two forms, one with its class definitions,
-            and once again but only its json data. This is semi redundant and a waste of
-            space. Consider refactoring so that each mod item just uses json data.
-        """
         # Get the live list of active and inactive mods. This is because the user
-        # will likely sort before saving. This is not meant to be used until later
-        # but is useful for getting the ids of the active mods.
-        active_mods_json = (
-            self.active_mods_panel.active_mods_list.get_list_items_by_dict()
-        )
-        inactive_mods_json = (
+        # will likely sort before saving.
+        active_mods = self.active_mods_panel.active_mods_list.get_list_items_by_dict()
+        active_mod_ids = list(active_mods.keys())
+        inactive_mods = (
             self.inactive_mods_panel.inactive_mods_list.get_list_items_by_dict()
         )
 
-        # Get all active mods and their dependencies
-        dependencies_graph = {}  # Schema: {item: {dependency1, dependency2, ...}}
-        active_mods = self.active_mods_panel.active_mods_list.get_list_items()
-        active_mod_ids = list(active_mods_json.keys())
-        for mod in active_mods:
-            dependencies_graph[mod.package_id] = set()
-            if mod.dependencies:  # Will either be None, or a set
-                for dependency in mod.dependencies:
-                    # Only add a dependency if dependency exists in active_mods
-                    # (related to comment about stripping dependencies)
-                    if dependency in active_mod_ids:
-                        dependencies_graph[mod.package_id].add(dependency)
+        # Get all active mods and their dependencies (if also active mod)
+        dependencies_graph = gen_deps_graph(active_mods, active_mod_ids)
 
-        # Run topological sort
-        # The result is a list of sets; each set contains topologically-equivalent items
-        topo_result = toposort(dependencies_graph)
+        # Get all active mods and their reverse dependencies
+        reverse_dependencies_graph = gen_rev_deps_graph(active_mods, active_mod_ids)
 
-        # Reorder active mods alphabetically by their topological level before
-        # submitting the list back into the widget
-        reordered_active_mods_data = {}
-        for level in topo_result:
-            temp_mod_dict = {}
-            for package_id in level:
-                # Previously, this was needed because the toposort produces elements for
-                # all package ids referenced in the dependencies graph. However, now
-                # we're stripping dependencies not in active mods
-                # -- if package_id in active_mods_json: --
-                temp_mod_dict[package_id] = active_mods_json[package_id]
-            # Sort packages in this topological level by name
-            sorted_temp_mod_dict = sorted(
-                temp_mod_dict.items(), key=lambda x: x[1]["name"], reverse=False
+        # Get dependencies graph for tier one mods (load at top mods)
+        tier_one_dependency_graph, tier_one_mods = gen_tier_one_deps_graph(
+            dependencies_graph
+        )
+
+        # Get dependencies graph for tier three mods (load at bottom mods)
+        tier_three_dependency_graph, tier_three_mods = gen_tier_three_deps_graph(
+            dependencies_graph, reverse_dependencies_graph
+        )
+
+        # Get dependencies graph for tier two mods (load in middle)
+        tier_two_dependency_graph = gen_tier_two_deps_graph(
+            active_mods, active_mod_ids, tier_one_mods, tier_three_mods
+        )
+
+        # Depending on the selected algorithm, sort all tiers with RimPy
+        # mimic algorithm or toposort
+        sorting_algorithm = (
+            self.game_configuration.settings_panel.sorting_algorithm_cb.currentText()
+        )
+
+        if sorting_algorithm == "RimPy":
+            reordered_tier_one_sorted_with_data = do_rimpy_sort(
+                tier_one_dependency_graph, active_mods
             )
-            # sorted_mod is tuple of (packageId, json_data)
-            # Add into reordered_active_mods_data (dicts are ordered now)
-            for sorted_mod in sorted_temp_mod_dict:
-                reordered_active_mods_data[sorted_mod[0]] = active_mods_json[
-                    sorted_mod[0]
-                ]
-        self._insert_data_into_lists(reordered_active_mods_data, inactive_mods_json)
+            reordered_tier_three_sorted_with_data = do_rimpy_sort(
+                tier_three_dependency_graph, active_mods
+            )
+            reordered_tier_two_sorted_with_data = do_rimpy_sort(
+                tier_two_dependency_graph, active_mods
+            )
+        else:
+            # Sort tier one mods
+            reordered_tier_one_sorted_with_data = do_topo_sort(
+                tier_one_dependency_graph, active_mods
+            )
+            # Sort tier three mods
+            reordered_tier_three_sorted_with_data = do_topo_sort(
+                tier_three_dependency_graph, active_mods
+            )
+            # Sort tier two mods
+            reordered_tier_two_sorted_with_data = do_topo_sort(
+                tier_two_dependency_graph, active_mods
+            )
+
+        print(len(reordered_tier_one_sorted_with_data))
+        print(len(reordered_tier_two_sorted_with_data))
+        print(len(reordered_tier_three_sorted_with_data))
+
+        # Add Tier 1, 2, 3 in order
+        combined_mods = {}
+        for package_id, mod_data in reordered_tier_one_sorted_with_data.items():
+            combined_mods[package_id] = mod_data
+        for package_id, mod_data in reordered_tier_two_sorted_with_data.items():
+            combined_mods[package_id] = mod_data
+        for package_id, mod_data in reordered_tier_three_sorted_with_data.items():
+            combined_mods[package_id] = mod_data
+
+        self._insert_data_into_lists(combined_mods, inactive_mods)
 
     def _do_import(self) -> None:
         """
