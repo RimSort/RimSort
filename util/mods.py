@@ -170,7 +170,7 @@ def get_installed_expansions(game_path: str) -> Dict[str, Any]:
 
     # Base game and expansion About.xml do not contain name, so these
     # must be manually added
-    for package_id in mod_data.keys():  
+    for package_id in mod_data.keys():
         if package_id == "ludeon.rimworld":
             mod_data[package_id]["name"] = "Core (Base game)"
         if package_id == "ludeon.rimworld.royalty":
@@ -179,7 +179,7 @@ def get_installed_expansions(game_path: str) -> Dict[str, Any]:
             mod_data[package_id]["name"] = "Ideology (DLC #2)"
         if package_id == "ludeon.rimworld.biotech":
             mod_data[package_id]["name"] = "Biotech (DLC #3)"
-    
+
     return mod_data
 
 
@@ -199,7 +199,7 @@ def get_local_mods(local_path: str) -> Dict[str, Any]:
     system_name = platform.system()
     if system_name == "Darwin":
         local_path = os.path.join(local_path, "RimWorldMac.app", "Mods")
-    
+
     # Get mod data
     return parse_mod_data(local_path)
 
@@ -551,6 +551,23 @@ def add_dependency_to_mod(
                         all_mods[dependency_id]["isDependencyOf"].add(
                             mod_data["packageId"]
                         )
+
+
+def get_game_version_from_config(config_path: str) -> str:
+    """
+    Given a path to a file in the ModsConfig.xml format, return the
+    game version.
+
+    :param path: path to a ModsConfig.xml file
+    :return: the game version as a string
+    """
+    mod_data = xml_path_to_json(config_path)
+    try:
+        if mod_data:
+            return mod_data["ModsConfigData"]["version"]
+        return {}
+    except:
+        raise InvalidModsConfigFormat
 
 
 def get_active_mods_from_config(config_path: str) -> Dict[str, Any]:

@@ -5,10 +5,10 @@ from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 from toposort import toposort
 
-from panel.actions_panel import Actions
-from panel.active_mods_panel import ActiveModList
-from panel.inactive_mods_panel import InactiveModList
-from panel.mod_info_panel import ModInfo
+from sub_view.actions_panel import Actions
+from sub_view.active_mods_panel import ActiveModList
+from sub_view.inactive_mods_panel import InactiveModList
+from sub_view.mod_info_panel import ModInfo
 from util.mods import *
 from util.xml import json_to_xml_write, xml_path_to_json
 from view.game_configuration_panel import GameConfiguration
@@ -107,6 +107,11 @@ class MainContent:
         self.expansions = get_installed_expansions(
             self.game_configuration.get_game_folder_path()
         )
+
+        self.game_version = get_game_version_from_config(
+            self.game_configuration.get_config_path()
+        )
+        self.game_configuration.game_version_line.setText(self.game_version)
 
         # Get and cache installed local/custom mods
         self.local_mods = get_local_mods(
