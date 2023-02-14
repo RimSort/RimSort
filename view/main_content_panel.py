@@ -1,5 +1,5 @@
 from typing import Any, Dict
-import time
+
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
@@ -12,8 +12,6 @@ from sub_view.mod_info_panel import ModInfo
 from util.mods import *
 from util.xml import json_to_xml_write, xml_path_to_json
 from view.game_configuration_panel import GameConfiguration
-
-import json
 
 
 class MainContent:
@@ -256,6 +254,7 @@ class MainContent:
         # load order needs within themselves, e.g. Harmony before core. There is no guarantee that
         # this list of mods is exhaustive, so we need to add any other mod that these mods depend on
         # into this list as well.
+        # TODO: pull from a config
         known_tier_one_mods = {
             "brrainz.harmony",
             "ludeon.rimworld",
@@ -301,6 +300,7 @@ class MainContent:
         # Tier three mods will have specific load order needs within themselves. There is no guarantee that
         # this list of mods is exhaustive, so we need to add any other mod that these mods depend on
         # into this list as well.
+        # TODO: pull from a config
         known_tier_three_mods = {"krkr.rocketman"}
         tier_three_mods = set()
         for known_tier_three_mod in known_tier_three_mods:
@@ -338,6 +338,8 @@ class MainContent:
                 ]
 
         # Now, sort the rest of the mods while removing references to mods in tier one and tier three
+        # First, get the dependency graph for tier two mods, minus all references to tier one
+        # and tier three mods
         tier_two_dependency_graph = {}
         for package_id, mod_data in active_mods_json.items():
             if package_id not in tier_one_mods and package_id not in tier_three_mods:
@@ -354,8 +356,84 @@ class MainContent:
                             stripped_dependencies.add(dependency_id)
                 tier_two_dependency_graph[package_id] = stripped_dependencies
 
-        ttdg = tier_two_dependency_graph.copy()
-        print(len(ttdg))
+        sorting_alglrithm = (
+            self.game_configuration.settings_panel.sorting_algorithm_cb.currentText()
+        )
+        reordered_tier_two_sorted_with_data = {}
+        if sorting_alglrithm == "RimPy":
+            reordered_tier_two_sorted_with_data = self.do_rimpy_sort(
+                tier_two_dependency_graph, active_mods_json
+            )
+        else:
+            reordered_tier_two_sorted_with_data = self.do_topo_sort(
+                tier_two_dependency_graph, active_mods_json
+            )
+
+        # Add Tier 1, 2, 3 in order
+        combined_tiers = {}
+        for package_id, mod_data in reordered_tier_one_sorted_with_data.items():
+            combined_tiers[package_id] = mod_data
+        for package_id, mod_data in reordered_tier_two_sorted_with_data.items():
+            if package_id in combined_tiers:
+                print("NO")
+            combined_tiers[package_id] = mod_data
+        for package_id, mod_data in reordered_tier_three_sorted_with_data.items():
+            if package_id in combined_tiers:
+                print("NO")
+            combined_tiers[package_id] = mod_data
+
+        self._insert_data_into_lists(combined_tiers, inactive_mods_json)
+
+    def recursively_force_insert(
+        self, rp_list, ttdg_alphabetized, e, active_mods_json, index_just_appended
+    ):
+        deps_not_alphed = ttdg_alphabetized[e]
+        deps_to_alph = {}
+        for dep in deps_not_alphed:
+            deps_to_alph[dep] = active_mods_json[dep]["name"]
+        deps_alphed = sorted(deps_to_alph.items(), key=lambda x: x[1], reverse=True)
+        for tup_id_name in deps_alphed:
+            if tup_id_name[0] not in rp_list:
+                rp_list.insert(index_just_appended, tup_id_name[0])
+                new_idx = rp_list.index(tup_id_name[0])
+                self.recursively_force_insert(
+                    rp_list,
+                    ttdg_alphabetized,
+                    tup_id_name[0],
+                    active_mods_json,
+                    new_idx,
+                )
+
+    def do_topo_sort(
+        self, dependency_graph: Dict[str, set], active_mods_json: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Sort mods using the topological sort algorithm. For each
+        topological level, sort the mods alphabetically.
+        """
+        tier_two_sorted = toposort(dependency_graph)
+        reordered_tier_two_sorted_with_data = {}
+        for level in tier_two_sorted:
+            temp_mod_dict = {}
+            for package_id in level:
+                temp_mod_dict[package_id] = active_mods_json[package_id]
+            # Sort packages in this topological level by name
+            sorted_temp_mod_dict = sorted(
+                temp_mod_dict.items(), key=lambda x: x[1]["name"], reverse=False
+            )
+            # sorted_mod is tuple of (packageId, json_data)
+            # Add into reordered_active_mods_data (dicts are ordered now)
+            for sorted_mod in sorted_temp_mod_dict:
+                reordered_tier_two_sorted_with_data[sorted_mod[0]] = active_mods_json[
+                    sorted_mod[0]
+                ]
+        return reordered_tier_two_sorted_with_data
+
+    def do_rimpy_sort(
+        self, dependency_graph: Dict[str, set], active_mods_json: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        # RimPy sorting method
+        ttdg = dependency_graph.copy()
         # Get an alphabetized list
         am = dict((k, v["name"]) for k, v in active_mods_json.items())
         am_alphabetized = sorted(am.items(), key=lambda x: x[1], reverse=False)
@@ -374,71 +452,11 @@ class MainContent:
                 self.recursively_force_insert(
                     rp_list, ttdg_alphabetized, e, active_mods_json, index_just_appended
                 )
-                count = count + 1
-                # if count == 20:
-                #     break
 
-        for thing in rp_list:
-            print(active_mods_json[thing]["name"])
-
-        # print(len(rp_list))
-        # print(len(reordered_tier_one_sorted_with_data))
-        # print(len(reordered_tier_three_sorted_with_data))
-
-        tier_two_sorted = toposort(tier_two_dependency_graph)
-        reordered_tier_two_sorted_with_data = {}
-        for level in tier_two_sorted:
-            temp_mod_dict = {}
-            for package_id in level:
-                temp_mod_dict[package_id] = active_mods_json[package_id]
-            # Sort packages in this topological level by name
-            sorted_temp_mod_dict = sorted(
-                temp_mod_dict.items(), key=lambda x: x[1]["name"], reverse=False
-            )
-            # sorted_mod is tuple of (packageId, json_data)
-            # Add into reordered_active_mods_data (dicts are ordered now)
-            for sorted_mod in sorted_temp_mod_dict:
-                reordered_tier_two_sorted_with_data[sorted_mod[0]] = active_mods_json[
-                    sorted_mod[0]
-                ]
-
-        # Add Tier 1, 2, 3 in order
-        combined_tiers = {}
-        for package_id, mod_data in reordered_tier_one_sorted_with_data.items():
-            combined_tiers[package_id] = mod_data
+        reordered = {}
         for package_id in rp_list:
-            combined_tiers[package_id] = active_mods_json[package_id]
-        # for package_id, mod_data in reordered_tier_two_sorted_with_data.items():
-        #     if package_id in combined_tiers:
-        #         print("NO")
-        #     combined_tiers[package_id] = mod_data
-        for package_id, mod_data in reordered_tier_three_sorted_with_data.items():
-            if package_id in combined_tiers:
-                print("NO")
-            combined_tiers[package_id] = mod_data
-
-        self._insert_data_into_lists(combined_tiers, inactive_mods_json)
-
-    def recursively_force_insert(
-        self, rp_list, ttdg_alphabetized, e, active_mods_json, index_just_appended
-    ):
-        deps_not_alphed = ttdg_alphabetized[e]
-        deps_to_alph = {}
-        for dep in deps_not_alphed:
-            deps_to_alph[dep] = active_mods_json[dep]["name"]
-        deps_alphed = sorted(deps_to_alph.items(), key=lambda x: x[1], reverse=True)
-        print(f"Calling RFI for {e} with deps {deps_alphed}")
-        for tup_id_name in deps_alphed:
-            if tup_id_name[0] not in rp_list:
-                rp_list.insert(index_just_appended, tup_id_name[0])
-                new_idx = rp_list.index(tup_id_name[0])
-                self.recursively_force_insert(
-                    rp_list,
-                    ttdg_alphabetized,
-                    tup_id_name[0],
-                    active_mods_json,
-                    new_idx,
-                )
+            reordered[package_id] = active_mods_json[package_id]
+        return reordered
 
     def get_reverse_dependencies_recursive(
         self, package_id, active_mods_rev_dependencies
