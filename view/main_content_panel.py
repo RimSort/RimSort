@@ -1,3 +1,7 @@
+import os
+import platform
+import subprocess
+
 from typing import Any, Dict
 
 from PySide2.QtCore import *
@@ -32,6 +36,7 @@ class MainContent:
 
         :param game_configuration: game configuration panel to get paths
         """
+
         # BASE LAYOUT
         self.main_layout = QHBoxLayout()
         self.main_layout.setContentsMargins(
@@ -93,6 +98,31 @@ class MainContent:
             self.all_mods_with_dependencies[package_id]
         )
 
+    def platform_specific_game_launch(self, args) -> None:
+        """
+        This function starts the Rimworld game process in it's own subprocess,
+        by launching the executable found in the configured game directory.
+
+        :param game_path: path to Rimworld game
+        """
+
+        game_path = self.game_configuration.get_game_folder_path()
+        system_name = platform.system()
+
+        if system_name == "Darwin":
+            subprocess.Popen(["open", game_path, "RimWorldMac.app"])
+        elif system_name == "Linux" or "Windows":
+            try:
+                subprocess.CREATE_NEW_PROCESS_GROUP
+            except AttributeError:
+                # not Windows, so assume POSIX; if not, we'll get a usable exception
+                p = subprocess.Popen([os.path.join(game_path, "RimWorldLinux")], start_new_session=True)
+            else:
+                # Windows
+                p = subprocess.Popen([os.path.join(game_path, "RimWorldWin64.exe")], creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+        else:
+            print("Unknown System")  # TODO
+
     def refresh_cache_calculations(self) -> None:
         """
         This function contains expensive calculations for getting workshop
@@ -109,8 +139,9 @@ class MainContent:
             self.game_configuration.get_game_folder_path()
         )
 
-        self.game_version = get_game_version_from_config(
-            self.game_configuration.get_config_path()
+        # Get & set Rimworld version string
+        self.game_version = get_game_version(
+            self.game_configuration.get_game_folder_path()
         )
         self.game_configuration.game_version_line.setText(self.game_version)
 
@@ -181,7 +212,8 @@ class MainContent:
         if action == "import":
             self._do_import()
         if action == "run":
-            print("RUN")
+            args = []
+            self.platform_specific_game_launch(args)
 
     def _insert_data_into_lists(
         self, active_mods: Dict[str, Any], inactive_mods: Dict[str, Any]

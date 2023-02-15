@@ -424,7 +424,7 @@ class GameConfiguration(QObject):
         print("autodetecting")
 
     def open_wiki_webbrowser(self):
-        webbrowser.open("https://github.com/oceancabbage/RimSort")
+        webbrowser.open("https://github.com/oceancabbage/RimSort/wiki")
 
     def open_github_webbrowser(self):
         webbrowser.open("https://github.com/oceancabbage/RimSort")

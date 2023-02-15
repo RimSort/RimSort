@@ -161,8 +161,7 @@ def get_installed_expansions(game_path: str) -> Dict[str, Any]:
     """
     # RimWorld folder on mac contains RimWorldMac.app which
     # is actually a folder itself
-    system_name = platform.system()
-    if system_name == "Darwin":
+    if platform.system() == "Darwin":
         game_path = os.path.join(game_path, "RimWorldMac.app")
 
     # Get mod data
@@ -553,21 +552,19 @@ def add_dependency_to_mod(
                         )
 
 
-def get_game_version_from_config(config_path: str) -> str:
+def get_game_version(game_path: str) -> str:
     """
-    Given a path to a file in the ModsConfig.xml format, return the
-    game version.
+    This function starts the Rimworld game version string from the file
+    'Version.txt' that is found in the configured game directory.
 
-    :param path: path to a ModsConfig.xml file
+    :param game_path: path to Rimworld game
     :return: the game version as a string
     """
-    mod_data = xml_path_to_json(config_path)
-    try:
-        if mod_data:
-            return mod_data["ModsConfigData"]["version"]
-        return {}
-    except:
-        raise InvalidModsConfigFormat
+    if os.path.exists(game_path):
+        with open(os.path.join(game_path, "Version.txt")) as f:
+            #print("Opening " + game_path)
+            version = f.read()
+        return version
 
 
 def get_active_mods_from_config(config_path: str) -> Dict[str, Any]:
