@@ -110,7 +110,7 @@ class MainContent:
         system_name = platform.system()
 
         if system_name == "Darwin":
-            subprocess.Popen(["open", game_path, "RimWorldMac.app"])
+            subprocess.Popen(["open", os.path.join(game_path, "RimWorldMac.app")])
         elif system_name == "Linux" or "Windows":
             try:
                 subprocess.CREATE_NEW_PROCESS_GROUP

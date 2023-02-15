@@ -561,8 +561,9 @@ def get_game_version(game_path: str) -> str:
     :return: the game version as a string
     """
     if os.path.exists(game_path):
+        if platform.system() == "Darwin":
+            game_path = os.path.join(game_path, "RimWorldMac.app")
         with open(os.path.join(game_path, "Version.txt")) as f:
-            #print("Opening " + game_path)
             version = f.read()
         return version
 
