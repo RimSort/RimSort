@@ -80,12 +80,7 @@ class MainContent:
             self.refresh_cache_calculations()
 
             # Insert mod data into list
-            self.repopulate_lists()
-
-            self.active_mods_data_restore_state, self.inactive_mods_data_restore_state = get_active_inactive_mods(
-                self.game_configuration.get_config_path(),
-                self.all_mods_with_dependencies,
-            )
+            self.repopulate_lists(True)
 
     @property
     def panel(self):
@@ -202,15 +197,22 @@ class MainContent:
             self.community_rules,  # TODO add user defined customRules from future customRules.json
         )
 
-    def repopulate_lists(self) -> None:
+    def repopulate_lists(self, is_initial: bool = False) -> None:
         """
         Get active and inactive mod lists based on the config path
-        and write them to the list widgets.
+        and write them to the list widgets. is_initial indicates if
+        this function is running at app initialization. If is_initial is
+        true, then write the active_mods_data and inactive_mods_data to 
+        restore variables.
         """
         active_mods_data, inactive_mods_data = get_active_inactive_mods(
             self.game_configuration.get_config_path(),
             self.all_mods_with_dependencies,
         )
+        if is_initial:
+            self.active_mods_data_restore_state = active_mods_data
+            self.inactive_mods_data_restore_state = inactive_mods_data
+
         self._insert_data_into_lists(active_mods_data, inactive_mods_data)
 
     def actions_slot(self, action: str) -> None:
