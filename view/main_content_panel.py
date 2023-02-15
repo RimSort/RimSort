@@ -82,9 +82,6 @@ class MainContent:
             # Insert mod data into list
             self.repopulate_lists()
 
-        else:
-            print("SET PATHS PLEASE")
-
     @property
     def panel(self):
         return self._panel
@@ -258,8 +255,16 @@ class MainContent:
         self.inactive_mods_panel.inactive_mods_list.recreate_mod_list(inactive_mods)
 
     def _do_refresh(self) -> None:
-        self.refresh_cache_calculations()
-        self.repopulate_lists()
+        if self.game_configuration.check_if_essential_paths_are_set():
+            # Run expensive calculations to set cache data
+            self.refresh_cache_calculations()
+
+            # Insert mod data into list
+            self.repopulate_lists()
+        else:
+            show_warning(
+                "Please remember to set the Game Install and Mods Config folder."
+            )
 
     def _do_clear(self) -> None:
         """

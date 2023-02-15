@@ -101,7 +101,7 @@ class GameConfiguration(QObject):
         self.game_folder_select_button.setObjectName("RightButton")
         self.game_folder_select_button.setToolTip("Set the game installation directory")
 
-        self.config_folder_open_button = QPushButton("Config File")
+        self.config_folder_open_button = QPushButton("Config Folder")
         self.config_folder_open_button.clicked.connect(
             partial(self.open_directory, self.get_config_folder_path)
         )
