@@ -86,7 +86,11 @@ class GameConfiguration(QObject):
         self.game_folder_open_button.setObjectName("LeftButton")
         self.game_folder_open_button.setToolTip("Open the game installation directory")
         self.game_folder_line = QLineEdit()
-        self.game_folder_line.setDisabled(True)
+        self.game_folder_line.setReadOnly(True)
+        self.game_folder_line.setClearButtonEnabled(True)
+        self.game_folder_line_clear_button = self.game_folder_line.findChild(QToolButton)
+        self.game_folder_line_clear_button.setEnabled(True)
+        self.game_folder_line_clear_button.clicked.connect(self.clear_game_folder_line)
         self.game_folder_line.setPlaceholderText("Unknown")
         self.game_folder_line.setToolTip(
             "The game installation directory contains the game executable.\n"
@@ -104,7 +108,11 @@ class GameConfiguration(QObject):
         self.config_folder_open_button.setObjectName("LeftButton")
         self.config_folder_open_button.setToolTip("Open the ModsConfig.xml directory")
         self.config_folder_line = QLineEdit()
-        self.config_folder_line.setDisabled(True)
+        self.config_folder_line.setReadOnly(True)
+        self.config_folder_line.setClearButtonEnabled(True)
+        self.config_folder_line_clear_button = self.config_folder_line.findChild(QToolButton)
+        self.config_folder_line_clear_button.setEnabled(True)
+        self.config_folder_line_clear_button.clicked.connect(self.clear_config_folder_line)
         self.config_folder_line.setPlaceholderText("Unknown")
         self.config_folder_line.setToolTip(
             "The this directory contains the ModsConfig.xml file, which\n"
@@ -125,7 +133,11 @@ class GameConfiguration(QObject):
             "Open the Steam Workshop Mods directory"
         )
         self.workshop_folder_line = QLineEdit()
-        self.workshop_folder_line.setDisabled(True)
+        self.workshop_folder_line.setReadOnly(True)
+        self.workshop_folder_line.setClearButtonEnabled(True)
+        self.workshop_folder_line_clear_button = self.workshop_folder_line.findChild(QToolButton)
+        self.workshop_folder_line_clear_button.setEnabled(True)
+        self.workshop_folder_line_clear_button.clicked.connect(self.clear_workshop_folder_line)
         self.workshop_folder_line.setPlaceholderText("Unknown")
         self.workshop_folder_line.setToolTip(
             "The Steam Workshop Mods directory contains mods downloaded from Steam.\n"
@@ -145,7 +157,11 @@ class GameConfiguration(QObject):
         self.local_folder_open_button.setObjectName("LeftButton")
         self.local_folder_open_button.setToolTip("Open the Local Mods directory")
         self.local_folder_line = QLineEdit()
-        self.local_folder_line.setDisabled(True)
+        self.local_folder_line.setReadOnly(True)
+        self.local_folder_line.setClearButtonEnabled(True)
+        self.local_folder_line_clear_button = self.local_folder_line.findChild(QToolButton)
+        self.local_folder_line_clear_button.setEnabled(True)
+        self.local_folder_line_clear_button.clicked.connect(self.clear_local_folder_line)
         self.local_folder_line.setPlaceholderText("Unknown")
         self.local_folder_line.setToolTip(
             "The Local Mods directory contains downloaded mod folders.\n"
@@ -420,13 +436,32 @@ class GameConfiguration(QObject):
             "config_folder",
             "local_folder"
         ]
+        # Update storage to remove all paths data
         for folder in folders:
             self.update_persistent_storage(folder, "")
+        
+        # Visually delete paths data
         self.game_folder_line.setText("")
         self.config_folder_line.setText("")
         self.workshop_folder_line.setText("")
         self.local_folder_line.setText("")
         self.game_version_line.setText("")
+    
+    def clear_game_folder_line(self):
+        self.update_persistent_storage("game_folder", "")
+        self.game_folder_line.setText("")
+    
+    def clear_config_folder_line(self):
+        self.update_persistent_storage("config_folder", "")
+        self.config_folder_line.setText("")
+    
+    def clear_workshop_folder_line(self):
+        self.update_persistent_storage("workshop_folder", "")
+        self.workshop_folder_line.setText("")
+
+    def clear_local_folder_line(self):
+        self.update_persistent_storage("local_folder", "")
+        self.local_folder_line.setText("")
 
     def autodetect_paths_by_platform(self) -> None:
         """
