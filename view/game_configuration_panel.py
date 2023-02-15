@@ -210,9 +210,27 @@ class GameConfiguration(QObject):
         self.initialize_settings_panel()
         self.initialize_storage()
 
+        # SIGNALS AND SLOTS
+        self.settings_panel.settings_signal.connect(self.delete_all_paths_data)  # Actionsdelete_all_paths_data
+
     @property
     def panel(self):
         return self._panel
+
+    def check_if_essential_paths_are_set(self) -> None:
+        """
+        When the user starts the app for the first time, none
+        of the paths will be set. We should check for this and
+        not throw a fatal error trying to load mods until the
+        user has had a chance to set paths.
+        """
+        if (
+            not self.game_folder_line.text()
+            or not self.config_folder_line.text()
+            or not self.workshop_folder_line.text()
+        ):
+            return False
+        return True
 
     def initialize_storage(self) -> None:
         """
@@ -394,6 +412,21 @@ class GameConfiguration(QObject):
             json_object = json.dumps(settings_data, indent=4)
             with open(settings_path, "w") as outfile:
                 outfile.write(json_object)
+    
+    def delete_all_paths_data(self) -> None:
+        folders = [
+            "workshop_folder",
+            "game_folder",
+            "config_folder",
+            "local_folder"
+        ]
+        for folder in folders:
+            self.update_persistent_storage(folder, "")
+        self.game_folder_line.setText("")
+        self.config_folder_line.setText("")
+        self.workshop_folder_line.setText("")
+        self.local_folder_line.setText("")
+        self.game_version_line.setText("")
 
     def get_game_folder_path(self):
         return self.game_folder_line.text()

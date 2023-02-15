@@ -74,11 +74,18 @@ class MainContent:
         # Fetch paths dynamically from game configuration panel
         self.game_configuration = game_configuration
 
-        # Run expensive calculations to set cache data
-        self.refresh_cache_calculations()
+        # Check if paths have been set
+        if self.game_configuration.check_if_essential_paths_are_set():
 
-        # Insert mod data into list
-        self.repopulate_lists()
+            # Run expensive calculations to set cache data
+            self.refresh_cache_calculations()
+
+            # Insert mod data into list
+            self.repopulate_lists()
+        
+        else:
+
+            print("SET PATHS PLEASE")
 
     @property
     def panel(self):
@@ -158,11 +165,15 @@ class MainContent:
         # One working Dictionary for ALL mods
         mods = merge_mod_data(self.local_mods, self.workshop_mods)
 
-        # Get and cache steam db rules data for ALL mods
-        self.steam_db_rules = get_steam_db_rules(mods)
+        self.steam_db_rules = {}
+        self.community_rules = {}
 
-        # Get and cache community rules data for ALL mods
-        self.community_rules = get_community_rules(mods)
+        # If there are mods at all, check for a mod DB.
+        if mods:
+            # Get and cache steam db rules data for ALL mods
+            self.steam_db_rules = get_steam_db_rules(mods)
+            # Get and cache community rules data for ALL mods
+            self.community_rules = get_community_rules(mods)
 
         # Calculate and cache dependencies for ALL mods
         self.all_mods_with_dependencies = get_dependencies_for_mods(
@@ -199,6 +210,8 @@ class MainContent:
 
         :param action: string indicating action
         """
+        if action == "refresh":
+            self._do_refresh()
         if action == "clear":
             self._do_clear()
         if action == "sort":
@@ -227,6 +240,10 @@ class MainContent:
         self.active_mods_panel.active_mods_list.recreate_mod_list(active_mods)
         self.inactive_mods_panel.inactive_mods_list.recreate_mod_list(inactive_mods)
 
+    def _do_refresh(self) -> None:
+        self.refresh_cache_calculations()
+        self.repopulate_lists()
+        
     def _do_clear(self) -> None:
         """
         Method to clear all the non-base, non-DLC mods from the active
