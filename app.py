@@ -68,3 +68,5 @@ try:
     app.exec_()
 except Exception:
     show_fatal_error(traceback.format_exc())
+finally:
+    sys.exit()
