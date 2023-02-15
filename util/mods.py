@@ -31,7 +31,7 @@ def get_active_inactive_mods(
     # Return an error if some active mod was in the ModsConfig but no data
     # could be found for it
     if invalid_mods:
-        warning_message = "The following list of mods could not be loaded\nDid you set your workshop/local mods path correctly?:"
+        warning_message = "The following list of mods could not be loaded\nDid you set your game install and workshop/local mods path correctly?:"
         for invalid_mod in invalid_mods:
             warning_message = warning_message + f"\n * {invalid_mod}"
         show_warning(warning_message)
@@ -121,7 +121,8 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                 f"Unable to get data for {intent}.\nThe path [{mods_path}] is invalid.\nCheck that your paths are set correctly."
             )
     if invalid_folders:
-        warning_message = "The following workshop folders could not be loaded:"
+        warning_message = "The following workshop folders could not be loaded:\n"
+        warning_message = warning_message + "(these may just be empty folders leftover from previous mod installs)"
         for invalid_folder in invalid_folders:
             warning_message = warning_message + f"\n * {invalid_folder}"
         show_warning(warning_message)
@@ -565,10 +566,11 @@ def get_game_version(game_path: str) -> str:
     :param game_path: path to Rimworld game
     :return: the game version as a string
     """
-    if os.path.exists(game_path):
-        if platform.system() == "Darwin":
-            game_path = os.path.join(game_path, "RimWorldMac.app")
-        with open(os.path.join(game_path, "Version.txt")) as f:
+    if platform.system() == "Darwin" and game_path:
+        game_path = os.path.join(game_path, "RimWorldMac.app")
+    version_file_path = os.path.join(game_path, "Version.txt")
+    if os.path.exists(version_file_path):
+        with open(version_file_path) as f:
             version = f.read()
         return version
     else:

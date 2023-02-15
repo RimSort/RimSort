@@ -229,7 +229,7 @@ class GameConfiguration(QObject):
         if (
             not self.game_folder_line.text()
             or not self.config_folder_line.text()
-            or not self.workshop_folder_line.text()
+            # or not self.workshop_folder_line.text()
         ):
             return False
         return True
@@ -435,7 +435,7 @@ class GameConfiguration(QObject):
         """
         os_paths = []
         darwin_paths = [
-            f"/Users/{getpass.getuser()}/Library/Application Support/Steam/steamapps/common/Rimworld/RimWorldMac.app",
+            f"/Users/{getpass.getuser()}/Library/Application Support/Steam/steamapps/common/Rimworld/",
             f"/Users/{getpass.getuser()}/Library/Application Support/Rimworld/Config",
             f"/Users/{getpass.getuser()}/Library/Application Support/Steam/steamapps/workshop/content/294100/"
             ]
@@ -462,6 +462,10 @@ class GameConfiguration(QObject):
         if os.path.exists(os_paths[0]):
             self.game_folder_line.setText(os_paths[0])
             self.update_persistent_storage("game_folder", os_paths[0])
+            if system_name == "Darwin":
+                # On mac the Mods folder is the Rimworld folder
+                self.local_folder_line.setText(os_paths[0])
+                self.update_persistent_storage("local_folder", os_paths[0])
         if os.path.exists(os_paths[1]):
             self.config_folder_line.setText(os_paths[1])
             self.update_persistent_storage("config_folder", os_paths[1])
@@ -469,8 +473,9 @@ class GameConfiguration(QObject):
             self.workshop_folder_line.setText(os_paths[2])
             self.update_persistent_storage("workshop_folder", os_paths[2])
         if os.path.exists(os.path.join(os_paths[0], "Mods")):
-            self.local_folder_line.setText(os.path.join(os_paths[0], "Mods"))
-            self.update_persistent_storage("local_folder", os.path.join(os_paths[0], "Mods"))
+            if system_name != "Darwin":
+                self.local_folder_line.setText(os.path.join(os_paths[0], "Mods"))
+                self.update_persistent_storage("local_folder", os.path.join(os_paths[0], "Mods"))
 
 
     def get_game_folder_path(self):
