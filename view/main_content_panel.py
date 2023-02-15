@@ -82,6 +82,11 @@ class MainContent:
             # Insert mod data into list
             self.repopulate_lists()
 
+            self.active_mods_data_restore_state, self.inactive_mods_data_restore_state = get_active_inactive_mods(
+                self.game_configuration.get_config_path(),
+                self.all_mods_with_dependencies,
+            )
+
     @property
     def panel(self):
         return self._panel
@@ -410,4 +415,4 @@ class MainContent:
         """
         Method to restore the mod lists to the last saved state.
         """
-        self.repopulate_lists()
+        self._insert_data_into_lists(self.active_mods_data_restore_state, self.inactive_mods_data_restore_state)
