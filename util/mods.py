@@ -166,7 +166,7 @@ def get_installed_expansions(game_path: str) -> Dict[str, Any]:
     """
     # RimWorld folder on mac contains RimWorldMac.app which
     # is actually a folder itself
-    if platform.system() == "Darwin":
+    if platform.system() == "Darwin" and game_path:
         game_path = os.path.join(game_path, "RimWorldMac.app")
 
     # Get mod data
@@ -201,7 +201,7 @@ def get_local_mods(local_path: str) -> Dict[str, Any]:
     # RimWorld folder on mac contains RimWorldMac.app which
     # is actually a folder itself
     system_name = platform.system()
-    if system_name == "Darwin":
+    if system_name == "Darwin" and local_path:
         local_path = os.path.join(local_path, "RimWorldMac.app", "Mods")
 
     # Get mod data

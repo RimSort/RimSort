@@ -76,15 +76,13 @@ class MainContent:
 
         # Check if paths have been set
         if self.game_configuration.check_if_essential_paths_are_set():
-
             # Run expensive calculations to set cache data
             self.refresh_cache_calculations()
 
             # Insert mod data into list
             self.repopulate_lists()
-        
-        else:
 
+        else:
             print("SET PATHS PLEASE")
 
     @property
@@ -114,21 +112,40 @@ class MainContent:
         """
 
         game_path = self.game_configuration.get_game_folder_path()
-        system_name = platform.system()
-
-        if system_name == "Darwin":
-            subprocess.Popen(["open", os.path.join(game_path, "RimWorldMac.app")])
-        elif system_name == "Linux" or "Windows":
-            try:
-                subprocess.CREATE_NEW_PROCESS_GROUP
-            except AttributeError:
-                # not Windows, so assume POSIX; if not, we'll get a usable exception
-                p = subprocess.Popen([os.path.join(game_path, "RimWorldLinux")], start_new_session=True)
+        if game_path:
+            system_name = platform.system()
+            if system_name == "Darwin":
+                executable_path = os.path.join(game_path, "RimWorldMac.app")
+                if os.path.exists(executable_path):
+                    subprocess.Popen(["open", executable_path])
+                else:
+                    show_warning("Executable not found in game folder.")
+            elif system_name == "Linux" or "Windows":
+                try:
+                    subprocess.CREATE_NEW_PROCESS_GROUP
+                except AttributeError:
+                    # not Windows, so assume POSIX; if not, we'll get a usable exception
+                    executable_path = os.path.join(game_path, "RimWorldLinux")
+                    if os.path.exists(executable_path):
+                        p = subprocess.Popen([executable_path], start_new_session=True)
+                    else:
+                        show_warning("Executable not found in game folder.")
+                else:
+                    # Windows
+                    executable_path = os.path.join(game_path, "RimWorldWin64.exe")
+                    if os.path.exists(executable_path):
+                        p = subprocess.Popen(
+                            [executable_path],
+                            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+                        )
+                    else:
+                        show_warning("Executable not found in game folder.")
             else:
-                # Windows
-                p = subprocess.Popen([os.path.join(game_path, "RimWorldWin64.exe")], creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+                print("Unknown System")  # TODO
         else:
-            print("Unknown System")  # TODO
+            show_warning(
+                "Unable to get data for game executable.\nCheck that your paths are set correctly."
+            )
 
     def refresh_cache_calculations(self) -> None:
         """
@@ -243,7 +260,7 @@ class MainContent:
     def _do_refresh(self) -> None:
         self.refresh_cache_calculations()
         self.repopulate_lists()
-        
+
     def _do_clear(self) -> None:
         """
         Method to clear all the non-base, non-DLC mods from the active

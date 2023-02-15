@@ -435,7 +435,10 @@ class GameConfiguration(QObject):
         return self.config_folder_line.text()
 
     def get_config_path(self):
-        return os.path.join(self.get_config_folder_path(), "ModsConfig.xml")
+        config_folder_path = self.get_config_folder_path()
+        if config_folder_path:
+            return os.path.join(self.get_config_folder_path(), "ModsConfig.xml")
+        return ""
 
     def get_workshop_folder_path(self):
         return self.workshop_folder_line.text()
