@@ -1,5 +1,7 @@
+import getpass
 import json
 import os
+from os.path import expanduser
 import platform
 import subprocess
 import webbrowser
@@ -335,8 +337,6 @@ class GameConfiguration(QObject):
         )
         self.game_folder_line.setText(game_exe_folder_path)
         self.update_persistent_storage("game_folder", game_exe_folder_path)
-        # TODO
-        # If Local Mods folder is not already set, automatically discern this information here
 
     def set_config_folder(self) -> None:
         """
@@ -428,6 +428,51 @@ class GameConfiguration(QObject):
         self.local_folder_line.setText("")
         self.game_version_line.setText("")
 
+    def autodetect_paths_by_platform(self) -> None:
+        """
+        This function tries to autodetect Rimworld paths based on the
+        defaults typically found per-platform, and set them in the client.
+        """
+        os_paths = []
+        darwin_paths = [
+            f"/Users/{getpass.getuser()}/Library/Application Support/Steam/steamapps/common/Rimworld/RimWorldMac.app",
+            f"/Users/{getpass.getuser()}/Library/Application Support/Rimworld/Config",
+            f"/Users/{getpass.getuser()}/Library/Application Support/Steam/steamapps/workshop/content/294100/"
+            ]
+        linux_paths = [
+            f"{expanduser('~')}/.steam/debian-installation/steamapps/common/RimWorld",
+            f"{expanduser('~')}/.config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios/Config",
+            f"{expanduser('~')}/.steam/debian-installation/steamapps/workshop/content/294100"
+        ]
+        windows_paths = [
+            os.path.join("C:" + os.sep, "Program Files (x86)", "Steam", "steamapps", "common", "Rimworld"),
+            os.path.join("C:" + os.sep, "Users", getpass.getuser(), "AppData", "LocalLow", "Ludeon Studios", "RimWorld by Ludeon Studios", "Config"),
+            os.path.join("C:" + os.sep, "Program Files (x86)", "Steam", "steamapps", "workshop", "content", "294100")
+        ]
+        system_name = platform.system()
+
+        if system_name == "Darwin":
+            os_paths = darwin_paths
+        elif system_name == "Linux":
+            os_paths = linux_paths
+        elif system_name == "Windows":
+            os_paths = windows_paths
+        else:
+            print("Unknown System")  # TODO
+        if os.path.exists(os_paths[0]):
+            self.game_folder_line.setText(os_paths[0])
+            self.update_persistent_storage("game_folder", os_paths[0])
+        if os.path.exists(os_paths[1]):
+            self.config_folder_line.setText(os_paths[1])
+            self.update_persistent_storage("config_folder", os_paths[1])
+        if os.path.exists(os_paths[2]):
+            self.workshop_folder_line.setText(os_paths[2])
+            self.update_persistent_storage("workshop_folder", os_paths[2])
+        if os.path.exists(os.path.join(os_paths[0], "Mods")):
+            self.local_folder_line.setText(os.path.join(os_paths[0], "Mods"))
+            self.update_persistent_storage("local_folder", os.path.join(os_paths[0], "Mods"))
+
+
     def get_game_folder_path(self):
         return self.game_folder_line.text()
 
@@ -454,7 +499,7 @@ class GameConfiguration(QObject):
         self.settings_panel.show()
 
     def do_autodetect(self):
-        print("autodetecting")
+        self.autodetect_paths_by_platform()
 
     def open_wiki_webbrowser(self):
         webbrowser.open("https://github.com/oceancabbage/RimSort/wiki")
