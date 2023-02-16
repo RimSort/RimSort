@@ -46,7 +46,7 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
     invalid_folders = set()
     invalid_abouts = set()
     if os.path.exists(mods_path):
-        # Iterate through each item in the workshop folder
+        # Iterate through each item in the provided folder
         for file in os.scandir(mods_path):
             if file.is_dir():  # Mods are contained in folders
                 # Look for a case-insensitive "About" folder

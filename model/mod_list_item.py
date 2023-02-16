@@ -46,8 +46,9 @@ class ModListItemInner(QWidget):
         self.incompatible_with_by_version = data.get("incompatibleWithByVersion")
 
         # Custom tags
-        self.base = data.get("isBase")  # True if base game
-        self.dlc = data.get("isDLC")  # True if DLC
+        self.isExpansion = data.get("isExpansion")  # True if base game or DLC
+        self.isWorkshop = data.get("isWorkshop") # True if workshop mod
+        self.isLocal = data.get("isLocal")  # True if local mod
         self.error = data.get("error")
 
         # Entire data
@@ -62,10 +63,12 @@ class ModListItemInner(QWidget):
         self.main_item_layout.setContentsMargins(0, 0, 0, 0)
         self.main_item_layout.setSpacing(0)
         item_name = self.name
-        if self.base:
-            item_name = f"*Base* {item_name}"
-        if self.dlc:
-            item_name = f"*DLC* {item_name}"
+
+        # Icons by mod source
+        self.icon_mod_source = QLabel()
+        self.icon_mod_source.setAlignment(Qt.AlignLeft)
+        self.pixmap = self.get_icon().pixmap(QSize(20, 20))
+        self.icon_mod_source.setPixmap(self.pixmap)
 
         self.font_metrics = QFontMetrics(self.font())
         text_width_needed = QRectF(self.font_metrics.boundingRect(item_name)).width()
@@ -78,6 +81,7 @@ class ModListItemInner(QWidget):
         else:
             self.main_label = QLabel(item_name)
         self.main_label.setObjectName("ListItemLabel")
+        self.main_item_layout.addWidget(self.icon_mod_source)
         self.main_item_layout.addWidget(self.main_label)
         self.setLayout(self.main_item_layout)
 
@@ -95,3 +99,19 @@ class ModListItemInner(QWidget):
         version_line = f"Version: {self.json_data.get('version', 'UNKNOWN')}\n"
         path_line = f"Path: {self.json_data.get('path', 'UNKNOWN')}"
         return name_line + author_line + package_id_line + version_line + path_line
+
+    def get_icon(self) -> QIcon:
+        """
+        Check custom tags added to mod metadata upon initialization, and return the cooresponding
+        QIcon for the type of mod that it is (expansion, workshop, or local mod?)
+
+        :return icon: QIcon object set to the path of the cooresponding icon image
+        """
+        if self.isExpansion:
+            return QIcon("data/E.png")
+        elif self.isWorkshop:
+            return QIcon("data/S.png")
+        elif self.isLocal:
+            return QIcon("data/L.png")
+        else:
+            print("No type")

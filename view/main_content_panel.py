@@ -176,6 +176,14 @@ class MainContent:
             self.game_configuration.get_workshop_folder_path()
         )
 
+        # Set custom tags for each data source to be used with setIcon later
+        for package_id in self.expansions:
+            self.expansions[package_id]["isExpansion"] = True
+        for package_id in self.workshop_mods:
+            self.workshop_mods[package_id]["isWorkshop"] = True
+        for package_id in self.local_mods:
+            self.local_mods[package_id]["isLocal"] = True
+
         # One working Dictionary for ALL mods
         mods = merge_mod_data(self.local_mods, self.workshop_mods)
 
