@@ -1,5 +1,9 @@
+import logging
 from typing import Any, Dict
+
 from toposort import toposort
+
+logger = logging.getLogger(__name__)
 
 
 def do_topo_sort(
@@ -9,6 +13,7 @@ def do_topo_sort(
     Sort mods using the topological sort algorithm. For each
     topological level, sort the mods alphabetically.
     """
+    logger.info(f"Starting Toposort for {len(dependency_graph)} mods")
     sorted_dependencies = toposort(dependency_graph)
     alphabetized_dependencies_w_data = {}
     for level in sorted_dependencies:
@@ -25,4 +30,5 @@ def do_topo_sort(
             alphabetized_dependencies_w_data[sorted_mod[0]] = active_mods_json[
                 sorted_mod[0]
             ]
+    logger.info(f"Finished Toposort sort with {len(alphabetized_dependencies_w_data)} mods")
     return alphabetized_dependencies_w_data

@@ -1,14 +1,18 @@
+import logging
+from functools import partial
+
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
-from functools import partial
+logger = logging.getLogger(__name__)
 
 
 class SettingsPanel(QDialog):
     settings_signal = Signal(str)
 
     def __init__(self) -> None:
+        logger.info("Starting SettingsPanel initialization")
         super(SettingsPanel, self).__init__()
 
         # Create window
@@ -39,3 +43,5 @@ class SettingsPanel(QDialog):
 
         # Display items
         self.setLayout(self.layout)
+
+        logger.info("Finished SettingsPanel initialization")
