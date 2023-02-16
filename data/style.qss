@@ -37,55 +37,42 @@ QWidget#MainPanel {
     margin: 7px; /* Space between frame and app edge */
 }
 
-QScrollBar:vertical {              
+QScrollBar:vertical {
     border: 1px solid #455364;
-    background: transparent;
-    width:7px;
-    margin: 0px 0px 0px 0px;
+    background: #19232d;
+    width: 10px;
+    margin: 15px 0px 15px 0px;
+    border-radius: 3px;
 }
 QScrollBar::handle:vertical {
-    background: #455364;
+    border-style: outset;
+    border-color: #455364;
+    background: #60798b;
+    border-width: 1px;
+    border-radius: 3px;
     min-height: 0px;
 }
+
 QScrollBar::add-line:vertical {
-    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-    stop: 0 rgb(69, 83, 100), stop: 0.5 rgb(32, 47, 130),  stop:1 rgb(32, 47, 130));
     height: 0px;
     subcontrol-position: bottom;
     subcontrol-origin: margin;
 }
+
 QScrollBar::sub-line:vertical {
-    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-    stop: 0  rgb(69, 83, 100), stop: 0.5 rgb(32, 47, 130),  stop:1 rgb(32, 47, 130));
     height: 0 px;
     subcontrol-position: top;
     subcontrol-origin: margin;
 }
 
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: none;
+}
+
 QScrollBar:horizontal {              
-    border: 1px solid #455364;
-    background: transparent;
-    width:7px;
-    margin: 0px 0px 0px 0px;
-}
-QScrollBar::handle:horizontal {
-    background: #455364;
-    min-height: 0px;
-}
-QScrollBar::add-line:horizontal {
-    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-    stop: 0 rgb(69, 83, 100), stop: 0.5 rgb(32, 47, 130),  stop:1 rgb(32, 47, 130));
     height: 0px;
-    subcontrol-position: bottom;
-    subcontrol-origin: margin;
 }
-QScrollBar::sub-line:horizontal {
-    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-    stop: 0  rgb(69, 83, 100), stop: 0.5 rgb(32, 47, 130),  stop:1 rgb(32, 47, 130));
-    height: 0 px;
-    subcontrol-position: top;
-    subcontrol-origin: margin;
-}
+
 
 /* ===== Mod Info Summary Text ===== */
 
@@ -135,6 +122,7 @@ QListWidget {
     border-color: #455364;
     border-width: 1px;
     border-radius: 3px;
+    padding-right: 5px;
 }
 
 /* Styling for a selected mod item */

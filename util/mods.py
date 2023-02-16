@@ -177,7 +177,7 @@ def get_installed_expansions(game_path: str) -> Dict[str, Any]:
     # must be manually added
     for package_id in mod_data.keys():
         if package_id == "ludeon.rimworld":
-            mod_data[package_id]["name"] = "Core (Base game)"
+            mod_data[package_id]["name"] = "Core (Base game) asjd;fjasdhflasdhjflaksjdfhlaksdjfhalksjd"
         if package_id == "ludeon.rimworld.royalty":
             mod_data[package_id]["name"] = "Royalty (DLC #1)"
         if package_id == "ludeon.rimworld.ideology":

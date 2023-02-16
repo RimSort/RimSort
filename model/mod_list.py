@@ -37,6 +37,10 @@ class ModListWidget(QListWidget):
         # When an item is clicked, display the mod information TODO
         self.itemClicked.connect(self.mod_clicked)
 
+        # Disable horizontal scroll bar
+        self.horizontalScrollBar().setEnabled(False)
+        self.horizontalScrollBar().setVisible(False)
+
         # Allow inserting custom list items
         self.model().rowsInserted.connect(
             self.handle_rows_inserted, Qt.QueuedConnection
