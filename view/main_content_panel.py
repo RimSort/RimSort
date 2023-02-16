@@ -1,14 +1,16 @@
+import logging
 import os
 import platform
 import subprocess
-
 from typing import Any, Dict
 
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
-from toposort import toposort
 
+from sort.dependencies import *
+from sort.rimpy_sort import *
+from sort.topo_sort import *
 from sub_view.actions_panel import Actions
 from sub_view.active_mods_panel import ActiveModList
 from sub_view.inactive_mods_panel import InactiveModList
@@ -16,9 +18,8 @@ from sub_view.mod_info_panel import ModInfo
 from util.mods import *
 from util.xml import json_to_xml_write, xml_path_to_json
 from view.game_configuration_panel import GameConfiguration
-from sort.dependencies import *
-from sort.rimpy_sort import *
-from sort.topo_sort import *
+
+logger = logging.getLogger(__name__)
 
 
 class MainContent:
@@ -36,6 +37,7 @@ class MainContent:
 
         :param game_configuration: game configuration panel to get paths
         """
+        logger.info("Starting MainContent initialization")
 
         # BASE LAYOUT
         self.main_layout = QHBoxLayout()
@@ -50,10 +52,12 @@ class MainContent:
         self.main_layout_frame.setLayout(self.main_layout)
 
         # INSTANTIATE WIDGETS
+        logger.info("Instantiating MainContent QWidget subclasses")
         self.mod_info_panel = ModInfo()
         self.active_mods_panel = ActiveModList()
         self.inactive_mods_panel = InactiveModList()
         self.actions_panel = Actions()
+        logger.info("Finished instantiating MainContent QWidget subclasses")
 
         # WIDGETS INTO BASE LAYOUT
         self.main_layout.addLayout(self.mod_info_panel.panel, 50)
@@ -72,6 +76,7 @@ class MainContent:
 
         # INITIALIZE WIDGETS
         # Fetch paths dynamically from game configuration panel
+        logger.info("Loading GameConfiguration instance")
         self.game_configuration = game_configuration
 
         # Check if paths have been set
@@ -81,6 +86,8 @@ class MainContent:
 
             # Insert mod data into list
             self.repopulate_lists(True)
+
+        logger.info("Finished MainContent initialization")
 
     @property
     def panel(self):
@@ -155,6 +162,7 @@ class MainContent:
         somehow, e.g. re-setting workshop path, mods config path, or downloading another mod,
         but also after ModsConfig.xml path has been changed).
         """
+        logger.info("Refreshing cache calculations")
         # Get and cache installed base game / DLC data
         self.expansions = get_installed_expansions(
             self.game_configuration.get_game_folder_path()
@@ -184,10 +192,13 @@ class MainContent:
 
         # If there are mods at all, check for a mod DB.
         if mods:
+            logger.info("Looking for a load order / dependency rules contained within mods")
             # Get and cache steam db rules data for ALL mods
             self.steam_db_rules = get_steam_db_rules(mods)
             # Get and cache community rules data for ALL mods
             self.community_rules = get_community_rules(mods)
+        else:
+            logger.warning("No LOCAL or WORKSHOP mods found at all. Are you playing Vanilla?")
 
         # Calculate and cache dependencies for ALL mods
         self.all_mods_with_dependencies = get_dependencies_for_mods(
@@ -196,13 +207,14 @@ class MainContent:
             self.steam_db_rules,
             self.community_rules,  # TODO add user defined customRules from future customRules.json
         )
+        logger.info("Finished refreshing cache calculations")
 
     def repopulate_lists(self, is_initial: bool = False) -> None:
         """
         Get active and inactive mod lists based on the config path
         and write them to the list widgets. is_initial indicates if
         this function is running at app initialization. If is_initial is
-        true, then write the active_mods_data and inactive_mods_data to 
+        true, then write the active_mods_data and inactive_mods_data to
         restore variables.
         """
         active_mods_data, inactive_mods_data = get_active_inactive_mods(
@@ -417,4 +429,6 @@ class MainContent:
         """
         Method to restore the mod lists to the last saved state.
         """
-        self._insert_data_into_lists(self.active_mods_data_restore_state, self.inactive_mods_data_restore_state)
+        self._insert_data_into_lists(
+            self.active_mods_data_restore_state, self.inactive_mods_data_restore_state
+        )

@@ -1,6 +1,10 @@
+import logging
+
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
+
+logger = logging.getLogger(__name__)
 
 
 class ScrollLabel(QScrollArea):
@@ -14,6 +18,7 @@ class ScrollLabel(QScrollArea):
         """
         Initialize the class.
         """
+        logger.info("Starting ScrollLabel initialization")
         super(ScrollLabel, self).__init__()
 
         # Enable styling
@@ -43,6 +48,8 @@ class ScrollLabel(QScrollArea):
 
         # Adding label to the layout
         self.main_layout.addWidget(self.label)
+
+        logger.info("Finished ScrollLabel initialization")
 
     def setText(self, text):
         self.label.setText(text)

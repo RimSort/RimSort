@@ -1,3 +1,4 @@
+import logging
 from typing import Any, Dict, List
 
 from PySide2.QtCore import *
@@ -5,6 +6,8 @@ from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
 from model.mod_list_item import ModListItemInner
+
+logger = logging.getLogger(__name__)
 
 
 class ModListWidget(QListWidget):
@@ -24,6 +27,7 @@ class ModListWidget(QListWidget):
         mod attributes. See tags:
         https://rimworldwiki.com/wiki/About.xml
         """
+        logger.info("Starting ModListWidget initialization")
 
         super(ModListWidget, self).__init__()
 
@@ -50,6 +54,8 @@ class ModListWidget(QListWidget):
         self.model().rowsAboutToBeRemoved.connect(
             self.handle_rows_removed, Qt.QueuedConnection
         )
+
+        logger.info("Finished ModListWidget initialization")
 
     def recreate_mod_list(self, mods: Dict[str, Any]) -> None:
         """

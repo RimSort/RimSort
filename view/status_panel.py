@@ -1,8 +1,12 @@
+import logging
+
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
 from model.animation_label import AnimationLabel
+
+logger = logging.getLogger(__name__)
 
 
 class Status:
@@ -16,13 +20,14 @@ class Status:
         Initialize the status panel. Construct the layout,
         add the single text widget.
         """
+        logger.info("Starting Status initialization")
         # Frame contains base layout to allow for styling
         self.frame = QFrame()
         self.frame.setObjectName("StatusPanel")
 
         # Base layout
         self._panel = QHBoxLayout()
-        self._panel.setContentsMargins(10,1,0,2)
+        self._panel.setContentsMargins(10, 1, 0, 2)
 
         # Adding layout to frame
         self.frame.setLayout(self._panel)
@@ -33,6 +38,8 @@ class Status:
 
         # Add widgets to base layout
         self._panel.addWidget(self.status_text)
+
+        logger.info("Finished Status initialization")
 
     @property
     def panel(self):
@@ -50,7 +57,9 @@ class Status:
         if action == "clear":
             self.status_text.start_pause_fade("Cleared active mods")
         if action == "restore":
-            self.status_text.start_pause_fade("Restored mod list to last saved ModsConfig.xml state")
+            self.status_text.start_pause_fade(
+                "Restored mod list to last saved ModsConfig.xml state"
+            )
         if action == "sort":
             self.status_text.start_pause_fade("Sorted active mod list")
         if action == "import":

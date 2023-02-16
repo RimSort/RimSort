@@ -1,11 +1,17 @@
-import os
-from typing import Any, Dict, List, Tuple
-from PySide2.QtWidgets import *
 import json
+import logging
+import os
 import platform
-from util.error import show_warning, show_fatal_error
+import traceback
+from typing import Any, Dict, List, Optional, Tuple
+
+from PySide2.QtWidgets import *
+
+from util.error import show_warning
 from util.exception import InvalidModsConfigFormat
 from util.xml import non_utf8_xml_path_to_json, xml_path_to_json
+
+logger = logging.getLogger(__name__)
 
 
 def get_active_inactive_mods(
@@ -42,13 +48,16 @@ def get_active_inactive_mods(
 
 
 def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
+    logger.info(f"Starting parsing mod data for intent: {intent}")
     mods = {}
-    invalid_folders = set()
-    invalid_abouts = set()
     if os.path.exists(mods_path):
+        logger.info(f"The provided mods path exists: {mods_path}")
         # Iterate through each item in the workshop folder
+        files_scanned = []
+        dirs_scanned = []
         for file in os.scandir(mods_path):
             if file.is_dir():  # Mods are contained in folders
+                dirs_scanned.append(file.name)
                 # Look for a case-insensitive "About" folder
                 invalid_folder_path_found = True
                 about_folder_name = "About"
@@ -76,10 +85,18 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                             break
                 # If there was an issue getting the expected path, track and exit
                 if invalid_folder_path_found or invalid_file_path_found:
-                    invalid_folders.add(file.name)
+                    logger.warning(
+                        f"There was an issue getting the expected sub-path for this path, no variations of /About/About.xml could be found: {file.path}"
+                    )
+                    logger.warning(
+                        "^ this may not be an issue, as workshop sometimes forgets to delete unsubscribed mod folders."
+                    )
                 else:
                     mod_data_path = os.path.join(
                         file.path, about_folder_name, about_file_name
+                    )
+                    logger.info(
+                        f"Found a variation of /About/About.xml at: {mod_data_path}"
                     )
                     mod_data = {}
                     try:
@@ -88,49 +105,54 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                             mod_data = xml_path_to_json(mod_data_path)
                         except UnicodeDecodeError:
                             # It may be necessary to remove all non-UTF-8 characters and parse again
+                            logger.warning(
+                                "Unable to parse About.xml with UTF-8, attempting to decode"
+                            )
                             mod_data = non_utf8_xml_path_to_json(mod_data_path)
                     except:
                         # If there was an issue parsing the About.xml, track and exit
-                        invalid_abouts.add(file.name)
+                        logger.error(
+                            f"Unable to parse About.xml with the exception: {traceback.format_exc()}"
+                        )
                     else:
                         # Case-insensitive `ModMetaData` key.
+                        logger.debug("Attempting to normalize XML content keys")
                         mod_data = {k.lower(): v for k, v in mod_data.items()}
-                        try:
-                            normalized_package_id = mod_data["modmetadata"][
-                                "packageId"
-                            ].lower()
-                            mod_data["modmetadata"]["packageId"] = normalized_package_id
-                            mod_data["modmetadata"]["folder"] = file.name
-                            mod_data["modmetadata"]["path"] = file.path
-                            mods[normalized_package_id] = mod_data["modmetadata"]
-                        except:
-                            # print(
-                            #     "Failed in getting modmetadata for mod:"
-                            #     + mod_data["modmetadata"]["name"]
-                            # )
-                            # If there was an issue with expected About.xml content, track and exit
-                            invalid_abouts.add(file.name)
-                        # else:
-                        #     print(
-                        #         "Succeeeded in getting modmetadata for mod:"
-                        #         + mod_data["modmetadata"]["name"]
-                        #     )
+                        logger.debug(f"Normalized XML content: {mod_data}")
+                        logger.debug("Editing XML content")
+                        if mod_data.get("modmetadata"):
+                            if mod_data["modmetadata"].get("packageId"):
+                                normalized_package_id = mod_data["modmetadata"][
+                                    "packageId"
+                                ].lower()
+                                mod_data["modmetadata"][
+                                    "packageId"
+                                ] = normalized_package_id
+                                mod_data["modmetadata"]["folder"] = file.name
+                                mod_data["modmetadata"]["path"] = file.path
+                                logger.debug(
+                                    f"Finished editing XML content, adding final content to larger list: {mod_data['modmetadata']}"
+                                )
+                                mods[normalized_package_id] = mod_data["modmetadata"]
+                            else:
+                                logger.error(
+                                    f"Key [packageId] does not exist in this data's [modmetadata]: {mod_data}"
+                                )
+                        else:
+                            logger.error(
+                                f"Key [modmetadata] does not exist in this data: {mod_data}"
+                            )
+            else:
+                files_scanned.append(file.name)
+        logger.info(f"Scanned the following files in mods path: {files_scanned}")
+        logger.info(f"Scanned the following dirs in mods path: {dirs_scanned}")
     else:
+        logger.error(f"The provided mods path does not exist: {mods_path}")
         if mods_path:
             show_warning(
                 f"Unable to get data for {intent}.\nThe path [{mods_path}] is invalid.\nCheck that your paths are set correctly."
             )
-    if invalid_folders:
-        warning_message = "The following workshop folders could not be loaded:\n"
-        warning_message = warning_message + "(these may just be empty folders leftover from previous mod installs)"
-        for invalid_folder in invalid_folders:
-            warning_message = warning_message + f"\n * {invalid_folder}"
-        show_warning(warning_message)
-    if invalid_abouts:
-        warning_message = "The following workshop folders had invalid About.xmls:"
-        for invalid_about in invalid_abouts:
-            warning_message = warning_message + f"\n * {invalid_about}"
-        show_warning(warning_message)
+    logger.info(f"Finished parsing mod data for intent: {intent}")
     return mods
 
 
@@ -165,16 +187,25 @@ def get_installed_expansions(game_path: str) -> Dict[str, Any]:
     :param path: path to the Rimworld install folder
     :return: a Dict of expansions by package id
     """
+    logger.info(f"Getting installed expansions with Game Folder path: {game_path}")
     # RimWorld folder on mac contains RimWorldMac.app which
     # is actually a folder itself
     if platform.system() == "Darwin" and game_path:
         game_path = os.path.join(game_path, "RimWorldMac.app")
+        logger.info(f"Running on MacOS, generating new game path: {game_path}")
 
     # Get mod data
-    mod_data = parse_mod_data(os.path.join(game_path, "Data"), "game install")
+    data_path = os.path.join(game_path, "Data")
+    logger.info(
+        f"Attempting to get BASE/EXPANSIONS data from Rimworld's /Data folder: {data_path}"
+    )
+    mod_data = parse_mod_data(data_path, "game install")
+    logger.info("Finished getting BASE/EXPANSION data")
+    logger.debug(mod_data)
 
     # Base game and expansion About.xml do not contain name, so these
     # must be manually added
+    logger.info("Manually populating names for BASE/EXPANSION data")
     for package_id in mod_data.keys():
         if package_id == "ludeon.rimworld":
             mod_data[package_id]["name"] = "Core (Base game)"
@@ -184,11 +215,14 @@ def get_installed_expansions(game_path: str) -> Dict[str, Any]:
             mod_data[package_id]["name"] = "Ideology (DLC #2)"
         if package_id == "ludeon.rimworld.biotech":
             mod_data[package_id]["name"] = "Biotech (DLC #3)"
-
+    logger.info(
+        "Finished getting installed expansions, returning final BASE/EXPANSIONS data now"
+    )
+    logger.debug(mod_data)
     return mod_data
 
 
-def get_local_mods(local_path: str) -> Dict[str, Any]:
+def get_local_mods(local_path: str, game_path: Optional[str] = None) -> Dict[str, Any]:
     """
     Given a path to the local GAME_INSTALL_DIR/Mods folder, return a dict
     containing data for all the mods keyed to their package ids.
@@ -199,14 +233,25 @@ def get_local_mods(local_path: str) -> Dict[str, Any]:
     :param path: path to the Rimworld workshop mods folder
     :return: a Dict of workshop mods by package id, and dict of community rules
     """
-    # RimWorld folder on mac contains RimWorldMac.app which
-    # is actually a folder itself
+    logger.info(f"Getting local mods with Local path: {local_path}")
+    logger.info(f"Supplementing call with Game Folder path: {game_path}")
+
+    # If local mods path is same as game path and we're running on a Mac,
+    # that means use the default local mods folder
+
     system_name = platform.system()
-    if system_name == "Darwin" and local_path:
+    if system_name == "Darwin" and local_path and local_path == game_path:
         local_path = os.path.join(local_path, "RimWorldMac.app", "Mods")
+        logger.info(f"Running on MacOS, generating new local mods path: {local_path}")
 
     # Get mod data
-    return parse_mod_data(local_path, "local mods")
+    logger.info(
+        f"Attempting to get LOCAL mods data from custom local path or Rimworld's /Mods folder: {local_path}"
+    )
+    mod_data = parse_mod_data(local_path, "local mods")
+    logger.info("Finished getting LOCAL mods data, returning LOCAL mods data now")
+    logger.debug(mod_data)
+    return mod_data
 
 
 def get_workshop_mods(workshop_path: str) -> Dict[str, Any]:
@@ -220,7 +265,11 @@ def get_workshop_mods(workshop_path: str) -> Dict[str, Any]:
     :param path: path to the Rimworld workshop mods folder
     :return: a Dict of workshop mods by package id, and dict of community rules
     """
-    return parse_mod_data(workshop_path, "workshop mods")
+    logger.info(f"Getting WORKSHOP data with Workshop path: {workshop_path}")
+    mod_data = parse_mod_data(workshop_path, "workshop mods")
+    logger.info("Finished getting WORKSHOP data, returning WORKSHOP data now")
+    logger.debug(mod_data)
+    return mod_data
 
 
 def get_steam_db_rules(mods: Dict[str, Any]) -> Dict[str, Any]:
@@ -228,30 +277,35 @@ def get_steam_db_rules(mods: Dict[str, Any]) -> Dict[str, Any]:
     Extract the configured DB mod's SteamDB rules, essential for the sort
     function. Produces an error if the DB mod is not found.
     """
+    logger.info("Getting steam DB rules")
     for package_id in mods:
         if (
             package_id == "rupal.rimpymodmanagerdatabase"
+            or mods[package_id]["folder"] == "1847679158"
         ):  # TODO make this a DB mod packageID a configurable preference
+            logger.info("Found RimPy ModManager DB")
             steam_db_rules_path = os.path.join(
                 mods[package_id]["path"], "db", "db.json"
             )
-            with open(steam_db_rules_path, encoding="utf-8") as f:
-                json_string = f.read()
-                db_data = json.loads(json_string)
-                return db_data["database"]
-        elif (
-            mods[package_id]["folder"] == "1847679158"
-        ):  # Fallback to RimPy if we can't find the configured DB
-            steam_db_rules_path = os.path.join(
-                mods[package_id]["path"], "db", "db.json"
-            )
-            with open(steam_db_rules_path, encoding="utf-8") as f:
-                json_string = f.read()
-                db_data = json.loads(json_string)
-                return db_data["database"]
+            logger.info(f"Generated path to db.json: {steam_db_rules_path}")
+            if os.path.exists(steam_db_rules_path):
+                with open(steam_db_rules_path, encoding="utf-8") as f:
+                    json_string = f.read()
+                    logger.info("Reading info from db.json")
+                    db_data = json.loads(json_string)
+                    logger.debug(
+                        "Returning db.json, this data is long so we forego logging it here"
+                    )
+                    return db_data["database"]
+            else:
+                logger.error("The db.json path does not exist")
+    logger.warning(
+        "No Steam DB data was found. This will affect the accuracy of mod dependencies"
+    )
     show_warning(
         "The configured DB mod was not detected.\nRimPy DB was also not found.\nPlease install & configure a valid DB mod and refresh/restart RimSort."
     )
+    return {}
 
 
 def get_community_rules(mods: Dict[str, Any]) -> Dict[str, Any]:
@@ -259,30 +313,37 @@ def get_community_rules(mods: Dict[str, Any]) -> Dict[str, Any]:
     Extract the configured DB mod's community rules, essential for the sort
     function. Produces an error if the DB mod is not found.
     """
+    logger.info("Getting community rules")
     for package_id in mods:
         if (
             package_id == "rupal.rimpymodmanagerdatabase"
+            or mods[package_id]["folder"] == "1847679158"
         ):  # TODO make this a DB mod packageID a configurable preference
+            logger.info("Found RimPy ModManager rules")
             community_rules_path = os.path.join(
                 mods[package_id]["path"], "db", "communityRules.json"
             )
-            with open(community_rules_path, encoding="utf-8") as f:
-                json_string = f.read()
-                rule_data = json.loads(json_string)
-                return rule_data["rules"]
-        elif (
-            mods[package_id]["folder"] == "1847679158"
-        ):  # Fallback to RimPy if we can't find the configured DB
-            community_rules_path = os.path.join(
-                mods[package_id]["path"], "db", "communityRules.json"
+            logger.info(
+                f"Generated path to communityRules.json: {community_rules_path}"
             )
-            with open(community_rules_path, encoding="utf-8") as f:
-                json_string = f.read()
-                rule_data = json.loads(json_string)
-                return rule_data["rules"]
+            if os.path.exists(community_rules_path):
+                with open(community_rules_path, encoding="utf-8") as f:
+                    json_string = f.read()
+                    logger.info("Reading info from communityRules.json")
+                    rule_data = json.loads(json_string)
+                    logger.debug(
+                        "Returning communityRules.json, this data is long so we forego logging it here"
+                    )
+                    return rule_data["rules"]
+            else:
+                logger.error("The communityRules.json path does not exist")
+    logger.warning(
+        "No Community Rules data was found. This will affect the accuracy of mod load order"
+    )
     show_warning(
         "The configured DB mod was not detected.\nRimPy DB was also not found.\nPlease install & configure a valid DB mod and refresh/restart RimSort."
     )
+    return {}
 
 
 def get_dependencies_for_mods(
@@ -301,11 +362,18 @@ def get_dependencies_for_mods(
     :param community_rules: dict of community established rules
     :return workshop_and_expansions: workshop mods + official modules with dependency data
     """
+    logger.info("Starting getting dependencies for all mods")
     # Dependencies will apply to installed expansions, as well as local/workshop mods
     all_mods = {**expansions, **mods}
+    logger.info(
+        f"Combined {len(expansions)} expansions with {len(mods)} mods, totaling {len(all_mods)} elements to get dependencies for"
+    )
 
-    # Add dependencies to installed mods based on dependencies listed in About.xml
+    # Add dependencies to installed mods based on dependencies listed in About.xml TODO manifest.xml
+    logger.info(f"Total number of dependencies: {_get_num_dependencies(all_mods)}")
+    logger.info("Starting adding dependencies through About.xml information")
     for package_id in all_mods:
+        logger.debug(f"Current mod: {package_id}")
         # All modDependencies are dependencies
         # if all_mods[package_id].get("modDependencies"):
         #     dependencies = all_mods[package_id]["modDependencies"]["li"]
@@ -320,8 +388,11 @@ def get_dependencies_for_mods(
         # Current mod should be loaded AFTER these mods
         # These are all dependencies for the current mod
         if all_mods[package_id].get("loadAfter"):
-            dependencies = all_mods[package_id]["loadAfter"]["li"]
+            dependencies = all_mods[package_id]["loadAfter"].get("li")
             if dependencies:
+                logger.debug(
+                    f"Current mod should load after these mods: {dependencies}"
+                )
                 add_dependency_to_mod(
                     all_mods[package_id],
                     "dependencies",
@@ -330,8 +401,11 @@ def get_dependencies_for_mods(
                 )
 
         if all_mods[package_id].get("forceLoadAfter"):
-            dependencies = all_mods[package_id]["forceLoadAfter"]["li"]
+            dependencies = all_mods[package_id]["forceLoadAfter"].get("li")
             if dependencies:
+                logger.debug(
+                    f"Current mod should force load after these mods: {dependencies}"
+                )
                 add_dependency_to_mod(
                     all_mods[package_id],
                     "dependencies",
@@ -341,8 +415,13 @@ def get_dependencies_for_mods(
 
         if all_mods[package_id].get("loadAfterByVersion"):
             if all_mods[package_id]["loadAfterByVersion"].get("v1.4"):
-                dependencies = all_mods[package_id]["loadAfterByVersion"]["v1.4"]["li"]
+                dependencies = all_mods[package_id]["loadAfterByVersion"]["v1.4"].get(
+                    "li"
+                )
                 if dependencies:
+                    logger.debug(
+                        f"Current mod should load after these mods for v1.4: {dependencies}"
+                    )
                     add_dependency_to_mod(
                         all_mods[package_id],
                         "dependencies",
@@ -353,8 +432,11 @@ def get_dependencies_for_mods(
         # Current mod should be loaded BEFORE these mods
         # The current mod is a dependency for all these mods
         if all_mods[package_id].get("loadBefore"):
-            dependencies = all_mods[package_id]["loadBefore"]["li"]
+            dependencies = all_mods[package_id]["loadBefore"].get("li")
             if dependencies:
+                logger.debug(
+                    f"Current mod should load before these mods: {dependencies}"
+                )
                 if isinstance(dependencies, str):
                     add_dependency_to_mod(
                         all_mods.get(
@@ -374,8 +456,11 @@ def get_dependencies_for_mods(
                         )
 
         if all_mods[package_id].get("forceLoadBefore"):
-            dependencies = all_mods[package_id]["forceLoadBefore"]["li"]
+            dependencies = all_mods[package_id]["forceLoadBefore"].get("li")
             if dependencies:
+                logger.debug(
+                    f"Current mod should force load before these mods: {dependencies}"
+                )
                 if isinstance(dependencies, str):
                     add_dependency_to_mod(
                         all_mods.get(
@@ -396,8 +481,13 @@ def get_dependencies_for_mods(
 
         if all_mods[package_id].get("loadBeforeByVersion"):
             if all_mods[package_id]["loadBeforeByVersion"].get("v1.4"):
-                dependencies = all_mods[package_id]["loadBeforeByVersion"]["v1.4"]["li"]
+                dependencies = all_mods[package_id]["loadBeforeByVersion"]["v1.4"].get(
+                    "li"
+                )
                 if dependencies:
+                    logger.debug(
+                        f"Current mod should load before these mods for v1.4: {dependencies}"
+                    )
                     if isinstance(dependencies, str):
                         add_dependency_to_mod(
                             all_mods.get(
@@ -418,14 +508,19 @@ def get_dependencies_for_mods(
 
         # Check for incompatible mods (TODO: currently unused)
         if all_mods[package_id].get("incompatibleWith"):
-            dependencies = all_mods[package_id]["incompatibleWith"]["li"]
+            dependencies = all_mods[package_id]["incompatibleWith"].get("li")
             if dependencies:
+                logger.debug(
+                    f"Current mod is incompatible with these mods: {dependencies}"
+                )
                 add_dependency_to_mod(
                     all_mods[package_id],
                     "incompatibilities",
                     dependencies,
                     all_mods,
                 )
+    logger.info("Finished adding dependencies through About.xml information")
+    logger.info(f"Total number of dependencies: {_get_num_dependencies(all_mods)}")
 
     # RimPy's references depdencies based on publisher ID, not package ID
     # Create a temporary publisher ID -> package ID dict here
@@ -451,41 +546,54 @@ def get_dependencies_for_mods(
     #                         dependency_package_id.lower(),
     #                         all_mods
     #                     )
-
     # Add dependencies to installed mods based on dependencies from community rules
+    logger.info("Starting adding dependencies through Community Rules")
     if community_rules:
         for package_id in community_rules:
-            for dependency_id in community_rules[package_id][
-                "loadBefore"
-            ]:  # Current mod should be loaded BEFORE these mods
-                add_dependency_to_mod(
-                    all_mods.get(dependency_id.lower()),
-                    "dependencies",
-                    package_id.lower(),
-                    all_mods,
-                )
-            for dependency_id in community_rules[package_id][
-                "loadAfter"
-            ]:  # Current mod should be loaded AFTER these mods
-                add_dependency_to_mod(
-                    all_mods.get(
-                        package_id.lower()
-                    ),  # Community rules may be referencing not-installed mod
-                    "dependencies",
-                    dependency_id.lower(),
-                    all_mods,
-                )
-
+            # TODO: requiring the package be in all_mods should be fine, as
+            # if the mod doesn't exist all_mods, then either mod_data or dependency_id
+            # will be None, and then we don't insert a dependency
+            if package_id in all_mods:
+                logger.debug(f"Current mod: {package_id}")
+                load_before_deps = community_rules[package_id].get("loadBefore")
+                if load_before_deps:
+                    logger.debug(
+                        f"Current mod should load before these mods: {load_before_deps}"
+                    )
+                    for dependency_id in load_before_deps:
+                        # Current mod should be loaded BEFORE these mods
+                        add_dependency_to_mod(
+                            all_mods.get(dependency_id.lower()),
+                            "dependencies",
+                            package_id.lower(),
+                            all_mods,
+                        )
+                load_after_deps = community_rules[package_id].get("loadAfter")
+                if load_after_deps:
+                    logger.debug(
+                        f"Current mod should load after these mods: {load_after_deps}"
+                    )
+                    for dependency_id in load_after_deps:
+                        # Current mod should be loaded AFTER these mods
+                        add_dependency_to_mod(
+                            all_mods.get(
+                                package_id.lower()
+                            ),  # Community rules may be referencing not-installed mod
+                            "dependencies",
+                            dependency_id.lower(),
+                            all_mods,
+                        )
+    logger.info("Finished adding dependencies through Community Rules")
+    logger.info(f"Total number of dependencies: {_get_num_dependencies(all_mods)}")
+    logger.info("Returing all mods now")
     return all_mods
 
 
-def _get_num_dependencies(all_mods: Dict[str, Any], to_print=False) -> None:
+def _get_num_dependencies(all_mods: Dict[str, Any]) -> None:
     """Debug func for getting total number of dependencies"""
     counter = 0
     for package_id, mod_data in all_mods.items():
         if mod_data.get("dependencies"):
-            # if to_print:
-            #     print(package_id, mod_data["dependencies"])
             counter = counter + len(mod_data["dependencies"])
     return counter
 
@@ -511,6 +619,7 @@ def add_dependency_to_mod(
     :param value: either string or list of strings (or sometimes None)
     :param workshop_and_expansions: dict of all mods to verify keys against
     """
+    logger.debug(f"Adding to key [{new_data_key}], packages [{dependency_or_dependency_ids}], for mod data: {mod_data}")
     if mod_data:
         # Create a new key with empty set as value
         if new_data_key not in mod_data:
@@ -566,17 +675,29 @@ def get_game_version(game_path: str) -> str:
     :param game_path: path to Rimworld game
     :return: the game version as a string
     """
+    logger.info(f"Getting game version from Game Folder: {game_path}")
+    version = ""
     if platform.system() == "Darwin" and game_path:
         game_path = os.path.join(game_path, "RimWorldMac.app")
+        logger.info(f"Running on MacOS, generating new game path: {game_path}")
     version_file_path = os.path.join(game_path, "Version.txt")
+    logger.info(f"Generated Version.txt path: {version_file_path}")
     if os.path.exists(version_file_path):
+        logger.info("Version.txt path exists")
         with open(version_file_path) as f:
             version = f.read()
-        return version
+            logger.info(f"Retrieved game version from Version.txt: {version.strip()}")
     else:
+        logger.error(
+            f"The provided Version.txt path does not exist: {version_file_path}"
+        )
         show_warning(
             f"Unable to get data for game version.\nThe path [{game_path}] is invalid.\nCheck that your paths are set correctly."
         )
+    logger.info(
+        f"Finished getting game version from Game Folder, returning now: {version.strip()}"
+    )
+    return version.strip()
 
 
 def get_active_mods_from_config(config_path: str) -> Dict[str, Any]:
@@ -639,9 +760,11 @@ def merge_mod_data(*dict_args) -> Dict[str, Any]:
     Given any number of dictionaries, shallow copy and merge into a new dict,
     precedence goes to key-value pairs in latter dictionaries.
     """
+    logger.info("Merging LOCAL mods with WORKSHOP mods")
     result = {}
     for dictionary in dict_args:
         result.update(dictionary)
+    logger.debug(f"Merged LOCAL and WORKSHOP mods: {result}")
     return result
 
 

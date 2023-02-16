@@ -1,8 +1,12 @@
+import logging
+
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
 from model.mod_list import ModListWidget
+
+logger = logging.getLogger(__name__)
 
 
 class ActiveModList:
@@ -17,6 +21,7 @@ class ActiveModList:
         Create a ListWidget using the dict of mods. This will
         create a row for every key-value pair in the dict.
         """
+        logger.info("Starting ActiveModList initialization")
 
         # Base layout type
         self.panel = QVBoxLayout()
@@ -33,6 +38,8 @@ class ActiveModList:
 
         # Connect signals and slots
         self.active_mods_list.list_change_signal.connect(self.change_mod_num_display)
+
+        logger.info("Finished ActiveModList initialization")
 
     def change_mod_num_display(self, count: str) -> None:
         self.num_mods.setText(f"Active [{count}]")
