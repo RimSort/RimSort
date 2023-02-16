@@ -79,7 +79,7 @@ class ModListWidget(QListWidget):
             item = self.item(idx)
             if item is not None and self.itemWidget(item) is None:
                 data = item.data(Qt.UserRole)
-                widget = ModListItemInner(data)
+                widget = ModListItemInner(data, self.width())
                 item.setSizeHint(widget.sizeHint())
                 self.setItemWidget(item, widget)
         self.list_change_signal.emit(str(self.count()))
