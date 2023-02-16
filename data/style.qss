@@ -166,6 +166,7 @@ QStyle::PE_IndicatorItemViewItemDrop {
 }
 
 QToolTip {
+    border-style: none;
     background: #346792;
     color: white;
 }
