@@ -38,8 +38,6 @@ class ModListWidget(QListWidget):
         self.itemClicked.connect(self.mod_clicked)
 
         # Disable horizontal scroll bar
-        self.verticalScrollBar().setObjectName("modListScrollBar")
-        self.horizontalScrollBar().setObjectName("modListScrollBar")
         self.horizontalScrollBar().setEnabled(False)
         self.horizontalScrollBar().setVisible(False)
 

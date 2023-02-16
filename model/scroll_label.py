@@ -18,8 +18,6 @@ class ScrollLabel(QScrollArea):
 
         # Enable styling
         self.setObjectName("descriptionWidget")
-        self.verticalScrollBar().setObjectName("modListScrollBar")
-        self.horizontalScrollBar().setObjectName("modListScrollBar")
 
         # Enabling scrolling
         self.setWidgetResizable(True)

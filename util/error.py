@@ -40,7 +40,7 @@ def show_warning(
     warning_message_box.exec_()
 
 
-def show_fatal(
+def show_fatal_error(
     text: Optional[str] = None,
     information: Optional[str] = None,
     details: Optional[str] = None,

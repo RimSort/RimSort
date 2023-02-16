@@ -37,25 +37,25 @@ QWidget#MainPanel {
     margin: 7px; /* Space between frame and app edge */
 }
 
-QScrollBar:vertical#modListScrollBar {
+QScrollBar:vertical {
     border: 1px solid #455364;
     border-radius: 5px;
     background: #19232d;
     width: 10px;
     margin: 20px 0px 20px 0px;
 }
-QScrollBar::handle:vertical#modListScrollBar {
+QScrollBar::handle:vertical {
     background: #60798b;
     border: 0px solid #455364;
     border-radius: 4px;
     min-height: 0px;
 }
 
-QScrollBar::handle:vertical:hover#modListScrollBar {
+QScrollBar::handle:vertical:hover {
     background: #346792;
 }
 
-QScrollBar::add-line:vertical#modListScrollBar {
+QScrollBar::add-line:vertical {
     height: 10px;
     background: #455364;
     subcontrol-position: bottom;
@@ -65,11 +65,11 @@ QScrollBar::add-line:vertical#modListScrollBar {
     border-radius: 5px;
 }
 
-QScrollBar::add-line:vertical:hover#modListScrollBar {
+QScrollBar::add-line:vertical:hover {
     background: #dddee1;
 }
 
-QScrollBar::sub-line:vertical#modListScrollBar {
+QScrollBar::sub-line:vertical {
     height: 10px;
     background: #455364;
     subcontrol-position: top;
@@ -78,15 +78,15 @@ QScrollBar::sub-line:vertical#modListScrollBar {
     border-radius: 5px;
 }
 
-QScrollBar::sub-line:vertical:hover#modListScrollBar {
+QScrollBar::sub-line:vertical:hover {
     background: #dddee1;
 }
 
-QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical#modListScrollBar {
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
     background: none;
 }
 
-QScrollBar:horizontal#modListScrollBar {              
+QScrollBar:horizontal {              
     height: 0px;
 }
 
@@ -187,72 +187,36 @@ QLabel#StatusLabel {
     background-color: #455364;
 }
 
+QPushButton {
+    color: white;
+    background-color: #455364;
+    border-style: solid;
+    border-width: 0px;
+    border-radius: 5px;
+    /* border-color: beige; */
+    /* font: bold 14px; */
+    min-width: 6em;
+    padding: 1px;
+}
+
 QLabel#gameVersion {
     color: white;
     margin-right: 4px;
 }
 
-QPushButton#appButton {
-    color: white;
-    background-color: #455364;
-    border-style: solid;
-    border-width: 0px;
-    border-radius: 5px;
-    /* border-color: beige; */
-    /* font: bold 14px; */
-    min-width: 6em;
-    padding: 1px;
-}
-
-QPushButton:hover#appButton {
-    background-color: #54687a;
-}
-
-QPushButton:pressed#appButton {
-    background-color: #3e4a52;
-    border-style: inset;
-}
-
 QPushButton#LeftButton {
-    color: white;
-    background-color: #455364;
-    border-style: solid;
-    border-width: 0px;
-    border-radius: 5px;
-    /* border-color: beige; */
-    /* font: bold 14px; */
-    min-width: 6em;
-    padding: 1px;
     margin-right: 4px;
 }
 
-QPushButton:hover#LeftButton {
-    background-color: #54687a;
-}
-
-QPushButton:pressed#LeftButton {
-    background-color: #3e4a52;
-    border-style: inset;
-}
-
 QPushButton#RightButton {
-    color: white;
-    background-color: #455364;
-    border-style: solid;
-    border-width: 0px;
-    border-radius: 5px;
-    /* border-color: beige; */
-    /* font: bold 14px; */
-    min-width: 6em;
-    padding: 1px;
     margin-left: 4px;
 }
 
-QPushButton:hover#RightButton {
+QPushButton:hover {
     background-color: #54687a;
 }
 
-QPushButton:pressed#RightButton {
+QPushButton:pressed {
     background-color: #3e4a52;
     border-style: inset;
 }
