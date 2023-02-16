@@ -14,7 +14,7 @@ Accent alert button: a3c1da
 /* Enable this to see UI guidelines */
 /* QWidget {
     color: white;
-    border-style: outset;
+    border-style: solid;
     background-color: #19232d;
     border-color: #455364;
     border-width: 1px;
@@ -30,12 +30,66 @@ QDialog#settingsPanel {
 }
 
 QWidget#MainPanel {
-    border-style: outset;
+    border-style: solid;
     border-color: #455364;
     border-width: 1px;
     border-radius: 3px;
     margin: 7px; /* Space between frame and app edge */
 }
+
+QScrollBar:vertical {
+    border: 1px solid #455364;
+    border-radius: 5px;
+    background: #19232d;
+    width: 10px;
+    margin: 20px 0px 20px 0px;
+}
+QScrollBar::handle:vertical {
+    background: #60798b;
+    border: 0px solid #455364;
+    border-radius: 4px;
+    min-height: 0px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: #346792;
+}
+
+QScrollBar::add-line:vertical {
+    height: 10px;
+    background: #455364;
+    subcontrol-position: bottom;
+    subcontrol-origin: margin;
+    margin-bottom: 5px;
+    border: 0px;
+    border-radius: 5px;
+}
+
+QScrollBar::add-line:vertical:hover {
+    background: #dddee1;
+}
+
+QScrollBar::sub-line:vertical {
+    height: 10px;
+    background: #455364;
+    subcontrol-position: top;
+    subcontrol-origin: margin;
+    margin-top: 5px;
+    border-radius: 5px;
+}
+
+QScrollBar::sub-line:vertical:hover {
+    background: #dddee1;
+}
+
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: none;
+}
+
+QScrollBar:horizontal {              
+    height: 0px;
+}
+
 
 /* ===== Mod Info Summary Text ===== */
 
@@ -52,7 +106,7 @@ QLabel#summaryValue {
 
 QWidget#descriptionWidget { /* Outer-most encapsulator */
     background-color: #19232d;
-    border-style: outset;
+    border-style: solid;
     border-color: #455364;
     border-width: 1px;
     border-radius: 3px;
@@ -72,7 +126,7 @@ QLabel#descriptionLabel { /* Description text itself */
 QLineEdit {
     color: #cfcfcf;
     background-color: #19232d;
-    border-style: outset;
+    border-style: solid;
     border-color: #455364;
     border-width: 1px;
     border-radius: 3px;
@@ -81,33 +135,39 @@ QLineEdit {
 /* Styling for the mod lists containers. */
 QListWidget {
     background-color: #19232d;
-    border-style: outset;
+    border-style: solid;
     border-color: #455364;
     border-width: 1px;
     border-radius: 3px;
+    padding-right: 5px;
+}
+
+QListWidget::item {
+    border: 0px;
+    /* padding-right: 20px; */
+    margin-right: 12px;
 }
 
 /* Styling for a selected mod item */
-QListWidget::item:selected {
-    border: 1px solid #6a6ea9;
-}
-
 QListWidget::item:selected:!active {
-    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                stop: 0 #ABAFE5, stop: 1 #8588B2);
+    background: #37414f;
 }
 
 QListWidget::item:selected:active {
-    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                stop: 0 #6a6ea9, stop: 1 #888dd9);
+    background: #346792;
 }
 
 QListWidget::item:hover {
-    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                stop: 0 #FAFBFE, stop: 1 #DCDEF1);
+    background: #37414f;
 }
 
 QStyle::PE_IndicatorItemViewItemDrop {
+    color: white;
+}
+
+QToolTip {
+    border-style: none;
+    background: #346792;
     color: white;
 }
 
@@ -128,7 +188,7 @@ QLabel#StatusLabel {
 QPushButton {
     color: white;
     background-color: #455364;
-    border-style: outset;
+    border-style: solid;
     border-width: 0px;
     border-radius: 5px;
     /* border-color: beige; */

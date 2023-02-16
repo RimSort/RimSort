@@ -1,3 +1,7 @@
+import os
+import platform
+import subprocess
+
 from typing import Any, Dict
 
 from PySide2.QtCore import *
@@ -32,6 +36,7 @@ class MainContent:
 
         :param game_configuration: game configuration panel to get paths
         """
+
         # BASE LAYOUT
         self.main_layout = QHBoxLayout()
         self.main_layout.setContentsMargins(
@@ -69,11 +74,13 @@ class MainContent:
         # Fetch paths dynamically from game configuration panel
         self.game_configuration = game_configuration
 
-        # Run expensive calculations to set cache data
-        self.refresh_cache_calculations()
+        # Check if paths have been set
+        if self.game_configuration.check_if_essential_paths_are_set():
+            # Run expensive calculations to set cache data
+            self.refresh_cache_calculations()
 
-        # Insert mod data into list
-        self.repopulate_lists()
+            # Insert mod data into list
+            self.repopulate_lists(True)
 
     @property
     def panel(self):
@@ -93,6 +100,50 @@ class MainContent:
             self.all_mods_with_dependencies[package_id]
         )
 
+    def platform_specific_game_launch(self, args) -> None:
+        """
+        This function starts the Rimworld game process in it's own subprocess,
+        by launching the executable found in the configured game directory.
+
+        :param game_path: path to Rimworld game
+        """
+
+        game_path = self.game_configuration.get_game_folder_path()
+        if game_path:
+            system_name = platform.system()
+            if system_name == "Darwin":
+                executable_path = os.path.join(game_path, "RimWorldMac.app")
+                if os.path.exists(executable_path):
+                    subprocess.Popen(["open", executable_path])
+                else:
+                    show_warning("Executable not found in game folder.")
+            elif system_name == "Linux" or "Windows":
+                try:
+                    subprocess.CREATE_NEW_PROCESS_GROUP
+                except AttributeError:
+                    # not Windows, so assume POSIX; if not, we'll get a usable exception
+                    executable_path = os.path.join(game_path, "RimWorldLinux")
+                    if os.path.exists(executable_path):
+                        p = subprocess.Popen([executable_path], start_new_session=True)
+                    else:
+                        show_warning("Executable not found in game folder.")
+                else:
+                    # Windows
+                    executable_path = os.path.join(game_path, "RimWorldWin64.exe")
+                    if os.path.exists(executable_path):
+                        p = subprocess.Popen(
+                            [executable_path],
+                            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+                        )
+                    else:
+                        show_warning("Executable not found in game folder.")
+            else:
+                print("Unknown System")  # TODO
+        else:
+            show_warning(
+                "Unable to get data for game executable.\nCheck that your paths are set correctly."
+            )
+
     def refresh_cache_calculations(self) -> None:
         """
         This function contains expensive calculations for getting workshop
@@ -109,8 +160,9 @@ class MainContent:
             self.game_configuration.get_game_folder_path()
         )
 
-        self.game_version = get_game_version_from_config(
-            self.game_configuration.get_config_path()
+        # Get & set Rimworld version string
+        self.game_version = get_game_version(
+            self.game_configuration.get_game_folder_path()
         )
         self.game_configuration.game_version_line.setText(self.game_version)
 
@@ -127,11 +179,15 @@ class MainContent:
         # One working Dictionary for ALL mods
         mods = merge_mod_data(self.local_mods, self.workshop_mods)
 
-        # Get and cache steam db rules data for ALL mods
-        self.steam_db_rules = get_steam_db_rules(mods)
+        self.steam_db_rules = {}
+        self.community_rules = {}
 
-        # Get and cache community rules data for ALL mods
-        self.community_rules = get_community_rules(mods)
+        # If there are mods at all, check for a mod DB.
+        if mods:
+            # Get and cache steam db rules data for ALL mods
+            self.steam_db_rules = get_steam_db_rules(mods)
+            # Get and cache community rules data for ALL mods
+            self.community_rules = get_community_rules(mods)
 
         # Calculate and cache dependencies for ALL mods
         self.all_mods_with_dependencies = get_dependencies_for_mods(
@@ -141,15 +197,22 @@ class MainContent:
             self.community_rules,  # TODO add user defined customRules from future customRules.json
         )
 
-    def repopulate_lists(self) -> None:
+    def repopulate_lists(self, is_initial: bool = False) -> None:
         """
         Get active and inactive mod lists based on the config path
-        and write them to the list widgets.
+        and write them to the list widgets. is_initial indicates if
+        this function is running at app initialization. If is_initial is
+        true, then write the active_mods_data and inactive_mods_data to 
+        restore variables.
         """
         active_mods_data, inactive_mods_data = get_active_inactive_mods(
             self.game_configuration.get_config_path(),
             self.all_mods_with_dependencies,
         )
+        if is_initial:
+            self.active_mods_data_restore_state = active_mods_data
+            self.inactive_mods_data_restore_state = inactive_mods_data
+
         self._insert_data_into_lists(active_mods_data, inactive_mods_data)
 
     def actions_slot(self, action: str) -> None:
@@ -168,6 +231,8 @@ class MainContent:
 
         :param action: string indicating action
         """
+        if action == "refresh":
+            self._do_refresh()
         if action == "clear":
             self._do_clear()
         if action == "sort":
@@ -181,7 +246,8 @@ class MainContent:
         if action == "import":
             self._do_import()
         if action == "run":
-            print("RUN")
+            args = []
+            self.platform_specific_game_launch(args)
 
     def _insert_data_into_lists(
         self, active_mods: Dict[str, Any], inactive_mods: Dict[str, Any]
@@ -194,6 +260,18 @@ class MainContent:
         """
         self.active_mods_panel.active_mods_list.recreate_mod_list(active_mods)
         self.inactive_mods_panel.inactive_mods_list.recreate_mod_list(inactive_mods)
+
+    def _do_refresh(self) -> None:
+        if self.game_configuration.check_if_essential_paths_are_set():
+            # Run expensive calculations to set cache data
+            self.refresh_cache_calculations()
+
+            # Insert mod data into list
+            self.repopulate_lists()
+        else:
+            show_warning(
+                "Please remember to set the Game Install and Mods Config folder."
+            )
 
     def _do_clear(self) -> None:
         """
@@ -339,4 +417,4 @@ class MainContent:
         """
         Method to restore the mod lists to the last saved state.
         """
-        self.repopulate_lists()
+        self._insert_data_into_lists(self.active_mods_data_restore_state, self.inactive_mods_data_restore_state)

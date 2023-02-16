@@ -42,6 +42,9 @@ class Actions(QObject):
 
         # Create button widgets. Each button, when clicked, emits a signal
         # with a string representing its action.
+        self.refresh_button = QPushButton("Refresh")
+        self.refresh_button.clicked.connect(partial(self.actions_signal.emit, "refresh"))
+
         self.clear_button = QPushButton("Clear")
         self.clear_button.clicked.connect(partial(self.actions_signal.emit, "clear"))
 
@@ -66,6 +69,7 @@ class Actions(QObject):
         self.run_button.clicked.connect(partial(self.actions_signal.emit, "run"))
 
         # Add buttons to sub-layouts and sub-layouts to the main layout.
+        self.top_panel.addWidget(self.refresh_button)
         self.top_panel.addWidget(self.clear_button)
         self.top_panel.addWidget(self.restore_button)
         self.top_panel.addWidget(self.sort_button)

@@ -23,7 +23,7 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__()
 
         # Create the main application window
-        self.setWindowTitle("RimSort")
+        self.setWindowTitle("RimSort Alpha v1.0.0")
         self.setFixedSize(QSize(1100, 700))  # TODO: support resizing
 
         # Create the main application layout
@@ -68,3 +68,5 @@ try:
     app.exec_()
 except Exception:
     show_fatal_error(traceback.format_exc())
+finally:
+    sys.exit()

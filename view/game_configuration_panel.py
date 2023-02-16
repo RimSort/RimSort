@@ -1,5 +1,7 @@
+import getpass
 import json
 import os
+from os.path import expanduser
 import platform
 import subprocess
 import webbrowser
@@ -84,7 +86,11 @@ class GameConfiguration(QObject):
         self.game_folder_open_button.setObjectName("LeftButton")
         self.game_folder_open_button.setToolTip("Open the game installation directory")
         self.game_folder_line = QLineEdit()
-        self.game_folder_line.setDisabled(True)
+        self.game_folder_line.setReadOnly(True)
+        self.game_folder_line.setClearButtonEnabled(True)
+        self.game_folder_line_clear_button = self.game_folder_line.findChild(QToolButton)
+        self.game_folder_line_clear_button.setEnabled(True)
+        self.game_folder_line_clear_button.clicked.connect(self.clear_game_folder_line)
         self.game_folder_line.setPlaceholderText("Unknown")
         self.game_folder_line.setToolTip(
             "The game installation directory contains the game executable.\n"
@@ -95,14 +101,18 @@ class GameConfiguration(QObject):
         self.game_folder_select_button.setObjectName("RightButton")
         self.game_folder_select_button.setToolTip("Set the game installation directory")
 
-        self.config_folder_open_button = QPushButton("Config File")
+        self.config_folder_open_button = QPushButton("Config Folder")
         self.config_folder_open_button.clicked.connect(
             partial(self.open_directory, self.get_config_folder_path)
         )
         self.config_folder_open_button.setObjectName("LeftButton")
         self.config_folder_open_button.setToolTip("Open the ModsConfig.xml directory")
         self.config_folder_line = QLineEdit()
-        self.config_folder_line.setDisabled(True)
+        self.config_folder_line.setReadOnly(True)
+        self.config_folder_line.setClearButtonEnabled(True)
+        self.config_folder_line_clear_button = self.config_folder_line.findChild(QToolButton)
+        self.config_folder_line_clear_button.setEnabled(True)
+        self.config_folder_line_clear_button.clicked.connect(self.clear_config_folder_line)
         self.config_folder_line.setPlaceholderText("Unknown")
         self.config_folder_line.setToolTip(
             "The this directory contains the ModsConfig.xml file, which\n"
@@ -123,7 +133,11 @@ class GameConfiguration(QObject):
             "Open the Steam Workshop Mods directory"
         )
         self.workshop_folder_line = QLineEdit()
-        self.workshop_folder_line.setDisabled(True)
+        self.workshop_folder_line.setReadOnly(True)
+        self.workshop_folder_line.setClearButtonEnabled(True)
+        self.workshop_folder_line_clear_button = self.workshop_folder_line.findChild(QToolButton)
+        self.workshop_folder_line_clear_button.setEnabled(True)
+        self.workshop_folder_line_clear_button.clicked.connect(self.clear_workshop_folder_line)
         self.workshop_folder_line.setPlaceholderText("Unknown")
         self.workshop_folder_line.setToolTip(
             "The Steam Workshop Mods directory contains mods downloaded from Steam.\n"
@@ -143,7 +157,11 @@ class GameConfiguration(QObject):
         self.local_folder_open_button.setObjectName("LeftButton")
         self.local_folder_open_button.setToolTip("Open the Local Mods directory")
         self.local_folder_line = QLineEdit()
-        self.local_folder_line.setDisabled(True)
+        self.local_folder_line.setReadOnly(True)
+        self.local_folder_line.setClearButtonEnabled(True)
+        self.local_folder_line_clear_button = self.local_folder_line.findChild(QToolButton)
+        self.local_folder_line_clear_button.setEnabled(True)
+        self.local_folder_line_clear_button.clicked.connect(self.clear_local_folder_line)
         self.local_folder_line.setPlaceholderText("Unknown")
         self.local_folder_line.setToolTip(
             "The Local Mods directory contains downloaded mod folders.\n"
@@ -210,9 +228,27 @@ class GameConfiguration(QObject):
         self.initialize_settings_panel()
         self.initialize_storage()
 
+        # SIGNALS AND SLOTS
+        self.settings_panel.settings_signal.connect(self.delete_all_paths_data)  # Actionsdelete_all_paths_data
+
     @property
     def panel(self):
         return self._panel
+
+    def check_if_essential_paths_are_set(self) -> None:
+        """
+        When the user starts the app for the first time, none
+        of the paths will be set. We should check for this and
+        not throw a fatal error trying to load mods until the
+        user has had a chance to set paths.
+        """
+        if (
+            not self.game_folder_line.text()
+            or not self.config_folder_line.text()
+            # or not self.workshop_folder_line.text()
+        ):
+            return False
+        return True
 
     def initialize_storage(self) -> None:
         """
@@ -317,8 +353,6 @@ class GameConfiguration(QObject):
         )
         self.game_folder_line.setText(game_exe_folder_path)
         self.update_persistent_storage("game_folder", game_exe_folder_path)
-        # TODO
-        # If Local Mods folder is not already set, automatically discern this information here
 
     def set_config_folder(self) -> None:
         """
@@ -394,6 +428,90 @@ class GameConfiguration(QObject):
             json_object = json.dumps(settings_data, indent=4)
             with open(settings_path, "w") as outfile:
                 outfile.write(json_object)
+    
+    def delete_all_paths_data(self) -> None:
+        folders = [
+            "workshop_folder",
+            "game_folder",
+            "config_folder",
+            "local_folder"
+        ]
+        # Update storage to remove all paths data
+        for folder in folders:
+            self.update_persistent_storage(folder, "")
+        
+        # Visually delete paths data
+        self.game_folder_line.setText("")
+        self.config_folder_line.setText("")
+        self.workshop_folder_line.setText("")
+        self.local_folder_line.setText("")
+        self.game_version_line.setText("")
+    
+    def clear_game_folder_line(self):
+        self.update_persistent_storage("game_folder", "")
+        self.game_folder_line.setText("")
+    
+    def clear_config_folder_line(self):
+        self.update_persistent_storage("config_folder", "")
+        self.config_folder_line.setText("")
+    
+    def clear_workshop_folder_line(self):
+        self.update_persistent_storage("workshop_folder", "")
+        self.workshop_folder_line.setText("")
+
+    def clear_local_folder_line(self):
+        self.update_persistent_storage("local_folder", "")
+        self.local_folder_line.setText("")
+
+    def autodetect_paths_by_platform(self) -> None:
+        """
+        This function tries to autodetect Rimworld paths based on the
+        defaults typically found per-platform, and set them in the client.
+        """
+        os_paths = []
+        darwin_paths = [
+            f"/Users/{getpass.getuser()}/Library/Application Support/Steam/steamapps/common/Rimworld/",
+            f"/Users/{getpass.getuser()}/Library/Application Support/Rimworld/Config",
+            f"/Users/{getpass.getuser()}/Library/Application Support/Steam/steamapps/workshop/content/294100/"
+            ]
+        linux_paths = [
+            f"{expanduser('~')}/.steam/debian-installation/steamapps/common/RimWorld",
+            f"{expanduser('~')}/.config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios/Config",
+            f"{expanduser('~')}/.steam/debian-installation/steamapps/workshop/content/294100"
+        ]
+        windows_paths = [
+            os.path.join("C:" + os.sep, "Program Files (x86)", "Steam", "steamapps", "common", "Rimworld"),
+            os.path.join("C:" + os.sep, "Users", getpass.getuser(), "AppData", "LocalLow", "Ludeon Studios", "RimWorld by Ludeon Studios", "Config"),
+            os.path.join("C:" + os.sep, "Program Files (x86)", "Steam", "steamapps", "workshop", "content", "294100")
+        ]
+        system_name = platform.system()
+
+        if system_name == "Darwin":
+            os_paths = darwin_paths
+        elif system_name == "Linux":
+            os_paths = linux_paths
+        elif system_name == "Windows":
+            os_paths = windows_paths
+        else:
+            print("Unknown System")  # TODO
+        if os.path.exists(os_paths[0]):
+            self.game_folder_line.setText(os_paths[0])
+            self.update_persistent_storage("game_folder", os_paths[0])
+            if system_name == "Darwin":
+                # On mac the Mods folder is the Rimworld folder
+                self.local_folder_line.setText(os_paths[0])
+                self.update_persistent_storage("local_folder", os_paths[0])
+        if os.path.exists(os_paths[1]):
+            self.config_folder_line.setText(os_paths[1])
+            self.update_persistent_storage("config_folder", os_paths[1])
+        if os.path.exists(os_paths[2]):
+            self.workshop_folder_line.setText(os_paths[2])
+            self.update_persistent_storage("workshop_folder", os_paths[2])
+        if os.path.exists(os.path.join(os_paths[0], "Mods")):
+            if system_name != "Darwin":
+                self.local_folder_line.setText(os.path.join(os_paths[0], "Mods"))
+                self.update_persistent_storage("local_folder", os.path.join(os_paths[0], "Mods"))
+
 
     def get_game_folder_path(self):
         return self.game_folder_line.text()
@@ -402,7 +520,10 @@ class GameConfiguration(QObject):
         return self.config_folder_line.text()
 
     def get_config_path(self):
-        return os.path.join(self.get_config_folder_path(), "ModsConfig.xml")
+        config_folder_path = self.get_config_folder_path()
+        if config_folder_path:
+            return os.path.join(self.get_config_folder_path(), "ModsConfig.xml")
+        return ""
 
     def get_workshop_folder_path(self):
         return self.workshop_folder_line.text()
@@ -421,10 +542,10 @@ class GameConfiguration(QObject):
         self.settings_panel.show()
 
     def do_autodetect(self):
-        print("autodetecting")
+        self.autodetect_paths_by_platform()
 
     def open_wiki_webbrowser(self):
-        webbrowser.open("https://github.com/oceancabbage/RimSort")
+        webbrowser.open("https://github.com/oceancabbage/RimSort/wiki")
 
     def open_github_webbrowser(self):
         webbrowser.open("https://github.com/oceancabbage/RimSort")

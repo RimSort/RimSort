@@ -30,18 +30,18 @@ def get_active_inactive_mods(
 
     # Return an error if some active mod was in the ModsConfig but no data
     # could be found for it
-    # if invalid_mods:
-    #     warning_message = "The following list of mods could not be loaded:"
-    #     for invalid_mod in invalid_mods:
-    #         warning_message = warning_message + f"\n * {invalid_mod}"
-    #     show_warning(warning_message)
+    if invalid_mods:
+        warning_message = "The following list of mods could not be loaded\nDid you set your game install and workshop/local mods path correctly?:"
+        for invalid_mod in invalid_mods:
+            warning_message = warning_message + f"\n * {invalid_mod}"
+        show_warning(warning_message)
 
     # Get the inactive mods by subtracting active mods from workshop + expansions
     inactive_mods = get_inactive_mods(workshop_and_expansions, active_mods)
     return active_mods, inactive_mods
 
 
-def parse_mod_data(mods_path: str) -> Dict[str, Any]:
+def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
     mods = {}
     invalid_folders = set()
     invalid_abouts = set()
@@ -115,16 +115,22 @@ def parse_mod_data(mods_path: str) -> Dict[str, Any]:
                         #         "Succeeeded in getting modmetadata for mod:"
                         #         + mod_data["modmetadata"]["name"]
                         #     )
+    else:
+        if mods_path:
+            show_warning(
+                f"Unable to get data for {intent}.\nThe path [{mods_path}] is invalid.\nCheck that your paths are set correctly."
+            )
     if invalid_folders:
-        warning_message = "The following workshop folders could not be loaded:"
+        warning_message = "The following workshop folders could not be loaded:\n"
+        warning_message = warning_message + "(these may just be empty folders leftover from previous mod installs)"
         for invalid_folder in invalid_folders:
             warning_message = warning_message + f"\n * {invalid_folder}"
-        # show_warning(warning_message)
+        show_warning(warning_message)
     if invalid_abouts:
-        warning_message = "The following workshop folders had invalid About.xml:"
+        warning_message = "The following workshop folders had invalid About.xmls:"
         for invalid_about in invalid_abouts:
             warning_message = warning_message + f"\n * {invalid_about}"
-        # show_warning(warning_message)
+        show_warning(warning_message)
     return mods
 
 
@@ -161,12 +167,11 @@ def get_installed_expansions(game_path: str) -> Dict[str, Any]:
     """
     # RimWorld folder on mac contains RimWorldMac.app which
     # is actually a folder itself
-    system_name = platform.system()
-    if system_name == "Darwin":
+    if platform.system() == "Darwin" and game_path:
         game_path = os.path.join(game_path, "RimWorldMac.app")
 
     # Get mod data
-    mod_data = parse_mod_data(os.path.join(game_path, "Data"))
+    mod_data = parse_mod_data(os.path.join(game_path, "Data"), "game install")
 
     # Base game and expansion About.xml do not contain name, so these
     # must be manually added
@@ -197,11 +202,11 @@ def get_local_mods(local_path: str) -> Dict[str, Any]:
     # RimWorld folder on mac contains RimWorldMac.app which
     # is actually a folder itself
     system_name = platform.system()
-    if system_name == "Darwin":
+    if system_name == "Darwin" and local_path:
         local_path = os.path.join(local_path, "RimWorldMac.app", "Mods")
 
     # Get mod data
-    return parse_mod_data(local_path)
+    return parse_mod_data(local_path, "local mods")
 
 
 def get_workshop_mods(workshop_path: str) -> Dict[str, Any]:
@@ -215,7 +220,7 @@ def get_workshop_mods(workshop_path: str) -> Dict[str, Any]:
     :param path: path to the Rimworld workshop mods folder
     :return: a Dict of workshop mods by package id, and dict of community rules
     """
-    return parse_mod_data(workshop_path)
+    return parse_mod_data(workshop_path, "workshop mods")
 
 
 def get_steam_db_rules(mods: Dict[str, Any]) -> Dict[str, Any]:
@@ -244,8 +249,8 @@ def get_steam_db_rules(mods: Dict[str, Any]) -> Dict[str, Any]:
                 json_string = f.read()
                 db_data = json.loads(json_string)
                 return db_data["database"]
-    show_fatal_error(
-        "The configured DB mod was not detected.\nRimPy DB was also not found.\nPlease install & configure a valid DB mod and restart RimSort."
+    show_warning(
+        "The configured DB mod was not detected.\nRimPy DB was also not found.\nPlease install & configure a valid DB mod and refresh/restart RimSort."
     )
 
 
@@ -275,8 +280,8 @@ def get_community_rules(mods: Dict[str, Any]) -> Dict[str, Any]:
                 json_string = f.read()
                 rule_data = json.loads(json_string)
                 return rule_data["rules"]
-    show_fatal_error(
-        "The configured DB mod was not detected.\nRimPy DB was also not found.\nPlease install & configure a valid DB mod and restart RimSort."
+    show_warning(
+        "The configured DB mod was not detected.\nRimPy DB was also not found.\nPlease install & configure a valid DB mod and refresh/restart RimSort."
     )
 
 
@@ -553,21 +558,25 @@ def add_dependency_to_mod(
                         )
 
 
-def get_game_version_from_config(config_path: str) -> str:
+def get_game_version(game_path: str) -> str:
     """
-    Given a path to a file in the ModsConfig.xml format, return the
-    game version.
+    This function starts the Rimworld game version string from the file
+    'Version.txt' that is found in the configured game directory.
 
-    :param path: path to a ModsConfig.xml file
+    :param game_path: path to Rimworld game
     :return: the game version as a string
     """
-    mod_data = xml_path_to_json(config_path)
-    try:
-        if mod_data:
-            return mod_data["ModsConfigData"]["version"]
-        return {}
-    except:
-        raise InvalidModsConfigFormat
+    if platform.system() == "Darwin" and game_path:
+        game_path = os.path.join(game_path, "RimWorldMac.app")
+    version_file_path = os.path.join(game_path, "Version.txt")
+    if os.path.exists(version_file_path):
+        with open(version_file_path) as f:
+            version = f.read()
+        return version
+    else:
+        show_warning(
+            f"Unable to get data for game version.\nThe path [{game_path}] is invalid.\nCheck that your paths are set correctly."
+        )
 
 
 def get_active_mods_from_config(config_path: str) -> Dict[str, Any]:
@@ -586,6 +595,10 @@ def get_active_mods_from_config(config_path: str) -> Dict[str, Any]:
                     (package_id.lower(), {})
                     for package_id in mod_data["ModsConfigData"]["activeMods"]["li"]
                 ]
+            )
+        else:
+            show_warning(
+                f"Unable to get data for active mods.\nThe path [{config_path}] is invalid.\nCheck that your paths are set correctly."
             )
         return {}
     except:

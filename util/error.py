@@ -28,4 +28,3 @@ def show_fatal_error(error_message: str) -> None:
     error.setInformativeText(error_message)
     error.setWindowTitle("Error")
     error.exec_()
-    sys.exit()
