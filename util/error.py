@@ -1,7 +1,41 @@
-import sys
-
 from PySide2.QtWidgets import *
 from typing import Optional
+
+
+def show_information(
+    text: Optional[str] = None,
+    information: Optional[str] = None,
+    details: Optional[str] = None,
+) -> None:
+    """
+    Displays a warning message box displaying the input string.
+
+    :param warning_message: the warning message to display
+    """
+    # Set up the message box
+    info_message_box = QMessageBox()
+    info_message_box.setIcon(QMessageBox.Warning)
+    info_message_box.setWindowTitle("Information")
+
+    # Add text
+    if text is None:
+        info_message_box.setText("RimSort has alerted!")
+    else:
+        info_message_box.setText(text)
+    if information is None:
+        info_message_box.setInformativeText(
+            "This is an informational alert. Nothing has gone wrong, but if "
+            "you are seeing this message that means we forgot to put proper "
+            "information here. Please let us know at https://github.com/oceancabbage/RimSort."
+        )
+    else:
+        info_message_box.setInformativeText(information)
+
+    if details is not None:
+        info_message_box.setDetailedText(details)
+
+    # Show the message box
+    info_message_box.exec_()
 
 
 def show_warning(

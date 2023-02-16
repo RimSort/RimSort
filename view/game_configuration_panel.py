@@ -7,6 +7,7 @@ import subprocess
 import webbrowser
 from functools import partial
 from typing import Any
+import traceback
 
 from PySide2.QtCore import *
 from PySide2.QtGui import *
@@ -260,8 +261,8 @@ class GameConfiguration(QObject):
         storage_path = QStandardPaths.writableLocation(
             QStandardPaths.AppLocalDataLocation
         )
-        print(storage_path)
         if not os.path.exists(storage_path):
+                
             os.makedirs(storage_path)
         settings_path = os.path.join(storage_path, "settings.json")
         if not os.path.exists(settings_path):
