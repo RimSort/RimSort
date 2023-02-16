@@ -37,25 +37,25 @@ QWidget#MainPanel {
     margin: 7px; /* Space between frame and app edge */
 }
 
-QScrollBar:vertical {
+QScrollBar:vertical#modListScrollBar {
     border: 1px solid #455364;
     border-radius: 5px;
     background: #19232d;
     width: 10px;
     margin: 20px 0px 20px 0px;
 }
-QScrollBar::handle:vertical {
+QScrollBar::handle:vertical#modListScrollBar {
     background: #60798b;
     border: 0px solid #455364;
     border-radius: 4px;
     min-height: 0px;
 }
 
-QScrollBar::handle:vertical:hover {
+QScrollBar::handle:vertical:hover#modListScrollBar {
     background: #346792;
 }
 
-QScrollBar::add-line:vertical {
+QScrollBar::add-line:vertical#modListScrollBar {
     height: 10px;
     background: #455364;
     subcontrol-position: bottom;
@@ -65,11 +65,11 @@ QScrollBar::add-line:vertical {
     border-radius: 5px;
 }
 
-QScrollBar::add-line:vertical:hover {
+QScrollBar::add-line:vertical:hover#modListScrollBar {
     background: #dddee1;
 }
 
-QScrollBar::sub-line:vertical {
+QScrollBar::sub-line:vertical#modListScrollBar {
     height: 10px;
     background: #455364;
     subcontrol-position: top;
@@ -78,15 +78,15 @@ QScrollBar::sub-line:vertical {
     border-radius: 5px;
 }
 
-QScrollBar::sub-line:vertical:hover {
+QScrollBar::sub-line:vertical:hover#modListScrollBar {
     background: #dddee1;
 }
 
-QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical#modListScrollBar {
     background: none;
 }
 
-QScrollBar:horizontal {              
+QScrollBar:horizontal#modListScrollBar {              
     height: 0px;
 }
 
@@ -111,6 +111,7 @@ QWidget#descriptionWidget { /* Outer-most encapsulator */
     border-width: 1px;
     border-radius: 3px;
     padding: 2px; /* The sharp corner of the text box clips out */
+    padding-right: 5px;
 }
 
 QWidget#descriptionContent { /* Text, minus scroll bar */
@@ -121,6 +122,7 @@ QWidget#descriptionContent { /* Text, minus scroll bar */
 QLabel#descriptionLabel { /* Description text itself */
     color: white;
     background-color: #19232d;
+    margin-right: 3px;
 }
 
 QLineEdit {
@@ -185,7 +187,12 @@ QLabel#StatusLabel {
     background-color: #455364;
 }
 
-QPushButton {
+QLabel#gameVersion {
+    color: white;
+    margin-right: 4px;
+}
+
+QPushButton#appButton {
     color: white;
     background-color: #455364;
     border-style: solid;
@@ -197,24 +204,55 @@ QPushButton {
     padding: 1px;
 }
 
-QLabel#gameVersion {
-    color: white;
-    margin-right: 4px;
-}
-
-QPushButton#LeftButton {
-    margin-right: 4px;
-}
-
-QPushButton#RightButton {
-    margin-left: 4px;
-}
-
-QPushButton:hover {
+QPushButton:hover#appButton {
     background-color: #54687a;
 }
 
-QPushButton:pressed {
+QPushButton:pressed#appButton {
+    background-color: #3e4a52;
+    border-style: inset;
+}
+
+QPushButton#LeftButton {
+    color: white;
+    background-color: #455364;
+    border-style: solid;
+    border-width: 0px;
+    border-radius: 5px;
+    /* border-color: beige; */
+    /* font: bold 14px; */
+    min-width: 6em;
+    padding: 1px;
+    margin-right: 4px;
+}
+
+QPushButton:hover#LeftButton {
+    background-color: #54687a;
+}
+
+QPushButton:pressed#LeftButton {
+    background-color: #3e4a52;
+    border-style: inset;
+}
+
+QPushButton#RightButton {
+    color: white;
+    background-color: #455364;
+    border-style: solid;
+    border-width: 0px;
+    border-radius: 5px;
+    /* border-color: beige; */
+    /* font: bold 14px; */
+    min-width: 6em;
+    padding: 1px;
+    margin-left: 4px;
+}
+
+QPushButton:hover#RightButton {
+    background-color: #54687a;
+}
+
+QPushButton:pressed#RightButton {
     background-color: #3e4a52;
     border-style: inset;
 }

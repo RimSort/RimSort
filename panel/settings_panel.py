@@ -28,6 +28,7 @@ class SettingsPanel(QDialog):
         self.sorting_algorithm_cb = QComboBox()
         self.sorting_algorithm_cb.addItems(["RimPy", "Topological"])
         self.clear_paths_button = QPushButton("Clear Paths")
+        self.clear_paths_button.setObjectName("appButton")
         self.clear_paths_button.clicked.connect(
             partial(self.settings_signal.emit, "clear_paths")
         )

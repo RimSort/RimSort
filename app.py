@@ -7,7 +7,7 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
-from util.error import show_fatal_error
+from util.error import show_fatal
 from util.proxy_style import ProxyStyle
 from view.game_configuration_panel import GameConfiguration
 from view.main_content_panel import MainContent
@@ -66,7 +66,7 @@ try:
     window = MainWindow()
     window.show()
     app.exec_()
-except Exception:
-    show_fatal_error(traceback.format_exc())
+except Exception as e:
+    show_fatal(details=str(traceback.format_exc()))
 finally:
     sys.exit()
