@@ -61,14 +61,8 @@ class ModListItemInner(QWidget):
         self.setToolTip(self.get_tool_tip_text())
         self.main_item_layout = QHBoxLayout()
         self.main_item_layout.setContentsMargins(0, 0, 0, 0)
-        self.main_item_layout.setSpacing(0)
+        self.main_item_layout.setSpacing(2)
         item_name = self.name
-
-        # Icons by mod source
-        self.icon_mod_source = QLabel()
-        self.icon_mod_source.setAlignment(Qt.AlignLeft)
-        self.pixmap = self.get_icon().pixmap(QSize(20, 20))
-        self.icon_mod_source.setPixmap(self.pixmap)
 
         self.font_metrics = QFontMetrics(self.font())
         text_width_needed = QRectF(self.font_metrics.boundingRect(item_name)).width()
@@ -80,9 +74,15 @@ class ModListItemInner(QWidget):
             self.main_label = QLabel(str(shortened_text))
         else:
             self.main_label = QLabel(item_name)
+
+        # Icons by mod source
+        self.icon_mod_source = QLabel()
+        self.icon_mod_source.setPixmap(self.get_icon().pixmap(QSize(20, 20)))
+
         self.main_label.setObjectName("ListItemLabel")
         self.main_item_layout.addWidget(self.icon_mod_source)
         self.main_item_layout.addWidget(self.main_label)
+        self.main_item_layout.addStretch()
         self.setLayout(self.main_item_layout)
 
     def get_tool_tip_text(self):
