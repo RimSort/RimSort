@@ -14,7 +14,7 @@ from view.game_configuration_panel import GameConfiguration
 from view.main_content_panel import MainContent
 from view.status_panel import Status
 
-logging_file_path = Path(os.path.join(os.path.dirname(__file__), "rs_log.log"))
+logging_file_path = Path(os.path.join(os.path.dirname(__file__), "RimSort.log"))
 logging.basicConfig(
     format="[%(levelname)s][%(asctime)s][%(name)s][%(funcName)s][%(lineno)d] : %(message)s",
     filename=logging_file_path,
