@@ -1,11 +1,14 @@
+import logging
+import os
 from typing import Any, Dict
 
-import os
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
 from model.scroll_label import ScrollLabel
+
+logger = logging.getLogger(__name__)
 
 
 class ModInfo:
@@ -18,6 +21,7 @@ class ModInfo:
         """
         Initialize the class.
         """
+        logger.info("Starting ModInfo initialization")
 
         # Base layout type
         self.panel = QVBoxLayout()
@@ -75,6 +79,8 @@ class ModInfo:
         self.mod_info_layout.addLayout(self.mod_info_authors)
         self.mod_info_layout.addLayout(self.mod_info_path)
         self.description_layout.addWidget(self.description)
+
+        logger.info("Finished ModInfo initialization")
 
     def display_mod_info(self, mod_info: Dict[str, Any]) -> None:
         """

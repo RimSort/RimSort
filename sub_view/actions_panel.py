@@ -1,8 +1,11 @@
+import logging
 from functools import partial
 
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
+
+logger = logging.getLogger(__name__)
 
 
 class Actions(QObject):
@@ -20,6 +23,7 @@ class Actions(QObject):
         Initialize the actions panel. Construct the layout,
         add widgets, and emit signals where applicable.
         """
+        logger.info("Starting Actions initialization")
         super(Actions, self).__init__()
 
         # Create the main layout.
@@ -43,7 +47,9 @@ class Actions(QObject):
         # Create button widgets. Each button, when clicked, emits a signal
         # with a string representing its action.
         self.refresh_button = QPushButton("Refresh")
-        self.refresh_button.clicked.connect(partial(self.actions_signal.emit, "refresh"))
+        self.refresh_button.clicked.connect(
+            partial(self.actions_signal.emit, "refresh")
+        )
 
         self.clear_button = QPushButton("Clear")
         self.clear_button.clicked.connect(partial(self.actions_signal.emit, "clear"))
@@ -79,6 +85,8 @@ class Actions(QObject):
         self.middle_panel.addWidget(self.export_button)
         self.bottom_panel.addWidget(self.save_button)
         self.bottom_panel.addWidget(self.run_button)
+
+        logger.info("Finished Actions initialization")
 
     @property
     def panel(self):

@@ -1,11 +1,13 @@
 import getpass
 import json
+import logging
 import os
 from os.path import expanduser
 import platform
 import subprocess
 import webbrowser
 from functools import partial
+from os.path import expanduser
 from typing import Any
 import traceback
 
@@ -14,7 +16,9 @@ from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
 from panel.settings_panel import SettingsPanel
-from util.error import show_warning
+from util.error import *
+
+logger = logging.getLogger(__name__)
 
 
 class GameConfiguration(QObject):
@@ -36,6 +40,7 @@ class GameConfiguration(QObject):
         """
         Initialize the game configuration.
         """
+        logger.info("Starting GameConfiguration initialization")
         super(GameConfiguration, self).__init__()
 
         # BASE LAYOUT
@@ -89,7 +94,9 @@ class GameConfiguration(QObject):
         self.game_folder_line = QLineEdit()
         self.game_folder_line.setReadOnly(True)
         self.game_folder_line.setClearButtonEnabled(True)
-        self.game_folder_line_clear_button = self.game_folder_line.findChild(QToolButton)
+        self.game_folder_line_clear_button = self.game_folder_line.findChild(
+            QToolButton
+        )
         self.game_folder_line_clear_button.setEnabled(True)
         self.game_folder_line_clear_button.clicked.connect(self.clear_game_folder_line)
         self.game_folder_line.setPlaceholderText("Unknown")
@@ -111,9 +118,13 @@ class GameConfiguration(QObject):
         self.config_folder_line = QLineEdit()
         self.config_folder_line.setReadOnly(True)
         self.config_folder_line.setClearButtonEnabled(True)
-        self.config_folder_line_clear_button = self.config_folder_line.findChild(QToolButton)
+        self.config_folder_line_clear_button = self.config_folder_line.findChild(
+            QToolButton
+        )
         self.config_folder_line_clear_button.setEnabled(True)
-        self.config_folder_line_clear_button.clicked.connect(self.clear_config_folder_line)
+        self.config_folder_line_clear_button.clicked.connect(
+            self.clear_config_folder_line
+        )
         self.config_folder_line.setPlaceholderText("Unknown")
         self.config_folder_line.setToolTip(
             "The this directory contains the ModsConfig.xml file, which\n"
@@ -136,9 +147,13 @@ class GameConfiguration(QObject):
         self.workshop_folder_line = QLineEdit()
         self.workshop_folder_line.setReadOnly(True)
         self.workshop_folder_line.setClearButtonEnabled(True)
-        self.workshop_folder_line_clear_button = self.workshop_folder_line.findChild(QToolButton)
+        self.workshop_folder_line_clear_button = self.workshop_folder_line.findChild(
+            QToolButton
+        )
         self.workshop_folder_line_clear_button.setEnabled(True)
-        self.workshop_folder_line_clear_button.clicked.connect(self.clear_workshop_folder_line)
+        self.workshop_folder_line_clear_button.clicked.connect(
+            self.clear_workshop_folder_line
+        )
         self.workshop_folder_line.setPlaceholderText("Unknown")
         self.workshop_folder_line.setToolTip(
             "The Steam Workshop Mods directory contains mods downloaded from Steam.\n"
@@ -160,9 +175,13 @@ class GameConfiguration(QObject):
         self.local_folder_line = QLineEdit()
         self.local_folder_line.setReadOnly(True)
         self.local_folder_line.setClearButtonEnabled(True)
-        self.local_folder_line_clear_button = self.local_folder_line.findChild(QToolButton)
+        self.local_folder_line_clear_button = self.local_folder_line.findChild(
+            QToolButton
+        )
         self.local_folder_line_clear_button.setEnabled(True)
-        self.local_folder_line_clear_button.clicked.connect(self.clear_local_folder_line)
+        self.local_folder_line_clear_button.clicked.connect(
+            self.clear_local_folder_line
+        )
         self.local_folder_line.setPlaceholderText("Unknown")
         self.local_folder_line.setToolTip(
             "The Local Mods directory contains downloaded mod folders.\n"
@@ -233,7 +252,11 @@ class GameConfiguration(QObject):
         self.initialize_storage()
 
         # SIGNALS AND SLOTS
-        self.settings_panel.settings_signal.connect(self.delete_all_paths_data)  # Actionsdelete_all_paths_data
+        self.settings_panel.settings_signal.connect(
+            self.delete_all_paths_data
+        )  # Actionsdelete_all_paths_data
+
+        logger.info("Finished GameConfiguration initialization")
 
     @property
     def panel(self):
@@ -246,12 +269,17 @@ class GameConfiguration(QObject):
         not throw a fatal error trying to load mods until the
         user has had a chance to set paths.
         """
+        logger.info("Checking if essential paths are set")
+        logger.info(f"Game Folder path: [{self.game_folder_line.text()}]")
+        logger.info(f"Config Folder path: [{self.config_folder_line.text()}]")
         if (
             not self.game_folder_line.text()
             or not self.config_folder_line.text()
             # or not self.workshop_folder_line.text()
         ):
+            logger.info("Or or more paths not set, returning False")
             return False
+        logger.info("Paths have been set, returning True")
         return True
 
     def initialize_storage(self) -> None:
@@ -261,21 +289,39 @@ class GameConfiguration(QObject):
         create them. If they do exist, set the path widgets
         to have paths written on the settings.json.
         """
+        logger.info("Starting storage initialization")
         storage_path = QStandardPaths.writableLocation(
             QStandardPaths.AppLocalDataLocation
         )
+        logger.info(f"Determined storage path: {storage_path}")
         if not os.path.exists(storage_path):
-                
+            logger.info(f"Storage path [{storage_path}] does not exist")
+            information = (
+                "It looks like you may be running RimSort for the first time! RimSort stores some client "
+                f"information in this directory: [{storage_path}]. It doesn't look like this directory "
+                "exists, so we'll make it for you now."
+            )
+            show_information(text="Welcome to RimSort!", information=information)
+            logger.info("Making storage directory")
             os.makedirs(storage_path)
         settings_path = os.path.join(storage_path, "settings.json")
+        logger.info(f"Determined settings file path: {settings_path}")
         if not os.path.exists(settings_path):
+            logger.info(f"Settings file [{settings_path}] does not exist")
+            # Create a new empty settings.json file
             init_settings = {}
             json_object = json.dumps(init_settings, indent=4)
+            logger.info(f"Creating empty JSON to write: [{json_object}]")
             with open(settings_path, "w") as outfile:
+                logger.info("Writing empty JSON to file")
                 outfile.write(json_object)
         else:
+            logger.info(f"Settings file [{settings_path}] exists. Opening file")
             with open(settings_path) as infile:
+                logger.info("Loading JSON from file")
                 settings_data = json.load(infile)
+                logger.info(f"JSON has been loaded: {settings_data}")
+                logger.info("Setting relevant QLineEdits now")
                 if settings_data.get("game_folder"):
                     self.game_folder_line.setText(settings_data["game_folder"])
                 if settings_data.get("config_folder"):
@@ -290,6 +336,7 @@ class GameConfiguration(QObject):
                     )
                 if settings_data.get("runArgs"):
                     self.run_arguments = settings_data["runArgs"]
+        logger.info("Finished storage initialization")
 
     def initialize_settings_panel(self) -> None:
         """
@@ -300,6 +347,7 @@ class GameConfiguration(QObject):
         Widndow modality is set so the user cannot interact with
         the rest of the application while the settings panel is open.
         """
+        logger.info("Calling Settings Panel initialization")
         self.settings_panel = SettingsPanel()
         self.settings_panel.setWindowModality(Qt.ApplicationModal)
         self.settings_panel.finished.connect(self.on_settings_close)
@@ -450,33 +498,28 @@ class GameConfiguration(QObject):
             json_object = json.dumps(settings_data, indent=4)
             with open(settings_path, "w") as outfile:
                 outfile.write(json_object)
-    
+
     def delete_all_paths_data(self) -> None:
-        folders = [
-            "workshop_folder",
-            "game_folder",
-            "config_folder",
-            "local_folder"
-        ]
+        folders = ["workshop_folder", "game_folder", "config_folder", "local_folder"]
         # Update storage to remove all paths data
         for folder in folders:
             self.update_persistent_storage(folder, "")
-        
+
         # Visually delete paths data
         self.game_folder_line.setText("")
         self.config_folder_line.setText("")
         self.workshop_folder_line.setText("")
         self.local_folder_line.setText("")
         self.game_version_line.setText("")
-    
+
     def clear_game_folder_line(self):
         self.update_persistent_storage("game_folder", "")
         self.game_folder_line.setText("")
-    
+
     def clear_config_folder_line(self):
         self.update_persistent_storage("config_folder", "")
         self.config_folder_line.setText("")
-    
+
     def clear_workshop_folder_line(self):
         self.update_persistent_storage("workshop_folder", "")
         self.workshop_folder_line.setText("")
@@ -493,18 +536,42 @@ class GameConfiguration(QObject):
         os_paths = []
         darwin_paths = [
             f"/Users/{getpass.getuser()}/Library/Application Support/Steam/steamapps/common/Rimworld/",
-            f"/Users/{getpass.getuser()}/Library/Application Support/Rimworld/Config",
-            f"/Users/{getpass.getuser()}/Library/Application Support/Steam/steamapps/workshop/content/294100/"
-            ]
+            f"/Users/{getpass.getuser()}/Library/Application Support/Rimworld/Config/",
+            f"/Users/{getpass.getuser()}/Library/Application Support/Steam/steamapps/workshop/content/294100/",
+        ]
         linux_paths = [
             f"{expanduser('~')}/.steam/debian-installation/steamapps/common/RimWorld",
             f"{expanduser('~')}/.config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios/Config",
-            f"{expanduser('~')}/.steam/debian-installation/steamapps/workshop/content/294100"
+            f"{expanduser('~')}/.steam/debian-installation/steamapps/workshop/content/294100",
         ]
         windows_paths = [
-            os.path.join("C:" + os.sep, "Program Files (x86)", "Steam", "steamapps", "common", "Rimworld"),
-            os.path.join("C:" + os.sep, "Users", getpass.getuser(), "AppData", "LocalLow", "Ludeon Studios", "RimWorld by Ludeon Studios", "Config"),
-            os.path.join("C:" + os.sep, "Program Files (x86)", "Steam", "steamapps", "workshop", "content", "294100")
+            os.path.join(
+                "C:" + os.sep,
+                "Program Files (x86)",
+                "Steam",
+                "steamapps",
+                "common",
+                "Rimworld",
+            ),
+            os.path.join(
+                "C:" + os.sep,
+                "Users",
+                getpass.getuser(),
+                "AppData",
+                "LocalLow",
+                "Ludeon Studios",
+                "RimWorld by Ludeon Studios",
+                "Config",
+            ),
+            os.path.join(
+                "C:" + os.sep,
+                "Program Files (x86)",
+                "Steam",
+                "steamapps",
+                "workshop",
+                "content",
+                "294100",
+            ),
         ]
         system_name = platform.system()
 
@@ -516,6 +583,8 @@ class GameConfiguration(QObject):
             os_paths = windows_paths
         else:
             print("Unknown System")  # TODO
+        
+        # If the game folder exists...
         if os.path.exists(os_paths[0]):
             self.game_folder_line.setText(os_paths[0])
             self.update_persistent_storage("game_folder", os_paths[0])
@@ -523,34 +592,53 @@ class GameConfiguration(QObject):
                 # On mac the Mods folder is the Rimworld folder
                 self.local_folder_line.setText(os_paths[0])
                 self.update_persistent_storage("local_folder", os_paths[0])
+        
+        # If the config folder exists...
         if os.path.exists(os_paths[1]):
             self.config_folder_line.setText(os_paths[1])
             self.update_persistent_storage("config_folder", os_paths[1])
+        
+        # If the workshop folder eixsts
         if os.path.exists(os_paths[2]):
             self.workshop_folder_line.setText(os_paths[2])
             self.update_persistent_storage("workshop_folder", os_paths[2])
+        
+        # Checking for an existing Rimworld/Mods folder
         if os.path.exists(os.path.join(os_paths[0], "Mods")):
             if system_name != "Darwin":
                 self.local_folder_line.setText(os.path.join(os_paths[0], "Mods"))
-                self.update_persistent_storage("local_folder", os.path.join(os_paths[0], "Mods"))
-
+                self.update_persistent_storage(
+                    "local_folder", os.path.join(os_paths[0], "Mods")
+                )
 
     def get_game_folder_path(self):
+        logger.info(f"Responding with requested Game Folder: {self.game_folder_line.text()}")
         return self.game_folder_line.text()
 
     def get_config_folder_path(self):
+        logger.info(f"Responding with requested Config Folder: {self.config_folder_line.text()}")
         return self.config_folder_line.text()
 
     def get_config_path(self):
+        logger.info("Getting path to ModsConfig.xml")
         config_folder_path = self.get_config_folder_path()
         if config_folder_path:
-            return os.path.join(self.get_config_folder_path(), "ModsConfig.xml")
+            config_xml_path = os.path.join(
+                self.get_config_folder_path(), "ModsConfig.xml"
+            )
+            logger.info(f"Determined ModsConfig.xml path: {config_xml_path}")
+            return config_xml_path
+        logger.info("ERROR: unable to get path to ModsConfig.xml")
         return ""
 
     def get_workshop_folder_path(self):
+        logger.info(
+            f"Responding with requested Workshop Folder: {self.workshop_folder_line.text()}"
+        )
         return self.workshop_folder_line.text()
 
     def get_local_folder_path(self):
+        logger.info(f"Responding with requested Local Folder: {self.local_folder_line.text()}")
         return self.local_folder_line.text()
 
     def open_settings_panel(self):
