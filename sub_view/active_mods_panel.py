@@ -56,6 +56,7 @@ class ActiveModList:
         logger.info("Finished ActiveModList initialization")
 
     def change_mod_num_display(self, count: str) -> None:
+        logger.info(f"Active mod count changed to: {count}")
         self.num_mods.setText(f"Active [{count}]")
 
     def clear_active_mods_search(self):

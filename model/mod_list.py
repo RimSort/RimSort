@@ -63,6 +63,7 @@ class ModListWidget(QListWidget):
 
         :param mods: dict of mod data
         """
+        logger.info("Internally recreating mod list")
         self.clear()
         if mods:
             for mod_json_data in mods.values():
@@ -81,6 +82,7 @@ class ModListWidget(QListWidget):
         :param first: index of first item inserted
         :param last: index of last item inserted
         """
+        logger.info(f"Handling inserts from row {first} to {last}")
         for idx in range(first, last + 1):
             item = self.item(idx)
             if item is not None and self.itemWidget(item) is None:
@@ -100,6 +102,7 @@ class ModListWidget(QListWidget):
         :param first: index of first item removed (not used)
         :param last: index of last item removed (not used)
         """
+        logger.info(f"Handling removals from row {first} to {last}")
         self.list_change_signal.emit(str(self.count()))
 
     def get_list_items(self) -> List[ModListItemInner]:
@@ -109,6 +112,7 @@ class ModListWidget(QListWidget):
 
         :return: a list of mod item widgets
         """
+        logger.info("Returning a list of all mod items as item widgets")
         return [self.itemWidget(self.item(i)) for i in range(self.count())]
 
     def get_list_items_by_dict(self) -> Dict[str, Any]:
@@ -118,10 +122,12 @@ class ModListWidget(QListWidget):
 
         :return: a dict of mod data
         """
+        logger.info("Returning a list of all mod items by json data")
         mod_dict = {}
         for i in range(self.count()):
             item = self.itemWidget(self.item(i)).json_data
             mod_dict[item["packageId"]] = item
+        logger.info(f"Collected json data for {len(mod_dict)} mods")
         return mod_dict
 
     def focusOutEvent(self, e: QFocusEvent) -> None:

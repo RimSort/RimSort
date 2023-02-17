@@ -2,7 +2,6 @@ import getpass
 import json
 import logging
 import os
-from os.path import expanduser
 import platform
 import subprocess
 import webbrowser
@@ -270,16 +269,17 @@ class GameConfiguration(QObject):
         user has had a chance to set paths.
         """
         logger.info("Checking if essential paths are set")
-        logger.info(f"Game Folder path: [{self.game_folder_line.text()}]")
-        logger.info(f"Config Folder path: [{self.config_folder_line.text()}]")
-        if (
-            not self.game_folder_line.text()
-            or not self.config_folder_line.text()
-            # or not self.workshop_folder_line.text()
-        ):
-            logger.info("Or or more paths not set, returning False")
+        game_folder_path = self.get_game_folder_path()
+        config_folder_path = self.get_config_folder_path()
+        if not game_folder_path or not config_folder_path:
+            logger.info("One or more paths not set, returning False")
             return False
-        logger.info("Paths have been set, returning True")
+        if not os.path.exists(game_folder_path) or not os.path.exists(
+            config_folder_path
+        ):
+            logger.info("One or more paths not exists, returning False")
+            return False
+        logger.info("Paths have been set and exist, returning True")
         return True
 
     def initialize_storage(self) -> None:
@@ -323,19 +323,44 @@ class GameConfiguration(QObject):
                 logger.info(f"JSON has been loaded: {settings_data}")
                 logger.info("Setting relevant QLineEdits now")
                 if settings_data.get("game_folder"):
-                    self.game_folder_line.setText(settings_data["game_folder"])
+                    game_folder_path = settings_data["game_folder"]
+                    if os.path.exists(game_folder_path):
+                        self.game_folder_line.setText(game_folder_path)
+                    else:
+                        logger.warning(
+                            f"The game folder that was loaded does not exist: {game_folder_path}"
+                        )
                 if settings_data.get("config_folder"):
-                    self.config_folder_line.setText(settings_data["config_folder"])
+                    config_folder_path = settings_data["config_folder"]
+                    if os.path.exists(config_folder_path):
+                        self.config_folder_line.setText(config_folder_path)
+                    else:
+                        logger.warning(
+                            f"The config folder that was loaded does not exist: {config_folder_path}"
+                        )
                 if settings_data.get("workshop_folder"):
-                    self.workshop_folder_line.setText(settings_data["workshop_folder"])
+                    workshop_folder_path = settings_data["workshop_folder"]
+                    if os.path.exists(workshop_folder_path):
+                        self.workshop_folder_line.setText(workshop_folder_path)
+                    else:
+                        logger.warning(
+                            f"The workshop folder that was loaded does not exist: {workshop_folder_path}"
+                        )
                 if settings_data.get("local_folder"):
-                    self.local_folder_line.setText(settings_data["local_folder"])
+                    local_folder_path = settings_data["local_folder"]
+                    if os.path.exists(local_folder_path):
+                        self.local_folder_line.setText(local_folder_path)
+                    else:
+                        logger.warning(
+                            f"The local folder that was loaded does not exist: {local_folder_path}"
+                        )
                 if settings_data.get("sorting_algorithm"):
                     self.settings_panel.sorting_algorithm_cb.setCurrentText(
                         settings_data["sorting_algorithm"]
                     )
                 if settings_data.get("runArgs"):
                     self.run_arguments = settings_data["runArgs"]
+        logger.info("Finished storage initialization")
         logger.info("Finished storage initialization")
 
     def initialize_settings_panel(self) -> None:
@@ -353,6 +378,7 @@ class GameConfiguration(QObject):
         self.settings_panel.finished.connect(self.on_settings_close)
 
     def on_settings_close(self) -> None:
+        logger.info("Settings panel closed, updating algorithm selection")
         self.settings_panel.close()
         self.update_persistent_storage(
             "sorting_algorithm", self.settings_panel.sorting_algorithm_cb.currentText()
@@ -365,13 +391,18 @@ class GameConfiguration(QObject):
 
         :param callable: function to get the corresponding folder path
         """
+        logger.info("USER ACTION: open directory with callable")
         path = callable()
+        logger.info(f"Directory callable resolved to: {path}")
         if os.path.exists(path):
             if os.path.isfile(path) or path.endswith(".app"):
+                logger.info("Opening parent directory of file or MacOS app")
                 self.platform_specific_open(os.path.dirname(path))
             else:
+                logger.info("Opening directory")
                 self.platform_specific_open(path)
         else:
+            logger.warning(f"The path {path} does not exist")
             show_warning(f"The path '{path}' does not exist.\nPlease reset the path.")
 
     def platform_specific_open(self, path: str) -> None:
@@ -383,18 +414,23 @@ class GameConfiguration(QObject):
         """
         system_name = platform.system()
         if system_name == "Darwin":
+            logger.info(f"Opening {path} with subprocess open on MacOS")
             subprocess.Popen(["open", path])
         elif system_name == "Windows":
+            logger.info(f"Opening {path} with startfile on Windows")
             os.startfile(path)
         elif system_name == "Linux":
+            logger.info(f"Opening {path} with xdg-open on Linux")
             subprocess.Popen(["xdg-open", path])
         else:
-            print("Unknown System")  # TODO
+            # TODO: show_warning
+            logger.error("Attempting to open directory on an unknown system")
 
     def set_game_exe_folder(self) -> None:
         """
         Open a file dialog to allow the user to select the game executable.
         """
+        logger.info("USER ACTION: set the game install folder")
         start_dir = ""
         if self.game_folder_line.text():
             possible_dir = self.game_folder_line.text()
@@ -405,6 +441,9 @@ class GameConfiguration(QObject):
                 caption="Select Game Folder", dir=start_dir
             )
         )
+        logger.info(
+            f"Game install folder chosen. Setting UI and updating storage: {game_exe_folder_path}"
+        )
         self.game_folder_line.setText(game_exe_folder_path)
         self.update_persistent_storage("game_folder", game_exe_folder_path)
 
@@ -412,6 +451,7 @@ class GameConfiguration(QObject):
         """
         Open a file dialog to allow the user to select the ModsConfig.xml directory.
         """
+        logger.info("USER ACTION: set the ModsConfig.xml folder")
         start_dir = ""
         if self.config_folder_line.text():
             possible_dir = self.config_folder_line.text()
@@ -422,6 +462,9 @@ class GameConfiguration(QObject):
                 caption="Select Mods Config Folder", dir=start_dir
             )
         )
+        logger.info(
+            f"ModsConfig.xml folder chosen. Setting UI and updating storage: {config_folder_path}"
+        )
         self.config_folder_line.setText(config_folder_path)
         self.update_persistent_storage("config_folder", config_folder_path)
         # TODO refresh mods
@@ -431,6 +474,7 @@ class GameConfiguration(QObject):
         Open a file dialog to allow the user to select a directory
         to set as the workshop folder.
         """
+        logger.info("USER ACTION: set the workshop folder")
         start_dir = ""
         if self.workshop_folder_line.text():
             possible_dir = self.workshop_folder_line.text()
@@ -441,6 +485,9 @@ class GameConfiguration(QObject):
                 caption="Select Workshop Folder", dir=start_dir
             )
         )
+        logger.info(
+            f"Workshop folder chosen. Setting UI and updating storage: {workshop_path}"
+        )
         self.workshop_folder_line.setText(workshop_path)
         self.update_persistent_storage("workshop_folder", workshop_path)
         # TODO refresh mods
@@ -450,6 +497,7 @@ class GameConfiguration(QObject):
         Open a file dialog to allow the user to select a directory
         to set as the local mods folder.
         """
+        logger.info("USER ACTION: set the local mods folder")
         start_dir = ""
         if self.local_folder_line.text():
             possible_dir = self.local_folder_line.text()
@@ -459,6 +507,9 @@ class GameConfiguration(QObject):
             QFileDialog.getExistingDirectory(
                 caption="Select Local Mods Folder", dir=start_dir
             )
+        )
+        logger.info(
+            f"Local mods folder chosen. Setting UI and updating storage: {local_path}"
         )
         self.local_folder_line.setText(local_path)
         self.update_persistent_storage("local_folder", local_path)
@@ -488,18 +539,30 @@ class GameConfiguration(QObject):
         :param key: key to use
         :param value: value to replace
         """
+        logger.info("Updating persistent storage")
         storage_path = QStandardPaths.writableLocation(
             QStandardPaths.AppLocalDataLocation
         )
         settings_path = os.path.join(storage_path, "settings.json")
-        with open(settings_path) as infile:
-            settings_data = json.load(infile)
-            settings_data[key] = value
-            json_object = json.dumps(settings_data, indent=4)
-            with open(settings_path, "w") as outfile:
-                outfile.write(json_object)
+        logger.info(f"Generated settings.json path: {settings_path}")
+        if os.path.exists(settings_path):
+            logger.info("settings.json exists, opening to write")
+            with open(settings_path) as infile:
+                settings_data = json.load(infile)
+                logger.info(f"Read JSON data: {settings_data}")
+                settings_data[key] = value
+                json_object = json.dumps(settings_data, indent=4)
+                logger.info(f"JSON data to write: {json_object}")
+                with open(settings_path, "w") as outfile:
+                    outfile.write(json_object)
+                    logger.info("JSON data written")
+        else:
+            logger.error(
+                "settings.json does not exist despite already running initialize_storage"
+            )
 
     def delete_all_paths_data(self) -> None:
+        logger.info("USER ACTION: clear all paths")
         folders = ["workshop_folder", "game_folder", "config_folder", "local_folder"]
         # Update storage to remove all paths data
         for folder in folders:
@@ -513,18 +576,22 @@ class GameConfiguration(QObject):
         self.game_version_line.setText("")
 
     def clear_game_folder_line(self):
+        logger.info("USER ACTION: clear game folder line")
         self.update_persistent_storage("game_folder", "")
         self.game_folder_line.setText("")
 
     def clear_config_folder_line(self):
+        logger.info("USER ACTION: clear config folder line")
         self.update_persistent_storage("config_folder", "")
         self.config_folder_line.setText("")
 
     def clear_workshop_folder_line(self):
+        logger.info("USER ACTION: clear workshop folder line")
         self.update_persistent_storage("workshop_folder", "")
         self.workshop_folder_line.setText("")
 
     def clear_local_folder_line(self):
+        logger.info("USER ACTION: clear local folder line")
         self.update_persistent_storage("local_folder", "")
         self.local_folder_line.setText("")
 
@@ -533,6 +600,7 @@ class GameConfiguration(QObject):
         This function tries to autodetect Rimworld paths based on the
         defaults typically found per-platform, and set them in the client.
         """
+        logger.info("USER ACTION: starting autodetect paths")
         os_paths = []
         darwin_paths = [
             f"/Users/{getpass.getuser()}/Library/Application Support/Steam/steamapps/common/Rimworld/",
@@ -577,55 +645,113 @@ class GameConfiguration(QObject):
 
         if system_name == "Darwin":
             os_paths = darwin_paths
+            logger.info(f"Running on MacOS with the following paths: {os_paths}")
         elif system_name == "Linux":
             os_paths = linux_paths
+            logger.info(f"Running on Linux with the following paths: {os_paths}")
         elif system_name == "Windows":
             os_paths = windows_paths
+            logger.info(f"Running on Windows with the following paths: {os_paths}")
         else:
-            print("Unknown System")  # TODO
-        
+            # TODO
+            logger.error("Attempting to autodetect paths on an unknown system.")
+
         # If the game folder exists...
         if os.path.exists(os_paths[0]):
-            self.game_folder_line.setText(os_paths[0])
-            self.update_persistent_storage("game_folder", os_paths[0])
+            logger.info(f"Autodetected game folder path exists: {os_paths[0]}")
+            if not self.game_folder_line.text():
+                logger.info(
+                    "No value set currently for game folder. Overwriting with autodetected path"
+                )
+                self.game_folder_line.setText(os_paths[0])
+                self.update_persistent_storage("game_folder", os_paths[0])
+            else:
+                logger.info("Value already set for game folder. Passing")
             if system_name == "Darwin":
+                logger.info("Additionally, setting local mods folder on MacOS")
                 # On mac the Mods folder is the Rimworld folder
-                self.local_folder_line.setText(os_paths[0])
-                self.update_persistent_storage("local_folder", os_paths[0])
-        
+                if not self.local_folder_line.text():
+                    logger.info(
+                        "No value set currently for local mods folder. Overwriting with autodetected path"
+                    )
+                    self.local_folder_line.setText(os_paths[0])
+                    self.update_persistent_storage("local_folder", os_paths[0])
+                else:
+                    logger.info("Value already set for local mods folder. Passing")
+        else:
+            logger.warning(
+                f"Autodetected game folder path does not exist: {os_paths[0]}"
+            )
+
         # If the config folder exists...
         if os.path.exists(os_paths[1]):
-            self.config_folder_line.setText(os_paths[1])
-            self.update_persistent_storage("config_folder", os_paths[1])
-        
+            logger.info(f"Autodetected config folder path exists: {os_paths[1]}")
+            if not self.config_folder_line.text():
+                logger.info(
+                    "No value set currently for config folder. Overwriting with autodetected path"
+                )
+                self.config_folder_line.setText(os_paths[1])
+                self.update_persistent_storage("config_folder", os_paths[1])
+            else:
+                logger.info("Value already set for config folder. Passing")
+        else:
+            logger.warning(
+                f"Autodetected config folder path does not exist: {os_paths[1]}"
+            )
+
         # If the workshop folder eixsts
         if os.path.exists(os_paths[2]):
-            self.workshop_folder_line.setText(os_paths[2])
-            self.update_persistent_storage("workshop_folder", os_paths[2])
-        
+            logger.info(f"Autodetected workshop folder path exists: {os_paths[2]}")
+            if not self.workshop_folder_line.text():
+                logger.info(
+                    "No value set currently for workshop folder. Overwriting with autodetected path"
+                )
+                self.workshop_folder_line.setText(os_paths[2])
+                self.update_persistent_storage("workshop_folder", os_paths[2])
+            else:
+                logger.info("Value already set for workshop folder. Passing")
+        else:
+            logger.warning(
+                f"Autodetected workshop folder path does not exist: {os_paths[2]}"
+            )
+
         # Checking for an existing Rimworld/Mods folder
-        if os.path.exists(os.path.join(os_paths[0], "Mods")):
-            if system_name != "Darwin":
-                self.local_folder_line.setText(os.path.join(os_paths[0], "Mods"))
-                self.update_persistent_storage(
-                    "local_folder", os.path.join(os_paths[0], "Mods")
+        if system_name != "Darwin":
+            rimworld_mods_path = os.path.join(os_paths[0], "Mods")
+            if os.path.exists(rimworld_mods_path):
+                logger.info(
+                    f"Autodetected local mods folder path exists: {rimworld_mods_path}"
+                )
+                if not self.local_folder_line.text():
+                    logger.info(
+                        "No value set currently for local mods folder. Overwriting with autodetected path"
+                    )
+                    self.local_folder_line.setText(rimworld_mods_path)
+                    self.update_persistent_storage("local_folder", rimworld_mods_path)
+                else:
+                    logger.info("Value already set for local mods folder. Passing")
+            else:
+                logger.warning(
+                    f"Autodetected game folder path does not exist: {rimworld_mods_path}"
                 )
 
     def get_game_folder_path(self):
-        logger.info(f"Responding with requested Game Folder: {self.game_folder_line.text()}")
+        logger.info(
+            f"Responding with requested Game Folder: {self.game_folder_line.text()}"
+        )
         return self.game_folder_line.text()
 
     def get_config_folder_path(self):
-        logger.info(f"Responding with requested Config Folder: {self.config_folder_line.text()}")
+        logger.info(
+            f"Responding with requested Config Folder: {self.config_folder_line.text()}"
+        )
         return self.config_folder_line.text()
 
     def get_config_path(self):
         logger.info("Getting path to ModsConfig.xml")
         config_folder_path = self.get_config_folder_path()
         if config_folder_path:
-            config_xml_path = os.path.join(
-                self.get_config_folder_path(), "ModsConfig.xml"
-            )
+            config_xml_path = os.path.join(config_folder_path, "ModsConfig.xml")
             logger.info(f"Determined ModsConfig.xml path: {config_xml_path}")
             return config_xml_path
         logger.info("ERROR: unable to get path to ModsConfig.xml")
@@ -638,7 +764,9 @@ class GameConfiguration(QObject):
         return self.workshop_folder_line.text()
 
     def get_local_folder_path(self):
-        logger.info(f"Responding with requested Local Folder: {self.local_folder_line.text()}")
+        logger.info(
+            f"Responding with requested Local Folder: {self.local_folder_line.text()}"
+        )
         return self.local_folder_line.text()
 
     def open_settings_panel(self):
@@ -649,13 +777,16 @@ class GameConfiguration(QObject):
         For some reason, open() does not work for making this a modal
         window.
         """
+        logger.info("USER ACTION: opening settings panel")
         self.settings_panel.show()
 
     def do_autodetect(self):
         self.autodetect_paths_by_platform()
 
     def open_wiki_webbrowser(self):
+        logger.info("USER ACTION: opening wiki")
         webbrowser.open("https://github.com/oceancabbage/RimSort/wiki")
 
     def open_github_webbrowser(self):
+        logger.info("USER ACTION: opening GitHub")
         webbrowser.open("https://github.com/oceancabbage/RimSort")

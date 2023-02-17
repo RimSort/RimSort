@@ -1,6 +1,10 @@
 from PySide2.QtWidgets import *
 from typing import Optional
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def show_information(
     text: Optional[str] = None,
@@ -12,6 +16,7 @@ def show_information(
 
     :param warning_message: the warning message to display
     """
+    logger.info(f"Showing information box with input: [{text}], [{information}], [{details}]")
     # Set up the message box
     info_message_box = QMessageBox()
     info_message_box.setIcon(QMessageBox.Warning)
@@ -35,6 +40,7 @@ def show_information(
         info_message_box.setDetailedText(details)
 
     # Show the message box
+    logger.info("Finished showing information box")
     info_message_box.exec_()
 
 
@@ -48,6 +54,7 @@ def show_warning(
 
     :param warning_message: the warning message to display
     """
+    logger.info(f"Showing warning box with input: [{text}], [{information}], [{details}]")
     # Set up the message box
     warning_message_box = QMessageBox()
     warning_message_box.setIcon(QMessageBox.Warning)
@@ -71,6 +78,7 @@ def show_warning(
         warning_message_box.setDetailedText(details)
 
     # Show the message box
+    logger.info("Finished showing warning box")
     warning_message_box.exec_()
 
 
@@ -89,6 +97,7 @@ def show_fatal_error(
     :param information: more verbose, informational text to display
     :param details: details to show in a scroll box
     """
+    logger.info(f"Showing fatal error box with input: [{text}], [{information}], [{details}]")
     # Set up the message box
     fatal_message_box = QMessageBox()
     fatal_message_box.setIcon(QMessageBox.Critical)
@@ -110,6 +119,10 @@ def show_fatal_error(
 
     if details is not None:
         fatal_message_box.setDetailedText(details)
+
+    # Show the message box
+    logger.info("Finished showing fatal error box")
+    fatal_message_box.exec_()
 
     # Show the message box
     fatal_message_box.exec_()

@@ -2,7 +2,6 @@ import os
 from typing import Any, Dict
 
 import xmltodict
-from util.error import show_warning
 
 import logging
 
@@ -73,6 +72,8 @@ def json_to_xml_write(data: Dict[str, Any], path: str) -> None:
     :param data: json data to write
     :param path: path to write the xml file to
     """
+    logger.info("Starting writing JSON to XML")
     new_xml_data = xmltodict.unparse(data, pretty=True, newl="\n", indent="  ")
     with open(path, "w") as f:
         f.write(new_xml_data)
+    logger.info("Finshed writing JSON to XML")

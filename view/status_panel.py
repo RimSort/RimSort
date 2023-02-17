@@ -54,6 +54,7 @@ class Status:
 
         :param action: the specific action being triggered
         """
+        logger.info(f"Displaying fading text for action: {action}")
         if action == "clear":
             self.status_text.start_pause_fade("Cleared active mods")
         if action == "restore":

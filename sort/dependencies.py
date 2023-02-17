@@ -1,8 +1,14 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
+
 def gen_deps_graph(active_mods_json, active_mod_ids):
     """
     Get dependencies
     """
     # Schema: {item: {dependency1, dependency2, ...}}
+    logging.info("Generating dependencies graph")
     dependencies_graph = {}
     for package_id, mod_data in active_mods_json.items():
         dependencies_graph[package_id] = set()
@@ -12,11 +18,15 @@ def gen_deps_graph(active_mods_json, active_mod_ids):
                 # (related to comment about stripping dependencies)
                 if dependency in active_mod_ids:
                     dependencies_graph[package_id].add(dependency)
+    logging.info(
+        f"Finished generating dependencies graph of {len(dependencies_graph)}, returning"
+    )
     return dependencies_graph
 
 
 def gen_rev_deps_graph(active_mods_json, active_mod_ids):
     # Schema: {item: {isDependentOn1, isDependentOn2, ...}}
+    logging.info("Generating reverse dependencies graph")
     reverse_dependencies_graph = {}
     for package_id, mod_data in active_mods_json.items():
         reverse_dependencies_graph[package_id] = set()
@@ -24,6 +34,9 @@ def gen_rev_deps_graph(active_mods_json, active_mod_ids):
             for dependent in mod_data["isDependencyOf"]:
                 if dependent in active_mod_ids:
                     reverse_dependencies_graph[package_id].add(dependent)
+    logging.info(
+        f"Finished generating reverse dependencies graph of {len(reverse_dependencies_graph)}, returning"
+    )
     return reverse_dependencies_graph
 
 
@@ -34,6 +47,7 @@ def gen_tier_one_deps_graph(dependencies_graph):
     # this list of mods is exhaustive, so we need to add any other mod that these mods depend on
     # into this list as well.
     # TODO: pull from a config
+    logger.info("Generating dependencies graph for tier one mods")
     known_tier_one_mods = {
         "brrainz.harmony",
         "ludeon.rimworld",
@@ -51,10 +65,12 @@ def gen_tier_one_deps_graph(dependencies_graph):
                 known_tier_one_mod, dependencies_graph
             )
             tier_one_mods.update(dependencies_set)
+    logger.info(f"Recursively generated the following set of tier one mods: {tier_one_mods}")
     tier_one_dependency_graph = {}
     for tier_one_mod in tier_one_mods:
         # Tier one mods will only ever reference other tier one mods in their dependencies graph
         tier_one_dependency_graph[tier_one_mod] = dependencies_graph[tier_one_mod]
+    logger.info("Attached corresponding dependencies to every tier one mod, returning")
     return tier_one_dependency_graph, tier_one_mods
 
 
@@ -77,6 +93,7 @@ def gen_tier_three_deps_graph(dependencies_graph, reverse_dependencies_graph):
     # this list of mods is exhaustive, so we need to add any other mod that these mods depend on
     # into this list as well.
     # TODO: pull from a config
+    logger.info("Generating dependencies graph for tier three mods")
     known_tier_three_mods = {"krkr.rocketman"}
     tier_three_mods = set()
     for known_tier_three_mod in known_tier_three_mods:
@@ -87,6 +104,7 @@ def gen_tier_three_deps_graph(dependencies_graph, reverse_dependencies_graph):
                 known_tier_three_mod, reverse_dependencies_graph
             )
             tier_three_mods.update(rev_dependencies_set)
+    logger.info(f"Recursively generated the following set of tier three mods: {tier_three_mods}")
     tier_three_dependency_graph = {}
     for tier_three_mod in tier_three_mods:
         # Tier three mods may reference non-tier-three mods in their dependencies graph,
@@ -95,6 +113,7 @@ def gen_tier_three_deps_graph(dependencies_graph, reverse_dependencies_graph):
         for possible_add in dependencies_graph[tier_three_mod]:
             if possible_add in tier_three_mods:
                 tier_three_dependency_graph[tier_three_mod].add(possible_add)
+    logger.info("Attached corresponding dependencies to every tier three mod, returning")
     return tier_three_dependency_graph, tier_three_mods
 
 
@@ -120,6 +139,8 @@ def gen_tier_two_deps_graph(
     # Now, sort the rest of the mods while removing references to mods in tier one and tier three
     # First, get the dependency graph for tier two mods, minus all references to tier one
     # and tier three mods
+    logger.info("Generating dependencies graph for tier two mods")
+    logger.info("Stripping all references to tier one and tier three mods and their dependencies")
     tier_two_dependency_graph = {}
     for package_id, mod_data in active_mods.items():
         if package_id not in tier_one_mods and package_id not in tier_three_mods:
@@ -135,4 +156,5 @@ def gen_tier_two_deps_graph(
                     ):
                         stripped_dependencies.add(dependency_id)
             tier_two_dependency_graph[package_id] = stripped_dependencies
+    logger.info("Generated tier two dependency graph, returning")
     return tier_two_dependency_graph

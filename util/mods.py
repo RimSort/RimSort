@@ -27,9 +27,13 @@ def get_active_inactive_mods(
     :param workshop_and_expansions: dict of all mods
     :return: a Dict for active mods and a Dict for inactive mods
     """
+    logger.info("Starting generating active and inactive mods")
 
     # Get the list of active mods and populate data from workshop + expansions
+    logger.info(f"Calling get active mods with Config Path: {config_path}")
     active_mods = get_active_mods_from_config(config_path)
+
+    logger.info("Calling populate active mods with data")
     active_mods, invalid_mods = populate_active_mods_workshop_data(
         active_mods, workshop_and_expansions
     )
@@ -37,13 +41,21 @@ def get_active_inactive_mods(
     # Return an error if some active mod was in the ModsConfig but no data
     # could be found for it
     if invalid_mods:
+        logger.warning(
+            f"Could not find data for the list of active mods: {invalid_mods}"
+        )
         warning_message = "The following list of mods could not be loaded\nDid you set your game install and workshop/local mods path correctly?:"
         for invalid_mod in invalid_mods:
             warning_message = warning_message + f"\n * {invalid_mod}"
         show_warning(warning_message)
 
     # Get the inactive mods by subtracting active mods from workshop + expansions
+    logger.info("Calling get inactive mods")
     inactive_mods = get_inactive_mods(workshop_and_expansions, active_mods)
+
+    logger.info(
+        f"Returning newly generated active mods [{len(active_mods)}] and inactive mods [{len(inactive_mods)}] list"
+    )
     return active_mods, inactive_mods
 
 
@@ -154,26 +166,6 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
             )
     logger.info(f"Finished parsing mod data for intent: {intent}")
     return mods
-
-
-def get_known_expansions_from_config(config_path: str) -> Dict[str, Any]:
-    """
-    Given a path to a file in the ModsConfig.xml format, return the
-    mods in the known expansions section (and add base game).
-
-    :param path: path to a ModsConfig.xml file
-    :return: a Dict keyed to mod package ids
-    """
-    mod_data = xml_path_to_json(config_path)
-    try:
-        ret = {}
-        if mod_data:
-            if mod_data["ModsConfigData"]["knownExpansions"]:
-                for package_id in mod_data["ModsConfigData"]["knownExpansions"]["li"]:
-                    ret[package_id.lower()] = {}
-        return ret
-    except Exception:
-        raise InvalidModsConfigFormat
 
 
 def get_installed_expansions(game_path: str) -> Dict[str, Any]:
@@ -619,7 +611,9 @@ def add_dependency_to_mod(
     :param value: either string or list of strings (or sometimes None)
     :param workshop_and_expansions: dict of all mods to verify keys against
     """
-    logger.debug(f"Adding to key [{new_data_key}], packages [{dependency_or_dependency_ids}], for mod data: {mod_data}")
+    logger.debug(
+        f"Adding to key [{new_data_key}], packages [{dependency_or_dependency_ids}], for mod data: {mod_data}"
+    )
     if mod_data:
         # Create a new key with empty set as value
         if new_data_key not in mod_data:
@@ -708,22 +702,27 @@ def get_active_mods_from_config(config_path: str) -> Dict[str, Any]:
     :param path: path to a ModsConfig.xml file
     :return: a Dict keyed to mod package ids
     """
+    logger.info(f"Getting active mods with Config Path: {config_path}")
     mod_data = xml_path_to_json(config_path)
-    try:
-        if mod_data:
-            return dict(
-                [
-                    (package_id.lower(), {})
-                    for package_id in mod_data["ModsConfigData"]["activeMods"]["li"]
-                ]
-            )
-        else:
-            show_warning(
-                f"Unable to get data for active mods.\nThe path [{config_path}] is invalid.\nCheck that your paths are set correctly."
-            )
+    if mod_data:
+        if mod_data.get("ModsConfigData"):
+            if mod_data["ModsConfigData"].get("activeMods"):
+                if mod_data["ModsConfigData"]["activeMods"].get("li"):
+                    empty_active_mods_dict = {}
+                    for package_id in mod_data["ModsConfigData"]["activeMods"]["li"]:
+                        empty_active_mods_dict[package_id.lower()] = {}
+                    logger.info(
+                        f"Returning empty active mods dict with {len(empty_active_mods_dict)} entries"
+                    )
+                    return empty_active_mods_dict
+        logger.error(f"Invalid ModsConfig.xml format: {mod_data}")
+        # TODO: show warning invalid mods config format
         return {}
-    except:
-        raise InvalidModsConfigFormat
+    logger.error(f"Empty ModsConfig.xml: {mod_data}")
+    show_warning(
+        f"Unable to get data for active mods.\nThe path [{config_path}] is invalid.\nCheck that your paths are set correctly."
+    )
+    return {}
 
 
 def populate_active_mods_workshop_data(
@@ -740,6 +739,7 @@ def populate_active_mods_workshop_data(
     :param workshop_and_expansions: dict of workshop mods (and expansions) keyed to packge-id
     :return: active mod list with populated data, and list of package ids of invalid mods
     """
+    logger.info("Populating empty active mods with data")
     populated_mods = unpopulated_mods.copy()
     invalid_mods = []
     for mod_package_id in unpopulated_mods:
@@ -749,9 +749,13 @@ def populate_active_mods_workshop_data(
         if mod_package_id in workshop_and_expansions:
             populated_mods[mod_package_id] = workshop_and_expansions[mod_package_id]
         else:
+            logger.warning(
+                f"Unable to find local/workshop data for listed active mod: {mod_package_id}"
+            )
             invalid_mods.append(mod_package_id)
             del populated_mods[mod_package_id]
             # populated_mods[mod_package_id] = {"name": f"ERROR({mod_package_id})", "packageId": mod_package_id}
+    logger.info("Finished populating empty active mods with data")
     return populated_mods, invalid_mods
 
 
@@ -780,9 +784,13 @@ def get_inactive_mods(
     :param active_mods: dict of active mods
     :return: a dict for inactive mods
     """
+    logger.info(
+        "Generating inactive mod lists from subtracting all mods with active mods"
+    )
     inactive_mods = workshop_and_expansions.copy()
     # For each mod in active mods, remove from workshop_and_expansions
     for mod_package_id in active_mods:
         if mod_package_id in workshop_and_expansions:
             del inactive_mods[mod_package_id]
+    logger.info("Finished generating inactive mods list")
     return inactive_mods
