@@ -30,10 +30,24 @@ class ActiveModList:
         self.num_mods = QLabel("Active [0]")
         self.num_mods.setAlignment(Qt.AlignCenter)
         self.num_mods.setObjectName("summaryValue")
+
         self.active_mods_list = ModListWidget()
+
+        self.active_mods_search = QLineEdit()
+        self.active_mods_search.setClearButtonEnabled(True)
+        self.active_mods_search.textChanged.connect(self.signal_active_mods_search(self.active_mods_search.text()))
+        self.active_mods_search_clear_button = self.active_mods_search.findChild(
+            QToolButton
+        )
+        self.active_mods_search_clear_button.setEnabled(True)
+        self.active_mods_search_clear_button.clicked.connect(
+            self.clear_active_mods_search
+        )
+        self.active_mods_search.setPlaceholderText("Search active mods...")
 
         # Add widgets to base layout
         self.panel.addWidget(self.num_mods)
+        self.panel.addWidget(self.active_mods_search)
         self.panel.addWidget(self.active_mods_list)
 
         # Connect signals and slots
@@ -43,3 +57,14 @@ class ActiveModList:
 
     def change_mod_num_display(self, count: str) -> None:
         self.num_mods.setText(f"Active [{count}]")
+
+    def clear_active_mods_search(self):
+        self.active_mods_search.setText("")
+
+    def signal_active_mods_search(self, pattern: str) -> None:
+        print("Signal active mods:")
+        print(pattern)
+        if pattern != "":
+            for mod_item in self.inactive_mods_list.get_list_items():
+                if not mod_item["name"].lower().contains(pattern.lower()):
+                    mod_item.hide()
