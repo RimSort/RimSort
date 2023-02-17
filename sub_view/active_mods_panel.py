@@ -35,7 +35,7 @@ class ActiveModList:
 
         self.active_mods_search = QLineEdit()
         self.active_mods_search.setClearButtonEnabled(True)
-        self.active_mods_search.textChanged.connect(self.signal_active_mods_search(self.active_mods_search.text()))
+        self.active_mods_search.textChanged.connect(self.signal_active_mods_search)
         self.active_mods_search_clear_button = self.active_mods_search.findChild(
             QToolButton
         )
@@ -61,11 +61,13 @@ class ActiveModList:
 
     def clear_active_mods_search(self):
         self.active_mods_search.setText("")
+        for mod_item in self.active_mods_list.get_list_items():
+            mod_item.show()
 
     def signal_active_mods_search(self, pattern: str) -> None:
-        print("Signal active mods:")
-        print(pattern)
-        if pattern != "":
-            for mod_item in self.inactive_mods_list.get_list_items():
-                if not mod_item["name"].lower().contains(pattern.lower()):
+        if pattern == "":
+            self.clear_active_mods_search()
+        else:
+            for mod_item in self.active_mods_list.get_list_items():
+                if not pattern.lower() in mod_item.name.lower():
                     mod_item.hide()
