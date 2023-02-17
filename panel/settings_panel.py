@@ -5,6 +5,8 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
+logger = logging.getLogger(__name__)
+
 from functools import partial
 
 
