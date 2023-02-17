@@ -67,6 +67,9 @@ class MainContent:
 
         # SIGNALS AND SLOTS
         self.actions_panel.actions_signal.connect(self.actions_slot)  # Actions
+        self.actions_panel.run_button.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.actions_panel.run_button.customContextMenuRequested.connect(self._do_edit_run_args)
+
         self.active_mods_panel.active_mods_list.mod_list_signal.connect(
             self.mod_list_slot
         )
@@ -107,68 +110,6 @@ class MainContent:
             self.all_mods_with_dependencies[package_id]
         )
 
-    def platform_specific_game_launch(self, args) -> None:
-        """
-        This function starts the Rimworld game process in it's own subprocess,
-        by launching the executable found in the configured game directory.
-
-        :param game_path: path to Rimworld game
-        """
-        logger.info("USER ACTION: launching the game")
-        game_path = self.game_configuration.get_game_folder_path()
-        logger.info(f"Attempting to find the game in the game folder {game_path}")
-        if game_path:
-            system_name = platform.system()
-            if system_name == "Darwin":
-                executable_path = os.path.join(game_path, "RimWorldMac.app")
-                logger.info(
-                    f"Path to game executable for MacOS generated: {executable_path}"
-                )
-                if os.path.exists(executable_path):
-                    logger.info("Launching the game with subprocess Popen")
-                    subprocess.Popen(["open", executable_path])
-                else:
-                    logger.info("The game executable path does not exist")
-                    show_warning("Executable not found in game folder.")
-            elif system_name == "Linux" or "Windows":
-                try:
-                    logger.info("Trying to create a new subprocess process group")
-                    subprocess.CREATE_NEW_PROCESS_GROUP
-                except AttributeError:
-                    # not Windows, so assume POSIX; if not, we'll get a usable exception
-                    executable_path = os.path.join(game_path, "RimWorldLinux")
-                    logger.info(
-                        f"Path to game executable for Linux generated: {executable_path}"
-                    )
-                    if os.path.exists(executable_path):
-                        logger.info("Launching the game with subprocess Popen")
-                        p = subprocess.Popen([executable_path], start_new_session=True)
-                    else:
-                        logger.info("The game executable path does not exist")
-                        show_warning("Executable not found in game folder.")
-                else:
-                    # Windows
-                    executable_path = os.path.join(game_path, "RimWorldWin64.exe")
-                    logger.info(
-                        f"Path to game executable for Windows generated: {executable_path}"
-                    )
-                    if os.path.exists(executable_path):
-                        logger.info("Launching the game with subprocess Popen")
-                        p = subprocess.Popen(
-                            [executable_path],
-                            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
-                        )
-                    else:
-                        logger.info("The game executable path does not exist")
-                        show_warning("Executable not found in game folder.")
-            else:
-                logger.error("Unable to launch the game on an unknown system")
-                print("Unknown System")  # TODO
-        else:
-            logger.error("The path to the game folder is empty")
-            show_warning(
-                "Unable to get data for game executable.\nCheck that your paths are set correctly."
-            )
 
     def refresh_cache_calculations(self) -> None:
         """
@@ -294,9 +235,88 @@ class MainContent:
         if action == "import":
             self._do_import()
         if action == "run":
-            self.platform_specific_game_launch(self.game_configuration.run_arguments)
-        if action == "runArgs":
-            self.game_configuration.edit_run_args()
+            self._do_platform_specific_game_launch(self.game_configuration.run_arguments)
+
+    def _do_edit_run_args(self):
+        """
+        Opens a QDialogInput that allows the user to edit the run args
+        that are configured to be passed to the Rimworld executable
+
+        :param path: path to open
+        """
+        args, ok = QInputDialog().getText(
+            None,
+            'Edit run arguments:', 
+            'Enter the arguments you would like to pass to the Rimworld executable:',
+            QLineEdit.Normal,
+            self.game_configuration.run_arguments
+        )
+        if ok:
+            self.game_configuration.run_arguments = args
+            self.game_configuration.update_persistent_storage("runArgs", self.game_configuration.run_arguments)
+
+    def _do_platform_specific_game_launch(self, args) -> None:
+        """
+        This function starts the Rimworld game process in it's own subprocess,
+        by launching the executable found in the configured game directory.
+
+        :param game_path: path to Rimworld game
+        """
+        logger.info("USER ACTION: launching the game")
+        game_path = self.game_configuration.get_game_folder_path()
+        logger.info(f"Attempting to find the game in the game folder {game_path}")
+        if game_path:
+            system_name = platform.system()
+            if system_name == "Darwin":
+                executable_path = os.path.join(game_path, "RimWorldMac.app")
+                logger.info(
+                    f"Path to game executable for MacOS generated: {executable_path}"
+                )
+                if os.path.exists(executable_path):
+                    logger.info("Launching the game with subprocess Popen: `" + executable_path + "` with args: `" + args + "`")
+                    subprocess.Popen(["open", executable_path, args])
+                else:
+                    logger.info("The game executable path does not exist")
+                    show_warning("Executable not found in game folder.")
+            elif system_name == "Linux" or "Windows":
+                try:
+                    logger.info("Trying to create a new subprocess process group")
+                    subprocess.CREATE_NEW_PROCESS_GROUP
+                except AttributeError:
+                    # not Windows, so assume POSIX; if not, we'll get a usable exception
+                    executable_path = os.path.join(game_path, "RimWorldLinux")
+                    logger.info(
+                        f"Path to game executable for Linux generated: {executable_path}"
+                    )
+                    if os.path.exists(executable_path):
+                        logger.info("Launching the game with subprocess Popen: `" + executable_path + "` with args: `" + args + "`")
+                        p = subprocess.Popen([executable_path, args], start_new_session=True)
+                    else:
+                        logger.info("The game executable path does not exist")
+                        show_warning("Executable not found in game folder.")
+                else:
+                    # Windows
+                    executable_path = os.path.join(game_path, "RimWorldWin64.exe")
+                    logger.info(
+                        f"Path to game executable for Windows generated: {executable_path}"
+                    )
+                    if os.path.exists(executable_path):
+                        logger.info("Launching the game with subprocess Popen: `" + executable_path + "` with args: `" + args + "`")
+                        p = subprocess.Popen(
+                            [executable_path, args],
+                            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+                        )
+                    else:
+                        logger.info("The game executable path does not exist")
+                        show_warning("Executable not found in game folder.")
+            else:
+                logger.error("Unable to launch the game on an unknown system")
+                print("Unknown System")  # TODO
+        else:
+            logger.error("The path to the game folder is empty")
+            show_warning(
+                "Unable to get data for game executable.\nCheck that your paths are set correctly."
+            )
 
     def _insert_data_into_lists(
         self, active_mods: Dict[str, Any], inactive_mods: Dict[str, Any]
