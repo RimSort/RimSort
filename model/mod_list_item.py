@@ -115,3 +115,17 @@ class ModListItemInner(QWidget):
             return QIcon("data/L.png")
         else:
             print("No type")
+
+    def show(self):
+        """
+        Show this widget, and all child widgets.
+        """
+        for w in [self, self.main_label, self.icon_mod_source]:
+            w.setVisible(True)
+
+    def hide(self):
+        """
+        Hide this widget, and all child widgets.
+        """
+        for w in [self, self.main_label, self.icon_mod_source]:
+            w.setVisible(False)

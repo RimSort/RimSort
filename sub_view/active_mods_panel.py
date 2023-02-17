@@ -50,6 +50,11 @@ class ActiveModList:
         self.panel.addWidget(self.active_mods_search)
         self.panel.addWidget(self.active_mods_list)
 
+        # Adding Completer.
+        self.completer = QCompleter(self.active_mods_list.get_list_items())
+        self.completer.setCaseSensitivity(Qt.CaseInsensitive)
+        self.active_mods_search.setCompleter(self.completer)
+
         # Connect signals and slots
         self.active_mods_list.list_change_signal.connect(self.change_mod_num_display)
 

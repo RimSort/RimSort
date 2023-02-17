@@ -51,6 +51,11 @@ class InactiveModList:
         self.panel.addWidget(self.inactive_mods_search)
         self.panel.addWidget(self.inactive_mods_list)
 
+        # Adding Completer.
+        self.completer = QCompleter(self.inactive_mods_list.get_list_items())
+        self.completer.setCaseSensitivity(Qt.CaseInsensitive)
+        self.inactive_mods_search.setCompleter(self.completer)
+
         # Connect signals and slots
         self.inactive_mods_list.list_change_signal.connect(self.change_mod_num_display)
 
@@ -67,7 +72,7 @@ class InactiveModList:
 
     def signal_inactive_mods_search(self, pattern: str) -> None:
         if pattern == "":
-            clear_inactive_mods_search()
+            self.clear_inactive_mods_search()
         else:
             for mod_item in self.inactive_mods_list.get_list_items():
                 if not pattern.lower() in mod_item.name.lower():
