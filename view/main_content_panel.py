@@ -254,8 +254,9 @@ class MainContent:
         if action == "import":
             self._do_import()
         if action == "run":
-            args = []
-            self.platform_specific_game_launch(args)
+            self.platform_specific_game_launch(self.game_configuration.run_arguments)
+        if action == "runArgs":
+            self.game_configuration.edit_run_args()
 
     def _insert_data_into_lists(
         self, active_mods: Dict[str, Any], inactive_mods: Dict[str, Any]

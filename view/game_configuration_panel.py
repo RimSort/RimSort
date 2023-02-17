@@ -202,6 +202,9 @@ class GameConfiguration(QObject):
         self.local_folder_row.addWidget(self.local_folder_line)
         self.local_folder_row.addWidget(self.local_folder_select_button)
 
+        # RUN ARGUMENTS
+        self.run_arguments = ""
+
         # CONTAINER LAYOUTS INTO BASE LAYOUT
         self.client_settings_frame = QFrame()
         self.client_settings_frame.setObjectName("configLine")
@@ -285,6 +288,8 @@ class GameConfiguration(QObject):
                     self.settings_panel.sorting_algorithm_cb.setCurrentText(
                         settings_data["sorting_algorithm"]
                     )
+                if settings_data.get("runArgs"):
+                    self.run_arguments = settings_data["runArgs"]
 
     def initialize_settings_panel(self) -> None:
         """
@@ -410,6 +415,22 @@ class GameConfiguration(QObject):
         self.local_folder_line.setText(local_path)
         self.update_persistent_storage("local_folder", local_path)
         # TODO refresh mods
+
+    def edit_run_args(self) -> None:
+        """
+        Open a dialog to allow the user to edit any preconfigured
+        arguments to be added to the Rimworld executable.
+        """
+        args = str(
+            QInputDialog.getText(
+                'Run arguments', 'Enter the arguments you would like to pass to the Rimworld executable:'
+            )
+        )
+        self.run_arguments = args
+        self.update_persistent_storage("runArgs", args)
+    
+    def get_run_args(self) -> str:
+        return self.run_arguments
 
     def update_persistent_storage(self, key: str, value: str) -> None:
         """

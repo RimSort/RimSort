@@ -67,6 +67,8 @@ class Actions(QObject):
 
         self.run_button = QPushButton("Run")
         self.run_button.clicked.connect(partial(self.actions_signal.emit, "run"))
+        self.run_button.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.run_button.customContextMenuRequested.connect(partial(self.actions_signal.emit, "runArgs"))
 
         # Add buttons to sub-layouts and sub-layouts to the main layout.
         self.top_panel.addWidget(self.refresh_button)
