@@ -1,9 +1,13 @@
+import logging
 from typing import Any, Dict
+
+logger = logging.getLogger(__name__)
 
 
 def do_rimpy_sort(
     dependency_graph: Dict[str, set], active_mods_json: Dict[str, Any]
 ) -> Dict[str, Any]:
+    logger.info(f"Starting RimPy sort for {len(dependency_graph)} mods")
     # Get an alphabetized list of dependencies
     active_mods_id_to_name = dict((k, v["name"]) for k, v in active_mods_json.items())
     active_mods_alphabetized = sorted(
@@ -36,6 +40,7 @@ def do_rimpy_sort(
     reordered = {}
     for package_id in mods_load_order:
         reordered[package_id] = active_mods_json[package_id]
+    logger.info(f"Finished RimPy sort with {len(reordered)} mods")
     return reordered
 
 

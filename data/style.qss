@@ -111,6 +111,7 @@ QWidget#descriptionWidget { /* Outer-most encapsulator */
     border-width: 1px;
     border-radius: 3px;
     padding: 2px; /* The sharp corner of the text box clips out */
+    padding-right: 5px;
 }
 
 QWidget#descriptionContent { /* Text, minus scroll bar */
@@ -121,6 +122,7 @@ QWidget#descriptionContent { /* Text, minus scroll bar */
 QLabel#descriptionLabel { /* Description text itself */
     color: white;
     background-color: #19232d;
+    margin-right: 3px;
 }
 
 QLineEdit {

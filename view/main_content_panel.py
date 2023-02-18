@@ -1,24 +1,26 @@
+import logging
 import os
 import platform
 import subprocess
-
 from typing import Any, Dict
 
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
-from toposort import toposort
 
+from sort.dependencies import *
+from sort.rimpy_sort import *
+from sort.topo_sort import *
 from sub_view.actions_panel import Actions
 from sub_view.active_mods_panel import ActiveModList
 from sub_view.inactive_mods_panel import InactiveModList
 from sub_view.mod_info_panel import ModInfo
 from util.mods import *
+from util.schema import validate_mods_config_format
 from util.xml import json_to_xml_write, xml_path_to_json
 from view.game_configuration_panel import GameConfiguration
-from sort.dependencies import *
-from sort.rimpy_sort import *
-from sort.topo_sort import *
+
+logger = logging.getLogger(__name__)
 
 
 class MainContent:
@@ -36,6 +38,7 @@ class MainContent:
 
         :param game_configuration: game configuration panel to get paths
         """
+        logger.info("Starting MainContent initialization")
 
         # BASE LAYOUT
         self.main_layout = QHBoxLayout()
@@ -50,10 +53,12 @@ class MainContent:
         self.main_layout_frame.setLayout(self.main_layout)
 
         # INSTANTIATE WIDGETS
+        logger.info("Instantiating MainContent QWidget subclasses")
         self.mod_info_panel = ModInfo()
         self.active_mods_panel = ActiveModList()
         self.inactive_mods_panel = InactiveModList()
         self.actions_panel = Actions()
+        logger.info("Finished instantiating MainContent QWidget subclasses")
 
         # WIDGETS INTO BASE LAYOUT
         self.main_layout.addLayout(self.mod_info_panel.panel, 50)
@@ -72,7 +77,12 @@ class MainContent:
 
         # INITIALIZE WIDGETS
         # Fetch paths dynamically from game configuration panel
+        logger.info("Loading GameConfiguration instance")
         self.game_configuration = game_configuration
+
+        # Restore cache initially set to empty
+        self.active_mods_data_restore_state = []
+        self.inactive_mods_data_restore_state = []
 
         # Check if paths have been set
         if self.game_configuration.check_if_essential_paths_are_set():
@@ -81,6 +91,8 @@ class MainContent:
 
             # Insert mod data into list
             self.repopulate_lists(True)
+
+        logger.info("Finished MainContent initialization")
 
     @property
     def panel(self):
@@ -95,7 +107,7 @@ class MainContent:
 
         :param package_id: package id of mod
         """
-        # print(self.all_mods_with_dependencies[package_id])
+        logger.info(f"USER ACTION: clicked on a mod list item: {package_id}")
         self.mod_info_panel.display_mod_info(
             self.all_mods_with_dependencies[package_id]
         )
@@ -107,41 +119,89 @@ class MainContent:
 
         :param game_path: path to Rimworld game
         """
-
+        logger.info("USER ACTION: launching the game")
         game_path = self.game_configuration.get_game_folder_path()
+        logger.info(f"Attempting to find the game in the game folder {game_path}")
         if game_path:
             system_name = platform.system()
             if system_name == "Darwin":
                 executable_path = os.path.join(game_path, "RimWorldMac.app")
+                logger.info(
+                    f"Path to game executable for MacOS generated: {executable_path}"
+                )
                 if os.path.exists(executable_path):
+                    logger.info("Launching the game with subprocess Popen")
                     subprocess.Popen(["open", executable_path])
                 else:
-                    show_warning("Executable not found in game folder.")
+                    logger.info("The game executable path does not exist")
+                    show_warning(
+                        text="Error Starting the Game",
+                        information=(
+                            "RimSort could not start RimWorld as the game executable does "
+                            f"not exist at the specified path: {executable_path}. Please check "
+                            "that this directory is correct and the RimWorld game executable "
+                            "exists in it."
+                        ),
+                    )
             elif system_name == "Linux" or "Windows":
                 try:
+                    logger.info("Trying to create a new subprocess process group")
                     subprocess.CREATE_NEW_PROCESS_GROUP
                 except AttributeError:
                     # not Windows, so assume POSIX; if not, we'll get a usable exception
                     executable_path = os.path.join(game_path, "RimWorldLinux")
+                    logger.info(
+                        f"Path to game executable for Linux generated: {executable_path}"
+                    )
                     if os.path.exists(executable_path):
+                        logger.info("Launching the game with subprocess Popen")
                         p = subprocess.Popen([executable_path], start_new_session=True)
                     else:
-                        show_warning("Executable not found in game folder.")
+                        logger.info("The game executable path does not exist")
+                        show_warning(
+                            text="Error Starting the Game",
+                            information=(
+                                "RimSort could not start RimWorld as the game executable does "
+                                f"not exist at the specified path: {executable_path}. Please check "
+                                "that this directory is correct and the RimWorld game executable "
+                                "exists in it."
+                            ),
+                        )
                 else:
                     # Windows
                     executable_path = os.path.join(game_path, "RimWorldWin64.exe")
+                    logger.info(
+                        f"Path to game executable for Windows generated: {executable_path}"
+                    )
                     if os.path.exists(executable_path):
+                        logger.info("Launching the game with subprocess Popen")
                         p = subprocess.Popen(
                             [executable_path],
                             creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
                         )
                     else:
-                        show_warning("Executable not found in game folder.")
+                        logger.info("The game executable path does not exist")
+                        show_warning(
+                            text="Error Starting the Game",
+                            information=(
+                                "RimSort could not start RimWorld as the game executable does "
+                                f"not exist at the specified path: {executable_path}. Please check "
+                                "that this directory is correct and the RimWorld game executable "
+                                "exists in it."
+                            ),
+                        )
             else:
+                logger.error("Unable to launch the game on an unknown system")
                 print("Unknown System")  # TODO
         else:
+            logger.error("The path to the game folder is empty")
             show_warning(
-                "Unable to get data for game executable.\nCheck that your paths are set correctly."
+                text="Error Starting the Game",
+                information=(
+                    "RimSort could not start RimWorld as the game folder is empty or invalid: [{game_path}] "
+                    "Please check that the game folder is properly set and that the RimWorld executable "
+                    "exists in it."
+                ),
             )
 
     def refresh_cache_calculations(self) -> None:
@@ -155,6 +215,7 @@ class MainContent:
         somehow, e.g. re-setting workshop path, mods config path, or downloading another mod,
         but also after ModsConfig.xml path has been changed).
         """
+        logger.info("Refreshing cache calculations")
         # Get and cache installed base game / DLC data
         self.expansions = get_installed_expansions(
             self.game_configuration.get_game_folder_path()
@@ -184,10 +245,17 @@ class MainContent:
 
         # If there are mods at all, check for a mod DB.
         if mods:
+            logger.info(
+                "Looking for a load order / dependency rules contained within mods"
+            )
             # Get and cache steam db rules data for ALL mods
             self.steam_db_rules = get_steam_db_rules(mods)
             # Get and cache community rules data for ALL mods
             self.community_rules = get_community_rules(mods)
+        else:
+            logger.warning(
+                "No LOCAL or WORKSHOP mods found at all. Are you playing Vanilla?"
+            )
 
         # Calculate and cache dependencies for ALL mods
         self.all_mods_with_dependencies = get_dependencies_for_mods(
@@ -196,20 +264,25 @@ class MainContent:
             self.steam_db_rules,
             self.community_rules,  # TODO add user defined customRules from future customRules.json
         )
+        logger.info("Finished refreshing cache calculations")
 
     def repopulate_lists(self, is_initial: bool = False) -> None:
         """
         Get active and inactive mod lists based on the config path
         and write them to the list widgets. is_initial indicates if
         this function is running at app initialization. If is_initial is
-        true, then write the active_mods_data and inactive_mods_data to 
+        true, then write the active_mods_data and inactive_mods_data to
         restore variables.
         """
+        logger.info("Repopulating mod lists")
         active_mods_data, inactive_mods_data = get_active_inactive_mods(
             self.game_configuration.get_config_path(),
             self.all_mods_with_dependencies,
         )
         if is_initial:
+            logger.info(
+                "Populating mod list data for the first time, so cache it for the restore function"
+            )
             self.active_mods_data_restore_state = active_mods_data
             self.inactive_mods_data_restore_state = inactive_mods_data
 
@@ -231,6 +304,7 @@ class MainContent:
 
         :param action: string indicating action
         """
+        logger.info(f"USER ACTION: received action {action}")
         if action == "refresh":
             self._do_refresh()
         if action == "clear":
@@ -258,8 +332,14 @@ class MainContent:
         :param active_mods: dict of active mods
         :param inactive_mods: dict of inactive mods
         """
+        logger.info(
+            f"Inserting mod data into active [{len(active_mods)}] and inactive [{len(inactive_mods)}] mod lists"
+        )
         self.active_mods_panel.active_mods_list.recreate_mod_list(active_mods)
         self.inactive_mods_panel.inactive_mods_list.recreate_mod_list(inactive_mods)
+        logger.info(
+            f"Finished inserting mod data into active [{len(active_mods)}] and inactive [{len(inactive_mods)}] mod lists"
+        )
 
     def _do_refresh(self) -> None:
         if self.game_configuration.check_if_essential_paths_are_set():
@@ -269,8 +349,9 @@ class MainContent:
             # Insert mod data into list
             self.repopulate_lists()
         else:
-            show_warning(
-                "Please remember to set the Game Install and Mods Config folder."
+            self._insert_data_into_lists({}, {})
+            logger.warning(
+                "Essential paths have not been set. Passing refresh and resetting mod lists"
             )
 
     def _do_clear(self) -> None:
@@ -285,21 +366,25 @@ class MainContent:
         expansions_ids = list(self.expansions.keys())
         active_mod_data = {}
         inactive_mod_data = {}
+        logger.info("Moving non-base/expansion active mods to inactive mods list")
         for package_id, mod_data in active_mods_data.items():
             if package_id in expansions_ids:
                 active_mod_data[package_id] = mod_data
             else:
                 inactive_mod_data[package_id] = mod_data
+        logger.info("Moving base/expansion inactive mods to active mods list")
         for package_id, mod_data in inactive_mods_data.items():
             if package_id in expansions_ids:
                 active_mod_data[package_id] = mod_data
             else:
                 inactive_mod_data[package_id] = mod_data
+        logger.info("Finished re-organizing mods for clear")
         self._insert_data_into_lists(active_mod_data, inactive_mod_data)
 
     def _do_sort(self) -> None:
         # Get the live list of active and inactive mods. This is because the user
         # will likely sort before saving.
+        logger.info("Starting sorting mods")
         active_mods = self.active_mods_panel.active_mods_list.get_list_items_by_dict()
         active_mod_ids = list(active_mods.keys())
         inactive_mods = (
@@ -334,6 +419,7 @@ class MainContent:
         )
 
         if sorting_algorithm == "RimPy":
+            logger.info("RimPy sorting algorithm is selected")
             reordered_tier_one_sorted_with_data = do_rimpy_sort(
                 tier_one_dependency_graph, active_mods
             )
@@ -344,6 +430,7 @@ class MainContent:
                 tier_two_dependency_graph, active_mods
             )
         else:
+            logger.info("Topological sorting algorithm is selected")
             # Sort tier one mods
             reordered_tier_one_sorted_with_data = do_topo_sort(
                 tier_one_dependency_graph, active_mods
@@ -357,9 +444,11 @@ class MainContent:
                 tier_two_dependency_graph, active_mods
             )
 
-        print(len(reordered_tier_one_sorted_with_data))
-        print(len(reordered_tier_two_sorted_with_data))
-        print(len(reordered_tier_three_sorted_with_data))
+        logger.info(f"Sorted tier one mods: {len(reordered_tier_one_sorted_with_data)}")
+        logger.info(f"Sorted tier two mods: {len(reordered_tier_two_sorted_with_data)}")
+        logger.info(
+            f"Sorted tier three mods: {len(reordered_tier_three_sorted_with_data)}"
+        )
 
         # Add Tier 1, 2, 3 in order
         combined_mods = {}
@@ -370,6 +459,7 @@ class MainContent:
         for package_id, mod_data in reordered_tier_three_sorted_with_data.items():
             combined_mods[package_id] = mod_data
 
+        logger.info("Finished combing all tiers of mods. Inserting into mod lists")
         self._insert_data_into_lists(combined_mods, inactive_mods)
 
     def _do_import(self) -> None:
@@ -377,44 +467,92 @@ class MainContent:
         Open a user-selected XML file. Calculate
         and display active and inactive lists based on this file.
         """
+        logger.info("Opening file dialog to select input file")
         file_path = QFileDialog.getOpenFileName(
             caption="Open Mod List", filter="XML (*.xml)"
         )
-        active_mods_data, inactive_mods_data = get_active_inactive_mods(
-            file_path[0], self.all_mods_with_dependencies
-        )
-        self._insert_data_into_lists(active_mods_data, inactive_mods_data)
+        logger.info(f"Selected path: {file_path[0]}")
+        if file_path[0]:
+            logger.info(f"Trying to import mods list from XML: {file_path}")
+            active_mods_data, inactive_mods_data = get_active_inactive_mods(
+                file_path[0], self.all_mods_with_dependencies
+            )
+            logger.info("Got new mods according to imported XML")
+            self._insert_data_into_lists(active_mods_data, inactive_mods_data)
+        else:
+            logger.info("User pressed cancel, passing")
 
     def _do_export(self) -> None:
         """
         Export the current list of active mods to a user-designated
         file. The current list does not need to have been saved.
         """
-        active_mods = [
-            mod_item.package_id.lower()
-            for mod_item in self.active_mods_panel.active_mods_list.get_list_items()
-        ]
-        mods_config_data = xml_path_to_json(self.game_configuration.get_config_path())
-        mods_config_data["ModsConfigData"]["activeMods"]["li"] = active_mods
+        logger.info("Opening file dialog to specify output file")
         file_path = QFileDialog.getSaveFileName(
             caption="Save Mod List", selectedFilter="xml"
         )
-        json_to_xml_write(mods_config_data, file_path[0])
+        logger.info(f"Selected path: {file_path[0]}")
+        if file_path[0]:
+            logger.info("Exporting current active mods to ModsConfig.xml format")
+            active_mods = [
+                mod_item.package_id.lower()
+                for mod_item in self.active_mods_panel.active_mods_list.get_list_items()
+            ]
+            logger.info(f"Collected {len(active_mods)} active mods for export")
+            logger.info("Getting current ModsConfig.xml to use as a reference format")
+            mods_config_data = xml_path_to_json(
+                self.game_configuration.get_config_path()
+            )
+            if validate_mods_config_format(mods_config_data):
+                logger.info(
+                    "Successfully got ModsConfig.xml data. Overwriting with current active mods"
+                )
+                mods_config_data["ModsConfigData"]["activeMods"]["li"] = active_mods
+                logger.info(
+                    f"Saving generated ModsConfig.xml to selected path: {file_path[0]}"
+                )
+                json_to_xml_write(mods_config_data, file_path[0])
+            else:
+                logger.error("Could not export active mods")
+        else:
+            logger.info("User pressed cancel, passing")
 
     def _do_save(self) -> None:
         """
         Method save the current list of active mods to the selected ModsConfig.xml
         """
+        logger.info("Saving current active mods to ModsConfig.xml")
         active_mods = [
             mod_item.package_id.lower()
             for mod_item in self.active_mods_panel.active_mods_list.get_list_items()
         ]
+        logger.info(f"Collected {len(active_mods)} active mods for saving")
         mods_config_data = xml_path_to_json(self.game_configuration.get_config_path())
-        mods_config_data["ModsConfigData"]["activeMods"]["li"] = active_mods
-        json_to_xml_write(mods_config_data, self.game_configuration.get_config_path())
+        if validate_mods_config_format(mods_config_data):
+            logger.info(
+                "Successfully got ModsConfig.xml data. Overwriting with current active mods"
+            )
+            mods_config_data["ModsConfigData"]["activeMods"]["li"] = active_mods
+            json_to_xml_write(
+                mods_config_data, self.game_configuration.get_config_path()
+            )
+        else:
+            logger.error("Could not save active mods")
+        logger.info("Finished saving active mods")
 
     def _do_restore(self) -> None:
         """
         Method to restore the mod lists to the last saved state.
         """
-        self._insert_data_into_lists(self.active_mods_data_restore_state, self.inactive_mods_data_restore_state)
+        if self.active_mods_data_restore_state and self.active_mods_data_restore_state:
+            logger.info(
+                f"Restoring cached mod lists with active list [{len(self.active_mods_data_restore_state)}] and inactive list [{len(self.inactive_mods_data_restore_state)}]"
+            )
+            self._insert_data_into_lists(
+                self.active_mods_data_restore_state,
+                self.inactive_mods_data_restore_state,
+            )
+        else:
+            logger.warning(
+                "Cached mod lists for restore function not set as client started improperly. Passing on restore"
+            )

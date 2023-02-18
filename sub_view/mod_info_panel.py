@@ -1,11 +1,14 @@
+import logging
+import os
 from typing import Any, Dict
 
-import os
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
 from model.scroll_label import ScrollLabel
+
+logger = logging.getLogger(__name__)
 
 
 class ModInfo:
@@ -18,6 +21,7 @@ class ModInfo:
         """
         Initialize the class.
         """
+        logger.info("Starting ModInfo initialization")
 
         # Base layout type
         self.panel = QVBoxLayout()
@@ -76,6 +80,8 @@ class ModInfo:
         self.mod_info_layout.addLayout(self.mod_info_path)
         self.description_layout.addWidget(self.description)
 
+        logger.info("Finished ModInfo initialization")
+
     def display_mod_info(self, mod_info: Dict[str, Any]) -> None:
         """
         This slot receives a the complete mod data json for
@@ -84,6 +90,7 @@ class ModInfo:
 
         :param mod_info: complete json info for the mod
         """
+        logger.info(f"Starting display mod info for info: {mod_info}")
         self.mod_info_name_value.setText(mod_info.get("name"))
         self.mod_info_package_id_value.setText(mod_info.get("packageId"))
         if mod_info.get("authors"):
@@ -97,6 +104,7 @@ class ModInfo:
         # Get Preview.png
         if mod_info.get("path"):
             workshop_folder_path = mod_info.get("path")
+            logger.info(f"Mod path exists at: {workshop_folder_path}")
             # Look for a case-insensitive About folder
             invalid_folder_path_found = True
             about_folder_name = "About"
@@ -123,8 +131,10 @@ class ModInfo:
                     break
             # If there was an issue getting the expected path, track and exit
             if invalid_folder_path_found or invalid_file_path_found:
+                logger.info("No preview image found for the mod")
                 self.preview_picture.setPixmap(None)
             else:
+                logger.info("Preview image found")
                 image_path = os.path.join(
                     workshop_folder_path, about_folder_name, preview_file_name
                 )
@@ -134,3 +144,4 @@ class ModInfo:
                 )
         else:
             self.preview_picture.setPixmap(None)
+        logger.info(f"Finished display mod info")
