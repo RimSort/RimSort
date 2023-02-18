@@ -82,6 +82,7 @@ class ModListWidget(QListWidget):
         :param first: index of first item inserted
         :param last: index of last item inserted
         """
+        logger.info(f"Handling inserts from row {first} to {last}")
         for idx in range(first, last + 1):
             item = self.item(idx)
             if item is not None and self.itemWidget(item) is None:
@@ -101,6 +102,7 @@ class ModListWidget(QListWidget):
         :param first: index of first item removed (not used)
         :param last: index of last item removed (not used)
         """
+        logger.info(f"Handling removals from row {first} to {last}")
         self.list_change_signal.emit(str(self.count()))
 
     def get_list_items(self) -> List[ModListItemInner]:

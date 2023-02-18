@@ -46,8 +46,9 @@ class ModListItemInner(QWidget):
         self.incompatible_with_by_version = data.get("incompatibleWithByVersion")
 
         # Custom tags
-        self.base = data.get("isBase")  # True if base game
-        self.dlc = data.get("isDLC")  # True if DLC
+        self.isExpansion = data.get("isExpansion")  # True if base game or DLC
+        self.isWorkshop = data.get("isWorkshop") # True if workshop mod
+        self.isLocal = data.get("isLocal")  # True if local mod
         self.error = data.get("error")
 
         # Entire data
@@ -60,12 +61,8 @@ class ModListItemInner(QWidget):
         self.setToolTip(self.get_tool_tip_text())
         self.main_item_layout = QHBoxLayout()
         self.main_item_layout.setContentsMargins(0, 0, 0, 0)
-        self.main_item_layout.setSpacing(0)
+        self.main_item_layout.setSpacing(2)
         item_name = self.name
-        if self.base:
-            item_name = f"*Base* {item_name}"
-        if self.dlc:
-            item_name = f"*DLC* {item_name}"
 
         self.font_metrics = QFontMetrics(self.font())
         text_width_needed = QRectF(self.font_metrics.boundingRect(item_name)).width()
@@ -77,8 +74,15 @@ class ModListItemInner(QWidget):
             self.main_label = QLabel(str(shortened_text))
         else:
             self.main_label = QLabel(item_name)
+
+        # Icons by mod source
+        self.icon_mod_source = QLabel()
+        self.icon_mod_source.setPixmap(self.get_icon().pixmap(QSize(20, 20)))
+
         self.main_label.setObjectName("ListItemLabel")
+        self.main_item_layout.addWidget(self.icon_mod_source)
         self.main_item_layout.addWidget(self.main_label)
+        self.main_item_layout.addStretch()
         self.setLayout(self.main_item_layout)
 
     def get_tool_tip_text(self):
@@ -95,3 +99,33 @@ class ModListItemInner(QWidget):
         version_line = f"Version: {self.json_data.get('version', 'UNKNOWN')}\n"
         path_line = f"Path: {self.json_data.get('path', 'UNKNOWN')}"
         return name_line + author_line + package_id_line + version_line + path_line
+
+    def get_icon(self) -> QIcon:
+        """
+        Check custom tags added to mod metadata upon initialization, and return the cooresponding
+        QIcon for the type of mod that it is (expansion, workshop, or local mod?)
+
+        :return icon: QIcon object set to the path of the cooresponding icon image
+        """
+        if self.isExpansion:
+            return QIcon("data/E.png")
+        elif self.isWorkshop:
+            return QIcon("data/S.png")
+        elif self.isLocal:
+            return QIcon("data/L.png")
+        else:
+            print("No type")
+
+    def show(self):
+        """
+        Show this widget, and all child widgets.
+        """
+        for w in [self, self.main_label, self.icon_mod_source]:
+            w.setVisible(True)
+
+    def hide(self):
+        """
+        Hide this widget, and all child widgets.
+        """
+        for w in [self, self.main_label, self.icon_mod_source]:
+            w.setVisible(False)

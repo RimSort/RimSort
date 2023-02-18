@@ -8,6 +8,7 @@ import webbrowser
 from functools import partial
 from os.path import expanduser
 from typing import Any
+import traceback
 
 from PySide2.QtCore import *
 from PySide2.QtGui import *
@@ -219,6 +220,9 @@ class GameConfiguration(QObject):
         self.local_folder_row.addWidget(self.local_folder_line)
         self.local_folder_row.addWidget(self.local_folder_select_button)
 
+        # RUN ARGUMENTS
+        self.run_arguments = ""
+
         # CONTAINER LAYOUTS INTO BASE LAYOUT
         self.client_settings_frame = QFrame()
         self.client_settings_frame.setObjectName("configLine")
@@ -370,6 +374,10 @@ class GameConfiguration(QObject):
                     self.settings_panel.sorting_algorithm_cb.setCurrentText(
                         settings_data["sorting_algorithm"]
                     )
+                if not settings_data.get("runArgs"):
+                    settings_data["runArgs"] = ""
+                else:
+                    self.run_arguments = settings_data["runArgs"]
         logger.info("Finished storage initialization")
 
     def initialize_settings_panel(self) -> None:

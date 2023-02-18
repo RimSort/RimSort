@@ -31,11 +31,30 @@ class InactiveModList:
         self.num_mods = QLabel("Inactive [0]")
         self.num_mods.setAlignment(Qt.AlignCenter)
         self.num_mods.setObjectName("summaryValue")
+
         self.inactive_mods_list = ModListWidget()
+
+        self.inactive_mods_search = QLineEdit()
+        self.inactive_mods_search.setClearButtonEnabled(True)
+        self.inactive_mods_search.textChanged.connect(self.signal_inactive_mods_search)
+        self.inactive_mods_search_clear_button = self.inactive_mods_search.findChild(
+            QToolButton
+        )
+        self.inactive_mods_search_clear_button.setEnabled(True)
+        self.inactive_mods_search_clear_button.clicked.connect(
+            self.clear_inactive_mods_search
+        )
+        self.inactive_mods_search.setPlaceholderText("Search inactive mods...")
 
         # Add widgets to base layout
         self.panel.addWidget(self.num_mods)
+        self.panel.addWidget(self.inactive_mods_search)
         self.panel.addWidget(self.inactive_mods_list)
+
+        # Adding Completer.
+        self.completer = QCompleter(self.inactive_mods_list.get_list_items())
+        self.completer.setCaseSensitivity(Qt.CaseInsensitive)
+        self.inactive_mods_search.setCompleter(self.completer)
 
         # Connect signals and slots
         self.inactive_mods_list.list_change_signal.connect(self.change_mod_num_display)
@@ -43,4 +62,18 @@ class InactiveModList:
         logger.info("Finished InactiveModList initialization")
 
     def change_mod_num_display(self, count: str) -> None:
+        logger.info(f"Inactive mod count changed to: {count}")
         self.num_mods.setText(f"Inactive [{count}]")
+
+    def clear_inactive_mods_search(self):
+        self.inactive_mods_search.setText("")
+        for mod_item in self.inactive_mods_list.get_list_items():
+            mod_item.show()
+
+    def signal_inactive_mods_search(self, pattern: str) -> None:
+        if pattern == "":
+            self.clear_inactive_mods_search()
+        else:
+            for mod_item in self.inactive_mods_list.get_list_items():
+                if not pattern.lower() in mod_item.name.lower():
+                    mod_item.hide()

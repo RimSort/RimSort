@@ -49,6 +49,7 @@ def gen_tier_one_deps_graph(dependencies_graph):
     # TODO: pull from a config
     logger.info("Generating dependencies graph for tier one mods")
     known_tier_one_mods = {
+        "zetrith.prepatcher",
         "brrainz.harmony",
         "ludeon.rimworld",
         "ludeon.rimworld.royalty",
