@@ -8,6 +8,8 @@ from typing import Any, Dict, List, Optional, Tuple
 from PySide2.QtWidgets import *
 import json
 import platform
+
+from util.schema import validate_mods_config_format
 from util.error import show_warning, show_fatal_error
 from util.exception import InvalidModsConfigFormat
 from util.xml import non_utf8_xml_path_to_json, xml_path_to_json
