@@ -1,8 +1,11 @@
+import logging
 from typing import Any, Dict
 
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
+
+logger = logging.getLogger(__name__)
 
 
 class ModListItemInner(QWidget):
@@ -23,47 +26,18 @@ class ModListItemInner(QWidget):
 
         super(ModListItemInner, self).__init__()
 
-        # Required tags
-        self.name = data.get("name")
-        self.author = data.get("author")
-        self.package_id = data.get("packageId")
-        self.description = data.get("description")
-        self.supported_versions = data.get("supportedVersions")
-
-        # Optional Tags
-        self.authors = data.get("authors")
-        self.url = data.get("url")
-        self.descriptions_by_version = data.get("descriptionsByVersion")
-        self.mod_dependencies = data.get("modDependencies")
-        self.mod_dependencies_by_version = data.get("modDependenciesByVersion")
-        self.load_before = data.get("loadBefore")
-        self.load_before_by_version = data.get("loadBeforeByVersion")
-        self.force_load_before = data.get("forceLoadBefore")
-        self.load_after = data.get("loadAfter")
-        self.load_after_by_version = data.get("loadAfterByVersion")
-        self.force_load_after = data.get("forceLoadAfter")
-        self.incompatible_with = data.get("incompatibleWith")
-        self.incompatible_with_by_version = data.get("incompatibleWithByVersion")
-
-        # Custom tags
-        self.isExpansion = data.get("isExpansion")  # True if base game or DLC
-        self.isWorkshop = data.get("isWorkshop") # True if workshop mod
-        self.isLocal = data.get("isLocal")  # True if local mod
-        self.error = data.get("error")
-
-        # Entire data
+        # All data, includig name, author, package id, dependencies,
+        # whether the mod is a workshop mod or expansion, etc is encapsulated
+        # in this variable. This is exactly equal to the dict value of a
+        # single all_mods key-value
         self.json_data = data
-
-        # Sorting tags
-        self.dependencies = data.get("dependencies")
 
         # Visuals
         self.setToolTip(self.get_tool_tip_text())
         self.main_item_layout = QHBoxLayout()
         self.main_item_layout.setContentsMargins(0, 0, 0, 0)
         self.main_item_layout.setSpacing(2)
-        item_name = self.name
-
+        item_name = self.json_data.get("name", "UNKNOWN")
         self.font_metrics = QFontMetrics(self.font())
         text_width_needed = QRectF(self.font_metrics.boundingRect(item_name)).width()
         if text_width_needed > container_width:
@@ -85,15 +59,15 @@ class ModListItemInner(QWidget):
         self.main_item_layout.addStretch()
         self.setLayout(self.main_item_layout)
 
-    def get_tool_tip_text(self):
-        name_line = f"Mod: {self.json_data['name']}\n"
+    def get_tool_tip_text(self) -> str:
+        name_line = f"Mod: {self.json_data.get('name', 'UNKNOWN')}\n"
         if self.json_data.get("authors"):
             list_of_authors = self.json_data.get("authors")["li"]
             authors_text = ", ".join(list_of_authors)
             author_line = f"Authors: {authors_text}\n"
         else:
             author_line = f"Authors: {self.json_data.get('author', 'UNKNOWN')}\n"
-        package_id_line = f"PackageID: {self.json_data['packageId']}\n"
+        package_id_line = f"PackageID: {self.json_data.get('packageId', 'UNKNOWN')}\n"
         # TODO: version information should be read from manifest file, which is not currently
         # being used. This file actually also contains some load rule data so use that too.
         version_line = f"Version: {self.json_data.get('version', 'UNKNOWN')}\n"
@@ -107,23 +81,23 @@ class ModListItemInner(QWidget):
 
         :return icon: QIcon object set to the path of the cooresponding icon image
         """
-        if self.isExpansion:
+        if self.json_data.get("isExpansion"):
             return QIcon("data/E.png")
-        elif self.isWorkshop:
+        elif self.json_data.get("isWorkshop"):
             return QIcon("data/S.png")
-        elif self.isLocal:
+        elif self.json_data.get("isLocal"):
             return QIcon("data/L.png")
         else:
-            print("No type")
+            logger.error(f"No type found for ModListItemInner with package id {self.json_data.get('packageId')}")
 
-    def show(self):
+    def show(self): # TODO: deprecate
         """
         Show this widget, and all child widgets.
         """
         for w in [self, self.main_label, self.icon_mod_source]:
             w.setVisible(True)
 
-    def hide(self):
+    def hide(self): # TODO: deprecate
         """
         Hide this widget, and all child widgets.
         """

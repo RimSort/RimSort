@@ -8,7 +8,6 @@ import webbrowser
 from functools import partial
 from os.path import expanduser
 from typing import Any
-import traceback
 
 from PySide2.QtCore import *
 from PySide2.QtGui import *

@@ -71,10 +71,10 @@ class MainContent:
         self.actions_panel.run_button.setContextMenuPolicy(Qt.CustomContextMenu)
         self.actions_panel.run_button.customContextMenuRequested.connect(self._do_edit_run_args)
 
-        self.active_mods_panel.active_mods_list.mod_list_signal.connect(
+        self.active_mods_panel.active_mods_list.mod_info_signal.connect(
             self.mod_list_slot
         )
-        self.inactive_mods_panel.inactive_mods_list.mod_list_signal.connect(
+        self.inactive_mods_panel.inactive_mods_list.mod_info_signal.connect(
             self.mod_list_slot
         )
 
@@ -281,11 +281,19 @@ class MainContent:
                     logger.info("Launching the game with subprocess Popen: `" + executable_path + "` with args: `" + args + "`")
                     subprocess.Popen(["open", executable_path, args])
                 else:
-                    logger.info("The game executable path does not exist")
-                    show_warning("Executable not found in game folder.")
+                    logger.warning("The game executable path does not exist")
+                    show_warning(
+                        text="Error Starting the Game",
+                        information=(
+                            "RimSort could not start RimWorld as the game executable does "
+                            f"not exist at the specified path: {executable_path}. Please check "
+                            "that this directory is correct and the RimWorld game executable "
+                            "exists in it."
+                        ),
+                    )
             elif system_name == "Linux" or "Windows":
                 try:
-                    logger.info("Trying to create a new subprocess process group")
+                    logger.warn("Trying to create a new subprocess process group")
                     subprocess.CREATE_NEW_PROCESS_GROUP
                 except AttributeError:
                     # not Windows, so assume POSIX; if not, we'll get a usable exception
@@ -297,8 +305,16 @@ class MainContent:
                         logger.info("Launching the game with subprocess Popen: `" + executable_path + "` with args: `" + args + "`")
                         p = subprocess.Popen([executable_path, args], start_new_session=True)
                     else:
-                        logger.info("The game executable path does not exist")
-                        show_warning("Executable not found in game folder.")
+                        logger.warning("The game executable path does not exist")
+                        show_warning(
+                            text="Error Starting the Game",
+                            information=(
+                                "RimSort could not start RimWorld as the game executable does "
+                                f"not exist at the specified path: {executable_path}. Please check "
+                                "that this directory is correct and the RimWorld game executable "
+                                "exists in it."
+                            ),
+                        )
                 else:
                     # Windows
                     executable_path = os.path.join(game_path, "RimWorldWin64.exe")
@@ -312,15 +328,27 @@ class MainContent:
                             creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
                         )
                     else:
-                        logger.info("The game executable path does not exist")
-                        show_warning("Executable not found in game folder.")
+                        logger.warning("The game executable path does not exist")
+                        show_warning(
+                            text="Error Starting the Game",
+                            information=(
+                                "RimSort could not start RimWorld as the game executable does "
+                                f"not exist at the specified path: {executable_path}. Please check "
+                                "that this directory is correct and the RimWorld game executable "
+                                "exists in it."
+                            ),
+                        )
             else:
                 logger.error("Unable to launch the game on an unknown system")
-                print("Unknown System")  # TODO
         else:
             logger.error("The path to the game folder is empty")
             show_warning(
-                "Unable to get data for game executable.\nCheck that your paths are set correctly."
+                text="Error Starting the Game",
+                information=(
+                    "RimSort could not start RimWorld as the game folder is empty or invalid: [{game_path}] "
+                    "Please check that the game folder is properly set and that the RimWorld executable "
+                    "exists in it."
+                ),
             )
 
     def _insert_data_into_lists(
@@ -335,8 +363,24 @@ class MainContent:
         logger.info(
             f"Inserting mod data into active [{len(active_mods)}] and inactive [{len(inactive_mods)}] mod lists"
         )
-        self.active_mods_panel.active_mods_list.recreate_mod_list(active_mods)
-        self.inactive_mods_panel.inactive_mods_list.recreate_mod_list(inactive_mods)
+        # TODO: inserting into mod list should not directly insert into the child modlist
+        # instead, it should call a function in the panel that stores the full list on the panel
+        # and THEN the panel inserts into child. this way, we can implement something this on child:
+        # https://stackoverflow.com/questions/62934682/how-to-filter-qlistwidget-with-a-qlineedit
+        # doing it this way implies 2 additional things:
+        #   the full list on the panel must be updated not only on this function (insert data into lists
+        #       but in this case it's more like deleting and reinstantiating)
+        #       but also whenever mods are moved or reorganized (more like updated). if we make this list ordered then
+        #       we just need 1 list to accommodate searching AND dependencies/incompatibilities/etc
+        #       otherwise we would need 2 dicts
+        #       this dict doesn't need to contain all the mod info for each mod (but would it make it easier)?
+        #       this function does contain all that information after all. we would just haveto be mindful
+        #       that this function initializes the deps/inconsi/etc data, while other functions update it
+        # self.active_mods_panel.active_mods_list.recreate_mod_list(active_mods)
+        # self.inactive_mods_panel.inactive_mods_list.recreate_mod_list(inactive_mods)
+        self.active_mods_panel.recreate_mod_list(active_mods)
+        self.inactive_mods_panel.recreate_mod_list(inactive_mods)
+        
         logger.info(
             f"Finished inserting mod data into active [{len(active_mods)}] and inactive [{len(inactive_mods)}] mod lists"
         )
@@ -495,8 +539,8 @@ class MainContent:
         if file_path[0]:
             logger.info("Exporting current active mods to ModsConfig.xml format")
             active_mods = [
-                mod_item.package_id.lower()
-                for mod_item in self.active_mods_panel.active_mods_list.get_list_items()
+                package_id
+                for package_id in self.active_mods_panel.active_mods_list.get_list_items_by_dict()
             ]
             logger.info(f"Collected {len(active_mods)} active mods for export")
             logger.info("Getting current ModsConfig.xml to use as a reference format")
@@ -523,8 +567,8 @@ class MainContent:
         """
         logger.info("Saving current active mods to ModsConfig.xml")
         active_mods = [
-            mod_item.package_id.lower()
-            for mod_item in self.active_mods_panel.active_mods_list.get_list_items()
+            package_id
+            for package_id in self.active_mods_panel.active_mods_list.get_list_items_by_dict()
         ]
         logger.info(f"Collected {len(active_mods)} active mods for saving")
         mods_config_data = xml_path_to_json(self.game_configuration.get_config_path())
