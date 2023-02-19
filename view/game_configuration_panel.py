@@ -497,7 +497,6 @@ class GameConfiguration(QObject):
             self.update_persistent_storage("config_folder", config_folder_path)
         else:
             logger.info("User pressed cancel, passing")
-        # TODO refresh mods
 
     def set_workshop_folder(self) -> None:
         """
@@ -524,7 +523,6 @@ class GameConfiguration(QObject):
             self.update_persistent_storage("workshop_folder", workshop_path)
         else:
             logger.info("User pressed cancel, passing")
-        # TODO refresh mods
 
     def set_local_folder(self) -> None:
         """
@@ -551,7 +549,6 @@ class GameConfiguration(QObject):
             self.update_persistent_storage("local_folder", local_path)
         else:
             logger.info("User pressed cancel, passing")
-        # TODO refresh mods
 
     def update_persistent_storage(self, key: str, value: str) -> None:
         """
@@ -675,7 +672,6 @@ class GameConfiguration(QObject):
             os_paths = windows_paths
             logger.info(f"Running on Windows with the following paths: {os_paths}")
         else:
-            # TODO
             logger.error("Attempting to autodetect paths on an unknown system.")
 
         # If the game folder exists...

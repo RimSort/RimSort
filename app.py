@@ -37,6 +37,7 @@ def handle_exception(exc_type, exc_value, exc_traceback):
     show_fatal_error(
         details="".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
     )
+    sys.exit()
 
 
 sys.excepthook = handle_exception
@@ -53,7 +54,7 @@ class MainWindow(QMainWindow):
 
         # Create the main application window
         self.setWindowTitle("RimSort Alpha v1.0.0")
-        self.setFixedSize(QSize(1100, 700))  # TODO: support resizing
+        self.setFixedSize(QSize(1200, 700))  # TODO: support resizing
 
         # Create the main application layout
         app_layout = QVBoxLayout()

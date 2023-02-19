@@ -29,7 +29,7 @@ class MainContent:
     panel of the GUI, containing the mod information display, inactive and
     active mod lists, and the action button panel. Additionally, it acts
     as the main temporary datastore of the app, caching workshop mod information
-    and their dependencies. <-- TODO (strip functionality from util files)
+    and their dependencies.
     """
 
     def __init__(self, game_configuration: GameConfiguration) -> None:
@@ -363,21 +363,6 @@ class MainContent:
         logger.info(
             f"Inserting mod data into active [{len(active_mods)}] and inactive [{len(inactive_mods)}] mod lists"
         )
-        # TODO: inserting into mod list should not directly insert into the child modlist
-        # instead, it should call a function in the panel that stores the full list on the panel
-        # and THEN the panel inserts into child. this way, we can implement something this on child:
-        # https://stackoverflow.com/questions/62934682/how-to-filter-qlistwidget-with-a-qlineedit
-        # doing it this way implies 2 additional things:
-        #   the full list on the panel must be updated not only on this function (insert data into lists
-        #       but in this case it's more like deleting and reinstantiating)
-        #       but also whenever mods are moved or reorganized (more like updated). if we make this list ordered then
-        #       we just need 1 list to accommodate searching AND dependencies/incompatibilities/etc
-        #       otherwise we would need 2 dicts
-        #       this dict doesn't need to contain all the mod info for each mod (but would it make it easier)?
-        #       this function does contain all that information after all. we would just haveto be mindful
-        #       that this function initializes the deps/inconsi/etc data, while other functions update it
-        # self.active_mods_panel.active_mods_list.recreate_mod_list(active_mods)
-        # self.inactive_mods_panel.inactive_mods_list.recreate_mod_list(inactive_mods)
         self.active_mods_panel.recreate_mod_list(active_mods)
         self.inactive_mods_panel.recreate_mod_list(inactive_mods)
         

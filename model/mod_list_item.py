@@ -36,12 +36,12 @@ class ModListItemInner(QWidget):
         self.setToolTip(self.get_tool_tip_text())
         self.main_item_layout = QHBoxLayout()
         self.main_item_layout.setContentsMargins(0, 0, 0, 0)
-        self.main_item_layout.setSpacing(2)
+        self.main_item_layout.setSpacing(0)
         item_name = self.json_data.get("name", "UNKNOWN")
         self.font_metrics = QFontMetrics(self.font())
         text_width_needed = QRectF(self.font_metrics.boundingRect(item_name)).width()
-        if text_width_needed > container_width:
-            available_width = container_width - 20
+        if text_width_needed > container_width - 70:
+            available_width = container_width - 70
             shortened_text = self.font_metrics.elidedText(
                 item_name, Qt.ElideRight, available_width
             )
@@ -50,12 +50,20 @@ class ModListItemInner(QWidget):
             self.main_label = QLabel(item_name)
 
         # Icons by mod source
-        self.icon_mod_source = QLabel()
-        self.icon_mod_source.setPixmap(self.get_icon().pixmap(QSize(20, 20)))
+        self.mod_source_icon = QLabel()
+        self.mod_source_icon.setPixmap(self.get_icon().pixmap(QSize(20, 20)))
+
+        # Warning icon hidden by default
+        self.warning_icon_label = QLabel()
+        self.warning_icon_label.setPixmap(
+            self.style().standardIcon(QStyle.SP_MessageBoxWarning).pixmap(QSize(20, 20))
+        )
+        self.warning_icon_label.setHidden(True)
 
         self.main_label.setObjectName("ListItemLabel")
-        self.main_item_layout.addWidget(self.icon_mod_source)
-        self.main_item_layout.addWidget(self.main_label)
+        self.main_item_layout.addWidget(self.mod_source_icon, 10)
+        self.main_item_layout.addWidget(self.main_label, 90)
+        self.main_item_layout.addWidget(self.warning_icon_label, 10)
         self.main_item_layout.addStretch()
         self.setLayout(self.main_item_layout)
 
@@ -82,24 +90,26 @@ class ModListItemInner(QWidget):
         :return icon: QIcon object set to the path of the cooresponding icon image
         """
         if self.json_data.get("isExpansion"):
-            return QIcon("data/E.png")
+            return QIcon("data/ludeon_icon.png")
         elif self.json_data.get("isWorkshop"):
-            return QIcon("data/S.png")
+            return QIcon("data/steam_icon.png")
         elif self.json_data.get("isLocal"):
-            return QIcon("data/L.png")
+            return self.style().standardIcon(QStyle.SP_FileDialogStart)
         else:
-            logger.error(f"No type found for ModListItemInner with package id {self.json_data.get('packageId')}")
+            logger.error(
+                f"No type found for ModListItemInner with package id {self.json_data.get('packageId')}"
+            )
 
-    def show(self): # TODO: deprecate
+    def show(self):  # TODO: deprecate
         """
         Show this widget, and all child widgets.
         """
-        for w in [self, self.main_label, self.icon_mod_source]:
+        for w in [self, self.main_label, self.mod_source_icon]:
             w.setVisible(True)
 
-    def hide(self): # TODO: deprecate
+    def hide(self):  # TODO: deprecate
         """
         Hide this widget, and all child widgets.
         """
-        for w in [self, self.main_label, self.icon_mod_source]:
+        for w in [self, self.main_label, self.mod_source_icon]:
             w.setVisible(False)

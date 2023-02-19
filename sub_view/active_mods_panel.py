@@ -12,7 +12,7 @@ from model.mod_list import ModListWidget
 logger = logging.getLogger(__name__)
 
 
-class ActiveModList:
+class ActiveModList(QWidget):
     """
     This class controls the layout and functionality for the
     active mods list panel on the GUI.
@@ -25,6 +25,8 @@ class ActiveModList:
         create a row for every key-value pair in the dict.
         """
         logger.info("Starting ActiveModList initialization")
+
+        super(ActiveModList, self).__init__()
 
         # Base layout type
         self.panel = QVBoxLayout()
@@ -48,10 +50,41 @@ class ActiveModList:
         )
         self.active_mods_search.setPlaceholderText("Search active mods...")
 
+        self.errors_summary_frame = QFrame()
+        self.errors_summary_frame.setObjectName("errorFrame")
+        self.errors_summary_layout = QHBoxLayout()
+        self.errors_summary_layout.setContentsMargins(0,0,0,0)
+        self.errors_summary_layout.setSpacing(2)
+        self.warnings_icon = QLabel()
+        self.warnings_icon.setPixmap(
+            self.style().standardIcon(QStyle.SP_MessageBoxWarning).pixmap(QSize(20, 20))
+        )
+        self.warnings_text = QLabel("0 warnings(s)")
+        self.errors_icon = QLabel()
+        self.errors_icon.setPixmap(
+            self.style().standardIcon(QStyle.SP_MessageBoxCritical).pixmap(QSize(20, 20))
+        )
+        self.errors_text = QLabel("0 error(s)")
+
+        self.warnings_layout = QHBoxLayout()
+        self.warnings_layout.addWidget(self.warnings_icon, 1)
+        self.warnings_layout.addWidget(self.warnings_text, 99)
+
+        self.errors_layout = QHBoxLayout()
+        self.errors_layout.addWidget(self.errors_icon, 1)
+        self.errors_layout.addWidget(self.errors_text, 99)
+
+        self.errors_summary_layout.addLayout(self.warnings_layout, 50)
+        self.errors_summary_layout.addLayout(self.errors_layout, 50)
+
+        self.errors_summary_frame.setLayout(self.errors_summary_layout)
+        self.errors_summary_frame.setHidden(True)
+
         # Add widgets to base layout
-        self.panel.addWidget(self.num_mods)
-        self.panel.addWidget(self.active_mods_search)
-        self.panel.addWidget(self.active_mods_list)
+        self.panel.addWidget(self.num_mods, 1)
+        self.panel.addWidget(self.active_mods_search, 1)
+        self.panel.addWidget(self.active_mods_list, 97)
+        self.panel.addWidget(self.errors_summary_frame, 1)
 
         # Tracking mod list
         self.tracking_active_mods = {}
@@ -86,23 +119,34 @@ class ActiveModList:
         self.active_mods_list.recreate_mod_list(mods)
 
     def recalculate_internal_list_errors(self):
-        # TODO: resume
+        """
+        Whenever the active mod list has items added to it,
+        or has items removed from it, or has items rearranged around within it,
+        calculate, for every mod contained within the list, their
+        """
         # TODO: optimization needed. This function is called n times for
         # inserting n mods (e.g. refresh action). It's also called twice when
         # moving a mod from inactive to active.
-        # TODO: need to test and commit
-        mods = self.active_mods_list.get_list_items_by_dict()
-        package_ids_set = set(mods.keys())  # set of package_ids to use for calculations
+        active_mods = self.active_mods_list.get_list_items_by_dict()
+        package_ids_set = set(
+            active_mods.keys()
+        )  # set of package_ids to use for calculations
         package_id_to_index = {}  # package_id <-> the position it is in
         package_id_to_errors = {}  # package_id <-> live errors it has
         count = 0
-        for package_id in mods:
+        for package_id in active_mods:
             package_id_to_index[package_id] = count
-            print(package_id, count)
             count = count + 1
-        print()
 
-        for package_id, mod_data in mods.items():
+        # For every active mod, find its various errors
+        # At the end of every loop, also determine whether the mod
+        # has issues, and if so, set the appropriate icon. Keep track
+        # of how many mods have issues for the summary widget.
+        num_warnings = 0
+        total_warning_text = ""
+        num_errors = 0
+        total_error_text = ""
+        for package_id, mod_data in active_mods.items():
             # Instantiate empty key value
             package_id_to_errors[package_id] = {
                 "missing_dependencies": set(),
@@ -147,10 +191,89 @@ class ActiveModList:
                             package_id_to_errors[package_id][
                                 "load_after_violations"
                             ].add(load_this_after)
-            print(package_id_to_errors[package_id], package_id)
-        print()
 
+            # Consolidate results
+            tool_tip_text = ""
+            missing_dependencies = package_id_to_errors[package_id][
+                "missing_dependencies"
+            ]
+            if missing_dependencies:
+                tool_tip_text += "\nMissing Dependencies:"
+                for dependency_id in missing_dependencies:
+                    tool_tip_text += f"\n  * {dependency_id}"
 
+            conflicting_incompatibilities = package_id_to_errors[package_id][
+                "conflicting_incompatibilities"
+            ]
+            if conflicting_incompatibilities:
+                tool_tip_text += "\nIncompatibilities:"
+                for incompatibility_id in conflicting_incompatibilities:
+                    incompatibility_name = active_mods[incompatibility_id]["name"]
+                    tool_tip_text += f"\n  * {incompatibility_name}"
+
+            load_before_violations = package_id_to_errors[package_id][
+                "load_before_violations"
+            ]
+            if load_before_violations:
+                tool_tip_text += "\nShould be Loaded After:"
+                for load_before_id in load_before_violations:
+                    load_before_name = active_mods[load_before_id]["name"]
+                    tool_tip_text += f"\n  * {load_before_name}"
+
+            load_after_violations = package_id_to_errors[package_id][
+                "load_after_violations"
+            ]
+            if load_after_violations:
+                tool_tip_text += "\nShould be Loaded Before:"
+                for load_after_id in load_after_violations:
+                    load_after_name = active_mods[load_after_id]["name"]
+                    tool_tip_text += f"\n  * {load_after_name}"
+            
+            # Set icon if necessary
+            current_package_index = package_id_to_index[package_id]
+            item_widget_at_index = self.active_mods_list.get_item_widget_at_index(
+                current_package_index
+            )
+            if item_widget_at_index:
+                if tool_tip_text:
+                    item_widget_at_index.warning_icon_label.setHidden(False)
+                    item_widget_at_index.warning_icon_label.setToolTip(
+                        tool_tip_text.lstrip()
+                    )
+                else:
+                    item_widget_at_index.warning_icon_label.setHidden(True)
+                    item_widget_at_index.warning_icon_label.setToolTip("")
+            
+            # Add to error/warnings summary if necessary
+            if missing_dependencies or conflicting_incompatibilities:
+                num_errors += 1
+                total_error_text += f"\n\n{active_mods[package_id]['name']}"
+                total_error_text += "\n============================="
+                total_error_text += tool_tip_text
+            elif load_before_violations or load_after_violations:
+                num_warnings += 1
+                total_warning_text += f"\n\n{active_mods[package_id]['name']}"
+                total_warning_text += "\n============================="
+                total_warning_text += tool_tip_text
+        
+        if total_error_text or total_warning_text or num_errors or num_warnings:
+            self.errors_summary_frame.setHidden(False)
+            self.warnings_text.setText(f"{num_warnings} warnings(s)")
+            self.errors_text.setText(f"{num_errors} errors(s)")
+            if total_error_text:
+                self.errors_icon.setToolTip(total_error_text.lstrip())
+            if total_warning_text:
+                self.warnings_icon.setToolTip(total_warning_text.lstrip())
+        else:
+            self.errors_summary_frame.setHidden(True)
+            self.warnings_text.setText("0 warnings(s)")
+            self.errors_text.setText("0 errors(s)")
+            if total_error_text:
+                self.errors_icon.setToolTip("")
+            if total_warning_text:
+                self.warnings_icon.setToolTip("")
+
+            
 
     def handle_internal_mod_list_updated(self, count: str) -> None:
         # 'drop' indicates that the update was just a drag and drop

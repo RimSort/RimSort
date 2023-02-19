@@ -108,6 +108,11 @@ class ModListWidget(QListWidget):
         self.list_update_signal.emit("drop")
         return ret
 
+    def get_item_widget_at_index(self, idx: int) -> ModListItemInner:
+        item = self.item(idx)
+        if item:
+            return self.itemWidget(item)
+
     def get_list_items_by_dict(self) -> Dict[str, Any]:
         """
         Get a dict of all row item's widgets data. Equal to `mods` in
