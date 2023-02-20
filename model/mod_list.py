@@ -102,7 +102,7 @@ class ModListWidget(QListWidget):
         :param last: index of last item removed (not used)
         """
         self.list_update_signal.emit(str(self.count()))
-    
+
     def dropEvent(self, event: QDropEvent) -> None:
         ret = super().dropEvent(event)
         self.list_update_signal.emit("drop")
@@ -112,6 +112,11 @@ class ModListWidget(QListWidget):
         item = self.item(idx)
         if item:
             return self.itemWidget(item)
+
+    def get_widgets_and_items(self):
+        return [
+            (self.itemWidget(self.item(i)), self.item(i)) for i in range(self.count())
+        ]
 
     def get_list_items_by_dict(self) -> Dict[str, Any]:
         """
@@ -125,7 +130,9 @@ class ModListWidget(QListWidget):
         for i in range(self.count()):
             item = self.itemWidget(self.item(i))
             if item:
-                mod_dict[item.json_data["packageId"]] = item.json_data  # Assume packageId always there
+                mod_dict[
+                    item.json_data["packageId"]
+                ] = item.json_data  # Assume packageId always there
         logger.info(f"Collected json data for {len(mod_dict)} mods")
         return mod_dict
 

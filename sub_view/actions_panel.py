@@ -8,7 +8,7 @@ from PySide2.QtWidgets import *
 logger = logging.getLogger(__name__)
 
 
-class Actions(QObject):
+class Actions(QWidget):
     """
     This class controls the layout and functionality for the action panel,
     the panel on the right side of the GUI (strip with the main
@@ -73,6 +73,8 @@ class Actions(QObject):
 
         self.run_button = QPushButton("Run")
         self.run_button.clicked.connect(partial(self.actions_signal.emit, "run"))
+        self.run_button.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.run_button.customContextMenuRequested.connect(self.contextMenuEvent)
 
         # Add buttons to sub-layouts and sub-layouts to the main layout.
         self.top_panel.addWidget(self.refresh_button)
@@ -89,3 +91,11 @@ class Actions(QObject):
     @property
     def panel(self):
         return self._panel
+
+    def contextMenuEvent(self, point):
+        contextMenu = QMenu(self)
+        set_run_args = contextMenu.addAction("Edit Run Args")
+        set_run_args.triggered.connect(
+            partial(self.actions_signal.emit, "edit_run_args")
+        )
+        action = contextMenu.exec_(self.run_button.mapToGlobal(point))

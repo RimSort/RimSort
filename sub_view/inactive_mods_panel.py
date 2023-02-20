@@ -51,9 +51,6 @@ class InactiveModList:
         self.panel.addWidget(self.inactive_mods_search)
         self.panel.addWidget(self.inactive_mods_list)
 
-        # Tracking mod list
-        self.tracking_active_mods = {}
-
         # Adding Completer.
         # self.completer = QCompleter(self.inactive_mods_list.get_list_items())
         # self.completer.setCaseSensitivity(Qt.CaseInsensitive)
@@ -63,44 +60,37 @@ class InactiveModList:
         self.inactive_mods_list.list_update_signal.connect(self.change_mod_num_display)
 
         logger.info("Finished InactiveModList initialization")
-    
-    def recreate_mod_list(self, mods: Dict[str, Any]) -> None:
-        """
-        Indicates that a new tracking mod list dist should
-        be created and attached to this class. This tracking dict
-        should keep track of: the mods that are included in the
-        actual child mod list, in ORDER. Directly supports the search
-        function as a fall-back 'full' mod list.
-        
-        However, note that the inactive mod list doesn't really need
-        to use order for anything since dependencies/incompatibilities etc
-        aren't shown for the inactive mods panel.
-
-        Then, calls function on child mod list to actually clear mods
-        and add new ones from the dict.
-
-        :param mods: dict of mod data
-        """
-        logger.info("Externally re-creating inactive tracking mod list")
-        self.tracking_active_mods = mods
-        self.inactive_mods_list.recreate_mod_list(mods)
 
     def change_mod_num_display(self, count: str) -> None:
         if count != "drop":
             logger.info(f"Inactive mod count changed to: {count}")
-            self.num_mods.setText(f"Inactive [{count}]")
+            # self.num_mods.setText(f"Inactive [{count}]")
+            self.update_count(self.inactive_mods_list.get_widgets_and_items())
 
     def clear_inactive_mods_search(self):
-         print("cleared")
-        # self.inactive_mods_search.setText("")
-        # for mod_item in self.inactive_mods_list.get_list_items():
-        #     mod_item.show()
+        self.inactive_mods_search.setText("")
+        self.inactive_mods_search.clearFocus()
 
     def signal_inactive_mods_search(self, pattern: str) -> None:
-        print(pattern)
-        # if pattern == "":
-        #     self.clear_inactive_mods_search()
-        # else:
-        #     for mod_item in self.inactive_mods_list.get_list_items():
-        #         if not pattern.lower() in mod_item.name.lower():
-        #             mod_item.hide()
+        wni = self.inactive_mods_list.get_widgets_and_items()
+        for widget, item in wni:
+            if pattern and not pattern.lower() in widget.json_data["name"].lower():
+                item.setHidden(True)
+            else:
+                item.setHidden(False)
+        self.update_count(wni)
+
+    def update_count(self, widgets_and_items):
+        num_hidden = 0
+        num_visible = 0
+        for w, i in widgets_and_items:
+            if i.isHidden():
+                num_hidden += 1
+            else:
+                num_visible += 1
+        if self.inactive_mods_search.text():
+            self.num_mods.setText(
+                f"Inactive [{num_visible}/{num_hidden + num_visible}]"
+            )
+        else:
+            self.num_mods.setText(f"Inactive [{num_hidden + num_visible}]")

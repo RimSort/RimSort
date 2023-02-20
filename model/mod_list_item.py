@@ -99,17 +99,3 @@ class ModListItemInner(QWidget):
             logger.error(
                 f"No type found for ModListItemInner with package id {self.json_data.get('packageId')}"
             )
-
-    def show(self):  # TODO: deprecate
-        """
-        Show this widget, and all child widgets.
-        """
-        for w in [self, self.main_label, self.mod_source_icon]:
-            w.setVisible(True)
-
-    def hide(self):  # TODO: deprecate
-        """
-        Hide this widget, and all child widgets.
-        """
-        for w in [self, self.main_label, self.mod_source_icon]:
-            w.setVisible(False)

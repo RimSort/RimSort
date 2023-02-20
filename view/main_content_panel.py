@@ -68,8 +68,6 @@ class MainContent:
 
         # SIGNALS AND SLOTS
         self.actions_panel.actions_signal.connect(self.actions_slot)  # Actions
-        self.actions_panel.run_button.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.actions_panel.run_button.customContextMenuRequested.connect(self._do_edit_run_args)
 
         self.active_mods_panel.active_mods_list.mod_info_signal.connect(
             self.mod_list_slot
@@ -114,7 +112,6 @@ class MainContent:
         self.mod_info_panel.display_mod_info(
             self.all_mods_with_dependencies[package_id]
         )
-
 
     def refresh_cache_calculations(self) -> None:
         """
@@ -240,7 +237,11 @@ class MainContent:
         if action == "import":
             self._do_import()
         if action == "run":
-            self._do_platform_specific_game_launch(self.game_configuration.run_arguments)
+            self._do_platform_specific_game_launch(
+                self.game_configuration.run_arguments
+            )
+        if action == "edit_run_args":
+            self._do_edit_run_args()
 
     def _do_edit_run_args(self):
         """
@@ -251,14 +252,16 @@ class MainContent:
         """
         args, ok = QInputDialog().getText(
             None,
-            'Edit run arguments:', 
-            'Enter the arguments you would like to pass to the Rimworld executable:',
+            "Edit run arguments:",
+            "Enter the arguments you would like to pass to the Rimworld executable:",
             QLineEdit.Normal,
-            self.game_configuration.run_arguments
+            self.game_configuration.run_arguments,
         )
         if ok:
             self.game_configuration.run_arguments = args
-            self.game_configuration.update_persistent_storage("runArgs", self.game_configuration.run_arguments)
+            self.game_configuration.update_persistent_storage(
+                "runArgs", self.game_configuration.run_arguments
+            )
 
     def _do_platform_specific_game_launch(self, args) -> None:
         """
@@ -278,8 +281,14 @@ class MainContent:
                     f"Path to game executable for MacOS generated: {executable_path}"
                 )
                 if os.path.exists(executable_path):
-                    logger.info("Launching the game with subprocess Popen: `" + executable_path + "` with args: `" + args + "`")
-                    subprocess.Popen(["open", executable_path, args])
+                    logger.info(
+                        "Launching the game with subprocess Popen: `"
+                        + executable_path
+                        + "` with args: `"
+                        + args
+                        + "`"
+                    )
+                    subprocess.Popen(["open", executable_path, "--args", args])
                 else:
                     logger.warning("The game executable path does not exist")
                     show_warning(
@@ -302,8 +311,16 @@ class MainContent:
                         f"Path to game executable for Linux generated: {executable_path}"
                     )
                     if os.path.exists(executable_path):
-                        logger.info("Launching the game with subprocess Popen: `" + executable_path + "` with args: `" + args + "`")
-                        p = subprocess.Popen([executable_path, args], start_new_session=True)
+                        logger.info(
+                            "Launching the game with subprocess Popen: `"
+                            + executable_path
+                            + "` with args: `"
+                            + args
+                            + "`"
+                        )
+                        p = subprocess.Popen(
+                            [executable_path, args], start_new_session=True
+                        )
                     else:
                         logger.warning("The game executable path does not exist")
                         show_warning(
@@ -322,7 +339,13 @@ class MainContent:
                         f"Path to game executable for Windows generated: {executable_path}"
                     )
                     if os.path.exists(executable_path):
-                        logger.info("Launching the game with subprocess Popen: `" + executable_path + "` with args: `" + args + "`")
+                        logger.info(
+                            "Launching the game with subprocess Popen: `"
+                            + executable_path
+                            + "` with args: `"
+                            + args
+                            + "`"
+                        )
                         p = subprocess.Popen(
                             [executable_path, args],
                             creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
@@ -363,14 +386,16 @@ class MainContent:
         logger.info(
             f"Inserting mod data into active [{len(active_mods)}] and inactive [{len(inactive_mods)}] mod lists"
         )
-        self.active_mods_panel.recreate_mod_list(active_mods)
-        self.inactive_mods_panel.recreate_mod_list(inactive_mods)
-        
+        self.active_mods_panel.active_mods_list.recreate_mod_list(active_mods)
+        self.inactive_mods_panel.inactive_mods_list.recreate_mod_list(inactive_mods)
+
         logger.info(
             f"Finished inserting mod data into active [{len(active_mods)}] and inactive [{len(inactive_mods)}] mod lists"
         )
 
     def _do_refresh(self) -> None:
+        self.active_mods_panel.clear_active_mods_search()
+        self.inactive_mods_panel.clear_inactive_mods_search()
         if self.game_configuration.check_if_essential_paths_are_set():
             # Run expensive calculations to set cache data
             self.refresh_cache_calculations()
@@ -388,6 +413,8 @@ class MainContent:
         Method to clear all the non-base, non-DLC mods from the active
         list widget and put them all into the inactive list widget.
         """
+        self.active_mods_panel.clear_active_mods_search()
+        self.inactive_mods_panel.clear_inactive_mods_search()
         active_mods_data, inactive_mods_data = get_active_inactive_mods(
             self.game_configuration.get_config_path(),
             self.all_mods_with_dependencies,
@@ -414,6 +441,8 @@ class MainContent:
         # Get the live list of active and inactive mods. This is because the user
         # will likely sort before saving.
         logger.info("Starting sorting mods")
+        self.active_mods_panel.clear_active_mods_search()
+        self.inactive_mods_panel.clear_inactive_mods_search()
         active_mods = self.active_mods_panel.active_mods_list.get_list_items_by_dict()
         active_mod_ids = list(active_mods.keys())
         inactive_mods = (
@@ -488,7 +517,7 @@ class MainContent:
         for package_id, mod_data in reordered_tier_three_sorted_with_data.items():
             combined_mods[package_id] = mod_data
 
-        logger.info("Finished combing all tiers of mods. Inserting into mod lists")
+        logger.info("Finished combining all tiers of mods. Inserting into mod lists")
         self._insert_data_into_lists(combined_mods, inactive_mods)
 
     def _do_import(self) -> None:
@@ -502,6 +531,8 @@ class MainContent:
         )
         logger.info(f"Selected path: {file_path[0]}")
         if file_path[0]:
+            self.active_mods_panel.clear_active_mods_search()
+            self.inactive_mods_panel.clear_inactive_mods_search()
             logger.info(f"Trying to import mods list from XML: {file_path}")
             active_mods_data, inactive_mods_data = get_active_inactive_mods(
                 file_path[0], self.all_mods_with_dependencies
@@ -574,6 +605,8 @@ class MainContent:
         Method to restore the mod lists to the last saved state.
         """
         if self.active_mods_data_restore_state and self.active_mods_data_restore_state:
+            self.active_mods_panel.clear_active_mods_search()
+            self.inactive_mods_panel.clear_inactive_mods_search()
             logger.info(
                 f"Restoring cached mod lists with active list [{len(self.active_mods_data_restore_state)}] and inactive list [{len(self.inactive_mods_data_restore_state)}]"
             )

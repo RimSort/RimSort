@@ -15,6 +15,10 @@ from view.main_content_panel import MainContent
 from view.status_panel import Status
 
 logging_file_path = Path(os.path.join(os.path.dirname(__file__), "rs_log.log"))
+
+# Delete previous log file
+logging_file_path.unlink(missing_ok=True)
+
 logging.basicConfig(
     format="[%(levelname)s][%(asctime)s][%(process)d][%(name)s][%(funcName)s][%(lineno)d] : %(message)s",
     filename=logging_file_path,

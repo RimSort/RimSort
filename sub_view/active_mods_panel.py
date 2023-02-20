@@ -5,8 +5,6 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
-from sortedcontainers import SortedList
-
 from model.mod_list import ModListWidget
 
 logger = logging.getLogger(__name__)
@@ -53,18 +51,22 @@ class ActiveModList(QWidget):
         self.errors_summary_frame = QFrame()
         self.errors_summary_frame.setObjectName("errorFrame")
         self.errors_summary_layout = QHBoxLayout()
-        self.errors_summary_layout.setContentsMargins(0,0,0,0)
+        self.errors_summary_layout.setContentsMargins(0, 0, 0, 0)
         self.errors_summary_layout.setSpacing(2)
         self.warnings_icon = QLabel()
         self.warnings_icon.setPixmap(
             self.style().standardIcon(QStyle.SP_MessageBoxWarning).pixmap(QSize(20, 20))
         )
         self.warnings_text = QLabel("0 warnings(s)")
+        self.warnings_text.setObjectName("summaryValue")
         self.errors_icon = QLabel()
         self.errors_icon.setPixmap(
-            self.style().standardIcon(QStyle.SP_MessageBoxCritical).pixmap(QSize(20, 20))
+            self.style()
+            .standardIcon(QStyle.SP_MessageBoxCritical)
+            .pixmap(QSize(20, 20))
         )
         self.errors_text = QLabel("0 error(s)")
+        self.errors_text.setObjectName("summaryValue")
 
         self.warnings_layout = QHBoxLayout()
         self.warnings_layout.addWidget(self.warnings_icon, 1)
@@ -86,9 +88,6 @@ class ActiveModList(QWidget):
         self.panel.addWidget(self.active_mods_list, 97)
         self.panel.addWidget(self.errors_summary_frame, 1)
 
-        # Tracking mod list
-        self.tracking_active_mods = {}
-
         # Adding Completer.
         # self.completer = QCompleter(self.active_mods_list.get_list_items())
         # self.completer.setCaseSensitivity(Qt.CaseInsensitive)
@@ -101,23 +100,6 @@ class ActiveModList(QWidget):
 
         logger.info("Finished ActiveModList initialization")
 
-    def recreate_mod_list(self, mods: Dict[str, Any]) -> None:
-        """
-        Indicates that a new tracking mod list dist should
-        be created and attached to this class. This tracking dict
-        should keep track of: the mods that are included in the
-        actual child mod list, in ORDER. Directly supports the search
-        function as a fall-back 'full' mod list.
-
-        Then, calls function on child mod list to actually clear mods
-        and add new ones from the dict.
-
-        :param mods: dict of mod data
-        """
-        logger.info("Externally re-creating active tracking mod list")
-        self.tracking_active_mods = mods  # TODO unused at the moment, maybe don't need
-        self.active_mods_list.recreate_mod_list(mods)
-
     def recalculate_internal_list_errors(self):
         """
         Whenever the active mod list has items added to it,
@@ -127,6 +109,7 @@ class ActiveModList(QWidget):
         # TODO: optimization needed. This function is called n times for
         # inserting n mods (e.g. refresh action). It's also called twice when
         # moving a mod from inactive to active.
+        logger.info("Recalculating internal list errors")
         active_mods = self.active_mods_list.get_list_items_by_dict()
         package_ids_set = set(
             active_mods.keys()
@@ -175,22 +158,40 @@ class ActiveModList(QWidget):
             if mod_data.get("loadTheseBefore"):
                 current_mod_index = package_id_to_index[package_id]
                 for load_this_before in mod_data["loadTheseBefore"]:
-                    # Note: we cannot use package_id_to_index.get(load_this_before) as 0 is falsy but valid
-                    if load_this_before in package_id_to_index:
-                        if current_mod_index <= package_id_to_index[load_this_before]:
-                            package_id_to_errors[package_id][
-                                "load_before_violations"
-                            ].add(load_this_before)
+                    if not isinstance(load_this_before, tuple):
+                        logger.error(
+                            f"Expected load order rule to be a tuple: [{load_this_before}]"
+                        )
+                    # Only if explict_bool = True then we show error
+                    if load_this_before[1]:
+                        # Note: we cannot use package_id_to_index.get(load_this_before) as 0 is falsy but valid
+                        if load_this_before[0] in package_id_to_index:
+                            if (
+                                current_mod_index
+                                <= package_id_to_index[load_this_before[0]]
+                            ):
+                                package_id_to_errors[package_id][
+                                    "load_before_violations"
+                                ].add(load_this_before[0])
 
             # Check loadTheseAfter
             if mod_data.get("loadTheseAfter"):
                 current_mod_index = package_id_to_index[package_id]
                 for load_this_after in mod_data["loadTheseAfter"]:
-                    if load_this_after in package_id_to_index:
-                        if current_mod_index >= package_id_to_index[load_this_after]:
-                            package_id_to_errors[package_id][
-                                "load_after_violations"
-                            ].add(load_this_after)
+                    if not isinstance(load_this_after, tuple):
+                        logger.error(
+                            f"Expected load order rule to be a tuple: [{load_this_after}]"
+                        )
+                    # Only if explict_bool = True then we show error
+                    if load_this_after[1]:
+                        if load_this_after[0] in package_id_to_index:
+                            if (
+                                current_mod_index
+                                >= package_id_to_index[load_this_after[0]]
+                            ):
+                                package_id_to_errors[package_id][
+                                    "load_after_violations"
+                                ].add(load_this_after[0])
 
             # Consolidate results
             tool_tip_text = ""
@@ -228,7 +229,7 @@ class ActiveModList(QWidget):
                 for load_after_id in load_after_violations:
                     load_after_name = active_mods[load_after_id]["name"]
                     tool_tip_text += f"\n  * {load_after_name}"
-            
+
             # Set icon if necessary
             current_package_index = package_id_to_index[package_id]
             item_widget_at_index = self.active_mods_list.get_item_widget_at_index(
@@ -243,7 +244,7 @@ class ActiveModList(QWidget):
                 else:
                     item_widget_at_index.warning_icon_label.setHidden(True)
                     item_widget_at_index.warning_icon_label.setToolTip("")
-            
+
             # Add to error/warnings summary if necessary
             if missing_dependencies or conflicting_incompatibilities:
                 num_errors += 1
@@ -255,7 +256,7 @@ class ActiveModList(QWidget):
                 total_warning_text += f"\n\n{active_mods[package_id]['name']}"
                 total_warning_text += "\n============================="
                 total_warning_text += tool_tip_text
-        
+
         if total_error_text or total_warning_text or num_errors or num_warnings:
             self.errors_summary_frame.setHidden(False)
             self.warnings_text.setText(f"{num_warnings} warnings(s)")
@@ -272,29 +273,42 @@ class ActiveModList(QWidget):
                 self.errors_icon.setToolTip("")
             if total_warning_text:
                 self.warnings_icon.setToolTip("")
-
-            
+        logger.info("Finished recalculating internal list errors")
 
     def handle_internal_mod_list_updated(self, count: str) -> None:
         # 'drop' indicates that the update was just a drag and drop
         # within the list.
         if count != "drop":
             logger.info(f"Active mod count changed to: {count}")
-            self.num_mods.setText(f"Active [{count}]")
+            # self.num_mods.setText(f"Active [{count}]")
+            self.update_count(self.active_mods_list.get_widgets_and_items())
 
         self.recalculate_internal_list_errors()
 
     def clear_active_mods_search(self):
-        print("cleared")
-        # self.active_mods_search.setText("")
-        # for mod_item in self.active_mods_list.get_list_items():
-        #     mod_item.show()
+        self.active_mods_search.setText("")
+        self.active_mods_search.clearFocus()
 
     def signal_active_mods_search(self, pattern: str) -> None:
-        print(pattern)
-        # if pattern == "":
-        #     self.clear_active_mods_search()
-        # else:
-        #     for mod_item in self.active_mods_list.get_list_items():
-        #         if not pattern.lower() in mod_item.name.lower():
-        #             mod_item.hide()
+        wni = self.active_mods_list.get_widgets_and_items()
+        for widget, item in wni:
+            if pattern and not pattern.lower() in widget.json_data["name"].lower():
+                item.setHidden(True)
+            else:
+                item.setHidden(False)
+        self.update_count(wni)
+
+    def update_count(self, widgets_and_items):
+        num_hidden = 0
+        num_visible = 0
+        for w, i in widgets_and_items:
+            if i.isHidden():
+                num_hidden += 1
+            else:
+                num_visible += 1
+        if self.active_mods_search.text():
+            self.num_mods.setText(
+                f"Active [{num_visible}/{num_hidden + num_visible}]"
+            )
+        else:
+            self.num_mods.setText(f"Active [{num_hidden + num_visible}]")
