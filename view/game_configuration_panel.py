@@ -190,9 +190,7 @@ class GameConfiguration(QObject):
         self.local_folder_select_button.clicked.connect(self.set_local_folder)
         self.local_folder_select_button.setObjectName("RightButton")
         self.local_folder_select_button.setToolTip(
-            "Set the Local Mods directory.\n"
-            "On Mac, set this to the game install directory to use the\n"
-            "default game install directory's Mods folder."
+            "Set the Local Mods directory."
         )
 
         # WIDGETS INTO CONTAINER LAYOUTS
@@ -685,17 +683,6 @@ class GameConfiguration(QObject):
                 self.update_persistent_storage("game_folder", os_paths[0])
             else:
                 logger.info("Value already set for game folder. Passing")
-            if system_name == "Darwin":
-                logger.info("Additionally, setting local mods folder on MacOS")
-                # On mac the Mods folder is the Rimworld folder
-                if not self.local_folder_line.text():
-                    logger.info(
-                        "No value set currently for local mods folder. Overwriting with autodetected path"
-                    )
-                    self.local_folder_line.setText(os_paths[0])
-                    self.update_persistent_storage("local_folder", os_paths[0])
-                else:
-                    logger.info("Value already set for local mods folder. Passing")
         else:
             logger.warning(
                 f"Autodetected game folder path does not exist: {os_paths[0]}"
@@ -734,24 +721,27 @@ class GameConfiguration(QObject):
             )
 
         # Checking for an existing Rimworld/Mods folder
-        if system_name != "Darwin":
+        rimworld_mods_path = ""
+        if system_name == "Darwin":
+            rimworld_mods_path = os.path.join(os_paths[0], "RimWorldMac.app", "Mods")
+        else:
             rimworld_mods_path = os.path.join(os_paths[0], "Mods")
-            if os.path.exists(rimworld_mods_path):
+        if os.path.exists(rimworld_mods_path):
+            logger.info(
+                f"Autodetected local mods folder path exists: {rimworld_mods_path}"
+            )
+            if not self.local_folder_line.text():
                 logger.info(
-                    f"Autodetected local mods folder path exists: {rimworld_mods_path}"
+                    "No value set currently for local mods folder. Overwriting with autodetected path"
                 )
-                if not self.local_folder_line.text():
-                    logger.info(
-                        "No value set currently for local mods folder. Overwriting with autodetected path"
-                    )
-                    self.local_folder_line.setText(rimworld_mods_path)
-                    self.update_persistent_storage("local_folder", rimworld_mods_path)
-                else:
-                    logger.info("Value already set for local mods folder. Passing")
+                self.local_folder_line.setText(rimworld_mods_path)
+                self.update_persistent_storage("local_folder", rimworld_mods_path)
             else:
-                logger.warning(
-                    f"Autodetected game folder path does not exist: {rimworld_mods_path}"
-                )
+                logger.info("Value already set for local mods folder. Passing")
+        else:
+            logger.warning(
+                f"Autodetected game folder path does not exist: {rimworld_mods_path}"
+            )
 
     def get_game_folder_path(self):
         logger.info(
