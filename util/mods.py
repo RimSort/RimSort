@@ -186,7 +186,7 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
     return mods
 
 
-def get_installed_expansions(game_path: str) -> Dict[str, Any]:
+def get_installed_expansions(game_path: str, game_version: str) -> Dict[str, Any]:
     """
     Given a path to the game's install folder, return a dict
     containing data for all of the installed expansions
@@ -216,15 +216,20 @@ def get_installed_expansions(game_path: str) -> Dict[str, Any]:
     # Base game and expansion About.xml do not contain name, so these
     # must be manually added
     logger.info("Manually populating names for BASE/EXPANSION data")
-    for package_id in mod_data.keys():
+    for package_id, data in mod_data.items():
         if package_id == "ludeon.rimworld":
-            mod_data[package_id]["name"] = "Core (Base game)"
-        if package_id == "ludeon.rimworld.royalty":
-            mod_data[package_id]["name"] = "Royalty (DLC #1)"
-        if package_id == "ludeon.rimworld.ideology":
-            mod_data[package_id]["name"] = "Ideology (DLC #2)"
-        if package_id == "ludeon.rimworld.biotech":
-            mod_data[package_id]["name"] = "Biotech (DLC #3)"
+            data["name"] = "Core (Base game)"
+        elif package_id == "ludeon.rimworld.royalty":
+            data["name"] = "Royalty (DLC #1)"
+        elif package_id == "ludeon.rimworld.ideology":
+            data["name"] = "Ideology (DLC #2)"
+        elif package_id == "ludeon.rimworld.biotech":
+            data["name"] = "Biotech (DLC #3)"
+        else:
+            logger.error(
+                f"An unknown mod has been found in the expansions folder: {package_id} {data}"
+            )
+        data["supportedVersions"] = {"li": game_version}
     logger.info(
         "Finished getting installed expansions, returning final BASE/EXPANSIONS data now"
     )
@@ -885,7 +890,7 @@ def add_load_rule_to_mod(
                     logger.error(
                         f"Load rule is not an expected str or dict: {dependency}"
                     )
-                
+
                 if dependency_id:
                     if dependency_id in all_mods:
                         mod_data[explicit_key].add((dependency_id, True))

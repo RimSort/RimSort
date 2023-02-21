@@ -85,6 +85,8 @@ class MainContent:
         self.active_mods_data_restore_state = []
         self.inactive_mods_data_restore_state = []
 
+        self.game_version = ""
+
         # Check if paths have been set
         if self.game_configuration.check_if_essential_paths_are_set():
             # Run expensive calculations to set cache data
@@ -125,16 +127,18 @@ class MainContent:
         but also after ModsConfig.xml path has been changed).
         """
         logger.info("Refreshing cache calculations")
-        # Get and cache installed base game / DLC data
-        self.expansions = get_installed_expansions(
-            self.game_configuration.get_game_folder_path()
-        )
 
         # Get & set Rimworld version string
         self.game_version = get_game_version(
             self.game_configuration.get_game_folder_path()
         )
         self.game_configuration.game_version_line.setText(self.game_version)
+        self.active_mods_panel.game_version = self.game_version
+
+        # Get and cache installed base game / DLC data
+        self.expansions = get_installed_expansions(
+            self.game_configuration.get_game_folder_path(), self.game_version
+        )
 
         # Get and cache installed local/custom mods
         self.local_mods = get_local_mods(
