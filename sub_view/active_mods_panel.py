@@ -94,6 +94,8 @@ class ActiveModList(QWidget):
         # self.active_mods_search.setCompleter(self.completer)
 
         self.game_version = ""
+        self.all_mods = {}
+        self.steam_package_id_to_name = {}
 
         # Connect signals and slots
         self.active_mods_list.list_update_signal.connect(
@@ -243,7 +245,19 @@ class ActiveModList(QWidget):
             if missing_dependencies:
                 error_tool_tip_text += "\n\nMissing Dependencies:"
                 for dependency_id in missing_dependencies:
-                    error_tool_tip_text += f"\n  * {dependency_id}"
+                    # If dependency is installed, we can get its name
+                    if dependency_id in self.all_mods:
+                        error_tool_tip_text += (
+                            f"\n  * {self.all_mods[dependency_id]['name']}"
+                        )
+                    # Otherwise, we might be able to get it from RimPy Steam DB
+                    elif dependency_id in self.steam_package_id_to_name:
+                        error_tool_tip_text += (
+                            f"\n  * {self.steam_package_id_to_name[dependency_id]}"
+                        )
+                    # Other-otherwise, just use the id
+                    else:
+                        error_tool_tip_text += f"\n  * {dependency_id}"
 
             conflicting_incompatibilities = package_id_to_errors[package_id][
                 "conflicting_incompatibilities"
@@ -271,10 +285,8 @@ class ActiveModList(QWidget):
                 for load_after_id in load_after_violations:
                     load_after_name = active_mods[load_after_id]["name"]
                     warning_tool_tip_text += f"\n  * {load_after_name}"
-            
-            version_mismatch = package_id_to_errors[package_id][
-                "version_mismatch"
-            ]
+
+            version_mismatch = package_id_to_errors[package_id]["version_mismatch"]
             if version_mismatch:
                 warning_tool_tip_text += "\n\nMod and Game Version Mismatch"
 

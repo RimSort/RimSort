@@ -380,7 +380,7 @@ def get_dependencies_for_mods(
     mods: Dict[str, Any],
     steam_db_rules: Dict[str, Any],
     community_rules: Dict[str, Any],
-) -> Dict[str, Any]:
+) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
     Iterate through each workshop mod + known expansion + base game and add new key-values
     describing its dependencies (what it should be loaded after), and incompatibilities
@@ -570,25 +570,31 @@ def get_dependencies_for_mods(
 
     # RimPy's references depdencies based on publisher ID, not package ID
     # TODO: optimization: maybe everything could be based off publisher ID
+    info_from_steam_package_id_to_name = {}
     if steam_db_rules:
         tracking_dict = {}
         steam_id_to_package_id = {}
 
         # Iterate through all workshop items in the Steam DB.
         for folder_id, mod_data in steam_db_rules.items():
-            db_package_id = mod_data["packageId"]
+            db_package_id = mod_data["packageId"].lower()
+
             # Record the Steam ID => package_id
-            steam_id_to_package_id[folder_id] = db_package_id.lower()
+            steam_id_to_package_id[folder_id] = db_package_id
+
+            # Also record package_ids to names (use in tooltips)
+            info_from_steam_package_id_to_name[db_package_id] = mod_data["name"]
+
             # If the package_id is in all_mods...
-            if db_package_id.lower() in all_mods:
+            if db_package_id in all_mods:
                 # Iterate through each dependency (Steam ID) listed on Steam
                 for dependency_folder_id, steam_dep_data in mod_data[
                     "dependencies"
                 ].items():
                     if db_package_id not in tracking_dict:
-                        tracking_dict[db_package_id.lower()] = set()
+                        tracking_dict[db_package_id] = set()
                     # Add Steam ID to dependencies of mod
-                    tracking_dict[db_package_id.lower()].add(dependency_folder_id)
+                    tracking_dict[db_package_id].add(dependency_folder_id)
 
         # For each mod that exists in all_mods -> dependencies (in Steam ID form)
         for installed_mod_id, set_of_dependency_steam_ids in tracking_dict.items():
@@ -663,7 +669,7 @@ def get_dependencies_for_mods(
         f"Total number of incompatibilities: {_get_num_dependencies(all_mods, 'incompatibilities')}"
     )
     logger.info("Returing all mods now")
-    return all_mods
+    return all_mods, info_from_steam_package_id_to_name
 
 
 def _get_num_dependencies(all_mods: Dict[str, Any], key_name: str) -> None:

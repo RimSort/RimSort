@@ -179,12 +179,23 @@ class MainContent:
             )
 
         # Calculate and cache dependencies for ALL mods
-        self.all_mods_with_dependencies = get_dependencies_for_mods(
+        (
+            self.all_mods_with_dependencies,
+            self.info_from_steam_package_id_to_name,
+        ) = get_dependencies_for_mods(
             self.expansions,
             mods,
             self.steam_db_rules,
             self.community_rules,  # TODO add user defined customRules from future customRules.json
         )
+
+        # Feed all_mods and Steam DB info to Active Mods list to surface
+        # names instead of package_ids when able
+        self.active_mods_panel.all_mods = self.all_mods_with_dependencies
+        self.active_mods_panel.steam_package_id_to_name = (
+            self.info_from_steam_package_id_to_name
+        )
+
         logger.info("Finished refreshing cache calculations")
 
     def repopulate_lists(self, is_initial: bool = False) -> None:
