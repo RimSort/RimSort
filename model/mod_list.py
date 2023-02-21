@@ -17,8 +17,8 @@ class ModListWidget(QListWidget):
     their own lists or moved from one list to another.
     """
 
-    mod_list_signal = Signal(str)
-    list_change_signal = Signal(str)
+    mod_info_signal = Signal(str)
+    list_update_signal = Signal(str)
 
     def __init__(self) -> None:
         """
@@ -89,7 +89,7 @@ class ModListWidget(QListWidget):
                 widget = ModListItemInner(data, self.width())
                 item.setSizeHint(widget.sizeHint())
                 self.setItemWidget(item, widget)
-        self.list_change_signal.emit(str(self.count()))
+        self.list_update_signal.emit(str(self.count()))
 
     def handle_rows_removed(self, parent: QModelIndex, first: int, last: int) -> None:
         """
@@ -101,17 +101,22 @@ class ModListWidget(QListWidget):
         :param first: index of first item removed (not used)
         :param last: index of last item removed (not used)
         """
-        self.list_change_signal.emit(str(self.count()))
+        self.list_update_signal.emit(str(self.count()))
 
-    def get_list_items(self) -> List[ModListItemInner]:
-        """
-        Get a list of all row item's widgets. Note that widgets actually
-        hold the mod data, not the list row items.
+    def dropEvent(self, event: QDropEvent) -> None:
+        ret = super().dropEvent(event)
+        self.list_update_signal.emit("drop")
+        return ret
 
-        :return: a list of mod item widgets
-        """
-        logger.info("Returning a list of all mod items as item widgets")
-        return [self.itemWidget(self.item(i)) for i in range(self.count())]
+    def get_item_widget_at_index(self, idx: int) -> ModListItemInner:
+        item = self.item(idx)
+        if item:
+            return self.itemWidget(item)
+
+    def get_widgets_and_items(self):
+        return [
+            (self.itemWidget(self.item(i)), self.item(i)) for i in range(self.count())
+        ]
 
     def get_list_items_by_dict(self) -> Dict[str, Any]:
         """
@@ -123,8 +128,11 @@ class ModListWidget(QListWidget):
         logger.info("Returning a list of all mod items by json data")
         mod_dict = {}
         for i in range(self.count()):
-            item = self.itemWidget(self.item(i)).json_data
-            mod_dict[item["packageId"]] = item
+            item = self.itemWidget(self.item(i))
+            if item:
+                mod_dict[
+                    item.json_data["packageId"]
+                ] = item.json_data  # Assume packageId always there
         logger.info(f"Collected json data for {len(mod_dict)} mods")
         return mod_dict
 
@@ -138,4 +146,4 @@ class ModListWidget(QListWidget):
 
     def mod_clicked(self, item: QListWidgetItem) -> None:
         """Method to handle clicking on a row"""
-        self.mod_list_signal.emit(item.data(Qt.UserRole)["packageId"])
+        self.mod_info_signal.emit(item.data(Qt.UserRole)["packageId"])

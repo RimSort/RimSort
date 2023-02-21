@@ -29,7 +29,7 @@ class MainContent:
     panel of the GUI, containing the mod information display, inactive and
     active mod lists, and the action button panel. Additionally, it acts
     as the main temporary datastore of the app, caching workshop mod information
-    and their dependencies. <-- TODO (strip functionality from util files)
+    and their dependencies.
     """
 
     def __init__(self, game_configuration: GameConfiguration) -> None:
@@ -68,10 +68,11 @@ class MainContent:
 
         # SIGNALS AND SLOTS
         self.actions_panel.actions_signal.connect(self.actions_slot)  # Actions
-        self.active_mods_panel.active_mods_list.mod_list_signal.connect(
+
+        self.active_mods_panel.active_mods_list.mod_info_signal.connect(
             self.mod_list_slot
         )
-        self.inactive_mods_panel.inactive_mods_list.mod_list_signal.connect(
+        self.inactive_mods_panel.inactive_mods_list.mod_info_signal.connect(
             self.mod_list_slot
         )
 
@@ -112,98 +113,6 @@ class MainContent:
             self.all_mods_with_dependencies[package_id]
         )
 
-    def platform_specific_game_launch(self, args) -> None:
-        """
-        This function starts the Rimworld game process in it's own subprocess,
-        by launching the executable found in the configured game directory.
-
-        :param game_path: path to Rimworld game
-        """
-        logger.info("USER ACTION: launching the game")
-        game_path = self.game_configuration.get_game_folder_path()
-        logger.info(f"Attempting to find the game in the game folder {game_path}")
-        if game_path:
-            system_name = platform.system()
-            if system_name == "Darwin":
-                executable_path = os.path.join(game_path, "RimWorldMac.app")
-                logger.info(
-                    f"Path to game executable for MacOS generated: {executable_path}"
-                )
-                if os.path.exists(executable_path):
-                    logger.info("Launching the game with subprocess Popen")
-                    subprocess.Popen(["open", executable_path])
-                else:
-                    logger.info("The game executable path does not exist")
-                    show_warning(
-                        text="Error Starting the Game",
-                        information=(
-                            "RimSort could not start RimWorld as the game executable does "
-                            f"not exist at the specified path: {executable_path}. Please check "
-                            "that this directory is correct and the RimWorld game executable "
-                            "exists in it."
-                        ),
-                    )
-            elif system_name == "Linux" or "Windows":
-                try:
-                    logger.info("Trying to create a new subprocess process group")
-                    subprocess.CREATE_NEW_PROCESS_GROUP
-                except AttributeError:
-                    # not Windows, so assume POSIX; if not, we'll get a usable exception
-                    executable_path = os.path.join(game_path, "RimWorldLinux")
-                    logger.info(
-                        f"Path to game executable for Linux generated: {executable_path}"
-                    )
-                    if os.path.exists(executable_path):
-                        logger.info("Launching the game with subprocess Popen")
-                        p = subprocess.Popen([executable_path], start_new_session=True)
-                    else:
-                        logger.info("The game executable path does not exist")
-                        show_warning(
-                            text="Error Starting the Game",
-                            information=(
-                                "RimSort could not start RimWorld as the game executable does "
-                                f"not exist at the specified path: {executable_path}. Please check "
-                                "that this directory is correct and the RimWorld game executable "
-                                "exists in it."
-                            ),
-                        )
-                else:
-                    # Windows
-                    executable_path = os.path.join(game_path, "RimWorldWin64.exe")
-                    logger.info(
-                        f"Path to game executable for Windows generated: {executable_path}"
-                    )
-                    if os.path.exists(executable_path):
-                        logger.info("Launching the game with subprocess Popen")
-                        p = subprocess.Popen(
-                            [executable_path],
-                            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
-                        )
-                    else:
-                        logger.info("The game executable path does not exist")
-                        show_warning(
-                            text="Error Starting the Game",
-                            information=(
-                                "RimSort could not start RimWorld as the game executable does "
-                                f"not exist at the specified path: {executable_path}. Please check "
-                                "that this directory is correct and the RimWorld game executable "
-                                "exists in it."
-                            ),
-                        )
-            else:
-                logger.error("Unable to launch the game on an unknown system")
-                print("Unknown System")  # TODO
-        else:
-            logger.error("The path to the game folder is empty")
-            show_warning(
-                text="Error Starting the Game",
-                information=(
-                    "RimSort could not start RimWorld as the game folder is empty or invalid: [{game_path}] "
-                    "Please check that the game folder is properly set and that the RimWorld executable "
-                    "exists in it."
-                ),
-            )
-
     def refresh_cache_calculations(self) -> None:
         """
         This function contains expensive calculations for getting workshop
@@ -236,6 +145,14 @@ class MainContent:
         self.workshop_mods = get_workshop_mods(
             self.game_configuration.get_workshop_folder_path()
         )
+
+        # Set custom tags for each data source to be used with setIcon later
+        for package_id in self.expansions:
+            self.expansions[package_id]["isExpansion"] = True
+        for package_id in self.workshop_mods:
+            self.workshop_mods[package_id]["isWorkshop"] = True
+        for package_id in self.local_mods:
+            self.local_mods[package_id]["isLocal"] = True
 
         # One working Dictionary for ALL mods
         mods = merge_mod_data(self.local_mods, self.workshop_mods)
@@ -320,8 +237,142 @@ class MainContent:
         if action == "import":
             self._do_import()
         if action == "run":
-            args = []
-            self.platform_specific_game_launch(args)
+            self._do_platform_specific_game_launch(
+                self.game_configuration.run_arguments
+            )
+        if action == "edit_run_args":
+            self._do_edit_run_args()
+
+    def _do_edit_run_args(self):
+        """
+        Opens a QDialogInput that allows the user to edit the run args
+        that are configured to be passed to the Rimworld executable
+
+        :param path: path to open
+        """
+        args, ok = QInputDialog().getText(
+            None,
+            "Edit run arguments:",
+            "Enter the arguments you would like to pass to the Rimworld executable:",
+            QLineEdit.Normal,
+            self.game_configuration.run_arguments,
+        )
+        if ok:
+            self.game_configuration.run_arguments = args
+            self.game_configuration.update_persistent_storage(
+                "runArgs", self.game_configuration.run_arguments
+            )
+
+    def _do_platform_specific_game_launch(self, args) -> None:
+        """
+        This function starts the Rimworld game process in it's own subprocess,
+        by launching the executable found in the configured game directory.
+
+        :param game_path: path to Rimworld game
+        """
+        logger.info("USER ACTION: launching the game")
+        game_path = self.game_configuration.get_game_folder_path()
+        logger.info(f"Attempting to find the game in the game folder {game_path}")
+        if game_path:
+            system_name = platform.system()
+            if system_name == "Darwin":
+                executable_path = os.path.join(game_path, "RimWorldMac.app")
+                logger.info(
+                    f"Path to game executable for MacOS generated: {executable_path}"
+                )
+                if os.path.exists(executable_path):
+                    logger.info(
+                        "Launching the game with subprocess Popen: `"
+                        + executable_path
+                        + "` with args: `"
+                        + args
+                        + "`"
+                    )
+                    subprocess.Popen(["open", executable_path, "--args", args])
+                else:
+                    logger.warning("The game executable path does not exist")
+                    show_warning(
+                        text="Error Starting the Game",
+                        information=(
+                            "RimSort could not start RimWorld as the game executable does "
+                            f"not exist at the specified path: {executable_path}. Please check "
+                            "that this directory is correct and the RimWorld game executable "
+                            "exists in it."
+                        ),
+                    )
+            elif system_name == "Linux" or "Windows":
+                try:
+                    logger.warn("Trying to create a new subprocess process group")
+                    subprocess.CREATE_NEW_PROCESS_GROUP
+                except AttributeError:
+                    # not Windows, so assume POSIX; if not, we'll get a usable exception
+                    executable_path = os.path.join(game_path, "RimWorldLinux")
+                    logger.info(
+                        f"Path to game executable for Linux generated: {executable_path}"
+                    )
+                    if os.path.exists(executable_path):
+                        logger.info(
+                            "Launching the game with subprocess Popen: `"
+                            + executable_path
+                            + "` with args: `"
+                            + args
+                            + "`"
+                        )
+                        p = subprocess.Popen(
+                            [executable_path, args], start_new_session=True
+                        )
+                    else:
+                        logger.warning("The game executable path does not exist")
+                        show_warning(
+                            text="Error Starting the Game",
+                            information=(
+                                "RimSort could not start RimWorld as the game executable does "
+                                f"not exist at the specified path: {executable_path}. Please check "
+                                "that this directory is correct and the RimWorld game executable "
+                                "exists in it."
+                            ),
+                        )
+                else:
+                    # Windows
+                    executable_path = os.path.join(game_path, "RimWorldWin64.exe")
+                    logger.info(
+                        f"Path to game executable for Windows generated: {executable_path}"
+                    )
+                    if os.path.exists(executable_path):
+                        logger.info(
+                            "Launching the game with subprocess Popen: `"
+                            + executable_path
+                            + "` with args: `"
+                            + args
+                            + "`"
+                        )
+                        p = subprocess.Popen(
+                            [executable_path, args],
+                            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+                        )
+                    else:
+                        logger.warning("The game executable path does not exist")
+                        show_warning(
+                            text="Error Starting the Game",
+                            information=(
+                                "RimSort could not start RimWorld as the game executable does "
+                                f"not exist at the specified path: {executable_path}. Please check "
+                                "that this directory is correct and the RimWorld game executable "
+                                "exists in it."
+                            ),
+                        )
+            else:
+                logger.error("Unable to launch the game on an unknown system")
+        else:
+            logger.error("The path to the game folder is empty")
+            show_warning(
+                text="Error Starting the Game",
+                information=(
+                    "RimSort could not start RimWorld as the game folder is empty or invalid: [{game_path}] "
+                    "Please check that the game folder is properly set and that the RimWorld executable "
+                    "exists in it."
+                ),
+            )
 
     def _insert_data_into_lists(
         self, active_mods: Dict[str, Any], inactive_mods: Dict[str, Any]
@@ -337,11 +388,14 @@ class MainContent:
         )
         self.active_mods_panel.active_mods_list.recreate_mod_list(active_mods)
         self.inactive_mods_panel.inactive_mods_list.recreate_mod_list(inactive_mods)
+
         logger.info(
             f"Finished inserting mod data into active [{len(active_mods)}] and inactive [{len(inactive_mods)}] mod lists"
         )
 
     def _do_refresh(self) -> None:
+        self.active_mods_panel.clear_active_mods_search()
+        self.inactive_mods_panel.clear_inactive_mods_search()
         if self.game_configuration.check_if_essential_paths_are_set():
             # Run expensive calculations to set cache data
             self.refresh_cache_calculations()
@@ -359,6 +413,8 @@ class MainContent:
         Method to clear all the non-base, non-DLC mods from the active
         list widget and put them all into the inactive list widget.
         """
+        self.active_mods_panel.clear_active_mods_search()
+        self.inactive_mods_panel.clear_inactive_mods_search()
         active_mods_data, inactive_mods_data = get_active_inactive_mods(
             self.game_configuration.get_config_path(),
             self.all_mods_with_dependencies,
@@ -385,6 +441,8 @@ class MainContent:
         # Get the live list of active and inactive mods. This is because the user
         # will likely sort before saving.
         logger.info("Starting sorting mods")
+        self.active_mods_panel.clear_active_mods_search()
+        self.inactive_mods_panel.clear_inactive_mods_search()
         active_mods = self.active_mods_panel.active_mods_list.get_list_items_by_dict()
         active_mod_ids = list(active_mods.keys())
         inactive_mods = (
@@ -459,7 +517,7 @@ class MainContent:
         for package_id, mod_data in reordered_tier_three_sorted_with_data.items():
             combined_mods[package_id] = mod_data
 
-        logger.info("Finished combing all tiers of mods. Inserting into mod lists")
+        logger.info("Finished combining all tiers of mods. Inserting into mod lists")
         self._insert_data_into_lists(combined_mods, inactive_mods)
 
     def _do_import(self) -> None:
@@ -473,6 +531,8 @@ class MainContent:
         )
         logger.info(f"Selected path: {file_path[0]}")
         if file_path[0]:
+            self.active_mods_panel.clear_active_mods_search()
+            self.inactive_mods_panel.clear_inactive_mods_search()
             logger.info(f"Trying to import mods list from XML: {file_path}")
             active_mods_data, inactive_mods_data = get_active_inactive_mods(
                 file_path[0], self.all_mods_with_dependencies
@@ -495,8 +555,8 @@ class MainContent:
         if file_path[0]:
             logger.info("Exporting current active mods to ModsConfig.xml format")
             active_mods = [
-                mod_item.package_id.lower()
-                for mod_item in self.active_mods_panel.active_mods_list.get_list_items()
+                package_id
+                for package_id in self.active_mods_panel.active_mods_list.get_list_items_by_dict()
             ]
             logger.info(f"Collected {len(active_mods)} active mods for export")
             logger.info("Getting current ModsConfig.xml to use as a reference format")
@@ -523,8 +583,8 @@ class MainContent:
         """
         logger.info("Saving current active mods to ModsConfig.xml")
         active_mods = [
-            mod_item.package_id.lower()
-            for mod_item in self.active_mods_panel.active_mods_list.get_list_items()
+            package_id
+            for package_id in self.active_mods_panel.active_mods_list.get_list_items_by_dict()
         ]
         logger.info(f"Collected {len(active_mods)} active mods for saving")
         mods_config_data = xml_path_to_json(self.game_configuration.get_config_path())
@@ -545,6 +605,8 @@ class MainContent:
         Method to restore the mod lists to the last saved state.
         """
         if self.active_mods_data_restore_state and self.active_mods_data_restore_state:
+            self.active_mods_panel.clear_active_mods_search()
+            self.inactive_mods_panel.clear_inactive_mods_search()
             logger.info(
                 f"Restoring cached mod lists with active list [{len(self.active_mods_data_restore_state)}] and inactive list [{len(self.inactive_mods_data_restore_state)}]"
             )

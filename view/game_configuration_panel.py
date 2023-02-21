@@ -219,6 +219,9 @@ class GameConfiguration(QObject):
         self.local_folder_row.addWidget(self.local_folder_line)
         self.local_folder_row.addWidget(self.local_folder_select_button)
 
+        # RUN ARGUMENTS
+        self.run_arguments = ""
+
         # CONTAINER LAYOUTS INTO BASE LAYOUT
         self.client_settings_frame = QFrame()
         self.client_settings_frame.setObjectName("configLine")
@@ -370,6 +373,10 @@ class GameConfiguration(QObject):
                     self.settings_panel.sorting_algorithm_cb.setCurrentText(
                         settings_data["sorting_algorithm"]
                     )
+                if not settings_data.get("runArgs"):
+                    settings_data["runArgs"] = ""
+                else:
+                    self.run_arguments = settings_data["runArgs"]
         logger.info("Finished storage initialization")
 
     def initialize_settings_panel(self) -> None:
@@ -490,7 +497,6 @@ class GameConfiguration(QObject):
             self.update_persistent_storage("config_folder", config_folder_path)
         else:
             logger.info("User pressed cancel, passing")
-        # TODO refresh mods
 
     def set_workshop_folder(self) -> None:
         """
@@ -517,7 +523,6 @@ class GameConfiguration(QObject):
             self.update_persistent_storage("workshop_folder", workshop_path)
         else:
             logger.info("User pressed cancel, passing")
-        # TODO refresh mods
 
     def set_local_folder(self) -> None:
         """
@@ -544,7 +549,6 @@ class GameConfiguration(QObject):
             self.update_persistent_storage("local_folder", local_path)
         else:
             logger.info("User pressed cancel, passing")
-        # TODO refresh mods
 
     def update_persistent_storage(self, key: str, value: str) -> None:
         """
@@ -668,7 +672,6 @@ class GameConfiguration(QObject):
             os_paths = windows_paths
             logger.info(f"Running on Windows with the following paths: {os_paths}")
         else:
-            # TODO
             logger.error("Attempting to autodetect paths on an unknown system.")
 
         # If the game folder exists...

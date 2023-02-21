@@ -114,6 +114,14 @@ QWidget#descriptionWidget { /* Outer-most encapsulator */
     padding-right: 5px;
 }
 
+QWidget#errorFrame { /* Outer-most encapsulator */
+    background-color: #19232d;
+    border-style: solid;
+    border-color: #455364;
+    border-width: 1px;
+    border-radius: 3px;
+}
+
 QWidget#descriptionContent { /* Text, minus scroll bar */
     background-color: #19232d;
     padding-right: 10px; /* Make some distance between text and scroll bar */

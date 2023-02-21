@@ -15,6 +15,10 @@ from view.main_content_panel import MainContent
 from view.status_panel import Status
 
 logging_file_path = Path(os.path.join(os.path.dirname(__file__), "rs_log.log"))
+
+# Delete previous log file
+logging_file_path.unlink(missing_ok=True)
+
 logging.basicConfig(
     format="[%(levelname)s][%(asctime)s][%(process)d][%(name)s][%(funcName)s][%(lineno)d] : %(message)s",
     filename=logging_file_path,
@@ -37,6 +41,7 @@ def handle_exception(exc_type, exc_value, exc_traceback):
     show_fatal_error(
         details="".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
     )
+    sys.exit()
 
 
 sys.excepthook = handle_exception
@@ -53,7 +58,7 @@ class MainWindow(QMainWindow):
 
         # Create the main application window
         self.setWindowTitle("RimSort Alpha v1.0.0")
-        self.setFixedSize(QSize(1100, 700))  # TODO: support resizing
+        self.setFixedSize(QSize(1200, 700))  # TODO: support resizing
 
         # Create the main application layout
         app_layout = QVBoxLayout()

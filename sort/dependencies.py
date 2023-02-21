@@ -12,12 +12,19 @@ def gen_deps_graph(active_mods_json, active_mod_ids):
     dependencies_graph = {}
     for package_id, mod_data in active_mods_json.items():
         dependencies_graph[package_id] = set()
-        if mod_data.get("dependencies"):  # Will either be None, or a set
-            for dependency in mod_data["dependencies"]:
-                # Only add a dependency if dependency exists in active_mods
-                # (related to comment about stripping dependencies)
-                if dependency in active_mod_ids:
-                    dependencies_graph[package_id].add(dependency)
+        if mod_data.get("loadTheseBefore"):  # Will either be None, or a set
+            for dependency in mod_data["loadTheseBefore"]:
+                # Only add a dependency if dependency exists in active_mods. Recall
+                # that dependencies exist for all_mods, but not all of these will be
+                # in active mods. Also note that dependencies here refers to load order
+                # rules. Also note that dependency[0] is required as dependency is a tuple
+                # of package_id, explicit_bool
+                if not isinstance(dependency, tuple):
+                    logger.error(
+                        f"Expected load order rule to be a tuple: [{dependency}]"
+                    )
+                if dependency[0] in active_mod_ids:
+                    dependencies_graph[package_id].add(dependency[0])
     logger.info(
         f"Finished generating dependencies graph of {len(dependencies_graph)}, returning"
     )
@@ -30,10 +37,15 @@ def gen_rev_deps_graph(active_mods_json, active_mod_ids):
     reverse_dependencies_graph = {}
     for package_id, mod_data in active_mods_json.items():
         reverse_dependencies_graph[package_id] = set()
-        if mod_data.get("isDependencyOf"):  # Will either be None, or a set
-            for dependent in mod_data["isDependencyOf"]:
-                if dependent in active_mod_ids:
-                    reverse_dependencies_graph[package_id].add(dependent)
+        if mod_data.get("loadTheseAfter"):  # Will either be None, or a set
+            for dependent in mod_data["loadTheseAfter"]:
+                # Dependent[0] is required here as as dependency is a tuple of package_id, explicit_bool
+                if not isinstance(dependent, tuple):
+                    logger.error(
+                        f"Expected load order rule to be a tuple: [{dependent}]"
+                    )
+                if dependent[0] in active_mod_ids:
+                    reverse_dependencies_graph[package_id].add(dependent[0])
     logger.info(
         f"Finished generating reverse dependencies graph of {len(reverse_dependencies_graph)}, returning"
     )
@@ -49,6 +61,7 @@ def gen_tier_one_deps_graph(dependencies_graph):
     # TODO: pull from a config
     logger.info("Generating dependencies graph for tier one mods")
     known_tier_one_mods = {
+        "zetrith.prepatcher",
         "brrainz.harmony",
         "ludeon.rimworld",
         "ludeon.rimworld.royalty",
@@ -65,7 +78,9 @@ def gen_tier_one_deps_graph(dependencies_graph):
                 known_tier_one_mod, dependencies_graph
             )
             tier_one_mods.update(dependencies_set)
-    logger.info(f"Recursively generated the following set of tier one mods: {tier_one_mods}")
+    logger.info(
+        f"Recursively generated the following set of tier one mods: {tier_one_mods}"
+    )
     tier_one_dependency_graph = {}
     for tier_one_mod in tier_one_mods:
         # Tier one mods will only ever reference other tier one mods in their dependencies graph
@@ -104,7 +119,9 @@ def gen_tier_three_deps_graph(dependencies_graph, reverse_dependencies_graph):
                 known_tier_three_mod, reverse_dependencies_graph
             )
             tier_three_mods.update(rev_dependencies_set)
-    logger.info(f"Recursively generated the following set of tier three mods: {tier_three_mods}")
+    logger.info(
+        f"Recursively generated the following set of tier three mods: {tier_three_mods}"
+    )
     tier_three_dependency_graph = {}
     for tier_three_mod in tier_three_mods:
         # Tier three mods may reference non-tier-three mods in their dependencies graph,
@@ -113,7 +130,9 @@ def gen_tier_three_deps_graph(dependencies_graph, reverse_dependencies_graph):
         for possible_add in dependencies_graph[tier_three_mod]:
             if possible_add in tier_three_mods:
                 tier_three_dependency_graph[tier_three_mod].add(possible_add)
-    logger.info("Attached corresponding dependencies to every tier three mod, returning")
+    logger.info(
+        "Attached corresponding dependencies to every tier three mod, returning"
+    )
     return tier_three_dependency_graph, tier_three_mods
 
 
@@ -140,21 +159,28 @@ def gen_tier_two_deps_graph(
     # First, get the dependency graph for tier two mods, minus all references to tier one
     # and tier three mods
     logger.info("Generating dependencies graph for tier two mods")
-    logger.info("Stripping all references to tier one and tier three mods and their dependencies")
+    logger.info(
+        "Stripping all references to tier one and tier three mods and their dependencies"
+    )
     tier_two_dependency_graph = {}
     for package_id, mod_data in active_mods.items():
         if package_id not in tier_one_mods and package_id not in tier_three_mods:
-            dependencies = mod_data.get("dependencies")
+            dependencies = mod_data.get("loadTheseBefore")
             stripped_dependencies = set()
             if dependencies:
                 for dependency_id in dependencies:
                     # Remember, dependencies from all_mods can reference non-active mods
+                    # Dependent[0] is required here as as dependency is a tuple of package_id, explicit_bool
+                    if not isinstance(dependency_id, tuple):
+                        logger.error(
+                            f"Expected load order rule to be a tuple: [{dependency_id}]"
+                        )
                     if (
-                        dependency_id not in tier_one_mods
-                        and dependency_id not in tier_three_mods
-                        and dependency_id in active_mod_ids
+                        dependency_id[0] not in tier_one_mods
+                        and dependency_id[0] not in tier_three_mods
+                        and dependency_id[0] in active_mod_ids
                     ):
-                        stripped_dependencies.add(dependency_id)
+                        stripped_dependencies.add(dependency_id[0])
             tier_two_dependency_graph[package_id] = stripped_dependencies
     logger.info("Generated tier two dependency graph, returning")
     return tier_two_dependency_graph

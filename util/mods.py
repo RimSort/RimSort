@@ -7,8 +7,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from PySide2.QtWidgets import *
 
-from util.schema import validate_mods_config_format
 from util.error import show_warning
+from util.schema import validate_mods_config_format
 from util.xml import non_utf8_xml_path_to_json, xml_path_to_json
 
 logger = logging.getLogger(__name__)
@@ -394,303 +394,478 @@ def get_dependencies_for_mods(
     )
 
     # Add dependencies to installed mods based on dependencies listed in About.xml TODO manifest.xml
-    logger.info(f"Total number of dependencies: {_get_num_dependencies(all_mods)}")
+    logger.info(
+        f"Total number of loadTheseBefore rules: {_get_num_dependencies(all_mods, 'loadTheseBefore')}"
+    )
+    logger.info(
+        f"Total number of loadTheseAfter rules: {_get_num_dependencies(all_mods, 'loadTheseAfter')}"
+    )
+    logger.info(
+        f"Total number of dependencies: {_get_num_dependencies(all_mods, 'dependencies')}"
+    )
+    logger.info(
+        f"Total number of incompatibilities: {_get_num_dependencies(all_mods, 'incompatibilities')}"
+    )
     logger.info("Starting adding dependencies through About.xml information")
     for package_id in all_mods:
         logger.debug(f"Current mod: {package_id}")
-        # All modDependencies are dependencies
-        # if all_mods[package_id].get("modDependencies"):
-        #     dependencies = all_mods[package_id]["modDependencies"]["li"]
-        #     if dependencies:
-        #         add_dependency_to_mod(
-        #             all_mods[package_id],
-        #             "dependencies",
-        #             dependencies,
-        #             all_mods,
-        #         )
 
-        # Current mod should be loaded AFTER these mods
-        # These are all dependencies for the current mod
-        if all_mods[package_id].get("loadAfter"):
-            dependencies = all_mods[package_id]["loadAfter"].get("li")
+        # modDependencies are not equal to mod load order rules
+        if all_mods[package_id].get("modDependencies"):
+            dependencies = all_mods[package_id]["modDependencies"].get("li")
             if dependencies:
+                logger.debug(f"Current mod requires these mods to work: {dependencies}")
+                add_dependency_to_mod(all_mods[package_id], dependencies, all_mods)
+
+        if all_mods[package_id].get("modDependenciesByVersion"):
+            if all_mods[package_id]["modDependenciesByVersion"].get("v1.4"):
+                dependencies_by_ver = all_mods[package_id]["modDependenciesByVersion"][
+                    "v1.4"
+                ].get("li")
+                if dependencies_by_ver:
+                    logger.debug(
+                        f"Current mod requires these mods by version to work: {dependencies_by_ver}"
+                    )
+                    add_dependency_to_mod(
+                        all_mods[package_id], dependencies_by_ver, all_mods
+                    )
+
+        if all_mods[package_id].get("incompatibleWith"):
+            incompatibilities = all_mods[package_id]["incompatibleWith"].get("li")
+            if incompatibilities:
                 logger.debug(
-                    f"Current mod should load after these mods: {dependencies}"
+                    f"Current mod is incompatible with these mods: {incompatibilities}"
                 )
-                add_dependency_to_mod(
+                add_incompatibility_to_mod(
+                    all_mods[package_id], incompatibilities, all_mods
+                )
+
+        if all_mods[package_id].get("incompatibleWithByVersion"):
+            if all_mods[package_id]["incompatibleWithByVersion"].get("v1.4"):
+                incompatibilities_by_ver = all_mods[package_id][
+                    "incompatibleWithByVersion"
+                ]["v1.4"].get("li")
+                if incompatibilities_by_ver:
+                    logger.debug(
+                        f"Current mod is incompatible by version with these mods: {incompatibilities_by_ver}"
+                    )
+                    add_incompatibility_to_mod(
+                        all_mods[package_id], incompatibilities_by_ver, all_mods
+                    )
+
+        # Current mod should be loaded AFTER these mods. These mods can be thought
+        # of as "load these before". These are not necessarily dependencies in the sense
+        # that they "depend" on them. But, if they exist in the same mod list, they
+        # should be loaded before.
+        if all_mods[package_id].get("loadAfter"):
+            load_these_before = all_mods[package_id]["loadAfter"].get("li")
+            if load_these_before:
+                logger.debug(
+                    f"Current mod should load after these mods: {load_these_before}"
+                )
+                add_load_rule_to_mod(
                     all_mods[package_id],
-                    "dependencies",
-                    dependencies,
+                    load_these_before,
+                    "loadTheseBefore",
+                    "loadTheseAfter",
                     all_mods,
                 )
 
         if all_mods[package_id].get("forceLoadAfter"):
-            dependencies = all_mods[package_id]["forceLoadAfter"].get("li")
-            if dependencies:
+            force_load_these_before = all_mods[package_id]["forceLoadAfter"].get("li")
+            if force_load_these_before:
                 logger.debug(
-                    f"Current mod should force load after these mods: {dependencies}"
+                    f"Current mod should force load after these mods: {force_load_these_before}"
                 )
-                add_dependency_to_mod(
+                add_load_rule_to_mod(
                     all_mods[package_id],
-                    "dependencies",
-                    dependencies,
+                    force_load_these_before,
+                    "loadTheseBefore",
+                    "loadTheseAfter",
                     all_mods,
                 )
 
         if all_mods[package_id].get("loadAfterByVersion"):
             if all_mods[package_id]["loadAfterByVersion"].get("v1.4"):
-                dependencies = all_mods[package_id]["loadAfterByVersion"]["v1.4"].get(
-                    "li"
-                )
-                if dependencies:
+                load_these_before_by_ver = all_mods[package_id]["loadAfterByVersion"][
+                    "v1.4"
+                ].get("li")
+                if load_these_before_by_ver:
                     logger.debug(
-                        f"Current mod should load after these mods for v1.4: {dependencies}"
+                        f"Current mod should load after these mods for v1.4: {load_these_before_by_ver}"
                     )
-                    add_dependency_to_mod(
+                    add_load_rule_to_mod(
                         all_mods[package_id],
-                        "dependencies",
-                        dependencies,
+                        load_these_before_by_ver,
+                        "loadTheseBefore",
+                        "loadTheseAfter",
                         all_mods,
                     )
 
         # Current mod should be loaded BEFORE these mods
         # The current mod is a dependency for all these mods
         if all_mods[package_id].get("loadBefore"):
-            dependencies = all_mods[package_id]["loadBefore"].get("li")
-            if dependencies:
+            load_these_after = all_mods[package_id]["loadBefore"].get("li")
+            if load_these_after:
                 logger.debug(
-                    f"Current mod should load before these mods: {dependencies}"
+                    f"Current mod should load before these mods: {load_these_after}"
                 )
-                if isinstance(dependencies, str):
-                    add_dependency_to_mod(
-                        all_mods.get(
-                            dependencies.lower()
-                        ),  # Will be None if mod does not exist
-                        "dependencies",
-                        package_id,
-                        all_mods,
-                    )
-                elif isinstance(dependencies, list):
-                    for dependency_id in dependencies:
-                        add_dependency_to_mod(
-                            all_mods.get(dependency_id.lower()),
-                            "dependencies",
-                            package_id,
-                            all_mods,
-                        )
+                add_load_rule_to_mod(
+                    all_mods[package_id],
+                    load_these_after,
+                    "loadTheseAfter",
+                    "loadTheseBefore",
+                    all_mods,
+                )
 
         if all_mods[package_id].get("forceLoadBefore"):
-            dependencies = all_mods[package_id]["forceLoadBefore"].get("li")
-            if dependencies:
+            force_load_these_after = all_mods[package_id]["forceLoadBefore"].get("li")
+            if force_load_these_after:
                 logger.debug(
-                    f"Current mod should force load before these mods: {dependencies}"
+                    f"Current mod should force load before these mods: {force_load_these_after}"
                 )
-                if isinstance(dependencies, str):
-                    add_dependency_to_mod(
-                        all_mods.get(
-                            dependencies.lower()
-                        ),  # Will be None if mod does not exist
-                        "dependencies",
-                        package_id,
-                        all_mods,
-                    )
-                elif isinstance(dependencies, list):
-                    for dependency_id in dependencies:
-                        add_dependency_to_mod(
-                            all_mods.get(dependency_id.lower()),
-                            "dependencies",
-                            package_id,
-                            all_mods,
-                        )
+                add_load_rule_to_mod(
+                    all_mods[package_id],
+                    force_load_these_after,
+                    "loadTheseAfter",
+                    "loadTheseBefore",
+                    all_mods,
+                )
 
         if all_mods[package_id].get("loadBeforeByVersion"):
             if all_mods[package_id]["loadBeforeByVersion"].get("v1.4"):
-                dependencies = all_mods[package_id]["loadBeforeByVersion"]["v1.4"].get(
-                    "li"
-                )
-                if dependencies:
+                load_these_after_by_ver = all_mods[package_id]["loadBeforeByVersion"][
+                    "v1.4"
+                ].get("li")
+                if load_these_after_by_ver:
                     logger.debug(
-                        f"Current mod should load before these mods for v1.4: {dependencies}"
+                        f"Current mod should load before these mods for v1.4: {load_these_after_by_ver}"
                     )
-                    if isinstance(dependencies, str):
-                        add_dependency_to_mod(
-                            all_mods.get(
-                                dependencies.lower()
-                            ),  # Will be None if mod does not exist
-                            "dependencies",
-                            package_id,
-                            all_mods,
-                        )
-                    elif isinstance(dependencies, list):
-                        for dependency_id in dependencies:
-                            add_dependency_to_mod(
-                                all_mods.get(dependency_id.lower()),
-                                "dependencies",
-                                package_id,
-                                all_mods,
-                            )
+                    add_load_rule_to_mod(
+                        all_mods[package_id],
+                        load_these_after_by_ver,
+                        "loadTheseAfter",
+                        "loadTheseBefore",
+                        all_mods,
+                    )
 
-        # Check for incompatible mods (TODO: currently unused)
-        if all_mods[package_id].get("incompatibleWith"):
-            dependencies = all_mods[package_id]["incompatibleWith"].get("li")
-            if dependencies:
-                logger.debug(
-                    f"Current mod is incompatible with these mods: {dependencies}"
-                )
-                add_dependency_to_mod(
-                    all_mods[package_id],
-                    "incompatibilities",
-                    dependencies,
-                    all_mods,
-                )
     logger.info("Finished adding dependencies through About.xml information")
-    logger.info(f"Total number of dependencies: {_get_num_dependencies(all_mods)}")
+    logger.info(
+        f"Total number of loadTheseBefore rules: {_get_num_dependencies(all_mods, 'loadTheseBefore')}"
+    )
+    logger.info(
+        f"Total number of loadTheseAfter rules: {_get_num_dependencies(all_mods, 'loadTheseAfter')}"
+    )
+    logger.info(
+        f"Total number of dependencies: {_get_num_dependencies(all_mods, 'dependencies')}"
+    )
+    logger.info(
+        f"Total number of incompatibilities: {_get_num_dependencies(all_mods, 'incompatibilities')}"
+    )
 
     # RimPy's references depdencies based on publisher ID, not package ID
-    # Create a temporary publisher ID -> package ID dict here
-    # This cooresponds with the folder name of the folder used to "contain" the mod in the Steam mods directory
     # TODO: optimization: maybe everything could be based off publisher ID
-    # TODO: optimization: all of this (and communityRules.json parsing) could probably be done in the first loop
-    # if steam_db_rules:
-    #     folder_to_package_id = {}
-    #     for package_id, mod_data in all_mods.items():
-    #         if mod_data.get("folder"):
-    #             folder_to_package_id[mod_data["folder"]] = mod_data["packageId"]
+    if steam_db_rules:
+        tracking_dict = {}
+        steam_id_to_package_id = {}
 
-    #     for folder_id, mod_data in steam_db_rules.items():
-    #         # We could use `folder_in in folder_to_package_id` too
-    #         if mod_data["packageId"].lower() in all_mods:
-    #             for dependency_folder_id in mod_data["dependencies"]:
-    #                 if dependency_folder_id in folder_to_package_id:
-    #                     # This means the dependency is in all mods
-    #                     dependency_package_id = folder_to_package_id[dependency_folder_id]
-    #                     add_dependency_to_mod(
-    #                         all_mods.get(mod_data["packageId"].lower()),
-    #                         "dependencies",
-    #                         dependency_package_id.lower(),
-    #                         all_mods
-    #                     )
-    # Add dependencies to installed mods based on dependencies from community rules
+        # Iterate through all workshop items in the Steam DB.
+        for folder_id, mod_data in steam_db_rules.items():
+            db_package_id = mod_data["packageId"]
+            # Record the Steam ID => package_id
+            steam_id_to_package_id[folder_id] = db_package_id.lower()
+            # If the package_id is in all_mods...
+            if db_package_id.lower() in all_mods:
+                # Iterate through each dependency (Steam ID) listed on Steam
+                for dependency_folder_id, steam_dep_data in mod_data[
+                    "dependencies"
+                ].items():
+                    if db_package_id not in tracking_dict:
+                        tracking_dict[db_package_id.lower()] = set()
+                    # Add Steam ID to dependencies of mod
+                    tracking_dict[db_package_id.lower()].add(dependency_folder_id)
+
+        # For each mod that exists in all_mods -> dependencies (in Steam ID form)
+        for installed_mod_id, set_of_dependency_steam_ids in tracking_dict.items():
+            for dependency_steam_id in set_of_dependency_steam_ids:
+                # Dependencies are added as package_ids. We should be able to
+                # resolve the package_id from the Steam ID for any mod, unless
+                # the DB.json actually references a Steam ID that itself does not
+                # wire to a package_id.
+                if dependency_steam_id in steam_id_to_package_id:
+                    add_single_str_dependency_to_mod(
+                        all_mods[installed_mod_id],  # Already checked above
+                        steam_id_to_package_id[dependency_steam_id],
+                        all_mods,
+                    )
+                else:
+                    logger.error(
+                        f"package_id not found for steam id [{dependency_steam_id}] for Steam db.json"
+                    )
+
+    # Add load order to installed mods based on dependencies from community rules
     logger.info("Starting adding dependencies through Community Rules")
     if community_rules:
         for package_id in community_rules:
-            # TODO: requiring the package be in all_mods should be fine, as
+            # Note: requiring the package be in all_mods should be fine, as
             # if the mod doesn't exist all_mods, then either mod_data or dependency_id
             # will be None, and then we don't insert a dependency
-            if package_id in all_mods:
-                logger.debug(f"Current mod: {package_id}")
-                load_before_deps = community_rules[package_id].get("loadBefore")
-                if load_before_deps:
+            if package_id.lower() in all_mods:  # all_mods is normalized
+                logger.debug(f"Current mod: {package_id} (we use normalized)")
+
+                load_these_after = community_rules[package_id].get("loadBefore")
+                if load_these_after:
                     logger.debug(
-                        f"Current mod should load before these mods: {load_before_deps}"
+                        f"Current mod should load before these mods: {load_these_after}"
                     )
-                    for dependency_id in load_before_deps:
-                        # Current mod should be loaded BEFORE these mods
-                        add_dependency_to_mod(
-                            all_mods.get(dependency_id.lower()),
-                            "dependencies",
-                            package_id.lower(),
+                    # In Rimpy, load_these_after is at least an empty dict
+                    # Cannot call add_load_rule_to_mod outside of this for loop,
+                    # as that expects a list
+                    for load_this_after in load_these_after:
+                        add_load_rule_to_mod(
+                            all_mods[package_id.lower()],  # Already checked above
+                            load_this_after,  # Lower() done in call
+                            "loadTheseAfter",
+                            "loadTheseBefore",
                             all_mods,
                         )
-                load_after_deps = community_rules[package_id].get("loadAfter")
-                if load_after_deps:
+
+                load_these_before = community_rules[package_id].get("loadAfter")
+                if load_these_before:
                     logger.debug(
-                        f"Current mod should load after these mods: {load_after_deps}"
+                        f"Current mod should load after these mods: {load_these_before}"
                     )
-                    for dependency_id in load_after_deps:
-                        # Current mod should be loaded AFTER these mods
-                        add_dependency_to_mod(
-                            all_mods.get(
-                                package_id.lower()
-                            ),  # Community rules may be referencing not-installed mod
-                            "dependencies",
-                            dependency_id.lower(),
+                    # In Rimpy, load_these_before is at least an empty dict
+                    for load_this_before in load_these_before:
+                        add_load_rule_to_mod(
+                            all_mods[package_id.lower()],  # Already checked above
+                            load_this_before,  # Lower() done in call
+                            "loadTheseBefore",
+                            "loadTheseAfter",
                             all_mods,
                         )
     logger.info("Finished adding dependencies through Community Rules")
-    logger.info(f"Total number of dependencies: {_get_num_dependencies(all_mods)}")
+    logger.info(
+        f"Total number of loadTheseBefore rules: {_get_num_dependencies(all_mods, 'loadTheseBefore')}"
+    )
+    logger.info(
+        f"Total number of loadTheseAfter rules: {_get_num_dependencies(all_mods, 'loadTheseAfter')}"
+    )
+    logger.info(
+        f"Total number of dependencies: {_get_num_dependencies(all_mods, 'dependencies')}"
+    )
+    logger.info(
+        f"Total number of incompatibilities: {_get_num_dependencies(all_mods, 'incompatibilities')}"
+    )
     logger.info("Returing all mods now")
     return all_mods
 
 
-def _get_num_dependencies(all_mods: Dict[str, Any]) -> None:
+def _get_num_dependencies(all_mods: Dict[str, Any], key_name: str) -> None:
     """Debug func for getting total number of dependencies"""
     counter = 0
     for package_id, mod_data in all_mods.items():
-        if mod_data.get("dependencies"):
-            counter = counter + len(mod_data["dependencies"])
+        if mod_data.get(key_name):
+            counter = counter + len(mod_data[key_name])
     return counter
 
 
 def add_dependency_to_mod(
     mod_data: Dict[str, Any],
-    new_data_key: str,
     dependency_or_dependency_ids: Any,
     all_mods: Dict[str, Any],
 ) -> None:
     """
-    Given a mod dict, a key, and a value, add the contents of value to the key
-    in the dict. If the key does not exist, add an empty list at that key. This
-    is to support dependency schemas being either strings or list of strings.
-
-    This is by design:
-    IMPORTANT!! Depdencies that DO NOT EXIST in all_mods ARE NOT ADDED!!
-    IMPORTANT!! "Current mods" that DO NOT EXIST in all_mods WILL NOT HAVE
-        DEPENDENCIES ADDED!
-
-    :param mod_data: mod data dict to add dependencies to
-    :param key: key to add data to
-    :param value: either string or list of strings (or sometimes None)
-    :param workshop_and_expansions: dict of all mods to verify keys against
+    Dependency data is collected regardless of whether or not that dependency
+    is in `all_mods`. This makes sense as dependencies exist outside of the realm
+    of the mods the user currently has installed. Dependencies are one-way, so
+    if A depends on B, B does not necessarily depend on A.
     """
     logger.debug(
-        f"Adding to key [{new_data_key}], packages [{dependency_or_dependency_ids}], for mod data: {mod_data}"
+        f"Adding dependencies for packages [{dependency_or_dependency_ids}] to mod data: {mod_data}"
     )
     if mod_data:
         # Create a new key with empty set as value
-        if new_data_key not in mod_data:
-            mod_data[new_data_key] = set()
+        if "dependencies" not in mod_data:
+            mod_data["dependencies"] = set()
+
+        # If the value is a single dict (for modDependencies)
+        if isinstance(dependency_or_dependency_ids, dict):
+            if dependency_or_dependency_ids.get("packageId"):
+                dependency_id = dependency_or_dependency_ids["packageId"].lower()
+                # if dependency_id in all_mods:
+                # ^ dependencies are required regardless of whether they are in all_mods
+                mod_data["dependencies"].add(dependency_id)
+            else:
+                logger.error(
+                    f"Dependency dict does not contain packageId: [{dependency_or_dependency_ids}]"
+                )
+        # If the value is a LIST of dicts
+        elif isinstance(dependency_or_dependency_ids, list):
+            if isinstance(dependency_or_dependency_ids[0], dict):
+                for dependency in dependency_or_dependency_ids:
+                    if dependency.get("packageId"):
+                        dependency_id = dependency["packageId"].lower()
+                        # if dependency_id in all_mods:
+                        # ^ dependencies are required regardless of whether they are in all_mods
+                        mod_data["dependencies"].add(dependency_id)
+                    else:
+                        logger.error(
+                            f"Dependency dict does not contain packageId: [{dependency_or_dependency_ids}]"
+                        )
+            else:
+                logger.error(
+                    f"List of dependencies does not contain dicts: [{dependency_or_dependency_ids}]"
+                )
+        else:
+            logger.error(
+                f"Dependencies is not a single dict or a list of dicts: [{dependency_or_dependency_ids}]"
+            )
+
+
+def add_single_str_dependency_to_mod(
+    mod_data: Dict[str, Any],
+    dependency_id: Any,
+    all_mods: Dict[str, Any],
+) -> None:
+    logger.debug(
+        f"Adding dependencies for package [{dependency_id}] to mod data: {mod_data}"
+    )
+    if mod_data:
+        # Create a new key with empty set as value
+        if "dependencies" not in mod_data:
+            mod_data["dependencies"] = set()
+
+        # If the value is a single dict (for modDependencies)
+        if isinstance(dependency_id, str):
+            mod_data["dependencies"].add(dependency_id)
+        else:
+            logger.error(f"Dependencies is not a single str: [{dependency_id}]")
+
+
+def add_incompatibility_to_mod(
+    mod_data: Dict[str, Any],
+    dependency_or_dependency_ids: Any,
+    all_mods: Dict[str, Any],
+) -> None:
+    """
+    Incompatibility data is collected only if that incompatibility is in `all_mods`.
+    There's no need to surface incompatibilities if they aren't even downloaded.
+    Reverse incompatibilities are not being added (commented out) as it has been brought
+    up that in certain cases mod authors may disagree on whether each other's mods
+    are incompatible with each other.
+    """
+    logger.debug(
+        f"Adding incompatibilities for packages [{dependency_or_dependency_ids}] to mod data: {mod_data} (and reverse direction too)"
+    )
+    if mod_data:
+        # Create a new key with empty set as value
+        if "incompatibilities" not in mod_data:
+            mod_data["incompatibilities"] = set()
 
         # If the value is a single string...
         if isinstance(dependency_or_dependency_ids, str):
             dependency_id = dependency_or_dependency_ids.lower()
             if dependency_id in all_mods:
-                mod_data[new_data_key].add(dependency_id)
-                if "isDependencyOf" not in all_mods[dependency_id]:
-                    all_mods[dependency_id]["isDependencyOf"] = set()
-                all_mods[dependency_id]["isDependencyOf"].add(mod_data["packageId"])
+                mod_data["incompatibilities"].add(dependency_id)
+                # if "incompatibilities" not in all_mods[dependency_id]:
+                #     all_mods[dependency_id]["incompatibilities"] = set()
+                # all_mods[dependency_id]["incompatibilities"].add(mod_data["packageId"])
 
-        # If the value is a single dict (for modDependencies)
-        elif isinstance(dependency_or_dependency_ids, dict):
-            dependency_id = dependency_or_dependency_ids["packageId"].lower()
-            if dependency_id in all_mods:
-                mod_data[new_data_key].add(dependency_id)
-                if "isDependencyOf" not in all_mods[dependency_id]:
-                    all_mods[dependency_id]["isDependencyOf"] = set()
-                all_mods[dependency_id]["isDependencyOf"].add(mod_data["packageId"])
-
-        # If the value is a LIST of strings or dicts
+        # If the value is a LIST of strings
         elif isinstance(dependency_or_dependency_ids, list):
             if isinstance(dependency_or_dependency_ids[0], str):
                 for dependency in dependency_or_dependency_ids:
                     dependency_id = dependency.lower()
                     if dependency_id in all_mods:
-                        mod_data[new_data_key].add(dependency_id)
-                        if "isDependencyOf" not in all_mods[dependency_id]:
-                            all_mods[dependency_id]["isDependencyOf"] = set()
-                        all_mods[dependency_id]["isDependencyOf"].add(
-                            mod_data["packageId"]
-                        )
-            elif isinstance(dependency_or_dependency_ids[0], dict):
+                        mod_data["incompatibilities"].add(dependency_id)
+                        # if "incompatibilities" not in all_mods[dependency_id]:
+                        #     all_mods[dependency_id]["incompatibilities"] = set()
+                        # all_mods[dependency_id]["incompatibilities"].add(
+                        #     mod_data["packageId"]
+                        # )
+            else:
+                logger.error(
+                    f"List of incompatibilities does not contain strings: [{dependency_or_dependency_ids}]"
+                )
+        else:
+            logger.error(
+                f"Incompatibilities is not a single string or a list of strings: [{dependency_or_dependency_ids}]"
+            )
+
+
+def add_load_rule_to_mod(
+    mod_data: Dict[str, Any],
+    dependency_or_dependency_ids: Any,
+    explicit_key: str,
+    indirect_key: str,
+    all_mods: Dict[str, Any],
+) -> None:
+    """
+    Load order data is collected only if the mod referenced is in `all_mods`, as
+    mods that are not installed do not need to be ordered.
+
+    Explicit = indicates if the rule is added because it was explicitly defined
+    somewhere, e.g. About.xml, or if it was inferred, e.g. If A loads after B,
+    B should load before A
+
+    Given a mod dict and a value, add the contents of value to the loadTheseBefore
+    and loadTheseAfter keys in the dict. If the key does not exist, add an empty list
+    at that key. This is to support load rule schemas being either strings or list of strings.
+
+    TODO: optimization. Currently, hardcodes adding loadTheseBefore and then reasons about
+    loadTheseAfter. This requires the calling part (reading About.xml and calling this function)
+    to have some confusing logic for placing variables in the right position to call this func.
+    Instead, expose 2 key names (explicit, indirect) as variables.
+
+    This is by design:
+    IMPORTANT!! Rules that DO NOT EXIST in all_mods ARE NOT ADDED!!
+    IMPORTANT!! "Current mods" that DO NOT EXIST in all_mods WILL NOT HAVE
+        DEPENDENCIES ADDED!
+
+    :param mod_data: mod data dict to add dependencies to
+    :param value: either string or list of strings (or sometimes None)
+    :param workshop_and_expansions: dict of all mods to verify keys against
+    """
+    logger.debug(
+        f"Adding load order rules containing packages [{dependency_or_dependency_ids}] for mod data: {mod_data} (and reverse direction too)"
+    )
+    if mod_data:
+        # Create a new key with empty set as value
+        if explicit_key not in mod_data:
+            mod_data[explicit_key] = set()
+
+        # If the value is a single string...
+        if isinstance(dependency_or_dependency_ids, str):
+            dependency_id = dependency_or_dependency_ids.lower()
+            if dependency_id in all_mods:
+                mod_data[explicit_key].add((dependency_id, True))
+                if indirect_key not in all_mods[dependency_id]:
+                    all_mods[dependency_id][indirect_key] = set()
+                all_mods[dependency_id][indirect_key].add(
+                    (mod_data["packageId"], False)
+                )
+
+        # If the value is a LIST of strings
+        elif isinstance(dependency_or_dependency_ids, list):
+            if isinstance(dependency_or_dependency_ids[0], str):
                 for dependency in dependency_or_dependency_ids:
-                    dependency_id = dependency["packageId"].lower()
+                    dependency_id = dependency.lower()
                     if dependency_id in all_mods:
-                        mod_data[new_data_key].add(dependency_id)
-                        if "isDependencyOf" not in all_mods[dependency_id]:
-                            all_mods[dependency_id]["isDependencyOf"] = set()
-                        all_mods[dependency_id]["isDependencyOf"].add(
-                            mod_data["packageId"]
+                        mod_data[explicit_key].add((dependency_id, True))
+                        if indirect_key not in all_mods[dependency_id]:
+                            all_mods[dependency_id][indirect_key] = set()
+                        all_mods[dependency_id][indirect_key].add(
+                            (mod_data["packageId"], False)
                         )
+            else:
+                logger.error(
+                    f"List of load order rules does not contain strings: [{dependency_or_dependency_ids}]"
+                )
+        else:
+            logger.error(
+                f"Load order rules is not a single string or a list of strings: [{dependency_or_dependency_ids}]"
+            )
 
 
 def get_game_version(game_path: str) -> str:
