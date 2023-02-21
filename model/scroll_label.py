@@ -41,7 +41,7 @@ class ScrollLabel(QScrollArea):
         # Label to store text
         self.label = QLabel(self.content)
         self.label.setObjectName("descriptionLabel")
-        self.label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        self.label.setAlignment(Qt.AlignTop)
 
         # Making label multi-line
         self.label.setWordWrap(True)
