@@ -93,6 +93,10 @@ class ActiveModList(QWidget):
         # self.completer.setCaseSensitivity(Qt.CaseInsensitive)
         # self.active_mods_search.setCompleter(self.completer)
 
+        self.game_version = ""
+        self.all_mods = {}
+        self.steam_package_id_to_name = {}
+
         # Connect signals and slots
         self.active_mods_list.list_update_signal.connect(
             self.handle_internal_mod_list_updated
@@ -136,7 +140,46 @@ class ActiveModList(QWidget):
                 "conflicting_incompatibilities": set(),
                 "load_before_violations": set(),
                 "load_after_violations": set(),
+                "version_mismatch": True,
             }
+
+            # Check version
+            if self.game_version:
+                if "supportedVersions" in mod_data:
+                    if "li" in mod_data["supportedVersions"]:
+                        supported_versions = mod_data["supportedVersions"]["li"]
+                        # supported_versions is either a string or list of strings
+                        if isinstance(supported_versions, str):
+                            if self.game_version.startswith(supported_versions):
+                                package_id_to_errors[package_id][
+                                    "version_mismatch"
+                                ] = False
+                        elif isinstance(supported_versions, list):
+                            is_supported = False
+                            for supported_version in supported_versions:
+                                if isinstance(supported_version, str):
+                                    if self.game_version.startswith(supported_version):
+                                        is_supported = True
+                                else:
+                                    logger.error(
+                                        f"supportedVersion in list is not str: {supported_versions}"
+                                    )
+                            if is_supported:
+                                package_id_to_errors[package_id][
+                                    "version_mismatch"
+                                ] = False
+                        else:
+                            logger.error(
+                                f"supportedVersions value not str or list: {supported_versions}"
+                            )
+                    else:
+                        logger.error(
+                            f"No li tag found in supportedVersions value: {mod_data['supportedVersions']}"
+                        )
+                else:
+                    logger.error(
+                        f"No supportedVersions key found in mod data: {mod_data}"
+                    )
 
             # Check dependencies
             if mod_data.get("dependencies"):
@@ -194,50 +237,69 @@ class ActiveModList(QWidget):
                                 ].add(load_this_after[0])
 
             # Consolidate results
-            tool_tip_text = ""
+            error_tool_tip_text = ""
+            warning_tool_tip_text = ""
             missing_dependencies = package_id_to_errors[package_id][
                 "missing_dependencies"
             ]
             if missing_dependencies:
-                tool_tip_text += "\nMissing Dependencies:"
+                error_tool_tip_text += "\n\nMissing Dependencies:"
                 for dependency_id in missing_dependencies:
-                    tool_tip_text += f"\n  * {dependency_id}"
+                    # If dependency is installed, we can get its name
+                    if dependency_id in self.all_mods:
+                        error_tool_tip_text += (
+                            f"\n  * {self.all_mods[dependency_id]['name']}"
+                        )
+                    # Otherwise, we might be able to get it from RimPy Steam DB
+                    elif dependency_id in self.steam_package_id_to_name:
+                        error_tool_tip_text += (
+                            f"\n  * {self.steam_package_id_to_name[dependency_id]}"
+                        )
+                    # Other-otherwise, just use the id
+                    else:
+                        error_tool_tip_text += f"\n  * {dependency_id}"
 
             conflicting_incompatibilities = package_id_to_errors[package_id][
                 "conflicting_incompatibilities"
             ]
             if conflicting_incompatibilities:
-                tool_tip_text += "\nIncompatibilities:"
+                error_tool_tip_text += "\n\nIncompatibilities:"
                 for incompatibility_id in conflicting_incompatibilities:
                     incompatibility_name = active_mods[incompatibility_id]["name"]
-                    tool_tip_text += f"\n  * {incompatibility_name}"
+                    error_tool_tip_text += f"\n  * {incompatibility_name}"
 
             load_before_violations = package_id_to_errors[package_id][
                 "load_before_violations"
             ]
             if load_before_violations:
-                tool_tip_text += "\nShould be Loaded After:"
+                warning_tool_tip_text += "\n\nShould be Loaded After:"
                 for load_before_id in load_before_violations:
                     load_before_name = active_mods[load_before_id]["name"]
-                    tool_tip_text += f"\n  * {load_before_name}"
+                    warning_tool_tip_text += f"\n  * {load_before_name}"
 
             load_after_violations = package_id_to_errors[package_id][
                 "load_after_violations"
             ]
             if load_after_violations:
-                tool_tip_text += "\nShould be Loaded Before:"
+                warning_tool_tip_text += "\n\nShould be Loaded Before:"
                 for load_after_id in load_after_violations:
                     load_after_name = active_mods[load_after_id]["name"]
-                    tool_tip_text += f"\n  * {load_after_name}"
+                    warning_tool_tip_text += f"\n  * {load_after_name}"
+
+            version_mismatch = package_id_to_errors[package_id]["version_mismatch"]
+            if version_mismatch:
+                warning_tool_tip_text += "\n\nMod and Game Version Mismatch"
 
             # Set icon if necessary
             current_package_index = package_id_to_index[package_id]
             item_widget_at_index = self.active_mods_list.get_item_widget_at_index(
                 current_package_index
             )
+            # Set icon tooltip
             if item_widget_at_index:
-                if tool_tip_text:
+                if warning_tool_tip_text or error_tool_tip_text:
                     item_widget_at_index.warning_icon_label.setHidden(False)
+                    tool_tip_text = error_tool_tip_text + warning_tool_tip_text
                     item_widget_at_index.warning_icon_label.setToolTip(
                         tool_tip_text.lstrip()
                     )
@@ -250,12 +312,12 @@ class ActiveModList(QWidget):
                 num_errors += 1
                 total_error_text += f"\n\n{active_mods[package_id]['name']}"
                 total_error_text += "\n============================="
-                total_error_text += tool_tip_text
-            elif load_before_violations or load_after_violations:
+                total_error_text += error_tool_tip_text.replace("\n\n", "\n")
+            if load_before_violations or load_after_violations or version_mismatch:
                 num_warnings += 1
                 total_warning_text += f"\n\n{active_mods[package_id]['name']}"
                 total_warning_text += "\n============================="
-                total_warning_text += tool_tip_text
+                total_warning_text += warning_tool_tip_text.replace("\n\n", "\n")
 
         if total_error_text or total_warning_text or num_errors or num_warnings:
             self.errors_summary_frame.setHidden(False)
@@ -292,7 +354,11 @@ class ActiveModList(QWidget):
     def signal_active_mods_search(self, pattern: str) -> None:
         wni = self.active_mods_list.get_widgets_and_items()
         for widget, item in wni:
-            if pattern and not pattern.lower() in widget.json_data["name"].lower():
+            if (
+                pattern
+                and not pattern.lower() in widget.json_data["name"].lower()
+                and not pattern.lower() in widget.json_data["packageId"].lower()
+            ):
                 item.setHidden(True)
             else:
                 item.setHidden(False)
@@ -307,8 +373,6 @@ class ActiveModList(QWidget):
             else:
                 num_visible += 1
         if self.active_mods_search.text():
-            self.num_mods.setText(
-                f"Active [{num_visible}/{num_hidden + num_visible}]"
-            )
+            self.num_mods.setText(f"Active [{num_visible}/{num_hidden + num_visible}]")
         else:
             self.num_mods.setText(f"Active [{num_hidden + num_visible}]")

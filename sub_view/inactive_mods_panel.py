@@ -74,7 +74,11 @@ class InactiveModList:
     def signal_inactive_mods_search(self, pattern: str) -> None:
         wni = self.inactive_mods_list.get_widgets_and_items()
         for widget, item in wni:
-            if pattern and not pattern.lower() in widget.json_data["name"].lower():
+            if (
+                pattern
+                and not pattern.lower() in widget.json_data["name"].lower()
+                and not pattern.lower() in widget.json_data["packageId"].lower()
+            ):
                 item.setHidden(True)
             else:
                 item.setHidden(False)

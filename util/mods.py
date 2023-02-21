@@ -186,7 +186,7 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
     return mods
 
 
-def get_installed_expansions(game_path: str) -> Dict[str, Any]:
+def get_installed_expansions(game_path: str, game_version: str) -> Dict[str, Any]:
     """
     Given a path to the game's install folder, return a dict
     containing data for all of the installed expansions
@@ -216,15 +216,20 @@ def get_installed_expansions(game_path: str) -> Dict[str, Any]:
     # Base game and expansion About.xml do not contain name, so these
     # must be manually added
     logger.info("Manually populating names for BASE/EXPANSION data")
-    for package_id in mod_data.keys():
+    for package_id, data in mod_data.items():
         if package_id == "ludeon.rimworld":
-            mod_data[package_id]["name"] = "Core (Base game)"
-        if package_id == "ludeon.rimworld.royalty":
-            mod_data[package_id]["name"] = "Royalty (DLC #1)"
-        if package_id == "ludeon.rimworld.ideology":
-            mod_data[package_id]["name"] = "Ideology (DLC #2)"
-        if package_id == "ludeon.rimworld.biotech":
-            mod_data[package_id]["name"] = "Biotech (DLC #3)"
+            data["name"] = "Core (Base game)"
+        elif package_id == "ludeon.rimworld.royalty":
+            data["name"] = "Royalty (DLC #1)"
+        elif package_id == "ludeon.rimworld.ideology":
+            data["name"] = "Ideology (DLC #2)"
+        elif package_id == "ludeon.rimworld.biotech":
+            data["name"] = "Biotech (DLC #3)"
+        else:
+            logger.error(
+                f"An unknown mod has been found in the expansions folder: {package_id} {data}"
+            )
+        data["supportedVersions"] = {"li": game_version}
     logger.info(
         "Finished getting installed expansions, returning final BASE/EXPANSIONS data now"
     )
@@ -375,7 +380,7 @@ def get_dependencies_for_mods(
     mods: Dict[str, Any],
     steam_db_rules: Dict[str, Any],
     community_rules: Dict[str, Any],
-) -> Dict[str, Any]:
+) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
     Iterate through each workshop mod + known expansion + base game and add new key-values
     describing its dependencies (what it should be loaded after), and incompatibilities
@@ -565,25 +570,31 @@ def get_dependencies_for_mods(
 
     # RimPy's references depdencies based on publisher ID, not package ID
     # TODO: optimization: maybe everything could be based off publisher ID
+    info_from_steam_package_id_to_name = {}
     if steam_db_rules:
         tracking_dict = {}
         steam_id_to_package_id = {}
 
         # Iterate through all workshop items in the Steam DB.
         for folder_id, mod_data in steam_db_rules.items():
-            db_package_id = mod_data["packageId"]
+            db_package_id = mod_data["packageId"].lower()
+
             # Record the Steam ID => package_id
-            steam_id_to_package_id[folder_id] = db_package_id.lower()
+            steam_id_to_package_id[folder_id] = db_package_id
+
+            # Also record package_ids to names (use in tooltips)
+            info_from_steam_package_id_to_name[db_package_id] = mod_data["name"]
+
             # If the package_id is in all_mods...
-            if db_package_id.lower() in all_mods:
+            if db_package_id in all_mods:
                 # Iterate through each dependency (Steam ID) listed on Steam
                 for dependency_folder_id, steam_dep_data in mod_data[
                     "dependencies"
                 ].items():
                     if db_package_id not in tracking_dict:
-                        tracking_dict[db_package_id.lower()] = set()
+                        tracking_dict[db_package_id] = set()
                     # Add Steam ID to dependencies of mod
-                    tracking_dict[db_package_id.lower()].add(dependency_folder_id)
+                    tracking_dict[db_package_id].add(dependency_folder_id)
 
         # For each mod that exists in all_mods -> dependencies (in Steam ID form)
         for installed_mod_id, set_of_dependency_steam_ids in tracking_dict.items():
@@ -658,7 +669,7 @@ def get_dependencies_for_mods(
         f"Total number of incompatibilities: {_get_num_dependencies(all_mods, 'incompatibilities')}"
     )
     logger.info("Returing all mods now")
-    return all_mods
+    return all_mods, info_from_steam_package_id_to_name
 
 
 def _get_num_dependencies(all_mods: Dict[str, Any], key_name: str) -> None:
@@ -705,6 +716,7 @@ def add_dependency_to_mod(
             if isinstance(dependency_or_dependency_ids[0], dict):
                 for dependency in dependency_or_dependency_ids:
                     if dependency.get("packageId"):
+                        # Below works with `MayRequire`` dependencies
                         dependency_id = dependency["packageId"].lower()
                         # if dependency_id in all_mods:
                         # ^ dependencies are required regardless of whether they are in all_mods
@@ -838,19 +850,54 @@ def add_load_rule_to_mod(
         # If the value is a single string...
         if isinstance(dependency_or_dependency_ids, str):
             dependency_id = dependency_or_dependency_ids.lower()
-            if dependency_id in all_mods:
-                mod_data[explicit_key].add((dependency_id, True))
-                if indirect_key not in all_mods[dependency_id]:
-                    all_mods[dependency_id][indirect_key] = set()
-                all_mods[dependency_id][indirect_key].add(
-                    (mod_data["packageId"], False)
+
+            if dependency_id:
+                if dependency_id in all_mods:
+                    mod_data[explicit_key].add((dependency_id, True))
+                    if indirect_key not in all_mods[dependency_id]:
+                        all_mods[dependency_id][indirect_key] = set()
+                    all_mods[dependency_id][indirect_key].add(
+                        (mod_data["packageId"], False)
+                    )
+
+        # If the value is a single dict (case of MayRequire rules)
+        elif isinstance(dependency_or_dependency_ids, dict):
+            dependency_id = ""
+            if "#text" in dependency_or_dependency_ids:
+                dependency_id = dependency_or_dependency_ids["#text"].lower()
+            else:
+                logger.error(
+                    f"Load rule with MayRequire does not contain expected #text key: {dependency_or_dependency_ids}"
                 )
+            if dependency_id:
+                if dependency_id in all_mods:
+                    mod_data[explicit_key].add((dependency_id, True))
+                    if indirect_key not in all_mods[dependency_id]:
+                        all_mods[dependency_id][indirect_key] = set()
+                    all_mods[dependency_id][indirect_key].add(
+                        (mod_data["packageId"], False)
+                    )
 
         # If the value is a LIST of strings
         elif isinstance(dependency_or_dependency_ids, list):
-            if isinstance(dependency_or_dependency_ids[0], str):
-                for dependency in dependency_or_dependency_ids:
+            for dependency in dependency_or_dependency_ids:
+                dependency_id = ""
+                if isinstance(dependency, str):
                     dependency_id = dependency.lower()
+                elif isinstance(dependency, dict):
+                    # MayRequire may be used here
+                    if "#text" in dependency:
+                        dependency_id = dependency["#text"].lower()
+                    else:
+                        logger.error(
+                            f"Load rule with MayRequire does not contain expected #text key: {dependency}"
+                        )
+                else:
+                    logger.error(
+                        f"Load rule is not an expected str or dict: {dependency}"
+                    )
+
+                if dependency_id:
                     if dependency_id in all_mods:
                         mod_data[explicit_key].add((dependency_id, True))
                         if indirect_key not in all_mods[dependency_id]:
@@ -858,13 +905,9 @@ def add_load_rule_to_mod(
                         all_mods[dependency_id][indirect_key].add(
                             (mod_data["packageId"], False)
                         )
-            else:
-                logger.error(
-                    f"List of load order rules does not contain strings: [{dependency_or_dependency_ids}]"
-                )
         else:
             logger.error(
-                f"Load order rules is not a single string or a list of strings: [{dependency_or_dependency_ids}]"
+                f"Load order rules is not a single string/dict or a list of strigs/dicts: [{dependency_or_dependency_ids}]"
             )
 
 
