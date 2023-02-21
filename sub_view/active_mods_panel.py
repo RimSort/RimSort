@@ -292,7 +292,11 @@ class ActiveModList(QWidget):
     def signal_active_mods_search(self, pattern: str) -> None:
         wni = self.active_mods_list.get_widgets_and_items()
         for widget, item in wni:
-            if pattern and not pattern.lower() in widget.json_data["name"].lower():
+            if (
+                pattern
+                and not pattern.lower() in widget.json_data["name"].lower()
+                and not pattern.lower() in widget.json_data["packageId"].lower()
+            ):
                 item.setHidden(True)
             else:
                 item.setHidden(False)
@@ -307,8 +311,6 @@ class ActiveModList(QWidget):
             else:
                 num_visible += 1
         if self.active_mods_search.text():
-            self.num_mods.setText(
-                f"Active [{num_visible}/{num_hidden + num_visible}]"
-            )
+            self.num_mods.setText(f"Active [{num_visible}/{num_hidden + num_visible}]")
         else:
             self.num_mods.setText(f"Active [{num_hidden + num_visible}]")
