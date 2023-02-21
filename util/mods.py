@@ -705,6 +705,7 @@ def add_dependency_to_mod(
             if isinstance(dependency_or_dependency_ids[0], dict):
                 for dependency in dependency_or_dependency_ids:
                     if dependency.get("packageId"):
+                        # Below works with `MayRequire`` dependencies
                         dependency_id = dependency["packageId"].lower()
                         # if dependency_id in all_mods:
                         # ^ dependencies are required regardless of whether they are in all_mods
@@ -838,19 +839,54 @@ def add_load_rule_to_mod(
         # If the value is a single string...
         if isinstance(dependency_or_dependency_ids, str):
             dependency_id = dependency_or_dependency_ids.lower()
-            if dependency_id in all_mods:
-                mod_data[explicit_key].add((dependency_id, True))
-                if indirect_key not in all_mods[dependency_id]:
-                    all_mods[dependency_id][indirect_key] = set()
-                all_mods[dependency_id][indirect_key].add(
-                    (mod_data["packageId"], False)
+
+            if dependency_id:
+                if dependency_id in all_mods:
+                    mod_data[explicit_key].add((dependency_id, True))
+                    if indirect_key not in all_mods[dependency_id]:
+                        all_mods[dependency_id][indirect_key] = set()
+                    all_mods[dependency_id][indirect_key].add(
+                        (mod_data["packageId"], False)
+                    )
+
+        # If the value is a single dict (case of MayRequire rules)
+        elif isinstance(dependency_or_dependency_ids, dict):
+            dependency_id = ""
+            if "#text" in dependency_or_dependency_ids:
+                dependency_id = dependency_or_dependency_ids["#text"].lower()
+            else:
+                logger.error(
+                    f"Load rule with MayRequire does not contain expected #text key: {dependency_or_dependency_ids}"
                 )
+            if dependency_id:
+                if dependency_id in all_mods:
+                    mod_data[explicit_key].add((dependency_id, True))
+                    if indirect_key not in all_mods[dependency_id]:
+                        all_mods[dependency_id][indirect_key] = set()
+                    all_mods[dependency_id][indirect_key].add(
+                        (mod_data["packageId"], False)
+                    )
 
         # If the value is a LIST of strings
         elif isinstance(dependency_or_dependency_ids, list):
-            if isinstance(dependency_or_dependency_ids[0], str):
-                for dependency in dependency_or_dependency_ids:
+            for dependency in dependency_or_dependency_ids:
+                dependency_id = ""
+                if isinstance(dependency, str):
                     dependency_id = dependency.lower()
+                elif isinstance(dependency, dict):
+                    # MayRequire may be used here
+                    if "#text" in dependency:
+                        dependency_id = dependency["#text"].lower()
+                    else:
+                        logger.error(
+                            f"Load rule with MayRequire does not contain expected #text key: {dependency}"
+                        )
+                else:
+                    logger.error(
+                        f"Load rule is not an expected str or dict: {dependency}"
+                    )
+                
+                if dependency_id:
                     if dependency_id in all_mods:
                         mod_data[explicit_key].add((dependency_id, True))
                         if indirect_key not in all_mods[dependency_id]:
@@ -858,13 +894,9 @@ def add_load_rule_to_mod(
                         all_mods[dependency_id][indirect_key].add(
                             (mod_data["packageId"], False)
                         )
-            else:
-                logger.error(
-                    f"List of load order rules does not contain strings: [{dependency_or_dependency_ids}]"
-                )
         else:
             logger.error(
-                f"Load order rules is not a single string or a list of strings: [{dependency_or_dependency_ids}]"
+                f"Load order rules is not a single string/dict or a list of strigs/dicts: [{dependency_or_dependency_ids}]"
             )
 
 
