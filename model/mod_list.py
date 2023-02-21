@@ -1,4 +1,6 @@
 import logging
+import os
+from pathlib import Path
 from typing import Any, Dict, List
 
 from PySide2.QtCore import *
@@ -45,6 +47,18 @@ class ModListWidget(QListWidget):
         self.horizontalScrollBar().setEnabled(False)
         self.horizontalScrollBar().setVisible(False)
 
+        # Store icon paths
+        self.steam_icon_path = str(
+            Path(
+                os.path.join(os.path.dirname(__file__), "../data/steam_icon.png")
+            ).resolve()
+        )
+        self.ludeon_icon_path = str(
+            Path(
+                os.path.join(os.path.dirname(__file__), "../data/ludeon_icon.png")
+            ).resolve()
+        )
+
         # Allow inserting custom list items
         self.model().rowsInserted.connect(
             self.handle_rows_inserted, Qt.QueuedConnection
@@ -86,7 +100,9 @@ class ModListWidget(QListWidget):
             item = self.item(idx)
             if item is not None and self.itemWidget(item) is None:
                 data = item.data(Qt.UserRole)
-                widget = ModListItemInner(data, self.width())
+                widget = ModListItemInner(
+                    data, self.width(), self.steam_icon_path, self.ludeon_icon_path
+                )
                 item.setSizeHint(widget.sizeHint())
                 self.setItemWidget(item, widget)
         self.list_update_signal.emit(str(self.count()))

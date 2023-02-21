@@ -14,7 +14,13 @@ class ModListItemInner(QWidget):
     mod and display relevant data on a mod list.
     """
 
-    def __init__(self, data: Dict[str, Any], container_width: float) -> None:
+    def __init__(
+        self,
+        data: Dict[str, Any],
+        container_width: float,
+        steam_icon_path: str,
+        ludeon_icon_path: str,
+    ) -> None:
         """
         Initialize the QWidget with mod data.
         All tags are set to the corresponding field if it
@@ -31,6 +37,8 @@ class ModListItemInner(QWidget):
         # in this variable. This is exactly equal to the dict value of a
         # single all_mods key-value
         self.json_data = data
+        self.steam_icon_path = steam_icon_path
+        self.ludeon_icon_path = ludeon_icon_path
 
         # Visuals
         self.setToolTip(self.get_tool_tip_text())
@@ -90,9 +98,9 @@ class ModListItemInner(QWidget):
         :return icon: QIcon object set to the path of the cooresponding icon image
         """
         if self.json_data.get("isExpansion"):
-            return QIcon("data/ludeon_icon.png")
+            return QIcon(self.ludeon_icon_path)
         elif self.json_data.get("isWorkshop"):
-            return QIcon("data/steam_icon.png")
+            return QIcon(self.steam_icon_path)
         elif self.json_data.get("isLocal"):
             return self.style().standardIcon(QStyle.SP_FileDialogStart)
         else:
