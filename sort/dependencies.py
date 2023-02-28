@@ -1,15 +1,18 @@
 import logging
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
-def gen_deps_graph(active_mods_json, active_mod_ids):
+def gen_deps_graph(
+    active_mods_json: dict[str, Any], active_mod_ids: list[str]
+) -> dict[str, set[str]]:
     """
     Get dependencies
     """
     # Schema: {item: {dependency1, dependency2, ...}}
     logger.info("Generating dependencies graph")
-    dependencies_graph = {}
+    dependencies_graph: dict[str, set[str]] = {}
     for package_id, mod_data in active_mods_json.items():
         dependencies_graph[package_id] = set()
         if mod_data.get("loadTheseBefore"):  # Will either be None, or a set
@@ -31,10 +34,12 @@ def gen_deps_graph(active_mods_json, active_mod_ids):
     return dependencies_graph
 
 
-def gen_rev_deps_graph(active_mods_json, active_mod_ids):
+def gen_rev_deps_graph(
+    active_mods_json: dict[str, Any], active_mod_ids: list[str]
+) -> dict[str, set[str]]:
     # Schema: {item: {isDependentOn1, isDependentOn2, ...}}
     logger.info("Generating reverse dependencies graph")
-    reverse_dependencies_graph = {}
+    reverse_dependencies_graph: dict[str, set[str]] = {}
     for package_id, mod_data in active_mods_json.items():
         reverse_dependencies_graph[package_id] = set()
         if mod_data.get("loadTheseAfter"):  # Will either be None, or a set
@@ -52,7 +57,9 @@ def gen_rev_deps_graph(active_mods_json, active_mod_ids):
     return reverse_dependencies_graph
 
 
-def gen_tier_one_deps_graph(dependencies_graph):
+def gen_tier_one_deps_graph(
+    dependencies_graph: dict[str, set[str]]
+) -> tuple[dict[str, set[str]], set[str]]:
     # Below is a list of mods determined to be "tier one", in the sense that they
     # should be loaded first before any other regular mod. Tier one mods will have specific
     # load order needs within themselves, e.g. Harmony before core. There is no guarantee that
@@ -89,7 +96,9 @@ def gen_tier_one_deps_graph(dependencies_graph):
     return tier_one_dependency_graph, tier_one_mods
 
 
-def get_dependencies_recursive(package_id, active_mods_dependencies):
+def get_dependencies_recursive(
+    package_id: str, active_mods_dependencies: dict[str, set[str]]
+) -> set[str]:
     dependencies_set = set()
     # Should always be true since all active ids get initialized with a set()
     if package_id in active_mods_dependencies:
@@ -101,7 +110,10 @@ def get_dependencies_recursive(package_id, active_mods_dependencies):
     return dependencies_set
 
 
-def gen_tier_three_deps_graph(dependencies_graph, reverse_dependencies_graph):
+def gen_tier_three_deps_graph(
+    dependencies_graph: dict[str, set[str]],
+    reverse_dependencies_graph: dict[str, set[str]],
+) -> tuple[dict[str, set[str]], set[str]]:
     # Below is a list of mods determined to be "tier three", in the sense that they
     # should be loaded after any other regular mod, potentially at the very end of the load order.
     # Tier three mods will have specific load order needs within themselves. There is no guarantee that
@@ -122,7 +134,7 @@ def gen_tier_three_deps_graph(dependencies_graph, reverse_dependencies_graph):
     logger.info(
         f"Recursively generated the following set of tier three mods: {tier_three_mods}"
     )
-    tier_three_dependency_graph = {}
+    tier_three_dependency_graph: dict[str, set[str]] = {}
     for tier_three_mod in tier_three_mods:
         # Tier three mods may reference non-tier-three mods in their dependencies graph,
         # so it is necessary to trim here
@@ -136,7 +148,9 @@ def gen_tier_three_deps_graph(dependencies_graph, reverse_dependencies_graph):
     return tier_three_dependency_graph, tier_three_mods
 
 
-def get_reverse_dependencies_recursive(package_id, active_mods_rev_dependencies):
+def get_reverse_dependencies_recursive(
+    package_id: str, active_mods_rev_dependencies: dict[str, set[str]]
+) -> set[str]:
     reverse_dependencies_set = set()
     # Should always be true since all active ids get initialized with a set()
     if package_id in active_mods_rev_dependencies:
@@ -153,8 +167,11 @@ def get_reverse_dependencies_recursive(package_id, active_mods_rev_dependencies)
 
 
 def gen_tier_two_deps_graph(
-    active_mods, active_mod_ids, tier_one_mods, tier_three_mods
-):
+    active_mods: dict[str, Any],
+    active_mod_ids: list[str],
+    tier_one_mods: set[str],
+    tier_three_mods: set[str],
+) -> dict[str, set[str]]:
     # Now, sort the rest of the mods while removing references to mods in tier one and tier three
     # First, get the dependency graph for tier two mods, minus all references to tier one
     # and tier three mods

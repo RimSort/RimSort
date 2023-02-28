@@ -1,12 +1,12 @@
 import logging
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
 def do_rimpy_sort(
-    dependency_graph: Dict[str, set], active_mods_json: Dict[str, Any]
-) -> Dict[str, Any]:
+    dependency_graph: dict[str, set[str]], active_mods_json: dict[str, Any]
+) -> dict[str, Any]:
     logger.info(f"Starting RimPy sort for {len(dependency_graph)} mods")
     # Get an alphabetized list of dependencies
     active_mods_id_to_name = dict((k, v["name"]) for k, v in active_mods_json.items())
@@ -45,12 +45,12 @@ def do_rimpy_sort(
 
 
 def recursively_force_insert(
-    mods_load_order,
-    dependency_graph,
-    package_id,
-    active_mods_json,
-    index_just_appended,
-):
+    mods_load_order: list[str],
+    dependency_graph: dict[str, set[str]],
+    package_id: str,
+    active_mods_json: dict[str, Any],
+    index_just_appended: int,
+) -> None:
     # Get the reverse alphabetized list (by name) of the current mod's dependencies
     deps_of_package = dependency_graph[package_id]
     deps_id_to_name = {}

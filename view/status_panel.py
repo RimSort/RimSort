@@ -40,7 +40,7 @@ class Status:
         logger.info("Finished Status initialization")
 
     @property
-    def panel(self):
+    def panel(self) -> QHBoxLayout:
         return self._panel
 
     def actions_slot(self, action: str) -> None:

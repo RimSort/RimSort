@@ -13,7 +13,7 @@ class ScrollLabel(QScrollArea):
     part of the mod ifo panel.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the class.
         """
@@ -50,9 +50,9 @@ class ScrollLabel(QScrollArea):
 
         logger.info("Finished ScrollLabel initialization")
 
-    def setText(self, text):
+    def setText(self, text: str) -> None:
         self.label.setText(text)
 
-    def text(self):
+    def text(self) -> str:
         get_text = self.label.text()
         return get_text

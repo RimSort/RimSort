@@ -570,7 +570,7 @@ def get_dependencies_for_mods(
     # TODO: optimization: maybe everything could be based off publisher ID
     info_from_steam_package_id_to_name = {}
     if steam_db_rules:
-        tracking_dict = {}
+        tracking_dict: dict[str, set[str]] = {}
         steam_id_to_package_id = {}
 
         # Iterate through all workshop items in the Steam DB.
@@ -670,7 +670,7 @@ def get_dependencies_for_mods(
     return all_mods, info_from_steam_package_id_to_name
 
 
-def _get_num_dependencies(all_mods: Dict[str, Any], key_name: str) -> None:
+def _get_num_dependencies(all_mods: Dict[str, Any], key_name: str) -> int:
     """Debug func for getting total number of dependencies"""
     counter = 0
     for package_id, mod_data in all_mods.items():
@@ -958,7 +958,7 @@ def get_active_mods_from_config(config_path: str) -> Dict[str, Any]:
     logger.info(f"Getting active mods with Config Path: {config_path}")
     mod_data = xml_path_to_json(config_path)
     if validate_mods_config_format(mod_data):
-        empty_active_mods_dict = {}
+        empty_active_mods_dict: dict[str, Any] = {}
         for package_id in mod_data["ModsConfigData"]["activeMods"]["li"]:
             empty_active_mods_dict[package_id.lower()] = {}
         logger.info(
@@ -1003,7 +1003,7 @@ def populate_active_mods_workshop_data(
     return populated_mods, invalid_mods
 
 
-def merge_mod_data(*dict_args) -> Dict[str, Any]:
+def merge_mod_data(*dict_args: dict[str, Any]) -> Dict[str, Any]:
     """
     Given any number of dictionaries, shallow copy and merge into a new dict,
     precedence goes to key-value pairs in latter dictionaries.

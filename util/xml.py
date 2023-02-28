@@ -16,7 +16,7 @@ def xml_path_to_json(path: str) -> Dict[str, Any]:
     :param path: path to the xml file
     :return: json dict of xml file contents
     """
-    data = {}
+    data: Dict[str, Any]= {}
     if os.path.exists(path):
         logger.info(f"Parsing XML file at: {path}")
         with open(path, encoding="utf-8") as f:
@@ -36,7 +36,7 @@ def non_utf8_xml_path_to_json(path: str) -> Dict[str, Any]:
     :param path: path to the xml file
     :return: json dict of xml file contents
     """
-    data = {}
+    data: Dict[str, Any] = {}
     if os.path.exists(path):
         logger.info(f"Parsing non UTF-8 XML file at: {path}")
         data = xmltodict.parse(fix_non_utf8_xml(path))
@@ -46,7 +46,7 @@ def non_utf8_xml_path_to_json(path: str) -> Dict[str, Any]:
     return data
 
 
-def fix_non_utf8_xml(path: str) -> str:
+def fix_non_utf8_xml(path: str) -> bytes:
     """
     Fixes files that are supposed to be UTF-8, but
     somehow are not. Iterates through every line and
@@ -58,7 +58,7 @@ def fix_non_utf8_xml(path: str) -> str:
     :return: the contents of the file
     """
     logger.info("Transforming non UTF-8 XML")
-    t = ""
+    t = b""
     with open(path, "rb") as problematic_file:
         t = problematic_file.read()
     r = t.decode("utf-8", "ignore").encode("utf-8")

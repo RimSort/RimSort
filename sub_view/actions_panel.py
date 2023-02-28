@@ -1,7 +1,7 @@
 import logging
 from functools import partial
 
-from PySide2.QtCore import Qt, Signal
+from PySide2.QtCore import QPoint, Qt, Signal
 from PySide2.QtWidgets import QMenu, QPushButton, QVBoxLayout, QWidget
 
 logger = logging.getLogger(__name__)
@@ -88,10 +88,10 @@ class Actions(QWidget):
         logger.info("Finished Actions initialization")
 
     @property
-    def panel(self):
+    def panel(self) -> QVBoxLayout:
         return self._panel
 
-    def contextMenuEvent(self, point):
+    def contextMenuEvent(self, point: QPoint) -> None:
         contextMenu = QMenu(self)
         set_run_args = contextMenu.addAction("Edit Run Args")
         set_run_args.triggered.connect(
