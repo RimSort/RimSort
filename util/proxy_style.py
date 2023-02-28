@@ -1,8 +1,8 @@
 from typing import Optional
 
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
+from PySide2.QtCore import Qt
+from PySide2.QtGui import QPainter, QPen
+from PySide2.QtWidgets import QProxyStyle, QStyle, QStyleOption, QWidget
 
 
 class ProxyStyle(QProxyStyle):

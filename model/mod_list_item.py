@@ -1,9 +1,9 @@
 import logging
 from typing import Any, Dict
 
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
+from PySide2.QtCore import QRectF, QSize, Qt
+from PySide2.QtGui import QFontMetrics, QIcon
+from PySide2.QtWidgets import QHBoxLayout, QLabel, QStyle, QWidget
 
 logger = logging.getLogger(__name__)
 

@@ -5,8 +5,6 @@ import platform
 import traceback
 from typing import Any, Dict, List, Optional, Tuple
 
-from PySide2.QtWidgets import *
-
 from util.error import show_warning
 from util.schema import validate_mods_config_format
 from util.xml import non_utf8_xml_path_to_json, xml_path_to_json

@@ -4,9 +4,7 @@ import platform
 import subprocess
 from typing import Any, Dict
 
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
+from PySide2.QtWidgets import QFileDialog, QFrame, QHBoxLayout, QInputDialog, QLineEdit
 
 from sort.dependencies import *
 from sort.rimpy_sort import *

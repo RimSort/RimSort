@@ -1,4 +1,4 @@
-from PySide2.QtWidgets import *
+from PySide2.QtWidgets import QMessageBox
 from typing import Optional
 
 import logging

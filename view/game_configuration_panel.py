@@ -9,9 +9,17 @@ from functools import partial
 from os.path import expanduser
 from typing import Any
 
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
+from PySide2.QtCore import QObject, QStandardPaths, Qt, Signal
+from PySide2.QtWidgets import (
+    QFileDialog,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QToolButton,
+    QVBoxLayout,
+)
 
 from panel.settings_panel import SettingsPanel
 from util.error import *
@@ -189,9 +197,7 @@ class GameConfiguration(QObject):
         self.local_folder_select_button = QPushButton("...")
         self.local_folder_select_button.clicked.connect(self.set_local_folder)
         self.local_folder_select_button.setObjectName("RightButton")
-        self.local_folder_select_button.setToolTip(
-            "Set the Local Mods directory."
-        )
+        self.local_folder_select_button.setToolTip("Set the Local Mods directory.")
 
         # WIDGETS INTO CONTAINER LAYOUTS
         self.client_settings_row.addWidget(self.client_settings_button)
@@ -423,7 +429,7 @@ class GameConfiguration(QObject):
                     f"The path [{path}] you are trying to open does not exist. Has the "
                     "folder been deleted or moved? Try re-setting the path with the button "
                     "on the right or using the AutoDetect Paths functionality."
-                )
+                ),
             )
 
     def platform_specific_open(self, path: str) -> None:

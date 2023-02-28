@@ -1,9 +1,8 @@
 import logging
 from functools import partial
 
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
+from PySide2.QtCore import Qt, Signal
+from PySide2.QtWidgets import QMenu, QPushButton, QVBoxLayout, QWidget
 
 logger = logging.getLogger(__name__)
 
