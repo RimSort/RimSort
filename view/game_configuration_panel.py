@@ -9,9 +9,17 @@ from functools import partial
 from os.path import expanduser
 from typing import Any
 
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
+from PySide2.QtCore import QObject, QStandardPaths, Qt, Signal
+from PySide2.QtWidgets import (
+    QFileDialog,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QToolButton,
+    QVBoxLayout,
+)
 
 from panel.settings_panel import SettingsPanel
 from util.error import *
@@ -189,9 +197,7 @@ class GameConfiguration(QObject):
         self.local_folder_select_button = QPushButton("...")
         self.local_folder_select_button.clicked.connect(self.set_local_folder)
         self.local_folder_select_button.setObjectName("RightButton")
-        self.local_folder_select_button.setToolTip(
-            "Set the Local Mods directory."
-        )
+        self.local_folder_select_button.setToolTip("Set the Local Mods directory.")
 
         # WIDGETS INTO CONTAINER LAYOUTS
         self.client_settings_row.addWidget(self.client_settings_button)
@@ -255,10 +261,10 @@ class GameConfiguration(QObject):
         logger.info("Finished GameConfiguration initialization")
 
     @property
-    def panel(self):
+    def panel(self) -> QVBoxLayout:
         return self._panel
 
-    def check_if_essential_paths_are_set(self) -> None:
+    def check_if_essential_paths_are_set(self) -> bool:
         """
         When the user starts the app for the first time, none
         of the paths will be set. We should check for this and
@@ -322,7 +328,7 @@ class GameConfiguration(QObject):
         if not os.path.exists(settings_path):
             logger.info(f"Settings file [{settings_path}] does not exist")
             # Create a new empty settings.json file
-            init_settings = {}
+            init_settings: dict[str, Any] = {}
             json_object = json.dumps(init_settings, indent=4)
             logger.info(f"Creating empty JSON to write: [{json_object}]")
             with open(settings_path, "w") as outfile:
@@ -423,7 +429,7 @@ class GameConfiguration(QObject):
                     f"The path [{path}] you are trying to open does not exist. Has the "
                     "folder been deleted or moved? Try re-setting the path with the button "
                     "on the right or using the AutoDetect Paths functionality."
-                )
+                ),
             )
 
     def platform_specific_open(self, path: str) -> None:
@@ -439,7 +445,7 @@ class GameConfiguration(QObject):
             subprocess.Popen(["open", path])
         elif system_name == "Windows":
             logger.info(f"Opening {path} with startfile on Windows")
-            os.startfile(path)
+            os.startfile(path)  # type: ignore
         elif system_name == "Linux":
             logger.info(f"Opening {path} with xdg-open on Linux")
             subprocess.Popen(["xdg-open", path])
@@ -592,22 +598,22 @@ class GameConfiguration(QObject):
         self.local_folder_line.setText("")
         self.game_version_line.setText("")
 
-    def clear_game_folder_line(self):
+    def clear_game_folder_line(self) -> None:
         logger.info("USER ACTION: clear game folder line")
         self.update_persistent_storage("game_folder", "")
         self.game_folder_line.setText("")
 
-    def clear_config_folder_line(self):
+    def clear_config_folder_line(self) -> None:
         logger.info("USER ACTION: clear config folder line")
         self.update_persistent_storage("config_folder", "")
         self.config_folder_line.setText("")
 
-    def clear_workshop_folder_line(self):
+    def clear_workshop_folder_line(self) -> None:
         logger.info("USER ACTION: clear workshop folder line")
         self.update_persistent_storage("workshop_folder", "")
         self.workshop_folder_line.setText("")
 
-    def clear_local_folder_line(self):
+    def clear_local_folder_line(self) -> None:
         logger.info("USER ACTION: clear local folder line")
         self.update_persistent_storage("local_folder", "")
         self.local_folder_line.setText("")
@@ -743,19 +749,19 @@ class GameConfiguration(QObject):
                 f"Autodetected game folder path does not exist: {rimworld_mods_path}"
             )
 
-    def get_game_folder_path(self):
+    def get_game_folder_path(self) -> str:
         logger.info(
             f"Responding with requested Game Folder: {self.game_folder_line.text()}"
         )
         return self.game_folder_line.text()
 
-    def get_config_folder_path(self):
+    def get_config_folder_path(self) -> str:
         logger.info(
             f"Responding with requested Config Folder: {self.config_folder_line.text()}"
         )
         return self.config_folder_line.text()
 
-    def get_config_path(self):
+    def get_config_path(self) -> str:
         logger.info("Getting path to ModsConfig.xml")
         config_folder_path = self.get_config_folder_path()
         if config_folder_path:
@@ -765,19 +771,19 @@ class GameConfiguration(QObject):
         logger.info("ERROR: unable to get path to ModsConfig.xml")
         return ""
 
-    def get_workshop_folder_path(self):
+    def get_workshop_folder_path(self) -> str:
         logger.info(
             f"Responding with requested Workshop Folder: {self.workshop_folder_line.text()}"
         )
         return self.workshop_folder_line.text()
 
-    def get_local_folder_path(self):
+    def get_local_folder_path(self) -> str:
         logger.info(
             f"Responding with requested Local Folder: {self.local_folder_line.text()}"
         )
         return self.local_folder_line.text()
 
-    def open_settings_panel(self):
+    def open_settings_panel(self) -> None:
         """
         Opens the settings panel (as a modal window), blocking
         access to the rest of the application until it is closed.
@@ -788,13 +794,13 @@ class GameConfiguration(QObject):
         logger.info("USER ACTION: opening settings panel")
         self.settings_panel.show()
 
-    def do_autodetect(self):
+    def do_autodetect(self) -> None:
         self.autodetect_paths_by_platform()
 
-    def open_wiki_webbrowser(self):
+    def open_wiki_webbrowser(self) -> None:
         logger.info("USER ACTION: opening wiki")
         webbrowser.open("https://github.com/oceancabbage/RimSort/wiki")
 
-    def open_github_webbrowser(self):
+    def open_github_webbrowser(self) -> None:
         logger.info("USER ACTION: opening GitHub")
         webbrowser.open("https://github.com/oceancabbage/RimSort")

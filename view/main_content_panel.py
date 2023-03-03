@@ -4,9 +4,7 @@ import platform
 import subprocess
 from typing import Any, Dict
 
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
+from PySide2.QtWidgets import QFileDialog, QFrame, QHBoxLayout, QInputDialog, QLineEdit
 
 from sort.dependencies import *
 from sort.rimpy_sort import *
@@ -82,8 +80,8 @@ class MainContent:
         self.game_configuration = game_configuration
 
         # Restore cache initially set to empty
-        self.active_mods_data_restore_state = []
-        self.inactive_mods_data_restore_state = []
+        self.active_mods_data_restore_state: Dict[str, Any] = {}
+        self.inactive_mods_data_restore_state: Dict[str, Any] = {}
 
         self.game_version = ""
 
@@ -96,10 +94,6 @@ class MainContent:
             self.repopulate_lists(True)
 
         logger.info("Finished MainContent initialization")
-
-    @property
-    def panel(self):
-        return self._panel
 
     def mod_list_slot(self, package_id: str) -> None:
         """
@@ -258,7 +252,7 @@ class MainContent:
         if action == "edit_run_args":
             self._do_edit_run_args()
 
-    def _do_edit_run_args(self):
+    def _do_edit_run_args(self) -> None:
         """
         Opens a QDialogInput that allows the user to edit the run args
         that are configured to be passed to the Rimworld executable
@@ -278,7 +272,7 @@ class MainContent:
                 "runArgs", self.game_configuration.run_arguments
             )
 
-    def _do_platform_specific_game_launch(self, args) -> None:
+    def _do_platform_specific_game_launch(self, args: str) -> None:
         """
         This function starts the Rimworld game process in it's own subprocess,
         by launching the executable found in the configured game directory.

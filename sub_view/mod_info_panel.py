@@ -2,9 +2,9 @@ import logging
 import os
 from typing import Any, Dict
 
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
+from PySide2.QtCore import Qt
+from PySide2.QtGui import QPixmap
+from PySide2.QtWidgets import QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout
 
 from model.scroll_label import ScrollLabel
 
@@ -93,18 +93,37 @@ class ModInfo:
         logger.info(f"Starting display mod info for info: {mod_info}")
         self.mod_info_name_value.setText(mod_info.get("name"))
         self.mod_info_package_id_value.setText(mod_info.get("packageId"))
-        if mod_info.get("authors"):
-            list_of_authors = mod_info.get("authors")["li"]
-            authors_text = ", ".join(list_of_authors)
-            self.mod_info_author_value.setText(authors_text)
+        if "authors" in mod_info:
+            if "li" in mod_info["authors"]:
+                list_of_authors = mod_info["authors"]["li"]
+                authors_text = ", ".join(list_of_authors)
+                self.mod_info_author_value.setText(authors_text)
+            else:
+                self.mod_info_author_value.setText("UNKNOWN")
+                logger.error(
+                    f"[authors] tag does not contain [li] tag: {mod_info['authors']}"
+                )
         else:
             self.mod_info_author_value.setText(mod_info.get("author"))
         self.mod_info_path_value.setText(mod_info.get("path"))
-        self.description.setText(mod_info.get("description"))
+
+        # Set the scrolling description for the Mod Info Panel
+        self.description.setText("")
+        if "description" in mod_info:
+            if mod_info["description"] is not None:
+                if isinstance(mod_info["description"], str):
+                    self.description.setText(mod_info["description"])
+                else:
+                    logger.error(
+                        f"[description] tag is not a string: {mod_info['description']}"
+                    )
+        # It is OK for the description value to be None (was not provided)
+        # It is OK for the description key to not be in mod_info
+
         # Get Preview.png
-        if mod_info.get("path"):
-            workshop_folder_path = mod_info.get("path")
-            logger.info(f"Mod path exists at: {workshop_folder_path}")
+        if mod_info.get("path") and isinstance(mod_info["path"], str):
+            workshop_folder_path = mod_info["path"]
+            logger.info(f"Got mod path for preview image: {workshop_folder_path}")
             # Look for a case-insensitive About folder
             invalid_folder_path_found = True
             about_folder_name = "About"
@@ -143,5 +162,8 @@ class ModInfo:
                     pixmap.scaled(self.preview_picture.size(), Qt.KeepAspectRatio)
                 )
         else:
+            logger.error(
+                f"[path] tag does not exist in mod_info, is empty, or is not string: {mod_info.get('path')}"
+            )
             self.preview_picture.setPixmap(None)
-        logger.info(f"Finished display mod info")
+        logger.info("Finished displaying mod info")

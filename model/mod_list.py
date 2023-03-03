@@ -1,11 +1,11 @@
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Optional
 
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
+from PySide2.QtCore import QModelIndex, Qt, Signal
+from PySide2.QtGui import QDropEvent, QFocusEvent
+from PySide2.QtWidgets import QAbstractItemView, QListWidget, QListWidgetItem
 
 from model.mod_list_item import ModListItemInner
 
@@ -71,7 +71,7 @@ class ModListWidget(QListWidget):
 
         logger.info("Finished ModListWidget initialization")
 
-    def recreate_mod_list(self, mods: Dict[str, Any]) -> None:
+    def recreate_mod_list(self, mods: dict[str, Any]) -> None:
         """
         Clear all mod items and add new ones from a dict.
 
@@ -124,17 +124,18 @@ class ModListWidget(QListWidget):
         self.list_update_signal.emit("drop")
         return ret
 
-    def get_item_widget_at_index(self, idx: int) -> ModListItemInner:
+    def get_item_widget_at_index(self, idx: int) -> Optional[ModListItemInner]:
         item = self.item(idx)
         if item:
             return self.itemWidget(item)
+        return None
 
-    def get_widgets_and_items(self):
+    def get_widgets_and_items(self) -> list[tuple[ModListItemInner, QListWidgetItem]]:
         return [
             (self.itemWidget(self.item(i)), self.item(i)) for i in range(self.count())
         ]
 
-    def get_list_items_by_dict(self) -> Dict[str, Any]:
+    def get_list_items_by_dict(self) -> dict[str, Any]:
         """
         Get a dict of all row item's widgets data. Equal to `mods` in
         recreate mod list.

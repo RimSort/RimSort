@@ -1,8 +1,6 @@
 import logging
 
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
+from PySide2.QtWidgets import QFrame, QHBoxLayout
 
 from model.animation_label import AnimationLabel
 
@@ -42,7 +40,7 @@ class Status:
         logger.info("Finished Status initialization")
 
     @property
-    def panel(self):
+    def panel(self) -> QHBoxLayout:
         return self._panel
 
     def actions_slot(self, action: str) -> None:

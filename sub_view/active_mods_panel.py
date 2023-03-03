@@ -1,11 +1,21 @@
 import logging
-from typing import Any, Dict
+from typing import Any
 
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
+from PySide2.QtCore import QSize, Qt
+from PySide2.QtWidgets import (
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QListWidgetItem,
+    QStyle,
+    QToolButton,
+    QVBoxLayout,
+    QWidget,
+)
 
 from model.mod_list import ModListWidget
+from model.mod_list_item import ModListItemInner
 
 logger = logging.getLogger(__name__)
 
@@ -94,8 +104,8 @@ class ActiveModList(QWidget):
         # self.active_mods_search.setCompleter(self.completer)
 
         self.game_version = ""
-        self.all_mods = {}
-        self.steam_package_id_to_name = {}
+        self.all_mods: dict[str, Any] = {}
+        self.steam_package_id_to_name: dict[str, Any] = {}
 
         # Connect signals and slots
         self.active_mods_list.list_update_signal.connect(
@@ -104,7 +114,7 @@ class ActiveModList(QWidget):
 
         logger.info("Finished ActiveModList initialization")
 
-    def recalculate_internal_list_errors(self):
+    def recalculate_internal_list_errors(self) -> None:
         """
         Whenever the active mod list has items added to it,
         or has items removed from it, or has items rearranged around within it,
@@ -296,7 +306,7 @@ class ActiveModList(QWidget):
                 current_package_index
             )
             # Set icon tooltip
-            if item_widget_at_index:
+            if item_widget_at_index is not None:
                 if warning_tool_tip_text or error_tool_tip_text:
                     item_widget_at_index.warning_icon_label.setHidden(False)
                     tool_tip_text = error_tool_tip_text + warning_tool_tip_text
@@ -347,7 +357,7 @@ class ActiveModList(QWidget):
 
         self.recalculate_internal_list_errors()
 
-    def clear_active_mods_search(self):
+    def clear_active_mods_search(self) -> None:
         self.active_mods_search.setText("")
         self.active_mods_search.clearFocus()
 
@@ -364,7 +374,9 @@ class ActiveModList(QWidget):
                 item.setHidden(False)
         self.update_count(wni)
 
-    def update_count(self, widgets_and_items):
+    def update_count(
+        self, widgets_and_items: list[tuple[ModListItemInner, QListWidgetItem]]
+    ) -> None:
         num_hidden = 0
         num_visible = 0
         for w, i in widgets_and_items:

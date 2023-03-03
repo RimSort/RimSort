@@ -1,11 +1,16 @@
 import logging
-from typing import Any, Dict, List
 
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
+from PySide2.QtCore import Qt
+from PySide2.QtWidgets import (
+    QLabel,
+    QLineEdit,
+    QListWidgetItem,
+    QToolButton,
+    QVBoxLayout,
+)
 
 from model.mod_list import ModListWidget
+from model.mod_list_item import ModListItemInner
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +72,7 @@ class InactiveModList:
             # self.num_mods.setText(f"Inactive [{count}]")
             self.update_count(self.inactive_mods_list.get_widgets_and_items())
 
-    def clear_inactive_mods_search(self):
+    def clear_inactive_mods_search(self) -> None:
         self.inactive_mods_search.setText("")
         self.inactive_mods_search.clearFocus()
 
@@ -84,7 +89,9 @@ class InactiveModList:
                 item.setHidden(False)
         self.update_count(wni)
 
-    def update_count(self, widgets_and_items):
+    def update_count(
+        self, widgets_and_items: list[tuple[ModListItemInner, QListWidgetItem]]
+    ) -> None:
         num_hidden = 0
         num_visible = 0
         for w, i in widgets_and_items:

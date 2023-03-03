@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from toposort import toposort
 
@@ -7,8 +7,8 @@ logger = logging.getLogger(__name__)
 
 
 def do_topo_sort(
-    dependency_graph: Dict[str, set], active_mods_json: Dict[str, Any]
-) -> Dict[str, Any]:
+    dependency_graph: dict[str, set[str]], active_mods_json: dict[str, Any]
+) -> dict[str, Any]:
     """
     Sort mods using the topological sort algorithm. For each
     topological level, sort the mods alphabetically.

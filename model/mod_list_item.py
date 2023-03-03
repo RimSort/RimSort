@@ -1,9 +1,9 @@
 import logging
 from typing import Any, Dict
 
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
+from PySide2.QtCore import QRectF, QSize, Qt
+from PySide2.QtGui import QFontMetrics, QIcon
+from PySide2.QtWidgets import QHBoxLayout, QLabel, QStyle, QWidget
 
 logger = logging.getLogger(__name__)
 
@@ -77,12 +77,18 @@ class ModListItemInner(QWidget):
 
     def get_tool_tip_text(self) -> str:
         name_line = f"Mod: {self.json_data.get('name', 'UNKNOWN')}\n"
-        if self.json_data.get("authors"):
-            list_of_authors = self.json_data.get("authors")["li"]
-            authors_text = ", ".join(list_of_authors)
-            author_line = f"Authors: {authors_text}\n"
+
+        author_line = "Author: UNKNOWN\n"
+        if "authors" in self.json_data:
+            if "li" in self.json_data["authors"]:
+                list_of_authors = self.json_data["authors"]["li"]
+                authors_text = ", ".join(list_of_authors)
+                author_line = f"Authors: {authors_text}\n"
+            else:
+                logger.error(f"[authors] tag does not contain [li] tag: {self.json_data['authors']}")
         else:
-            author_line = f"Authors: {self.json_data.get('author', 'UNKNOWN')}\n"
+            author_line = f"Author: {self.json_data.get('author', 'UNKNOWN')}\n"
+
         package_id_line = f"PackageID: {self.json_data.get('packageId', 'UNKNOWN')}\n"
         # TODO: version information should be read from manifest file, which is not currently
         # being used. This file actually also contains some load rule data so use that too.

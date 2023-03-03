@@ -4,9 +4,8 @@ import sys
 import traceback
 from pathlib import Path
 
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
+from PySide2.QtCore import QSize
+from PySide2.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 
 from util.error import show_fatal_error
 from util.proxy_style import ProxyStyle
