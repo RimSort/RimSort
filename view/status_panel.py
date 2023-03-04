@@ -10,38 +10,35 @@ logger = logging.getLogger(__name__)
 class Status:
     """
     This class controls the layout and functionality for
-    the status panel on the bottom of the GUI.
+    the Status view on the bottom of the GUI.
     """
 
     def __init__(self) -> None:
         """
-        Initialize the status panel. Construct the layout,
-        add the single text widget.
+        Initialize the Status view. Construct the layout
+        add the single fading text widget.
         """
-        logger.info("Starting Status initialization")
-        # Frame contains base layout to allow for styling
+        logger.info("Starting Status view initialization")
+
+        # This view is contained within a QFrame to allow for styling
         self.frame = QFrame()
         self.frame.setObjectName("StatusPanel")
 
-        # Base layout
-        self._panel = QHBoxLayout()
-        self._panel.setContentsMargins(10, 1, 0, 2)
+        # Create the main layout for the view
+        self.layout = QHBoxLayout()
+        self.layout.setContentsMargins(10, 1, 0, 2)
 
-        # Adding layout to frame
-        self.frame.setLayout(self._panel)
+        # The main layout is contained inside the QFrame
+        self.frame.setLayout(self.layout)
 
-        # Instantiate widgets
+        # Create the single fading text widget
         self.status_text = AnimationLabel()
         self.status_text.setObjectName("StatusLabel")
 
-        # Add widgets to base layout
-        self._panel.addWidget(self.status_text)
+        # Add the widget to the base layout
+        self.layout.addWidget(self.status_text)
 
-        logger.info("Finished Status initialization")
-
-    @property
-    def panel(self) -> QHBoxLayout:
-        return self._panel
+        logger.info("Finished Status view initialization")
 
     def actions_slot(self, action: str) -> None:
         """

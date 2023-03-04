@@ -21,8 +21,8 @@ from PySide2.QtWidgets import (
     QVBoxLayout,
 )
 
-from panel.settings_panel import SettingsPanel
 from util.error import *
+from window.settings_panel import SettingsPanel
 
 logger = logging.getLogger(__name__)
 
