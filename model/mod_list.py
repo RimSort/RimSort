@@ -21,6 +21,7 @@ class ModListWidget(QListWidget):
 
     mod_info_signal = Signal(str)
     list_update_signal = Signal(str)
+    item_added_signal = Signal(str)
 
     def __init__(self) -> None:
         """
@@ -69,6 +70,10 @@ class ModListWidget(QListWidget):
             self.handle_rows_removed, Qt.QueuedConnection
         )
 
+        # This set is used to keep track of mods that have been loaded
+        # into widgets. Used for an optimization strategy for `handle_rows_inserted`
+        self.package_ids = set()
+
         logger.info("Finished ModListWidget initialization")
 
     def recreate_mod_list(self, mods: dict[str, Any]) -> None:
@@ -79,6 +84,7 @@ class ModListWidget(QListWidget):
         """
         logger.info("Internally recreating mod list")
         self.clear()
+        self.package_ids = set()
         if mods:
             for mod_json_data in mods.values():
                 list_item = QListWidgetItem(self)
@@ -88,9 +94,34 @@ class ModListWidget(QListWidget):
     def handle_rows_inserted(self, parent: QModelIndex, first: int, last: int) -> None:
         """
         This slot is called when rows are inserted.
-        When row items are inserted, create a corresponding display widget
-        and insert it into the row item. Can accommodate inserting
-        multiple rows. First = last for single item inserts.
+
+        When mods are inserted into the mod list, either through the
+        `recreate_mod_list` method above or automatically through dragging
+        and dropping on the UI, this function is called. For single-item
+        inserts, which happens through the above method or through dragging
+        and dropping individual mods, `first` equals `last` and the below
+        loop is just run once. In this loop, a custom widget is created,
+        which displays the text, icons, etc, and is added to the list item.
+
+        For dragging and dropping multiple items, the loop is run multiple
+        times. Importantly, even for multiple items, the number of list items
+        is set BEFORE the loop starts running, e.g. if we were dragging 3 mods
+        onto a list of 100 mods, this method is called once and by the start
+        of this method, `self.count()` is already 103; there are 3 "empty"
+        list items that do not have widgets assigned to them.
+
+        However, inserting the initial `n` mods with `recreate_mod_list` has
+        has an inefficiency: it is only able to insert one at a time. This means
+        this method is called `n` times for the first `n` mods.
+        One optimization here (saving about 1 second with a 200 mod list) is
+        to not emit the list update signal until the number of widgets is
+        equal to the number of items. If widgets < items, that means
+        widgets are still being added. Only when widgets == items does it mean
+        we are done with adding the initial set of mods. We can do this
+        by keeping track of the number of widgets currently loaded in the list
+        through a set of package_ids (this is imperfect, we will need to switch
+        this to using UUID keys TODO). This way, we easily compare `self.count()`
+        to the length of the set.
 
         :param parent: parent to get rows under (not used)
         :param first: index of first item inserted
@@ -105,19 +136,34 @@ class ModListWidget(QListWidget):
                 )
                 item.setSizeHint(widget.sizeHint())
                 self.setItemWidget(item, widget)
-        self.list_update_signal.emit(str(self.count()))
+                self.package_ids.add(data["packageId"])
+                self.item_added_signal.emit(data["packageId"])
+
+        if len(self.package_ids) == self.count():
+            self.list_update_signal.emit(str(self.count()))
+
+    def handle_other_list_row_added(self, package_id: str) -> None:
+        self.package_ids.discard(package_id)
 
     def handle_rows_removed(self, parent: QModelIndex, first: int, last: int) -> None:
         """
         This slot is called when rows are removed.
         Emit a signal with the count of objects remaining to update
-        the count label.
+        the count label. For some reason this seems to call twice on
+        dragging and dropping multiple mods.
+
+        The condition is required because when we `do_clear` or `do_import`,
+        the existing list needs to be "wiped", and this counts as `n`
+        calls to this function. When this happens, `self.package_ids` is
+        cleared and `self.count()` remains at the previous number, so we can
+        just check for equality here.
 
         :param parent: parent to get rows under (not used)
         :param first: index of first item removed (not used)
         :param last: index of last item removed (not used)
         """
-        self.list_update_signal.emit(str(self.count()))
+        if len(self.package_ids) == self.count():
+            self.list_update_signal.emit(str(self.count()))
 
     def dropEvent(self, event: QDropEvent) -> None:
         ret = super().dropEvent(event)

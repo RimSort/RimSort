@@ -74,6 +74,13 @@ class MainContent:
             self.mod_list_slot
         )
 
+        self.active_mods_panel.active_mods_list.item_added_signal.connect(
+            self.inactive_mods_panel.inactive_mods_list.handle_other_list_row_added
+        )
+        self.inactive_mods_panel.inactive_mods_list.item_added_signal.connect(
+            self.active_mods_panel.active_mods_list.handle_other_list_row_added
+        )
+
         # INITIALIZE WIDGETS
         # Fetch paths dynamically from game configuration panel
         logger.info("Loading GameConfiguration instance")
@@ -612,6 +619,8 @@ class MainContent:
     def _do_restore(self) -> None:
         """
         Method to restore the mod lists to the last saved state.
+        TODO: restoring after clearing will cause a few harmless lines of
+        'Inactive mod count changed to: 0' to appear.
         """
         if self.active_mods_data_restore_state and self.active_mods_data_restore_state:
             self.active_mods_panel.clear_active_mods_search()
