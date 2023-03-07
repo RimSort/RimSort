@@ -20,7 +20,7 @@ class SteamWorkshopQuery:
     :param appid: The AppID associated with the game you are looking up info for
     :param life: The lifespan of the Query in terms of the seconds added to the time of
     database generation. This adds an 'expiry' to the data being cached.
-    :param mods: A Dict equivalent to 'all_mods' or mod_list.get_list_items_by_dict() in
+    :param mods: a Dict equivalent to 'all_mods' or mod_list.get_list_items_by_dict() in
     which contains possible Steam mods to lookup metadata for
     """
 
@@ -32,6 +32,12 @@ class SteamWorkshopQuery:
         self.workshop_json_data = self.cache_parsable_db_json_data(mods)
 
     def __chunks(self, _list: list, limit: int):
+        """
+        Split list into chunks no larger than the configured limit
+
+        :param _list: a list to break into chunks
+        :param limit: maximum size of the returned list
+        """
         for i in range(0, len(_list), limit):
             yield _list[i : i + limit]
 
@@ -39,6 +45,15 @@ class SteamWorkshopQuery:
         return int(time() + life)  # current seconds since epoch + 30 minutes
 
     def cache_parsable_db_json_data(self, mods: Dict[str, Any]) -> Dict[Any, Any]:
+        """
+        Builds a database using a chunked WebAPI query of all available PublishedFileIds
+        that are pulled from local mod metadata.
+
+        :param mods: a Dict equivalent to 'all_mods' or mod_list.get_list_items_by_dict()
+        in which contains possible Steam mods to lookup metadata for
+        :return: a RimPy Mod Manager db_data["database"] equivalent, stitched together from
+        local metadata & the Workshop metadata result from a live WebAPI query of those mods
+        """
         authors = ""
         gameVersions = []
         pfid = ""
@@ -106,10 +121,11 @@ class SteamWorkshopQuery:
 
         https://steamapi.xpaw.me/#IPublishedFileService/GetDetails
 
-        :param json_to_update: a Dict of json data, containing a query to update (or the skeleton of one from local_metadata)
+        :param json_to_update: a Dict of json data, containing a query to update in
+        RimPy db_data["database"] format, or the skeleton of one from local_metadata
         :param publishedfileids: a list of PublishedFileIds to query Steam Workshop mod metadata for
-        :return: Tuple containing the updated json data from pfid query, as well as a list of any missing children's pfids
-        to consider for additional queries
+        :return: Tuple containing the updated json data from PublishedFileIds query, as well as
+        a list of any missing children's PublishedFileIds to consider for additional queries
         """
         missing_children = []
         result = json_to_update

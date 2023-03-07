@@ -28,6 +28,9 @@ class ModListItemInner(QWidget):
         https://rimworldwiki.com/wiki/About.xml
 
         :param data: mod data by tag
+        :param container_width: width of container
+        :param steam_icon_path: path to the Steam icon to be used for list items
+        :param ludeon_icon_path: path to the Ludeon icon to be used for list items
         """
 
         super(ModListItemInner, self).__init__()
@@ -51,7 +54,7 @@ class ModListItemInner(QWidget):
         if text_width_needed > container_width - 70:
             available_width = container_width - 70
             shortened_text = self.font_metrics.elidedText(
-                item_name, Qt.ElideRight, available_width
+                item_name, Qt.ElideRight, int(available_width)
             )
             self.main_label = QLabel(str(shortened_text))
         else:
@@ -76,6 +79,11 @@ class ModListItemInner(QWidget):
         self.setLayout(self.main_item_layout)
 
     def get_tool_tip_text(self) -> str:
+        """
+        Compose a mod_list_item's tool_tip_text
+
+        :return: string containing the tool_tip_text
+        """
         name_line = f"Mod: {self.json_data.get('name', 'UNKNOWN')}\n"
 
         author_line = "Author: UNKNOWN\n"
@@ -85,7 +93,9 @@ class ModListItemInner(QWidget):
                 authors_text = ", ".join(list_of_authors)
                 author_line = f"Authors: {authors_text}\n"
             else:
-                logger.error(f"[authors] tag does not contain [li] tag: {self.json_data['authors']}")
+                logger.error(
+                    f"[authors] tag does not contain [li] tag: {self.json_data['authors']}"
+                )
         else:
             author_line = f"Author: {self.json_data.get('author', 'UNKNOWN')}\n"
 
@@ -96,12 +106,12 @@ class ModListItemInner(QWidget):
         path_line = f"Path: {self.json_data.get('path', 'UNKNOWN')}"
         return name_line + author_line + package_id_line + version_line + path_line
 
-    def get_icon(self) -> QIcon:
+    def get_icon(self) -> QIcon:  # type: ignore
         """
         Check custom tags added to mod metadata upon initialization, and return the cooresponding
         QIcon for the mod's source type (expansion, workshop, or local mod?)
 
-        :return icon: QIcon object set to the path of the cooresponding icon image
+        :return: QIcon object set to the path of the cooresponding icon image
         """
         if self.json_data.get("data_source") == "expansion":
             return QIcon(self.ludeon_icon_path)

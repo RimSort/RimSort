@@ -8,7 +8,9 @@ logger = logging.getLogger(__name__)
 
 def validate_mods_config_format(mods_config_data: Dict[str, Any]) -> bool:
     """
-    Return True if the ModsConfig is in the expected format, otherwise False.
+    Validate format of a Rimworld ModsConfig.xml
+
+    :return: True if the ModsConfig is in the expected format, otherwise False.
     """
     logger.info(f"Validating mods config: {mods_config_data}")
     if mods_config_data:

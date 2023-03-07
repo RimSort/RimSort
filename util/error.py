@@ -12,11 +12,15 @@ def show_information(
     details: Optional[str] = None,
 ) -> None:
     """
-    Displays a warning message box displaying the input string.
+    Displays an info message box using the input parameters
 
-    :param warning_message: the warning message to display
+    :param text: text to pass to setText
+    :param information: text to pass to setInformativeText
+    :param details: text to pass to setDetailedText
     """
-    logger.info(f"Showing information box with input: [{text}], [{information}], [{details}]")
+    logger.info(
+        f"Showing information box with input: [{text}], [{information}], [{details}]"
+    )
     # Set up the message box
     info_message_box = QMessageBox()
     info_message_box.setIcon(QMessageBox.Warning)
@@ -50,11 +54,15 @@ def show_warning(
     details: Optional[str] = None,
 ) -> None:
     """
-    Displays a warning message box displaying the input string.
+    Displays a warning message box using the input parameters
 
-    :param warning_message: the warning message to display
+    :param text: text to pass to setText
+    :param information: text to pass to setInformativeText
+    :param details: text to pass to setDetailedText
     """
-    logger.info(f"Showing warning box with input: [{text}], [{information}], [{details}]")
+    logger.info(
+        f"Showing warning box with input: [{text}], [{information}], [{details}]"
+    )
     # Set up the message box
     warning_message_box = QMessageBox()
     warning_message_box.setIcon(QMessageBox.Warning)
@@ -91,13 +99,15 @@ def show_fatal_error(
     Displays a critical error message box, containing text,
     information, and details. Currently only called if there
     are any hard exceptions that cause the main app exec
-    loop to stop functoning.
+    loop to stop functioning.
 
-    :param text: text to display
-    :param information: more verbose, informational text to display
-    :param details: details to show in a scroll box
+    :param text: text to pass to setText
+    :param information: text to pass to setInformativeText
+    :param details: text to pass to setDetailedText
     """
-    logger.info(f"Showing fatal error box with input: [{text}], [{information}], [{details}]")
+    logger.info(
+        f"Showing fatal error box with input: [{text}], [{information}], [{details}]"
+    )
     # Set up the message box
     fatal_message_box = QMessageBox()
     fatal_message_box.setIcon(QMessageBox.Critical)

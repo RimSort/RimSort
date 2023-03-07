@@ -14,7 +14,7 @@ def gen_deps_graph(
     logger.info("Generating dependencies graph")
     dependencies_graph: dict[str, set[str]] = {}
     for mod_data in active_mods_json.values():
-        package_id = mod_data['packageId']
+        package_id = mod_data["packageId"]
         dependencies_graph[package_id] = set()
         if mod_data.get("loadTheseBefore"):  # Will either be None, or a set
             for dependency in mod_data["loadTheseBefore"]:
@@ -42,7 +42,7 @@ def gen_rev_deps_graph(
     logger.info("Generating reverse dependencies graph")
     reverse_dependencies_graph: dict[str, set[str]] = {}
     for mod_data in active_mods_json.values():
-        package_id = mod_data['packageId']
+        package_id = mod_data["packageId"]
         reverse_dependencies_graph[package_id] = set()
         if mod_data.get("loadTheseAfter"):  # Will either be None, or a set
             for dependent in mod_data["loadTheseAfter"]:
@@ -183,7 +183,7 @@ def gen_tier_two_deps_graph(
     )
     tier_two_dependency_graph = {}
     for mod_data in active_mods.values():
-        package_id = mod_data['packageId']
+        package_id = mod_data["packageId"]
         if package_id not in tier_one_mods and package_id not in tier_three_mods:
             dependencies = mod_data.get("loadTheseBefore")
             stripped_dependencies = set()

@@ -14,7 +14,7 @@ from view.main_content_panel import MainContent
 from view.status_panel import Status
 
 # The log file is stored inside the app directory (on Mac, it is inside the package)
-logging_file_path = Path(os.path.join(os.path.dirname(__file__), "rs_log.log"))
+logging_file_path = Path(os.path.join(os.path.dirname(__file__), "data", "RimSort.log"))
 
 # Only the most recent log file is kept
 logging_file_path.unlink(missing_ok=True)

@@ -88,7 +88,7 @@ class ModListWidget(QListWidget):
         if mods:
             for uuid, mod_json_data in mods.items():
                 # Add the uuid that cooresponds to metadata entry, to the list item's json data for future usage
-                mod_json_data['uuid'] = uuid
+                mod_json_data["uuid"] = uuid
                 list_item = QListWidgetItem(self)
                 list_item.setData(Qt.UserRole, mod_json_data)
                 self.addItem(list_item)
@@ -196,9 +196,7 @@ class ModListWidget(QListWidget):
             item = self.itemWidget(self.item(i))
             if item:
                 # Assume uuid always there, as this should be added when the list item's json data is populated
-                mod_dict[
-                    item.json_data["uuid"]
-                ] = item.json_data 
+                mod_dict[item.json_data["uuid"]] = item.json_data
         logger.info(f"Collected json data for {len(mod_dict)} mods")
         return mod_dict
 

@@ -97,7 +97,7 @@ class MainContent:
             # Run expensive calculations to set cache data
             self.refresh_cache_calculations()
 
-            # Insert mod data into list
+            # Insert mod data into list (is_initial = True)
             self.repopulate_lists(True)
 
         logger.info("Finished MainContent initialization")
@@ -113,7 +113,7 @@ class MainContent:
         complete json mod info for that internal uuid. It passes
         this information to the mod info panel to display.
 
-        :param package_id: package id of mod
+        :param uuid: uuid of mod
         """
         logger.info(f"USER ACTION: clicked on a mod list item: {uuid}")
         for mod_uuid in self.all_mods_with_dependencies:
@@ -184,7 +184,9 @@ class MainContent:
                 # Get and cache RimPy Community Rules communityRules.json for ALL mods
                 self.steam_db_rules, self.community_rules = get_rimpy_database_mod(mods)
             else:
-                self.steam_db_rules, self.community_rules = get_3rd_party_metadata(self.game_configuration.steam_apikey, mods)
+                self.steam_db_rules, self.community_rules = get_3rd_party_metadata(
+                    self.game_configuration.steam_apikey, mods
+                )
         else:
             logger.warning(
                 "No LOCAL or WORKSHOP mods found at all. Are you playing Vanilla?"
@@ -301,7 +303,7 @@ class MainContent:
             "Edit Steam apikey:",
             "Enter your personal 32 character Steam apikey here:",
             QLineEdit.Normal,
-            self.game_configuration.steam_apikey
+            self.game_configuration.steam_apikey,
         )
         if ok:
             self.game_configuration.steam_apikey = args
@@ -314,7 +316,7 @@ class MainContent:
         This function starts the Rimworld game process in it's own subprocess,
         by launching the executable found in the configured game directory.
 
-        :param game_path: path to Rimworld game
+        :param args: user-configured args to pass to the Rimworld game
         """
         logger.info("USER ACTION: launching the game")
         game_path = self.game_configuration.get_game_folder_path()
@@ -440,6 +442,9 @@ class MainContent:
         )
 
     def _do_refresh(self) -> None:
+        """
+        Refresh expensive calculations & repopulate lists with that refreshed data
+        """
         self.active_mods_panel.clear_active_mods_search()
         self.inactive_mods_panel.clear_inactive_mods_search()
         if self.game_configuration.check_if_essential_paths_are_set():
@@ -484,6 +489,10 @@ class MainContent:
         self._insert_data_into_lists(active_mod_data, inactive_mod_data)
 
     def _do_sort(self) -> None:
+        """
+        Trigger sorting of all active mods using user-configured algorithm
+        & all available & configured metadata
+        """
         # Get the live list of active and inactive mods. This is because the user
         # will likely sort before saving.
         logger.info("Starting sorting mods")
@@ -492,7 +501,7 @@ class MainContent:
         active_mods = self.active_mods_panel.active_mods_list.get_list_items_by_dict()
         active_mod_ids = list()
         for mod_data in active_mods.values():
-            active_mod_ids.append(mod_data['packageId'])
+            active_mod_ids.append(mod_data["packageId"])
         inactive_mods = (
             self.inactive_mods_panel.inactive_mods_list.get_list_items_by_dict()
         )
@@ -602,10 +611,11 @@ class MainContent:
         logger.info(f"Selected path: {file_path[0]}")
         if file_path[0]:
             logger.info("Exporting current active mods to ModsConfig.xml format")
-            active_mods_json = self.active_mods_panel.active_mods_list.get_list_items_by_dict()
+            active_mods_json = (
+                self.active_mods_panel.active_mods_list.get_list_items_by_dict()
+            )
             active_mods = [
-                mod_data['packageId']
-                for mod_data in active_mods_json.values()
+                mod_data["packageId"] for mod_data in active_mods_json.values()
             ]
             logger.info(f"Collected {len(active_mods)} active mods for export")
             logger.info("Getting current ModsConfig.xml to use as a reference format")
@@ -631,11 +641,10 @@ class MainContent:
         Method save the current list of active mods to the selected ModsConfig.xml
         """
         logger.info("Saving current active mods to ModsConfig.xml")
-        active_mods_json = self.active_mods_panel.active_mods_list.get_list_items_by_dict()
-        active_mods = [
-            mod_data['packageId']
-            for mod_data in active_mods_json.values()
-        ]
+        active_mods_json = (
+            self.active_mods_panel.active_mods_list.get_list_items_by_dict()
+        )
+        active_mods = [mod_data["packageId"] for mod_data in active_mods_json.values()]
         logger.info(f"Collected {len(active_mods)} active mods for saving")
         mods_config_data = xml_path_to_json(self.game_configuration.get_config_path())
         if validate_mods_config_format(mods_config_data):

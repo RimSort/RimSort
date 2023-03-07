@@ -33,7 +33,9 @@ class SettingsPanel(QDialog):
         self.external_metadata_label = QLabel("External Metadata Source")
         self.external_metadata_label.setObjectName("externalMetadataSource")
         self.external_metadata_cb = QComboBox()
-        self.external_metadata_cb.addItems(["RimPy Mod Manager Database", "Rimsort Dynamic Query"])
+        self.external_metadata_cb.addItems(
+            ["RimPy Mod Manager Database", "Rimsort Dynamic Query"]
+        )
         self.clear_paths_button = QPushButton("Clear Paths")
         self.clear_paths_button.clicked.connect(
             partial(self.settings_signal.emit, "clear_paths")

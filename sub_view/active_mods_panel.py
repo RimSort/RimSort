@@ -125,14 +125,17 @@ class ActiveModList(QWidget):
         # moving a mod from inactive to active.
         logger.info("Recalculating internal list errors")
         active_mods = self.active_mods_list.get_list_items_by_dict()
-        packageId_to_uuid = {} # uuid <-> the unique mod's packageId
+        packageId_to_uuid = {}  # uuid <-> the unique mod's packageId
         uuid_to_index = {}  # uuid <-> the position it is in
         count = 0
         package_id_to_errors = {}  # package_id <-> live errors it has
-        package_ids_set = set() # empty set for package_ids to use for calculations
+        package_ids_set = set()  # empty set for package_ids to use for calculations
 
-        for uuid, mod_data in active_mods.items(): # add package_id from active mod data
-            package_id = mod_data['packageId']
+        for (
+            uuid,
+            mod_data,
+        ) in active_mods.items():  # add package_id from active mod data
+            package_id = mod_data["packageId"]
             package_ids_set.add(package_id)
             packageId_to_uuid[package_id] = uuid
             uuid_to_index[uuid] = count
@@ -164,9 +167,7 @@ class ActiveModList(QWidget):
                         # supported_versions is either a string or list of strings
                         if isinstance(supported_versions, str):
                             if self.game_version.startswith(supported_versions):
-                                package_id_to_errors[uuid][
-                                    "version_mismatch"
-                                ] = False
+                                package_id_to_errors[uuid]["version_mismatch"] = False
                         elif isinstance(supported_versions, list):
                             is_supported = False
                             for supported_version in supported_versions:
@@ -178,9 +179,7 @@ class ActiveModList(QWidget):
                                         f"supportedVersion in list is not str: {supported_versions}"
                                     )
                             if is_supported:
-                                package_id_to_errors[uuid][
-                                    "version_mismatch"
-                                ] = False
+                                package_id_to_errors[uuid]["version_mismatch"] = False
                         else:
                             logger.error(
                                 f"supportedVersions value not str or list: {supported_versions}"
@@ -206,9 +205,9 @@ class ActiveModList(QWidget):
             if mod_data.get("incompatibilities"):
                 for incompatibility in mod_data["incompatibilities"]:
                     if incompatibility in package_ids_set:
-                        package_id_to_errors[uuid][
-                            "conflicting_incompatibilities"
-                        ].add(incompatibility)
+                        package_id_to_errors[uuid]["conflicting_incompatibilities"].add(
+                            incompatibility
+                        )
 
             # Check loadTheseBefore
             if mod_data.get("loadTheseBefore"):
@@ -222,10 +221,7 @@ class ActiveModList(QWidget):
                     if load_this_before[1]:
                         # Note: we cannot use uuid_to_index.get(load_this_before) as 0 is falsy but valid
                         if load_this_before[0] in uuid_to_index:
-                            if (
-                                current_mod_index
-                                <= uuid_to_index[load_this_before[0]]
-                            ):
+                            if current_mod_index <= uuid_to_index[load_this_before[0]]:
                                 package_id_to_errors[uuid][
                                     "load_before_violations"
                                 ].add(load_this_before[0])
@@ -241,28 +237,21 @@ class ActiveModList(QWidget):
                     # Only if explict_bool = True then we show error
                     if load_this_after[1]:
                         if load_this_after[0] in uuid_to_index:
-                            if (
-                                current_mod_index
-                                >= uuid_to_index[load_this_after[0]]
-                            ):
-                                package_id_to_errors[uuid][
-                                    "load_after_violations"
-                                ].add(load_this_after[0])
+                            if current_mod_index >= uuid_to_index[load_this_after[0]]:
+                                package_id_to_errors[uuid]["load_after_violations"].add(
+                                    load_this_after[0]
+                                )
 
             # Consolidate results
             error_tool_tip_text = ""
             warning_tool_tip_text = ""
-            missing_dependencies = package_id_to_errors[uuid][
-                "missing_dependencies"
-            ]
+            missing_dependencies = package_id_to_errors[uuid]["missing_dependencies"]
             if missing_dependencies:
                 error_tool_tip_text += "\n\nMissing Dependencies:"
                 for dependency_id in missing_dependencies:
                     # If dependency is installed, we can get its name
-                    if dependency_id in mod_data['packageId']:
-                        error_tool_tip_text += (
-                            f"\n  * {self.all_mods[uuid]['name']}"
-                        )
+                    if dependency_id in mod_data["packageId"]:
+                        error_tool_tip_text += f"\n  * {self.all_mods[uuid]['name']}"
                     # Otherwise, we might be able to get it from RimPy Steam DB
                     elif dependency_id in self.steam_package_id_to_name:
                         error_tool_tip_text += (
@@ -292,9 +281,7 @@ class ActiveModList(QWidget):
                     load_before_name = active_mods[load_before_uuid]["name"]
                     warning_tool_tip_text += f"\n  * {load_before_name}"
 
-            load_after_violations = package_id_to_errors[uuid][
-                "load_after_violations"
-            ]
+            load_after_violations = package_id_to_errors[uuid]["load_after_violations"]
             if load_after_violations:
                 warning_tool_tip_text += "\n\nShould be Loaded Before:"
                 for load_after_id in load_after_violations:

@@ -50,7 +50,9 @@ class Actions(QWidget):
             partial(self.actions_signal.emit, "refresh")
         )
         self.refresh_button.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.refresh_button.customContextMenuRequested.connect(self.steamApikeyContextMenuEvent)
+        self.refresh_button.customContextMenuRequested.connect(
+            self.steamApikeyContextMenuEvent
+        )
 
         self.clear_button = QPushButton("Clear")
         self.clear_button.clicked.connect(partial(self.actions_signal.emit, "clear"))
@@ -94,16 +96,16 @@ class Actions(QWidget):
         return self._panel
 
     def runArgsContextMenuEvent(self, point: QPoint) -> None:
-        contextMenu = QMenu(self) # Actions Panel context menu event
-        set_run_args = contextMenu.addAction("Edit Run Args") # runArgs
+        contextMenu = QMenu(self)  # Actions Panel context menu event
+        set_run_args = contextMenu.addAction("Edit Run Args")  # runArgs
         set_run_args.triggered.connect(
             partial(self.actions_signal.emit, "edit_run_args")
         )
         action = contextMenu.exec_(self.run_button.mapToGlobal(point))
 
     def steamApikeyContextMenuEvent(self, point: QPoint) -> None:
-        contextMenu = QMenu(self) # Actions Panel context menu event
-        set_steam_apikey = contextMenu.addAction("Edit Steam Apikey") # steam_apikey
+        contextMenu = QMenu(self)  # Actions Panel context menu event
+        set_steam_apikey = contextMenu.addAction("Edit Steam Apikey")  # steam_apikey
         set_steam_apikey.triggered.connect(
             partial(self.actions_signal.emit, "edit_steam_apikey")
         )

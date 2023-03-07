@@ -414,7 +414,10 @@ class GameConfiguration(QObject):
         self.update_persistent_storage(
             "sorting_algorithm", self.settings_panel.sorting_algorithm_cb.currentText()
         )
-        self.update_persistent_storage("external_metadata_source", self.settings_panel.external_metadata_cb.currentText())
+        self.update_persistent_storage(
+            "external_metadata_source",
+            self.settings_panel.external_metadata_cb.currentText(),
+        )
 
     def open_directory(self, callable: Any) -> None:
         """

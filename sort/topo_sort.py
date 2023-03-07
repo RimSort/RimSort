@@ -20,7 +20,7 @@ def do_topo_sort(
         temp_mod_dict = {}
         for package_id in level:
             for uuid, mod_data in active_mods_json.items():
-                mod_package_id = mod_data['packageId']
+                mod_package_id = mod_data["packageId"]
                 if package_id == mod_package_id:
                     temp_mod_dict[uuid] = active_mods_json[uuid]
         # Sort packages in this topological level by name
@@ -33,5 +33,7 @@ def do_topo_sort(
             alphabetized_dependencies_w_data[sorted_mod[0]] = active_mods_json[
                 sorted_mod[0]
             ]
-    logger.info(f"Finished Toposort sort with {len(alphabetized_dependencies_w_data)} mods")
+    logger.info(
+        f"Finished Toposort sort with {len(alphabetized_dependencies_w_data)} mods"
+    )
     return alphabetized_dependencies_w_data

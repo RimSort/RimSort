@@ -16,7 +16,7 @@ def xml_path_to_json(path: str) -> Dict[str, Any]:
     :param path: path to the xml file
     :return: json dict of xml file contents
     """
-    data: Dict[str, Any]= {}
+    data: Dict[str, Any] = {}
     if os.path.exists(path):
         logger.info(f"Parsing XML file at: {path}")
         with open(path, encoding="utf-8") as f:
