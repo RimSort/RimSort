@@ -30,6 +30,10 @@ class SettingsPanel(QDialog):
         self.sorting_algorithm_label.setObjectName("summaryValue")
         self.sorting_algorithm_cb = QComboBox()
         self.sorting_algorithm_cb.addItems(["RimPy", "Topological"])
+        self.external_metadata_label = QLabel("External Metadata Source")
+        self.external_metadata_label.setObjectName("externalMetadataSource")
+        self.external_metadata_cb = QComboBox()
+        self.external_metadata_cb.addItems(["RimPy Mod Manager Database", "Rimsort Dynamic Query"])
         self.clear_paths_button = QPushButton("Clear Paths")
         self.clear_paths_button.clicked.connect(
             partial(self.settings_signal.emit, "clear_paths")
@@ -38,6 +42,8 @@ class SettingsPanel(QDialog):
         # Add widgets to layout
         self.layout.addWidget(self.sorting_algorithm_label)
         self.layout.addWidget(self.sorting_algorithm_cb)
+        self.layout.addWidget(self.external_metadata_label)
+        self.layout.addWidget(self.external_metadata_cb)
         self.layout.addWidget(self.clear_paths_button)
 
         # Display items

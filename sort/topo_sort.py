@@ -19,12 +19,15 @@ def do_topo_sort(
     for level in sorted_dependencies:
         temp_mod_dict = {}
         for package_id in level:
-            temp_mod_dict[package_id] = active_mods_json[package_id]
+            for uuid, mod_data in active_mods_json.items():
+                mod_package_id = mod_data['packageId']
+                if package_id == mod_package_id:
+                    temp_mod_dict[uuid] = active_mods_json[uuid]
         # Sort packages in this topological level by name
         sorted_temp_mod_dict = sorted(
             temp_mod_dict.items(), key=lambda x: x[1]["name"], reverse=False
         )
-        # sorted_mod is tuple of (packageId, json_data)
+        # sorted_mod is tuple of (uuid, json_data)
         # Add into reordered_active_mods_data (dicts are ordered now)
         for sorted_mod in sorted_temp_mod_dict:
             alphabetized_dependencies_w_data[sorted_mod[0]] = active_mods_json[

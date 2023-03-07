@@ -72,7 +72,7 @@ class ModListWidget(QListWidget):
 
         # This set is used to keep track of mods that have been loaded
         # into widgets. Used for an optimization strategy for `handle_rows_inserted`
-        self.package_ids = set()
+        self.uuids = set()
 
         logger.info("Finished ModListWidget initialization")
 
@@ -84,9 +84,11 @@ class ModListWidget(QListWidget):
         """
         logger.info("Internally recreating mod list")
         self.clear()
-        self.package_ids = set()
+        self.uuids = set()
         if mods:
-            for mod_json_data in mods.values():
+            for uuid, mod_json_data in mods.items():
+                # Add the uuid that cooresponds to metadata entry, to the list item's json data for future usage
+                mod_json_data['uuid'] = uuid
                 list_item = QListWidgetItem(self)
                 list_item.setData(Qt.UserRole, mod_json_data)
                 self.addItem(list_item)
@@ -136,14 +138,14 @@ class ModListWidget(QListWidget):
                 )
                 item.setSizeHint(widget.sizeHint())
                 self.setItemWidget(item, widget)
-                self.package_ids.add(data["packageId"])
-                self.item_added_signal.emit(data["packageId"])
+                self.uuids.add(data["uuid"])
+                self.item_added_signal.emit(data["uuid"])
 
-        if len(self.package_ids) == self.count():
+        if len(self.uuids) == self.count():
             self.list_update_signal.emit(str(self.count()))
 
     def handle_other_list_row_added(self, package_id: str) -> None:
-        self.package_ids.discard(package_id)
+        self.uuids.discard(package_id)
 
     def handle_rows_removed(self, parent: QModelIndex, first: int, last: int) -> None:
         """
@@ -154,7 +156,7 @@ class ModListWidget(QListWidget):
 
         The condition is required because when we `do_clear` or `do_import`,
         the existing list needs to be "wiped", and this counts as `n`
-        calls to this function. When this happens, `self.package_ids` is
+        calls to this function. When this happens, `self.uuids` is
         cleared and `self.count()` remains at the previous number, so we can
         just check for equality here.
 
@@ -162,7 +164,7 @@ class ModListWidget(QListWidget):
         :param first: index of first item removed (not used)
         :param last: index of last item removed (not used)
         """
-        if len(self.package_ids) == self.count():
+        if len(self.uuids) == self.count():
             self.list_update_signal.emit(str(self.count()))
 
     def dropEvent(self, event: QDropEvent) -> None:
@@ -193,9 +195,10 @@ class ModListWidget(QListWidget):
         for i in range(self.count()):
             item = self.itemWidget(self.item(i))
             if item:
+                # Assume uuid always there, as this should be added when the list item's json data is populated
                 mod_dict[
-                    item.json_data["packageId"]
-                ] = item.json_data  # Assume packageId always there
+                    item.json_data["uuid"]
+                ] = item.json_data 
         logger.info(f"Collected json data for {len(mod_dict)} mods")
         return mod_dict
 
@@ -208,5 +211,8 @@ class ModListWidget(QListWidget):
         return super().focusOutEvent(e)
 
     def mod_clicked(self, item: QListWidgetItem) -> None:
-        """Method to handle clicking on a row"""
-        self.mod_info_signal.emit(item.data(Qt.UserRole)["packageId"])
+        """
+        Method to handle clicking on a row
+        Look up the mod's data by uuid
+        """
+        self.mod_info_signal.emit(item.data(Qt.UserRole)["uuid"])

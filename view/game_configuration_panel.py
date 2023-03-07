@@ -226,6 +226,9 @@ class GameConfiguration(QObject):
         # RUN ARGUMENTS
         self.run_arguments = ""
 
+        # STEAM APIKEY
+        self.steam_apikey = ""
+
         # CONTAINER LAYOUTS INTO BASE LAYOUT
         self.client_settings_frame = QFrame()
         self.client_settings_frame.setObjectName("configLine")
@@ -377,10 +380,18 @@ class GameConfiguration(QObject):
                     self.settings_panel.sorting_algorithm_cb.setCurrentText(
                         settings_data["sorting_algorithm"]
                     )
+                if settings_data.get("external_metadata_source"):
+                    self.settings_panel.external_metadata_cb.setCurrentText(
+                        settings_data["external_metadata_source"]
+                    )
                 if not settings_data.get("runArgs"):
                     settings_data["runArgs"] = ""
                 else:
                     self.run_arguments = settings_data["runArgs"]
+                if not settings_data.get("steam_apikey"):
+                    settings_data["steam_apikey"] = ""
+                else:
+                    self.steam_apikey = settings_data["steam_apikey"]
         logger.info("Finished storage initialization")
 
     def initialize_settings_panel(self) -> None:
@@ -403,6 +414,7 @@ class GameConfiguration(QObject):
         self.update_persistent_storage(
             "sorting_algorithm", self.settings_panel.sorting_algorithm_cb.currentText()
         )
+        self.update_persistent_storage("external_metadata_source", self.settings_panel.external_metadata_cb.currentText())
 
     def open_directory(self, callable: Any) -> None:
         """

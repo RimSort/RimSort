@@ -99,15 +99,15 @@ class ModListItemInner(QWidget):
     def get_icon(self) -> QIcon:
         """
         Check custom tags added to mod metadata upon initialization, and return the cooresponding
-        QIcon for the type of mod that it is (expansion, workshop, or local mod?)
+        QIcon for the mod's source type (expansion, workshop, or local mod?)
 
         :return icon: QIcon object set to the path of the cooresponding icon image
         """
-        if self.json_data.get("isExpansion"):
+        if self.json_data.get("data_source") == "expansion":
             return QIcon(self.ludeon_icon_path)
-        elif self.json_data.get("isWorkshop"):
+        elif self.json_data.get("data_source") == "workshop":
             return QIcon(self.steam_icon_path)
-        elif self.json_data.get("isLocal"):
+        elif self.json_data.get("data_source") == "local":
             return self.style().standardIcon(QStyle.SP_FileDialogStart)
         else:
             logger.error(

@@ -102,19 +102,25 @@ class MainContent:
 
         logger.info("Finished MainContent initialization")
 
-    def mod_list_slot(self, package_id: str) -> None:
+    @property
+    def panel(self):
+        return self._panel
+
+    def mod_list_slot(self, uuid: str) -> None:
         """
         This slot method is triggered when the user clicks on an item
-        on a mod list. It takes the package_id and gets the
-        complete json mod info for that package_id. It passes
+        on a mod list. It takes the internal uuid and gets the
+        complete json mod info for that internal uuid. It passes
         this information to the mod info panel to display.
 
         :param package_id: package id of mod
         """
-        logger.info(f"USER ACTION: clicked on a mod list item: {package_id}")
-        self.mod_info_panel.display_mod_info(
-            self.all_mods_with_dependencies[package_id]
-        )
+        logger.info(f"USER ACTION: clicked on a mod list item: {uuid}")
+        for mod_uuid in self.all_mods_with_dependencies:
+            if mod_uuid == uuid:
+                self.mod_info_panel.display_mod_info(
+                    self.all_mods_with_dependencies[uuid]
+                )
 
     def refresh_cache_calculations(self) -> None:
         """
@@ -152,12 +158,12 @@ class MainContent:
         )
 
         # Set custom tags for each data source to be used with setIcon later
-        for package_id in self.expansions:
-            self.expansions[package_id]["isExpansion"] = True
-        for package_id in self.workshop_mods:
-            self.workshop_mods[package_id]["isWorkshop"] = True
-        for package_id in self.local_mods:
-            self.local_mods[package_id]["isLocal"] = True
+        for uuid in self.expansions:
+            self.expansions[uuid]["data_source"] = "expansion"
+        for uuid in self.workshop_mods:
+            self.workshop_mods[uuid]["data_source"] = "workshop"
+        for uuid in self.local_mods:
+            self.local_mods[uuid]["data_source"] = "local"
 
         # One working Dictionary for ALL mods
         mods = merge_mod_data(self.local_mods, self.workshop_mods)
@@ -170,10 +176,15 @@ class MainContent:
             logger.info(
                 "Looking for a load order / dependency rules contained within mods"
             )
-            # Get and cache steam db rules data for ALL mods
-            self.steam_db_rules = get_steam_db_rules(mods)
-            # Get and cache community rules data for ALL mods
-            self.community_rules = get_community_rules(mods)
+            external_metadata_source = (
+                self.game_configuration.settings_panel.external_metadata_cb.currentText()
+            )
+            if external_metadata_source == "RimPy Mod Manager Database":
+                # Get and cache RimPy Steam db.json rules data for ALL mods
+                # Get and cache RimPy Community Rules communityRules.json for ALL mods
+                self.steam_db_rules, self.community_rules = get_rimpy_database_mod(mods)
+            else:
+                self.steam_db_rules, self.community_rules = get_3rd_party_metadata(self.game_configuration.steam_apikey, mods)
         else:
             logger.warning(
                 "No LOCAL or WORKSHOP mods found at all. Are you playing Vanilla?"
@@ -240,6 +251,8 @@ class MainContent:
         logger.info(f"USER ACTION: received action {action}")
         if action == "refresh":
             self._do_refresh()
+        if action == "edit_steam_apikey":
+            self._do_edit_steam_apikey()
         if action == "clear":
             self._do_clear()
         if action == "sort":
@@ -263,8 +276,6 @@ class MainContent:
         """
         Opens a QDialogInput that allows the user to edit the run args
         that are configured to be passed to the Rimworld executable
-
-        :param path: path to open
         """
         args, ok = QInputDialog().getText(
             None,
@@ -277,6 +288,25 @@ class MainContent:
             self.game_configuration.run_arguments = args
             self.game_configuration.update_persistent_storage(
                 "runArgs", self.game_configuration.run_arguments
+            )
+
+    def _do_edit_steam_apikey(self) -> None:
+        """
+        Opens a QDialogInput that allows the user to edit their Steam apikey
+        that are configured to be passed to the "Dynamic Query" feature for
+        the Steam Workshop metadata needed for sorting
+        """
+        args, ok = QInputDialog().getText(
+            None,
+            "Edit Steam apikey:",
+            "Enter your personal 32 character Steam apikey here:",
+            QLineEdit.Normal,
+            self.game_configuration.steam_apikey
+        )
+        if ok:
+            self.game_configuration.steam_apikey = args
+            self.game_configuration.update_persistent_storage(
+                "steam_apikey", self.game_configuration.steam_apikey
             )
 
     def _do_platform_specific_game_launch(self, args: str) -> None:
@@ -435,21 +465,21 @@ class MainContent:
             self.game_configuration.get_config_path(),
             self.all_mods_with_dependencies,
         )
-        expansions_ids = list(self.expansions.keys())
+        expansions_uuids = list(self.expansions.keys())
         active_mod_data = {}
         inactive_mod_data = {}
         logger.info("Moving non-base/expansion active mods to inactive mods list")
-        for package_id, mod_data in active_mods_data.items():
-            if package_id in expansions_ids:
-                active_mod_data[package_id] = mod_data
+        for uuid, mod_data in active_mods_data.items():
+            if uuid in expansions_uuids:
+                active_mod_data[uuid] = mod_data
             else:
-                inactive_mod_data[package_id] = mod_data
+                inactive_mod_data[uuid] = mod_data
         logger.info("Moving base/expansion inactive mods to active mods list")
-        for package_id, mod_data in inactive_mods_data.items():
-            if package_id in expansions_ids:
-                active_mod_data[package_id] = mod_data
+        for uuid, mod_data in inactive_mods_data.items():
+            if uuid in expansions_uuids:
+                active_mod_data[uuid] = mod_data
             else:
-                inactive_mod_data[package_id] = mod_data
+                inactive_mod_data[uuid] = mod_data
         logger.info("Finished re-organizing mods for clear")
         self._insert_data_into_lists(active_mod_data, inactive_mod_data)
 
@@ -460,7 +490,9 @@ class MainContent:
         self.active_mods_panel.clear_active_mods_search()
         self.inactive_mods_panel.clear_inactive_mods_search()
         active_mods = self.active_mods_panel.active_mods_list.get_list_items_by_dict()
-        active_mod_ids = list(active_mods.keys())
+        active_mod_ids = list()
+        for mod_data in active_mods.values():
+            active_mod_ids.append(mod_data['packageId'])
         inactive_mods = (
             self.inactive_mods_panel.inactive_mods_list.get_list_items_by_dict()
         )
@@ -526,12 +558,12 @@ class MainContent:
 
         # Add Tier 1, 2, 3 in order
         combined_mods = {}
-        for package_id, mod_data in reordered_tier_one_sorted_with_data.items():
-            combined_mods[package_id] = mod_data
-        for package_id, mod_data in reordered_tier_two_sorted_with_data.items():
-            combined_mods[package_id] = mod_data
-        for package_id, mod_data in reordered_tier_three_sorted_with_data.items():
-            combined_mods[package_id] = mod_data
+        for uuid, mod_data in reordered_tier_one_sorted_with_data.items():
+            combined_mods[uuid] = mod_data
+        for uuid, mod_data in reordered_tier_two_sorted_with_data.items():
+            combined_mods[uuid] = mod_data
+        for uuid, mod_data in reordered_tier_three_sorted_with_data.items():
+            combined_mods[uuid] = mod_data
 
         logger.info("Finished combining all tiers of mods. Inserting into mod lists")
         self._insert_data_into_lists(combined_mods, inactive_mods)
@@ -570,9 +602,10 @@ class MainContent:
         logger.info(f"Selected path: {file_path[0]}")
         if file_path[0]:
             logger.info("Exporting current active mods to ModsConfig.xml format")
+            active_mods_json = self.active_mods_panel.active_mods_list.get_list_items_by_dict()
             active_mods = [
-                package_id
-                for package_id in self.active_mods_panel.active_mods_list.get_list_items_by_dict()
+                mod_data['packageId']
+                for mod_data in active_mods_json.values()
             ]
             logger.info(f"Collected {len(active_mods)} active mods for export")
             logger.info("Getting current ModsConfig.xml to use as a reference format")
@@ -598,9 +631,10 @@ class MainContent:
         Method save the current list of active mods to the selected ModsConfig.xml
         """
         logger.info("Saving current active mods to ModsConfig.xml")
+        active_mods_json = self.active_mods_panel.active_mods_list.get_list_items_by_dict()
         active_mods = [
-            package_id
-            for package_id in self.active_mods_panel.active_mods_list.get_list_items_by_dict()
+            mod_data['packageId']
+            for mod_data in active_mods_json.values()
         ]
         logger.info(f"Collected {len(active_mods)} active mods for saving")
         mods_config_data = xml_path_to_json(self.game_configuration.get_config_path())
