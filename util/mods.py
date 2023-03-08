@@ -2,12 +2,13 @@ import json
 import logging
 import os
 import platform
+from requests.exceptions import HTTPError
 from time import time
 import traceback
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
 
-from util.error import show_warning
+from util.error import show_fatal_error, show_information, show_warning
 from util.steam.IPublishedFileService import SteamWorkshopQuery
 from util.schema import validate_mods_config_format
 from util.xml import non_utf8_xml_path_to_json, xml_path_to_json
@@ -194,8 +195,12 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                                 )
                                 if pfid != "":
                                     mod_data["modmetadata"]["publishedfileid"] = pfid
-                                    mod_data["modmetadata"]["steam_uri"] = f"steam://url/CommunityFilePage/{pfid}"
-                                    mod_data["modmetadata"]["steam_url"] = f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
+                                    mod_data["modmetadata"][
+                                        "steam_uri"
+                                    ] = f"steam://url/CommunityFilePage/{pfid}"
+                                    mod_data["modmetadata"][
+                                        "steam_url"
+                                    ] = f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
                                 mods[uuid] = mod_data["modmetadata"]
                             else:
                                 logger.error(
@@ -264,13 +269,19 @@ def get_installed_expansions(game_path: str, game_version: str) -> Dict[str, Any
             data["steam_url"] = "https://store.steampowered.com/app/294100/RimWorld"
         elif package_id == "ludeon.rimworld.royalty":
             data["name"] = "Royalty (DLC #1)"
-            data["steam_url"] = "https://store.steampowered.com/app/1149640/RimWorld__Royalty"
+            data[
+                "steam_url"
+            ] = "https://store.steampowered.com/app/1149640/RimWorld__Royalty"
         elif package_id == "ludeon.rimworld.ideology":
             data["name"] = "Ideology (DLC #2)"
-            data["steam_url"] = "https://store.steampowered.com/app/1392840/RimWorld__Ideology"
+            data[
+                "steam_url"
+            ] = "https://store.steampowered.com/app/1392840/RimWorld__Ideology"
         elif package_id == "ludeon.rimworld.biotech":
             data["name"] = "Biotech (DLC #3)"
-            data["steam_url"] = "https://store.steampowered.com/app/1826140/RimWorld__Biotech"
+            data[
+                "steam_url"
+            ] = "https://store.steampowered.com/app/1826140/RimWorld__Biotech"
         else:
             logger.error(
                 f"An unknown mod has been found in the expansions folder: {package_id} {data}"
@@ -450,33 +461,49 @@ def get_3rd_party_metadata(
                 return db_json_data, community_rules_json_data
             else:
                 db_data_expired = True
-                logger.info(
-                    "Disregarding cached Steam metadata; it is expired. Attempting live query..."
-                )  # TODO: Make this info visible to the user
+                show_information(
+                    text="RimSort Dynamic Query",
+                    information="Cached data invalid or missing.\nAttempting live query..."
+                )  # Notify the user
 
     # Attempt live query & cache the query
     logger.info("Cached data invalid or missing. Attempting live query...")
-    # For now, we load apikey from text file in cwd. DO NOT COMMIT THIS TO ANY PUBLIC REPOSITORY!
     if len(apikey) == 32:  # If it is 32 characters
         logger.info("Retreived Steam API key from settings.json")
     else:  # Otherwise, it's not valid
-        logger.warning(
-            "Failed to read a valid Steam API key from settings.json. Unable to initialize SteamWorkshopQuery for live metadata..."
-        )  # TODO: Make this warning visible to the user
         if (
             db_data_expired
         ):  # If the cached db data is expired (this is not set if the data doesn't exist or is invalid)
             # Fallback to the expired metadata
+            show_warning(
+                text="RimSort Dynamic Query",
+                information="Failed to read a valid Steam API key from settings.json",
+                details="Unable to initialize SteamWorkshopQuery for live metadata.\n\nFalling back to cached, but EXPIRED Dynamic Query database...",
+            )  # Notify the user
+            logger.warning("Falling back to cached, but EXPIRED Dynamic Query database")
             db_json_data = db_data[
                 "database"
             ]  # TODO: additional check to verify integrity of this data's schema
         return db_json_data, community_rules_json_data
-    logger.info("Using Steam WebAPI for Workshop metadata...")
     if len(mods.keys()) > 0:  # No empty queries!
-        mods_query = SteamWorkshopQuery(apikey, 294100, db_json_data_life, mods)
-        db_json_data = mods_query.workshop_json_data[
-            "database"
-        ]  # Get json data directly from memory upon query completion
+        try: # Since the key is valid, we try to launch a live query
+            logger.info("Initializing Steam WebAPI with configured Steam API key...")
+            mods_query = SteamWorkshopQuery(apikey, 294100, db_json_data_life, mods)
+            db_json_data = mods_query.workshop_json_data[
+                "database"
+            ]  # Get json data directly from memory upon query completion
+        except HTTPError:
+            stacktrace = traceback.format_exc()
+            pattern = "&key="
+            stacktrace = stacktrace[
+                : len(stacktrace)
+                - (len(stacktrace) - (stacktrace.find(pattern) + len(pattern)))
+            ] # If an HTTPError from steam/urllib3 module(s) somehow is uncaught, try to remove the Steam API key from the stacktrace
+            show_fatal_error(
+                text="RimSort Dynamic Query",
+                information="SteamWorkshopQuery failed to initialize database.\nThere is no external metadata being factored for sorting!\n\nCached Dynamic Query database not found!\n\nFailed to initialize new SteamWorkshopQuery with configured Steam API key.\n\nAre you connected to the internet?\n\nIs your configured key invalid or revoked?",
+                details=stacktrace
+            )
     else:
         logger.warning(
             "Tried to generate SteamWorkshopQuery with 0 mods...? Unable to initialize SteamWorkshopQuery for live metadata..."

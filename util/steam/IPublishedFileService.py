@@ -1,5 +1,6 @@
 import json
 import logging
+from requests.exceptions import HTTPError
 import sys
 from time import time
 from typing import Any, Dict, List, Optional, Tuple

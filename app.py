@@ -3,6 +3,7 @@ import os
 import sys
 import traceback
 from pathlib import Path
+from requests.exceptions import HTTPError
 
 from PySide2.QtCore import QSize
 from PySide2.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
@@ -116,10 +117,18 @@ try:
     logger.info("Showing MainWindow")
     window.show()
     app.exec_()
-except:
+except Exception as e:
     # Catch exceptions during initial application instantiation
     # Uncaught exceptions during the application loop are caught with excepthook
-    stacktrace = traceback.format_exc()
+    if e.__class__.__name__ == "HTTPError": # requests.exceptions.HTTPError
+        stacktrace = traceback.format_exc()
+        pattern = "&key="
+        stacktrace = stacktrace[
+            : len(stacktrace)
+            - (len(stacktrace) - (stacktrace.find(pattern) + len(pattern)))
+        ] # If an HTTPError from steam/urllib3 module(s) somehow is uncaught, try to remove the Steam API key from the stacktrace
+    else:
+        stacktrace = traceback.format_exc()
     logger.error(
         "The main application instantiation has failed with an uncaught exception:"
     )
