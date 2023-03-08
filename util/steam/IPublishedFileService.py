@@ -9,7 +9,7 @@ from steam.webapi import WebAPI
 logger = logging.getLogger(__name__)
 # Uncomment this if you want to see the full urllib3 request
 # THIS CONTAINS THE STEAM API KEY
-logging.getLogger("urllib3").setLevel(logging.WARNING)
+logging.getLogger("urllib3").setLevel(logging.CRITICAL)
 
 
 class SteamWorkshopQuery:

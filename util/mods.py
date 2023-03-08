@@ -194,6 +194,8 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                                 )
                                 if pfid != "":
                                     mod_data["modmetadata"]["publishedfileid"] = pfid
+                                    mod_data["modmetadata"]["steam_uri"] = f"steam://url/CommunityFilePage/{pfid}"
+                                    mod_data["modmetadata"]["steam_url"] = f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
                                 mods[uuid] = mod_data["modmetadata"]
                             else:
                                 logger.error(
@@ -259,12 +261,16 @@ def get_installed_expansions(game_path: str, game_version: str) -> Dict[str, Any
         package_id = data["packageId"]
         if package_id == "ludeon.rimworld":
             data["name"] = "Core (Base game)"
+            data["steam_url"] = "https://store.steampowered.com/app/294100/RimWorld"
         elif package_id == "ludeon.rimworld.royalty":
             data["name"] = "Royalty (DLC #1)"
+            data["steam_url"] = "https://store.steampowered.com/app/1149640/RimWorld__Royalty"
         elif package_id == "ludeon.rimworld.ideology":
             data["name"] = "Ideology (DLC #2)"
+            data["steam_url"] = "https://store.steampowered.com/app/1392840/RimWorld__Ideology"
         elif package_id == "ludeon.rimworld.biotech":
             data["name"] = "Biotech (DLC #3)"
+            data["steam_url"] = "https://store.steampowered.com/app/1826140/RimWorld__Biotech"
         else:
             logger.error(
                 f"An unknown mod has been found in the expansions folder: {package_id} {data}"

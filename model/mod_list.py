@@ -6,7 +6,13 @@ import webbrowser
 
 from PySide2.QtCore import Qt, QEvent, QModelIndex, Signal
 from PySide2.QtGui import QDropEvent, QFocusEvent
-from PySide2.QtWidgets import QAbstractItemView, QListWidget, QListWidgetItem, QMenu
+from PySide2.QtWidgets import (
+    QAction,
+    QAbstractItemView,
+    QListWidget,
+    QListWidgetItem,
+    QMenu,
+)
 
 from model.mod_list_item import ModListItemInner
 from util.filesystem import *
@@ -84,23 +90,50 @@ class ModListWidget(QListWidget):
     def eventFilter(self, source, event):
         if event.type() == QEvent.ContextMenu and source is self:
             contextMenu = QMenu()
-            open_folder = contextMenu.addAction("Open Folder")  # Open Folder
-            open_url = contextMenu.addAction("Open URL in browser")  # Open URL
-            source_item = source.itemAt(event.pos())
+            open_folder = contextMenu.addAction("Open folder")  # Open folder
+            open_url_browser = contextMenu.addAction(
+                "Open URL in browser"
+            )  # Open URL in browser
+            source_item = source.itemAt(
+                event.pos()
+            )  # Which QListWidgetItem was right clicked?
             if type(source_item) is QListWidgetItem:
-                action = contextMenu.exec_(self.mapToGlobal(event.pos()))
-                for widget, item in self.get_widgets_and_items():
+                for (
+                    widget,
+                    item,
+                ) in (
+                    self.get_widgets_and_items()
+                ):  # Find source_widget from the available QWidgets
                     if source_item is item:
-                        path = widget.json_data[
-                            "path"
-                        ]  # Set local data folder path - assume exists
-                        if widget.json_data.get("url"):
-                            url = widget.json_data["url"]  # Set mod url if it exists
-                if action == open_folder:
-                    platform_specific_open(path)
-                if action == open_url:
-                    open_url.triggered.connect(self.open_mod_url(url))
-
+                        source_widget = widget
+                widget_json_data = source_widget.json_data
+                widget_package_id = widget_json_data["packageId"]
+                if widget_json_data.get("steam_uri"):
+                    steam_uri = widget_json_data.get("steam_uri")
+                    open_mod_steam = contextMenu.addAction("Open mod in Steam")
+                action = contextMenu.exec_(
+                    self.mapToGlobal(event.pos())
+                )  # Execute QMenu and return it's ACTION
+                if action == open_folder:  # ACTION: Open folder
+                    path = widget_json_data[
+                        "path"
+                    ]  # Set local data folder path from metadata
+                    if os.path.exists(path):  # If the path actually exists
+                        platform_specific_open(path)  # Open it
+                    else:  # Otherwise, warn & do nothing
+                        logger.warning(
+                            f"Failed to 'Open folder' for {widget_package_id}"
+                        )
+                        logger.warning(f"Path does not exist: {path}")
+                if action == open_url_browser:  # ACTION: Open URL in browser
+                    url = self.get_mod_url(widget_json_data)
+                    if url != "":
+                        self.open_mod_url(url)
+                    else:
+                        logger.warning("URL is empty!")
+                if "open_mod_steam" in locals():  # This action is conditionally created
+                    if action == open_mod_steam:  # ACTION: Open steam:// uri in Steam
+                        platform_specific_open(steam_uri)
             return True
         return super().eventFilter(source, event)
 
@@ -243,10 +276,55 @@ class ModListWidget(QListWidget):
         """
         self.mod_info_signal.emit(item.data(Qt.UserRole)["uuid"])
 
+    def get_mod_url(self, widget_json_data) -> str:
+        url = ""
+        if (
+            widget_json_data["data_source"] == "workshop"
+        ):  # If the mod was parsed from a Steam mods source
+            if widget_json_data.get("steam_url") and isinstance(
+                widget_json_data["steam_url"], str
+            ):  # If the steam_url exists
+                url = widget_json_data.get("steam_url")  # Use the Steam URL
+            elif widget_json_data.get("url") and isinstance(
+                widget_json_data["url"],
+                str,
+            ):  # Otherwise, check if local metadata url exists
+                url = widget_json_data["url"]  # Use the local metadata url
+            else:  # Otherwise, warn & do nothing
+                logger.warning(f"Unable to get url for mod {widget_package_id}")
+        elif (
+            widget_json_data["data_source"] == "local"
+        ):  # If the mod was parsed from a local mods source
+            if widget_json_data.get("url") and isinstance(
+                widget_json_data["url"],
+                str,
+            ):  # If the local metadata url exists
+                url = widget_json_data["url"]  # Use the local metadata url
+            elif widget_json_data.get("steam_url") and isinstance(
+                widget_json_data["steam_url"], str
+            ):  # Otherwise, if the mod has steam_url
+                url = widget_json_data.get("steam_url")  # Use the Steam URL
+            else:  # Otherwise, warn & do nothing
+                logger.warning(f"Unable to get url for mod {widget_package_id}")
+        elif (
+            widget_json_data["data_source"] == "expansion"
+        ):  # Otherwise, the mod MUST be an expansion
+            if widget_json_data.get("steam_url") and isinstance(
+                widget_json_data["steam_url"], str
+            ):  # If the steam_url exists
+                url = widget_json_data.get("steam_url")  # Use the Steam URL
+            else:  # Otherwise, warn & do nothing
+                logger.warning(f"Unable to get url for mod {widget_package_id}")
+        else:  # ??? Not possible
+            logger.critical(
+                "Tried to parse URL for a mod that does not have a data_source?"
+            )
+        return url
+
     def open_mod_url(self, url: str) -> None:
         """
         Open the url of a mod of a url in a user's default web browser
         """
         browser = webbrowser.get().name
         logger.info(f"USER ACTION: Opening mod url {url} in " + f"{browser}")
-        webbrowser.open(url)
+        webbrowser.open_new_tab(url)
