@@ -151,47 +151,51 @@ class SteamWorkshopQuery:
                 includereactions=False,
             )
             for metadata in response["response"]["publishedfiledetails"]:
-                publishedfileid = metadata["publishedfileid"]
-                if not result["database"].get(publishedfileid):
-                    result["database"][publishedfileid] = {}
-                    result["database"][publishedfileid]["missing"] = True
-                    result["database"][publishedfileid][
-                        "url"
-                    ] = f"https://steamcommunity.com/sharedfiles/filedetails/?id={publishedfileid}"
-                steam_title = metadata["title"]
-                result["database"][publishedfileid]["steamName"] = steam_title
-                result["database"][publishedfileid]["dependencies"] = {}
-                if metadata.get("children"):
-                    for children in metadata[
-                        "children"
-                    ]:  # Check if children present in database
-                        child_pfid = children["publishedfileid"]
-                        if result["database"].get(
-                            child_pfid
-                        ):  # If we have data for this child already cached, populate it
-                            if result["database"][child_pfid].get("name"):
-                                child_name = result["database"][child_pfid]["name"]
-                            elif result["database"][child_pfid].get("steamName"):
-                                child_name = result["database"][child_pfid]["steamName"]
-                            else:
-                                logger.warning(
-                                    f"Unable to find name for child {child_pfid}"
-                                )
-                            if result["database"][child_pfid].get("url"):
-                                child_url = result["database"][child_pfid]["url"]
-                            else:
-                                logger.warning(
-                                    f"Unable to find url for child {child_pfid}"
-                                )
-                            result["database"][publishedfileid]["dependencies"][
+                if metadata["result"] != 1:
+                    publishedfileid = metadata["publishedfileid"]
+                    logger.warning(f"Tried to parse Steam Workshop metadata for a Steam Workshop mod that is deleted/private/removed/unposted: {publishedfileid}")
+                else: 
+                    publishedfileid = metadata["publishedfileid"]
+                    if not result["database"].get(publishedfileid):
+                        result["database"][publishedfileid] = {}
+                        result["database"][publishedfileid]["missing"] = True
+                        result["database"][publishedfileid][
+                            "url"
+                        ] = f"https://steamcommunity.com/sharedfiles/filedetails/?id={publishedfileid}"
+                    steam_title = metadata["title"]
+                    result["database"][publishedfileid]["steamName"] = steam_title
+                    result["database"][publishedfileid]["dependencies"] = {}
+                    if metadata.get("children"):
+                        for children in metadata[
+                            "children"
+                        ]:  # Check if children present in database
+                            child_pfid = children["publishedfileid"]
+                            if result["database"].get(
                                 child_pfid
-                            ] = [child_name, child_url]
-                        else:  # Child was not found in database, track it's pfid for later
-                            if child_pfid not in missing_children:
-                                logger.warning(
-                                    f"Could not find pfid {child_pfid} in database. Adding child to missing_children..."
-                                )
-                                missing_children.append(child_pfid)
+                            ):  # If we have data for this child already cached, populate it
+                                if result["database"][child_pfid].get("name"):
+                                    child_name = result["database"][child_pfid]["name"]
+                                elif result["database"][child_pfid].get("steamName"):
+                                    child_name = result["database"][child_pfid]["steamName"]
+                                else:
+                                    logger.warning(
+                                        f"Unable to find name for child {child_pfid}"
+                                    )
+                                if result["database"][child_pfid].get("url"):
+                                    child_url = result["database"][child_pfid]["url"]
+                                else:
+                                    logger.warning(
+                                        f"Unable to find url for child {child_pfid}"
+                                    )
+                                result["database"][publishedfileid]["dependencies"][
+                                    child_pfid
+                                ] = [child_name, child_url]
+                            else:  # Child was not found in database, track it's pfid for later
+                                if child_pfid not in missing_children:
+                                    logger.warning(
+                                        f"Could not find pfid {child_pfid} in database. Adding child to missing_children..."
+                                    )
+                                    missing_children.append(child_pfid)
         return result, missing_children
 
 

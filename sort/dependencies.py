@@ -123,7 +123,7 @@ def gen_tier_three_deps_graph(
     # into this list as well.
     # TODO: pull from a config
     logger.info("Generating dependencies graph for tier three mods")
-    known_tier_three_mods = {"krkr.rocketman"}
+    known_tier_three_mods = {"rim.job.world", "krkr.rocketman"}
     tier_three_mods = set()
     for known_tier_three_mod in known_tier_three_mods:
         if known_tier_three_mod in dependencies_graph:

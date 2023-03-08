@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
 
 from util.error import show_warning
-from util.IPublishedFileService import SteamWorkshopQuery
+from util.steam.IPublishedFileService import SteamWorkshopQuery
 from util.schema import validate_mods_config_format
 from util.xml import non_utf8_xml_path_to_json, xml_path_to_json
 
@@ -138,6 +138,7 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                     try:
                         with open(pfid_path) as pfid_file:
                             pfid = pfid_file.read()
+                            pfid = pfid.strip()
                     except:
                         logger.error(f"Failed to read pfid from {pfid_path}")
                 # If there was an issue getting the expected path, track and exit
