@@ -3,7 +3,6 @@ import json
 import logging
 import os
 import platform
-import subprocess
 import webbrowser
 from functools import partial
 from os.path import expanduser
@@ -22,9 +21,11 @@ from PySide2.QtWidgets import (
 )
 
 from util.error import *
+from util.filesystem import *
 from window.settings_panel import SettingsPanel
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class GameConfiguration(QObject):
@@ -342,7 +343,7 @@ class GameConfiguration(QObject):
             with open(settings_path) as infile:
                 logger.info("Loading JSON from file")
                 settings_data = json.load(infile)
-                logger.info(f"JSON has been loaded: {settings_data}")
+                logger.debug(f"JSON has been loaded: {settings_data}")
                 logger.info("Setting relevant QLineEdits now")
                 if settings_data.get("game_folder"):
                     game_folder_path = settings_data["game_folder"]
@@ -432,10 +433,10 @@ class GameConfiguration(QObject):
         if os.path.exists(path):
             if os.path.isfile(path) or path.endswith(".app"):
                 logger.info("Opening parent directory of file or MacOS app")
-                self.platform_specific_open(os.path.dirname(path))
+                platform_specific_open(os.path.dirname(path))
             else:
                 logger.info("Opening directory")
-                self.platform_specific_open(path)
+                platform_specific_open(path)
         else:
             logger.warning(f"The path {path} does not exist")
             show_warning(
@@ -447,25 +448,6 @@ class GameConfiguration(QObject):
                 ),
             )
 
-    def platform_specific_open(self, path: str) -> None:
-        """
-        Function to open a folder in the platform-specific
-        explorer app.
-
-        :param path: path to open
-        """
-        system_name = platform.system()
-        if system_name == "Darwin":
-            logger.info(f"Opening {path} with subprocess open on MacOS")
-            subprocess.Popen(["open", path])
-        elif system_name == "Windows":
-            logger.info(f"Opening {path} with startfile on Windows")
-            os.startfile(path)  # type: ignore
-        elif system_name == "Linux":
-            logger.info(f"Opening {path} with xdg-open on Linux")
-            subprocess.Popen(["xdg-open", path])
-        else:
-            logger.error("Attempting to open directory on an unknown system")
 
     def set_game_exe_folder(self) -> None:
         """
@@ -587,10 +569,10 @@ class GameConfiguration(QObject):
             logger.info("settings.json exists, opening to write")
             with open(settings_path) as infile:
                 settings_data = json.load(infile)
-                logger.info(f"Read JSON data: {settings_data}")
+                logger.debug(f"Read JSON data: {settings_data}")
                 settings_data[key] = value
                 json_object = json.dumps(settings_data, indent=4)
-                logger.info(f"JSON data to write: {json_object}")
+                logger.debug(f"JSON data to write: {json_object}")
                 with open(settings_path, "w") as outfile:
                     outfile.write(json_object)
                     logger.info("JSON data written")

@@ -35,7 +35,7 @@ class ModListItemInner(QWidget):
 
         super(ModListItemInner, self).__init__()
 
-        # All data, includig name, author, package id, dependencies,
+        # All data, including name, author, package id, dependencies,
         # whether the mod is a workshop mod or expansion, etc is encapsulated
         # in this variable. This is exactly equal to the dict value of a
         # single all_mods key-value

@@ -2,12 +2,14 @@ import logging
 import os
 from pathlib import Path
 from typing import Any, Optional
+import webbrowser
 
-from PySide2.QtCore import QModelIndex, Qt, Signal
+from PySide2.QtCore import Qt, QEvent, QModelIndex, Signal
 from PySide2.QtGui import QDropEvent, QFocusEvent
-from PySide2.QtWidgets import QAbstractItemView, QListWidget, QListWidgetItem
+from PySide2.QtWidgets import QAbstractItemView, QListWidget, QListWidgetItem, QMenu
 
 from model.mod_list_item import ModListItemInner
+from util.filesystem import *
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +46,9 @@ class ModListWidget(QListWidget):
         # When an item is clicked, display the mod information TODO
         self.itemClicked.connect(self.mod_clicked)
 
+        # Add an eventFilter for per mod_list_item context menu
+        self.installEventFilter(self)
+
         # Disable horizontal scroll bar
         self.horizontalScrollBar().setEnabled(False)
         self.horizontalScrollBar().setVisible(False)
@@ -75,6 +80,29 @@ class ModListWidget(QListWidget):
         self.uuids = set()
 
         logger.info("Finished ModListWidget initialization")
+
+    def eventFilter(self, source, event):
+        if event.type() == QEvent.ContextMenu and source is self:
+            contextMenu = QMenu()
+            open_folder = contextMenu.addAction("Open Folder")  # Open Folder
+            open_url = contextMenu.addAction("Open URL in browser")  # Open URL
+            source_item = source.itemAt(event.pos())
+            if type(source_item) is QListWidgetItem:
+                action = contextMenu.exec_(self.mapToGlobal(event.pos()))
+                for widget, item in self.get_widgets_and_items():
+                    if source_item is item:
+                        path = widget.json_data[
+                            "path"
+                        ]  # Set local data folder path - assume exists
+                        if widget.json_data.get("url"):
+                            url = widget.json_data["url"]  # Set mod url if it exists
+                if action == open_folder:
+                    platform_specific_open(path)
+                if action == open_url:
+                    open_url.triggered.connect(self.open_mod_url(url))
+
+            return True
+        return super().eventFilter(source, event)
 
     def recreate_mod_list(self, mods: dict[str, Any]) -> None:
         """
@@ -214,3 +242,11 @@ class ModListWidget(QListWidget):
         Look up the mod's data by uuid
         """
         self.mod_info_signal.emit(item.data(Qt.UserRole)["uuid"])
+
+    def open_mod_url(self, url: str) -> None:
+        """
+        Open the url of a mod of a url in a user's default web browser
+        """
+        browser = webbrowser.get().name
+        logger.info(f"USER ACTION: Opening mod url {url} in " + f"{browser}")
+        webbrowser.open(url)

@@ -182,7 +182,11 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                         if mod_data.get("modmetadata"):
                             if mod_data["modmetadata"].get("packageId"):
                                 uuid = str(uuid4())
-                                mod_data["modmetadata"]["packageId"] = mod_data["modmetadata"]["packageId"].lower() # normalize package ID in metadata
+                                mod_data["modmetadata"]["packageId"] = mod_data[
+                                    "modmetadata"
+                                ][
+                                    "packageId"
+                                ].lower()  # normalize package ID in metadata
                                 mod_data["modmetadata"]["folder"] = file.name
                                 mod_data["modmetadata"]["path"] = file.path
                                 logger.debug(
@@ -323,7 +327,9 @@ def get_workshop_mods(workshop_path: str) -> Dict[str, Any]:
     return mod_data
 
 
-def get_rimpy_database_mod(mods: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+def get_rimpy_database_mod(
+    mods: Dict[str, Any]
+) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
     Extract the RimPy Mod Manager Database mod's SteamDB rules, essential for the sorting functions.
     Produces an error if the DB mod is not found.
@@ -340,9 +346,7 @@ def get_rimpy_database_mod(mods: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[s
             or mods[uuid].get("publishedfileid") == "1847679158"
         ):  # TODO make this a DB mod packageID a configurable preference
             logger.info("Found RimPy Mod Manager Database mod")
-            steam_db_rules_path = os.path.join(
-                mods[uuid]["path"], "db", "db.json"
-            )
+            steam_db_rules_path = os.path.join(mods[uuid]["path"], "db", "db.json")
             logger.info(f"Generated path to db.json: {steam_db_rules_path}")
             if os.path.exists(steam_db_rules_path):
                 with open(steam_db_rules_path, encoding="utf-8") as f:
@@ -388,14 +392,17 @@ def get_rimpy_database_mod(mods: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[s
     )
     return db_json_data, community_rules_json_data
 
-def get_3rd_party_metadata(apikey: str, mods: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+
+def get_3rd_party_metadata(
+    apikey: str, mods: Dict[str, Any]
+) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
     Query Steam Workshop metadata for any mods that have a 'publishedfileid' attribute
     contained in their mod_data, essential for the sorting functions. Will produce warnings
     if the data is unable to be retrieved.
 
 
-    TODO: Implement this with associated workflows! 
+    TODO: Implement this with associated workflows!
     Possibly implement a separate root key (i.e. ["community_rules"] instead of ["database"]...?)
 
     Return RimSort Community Rules db, essential for the sorting functions.
@@ -406,7 +413,7 @@ def get_3rd_party_metadata(apikey: str, mods: Dict[str, Any]) -> Tuple[Dict[str,
     which contains possible Steam mods to lookup metadata for
     :return: Tuple containing the updated json data from database, and community_rules
     """
-    db_data = {} # This is kept to fall back on.
+    db_data = {}  # This is kept to fall back on.
     db_data_expired = None
     db_json_data = {}
     db_json_data_life = 1800
@@ -414,8 +421,12 @@ def get_3rd_party_metadata(apikey: str, mods: Dict[str, Any]) -> Tuple[Dict[str,
     db_json_folder = "data"
     db_json_filename = "db_json_data.json"
     db_json_data_path = os.path.join(os.getcwd(), db_json_folder, db_json_filename)
-    logger.info("Checking for cached Steam db...") # TODO: Make this info visible to the user
-    if os.path.exists(db_json_data_path): # Look for cached data & load it if available & not expired
+    logger.info(
+        "Checking for cached Steam db..."
+    )  # TODO: Make this info visible to the user
+    if os.path.exists(
+        db_json_data_path
+    ):  # Look for cached data & load it if available & not expired
         logger.info(f"Found cached Steam db at {db_json_data_path}")
         with open(db_json_data_path, encoding="utf-8") as f:
             json_string = f.read()
@@ -423,33 +434,50 @@ def get_3rd_party_metadata(apikey: str, mods: Dict[str, Any]) -> Tuple[Dict[str,
             db_data = json.loads(json_string)
             current_time = int(time())
             db_time = int(db_data["version"])
-            if current_time < db_time: # if current epoch is less than the database's epoch
-                db_json_data = db_data["database"] # TODO: additional check to verify integrity of this data's schema
+            if (
+                current_time < db_time
+            ):  # if current epoch is less than the database's epoch
+                db_json_data = db_data[
+                    "database"
+                ]  # TODO: additional check to verify integrity of this data's schema
                 logger.info(f"Cached Steam metadata is valid: {db_json_data}")
                 return db_json_data, community_rules_json_data
             else:
                 db_data_expired = True
-                logger.info("Disregarding cached Steam metadata; it is expired. Attempting live query...") # TODO: Make this info visible to the user 
-        
+                logger.info(
+                    "Disregarding cached Steam metadata; it is expired. Attempting live query..."
+                )  # TODO: Make this info visible to the user
+
     # Attempt live query & cache the query
     logger.info("Cached data invalid or missing. Attempting live query...")
     # For now, we load apikey from text file in cwd. DO NOT COMMIT THIS TO ANY PUBLIC REPOSITORY!
-    if len(apikey) == 32: # If it is 32 characters
+    if len(apikey) == 32:  # If it is 32 characters
         logger.info("Retreived Steam API key from settings.json")
-    else: # Otherwise, it's not valid
-        logger.warning("Failed to read a valid Steam API key from settings.json. Unable to initialize SteamWorkshopQuery for live metadata...") # TODO: Make this warning visible to the user
-        if db_data_expired: # If the cached db data is expired (this is not set if the data doesn't exist or is invalid)
+    else:  # Otherwise, it's not valid
+        logger.warning(
+            "Failed to read a valid Steam API key from settings.json. Unable to initialize SteamWorkshopQuery for live metadata..."
+        )  # TODO: Make this warning visible to the user
+        if (
+            db_data_expired
+        ):  # If the cached db data is expired (this is not set if the data doesn't exist or is invalid)
             # Fallback to the expired metadata
-            db_json_data = db_data["database"] # TODO: additional check to verify integrity of this data's schema
+            db_json_data = db_data[
+                "database"
+            ]  # TODO: additional check to verify integrity of this data's schema
         return db_json_data, community_rules_json_data
     logger.info("Using Steam WebAPI for Workshop metadata...")
-    if len(mods.keys()) > 0: # No empty queries!
+    if len(mods.keys()) > 0:  # No empty queries!
         mods_query = SteamWorkshopQuery(apikey, 294100, db_json_data_life, mods)
-        db_json_data = mods_query.workshop_json_data["database"] # Get json data directly from memory upon query completion
+        db_json_data = mods_query.workshop_json_data[
+            "database"
+        ]  # Get json data directly from memory upon query completion
     else:
-        logger.warning("Tried to generate SteamWorkshopQuery with 0 mods...? Unable to initialize SteamWorkshopQuery for live metadata...") # TODO: Make this warning visible to the user
+        logger.warning(
+            "Tried to generate SteamWorkshopQuery with 0 mods...? Unable to initialize SteamWorkshopQuery for live metadata..."
+        )  # TODO: Make this warning visible to the user
 
     return db_json_data, community_rules_json_data
+
 
 def get_dependencies_for_mods(
     expansions: Dict[str, Any],
@@ -497,9 +525,7 @@ def get_dependencies_for_mods(
                     logger.debug(
                         f"Current mod requires these mods by version to work: {dependencies_by_ver}"
                     )
-                    add_dependency_to_mod(
-                        all_mods[uuid], dependencies_by_ver, all_mods
-                    )
+                    add_dependency_to_mod(all_mods[uuid], dependencies_by_ver, all_mods)
 
         if all_mods[uuid].get("incompatibleWith"):
             incompatibilities = all_mods[uuid]["incompatibleWith"].get("li")
@@ -507,15 +533,13 @@ def get_dependencies_for_mods(
                 logger.debug(
                     f"Current mod is incompatible with these mods: {incompatibilities}"
                 )
-                add_incompatibility_to_mod(
-                    all_mods[uuid], incompatibilities, all_mods
-                )
+                add_incompatibility_to_mod(all_mods[uuid], incompatibilities, all_mods)
 
         if all_mods[uuid].get("incompatibleWithByVersion"):
             if all_mods[uuid]["incompatibleWithByVersion"].get("v1.4"):
-                incompatibilities_by_ver = all_mods[uuid][
-                    "incompatibleWithByVersion"
-                ]["v1.4"].get("li")
+                incompatibilities_by_ver = all_mods[uuid]["incompatibleWithByVersion"][
+                    "v1.4"
+                ].get("li")
                 if incompatibilities_by_ver:
                     logger.debug(
                         f"Current mod is incompatible by version with these mods: {incompatibilities_by_ver}"
@@ -629,26 +653,32 @@ def get_dependencies_for_mods(
         tracking_dict: dict[str, set[str]] = {}
         steam_id_to_package_id = {}
         # Iterate through all workshop items in the Steam DB.
-        for folder_id, mod_data in steam_db_rules.items():
-            db_package_id = mod_data["packageId"].lower()
+        for publishedfileid, mod_data in steam_db_rules.items():
+            try:
+                db_package_id = mod_data["packageId"].lower()
 
-            # Record the Steam ID => package_id
-            steam_id_to_package_id[folder_id] = db_package_id
+                # Record the Steam ID => package_id
+                steam_id_to_package_id[publishedfileid] = db_package_id
 
-            # Also record package_ids to names (use in tooltips)
-            info_from_steam_package_id_to_name[db_package_id] = mod_data["name"]
+                # Also record package_ids to names (use in tooltips)
+                info_from_steam_package_id_to_name[db_package_id] = mod_data["name"]
 
-            # If the package_id is in all_mods...
-            for uuid, modmetadata in all_mods.items():
-                if db_package_id in modmetadata['packageId']:
-                    # Iterate through each dependency (Steam ID) listed on Steam
-                    for dependency_folder_id, steam_dep_data in mod_data[
-                        "dependencies"
-                    ].items():
-                        if db_package_id not in tracking_dict:
-                            tracking_dict[uuid] = set()
-                        # Add Steam ID to dependencies of mod
-                        tracking_dict[uuid].add(dependency_folder_id)
+                # If the package_id is in all_mods...
+                for uuid, modmetadata in all_mods.items():
+                    if db_package_id in modmetadata["packageId"]:
+                        # Iterate through each dependency (Steam ID) listed on Steam
+                        for dependency_publishedfileid, steam_dep_data in mod_data[
+                            "dependencies"
+                        ].items():
+                            if db_package_id not in tracking_dict:
+                                tracking_dict[uuid] = set()
+                            # Add Steam ID to dependencies of mod
+                            tracking_dict[uuid].add(dependency_publishedfileid)
+            except:
+                logger.warning(
+                    f"Skipping parsing Steam metadata mod for {publishedfileid}"
+                )
+                continue
 
         # For each mod that exists in all_mods -> dependencies (in Steam ID form)
         for mod_uuid, set_of_dependency_steam_ids in tracking_dict.items():
@@ -679,7 +709,9 @@ def get_dependencies_for_mods(
             # if the mod doesn't exist all_mods, then either mod_data or dependency_id
             # will be None, and then we don't insert a dependency
             for mod_uuid, modmetadata in all_mods.items():
-                if package_id.lower() in modmetadata['packageId']:  # all_mods is normalized
+                if (
+                    package_id.lower() in modmetadata["packageId"]
+                ):  # all_mods is normalized
                     logger.debug(f"Current mod: {package_id} (we use normalized)")
 
                     load_these_after = community_rules[package_id].get("loadBefore")
@@ -696,7 +728,7 @@ def get_dependencies_for_mods(
                                 load_this_after,  # Lower() done in call
                                 "loadTheseAfter",
                                 "loadTheseBefore",
-                                all_mods
+                                all_mods,
                             )
 
                     load_these_before = community_rules[package_id].get("loadAfter")
@@ -711,7 +743,7 @@ def get_dependencies_for_mods(
                                 load_this_before,  # Lower() done in call
                                 "loadTheseBefore",
                                 "loadTheseAfter",
-                                all_mods
+                                all_mods,
                             )
         logger.info("Finished adding dependencies from Community Rules")
 
@@ -728,6 +760,7 @@ def _get_num_dependencies(all_mods: Dict[str, Any], key_name: str) -> int:
         if mod_data.get(key_name):
             counter = counter + len(mod_data[key_name])
     return counter
+
 
 def _log_deps_order_info(all_mods) -> None:
     """This block is used quite a bit - deserves own function"""
@@ -748,7 +781,7 @@ def _log_deps_order_info(all_mods) -> None:
 def add_dependency_to_mod(
     mod_data: Dict[str, Any],
     dependency_or_dependency_ids: Any,
-    all_mods: Dict[str, Any]
+    all_mods: Dict[str, Any],
 ) -> None:
     """
     Dependency data is collected regardless of whether or not that dependency
@@ -843,7 +876,7 @@ def add_incompatibility_to_mod(
         if isinstance(dependency_or_dependency_ids, str):
             dependency_id = dependency_or_dependency_ids.lower()
             for uuid in all_mods:
-                if all_mods[uuid]['packageId'] == dependency_id:
+                if all_mods[uuid]["packageId"] == dependency_id:
                     mod_data["incompatibilities"].add(dependency_id)
                     # if "incompatibilities" not in all_mods[dependency_id]:
                     #     all_mods[dependency_id]["incompatibilities"] = set()
@@ -855,7 +888,7 @@ def add_incompatibility_to_mod(
                 for dependency in dependency_or_dependency_ids:
                     dependency_id = dependency.lower()
                     for uuid in all_mods:
-                        if all_mods[uuid]['packageId'] == dependency_id:
+                        if all_mods[uuid]["packageId"] == dependency_id:
                             mod_data["incompatibilities"].add(dependency_id)
                             # if "incompatibilities" not in all_mods[dependency_id]:
                             #     all_mods[dependency_id]["incompatibilities"] = set()
@@ -917,13 +950,11 @@ def add_load_rule_to_mod(
         if isinstance(dependency_or_dependency_ids, str):
             dependency_id = dependency_or_dependency_ids.lower()
             for uuid in all_mods:
-                if all_mods[uuid]['packageId'] == dependency_id:
+                if all_mods[uuid]["packageId"] == dependency_id:
                     mod_data[explicit_key].add((dependency_id, True))
                     if indirect_key not in all_mods[uuid]:
                         all_mods[uuid][indirect_key] = set()
-                    all_mods[uuid][indirect_key].add(
-                        (mod_data["packageId"], False)
-                    )
+                    all_mods[uuid][indirect_key].add((mod_data["packageId"], False))
 
         # If the value is a single dict (case of MayRequire rules)
         elif isinstance(dependency_or_dependency_ids, dict):
@@ -936,13 +967,11 @@ def add_load_rule_to_mod(
                 )
             if dependency_id:
                 for uuid in all_mods:
-                    if all_mods[uuid]['packageId'] == dependency_id:
+                    if all_mods[uuid]["packageId"] == dependency_id:
                         mod_data[explicit_key].add((dependency_id, True))
                         if indirect_key not in all_mods[uuid]:
                             all_mods[uuid][indirect_key] = set()
-                        all_mods[uuid][indirect_key].add(
-                            (mod_data["packageId"], False)
-                        )
+                        all_mods[uuid][indirect_key].add((mod_data["packageId"], False))
 
         # If the value is a LIST of strings
         elif isinstance(dependency_or_dependency_ids, list):
@@ -965,7 +994,7 @@ def add_load_rule_to_mod(
 
                 if dependency_id:
                     for uuid in all_mods:
-                        if all_mods[uuid]['packageId'] == dependency_id:
+                        if all_mods[uuid]["packageId"] == dependency_id:
                             mod_data[explicit_key].add((dependency_id, True))
                             if indirect_key not in all_mods[uuid]:
                                 all_mods[uuid][indirect_key] = set()
@@ -1016,7 +1045,9 @@ def get_game_version(game_path: str) -> str:
     return version.strip()
 
 
-def get_active_mods_from_config(config_path: str, workshop_and_expansions: Dict[str, Any]) -> Dict[str, Any]:
+def get_active_mods_from_config(
+    config_path: str, workshop_and_expansions: Dict[str, Any]
+) -> Dict[str, Any]:
     """
     Given a path to a file in the ModsConfig.xml format, return the
     mods in the active mods section.
@@ -1030,7 +1061,7 @@ def get_active_mods_from_config(config_path: str, workshop_and_expansions: Dict[
         empty_active_mods_dict: dict[str, Any] = {}
         for package_id in mod_data["ModsConfigData"]["activeMods"]["li"]:
             for uuid in workshop_and_expansions:
-                if workshop_and_expansions[uuid]['packageId'] == package_id.lower():
+                if workshop_and_expansions[uuid]["packageId"] == package_id.lower():
                     empty_active_mods_dict[uuid] = workshop_and_expansions[uuid]
         logger.info(
             f"Returning empty active mods dict with {len(empty_active_mods_dict)} entries"
@@ -1061,7 +1092,10 @@ def populate_active_mods_workshop_data(
         # Cross reference package ids with mods in the workshop folder.
         # If unable to, that means either the mod hasn't been downloaded
         # of it is an invalid entry.
-        if unpopulated_mods[mod_uuid]["packageId"] == workshop_and_expansions[mod_uuid]["packageId"]:
+        if (
+            unpopulated_mods[mod_uuid]["packageId"]
+            == workshop_and_expansions[mod_uuid]["packageId"]
+        ):
             populated_mods[mod_uuid] = workshop_and_expansions[mod_uuid]
         else:
             logger.warning(
@@ -1105,7 +1139,10 @@ def get_inactive_mods(
     inactive_mods = workshop_and_expansions.copy()
     # For each mod in active mods, remove from inactive_mods
     for mod_uuid in active_mods:
-        if active_mods[mod_uuid]["packageId"] == workshop_and_expansions[mod_uuid]["packageId"]:
+        if (
+            active_mods[mod_uuid]["packageId"]
+            == workshop_and_expansions[mod_uuid]["packageId"]
+        ):
             del inactive_mods[mod_uuid]
     logger.info("Finished generating inactive mods list")
     return inactive_mods

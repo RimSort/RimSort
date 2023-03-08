@@ -81,31 +81,41 @@ class SteamWorkshopQuery:
                 if v["supportedVersions"].get("li"):
                     gameVersions = v["supportedVersions"]["li"]
                     local_metadata["database"][pfid]["gameVersions"] = gameVersions
-        logger.info(
-            f"SteamWorkshopQuery initializing for {len(publishedfileids)} mods"
-        )
+        logger.info(f"SteamWorkshopQuery initializing for {len(publishedfileids)} mods")
         querying = True
         query = {}
         query["version"] = self.expiry
         query["database"] = local_metadata["database"]
         while querying:  # Begin initial query
-            query, missing_children = self.IPublishedFileService_GetDetails(
-                query, publishedfileids
-            )
+            (  # Returns WHAT we can get remotely, FROM what we have locally
+                query,
+                missing_children,
+            ) = self.IPublishedFileService_GetDetails(query, publishedfileids)
             if (
                 len(missing_children) > 0
-            ):  # If we have missing data for any dependency, get it
+            ):  # If we have missing data for any dependency...
                 logger.info(
                     f"Retrieving dependency information for the following missing children: {missing_children}"
                 )
-                query, missing_children = self.IPublishedFileService_GetDetails(
-                    query, missing_children
-                )
-            else:
+                # Extend publishedfileids with the missing_children PublishedFileIds for final query
+                publishedfileids.extend(missing_children)
+                # Launch a separate query from the initial, to recursively append
+                # any of the missing_children's metadata to the query["database"].
+                #
+                # This will ensure that we get ALL dependency data that is possible,
+                # even if we do not have the dependenc{y, ies}. It's not perfect,
+                # because it will always cause one additional full query to ensure that
+                # the query["database"] is complete with missing_children metadata.
+                #
+                # It is the only way to paint the full picture without already
+                # possessing the mod's metadata for the initial query.
+                (
+                    query,
+                    missing_children,
+                ) = self.IPublishedFileService_GetDetails(query, missing_children)
+            else:  # Stop querying once we have 0 missing_children
                 missing_children = []
                 querying = False
-            if missing_children:
-                publishedfileids.extend(missing_children)
         total = len(query["database"])
         logger.info(f"Returning Steam Workshop db_json_data with {total} items")
         with open("data/db_json_data.json", "w") as output:
@@ -128,6 +138,7 @@ class SteamWorkshopQuery:
         a list of any missing children's PublishedFileIds to consider for additional queries
         """
         missing_children = []
+        missing_children_omit = []
         result = json_to_update
         for batch in self.__chunks(
             publishedfileids, 215
@@ -151,17 +162,35 @@ class SteamWorkshopQuery:
                 includereactions=False,
             )
             for metadata in response["response"]["publishedfiledetails"]:
-                if metadata["result"] != 1:
-                    publishedfileid = metadata["publishedfileid"]
-                    logger.warning(f"Tried to parse Steam Workshop metadata for a Steam Workshop mod that is deleted/private/removed/unposted: {publishedfileid}")
-                else: 
-                    publishedfileid = metadata["publishedfileid"]
-                    if not result["database"].get(publishedfileid):
-                        result["database"][publishedfileid] = {}
-                        result["database"][publishedfileid]["missing"] = True
-                        result["database"][publishedfileid][
-                            "url"
-                        ] = f"https://steamcommunity.com/sharedfiles/filedetails/?id={publishedfileid}"
+                publishedfileid = metadata[
+                    "publishedfileid"
+                ]  # Set the PublishedFileId to that of the metadata we are parsing
+                if not result["database"].get(
+                    publishedfileid
+                ):  # If we don't already have a ["database"] entry for this pfid
+                    result["database"][publishedfileid] = {}  # Add in skeleton data
+                    result["database"][publishedfileid][
+                        "url"
+                    ] = f"https://steamcommunity.com/sharedfiles/filedetails/?id={publishedfileid}"
+                    result["database"][publishedfileid][
+                        "steamName"
+                    ] = "Steam metadata unavailable"
+                    result["database"][publishedfileid]["missing"] = True
+                    if metadata["result"] != 1:  # If the mod is no longer published
+                        logger.warning(
+                            f"Tried to parse metadata for a mod that is deleted/private/removed/unposted: {publishedfileid}"
+                        )
+                        result["database"][
+                            publishedfileid
+                        ][  # Reflect the mod's status in it's attributes
+                            "steamName"
+                        ] = "Missing mod: deleted/private/removed/unposted"
+                        result["database"][publishedfileid]["unpublished"] = True
+                else:
+                    if result["database"][publishedfileid].get(
+                        "unpublished"
+                    ):  # If mod is unpublished, it has no metadata
+                        continue
                     steam_title = metadata["title"]
                     result["database"][publishedfileid]["steamName"] = steam_title
                     result["database"][publishedfileid]["dependencies"] = {}
@@ -173,10 +202,14 @@ class SteamWorkshopQuery:
                             if result["database"].get(
                                 child_pfid
                             ):  # If we have data for this child already cached, populate it
-                                if result["database"][child_pfid].get("name"):
+                                if result["database"][child_pfid].get(
+                                    "name"
+                                ):  # Use local name over Steam name if possible
                                     child_name = result["database"][child_pfid]["name"]
                                 elif result["database"][child_pfid].get("steamName"):
-                                    child_name = result["database"][child_pfid]["steamName"]
+                                    child_name = result["database"][child_pfid][
+                                        "steamName"
+                                    ]
                                 else:
                                     logger.warning(
                                         f"Unable to find name for child {child_pfid}"
@@ -196,6 +229,7 @@ class SteamWorkshopQuery:
                                         f"Could not find pfid {child_pfid} in database. Adding child to missing_children..."
                                     )
                                     missing_children.append(child_pfid)
+
         return result, missing_children
 
 
