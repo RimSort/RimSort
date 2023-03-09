@@ -735,51 +735,51 @@ def get_dependencies_for_mods(
     _log_deps_order_info(all_mods)
 
     # Add load order to installed mods based on dependencies from community rules
+    package_id_to_uuid = {}
+    for mod_uuid, modmetadata in all_mods.items():
+        package_id_to_uuid[modmetadata["packageId"]] = mod_uuid
+
     if community_rules:
         logger.info("Starting adding dependencies from Community Rules")
         for package_id in community_rules:
             # Note: requiring the package be in all_mods should be fine, as
             # if the mod doesn't exist all_mods, then either mod_data or dependency_id
             # will be None, and then we don't insert a dependency
-            for mod_uuid, modmetadata in all_mods.items():
-                if (
-                    package_id.lower() in modmetadata["packageId"]
-                ):  # all_mods is normalized
-                    logger.debug(f"Current mod: {package_id} (we use normalized)")
+            if package_id.lower() in package_id_to_uuid:
 
-                    load_these_after = community_rules[package_id].get("loadBefore")
-                    if load_these_after:
-                        logger.debug(
-                            f"Current mod should load before these mods: {load_these_after}"
+                load_these_after = community_rules[package_id].get("loadBefore")
+                if load_these_after:
+                    logger.debug(
+                        f"Current mod should load before these mods: {load_these_after}"
+                    )
+                    # In Rimpy, load_these_after is at least an empty dict
+                    # Cannot call add_load_rule_to_mod outside of this for loop,
+                    # as that expects a list
+                    for load_this_after in load_these_after:
+                        add_load_rule_to_mod(
+                            all_mods[package_id_to_uuid[package_id.lower()]],  # Already checked above
+                            load_this_after,  # Lower() done in call
+                            "loadTheseAfter",
+                            "loadTheseBefore",
+                            all_mods,
                         )
-                        # In Rimpy, load_these_after is at least an empty dict
-                        # Cannot call add_load_rule_to_mod outside of this for loop,
-                        # as that expects a list
-                        for load_this_after in load_these_after:
-                            add_load_rule_to_mod(
-                                all_mods[mod_uuid],  # Already checked above
-                                load_this_after,  # Lower() done in call
-                                "loadTheseAfter",
-                                "loadTheseBefore",
-                                all_mods,
-                            )
 
-                    load_these_before = community_rules[package_id].get("loadAfter")
-                    if load_these_before:
-                        logger.debug(
-                            f"Current mod should load after these mods: {load_these_before}"
+                load_these_before = community_rules[package_id].get("loadAfter")
+                if load_these_before:
+                    logger.debug(
+                        f"Current mod should load after these mods: {load_these_before}"
+                    )
+                    # In Rimpy, load_these_before is at least an empty dict
+                    for load_this_before in load_these_before:
+                        add_load_rule_to_mod(
+                            all_mods[package_id_to_uuid[package_id.lower()]],  # Already checked above
+                            load_this_before,  # Lower() done in call
+                            "loadTheseBefore",
+                            "loadTheseAfter",
+                            all_mods,
                         )
-                        # In Rimpy, load_these_before is at least an empty dict
-                        for load_this_before in load_these_before:
-                            add_load_rule_to_mod(
-                                all_mods[mod_uuid],  # Already checked above
-                                load_this_before,  # Lower() done in call
-                                "loadTheseBefore",
-                                "loadTheseAfter",
-                                all_mods,
-                            )
         logger.info("Finished adding dependencies from Community Rules")
-
+    
     _log_deps_order_info(all_mods)
 
     logger.info("Returing all mods now")
