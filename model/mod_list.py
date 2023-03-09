@@ -98,14 +98,7 @@ class ModListWidget(QListWidget):
                 event.pos()
             )  # Which QListWidgetItem was right clicked?
             if type(source_item) is QListWidgetItem:
-                for (
-                    widget,
-                    item,
-                ) in (
-                    self.get_widgets_and_items()
-                ):  # Find source_widget from the available QWidgets
-                    if source_item is item:
-                        source_widget = widget
+                source_widget = self.itemWidget(source_item)
                 widget_json_data = source_widget.json_data
                 widget_package_id = widget_json_data["packageId"]
                 if widget_json_data.get("steam_uri"):
