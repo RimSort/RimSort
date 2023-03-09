@@ -679,6 +679,12 @@ def get_dependencies_for_mods(
 
     logger.info("Finished adding dependencies through About.xml information")
     _log_deps_order_info(all_mods)
+
+    # Next two sections utilize this helper dict
+    package_id_to_uuid = {}
+    for mod_uuid, modmetadata in all_mods.items():
+        package_id_to_uuid[modmetadata["packageId"]] = mod_uuid
+
     # Steam's WebAPI references dependencies based on PublishedFileID, not package ID
     info_from_steam_package_id_to_name = {}
     if steam_db_rules:
@@ -697,16 +703,15 @@ def get_dependencies_for_mods(
                 info_from_steam_package_id_to_name[db_package_id] = mod_data["name"]
 
                 # If the package_id is in all_mods...
-                for uuid, modmetadata in all_mods.items():
-                    if db_package_id in modmetadata["packageId"]:
-                        # Iterate through each dependency (Steam ID) listed on Steam
-                        for dependency_publishedfileid, steam_dep_data in mod_data[
-                            "dependencies"
-                        ].items():
-                            if db_package_id not in tracking_dict:
-                                tracking_dict[uuid] = set()
-                            # Add Steam ID to dependencies of mod
-                            tracking_dict[uuid].add(dependency_publishedfileid)
+                if db_package_id in package_id_to_uuid:
+                    # Iterate through each dependency (Steam ID) listed on Steam
+                    for dependency_publishedfileid, steam_dep_data in mod_data[
+                        "dependencies"
+                    ].items():
+                        if db_package_id not in tracking_dict:
+                            tracking_dict[db_package_id] = set()
+                        # Add Steam ID to dependencies of mod
+                        tracking_dict[db_package_id].add(dependency_publishedfileid)
             except:
                 logger.warning(
                     f"Skipping parsing Steam metadata mod for {publishedfileid}"
@@ -714,7 +719,7 @@ def get_dependencies_for_mods(
                 continue
 
         # For each mod that exists in all_mods -> dependencies (in Steam ID form)
-        for mod_uuid, set_of_dependency_steam_ids in tracking_dict.items():
+        for installed_mod_package_id, set_of_dependency_steam_ids in tracking_dict.items():
             for dependency_steam_id in set_of_dependency_steam_ids:
                 # Dependencies are added as package_ids. We should be able to
                 # resolve the package_id from the Steam ID for any mod, unless
@@ -722,7 +727,7 @@ def get_dependencies_for_mods(
                 # wire to a package_id defined in an installed & valid mod.
                 if dependency_steam_id in steam_id_to_package_id:
                     add_single_str_dependency_to_mod(
-                        all_mods[mod_uuid],  # Already checked above
+                        all_mods[package_id_to_uuid[installed_mod_package_id]],  # Already checked above
                         steam_id_to_package_id[dependency_steam_id],
                         all_mods,
                     )
@@ -735,10 +740,6 @@ def get_dependencies_for_mods(
     _log_deps_order_info(all_mods)
 
     # Add load order to installed mods based on dependencies from community rules
-    package_id_to_uuid = {}
-    for mod_uuid, modmetadata in all_mods.items():
-        package_id_to_uuid[modmetadata["packageId"]] = mod_uuid
-
     if community_rules:
         logger.info("Starting adding dependencies from Community Rules")
         for package_id in community_rules:
