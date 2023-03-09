@@ -258,9 +258,9 @@ class GameConfiguration(QObject):
         self.initialize_storage()
 
         # SIGNALS AND SLOTS
-        self.settings_panel.settings_signal.connect(
+        self.settings_panel.clear_paths_signal.connect(
             self.delete_all_paths_data
-        )  # Actionsdelete_all_paths_data
+        )  # Actions delete_all_paths_data
 
         logger.info("Finished GameConfiguration initialization")
 

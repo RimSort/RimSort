@@ -64,6 +64,11 @@ class MainContent:
         self.main_layout.addLayout(self.active_mods_panel.panel, 20)
         self.main_layout.addLayout(self.actions_panel.panel, 10)
 
+        # INITIALIZE WIDGETS
+        # Fetch paths dynamically from game configuration panel
+        logger.info("Loading GameConfiguration instance")
+        self.game_configuration = game_configuration
+
         # SIGNALS AND SLOTS
         self.actions_panel.actions_signal.connect(self.actions_slot)  # Actions
 
@@ -80,11 +85,9 @@ class MainContent:
         self.inactive_mods_panel.inactive_mods_list.item_added_signal.connect(
             self.active_mods_panel.active_mods_list.handle_other_list_row_added
         )
-
-        # INITIALIZE WIDGETS
-        # Fetch paths dynamically from game configuration panel
-        logger.info("Loading GameConfiguration instance")
-        self.game_configuration = game_configuration
+        self.game_configuration.settings_panel.metadata_comparison_signal.connect(
+            self._do_generate_metadata_comparison_report
+        )
 
         # Restore cache initially set to empty
         self.active_mods_data_restore_state: Dict[str, Any] = {}
@@ -310,6 +313,88 @@ class MainContent:
             self.game_configuration.update_persistent_storage(
                 "steam_apikey", self.game_configuration.steam_apikey
             )
+
+    def _do_generate_metadata_comparison_report(self) -> None:
+        mods = self.all_mods_with_dependencies
+        rimpy_deps = {}
+        rimsort_deps = {}
+        dynamic_query_db_json_path = os.path.join(
+            os.getcwd(), "data", "db_data.json"
+        )
+        if os.path.exists(dynamic_query_db_json_path):
+            with open(dynamic_query_db_json_path, encoding="utf-8") as f:
+                json_string = f.read()
+                logger.info(
+                    "Reading info from cached RimSort Dynamic Query db_data.json"
+                )
+                rimsort_steam_data = json.loads(json_string)
+        else:
+            show_warning("The could not find a cached RimSort Dynamic Query!")
+            return
+        for uuid in mods:
+            if (
+                mods[uuid].get("packageId") == "rupal.rimpymodmanagerdatabase"
+                or mods[uuid].get("publishedfileid") == "1847679158"
+            ):
+                rimpy_db_json_path = os.path.join(mods[uuid]["path"], "db", "db.json")
+                if os.path.exists(rimpy_db_json_path):
+                    with open(rimpy_db_json_path, encoding="utf-8") as f:
+                        json_string = f.read()
+                        logger.info(
+                            "Reading info from Rimpy Mod Manager Database db.json"
+                        )
+                        rimpy_steam_data = json.loads(json_string)
+                else:
+                    show_warning("The could not find RimPy Mod Manager Database mod!")
+                    return
+        count = 0
+        for k, v in rimsort_steam_data["database"].items():
+            # print(k, v['dependencies'])
+            rimsort_deps[k] = set()
+            if v.get("dependencies"):
+                for dep_key in v["dependencies"]:
+                    rimsort_deps[k].add(dep_key)
+                    count += 1
+        count = 0
+        for k, v in rimpy_steam_data["database"].items():
+            # print(k, v['dependencies'])
+            if k in rimsort_deps:
+                rimpy_deps[k] = set()
+                if v.get("dependencies"):
+                    for dep_key in v["dependencies"]:
+                        rimpy_deps[k].add(dep_key)
+                        count += 1
+        no_deps_str = "*no explicit dependencies listed*"
+        rimsort_total_dependencies = len(rimsort_deps)
+        rimpy_total_dependencies = len(rimpy_deps)
+        report = (
+            "#######################\nExternal metadata comparison:\n#######################"
+            #+ f"\nTotal # of deps from Dynamic Query: {rimsort_total_dependencies}"
+            #+ f"\nTotal # of deps from RimPy db.json: {rimpy_total_dependencies}"
+        )
+        for k, v in rimsort_deps.items():
+            # If the deps are different...
+            if v != rimpy_deps.get(k):
+                pp = rimpy_deps.get(k)
+                if pp:
+                    # Normalize here (get rid of core/dlc deps)
+                    pp.discard("294100")
+                    pp.discard("1149640")
+                    pp.discard("1392840")
+                    pp.discard("1826140")
+                    if v != pp:
+                        if v == set():
+                            v = no_deps_str
+                        if pp == set():
+                            pp = no_deps_str
+                        mod_name = rimpy_steam_data["database"][k]["name"]
+                        report += "\n\n#################"
+                        report += f"\nDISCREPANCY FOUND:"
+                        report += "\n#################"
+                        report += f"\nMod name: {mod_name}"
+                        report += f"\n\nRimSort Dynamic Query dependencies:\n{v}"
+                        report += f"\n\nRimPy's Steam DB data dependencies:\n{pp}"
+        show_information("External metadata comparison:", "Click 'Show Details' to see the full report!", report)
 
     def _do_platform_specific_game_launch(self, args: str) -> None:
         """

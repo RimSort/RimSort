@@ -119,7 +119,7 @@ class SteamWorkshopQuery:
                 querying = False
         total = len(query["database"])
         logger.info(f"Returning Steam Workshop db_json_data with {total} items")
-        with open("data/db_json_data.json", "w") as output:
+        with open("data/db_data.json", "w") as output:
             json.dump(query, output, indent=4)
         return query
 

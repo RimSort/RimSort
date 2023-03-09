@@ -436,7 +436,7 @@ def get_3rd_party_metadata(
     db_json_data_life = 1800
     community_rules_json_data = {}
     db_json_folder = "data"
-    db_json_filename = "db_json_data.json"
+    db_json_filename = "db_data.json"
     db_json_data_path = os.path.join(os.getcwd(), db_json_folder, db_json_filename)
     logger.info(
         "Checking for cached Steam db..."

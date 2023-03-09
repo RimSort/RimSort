@@ -8,7 +8,8 @@ logger = logging.getLogger(__name__)
 
 
 class SettingsPanel(QDialog):
-    settings_signal = Signal(str)
+    clear_paths_signal = Signal(str)
+    metadata_comparison_signal = Signal(str)
 
     def __init__(self) -> None:
         logger.info("Starting SettingsPanel initialization")
@@ -36,9 +37,13 @@ class SettingsPanel(QDialog):
         self.external_metadata_cb.addItems(
             ["RimPy Mod Manager Database", "Rimsort Dynamic Query"]
         )
+        self.comparison_report_button = QPushButton("External metadata comparison")
+        self.comparison_report_button.clicked.connect(
+            partial(self.metadata_comparison_signal.emit, "external_metadata_comparison")
+        )
         self.clear_paths_button = QPushButton("Clear Paths")
         self.clear_paths_button.clicked.connect(
-            partial(self.settings_signal.emit, "clear_paths")
+            partial(self.clear_paths_signal.emit, "clear_paths")
         )
 
         # Add widgets to layout
@@ -46,6 +51,7 @@ class SettingsPanel(QDialog):
         self.layout.addWidget(self.sorting_algorithm_cb)
         self.layout.addWidget(self.external_metadata_label)
         self.layout.addWidget(self.external_metadata_cb)
+        self.layout.addWidget(self.comparison_report_button)
         self.layout.addWidget(self.clear_paths_button)
 
         # Display items

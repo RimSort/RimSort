@@ -164,5 +164,5 @@ cython_debug/
 .vscode/
 modlists
 test*
-data/db_json_data.json
+data/db_data.json
 key.txt
