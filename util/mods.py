@@ -432,6 +432,7 @@ def get_3rd_party_metadata(
     """
     db_data = {}  # This is kept to fall back on.
     db_data_expired = None
+    db_data_missing = None
     db_json_data = {}
     db_json_data_life = 1800
     community_rules_json_data = {}
@@ -461,19 +462,44 @@ def get_3rd_party_metadata(
                 return db_json_data, community_rules_json_data
             else:
                 db_data_expired = True
-                show_information(
-                    text="RimSort Dynamic Query",
-                    information="Cached data invalid or missing.\nAttempting live query..."
-                )  # Notify the user
-
+    else:
+        db_data_missing = True
+    if db_data_expired or db_data_missing:
+        show_information(
+            text="RimSort Dynamic Query",
+            information="Cached data expired or missing.\nAttempting live query..."
+        )  # Notify the user
+        logger.info("Cached data expired or missing. Attempting live query...")
     # Attempt live query & cache the query
-    logger.info("Cached data invalid or missing. Attempting live query...")
-    if len(apikey) == 32:  # If it is 32 characters
+    if len(apikey) == 32:  # If apikey is less than 32 characters
         logger.info("Retreived Steam API key from settings.json")
-    else:  # Otherwise, it's not valid
+        if len(mods.keys()) > 0:  # No empty queries!
+            try: # Since the key is valid, we try to launch a live query
+                logger.info("Initializing Steam WebAPI with configured Steam API key...")
+                mods_query = SteamWorkshopQuery(apikey, 294100, db_json_data_life, mods)
+                db_json_data = mods_query.workshop_json_data[
+                    "database"
+                ]  # Get json data directly from memory upon query completion
+            except HTTPError:
+                stacktrace = traceback.format_exc()
+                pattern = "&key="
+                stacktrace = stacktrace[
+                    : len(stacktrace)
+                    - (len(stacktrace) - (stacktrace.find(pattern) + len(pattern)))
+                ] # If an HTTPError from steam/urllib3 module(s) somehow is uncaught, try to remove the Steam API key from the stacktrace
+                show_fatal_error(
+                    text="RimSort Dynamic Query",
+                    information="SteamWorkshopQuery failed to initialize database.\nThere is no external metadata being factored for sorting!\n\nCached Dynamic Query database not found!\n\nFailed to initialize new SteamWorkshopQuery with configured Steam API key.\n\nAre you connected to the internet?\n\nIs your configured key invalid or revoked?\n\nPlease right-click the 'Refresh' button and configure a valid Steam API key so that you can generate a database.\n\nPlease reference: https://github.com/oceancabbage/RimSort/wiki/User-Guide#obtaining-your-steam-api-key--using-it-with-rimsort-dynamic-query",
+                    details=stacktrace
+                )
+        else:
+            logger.warning(
+                "Tried to generate SteamWorkshopQuery with 0 mods...? Unable to initialize SteamWorkshopQuery for live metadata..."
+            )  # TODO: Make this warning visible to the user
+    else:  # Otherwise, API key is not valid
         if (
-            db_data_expired
-        ):  # If the cached db data is expired (this is not set if the data doesn't exist or is invalid)
+            db_data_expired and not db_data_missing
+        ):  # If the cached db data is expired but NOT missing
             # Fallback to the expired metadata
             show_warning(
                 text="RimSort Dynamic Query",
@@ -484,31 +510,12 @@ def get_3rd_party_metadata(
             db_json_data = db_data[
                 "database"
             ]  # TODO: additional check to verify integrity of this data's schema
-        return db_json_data, community_rules_json_data
-    if len(mods.keys()) > 0:  # No empty queries!
-        try: # Since the key is valid, we try to launch a live query
-            logger.info("Initializing Steam WebAPI with configured Steam API key...")
-            mods_query = SteamWorkshopQuery(apikey, 294100, db_json_data_life, mods)
-            db_json_data = mods_query.workshop_json_data[
-                "database"
-            ]  # Get json data directly from memory upon query completion
-        except HTTPError:
-            stacktrace = traceback.format_exc()
-            pattern = "&key="
-            stacktrace = stacktrace[
-                : len(stacktrace)
-                - (len(stacktrace) - (stacktrace.find(pattern) + len(pattern)))
-            ] # If an HTTPError from steam/urllib3 module(s) somehow is uncaught, try to remove the Steam API key from the stacktrace
-            show_fatal_error(
+        else: # Assume db_data_missing
+            show_warning(
                 text="RimSort Dynamic Query",
-                information="SteamWorkshopQuery failed to initialize database.\nThere is no external metadata being factored for sorting!\n\nCached Dynamic Query database not found!\n\nFailed to initialize new SteamWorkshopQuery with configured Steam API key.\n\nAre you connected to the internet?\n\nIs your configured key invalid or revoked?",
-                details=stacktrace
+                information="Unable to initialize external metadata.\nThere is no external metadata being factored for sorting!",
+                details="Cached Dynamic Query database not found!\n\nPlease right-click the 'Refresh' button and configure a valid Steam API key so that you can generate a database.\n\nPlease reference: https://github.com/oceancabbage/RimSort/wiki/User-Guide#obtaining-your-steam-api-key--using-it-with-rimsort-dynamic-query"
             )
-    else:
-        logger.warning(
-            "Tried to generate SteamWorkshopQuery with 0 mods...? Unable to initialize SteamWorkshopQuery for live metadata..."
-        )  # TODO: Make this warning visible to the user
-
     return db_json_data, community_rules_json_data
 
 
