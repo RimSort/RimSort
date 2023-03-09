@@ -230,6 +230,9 @@ class GameConfiguration(QObject):
         # STEAM APIKEY
         self.steam_apikey = ""
 
+        # DYNAMIC QUERY EXPIRY
+        self.dynamic_query_expiry = 1800
+
         # CONTAINER LAYOUTS INTO BASE LAYOUT
         self.client_settings_frame = QFrame()
         self.client_settings_frame.setObjectName("configLine")
@@ -393,6 +396,10 @@ class GameConfiguration(QObject):
                     settings_data["steam_apikey"] = ""
                 else:
                     self.steam_apikey = settings_data["steam_apikey"]
+                if not settings_data.get("dynamic_query_expiry"):
+                    settings_data["dynamic_query_expiry"] = 1800
+                else:
+                    self.dynamic_query_expiry = settings_data["dynamic_query_expiry"]
         logger.info("Finished storage initialization")
 
     def initialize_settings_panel(self) -> None:
@@ -447,7 +454,6 @@ class GameConfiguration(QObject):
                     "on the right or using the AutoDetect Paths functionality."
                 ),
             )
-
 
     def set_game_exe_folder(self) -> None:
         """

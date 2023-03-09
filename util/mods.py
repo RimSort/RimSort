@@ -411,7 +411,7 @@ def get_rimpy_database_mod(
 
 
 def get_3rd_party_metadata(
-    apikey: str, mods: Dict[str, Any]
+    apikey: str, db_json_data_life: int, mods: Dict[str, Any]
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
     Query Steam Workshop metadata for any mods that have a 'publishedfileid' attribute
@@ -434,7 +434,6 @@ def get_3rd_party_metadata(
     db_data_expired = None
     db_data_missing = None
     db_json_data = {}
-    db_json_data_life = 1800
     community_rules_json_data = {}
     db_json_folder = "data"
     db_json_filename = "db_data.json"
@@ -467,15 +466,17 @@ def get_3rd_party_metadata(
     if db_data_expired or db_data_missing:
         show_information(
             text="RimSort Dynamic Query",
-            information="Cached data expired or missing.\nAttempting live query..."
+            information="Cached data expired or missing.\nAttempting live query...",
         )  # Notify the user
         logger.info("Cached data expired or missing. Attempting live query...")
     # Attempt live query & cache the query
     if len(apikey) == 32:  # If apikey is less than 32 characters
         logger.info("Retreived Steam API key from settings.json")
         if len(mods.keys()) > 0:  # No empty queries!
-            try: # Since the key is valid, we try to launch a live query
-                logger.info("Initializing Steam WebAPI with configured Steam API key...")
+            try:  # Since the key is valid, we try to launch a live query
+                logger.info(
+                    "Initializing Steam WebAPI with configured Steam API key..."
+                )
                 mods_query = SteamWorkshopQuery(apikey, 294100, db_json_data_life, mods)
                 db_json_data = mods_query.workshop_json_data[
                     "database"
@@ -486,11 +487,11 @@ def get_3rd_party_metadata(
                 stacktrace = stacktrace[
                     : len(stacktrace)
                     - (len(stacktrace) - (stacktrace.find(pattern) + len(pattern)))
-                ] # If an HTTPError from steam/urllib3 module(s) somehow is uncaught, try to remove the Steam API key from the stacktrace
+                ]  # If an HTTPError from steam/urllib3 module(s) somehow is uncaught, try to remove the Steam API key from the stacktrace
                 show_fatal_error(
                     text="RimSort Dynamic Query",
                     information="SteamWorkshopQuery failed to initialize database.\nThere is no external metadata being factored for sorting!\n\nCached Dynamic Query database not found!\n\nFailed to initialize new SteamWorkshopQuery with configured Steam API key.\n\nAre you connected to the internet?\n\nIs your configured key invalid or revoked?\n\nPlease right-click the 'Refresh' button and configure a valid Steam API key so that you can generate a database.\n\nPlease reference: https://github.com/oceancabbage/RimSort/wiki/User-Guide#obtaining-your-steam-api-key--using-it-with-rimsort-dynamic-query",
-                    details=stacktrace
+                    details=stacktrace,
                 )
         else:
             logger.warning(
@@ -510,11 +511,11 @@ def get_3rd_party_metadata(
             db_json_data = db_data[
                 "database"
             ]  # TODO: additional check to verify integrity of this data's schema
-        else: # Assume db_data_missing
+        else:  # Assume db_data_missing
             show_warning(
                 text="RimSort Dynamic Query",
                 information="Unable to initialize external metadata.\nThere is no external metadata being factored for sorting!",
-                details="Cached Dynamic Query database not found!\n\nPlease right-click the 'Refresh' button and configure a valid Steam API key so that you can generate a database.\n\nPlease reference: https://github.com/oceancabbage/RimSort/wiki/User-Guide#obtaining-your-steam-api-key--using-it-with-rimsort-dynamic-query"
+                details="Cached Dynamic Query database not found!\n\nPlease right-click the 'Refresh' button and configure a valid Steam API key so that you can generate a database.\n\nPlease reference: https://github.com/oceancabbage/RimSort/wiki/User-Guide#obtaining-your-steam-api-key--using-it-with-rimsort-dynamic-query",
             )
     return db_json_data, community_rules_json_data
 
@@ -726,7 +727,10 @@ def get_dependencies_for_mods(
                 continue
 
         # For each mod that exists in all_mods -> dependencies (in Steam ID form)
-        for installed_mod_package_id, set_of_dependency_steam_ids in tracking_dict.items():
+        for (
+            installed_mod_package_id,
+            set_of_dependency_steam_ids,
+        ) in tracking_dict.items():
             for dependency_steam_id in set_of_dependency_steam_ids:
                 # Dependencies are added as package_ids. We should be able to
                 # resolve the package_id from the Steam ID for any mod, unless
@@ -734,7 +738,9 @@ def get_dependencies_for_mods(
                 # wire to a package_id defined in an installed & valid mod.
                 if dependency_steam_id in steam_id_to_package_id:
                     add_single_str_dependency_to_mod(
-                        all_mods[package_id_to_uuid[installed_mod_package_id]],  # Already checked above
+                        all_mods[
+                            package_id_to_uuid[installed_mod_package_id]
+                        ],  # Already checked above
                         steam_id_to_package_id[dependency_steam_id],
                         all_mods,
                     )
@@ -765,7 +771,9 @@ def get_dependencies_for_mods(
                     # as that expects a list
                     for load_this_after in load_these_after:
                         add_load_rule_to_mod(
-                            all_mods[package_id_to_uuid[package_id.lower()]],  # Already checked above
+                            all_mods[
+                                package_id_to_uuid[package_id.lower()]
+                            ],  # Already checked above
                             load_this_after,  # Lower() done in call
                             "loadTheseAfter",
                             "loadTheseBefore",
@@ -780,14 +788,16 @@ def get_dependencies_for_mods(
                     # In Rimpy, load_these_before is at least an empty dict
                     for load_this_before in load_these_before:
                         add_load_rule_to_mod(
-                            all_mods[package_id_to_uuid[package_id.lower()]],  # Already checked above
+                            all_mods[
+                                package_id_to_uuid[package_id.lower()]
+                            ],  # Already checked above
                             load_this_before,  # Lower() done in call
                             "loadTheseBefore",
                             "loadTheseAfter",
                             all_mods,
                         )
         logger.info("Finished adding dependencies from Community Rules")
-    
+
     _log_deps_order_info(all_mods)
 
     logger.info("Returing all mods now")

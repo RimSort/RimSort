@@ -88,6 +88,9 @@ class MainContent:
         self.game_configuration.settings_panel.metadata_comparison_signal.connect(
             self._do_generate_metadata_comparison_report
         )
+        self.game_configuration.settings_panel.set_dynamic_query_expiry_signal.connect(
+            self._do_set_dynamic_query_expiry
+        )
 
         # Restore cache initially set to empty
         self.active_mods_data_restore_state: Dict[str, Any] = {}
@@ -188,7 +191,9 @@ class MainContent:
                 self.steam_db_rules, self.community_rules = get_rimpy_database_mod(mods)
             else:
                 self.steam_db_rules, self.community_rules = get_3rd_party_metadata(
-                    self.game_configuration.steam_apikey, mods
+                    self.game_configuration.steam_apikey,
+                    self.game_configuration.dynamic_query_expiry,
+                    mods,
                 )
         else:
             logger.warning(
@@ -318,9 +323,7 @@ class MainContent:
         mods = self.all_mods_with_dependencies
         rimpy_deps = {}
         rimsort_deps = {}
-        dynamic_query_db_json_path = os.path.join(
-            os.getcwd(), "data", "db_data.json"
-        )
+        dynamic_query_db_json_path = os.path.join(os.getcwd(), "data", "db_data.json")
         if os.path.exists(dynamic_query_db_json_path):
             with open(dynamic_query_db_json_path, encoding="utf-8") as f:
                 json_string = f.read()
@@ -369,8 +372,8 @@ class MainContent:
         rimpy_total_dependencies = len(rimpy_deps)
         report = (
             "#######################\nExternal metadata comparison:\n#######################"
-            #+ f"\nTotal # of deps from Dynamic Query: {rimsort_total_dependencies}"
-            #+ f"\nTotal # of deps from RimPy db.json: {rimpy_total_dependencies}"
+            # + f"\nTotal # of deps from Dynamic Query: {rimsort_total_dependencies}"
+            # + f"\nTotal # of deps from RimPy db.json: {rimpy_total_dependencies}"
         )
         for k, v in rimsort_deps.items():
             # If the deps are different...
@@ -394,7 +397,35 @@ class MainContent:
                         report += f"\nMod name: {mod_name}"
                         report += f"\n\nRimSort Dynamic Query dependencies:\n{v}"
                         report += f"\n\nRimPy's Steam DB data dependencies:\n{pp}"
-        show_information("External metadata comparison:", "Click 'Show Details' to see the full report!", report)
+        show_information(
+            "External metadata comparison:",
+            "Click 'Show Details' to see the full report!",
+            report,
+        )
+
+    def _do_set_dynamic_query_expiry(self) -> None:
+        """
+        Opens a QDialogInput that allows the user to edit their preferred
+        Dynamic Query expiry (in seconds)
+        """
+        args, ok = QInputDialog().getText(
+            None,
+            "Edit Dynamic Query expiry:",
+            "Enter your preferred expiry duration in seconds (default 30 min/1800 sec):",
+            QLineEdit.Normal,
+            str(self.game_configuration.dynamic_query_expiry),
+        )
+        if ok:
+            try:
+                self.game_configuration.dynamic_query_expiry = int(args)
+                self.game_configuration.update_persistent_storage(
+                    "dynamic_query_expiry", self.game_configuration.dynamic_query_expiry
+                )
+            except ValueError:
+                show_warning(
+                    "Tried configuring Dynamic Query with a value that is not an integer.",
+                    "Please reconfigure the expiry value with an integer in terms of the seconds from epoch you would like your query to expire.",
+                )
 
     def _do_platform_specific_game_launch(self, args: str) -> None:
         """
