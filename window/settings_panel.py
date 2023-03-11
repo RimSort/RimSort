@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 class SettingsPanel(QDialog):
     clear_paths_signal = Signal(str)
+    metadata_by_appid_signal = Signal(str)
     metadata_comparison_signal = Signal(str)
     set_dynamic_query_expiry_signal = Signal(str)
 
@@ -38,6 +39,12 @@ class SettingsPanel(QDialog):
         self.external_metadata_cb.addItems(
             ["RimPy Mod Manager Database", "Rimsort Dynamic Query"]
         )
+        self.metadata_by_appid_button = QPushButton("Generate external metadata by appid")
+        self.metadata_by_appid_button.clicked.connect(
+            partial(
+                self.metadata_by_appid_signal.emit, "generate_metadata_by_appid"
+            )
+        )
         self.comparison_report_button = QPushButton("External metadata comparison")
         self.comparison_report_button.clicked.connect(
             partial(
@@ -63,6 +70,7 @@ class SettingsPanel(QDialog):
         self.layout.addWidget(self.sorting_algorithm_cb)
         self.layout.addWidget(self.external_metadata_label)
         self.layout.addWidget(self.external_metadata_cb)
+        self.layout.addWidget(self.metadata_by_appid_button)
         self.layout.addWidget(self.comparison_report_button)
         self.layout.addWidget(self.set_dynamic_query_expiry_button)
         self.layout.addWidget(self.clear_paths_button)

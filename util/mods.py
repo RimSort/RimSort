@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
 
 from util.error import show_fatal_error, show_information, show_warning
-from util.steam.webapi.IPublishedFileService import SteamWorkshopQuery
+from util.steam.webapi.IPublishedFileService import DynamicQuery
 from util.schema import validate_mods_config_format
 from util.xml import non_utf8_xml_path_to_json, xml_path_to_json
 
@@ -477,7 +477,10 @@ def get_3rd_party_metadata(
                 logger.info(
                     "Initializing Steam WebAPI with configured Steam API key..."
                 )
-                mods_query = SteamWorkshopQuery(apikey, 294100, db_json_data_life, mods)
+                mods_query = DynamicQuery(apikey, 294100, db_json_data_life)
+                mods_query.workshop_json_data = mods_query.cache_parsable_db_json_data(
+                    mods
+                )
                 db_json_data = mods_query.workshop_json_data[
                     "database"
                 ]  # Get json data directly from memory upon query completion
@@ -490,12 +493,12 @@ def get_3rd_party_metadata(
                 ]  # If an HTTPError from steam/urllib3 module(s) somehow is uncaught, try to remove the Steam API key from the stacktrace
                 show_fatal_error(
                     text="RimSort Dynamic Query",
-                    information="SteamWorkshopQuery failed to initialize database.\nThere is no external metadata being factored for sorting!\n\nCached Dynamic Query database not found!\n\nFailed to initialize new SteamWorkshopQuery with configured Steam API key.\n\nAre you connected to the internet?\n\nIs your configured key invalid or revoked?\n\nPlease right-click the 'Refresh' button and configure a valid Steam API key so that you can generate a database.\n\nPlease reference: https://github.com/oceancabbage/RimSort/wiki/User-Guide#obtaining-your-steam-api-key--using-it-with-rimsort-dynamic-query",
+                    information="DynamicQuery failed to initialize database.\nThere is no external metadata being factored for sorting!\n\nCached Dynamic Query database not found!\n\nFailed to initialize new DynamicQuery with configured Steam API key.\n\nAre you connected to the internet?\n\nIs your configured key invalid or revoked?\n\nPlease right-click the 'Refresh' button and configure a valid Steam API key so that you can generate a database.\n\nPlease reference: https://github.com/oceancabbage/RimSort/wiki/User-Guide#obtaining-your-steam-api-key--using-it-with-rimsort-dynamic-query",
                     details=stacktrace,
                 )
         else:
             logger.warning(
-                "Tried to generate SteamWorkshopQuery with 0 mods...? Unable to initialize SteamWorkshopQuery for live metadata..."
+                "Tried to generate DynamicQuery with 0 mods...? Unable to initialize DynamicQuery for live metadata..."
             )  # TODO: Make this warning visible to the user
     else:  # Otherwise, API key is not valid
         if (
@@ -505,7 +508,7 @@ def get_3rd_party_metadata(
             show_warning(
                 text="RimSort Dynamic Query",
                 information="Failed to read a valid Steam API key from settings.json",
-                details="Unable to initialize SteamWorkshopQuery for live metadata.\n\nFalling back to cached, but EXPIRED Dynamic Query database...",
+                details="Unable to initialize DynamicQuery for live metadata.\n\nFalling back to cached, but EXPIRED Dynamic Query database...",
             )  # Notify the user
             logger.warning("Falling back to cached, but EXPIRED Dynamic Query database")
             db_json_data = db_data[

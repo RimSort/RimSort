@@ -1,9 +1,12 @@
 import json
 import logging
+from math import ceil
 from requests.exceptions import HTTPError
 import sys
 from time import time
 from typing import Any, Dict, List, Optional, Tuple
+
+from window.runner_panel import RunnerPanel
 
 from steam.webapi import WebAPI
 
@@ -13,9 +16,147 @@ logger = logging.getLogger(__name__)
 logging.getLogger("urllib3").setLevel(logging.CRITICAL)
 
 
-class SteamWorkshopQuery:
+class AppIDQuery:
     """
-    Create SteamWorkshopQuery object to initialize the scraped data from Workshop
+    Create AppIDQuery object to initialize the scraped data from Workshop
+    """
+
+    def __init__(self, apikey: str, appid: int):
+        self.all_mods_metadata = {}
+        self.api = WebAPI(apikey, format="json", https=True)
+        self.apikey = apikey
+        self.appid = appid
+        self.next_cursor = "*"
+        self.pagenum = 1
+        self.pages = 1
+        self.publishedfileids = []
+        self.query = True
+        self.total = 0
+        logger.info(
+            f"AllPublishedFileIDsByAppID initializing... Compiling list of all Workshop mod PublishedFileIDs for {self.appid}..."
+        )
+        while self.query:
+            if self.pagenum > self.pages:
+                self.query = False
+                break
+            self.next_cursor = self.IPublishedFileService_QueryFiles(self.next_cursor)
+
+    def _all_mods_metadata_by_appid(self, life: int):
+        """
+        Utilizes DynamicQuery object to return an complete query of an AppID's
+        Steam Workshop mod catalogue's metadata from Steam WebAPI
+
+        :param life: The lifespan of the Query in terms of the seconds added to the time of
+        database generation. This adds an 'expiry' to the data being cached.
+        """
+        all_publishings_metadata_query = DynamicQuery(self.apikey, self.appid, 1800)
+        db = {}
+        db["version"] = all_publishings_metadata_query.expiry
+        db["database"] = {}
+        for publishedfileid in self.publishedfileids:
+            db["database"][publishedfileid] = {}
+        # Begin initial query
+        (  # Initial population of steamName, url, and empty dependencies {}
+            db,
+            missing_children,
+        ) = all_publishings_metadata_query.IPublishedFileService_GetDetails(
+            db, True, self.publishedfileids
+        )
+        # Begin secondary query
+        (  # Secondary pass to piece together the dependency data
+            db,
+            missing_children,
+        ) = all_publishings_metadata_query.IPublishedFileService_GetDetails(
+            db, False, self.publishedfileids
+        )
+
+        total = len(db["database"])
+        logger.info(f"Returning Steam Workshop db_json_data with {total} items")
+        with open(f"data/{self.appid}_AppIDQuery.json", "w") as output:
+            json.dump(db, output, indent=4)
+
+    def IPublishedFileService_QueryFiles(self, cursor: str) -> str:
+        """
+        Utility to crawl the entirety of Rimworld's Steam Workshop catalogue, compile,
+        and populate a list of all PublishedFileIDs
+
+        Given a string cursor, return a string next_cursor from Steam WebAPI, from the
+        data being parsed from the loop of each page - API has 100 item limit per page
+
+        https://steamapi.xpaw.me/#IPublishedFileService/QueryFiles
+        https://partner.steamgames.com/doc/webapi/IPublishedFileService#QueryFiles
+
+        :param str: IN string containing the variable that corresponds to the
+        `cursor` parameter being passed to the CURRENT WebAPI.call() query
+
+        :return: OUT string containing the variable that corresponds to the
+        `cursor` parameter being returned to the FOLLOWING loop in our series of
+        WebAPI.call() results that are being are parsing
+        """
+
+        result = self.api.call(
+            method_path="IPublishedFileService.QueryFiles",
+            key=self.apikey,
+            query_type=1,
+            page=1,
+            cursor=cursor,
+            numperpage=50000,
+            creator_appid=self.appid,
+            appid=self.appid,
+            requiredtags=None,
+            excludedtags=None,
+            match_all_tags=False,
+            required_flags=None,
+            omitted_flags=None,
+            search_text="",
+            filetype=0,
+            child_publishedfileid=None,
+            days=None,
+            include_recent_votes_only=False,
+            required_kv_tags=None,
+            taggroups=None,
+            date_range_created=None,
+            date_range_updated=None,
+            excluded_content_descriptors=None,
+            totalonly=False,
+            ids_only=True,
+            return_vote_data=False,
+            return_tags=False,
+            return_kv_tags=False,
+            return_previews=False,
+            return_children=True,
+            return_short_description=False,
+            return_for_sale_data=False,
+            return_playtime_stats=False,
+            return_details=False,
+            strip_description_bbcode=False,
+        )
+        # Print total mods found we need to iter through paginations to get info for
+        if (
+            self.pagenum and self.total == 0
+        ):  # If True, this is initial loop; we properly set them in initial loop
+            if result["response"]["total"]:
+                self.pagenum = 1
+                self.total = result["response"]["total"]
+                self.pages = ceil(
+                    self.total / len(result["response"]["publishedfiledetails"])
+                )
+                logger.info(f"Total mod items to parse: {str(self.total)}")
+        logger.info(
+            f"IPublishedFileService.QueryFiles page [{str(self.pagenum)}"
+            + f"/{str(self.pages)}]"
+        )
+        ids_from_page = []
+        for item in result["response"]["publishedfiledetails"]:
+            self.publishedfileids.append(item["publishedfileid"])
+            ids_from_page.append(item["publishedfileid"])
+        self.pagenum += 1
+        return result["response"]["next_cursor"]
+
+
+class DynamicQuery:
+    """
+    Create DynamicQuery object to initialize the scraped data from Workshop
 
     :param apikey: Steam API key to be used for query
     :param appid: The AppID associated with the game you are looking up info for
@@ -25,12 +166,12 @@ class SteamWorkshopQuery:
     which contains possible Steam mods to lookup metadata for
     """
 
-    def __init__(self, apikey: str, appid: int, life: int, mods: Dict[str, Any]):
+    def __init__(self, apikey: str, appid: int, life: int):
         self.api = WebAPI(apikey, format="json", https=True)
         self.apikey = apikey
         self.appid = appid
         self.expiry = self.__expires(life)
-        self.workshop_json_data = self.cache_parsable_db_json_data(mods)
+        self.workshop_json_data = {}
 
     def __chunks(self, _list: list, limit: int):
         """
@@ -82,16 +223,16 @@ class SteamWorkshopQuery:
                 if v["supportedVersions"].get("li"):
                     gameVersions = v["supportedVersions"]["li"]
                     local_metadata["database"][pfid]["gameVersions"] = gameVersions
-        logger.info(f"SteamWorkshopQuery initializing for {len(publishedfileids)} mods")
-        querying = True
+        logger.info(f"DynamicQuery initializing for {len(publishedfileids)} mods")
         query = {}
         query["version"] = self.expiry
         query["database"] = local_metadata["database"]
+        querying = True
         while querying:  # Begin initial query
             (  # Returns WHAT we can get remotely, FROM what we have locally
                 query,
                 missing_children,
-            ) = self.IPublishedFileService_GetDetails(query, publishedfileids)
+            ) = self.IPublishedFileService_GetDetails(query, False, publishedfileids)
             if (
                 len(missing_children) > 0
             ):  # If we have missing data for any dependency...
@@ -110,10 +251,9 @@ class SteamWorkshopQuery:
                 #
                 # It is the only way to paint the full picture without already
                 # possessing the mod's metadata for the initial query.
-                (
-                    query,
-                    missing_children,
-                ) = self.IPublishedFileService_GetDetails(query, missing_children)
+                (query, missing_children,) = self.IPublishedFileService_GetDetails(
+                    query, False, missing_children
+                )
             else:  # Stop querying once we have 0 missing_children
                 missing_children = []
                 querying = False
@@ -124,7 +264,7 @@ class SteamWorkshopQuery:
         return query
 
     def IPublishedFileService_GetDetails(
-        self, json_to_update: Dict[Any, Any], publishedfileids: list
+        self, json_to_update: Dict[Any, Any], override: bool, publishedfileids: list
     ) -> Tuple[Dict[Any, Any], list]:
         """
         Given a list of PublishedFileIds, return a dict of json data queried
@@ -139,7 +279,6 @@ class SteamWorkshopQuery:
         a list of any missing children's PublishedFileIds to consider for additional queries
         """
         missing_children = []
-        missing_children_omit = []
         result = json_to_update
         for batch in self.__chunks(
             publishedfileids, 215
@@ -166,7 +305,26 @@ class SteamWorkshopQuery:
                 publishedfileid = metadata[
                     "publishedfileid"
                 ]  # Set the PublishedFileId to that of the metadata we are parsing
-                if not result["database"].get(
+                if (
+                    override
+                ):  # Override assumes we have ALL PublishedFileIDs available. Does not get dependency data.
+                    if metadata["result"] != 1:  # If the mod is no longer published
+                        logger.warning(
+                            f"Tried to parse metadata for a mod that is deleted/private/removed/unposted: {publishedfileid}"
+                        )
+                        result["database"][
+                            publishedfileid
+                        ][  # Reflect the mod's status in it's attributes
+                            "steamName"
+                        ] = "Missing mod: deleted/private/removed/unposted"
+                        result["database"][publishedfileid]["unpublished"] = True
+                        continue
+                    result["database"][publishedfileid][
+                        "url"
+                    ] = f"https://steamcommunity.com/sharedfiles/filedetails/?id={publishedfileid}"
+                    result["database"][publishedfileid]["steamName"] = metadata["title"]
+                    result["database"][publishedfileid]["dependencies"] = {}
+                elif not result["database"].get(
                     publishedfileid
                 ):  # If we don't already have a ["database"] entry for this pfid
                     result["database"][publishedfileid] = {}  # Add in skeleton data
@@ -192,8 +350,7 @@ class SteamWorkshopQuery:
                         "unpublished"
                     ):  # If mod is unpublished, it has no metadata
                         continue
-                    steam_title = metadata["title"]
-                    result["database"][publishedfileid]["steamName"] = steam_title
+                    result["database"][publishedfileid]["steamName"] = metadata["title"]
                     result["database"][publishedfileid]["dependencies"] = {}
                     if metadata.get("children"):
                         for children in metadata[

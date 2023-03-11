@@ -116,9 +116,14 @@ class ModListWidget(QListWidget):
                         platform_specific_open(path)  # Open it
                     else:  # Otherwise, warn & do nothing
                         show_warning(
-                            "Cannot 'Open folder'!", f"Failed to 'Open folder' for {widget_package_id}! ",  f"Path does not exist: {path}"
+                            "Cannot 'Open folder'!",
+                            f"Failed to 'Open folder' for {widget_package_id}! ",
+                            f"Path does not exist: {path}",
                         )
-                        log.warning(f"Failed to 'Open folder' for {widget_package_id}! " + f"Path does not exist: {path}")
+                        log.warning(
+                            f"Failed to 'Open folder' for {widget_package_id}! "
+                            + f"Path does not exist: {path}"
+                        )
                 if action == open_url_browser:  # ACTION: Open URL in browser
                     url = self.get_mod_url(widget_json_data)
                     if url != "":

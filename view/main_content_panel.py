@@ -2,6 +2,7 @@ import logging
 import os
 import platform
 import subprocess
+from time import sleep
 from typing import Any, Dict
 
 from PySide2.QtWidgets import QFileDialog, QFrame, QHBoxLayout, QInputDialog, QLineEdit
@@ -15,9 +16,11 @@ from sub_view.inactive_mods_panel import InactiveModList
 from sub_view.mod_info_panel import ModInfo
 from util.mods import *
 from util.schema import validate_mods_config_format
-from util.steam.steamcmd.wrapper import SteamcmdRunner, SteamcmdInterface
+from util.steam.steamcmd.wrapper import SteamcmdInterface
+from util.steam.webapi.IPublishedFileService import AppIDQuery
 from util.xml import json_to_xml_write, xml_path_to_json
 from view.game_configuration_panel import GameConfiguration
+from window.runner_panel import RunnerPanel
 
 logger = logging.getLogger(__name__)
 
@@ -85,6 +88,9 @@ class MainContent:
         )
         self.inactive_mods_panel.inactive_mods_list.item_added_signal.connect(
             self.active_mods_panel.active_mods_list.handle_other_list_row_added
+        )
+        self.game_configuration.settings_panel.metadata_by_appid_signal.connect(
+            self._do_generate_metadata_by_appid
         )
         self.game_configuration.settings_panel.metadata_comparison_signal.connect(
             self._do_generate_metadata_comparison_report
@@ -324,6 +330,10 @@ class MainContent:
                 "steam_apikey", self.game_configuration.steam_apikey
             )
 
+    def _do_generate_metadata_by_appid(self) -> None:
+        appid_query = AppIDQuery(self.game_configuration.steam_apikey, 294100)
+        appid_query._all_mods_metadata_by_appid(1800)
+
     def _do_generate_metadata_comparison_report(self) -> None:
         mods = self.all_mods_with_dependencies
         rimpy_deps = {}
@@ -544,11 +554,10 @@ class MainContent:
             )
 
     def _do_setup_steamcmd(self):
-        self.runner = SteamcmdRunner()
+        self.runner = RunnerPanel()
         self.runner.show()
         self.runner.message("Setting up steamcmd...")
         self.steamcmd_wrapper.get_steamcmd(False, self.runner)
-        #self.steamcmd_wrapper.download_publishedfileids("294100", ["2896548513", "1909914131"], self.runner)
 
     def _insert_data_into_lists(
         self, active_mods: Dict[str, Any], inactive_mods: Dict[str, Any]

@@ -10,56 +10,11 @@ from zipfile import ZipFile
 from typing import Any, Dict, List, Optional, Tuple
 
 from util.error import show_fatal_error, show_information, show_warning
-
-from PySide2.QtCore import QProcess
-from PySide2.QtWidgets import (
-    QMainWindow,
-    QMessageBox,
-    QPlainTextEdit,
-    QWidget,
-    QVBoxLayout,
-)
+from window.runner_panel import RunnerPanel
 
 import shutil
 
 logger = logging.getLogger(__name__)
-
-
-class SteamcmdRunner(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.text = QPlainTextEdit(readOnly=True)
-
-        self.layout = QVBoxLayout()
-        self.layout.addWidget(self.text)
-        self.setLayout(self.layout)
-        self.resize(800, 600)
-
-        self.message("###########################")
-        self.message("steamcmd runner initialized")
-        self.message("###########################")
-        self.message("")
-
-    def execute(self, command: str, script_path: str):
-        logger.info(f"Running steamcmd script: {script_path}")
-        self.message(f"Running steamcmd script: {script_path}")
-        self.process = QProcess(self)
-        self.process.setProgram(command)
-        self.process.setArguments([f"+runscript {script_path}"])
-        self.process.setProcessChannelMode(QProcess.MergedChannels)
-        self.process.readyReadStandardOutput.connect(self.readyReadStandardOutput)
-        self.process.finished.connect(self.finished)
-        self.process.start()
-
-    def message(self, line: str):
-        self.text.appendPlainText(line)
-
-    def readyReadStandardOutput(self):
-        text = self.process.readAllStandardOutput().data().decode()
-        self.text.appendPlainText(text)
-
-    def finished(self):
-        logger.info("Subprocess completed")
 
 
 class SteamcmdInterface:
@@ -100,7 +55,9 @@ class SteamcmdInterface:
         if not os.path.exists(self.workshop_mods_path):
             os.makedirs(self.workshop_mods_path)
 
-    def download_publishedfileids(self, appid: str, publishedfileids: list, runner: SteamcmdRunner):
+    def download_publishedfileids(
+        self, appid: str, publishedfileids: list, runner: RunnerPanel
+    ):
         """
         This function downloads a list of mods from a list publishedfileids
 
@@ -118,18 +75,23 @@ class SteamcmdInterface:
             script = [f"force_install_dir {self.workshop_mods_path}", "login anonymous"]
             for publishedfileid in publishedfileids:
                 script.append(f"workshop_download_item {appid} " + publishedfileid)
-            script.extend(["validate", "quit"])
+            script.extend(
+                [
+                    # "validate",
+                    "quit"
+                ]
+            )
             script_path = os.path.join(self.steamcmd_path, "script.txt")
             with open(script_path, "w") as script_output:
                 script_output.write("\n".join(script))
             runner.message(
                 f"Compiled & using script in {self.steamcmd_path}/script.txt"
             )
-            runner.execute(self.steamcmd, script_path)
+            runner.execute(self.steamcmd, [f"+runscript {script_path}"])
         else:
             runner.message("steamcmd was not found. Please setup steamcmd first!")
 
-    def get_steamcmd(self, reinstall: bool, runner: SteamcmdRunner) -> None:
+    def get_steamcmd(self, reinstall: bool, runner: RunnerPanel) -> None:
         if os.path.exists(self.steamcmd_path):
             if reinstall:
                 logger.info(f"Reinstalling steamcmd at {self.steamcmd_path}")
