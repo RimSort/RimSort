@@ -166,3 +166,6 @@ modlists
 test*
 data/db_data.json
 key.txt
+*.xml
+/steam/
+/steamcmd/

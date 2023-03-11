@@ -71,6 +71,9 @@ class Actions(QWidget):
         self.export_button = QPushButton("Export List")
         self.export_button.clicked.connect(partial(self.actions_signal.emit, "export"))
 
+        self.setup_steamcmd_button = QPushButton("Setup steamcmd")
+        self.setup_steamcmd_button.clicked.connect(partial(self.actions_signal.emit, "setup_steamcmd"))
+
         self.save_button = QPushButton("Save")
         self.save_button.clicked.connect(partial(self.actions_signal.emit, "save"))
 
@@ -86,6 +89,7 @@ class Actions(QWidget):
         self.top_panel.addWidget(self.sort_button)
         self.middle_panel.addWidget(self.import_button)
         self.middle_panel.addWidget(self.export_button)
+        self.bottom_panel.addWidget(self.setup_steamcmd_button)
         self.bottom_panel.addWidget(self.save_button)
         self.bottom_panel.addWidget(self.run_button)
 

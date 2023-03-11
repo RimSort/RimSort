@@ -15,6 +15,7 @@ from sub_view.inactive_mods_panel import InactiveModList
 from sub_view.mod_info_panel import ModInfo
 from util.mods import *
 from util.schema import validate_mods_config_format
+from util.steam.steamcmd.wrapper import SteamcmdRunner, SteamcmdInterface
 from util.xml import json_to_xml_write, xml_path_to_json
 from view.game_configuration_panel import GameConfiguration
 
@@ -105,6 +106,8 @@ class MainContent:
 
             # Insert mod data into list (is_initial = True)
             self.repopulate_lists(True)
+
+        self.steamcmd_wrapper = SteamcmdInterface()
 
         logger.info("Finished MainContent initialization")
 
@@ -275,6 +278,8 @@ class MainContent:
             self._do_restore()
         if action == "import":
             self._do_import()
+        if action == "setup_steamcmd":
+            self._do_setup_steamcmd()
         if action == "run":
             self._do_platform_specific_game_launch(
                 self.game_configuration.run_arguments
@@ -537,6 +542,13 @@ class MainContent:
                     "exists in it."
                 ),
             )
+
+    def _do_setup_steamcmd(self):
+        self.runner = SteamcmdRunner()
+        self.runner.show()
+        self.runner.message("Setting up steamcmd...")
+        self.steamcmd_wrapper.get_steamcmd(False, self.runner)
+        #self.steamcmd_wrapper.download_publishedfileids("294100", ["2896548513", "1909914131"], self.runner)
 
     def _insert_data_into_lists(
         self, active_mods: Dict[str, Any], inactive_mods: Dict[str, Any]

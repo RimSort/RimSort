@@ -14,6 +14,7 @@ from PySide2.QtWidgets import (
     QMenu,
 )
 
+from util.error import show_warning
 from model.mod_list_item import ModListItemInner
 from util.filesystem import *
 
@@ -114,16 +115,16 @@ class ModListWidget(QListWidget):
                     if os.path.exists(path):  # If the path actually exists
                         platform_specific_open(path)  # Open it
                     else:  # Otherwise, warn & do nothing
-                        logger.warning(
-                            f"Failed to 'Open folder' for {widget_package_id}"
+                        show_warning(
+                            "Cannot 'Open folder'!", f"Failed to 'Open folder' for {widget_package_id}! ",  f"Path does not exist: {path}"
                         )
-                        logger.warning(f"Path does not exist: {path}")
+                        log.warning(f"Failed to 'Open folder' for {widget_package_id}! " + f"Path does not exist: {path}")
                 if action == open_url_browser:  # ACTION: Open URL in browser
                     url = self.get_mod_url(widget_json_data)
                     if url != "":
                         self.open_mod_url(url)
                     else:
-                        logger.warning("URL is empty!")
+                        show_warning("URL is empty!")
                 if "open_mod_steam" in locals():  # This action is conditionally created
                     if action == open_mod_steam:  # ACTION: Open steam:// uri in Steam
                         platform_specific_open(steam_uri)

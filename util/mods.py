@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
 
 from util.error import show_fatal_error, show_information, show_warning
-from util.steam.IPublishedFileService import SteamWorkshopQuery
+from util.steam.webapi.IPublishedFileService import SteamWorkshopQuery
 from util.schema import validate_mods_config_format
 from util.xml import non_utf8_xml_path_to_json, xml_path_to_json
 
