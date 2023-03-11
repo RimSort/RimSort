@@ -72,7 +72,7 @@ class MainWindow(QMainWindow):
 
         # Create the main application window
         self.setWindowTitle("RimSort Alpha v1.0.3")
-        self.setFixedSize(QSize(1200, 700))  # TODO: support resizing
+        self.setMinimumSize(QSize(1200, 700))
 
         # Create the window layout
         app_layout = QVBoxLayout()
