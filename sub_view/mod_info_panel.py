@@ -6,6 +6,7 @@ from PySide2.QtCore import Qt
 from PySide2.QtGui import QPixmap
 from PySide2.QtWidgets import QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout
 
+from model.image_label import ImageLabel
 from model.scroll_label import ScrollLabel
 
 logger = logging.getLogger(__name__)
@@ -42,9 +43,10 @@ class ModInfo:
         self.panel.addLayout(self.description_layout, 30)
 
         # Create widgets
-        self.preview_picture = QLabel()
+        self.preview_picture = ImageLabel()
         self.preview_picture.setAlignment(Qt.AlignCenter)
         self.preview_picture.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.preview_picture.setMinimumSize(1, 1)
         self.mod_info_name_label = QLabel("Name:")
         self.mod_info_name_label.setObjectName("summaryLabel")
         self.mod_info_name_value = QLabel()
