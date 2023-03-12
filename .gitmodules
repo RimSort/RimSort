@@ -1,0 +1,4 @@
+[submodule "SteamworksPy"]
+	path = SteamworksPy
+	url = https://github.com/philippj/SteamworksPy
+	ignore = dirty
