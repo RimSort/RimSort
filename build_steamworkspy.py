@@ -68,6 +68,8 @@ STEAMWORKS_COMPILE_CMD_WIN64 = [
 STEAMWORKS_SDK_URL = "https://partner.steamgames.com/downloads/steamworks_sdk_155.zip"
 STEAMWORKS_PY_CMD = ["git", "submodule", "update", "--init", "--recursive"]
 STEAMWORKS_PY_PATH = os.path.join(CWD, "SteamworksPy", "library")
+STEAMWORKS_MODULE_PATH = os.path.join(CWD, "SteamworksPy", "steamworks")
+STEAMWORKS_MODULE_FIN = os.path.join(CWD, "steamworks")
 STEAMWORKS_SDK_PATH = os.path.join(STEAMWORKS_PY_PATH, "sdk")
 STEAMWORKS_SDK_HEADER_PATH = os.path.join(STEAMWORKS_SDK_PATH, "public", "steam")
 STEAMWORKS_SDK_HEADER_DEST_PATH = os.path.join(STEAMWORKS_PY_PATH, "sdk", "steam")
@@ -216,3 +218,9 @@ shutil.copyfile(STEAMWORKS_SDK_LIBSTEAM_DEST_PATH, STEAMWORKS_SDK_LIBSTEAM_FIN_P
 # STEAMWORKSPY
 print(f"Copying file {STEAMWORKSPY_BIN_PATH} to: {STEAMWORKSPY_BIN_FIN_PATH}")
 shutil.copyfile(STEAMWORKSPY_BIN_PATH, STEAMWORKSPY_BIN_FIN_PATH)
+
+# STEAMWORKS PYTHON MODULE
+print(f"Copying folder {STEAMWORKS_MODULE_PATH} to: {STEAMWORKS_MODULE_FIN}")
+if os.path.exists(STEAMWORKS_MODULE_FIN):
+    shutil.rmtree(STEAMWORKS_MODULE_FIN)
+shutil.copytree(STEAMWORKS_MODULE_PATH, STEAMWORKS_MODULE_FIN)

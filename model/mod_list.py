@@ -1,6 +1,7 @@
 import logging
 import os
 from pathlib import Path
+import shutil
 from typing import Any, Optional
 import webbrowser
 
@@ -28,9 +29,11 @@ class ModListWidget(QListWidget):
     their own lists or moved from one list to another.
     """
 
-    mod_info_signal = Signal(str)
-    list_update_signal = Signal(str)
     item_added_signal = Signal(str)
+    list_update_signal = Signal(str)
+    mod_info_signal = Signal(str)
+    refresh_signal = Signal(str)
+    steamworks_subscription_signal = Signal(list)
 
     def __init__(self) -> None:
         """
@@ -90,6 +93,7 @@ class ModListWidget(QListWidget):
 
     def eventFilter(self, source, event):
         if event.type() == QEvent.ContextMenu and source is self:
+            logger.info("USER ACTION: Open right-click mod_list_item contextMenu")
             contextMenu = QMenu()
             open_folder = contextMenu.addAction("Open folder")  # Open folder
             open_url_browser = contextMenu.addAction(
@@ -101,30 +105,40 @@ class ModListWidget(QListWidget):
             if type(source_item) is QListWidgetItem:
                 source_widget = self.itemWidget(source_item)
                 widget_json_data = source_widget.json_data
+                mod_data_source = widget_json_data.get("data_source")
                 widget_package_id = widget_json_data["packageId"]
+                mod_path = widget_json_data[
+                    "path"
+                ]  # Set local data folder path from metadata
+                mod_pfid = widget_json_data["publishedfileid"]
                 if widget_json_data.get("steam_uri"):
                     steam_uri = widget_json_data.get("steam_uri")
                     open_mod_steam = contextMenu.addAction("Open mod in Steam")
+                if mod_data_source == "local":
+                    delete_mod = contextMenu.addAction("Delete mod")  # Delete mod
+                elif mod_data_source == "workshop":
+                    unsubscribe_delete_mod = contextMenu.addAction(
+                        "Unsubscribe + delete mod"
+                    )  # Unsubscribe + delete mod
                 action = contextMenu.exec_(
                     self.mapToGlobal(event.pos())
                 )  # Execute QMenu and return it's ACTION
                 if action == open_folder:  # ACTION: Open folder
-                    path = widget_json_data[
-                        "path"
-                    ]  # Set local data folder path from metadata
-                    if os.path.exists(path):  # If the path actually exists
-                        platform_specific_open(path)  # Open it
+                    if os.path.exists(mod_path):  # If the path actually exists
+                        logger.info(f"Opening folder: {mod_path}")
+                        platform_specific_open(mod_path)  # Open it
                     else:  # Otherwise, warn & do nothing
                         show_warning(
                             "Cannot 'Open folder'!",
                             f"Failed to 'Open folder' for {widget_package_id}! ",
-                            f"Path does not exist: {path}",
+                            f"Path does not exist: {mod_path}",
                         )
                         log.warning(
                             f"Failed to 'Open folder' for {widget_package_id}! "
-                            + f"Path does not exist: {path}"
+                            + f"Path does not exist: {mod_path}"
                         )
                 if action == open_url_browser:  # ACTION: Open URL in browser
+                    logger.info(f"Opening url in browser: {url}")
                     url = self.get_mod_url(widget_json_data)
                     if url != "":
                         self.open_mod_url(url)
@@ -133,6 +147,22 @@ class ModListWidget(QListWidget):
                 if "open_mod_steam" in locals():  # This action is conditionally created
                     if action == open_mod_steam:  # ACTION: Open steam:// uri in Steam
                         platform_specific_open(steam_uri)
+                if "delete_mod" in locals():  # This action is conditionally created
+                    if action == delete_mod:  # ACTION: Delete mod
+                        logger.info(f"Deleting mod at: {mod_path}")
+                        shutil.rmtree(mod_path)
+                        self.refresh_signal.emit("refresh")
+                if (
+                    "unsubscribe_delete_mod" in locals()
+                ):  # This action is conditionally created
+                    if (
+                        action == unsubscribe_delete_mod
+                    ):  # ACTION: Unsubscribe & delete mod
+                        logger.info(f"Unsubscribing from mod: {mod_pfid}")
+                        self.steamworks_subscription_signal.emit(
+                            ["unsubscribe", mod_pfid]
+                        )
+                        self.refresh_signal.emit("refresh")
             return True
         return super().eventFilter(source, event)
 

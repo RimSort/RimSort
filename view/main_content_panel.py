@@ -17,6 +17,7 @@ from sub_view.mod_info_panel import ModInfo
 from util.mods import *
 from util.schema import validate_mods_config_format
 from util.steam.steamcmd.wrapper import SteamcmdInterface
+from util.steam.steamworks.wrapper import SteamworksInterface
 from util.steam.webapi.wrapper import AppIDQuery
 from util.xml import json_to_xml_write, xml_path_to_json
 from view.game_configuration_panel import GameConfiguration
@@ -83,13 +84,25 @@ class MainContent:
         self.inactive_mods_panel.inactive_mods_list.mod_info_signal.connect(
             self.mod_list_slot
         )
-
         self.active_mods_panel.active_mods_list.item_added_signal.connect(
             self.inactive_mods_panel.inactive_mods_list.handle_other_list_row_added
         )
         self.inactive_mods_panel.inactive_mods_list.item_added_signal.connect(
             self.active_mods_panel.active_mods_list.handle_other_list_row_added
         )
+        self.active_mods_panel.active_mods_list.steamworks_subscription_signal.connect(
+            self.steamworks_subscriptions_handler
+        )
+        self.inactive_mods_panel.inactive_mods_list.steamworks_subscription_signal.connect(
+            self.steamworks_subscriptions_handler
+        )
+        self.active_mods_panel.active_mods_list.refresh_signal.connect(
+            self.actions_slot
+        )
+        self.inactive_mods_panel.inactive_mods_list.refresh_signal.connect(
+            self.actions_slot
+        )
+
         self.game_configuration.settings_panel.metadata_by_appid_signal.connect(
             self._do_generate_metadata_by_appid
         )
@@ -251,6 +264,24 @@ class MainContent:
             self.inactive_mods_data_restore_state = inactive_mods_data
 
         self._insert_data_into_lists(active_mods_data, inactive_mods_data)
+
+    def steamworks_subscriptions_handler(self, instruction: list) -> None:
+        logger.info(
+            f"Steamworks subscriptions handler received instruction: {instruction}"
+        )
+        supported_actions = ["subscribe", "unsubscribe"]
+        if instruction[0] in supported_actions:
+            logger.info("Creating steamworks_wrapper...")
+            steamworks_wrapper = SteamworksInterface()
+            if instruction[0] == "unsubscribe":
+                steamworks_wrapper.steamworks.Workshop.UnsubscribeItem(
+                    int(instruction[1])
+                )
+            elif instruction[0] == "subscribe":
+                steamworks_wrapper.steamworks.Workshop.SubscribeItem(
+                    int(instruction[1])
+                )
+            # steamworks_wrapper.steamworks.unload()
 
     def actions_slot(self, action: str) -> None:
         """
