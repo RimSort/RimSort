@@ -21,6 +21,7 @@ from util.steam.webapi.wrapper import AppIDQuery
 from util.xml import json_to_xml_write, xml_path_to_json
 from view.game_configuration_panel import GameConfiguration
 from window.runner_panel import RunnerPanel
+from window.web_content_panel import WebContentPanel
 
 logger = logging.getLogger(__name__)
 
@@ -274,18 +275,20 @@ class MainContent:
             self._do_edit_steam_apikey()
         if action == "clear":
             self._do_clear()
-        if action == "sort":
-            self._do_sort()
-        if action == "save":
-            self._do_save()
-        if action == "export":
-            self._do_export()
         if action == "restore":
             self._do_restore()
-        if action == "import":
-            self._do_import()
+        if action == "sort":
+            self._do_sort()
+        if action == "browse_workshop":
+            self._do_browse_workshop()
         if action == "setup_steamcmd":
             self._do_setup_steamcmd()
+        if action == "import":
+            self._do_import()
+        if action == "export":
+            self._do_export()
+        if action == "save":
+            self._do_save()
         if action == "run":
             self._do_platform_specific_game_launch(
                 self.game_configuration.run_arguments
@@ -560,6 +563,12 @@ class MainContent:
                     "exists in it."
                 ),
             )
+
+    def _do_browse_workshop(self):
+        self.browser = WebContentPanel(
+            "https://steamcommunity.com/app/294100/workshop/"
+        )
+        self.browser.show()
 
     def _do_setup_steamcmd(self):
         self.runner = RunnerPanel()

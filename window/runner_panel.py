@@ -2,8 +2,6 @@ import logging
 
 from PySide2.QtCore import QProcess
 from PySide2.QtWidgets import (
-    QMainWindow,
-    QMessageBox,
     QPlainTextEdit,
     QWidget,
     QVBoxLayout,
@@ -20,6 +18,7 @@ class RunnerPanel(QWidget):
 
     def __init__(self):
         super().__init__()
+        logger.info("Initializing RunnerPanel")
         self.text = QPlainTextEdit(readOnly=True)
         self.text.verticalScrollBar().setValue(self.text.verticalScrollBar().maximum())
 
@@ -42,6 +41,7 @@ class RunnerPanel(QWidget):
         self.process.start()
 
     def message(self, line: str):
+        logger.info(line)
         self.text.appendPlainText(line)
 
     def readyReadStandardOutput(self):

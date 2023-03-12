@@ -114,7 +114,6 @@ class SteamcmdInterface:
     ) -> None:
         installed = None
         if reinstall:
-            logger.info(f"Reinstalling steamcmd at {self.steamcmd_path}")
             runner.message("Existing steamcmd installation found!")
             runner.message(f"Deleting existing installation from: {self.steamcmd_path}")
             shutil.rmtree(self.steamcmd_path)
