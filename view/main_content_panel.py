@@ -17,7 +17,7 @@ from sub_view.mod_info_panel import ModInfo
 from util.mods import *
 from util.schema import validate_mods_config_format
 from util.steam.steamcmd.wrapper import SteamcmdInterface
-from util.steam.webapi.IPublishedFileService import AppIDQuery
+from util.steam.webapi.wrapper import AppIDQuery
 from util.xml import json_to_xml_write, xml_path_to_json
 from view.game_configuration_panel import GameConfiguration
 from window.runner_panel import RunnerPanel
@@ -95,8 +95,8 @@ class MainContent:
         self.game_configuration.settings_panel.metadata_comparison_signal.connect(
             self._do_generate_metadata_comparison_report
         )
-        self.game_configuration.settings_panel.set_dynamic_query_expiry_signal.connect(
-            self._do_set_dynamic_query_expiry
+        self.game_configuration.settings_panel.set_webapi_query_expiry_signal.connect(
+            self._do_set_webapi_query_expiry
         )
 
         # Restore cache initially set to empty
@@ -201,7 +201,7 @@ class MainContent:
             else:
                 self.steam_db_rules, self.community_rules = get_3rd_party_metadata(
                     self.game_configuration.steam_apikey,
-                    self.game_configuration.dynamic_query_expiry,
+                    self.game_configuration.webapi_query_expiry,
                     mods,
                 )
         else:
@@ -331,19 +331,27 @@ class MainContent:
             )
 
     def _do_generate_metadata_by_appid(self) -> None:
-        appid_query = AppIDQuery(self.game_configuration.steam_apikey, 294100)
-        appid_query._all_mods_metadata_by_appid(1800)
+        apikey = 294100
+        logger.info(
+            f"Initializing AppIDQuery with configured Steam API key for AppID: {appid}..."
+        )
+        appid_query = AppIDQuery(self.game_configuration.steam_apikey, appid)
+        appid_query.all_mods_metadata = appid_query._all_mods_metadata_by_appid(
+            self.game_configuration.webapi_query_expiry
+        )
 
     def _do_generate_metadata_comparison_report(self) -> None:
         mods = self.all_mods_with_dependencies
         rimpy_deps = {}
         rimsort_deps = {}
-        dynamic_query_db_json_path = os.path.join(os.getcwd(), "data", "db_data.json")
+        dynamic_query_db_json_path = os.path.join(
+            os.getcwd(), "data", "steam_metadata.json"
+        )
         if os.path.exists(dynamic_query_db_json_path):
             with open(dynamic_query_db_json_path, encoding="utf-8") as f:
                 json_string = f.read()
                 logger.info(
-                    "Reading info from cached RimSort Dynamic Query db_data.json"
+                    "Reading info from cached RimSort Dynamic Query steam_metadata.json"
                 )
                 rimsort_steam_data = json.loads(json_string)
         else:
@@ -418,23 +426,23 @@ class MainContent:
             report,
         )
 
-    def _do_set_dynamic_query_expiry(self) -> None:
+    def _do_set_webapi_query_expiry(self) -> None:
         """
         Opens a QDialogInput that allows the user to edit their preferred
-        Dynamic Query expiry (in seconds)
+        WebAPI Query Expiry (in seconds)
         """
         args, ok = QInputDialog().getText(
             None,
-            "Edit Dynamic Query expiry:",
+            "Edit WebAPI Query Expiry:",
             "Enter your preferred expiry duration in seconds (default 30 min/1800 sec):",
             QLineEdit.Normal,
-            str(self.game_configuration.dynamic_query_expiry),
+            str(self.game_configuration.webapi_query_expiry),
         )
         if ok:
             try:
-                self.game_configuration.dynamic_query_expiry = int(args)
+                self.game_configuration.webapi_query_expiry = int(args)
                 self.game_configuration.update_persistent_storage(
-                    "dynamic_query_expiry", self.game_configuration.dynamic_query_expiry
+                    "webapi_query_expiry", self.game_configuration.webapi_query_expiry
                 )
             except ValueError:
                 show_warning(
@@ -557,7 +565,9 @@ class MainContent:
         self.runner = RunnerPanel()
         self.runner.show()
         self.runner.message("Setting up steamcmd...")
-        self.steamcmd_wrapper.get_steamcmd(False, self.runner)
+        self.steamcmd_wrapper.get_steamcmd(
+            self.game_configuration.get_local_folder_path(), False, self.runner
+        )
 
     def _insert_data_into_lists(
         self, active_mods: Dict[str, Any], inactive_mods: Dict[str, Any]

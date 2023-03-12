@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
 
 from util.error import show_fatal_error, show_information, show_warning
-from util.steam.webapi.IPublishedFileService import DynamicQuery
+from util.steam.webapi.wrapper import DynamicQuery
 from util.schema import validate_mods_config_format
 from util.xml import non_utf8_xml_path_to_json, xml_path_to_json
 
@@ -436,7 +436,7 @@ def get_3rd_party_metadata(
     db_json_data = {}
     community_rules_json_data = {}
     db_json_folder = "data"
-    db_json_filename = "db_data.json"
+    db_json_filename = "steam_metadata.json"
     db_json_data_path = os.path.join(os.getcwd(), db_json_folder, db_json_filename)
     logger.info(
         "Checking for cached Steam db..."
@@ -474,13 +474,16 @@ def get_3rd_party_metadata(
         logger.info("Retreived Steam API key from settings.json")
         if len(mods.keys()) > 0:  # No empty queries!
             try:  # Since the key is valid, we try to launch a live query
+                appid = 294100
                 logger.info(
-                    "Initializing Steam WebAPI with configured Steam API key..."
+                    f"Initializing DynamicQuery with configured Steam API key for {appid}..."
                 )
                 mods_query = DynamicQuery(apikey, 294100, db_json_data_life)
-                mods_query.workshop_json_data = mods_query.cache_parsable_db_json_data(
-                    mods
-                )
+                mods_query.workshop_json_data = mods_query.cache_parsable_db_data(mods)
+                db_output_path = os.path.join(os.getcwd(), "data/steam_metadata.json")
+                logger.info(f"Caching DynamicQuery result: {db_output_path}")
+                with open(db_output_path, "w") as output:
+                    json.dump(mods_query.workshop_json_data, output, indent=4)
                 db_json_data = mods_query.workshop_json_data[
                     "database"
                 ]  # Get json data directly from memory upon query completion

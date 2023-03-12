@@ -164,7 +164,7 @@ cython_debug/
 .vscode/
 modlists
 test*
-data/db_data.json
+data/steam_metadata.json
 key.txt
 *.xml
 /steam/

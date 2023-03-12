@@ -4,7 +4,7 @@ from math import ceil
 from requests.exceptions import HTTPError
 import sys
 from time import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from window.runner_panel import RunnerPanel
 
@@ -33,7 +33,7 @@ class AppIDQuery:
         self.query = True
         self.total = 0
         logger.info(
-            f"AllPublishedFileIDsByAppID initializing... Compiling list of all Workshop mod PublishedFileIDs for {self.appid}..."
+            f"AppIDQuery initializing... Compiling list of all Workshop mod PublishedFileIDs for {self.appid}..."
         )
         while self.query:
             if self.pagenum > self.pages:
@@ -41,7 +41,7 @@ class AppIDQuery:
                 break
             self.next_cursor = self.IPublishedFileService_QueryFiles(self.next_cursor)
 
-    def _all_mods_metadata_by_appid(self, life: int):
+    def _all_mods_metadata_by_appid(self, life: int) -> Dict[Any, Any]:
         """
         Utilizes DynamicQuery object to return an complete query of an AppID's
         Steam Workshop mod catalogue's metadata from Steam WebAPI
@@ -53,9 +53,17 @@ class AppIDQuery:
         db = {}
         db["version"] = all_publishings_metadata_query.expiry
         db["database"] = {}
+        logger.info(
+            f"Populating {str(len(self.publishedfileids))} empty keys into initial database for "
+            + f"{self.appid}."
+        )
         for publishedfileid in self.publishedfileids:
             db["database"][publishedfileid] = {}
         # Begin initial query
+        logger.info(
+            f"Populated {str(len(self.publishedfileids))} PublishedFileIds into database"
+        )
+        logger.info("Beginning initial query...")
         (  # Initial population of steamName, url, and empty dependencies {}
             db,
             missing_children,
@@ -63,17 +71,27 @@ class AppIDQuery:
             db, True, self.publishedfileids
         )
         # Begin secondary query
+        logger.info(
+            f"Initial query completed. Initiating second pass to populate full dependency data for {str(len(self.publishedfileids))} PublishedFileIds"
+        )
         (  # Secondary pass to piece together the dependency data
             db,
             missing_children,
         ) = all_publishings_metadata_query.IPublishedFileService_GetDetails(
             db, False, self.publishedfileids
         )
-
+        logger.info(
+            f"A total of {str(len(missing_children))} missing children were returned with this query."
+        )
+        logger.info(
+            "This indicates that some of the published mods queried have children listed who's PublishedFileIds are no longer searchable in the Steam Workshop catalogue."
+        )
+        logger.info(
+            "This message is for informational purposes only, so that you understand why these are missing from your query."
+        )
         total = len(db["database"])
-        logger.info(f"Returning Steam Workshop db_json_data with {total} items")
-        with open(f"data/{self.appid}_AppIDQuery.json", "w") as output:
-            json.dump(db, output, indent=4)
+        logger.info(f"Returning Steam Workshop metadata with {total} PublishedFileIds")
+        return db
 
     def IPublishedFileService_QueryFiles(self, cursor: str) -> str:
         """
@@ -85,6 +103,7 @@ class AppIDQuery:
 
         https://steamapi.xpaw.me/#IPublishedFileService/QueryFiles
         https://partner.steamgames.com/doc/webapi/IPublishedFileService#QueryFiles
+        https://steamwebapi.azurewebsites.net (Ctrl + F search: "IPublishedFileService/QueryFiles")
 
         :param str: IN string containing the variable that corresponds to the
         `cursor` parameter being passed to the CURRENT WebAPI.call() query
@@ -162,8 +181,6 @@ class DynamicQuery:
     :param appid: The AppID associated with the game you are looking up info for
     :param life: The lifespan of the Query in terms of the seconds added to the time of
     database generation. This adds an 'expiry' to the data being cached.
-    :param mods: a Dict equivalent to 'all_mods' or mod_list.get_list_items_by_dict() in
-    which contains possible Steam mods to lookup metadata for
     """
 
     def __init__(self, apikey: str, appid: int, life: int):
@@ -172,6 +189,7 @@ class DynamicQuery:
         self.appid = appid
         self.expiry = self.__expires(life)
         self.workshop_json_data = {}
+        logger.info(f"DynamicQuery initialized...")
 
     def __chunks(self, _list: list, limit: int):
         """
@@ -186,7 +204,7 @@ class DynamicQuery:
     def __expires(self, life: int) -> int:
         return int(time() + life)  # current seconds since epoch + 30 minutes
 
-    def cache_parsable_db_json_data(self, mods: Dict[str, Any]) -> Dict[Any, Any]:
+    def cache_parsable_db_data(self, mods: Dict[str, Any]) -> Dict[Any, Any]:
         """
         Builds a database using a chunked WebAPI query of all available PublishedFileIds
         that are pulled from local mod metadata.
@@ -258,9 +276,7 @@ class DynamicQuery:
                 missing_children = []
                 querying = False
         total = len(query["database"])
-        logger.info(f"Returning Steam Workshop db_json_data with {total} items")
-        with open("data/db_data.json", "w") as output:
-            json.dump(query, output, indent=4)
+        logger.info(f"Returning Steam Workshop metadata for {total} PublishedFileIds")
         return query
 
     def IPublishedFileService_GetDetails(
@@ -271,6 +287,7 @@ class DynamicQuery:
         from Steam WebAPI, containing data to be parsed during db update.
 
         https://steamapi.xpaw.me/#IPublishedFileService/GetDetails
+        https://steamwebapi.azurewebsites.net (Ctrl + F search: "IPublishedFileService/GetUserFiles")
 
         :param json_to_update: a Dict of json data, containing a query to update in
         RimPy db_data["database"] format, or the skeleton of one from local_metadata

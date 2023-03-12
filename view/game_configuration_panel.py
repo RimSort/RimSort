@@ -230,8 +230,8 @@ class GameConfiguration(QObject):
         # STEAM APIKEY
         self.steam_apikey = ""
 
-        # DYNAMIC QUERY EXPIRY
-        self.dynamic_query_expiry = 1800
+        # WEBAPI QUERY EXPIRY
+        self.webapi_query_expiry = 1800
 
         # CONTAINER LAYOUTS INTO BASE LAYOUT
         self.client_settings_frame = QFrame()
@@ -396,10 +396,10 @@ class GameConfiguration(QObject):
                     settings_data["steam_apikey"] = ""
                 else:
                     self.steam_apikey = settings_data["steam_apikey"]
-                if not settings_data.get("dynamic_query_expiry"):
-                    settings_data["dynamic_query_expiry"] = 1800
+                if not settings_data.get("webapi_query_expiry"):
+                    settings_data["webapi_query_expiry"] = 1800
                 else:
-                    self.dynamic_query_expiry = settings_data["dynamic_query_expiry"]
+                    self.webapi_query_expiry = settings_data["webapi_query_expiry"]
         logger.info("Finished storage initialization")
 
     def initialize_settings_panel(self) -> None:

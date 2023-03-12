@@ -11,7 +11,7 @@ class SettingsPanel(QDialog):
     clear_paths_signal = Signal(str)
     metadata_by_appid_signal = Signal(str)
     metadata_comparison_signal = Signal(str)
-    set_dynamic_query_expiry_signal = Signal(str)
+    set_webapi_query_expiry_signal = Signal(str)
 
     def __init__(self) -> None:
         logger.info("Starting SettingsPanel initialization")
@@ -51,13 +51,13 @@ class SettingsPanel(QDialog):
                 self.metadata_comparison_signal.emit, "external_metadata_comparison"
             )
         )
-        self.set_dynamic_query_expiry_button = QPushButton("Set Dynamic Query expiry")
-        self.set_dynamic_query_expiry_button.setToolTip(
+        self.set_webapi_query_expiry_button = QPushButton("Set WebAPI Query Expiry")
+        self.set_webapi_query_expiry_button.setToolTip(
             "Default: 30 min (1800 seconds)"
         )
-        self.set_dynamic_query_expiry_button.clicked.connect(
+        self.set_webapi_query_expiry_button.clicked.connect(
             partial(
-                self.set_dynamic_query_expiry_signal.emit, "set_dynamic_query_expiry"
+                self.set_webapi_query_expiry_signal.emit, "set_webapi_query_expiry"
             )
         )
         self.clear_paths_button = QPushButton("Clear Paths")
@@ -72,7 +72,7 @@ class SettingsPanel(QDialog):
         self.layout.addWidget(self.external_metadata_cb)
         self.layout.addWidget(self.metadata_by_appid_button)
         self.layout.addWidget(self.comparison_report_button)
-        self.layout.addWidget(self.set_dynamic_query_expiry_button)
+        self.layout.addWidget(self.set_webapi_query_expiry_button)
         self.layout.addWidget(self.clear_paths_button)
 
         # Display items
