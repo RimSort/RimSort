@@ -281,7 +281,8 @@ class MainContent:
                 steamworks_wrapper.steamworks.Workshop.SubscribeItem(
                     int(instruction[1])
                 )
-            # steamworks_wrapper.steamworks.unload()
+            sleep(5)
+            steamworks_wrapper.steamworks.unload()
 
     def actions_slot(self, action: str) -> None:
         """

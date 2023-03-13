@@ -15,6 +15,7 @@ import requests
 import shutil
 import subprocess
 import sys
+import time
 from zipfile import ZipFile
 
 
@@ -28,7 +29,7 @@ Setup environment
 """
 
 print("Setting up environment...")
-ARCH = platform.processor()
+ARCH = platform.architecture()[0]
 CWD = os.getcwd()
 STEAMWORKSPY_BIN_LINUX = "SteamworksPy.so"
 LINUX_COMPILE_CMD = [
@@ -65,7 +66,7 @@ STEAMWORKS_COMPILE_CMD_WIN64 = [
     "/DLL",
     f"/OUT:{STEAMWORKSPY_BIN_WIN64}",
 ]
-STEAMWORKS_SDK_URL = "https://partner.steamgames.com/downloads/steamworks_sdk_155.zip"
+STEAMWORKS_SDK_URL = "https://github.com/oceancabbage/RimSort/raw/steamworks-sdk/steamworks_sdk_155.zip" #"https://partner.steamgames.com/downloads/steamworks_sdk_155.zip"
 STEAMWORKS_PY_CMD = ["git", "submodule", "update", "--init", "--recursive"]
 STEAMWORKS_PY_PATH = os.path.join(CWD, "SteamworksPy", "library")
 STEAMWORKS_MODULE_PATH = os.path.join(CWD, "SteamworksPy", "steamworks")
@@ -105,12 +106,12 @@ if SYSTEM == "Darwin":  # TODO automate build for MacOS
         Find the resultant library and rename it SteamworksPy.dylib.
     """
 elif SYSTEM == "Linux":
-    if ARCH == "i386":
+    if ARCH == "32bit":
         STEAMWORKS_SDK_LIBSTEAM_PATH = os.path.join(
             STEAMWORKS_SDK_REDIST_BIN_PATH, "linux32", "libsteam_api.so"
         )
 
-    elif ARCH == "x86_64":
+    elif ARCH == "64bit":
         STEAMWORKS_SDK_LIBSTEAM_PATH = os.path.join(
             STEAMWORKS_SDK_REDIST_BIN_PATH, "linux64", "libsteam_api.so"
         )
@@ -124,7 +125,7 @@ elif SYSTEM == "Linux":
     STEAMWORKSPY_BIN_PATH = os.path.join(STEAMWORKS_PY_PATH, STEAMWORKSPY_BIN_LINUX)
     STEAMWORKSPY_BIN_FIN_PATH = os.path.join(CWD, STEAMWORKSPY_BIN_LINUX)
 elif SYSTEM == "Windows":
-    if ARCH == "i386":
+    if ARCH == "32bit":
         STEAMWORKS_SDK_LIBSTEAM_PATH = os.path.join(
             STEAMWORKS_SDK_REDIST_BIN_PATH, "steam_api.dll"
         )
@@ -142,7 +143,7 @@ elif SYSTEM == "Windows":
         COMPILE_CMD = STEAMWORKS_COMPILE_CMD_WIN32
         STEAMWORKSPY_BIN_PATH = os.path.join(STEAMWORKS_PY_PATH, STEAMWORKSPY_BIN_WIN32)
         STEAMWORKSPY_BIN_FIN_PATH = os.path.join(CWD, STEAMWORKSPY_BIN_WIN32)
-    elif ARCH == "x86_64":
+    elif ARCH == "64bit":
         STEAMWORKS_SDK_LIBSTEAM_PATH = os.path.join(
             STEAMWORKS_SDK_REDIST_BIN_PATH, "win64", "steam_api64.dll"
         )
@@ -152,11 +153,11 @@ elif SYSTEM == "Windows":
         STEAMWORKS_SDK_LIBSTEAM_DEST_PATH = os.path.join(
             STEAMWORKS_PY_PATH, "steam_api64.dll"
         )
-        STEAMWORKS_SDK_LIBSTEAM_DEST_PATH = os.path.join(CWD, "steam_api64.dll")
+        STEAMWORKS_SDK_LIBSTEAM_FIN_PATH = os.path.join(CWD, "steam_api64.dll")
         STEAMWORKS_SDK_APILIB_DEST_PATH = os.path.join(
             STEAMWORKS_PY_PATH, "steam_api64.lib"
         )
-        STEAMWORKS_SDK_APILIB_DEST_PATH = os.path.join(CWD, "steam_api64.lib")
+        STEAMWORKS_SDK_APILIB_FIN_PATH = os.path.join(CWD, "steam_api64.lib")
         COMPILE_CMD = STEAMWORKS_COMPILE_CMD_WIN64
         STEAMWORKSPY_BIN_PATH = os.path.join(STEAMWORKS_PY_PATH, STEAMWORKSPY_BIN_WIN64)
         STEAMWORKSPY_BIN_FIN_PATH = os.path.join(CWD, STEAMWORKSPY_BIN_WIN64)
@@ -175,10 +176,9 @@ print("Ensuring we have SteamworksPy submodule initiated & up-to-date...")
 _execute(STEAMWORKS_PY_CMD)
 
 print("Getting Steamworks SDK...")
-if os.path.exists(STEAMWORKS_SDK_PATH):
-    shutil.rmtree(STEAMWORKS_SDK_PATH)
-with ZipFile(BytesIO(requests.get(STEAMWORKS_SDK_URL).content)) as zipobj:
-    zipobj.extractall(STEAMWORKS_PY_PATH)
+if not os.path.exists(STEAMWORKS_SDK_PATH):
+    with ZipFile(BytesIO(requests.get(STEAMWORKS_SDK_URL).content)) as zipobj:
+        zipobj.extractall(STEAMWORKS_PY_PATH)
 
 print(f"Getting Steam headers...")
 if os.path.exists(STEAMWORKS_SDK_HEADER_DEST_PATH):
@@ -200,6 +200,7 @@ print(f"Entering directory {STEAMWORKS_PY_PATH}")
 os.chdir(STEAMWORKS_PY_PATH)
 _execute(COMPILE_CMD)
 
+time.sleep(10)
 print(f"Returning to cwd... {CWD}")
 os.chdir(CWD)
 

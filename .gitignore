@@ -165,10 +165,8 @@ cython_debug/
 modlists
 test*
 data/steam_metadata.json
-key.txt
 *.xml
 /steam/
 /steamcmd/
 *_AppIDQuery*
-steam_api.lib
 /steamworks/

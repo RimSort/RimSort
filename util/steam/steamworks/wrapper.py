@@ -21,7 +21,6 @@ class SteamworksInterface:
 
     def __init__(self):
         logger.info("SteamworksInterface initializing...")
-        self.brakes = False
         self.steamworks = STEAMWORKS()
         self.steamworks.initialize()
         self.steamworks.Workshop.SetItemSubscribedCallback(self._cb_subscription_action)
