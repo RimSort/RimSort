@@ -50,4 +50,4 @@ class RunnerPanel(QWidget):
 
     def finished(self):
         logger.info("Subprocess completed")
-        #self.destroy()
+        # self.destroy()

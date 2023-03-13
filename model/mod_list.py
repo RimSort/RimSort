@@ -95,10 +95,6 @@ class ModListWidget(QListWidget):
         if event.type() == QEvent.ContextMenu and source is self:
             logger.info("USER ACTION: Open right-click mod_list_item contextMenu")
             contextMenu = QMenu()
-            open_folder = contextMenu.addAction("Open folder")  # Open folder
-            open_url_browser = contextMenu.addAction(
-                "Open URL in browser"
-            )  # Open URL in browser
             source_item = source.itemAt(
                 event.pos()
             )  # Which QListWidgetItem was right clicked?
@@ -110,16 +106,24 @@ class ModListWidget(QListWidget):
                 mod_path = widget_json_data[
                     "path"
                 ]  # Set local data folder path from metadata
-                mod_pfid = widget_json_data["publishedfileid"]
+                open_folder = contextMenu.addAction("Open folder")  # Open folder
+                if widget_json_data.get("url"):
+                    url = widget_json_data["url"]
+                    open_url_browser = contextMenu.addAction(
+                        "Open URL in browser"
+                    )  # Open URL in browser
                 if widget_json_data.get("steam_uri"):
                     steam_uri = widget_json_data.get("steam_uri")
                     open_mod_steam = contextMenu.addAction("Open mod in Steam")
-                if mod_data_source == "local":
-                    delete_mod = contextMenu.addAction("Delete mod")  # Delete mod
-                elif mod_data_source == "workshop":
+                if mod_data_source == "workshop" and widget_json_data.get(
+                    "publishedfileid"
+                ):
+                    mod_pfid = widget_json_data["publishedfileid"]
                     unsubscribe_delete_mod = contextMenu.addAction(
                         "Unsubscribe + delete mod"
                     )  # Unsubscribe + delete mod
+                else:
+                    delete_mod = contextMenu.addAction("Delete mod")  # Delete mod
                 action = contextMenu.exec_(
                     self.mapToGlobal(event.pos())
                 )  # Execute QMenu and return it's ACTION
@@ -137,13 +141,16 @@ class ModListWidget(QListWidget):
                             f"Failed to 'Open folder' for {widget_package_id}! "
                             + f"Path does not exist: {mod_path}"
                         )
-                if action == open_url_browser:  # ACTION: Open URL in browser
-                    logger.info(f"Opening url in browser: {url}")
-                    url = self.get_mod_url(widget_json_data)
-                    if url != "":
-                        self.open_mod_url(url)
-                    else:
-                        show_warning("URL is empty!")
+                if (
+                    "open_url_browser" in locals()
+                ):  # This action is conditionally created
+                    if action == open_url_browser:  # ACTION: Open URL in browser
+                        logger.info(f"Opening url in browser: {url}")
+                        url = self.get_mod_url(widget_json_data)
+                        if url != "":
+                            self.open_mod_url(url)
+                        else:
+                            show_warning("URL is empty!")
                 if "open_mod_steam" in locals():  # This action is conditionally created
                     if action == open_mod_steam:  # ACTION: Open steam:// uri in Steam
                         platform_specific_open(steam_uri)
@@ -226,6 +233,8 @@ class ModListWidget(QListWidget):
                 widget = ModListItemInner(
                     data, self.width(), self.steam_icon_path, self.ludeon_icon_path
                 )
+                if data.get("invalid"):
+                    widget.main_label.setStyleSheet("QLabel { color : red; }")
                 item.setSizeHint(widget.sizeHint())
                 self.setItemWidget(item, widget)
                 self.uuids.add(data["uuid"])

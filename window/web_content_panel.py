@@ -33,7 +33,9 @@ class WebContentPanel(QWidget):
         self.location.setSizePolicy(
             QSizePolicy.Expanding, self.location.sizePolicy().verticalPolicy()
         )
-        self.location.returnPressed.connect(partial(self._changeLocation, self.location.text()))
+        self.location.returnPressed.connect(
+            partial(self._changeLocation, self.location.text())
+        )
 
         self.nav_bar = QToolBar()
 

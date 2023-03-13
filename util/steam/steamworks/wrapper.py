@@ -24,7 +24,9 @@ class SteamworksInterface:
         self.steamworks = STEAMWORKS()
         self.steamworks.initialize()
         self.steamworks.Workshop.SetItemSubscribedCallback(self._cb_subscription_action)
-        self.steamworks.Workshop.SetItemUnsubscribedCallback(self._cb_subscription_action)
+        self.steamworks.Workshop.SetItemUnsubscribedCallback(
+            self._cb_subscription_action
+        )
         logger.info("Starting daemon...")
         self.steamworks_thread = self._daemon()
         self.steamworks_thread.start()
@@ -36,7 +38,9 @@ class SteamworksInterface:
 
     def _cb_subscription_action(self, *args, **kwargs) -> None:
         logger.info(f"Subscription action: {args}, {kwargs}")
-        logger.info(f"Result: {args[0].result} PublishedFileId: {args[0].publishedFileId}")
+        logger.info(
+            f"Result: {args[0].result} PublishedFileId: {args[0].publishedFileId}"
+        )
 
     def _daemon(self) -> Thread:
         return Thread(target=self._callbacks, daemon=True)

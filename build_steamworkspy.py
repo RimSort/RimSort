@@ -66,7 +66,7 @@ STEAMWORKS_COMPILE_CMD_WIN64 = [
     "/DLL",
     f"/OUT:{STEAMWORKSPY_BIN_WIN64}",
 ]
-STEAMWORKS_SDK_URL = "https://github.com/oceancabbage/RimSort/raw/steamworks-sdk/steamworks_sdk_155.zip" #"https://partner.steamgames.com/downloads/steamworks_sdk_155.zip"
+STEAMWORKS_SDK_URL = "https://github.com/oceancabbage/RimSort/raw/steamworks-sdk/steamworks_sdk_155.zip"  # "https://partner.steamgames.com/downloads/steamworks_sdk_155.zip"
 STEAMWORKS_PY_CMD = ["git", "submodule", "update", "--init", "--recursive"]
 STEAMWORKS_PY_PATH = os.path.join(CWD, "SteamworksPy", "library")
 STEAMWORKS_MODULE_PATH = os.path.join(CWD, "SteamworksPy", "steamworks")

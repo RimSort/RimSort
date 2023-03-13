@@ -93,6 +93,9 @@ class ModInfo:
         :param mod_info: complete json info for the mod
         """
         logger.info(f"Starting display mod info for info: {mod_info}")
+        invalid = False
+        if mod_info.get("invalid"):
+            invalid = True
         self.mod_info_name_value.setText(mod_info.get("name"))
         self.mod_info_package_id_value.setText(mod_info.get("packageId"))
         if "authors" in mod_info:
@@ -122,57 +125,71 @@ class ModInfo:
         # It is OK for the description value to be None (was not provided)
         # It is OK for the description key to not be in mod_info
 
+        if invalid:
+            # Set label color to red if mod is invalid
+            invalid_qlabel_stylesheet = "QLabel { color : red; }"
+            self.mod_info_name_value.setStyleSheet(invalid_qlabel_stylesheet)
+            self.mod_info_path_value.setStyleSheet(invalid_qlabel_stylesheet)
+            self.mod_info_author_value.setStyleSheet(invalid_qlabel_stylesheet)
+            self.mod_info_package_id_value.setStyleSheet(invalid_qlabel_stylesheet)
+
         # Get Preview.png
         if mod_info.get("path") and isinstance(mod_info["path"], str):
             workshop_folder_path = mod_info["path"]
             logger.info(f"Got mod path for preview image: {workshop_folder_path}")
             if os.path.exists(workshop_folder_path):
-                # Look for a case-insensitive About folder
-                invalid_folder_path_found = True
                 about_folder_name = "About"
-                for temp_file in os.scandir(workshop_folder_path):
-                    if (
-                        temp_file.name.lower() == about_folder_name.lower()
-                        and temp_file.is_dir()
+                about_folder_target_path = os.path.join(
+                    workshop_folder_path, about_folder_name
+                )
+                if os.path.exists(about_folder_target_path):
+                    # Look for a case-insensitive About folder
+                    invalid_folder_path_found = True
+                    for temp_file in os.scandir(workshop_folder_path):
+                        if (
+                            temp_file.name.lower() == about_folder_name.lower()
+                            and temp_file.is_dir()
+                        ):
+                            about_folder_name = temp_file.name
+                            invalid_folder_path_found = False
+                            break
+                    # Look for a case-insensitive "Preview.png" file
+                    invalid_file_path_found = True
+                    preview_file_name = "Preview.png"
+                    for temp_file in os.scandir(
+                        os.path.join(workshop_folder_path, about_folder_name)
                     ):
-                        about_folder_name = temp_file.name
-                        invalid_folder_path_found = False
-                        break
-                # Look for a case-insensitive "Preview.png" file
-                invalid_file_path_found = True
-                preview_file_name = "Preview.png"
-                for temp_file in os.scandir(
-                    os.path.join(workshop_folder_path, about_folder_name)
-                ):
-                    if (
-                        temp_file.name.lower() == preview_file_name.lower()
-                        and temp_file.is_file()
-                    ):
-                        preview_file_name = temp_file.name
-                        invalid_file_path_found = False
-                        break
-                # If there was an issue getting the expected path, track and exit
-                if invalid_folder_path_found or invalid_file_path_found:
-                    logger.info("No preview image found for the mod")
-                    self.preview_picture.setPixmap(None)
+                        if (
+                            temp_file.name.lower() == preview_file_name.lower()
+                            and temp_file.is_file()
+                        ):
+                            preview_file_name = temp_file.name
+                            invalid_file_path_found = False
+                            break
+                    # If there was an issue getting the expected path, track and exit
+                    if invalid_folder_path_found or invalid_file_path_found:
+                        logger.info("No preview image found for the mod")
+                        self.preview_picture.setPixmap(None)
+                    else:
+                        logger.info("Preview image found")
+                        image_path = os.path.join(
+                            workshop_folder_path, about_folder_name, preview_file_name
+                        )
+                        pixmap = QPixmap(image_path)
+                        self.preview_picture.setPixmap(
+                            pixmap.scaled(
+                                self.preview_picture.size(), Qt.KeepAspectRatio
+                            )
+                        )
                 else:
-                    logger.info("Preview image found")
-                    image_path = os.path.join(
-                        workshop_folder_path, about_folder_name, preview_file_name
+                    logger.error(
+                        f"The local data for the mod {self.mod_info_package_id_value} was not found. Using cached metadata with missing Preview image."
                     )
+                    image_path = os.path.join(os.getcwd(), "data", "missing.png")
                     pixmap = QPixmap(image_path)
                     self.preview_picture.setPixmap(
                         pixmap.scaled(self.preview_picture.size(), Qt.KeepAspectRatio)
                     )
-            else:
-                logger.error(
-                    f"The local data for the mod {self.mod_info_package_id_value} was not found. Using cached metadata with missing Preview image."
-                )
-                image_path = os.path.join(os.getcwd(), "data", "missing.png")
-                pixmap = QPixmap(image_path)
-                self.preview_picture.setPixmap(
-                    pixmap.scaled(self.preview_picture.size(), Qt.KeepAspectRatio)
-                )
 
         else:
             logger.error(
