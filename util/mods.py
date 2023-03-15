@@ -496,9 +496,11 @@ def get_3rd_party_metadata(
                 logger.info(
                     f"Initializing DynamicQuery with configured Steam API key for {appid}..."
                 )
-                mods_query = DynamicQuery(apikey, 294100, db_json_data_life)
+                mods_query = DynamicQuery(apikey, appid, db_json_data_life)
                 mods_query.workshop_json_data = mods_query.cache_parsable_db_data(mods)
-                db_output_path = os.path.join(os.getcwd(), "data/steam_metadata.json")
+                db_output_path = os.path.join(
+                    os.getcwd(), "data", "steam_metadata.json"
+                )
                 logger.info(f"Caching DynamicQuery result: {db_output_path}")
                 with open(db_output_path, "w") as output:
                     json.dump(mods_query.workshop_json_data, output, indent=4)

@@ -1,4 +1,5 @@
 import logging
+from multiprocessing import active_children, Process
 import os
 import platform
 import subprocess
@@ -17,7 +18,7 @@ from sub_view.mod_info_panel import ModInfo
 from util.mods import *
 from util.schema import validate_mods_config_format
 from util.steam.steamcmd.wrapper import SteamcmdInterface
-from util.steam.steamworks.wrapper import SteamworksInterface
+from util.steam.steamworks.wrapper import steamworks_subscriptions_handler
 from util.steam.webapi.wrapper import AppIDQuery
 from util.xml import json_to_xml_write, xml_path_to_json
 from view.game_configuration_panel import GameConfiguration
@@ -91,10 +92,10 @@ class MainContent:
             self.active_mods_panel.active_mods_list.handle_other_list_row_added
         )
         self.active_mods_panel.active_mods_list.steamworks_subscription_signal.connect(
-            self.steamworks_subscriptions_handler
+            self._do_steamworks_api_call
         )
         self.inactive_mods_panel.inactive_mods_list.steamworks_subscription_signal.connect(
-            self.steamworks_subscriptions_handler
+            self._do_steamworks_api_call
         )
         self.active_mods_panel.active_mods_list.refresh_signal.connect(
             self.actions_slot
@@ -265,25 +266,6 @@ class MainContent:
 
         self._insert_data_into_lists(active_mods_data, inactive_mods_data)
 
-    def steamworks_subscriptions_handler(self, instruction: list) -> None:
-        logger.info(
-            f"Steamworks subscriptions handler received instruction: {instruction}"
-        )
-        supported_actions = ["subscribe", "unsubscribe"]
-        if instruction[0] in supported_actions:
-            logger.info("Creating steamworks_wrapper...")
-            steamworks_wrapper = SteamworksInterface()
-            if instruction[0] == "unsubscribe":
-                steamworks_wrapper.steamworks.Workshop.UnsubscribeItem(
-                    int(instruction[1])
-                )
-            elif instruction[0] == "subscribe":
-                steamworks_wrapper.steamworks.Workshop.SubscribeItem(
-                    int(instruction[1])
-                )
-            sleep(5)
-            steamworks_wrapper.steamworks.unload()
-
     def actions_slot(self, action: str) -> None:
         """
         Slot for the `actions_signal` signal. Depending on the action,
@@ -366,7 +348,7 @@ class MainContent:
             )
 
     def _do_generate_metadata_by_appid(self) -> None:
-        apikey = 294100
+        appid = 294100
         logger.info(
             f"Initializing AppIDQuery with configured Steam API key for AppID: {appid}..."
         )
@@ -374,6 +356,10 @@ class MainContent:
         appid_query.all_mods_metadata = appid_query._all_mods_metadata_by_appid(
             self.game_configuration.webapi_query_expiry
         )
+        db_output_path = os.path.join(os.getcwd(), "data", f"{appid}_AppIDQuery.json")
+        logger.info(f"Caching DynamicQuery result: {db_output_path}")
+        with open(db_output_path, "w") as output:
+            json.dump(appid_query.all_mods_metadata, output, indent=4)
 
     def _do_generate_metadata_comparison_report(self) -> None:
         mods = self.all_mods_with_dependencies
@@ -595,6 +581,40 @@ class MainContent:
                     "exists in it."
                 ),
             )
+
+    def _do_steamworks_api_call(self, instruction: list):
+        """
+        Create & launch Steamworks API process to handle instructions received from connected signals
+
+        :param instruction: a list where:
+            instruction[0] is a string that corresponds with the following supported_actions[]
+            instruction[1] is an int that corresponds with a subscribed Steam mod's PublishedFileId
+        """
+        logger.info(f"Received Steamworks API instruction: {instruction}")
+        subscription_actions = ["subscribe", "unsubscribe"]
+        supported_actions = []
+        supported_actions.extend(subscription_actions)
+        if (
+            instruction[0] in supported_actions
+        ):  # Actions can be added as functions are implemented in util.steam.steamworks.wrapper
+            if instruction[0] in subscription_actions:
+                logger.info(
+                    f"Creating Steamworks PI process with instruction {instruction}"
+                )
+                steamworks_api_process = Process(
+                    target=steamworks_subscriptions_handler, args=(instruction,)
+                )
+                steamworks_api_process.start()
+        else:
+            logger.error(f"Unsupported instruction {instruction}")
+            return
+        # We give Steam 10 seconds to respond before timing out
+        steamworks_api_process.join(10)
+        if steamworks_api_process.is_alive():
+            logger.error(
+                "Timeout reached. Forcefully terminating Steamworks API process!"
+            )
+            steamworks_api_process.terminate()
 
     def _do_browse_workshop(self):
         self.browser = WebContentPanel(
