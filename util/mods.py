@@ -151,20 +151,20 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                         "^ this may not be an issue, as workshop sometimes forgets to delete unsubscribed mod folders."
                     )
                     invalid_dirs.append(file.name)
-                    for invalid_dir in invalid_dirs:
-                        uuid = str(uuid4())
-                        mods[uuid] = {}
-                        mods[uuid]["invalid"] = True
-                        mods[uuid]["folder"] = file.name
-                        mods[uuid]["path"] = file.path
-                        mods[uuid]["name"] = "UNKNOWN"
-                        mods[uuid]["packageId"] = "UNKNOWN"
-                        mods[uuid]["author"] = "UNKNOWN"
-                        mods[uuid]["description"] = (
-                            "This mod is considered invalid by RimSort (and the RimWorld game)."
-                            + "\n\nThis mod does NOT contain an ./About/About.xml and is likely leftover from previous usage."
-                            + "\n\nThis can happen sometimes with Steam mods if there are leftover .dds textures or unexpected data."
-                        )
+                    logger.info(f"Populating invalid mod: {file.path}")
+                    uuid = str(uuid4())
+                    mods[uuid] = {}
+                    mods[uuid]["invalid"] = True
+                    mods[uuid]["folder"] = file.name
+                    mods[uuid]["path"] = file.path
+                    mods[uuid]["name"] = "UNKNOWN"
+                    mods[uuid]["packageId"] = "UNKNOWN"
+                    mods[uuid]["author"] = "UNKNOWN"
+                    mods[uuid]["description"] = (
+                        "This mod is considered invalid by RimSort (and the RimWorld game)."
+                        + "\n\nThis mod does NOT contain an ./About/About.xml and is likely leftover from previous usage."
+                        + "\n\nThis can happen sometimes with Steam mods if there are leftover .dds textures or unexpected data."
+                    )
                 else:
                     mod_data_path = os.path.join(
                         file.path, about_folder_name, about_file_name

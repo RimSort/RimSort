@@ -3,7 +3,6 @@ from multiprocessing import active_children, Process
 import os
 import platform
 import subprocess
-from time import sleep
 from typing import Any, Dict
 
 from PySide2.QtWidgets import QFileDialog, QFrame, QHBoxLayout, QInputDialog, QLineEdit
@@ -150,6 +149,36 @@ class MainContent:
             if mod_uuid == uuid:
                 self.mod_info_panel.display_mod_info(
                     self.all_mods_with_dependencies[uuid]
+                )
+            if self.all_mods_with_dependencies[uuid].get("invalid"):
+                # Set label color to red if mod is invalid
+                invalid_qlabel_stylesheet = "QLabel { color : red; }"
+                self.mod_info_panel.mod_info_name_value.setStyleSheet(
+                    invalid_qlabel_stylesheet
+                )
+                self.mod_info_panel.mod_info_path_value.setStyleSheet(
+                    invalid_qlabel_stylesheet
+                )
+                self.mod_info_panel.mod_info_author_value.setStyleSheet(
+                    invalid_qlabel_stylesheet
+                )
+                self.mod_info_panel.mod_info_package_id_value.setStyleSheet(
+                    invalid_qlabel_stylesheet
+                )
+            else:
+                # Set label color to white if mod is valid
+                invalid_qlabel_stylesheet = "QLabel { color : white; }"
+                self.mod_info_panel.mod_info_name_value.setStyleSheet(
+                    invalid_qlabel_stylesheet
+                )
+                self.mod_info_panel.mod_info_path_value.setStyleSheet(
+                    invalid_qlabel_stylesheet
+                )
+                self.mod_info_panel.mod_info_author_value.setStyleSheet(
+                    invalid_qlabel_stylesheet
+                )
+                self.mod_info_panel.mod_info_package_id_value.setStyleSheet(
+                    invalid_qlabel_stylesheet
                 )
 
     def refresh_cache_calculations(self) -> None:
@@ -599,7 +628,7 @@ class MainContent:
         ):  # Actions can be added as functions are implemented in util.steam.steamworks.wrapper
             if instruction[0] in subscription_actions:
                 logger.info(
-                    f"Creating Steamworks PI process with instruction {instruction}"
+                    f"Creating Steamworks API process with instruction {instruction}"
                 )
                 steamworks_api_process = Process(
                     target=steamworks_subscriptions_handler, args=(instruction,)

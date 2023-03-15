@@ -93,9 +93,6 @@ class ModInfo:
         :param mod_info: complete json info for the mod
         """
         logger.info(f"Starting display mod info for info: {mod_info}")
-        invalid = False
-        if mod_info.get("invalid"):
-            invalid = True
         self.mod_info_name_value.setText(mod_info.get("name"))
         self.mod_info_package_id_value.setText(mod_info.get("packageId"))
         if "authors" in mod_info:
@@ -124,14 +121,6 @@ class ModInfo:
                     )
         # It is OK for the description value to be None (was not provided)
         # It is OK for the description key to not be in mod_info
-
-        if invalid:
-            # Set label color to red if mod is invalid
-            invalid_qlabel_stylesheet = "QLabel { color : red; }"
-            self.mod_info_name_value.setStyleSheet(invalid_qlabel_stylesheet)
-            self.mod_info_path_value.setStyleSheet(invalid_qlabel_stylesheet)
-            self.mod_info_author_value.setStyleSheet(invalid_qlabel_stylesheet)
-            self.mod_info_package_id_value.setStyleSheet(invalid_qlabel_stylesheet)
 
         # Get Preview.png
         if mod_info.get("path") and isinstance(mod_info["path"], str):

@@ -2,6 +2,8 @@ import logging
 import os
 from pathlib import Path
 import shutil
+from time import sleep
+from threading import Thread
 from typing import Any, Optional
 import webbrowser
 
@@ -91,6 +93,12 @@ class ModListWidget(QListWidget):
 
         logger.info("Finished ModListWidget initialization")
 
+    def delayed_refresh_signal(self):
+        logger.info("Refreshing in 10s")
+        sleep(10)
+        self.refresh_signal.emit("refresh")
+        logger.info("Refresh signal emitted")
+
     def eventFilter(self, source, event):
         if event.type() == QEvent.ContextMenu and source is self:
             logger.info("USER ACTION: Open right-click mod_list_item contextMenu")
@@ -158,7 +166,12 @@ class ModListWidget(QListWidget):
                     if action == delete_mod:  # ACTION: Delete mod
                         logger.info(f"Deleting mod at: {mod_path}")
                         shutil.rmtree(mod_path)
-                        self.refresh_signal.emit("refresh")
+                        logger.info("Creating delayed refresh signal (10s)")
+                        refresh_thread = Thread(
+                            target=self.delayed_refresh_signal,
+                            daemon=True,
+                        )
+                        refresh_thread.start()
                 if (
                     "unsubscribe_delete_mod" in locals()
                 ):  # This action is conditionally created
@@ -169,7 +182,12 @@ class ModListWidget(QListWidget):
                         self.steamworks_subscription_signal.emit(
                             ["unsubscribe", mod_pfid]
                         )
-                        self.refresh_signal.emit("refresh")
+                        logger.info("Creating delayed refresh signal (10s)")
+                        refresh_thread = Thread(
+                            target=self.delayed_refresh_signal,
+                            daemon=True,
+                        )
+                        refresh_thread.start()
             return True
         return super().eventFilter(source, event)
 

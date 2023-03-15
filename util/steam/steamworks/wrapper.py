@@ -4,6 +4,10 @@ from time import sleep
 import sys
 
 from steamworks import STEAMWORKS
+from steamworks.exceptions import SteamNotRunningException
+import traceback
+
+from util.error import show_warning
 
 logger = logging.getLogger(__name__)
 
@@ -24,17 +28,27 @@ class SteamworksInterface:
     def __init__(self):
         logger.info("SteamworksInterface initializing...")
         self.callback_received = False  # Signal used to end the _callbacks Thread
+        self.steam_not_running = False  # Skip action if True. Log occurrences.
         self.steamworks = STEAMWORKS()
-        self.steamworks.initialize()  # Init the Steamworks API
-        # Point Steamworks API callback response to our functions
-        self.steamworks.Workshop.SetItemSubscribedCallback(self._cb_subscription_action)
-        self.steamworks.Workshop.SetItemUnsubscribedCallback(
-            self._cb_subscription_action
-        )
-        # Start the thread
-        logger.info("Starting thread...")
-        self.steamworks_thread = self._daemon()
-        self.steamworks_thread.start()
+        try:
+            self.steamworks.initialize()  # Init the Steamworks API
+        except SteamNotRunningException:
+            logger.warning(
+                "Unable to initiate Steamworks API call. Steam is not running!"
+            )
+            self.steam_not_running = True
+        if not self.steam_not_running:  # Skip if True
+            # Point Steamworks API callback response to our functions
+            self.steamworks.Workshop.SetItemSubscribedCallback(
+                self._cb_subscription_action
+            )
+            self.steamworks.Workshop.SetItemUnsubscribedCallback(
+                self._cb_subscription_action
+            )
+            # Start the thread
+            logger.info("Starting thread...")
+            self.steamworks_thread = self._daemon()
+            self.steamworks_thread.start()
 
     def _callbacks(self):
         logger.info("Starting _callbacks")
@@ -45,7 +59,6 @@ class SteamworksInterface:
         else:
             logger.info("Steamworks loaded!")
         while not self.callback_received:
-            logger.info("Running callbacks...")
             self.steamworks.run_callbacks()
             sleep(0.1)
         else:
@@ -77,28 +90,32 @@ def steamworks_subscriptions_handler(instruction: list) -> None:
         instruction[0] is a string that corresponds with the following supported_actions[]
         instruction[1] is an int that corresponds with a subscribed Steam mod's PublishedFileId
     """
-    logger.info(f"Steamworks subscriptions handler received instruction: {instruction}")
-    logger.info(f"Creating SteamworksThread with instruction {instruction}")
+    logger.info(f"Creating SteamworksInterface and passing instruction {instruction}")
     steamworks_interface = SteamworksInterface()
-    while (
-        True
-    ):  # Ensure that Steamworks API is initialized before attempting any instruction
-        if steamworks_interface.steamworks.loaded():
+    if not steamworks_interface.steam_not_running:  # Skip if True
+        while (
+            not steamworks_interface.steamworks.loaded()
+        ):  # Ensure that Steamworks API is initialized before attempting any instruction
             break
-        sleep(0.1)
-    if instruction[0] == "subscribe":
-        steamworks_interface.steamworks.Workshop.SubscribeItem(int(instruction[1]))
-    elif instruction[0] == "unsubscribe":
-        steamworks_interface.steamworks.Workshop.UnsubscribeItem(int(instruction[1]))
-    # Wait for thread to complete with 5 second timeout
-    steamworks_interface.steamworks_thread.join(5)
-    # While the thread is alive, we wait for it. This means that the above Thread.join() reached the timeout...
-    # This is not good! Steam is not responding to your instruction!) TODO make this case more extensive & exit gracefully
-    while steamworks_interface.steamworks_thread.is_alive():
-        logger.error("No response from Steam!")
-    else:  # This means that Steam responded to our instruction. We are done with Steamworks API now, so we dispose of everything.
-        logger.info("Thread completed. Unloading Steamworks...")
-        steamworks_interface.steamworks.unload()
+            sleep(0.1)
+        else:
+            if instruction[0] == "subscribe":
+                steamworks_interface.steamworks.Workshop.SubscribeItem(
+                    int(instruction[1])
+                )
+            elif instruction[0] == "unsubscribe":
+                steamworks_interface.steamworks.Workshop.UnsubscribeItem(
+                    int(instruction[1])
+                )
+            # Wait for thread to complete with 5 second timeout
+            steamworks_interface.steamworks_thread.join(5)
+            # While the thread is alive, we wait for it. This means that the above Thread.join() reached the timeout...
+            # This is not good! Steam is not responding to your instruction!)
+            if steamworks_interface.steamworks_thread.is_alive():
+                logger.error("No response from Steam!")
+            else:  # This means that Steam responded to our instruction. We are done with Steamworks API now, so we dispose of everything.
+                logger.info("Thread completed. Unloading Steamworks...")
+            steamworks_interface.steamworks.unload()
 
 
 if __name__ == "__main__":
