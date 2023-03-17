@@ -117,6 +117,9 @@ class MainContent:
         self.active_mods_data_restore_state: Dict[str, Any] = {}
         self.inactive_mods_data_restore_state: Dict[str, Any] = {}
 
+        # Store duplicate_mods for global access
+        self.duplicate_mods = {}
+
         self.game_version = ""
 
         # Check if paths have been set
@@ -282,7 +285,11 @@ class MainContent:
         restore variables.
         """
         logger.info("Repopulating mod lists")
-        active_mods_data, inactive_mods_data = get_active_inactive_mods(
+        (
+            active_mods_data,
+            inactive_mods_data,
+            self.duplicate_mods,
+        ) = get_active_inactive_mods(
             self.game_configuration.get_config_path(),
             self.all_mods_with_dependencies,
         )
@@ -709,7 +716,11 @@ class MainContent:
         """
         self.active_mods_panel.clear_active_mods_search()
         self.inactive_mods_panel.clear_inactive_mods_search()
-        active_mods_data, inactive_mods_data = get_active_inactive_mods(
+        (
+            active_mods_data,
+            inactive_mods_data,
+            self.duplicate_mods,
+        ) = get_active_inactive_mods(
             self.game_configuration.get_config_path(),
             self.all_mods_with_dependencies,
         )
@@ -834,9 +845,11 @@ class MainContent:
             self.active_mods_panel.clear_active_mods_search()
             self.inactive_mods_panel.clear_inactive_mods_search()
             logger.info(f"Trying to import mods list from XML: {file_path}")
-            active_mods_data, inactive_mods_data = get_active_inactive_mods(
-                file_path[0], self.all_mods_with_dependencies
-            )
+            (
+                active_mods_data,
+                inactive_mods_data,
+                self.duplicate_mods,
+            ) = get_active_inactive_mods(file_path[0], self.all_mods_with_dependencies)
             logger.info("Got new mods according to imported XML")
             self._insert_data_into_lists(active_mods_data, inactive_mods_data)
         else:

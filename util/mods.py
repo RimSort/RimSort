@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 def get_active_inactive_mods(
     config_path: str, workshop_and_expansions: Dict[str, Any]
-) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+) -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any]]:
     """
     Given a path to the ModsConfig.xml folder and a complete list of
     mods (including base game and DLC) and their dependencies,
@@ -31,7 +31,7 @@ def get_active_inactive_mods(
     :return: a Dict for active mods and a Dict for inactive mods
     """
     logger.info("Starting generating active and inactive mods")
-    # Calculate duplicate mods (SCEMA: {str packageId: {str uuid: str data_source} })
+    # Calculate duplicate mods (SCHEMA: {str packageId: {str uuid: list[str data_source, str mod_path]} })
     duplicate_mods = {}
     packageId_to_uuids = {}
     for mod_uuid, mod_data in workshop_and_expansions.items():
@@ -97,7 +97,7 @@ def get_active_inactive_mods(
     logger.info(
         f"Returning newly generated active mods [{len(active_mods)}] and inactive mods [{len(inactive_mods)}] list"
     )
-    return active_mods, inactive_mods
+    return active_mods, inactive_mods, duplicate_mods
 
 
 def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
