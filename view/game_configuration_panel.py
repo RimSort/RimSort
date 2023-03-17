@@ -224,6 +224,9 @@ class GameConfiguration(QObject):
         self.local_folder_row.addWidget(self.local_folder_line)
         self.local_folder_row.addWidget(self.local_folder_select_button)
 
+        # DUPE MODS WARNING TOGGLE
+        self.duplicate_mods_warning_toggle = False
+
         # RUN ARGUMENTS
         self.run_arguments = ""
 
@@ -264,6 +267,9 @@ class GameConfiguration(QObject):
         self.settings_panel.clear_paths_signal.connect(
             self.delete_all_paths_data
         )  # Actions delete_all_paths_data
+        self.settings_panel.dupe_mods_warning_signal.connect(
+            self.dupe_mods_warning_setting
+        )
 
         logger.info("Finished GameConfiguration initialization")
 
@@ -400,6 +406,12 @@ class GameConfiguration(QObject):
                     settings_data["webapi_query_expiry"] = 1800
                 else:
                     self.webapi_query_expiry = settings_data["webapi_query_expiry"]
+                if not settings_data.get("duplicate_mods_warning_toggle"):
+                    settings_data["duplicate_mods_warning"] = False
+                else:
+                    self.duplicate_mods_warning_toggle = settings_data[
+                        "duplicate_mods_warning_toggle"
+                    ]
         logger.info("Finished storage initialization")
 
     def initialize_settings_panel(self) -> None:
@@ -600,6 +612,15 @@ class GameConfiguration(QObject):
         self.workshop_folder_line.setText("")
         self.local_folder_line.setText("")
         self.game_version_line.setText("")
+
+    def dupe_mods_warning_setting(self) -> None:
+        logger.info(f"USER ACTION: change dupe mods warning state")
+        if self.settings_panel.duplicate_mods_checkbox.isChecked():
+            self.duplicate_mods_warning_toggle = True
+            self.update_persistent_storage("duplicate_mods_warning_toggle", True)
+        else:
+            self.duplicate_mods_warning_toggle = False
+            self.update_persistent_storage("duplicate_mods_warning_toggle", False)
 
     def clear_game_folder_line(self) -> None:
         logger.info("USER ACTION: clear game folder line")

@@ -18,7 +18,9 @@ logger = logging.getLogger(__name__)
 
 
 def get_active_inactive_mods(
-    config_path: str, workshop_and_expansions: Dict[str, Any]
+    config_path: str,
+    workshop_and_expansions: Dict[str, Any],
+    duplicate_mods_warning_toggle: bool,
 ) -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any]]:
     """
     Given a path to the ModsConfig.xml folder and a complete list of
@@ -57,7 +59,7 @@ def get_active_inactive_mods(
     # Return an error if some active mod was in the ModsConfig but no data
     # could be found for it
     if (
-        duplicate_mods
+        duplicate_mods and duplicate_mods_warning_toggle
     ):  # TODO: make this warning configurable (allow users to completely disable it if they choose to do so)
         logger.warning(
             f"Could not find data for the list of active mods: {duplicate_mods}"

@@ -292,6 +292,7 @@ class MainContent:
         ) = get_active_inactive_mods(
             self.game_configuration.get_config_path(),
             self.all_mods_with_dependencies,
+            self.game_configuration.duplicate_mods_warning_toggle,
         )
         if is_initial:
             logger.info(
@@ -723,6 +724,7 @@ class MainContent:
         ) = get_active_inactive_mods(
             self.game_configuration.get_config_path(),
             self.all_mods_with_dependencies,
+            self.game_configuration.duplicate_mods_warning_toggle,
         )
         expansions_uuids = list(self.expansions.keys())
         active_mod_data = {}
@@ -849,7 +851,11 @@ class MainContent:
                 active_mods_data,
                 inactive_mods_data,
                 self.duplicate_mods,
-            ) = get_active_inactive_mods(file_path[0], self.all_mods_with_dependencies)
+            ) = get_active_inactive_mods(
+                file_path[0],
+                self.all_mods_with_dependencies,
+                self.game_configuration.duplicate_mods_warning_toggle,
+            )
             logger.info("Got new mods according to imported XML")
             self._insert_data_into_lists(active_mods_data, inactive_mods_data)
         else:

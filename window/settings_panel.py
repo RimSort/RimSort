@@ -2,13 +2,21 @@ import logging
 from functools import partial
 
 from PySide2.QtCore import Qt, Signal
-from PySide2.QtWidgets import QComboBox, QDialog, QLabel, QPushButton, QVBoxLayout
+from PySide2.QtWidgets import (
+    QCheckBox,
+    QComboBox,
+    QDialog,
+    QLabel,
+    QPushButton,
+    QVBoxLayout,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class SettingsPanel(QDialog):
     clear_paths_signal = Signal(str)
+    dupe_mods_warning_signal = Signal(str)
     metadata_by_appid_signal = Signal(str)
     metadata_comparison_signal = Signal(str)
     set_webapi_query_expiry_signal = Signal(str)
@@ -35,15 +43,16 @@ class SettingsPanel(QDialog):
         self.sorting_algorithm_cb.addItems(["RimPy", "Topological"])
         self.external_metadata_label = QLabel("External Metadata Source")
         self.external_metadata_label.setObjectName("externalMetadataSource")
+        self.external_metadata_label.setStyleSheet("QLabel { color : white; }")
         self.external_metadata_cb = QComboBox()
         self.external_metadata_cb.addItems(
             ["RimPy Mod Manager Database", "Rimsort Dynamic Query"]
         )
-        self.metadata_by_appid_button = QPushButton("Generate external metadata by appid")
+        self.metadata_by_appid_button = QPushButton(
+            "Generate external metadata by appid"
+        )
         self.metadata_by_appid_button.clicked.connect(
-            partial(
-                self.metadata_by_appid_signal.emit, "generate_metadata_by_appid"
-            )
+            partial(self.metadata_by_appid_signal.emit, "generate_metadata_by_appid")
         )
         self.comparison_report_button = QPushButton("External metadata comparison")
         self.comparison_report_button.clicked.connect(
@@ -52,19 +61,21 @@ class SettingsPanel(QDialog):
             )
         )
         self.set_webapi_query_expiry_button = QPushButton("Set WebAPI Query Expiry")
-        self.set_webapi_query_expiry_button.setToolTip(
-            "Default: 30 min (1800 seconds)"
-        )
+        self.set_webapi_query_expiry_button.setToolTip("Default: 30 min (1800 seconds)")
         self.set_webapi_query_expiry_button.clicked.connect(
-            partial(
-                self.set_webapi_query_expiry_signal.emit, "set_webapi_query_expiry"
-            )
+            partial(self.set_webapi_query_expiry_signal.emit, "set_webapi_query_expiry")
         )
         self.clear_paths_button = QPushButton("Clear Paths")
         self.clear_paths_button.clicked.connect(
             partial(self.clear_paths_signal.emit, "clear_paths")
         )
-
+        self.duplicate_mods_checkbox = QCheckBox(
+            "Show duplicate mods warning on startup"
+        )
+        self.duplicate_mods_checkbox.setStyleSheet("QCheckBox { color : white; }")
+        self.duplicate_mods_checkbox.stateChanged.connect(
+            self.dupe_mods_warning_signal.emit
+        )
         # Add widgets to layout
         self.layout.addWidget(self.sorting_algorithm_label)
         self.layout.addWidget(self.sorting_algorithm_cb)
@@ -74,6 +85,7 @@ class SettingsPanel(QDialog):
         self.layout.addWidget(self.comparison_report_button)
         self.layout.addWidget(self.set_webapi_query_expiry_button)
         self.layout.addWidget(self.clear_paths_button)
+        self.layout.addWidget(self.duplicate_mods_checkbox)
 
         # Display items
         self.setLayout(self.layout)
