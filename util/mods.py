@@ -1182,9 +1182,14 @@ def get_active_mods_from_config(
             ) in workshop_and_expansions:  # Find this mods' metadata packageId & path
                 metadata_package_id = workshop_and_expansions[uuid]["packageId"]
                 metadata_path = workshop_and_expansions[uuid]["path"]
+                package_id_steam_suffix = "_steam"
+                package_id_normalized_stripped = package_id_normalized.replace(
+                    package_id_steam_suffix, ""
+                )
                 if metadata_package_id == package_id_normalized:
                     # If the mod to populate DOESN'T have have duplicates, populate like normal
                     if not package_id_normalized in duplicate_mods.keys():
+                        logger.debug(f"Adding mod to active: {package_id_normalized}")
                         populated_mods.append(package_id_normalized)
                         active_mods_dict[uuid] = workshop_and_expansions[uuid]
                     # ...else, the mod to populate DOES have duplicates found in metadata
@@ -1225,10 +1230,14 @@ def get_active_mods_from_config(
                             # IF we have multiple duplicate paths in SAME data_source, set the first naturally occurring mod
                             # by path in the active_mods_dict, any additional uuids will be later set to inactive.
                             # OTHERWISE we use the first path we find in order of SOURCE PRIORITY
+                            logger.debug(metadata_path)
+                            logger.debug(expansion_paths)
+                            logger.debug(local_paths)
+                            logger.debug(workshop_paths)
                             if len(natsort_expansion_paths) > 1:  # EXPANSIONS
                                 if metadata_path == natsort_expansion_paths[0]:
                                     logger.warning(
-                                        f"Found duplicate expansions for {package_id_normalized}: {natsort_expansion_paths}"
+                                        f"Using duplicate expansion for {package_id_normalized}: {metadata_path}"
                                     )
                                     logger.warning(
                                         f"Using mod located at: {metadata_path}"
@@ -1241,14 +1250,15 @@ def get_active_mods_from_config(
                             # If the metadata_path is even in our expansion_paths <=1 item list for this duplicate (if 0 count, this would be false):
                             elif metadata_path in expansion_paths:
                                 logger.warning(
-                                    f"Found duplicate expansion for {package_id_normalized}: {metadata_path}"
+                                    f"Using duplicate expansion for {package_id_normalized}: {metadata_path}"
                                 )
                                 populated_mods.append(package_id_normalized)
                                 active_mods_dict[uuid] = workshop_and_expansions[uuid]
+                                continue
                             if len(natsort_local_paths) > 1:  # LOCAL mods
                                 if metadata_path == natsort_local_paths[0]:
                                     logger.warning(
-                                        f"Found duplicate local mods for {package_id_normalized}: {natsort_local_paths}"
+                                        f"Using duplicate local mod for {package_id_normalized}: {metadata_path}"
                                     )
                                     populated_mods.append(package_id_normalized)
                                     active_mods_dict[uuid] = workshop_and_expansions[
@@ -1258,14 +1268,15 @@ def get_active_mods_from_config(
                             # If the metadata_path is even in our local_paths <=1 item list for this duplicate (if 0 count, this would be false):
                             elif metadata_path in local_paths:
                                 logger.warning(
-                                    f"Found duplicate expansion for {package_id_normalized}: {metadata_path}"
+                                    f"Using duplicate local mod for {package_id_normalized}: {metadata_path}"
                                 )
                                 populated_mods.append(package_id_normalized)
                                 active_mods_dict[uuid] = workshop_and_expansions[uuid]
+                                continue
                             if len(natsort_workshop_paths) > 1:  # WORKSHOP mods
                                 if metadata_path == natsort_workshop_paths[0]:
                                     logger.warning(
-                                        f"Found duplicate workshop mods for {package_id_normalized}: {natsort_workshop_paths}"
+                                        f"Using duplicate workshop mod for {package_id_normalized}: {metadata_path}"
                                     )
                                     populated_mods.append(package_id_normalized)
                                     active_mods_dict[uuid] = workshop_and_expansions[
@@ -1275,10 +1286,81 @@ def get_active_mods_from_config(
                             # If the metadata_path is even in our workshop_paths <=1 item list for this duplicate (if 0 count, this would be false):
                             elif metadata_path in workshop_paths:
                                 logger.warning(
-                                    f"Found duplicate expansion for {package_id_normalized}: {metadata_path}"
+                                    f"Using duplicate workshop mod for {package_id_normalized}: {metadata_path}"
                                 )
                                 populated_mods.append(package_id_normalized)
                                 active_mods_dict[uuid] = workshop_and_expansions[uuid]
+                                continue
+                # Otherwise check for `_steam`
+                elif metadata_package_id == package_id_normalized_stripped:
+                    if (
+                        package_id_steam_suffix in package_id_normalized
+                    ):  # If `_steam`, we check for dupes
+                        if (
+                            not package_id_normalized_stripped in duplicate_mods.keys()
+                        ):  # If no dupes, just add whatever we find
+                            logger.debug(
+                                f"Adding mod to active: {package_id_normalized_stripped}"
+                            )
+                            populated_mods.append(package_id_normalized_stripped)
+                            active_mods_dict[uuid] = workshop_and_expansions[uuid]
+                        else:  # ...else, it has duplicates, so we find the Steam mod specifically
+                            if (
+                                not package_id_normalized_stripped
+                                in duplicates_processed
+                            ):  # If we haven't already processed this duplicate
+                                logger.info(
+                                    f"Handling special case with `_steam` suffix for packageId: {package_id_normalized}"
+                                )
+                                logger.debug(
+                                    f"DUPLICATE FOUND: {package_id_normalized_stripped}"
+                                )
+                                workshop_paths = []
+                                local_paths = []
+                                # Go thru each duplicate path by data_source
+                                for dupe_uuid, data_source in duplicate_mods[
+                                    package_id_normalized_stripped
+                                ].items():
+                                    # Compile lists of our paths by source
+                                    # logger.debug(f"{dupe_uuid}: {data_source}")
+                                    if data_source[0] == "workshop":
+                                        workshop_paths.append(data_source[1])
+                                    if data_source[0] == "local":
+                                        local_paths.append(data_source[1])
+                                # Naturally sorted paths
+                                natsort_workshop_paths = natsorted(workshop_paths)
+                                natsort_local_paths = natsorted(local_paths)
+                                logger.debug(
+                                    f"Natsorted workshop paths: {natsort_workshop_paths}"
+                                )
+                                logger.debug(
+                                    f"Natsorted local paths: {natsort_local_paths}"
+                                )
+                                # Explicit case for mods with `_steam` suffix
+                                # SOURCE PRIORITY: Workshop > Local (this should NOT be used for expansions...)
+                                # We use the first path we find in order of SOURCE PRIORITY
+                                logger.debug(metadata_path)
+                                logger.debug(workshop_paths)
+                                logger.debug(local_paths)
+                                if not metadata_path in workshop_paths:
+                                    logger.debug(
+                                        f"Skipping local instance of duplicate `_steam` suffixed mod: {metadata_path}"
+                                    )
+                                    continue
+                                else:
+                                    logger.warning(
+                                        f"Using duplicate workshop mod for {package_id_normalized_stripped}: {metadata_path}"
+                                    )
+                                    populated_mods.append(package_id_normalized)
+                                    active_mods_dict[uuid] = workshop_and_expansions[
+                                        uuid
+                                    ]
+                                    # Track this dupe once we find the steam mod
+                                    duplicates_processed.append(package_id_normalized)
+                                    duplicates_processed.append(
+                                        package_id_normalized_stripped
+                                    )
+                                    continue
 
         missing_mods = list(set(to_populate) - set(populated_mods))
         logger.info(
