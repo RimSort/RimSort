@@ -873,7 +873,7 @@ class MainContent:
                 logger.info(
                     f"Saving generated ModsConfig.xml to selected path: {file_path[0]}"
                 )
-                json_to_xml_write(mods_config_data, file_path[0])
+                json_to_xml_write(mods_config_data, file_path[0] + ".xml")
             else:
                 logger.error("Could not export active mods")
         else:
