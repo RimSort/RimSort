@@ -1,5 +1,6 @@
 import json
 import logging
+from natsort import natsorted
 import os
 import platform
 from requests.exceptions import HTTPError
@@ -30,25 +31,57 @@ def get_active_inactive_mods(
     :return: a Dict for active mods and a Dict for inactive mods
     """
     logger.info("Starting generating active and inactive mods")
-
+    # Calculate duplicate mods (SCEMA: {str packageId: {str uuid: str data_source} })
+    duplicate_mods = {}
+    packageId_to_uuids = {}
+    for mod_uuid, mod_data in workshop_and_expansions.items():
+        data_source = mod_data["data_source"]  # Track data_source
+        package_id = mod_data["packageId"]  # Track packageId to UUIDs
+        mod_path = mod_data["path"]  # Track path
+        if not packageId_to_uuids.get(package_id):
+            packageId_to_uuids[package_id] = {}
+        packageId_to_uuids[package_id][mod_uuid] = [data_source, mod_path]
+    duplicate_mods = packageId_to_uuids.copy()
+    for package_id in packageId_to_uuids:  # If a packageId has > 1 UUID listed
+        if len(packageId_to_uuids[package_id]) > 1:  # ...it is a duplicate mod
+            logger.info(
+                f"Duplicate mods found for mod {package_id}: {packageId_to_uuids[package_id]}"
+            )
+        else:  # Otherwise, remove non-duplicates from our tracking dict
+            del duplicate_mods[package_id]
     # Get the list of active mods and populate data from workshop + expansions
     logger.info(f"Calling get active mods with Config Path: {config_path}")
-    active_mods = get_active_mods_from_config(config_path, workshop_and_expansions)
-
-    logger.info("Calling populate active mods with data")
-    active_mods, invalid_mods = populate_active_mods_workshop_data(
-        active_mods, workshop_and_expansions
+    active_mods, missing_mods = get_active_mods_from_config(
+        config_path, duplicate_mods, workshop_and_expansions
     )
-
     # Return an error if some active mod was in the ModsConfig but no data
     # could be found for it
-    if invalid_mods:
+    if (
+        duplicate_mods
+    ):  # TODO: make this warning configurable (allow users to completely disable it if they choose to do so)
         logger.warning(
-            f"Could not find data for the list of active mods: {invalid_mods}"
+            f"Could not find data for the list of active mods: {duplicate_mods}"
         )
-        list_of_violating_mods = ""
-        for invalid_mod in invalid_mods:
-            list_of_violating_mods = list_of_violating_mods + f"* {invalid_mod}\n"
+        list_of_duplicate_mods = ""
+        for duplicate_mod in duplicate_mods.keys():
+            list_of_duplicate_mods = list_of_duplicate_mods + f"* {duplicate_mod}\n"
+        show_warning(
+            text="Duplicate mods found for package ID(s) in your ModsConfig.xml (active mods list)",
+            information=(
+                "The following list of mods were set active in your ModsConfig.xml and "
+                "duplicate instances were found of these mods in your mod data sources. "
+                "The vanilla game will use the first 'local mod' of a particular package ID "
+                "that is found - so RimSort will also adhere to this logic."
+            ),
+            details=list_of_duplicate_mods,
+        )
+    if missing_mods:
+        logger.warning(
+            f"Could not find data for the list of active mods: {missing_mods}"
+        )
+        list_of_missing_mods = ""
+        for missing_mod in missing_mods:
+            list_of_missing_mods = list_of_missing_mods + f"* {missing_mod}\n"
         show_warning(
             text="Could not find data for some mods",
             information=(
@@ -56,13 +89,11 @@ def get_active_inactive_mods(
                 "no data could be found from the workshop or in your local mods. "
                 "Did you set your game install and workshop/local mods path correctly?"
             ),
-            details=list_of_violating_mods,
+            details=list_of_missing_mods,
         )
-
     # Get the inactive mods by subtracting active mods from workshop + expansions
     logger.info("Calling get inactive mods")
     inactive_mods = get_inactive_mods(workshop_and_expansions, active_mods)
-
     logger.info(
         f"Returning newly generated active mods [{len(active_mods)}] and inactive mods [{len(inactive_mods)}] list"
     )
@@ -1123,66 +1154,143 @@ def get_game_version(game_path: str) -> str:
 
 
 def get_active_mods_from_config(
-    config_path: str, workshop_and_expansions: Dict[str, Any]
-) -> Dict[str, Any]:
+    config_path: str,
+    duplicate_mods: Dict[str, Any],
+    workshop_and_expansions: Dict[str, Any],
+) -> Tuple[Dict[str, Any], List[str]]:
     """
     Given a path to a file in the ModsConfig.xml format, return the
     mods in the active mods section.
-
     :param path: path to a ModsConfig.xml file
     :return: a Dict keyed to mod package ids
     """
     logger.info(f"Getting active mods with Config Path: {config_path}")
+    active_mods_dict: dict[str, Any] = {}
+    duplicates_processed = []
+    missing_mods = []
     mod_data = xml_path_to_json(config_path)
+    populated_mods = []
+    to_populate = []
     if validate_mods_config_format(mod_data):
-        empty_active_mods_dict: dict[str, Any] = {}
-        for package_id in mod_data["ModsConfigData"]["activeMods"]["li"]:
-            for uuid in workshop_and_expansions:
-                if workshop_and_expansions[uuid]["packageId"] == package_id.lower():
-                    empty_active_mods_dict[uuid] = workshop_and_expansions[uuid]
+        for package_id in mod_data["ModsConfigData"]["activeMods"][
+            "li"
+        ]:  # Go thru active mods
+            package_id_normalized = package_id.lower()
+            to_populate.append(package_id_normalized)
+            for (
+                uuid
+            ) in workshop_and_expansions:  # Find this mods' metadata packageId & path
+                metadata_package_id = workshop_and_expansions[uuid]["packageId"]
+                metadata_path = workshop_and_expansions[uuid]["path"]
+                if metadata_package_id == package_id_normalized:
+                    # If the mod to populate DOESN'T have have duplicates, populate like normal
+                    if not package_id_normalized in duplicate_mods.keys():
+                        populated_mods.append(package_id_normalized)
+                        active_mods_dict[uuid] = workshop_and_expansions[uuid]
+                    # ...else, the mod to populate DOES have duplicates found in metadata
+                    else:  # If we haven't already processed this duplicate
+                        if not package_id_normalized in duplicates_processed:
+                            # Track this dupe - it should only need processed once
+                            duplicates_processed.append(package_id_normalized)
+                            logger.debug(f"DUPLICATE FOUND: {package_id_normalized}")
+                            expansion_paths = []
+                            local_paths = []
+                            workshop_paths = []
+                            # Go thru each duplicate path by data_source
+                            for dupe_uuid, data_source in duplicate_mods[
+                                package_id_normalized
+                            ].items():
+                                # Compile lists of our paths by source
+                                # logger.debug(f"{dupe_uuid}: {data_source}")
+                                if data_source[0] == "expansion":
+                                    expansion_paths.append(data_source[1])
+                                if data_source[0] == "local":
+                                    local_paths.append(data_source[1])
+                                if data_source[0] == "workshop":
+                                    workshop_paths.append(data_source[1])
+                            # Naturally sorted paths
+                            natsort_expansion_paths = natsorted(expansion_paths)
+                            natsort_local_paths = natsorted(local_paths)
+                            natsort_workshop_paths = natsorted(workshop_paths)
+                            logger.debug(
+                                f"Natsorted expansion paths: {natsort_expansion_paths}"
+                            )
+                            logger.debug(
+                                f"Natsorted local paths: {natsort_local_paths}"
+                            )
+                            logger.debug(
+                                f"Natsorted workshop paths: {natsort_workshop_paths}"
+                            )
+                            # SOURCE PRIORITY: Expansions > Local > Workshop
+                            # IF we have multiple duplicate paths in SAME data_source, set the first naturally occurring mod
+                            # by path in the active_mods_dict, any additional uuids will be later set to inactive.
+                            # OTHERWISE we use the first path we find in order of SOURCE PRIORITY
+                            if len(natsort_expansion_paths) > 1:  # EXPANSIONS
+                                if metadata_path == natsort_expansion_paths[0]:
+                                    logger.warning(
+                                        f"Found duplicate expansions for {package_id_normalized}: {natsort_expansion_paths}"
+                                    )
+                                    logger.warning(
+                                        f"Using mod located at: {metadata_path}"
+                                    )
+                                    populated_mods.append(package_id_normalized)
+                                    active_mods_dict[uuid] = workshop_and_expansions[
+                                        uuid
+                                    ]
+                                    continue
+                            # If the metadata_path is even in our expansion_paths <=1 item list for this duplicate (if 0 count, this would be false):
+                            elif metadata_path in expansion_paths:
+                                logger.warning(
+                                    f"Found duplicate expansion for {package_id_normalized}: {metadata_path}"
+                                )
+                                populated_mods.append(package_id_normalized)
+                                active_mods_dict[uuid] = workshop_and_expansions[uuid]
+                            if len(natsort_local_paths) > 1:  # LOCAL mods
+                                if metadata_path == natsort_local_paths[0]:
+                                    logger.warning(
+                                        f"Found duplicate local mods for {package_id_normalized}: {natsort_local_paths}"
+                                    )
+                                    populated_mods.append(package_id_normalized)
+                                    active_mods_dict[uuid] = workshop_and_expansions[
+                                        uuid
+                                    ]
+                                    continue
+                            # If the metadata_path is even in our local_paths <=1 item list for this duplicate (if 0 count, this would be false):
+                            elif metadata_path in local_paths:
+                                logger.warning(
+                                    f"Found duplicate expansion for {package_id_normalized}: {metadata_path}"
+                                )
+                                populated_mods.append(package_id_normalized)
+                                active_mods_dict[uuid] = workshop_and_expansions[uuid]
+                            if len(natsort_workshop_paths) > 1:  # WORKSHOP mods
+                                if metadata_path == natsort_workshop_paths[0]:
+                                    logger.warning(
+                                        f"Found duplicate workshop mods for {package_id_normalized}: {natsort_workshop_paths}"
+                                    )
+                                    populated_mods.append(package_id_normalized)
+                                    active_mods_dict[uuid] = workshop_and_expansions[
+                                        uuid
+                                    ]
+                                    continue
+                            # If the metadata_path is even in our workshop_paths <=1 item list for this duplicate (if 0 count, this would be false):
+                            elif metadata_path in workshop_paths:
+                                logger.warning(
+                                    f"Found duplicate expansion for {package_id_normalized}: {metadata_path}"
+                                )
+                                populated_mods.append(package_id_normalized)
+                                active_mods_dict[uuid] = workshop_and_expansions[uuid]
+
+        missing_mods = list(set(to_populate) - set(populated_mods))
         logger.info(
-            f"Returning empty active mods dict with {len(empty_active_mods_dict)} entries"
+            f"Generated active_mods_dict with {len(active_mods_dict)} entries: {active_mods_dict}"
         )
-        logger.info(empty_active_mods_dict)
-        return empty_active_mods_dict
-    logger.error(f"Unable to get active mods from config with read data: {mod_data}")
-    return {}
-
-
-def populate_active_mods_workshop_data(
-    unpopulated_mods: Dict[str, Any], workshop_and_expansions: Dict[str, Any]
-) -> Tuple[Dict[str, Any], List[str]]:
-    """
-    Given a dict of mods with no attached data, populate all
-    workshop mods with workshop mods data (taken from the workshop directory).
-    Note that key-values in unpopulated mods that cannot find a
-    corresponding package id in workshop mods will not have their
-    values modified (will be kept empty).
-    :param unpopulated_mods: dict of package-id-keyed active mods
-    :param workshop_and_expansions: dict of workshop mods (and expansions) keyed to packge-id
-    :return: active mod list with populated data, and list of package ids of invalid mods
-    """
-    logger.info("Populating empty active mods with data")
-    populated_mods = unpopulated_mods.copy()
-    invalid_mods = []
-    for mod_uuid in unpopulated_mods:
-        # Cross reference package ids with mods in the workshop folder.
-        # If unable to, that means either the mod hasn't been downloaded
-        # of it is an invalid entry.
-        if (
-            unpopulated_mods[mod_uuid]["packageId"]
-            == workshop_and_expansions[mod_uuid]["packageId"]
-        ):
-            populated_mods[mod_uuid] = workshop_and_expansions[mod_uuid]
-        else:
-            logger.warning(
-                f"Unable to find local/workshop data for listed active mod: {mod_uuid}"
-            )
-            invalid_mods.append(mod_uuid)
-            del populated_mods[mod_uuid]
-            # populated_mods[mod_package_id] = {"name": f"ERROR({mod_package_id})", "packageId": mod_package_id}
-    logger.info("Finished populating empty active mods with data")
-    return populated_mods, invalid_mods
+        logger.info(f"Returning missing mods: {missing_mods}")
+        return active_mods_dict, missing_mods
+    else:
+        logger.error(
+            f"Unable to get active mods from config with read data: {mod_data}"
+        )
+        return active_mods_dict, missing_mods
 
 
 def merge_mod_data(*dict_args: dict[str, Any]) -> Dict[str, Any]:
@@ -1206,19 +1314,24 @@ def get_inactive_mods(
     Generate a list of inactive mods by cross-referencing the list of
     installed workshop mods with the active mods and known expansions.
 
+    Move the first local instance of any duplicate found alphabetically
+    ascending by filename to the active mods list; and the rest of the dupes
+    to the inactive mods list. TODO this is not accurate
+
     :param workshop_and_expansions: dict of workshop mods and expansions
     :param active_mods: dict of active mods
+    :param duplicate_mods: dict keyed with packageIds to list of dupe uuids
     :return: a dict for inactive mods
     """
     logger.info(
         "Generating inactive mod lists from subtracting all mods with active mods"
     )
     inactive_mods = workshop_and_expansions.copy()
-    # For each mod in active mods, remove from inactive_mods
-    for mod_uuid in active_mods:
-        if (
-            active_mods[mod_uuid]["packageId"]
-            == workshop_and_expansions[mod_uuid]["packageId"]
+    # For each mod in active mods
+    for mod_uuid, mod_data in active_mods.items():
+        package_id = active_mods[mod_uuid]["packageId"]
+        if (  # Remove all active_mods uuids from inactive_mods
+            package_id == workshop_and_expansions[mod_uuid]["packageId"]
         ):
             del inactive_mods[mod_uuid]
     logger.info("Finished generating inactive mods list")

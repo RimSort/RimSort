@@ -637,6 +637,9 @@ class MainContent:
         else:
             logger.error(f"Unsupported instruction {instruction}")
             return
+        logger.info(
+            f"Steamworks API process started (timeout 10s) with PID: {steamworks_api_process.pid}"
+        )
         # We give Steam 10 seconds to respond before timing out
         steamworks_api_process.join(10)
         if steamworks_api_process.is_alive():
@@ -644,6 +647,9 @@ class MainContent:
                 "Timeout reached. Forcefully terminating Steamworks API process!"
             )
             steamworks_api_process.terminate()
+        logger.info(
+            f"Steamworks API process completed for PID: {steamworks_api_process.pid}"
+        )
 
     def _do_browse_workshop(self):
         self.browser = WebContentPanel(
@@ -843,7 +849,7 @@ class MainContent:
         """
         logger.info("Opening file dialog to specify output file")
         file_path = QFileDialog.getSaveFileName(
-            caption="Save Mod List", selectedFilter="xml"
+            caption="Save Mod List", filter="XML (*.xml)"
         )
         logger.info(f"Selected path: {file_path[0]}")
         if file_path[0]:
