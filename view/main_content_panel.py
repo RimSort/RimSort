@@ -228,13 +228,16 @@ class MainContent:
             self.local_mods[uuid]["data_source"] = "local"
 
         # One working Dictionary for ALL mods
-        mods = merge_mod_data(self.local_mods, self.workshop_mods)
+        all_mods = merge_mod_data(self.expansions, self.local_mods, self.workshop_mods)
+        logger.info(
+            f"Combined {len(self.expansions)} expansions, {len(self.local_mods)} local mods, and {len(self.workshop_mods)}. Total elements to get dependencies for: {len(all_mods)}"
+        )
 
         self.steam_db_rules = {}
         self.community_rules = {}
 
         # If there are mods at all, check for a mod DB.
-        if mods:
+        if all_mods:
             logger.info(
                 "Looking for a load order / dependency rules contained within mods"
             )
@@ -244,12 +247,12 @@ class MainContent:
             if external_metadata_source == "RimPy Mod Manager Database":
                 # Get and cache RimPy Steam db.json rules data for ALL mods
                 # Get and cache RimPy Community Rules communityRules.json for ALL mods
-                self.steam_db_rules, self.community_rules = get_rimpy_database_mod(mods)
+                self.steam_db_rules, self.community_rules = get_rimpy_database_mod(all_mods)
             else:
                 self.steam_db_rules, self.community_rules = get_3rd_party_metadata(
                     self.game_configuration.steam_apikey,
                     self.game_configuration.webapi_query_expiry,
-                    mods,
+                    all_mods,
                 )
         else:
             logger.warning(
@@ -261,8 +264,7 @@ class MainContent:
             self.all_mods_with_dependencies,
             self.info_from_steam_package_id_to_name,
         ) = get_dependencies_for_mods(
-            self.expansions,
-            mods,
+            all_mods,
             self.steam_db_rules,
             self.community_rules,  # TODO add user defined customRules from future customRules.json
         )

@@ -1,10 +1,12 @@
 import logging
 import os
+import platform
 import sys
 import traceback
 from pathlib import Path
 from requests.exceptions import HTTPError
 
+from logger_tt import setup_logging
 from PySide2.QtCore import QSize
 from PySide2.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 
@@ -14,18 +16,24 @@ from view.game_configuration_panel import GameConfiguration
 from view.main_content_panel import MainContent
 from view.status_panel import Status
 
-# The log file is stored inside the app directory (on Mac, it is inside the package)
-logging_file_path = Path(os.path.join(os.path.dirname(__file__), "data", "RimSort.log"))
+# The log file is stored inside the RimSort install directory (on Mac, it is inside the package)
+data_path = os.path.join(os.path.dirname(__file__), "data")
+logging_config_path = os.path.join(data_path, "logging_config.json")
+logging_file_path = os.path.join(data_path, "RimSort.log")
 
-# Only the most recent log file is kept
-logging_file_path.unlink(missing_ok=True)
+if platform.system() == "Linux":
+    setup_logging(
+        config_path=logging_config_path,
+        log_path=logging_file_path,
+        use_multiprocessing="fork",
+    )
+else:
+    setup_logging(
+        config_path=logging_config_path,
+        log_path=logging_file_path,
+        use_multiprocessing="spawn",
+    )
 
-# Configure logger settings
-logging.basicConfig(
-    format="[%(levelname)s][%(asctime)s][%(process)d][%(name)s][%(funcName)s][%(lineno)d] : %(message)s",
-    filename=logging_file_path,
-    level=logging.DEBUG,
-)
 logger = logging.getLogger(__name__)
 logger.info("Starting RimSort application")
 
@@ -105,35 +113,38 @@ class MainWindow(QMainWindow):
         logger.info("Finished MainWindow initialization")
 
 
-try:
-    app = QApplication(sys.argv)
-    app.setApplicationName("RimSort")
-    logger.info("Setting application styles")
-    app.setStyle(ProxyStyle())  # Add proxy style for overriding some styling elements
-    app.setStyleSheet(  # Add style sheet for styling layouts and widgets
-        Path(os.path.join(os.path.dirname(__file__), "data/style.qss")).read_text()
-    )
-    window = MainWindow()
-    logger.info("Showing MainWindow")
-    window.show()
-    app.exec_()
-except Exception as e:
-    # Catch exceptions during initial application instantiation
-    # Uncaught exceptions during the application loop are caught with excepthook
-    if e.__class__.__name__ == "HTTPError":  # requests.exceptions.HTTPError
-        stacktrace = traceback.format_exc()
-        pattern = "&key="
-        stacktrace = stacktrace[
-            : len(stacktrace)
-            - (len(stacktrace) - (stacktrace.find(pattern) + len(pattern)))
-        ]  # If an HTTPError from steam/urllib3 module(s) somehow is uncaught, try to remove the Steam API key from the stacktrace
-    else:
-        stacktrace = traceback.format_exc()
-    logger.error(
-        "The main application instantiation has failed with an uncaught exception:"
-    )
-    logger.error(stacktrace)
-    show_fatal_error(details=stacktrace)
-finally:
-    logger.info("Exiting program")
-    sys.exit()
+if __name__ == "__main__":
+    try:
+        app = QApplication(sys.argv)
+        app.setApplicationName("RimSort")
+        logger.info("Setting application styles")
+        app.setStyle(
+            ProxyStyle()
+        )  # Add proxy style for overriding some styling elements
+        app.setStyleSheet(  # Add style sheet for styling layouts and widgets
+            Path(os.path.join(os.path.dirname(__file__), "data/style.qss")).read_text()
+        )
+        window = MainWindow()
+        logger.info("Showing MainWindow")
+        window.show()
+        app.exec_()
+    except Exception as e:
+        # Catch exceptions during initial application instantiation
+        # Uncaught exceptions during the application loop are caught with excepthook
+        if e.__class__.__name__ == "HTTPError":  # requests.exceptions.HTTPError
+            stacktrace = traceback.format_exc()
+            pattern = "&key="
+            stacktrace = stacktrace[
+                : len(stacktrace)
+                - (len(stacktrace) - (stacktrace.find(pattern) + len(pattern)))
+            ]  # If an HTTPError from steam/urllib3 module(s) somehow is uncaught, try to remove the Steam API key from the stacktrace
+        else:
+            stacktrace = traceback.format_exc()
+        logger.error(
+            "The main application instantiation has failed with an uncaught exception:"
+        )
+        logger.error(stacktrace)
+        show_fatal_error(details=stacktrace)
+    finally:
+        logger.info("Exiting program")
+        sys.exit()

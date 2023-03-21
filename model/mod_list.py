@@ -347,7 +347,7 @@ class ModListWidget(QListWidget):
             ):  # Otherwise, check if local metadata url exists
                 url = widget_json_data["url"]  # Use the local metadata url
             else:  # Otherwise, warn & do nothing
-                logger.warning(f"Unable to get url for mod {widget_package_id}")
+                logger.warning(f"Unable to get url for mod {widget_package_id}") # TODO: Make warning visible
         elif (
             widget_json_data["data_source"] == "local"
         ):  # If the mod was parsed from a local mods source
@@ -361,7 +361,7 @@ class ModListWidget(QListWidget):
             ):  # Otherwise, if the mod has steam_url
                 url = widget_json_data.get("steam_url")  # Use the Steam URL
             else:  # Otherwise, warn & do nothing
-                logger.warning(f"Unable to get url for mod {widget_package_id}")
+                logger.warning(f"Unable to get url for mod {widget_package_id}") # TODO: Make warning visible
         elif (
             widget_json_data["data_source"] == "expansion"
         ):  # Otherwise, the mod MUST be an expansion
@@ -370,7 +370,7 @@ class ModListWidget(QListWidget):
             ):  # If the steam_url exists
                 url = widget_json_data.get("steam_url")  # Use the Steam URL
             else:  # Otherwise, warn & do nothing
-                logger.warning(f"Unable to get url for mod {widget_package_id}")
+                logger.warning(f"Unable to get url for mod {widget_package_id}") # TODO: Make warning visible
         else:  # ??? Not possible
             logger.critical(
                 "Tried to parse URL for a mod that does not have a data_source?"

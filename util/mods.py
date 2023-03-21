@@ -156,10 +156,10 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                             break
                 # If there was an issue getting the expected path, track and exit
                 if invalid_folder_path_found or invalid_pfid_file_path_found:
-                    logger.warning(
+                    logger.debug(
                         f"There was an issue getting the expected sub-path for this path, no variations of /About/PublishedFileId.txt could be found: {file.path}"
                     )
-                    logger.warning(
+                    logger.debug(
                         "^ this may not be an issue, as workshop sometimes forgets to delete unsubscribed mod folders, or a mod may not contain this information (mods can be unpublished)"
                     )
                 else:
@@ -177,10 +177,10 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                         logger.error(f"Failed to read pfid from {pfid_path}")
                 # If there was an issue getting the expected path, track and exit
                 if invalid_folder_path_found or invalid_about_file_path_found:
-                    logger.warning(
+                    logger.debug(
                         f"There was an issue getting the expected sub-path for this path, no variations of /About/About.xml could be found: {file.path}"
                     )
-                    logger.warning(
+                    logger.debug(
                         "^ this may not be an issue, as workshop sometimes forgets to delete unsubscribed mod folders."
                     )
                     invalid_dirs.append(file.name)
@@ -213,7 +213,7 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                         except UnicodeDecodeError:
                             # It may be necessary to remove all non-UTF-8 characters and parse again
                             logger.warning(
-                                "Unable to parse About.xml with UTF-8, attempting to decode"
+                                f"Unable to parse About.xml with UTF-8, attempting to decode: {mod_data_path}"
                             )
                             mod_data = non_utf8_xml_path_to_json(mod_data_path)
                     except:
@@ -316,23 +316,31 @@ def get_installed_expansions(game_path: str, game_version: str) -> Dict[str, Any
     for uuid, data in mod_data.items():
         package_id = data["packageId"]
         if package_id == "ludeon.rimworld":
-            data["name"] = "Core (Base game)"
+            data["name"] = "RimWorld"
             data["steam_url"] = "https://store.steampowered.com/app/294100/RimWorld"
+            data["steamAppId"] = "294100"
+            data["description"] = "Base game"
         elif package_id == "ludeon.rimworld.royalty":
-            data["name"] = "Royalty (DLC #1)"
+            data["name"] = "RimWorld - Royalty"
             data[
                 "steam_url"
             ] = "https://store.steampowered.com/app/1149640/RimWorld__Royalty"
+            data["steamAppId"] = "1149640"
+            data["description"] = "DLC #1"
         elif package_id == "ludeon.rimworld.ideology":
-            data["name"] = "Ideology (DLC #2)"
+            data["name"] = "RimWorld - Ideology"
             data[
                 "steam_url"
             ] = "https://store.steampowered.com/app/1392840/RimWorld__Ideology"
+            data["steamAppId"] = "1392840"
+            data["description"] = "DLC #2"
         elif package_id == "ludeon.rimworld.biotech":
-            data["name"] = "Biotech (DLC #3)"
+            data["name"] = "RimWorld - Biotech"
             data[
                 "steam_url"
             ] = "https://store.steampowered.com/app/1826140/RimWorld__Biotech"
+            data["steamAppId"] = "1826140"
+            data["description"] = "DLC #3"
         else:
             logger.error(
                 f"An unknown mod has been found in the expansions folder: {package_id} {data}"
@@ -580,8 +588,7 @@ def get_3rd_party_metadata(
 
 
 def get_dependencies_for_mods(
-    expansions: Dict[str, Any],
-    mods: Dict[str, Any],
+    all_mods: Dict[str, Any],
     steam_db_rules: Dict[str, Any],
     community_rules: Dict[str, Any],
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
@@ -590,21 +597,14 @@ def get_dependencies_for_mods(
     describing its dependencies (what it should be loaded after), and incompatibilities
     (currently not being used).
 
-    :param all_workshop_mods: dict of all workshop mods
-    :param known_expansions: dict of known expansions + base
-    :param community_rules: dict of community established rules
+    :param all_mods: dict of all mods from local mod (and expansion) metadata
+    :param steam_db_rules: a dict containing the ["database"] rules from external metadata
+    :param community_rules: dict of community established rules from external metadata
     :return workshop_and_expansions: workshop mods + official modules with dependency data
     """
     logger.info("Starting getting dependencies for all mods")
-    # Dependencies will apply to installed expansions, as well as local/workshop mods
-    all_mods = {**expansions, **mods}
-    logger.info(
-        f"Combined {len(expansions)} expansions with {len(mods)} mods, totaling {len(all_mods)} elements to get dependencies for"
-    )
 
     # Add dependencies to installed mods based on dependencies listed in About.xml TODO manifest.xml
-    _log_deps_order_info(all_mods)
-
     logger.info("Starting adding dependencies through About.xml information")
     for uuid in all_mods:
         logger.debug(f"UUID: {uuid} packageId: " + all_mods[uuid].get("packageId"))
@@ -779,10 +779,13 @@ def get_dependencies_for_mods(
                             tracking_dict[db_package_id] = set()
                         # Add Steam ID to dependencies of mod
                         tracking_dict[db_package_id].add(dependency_publishedfileid)
-            except:
-                logger.warning(
-                    f"Skipping parsing Steam metadata mod for {publishedfileid}"
+            except KeyError as e:
+                # This should only happen for the hardcoded expansion metadata contained in a Dynamic Query
+                logger.debug(
+                    f"Unable to find package_id for Steam item. Skipping parsing Steam dependency metadata for item: {publishedfileid}"
                 )
+                # Uncomment to see the missing key (not needed, just leaving here for info)
+                # logger.debug(f"\n{traceback.format_exc()}")
                 continue
 
         # For each mod that exists in all_mods -> dependencies (in Steam ID form)
@@ -793,7 +796,7 @@ def get_dependencies_for_mods(
             for dependency_steam_id in set_of_dependency_steam_ids:
                 # Dependencies are added as package_ids. We should be able to
                 # resolve the package_id from the Steam ID for any mod, unless
-                # the DB.json actually references a Steam ID that itself does not
+                # the metadata actually references a Steam ID that itself does not
                 # wire to a package_id defined in an installed & valid mod.
                 if dependency_steam_id in steam_id_to_package_id:
                     add_single_str_dependency_to_mod(
@@ -804,8 +807,11 @@ def get_dependencies_for_mods(
                         all_mods,
                     )
                 else:
-                    logger.error(
-                        f"package_id not found for steam id [{dependency_steam_id}] for Steam db.json"
+                    # This should only happen with RimPy Mod Manager Database, since it does not contain
+                    # keyed information for Core + DLCs in it's ["database"] - this is only referenced by 
+                    # RPMMDB with the ["database"][pfid]["children"] values.
+                    logger.debug(
+                        f"package_id not found for steam id [{dependency_steam_id}] in Steam metadata"
                     )
         logger.info("Finished adding dependencies from Steam db")
 

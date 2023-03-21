@@ -11,9 +11,11 @@ from window.runner_panel import RunnerPanel
 from steam.webapi import WebAPI
 
 logger = logging.getLogger(__name__)
+# This is redundant since it is also done in `logger-tt` config,
+# however, it can't hurt, just in case!
 # Uncomment this if you want to see the full urllib3 request
 # THIS CONTAINS THE STEAM API KEY
-logging.getLogger("urllib3").setLevel(logging.CRITICAL)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
 
 
 class AppIDQuery:
@@ -241,6 +243,25 @@ class DynamicQuery:
                 if v["supportedVersions"].get("li"):
                     gameVersions = v["supportedVersions"]["li"]
                     local_metadata["database"][pfid]["gameVersions"] = gameVersions
+            elif v.get("steamAppId"):
+                local_metadata["database"]["appid"] = True
+                appid = v["steamAppId"]
+                url = f"https://store.steampowered.com/app/{appid}"
+                local_metadata["database"][appid] = {}
+                local_metadata["database"][appid]["url"] = url
+                if v.get("name"):
+                    name = v["name"]
+                    local_metadata["database"][appid]["name"] = name
+                if v.get("author"):
+                    authors = v["author"]
+                    local_metadata["database"][appid]["authors"] = authors
+                if v.get("supportedVersions"):
+                    if v["supportedVersions"].get("li"):
+                        gameVersions = v["supportedVersions"]["li"]
+                        local_metadata["database"][appid]["gameVersions"] = gameVersions
+                logger.debug(
+                    f"Populated local metadata for Steam appid: [{pid} | {appid}]"
+                )
         logger.info(f"DynamicQuery initializing for {len(publishedfileids)} mods")
         query = {}
         query["version"] = self.expiry

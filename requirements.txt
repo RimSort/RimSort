@@ -1,3 +1,4 @@
+logger-tt==1.7.3
 natsort==8.3.1
 pyinstaller==5.7.0
 PySide2==5.15.2.1
