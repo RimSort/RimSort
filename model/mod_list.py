@@ -7,7 +7,7 @@ from threading import Thread
 from typing import Any, Optional
 import webbrowser
 
-from PySide2.QtCore import Qt, QEvent, QModelIndex, Signal
+from PySide2.QtCore import Qt, QEvent, QModelIndex, QObject, Signal
 from PySide2.QtGui import QDropEvent, QFocusEvent
 from PySide2.QtWidgets import (
     QAction,
@@ -19,7 +19,7 @@ from PySide2.QtWidgets import (
 
 from util.error import show_warning
 from model.mod_list_item import ModListItemInner
-from util.filesystem import *
+from util.filesystem import platform_specific_open
 
 logger = logging.getLogger(__name__)
 
@@ -93,17 +93,36 @@ class ModListWidget(QListWidget):
 
         logger.info("Finished ModListWidget initialization")
 
-    def delayed_refresh_signal(self):
+    def delayed_refresh_signal(self) -> None:
+        """
+        The purpose of this function is to force client to refresh after a
+        certain amount of time has passed since the QAction was completed.
+
+        This is particularly useful for contextMenu options to Delete or Unsub
+        a mod, as these actions can take a bit of time.
+
+        TODO: Replace with something dynamic and less clunky/tacky. Weird things
+        can happen if you try to do this multiple times before the timer completes.
+        """
         logger.info("Refreshing in 10s")
         sleep(10)
         self.refresh_signal.emit("refresh")
         logger.info("Refresh signal emitted")
 
-    def eventFilter(self, source, event):
-        if event.type() == QEvent.ContextMenu and source is self:
+    def eventFilter(self, source_object: QObject, event: QEvent) -> None:
+        """
+        https://doc.qt.io/qtforpython/overviews/eventsandfilters.html
+
+        Takes source object and filters an event at the ListWidget level, executes 
+        an action based on a per-mod_list_item contextMenu
+
+        :param object: the source object returned from the event
+        :param event: the QEvent type
+        """
+        if event.type() == QEvent.ContextMenu and source_object is self:
             logger.info("USER ACTION: Open right-click mod_list_item contextMenu")
             contextMenu = QMenu()
-            source_item = source.itemAt(
+            source_item = source_object.itemAt(
                 event.pos()
             )  # Which QListWidgetItem was right clicked?
             if type(source_item) is QListWidgetItem:
@@ -145,7 +164,7 @@ class ModListWidget(QListWidget):
                             f"Failed to 'Open folder' for {widget_package_id}! ",
                             f"Path does not exist: {mod_path}",
                         )
-                        log.warning(
+                        logger.warning(
                             f"Failed to 'Open folder' for {widget_package_id}! "
                             + f"Path does not exist: {mod_path}"
                         )
@@ -189,7 +208,7 @@ class ModListWidget(QListWidget):
                         )
                         refresh_thread.start()
             return True
-        return super().eventFilter(source, event)
+        return super().eventFilter(source_object, event)
 
     def recreate_mod_list(self, mods: dict[str, Any]) -> None:
         """
