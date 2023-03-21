@@ -113,7 +113,7 @@ class ModListWidget(QListWidget):
         """
         https://doc.qt.io/qtforpython/overviews/eventsandfilters.html
 
-        Takes source object and filters an event at the ListWidget level, executes 
+        Takes source object and filters an event at the ListWidget level, executes
         an action based on a per-mod_list_item contextMenu
 
         :param object: the source object returned from the event
@@ -280,8 +280,8 @@ class ModListWidget(QListWidget):
         if len(self.uuids) == self.count():
             self.list_update_signal.emit(str(self.count()))
 
-    def handle_other_list_row_added(self, package_id: str) -> None:
-        self.uuids.discard(package_id)
+    def handle_other_list_row_added(self, uuid: str) -> None:
+        self.uuids.discard(uuid)
 
     def handle_rows_removed(self, parent: QModelIndex, first: int, last: int) -> None:
         """
@@ -366,7 +366,9 @@ class ModListWidget(QListWidget):
             ):  # Otherwise, check if local metadata url exists
                 url = widget_json_data["url"]  # Use the local metadata url
             else:  # Otherwise, warn & do nothing
-                logger.warning(f"Unable to get url for mod {widget_package_id}") # TODO: Make warning visible
+                logger.warning(
+                    f"Unable to get url for mod {widget_package_id}"
+                )  # TODO: Make warning visible
         elif (
             widget_json_data["data_source"] == "local"
         ):  # If the mod was parsed from a local mods source
@@ -380,7 +382,9 @@ class ModListWidget(QListWidget):
             ):  # Otherwise, if the mod has steam_url
                 url = widget_json_data.get("steam_url")  # Use the Steam URL
             else:  # Otherwise, warn & do nothing
-                logger.warning(f"Unable to get url for mod {widget_package_id}") # TODO: Make warning visible
+                logger.warning(
+                    f"Unable to get url for mod {widget_package_id}"
+                )  # TODO: Make warning visible
         elif (
             widget_json_data["data_source"] == "expansion"
         ):  # Otherwise, the mod MUST be an expansion
@@ -389,7 +393,9 @@ class ModListWidget(QListWidget):
             ):  # If the steam_url exists
                 url = widget_json_data.get("steam_url")  # Use the Steam URL
             else:  # Otherwise, warn & do nothing
-                logger.warning(f"Unable to get url for mod {widget_package_id}") # TODO: Make warning visible
+                logger.warning(
+                    f"Unable to get url for mod {widget_package_id}"
+                )  # TODO: Make warning visible
         else:  # ??? Not possible
             logger.critical(
                 "Tried to parse URL for a mod that does not have a data_source?"

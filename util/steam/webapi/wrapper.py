@@ -244,11 +244,14 @@ class DynamicQuery:
                     gameVersions = v["supportedVersions"]["li"]
                     local_metadata["database"][pfid]["gameVersions"] = gameVersions
             elif v.get("steamAppId"):
-                local_metadata["database"]["appid"] = True
                 appid = v["steamAppId"]
                 url = f"https://store.steampowered.com/app/{appid}"
                 local_metadata["database"][appid] = {}
+                local_metadata["database"][appid]["appid"] = True
                 local_metadata["database"][appid]["url"] = url
+                if v.get("packageId"):
+                    pid = v["packageId"]
+                    local_metadata["database"][appid]["packageId"] = pid
                 if v.get("name"):
                     name = v["name"]
                     local_metadata["database"][appid]["name"] = name
@@ -259,6 +262,7 @@ class DynamicQuery:
                     if v["supportedVersions"].get("li"):
                         gameVersions = v["supportedVersions"]["li"]
                         local_metadata["database"][appid]["gameVersions"] = gameVersions
+                local_metadata["database"][appid]["dependencies"] = {}
                 logger.debug(
                     f"Populated local metadata for Steam appid: [{pid} | {appid}]"
                 )

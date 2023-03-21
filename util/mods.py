@@ -780,9 +780,8 @@ def get_dependencies_for_mods(
                         # Add Steam ID to dependencies of mod
                         tracking_dict[db_package_id].add(dependency_publishedfileid)
             except KeyError as e:
-                # This should only happen for the hardcoded expansion metadata contained in a Dynamic Query
                 logger.debug(
-                    f"Unable to find package_id for Steam item. Skipping parsing Steam dependency metadata for item: {publishedfileid}"
+                    f"Unable to find complete Steam metadata. Skipping parsing Steam dependency metadata for item: {publishedfileid}"
                 )
                 # Uncomment to see the missing key (not needed, just leaving here for info)
                 # logger.debug(f"\n{traceback.format_exc()}")
@@ -808,7 +807,7 @@ def get_dependencies_for_mods(
                     )
                 else:
                     # This should only happen with RimPy Mod Manager Database, since it does not contain
-                    # keyed information for Core + DLCs in it's ["database"] - this is only referenced by 
+                    # keyed information for Core + DLCs in it's ["database"] - this is only referenced by
                     # RPMMDB with the ["database"][pfid]["children"] values.
                     logger.debug(
                         f"package_id not found for steam id [{dependency_steam_id}] in Steam metadata"
