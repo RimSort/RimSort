@@ -198,6 +198,7 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                         + "\n\nThis mod does NOT contain an ./About/About.xml and is likely leftover from previous usage."
                         + "\n\nThis can happen sometimes with Steam mods if there are leftover .dds textures or unexpected data."
                     )
+                    mods[uuid]["uuid"] = uuid
                 else:
                     mod_data_path = os.path.join(
                         file.path, about_folder_name, about_file_name
@@ -252,6 +253,8 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                                     mod_data["modmetadata"][
                                         "name"
                                     ] = "Mod name unspecified"
+                                # Add the uuid that cooresponds to metadata entry, to the list item's json data for future usage
+                                mod_data["modmetadata"]["uuid"] = uuid
                                 mods[uuid] = mod_data["modmetadata"]
                             else:
                                 logger.error(
@@ -313,7 +316,7 @@ def get_installed_expansions(game_path: str, game_version: str) -> Dict[str, Any
     # Base game and expansion About.xml do not contain name, so these
     # must be manually added
     logger.info("Manually populating names for BASE/EXPANSION data")
-    for uuid, data in mod_data.items():
+    for data in mod_data.values():
         package_id = data["packageId"]
         if package_id == "ludeon.rimworld":
             data["name"] = "RimWorld"
@@ -871,7 +874,7 @@ def get_dependencies_for_mods(
 def _get_num_dependencies(all_mods: Dict[str, Any], key_name: str) -> int:
     """Debug func for getting total number of dependencies"""
     counter = 0
-    for uuid, mod_data in all_mods.items():
+    for mod_data in all_mods.values():
         if mod_data.get(key_name):
             counter = counter + len(mod_data[key_name])
     return counter

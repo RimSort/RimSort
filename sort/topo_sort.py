@@ -16,13 +16,15 @@ def do_topo_sort(
     logger.info(f"Starting Toposort for {len(dependency_graph)} mods")
     sorted_dependencies = toposort(dependency_graph)
     alphabetized_dependencies_w_data = {}
+    active_mods_packageid_to_uuid = dict(
+        (v["packageId"], v["uuid"]) for v in active_mods_json.values()
+    )
     for level in sorted_dependencies:
         temp_mod_dict = {}
         for package_id in level:
-            for uuid, mod_data in active_mods_json.items():
-                mod_package_id = mod_data["packageId"]
-                if package_id == mod_package_id:
-                    temp_mod_dict[uuid] = active_mods_json[uuid]
+            if package_id in active_mods_packageid_to_uuid:
+                mod_uuid = active_mods_packageid_to_uuid[package_id]
+                temp_mod_dict[mod_uuid] = active_mods_json[mod_uuid]
         # Sort packages in this topological level by name
         sorted_temp_mod_dict = sorted(
             temp_mod_dict.items(), key=lambda x: x[1]["name"], reverse=False
