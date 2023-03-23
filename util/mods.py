@@ -40,7 +40,7 @@ def get_active_inactive_mods(
         data_source = mod_data["data_source"]  # Track data_source
         package_id = mod_data["packageId"]  # Track packageId to UUIDs
         mod_path = mod_data["path"]  # Track path
-        if not packageId_to_uuids.get(package_id):
+        if package_id not in packageId_to_uuids:
             packageId_to_uuids[package_id] = {}
         packageId_to_uuids[package_id][mod_uuid] = [data_source, mod_path]
     duplicate_mods = packageId_to_uuids.copy()
@@ -420,7 +420,7 @@ def get_rimpy_database_mod(
         if (
             mods[uuid].get("packageId") == "rupal.rimpymodmanagerdatabase"
             or mods[uuid].get("publishedfileid") == "1847679158"
-        ):  # TODO make this a DB mod packageID a configurable preference
+        ):
             logger.info("Found RimPy Mod Manager Database mod")
             steam_db_rules_path = os.path.join(mods[uuid]["path"], "db", "db.json")
             logger.info(f"Generated path to db.json: {steam_db_rules_path}")
@@ -993,9 +993,6 @@ def add_incompatibility_to_mod(
             for uuid in all_mods:
                 if all_mods[uuid]["packageId"] == dependency_id:
                     mod_data["incompatibilities"].add(dependency_id)
-                    # if "incompatibilities" not in all_mods[dependency_id]:
-                    #     all_mods[dependency_id]["incompatibilities"] = set()
-                    # all_mods[dependency_id]["incompatibilities"].add(mod_data["packageId"])
 
         # If the value is a LIST of strings
         elif isinstance(dependency_or_dependency_ids, list):
