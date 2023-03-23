@@ -218,6 +218,16 @@ class MainContent:
         self.workshop_mods = get_workshop_mods(
             self.game_configuration.get_workshop_folder_path()
         )
+        # If we can find the appworkshop_294100.acf file based on Workshop mods path,
+        # then we want to parse it and add desired information for later usage
+        appworkshop_path = os.path.split(
+            os.path.split(self.game_configuration.get_workshop_folder_path())[0]
+        )[0]
+        appworkshop_acf_path = os.path.join(
+            appworkshop_path, "appworkshop_294100.acf"
+        )
+        if os.path.exists(appworkshop_acf_path):
+            get_workshop_acf_data(appworkshop_acf_path, self.workshop_mods)
 
         # Set custom tags for each data source to be used with setIcon later
         for uuid in self.expansions:

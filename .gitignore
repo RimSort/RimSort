@@ -169,4 +169,4 @@ data/steam_metadata.json
 /steam/
 /steamcmd/
 *_AppIDQuery*
-/steamworks/
+/steamworks

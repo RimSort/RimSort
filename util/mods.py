@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
 
 from util.error import show_fatal_error, show_information, show_warning
+from util.steam.steamfiles.wrapper import acf_to_dict
 from util.steam.webapi.wrapper import DynamicQuery
 from util.schema import validate_mods_config_format
 from util.xml import non_utf8_xml_path_to_json, xml_path_to_json
@@ -241,7 +242,7 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                                 logger.debug(
                                     f"Finished editing XML content, adding final content to larger list: {mod_data['modmetadata']}"
                                 )
-                                if pfid != "":
+                                if pfid:  # If we parsed a pfid earlier...
                                     mod_data["modmetadata"]["publishedfileid"] = pfid
                                     mod_data["modmetadata"][
                                         "steam_uri"
@@ -249,6 +250,14 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                                     mod_data["modmetadata"][
                                         "steam_url"
                                     ] = f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
+                                elif (
+                                    intent == "workshop mods"
+                                ):  # ... otherwise, if workshop mods intent
+                                    mod_data["modmetadata"][
+                                        "publishedfileid"
+                                    ] = mod_data["modmetadata"][
+                                        "folder"
+                                    ]  # ... set the pfid to the folder name
                                 if not mod_data["modmetadata"].get("name"):
                                     mod_data["modmetadata"][
                                         "name"
@@ -360,7 +369,7 @@ def get_local_mods(local_path: str, game_path: Optional[str] = None) -> Dict[str
     """
     Given a path to the local GAME_INSTALL_DIR/Mods folder, return a dict
     containing data for all the mods keyed to their package ids.
-    The root-level key is the package id, and the root-level value
+    The root-level key is the uuid, and the root-level value
     is the converted About.xml. If the path does not exist, the dict
     will be empty.
 
@@ -392,7 +401,7 @@ def get_workshop_mods(workshop_path: str) -> Dict[str, Any]:
     """
     Given a path to the Rimworld Steam workshop folder, return a dict
     containing data for all the mods keyed to their package ids.
-    The root-level key is the package id, and the root-level value
+    The root-level key is the uuid, and the root-level value
     is the converted About.xml. If the path does not exist, the dict
     will be empty.
 
@@ -404,6 +413,36 @@ def get_workshop_mods(workshop_path: str) -> Dict[str, Any]:
     logger.info("Finished getting WORKSHOP data, returning WORKSHOP data now")
     logger.debug(mod_data)
     return mod_data
+
+
+def get_workshop_acf_data(
+    appworkshop_acf_path: str, workshop_mods: Dict[str, Any]
+) -> None:
+    """
+    Given a path to the Rimworld Steam Workshop appworkshop_294100.acf file,
+    return a dict containing data for all the mods keyed to their package ids.
+    The root-level key is the uuid, and the root-level value
+    is the converted About.xml. If the path does not exist, the dict
+    will be empty.
+
+    The purpose of this function is to populate the size, timeupdated, and manifest info
+    from this file to mod_json_data for later usage.
+
+    :param appworkshop_acf_path: path to the Rimworld Steam Workshop appworkshop_294100.acf file
+    :param workshop_mods: a Dict containing parsed mod metadata from Steam workshop mods
+    """
+    workshop_acf_data = acf_to_dict(appworkshop_acf_path)
+    workshop_mods_pfid_to_uuid = dict(
+        (v["publishedfileid"], v["uuid"]) for v in workshop_mods.values()
+    )
+    for publishedfileid in workshop_acf_data["AppWorkshop"][
+        "WorkshopItemsInstalled"
+    ].keys():
+        if publishedfileid in workshop_mods_pfid_to_uuid:
+            mod_uuid = workshop_mods_pfid_to_uuid[publishedfileid]
+            workshop_mods[mod_uuid]["internal_time_updated"] = workshop_acf_data[
+                "AppWorkshop"
+            ]["WorkshopItemsInstalled"][publishedfileid]["timeupdated"]
 
 
 def get_rimpy_database_mod(
@@ -773,7 +812,9 @@ def get_dependencies_for_mods(
                 # TODO: handle these dependencies separately once we are populating that info in Dynamic Query
                 # This is useless for RimPy Mod Manager Database as these AppID dependencies are not keyed
                 if mod_data.get("appid") and mod_data["appid"]:
-                    logger.debug(f"Skipping Steam dependency data for appid {publishedfileid}")
+                    logger.debug(
+                        f"Skipping Steam dependency data for appid {publishedfileid}"
+                    )
                     continue
                 # If the package_id is in all_mods...
                 elif db_package_id in package_id_to_uuid:
@@ -784,7 +825,9 @@ def get_dependencies_for_mods(
                         # Track mod dependency information
                         if db_package_id not in tracking_dict:
                             tracking_dict[db_package_id] = set()
-                        logger.debug(f"Tracking Steam dependency data for mod: {publishedfileid}")
+                        logger.debug(
+                            f"Tracking Steam dependency data for mod: {publishedfileid}"
+                        )
                         # Add Steam ID to dependencies of mod
                         tracking_dict[db_package_id].add(dependency_id)
             except KeyError as e:
@@ -870,7 +913,9 @@ def get_dependencies_for_mods(
                         )
         logger.info("Finished adding dependencies from Community Rules")
     else:
-        logger.info("No Community Rules database supplied from external metadata. skipping.")
+        logger.info(
+            "No Community Rules database supplied from external metadata. skipping."
+        )
 
     _log_deps_order_info(all_mods)
 

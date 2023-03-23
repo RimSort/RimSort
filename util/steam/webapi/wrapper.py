@@ -393,6 +393,12 @@ class DynamicQuery:
                     ):  # If mod is unpublished, it has no metadata
                         continue
                     result["database"][publishedfileid]["steamName"] = metadata["title"]
+                    result["database"][publishedfileid][
+                        "external_time_created"
+                    ] = metadata["time_created"]
+                    result["database"][publishedfileid][
+                        "external_time_updated"
+                    ] = metadata["time_updated"]
                     result["database"][publishedfileid]["dependencies"] = {}
                     if metadata.get("children"):
                         for children in metadata[

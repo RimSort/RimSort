@@ -1,4 +1,8 @@
+[submodule "steamfiles"]
+	path = steamfiles
+	url = https://github.com/twstagg/steamfiles
+	ignore = dirty
 [submodule "SteamworksPy"]
 	path = SteamworksPy
-	url = https://github.com/philippj/SteamworksPy
+	url = https://github.com/twstagg/SteamworksPy
 	ignore = dirty

@@ -31,6 +31,8 @@ Setup environment
 print("Setting up environment...")
 ARCH = platform.architecture()[0]
 CWD = os.getcwd()
+MODULE_SRC_PATH = os.path.join(CWD, "SteamworksPy", "steamworks")
+MODULE_DEST_PATH = os.path.join(CWD, "steamworks")
 STEAMWORKSPY_BIN_LINUX = "SteamworksPy.so"
 LINUX_COMPILE_CMD = [
     "g++",
@@ -67,7 +69,7 @@ STEAMWORKS_COMPILE_CMD_WIN64 = [
     f"/OUT:{STEAMWORKSPY_BIN_WIN64}",
 ]
 STEAMWORKS_SDK_URL = "https://github.com/oceancabbage/RimSort/raw/steamworks-sdk/steamworks_sdk_155.zip"  # "https://partner.steamgames.com/downloads/steamworks_sdk_155.zip"
-STEAMWORKS_PY_CMD = ["git", "submodule", "update", "--init", "--recursive"]
+SUBMODULE_UPDATE_INIT_CMD = ["git", "submodule", "update", "--init", "--recursive"]
 STEAMWORKS_PY_PATH = os.path.join(CWD, "SteamworksPy", "library")
 STEAMWORKS_MODULE_PATH = os.path.join(CWD, "SteamworksPy", "steamworks")
 STEAMWORKS_MODULE_FIN = os.path.join(CWD, "steamworks")
@@ -173,7 +175,7 @@ Do stuff!
 """
 
 print("Ensuring we have SteamworksPy submodule initiated & up-to-date...")
-_execute(STEAMWORKS_PY_CMD)
+_execute(SUBMODULE_UPDATE_INIT_CMD)
 
 print("Getting Steamworks SDK...")
 if not os.path.exists(STEAMWORKS_SDK_PATH):
@@ -221,7 +223,16 @@ print(f"Copying file {STEAMWORKSPY_BIN_PATH} to: {STEAMWORKSPY_BIN_FIN_PATH}")
 shutil.copyfile(STEAMWORKSPY_BIN_PATH, STEAMWORKSPY_BIN_FIN_PATH)
 
 # STEAMWORKS PYTHON MODULE
-print(f"Copying folder {STEAMWORKS_MODULE_PATH} to: {STEAMWORKS_MODULE_FIN}")
-if os.path.exists(STEAMWORKS_MODULE_FIN):
-    shutil.rmtree(STEAMWORKS_MODULE_FIN)
-shutil.copytree(STEAMWORKS_MODULE_PATH, STEAMWORKS_MODULE_FIN)
+# print(f"Copying folder {STEAMWORKS_MODULE_PATH} to: {STEAMWORKS_MODULE_FIN}")
+# if os.path.exists(STEAMWORKS_MODULE_FIN):
+#     shutil.rmtree(STEAMWORKS_MODULE_FIN)
+# shutil.copytree(STEAMWORKS_MODULE_PATH, STEAMWORKS_MODULE_FIN)
+
+print("Creating symlink to built module...")
+os.symlink(
+    MODULE_SRC_PATH,
+    MODULE_DEST_PATH,
+    target_is_directory=True,
+)
+
+print("Done! Exiting...")
