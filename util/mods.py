@@ -765,23 +765,28 @@ def get_dependencies_for_mods(
         for publishedfileid, mod_data in steam_db_rules.items():
             try:
                 db_package_id = mod_data["packageId"].lower()
-
                 # Record the Steam ID => package_id
                 steam_id_to_package_id[publishedfileid] = db_package_id
-
                 # Also record package_ids to names (use in tooltips)
                 info_from_steam_package_id_to_name[db_package_id] = mod_data["name"]
-
+                # Skip dependency info for appids for now
+                # TODO: handle these dependencies separately once we are populating that info in Dynamic Query
+                # This is useless for RimPy Mod Manager Database as these AppID dependencies are not keyed
+                if mod_data.get("appid") and mod_data["appid"]:
+                    logger.debug(f"Skipping Steam dependency data for appid {publishedfileid}")
+                    continue
                 # If the package_id is in all_mods...
-                if db_package_id in package_id_to_uuid:
+                elif db_package_id in package_id_to_uuid:
                     # Iterate through each dependency (Steam ID) listed on Steam
-                    for dependency_publishedfileid, steam_dep_data in mod_data[
+                    for dependency_id, steam_dep_data in mod_data[
                         "dependencies"
                     ].items():
+                        # Track mod dependency information
                         if db_package_id not in tracking_dict:
                             tracking_dict[db_package_id] = set()
+                        logger.debug(f"Tracking Steam dependency data for mod: {publishedfileid}")
                         # Add Steam ID to dependencies of mod
-                        tracking_dict[db_package_id].add(dependency_publishedfileid)
+                        tracking_dict[db_package_id].add(dependency_id)
             except KeyError as e:
                 logger.debug(
                     f"Unable to find complete Steam metadata. Skipping parsing Steam dependency metadata for item: {publishedfileid}"
@@ -864,6 +869,8 @@ def get_dependencies_for_mods(
                             all_mods,
                         )
         logger.info("Finished adding dependencies from Community Rules")
+    else:
+        logger.info("No Community Rules database supplied from external metadata. skipping.")
 
     _log_deps_order_info(all_mods)
 
@@ -1053,9 +1060,6 @@ def add_load_rule_to_mod(
     :param value: either string or list of strings (or sometimes None)
     :param workshop_and_expansions: dict of all mods to verify keys against
     """
-    logger.debug(
-        f"Adding load order rules containing packages [{dependency_or_dependency_ids}] for mod data: {mod_data} (and reverse direction too)"
-    )
     if mod_data:
         # Create a new key with empty set as value
         if explicit_key not in mod_data:
@@ -1120,6 +1124,10 @@ def add_load_rule_to_mod(
             logger.error(
                 f"Load order rules is not a single string/dict or a list of strigs/dicts: [{dependency_or_dependency_ids}]"
             )
+            return
+    logger.debug(
+        f"Added load order rules containing package(s) [{dependency_or_dependency_ids}] for mod data: {mod_data} (and reverse direction too)"
+    )
 
 
 def get_game_version(game_path: str) -> str:
