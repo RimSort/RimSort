@@ -134,11 +134,14 @@ class ModListWidget(QListWidget):
                     "path"
                 ]  # Set local data folder path from metadata
                 open_folder = contextMenu.addAction("Open folder")  # Open folder
-                if widget_json_data.get("url"):
-                    url = widget_json_data["url"]
-                    open_url_browser = contextMenu.addAction(
-                        "Open URL in browser"
-                    )  # Open URL in browser
+                if widget_json_data.get("url") or widget_json_data.get("steam_url"):
+                    url = self.get_mod_url(widget_json_data)
+                    if url != "":
+                        open_url_browser = contextMenu.addAction(
+                            "Open URL in browser"
+                        )  # Open URL in browser
+                    else:
+                        show_warning(f"No URL was returned to open from mod metadata... Is the metadata correct? Result: {url}")
                 if widget_json_data.get("steam_uri"):
                     steam_uri = widget_json_data.get("steam_uri")
                     open_mod_steam = contextMenu.addAction("Open mod in Steam")
@@ -173,11 +176,7 @@ class ModListWidget(QListWidget):
                 ):  # This action is conditionally created
                     if action == open_url_browser:  # ACTION: Open URL in browser
                         logger.info(f"Opening url in browser: {url}")
-                        url = self.get_mod_url(widget_json_data)
-                        if url != "":
-                            self.open_mod_url(url)
-                        else:
-                            show_warning("URL is empty!")
+                        self.open_mod_url(url)
                 if "open_mod_steam" in locals():  # This action is conditionally created
                     if action == open_mod_steam:  # ACTION: Open steam:// uri in Steam
                         platform_specific_open(steam_uri)
@@ -351,7 +350,7 @@ class ModListWidget(QListWidget):
 
     def get_mod_url(self, widget_json_data) -> str:
         url = ""
-        if (
+        if (  # Workshop mod URL priority: steam_url > url
             widget_json_data["data_source"] == "workshop"
         ):  # If the mod was parsed from a Steam mods source
             if widget_json_data.get("steam_url") and isinstance(
@@ -367,7 +366,7 @@ class ModListWidget(QListWidget):
                 logger.warning(
                     f"Unable to get url for mod {widget_package_id}"
                 )  # TODO: Make warning visible
-        elif (
+        elif (  # Local mod URL priority: url > steam_url
             widget_json_data["data_source"] == "local"
         ):  # If the mod was parsed from a local mods source
             if widget_json_data.get("url") and isinstance(
@@ -383,7 +382,7 @@ class ModListWidget(QListWidget):
                 logger.warning(
                     f"Unable to get url for mod {widget_package_id}"
                 )  # TODO: Make warning visible
-        elif (
+        elif (  # Expansions don't have url - always use steam_url if available
             widget_json_data["data_source"] == "expansion"
         ):  # Otherwise, the mod MUST be an expansion
             if widget_json_data.get("steam_url") and isinstance(
@@ -395,8 +394,8 @@ class ModListWidget(QListWidget):
                     f"Unable to get url for mod {widget_package_id}"
                 )  # TODO: Make warning visible
         else:  # ??? Not possible
-            logger.critical(
-                "Tried to parse URL for a mod that does not have a data_source?"
+            logger.debug(
+                f"Tried to parse URL for a mod that does not have a data_source? Erroneous json data: {widget_json_data}"
             )
         return url
 

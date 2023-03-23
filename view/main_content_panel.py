@@ -247,7 +247,9 @@ class MainContent:
             if external_metadata_source == "RimPy Mod Manager Database":
                 # Get and cache RimPy Steam db.json rules data for ALL mods
                 # Get and cache RimPy Community Rules communityRules.json for ALL mods
-                self.steam_db_rules, self.community_rules = get_rimpy_database_mod(all_mods)
+                self.steam_db_rules, self.community_rules = get_rimpy_database_mod(
+                    all_mods
+                )
             else:
                 self.steam_db_rules, self.community_rules = get_3rd_party_metadata(
                     self.game_configuration.steam_apikey,
