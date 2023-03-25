@@ -933,9 +933,22 @@ class MainContent:
             active_mods_json = (
                 self.active_mods_panel.active_mods_list.get_list_items_by_dict()
             )
-            active_mods = [
-                mod_data["packageId"] for mod_data in active_mods_json.values()
-            ]
+            active_mods = []
+            for mod_data in active_mods_json.values():
+                package_id = mod_data["packageId"]
+                if package_id in active_mods:  # This should NOT be happening
+                    logger.critical(
+                        f"Tried to export more than 1 identical package ids to the same mod list. Skipping duplicate {package_id}"
+                    )
+                    continue
+                else:  # Otherwise, proceed with adding the mod package_id
+                    if (
+                        package_id in self.duplicate_mods.keys()
+                    ):  # Check if mod has duplicates
+                        if mod_data["data_source"] == "workshop":
+                            active_mods.append(package_id + "_steam")
+                            continue  # Append `_steam` suffix if Steam mod, continue to next mod
+                    active_mods.append(package_id)
             logger.info(f"Collected {len(active_mods)} active mods for export")
             logger.info("Getting current ModsConfig.xml to use as a reference format")
             mods_config_data = xml_path_to_json(
@@ -963,7 +976,22 @@ class MainContent:
         active_mods_json = (
             self.active_mods_panel.active_mods_list.get_list_items_by_dict()
         )
-        active_mods = [mod_data["packageId"] for mod_data in active_mods_json.values()]
+        active_mods = []
+        for mod_data in active_mods_json.values():
+            package_id = mod_data["packageId"]
+            if package_id in active_mods:  # This should NOT be happening
+                logger.critical(
+                    f"Tried to export more than 1 identical package ids to the same mod list. Skipping duplicate {package_id}"
+                )
+                continue
+            else:  # Otherwise, proceed with adding the mod package_id
+                if (
+                    package_id in self.duplicate_mods.keys()
+                ):  # Check if mod has duplicates
+                    if mod_data["data_source"] == "workshop":
+                        active_mods.append(package_id + "_steam")
+                        continue  # Append `_steam` suffix if Steam mod, continue to next mod
+                active_mods.append(package_id)
         logger.info(f"Collected {len(active_mods)} active mods for saving")
         mods_config_data = xml_path_to_json(self.game_configuration.get_config_path())
         if validate_mods_config_format(mods_config_data):
