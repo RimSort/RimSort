@@ -406,7 +406,7 @@ class GameConfiguration(QObject):
                     self.run_arguments = settings_data["runArgs"]
                 if settings_data.get("steam_apikey"):
                     self.steam_apikey = settings_data["steam_apikey"]
-                if settings_data.get("webapi_query_expiry"):
+                if not settings_data.get("webapi_query_expiry"):
                     settings_data["webapi_query_expiry"] = 1800
                 self.webapi_query_expiry = settings_data["webapi_query_expiry"]
                 if not settings_data.get("duplicate_mods_warning"):

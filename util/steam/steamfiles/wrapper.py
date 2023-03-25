@@ -1,6 +1,6 @@
 from typing import Any, Dict
 
-from steamfiles.steamfiles import acf, appinfo, manifest
+from steamfiles.steamfiles import acf
 
 
 def acf_to_dict(path: str) -> Dict[str, Any]:

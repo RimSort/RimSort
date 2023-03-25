@@ -21,7 +21,8 @@ from zipfile import ZipFile
 
 def _execute(cmd: list) -> None:
     print(f"\nExecuting command: {cmd}\n")
-    subprocess.Popen(cmd)
+    p = subprocess.Popen(cmd)
+    p.wait()
 
 
 """
@@ -33,7 +34,23 @@ ARCH = platform.architecture()[0]
 CWD = os.getcwd()
 MODULE_SRC_PATH = os.path.join(CWD, "SteamworksPy", "steamworks")
 MODULE_DEST_PATH = os.path.join(CWD, "steamworks")
-STEAMWORKSPY_BIN_LINUX = "SteamworksPy.so"
+PROCESSOR = platform.processor()
+STEAMWORKSPY_BIN_DARWIN = f"SteamworksPy_{PROCESSOR}.dylib"
+STEAMWORKSPY_BIN_DARWIN_LINK_PATH = os.path.join(CWD, "SteamworksPy.dylib")
+DARWIN_COMPILE_CMD = [
+    "g++",
+    "-std=c++11",
+    "-o",
+    f"{STEAMWORKSPY_BIN_DARWIN}",
+    "-shared",
+    "-fPIC",
+    "SteamworksPy.cpp",
+    "-l",
+    "steam_api",
+    "-L.",
+]
+STEAMWORKSPY_BIN_LINUX = f"SteamworksPy_{PROCESSOR}.so"
+STEAMWORKSPY_BIN_LINUX_LINK_PATH = os.path.join(CWD, "SteamworksPy.so")
 LINUX_COMPILE_CMD = [
     "g++",
     "-std=c++11",
@@ -88,25 +105,21 @@ SYSTEM = platform.system()
 
 print(f"Running on {SYSTEM} {ARCH}...")
 
-if SYSTEM == "Darwin":  # TODO automate build for MacOS
-    print(f"{SYSTEM} support WIP")
-    sys.exit()
-    """
-    MacOS
-
-    Follow these steps to create your SteamworksPy.dylib file:
-
-        Create a new library project in Xcode.
-        New > Project > Library
-        When configuring options, set Framework to "None (Plain C/C++ Library)" and Type to "Dynamic".
-        Move libsteam_api.dylib to the project directory created by Xcode.
-        In the Build Phases tab:
-            Add SteamworksPy.cpp to Compile Sources.
-            Add steam_api.h from /steam/ folder to the public section of Headers.
-            Add libsteam_api.dylib to Link Binary with Libraries.
-        Build.
-        Find the resultant library and rename it SteamworksPy.dylib.
-    """
+if SYSTEM == "Darwin":
+    if ARCH == "64bit":
+        STEAMWORKS_SDK_LIBSTEAM_PATH = os.path.join(
+            STEAMWORKS_SDK_REDIST_BIN_PATH, "osx", "libsteam_api.dylib"
+        )
+    else:
+        print(f"Unsupported ARCH: {ARCH}")
+        sys.exit()
+    STEAMWORKS_SDK_LIBSTEAM_DEST_PATH = os.path.join(
+        STEAMWORKS_PY_PATH, "libsteam_api.dylib"
+    )
+    STEAMWORKS_SDK_LIBSTEAM_FIN_PATH = os.path.join(CWD, "libsteam_api.dylib")
+    COMPILE_CMD = DARWIN_COMPILE_CMD
+    STEAMWORKSPY_BIN_PATH = os.path.join(STEAMWORKS_PY_PATH, STEAMWORKSPY_BIN_DARWIN)
+    STEAMWORKSPY_BIN_FIN_PATH = os.path.join(CWD, STEAMWORKSPY_BIN_DARWIN)
 elif SYSTEM == "Linux":
     if ARCH == "32bit":
         STEAMWORKS_SDK_LIBSTEAM_PATH = os.path.join(
@@ -119,6 +132,7 @@ elif SYSTEM == "Linux":
         )
     else:
         print(f"Unsupported ARCH: {ARCH}")
+        sys.exit()
     STEAMWORKS_SDK_LIBSTEAM_DEST_PATH = os.path.join(
         STEAMWORKS_PY_PATH, "libsteam_api.so"
     )
@@ -202,7 +216,6 @@ print(f"Entering directory {STEAMWORKS_PY_PATH}")
 os.chdir(STEAMWORKS_PY_PATH)
 _execute(COMPILE_CMD)
 
-time.sleep(10)
 print(f"Returning to cwd... {CWD}")
 os.chdir(CWD)
 
@@ -221,18 +234,25 @@ shutil.copyfile(STEAMWORKS_SDK_LIBSTEAM_DEST_PATH, STEAMWORKS_SDK_LIBSTEAM_FIN_P
 # STEAMWORKSPY
 print(f"Copying file {STEAMWORKSPY_BIN_PATH} to: {STEAMWORKSPY_BIN_FIN_PATH}")
 shutil.copyfile(STEAMWORKSPY_BIN_PATH, STEAMWORKSPY_BIN_FIN_PATH)
-
-# STEAMWORKS PYTHON MODULE
-# print(f"Copying folder {STEAMWORKS_MODULE_PATH} to: {STEAMWORKS_MODULE_FIN}")
-# if os.path.exists(STEAMWORKS_MODULE_FIN):
-#     shutil.rmtree(STEAMWORKS_MODULE_FIN)
-# shutil.copytree(STEAMWORKS_MODULE_PATH, STEAMWORKS_MODULE_FIN)
+if SYSTEM == "Darwin":
+    print(f"Copying file {STEAMWORKSPY_BIN_FIN_PATH} to: {STEAMWORKSPY_BIN_DARWIN_LINK_PATH}")
+    shutil.copyfile(STEAMWORKSPY_BIN_FIN_PATH, STEAMWORKSPY_BIN_DARWIN_LINK_PATH)
+elif SYSTEM == "Linux":
+    print(f"Copying file {STEAMWORKSPY_BIN_FIN_PATH} to: {STEAMWORKSPY_BIN_LINUX_LINK_PATH}")
+    shutil.copyfile(STEAMWORKSPY_BIN_FIN_PATH, STEAMWORKSPY_BIN_LINUX_LINK_PATH)
 
 print("Creating symlink to built module...")
-os.symlink(
-    MODULE_SRC_PATH,
-    MODULE_DEST_PATH,
-    target_is_directory=True,
-)
-
+try:
+    os.symlink(
+        MODULE_SRC_PATH,
+        MODULE_DEST_PATH,
+        target_is_directory=True,
+    )
+except FileExistsError:
+    print(
+        f"Unable to create symlink from source: {MODULE_SRC_PATH} to destination: {MODULE_DEST_PATH}"
+    )
+    print(
+        "Destination already exists, or you don't have permission. You can safely ignore this as long as you are able to run RimSort after completing runtime setup."
+    )
 print("Done! Exiting...")
