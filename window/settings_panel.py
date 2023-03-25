@@ -20,6 +20,7 @@ class SettingsPanel(QDialog):
     metadata_by_appid_signal = Signal(str)
     metadata_comparison_signal = Signal(str)
     set_webapi_query_expiry_signal = Signal(str)
+    steam_mods_update_check_signal = Signal(str)
 
     def __init__(self) -> None:
         logger.info("Starting SettingsPanel initialization")
@@ -70,11 +71,18 @@ class SettingsPanel(QDialog):
             partial(self.clear_paths_signal.emit, "clear_paths")
         )
         self.duplicate_mods_checkbox = QCheckBox(
-            "Show duplicate mods warning on startup"
+            "Show duplicate mods warning on refresh"
         )
-        self.duplicate_mods_checkbox.setStyleSheet("QCheckBox { color : white; }")
+        # self.duplicate_mods_checkbox.setStyleSheet("QCheckBox { color : white; }")
         self.duplicate_mods_checkbox.stateChanged.connect(
             self.dupe_mods_warning_signal.emit
+        )
+        self.steam_mods_update_checkbox = QCheckBox(
+            "Show Steam mods update check on refresh"
+        )
+        # self.steam_mods_update_checkbox.setStyleSheet("QCheckBox { color : white; }")
+        self.steam_mods_update_checkbox.stateChanged.connect(
+            self.steam_mods_update_check_signal.emit
         )
         # Add widgets to layout
         self.layout.addWidget(self.sorting_algorithm_label)
@@ -86,6 +94,7 @@ class SettingsPanel(QDialog):
         self.layout.addWidget(self.set_webapi_query_expiry_button)
         self.layout.addWidget(self.clear_paths_button)
         self.layout.addWidget(self.duplicate_mods_checkbox)
+        self.layout.addWidget(self.steam_mods_update_checkbox)
 
         # Display items
         self.setLayout(self.layout)

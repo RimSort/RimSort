@@ -4,7 +4,7 @@ from natsort import natsorted
 import os
 import platform
 from requests.exceptions import HTTPError
-from time import time
+from time import localtime, strftime, time
 import traceback
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
@@ -59,29 +59,30 @@ def get_active_inactive_mods(
     )
     # Return an error if some active mod was in the ModsConfig but no data
     # could be found for it
-    if (
-        duplicate_mods and duplicate_mods_warning_toggle
-    ):  # TODO: make this warning configurable (allow users to completely disable it if they choose to do so)
-        logger.warning(
-            f"Could not find data for the list of active mods: {duplicate_mods}"
+    if duplicate_mods:
+        logger.debug(
+            f"The following duplicate mods were found in the list of active mods: {duplicate_mods}"
         )
-        list_of_duplicate_mods = ""
-        for duplicate_mod in duplicate_mods.keys():
-            list_of_duplicate_mods = list_of_duplicate_mods + f"* {duplicate_mod}\n"
-        show_warning(
-            text="Duplicate mods found for package ID(s) in your ModsConfig.xml (active mods list)",
-            information=(
-                "The following list of mods were set active in your ModsConfig.xml and "
-                "duplicate instances were found of these mods in your mod data sources. "
-                "The vanilla game will use the first 'local mod' of a particular package ID "
-                "that is found - so RimSort will also adhere to this logic."
-            ),
-            details=list_of_duplicate_mods,
-        )
+        if duplicate_mods_warning_toggle:
+            list_of_duplicate_mods = ""
+            for duplicate_mod in duplicate_mods.keys():
+                list_of_duplicate_mods = list_of_duplicate_mods + f"* {duplicate_mod}\n"
+            show_warning(
+                text="Duplicate mods found for package ID(s) in your ModsConfig.xml (active mods list)",
+                information=(
+                    "The following list of mods were set active in your ModsConfig.xml and "
+                    "duplicate instances were found of these mods in your mod data sources. "
+                    "The vanilla game will use the first 'local mod' of a particular package ID "
+                    "that is found - so RimSort will also adhere to this logic."
+                ),
+                details=list_of_duplicate_mods,
+            )
+        else:
+            logger.debug(
+                "User preference is not configured to display duplicate mods. Skipping..."
+            )
     if missing_mods:
-        logger.warning(
-            f"Could not find data for the list of active mods: {missing_mods}"
-        )
+        logger.debug(f"Could not find data for the list of active mods: {missing_mods}")
         list_of_missing_mods = ""
         for missing_mod in missing_mods:
             list_of_missing_mods = list_of_missing_mods + f"* {missing_mod}\n"
@@ -167,7 +168,7 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                     pfid_path = os.path.join(
                         file.path, about_folder_name, pfid_file_name
                     )
-                    logger.info(
+                    logger.debug(
                         f"Found a variation of /About/PublishedFileId.txt at: {pfid_path}"
                     )
                     try:
@@ -204,7 +205,7 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                     mod_data_path = os.path.join(
                         file.path, about_folder_name, about_file_name
                     )
-                    logger.info(
+                    logger.debug(
                         f"Found a variation of /About/About.xml at: {mod_data_path}"
                     )
                     mod_data = {}
@@ -214,7 +215,7 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                             mod_data = xml_path_to_json(mod_data_path)
                         except UnicodeDecodeError:
                             # It may be necessary to remove all non-UTF-8 characters and parse again
-                            logger.warning(
+                            logger.debug(
                                 f"Unable to parse About.xml with UTF-8, attempting to decode: {mod_data_path}"
                             )
                             mod_data = non_utf8_xml_path_to_json(mod_data_path)
@@ -419,14 +420,9 @@ def get_workshop_acf_data(
     appworkshop_acf_path: str, workshop_mods: Dict[str, Any]
 ) -> None:
     """
-    Given a path to the Rimworld Steam Workshop appworkshop_294100.acf file,
-    return a dict containing data for all the mods keyed to their package ids.
-    The root-level key is the uuid, and the root-level value
-    is the converted About.xml. If the path does not exist, the dict
-    will be empty.
+    Given a path to the Rimworld Steam Workshop appworkshop_294100.acf file, and parse it into a dict.
 
-    The purpose of this function is to populate the size, timeupdated, and manifest info
-    from this file to mod_json_data for later usage.
+    The purpose of this function is to populate the info from this file to mod_json_data for later usage.
 
     :param appworkshop_acf_path: path to the Rimworld Steam Workshop appworkshop_294100.acf file
     :param workshop_mods: a Dict containing parsed mod metadata from Steam workshop mods
@@ -436,13 +432,27 @@ def get_workshop_acf_data(
         (v["publishedfileid"], v["uuid"]) for v in workshop_mods.values()
     )
     for publishedfileid in workshop_acf_data["AppWorkshop"][
+        "WorkshopItemDetails"
+    ].keys():
+        if publishedfileid in workshop_mods_pfid_to_uuid:
+            mod_uuid = workshop_mods_pfid_to_uuid[publishedfileid]
+            workshop_mods[mod_uuid]["internal_time_touched"] = int(
+                workshop_acf_data["AppWorkshop"]["WorkshopItemDetails"][
+                    publishedfileid
+                ][
+                    "timetouched"
+                ]  # The last time Steam client touched a mod according to it's entry in appworkshop_294100.acf
+            )
+    for publishedfileid in workshop_acf_data["AppWorkshop"][
         "WorkshopItemsInstalled"
     ].keys():
         if publishedfileid in workshop_mods_pfid_to_uuid:
             mod_uuid = workshop_mods_pfid_to_uuid[publishedfileid]
-            workshop_mods[mod_uuid]["internal_time_updated"] = workshop_acf_data[
-                "AppWorkshop"
-            ]["WorkshopItemsInstalled"][publishedfileid]["timeupdated"]
+            workshop_mods[mod_uuid]["internal_time_updated"] = int(
+                workshop_acf_data["AppWorkshop"]["WorkshopItemsInstalled"][
+                    publishedfileid
+                ]["timeupdated"]
+            )  # I think this is always equivalent to the external_metadata entry for this same data. Unsure. Probably not unless a mod is outdated by quite some time
 
 
 def get_rimpy_database_mod(
@@ -511,6 +521,81 @@ def get_rimpy_database_mod(
     return db_json_data, community_rules_json_data
 
 
+def get_external_time_data_for_workshop_mods(
+    steam_db_rules: Dict[str, Any], mods: Dict[str, Any]
+) -> Dict[str, Any]:
+    """
+    Query Steam Workshop metadata for time data, for any mods that have a 'publishedfileid'
+    attribute contained in their mod_data, and from there, populate mod_json_data with it.
+
+    Return a dict of any potential mod updates found for Steam Workshop mods, with time data
+
+    :param steam_db_rules: a dict containing the ["database"] rules from external metadata
+    :param mods: A Dict equivalent to 'all_mods' or mod_list.get_list_items_by_dict() in
+    which contains possible Steam mods to lookup metadata for
+    :return: a dict of any potential mod updates found for Steam Workshop mods, with time data
+    """
+    logger.info("Parsing Steam mod metadata for most recent time data")
+    workshop_mods_potential_updates = {}
+    for v in mods.values():
+        if v["data_source"] == "workshop":  # If the mod we are parsing is a Steam mod
+            if v.get("publishedfileid"):
+                pfid = v["publishedfileid"]  # ... assume pfid exists
+                uuid = v["uuid"]
+                if steam_db_rules[pfid].get("external_time_created"):
+                    mods[uuid]["external_time_created"] = steam_db_rules[pfid][
+                        "external_time_created"  # ... populate external metadata into mod_json_data
+                    ]
+                if steam_db_rules[pfid].get("external_time_updated"):
+                    mods[uuid]["external_time_updated"] = steam_db_rules[pfid][
+                        "external_time_updated"  # ... populate external metadata into mod_json_data
+                    ]
+                # logger.debug(f"Checking time data for mod {pfid}")
+                try:
+                    if v.get("name"):
+                        name = v["name"]
+                    elif steam_db_rules[pfid].get("steamName"):
+                        name = steam_db_rules[pfid]["steamName"]
+                    else:
+                        name = "UNKNOWN"
+                    name = f"############################\n{name}"  # ... get the name
+                    etc = v["external_time_created"]
+                    etu = v["external_time_updated"]
+                    itt = v["internal_time_touched"]
+                    itu = v["internal_time_updated"]
+                    time_data_human_readable = (  # ... create human readable string
+                        f"\n{name}"
+                        + f"\nInstalled mod last touched: {strftime('%Y-%m-%d %H:%M:%S', localtime(itt))}"
+                        + f"\nPublishing last updated: {strftime('%Y-%m-%d %H:%M:%S', localtime(etu))}\n"
+                    )
+                    # logger.debug(time_data_human_readable)
+                    if (
+                        itt != 0 and etu > itt
+                    ):  # If external_mod_updated time is PAST the time Steam client last touched a Steam mod
+                        logger.debug(f"Potential update found for Steam mod: {pfid}")
+                        workshop_mods_potential_updates[pfid] = {}
+                        workshop_mods_potential_updates[pfid][
+                            "external_time_created"
+                        ] = etc
+                        workshop_mods_potential_updates[pfid][
+                            "external_time_updated"
+                        ] = etu
+                        workshop_mods_potential_updates[pfid][
+                            "internal_time_touched"
+                        ] = itt
+                        workshop_mods_potential_updates[pfid][
+                            "internal_time_updated"
+                        ] = itu
+                        workshop_mods_potential_updates[pfid][
+                            "ui_string"
+                        ] = time_data_human_readable
+                except KeyError as e:
+                    stacktrace = traceback.format_exc()
+                    logger.debug(f"Missing time data for Steam mod: {pfid}")
+                    logger.debug(stacktrace)
+    return workshop_mods_potential_updates
+
+
 def get_3rd_party_metadata(
     apikey: str, db_json_data_life: int, mods: Dict[str, Any]
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
@@ -519,7 +604,6 @@ def get_3rd_party_metadata(
     contained in their mod_data, essential for the sorting functions. Will produce warnings
     if the data is unable to be retrieved.
 
-
     TODO: Implement this with associated workflows!
     Possibly implement a separate root key (i.e. ["community_rules"] instead of ["database"]...?)
 
@@ -527,6 +611,7 @@ def get_3rd_party_metadata(
     Produces an error if the data is not found.
 
     :param apikey: a Steam apikey that is pulled from game_configuration.steam_apikey
+    :param db_json_data_life: expiry timer used for a cached Dynamic Query
     :param mods: A Dict equivalent to 'all_mods' or mod_list.get_list_items_by_dict() in
     which contains possible Steam mods to lookup metadata for
     :return: Tuple containing the updated json data from database, and community_rules

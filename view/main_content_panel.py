@@ -102,7 +102,6 @@ class MainContent:
         self.inactive_mods_panel.inactive_mods_list.refresh_signal.connect(
             self.actions_slot
         )
-
         self.game_configuration.settings_panel.metadata_by_appid_signal.connect(
             self._do_generate_metadata_by_appid
         )
@@ -120,6 +119,10 @@ class MainContent:
         # Store duplicate_mods for global access
         self.duplicate_mods = {}
 
+        # State used if appworkshop metadata is parsed from Steam workshop install
+        self.appworkshop_acf_data_parsed = False
+
+        # Empty game version string unless the data is populated
         self.game_version = ""
 
         # Check if paths have been set
@@ -221,13 +224,21 @@ class MainContent:
         # If we can find the appworkshop_294100.acf file based on Workshop mods path,
         # then we want to parse it and add desired information for later usage
         appworkshop_path = os.path.split(
+            # This is just getting the path 2 directories up from content/294100,
+            # so that we can find workshop/appworkshop_294100.acf
             os.path.split(self.game_configuration.get_workshop_folder_path())[0]
         )[0]
-        appworkshop_acf_path = os.path.join(
-            appworkshop_path, "appworkshop_294100.acf"
-        )
-        if os.path.exists(appworkshop_acf_path):
-            get_workshop_acf_data(appworkshop_acf_path, self.workshop_mods)
+        appworkshop_acf_path = os.path.join(appworkshop_path, "appworkshop_294100.acf")
+        if os.path.exists(appworkshop_acf_path):  # If the file we want to parse exists
+            get_workshop_acf_data(
+                appworkshop_acf_path, self.workshop_mods
+            )  # ... get data
+            logger.info(
+                f"Successfully parsed Steam client appworkshop_acf metadata: {appworkshop_acf_path}"
+            )
+            self.appworkshop_acf_data_parsed = True
+        else:
+            logger.info(f"Unable to parse Steam client appworkshop_acf metadata")
 
         # Set custom tags for each data source to be used with setIcon later
         for uuid in self.expansions:
@@ -245,6 +256,7 @@ class MainContent:
 
         self.steam_db_rules = {}
         self.community_rules = {}
+        self.workshop_mods_potential_updates = {}
 
         # If there are mods at all, check for a mod DB.
         if all_mods:
@@ -266,6 +278,11 @@ class MainContent:
                     self.game_configuration.webapi_query_expiry,
                     all_mods,
                 )
+                self.workshop_mods_potential_updates = (
+                    get_external_time_data_for_workshop_mods(
+                        self.steam_db_rules, all_mods
+                    )
+                )
         else:
             logger.warning(
                 "No LOCAL or WORKSHOP mods found at all. Are you playing Vanilla?"
@@ -280,7 +297,33 @@ class MainContent:
             self.steam_db_rules,
             self.community_rules,  # TODO add user defined customRules from future customRules.json
         )
-
+        # If we parsed this data from Steam client appworkshop_294100.acf
+        if self.appworkshop_acf_data_parsed:
+            if (
+                self.game_configuration.steam_mods_update_check_toggle
+            ):  # ... and the user desires this information to be displayed
+                if (
+                    len(self.workshop_mods_potential_updates) > 0
+                ):  # ... and we have potential updates to show
+                    logger.info(
+                        "User preference is configured to check Steam mods for updates. Displaying potential updates..."
+                    )
+                    list_of_potential_updates = ""
+                    for time_data in self.workshop_mods_potential_updates.values():
+                        list_of_potential_updates += time_data["ui_string"]
+                    show_information(
+                        text="RimSort Dynamic Query: The following list of Steam mods may have updates available!",
+                        information=(
+                            "This metadata was parsed directly from your Steam client's workshop data, and compared with the "
+                            "'time updated' metadata returned from your most recent Dynamic Query."
+                            # "\nDo you want the Steam client to do a verification check of your mods now?"
+                        ),
+                        details=list_of_potential_updates,
+                    )
+            else:
+                logger.debug(
+                    "User preference is not configured to check Steam mods for updates. Skipping..."
+                )
         # Feed all_mods and Steam DB info to Active Mods list to surface
         # names instead of package_ids when able
         self.active_mods_panel.all_mods = self.all_mods_with_dependencies

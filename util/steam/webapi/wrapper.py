@@ -393,12 +393,20 @@ class DynamicQuery:
                     ):  # If mod is unpublished, it has no metadata
                         continue
                     result["database"][publishedfileid]["steamName"] = metadata["title"]
-                    result["database"][publishedfileid][
+                    result["database"][
+                        publishedfileid
+                    ][  # Track time publishing created
                         "external_time_created"
-                    ] = metadata["time_created"]
-                    result["database"][publishedfileid][
+                    ] = metadata[
+                        "time_created"
+                    ]
+                    result["database"][
+                        publishedfileid
+                    ][  # Track time publishing last updated
                         "external_time_updated"
-                    ] = metadata["time_updated"]
+                    ] = metadata[
+                        "time_updated"
+                    ]
                     result["database"][publishedfileid]["dependencies"] = {}
                     if metadata.get("children"):
                         for children in metadata[

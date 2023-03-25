@@ -227,6 +227,9 @@ class GameConfiguration(QObject):
         # DUPE MODS WARNING TOGGLE
         self.duplicate_mods_warning_toggle = False
 
+        # STEAM MODS UPDATE CHECK TOGGLE
+        self.steam_mods_update_check_toggle = False
+
         # RUN ARGUMENTS
         self.run_arguments = ""
 
@@ -267,8 +270,13 @@ class GameConfiguration(QObject):
         self.settings_panel.clear_paths_signal.connect(
             self.delete_all_paths_data
         )  # Actions delete_all_paths_data
-        self.settings_panel.dupe_mods_warning_signal.connect(
-            self.dupe_mods_warning_setting
+
+        # MISC
+        self.settings_panel.duplicate_mods_checkbox.setChecked(
+            self.duplicate_mods_warning_toggle
+        )
+        self.settings_panel.steam_mods_update_checkbox.setChecked(
+            self.steam_mods_update_check_toggle
         )
 
         logger.info("Finished GameConfiguration initialization")
@@ -394,24 +402,23 @@ class GameConfiguration(QObject):
                     self.settings_panel.external_metadata_cb.setCurrentText(
                         settings_data["external_metadata_source"]
                     )
-                if not settings_data.get("runArgs"):
-                    settings_data["runArgs"] = ""
-                else:
+                if settings_data.get("runArgs"):
                     self.run_arguments = settings_data["runArgs"]
-                if not settings_data.get("steam_apikey"):
-                    settings_data["steam_apikey"] = ""
-                else:
+                if settings_data.get("steam_apikey"):
                     self.steam_apikey = settings_data["steam_apikey"]
-                if not settings_data.get("webapi_query_expiry"):
+                if settings_data.get("webapi_query_expiry"):
                     settings_data["webapi_query_expiry"] = 1800
-                else:
-                    self.webapi_query_expiry = settings_data["webapi_query_expiry"]
-                if not settings_data.get("duplicate_mods_warning_toggle"):
+                self.webapi_query_expiry = settings_data["webapi_query_expiry"]
+                if not settings_data.get("duplicate_mods_warning"):
                     settings_data["duplicate_mods_warning"] = False
-                else:
-                    self.duplicate_mods_warning_toggle = settings_data[
-                        "duplicate_mods_warning_toggle"
-                    ]
+                self.duplicate_mods_warning_toggle = settings_data[
+                    "duplicate_mods_warning"
+                ]
+                if not settings_data.get("steam_mods_update_check"):
+                    settings_data["steam_mods_update_check"] = False
+                self.steam_mods_update_check_toggle = settings_data[
+                    "steam_mods_update_check"
+                ]
         logger.info("Finished storage initialization")
 
     def initialize_settings_panel(self) -> None:
@@ -429,15 +436,32 @@ class GameConfiguration(QObject):
         self.settings_panel.finished.connect(self.on_settings_close)
 
     def on_settings_close(self) -> None:
-        logger.info("Settings panel closed, updating algorithm selection")
+        logger.info(
+            "Settings panel closed, updating persistent storage for these options..."
+        )
         self.settings_panel.close()
         self.update_persistent_storage(
             "sorting_algorithm", self.settings_panel.sorting_algorithm_cb.currentText()
         )
+
         self.update_persistent_storage(
             "external_metadata_source",
             self.settings_panel.external_metadata_cb.currentText(),
         )
+
+        if self.settings_panel.duplicate_mods_checkbox.isChecked():
+            self.duplicate_mods_warning_toggle = True
+            self.update_persistent_storage("duplicate_mods_warning", True)
+        else:
+            self.duplicate_mods_warning_toggle = False
+            self.update_persistent_storage("duplicate_mods_warning", False)
+
+        if self.settings_panel.steam_mods_update_checkbox.isChecked():
+            self.steam_mods_update_check_toggle = True
+            self.update_persistent_storage("steam_mods_update_check", True)
+        else:
+            self.steam_mods_update_check_toggle = False
+            self.update_persistent_storage("steam_mods_update_check", False)
 
     def open_directory(self, callable: Any) -> None:
         """
@@ -569,7 +593,7 @@ class GameConfiguration(QObject):
         else:
             logger.info("User pressed cancel, passing")
 
-    def update_persistent_storage(self, key: str, value: str) -> None:
+    def update_persistent_storage(self, key: str, value: Any) -> None:
         """
         Given a key and value, write this key and value to the
         persistent settings.json.
@@ -617,10 +641,19 @@ class GameConfiguration(QObject):
         logger.info(f"USER ACTION: change dupe mods warning state")
         if self.settings_panel.duplicate_mods_checkbox.isChecked():
             self.duplicate_mods_warning_toggle = True
-            self.update_persistent_storage("duplicate_mods_warning_toggle", True)
+            self.update_persistent_storage("duplicate_mods_warning", True)
         else:
             self.duplicate_mods_warning_toggle = False
-            self.update_persistent_storage("duplicate_mods_warning_toggle", False)
+            self.update_persistent_storage("duplicate_mods_warning", False)
+
+    def steam_mods_update_check_setting(self) -> None:
+        logger.info(f"USER ACTION: change Steam mods update check state")
+        if self.settings_panel.steam_mods_update_checkbox.isChecked():
+            self.steam_mods_update_check_toggle = True
+            self.update_persistent_storage("steam_mods_update_check", True)
+        else:
+            self.steam_mods_update_check_toggle = False
+            self.update_persistent_storage("steam_mods_update_check", False)
 
     def clear_game_folder_line(self) -> None:
         logger.info("USER ACTION: clear game folder line")
