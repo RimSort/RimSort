@@ -50,6 +50,8 @@ class GameConfiguration(QObject):
         logger.info("Starting GameConfiguration initialization")
         super(GameConfiguration, self).__init__()
 
+        self.storage_path = ""
+
         # BASE LAYOUT
         self._panel = QVBoxLayout()
         # Represents spacing between edge and layout
@@ -330,21 +332,21 @@ class GameConfiguration(QObject):
         to have paths written on the settings.json.
         """
         logger.info("Starting storage initialization")
-        storage_path = QStandardPaths.writableLocation(
+        self.storage_path = QStandardPaths.writableLocation(
             QStandardPaths.AppLocalDataLocation
         )
-        logger.info(f"Determined storage path: {storage_path}")
-        if not os.path.exists(storage_path):
-            logger.info(f"Storage path [{storage_path}] does not exist")
+        logger.info(f"Determined storage path: {self.storage_path}")
+        if not os.path.exists(self.storage_path):
+            logger.info(f"Storage path [{self.storage_path}] does not exist")
             information = (
                 "It looks like you may be running RimSort for the first time! RimSort stores some client "
-                f"information in this directory: [{storage_path}]. It doesn't look like this directory "
+                f"information in this directory: [{self.storage_path}]. It doesn't look like this directory "
                 "exists, so we'll make it for you now."
             )
             show_information(text="Welcome to RimSort!", information=information)
             logger.info("Making storage directory")
-            os.makedirs(storage_path)
-        settings_path = os.path.join(storage_path, "settings.json")
+            os.makedirs(self.storage_path)
+        settings_path = os.path.join(self.storage_path, "settings.json")
         logger.info(f"Determined settings file path: {settings_path}")
         if not os.path.exists(settings_path):
             logger.info(f"Settings file [{settings_path}] does not exist")
@@ -415,7 +417,7 @@ class GameConfiguration(QObject):
                     "duplicate_mods_warning"
                 ]
                 if not settings_data.get("steam_mods_update_check"):
-                    settings_data["steam_mods_update_check"] = False
+                    settings_data["steam_mods_update_check"] = True
                 self.steam_mods_update_check_toggle = settings_data[
                     "steam_mods_update_check"
                 ]
@@ -602,10 +604,10 @@ class GameConfiguration(QObject):
         :param value: value to replace
         """
         logger.info("Updating persistent storage")
-        storage_path = QStandardPaths.writableLocation(
+        self.storage_path = QStandardPaths.writableLocation(
             QStandardPaths.AppLocalDataLocation
         )
-        settings_path = os.path.join(storage_path, "settings.json")
+        settings_path = os.path.join(self.storage_path, "settings.json")
         logger.info(f"Generated settings.json path: {settings_path}")
         if os.path.exists(settings_path):
             logger.info("settings.json exists, opening to write")

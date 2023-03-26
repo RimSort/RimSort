@@ -116,6 +116,11 @@ class MainContent:
         self.active_mods_data_restore_state: Dict[str, Any] = {}
         self.inactive_mods_data_restore_state: Dict[str, Any] = {}
 
+        # Set cached Dynamic Query target path
+        self.cached_dynamic_query_target_path = os.path.join(
+            self.game_configuration.storage_path, "steam_metadata.json"
+        )
+
         # Store duplicate_mods for global access
         self.duplicate_mods = {}
 
@@ -276,6 +281,7 @@ class MainContent:
                 self.steam_db_rules, self.community_rules = get_3rd_party_metadata(
                     self.game_configuration.steam_apikey,
                     self.game_configuration.webapi_query_expiry,
+                    self.cached_dynamic_query_target_path,
                     all_mods,
                 )
                 self.workshop_mods_potential_updates = (
@@ -450,7 +456,9 @@ class MainContent:
         appid_query.all_mods_metadata = appid_query._all_mods_metadata_by_appid(
             self.game_configuration.webapi_query_expiry
         )
-        db_output_path = os.path.join(os.getcwd(), "data", f"{appid}_AppIDQuery.json")
+        db_output_path = os.path.join(
+            self.game_configuration.storage_path, f"{appid}_AppIDQuery.json"
+        )
         logger.info(f"Caching DynamicQuery result: {db_output_path}")
         with open(db_output_path, "w") as output:
             json.dump(appid_query.all_mods_metadata, output, indent=4)
@@ -459,11 +467,8 @@ class MainContent:
         mods = self.all_mods_with_dependencies
         rimpy_deps = {}
         rimsort_deps = {}
-        dynamic_query_db_json_path = os.path.join(
-            os.getcwd(), "data", "steam_metadata.json"
-        )
-        if os.path.exists(dynamic_query_db_json_path):
-            with open(dynamic_query_db_json_path, encoding="utf-8") as f:
+        if os.path.exists(self.cached_dynamic_query_target_path):
+            with open(self.cached_dynamic_query_target_path, encoding="utf-8") as f:
                 json_string = f.read()
                 logger.info(
                     "Reading info from cached RimSort Dynamic Query steam_metadata.json"
@@ -897,7 +902,9 @@ class MainContent:
         """
         logger.info("Opening file dialog to select input file")
         file_path = QFileDialog.getOpenFileName(
-            caption="Open Mod List", filter="XML (*.xml)"
+            caption="Open Mod List",
+            dir=os.path.join(self.game_configuration.storage_path, "ModLists"),
+            filter="XML (*.xml)",
         )
         logger.info(f"Selected path: {file_path[0]}")
         if file_path[0]:
@@ -925,7 +932,9 @@ class MainContent:
         """
         logger.info("Opening file dialog to specify output file")
         file_path = QFileDialog.getSaveFileName(
-            caption="Save Mod List", filter="XML (*.xml)"
+            caption="Save Mod List",
+            dir=os.path.join(self.game_configuration.storage_path, "ModLists"),
+            filter="XML (*.xml)",
         )
         logger.info(f"Selected path: {file_path[0]}")
         if file_path[0]:

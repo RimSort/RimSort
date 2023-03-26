@@ -425,12 +425,19 @@ def get_workshop_acf_data(
     The purpose of this function is to populate the info from this file to mod_json_data for later usage.
 
     :param appworkshop_acf_path: path to the Rimworld Steam Workshop appworkshop_294100.acf file
-    :param workshop_mods: a Dict containing parsed mod metadata from Steam workshop mods
+    :param workshop_mods: a Dict containing parsed mod metadata from Steam workshop mods. This can be
+    all_mods or just a dict of Steam mods where their ["data_source"] is "workshop".
     """
     workshop_acf_data = acf_to_dict(appworkshop_acf_path)
-    workshop_mods_pfid_to_uuid = dict(
-        (v["publishedfileid"], v["uuid"]) for v in workshop_mods.values()
-    )
+    workshop_mods_pfid_to_uuid = {}
+    for v in workshop_mods.values():
+        if v.get("invalid"):
+            logger.debug(f"Unable to parse acf data for invalid mod: {v}")
+            continue
+        else:
+            if v.get("publishedfileid"):
+                pfid = v["publishedfileid"]
+                workshop_mods_pfid_to_uuid[pfid] = v["uuid"]
     for publishedfileid in workshop_acf_data["AppWorkshop"][
         "WorkshopItemDetails"
     ].keys():
@@ -597,7 +604,7 @@ def get_external_time_data_for_workshop_mods(
 
 
 def get_3rd_party_metadata(
-    apikey: str, db_json_data_life: int, mods: Dict[str, Any]
+    apikey: str, db_json_data_life: int, db_json_data_path: str, mods: Dict[str, Any]
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
     Query Steam Workshop metadata for any mods that have a 'publishedfileid' attribute
@@ -612,6 +619,7 @@ def get_3rd_party_metadata(
 
     :param apikey: a Steam apikey that is pulled from game_configuration.steam_apikey
     :param db_json_data_life: expiry timer used for a cached Dynamic Query
+    :param db_json_data_path: path to be used for caching the Dynamic Query
     :param mods: A Dict equivalent to 'all_mods' or mod_list.get_list_items_by_dict() in
     which contains possible Steam mods to lookup metadata for
     :return: Tuple containing the updated json data from database, and community_rules
@@ -621,19 +629,16 @@ def get_3rd_party_metadata(
     db_data_missing = None
     db_json_data = {}
     community_rules_json_data = {}
-    db_json_folder = "data"
-    db_json_filename = "steam_metadata.json"
-    db_json_data_path = os.path.join(os.getcwd(), db_json_folder, db_json_filename)
     logger.info(
         "Checking for cached Steam db..."
     )  # TODO: Make this info visible to the user
     if os.path.exists(
         db_json_data_path
     ):  # Look for cached data & load it if available & not expired
-        logger.info(f"Found cached Steam db at {db_json_data_path}")
+        logger.debug(f"Found cached Steam db at {db_json_data_path}")
         with open(db_json_data_path, encoding="utf-8") as f:
             json_string = f.read()
-            logger.info(f"Reading info from {db_json_filename}")
+            logger.debug(f"Reading info from {db_json_data_path}")
             db_data = json.loads(json_string)
             current_time = int(time())
             db_time = int(db_data["version"])
@@ -666,11 +671,8 @@ def get_3rd_party_metadata(
                 )
                 mods_query = DynamicQuery(apikey, appid, db_json_data_life)
                 mods_query.workshop_json_data = mods_query.cache_parsable_db_data(mods)
-                db_output_path = os.path.join(
-                    os.getcwd(), "data", "steam_metadata.json"
-                )
-                logger.info(f"Caching DynamicQuery result: {db_output_path}")
-                with open(db_output_path, "w") as output:
+                logger.info(f"Caching DynamicQuery result: {db_json_data_path}")
+                with open(db_json_data_path, "w") as output:
                     json.dump(mods_query.workshop_json_data, output, indent=4)
                 db_json_data = mods_query.workshop_json_data[
                     "database"

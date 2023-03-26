@@ -8,7 +8,7 @@ a = Analysis(
     ['RimSort.py'],
     pathex=[],
     binaries=[("libsteam_api.dylib", "."), ("SteamworksPy.dylib", ".")],
-    datas=[("data","data")],
+    datas=[("data","data"), ("steam_appid.txt", ".")],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
