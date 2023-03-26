@@ -1,6 +1,7 @@
 from io import BytesIO
 import logging
 import os
+from pathlib import Path
 import platform
 import requests
 import subprocess
@@ -28,9 +29,17 @@ class SteamcmdInterface:
         logger.info("SteamcmdInterface initilizing...")
         self.cwd = os.getcwd()
         self.log = ""
-        self.steamcmd_path = os.path.join(self.cwd, "steamcmd")
+        self.steamcmd_path = str(
+            Path(
+                os.path.join(os.path.dirname(__file__), "../../../data/steamcmd")
+            ).resolve()
+        )
         self.system = platform.system()
-        self.steamcmd_mods_path = os.path.join(self.cwd, "steam")
+        self.steamcmd_mods_path = str(
+            Path(
+                os.path.join(os.path.dirname(__file__), "../../../data/steam")
+            ).resolve()
+        )
 
         if self.system == "Darwin":
             self.steamcmd_url = (
