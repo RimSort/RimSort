@@ -65,6 +65,7 @@ LINUX_COMPILE_CMD = [
 ]
 STEAMWORKSPY_BIN_WIN32 = "SteamworksPy.dll"
 STEAMWORKS_COMPILE_CMD_WIN32 = [
+    "cmd.exe", "/k", 'C:\\"Program Files (x86)"\\"Microsoft Visual Studio"\\2022\\BuildTools\\VC\\Auxiliary\\Build\\vcvars64.bat', "&",
     "cl",
     "/D_USRDLL",
     "/D_WINDLL",
@@ -73,9 +74,11 @@ STEAMWORKS_COMPILE_CMD_WIN32 = [
     "/link",
     "/DLL",
     f"/OUT:{STEAMWORKSPY_BIN_WIN32}",
+    "&", "exit"
 ]
 STEAMWORKSPY_BIN_WIN64 = "SteamworksPy64.dll"
 STEAMWORKS_COMPILE_CMD_WIN64 = [
+    "cmd.exe", "/k", 'C:\\"Program Files (x86)"\\"Microsoft Visual Studio"\\2022\\BuildTools\\VC\\Auxiliary\\Build\\vcvars64.bat', "&",
     "cl",
     "/D_USRDLL",
     "/D_WINDLL",
@@ -84,6 +87,7 @@ STEAMWORKS_COMPILE_CMD_WIN64 = [
     "/link",
     "/DLL",
     f"/OUT:{STEAMWORKSPY_BIN_WIN64}",
+    "&", "exit"
 ]
 STEAMWORKS_SDK_URL = "https://github.com/oceancabbage/RimSort/raw/steamworks-sdk/steamworks_sdk_155.zip"  # "https://partner.steamgames.com/downloads/steamworks_sdk_155.zip"
 SUBMODULE_UPDATE_INIT_CMD = ["git", "submodule", "update", "--init", "--recursive"]

@@ -6,7 +6,7 @@ import traceback
 from pathlib import Path
 from requests.exceptions import HTTPError
 
-from logger_tt import setup_logging
+from logger_tt import handlers, logger, setup_logging
 from PySide2.QtCore import QSize
 from PySide2.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 
