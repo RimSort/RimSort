@@ -196,13 +196,13 @@ print("Ensuring we have SteamworksPy submodule initiated & up-to-date...")
 _execute(SUBMODULE_UPDATE_INIT_CMD)
 
 print("Getting Steamworks SDK...")
-if not os.path.exists(STEAMWORKS_SDK_PATH):
-    with ZipFile(BytesIO(requests.get(STEAMWORKS_SDK_URL).content)) as zipobj:
-        zipobj.extractall(STEAMWORKS_PY_PATH)
+if os.path.exists(STEAMWORKS_SDK_PATH):
+    print("Existing SDK found. Removing, and re-downloading fresh copy.")
+    shutil.rmtree(STEAMWORKS_SDK_PATH)
+with ZipFile(BytesIO(requests.get(STEAMWORKS_SDK_URL).content)) as zipobj:
+    zipobj.extractall(STEAMWORKS_PY_PATH)
 
 print(f"Getting Steam headers...")
-if os.path.exists(STEAMWORKS_SDK_HEADER_DEST_PATH):
-    shutil.rmtree(STEAMWORKS_SDK_HEADER_DEST_PATH)
 shutil.copytree(STEAMWORKS_SDK_HEADER_PATH, STEAMWORKS_SDK_HEADER_DEST_PATH)
 
 print("Getting Steam API lib file...")
