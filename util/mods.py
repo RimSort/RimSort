@@ -547,16 +547,18 @@ def get_external_time_data_for_workshop_mods(
     for v in mods.values():
         if v["data_source"] == "workshop":  # If the mod we are parsing is a Steam mod
             if v.get("publishedfileid"):
-                pfid = v["publishedfileid"]  # ... assume pfid exists
+                pfid = v["publishedfileid"]  # ... assume pfid exists in mod metadata
                 uuid = v["uuid"]
-                if steam_db_rules[pfid].get("external_time_created"):
-                    mods[uuid]["external_time_created"] = steam_db_rules[pfid][
-                        "external_time_created"  # ... populate external metadata into mod_json_data
-                    ]
-                if steam_db_rules[pfid].get("external_time_updated"):
-                    mods[uuid]["external_time_updated"] = steam_db_rules[pfid][
-                        "external_time_updated"  # ... populate external metadata into mod_json_data
-                    ]
+                # It is possible for a mod to not have metadata in an outdated/stale Dynamic Query
+                if steam_db_rules.get("pfid"):
+                    if steam_db_rules[pfid].get("external_time_created"):
+                        mods[uuid]["external_time_created"] = steam_db_rules[pfid][
+                            "external_time_created"  # ... populate external metadata into mod_json_data
+                        ]
+                    if steam_db_rules[pfid].get("external_time_updated"):
+                        mods[uuid]["external_time_updated"] = steam_db_rules[pfid][
+                            "external_time_updated"  # ... populate external metadata into mod_json_data
+                        ]
                 # logger.debug(f"Checking time data for mod {pfid}")
                 try:
                     if v.get("name"):
