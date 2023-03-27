@@ -1,7 +1,7 @@
 import logging
 from functools import partial
 
-from PySide2.QtCore import Qt, Signal
+from PySide2.QtCore import QStandardPaths, Qt, Signal
 from PySide2.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -10,6 +10,8 @@ from PySide2.QtWidgets import (
     QPushButton,
     QVBoxLayout,
 )
+
+from util.filesystem import platform_specific_open
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +72,13 @@ class SettingsPanel(QDialog):
         self.clear_paths_button.clicked.connect(
             partial(self.clear_paths_signal.emit, "clear_paths")
         )
+        self.open_storage_button = QPushButton("Open Storage Dir")
+        self.open_storage_button.clicked.connect(
+            partial(
+                platform_specific_open,
+                QStandardPaths.writableLocation(QStandardPaths.AppLocalDataLocation),
+            )
+        )
         self.duplicate_mods_checkbox = QCheckBox(
             "Show duplicate mods warning on refresh"
         )
@@ -93,6 +102,7 @@ class SettingsPanel(QDialog):
         self.layout.addWidget(self.comparison_report_button)
         self.layout.addWidget(self.set_webapi_query_expiry_button)
         self.layout.addWidget(self.clear_paths_button)
+        self.layout.addWidget(self.open_storage_button)
         self.layout.addWidget(self.duplicate_mods_checkbox)
         self.layout.addWidget(self.steam_mods_update_checkbox)
 
