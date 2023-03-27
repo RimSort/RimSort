@@ -240,9 +240,6 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                                 ].lower()  # normalize package ID in metadata
                                 mod_data["modmetadata"]["folder"] = file.name
                                 mod_data["modmetadata"]["path"] = file.path
-                                logger.debug(
-                                    f"Finished editing XML content, adding final content to larger list: {mod_data['modmetadata']}"
-                                )
                                 if pfid:  # If we parsed a pfid earlier...
                                     mod_data["modmetadata"]["publishedfileid"] = pfid
                                     mod_data["modmetadata"][
@@ -265,6 +262,9 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                                     ] = "Mod name unspecified"
                                 # Add the uuid that cooresponds to metadata entry, to the list item's json data for future usage
                                 mod_data["modmetadata"]["uuid"] = uuid
+                                logger.debug(
+                                    f"Finished editing XML content, adding final content to larger list: {mod_data['modmetadata']}"
+                                )
                                 mods[uuid] = mod_data["modmetadata"]
                             else:
                                 logger.error(

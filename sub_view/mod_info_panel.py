@@ -34,6 +34,7 @@ class ModInfo:
         self.mod_info_name = QHBoxLayout()
         self.mod_info_package_id = QHBoxLayout()
         self.mod_info_authors = QHBoxLayout()
+        self.mod_info_mod_version = QHBoxLayout()
         self.mod_info_path = QHBoxLayout()
         self.description_layout = QHBoxLayout()
 
@@ -51,18 +52,27 @@ class ModInfo:
         self.mod_info_name_label.setObjectName("summaryLabel")
         self.mod_info_name_value = QLabel()
         self.mod_info_name_value.setObjectName("summaryValue")
+        self.mod_info_name_value.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.mod_info_package_id_label = QLabel("PackageID:")
         self.mod_info_package_id_label.setObjectName("summaryLabel")
         self.mod_info_package_id_value = QLabel()
         self.mod_info_package_id_value.setObjectName("summaryValue")
+        self.mod_info_package_id_value.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.mod_info_author_label = QLabel("Authors:")
         self.mod_info_author_label.setObjectName("summaryLabel")
         self.mod_info_author_value = QLabel()
         self.mod_info_author_value.setObjectName("summaryValue")
+        self.mod_info_author_value.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self.mod_info_mod_version_label = QLabel("Mod version:")
+        self.mod_info_mod_version_label.setObjectName("summaryLabel")
+        self.mod_info_mod_version_value = QLabel()
+        self.mod_info_mod_version_value.setObjectName("summaryValue")
+        self.mod_info_mod_version_value.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.mod_info_path_label = QLabel("Path:")
         self.mod_info_path_label.setObjectName("summaryLabel")
         self.mod_info_path_value = QLabel()
         self.mod_info_path_value.setObjectName("summaryValue")
+        self.mod_info_path_value.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.mod_info_path_value.setWordWrap(True)
         self.description = ScrollLabel()
 
@@ -76,9 +86,12 @@ class ModInfo:
         self.mod_info_package_id.addWidget(self.mod_info_package_id_value, 80)
         self.mod_info_authors.addWidget(self.mod_info_author_label, 20)
         self.mod_info_authors.addWidget(self.mod_info_author_value, 80)
+        self.mod_info_mod_version.addWidget(self.mod_info_mod_version_label, 20)
+        self.mod_info_mod_version.addWidget(self.mod_info_mod_version_value, 80)
         self.mod_info_layout.addLayout(self.mod_info_name)
         self.mod_info_layout.addLayout(self.mod_info_package_id)
         self.mod_info_layout.addLayout(self.mod_info_authors)
+        self.mod_info_layout.addLayout(self.mod_info_mod_version)
         self.mod_info_layout.addLayout(self.mod_info_path)
         self.description_layout.addWidget(self.description)
 
@@ -107,6 +120,10 @@ class ModInfo:
                 )
         else:
             self.mod_info_author_value.setText(mod_info.get("author"))
+        if "modVersion" in mod_info:
+            self.mod_info_mod_version_value.setText(mod_info.get("modVersion"))
+        else:
+            self.mod_info_mod_version_value.setText("Not specified")
         self.mod_info_path_value.setText(mod_info.get("path"))
 
         # Set the scrolling description for the Mod Info Panel

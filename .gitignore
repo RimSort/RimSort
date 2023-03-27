@@ -171,3 +171,4 @@ data/steam_metadata.json
 *_AppIDQuery*
 /steamworks
 SteamworksPy.dylib
+data/steam*
