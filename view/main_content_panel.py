@@ -3,6 +3,7 @@ from multiprocessing import active_children, Process
 import os
 import platform
 import subprocess
+from threading import Thread
 from typing import Any, Dict
 
 from PySide2.QtWidgets import QFileDialog, QFrame, QHBoxLayout, QInputDialog, QLineEdit
@@ -17,7 +18,10 @@ from sub_view.mod_info_panel import ModInfo
 from util.mods import *
 from util.schema import validate_mods_config_format
 from util.steam.steamcmd.wrapper import SteamcmdInterface
-from util.steam.steamworks.wrapper import steamworks_subscriptions_handler
+from util.steam.steamworks.wrapper import (
+    launch_game_process,
+    steamworks_subscriptions_handler,
+)
 from util.steam.webapi.wrapper import AppIDQuery
 from util.xml import json_to_xml_write, xml_path_to_json
 from view.game_configuration_panel import GameConfiguration
@@ -138,7 +142,11 @@ class MainContent:
             # Insert mod data into list (is_initial = True)
             self.repopulate_lists(True)
 
+        # Instantiate steamcmd wrapper
         self.steamcmd_wrapper = SteamcmdInterface()
+
+        # Steamworks bool - use this to check any Steamworks processes you try to initialize
+        self.steamworks_initialized = False
 
         logger.info("Finished MainContent initialization")
 
@@ -404,8 +412,14 @@ class MainContent:
         if action == "save":
             self._do_save()
         if action == "run":
-            self._do_platform_specific_game_launch(
-                self.game_configuration.run_arguments
+            self._do_steamworks_api_call(
+                [
+                    "launch_game_process",
+                    [
+                        self.game_configuration.get_game_folder_path(),
+                        self.game_configuration.run_arguments,
+                    ],
+                ]
             )
         if action == "edit_run_args":
             self._do_edit_run_args()
@@ -570,156 +584,57 @@ class MainContent:
                     "Please reconfigure the expiry value with an integer in terms of the seconds from epoch you would like your query to expire.",
                 )
 
-    def _do_platform_specific_game_launch(self, args: str) -> None:
-        """
-        This function starts the Rimworld game process in it's own subprocess,
-        by launching the executable found in the configured game directory.
-
-        :param args: user-configured args to pass to the Rimworld game
-        """
-        logger.info("USER ACTION: launching the game")
-        game_path = self.game_configuration.get_game_folder_path()
-        logger.info(f"Attempting to find the game in the game folder {game_path}")
-        if game_path:
-            system_name = platform.system()
-            if system_name == "Darwin":
-                executable_path = os.path.join(game_path, "RimWorldMac.app")
-                logger.info(
-                    f"Path to game executable for MacOS generated: {executable_path}"
-                )
-                if os.path.exists(executable_path):
-                    logger.info(
-                        "Launching the game with subprocess Popen: `"
-                        + executable_path
-                        + "` with args: `"
-                        + args
-                        + "`"
-                    )
-                    subprocess.Popen(["open", executable_path, "--args", args])
-                else:
-                    logger.warning("The game executable path does not exist")
-                    show_warning(
-                        text="Error Starting the Game",
-                        information=(
-                            "RimSort could not start RimWorld as the game executable does "
-                            f"not exist at the specified path: {executable_path}. Please check "
-                            "that this directory is correct and the RimWorld game executable "
-                            "exists in it."
-                        ),
-                    )
-            elif system_name == "Linux" or "Windows":
-                try:
-                    logger.warn("Trying to create a new subprocess process group")
-                    subprocess.CREATE_NEW_PROCESS_GROUP
-                except AttributeError:
-                    # not Windows, so assume POSIX; if not, we'll get a usable exception
-                    executable_path = os.path.join(game_path, "RimWorldLinux")
-                    logger.info(
-                        f"Path to game executable for Linux generated: {executable_path}"
-                    )
-                    if os.path.exists(executable_path):
-                        logger.info(
-                            "Launching the game with subprocess Popen: `"
-                            + executable_path
-                            + "` with args: `"
-                            + args
-                            + "`"
-                        )
-                        p = subprocess.Popen(
-                            [executable_path, args], start_new_session=True
-                        )
-                    else:
-                        logger.warning("The game executable path does not exist")
-                        show_warning(
-                            text="Error Starting the Game",
-                            information=(
-                                "RimSort could not start RimWorld as the game executable does "
-                                f"not exist at the specified path: {executable_path}. Please check "
-                                "that this directory is correct and the RimWorld game executable "
-                                "exists in it."
-                            ),
-                        )
-                else:
-                    # Windows
-                    executable_path = os.path.join(game_path, "RimWorldWin64.exe")
-                    logger.info(
-                        f"Path to game executable for Windows generated: {executable_path}"
-                    )
-                    if os.path.exists(executable_path):
-                        logger.info(
-                            "Launching the game with subprocess Popen: `"
-                            + executable_path
-                            + "` with args: `"
-                            + args
-                            + "`"
-                        )
-                        p = subprocess.Popen(
-                            [executable_path, args],
-                            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
-                        )
-                    else:
-                        logger.warning("The game executable path does not exist")
-                        show_warning(
-                            text="Error Starting the Game",
-                            information=(
-                                "RimSort could not start RimWorld as the game executable does "
-                                f"not exist at the specified path: {executable_path}. Please check "
-                                "that this directory is correct and the RimWorld game executable "
-                                "exists in it."
-                            ),
-                        )
-            else:
-                logger.error("Unable to launch the game on an unknown system")
-        else:
-            logger.error("The path to the game folder is empty")
-            show_warning(
-                text="Error Starting the Game",
-                information=(
-                    "RimSort could not start RimWorld as the game folder is empty or invalid: [{game_path}] "
-                    "Please check that the game folder is properly set and that the RimWorld executable "
-                    "exists in it."
-                ),
-            )
-
     def _do_steamworks_api_call(self, instruction: list):
         """
         Create & launch Steamworks API process to handle instructions received from connected signals
 
+        FOR subscription_actions[]...
         :param instruction: a list where:
             instruction[0] is a string that corresponds with the following supported_actions[]
             instruction[1] is an int that corresponds with a subscribed Steam mod's PublishedFileId
+        FOR "launch_game_process"...
+        :param instruction: a list where:
+            instruction[0] is a string that corresponds with the following supported_actions[]
+            instruction[1] is a list containing [path: str, args: str] respectively
         """
         logger.info(f"Received Steamworks API instruction: {instruction}")
-        subscription_actions = ["subscribe", "unsubscribe"]
-        supported_actions = []
-        supported_actions.extend(subscription_actions)
-        if (
-            instruction[0] in supported_actions
-        ):  # Actions can be added as functions are implemented in util.steam.steamworks.wrapper
-            if instruction[0] in subscription_actions:
-                logger.info(
-                    f"Creating Steamworks API process with instruction {instruction}"
-                )
-                steamworks_api_process = Process(
-                    target=steamworks_subscriptions_handler, args=(instruction,)
-                )
-                steamworks_api_process.start()
-        else:
-            logger.error(f"Unsupported instruction {instruction}")
-            return
-        logger.info(
-            f"Steamworks API process started (timeout 10s) with PID: {steamworks_api_process.pid}"
-        )
-        # We give Steam 10 seconds to respond before timing out
-        steamworks_api_process.join(10)
-        if steamworks_api_process.is_alive():
-            logger.error(
-                "Timeout reached. Forcefully terminating Steamworks API process!"
+        if not self.steamworks_initialized:
+            self.steamworks_initialized = True
+            subscription_actions = ["subscribe", "unsubscribe"]
+            supported_actions = ["launch_game_process"]
+            supported_actions.extend(subscription_actions)
+            if (
+                instruction[0] in supported_actions
+            ):  # Actions can be added as functions are implemented in util.steam.steamworks.wrapper
+                if instruction[0] in subscription_actions:
+                    logger.info(
+                        f"Creating Steamworks API process with instruction {instruction}"
+                    )
+                    steamworks_api_process = Process(
+                        target=steamworks_subscriptions_handler, args=(instruction,)
+                    )
+                elif instruction[0] == "launch_game_process":
+                    steamworks_api_process = Process(
+                        target=launch_game_process,
+                        args=(instruction[1],),
+                    )
+            else:
+                logger.error(f"Unsupported instruction {instruction}")
+                return
+            # Start the Steamworks API Process
+            steamworks_api_process.start()
+            logger.info(
+                f"Steamworks API process wrapper started with PID: {steamworks_api_process.pid}"
             )
-            steamworks_api_process.terminate()
-        logger.info(
-            f"Steamworks API process completed for PID: {steamworks_api_process.pid}"
-        )
+            steamworks_api_process.join()
+            logger.info(
+                f"Steamworks API process wrapper completed for PID: {steamworks_api_process.pid}"
+            )
+            self.steamworks_initialized = False
+        else:
+            logger.warning(
+                "Steamworks API is already initialized! We do NOT want multiple interactions. Skipping instruction..."
+            )
 
     def _do_browse_workshop(self):
         self.browser = WebContentPanel(

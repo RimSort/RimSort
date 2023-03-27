@@ -1,4 +1,7 @@
 import logging
+import os
+import platform
+import subprocess
 from threading import Thread
 from time import sleep
 import sys
@@ -80,6 +83,87 @@ class SteamworksInterface:
         Returns a Thread pointing to our _callbacks daemon
         """
         return Thread(target=self._callbacks, daemon=True)
+
+
+def launch_game_process(instruction: list) -> None:
+    """
+    This function starts the Rimworld game process in it's own Process,
+    by launching the executable found in the configured game directory.
+
+    This function initializes the Steamworks API to be used by the RimWorld game.
+
+    :param instruction: a list containing [path: str, args: str] respectively
+    """
+    game_path = instruction[0]
+    args = instruction[1]
+    logger.info(f"Attempting to find the game in the game folder {game_path}")
+    steam_not_running = False  # Skip action if True. Log occurrences.
+    steamworks = STEAMWORKS()
+    try:
+        steamworks.initialize()  # Init the Steamworks API
+    except SteamNotRunningException:
+        logger.warning("Unable to initiate Steamworks API call. Steam is not running!")
+        steam_not_running = True
+    if not steam_not_running:  # Skip if True
+        logger.info(f"Launching RimWorld game process using Steamworks API.")
+    else:
+        logger.warning(
+            f"Unable to launch game with Steamworks API. Please close your game and try to launch again after opening Steam."
+        )
+    if game_path:
+        system_name = platform.system()
+        if system_name == "Darwin":
+            executable_path = os.path.join(game_path, "RimWorldMac.app")
+        elif system_name == "Linux":
+            # Linux
+            executable_path = os.path.join(game_path, "RimWorldLinux")
+        elif "Windows":
+            # Windows
+            executable_path = os.path.join(game_path, "RimWorldWin64.exe")
+        else:
+            logger.error("Unable to launch the game on an unknown system")
+        logger.info(
+            f"Path to game executable for {system_name} generated: {executable_path}"
+        )
+        if os.path.exists(executable_path):
+            logger.info(
+                f"Launching the game with subprocess.Popen(): `"
+                + executable_path
+                + "` with args: `"
+                + args
+                + "`"
+            )
+            if system_name == "Darwin":
+                p = subprocess.Popen(["open", executable_path, "--args", args])
+            else:
+                p = subprocess.Popen([executable_path, args])
+            logger.info(f"Launched RimWorld game process with PID: {p.pid}")
+            logger.info("Waiting for game to finish...")
+            p.wait()
+        else:
+            logger.warning("The game executable path does not exist")
+            show_warning(
+                text="Error Starting the Game",
+                information=(
+                    "RimSort could not start RimWorld as the game executable does "
+                    f"not exist at the specified path: {executable_path}. Please check "
+                    "that this directory is correct and the RimWorld game executable "
+                    "exists in it."
+                ),
+            )
+        # Always unload Steamworks API after `p` completion
+        steamworks.unload()
+
+    else:
+        logger.error("The path to the game folder is empty")
+        show_warning(
+            text="Error Starting the Game",
+            information=(
+                "RimSort could not start RimWorld as the game folder is empty or invalid: [{game_path}] "
+                "Please check that the game folder is properly set and that the RimWorld executable "
+                "exists in it."
+            ),
+        )
 
 
 def steamworks_subscriptions_handler(instruction: list) -> None:
