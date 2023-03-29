@@ -100,9 +100,7 @@ class ModListItemInner(QWidget):
             author_line = f"Author: {self.json_data.get('author', 'UNKNOWN')}\n"
 
         package_id_line = f"PackageID: {self.json_data.get('packageId', 'UNKNOWN')}\n"
-        # TODO: version information should be read from manifest file, which is not currently
-        # being used. This file actually also contains some load rule data so use that too.
-        version_line = f"Version: {self.json_data.get('version', 'UNKNOWN')}\n"
+        version_line = f"Version: {self.json_data.get('modVersion', 'Not specified')}\n"
         path_line = f"Path: {self.json_data.get('path', 'UNKNOWN')}"
         return name_line + author_line + package_id_line + version_line + path_line
 
