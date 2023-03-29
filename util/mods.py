@@ -550,7 +550,7 @@ def get_external_time_data_for_workshop_mods(
                 pfid = v["publishedfileid"]  # ... assume pfid exists in mod metadata
                 uuid = v["uuid"]
                 # It is possible for a mod to not have metadata in an outdated/stale Dynamic Query
-                if steam_db_rules.get("pfid"):
+                if steam_db_rules.get(pfid):
                     if steam_db_rules[pfid].get("external_time_created"):
                         mods[uuid]["external_time_created"] = steam_db_rules[pfid][
                             "external_time_created"  # ... populate external metadata into mod_json_data
