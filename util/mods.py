@@ -1537,6 +1537,60 @@ def merge_mod_data(*dict_args: dict[str, Any]) -> Dict[str, Any]:
     return result
 
 
+def add_more_versions_to_mod(
+    mod_data: Dict[str, Any],
+    version_to_add: str
+) -> Dict[str, Any]:
+    """
+    Adds a version to the supported versions tag of a mod if needed
+    """
+    mod_versions = mod_data["supportedVersions"]['li']
+    if isinstance(mod_versions, str):
+        if mod_versions == version_to_add:
+            return mod_data
+        mod_data["supportedVersions"]['li'] = set()
+        mod_data["supportedVersions"]['li'].add(version_to_add)
+        mod_data["supportedVersions"]['li'].add(mod_versions)
+        mod_data["description"] = version_to_add + "-tag added by No Version Warning-mod\n" + mod_data["description"]  
+        return mod_data    
+    if not isinstance(mod_versions, list):
+        return mod_data    
+    if version_to_add in mod_versions:
+        return mod_data        
+    mod_data["supportedVersions"]['li'].insert(0, version_to_add)  
+    mod_data["description"] = version_to_add + "-tag added by No Version Warning-mod\n" + mod_data["description"]  
+    logger.info(f"[NoVersionWarning]: Added support for game-version {version_to_add} for mod: {mod_data}")
+    return mod_data
+
+
+def get_modids_from_noversionwarning_xml(
+    version_folder
+    ):
+    """
+    Parses the ModIdsToFix.xml in the "No version warning" mod and returns the supported mod-ids
+    """
+    file_to_find = os.path.join(version_folder.path, "ModIdsToFix.xml")
+    if not os.path.exists(file_to_find):
+        logger.warning(f"[NoVersionWarning]: No ModIdsToFix found at {file_to_find}")            
+        return None
+    try:
+        try:
+            # Default: try to parse with UTF-8 encodnig
+            version_xml_data = xml_path_to_json(file_to_find)
+        except UnicodeDecodeError:
+            # It may be necessary to remove all non-UTF-8 characters and parse again
+            logger.warning("[NoVersionWarning]: Unable to parse no-version file with UTF-8, attempting to decode")
+            version_xml_data = non_utf8_xml_path_to_json(file_to_find)
+    except:
+        # If there was an issue parsing the no-version file, track and exit
+        logger.error(f"[NoVersionWarning]: Unable to parse no-version file with the exception: {traceback.format_exc()}")
+        return None
+    if not "li" in version_xml_data["ModIdsToFix"]:
+        logger.warning(f"[NoVersionWarning]: No-version file has no mod-ids defined")
+        return None
+    return version_xml_data["ModIdsToFix"]['li']
+
+
 def get_inactive_mods(
     workshop_and_expansions: Dict[str, Any],
     active_mods: Dict[str, Any],

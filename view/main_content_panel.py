@@ -2,6 +2,7 @@ import logging
 from multiprocessing import active_children, Process
 import os
 import platform
+import re
 import subprocess
 from threading import Thread
 from typing import Any, Dict
@@ -53,7 +54,8 @@ class MainContent:
         self.main_layout.setContentsMargins(
             5, 5, 5, 5
         )  # Space between widgets and Frame border
-        self.main_layout.setSpacing(5)  # Space beteen mod lists and action buttons
+        # Space beteen mod lists and action buttons
+        self.main_layout.setSpacing(5)
 
         # FRAME REQUIRED - to allow for styling
         self.main_layout_frame = QFrame()
@@ -239,10 +241,13 @@ class MainContent:
         appworkshop_path = os.path.split(
             # This is just getting the path 2 directories up from content/294100,
             # so that we can find workshop/appworkshop_294100.acf
-            os.path.split(self.game_configuration.get_workshop_folder_path())[0]
+            os.path.split(
+                self.game_configuration.get_workshop_folder_path())[0]
         )[0]
-        appworkshop_acf_path = os.path.join(appworkshop_path, "appworkshop_294100.acf")
-        if os.path.exists(appworkshop_acf_path):  # If the file we want to parse exists
+        appworkshop_acf_path = os.path.join(
+            appworkshop_path, "appworkshop_294100.acf")
+        # If the file we want to parse exists
+        if os.path.exists(appworkshop_acf_path):
             get_workshop_acf_data(
                 appworkshop_acf_path, self.workshop_mods
             )  # ... get data
@@ -251,7 +256,8 @@ class MainContent:
             )
             self.appworkshop_acf_data_parsed = True
         else:
-            logger.info(f"Unable to parse Steam client appworkshop_acf metadata")
+            logger.info(
+                f"Unable to parse Steam client appworkshop_acf metadata")
 
         # Set custom tags for each data source to be used with setIcon later
         for uuid in self.expansions:
@@ -262,10 +268,59 @@ class MainContent:
             self.local_mods[uuid]["data_source"] = "local"
 
         # One working Dictionary for ALL mods
-        all_mods = merge_mod_data(self.expansions, self.local_mods, self.workshop_mods)
+        all_mods = merge_mod_data(
+            self.expansions, self.local_mods, self.workshop_mods)
         logger.info(
             f"Combined {len(self.expansions)} expansions, {len(self.local_mods)} local mods, and {len(self.workshop_mods)}. Total elements to get dependencies for: {len(all_mods)}"
         )
+
+        # Check mods verified working with newer game-versions than defined
+        # https://steamcommunity.com/sharedfiles/filedetails/?id=2599504692
+        package_id_to_uuid = {}
+        for mod_uuid, modmetadata in all_mods.items():
+            package_id_to_uuid[modmetadata["packageId"]] = mod_uuid
+        if "mlie.noversionwarning" in package_id_to_uuid.keys():
+            no_version_mod = all_mods[package_id_to_uuid["mlie.noversionwarning"]]
+            logger.debug(
+                f"[NoVersionWarning]: No version warning-mod found - {no_version_mod}")
+            version_mod_path = no_version_mod["path"]
+            for file in os.scandir(version_mod_path):
+                # Only look in folders
+                if not file.is_dir():
+                    continue
+                # Only look in version-folders
+                if not re.match("\d+\.\d+", file.name):
+                    continue
+                current_supported_version = file.name
+                supported_mod_ids = get_modids_from_noversionwarning_xml(file)
+                if isinstance(supported_mod_ids, str):
+                    mod_id = supported_mod_ids.lower()
+                    if not mod_id in package_id_to_uuid.keys():
+                        continue
+                    mod_uuid = package_id_to_uuid[mod_id]
+                    if mod_uuid in self.local_mods.keys():
+                        self.local_mods[mod_uuid] = add_more_versions_to_mod(
+                            self.local_mods[mod_uuid], current_supported_version)
+                    if mod_uuid in self.workshop_mods.keys():
+                        self.workshop_mods[mod_uuid] = add_more_versions_to_mod(
+                            self.workshop_mods[mod_uuid], current_supported_version)
+                    continue
+                if not isinstance(supported_mod_ids, list):
+                    logger.error(
+                        f"[NoVersionWarning]: supported_mod_ids value not str or list: {supported_mod_ids}")
+                    continue
+                for mod_id in supported_mod_ids:
+                    mod_id = mod_id.lower()
+                    if not mod_id in package_id_to_uuid.keys():
+                        continue
+                    mod_uuid = package_id_to_uuid[mod_id]
+                    if mod_uuid in self.local_mods.keys():
+                        self.local_mods[mod_uuid] = add_more_versions_to_mod(
+                            self.local_mods[mod_uuid], current_supported_version)
+                    if mod_uuid in self.workshop_mods.keys():
+                        self.workshop_mods[mod_uuid] = add_more_versions_to_mod(
+                            self.workshop_mods[mod_uuid], current_supported_version)
+                    continue
 
         self.steam_db_rules = {}
         self.community_rules = {}
@@ -496,7 +551,8 @@ class MainContent:
                 mods[uuid].get("packageId") == "rupal.rimpymodmanagerdatabase"
                 or mods[uuid].get("publishedfileid") == "1847679158"
             ):
-                rimpy_db_json_path = os.path.join(mods[uuid]["path"], "db", "db.json")
+                rimpy_db_json_path = os.path.join(
+                    mods[uuid]["path"], "db", "db.json")
                 if os.path.exists(rimpy_db_json_path):
                     with open(rimpy_db_json_path, encoding="utf-8") as f:
                         json_string = f.read()
@@ -505,7 +561,8 @@ class MainContent:
                         )
                         rimpy_steam_data = json.loads(json_string)
                 else:
-                    show_warning("The could not find RimPy Mod Manager Database mod!")
+                    show_warning(
+                        "The could not find RimPy Mod Manager Database mod!")
                     return
         count = 0
         for k, v in rimsort_steam_data["database"].items():
@@ -611,7 +668,8 @@ class MainContent:
                         f"Creating Steamworks API process with instruction {instruction}"
                     )
                     steamworks_api_process = Process(
-                        target=steamworks_subscriptions_handler, args=(instruction,)
+                        target=steamworks_subscriptions_handler, args=(
+                            instruction,)
                     )
                 elif instruction[0] == "launch_game_process":
                     steamworks_api_process = Process(
@@ -663,7 +721,8 @@ class MainContent:
             f"Inserting mod data into active [{len(active_mods)}] and inactive [{len(inactive_mods)}] mod lists"
         )
         self.active_mods_panel.active_mods_list.recreate_mod_list(active_mods)
-        self.inactive_mods_panel.inactive_mods_list.recreate_mod_list(inactive_mods)
+        self.inactive_mods_panel.inactive_mods_list.recreate_mod_list(
+            inactive_mods)
 
         logger.info(
             f"Finished inserting mod data into active [{len(active_mods)}] and inactive [{len(inactive_mods)}] mod lists"
@@ -706,7 +765,8 @@ class MainContent:
         expansions_uuids = list(self.expansions.keys())
         active_mod_data = {}
         inactive_mod_data = {}
-        logger.info("Moving non-base/expansion active mods to inactive mods list")
+        logger.info(
+            "Moving non-base/expansion active mods to inactive mods list")
         for uuid, mod_data in active_mods_data.items():
             if uuid in expansions_uuids:
                 active_mod_data[uuid] = mod_data
@@ -743,7 +803,8 @@ class MainContent:
         dependencies_graph = gen_deps_graph(active_mods, active_mod_ids)
 
         # Get all active mods and their reverse dependencies
-        reverse_dependencies_graph = gen_rev_deps_graph(active_mods, active_mod_ids)
+        reverse_dependencies_graph = gen_rev_deps_graph(
+            active_mods, active_mod_ids)
 
         # Get dependencies graph for tier one mods (load at top mods)
         tier_one_dependency_graph, tier_one_mods = gen_tier_one_deps_graph(
@@ -792,8 +853,10 @@ class MainContent:
                 tier_two_dependency_graph, active_mods
             )
 
-        logger.info(f"Sorted tier one mods: {len(reordered_tier_one_sorted_with_data)}")
-        logger.info(f"Sorted tier two mods: {len(reordered_tier_two_sorted_with_data)}")
+        logger.info(
+            f"Sorted tier one mods: {len(reordered_tier_one_sorted_with_data)}")
+        logger.info(
+            f"Sorted tier two mods: {len(reordered_tier_two_sorted_with_data)}")
         logger.info(
             f"Sorted tier three mods: {len(reordered_tier_three_sorted_with_data)}"
         )
@@ -807,7 +870,8 @@ class MainContent:
         for uuid, mod_data in reordered_tier_three_sorted_with_data.items():
             combined_mods[uuid] = mod_data
 
-        logger.info("Finished combining all tiers of mods. Inserting into mod lists")
+        logger.info(
+            "Finished combining all tiers of mods. Inserting into mod lists")
         self._insert_data_into_lists(combined_mods, inactive_mods)
 
     def _do_import(self) -> None:
@@ -853,7 +917,8 @@ class MainContent:
         )
         logger.info(f"Selected path: {file_path[0]}")
         if file_path[0]:
-            logger.info("Exporting current active mods to ModsConfig.xml format")
+            logger.info(
+                "Exporting current active mods to ModsConfig.xml format")
             active_mods_json = (
                 self.active_mods_panel.active_mods_list.get_list_items_by_dict()
             )
@@ -874,7 +939,8 @@ class MainContent:
                             continue  # Append `_steam` suffix if Steam mod, continue to next mod
                     active_mods.append(package_id)
             logger.info(f"Collected {len(active_mods)} active mods for export")
-            logger.info("Getting current ModsConfig.xml to use as a reference format")
+            logger.info(
+                "Getting current ModsConfig.xml to use as a reference format")
             mods_config_data = xml_path_to_json(
                 self.game_configuration.get_config_path()
             )
@@ -917,7 +983,8 @@ class MainContent:
                         continue  # Append `_steam` suffix if Steam mod, continue to next mod
                 active_mods.append(package_id)
         logger.info(f"Collected {len(active_mods)} active mods for saving")
-        mods_config_data = xml_path_to_json(self.game_configuration.get_config_path())
+        mods_config_data = xml_path_to_json(
+            self.game_configuration.get_config_path())
         if validate_mods_config_format(mods_config_data):
             logger.info(
                 "Successfully got ModsConfig.xml data. Overwriting with current active mods"
