@@ -461,104 +461,171 @@ class MainContent:
                 "steam_apikey", self.game_configuration.steam_apikey
             )
 
-    def _do_generate_metadata_by_appid(self) -> None:
-        appid = 294100
-        logger.info(
-            f"Initializing AppIDQuery with configured Steam API key for AppID: {appid}..."
-        )
-        appid_query = AppIDQuery(self.game_configuration.steam_apikey, appid)
-        appid_query.all_mods_metadata = appid_query._all_mods_metadata_by_appid(
-            self.game_configuration.webapi_query_expiry
-        )
-        db_output_path = os.path.join(
-            self.game_configuration.storage_path, f"{appid}_AppIDQuery.json"
-        )
-        logger.info(f"Caching DynamicQuery result: {db_output_path}")
-        with open(db_output_path, "w") as output:
-            json.dump(appid_query.all_mods_metadata, output, indent=4)
+    def _do_generate_metadata_by_appid(self, appid: int) -> None:
+        if (
+            len(self.game_configuration.steam_apikey) == 32
+        ):  # If apikey is 32 characters
+            logger.info("Retreived valid Steam API key from settings")
+            try:  # Since the key is valid, we try to launch a live query
+                appid = 294100
+                logger.info(
+                    f"Initializing AppIDQuery with configured Steam API key for AppID: {appid}..."
+                )
+                appid_query = AppIDQuery(self.game_configuration.steam_apikey, appid)
+                all_publishings_metadata_query = DynamicQuery(
+                    self.game_configuration.steam_apikey,
+                    appid,
+                    self.game_configuration.webapi_query_expiry,
+                )
+                db = {}
+                db["version"] = all_publishings_metadata_query.expiry
+                db["database"] = {}
+                logger.info(
+                    f"Populating {str(len(appid_query.publishedfileids))} empty keys into initial database for "
+                    + f"{appid}."
+                )
+                for publishedfileid in appid_query.publishedfileids:
+                    db["database"][publishedfileid] = {
+                        "url": f"https://steamcommunity.com/sharedfiles/filedetails/?id={publishedfileid}"
+                    }
+                publishedfileids = appid_query.publishedfileids
+                logger.info(
+                    f"Populated {str(len(appid_query.publishedfileids))} PublishedFileIds into database"
+                )
+                appid_query.all_mods_metadata = (
+                    all_publishings_metadata_query.cache_parsable_db_data(
+                        db, publishedfileids
+                    )
+                )
+                db_output_path = os.path.join(
+                    self.game_configuration.storage_path, f"{appid}_AppIDQuery.json"
+                )
+                logger.info(f"Caching DynamicQuery result: {db_output_path}")
+                with open(db_output_path, "w") as output:
+                    json.dump(appid_query.all_mods_metadata, output, indent=4)
+            except HTTPError:
+                stacktrace = traceback.format_exc()
+                pattern = "&key="
+                stacktrace = stacktrace[
+                    : len(stacktrace)
+                    - (len(stacktrace) - (stacktrace.find(pattern) + len(pattern)))
+                ]  # If an HTTPError from steam/urllib3 module(s) somehow is uncaught, try to remove the Steam API key from the stacktrace
+                show_fatal_error(
+                    text="RimSort Dynamic Query",
+                    information="DynamicQuery failed to initialize database.\nThere is no external metadata being factored for sorting!\n\nCached Dynamic Query database not found!\n\nFailed to initialize new DynamicQuery with configured Steam API key.\n\nAre you connected to the internet?\n\nIs your configured key invalid or revoked?\n\nPlease right-click the 'Refresh' button and configure a valid Steam API key so that you can generate a database.\n\nPlease reference: https://github.com/oceancabbage/RimSort/wiki/User-Guide#obtaining-your-steam-api-key--using-it-with-rimsort-dynamic-query",
+                    details=stacktrace,
+                )
 
     def _do_generate_metadata_comparison_report(self) -> None:
+        discrepancies = []
         mods = self.all_mods_with_dependencies
         rimpy_deps = {}
         rimsort_deps = {}
-        if os.path.exists(self.cached_dynamic_query_target_path):
-            with open(self.cached_dynamic_query_target_path, encoding="utf-8") as f:
-                json_string = f.read()
-                logger.info(
-                    "Reading info from cached RimSort Dynamic Query steam_metadata.json"
-                )
-                rimsort_steam_data = json.loads(json_string)
-        else:
-            show_warning("The could not find a cached RimSort Dynamic Query!")
-            return
-        for uuid in mods:
-            if (
-                mods[uuid].get("packageId") == "rupal.rimpymodmanagerdatabase"
-                or mods[uuid].get("publishedfileid") == "1847679158"
-            ):
-                rimpy_db_json_path = os.path.join(mods[uuid]["path"], "db", "db.json")
-                if os.path.exists(rimpy_db_json_path):
-                    with open(rimpy_db_json_path, encoding="utf-8") as f:
-                        json_string = f.read()
-                        logger.info(
-                            "Reading info from Rimpy Mod Manager Database db.json"
+        """
+        Open a user-selected JSON file. Calculate and display discrepencies
+        found between RimPy Mod Manager database and this file.
+        """
+        logger.info("Opening file dialog to select input file")
+        file_path = QFileDialog.getOpenFileName(
+            caption="Open Mod List",
+            dir=os.path.join(self.game_configuration.storage_path),
+            filter="JSON (*.json)",
+        )
+        logger.info(f"Selected path: {file_path[0]}")
+        if file_path[0]:
+            if os.path.exists(file_path[0]):
+                with open(file_path[0], encoding="utf-8") as f:
+                    json_string = f.read()
+                    logger.info(
+                        "Reading info from cached RimSort Dynamic Query steam_metadata.json"
+                    )
+                    rimsort_steam_data = json.loads(json_string)
+            else:
+                show_warning("The could not find a cached RimSort Dynamic Query!")
+                return
+            for uuid in mods:
+                if (
+                    mods[uuid].get("packageId") == "rupal.rimpymodmanagerdatabase"
+                    or mods[uuid].get("publishedfileid") == "1847679158"
+                ):
+                    rimpy_db_json_path = os.path.join(
+                        mods[uuid]["path"], "db", "db.json"
+                    )
+                    if os.path.exists(rimpy_db_json_path):
+                        with open(rimpy_db_json_path, encoding="utf-8") as f:
+                            json_string = f.read()
+                            logger.info(
+                                "Reading info from Rimpy Mod Manager Database db.json"
+                            )
+                            rimpy_steam_data = json.loads(json_string)
+                    else:
+                        show_warning(
+                            "The could not find RimPy Mod Manager Database mod!"
                         )
-                        rimpy_steam_data = json.loads(json_string)
-                else:
-                    show_warning("The could not find RimPy Mod Manager Database mod!")
-                    return
-        count = 0
-        for k, v in rimsort_steam_data["database"].items():
-            # print(k, v['dependencies'])
-            rimsort_deps[k] = set()
-            if v.get("dependencies"):
-                for dep_key in v["dependencies"]:
-                    rimsort_deps[k].add(dep_key)
-                    count += 1
-        count = 0
-        for k, v in rimpy_steam_data["database"].items():
-            # print(k, v['dependencies'])
-            if k in rimsort_deps:
-                rimpy_deps[k] = set()
+                        return
+            for k, v in rimsort_steam_data["database"].items():
+                # print(k, v['dependencies'])
+                rimsort_deps[k] = set()
                 if v.get("dependencies"):
                     for dep_key in v["dependencies"]:
-                        rimpy_deps[k].add(dep_key)
-                        count += 1
-        no_deps_str = "*no explicit dependencies listed*"
-        rimsort_total_dependencies = len(rimsort_deps)
-        rimpy_total_dependencies = len(rimpy_deps)
-        report = (
-            "#######################\nExternal metadata comparison:\n#######################"
-            # + f"\nTotal # of deps from Dynamic Query: {rimsort_total_dependencies}"
-            # + f"\nTotal # of deps from RimPy db.json: {rimpy_total_dependencies}"
-        )
-        for k, v in rimsort_deps.items():
-            # If the deps are different...
-            if v != rimpy_deps.get(k):
-                pp = rimpy_deps.get(k)
-                if pp:
-                    # Normalize here (get rid of core/dlc deps)
-                    pp.discard("294100")
-                    pp.discard("1149640")
-                    pp.discard("1392840")
-                    pp.discard("1826140")
-                    if v != pp:
-                        if v == set():
-                            v = no_deps_str
-                        if pp == set():
-                            pp = no_deps_str
-                        mod_name = rimpy_steam_data["database"][k]["name"]
-                        report += "\n\n#################"
-                        report += f"\nDISCREPANCY FOUND:"
-                        report += "\n#################"
-                        report += f"\nMod name: {mod_name}"
-                        report += f"\n\nRimSort Dynamic Query dependencies:\n{v}"
-                        report += f"\n\nRimPy's Steam DB data dependencies:\n{pp}"
-        show_information(
-            "External metadata comparison:",
-            "Click 'Show Details' to see the full report!",
-            report,
-        )
+                        rimsort_deps[k].add(dep_key)
+            for k, v in rimpy_steam_data["database"].items():
+                # print(k, v['dependencies'])
+                if k in rimsort_deps:
+                    rimpy_deps[k] = set()
+                    if v.get("dependencies"):
+                        for dep_key in v["dependencies"]:
+                            rimpy_deps[k].add(dep_key)
+            no_deps_str = "*no explicit dependencies listed*"
+            rimsort_total_dependencies = len(rimsort_deps)
+            rimpy_total_dependencies = len(rimpy_deps)
+            report = (
+                "#######################\nExternal metadata comparison:\n#######################"
+                # + f"\nTotal # of deps from Dynamic Query: {rimsort_total_dependencies}"
+                # + f"\nTotal # of deps from RimPy db.json: {rimpy_total_dependencies}"
+            )
+            comparison_skipped = []
+            for k, v in rimsort_deps.items():
+                if rimsort_steam_data["database"][k].get("unpublished"):
+                    comparison_skipped.append(k)
+                    # logger.debug(f"Skipping comparison for unpublished mod: {k}")
+                else:
+                    # If the deps are different...
+                    if v != rimpy_deps.get(k):
+                        pp = rimpy_deps.get(k)
+                        if pp:
+                            # Normalize here (get rid of core/dlc deps)
+                            pp.discard("294100")
+                            pp.discard("1149640")
+                            pp.discard("1392840")
+                            pp.discard("1826140")
+                            if v != pp:
+                                discrepancies.append(k)
+                                pp_total = len(pp)
+                                v_total = len(v)
+                                if v == set():
+                                    v = no_deps_str
+                                if pp == set():
+                                    pp = no_deps_str
+                                mod_name = rimpy_steam_data["database"][k]["name"]
+                                report += "\n\n################################"
+                                report += f"\nDISCREPANCY FOUND for {k}:"
+                                report += f"\nhttps://steamcommunity.com/sharedfiles/filedetails/?id={k}"
+                                report += "\n################################"
+                                report += f"\nMod name: {mod_name}"
+                                report += f"\n\nRimSort Dynamic Query:\n{v_total} dependencies found:\n{v}"
+                                report += f"\n\nRimPy Mod Mgr Database:\n{pp_total} dependencies found:\n{pp}"
+            report += f"\n\nTotal # of discrepancies: {len(discrepancies)}"
+            logger.debug(
+                f"Comparison skipped for {len(comparison_skipped)} unpublished mods: {comparison_skipped}"
+            )
+            show_information(
+                "RimSort Dynamic Query: External Steam metadata comparison report",
+                "Click 'Show Details' to see the full report!",
+                report,
+            )
+        else:
+            logger.info("User pressed cancel, passing")
 
     def _do_set_webapi_query_expiry(self) -> None:
         """

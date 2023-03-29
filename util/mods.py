@@ -664,15 +664,70 @@ def get_3rd_party_metadata(
         logger.info("Cached data expired or missing. Attempting live query...")
     # Attempt live query & cache the query
     if len(apikey) == 32:  # If apikey is less than 32 characters
-        logger.info("Retreived Steam API key from settings.json")
+        logger.info("Retreived valid Steam API key from settings")
         if len(mods.keys()) > 0:  # No empty queries!
             try:  # Since the key is valid, we try to launch a live query
                 appid = 294100
                 logger.info(
                     f"Initializing DynamicQuery with configured Steam API key for {appid}..."
                 )
+                authors = ""
+                gameVersions = []
+                pfid = ""
+                pid = ""
+                name = ""
+                local_metadata = {"version": 0, "database": {}}
+                publishedfileids = []
+                for v in mods.values():
+                    if v.get("publishedfileid"):
+                        pfid = v["publishedfileid"]
+                        url = f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
+                        local_metadata["database"][pfid] = {}
+                        local_metadata["database"][pfid]["url"] = url
+                        publishedfileids.append(pfid)
+                        if v.get("packageId"):
+                            pid = v["packageId"]
+                            local_metadata["database"][pfid]["packageId"] = pid
+                        if v.get("name"):
+                            name = v["name"]
+                            local_metadata["database"][pfid]["name"] = name
+                        if v.get("author"):
+                            authors = v["author"]
+                            local_metadata["database"][pfid]["authors"] = authors
+                        if v["supportedVersions"].get("li"):
+                            gameVersions = v["supportedVersions"]["li"]
+                            local_metadata["database"][pfid][
+                                "gameVersions"
+                            ] = gameVersions
+                    elif v.get("steamAppId"):
+                        appid = v["steamAppId"]
+                        url = f"https://store.steampowered.com/app/{appid}"
+                        local_metadata["database"][appid] = {}
+                        local_metadata["database"][appid]["appid"] = True
+                        local_metadata["database"][appid]["url"] = url
+                        if v.get("packageId"):
+                            pid = v["packageId"]
+                            local_metadata["database"][appid]["packageId"] = pid
+                        if v.get("name"):
+                            name = v["name"]
+                            local_metadata["database"][appid]["name"] = name
+                        if v.get("author"):
+                            authors = v["author"]
+                            local_metadata["database"][appid]["authors"] = authors
+                        if v.get("supportedVersions"):
+                            if v["supportedVersions"].get("li"):
+                                gameVersions = v["supportedVersions"]["li"]
+                                local_metadata["database"][appid][
+                                    "gameVersions"
+                                ] = gameVersions
+                        local_metadata["database"][appid]["dependencies"] = {}
+                        logger.debug(
+                            f"Populated local metadata for Steam appid: [{pid} | {appid}]"
+                        )
                 mods_query = DynamicQuery(apikey, appid, db_json_data_life)
-                mods_query.workshop_json_data = mods_query.cache_parsable_db_data(mods)
+                mods_query.workshop_json_data = mods_query.cache_parsable_db_data(
+                    local_metadata, publishedfileids
+                )
                 logger.info(f"Caching DynamicQuery result: {db_json_data_path}")
                 with open(db_json_data_path, "w") as output:
                     json.dump(mods_query.workshop_json_data, output, indent=4)

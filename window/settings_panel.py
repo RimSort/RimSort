@@ -55,7 +55,7 @@ class SettingsPanel(QDialog):
             "Generate external metadata by appid"
         )
         self.metadata_by_appid_button.clicked.connect(
-            partial(self.metadata_by_appid_signal.emit, "generate_metadata_by_appid")
+            partial(self.metadata_by_appid_signal.emit, 294100)
         )
         self.comparison_report_button = QPushButton("External metadata comparison")
         self.comparison_report_button.clicked.connect(

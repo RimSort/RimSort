@@ -43,58 +43,6 @@ class AppIDQuery:
                 break
             self.next_cursor = self.IPublishedFileService_QueryFiles(self.next_cursor)
 
-    def _all_mods_metadata_by_appid(self, life: int) -> Dict[Any, Any]:
-        """
-        Utilizes DynamicQuery object to return an complete query of an AppID's
-        Steam Workshop mod catalogue's metadata from Steam WebAPI
-
-        :param life: The lifespan of the Query in terms of the seconds added to the time of
-        database generation. This adds an 'expiry' to the data being cached.
-        """
-        all_publishings_metadata_query = DynamicQuery(self.apikey, self.appid, 1800)
-        db = {}
-        db["version"] = all_publishings_metadata_query.expiry
-        db["database"] = {}
-        logger.info(
-            f"Populating {str(len(self.publishedfileids))} empty keys into initial database for "
-            + f"{self.appid}."
-        )
-        for publishedfileid in self.publishedfileids:
-            db["database"][publishedfileid] = {}
-        # Begin initial query
-        logger.info(
-            f"Populated {str(len(self.publishedfileids))} PublishedFileIds into database"
-        )
-        logger.info("Beginning initial query...")
-        (  # Initial population of steamName, url, and empty dependencies {}
-            db,
-            missing_children,
-        ) = all_publishings_metadata_query.IPublishedFileService_GetDetails(
-            db, True, self.publishedfileids
-        )
-        # Begin secondary query
-        logger.info(
-            f"Initial query completed. Initiating second pass to populate full dependency data for {str(len(self.publishedfileids))} PublishedFileIds"
-        )
-        (  # Secondary pass to piece together the dependency data
-            db,
-            missing_children,
-        ) = all_publishings_metadata_query.IPublishedFileService_GetDetails(
-            db, False, self.publishedfileids
-        )
-        logger.info(
-            f"A total of {str(len(missing_children))} missing children were returned with this query."
-        )
-        logger.info(
-            "This indicates that some of the published mods queried have children listed who's PublishedFileIds are no longer searchable in the Steam Workshop catalogue."
-        )
-        logger.info(
-            "This message is for informational purposes only, so that you understand why these are missing from your query."
-        )
-        total = len(db["database"])
-        logger.info(f"Returning Steam Workshop metadata with {total} PublishedFileIds")
-        return db
-
     def IPublishedFileService_QueryFiles(self, cursor: str) -> str:
         """
         Utility to crawl the entirety of Rimworld's Steam Workshop catalogue, compile,
@@ -206,76 +154,28 @@ class DynamicQuery:
     def __expires(self, life: int) -> int:
         return int(time() + life)  # current seconds since epoch + 30 minutes
 
-    def cache_parsable_db_data(self, mods: Dict[str, Any]) -> Dict[Any, Any]:
+    def cache_parsable_db_data(
+        self, database: Dict[str, Any], publishedfileids: list
+    ) -> Dict[Any, Any]:
         """
         Builds a database using a chunked WebAPI query of all available PublishedFileIds
         that are pulled from local mod metadata.
 
-        :param mods: a Dict equivalent to 'all_mods' or mod_list.get_list_items_by_dict()
-        in which contains possible Steam mods to lookup metadata for
+        :param database: a database to update using IPublishedFileService_GetDetails queries
         :return: a RimPy Mod Manager db_data["database"] equivalent, stitched together from
-        local metadata & the Workshop metadata result from a live WebAPI query of those mods
+        local database provided, as well as the Workshop metadata results from a live WebAPI
+        query of those publishedfileids
         """
-        authors = ""
-        gameVersions = []
-        pfid = ""
-        pid = ""
-        name = ""
-        local_metadata = {}
-        local_metadata["database"] = {}
-        publishedfileids = []
-        for v in mods.values():
-            if v.get("publishedfileid"):
-                pfid = v["publishedfileid"]
-                url = f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
-                local_metadata["database"][pfid] = {}
-                local_metadata["database"][pfid]["url"] = url
-                publishedfileids.append(pfid)
-                if v.get("packageId"):
-                    pid = v["packageId"]
-                    local_metadata["database"][pfid]["packageId"] = pid
-                if v.get("name"):
-                    name = v["name"]
-                    local_metadata["database"][pfid]["name"] = name
-                if v.get("author"):
-                    authors = v["author"]
-                    local_metadata["database"][pfid]["authors"] = authors
-                if v["supportedVersions"].get("li"):
-                    gameVersions = v["supportedVersions"]["li"]
-                    local_metadata["database"][pfid]["gameVersions"] = gameVersions
-            elif v.get("steamAppId"):
-                appid = v["steamAppId"]
-                url = f"https://store.steampowered.com/app/{appid}"
-                local_metadata["database"][appid] = {}
-                local_metadata["database"][appid]["appid"] = True
-                local_metadata["database"][appid]["url"] = url
-                if v.get("packageId"):
-                    pid = v["packageId"]
-                    local_metadata["database"][appid]["packageId"] = pid
-                if v.get("name"):
-                    name = v["name"]
-                    local_metadata["database"][appid]["name"] = name
-                if v.get("author"):
-                    authors = v["author"]
-                    local_metadata["database"][appid]["authors"] = authors
-                if v.get("supportedVersions"):
-                    if v["supportedVersions"].get("li"):
-                        gameVersions = v["supportedVersions"]["li"]
-                        local_metadata["database"][appid]["gameVersions"] = gameVersions
-                local_metadata["database"][appid]["dependencies"] = {}
-                logger.debug(
-                    f"Populated local metadata for Steam appid: [{pid} | {appid}]"
-                )
         logger.info(f"DynamicQuery initializing for {len(publishedfileids)} mods")
-        query = {}
+        query = database
         query["version"] = self.expiry
-        query["database"] = local_metadata["database"]
+        query["database"] = database["database"]
         querying = True
         while querying:  # Begin initial query
             (  # Returns WHAT we can get remotely, FROM what we have locally
                 query,
                 missing_children,
-            ) = self.IPublishedFileService_GetDetails(query, False, publishedfileids)
+            ) = self.IPublishedFileService_GetDetails(query, publishedfileids)
             if (
                 len(missing_children) > 0
             ):  # If we have missing data for any dependency...
@@ -294,9 +194,10 @@ class DynamicQuery:
                 #
                 # It is the only way to paint the full picture without already
                 # possessing the mod's metadata for the initial query.
-                (query, missing_children,) = self.IPublishedFileService_GetDetails(
-                    query, False, missing_children
-                )
+                (
+                    query,
+                    missing_children,
+                ) = self.IPublishedFileService_GetDetails(query, missing_children)
             else:  # Stop querying once we have 0 missing_children
                 missing_children = []
                 querying = False
@@ -305,7 +206,7 @@ class DynamicQuery:
         return query
 
     def IPublishedFileService_GetDetails(
-        self, json_to_update: Dict[Any, Any], override: bool, publishedfileids: list
+        self, json_to_update: Dict[Any, Any], publishedfileids: list
     ) -> Tuple[Dict[Any, Any], list]:
         """
         Given a list of PublishedFileIds, return a dict of json data queried
@@ -347,67 +248,54 @@ class DynamicQuery:
                 publishedfileid = metadata[
                     "publishedfileid"
                 ]  # Set the PublishedFileId to that of the metadata we are parsing
-                if (
-                    override
-                ):  # Override assumes we have ALL PublishedFileIDs available. Does not get dependency data.
-                    if metadata["result"] != 1:  # If the mod is no longer published
-                        logger.warning(
-                            f"Tried to parse metadata for a mod that is deleted/private/removed/unposted: {publishedfileid}"
-                        )
-                        result["database"][
-                            publishedfileid
-                        ][  # Reflect the mod's status in it's attributes
-                            "steamName"
-                        ] = "Missing mod: deleted/private/removed/unposted"
-                        result["database"][publishedfileid]["unpublished"] = True
-                        continue
-                    result["database"][publishedfileid][
-                        "url"
-                    ] = f"https://steamcommunity.com/sharedfiles/filedetails/?id={publishedfileid}"
-                    result["database"][publishedfileid]["steamName"] = metadata["title"]
-                    result["database"][publishedfileid]["dependencies"] = {}
-                elif not result["database"].get(
-                    publishedfileid
-                ):  # If we don't already have a ["database"] entry for this pfid
-                    result["database"][publishedfileid] = {}  # Add in skeleton data
-                    result["database"][publishedfileid][
-                        "url"
-                    ] = f"https://steamcommunity.com/sharedfiles/filedetails/?id={publishedfileid}"
-                    result["database"][publishedfileid][
+
+                # Uncomment this to view the metadata being parsed in real time
+                # logger.debug(f"{publishedfileid}: {metadata}")
+
+                # If the mod is no longer published
+                if metadata["result"] != 1:
+                    if not result["database"].get(
+                        publishedfileid
+                    ):  # If we don't already have a ["database"] entry for this pfid
+                        result["database"][publishedfileid] = {}
+                    logger.debug(
+                        f"Tried to parse metadata for a mod that is deleted/private/removed/unposted: {publishedfileid}"
+                    )
+                    result["database"][
+                        publishedfileid
+                    ][  # Reflect the mod's status in it's attributes
                         "steamName"
-                    ] = "Steam metadata unavailable"
-                    result["database"][publishedfileid]["missing"] = True
-                    if metadata["result"] != 1:  # If the mod is no longer published
-                        logger.warning(
-                            f"Tried to parse metadata for a mod that is deleted/private/removed/unposted: {publishedfileid}"
-                        )
-                        result["database"][
-                            publishedfileid
-                        ][  # Reflect the mod's status in it's attributes
-                            "steamName"
-                        ] = "Missing mod: deleted/private/removed/unposted"
-                        result["database"][publishedfileid]["unpublished"] = True
+                    ] = "Missing mod: deleted/private/removed/unposted"
+                    result["database"][publishedfileid][
+                        "url"
+                    ] = f"https://steamcommunity.com/sharedfiles/filedetails/?id={publishedfileid}"
+                    result["database"][publishedfileid]["unpublished"] = True
+                    # If mod is unpublished, it has no metadata.
+                    continue  # We are done with this publishedfileid
                 else:
-                    if result["database"][publishedfileid].get(
-                        "unpublished"
-                    ):  # If mod is unpublished, it has no metadata
-                        continue
+                    # This case is mostly intended for any missing_children passed back thru
+                    # If this is part of an AppIDQuery, then it is useful for population of
+                    # child_name and/or child_url below as part of the dependency data being collected
+                    if not result["database"].get(
+                        publishedfileid
+                    ):  # If we don't already have a ["database"] entry for this pfid
+                        result["database"][publishedfileid] = {}  # Add in skeleton data
+                        result["database"][publishedfileid]["missing"] = True
+                    # We populate the data
                     result["database"][publishedfileid]["steamName"] = metadata["title"]
-                    result["database"][
-                        publishedfileid
-                    ][  # Track time publishing created
+                    result["database"][publishedfileid][
+                        "url"
+                    ] = f"https://steamcommunity.com/sharedfiles/filedetails/?id={publishedfileid}"
+                    # Track time publishing created
+                    result["database"][publishedfileid][
                         "external_time_created"
-                    ] = metadata[
-                        "time_created"
-                    ]
-                    result["database"][
-                        publishedfileid
-                    ][  # Track time publishing last updated
+                    ] = metadata["time_created"]
+                    # Track time publishing last updated
+                    result["database"][publishedfileid][
                         "external_time_updated"
-                    ] = metadata[
-                        "time_updated"
-                    ]
+                    ] = metadata["time_updated"]
                     result["database"][publishedfileid]["dependencies"] = {}
+                    # If the publishing has listed mod dependencies
                     if metadata.get("children"):
                         for children in metadata[
                             "children"
@@ -415,35 +303,42 @@ class DynamicQuery:
                             child_pfid = children["publishedfileid"]
                             if result["database"].get(
                                 child_pfid
-                            ):  # If we have data for this child already cached, populate it
-                                if result["database"][child_pfid].get(
-                                    "name"
-                                ):  # Use local name over Steam name if possible
-                                    child_name = result["database"][child_pfid]["name"]
-                                elif result["database"][child_pfid].get("steamName"):
-                                    child_name = result["database"][child_pfid][
+                            ):  # If we have data for this child already cached
+                                if not result["database"][child_pfid].get(
+                                    "unpublished"
+                                ):  # ... and the mod is published, populate it
+                                    if result["database"][child_pfid].get(
+                                        "name"
+                                    ):  # Use local name over Steam name if possible
+                                        child_name = result["database"][child_pfid][
+                                            "name"
+                                        ]
+                                    elif result["database"][child_pfid].get(
                                         "steamName"
-                                    ]
-                                else:
-                                    logger.warning(
-                                        f"Unable to find name for child {child_pfid}"
-                                    )
-                                if result["database"][child_pfid].get("url"):
+                                    ):
+                                        child_name = result["database"][child_pfid][
+                                            "steamName"
+                                        ]
+                                    else:  # This is a stub value used in-memory only (hopefully)
+                                        # and is intended for AppIdQuery first pass
+                                        child_name = "UNKNOWN"
                                     child_url = result["database"][child_pfid]["url"]
-                                else:
-                                    logger.warning(
-                                        f"Unable to find url for child {child_pfid}"
-                                    )
-                                result["database"][publishedfileid]["dependencies"][
-                                    child_pfid
-                                ] = [child_name, child_url]
+                                    result["database"][publishedfileid]["dependencies"][
+                                        child_pfid
+                                    ] = [child_name, child_url]
                             else:  # Child was not found in database, track it's pfid for later
                                 if child_pfid not in missing_children:
-                                    logger.warning(
+                                    logger.debug(
                                         f"Could not find pfid {child_pfid} in database. Adding child to missing_children..."
                                     )
                                     missing_children.append(child_pfid)
-
+        for missing_child in missing_children:
+            if result["database"].get(missing_child) and result["database"][
+                missing_child
+            ].get(
+                "unpublished"
+            ):  # If there is somehow an unpublished mod in missing_children, remove it
+                missing_children.remove(missing_child)
         return result, missing_children
 
 
