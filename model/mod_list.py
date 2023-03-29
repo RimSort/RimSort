@@ -56,7 +56,7 @@ class ModListWidget(QListWidget):
         self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
 
         # When an item is clicked, display the mod information TODO
-        self.itemClicked.connect(self.mod_clicked)
+        self.currentItemChanged.connect(self.mod_clicked)
 
         # Add an eventFilter for per mod_list_item context menu
         self.installEventFilter(self)
@@ -341,12 +341,13 @@ class ModListWidget(QListWidget):
         self.clearFocus()
         return super().focusOutEvent(e)
 
-    def mod_clicked(self, item: QListWidgetItem) -> None:
+    def mod_clicked(self, current: QListWidgetItem, previous: QListWidgetItem) -> None:
         """
-        Method to handle clicking on a row
-        Look up the mod's data by uuid
+        Method to handle clicking on a row or navigating between rows with
+        the keyboard. Look up the mod's data by uuid
         """
-        self.mod_info_signal.emit(item.data(Qt.UserRole)["uuid"])
+        if current is not None:
+            self.mod_info_signal.emit(current.data(Qt.UserRole)["uuid"])
 
     def get_mod_url(self, widget_json_data) -> str:
         url = ""
