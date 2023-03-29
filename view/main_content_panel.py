@@ -158,9 +158,43 @@ class MainContent:
             self.workshop_mods[package_id]["isWorkshop"] = True
         for package_id in self.local_mods:
             self.local_mods[package_id]["isLocal"] = True
-
+                          
         # One working Dictionary for ALL mods
         mods = merge_mod_data(self.local_mods, self.workshop_mods)
+
+        # Check mods verified working with newer game-versions than defined
+        # https://steamcommunity.com/sharedfiles/filedetails/?id=2599504692
+        if "mlie.noversionwarning" in mods.keys():
+            no_version_mod = mods["mlie.noversionwarning"]
+            logger.debug(f"[NoVersionWarning]: No version warning-mod found - {no_version_mod}")
+            version_mod_path = no_version_mod["path"]
+            for file in os.scandir(version_mod_path):
+                # Only look in folders
+                if not file.is_dir():
+                    continue
+                # Only look in version-folders
+                if not re.match("\d+\.\d+", file.name):
+                    continue                
+                current_supported_version = file.name
+                supported_mod_ids = get_modids_from_noversionwarning_xml(file)
+                if isinstance(supported_mod_ids, str):
+                    mod_id = supported_mod_ids.lower()
+                    if mod_id in self.local_mods.keys():
+                        self.local_mods[mod_id] = add_more_versions_to_mod(self.local_mods[mod_id], current_supported_version)
+                    if mod_id in self.workshop_mods.keys():
+                        self.workshop_mods[mod_id] = add_more_versions_to_mod(self.workshop_mods[mod_id], current_supported_version)
+                    continue
+                if not isinstance(supported_mod_ids, list):
+                    logger.error(f"[NoVersionWarning]: supported_mod_ids value not str or list: {supported_mod_ids}")
+                    continue
+                for mod_id in supported_mod_ids:
+                    mod_id = mod_id.lower()
+                    if mod_id in self.local_mods.keys():
+                        self.local_mods[mod_id] = add_more_versions_to_mod(self.local_mods[mod_id], current_supported_version)
+                    if mod_id in self.workshop_mods.keys():
+                        self.workshop_mods[mod_id] = add_more_versions_to_mod(self.workshop_mods[mod_id], current_supported_version)
+                    continue
+
 
         self.steam_db_rules = {}
         self.community_rules = {}
