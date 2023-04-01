@@ -6,6 +6,7 @@ import subprocess
 from threading import Thread
 from typing import Any, Dict
 
+from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QFileDialog, QFrame, QHBoxLayout, QInputDialog, QLineEdit
 
 from sort.dependencies import *
@@ -27,8 +28,6 @@ from util.xml import json_to_xml_write, xml_path_to_json
 from view.game_configuration_panel import GameConfiguration
 from window.runner_panel import RunnerPanel
 from window.web_content_panel import WebContentPanel
-
-
 
 
 class MainContent:
@@ -81,6 +80,12 @@ class MainContent:
 
         # SIGNALS AND SLOTS
         self.actions_panel.actions_signal.connect(self.actions_slot)  # Actions
+        self.active_mods_panel.active_mods_list.key_press_signal.connect(
+            self.handle_active_mod_key_press
+        )
+        self.inactive_mods_panel.inactive_mods_list.key_press_signal.connect(
+            self.handle_inactive_mod_key_press
+        )
 
         self.active_mods_panel.active_mods_list.mod_info_signal.connect(
             self.mod_list_slot
@@ -165,9 +170,7 @@ class MainContent:
         """
         logger.info(f"USER ACTION: clicked on a mod list item: {uuid}")
         if uuid in self.all_mods_with_dependencies:
-            self.mod_info_panel.display_mod_info(
-                self.all_mods_with_dependencies[uuid]
-            )
+            self.mod_info_panel.display_mod_info(self.all_mods_with_dependencies[uuid])
             if self.all_mods_with_dependencies[uuid].get("invalid"):
                 # Set label color to red if mod is invalid
                 invalid_qlabel_stylesheet = "QLabel { color : red; }"
@@ -198,6 +201,54 @@ class MainContent:
                 self.mod_info_panel.mod_info_package_id_value.setStyleSheet(
                     invalid_qlabel_stylesheet
                 )
+
+    def handle_active_mod_key_press(self, key) -> None:
+        """
+        If the Left Arrow key is pressed while the user is focused on the
+        Active Mods List, the focus is shifted to the Inactive Mods List.
+        If no Inactive Mod was previously selected, the middle (relative)
+        one is selected. `mod_list_slot` is also called to update the
+        Mod Info Panel.
+        """
+        iml = self.inactive_mods_panel.inactive_mods_list
+        if key == "Left":
+            iml.setFocus()
+            if not iml.selectedIndexes():
+                rect = iml.contentsRect()
+                top = iml.indexAt(rect.topLeft())
+                if top.isValid():
+                    bottom = iml.indexAt(rect.bottomLeft())
+                    if not bottom.isValid():
+                        bottom = iml.model().index(iml.count() - 1)
+                    print(top.row(), bottom.row() + 1)
+                    iml.setCurrentRow(int((top.row() + bottom.row() + 1) / 2))
+                else:
+                    iml.setCurrentRow(0)
+            self.mod_list_slot(iml.selectedItems()[0].data(Qt.UserRole)["uuid"])
+
+    def handle_inactive_mod_key_press(self, key) -> None:
+        """
+        If the Right Arrow key is pressed while the user is focused on the
+        Inactive Mods List, the focus is shifted to the Active Mods List.
+        If no Active Mod was previously selected, the middle (relative)
+        one is selected. `mod_list_slot` is also called to update the
+        Mod Info Panel.
+        """
+        aml = self.active_mods_panel.active_mods_list
+        if key == "Right":
+            aml.setFocus()
+            if not aml.selectedIndexes():
+                rect = aml.contentsRect()
+                top = aml.indexAt(rect.topLeft())
+                if top.isValid():
+                    bottom = aml.indexAt(rect.bottomLeft())
+                    if not bottom.isValid():
+                        bottom = aml.model().index(aml.count() - 1)
+                    print(top.row(), bottom.row() + 1)
+                    aml.setCurrentRow(int((top.row() + bottom.row() + 1) / 2))
+                else:
+                    aml.setCurrentRow(0)
+            self.mod_list_slot(aml.selectedItems()[0].data(Qt.UserRole)["uuid"])
 
     def refresh_cache_calculations(self) -> None:
         """

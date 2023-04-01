@@ -1,24 +1,24 @@
 from logger_tt import logger
 import os
-from pathlib import Path
 import shutil
-from time import sleep
-from threading import Thread
-from typing import Any, Optional
 import webbrowser
+from pathlib import Path
+from threading import Thread
+from time import sleep
+from typing import Any, Optional
 
-from PySide2.QtCore import Qt, QEvent, QModelIndex, QObject, Signal
-from PySide2.QtGui import QDropEvent, QFocusEvent
+from PySide2.QtCore import QEvent, QModelIndex, QObject, Qt, Signal
+from PySide2.QtGui import QDropEvent, QFocusEvent, QKeySequence
 from PySide2.QtWidgets import (
-    QAction,
     QAbstractItemView,
+    QAction,
     QListWidget,
     QListWidgetItem,
     QMenu,
 )
 
-from util.error import show_warning
 from model.mod_list_item import ModListItemInner
+from util.error import show_warning
 from util.filesystem import platform_specific_open
 
 
@@ -36,6 +36,7 @@ class ModListWidget(QListWidget):
     mod_info_signal = Signal(str)
     refresh_signal = Signal(str)
     steamworks_subscription_signal = Signal(list)
+    key_press_signal = Signal(str)
 
     def __init__(self) -> None:
         """
@@ -141,7 +142,9 @@ class ModListWidget(QListWidget):
                             "Open URL in browser"
                         )  # Open URL in browser
                     else:
-                        show_warning(f"No URL was returned to open from mod metadata... Is the metadata correct? Result: {url}")
+                        show_warning(
+                            f"No URL was returned to open from mod metadata... Is the metadata correct? Result: {url}"
+                        )
                 if widget_json_data.get("steam_uri"):
                     steam_uri = widget_json_data.get("steam_uri")
                     open_mod_steam = contextMenu.addAction("Open mod in Steam")
@@ -310,6 +313,17 @@ class ModListWidget(QListWidget):
         if item:
             return self.itemWidget(item)
         return None
+
+    def keyPressEvent(self, e):
+        """
+        This event occurs when the user presses a key while the mod
+        list is in focus.
+        """
+        key_pressed = QKeySequence(e.key()).toString()
+        if key_pressed == "Left" or key_pressed == "Right":
+            self.key_press_signal.emit(key_pressed)
+        else:
+            return super().keyPressEvent(e)
 
     def get_widgets_and_items(self) -> list[tuple[ModListItemInner, QListWidgetItem]]:
         return [
