@@ -1,9 +1,9 @@
-import logging
+from logger_tt import logger
 from typing import Any
 
 from toposort import toposort
 
-logger = logging.getLogger(__name__)
+
 
 
 def do_topo_sort(

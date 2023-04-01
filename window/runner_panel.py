@@ -1,4 +1,4 @@
-import logging
+from logger_tt import logger
 
 from PySide2.QtCore import QProcess
 from PySide2.QtWidgets import (
@@ -7,7 +7,7 @@ from PySide2.QtWidgets import (
     QVBoxLayout,
 )
 
-logger = logging.getLogger(__name__)
+
 
 
 class RunnerPanel(QWidget):

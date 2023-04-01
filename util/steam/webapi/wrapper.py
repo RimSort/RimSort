@@ -1,5 +1,6 @@
 import json
-import logging
+from logging import getLogger, WARNING
+from logger_tt import logger
 from math import ceil
 from requests.exceptions import HTTPError
 import sys
@@ -10,12 +11,12 @@ from window.runner_panel import RunnerPanel
 
 from steam.webapi import WebAPI
 
-logger = logging.getLogger(__name__)
+
 # This is redundant since it is also done in `logger-tt` config,
 # however, it can't hurt, just in case!
 # Uncomment this if you want to see the full urllib3 request
 # THIS CONTAINS THE STEAM API KEY
-logging.getLogger("urllib3").setLevel(logging.WARNING)
+getLogger("urllib3").setLevel(WARNING)
 
 
 class AppIDQuery:

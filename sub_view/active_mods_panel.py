@@ -1,4 +1,4 @@
-import logging
+from logger_tt import logger
 from typing import Any
 
 from PySide2.QtCore import QSize, Qt
@@ -17,7 +17,7 @@ from PySide2.QtWidgets import (
 from model.mod_list import ModListWidget
 from model.mod_list_item import ModListItemInner
 
-logger = logging.getLogger(__name__)
+
 
 
 class ActiveModList(QWidget):

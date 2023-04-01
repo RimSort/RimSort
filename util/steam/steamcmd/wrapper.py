@@ -1,5 +1,5 @@
 from io import BytesIO
-import logging
+from logger_tt import logger
 import os
 from pathlib import Path
 import platform
@@ -17,7 +17,7 @@ from PySide2.QtWidgets import QMessageBox
 
 import shutil
 
-logger = logging.getLogger(__name__)
+
 
 
 class SteamcmdInterface:

@@ -3,9 +3,9 @@ from typing import Any, Dict
 
 import xmltodict
 
-import logging
+from logger_tt import logger
 
-logger = logging.getLogger(__name__)
+
 
 
 def xml_path_to_json(path: str) -> Dict[str, Any]:

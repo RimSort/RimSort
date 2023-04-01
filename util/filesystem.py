@@ -1,9 +1,9 @@
-import logging
+from logger_tt import logger
 import os
 import platform
 import subprocess
 
-logger = logging.getLogger(__name__)
+
 def platform_specific_open(path: str) -> None:
     """
     Function to open a folder in the platform-specific

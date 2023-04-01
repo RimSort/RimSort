@@ -1,10 +1,10 @@
-import logging
+from logger_tt import logger
 
 from PySide2.QtWidgets import QFrame, QHBoxLayout
 
 from model.animation_label import AnimationLabel
 
-logger = logging.getLogger(__name__)
+
 
 
 class Status:

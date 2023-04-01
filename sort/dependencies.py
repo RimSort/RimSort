@@ -1,7 +1,7 @@
-import logging
+from logger_tt import logger
 from typing import Any
 
-logger = logging.getLogger(__name__)
+
 
 
 def gen_deps_graph(

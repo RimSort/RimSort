@@ -1,9 +1,9 @@
 from PySide2.QtWidgets import QMessageBox
 from typing import Optional
 
-import logging
+from logger_tt import logger
 
-logger = logging.getLogger(__name__)
+
 
 
 def show_information(

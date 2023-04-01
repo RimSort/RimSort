@@ -1,11 +1,11 @@
-import logging
+from logger_tt import logger
 from typing import Any, Dict
 
 from PySide2.QtCore import QRectF, QSize, Qt
 from PySide2.QtGui import QFontMetrics, QIcon
 from PySide2.QtWidgets import QHBoxLayout, QLabel, QStyle, QWidget
 
-logger = logging.getLogger(__name__)
+
 
 
 class ModListItemInner(QWidget):

@@ -1,4 +1,4 @@
-import logging
+from logger_tt import logger
 from multiprocessing import active_children, Process
 import os
 import platform
@@ -28,7 +28,7 @@ from view.game_configuration_panel import GameConfiguration
 from window.runner_panel import RunnerPanel
 from window.web_content_panel import WebContentPanel
 
-logger = logging.getLogger(__name__)
+
 
 
 class MainContent:

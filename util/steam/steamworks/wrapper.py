@@ -1,4 +1,4 @@
-import logging
+from logger_tt import logger
 import os
 import platform
 import subprocess
@@ -12,7 +12,7 @@ import traceback
 
 from util.error import show_warning
 
-logger = logging.getLogger(__name__)
+
 
 
 class SteamworksInterface:
@@ -101,6 +101,7 @@ def launch_game_process(instruction: list) -> None:
     steamworks = STEAMWORKS()
     try:
         steamworks.initialize()  # Init the Steamworks API
+        logger.debug("Steamworks API initialized...")
     except SteamNotRunningException:
         logger.warning("Unable to initiate Steamworks API call. Steam is not running!")
         steam_not_running = True
@@ -133,13 +134,19 @@ def launch_game_process(instruction: list) -> None:
                 + args
                 + "`"
             )
-            if system_name == "Darwin":
+            # https://stackoverflow.com/a/21805723
+            if system_name == "Darwin": # MacOS
                 p = subprocess.Popen(["open", executable_path, "--args", args])
             else:
-                p = subprocess.Popen([executable_path, args])
-            logger.info(f"Launched RimWorld game process with PID: {p.pid}")
-            logger.info("Waiting for game to finish...")
-            p.wait()
+                try:
+                    subprocess.CREATE_NEW_PROCESS_GROUP
+                except AttributeError: # not Windows, so assume POSIX; if not, we'll get a usable exception
+                    p = subprocess.Popen([executable_path, args], start_new_session=True)
+                else: # Windows
+                    p = subprocess.Popen([executable_path, args], creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+            logger.info(f"Launched independent RimWorld game process with PID: {p.pid}")
+            # Always unload Steamworks API after `p` completion
+            steamworks.unload()
         else:
             logger.warning("The game executable path does not exist")
             show_warning(
@@ -151,9 +158,6 @@ def launch_game_process(instruction: list) -> None:
                     "exists in it."
                 ),
             )
-        # Always unload Steamworks API after `p` completion
-        steamworks.unload()
-
     else:
         logger.error("The path to the game folder is empty")
         show_warning(

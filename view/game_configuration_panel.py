@@ -1,6 +1,7 @@
 import getpass
 import json
-import logging
+from logging import INFO
+from logger_tt import logger
 import os
 import platform
 import webbrowser
@@ -24,8 +25,8 @@ from util.error import *
 from util.filesystem import *
 from window.settings_panel import SettingsPanel
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+
+logger.setLevel(INFO)
 
 
 class GameConfiguration(QObject):

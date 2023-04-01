@@ -1,5 +1,5 @@
 from functools import partial
-import logging
+from logger_tt import logger
 import os
 import platform
 
@@ -13,7 +13,7 @@ from PySide2.QtWidgets import (
     QVBoxLayout,
 )
 
-logger = logging.getLogger(__name__)
+
 
 
 class WebContentPanel(QWidget):

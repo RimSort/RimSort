@@ -1,4 +1,4 @@
-import logging
+from logger_tt import logger
 import os
 from pathlib import Path
 import shutil
@@ -21,7 +21,7 @@ from util.error import show_warning
 from model.mod_list_item import ModListItemInner
 from util.filesystem import platform_specific_open
 
-logger = logging.getLogger(__name__)
+
 
 
 class ModListWidget(QListWidget):

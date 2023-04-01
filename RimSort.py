@@ -1,10 +1,10 @@
-import logging
+from multiprocessing import freeze_support
 import os
+from pathlib import Path
 import platform
+from requests.exceptions import HTTPError
 import sys
 import traceback
-from pathlib import Path
-from requests.exceptions import HTTPError
 
 from logger_tt import handlers, logger, setup_logging
 from PySide2.QtCore import QSize
@@ -21,7 +21,9 @@ data_path = os.path.join(os.path.dirname(__file__), "data")
 logging_config_path = os.path.join(data_path, "logging_config.json")
 logging_file_path = os.path.join(data_path, "RimSort.log")
 
-if platform.system() == "Linux":
+system = platform.system()
+
+if system == "Linux":
     setup_logging(
         config_path=logging_config_path,
         log_path=logging_file_path,
@@ -33,10 +35,6 @@ else:
         log_path=logging_file_path,
         use_multiprocessing="spawn",
     )
-
-logger = logging.getLogger(__name__)
-logger.info("Starting RimSort application")
-
 
 def handle_exception(exc_type, exc_value, exc_traceback):
     """
@@ -113,7 +111,7 @@ class MainWindow(QMainWindow):
         logger.info("Finished MainWindow initialization")
 
 
-if __name__ == "__main__":
+def main_thread():
     try:
         app = QApplication(sys.argv)
         app.setApplicationName("RimSort")
@@ -148,3 +146,17 @@ if __name__ == "__main__":
     finally:
         logger.info("Exiting program")
         sys.exit()
+
+
+if __name__ == "__main__":
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        logger.warning("Running using PyInstaller bundle")
+        if system == "Windows":
+            logger.warning(
+                "Windows platform detected: using multiprocessing.freeze_support()"
+            )
+            freeze_support()
+    else:
+        logger.warning("Running using Python interpreter")
+    logger.info("Starting RimSort application")
+    main_thread()

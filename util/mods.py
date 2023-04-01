@@ -1,5 +1,5 @@
 import json
-import logging
+from logger_tt import logger
 from natsort import natsorted
 import os
 import platform
@@ -15,7 +15,7 @@ from util.steam.webapi.wrapper import DynamicQuery
 from util.schema import validate_mods_config_format
 from util.xml import non_utf8_xml_path_to_json, xml_path_to_json
 
-logger = logging.getLogger(__name__)
+
 
 
 def get_active_inactive_mods(

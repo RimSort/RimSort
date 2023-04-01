@@ -1,10 +1,10 @@
-import logging
+from logger_tt import logger
 from functools import partial
 
 from PySide2.QtCore import QPoint, Qt, Signal
 from PySide2.QtWidgets import QMenu, QPushButton, QVBoxLayout, QWidget
 
-logger = logging.getLogger(__name__)
+
 
 
 class Actions(QWidget):
