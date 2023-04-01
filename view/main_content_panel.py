@@ -164,11 +164,10 @@ class MainContent:
         :param uuid: uuid of mod
         """
         logger.info(f"USER ACTION: clicked on a mod list item: {uuid}")
-        for mod_uuid in self.all_mods_with_dependencies:
-            if mod_uuid == uuid:
-                self.mod_info_panel.display_mod_info(
-                    self.all_mods_with_dependencies[uuid]
-                )
+        if uuid in self.all_mods_with_dependencies:
+            self.mod_info_panel.display_mod_info(
+                self.all_mods_with_dependencies[uuid]
+            )
             if self.all_mods_with_dependencies[uuid].get("invalid"):
                 # Set label color to red if mod is invalid
                 invalid_qlabel_stylesheet = "QLabel { color : red; }"
