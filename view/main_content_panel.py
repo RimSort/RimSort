@@ -209,22 +209,48 @@ class MainContent:
         If no Inactive Mod was previously selected, the middle (relative)
         one is selected. `mod_list_slot` is also called to update the
         Mod Info Panel.
+
+        If the Return or Space button is pressed the selected mods in the
+        current list are deleted from the current list and inserted
+        into the other list.
         """
+        aml = self.active_mods_panel.active_mods_list
         iml = self.inactive_mods_panel.inactive_mods_list
         if key == "Left":
             iml.setFocus()
             if not iml.selectedIndexes():
-                rect = iml.contentsRect()
-                top = iml.indexAt(rect.topLeft())
-                if top.isValid():
-                    bottom = iml.indexAt(rect.bottomLeft())
-                    if not bottom.isValid():
-                        bottom = iml.model().index(iml.count() - 1)
-                    print(top.row(), bottom.row() + 1)
-                    iml.setCurrentRow(int((top.row() + bottom.row() + 1) / 2))
-                else:
-                    iml.setCurrentRow(0)
+                iml.setCurrentRow(self._get_relative_middle(iml))
             self.mod_list_slot(iml.selectedItems()[0].data(Qt.UserRole)["uuid"])
+
+        elif key == "Return" or key == "Space":
+            # TODO: graphical bug where if you hold down the key, items are
+            # inserted too quickly and become empty items
+
+            items_to_move = aml.selectedItems().copy()
+            if items_to_move:
+                first_selected = sorted(aml.row(i) for i in items_to_move)[0]
+
+                # Remove items from current list
+                for item in items_to_move:
+                    aml.takeItem(aml.row(item))
+                    aml.uuids.discard(item.data(Qt.UserRole)["uuid"])
+                if aml.count():
+                    if aml.count() == first_selected:
+                        aml.setCurrentRow(aml.count() - 1)
+                    else:
+                        aml.setCurrentRow(first_selected)
+
+                # Insert items into other list
+                if not iml.selectedIndexes():
+                    count = self._get_relative_middle(iml)
+                else:
+                    count = iml.row(iml.selectedItems()[-1]) + 1
+                for item in items_to_move:
+                    iml.insertItem(count, item)
+                    count += 1
+
+                # If the other list is the active mod list, recalculate errors
+                self.active_mods_panel.recalculate_internal_list_errors()
 
     def handle_inactive_mod_key_press(self, key) -> None:
         """
@@ -233,22 +259,59 @@ class MainContent:
         If no Active Mod was previously selected, the middle (relative)
         one is selected. `mod_list_slot` is also called to update the
         Mod Info Panel.
+
+        If the Return or Space button is pressed the selected mods in the
+        current list are deleted from the current list and inserted
+        into the other list.
         """
+
         aml = self.active_mods_panel.active_mods_list
+        iml = self.inactive_mods_panel.inactive_mods_list
         if key == "Right":
             aml.setFocus()
             if not aml.selectedIndexes():
-                rect = aml.contentsRect()
-                top = aml.indexAt(rect.topLeft())
-                if top.isValid():
-                    bottom = aml.indexAt(rect.bottomLeft())
-                    if not bottom.isValid():
-                        bottom = aml.model().index(aml.count() - 1)
-                    print(top.row(), bottom.row() + 1)
-                    aml.setCurrentRow(int((top.row() + bottom.row() + 1) / 2))
-                else:
-                    aml.setCurrentRow(0)
+                aml.setCurrentRow(self._get_relative_middle(aml))
             self.mod_list_slot(aml.selectedItems()[0].data(Qt.UserRole)["uuid"])
+
+        elif key == "Return" or key == "Space":
+            # TODO: graphical bug where if you hold down the key, items are
+            # inserted too quickly and become empty items
+
+            items_to_move = iml.selectedItems().copy()
+            if items_to_move:
+                first_selected = sorted(iml.row(i) for i in items_to_move)[0]
+
+                # Remove items from current list
+                for item in items_to_move:
+                    iml.takeItem(iml.row(item))
+                    iml.uuids.discard(item.data(Qt.UserRole)["uuid"])
+                if iml.count():
+                    if iml.count() == first_selected:
+                        iml.setCurrentRow(iml.count() - 1)
+                    else:
+                        iml.setCurrentRow(first_selected)
+
+                # Insert items into other list
+                if not aml.selectedIndexes():
+                    count = self._get_relative_middle(aml)
+                else:
+                    count = aml.row(aml.selectedItems()[-1]) + 1
+                for item in items_to_move:
+                    aml.insertItem(count, item)
+                    count += 1
+
+                # If the other list is the active mod list, recalculate errors
+                self.active_mods_panel.recalculate_internal_list_errors()
+
+    def _get_relative_middle(self, some_list):
+        rect = some_list.contentsRect()
+        top = some_list.indexAt(rect.topLeft())
+        if top.isValid():
+            bottom = some_list.indexAt(rect.bottomLeft())
+            if not bottom.isValid():
+                bottom = some_list.model().index(some_list.count() - 1)
+            return (top.row() + bottom.row() + 1) / 2
+        return 0
 
     def refresh_cache_calculations(self) -> None:
         """

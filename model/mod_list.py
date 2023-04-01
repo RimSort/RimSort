@@ -22,8 +22,6 @@ from util.error import show_warning
 from util.filesystem import platform_specific_open
 
 
-
-
 class ModListWidget(QListWidget):
     """
     Subclass for QListWidget. Used to store lists for
@@ -320,7 +318,12 @@ class ModListWidget(QListWidget):
         list is in focus.
         """
         key_pressed = QKeySequence(e.key()).toString()
-        if key_pressed == "Left" or key_pressed == "Right":
+        if (
+            key_pressed == "Left"
+            or key_pressed == "Right"
+            or key_pressed == "Return"
+            or key_pressed == "Space"
+        ):
             self.key_press_signal.emit(key_pressed)
         else:
             return super().keyPressEvent(e)
