@@ -3,9 +3,10 @@ from logger_tt import logger
 import os
 import platform
 
-from PySide2.QtCore import QUrl
-from PySide2.QtWebEngineWidgets import QWebEnginePage, QWebEngineView
-from PySide2.QtWidgets import (
+from PySide6.QtCore import QUrl
+from PySide6.QtWebEngineCore import QWebEnginePage
+from PySide6.QtWebEngineWidgets import QWebEngineView
+from PySide6.QtWidgets import (
     QLineEdit,
     QSizePolicy,
     QToolBar,

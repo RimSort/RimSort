@@ -7,11 +7,10 @@ from threading import Thread
 from time import sleep
 from typing import Any, Optional
 
-from PySide2.QtCore import QEvent, QModelIndex, QObject, Qt, Signal
-from PySide2.QtGui import QDropEvent, QFocusEvent, QKeySequence
-from PySide2.QtWidgets import (
+from PySide6.QtCore import Qt, QEvent, QModelIndex, QObject, Signal
+from PySide6.QtGui import QAction, QDropEvent, QFocusEvent, QKeySequence
+from PySide6.QtWidgets import (
     QAbstractItemView,
-    QAction,
     QListWidget,
     QListWidgetItem,
     QMenu,

@@ -13,7 +13,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from util.error import show_fatal_error, show_information, show_warning
 from window.runner_panel import RunnerPanel
 
-from PySide2.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QMessageBox
 
 import shutil
 

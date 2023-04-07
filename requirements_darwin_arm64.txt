@@ -1,6 +1,0 @@
-logger-tt==1.7.3
-natsort==8.3.1
-pyinstaller==5.7.0
-steam==1.4.4
-toposort==1.9
-xmltodict==0.13.0

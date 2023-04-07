@@ -1,8 +1,8 @@
 from logger_tt import logger
 from functools import partial
 
-from PySide2.QtCore import QStandardPaths, Qt, Signal
-from PySide2.QtWidgets import (
+from PySide6.QtCore import QStandardPaths, Qt, Signal
+from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QDialog,

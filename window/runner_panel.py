@@ -1,7 +1,7 @@
 from logger_tt import logger
 
-from PySide2.QtCore import QProcess
-from PySide2.QtWidgets import (
+from PySide6.QtCore import QProcess
+from PySide6.QtWidgets import (
     QPlainTextEdit,
     QWidget,
     QVBoxLayout,

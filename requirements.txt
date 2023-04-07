@@ -1,7 +1,11 @@
 logger-tt==1.7.3
 natsort==8.3.1
 pyinstaller==5.7.0
-PySide2==5.15.2.1
+PySide6==6.4.3
+PySide6-Addons==6.4.3
+PySide6-Essentials==6.4.3
 steam==1.4.4
 toposort==1.9
 xmltodict==0.13.0
+nuitka==1.5.5
+imageio==2.27.0

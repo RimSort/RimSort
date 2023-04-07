@@ -1,4 +1,5 @@
 from logger_tt import logger
+import multiprocessing
 import os
 import platform
 import subprocess
@@ -12,8 +13,8 @@ import traceback
 
 from util.error import show_warning
 
-
-
+print(f"steamworks.wrapper: {multiprocessing.current_process()}")
+print(f"__name__: {__name__}\nsys.argv: {sys.argv}")
 
 class SteamworksInterface:
     """

@@ -1,7 +1,7 @@
 from logger_tt import logger
 
-from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QFrame, QLabel, QScrollArea, QVBoxLayout
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QFrame, QLabel, QScrollArea, QVBoxLayout
 
 
 

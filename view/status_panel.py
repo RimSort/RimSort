@@ -1,6 +1,6 @@
 from logger_tt import logger
 
-from PySide2.QtWidgets import QFrame, QHBoxLayout
+from PySide6.QtWidgets import QFrame, QHBoxLayout
 
 from model.animation_label import AnimationLabel
 

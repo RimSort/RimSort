@@ -2,9 +2,9 @@ from logger_tt import logger
 import os
 from typing import Any, Dict
 
-from PySide2.QtCore import Qt
-from PySide2.QtGui import QPixmap
-from PySide2.QtWidgets import QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QPixmap
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout
 
 from model.image_label import ImageLabel
 from model.scroll_label import ScrollLabel

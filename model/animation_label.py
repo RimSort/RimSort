@@ -1,5 +1,5 @@
-from PySide2.QtCore import QPropertyAnimation, QTimer, QEasingCurve
-from PySide2.QtWidgets import QLabel, QGraphicsOpacityEffect
+from PySide6.QtCore import QPropertyAnimation, QTimer, QEasingCurve
+from PySide6.QtWidgets import QLabel, QGraphicsOpacityEffect
 
 
 class AnimationLabel(QLabel):

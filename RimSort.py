@@ -1,14 +1,17 @@
-from multiprocessing import freeze_support
+import multiprocessing
+import sys
+print(f"RimSort.py: {multiprocessing.current_process()}")
+print(f"__name__: {__name__}\nsys.argv: {sys.argv}")
+from multiprocessing import freeze_support, set_start_method
 import os
 from pathlib import Path
 import platform
 from requests.exceptions import HTTPError
-import sys
 import traceback
 
 from logger_tt import handlers, logger, setup_logging
-from PySide2.QtCore import QSize
-from PySide2.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
+from PySide6.QtCore import QSize
+from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 
 from util.error import show_fatal_error
 from util.proxy_style import ProxyStyle
@@ -125,7 +128,7 @@ def main_thread():
         window = MainWindow()
         logger.info("Showing MainWindow")
         window.show()
-        app.exec_()
+        app.exec()
     except Exception as e:
         # Catch exceptions during initial application instantiation
         # Uncaught exceptions during the application loop are caught with excepthook
@@ -149,13 +152,28 @@ def main_thread():
 
 
 if __name__ == "__main__":
-    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
-        logger.warning("Running using PyInstaller bundle")
-        if system == "Windows":
+    # This check was PREVIOUSLY used to check whether RimSort was running via PyInstaller
+    # TODO: Remove this.
+    # if getattr(sys, "frozen", False):
+    #     logger.warning("Running using PyInstaller bundle")
+    #     if system != "Linux":
+    #         logger.warning(
+    #             "Non-Linux platform detected: using multiprocessing.freeze_support() & setting 'spawn' as MP method"
+    #         )
+    #         freeze_support()
+    #         set_start_method('spawn')
+    # else:
+    #     logger.warning("Running using Python interpreter")
+    # This check is used 
+    is_nuitka = "__compiled__" in globals()
+    if is_nuitka:
+        logger.warning("Running using Nuitka bundle")
+        if system != "Linux":
             logger.warning(
-                "Windows platform detected: using multiprocessing.freeze_support()"
+                "Non-Linux platform detected: using multiprocessing.freeze_support() & setting 'spawn' as MP method"
             )
             freeze_support()
+            set_start_method('spawn')
     else:
         logger.warning("Running using Python interpreter")
     logger.info("Starting RimSort application")

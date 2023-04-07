@@ -1,13 +1,15 @@
 from logger_tt import logger
+import multiprocessing
 from multiprocessing import active_children, Process
 import os
 import platform
 import subprocess
+import sys
 from threading import Thread
 from typing import Any, Dict
 
-from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QFileDialog, QFrame, QHBoxLayout, QInputDialog, QLineEdit
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QFileDialog, QFrame, QHBoxLayout, QInputDialog, QLineEdit
 
 from sort.dependencies import *
 from sort.rimpy_sort import *
@@ -28,6 +30,10 @@ from util.xml import json_to_xml_write, xml_path_to_json
 from view.game_configuration_panel import GameConfiguration
 from window.runner_panel import RunnerPanel
 from window.web_content_panel import WebContentPanel
+
+
+print(f"main_content_panel.py: {multiprocessing.current_process()}")
+print(f"__name__: {__name__}\nsys.argv: {sys.argv}")
 
 
 class MainContent:

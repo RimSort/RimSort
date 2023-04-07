@@ -1,8 +1,8 @@
 from logger_tt import logger
 from typing import Any
 
-from PySide2.QtCore import QSize, Qt
-from PySide2.QtWidgets import (
+from PySide6.QtCore import QSize, Qt
+from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,

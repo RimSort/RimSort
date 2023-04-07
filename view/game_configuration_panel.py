@@ -9,8 +9,8 @@ from functools import partial
 from os.path import expanduser
 from typing import Any
 
-from PySide2.QtCore import QObject, QStandardPaths, Qt, Signal
-from PySide2.QtWidgets import (
+from PySide6.QtCore import QObject, QStandardPaths, Qt, Signal
+from PySide6.QtWidgets import (
     QFileDialog,
     QFrame,
     QHBoxLayout,
