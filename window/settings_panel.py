@@ -1,5 +1,7 @@
-from logger_tt import logger
 from functools import partial
+from logger_tt import logger
+import os
+import sys
 
 from PySide6.QtCore import QStandardPaths, Qt, Signal
 from PySide6.QtWidgets import (
@@ -12,8 +14,6 @@ from PySide6.QtWidgets import (
 )
 
 from util.filesystem import platform_specific_open
-
-
 
 
 class SettingsPanel(QDialog):
@@ -72,6 +72,13 @@ class SettingsPanel(QDialog):
         self.clear_paths_button.clicked.connect(
             partial(self.clear_paths_signal.emit, "clear_paths")
         )
+        self.open_log_button = QPushButton("Open RimSort Log")
+        self.open_log_button.clicked.connect(
+            partial(
+                platform_specific_open,
+                os.path.join(os.path.dirname(sys.argv[0]), "RimSort.log"),
+            )
+        )
         self.open_storage_button = QPushButton("Open Storage Dir")
         self.open_storage_button.clicked.connect(
             partial(
@@ -102,6 +109,7 @@ class SettingsPanel(QDialog):
         self.layout.addWidget(self.comparison_report_button)
         self.layout.addWidget(self.set_webapi_query_expiry_button)
         self.layout.addWidget(self.clear_paths_button)
+        self.layout.addWidget(self.open_log_button)
         self.layout.addWidget(self.open_storage_button)
         self.layout.addWidget(self.duplicate_mods_checkbox)
         self.layout.addWidget(self.steam_mods_update_checkbox)
