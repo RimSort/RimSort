@@ -87,7 +87,7 @@ class SteamworksInterface:
         return Thread(target=self._callbacks, daemon=True)
 
 
-def launch_game_process(instruction: list) -> None:
+def launch_game_process(instruction: list, override: bool) -> None:
     """
     This function starts the Rimworld game process in it's own Process,
     by launching the executable found in the configured game directory.
@@ -95,24 +95,28 @@ def launch_game_process(instruction: list) -> None:
     This function initializes the Steamworks API to be used by the RimWorld game.
 
     :param instruction: a list containing [path: str, args: str] respectively
+    :param override: a bool when if set to True, skips initiating Steamworks
     """
     game_path = instruction[0]
     args = instruction[1]
+    if not override:
+        steam_not_running = False  # Skip action if True. Log occurrences.
+        steamworks = STEAMWORKS()
+        try:
+            steamworks.initialize()  # Init the Steamworks API
+            logger.debug("Steamworks API initialized...")
+        except SteamNotRunningException:
+            logger.warning(
+                "Unable to initiate Steamworks API call. Steam is not running!"
+            )
+            steam_not_running = True
+        if not steam_not_running:  # Skip if True
+            logger.info(f"Launching RimWorld game process using Steamworks API.")
+        else:
+            logger.warning(
+                f"Unable to launch game with Steamworks API. Please close your game and try to launch again after opening Steam."
+            )
     logger.info(f"Attempting to find the game in the game folder {game_path}")
-    steam_not_running = False  # Skip action if True. Log occurrences.
-    steamworks = STEAMWORKS()
-    try:
-        steamworks.initialize()  # Init the Steamworks API
-        logger.debug("Steamworks API initialized...")
-    except SteamNotRunningException:
-        logger.warning("Unable to initiate Steamworks API call. Steam is not running!")
-        steam_not_running = True
-    if not steam_not_running:  # Skip if True
-        logger.info(f"Launching RimWorld game process using Steamworks API.")
-    else:
-        logger.warning(
-            f"Unable to launch game with Steamworks API. Please close your game and try to launch again after opening Steam."
-        )
     if game_path:
         system_name = platform.system()
         if system_name == "Darwin":
@@ -142,7 +146,9 @@ def launch_game_process(instruction: list) -> None:
             else:
                 try:
                     subprocess.CREATE_NEW_PROCESS_GROUP
-                except AttributeError:  # not Windows, so assume POSIX; if not, we'll get a usable exception
+                except (
+                    AttributeError
+                ):  # not Windows, so assume POSIX; if not, we'll get a usable exception
                     p = subprocess.Popen(
                         [executable_path, args], start_new_session=True
                     )
@@ -152,6 +158,10 @@ def launch_game_process(instruction: list) -> None:
                         creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
                     )
             logger.info(f"Launched independent RimWorld game process with PID: {p.pid}")
+            if (
+                override
+            ):  # Skip the next instruction to unload Steamworks, if we aren't using it
+                return
             # Always unload Steamworks API after `p` completion
             steamworks.unload()
         else:
