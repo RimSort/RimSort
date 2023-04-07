@@ -1,5 +1,6 @@
 import multiprocessing
 import sys
+
 print(f"RimSort.py: {multiprocessing.current_process()}")
 print(f"__name__: {__name__}\nsys.argv: {sys.argv}")
 from multiprocessing import freeze_support, set_start_method
@@ -38,6 +39,7 @@ else:
         log_path=logging_file_path,
         use_multiprocessing="spawn",
     )
+
 
 def handle_exception(exc_type, exc_value, exc_traceback):
     """
@@ -164,7 +166,8 @@ if __name__ == "__main__":
     #         set_start_method('spawn')
     # else:
     #     logger.warning("Running using Python interpreter")
-    # This check is used 
+
+    # This check is used whether RimSort is running via Nuitka bundle
     is_nuitka = "__compiled__" in globals()
     if is_nuitka:
         logger.warning("Running using Nuitka bundle")
@@ -173,7 +176,7 @@ if __name__ == "__main__":
                 "Non-Linux platform detected: using multiprocessing.freeze_support() & setting 'spawn' as MP method"
             )
             freeze_support()
-            set_start_method('spawn')
+            set_start_method("spawn")
     else:
         logger.warning("Running using Python interpreter")
     logger.info("Starting RimSort application")

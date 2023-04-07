@@ -16,6 +16,7 @@ from util.error import show_warning
 print(f"steamworks.wrapper: {multiprocessing.current_process()}")
 print(f"__name__: {__name__}\nsys.argv: {sys.argv}")
 
+
 class SteamworksInterface:
     """
     A class object to handle our interactions with SteamworksPy
@@ -136,15 +137,20 @@ def launch_game_process(instruction: list) -> None:
                 + "`"
             )
             # https://stackoverflow.com/a/21805723
-            if system_name == "Darwin": # MacOS
+            if system_name == "Darwin":  # MacOS
                 p = subprocess.Popen(["open", executable_path, "--args", args])
             else:
                 try:
                     subprocess.CREATE_NEW_PROCESS_GROUP
-                except AttributeError: # not Windows, so assume POSIX; if not, we'll get a usable exception
-                    p = subprocess.Popen([executable_path, args], start_new_session=True)
-                else: # Windows
-                    p = subprocess.Popen([executable_path, args], creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+                except AttributeError:  # not Windows, so assume POSIX; if not, we'll get a usable exception
+                    p = subprocess.Popen(
+                        [executable_path, args], start_new_session=True
+                    )
+                else:  # Windows
+                    p = subprocess.Popen(
+                        [executable_path, args],
+                        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+                    )
             logger.info(f"Launched independent RimWorld game process with PID: {p.pid}")
             # Always unload Steamworks API after `p` completion
             steamworks.unload()

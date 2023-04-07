@@ -10,8 +10,6 @@ from model.image_label import ImageLabel
 from model.scroll_label import ScrollLabel
 
 
-
-
 class ModInfo:
     """
     This class controls the layout and functionality for the
@@ -48,6 +46,11 @@ class ModInfo:
         self.preview_picture.setAlignment(Qt.AlignCenter)
         self.preview_picture.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.preview_picture.setMinimumSize(1, 1)
+        self.preview_picture.setPixmap(
+            QPixmap(os.path.join(os.getcwd(), "data", "missing.png")).scaled(
+                self.preview_picture.size(), Qt.KeepAspectRatio
+            )
+        )
         self.mod_info_name_label = QLabel("Name:")
         self.mod_info_name_label.setObjectName("summaryLabel")
         self.mod_info_name_value = QLabel()
@@ -67,7 +70,9 @@ class ModInfo:
         self.mod_info_mod_version_label.setObjectName("summaryLabel")
         self.mod_info_mod_version_value = QLabel()
         self.mod_info_mod_version_value.setObjectName("summaryValue")
-        self.mod_info_mod_version_value.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self.mod_info_mod_version_value.setTextInteractionFlags(
+            Qt.TextSelectableByMouse
+        )
         self.mod_info_path_label = QLabel("Path:")
         self.mod_info_path_label.setObjectName("summaryLabel")
         self.mod_info_path_value = QLabel()
@@ -175,7 +180,13 @@ class ModInfo:
                     # If there was an issue getting the expected path, track and exit
                     if invalid_folder_path_found or invalid_file_path_found:
                         logger.info("No preview image found for the mod")
-                        self.preview_picture.setPixmap(None)
+                        image_path = os.path.join(os.getcwd(), "data", "missing.png")
+                        pixmap = QPixmap(image_path)
+                        self.preview_picture.setPixmap(
+                            pixmap.scaled(
+                                self.preview_picture.size(), Qt.KeepAspectRatio
+                            )
+                        )
                     else:
                         logger.info("Preview image found")
                         image_path = os.path.join(
@@ -201,5 +212,9 @@ class ModInfo:
             logger.error(
                 f"[path] tag does not exist in mod_info, is empty, or is not string: {mod_info.get('path')}"
             )
-            self.preview_picture.setPixmap(None)
+            image_path = os.path.join(os.getcwd(), "data", "missing.png")
+            pixmap = QPixmap(image_path)
+            self.preview_picture.setPixmap(
+                pixmap.scaled(self.preview_picture.size(), Qt.KeepAspectRatio)
+            )
         logger.info("Finished displaying mod info")

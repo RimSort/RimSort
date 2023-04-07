@@ -785,7 +785,6 @@ class MainContent:
         """
         logger.info(f"Received Steamworks API instruction: {instruction}")
         if not self.steamworks_initialized:
-            self.steamworks_initialized = True
             subscription_actions = ["subscribe", "unsubscribe"]
             supported_actions = ["launch_game_process"]
             supported_actions.extend(subscription_actions)
@@ -796,14 +795,42 @@ class MainContent:
                     logger.info(
                         f"Creating Steamworks API process with instruction {instruction}"
                     )
-                    steamworks_api_process = Process(
-                        target=steamworks_subscriptions_handler, args=(instruction,)
-                    )
+                    # Temporarily disable Steam API subscription interactions with Nuitka builds for Mac/Win
+                    if (
+                        platform.system() == "Darwin"
+                        or "Windows"
+                        and "__compiled__" in globals()
+                    ):
+                        logger.warning(
+                            "Steamworks API subscription interactions are currently disabled on frozen Nuitka bundles due to issues with logger_tt and multiprocessing."
+                        )
+                        return
+                    else:
+                        self.steamworks_initialized = True
+                        steamworks_api_process = Process(
+                            target=steamworks_subscriptions_handler, args=(instruction,)
+                        )
                 elif instruction[0] == "launch_game_process":
-                    steamworks_api_process = Process(
-                        target=launch_game_process,
-                        args=(instruction[1],),
-                    )
+                    # Temporarily disable Steam API game launch with Nuitka builds for Mac/Win
+                    if (
+                        platform.system() == "Darwin"
+                        or "Windows"
+                        and "__compiled__" in globals()
+                    ):
+                        logger.warning(
+                            "Steamworks API game launch is currently disabled on frozen Nuitka bundles due to issues with logger_tt and multiprocessing."
+                        )
+                        logger.warning(
+                            "Launching independent game process without Steamworks API!"
+                        )
+                        launch_game_process(instruction[1])
+                        return
+                    else:
+                        self.steamworks_initialized = True
+                        steamworks_api_process = Process(
+                            target=launch_game_process,
+                            args=(instruction[1],),
+                        )
             else:
                 logger.error(f"Unsupported instruction {instruction}")
                 return
