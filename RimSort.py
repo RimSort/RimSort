@@ -20,12 +20,17 @@ from view.game_configuration_panel import GameConfiguration
 from view.main_content_panel import MainContent
 from view.status_panel import Status
 
-# The log file is stored inside the RimSort install directory (on Mac, it is inside the package)
+is_nuitka = "__compiled__" in globals()
+system = platform.system()
+
+# If RimSort is running from a --onefile Nuitka build, there are some nuances to consider:
+# https://nuitka.net/doc/user-manual.html#onefile-finding-files
+# You can override by passing --onefile-tempdir-spec to `nuitka`
+# See also: https://nuitka.net/doc/user-manual.html#use-case-4-program-distribution
+# Otherwise, use sys.argv[0] to get the actual relative path to the executable
 data_path = os.path.join(os.path.dirname(__file__), "data")
 logging_config_path = os.path.join(data_path, "logging_config.json")
-logging_file_path = os.path.join(data_path, "RimSort.log")
-
-system = platform.system()
+logging_file_path = os.path.join(os.path.dirname(sys.argv[0]), "RimSort.log")
 
 if system == "Linux":
     setup_logging(
@@ -134,7 +139,9 @@ def main_thread():
     except Exception as e:
         # Catch exceptions during initial application instantiation
         # Uncaught exceptions during the application loop are caught with excepthook
-        if e.__class__.__name__ == "HTTPError":  # requests.exceptions.HTTPError
+        if (
+            e.__class__.__name__ == "HTTPError" or e.__class__.__name__ == "SSLError"
+        ):  # requests.exceptions.HTTPError OR urllib3.exceptions.SSLError
             stacktrace = traceback.format_exc()
             pattern = "&key="
             stacktrace = stacktrace[
@@ -168,7 +175,6 @@ if __name__ == "__main__":
     #     logger.warning("Running using Python interpreter")
 
     # This check is used whether RimSort is running via Nuitka bundle
-    is_nuitka = "__compiled__" in globals()
     if is_nuitka:
         logger.warning("Running using Nuitka bundle")
         if system != "Linux":

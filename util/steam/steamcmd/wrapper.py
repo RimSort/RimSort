@@ -18,28 +18,18 @@ from PySide6.QtWidgets import QMessageBox
 import shutil
 
 
-
-
 class SteamcmdInterface:
     """
     Create SteamcmdInterface object to provide an interface for steamcmd functionality
     """
 
-    def __init__(self) -> None:
+    def __init__(self, storage_path: str) -> None:
         logger.info("SteamcmdInterface initilizing...")
         self.cwd = os.getcwd()
         self.log = ""
-        self.steamcmd_path = str(
-            Path(
-                os.path.join(os.path.dirname(__file__), "../../../data/steamcmd")
-            ).resolve()
-        )
+        self.steamcmd_path = Path(storage_path, "steamcmd").resolve()
         self.system = platform.system()
-        self.steamcmd_mods_path = str(
-            Path(
-                os.path.join(os.path.dirname(__file__), "../../../data/steam")
-            ).resolve()
-        )
+        self.steamcmd_mods_path = Path(storage_path, "steam").resolve()
 
         if self.system == "Darwin":
             self.steamcmd_url = (

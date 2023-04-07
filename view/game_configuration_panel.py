@@ -337,16 +337,6 @@ class GameConfiguration(QObject):
             QStandardPaths.AppLocalDataLocation
         )
         logger.info(f"Determined storage path: {self.storage_path}")
-        if not os.path.exists(self.storage_path):
-            logger.info(f"Storage path [{self.storage_path}] does not exist")
-            information = (
-                "It looks like you may be running RimSort for the first time! RimSort stores some client "
-                f"information in this directory: [{self.storage_path}]. It doesn't look like this directory "
-                "exists, so we'll make it for you now."
-            )
-            show_information(text="Welcome to RimSort!", information=information)
-            logger.info("Making storage directory")
-            os.makedirs(self.storage_path)
         settings_path = os.path.join(self.storage_path, "settings.json")
         logger.info(f"Determined settings file path: {settings_path}")
         if not os.path.exists(settings_path):

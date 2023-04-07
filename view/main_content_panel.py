@@ -3,10 +3,12 @@ import multiprocessing
 from multiprocessing import active_children, Process
 import os
 import platform
+from requests.exceptions import SSLError
 import subprocess
 import sys
 from threading import Thread
 from typing import Any, Dict
+from urllib3.exceptions import HTTPError
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QFileDialog, QFrame, QHBoxLayout, QInputDialog, QLineEdit
@@ -154,7 +156,7 @@ class MainContent:
             self.repopulate_lists(True)
 
         # Instantiate steamcmd wrapper
-        self.steamcmd_wrapper = SteamcmdInterface()
+        self.steamcmd_wrapper = SteamcmdInterface(self.game_configuration.storage_path)
 
         # Steamworks bool - use this to check any Steamworks processes you try to initialize
         self.steamworks_initialized = False
@@ -629,6 +631,18 @@ class MainContent:
                     : len(stacktrace)
                     - (len(stacktrace) - (stacktrace.find(pattern) + len(pattern)))
                 ]  # If an HTTPError from steam/urllib3 module(s) somehow is uncaught, try to remove the Steam API key from the stacktrace
+                show_fatal_error(
+                    text="RimSort Dynamic Query",
+                    information="DynamicQuery failed to initialize database.\nThere is no external metadata being factored for sorting!\n\nCached Dynamic Query database not found!\n\nFailed to initialize new DynamicQuery with configured Steam API key.\n\nAre you connected to the internet?\n\nIs your configured key invalid or revoked?\n\nPlease right-click the 'Refresh' button and configure a valid Steam API key so that you can generate a database.\n\nPlease reference: https://github.com/oceancabbage/RimSort/wiki/User-Guide#obtaining-your-steam-api-key--using-it-with-rimsort-dynamic-query",
+                    details=stacktrace,
+                )
+            except SSLError:
+                stacktrace = traceback.format_exc()
+                pattern = "&key="
+                stacktrace = stacktrace[
+                    : len(stacktrace)
+                    - (len(stacktrace) - (stacktrace.find(pattern) + len(pattern)))
+                ]  # If an SSLError from steam/urllib3 module(s) somehow is uncaught, try to remove the Steam API key from the stacktrace
                 show_fatal_error(
                     text="RimSort Dynamic Query",
                     information="DynamicQuery failed to initialize database.\nThere is no external metadata being factored for sorting!\n\nCached Dynamic Query database not found!\n\nFailed to initialize new DynamicQuery with configured Steam API key.\n\nAre you connected to the internet?\n\nIs your configured key invalid or revoked?\n\nPlease right-click the 'Refresh' button and configure a valid Steam API key so that you can generate a database.\n\nPlease reference: https://github.com/oceancabbage/RimSort/wiki/User-Guide#obtaining-your-steam-api-key--using-it-with-rimsort-dynamic-query",
