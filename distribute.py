@@ -13,15 +13,59 @@ _SYSTEM = platform.system()
 PY_CMD = "python3"
 _PYINSTALLER_SPEC_PATH = f"pyinstaller_{_SYSTEM}.spec"
 if _SYSTEM == "Darwin":
-    _NUITKA_CMD = [ PY_CMD, "-m", "nuitka", "--standalone", "--onefile", "--macos-create-app-bundle", "--macos-app-icon=./data/AppIcon_a.icns", "--enable-plugin=pyside6", "--include-data-dir=./data/=data", f"--include-data-file=./SteamworksPy_{_PROCESSOR}.dylib=SteamworksPy.dylib", "--include-data-file=./libsteam_api.dylib=libsteam_api.dylib", "--include-data-file=./steam_appid.txt=steam_appid.txt", "RimSort.py" ]
+    _NUITKA_CMD = [
+        PY_CMD,
+        "-m",
+        "nuitka",
+        "--standalone",
+        "--onefile",
+        "--macos-create-app-bundle",
+        "--macos-app-icon=./data/AppIcon_a.icns",
+        "--enable-plugin=pyside6",
+        "--include-data-dir=./data/=data",
+        f"--include-data-file=./SteamworksPy_{_PROCESSOR}.dylib=SteamworksPy.dylib",
+        "--include-data-file=./libsteam_api.dylib=libsteam_api.dylib",
+        "--include-data-file=./steam_appid.txt=steam_appid.txt",
+        "RimSort.py",
+        "--output-dir=./dist/",
+    ]
 elif _SYSTEM == "Linux":
-    _NUITKA_CMD = [ PY_CMD, "-m", "nuitka", "--standalone", "--onefile", "--enable-plugin=pyside6", "--include-data-dir=./data/=data", f"--include-data-file=./SteamworksPy_{_PROCESSOR}.so=SteamworksPy.so", "--include-data-file=./libsteam_api.so=libsteam_api.so", "--include-data-file=./steam_appid.txt=steam_appid.txt", "RimSort.py" ]
+    _NUITKA_CMD = [
+        PY_CMD,
+        "-m",
+        "nuitka",
+        "--standalone",
+        "--onefile",
+        "--enable-plugin=pyside6",
+        "--include-data-dir=./data/=data",
+        f"--include-data-file=./SteamworksPy_{_PROCESSOR}.so=SteamworksPy.so",
+        "--include-data-file=./libsteam_api.so=libsteam_api.so",
+        "--include-data-file=./steam_appid.txt=steam_appid.txt",
+        "RimSort.py",
+        "--output-dir=./dist/",
+    ]
 elif _SYSTEM == "Windows" and _ARCH == "64bit":
     PY_CMD = "py"
-    _NUITKA_CMD = [ PY_CMD, "-m", "nuitka", "--standalone", "--onefile", "--windows-icon-from-ico=./data/AppIcon_a.png", "--enable-plugin=pyside6", "--include-data-dir=./data/=data", "--include-data-file=./SteamworksPy64.dll=SteamworksPy64.dll", "--include-data-file=./steam_api64.dll=steam_api64.dll", "--include-data-file=./steam_appid.txt=steam_appid.txt", "RimSort.py" ]
+    _NUITKA_CMD = [
+        PY_CMD,
+        "-m",
+        "nuitka",
+        "--standalone",
+        "--onefile",
+        "--windows-icon-from-ico=./data/AppIcon_a.png",
+        "--enable-plugin=pyside6",
+        "--include-data-dir=./data/=data",
+        "--include-data-file=./SteamworksPy64.dll=SteamworksPy64.dll",
+        "--include-data-file=./steam_api64.dll=steam_api64.dll",
+        "--include-data-file=./steam_appid.txt=steam_appid.txt",
+        "RimSort.py",
+        "--output-dir=./dist",
+    ]
     _PYINSTALLER_SPEC_PATH = f"pyinstaller_{_SYSTEM}_{_ARCH}.spec"
 else:
-    print(f"Attempting to build on unsupported platform: {_SYSTEM} {_ARCH} with {_PROCESSOR}")
+    print(
+        f"Attempting to build on unsupported platform: {_SYSTEM} {_ARCH} with {_PROCESSOR}"
+    )
     print("Exiting...")
 GET_REQ_CMD = [PY_CMD, "-m", "pip", "install", "-r", "requirements.txt"]
 STEAMFILES_BUILD_CMD = [PY_CMD, "build_steamfiles.py"]

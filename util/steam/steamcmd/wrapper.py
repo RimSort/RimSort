@@ -214,11 +214,16 @@ class SteamcmdInterface:
                     runner.message(
                         f"[{symlink_source_path}] -> " + symlink_destination_path
                     )
-                    os.symlink(
-                        symlink_source_path,
-                        symlink_destination_path,
-                        target_is_directory=True,
-                    )
+                    if self.system != "Windows":
+                        os.symlink(
+                            symlink_source_path,
+                            symlink_destination_path,
+                            target_is_directory=True,
+                        )
+                    else:
+                        from _winapi import CreateJunction
+                        CreateJunction(symlink_source_path, symlink_destination_path)
+
 
 
 if __name__ == "__main__":
