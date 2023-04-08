@@ -15,8 +15,6 @@ from PySide6.QtWidgets import (
 )
 
 
-
-
 class WebContentPanel(QWidget):
     """
     A generic panel used to browse web content

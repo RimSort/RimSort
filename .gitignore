@@ -170,3 +170,4 @@ SteamworksPy.dylib
 *.build/
 *.dist/
 *.onefile-build/
+logger_tt/

@@ -2,8 +2,6 @@ from logger_tt import logger
 from typing import Any
 
 
-
-
 def do_rimpy_sort(
     dependency_graph: dict[str, set[str]], active_mods_json: dict[str, Any]
 ) -> dict[str, Any]:

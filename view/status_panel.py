@@ -5,8 +5,6 @@ from PySide6.QtWidgets import QFrame, QHBoxLayout
 from model.animation_label import AnimationLabel
 
 
-
-
 class Status:
     """
     This class controls the layout and functionality for

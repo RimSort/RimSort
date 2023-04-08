@@ -222,8 +222,8 @@ class SteamcmdInterface:
                         )
                     else:
                         from _winapi import CreateJunction
-                        CreateJunction(symlink_source_path, symlink_destination_path)
 
+                        CreateJunction(symlink_source_path, symlink_destination_path)
 
 
 if __name__ == "__main__":

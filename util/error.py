@@ -4,8 +4,6 @@ from typing import Optional
 from logger_tt import logger
 
 
-
-
 def show_information(
     text: Optional[str] = None,
     information: Optional[str] = None,

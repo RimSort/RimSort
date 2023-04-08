@@ -6,8 +6,6 @@ from PySide6.QtGui import QFontMetrics, QIcon
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QStyle, QWidget
 
 
-
-
 class ModListItemInner(QWidget):
     """
     Subclass for QWidget. Used to store data for a single

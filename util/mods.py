@@ -16,8 +16,6 @@ from util.schema import validate_mods_config_format
 from util.xml import non_utf8_xml_path_to_json, xml_path_to_json
 
 
-
-
 def get_active_inactive_mods(
     config_path: str,
     workshop_and_expansions: Dict[str, Any],
@@ -1019,7 +1017,6 @@ def get_dependencies_for_mods(
             # if the mod doesn't exist all_mods, then either mod_data or dependency_id
             # will be None, and then we don't insert a dependency
             if package_id.lower() in package_id_to_uuid:
-
                 load_these_after = community_rules[package_id].get("loadBefore")
                 if load_these_after:
                     logger.debug(

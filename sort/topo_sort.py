@@ -4,8 +4,6 @@ from typing import Any
 from toposort import toposort
 
 
-
-
 def do_topo_sort(
     dependency_graph: dict[str, set[str]], active_mods_json: dict[str, Any]
 ) -> dict[str, Any]:

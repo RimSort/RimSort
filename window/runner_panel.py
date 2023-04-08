@@ -8,8 +8,6 @@ from PySide6.QtWidgets import (
 )
 
 
-
-
 class RunnerPanel(QWidget):
     """
     A generic, read-only panel that can be used to display output from something.

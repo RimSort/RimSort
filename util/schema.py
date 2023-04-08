@@ -4,8 +4,6 @@ from typing import Any, Dict
 from util.error import show_warning
 
 
-
-
 def validate_mods_config_format(mods_config_data: Dict[str, Any]) -> bool:
     """
     Validate format of a Rimworld ModsConfig.xml

@@ -6,8 +6,6 @@ import xmltodict
 from logger_tt import logger
 
 
-
-
 def xml_path_to_json(path: str) -> Dict[str, Any]:
     """
     Return the contents of an xml file as json.

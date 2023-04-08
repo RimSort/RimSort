@@ -4,8 +4,6 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QFrame, QLabel, QScrollArea, QVBoxLayout
 
 
-
-
 class ScrollLabel(QScrollArea):
     """
     Subclass for QScrollArea. Creates a read-only

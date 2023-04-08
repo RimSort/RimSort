@@ -18,8 +18,6 @@ from model.mod_list import ModListWidget
 from model.mod_list_item import ModListItemInner
 
 
-
-
 class ActiveModList(QWidget):
     """
     This class controls the layout and functionality for the

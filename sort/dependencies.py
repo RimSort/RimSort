@@ -2,8 +2,6 @@ from logger_tt import logger
 from typing import Any
 
 
-
-
 def gen_deps_graph(
     active_mods_json: dict[str, Any], active_mod_ids: list[str]
 ) -> dict[str, set[str]]:

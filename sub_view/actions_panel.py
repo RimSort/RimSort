@@ -5,8 +5,6 @@ from PySide6.QtCore import QPoint, Qt, Signal
 from PySide6.QtWidgets import QMenu, QPushButton, QVBoxLayout, QWidget
 
 
-
-
 class Actions(QWidget):
     """
     This class controls the layout and functionality for the action panel,
@@ -72,10 +70,14 @@ class Actions(QWidget):
         self.export_button.clicked.connect(partial(self.actions_signal.emit, "export"))
 
         self.browse_workshop_button = QPushButton("Browse workshop")
-        self.browse_workshop_button.clicked.connect(partial(self.actions_signal.emit, "browse_workshop"))
+        self.browse_workshop_button.clicked.connect(
+            partial(self.actions_signal.emit, "browse_workshop")
+        )
 
         self.setup_steamcmd_button = QPushButton("Setup steamcmd")
-        self.setup_steamcmd_button.clicked.connect(partial(self.actions_signal.emit, "setup_steamcmd"))
+        self.setup_steamcmd_button.clicked.connect(
+            partial(self.actions_signal.emit, "setup_steamcmd")
+        )
 
         self.save_button = QPushButton("Save")
         self.save_button.clicked.connect(partial(self.actions_signal.emit, "save"))
