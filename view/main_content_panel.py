@@ -6,6 +6,7 @@ import platform
 from requests.exceptions import SSLError
 import subprocess
 import sys
+from time import sleep
 from threading import Thread
 from typing import Any, Dict
 from urllib3.exceptions import HTTPError
@@ -120,7 +121,7 @@ class MainContent:
             self.actions_slot
         )
         self.game_configuration.settings_panel.metadata_by_appid_signal.connect(
-            self._do_generate_metadata_by_appid
+            self._do_appidquery_thread
         )
         self.game_configuration.settings_panel.metadata_comparison_signal.connect(
             self._do_generate_metadata_comparison_report
@@ -160,6 +161,10 @@ class MainContent:
 
         # Steamworks bool - use this to check any Steamworks processes you try to initialize
         self.steamworks_initialized = False
+
+        # WebAPI bool - don't allow more than 1 AppIDQuery run at once
+        self.appidquery_live = False
+        self.appidquery_thread = Thread()
 
         logger.info("Finished MainContent initialization")
 
@@ -582,7 +587,7 @@ class MainContent:
                 "steam_apikey", self.game_configuration.steam_apikey
             )
 
-    def _do_generate_metadata_by_appid(self, appid: int) -> None:
+    def _do_appidquery(self, appid: int) -> None:
         if (
             len(self.game_configuration.steam_apikey) == 32
         ):  # If apikey is 32 characters
@@ -648,8 +653,34 @@ class MainContent:
                     information="DynamicQuery failed to initialize database.\nThere is no external metadata being factored for sorting!\n\nCached Dynamic Query database not found!\n\nFailed to initialize new DynamicQuery with configured Steam API key.\n\nAre you connected to the internet?\n\nIs your configured key invalid or revoked?\n\nPlease right-click the 'Refresh' button and configure a valid Steam API key so that you can generate a database.\n\nPlease reference: https://github.com/oceancabbage/RimSort/wiki/User-Guide#obtaining-your-steam-api-key--using-it-with-rimsort-dynamic-query",
                     details=stacktrace,
                 )
+            finally:
+                # We always want to reset this when we are done
+                self.appidquery_live = False
+                try:
+                    self.appidquery_thread.join()
+                except:
+                    logger.debug(
+                        "Unable to join AppIDQuery thread to main thread. This is probably because you closed the main thread while your AppIDQuery was still running. Silly goose."
+                    )
+
+    def _do_appidquery_thread(self, appid: int) -> None:
+        logger.info("Checking for live AppIDQuery...")
+        if self.appidquery_live:
+            show_information(
+                "Unable to create new AppIDQuery",
+                "There is an AppIDQuery already running. Please allow it to complete before trying again.\n\nYou can monitor it's progress in RimSort.log!",
+            )
+            return
+            logger.warning(
+                "Skipping AppIDQuery - there is already a live query running!"
+            )
+        logger.info("All clear! Starting AppIDQuery...")
+        self.appidquery_live = True
+        self.appidquery_thread = Thread(target=self._do_appidquery, args=[appid])
+        self.appidquery_thread.start()
 
     def _do_generate_metadata_comparison_report(self) -> None:
+        # TODO: Refactor this...
         discrepancies = []
         mods = self.all_mods_with_dependencies
         rimpy_deps = {}
