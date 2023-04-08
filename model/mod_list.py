@@ -3,7 +3,6 @@ import os
 import shutil
 import webbrowser
 from pathlib import Path
-from threading import Thread
 from time import sleep
 from typing import Any, Optional
 
@@ -91,22 +90,6 @@ class ModListWidget(QListWidget):
 
         logger.info("Finished ModListWidget initialization")
 
-    def delayed_refresh_signal(self) -> None:
-        """
-        The purpose of this function is to force client to refresh after a
-        certain amount of time has passed since the QAction was completed.
-
-        This is particularly useful for contextMenu options to Delete or Unsub
-        a mod, as these actions can take a bit of time.
-
-        TODO: Replace with something dynamic and less clunky/tacky. Weird things
-        can happen if you try to do this multiple times before the timer completes.
-        """
-        logger.info("Refreshing in 10s")
-        sleep(10)
-        self.refresh_signal.emit("refresh")
-        logger.info("Refresh signal emitted")
-
     def eventFilter(self, source_object: QObject, event: QEvent) -> None:
         """
         https://doc.qt.io/qtforpython/overviews/eventsandfilters.html
@@ -184,12 +167,6 @@ class ModListWidget(QListWidget):
                     if action == delete_mod:  # ACTION: Delete mod
                         logger.info(f"Deleting mod at: {mod_path}")
                         shutil.rmtree(mod_path)
-                        logger.info("Creating delayed refresh signal (10s)")
-                        refresh_thread = Thread(
-                            target=self.delayed_refresh_signal,
-                            daemon=True,
-                        )
-                        refresh_thread.start()
                 if (
                     "unsubscribe_delete_mod" in locals()
                 ):  # This action is conditionally created
@@ -200,12 +177,6 @@ class ModListWidget(QListWidget):
                         self.steamworks_subscription_signal.emit(
                             ["unsubscribe", mod_pfid]
                         )
-                        logger.info("Creating delayed refresh signal (10s)")
-                        refresh_thread = Thread(
-                            target=self.delayed_refresh_signal,
-                            daemon=True,
-                        )
-                        refresh_thread.start()
             return True
         return super().eventFilter(source_object, event)
 
