@@ -160,6 +160,14 @@ cython_debug/
 
 # RimSort
 .DS_Store
-/app
 .vscode/
-modlists
+test*
+data/steam*
+*.xml
+*_AppIDQuery*
+/steamworks
+SteamworksPy.dylib
+*.build/
+*.dist/
+*.onefile-build/
+logger_tt/

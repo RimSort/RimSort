@@ -1,7 +1,7 @@
-import logging
+from logger_tt import logger
 
-from PySide2.QtCore import Qt
-from PySide2.QtWidgets import (
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QListWidgetItem,
@@ -11,8 +11,6 @@ from PySide2.QtWidgets import (
 
 from model.mod_list import ModListWidget
 from model.mod_list_item import ModListItemInner
-
-logger = logging.getLogger(__name__)
 
 
 class InactiveModList:

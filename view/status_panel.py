@@ -1,10 +1,8 @@
-import logging
+from logger_tt import logger
 
-from PySide2.QtWidgets import QFrame, QHBoxLayout
+from PySide6.QtWidgets import QFrame, QHBoxLayout
 
 from model.animation_label import AnimationLabel
-
-logger = logging.getLogger(__name__)
 
 
 class Status:
@@ -57,12 +55,16 @@ class Status:
                 "Restored mod list to last saved ModsConfig.xml state"
             )
         if action == "sort":
-            self.status_text.start_pause_fade("Sorted active mod list")
+            self.status_text.start_pause_fade("Sorted active mod list!")
         if action == "import":
-            self.status_text.start_pause_fade("Imported mod list from external file")
+            self.status_text.start_pause_fade("Imported mod list from external file!")
         if action == "export":
-            self.status_text.start_pause_fade("Exported active mods to external file")
+            self.status_text.start_pause_fade("Exported active mods to external file!")
         if action == "save":
-            self.status_text.start_pause_fade("Active mods saved into ModsConfig.xml")
+            self.status_text.start_pause_fade("Active mods saved into ModsConfig.xml!")
         if action == "run":
-            self.status_text.start_pause_fade("Starting RimWorld")
+            self.status_text.start_pause_fade("Starting RimWorld!")
+        if action == "runArgs":
+            self.status_text.start_pause_fade("Editing configured run arguments...")
+        if action == "edit_steam_apikey":
+            self.status_text.start_pause_fade("Editing configured Steam API key...")

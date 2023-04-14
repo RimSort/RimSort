@@ -5,10 +5,10 @@ block_cipher = None
 
 
 a = Analysis(
-    ['app.py'],
+    ['RimSort.py'],
     pathex=[],
-    binaries=[],
-    datas=[("data","data")],
+    binaries=[("libsteam_api.dylib", "."), ("SteamworksPy.dylib", ".")],
+    datas=[("data","data"), ("steam_appid.txt", ".")],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -46,11 +46,12 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='app',
+    name='RimSort',
+    icon="data/AppIcon_a.png",
 )
 app = BUNDLE(
     coll,
     name='RimSort.app',
-    icon=None,
+    icon="data/AppIcon_a.icns",
     bundle_identifier=None,
 )

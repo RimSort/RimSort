@@ -1,0 +1,62 @@
+{
+    "version": 1,
+    "disable_existing_loggers": false,
+    "formatters": {
+        "debug": {
+            "format": "[%(levelname)s][%(asctime)s][%(process)s][%(name)s][%(funcName)s][%(lineno)d] : %(message)s",
+            "datefmt": "%Y-%m-%d %H:%M:%S"
+        },
+        "simple": {
+            "format": "[%(asctime)s] %(levelname)s: %(message)s",
+            "datefmt": "%Y-%m-%d %H:%M:%S"
+        }
+    },
+    "handlers": {
+        "buffer_stream_handler": {
+            "class": "logger_tt.handlers.StreamHandlerWithBuffer",
+            "level": "WARNING",
+            "formatter": "simple",
+            "stream": "ext://sys.stdout",
+            "buffer_time": 0.5,
+            "buffer_lines": 0,
+            "debug": false
+        },
+        "log_file_handler": {
+            "class": "logging.FileHandler",
+            "level": "DEBUG",
+            "formatter": "debug",
+            "filename": "data/RimSort.log",
+            "mode": "w+",
+            "encoding": "utf8",
+            "delay": true
+        }
+    },
+    "loggers": {
+        "urllib3": {
+            "level": "WARNING",
+            "handlers": [
+                "buffer_stream_handler"
+            ],
+            "propagate": false
+        }
+    },
+    "root": {
+        "level": "DEBUG",
+        "handlers": [
+            "buffer_stream_handler",
+            "log_file_handler"
+        ]
+    },
+    "logger_tt": {
+        "suppress": [
+            "exchangelib"
+        ],
+        "suppress_level_below": "WARNING",
+        "capture_print": false,
+        "strict": false,
+        "guess_level": false,
+        "full_context": 3,
+        "limit_line_length": 1000,
+        "analyze_raise_statement": true
+    }
+}

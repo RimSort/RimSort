@@ -1,15 +1,23 @@
-import logging
+from logger_tt import logger
 import os
+import shutil
+import webbrowser
 from pathlib import Path
+from time import sleep
 from typing import Any, Optional
 
-from PySide2.QtCore import QModelIndex, Qt, Signal
-from PySide2.QtGui import QDropEvent, QFocusEvent
-from PySide2.QtWidgets import QAbstractItemView, QListWidget, QListWidgetItem
+from PySide6.QtCore import Qt, QEvent, QModelIndex, QObject, Signal
+from PySide6.QtGui import QAction, QDropEvent, QFocusEvent, QKeySequence
+from PySide6.QtWidgets import (
+    QAbstractItemView,
+    QListWidget,
+    QListWidgetItem,
+    QMenu,
+)
 
 from model.mod_list_item import ModListItemInner
-
-logger = logging.getLogger(__name__)
+from util.error import show_warning
+from util.filesystem import platform_specific_open
 
 
 class ModListWidget(QListWidget):
@@ -19,9 +27,12 @@ class ModListWidget(QListWidget):
     their own lists or moved from one list to another.
     """
 
-    mod_info_signal = Signal(str)
-    list_update_signal = Signal(str)
     item_added_signal = Signal(str)
+    list_update_signal = Signal(str)
+    mod_info_signal = Signal(str)
+    refresh_signal = Signal(str)
+    steamworks_subscription_signal = Signal(list)
+    key_press_signal = Signal(str)
 
     def __init__(self) -> None:
         """
@@ -42,7 +53,10 @@ class ModListWidget(QListWidget):
         self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
 
         # When an item is clicked, display the mod information TODO
-        self.itemClicked.connect(self.mod_clicked)
+        self.currentItemChanged.connect(self.mod_clicked)
+
+        # Add an eventFilter for per mod_list_item context menu
+        self.installEventFilter(self)
 
         # Disable horizontal scroll bar
         self.horizontalScrollBar().setEnabled(False)
@@ -72,9 +86,99 @@ class ModListWidget(QListWidget):
 
         # This set is used to keep track of mods that have been loaded
         # into widgets. Used for an optimization strategy for `handle_rows_inserted`
-        self.package_ids = set()
+        self.uuids = set()
 
         logger.info("Finished ModListWidget initialization")
+
+    def eventFilter(self, source_object: QObject, event: QEvent) -> None:
+        """
+        https://doc.qt.io/qtforpython/overviews/eventsandfilters.html
+
+        Takes source object and filters an event at the ListWidget level, executes
+        an action based on a per-mod_list_item contextMenu
+
+        :param object: the source object returned from the event
+        :param event: the QEvent type
+        """
+        if event.type() == QEvent.ContextMenu and source_object is self:
+            logger.info("USER ACTION: Open right-click mod_list_item contextMenu")
+            contextMenu = QMenu()
+            source_item = source_object.itemAt(
+                event.pos()
+            )  # Which QListWidgetItem was right clicked?
+            if type(source_item) is QListWidgetItem:
+                source_widget = self.itemWidget(source_item)
+                widget_json_data = source_widget.json_data
+                mod_data_source = widget_json_data.get("data_source")
+                widget_package_id = widget_json_data["packageId"]
+                mod_path = widget_json_data[
+                    "path"
+                ]  # Set local data folder path from metadata
+                open_folder = contextMenu.addAction("Open folder")  # Open folder
+                if widget_json_data.get("url") or widget_json_data.get("steam_url"):
+                    url = self.get_mod_url(widget_json_data)
+                    if url != "":
+                        open_url_browser = contextMenu.addAction(
+                            "Open URL in browser"
+                        )  # Open URL in browser
+                    else:
+                        show_warning(
+                            f"No URL was returned to open from mod metadata... Is the metadata correct? Result: {url}"
+                        )
+                if widget_json_data.get("steam_uri"):
+                    steam_uri = widget_json_data.get("steam_uri")
+                    open_mod_steam = contextMenu.addAction("Open mod in Steam")
+                if mod_data_source == "workshop" and widget_json_data.get(
+                    "publishedfileid"
+                ):
+                    mod_pfid = widget_json_data["publishedfileid"]
+                    unsubscribe_delete_mod = contextMenu.addAction(
+                        "Unsubscribe + delete mod"
+                    )  # Unsubscribe + delete mod
+                else:
+                    delete_mod = contextMenu.addAction("Delete mod")  # Delete mod
+                action = contextMenu.exec_(
+                    self.mapToGlobal(event.pos())
+                )  # Execute QMenu and return it's ACTION
+                if action == open_folder:  # ACTION: Open folder
+                    if os.path.exists(mod_path):  # If the path actually exists
+                        logger.info(f"Opening folder: {mod_path}")
+                        platform_specific_open(mod_path)  # Open it
+                    else:  # Otherwise, warn & do nothing
+                        show_warning(
+                            "Cannot 'Open folder'!",
+                            f"Failed to 'Open folder' for {widget_package_id}! ",
+                            f"Path does not exist: {mod_path}",
+                        )
+                        logger.warning(
+                            f"Failed to 'Open folder' for {widget_package_id}! "
+                            + f"Path does not exist: {mod_path}"
+                        )
+                if (
+                    "open_url_browser" in locals()
+                ):  # This action is conditionally created
+                    if action == open_url_browser:  # ACTION: Open URL in browser
+                        logger.info(f"Opening url in browser: {url}")
+                        self.open_mod_url(url)
+                if "open_mod_steam" in locals():  # This action is conditionally created
+                    if action == open_mod_steam:  # ACTION: Open steam:// uri in Steam
+                        platform_specific_open(steam_uri)
+                if "delete_mod" in locals():  # This action is conditionally created
+                    if action == delete_mod:  # ACTION: Delete mod
+                        logger.info(f"Deleting mod at: {mod_path}")
+                        shutil.rmtree(mod_path)
+                if (
+                    "unsubscribe_delete_mod" in locals()
+                ):  # This action is conditionally created
+                    if (
+                        action == unsubscribe_delete_mod
+                    ):  # ACTION: Unsubscribe & delete mod
+                        logger.info(f"Unsubscribing from mod: {mod_pfid}")
+                        self.steamworks_subscription_signal.emit(
+                            ["unsubscribe", mod_pfid]
+                        )
+            return True
+        return super().eventFilter(source_object, event)
 
     def recreate_mod_list(self, mods: dict[str, Any]) -> None:
         """
@@ -84,7 +188,7 @@ class ModListWidget(QListWidget):
         """
         logger.info("Internally recreating mod list")
         self.clear()
-        self.package_ids = set()
+        self.uuids = set()
         if mods:
             for mod_json_data in mods.values():
                 list_item = QListWidgetItem(self)
@@ -134,16 +238,18 @@ class ModListWidget(QListWidget):
                 widget = ModListItemInner(
                     data, self.width(), self.steam_icon_path, self.ludeon_icon_path
                 )
+                if data.get("invalid"):
+                    widget.main_label.setStyleSheet("QLabel { color : red; }")
                 item.setSizeHint(widget.sizeHint())
                 self.setItemWidget(item, widget)
-                self.package_ids.add(data["packageId"])
-                self.item_added_signal.emit(data["packageId"])
+                self.uuids.add(data["uuid"])
+                self.item_added_signal.emit(data["uuid"])
 
-        if len(self.package_ids) == self.count():
+        if len(self.uuids) == self.count():
             self.list_update_signal.emit(str(self.count()))
 
-    def handle_other_list_row_added(self, package_id: str) -> None:
-        self.package_ids.discard(package_id)
+    def handle_other_list_row_added(self, uuid: str) -> None:
+        self.uuids.discard(uuid)
 
     def handle_rows_removed(self, parent: QModelIndex, first: int, last: int) -> None:
         """
@@ -154,7 +260,7 @@ class ModListWidget(QListWidget):
 
         The condition is required because when we `do_clear` or `do_import`,
         the existing list needs to be "wiped", and this counts as `n`
-        calls to this function. When this happens, `self.package_ids` is
+        calls to this function. When this happens, `self.uuids` is
         cleared and `self.count()` remains at the previous number, so we can
         just check for equality here.
 
@@ -162,7 +268,7 @@ class ModListWidget(QListWidget):
         :param first: index of first item removed (not used)
         :param last: index of last item removed (not used)
         """
-        if len(self.package_ids) == self.count():
+        if len(self.uuids) == self.count():
             self.list_update_signal.emit(str(self.count()))
 
     def dropEvent(self, event: QDropEvent) -> None:
@@ -175,6 +281,22 @@ class ModListWidget(QListWidget):
         if item:
             return self.itemWidget(item)
         return None
+
+    def keyPressEvent(self, e):
+        """
+        This event occurs when the user presses a key while the mod
+        list is in focus.
+        """
+        key_pressed = QKeySequence(e.key()).toString()
+        if (
+            key_pressed == "Left"
+            or key_pressed == "Right"
+            or key_pressed == "Return"
+            or key_pressed == "Space"
+        ):
+            self.key_press_signal.emit(key_pressed)
+        else:
+            return super().keyPressEvent(e)
 
     def get_widgets_and_items(self) -> list[tuple[ModListItemInner, QListWidgetItem]]:
         return [
@@ -193,9 +315,8 @@ class ModListWidget(QListWidget):
         for i in range(self.count()):
             item = self.itemWidget(self.item(i))
             if item:
-                mod_dict[
-                    item.json_data["packageId"]
-                ] = item.json_data  # Assume packageId always there
+                # Assume uuid always there, as this should be added when the list item's json data is populated
+                mod_dict[item.json_data["uuid"]] = item.json_data
         logger.info(f"Collected json data for {len(mod_dict)} mods")
         return mod_dict
 
@@ -207,6 +328,69 @@ class ModListWidget(QListWidget):
         self.clearFocus()
         return super().focusOutEvent(e)
 
-    def mod_clicked(self, item: QListWidgetItem) -> None:
-        """Method to handle clicking on a row"""
-        self.mod_info_signal.emit(item.data(Qt.UserRole)["packageId"])
+    def mod_clicked(self, current: QListWidgetItem, previous: QListWidgetItem) -> None:
+        """
+        Method to handle clicking on a row or navigating between rows with
+        the keyboard. Look up the mod's data by uuid
+        """
+        if current is not None:
+            self.mod_info_signal.emit(current.data(Qt.UserRole)["uuid"])
+
+    def get_mod_url(self, widget_json_data) -> str:
+        url = ""
+        if (  # Workshop mod URL priority: steam_url > url
+            widget_json_data["data_source"] == "workshop"
+        ):  # If the mod was parsed from a Steam mods source
+            if widget_json_data.get("steam_url") and isinstance(
+                widget_json_data["steam_url"], str
+            ):  # If the steam_url exists
+                url = widget_json_data.get("steam_url")  # Use the Steam URL
+            elif widget_json_data.get("url") and isinstance(
+                widget_json_data["url"],
+                str,
+            ):  # Otherwise, check if local metadata url exists
+                url = widget_json_data["url"]  # Use the local metadata url
+            else:  # Otherwise, warn & do nothing
+                logger.warning(
+                    f"Unable to get url for mod {widget_package_id}"
+                )  # TODO: Make warning visible
+        elif (  # Local mod URL priority: url > steam_url
+            widget_json_data["data_source"] == "local"
+        ):  # If the mod was parsed from a local mods source
+            if widget_json_data.get("url") and isinstance(
+                widget_json_data["url"],
+                str,
+            ):  # If the local metadata url exists
+                url = widget_json_data["url"]  # Use the local metadata url
+            elif widget_json_data.get("steam_url") and isinstance(
+                widget_json_data["steam_url"], str
+            ):  # Otherwise, if the mod has steam_url
+                url = widget_json_data.get("steam_url")  # Use the Steam URL
+            else:  # Otherwise, warn & do nothing
+                logger.warning(
+                    f"Unable to get url for mod {widget_package_id}"
+                )  # TODO: Make warning visible
+        elif (  # Expansions don't have url - always use steam_url if available
+            widget_json_data["data_source"] == "expansion"
+        ):  # Otherwise, the mod MUST be an expansion
+            if widget_json_data.get("steam_url") and isinstance(
+                widget_json_data["steam_url"], str
+            ):  # If the steam_url exists
+                url = widget_json_data.get("steam_url")  # Use the Steam URL
+            else:  # Otherwise, warn & do nothing
+                logger.warning(
+                    f"Unable to get url for mod {widget_package_id}"
+                )  # TODO: Make warning visible
+        else:  # ??? Not possible
+            logger.debug(
+                f"Tried to parse URL for a mod that does not have a data_source? Erroneous json data: {widget_json_data}"
+            )
+        return url
+
+    def open_mod_url(self, url: str) -> None:
+        """
+        Open the url of a mod of a url in a user's default web browser
+        """
+        browser = webbrowser.get().name
+        logger.info(f"USER ACTION: Opening mod url {url} in " + f"{browser}")
+        webbrowser.open_new_tab(url)

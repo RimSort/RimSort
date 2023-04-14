@@ -1,16 +1,16 @@
 import getpass
 import json
-import logging
+from logging import INFO
+from logger_tt import logger
 import os
 import platform
-import subprocess
 import webbrowser
 from functools import partial
 from os.path import expanduser
 from typing import Any
 
-from PySide2.QtCore import QObject, QStandardPaths, Qt, Signal
-from PySide2.QtWidgets import (
+from PySide6.QtCore import QObject, QStandardPaths, Qt, Signal
+from PySide6.QtWidgets import (
     QFileDialog,
     QFrame,
     QHBoxLayout,
@@ -22,9 +22,11 @@ from PySide2.QtWidgets import (
 )
 
 from util.error import *
+from util.filesystem import *
 from window.settings_panel import SettingsPanel
 
-logger = logging.getLogger(__name__)
+
+logger.setLevel(INFO)
 
 
 class GameConfiguration(QObject):
@@ -48,6 +50,8 @@ class GameConfiguration(QObject):
         """
         logger.info("Starting GameConfiguration initialization")
         super(GameConfiguration, self).__init__()
+
+        self.storage_path = ""
 
         # BASE LAYOUT
         self._panel = QVBoxLayout()
@@ -223,8 +227,20 @@ class GameConfiguration(QObject):
         self.local_folder_row.addWidget(self.local_folder_line)
         self.local_folder_row.addWidget(self.local_folder_select_button)
 
+        # DUPE MODS WARNING TOGGLE
+        self.duplicate_mods_warning_toggle = False
+
+        # STEAM MODS UPDATE CHECK TOGGLE
+        self.steam_mods_update_check_toggle = False
+
         # RUN ARGUMENTS
         self.run_arguments = ""
+
+        # STEAM APIKEY
+        self.steam_apikey = ""
+
+        # WEBAPI QUERY EXPIRY
+        self.webapi_query_expiry = 1800
 
         # CONTAINER LAYOUTS INTO BASE LAYOUT
         self.client_settings_frame = QFrame()
@@ -254,9 +270,17 @@ class GameConfiguration(QObject):
         self.initialize_storage()
 
         # SIGNALS AND SLOTS
-        self.settings_panel.settings_signal.connect(
+        self.settings_panel.clear_paths_signal.connect(
             self.delete_all_paths_data
-        )  # Actionsdelete_all_paths_data
+        )  # Actions delete_all_paths_data
+
+        # MISC
+        self.settings_panel.duplicate_mods_checkbox.setChecked(
+            self.duplicate_mods_warning_toggle
+        )
+        self.settings_panel.steam_mods_update_checkbox.setChecked(
+            self.steam_mods_update_check_toggle
+        )
 
         logger.info("Finished GameConfiguration initialization")
 
@@ -309,21 +333,21 @@ class GameConfiguration(QObject):
         to have paths written on the settings.json.
         """
         logger.info("Starting storage initialization")
-        storage_path = QStandardPaths.writableLocation(
+        self.storage_path = QStandardPaths.writableLocation(
             QStandardPaths.AppLocalDataLocation
         )
-        logger.info(f"Determined storage path: {storage_path}")
-        if not os.path.exists(storage_path):
-            logger.info(f"Storage path [{storage_path}] does not exist")
+        logger.info(f"Determined storage path: {self.storage_path}")
+        if not os.path.exists(self.storage_path):
+            logger.info(f"Storage path [{self.storage_path}] does not exist")
             information = (
                 "It looks like you may be running RimSort for the first time! RimSort stores some client "
-                f"information in this directory: [{storage_path}]. It doesn't look like this directory "
+                f"information in this directory: [{self.storage_path}]. It doesn't look like this directory "
                 "exists, so we'll make it for you now."
             )
             show_information(text="Welcome to RimSort!", information=information)
             logger.info("Making storage directory")
-            os.makedirs(storage_path)
-        settings_path = os.path.join(storage_path, "settings.json")
+            os.makedirs(self.storage_path)
+        settings_path = os.path.join(self.storage_path, "settings.json")
         logger.info(f"Determined settings file path: {settings_path}")
         if not os.path.exists(settings_path):
             logger.info(f"Settings file [{settings_path}] does not exist")
@@ -339,7 +363,7 @@ class GameConfiguration(QObject):
             with open(settings_path) as infile:
                 logger.info("Loading JSON from file")
                 settings_data = json.load(infile)
-                logger.info(f"JSON has been loaded: {settings_data}")
+                logger.debug(f"JSON has been loaded: {settings_data}")
                 logger.info("Setting relevant QLineEdits now")
                 if settings_data.get("game_folder"):
                     game_folder_path = settings_data["game_folder"]
@@ -377,10 +401,27 @@ class GameConfiguration(QObject):
                     self.settings_panel.sorting_algorithm_cb.setCurrentText(
                         settings_data["sorting_algorithm"]
                     )
-                if not settings_data.get("runArgs"):
-                    settings_data["runArgs"] = ""
-                else:
+                if settings_data.get("external_metadata_source"):
+                    self.settings_panel.external_metadata_cb.setCurrentText(
+                        settings_data["external_metadata_source"]
+                    )
+                if settings_data.get("runArgs"):
                     self.run_arguments = settings_data["runArgs"]
+                if settings_data.get("steam_apikey"):
+                    self.steam_apikey = settings_data["steam_apikey"]
+                if not settings_data.get("webapi_query_expiry"):
+                    settings_data["webapi_query_expiry"] = 1800
+                self.webapi_query_expiry = settings_data["webapi_query_expiry"]
+                if not settings_data.get("duplicate_mods_warning"):
+                    settings_data["duplicate_mods_warning"] = False
+                self.duplicate_mods_warning_toggle = settings_data[
+                    "duplicate_mods_warning"
+                ]
+                if not settings_data.get("steam_mods_update_check"):
+                    settings_data["steam_mods_update_check"] = True
+                self.steam_mods_update_check_toggle = settings_data[
+                    "steam_mods_update_check"
+                ]
         logger.info("Finished storage initialization")
 
     def initialize_settings_panel(self) -> None:
@@ -398,11 +439,32 @@ class GameConfiguration(QObject):
         self.settings_panel.finished.connect(self.on_settings_close)
 
     def on_settings_close(self) -> None:
-        logger.info("Settings panel closed, updating algorithm selection")
+        logger.info(
+            "Settings panel closed, updating persistent storage for these options..."
+        )
         self.settings_panel.close()
         self.update_persistent_storage(
             "sorting_algorithm", self.settings_panel.sorting_algorithm_cb.currentText()
         )
+
+        self.update_persistent_storage(
+            "external_metadata_source",
+            self.settings_panel.external_metadata_cb.currentText(),
+        )
+
+        if self.settings_panel.duplicate_mods_checkbox.isChecked():
+            self.duplicate_mods_warning_toggle = True
+            self.update_persistent_storage("duplicate_mods_warning", True)
+        else:
+            self.duplicate_mods_warning_toggle = False
+            self.update_persistent_storage("duplicate_mods_warning", False)
+
+        if self.settings_panel.steam_mods_update_checkbox.isChecked():
+            self.steam_mods_update_check_toggle = True
+            self.update_persistent_storage("steam_mods_update_check", True)
+        else:
+            self.steam_mods_update_check_toggle = False
+            self.update_persistent_storage("steam_mods_update_check", False)
 
     def open_directory(self, callable: Any) -> None:
         """
@@ -417,10 +479,10 @@ class GameConfiguration(QObject):
         if os.path.exists(path):
             if os.path.isfile(path) or path.endswith(".app"):
                 logger.info("Opening parent directory of file or MacOS app")
-                self.platform_specific_open(os.path.dirname(path))
+                platform_specific_open(os.path.dirname(path))
             else:
                 logger.info("Opening directory")
-                self.platform_specific_open(path)
+                platform_specific_open(path)
         else:
             logger.warning(f"The path {path} does not exist")
             show_warning(
@@ -431,26 +493,6 @@ class GameConfiguration(QObject):
                     "on the right or using the AutoDetect Paths functionality."
                 ),
             )
-
-    def platform_specific_open(self, path: str) -> None:
-        """
-        Function to open a folder in the platform-specific
-        explorer app.
-
-        :param path: path to open
-        """
-        system_name = platform.system()
-        if system_name == "Darwin":
-            logger.info(f"Opening {path} with subprocess open on MacOS")
-            subprocess.Popen(["open", path])
-        elif system_name == "Windows":
-            logger.info(f"Opening {path} with startfile on Windows")
-            os.startfile(path)  # type: ignore
-        elif system_name == "Linux":
-            logger.info(f"Opening {path} with xdg-open on Linux")
-            subprocess.Popen(["xdg-open", path])
-        else:
-            logger.error("Attempting to open directory on an unknown system")
 
     def set_game_exe_folder(self) -> None:
         """
@@ -554,7 +596,7 @@ class GameConfiguration(QObject):
         else:
             logger.info("User pressed cancel, passing")
 
-    def update_persistent_storage(self, key: str, value: str) -> None:
+    def update_persistent_storage(self, key: str, value: Any) -> None:
         """
         Given a key and value, write this key and value to the
         persistent settings.json.
@@ -563,19 +605,19 @@ class GameConfiguration(QObject):
         :param value: value to replace
         """
         logger.info("Updating persistent storage")
-        storage_path = QStandardPaths.writableLocation(
+        self.storage_path = QStandardPaths.writableLocation(
             QStandardPaths.AppLocalDataLocation
         )
-        settings_path = os.path.join(storage_path, "settings.json")
+        settings_path = os.path.join(self.storage_path, "settings.json")
         logger.info(f"Generated settings.json path: {settings_path}")
         if os.path.exists(settings_path):
             logger.info("settings.json exists, opening to write")
             with open(settings_path) as infile:
                 settings_data = json.load(infile)
-                logger.info(f"Read JSON data: {settings_data}")
+                logger.debug(f"Read JSON data: {settings_data}")
                 settings_data[key] = value
                 json_object = json.dumps(settings_data, indent=4)
-                logger.info(f"JSON data to write: {json_object}")
+                logger.debug(f"JSON data to write: {json_object}")
                 with open(settings_path, "w") as outfile:
                     outfile.write(json_object)
                     logger.info("JSON data written")
@@ -597,6 +639,24 @@ class GameConfiguration(QObject):
         self.workshop_folder_line.setText("")
         self.local_folder_line.setText("")
         self.game_version_line.setText("")
+
+    def dupe_mods_warning_setting(self) -> None:
+        logger.info(f"USER ACTION: change dupe mods warning state")
+        if self.settings_panel.duplicate_mods_checkbox.isChecked():
+            self.duplicate_mods_warning_toggle = True
+            self.update_persistent_storage("duplicate_mods_warning", True)
+        else:
+            self.duplicate_mods_warning_toggle = False
+            self.update_persistent_storage("duplicate_mods_warning", False)
+
+    def steam_mods_update_check_setting(self) -> None:
+        logger.info(f"USER ACTION: change Steam mods update check state")
+        if self.settings_panel.steam_mods_update_checkbox.isChecked():
+            self.steam_mods_update_check_toggle = True
+            self.update_persistent_storage("steam_mods_update_check", True)
+        else:
+            self.steam_mods_update_check_toggle = False
+            self.update_persistent_storage("steam_mods_update_check", False)
 
     def clear_game_folder_line(self) -> None:
         logger.info("USER ACTION: clear game folder line")

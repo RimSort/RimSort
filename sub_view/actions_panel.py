@@ -1,10 +1,8 @@
-import logging
+from logger_tt import logger
 from functools import partial
 
-from PySide2.QtCore import QPoint, Qt, Signal
-from PySide2.QtWidgets import QMenu, QPushButton, QVBoxLayout, QWidget
-
-logger = logging.getLogger(__name__)
+from PySide6.QtCore import QPoint, Qt, Signal
+from PySide6.QtWidgets import QMenu, QPushButton, QVBoxLayout, QWidget
 
 
 class Actions(QWidget):
@@ -49,6 +47,10 @@ class Actions(QWidget):
         self.refresh_button.clicked.connect(
             partial(self.actions_signal.emit, "refresh")
         )
+        self.refresh_button.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.refresh_button.customContextMenuRequested.connect(
+            self.steamApikeyContextMenuEvent
+        )
 
         self.clear_button = QPushButton("Clear")
         self.clear_button.clicked.connect(partial(self.actions_signal.emit, "clear"))
@@ -67,21 +69,33 @@ class Actions(QWidget):
         self.export_button = QPushButton("Export List")
         self.export_button.clicked.connect(partial(self.actions_signal.emit, "export"))
 
+        self.browse_workshop_button = QPushButton("Browse workshop")
+        self.browse_workshop_button.clicked.connect(
+            partial(self.actions_signal.emit, "browse_workshop")
+        )
+
+        self.setup_steamcmd_button = QPushButton("Setup steamcmd")
+        self.setup_steamcmd_button.clicked.connect(
+            partial(self.actions_signal.emit, "setup_steamcmd")
+        )
+
         self.save_button = QPushButton("Save")
         self.save_button.clicked.connect(partial(self.actions_signal.emit, "save"))
 
         self.run_button = QPushButton("Run")
         self.run_button.clicked.connect(partial(self.actions_signal.emit, "run"))
         self.run_button.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.run_button.customContextMenuRequested.connect(self.contextMenuEvent)
+        self.run_button.customContextMenuRequested.connect(self.runArgsContextMenuEvent)
 
         # Add buttons to sub-layouts and sub-layouts to the main layout.
         self.top_panel.addWidget(self.refresh_button)
         self.top_panel.addWidget(self.clear_button)
         self.top_panel.addWidget(self.restore_button)
         self.top_panel.addWidget(self.sort_button)
-        self.middle_panel.addWidget(self.import_button)
-        self.middle_panel.addWidget(self.export_button)
+        self.middle_panel.addWidget(self.browse_workshop_button)
+        self.middle_panel.addWidget(self.setup_steamcmd_button)
+        self.bottom_panel.addWidget(self.import_button)
+        self.bottom_panel.addWidget(self.export_button)
         self.bottom_panel.addWidget(self.save_button)
         self.bottom_panel.addWidget(self.run_button)
 
@@ -91,10 +105,18 @@ class Actions(QWidget):
     def panel(self) -> QVBoxLayout:
         return self._panel
 
-    def contextMenuEvent(self, point: QPoint) -> None:
-        contextMenu = QMenu(self)
-        set_run_args = contextMenu.addAction("Edit Run Args")
+    def runArgsContextMenuEvent(self, point: QPoint) -> None:
+        contextMenu = QMenu(self)  # Actions Panel context menu event
+        set_run_args = contextMenu.addAction("Edit Run Args")  # runArgs
         set_run_args.triggered.connect(
             partial(self.actions_signal.emit, "edit_run_args")
         )
         action = contextMenu.exec_(self.run_button.mapToGlobal(point))
+
+    def steamApikeyContextMenuEvent(self, point: QPoint) -> None:
+        contextMenu = QMenu(self)  # Actions Panel context menu event
+        set_steam_apikey = contextMenu.addAction("Edit Steam Apikey")  # steam_apikey
+        set_steam_apikey.triggered.connect(
+            partial(self.actions_signal.emit, "edit_steam_apikey")
+        )
+        action = contextMenu.exec_(self.refresh_button.mapToGlobal(point))

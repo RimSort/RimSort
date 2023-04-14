@@ -1,14 +1,13 @@
-import logging
+from logger_tt import logger
 import os
 from typing import Any, Dict
 
-from PySide2.QtCore import Qt
-from PySide2.QtGui import QPixmap
-from PySide2.QtWidgets import QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QPixmap
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout
 
+from model.image_label import ImageLabel
 from model.scroll_label import ScrollLabel
-
-logger = logging.getLogger(__name__)
 
 
 class ModInfo:
@@ -33,6 +32,7 @@ class ModInfo:
         self.mod_info_name = QHBoxLayout()
         self.mod_info_package_id = QHBoxLayout()
         self.mod_info_authors = QHBoxLayout()
+        self.mod_info_mod_version = QHBoxLayout()
         self.mod_info_path = QHBoxLayout()
         self.description_layout = QHBoxLayout()
 
@@ -42,25 +42,42 @@ class ModInfo:
         self.panel.addLayout(self.description_layout, 30)
 
         # Create widgets
-        self.preview_picture = QLabel()
+        self.preview_picture = ImageLabel()
         self.preview_picture.setAlignment(Qt.AlignCenter)
         self.preview_picture.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.preview_picture.setMinimumSize(1, 1)
+        self.preview_picture.setPixmap(
+            QPixmap(os.path.join(os.getcwd(), "data", "missing.png")).scaled(
+                self.preview_picture.size(), Qt.KeepAspectRatio
+            )
+        )
         self.mod_info_name_label = QLabel("Name:")
         self.mod_info_name_label.setObjectName("summaryLabel")
         self.mod_info_name_value = QLabel()
         self.mod_info_name_value.setObjectName("summaryValue")
+        self.mod_info_name_value.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.mod_info_package_id_label = QLabel("PackageID:")
         self.mod_info_package_id_label.setObjectName("summaryLabel")
         self.mod_info_package_id_value = QLabel()
         self.mod_info_package_id_value.setObjectName("summaryValue")
+        self.mod_info_package_id_value.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.mod_info_author_label = QLabel("Authors:")
         self.mod_info_author_label.setObjectName("summaryLabel")
         self.mod_info_author_value = QLabel()
         self.mod_info_author_value.setObjectName("summaryValue")
+        self.mod_info_author_value.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self.mod_info_mod_version_label = QLabel("Mod version:")
+        self.mod_info_mod_version_label.setObjectName("summaryLabel")
+        self.mod_info_mod_version_value = QLabel()
+        self.mod_info_mod_version_value.setObjectName("summaryValue")
+        self.mod_info_mod_version_value.setTextInteractionFlags(
+            Qt.TextSelectableByMouse
+        )
         self.mod_info_path_label = QLabel("Path:")
         self.mod_info_path_label.setObjectName("summaryLabel")
         self.mod_info_path_value = QLabel()
         self.mod_info_path_value.setObjectName("summaryValue")
+        self.mod_info_path_value.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.mod_info_path_value.setWordWrap(True)
         self.description = ScrollLabel()
 
@@ -74,9 +91,12 @@ class ModInfo:
         self.mod_info_package_id.addWidget(self.mod_info_package_id_value, 80)
         self.mod_info_authors.addWidget(self.mod_info_author_label, 20)
         self.mod_info_authors.addWidget(self.mod_info_author_value, 80)
+        self.mod_info_mod_version.addWidget(self.mod_info_mod_version_label, 20)
+        self.mod_info_mod_version.addWidget(self.mod_info_mod_version_value, 80)
         self.mod_info_layout.addLayout(self.mod_info_name)
         self.mod_info_layout.addLayout(self.mod_info_package_id)
         self.mod_info_layout.addLayout(self.mod_info_authors)
+        self.mod_info_layout.addLayout(self.mod_info_mod_version)
         self.mod_info_layout.addLayout(self.mod_info_path)
         self.description_layout.addWidget(self.description)
 
@@ -105,6 +125,10 @@ class ModInfo:
                 )
         else:
             self.mod_info_author_value.setText(mod_info.get("author"))
+        if "modVersion" in mod_info:
+            self.mod_info_mod_version_value.setText(mod_info.get("modVersion"))
+        else:
+            self.mod_info_mod_version_value.setText("Not specified")
         self.mod_info_path_value.setText(mod_info.get("path"))
 
         # Set the scrolling description for the Mod Info Panel
@@ -124,46 +148,73 @@ class ModInfo:
         if mod_info.get("path") and isinstance(mod_info["path"], str):
             workshop_folder_path = mod_info["path"]
             logger.info(f"Got mod path for preview image: {workshop_folder_path}")
-            # Look for a case-insensitive About folder
-            invalid_folder_path_found = True
-            about_folder_name = "About"
-            for temp_file in os.scandir(workshop_folder_path):
-                if (
-                    temp_file.name.lower() == about_folder_name.lower()
-                    and temp_file.is_dir()
-                ):
-                    about_folder_name = temp_file.name
-                    invalid_folder_path_found = False
-                    break
-            # Look for a case-insensitive "Preview.png" file
-            invalid_file_path_found = True
-            preview_file_name = "Preview.png"
-            for temp_file in os.scandir(
-                os.path.join(workshop_folder_path, about_folder_name)
-            ):
-                if (
-                    temp_file.name.lower() == preview_file_name.lower()
-                    and temp_file.is_file()
-                ):
-                    preview_file_name = temp_file.name
-                    invalid_file_path_found = False
-                    break
-            # If there was an issue getting the expected path, track and exit
-            if invalid_folder_path_found or invalid_file_path_found:
-                logger.info("No preview image found for the mod")
-                self.preview_picture.setPixmap(None)
-            else:
-                logger.info("Preview image found")
-                image_path = os.path.join(
-                    workshop_folder_path, about_folder_name, preview_file_name
+            if os.path.exists(workshop_folder_path):
+                about_folder_name = "About"
+                about_folder_target_path = os.path.join(
+                    workshop_folder_path, about_folder_name
                 )
-                pixmap = QPixmap(image_path)
-                self.preview_picture.setPixmap(
-                    pixmap.scaled(self.preview_picture.size(), Qt.KeepAspectRatio)
-                )
+                if os.path.exists(about_folder_target_path):
+                    # Look for a case-insensitive About folder
+                    invalid_folder_path_found = True
+                    for temp_file in os.scandir(workshop_folder_path):
+                        if (
+                            temp_file.name.lower() == about_folder_name.lower()
+                            and temp_file.is_dir()
+                        ):
+                            about_folder_name = temp_file.name
+                            invalid_folder_path_found = False
+                            break
+                    # Look for a case-insensitive "Preview.png" file
+                    invalid_file_path_found = True
+                    preview_file_name = "Preview.png"
+                    for temp_file in os.scandir(
+                        os.path.join(workshop_folder_path, about_folder_name)
+                    ):
+                        if (
+                            temp_file.name.lower() == preview_file_name.lower()
+                            and temp_file.is_file()
+                        ):
+                            preview_file_name = temp_file.name
+                            invalid_file_path_found = False
+                            break
+                    # If there was an issue getting the expected path, track and exit
+                    if invalid_folder_path_found or invalid_file_path_found:
+                        logger.info("No preview image found for the mod")
+                        image_path = os.path.join(os.getcwd(), "data", "missing.png")
+                        pixmap = QPixmap(image_path)
+                        self.preview_picture.setPixmap(
+                            pixmap.scaled(
+                                self.preview_picture.size(), Qt.KeepAspectRatio
+                            )
+                        )
+                    else:
+                        logger.info("Preview image found")
+                        image_path = os.path.join(
+                            workshop_folder_path, about_folder_name, preview_file_name
+                        )
+                        pixmap = QPixmap(image_path)
+                        self.preview_picture.setPixmap(
+                            pixmap.scaled(
+                                self.preview_picture.size(), Qt.KeepAspectRatio
+                            )
+                        )
+                else:
+                    logger.error(
+                        f"The local data for the mod {self.mod_info_package_id_value} was not found. Using cached metadata with missing Preview image."
+                    )
+                    image_path = os.path.join(os.getcwd(), "data", "missing.png")
+                    pixmap = QPixmap(image_path)
+                    self.preview_picture.setPixmap(
+                        pixmap.scaled(self.preview_picture.size(), Qt.KeepAspectRatio)
+                    )
+
         else:
             logger.error(
                 f"[path] tag does not exist in mod_info, is empty, or is not string: {mod_info.get('path')}"
             )
-            self.preview_picture.setPixmap(None)
+            image_path = os.path.join(os.getcwd(), "data", "missing.png")
+            pixmap = QPixmap(image_path)
+            self.preview_picture.setPixmap(
+                pixmap.scaled(self.preview_picture.size(), Qt.KeepAspectRatio)
+            )
         logger.info("Finished displaying mod info")

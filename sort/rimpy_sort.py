@@ -1,7 +1,5 @@
-import logging
+from logger_tt import logger
 from typing import Any
-
-logger = logging.getLogger(__name__)
 
 
 def do_rimpy_sort(
@@ -9,10 +7,16 @@ def do_rimpy_sort(
 ) -> dict[str, Any]:
     logger.info(f"Starting RimPy sort for {len(dependency_graph)} mods")
     # Get an alphabetized list of dependencies
-    active_mods_id_to_name = dict((k, v["name"]) for k, v in active_mods_json.items())
+    active_mods_id_to_name = dict(
+        (v["packageId"], v["name"]) for v in active_mods_json.values()
+    )
+    active_mods_packageid_to_uuid = dict(
+        (v["packageId"], v["uuid"]) for v in active_mods_json.values()
+    )
     active_mods_alphabetized = sorted(
         active_mods_id_to_name.items(), key=lambda x: x[1], reverse=False
     )
+
     dependencies_alphabetized = {}
     for tuple_id_name in active_mods_alphabetized:
         if tuple_id_name[0] in dependency_graph:
@@ -39,7 +43,9 @@ def do_rimpy_sort(
 
     reordered = {}
     for package_id in mods_load_order:
-        reordered[package_id] = active_mods_json[package_id]
+        if package_id in active_mods_packageid_to_uuid:
+            mod_uuid = active_mods_packageid_to_uuid[package_id]
+            reordered[mod_uuid] = active_mods_json[mod_uuid]
     logger.info(f"Finished RimPy sort with {len(reordered)} mods")
     return reordered
 
@@ -55,7 +61,10 @@ def recursively_force_insert(
     deps_of_package = dependency_graph[package_id]
     deps_id_to_name = {}
     for dependency_id in deps_of_package:
-        deps_id_to_name[dependency_id] = active_mods_json[dependency_id]["name"]
+        for uuid, mod_data in active_mods_json.items():
+            mod_package_id = mod_data["packageId"]
+            if dependency_id == mod_package_id:
+                deps_id_to_name[dependency_id] = active_mods_json[uuid]["name"]
     deps_of_package_alphabetized = sorted(
         deps_id_to_name.items(), key=lambda x: x[1], reverse=True
     )

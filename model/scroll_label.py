@@ -1,9 +1,7 @@
-import logging
+from logger_tt import logger
 
-from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QFrame, QLabel, QScrollArea, QVBoxLayout
-
-logger = logging.getLogger(__name__)
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QFrame, QLabel, QScrollArea, QVBoxLayout
 
 
 class ScrollLabel(QScrollArea):
