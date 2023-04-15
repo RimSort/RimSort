@@ -158,6 +158,11 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
+# venv
+bin/
+lib64
+pyvenv.cfg
+
 # RimSort
 .DS_Store
 .vscode/
@@ -171,3 +176,4 @@ SteamworksPy.dylib
 *.dist/
 *.onefile-build/
 logger_tt/
+

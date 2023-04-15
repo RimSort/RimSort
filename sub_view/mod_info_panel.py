@@ -126,7 +126,10 @@ class ModInfo:
         else:
             self.mod_info_author_value.setText(mod_info.get("author"))
         if "modVersion" in mod_info:
-            self.mod_info_mod_version_value.setText(mod_info.get("modVersion"))
+            if isinstance(mod_info.get("modVersion"), str):
+                self.mod_info_mod_version_value.setText(mod_info.get("modVersion"))
+            elif isinstance(mod_info.get("modVersion"), dict):
+                self.mod_info_mod_version_value.setText(mod_info["modVersion"]["#text"])
         else:
             self.mod_info_mod_version_value.setText("Not specified")
         self.mod_info_path_value.setText(mod_info.get("path"))
