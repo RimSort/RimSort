@@ -54,7 +54,7 @@ elif _SYSTEM == "Linux":
         "--output-dir=./dist/",
     ]
 elif _SYSTEM == "Windows" and _ARCH == "64bit":
-    PY_CMD = "py"
+    PY_CMD = "python"
     _NUITKA_CMD = [
         PY_CMD,
         "-m",
@@ -375,11 +375,16 @@ print("Creating symlink to built module...")
 MODULE_SRC_PATH = os.path.join(_CWD, "SteamworksPy", "steamworks")
 MODULE_DEST_PATH = os.path.join(_CWD, "steamworks")
 try:
-    os.symlink(
-        MODULE_SRC_PATH,
-        MODULE_DEST_PATH,
-        target_is_directory=True,
-    )
+    if _SYSTEM != "Windows":
+        os.symlink(
+            MODULE_SRC_PATH,
+            MODULE_DEST_PATH,
+            target_is_directory=True,
+        )
+    else:
+        from _winapi import CreateJunction
+
+        CreateJunction(MODULE_SRC_PATH, MODULE_DEST_PATH)
 except FileExistsError:
     print(
         f"Unable to create symlink from source: {MODULE_SRC_PATH} to destination: {MODULE_DEST_PATH}"
