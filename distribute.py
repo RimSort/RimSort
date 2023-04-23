@@ -332,7 +332,7 @@ def get_latest_todds_release() -> None:
 
     if _SYSTEM == "Darwin":
         if _PROCESSOR == "i386" or _PROCESSOR == "arm":
-            print(f"Darwin/MacOS system detected with a {arch} {processor} CPU...")
+            print(f"Darwin/MacOS system detected with a {_ARCH} {_PROCESSOR} CPU...")
             target_archive = f"todds_{_SYSTEM}_{_PROCESSOR}_{tag_name}.zip"
         else:
             print(f"Unsupported processor {_SYSTEM} {_ARCH} {_PROCESSOR}")
