@@ -46,6 +46,7 @@ elif _SYSTEM == "Linux":
         "nuitka",
         "--standalone",
         "--onefile",
+        "--linux-icon=./data/AppIcon_a.png",
         "--enable-plugin=pyside6",
         "--include-data-dir=./data/=data",
         "--include-data-dir=./todds/=todds",

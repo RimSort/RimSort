@@ -543,9 +543,11 @@ class GameConfiguration(QObject):
             possible_dir = self.game_folder_line.text()
             if os.path.exists(possible_dir):
                 start_dir = possible_dir
-        game_exe_folder_path = str(
-            QFileDialog.getExistingDirectory(
-                caption="Select Game Folder", dir=start_dir
+        game_exe_folder_path = os.path.normpath(
+            str(
+                QFileDialog.getExistingDirectory(
+                    caption="Select Game Folder", dir=start_dir
+                )
             )
         )
         logger.info(f"Selected path: {game_exe_folder_path}")
@@ -568,9 +570,11 @@ class GameConfiguration(QObject):
             possible_dir = self.config_folder_line.text()
             if os.path.exists(possible_dir):
                 start_dir = possible_dir
-        config_folder_path = str(
-            QFileDialog.getExistingDirectory(
-                caption="Select Mods Config Folder", dir=start_dir
+        config_folder_path = os.path.normpath(
+            str(
+                QFileDialog.getExistingDirectory(
+                    caption="Select Mods Config Folder", dir=start_dir
+                )
             )
         )
         logger.info(f"Selected path: {config_folder_path}")
@@ -594,9 +598,11 @@ class GameConfiguration(QObject):
             possible_dir = self.workshop_folder_line.text()
             if os.path.exists(possible_dir):
                 start_dir = possible_dir
-        workshop_path = str(
-            QFileDialog.getExistingDirectory(
-                caption="Select Workshop Folder", dir=start_dir
+        workshop_path = os.path.normpath(
+            str(
+                QFileDialog.getExistingDirectory(
+                    caption="Select Workshop Folder", dir=start_dir
+                )
             )
         )
         logger.info(f"Selected path: {workshop_path}")
@@ -620,9 +626,11 @@ class GameConfiguration(QObject):
             possible_dir = self.local_folder_line.text()
             if os.path.exists(possible_dir):
                 start_dir = possible_dir
-        local_path = str(
-            QFileDialog.getExistingDirectory(
-                caption="Select Local Mods Folder", dir=start_dir
+        local_path = os.path.normpath(
+            str(
+                QFileDialog.getExistingDirectory(
+                    caption="Select Local Mods Folder", dir=start_dir
+                )
             )
         )
         logger.info(f"Selected path: {local_path}")
