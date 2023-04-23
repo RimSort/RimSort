@@ -17,6 +17,9 @@ Setup environment
 _ARCH = platform.architecture()[0]
 _CWD = os.getcwd()
 _PROCESSOR = platform.processor()
+if _PROCESSOR == "":
+    _PROCESSOR = platform.machine()
+
 _SYSTEM = platform.system()
 
 PY_CMD = "python3"
@@ -412,7 +415,7 @@ os.chdir(_CWD)
 
 # Build SteamworksPy
 print("Building SteamworksPy library...")
-build_steamworkspy()
+#build_steamworkspy()
 # Copy libs
 if _SYSTEM != "Windows":
     if _SYSTEM == "Darwin":
