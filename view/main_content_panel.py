@@ -6,6 +6,7 @@ import platform
 from requests.exceptions import SSLError
 import subprocess
 import sys
+from tempfile import gettempdir
 from time import sleep
 from threading import Thread
 from typing import Any, Dict
@@ -29,6 +30,7 @@ from util.steam.steamworks.wrapper import (
     steamworks_subscriptions_handler,
 )
 from util.steam.webapi.wrapper import AppIDQuery
+from util.todds.wrapper import ToddsInterface
 from util.xml import json_to_xml_write, xml_path_to_json
 from view.game_configuration_panel import GameConfiguration
 from window.runner_panel import RunnerPanel
@@ -120,7 +122,7 @@ class MainContent:
         self.inactive_mods_panel.inactive_mods_list.refresh_signal.connect(
             self.actions_slot
         )
-        self.game_configuration.settings_panel.metadata_by_appid_signal.connect(
+        self.game_configuration.settings_panel.appidquery_signal.connect(
             self._do_appidquery_thread
         )
         self.game_configuration.settings_panel.metadata_comparison_signal.connect(
@@ -156,11 +158,15 @@ class MainContent:
             # Insert mod data into list (is_initial = True)
             self.repopulate_lists(True)
 
-        # Instantiate steamcmd wrapper
+        # Instantiate steamcmd utils
+        self.steamcmd_runner = RunnerPanel = None
         self.steamcmd_wrapper = SteamcmdInterface(self.game_configuration.storage_path)
 
         # Steamworks bool - use this to check any Steamworks processes you try to initialize
         self.steamworks_initialized = False
+
+        # Instantiate todds runner
+        self.todds_runner = RunnerPanel = None
 
         # WebAPI bool - don't allow more than 1 AppIDQuery run at once
         self.appidquery_live = False
@@ -527,6 +533,29 @@ class MainContent:
             self._do_restore()
         if action == "sort":
             self._do_sort()
+        if "textures" in action:
+            logger.warning("Initiating new todds operation...")
+            # Setup Environment
+            tempdir = gettempdir()
+            todds_txt_path = os.path.join(tempdir, "todds.txt")
+            if os.path.exists(todds_txt_path):
+                os.remove(todds_txt_path)
+            if self.game_configuration.get_local_folder_path() != None or "":
+                local_mods_target = self.game_configuration.get_local_folder_path()
+            if self.game_configuration.get_workshop_folder_path() != None or "":
+                workshop_mods_target = (
+                    self.game_configuration.get_workshop_folder_path()
+                )
+            if "local_mods_target" in locals():
+                with open(todds_txt_path, "a") as todds_txt_file:
+                    todds_txt_file.write(local_mods_target + "\n")
+            if "workshop_mods_target" in locals():
+                with open(todds_txt_path, "a") as todds_txt_file:
+                    todds_txt_file.write(workshop_mods_target + "\n")
+            if action == "optimize_textures":
+                self._do_optimize_textures(todds_txt_path)
+            if action == "delete_textures":
+                self._do_delete_dds_textures(todds_txt_path)
         if action == "browse_workshop":
             self._do_browse_workshop()
         if action == "setup_steamcmd":
@@ -791,6 +820,48 @@ class MainContent:
         else:
             logger.info("User pressed cancel, passing")
 
+    def _do_optimize_textures(self, todds_txt_path: str) -> None:
+        # Setup environment
+        preset = self.game_configuration.todds_preset
+        todds_interface = ToddsInterface(self.game_configuration.todds_overwrite_toggle)
+        todds_args_preset = todds_interface.todds_presets[preset]
+
+        # UI
+        self.todds_runner = RunnerPanel()
+        self.todds_runner.setWindowModality(Qt.ApplicationModal)
+        self.todds_runner.show()
+        self.todds_runner.message("Initiating texture optimization with todds...")
+        self.todds_runner.message("Courtesy of joseasoler#1824")
+        self.todds_runner.message(f"Using configured preset: {preset}\n\n\n")
+
+        todds_interface.execute_todds_cmd(
+            todds_args_preset, todds_txt_path, self.todds_runner
+        )
+
+    def _do_delete_dds_textures(self, todds_txt_path: str) -> None:
+        todds_interface = ToddsInterface()
+        todds_clean_args = [
+            "-cl",
+            "-o",
+            "-r",
+            "Textures",
+            "-p",
+            "-t",
+            "-v",
+        ]
+
+        # UI
+        self.todds_runner = RunnerPanel()
+        self.todds_runner.setWindowModality(Qt.ApplicationModal)
+        self.todds_runner.show()
+        self.todds_runner.message("Deleting .dds textures using todds...")
+        self.todds_runner.message("Courtesy of joseasoler#1824\n\n\n")
+
+        # Delete all .dds textures using todds
+        todds_interface.execute_todds_cmd(
+            todds_clean_args, todds_txt_path, self.todds_runner
+        )
+
     def _do_set_webapi_query_expiry(self) -> None:
         """
         Opens a QDialogInput that allows the user to edit their preferred
@@ -893,11 +964,12 @@ class MainContent:
         self.browser.show()
 
     def _do_setup_steamcmd(self):
-        self.runner = RunnerPanel()
-        self.runner.show()
-        self.runner.message("Setting up steamcmd...")
+        self.steamcmd_runner = RunnerPanel()
+        self.steamcmd_runner.setWindowModality(Qt.ApplicationModal)
+        self.steamcmd_runner.show()
+        self.steamcmd_runner.message("Setting up steamcmd...")
         self.steamcmd_wrapper.get_steamcmd(
-            self.game_configuration.get_local_folder_path(), False, self.runner
+            self.game_configuration.get_local_folder_path(), False, self.steamcmd_runner
         )
 
     def _insert_data_into_lists(

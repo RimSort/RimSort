@@ -14,7 +14,7 @@ from logger_tt import handlers, logger, setup_logging
 from PySide6.QtCore import QSize
 from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 
-from util.error import show_fatal_error
+from model.dialogue import show_fatal_error
 from util.proxy_style import ProxyStyle
 from view.game_configuration_panel import GameConfiguration
 from view.main_content_panel import MainContent

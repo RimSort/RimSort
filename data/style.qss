@@ -29,6 +29,10 @@ QDialog#settingsPanel {
     background-color: #22303d;
 }
 
+QCheckBox#summaryValue {
+    color: white;
+}
+
 QWidget#MainPanel {
     border-style: solid;
     border-color: #455364;

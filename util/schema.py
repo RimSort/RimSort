@@ -1,7 +1,7 @@
 from logger_tt import logger
 from typing import Any, Dict
 
-from util.error import show_warning
+from model.dialogue import show_warning
 
 
 def validate_mods_config_format(mods_config_data: Dict[str, Any]) -> bool:

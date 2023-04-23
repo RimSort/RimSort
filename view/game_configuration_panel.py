@@ -21,7 +21,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from util.error import *
+from model.dialogue import *
 from util.filesystem import *
 from window.settings_panel import SettingsPanel
 
@@ -227,11 +227,17 @@ class GameConfiguration(QObject):
         self.local_folder_row.addWidget(self.local_folder_line)
         self.local_folder_row.addWidget(self.local_folder_select_button)
 
+        # TODDS PRESET
+        self.todds_preset = "medium"
+
         # DUPE MODS WARNING TOGGLE
         self.duplicate_mods_warning_toggle = False
 
         # STEAM MODS UPDATE CHECK TOGGLE
         self.steam_mods_update_check_toggle = False
+
+        # TODDS OVERWRITE TOGGLE
+        self.todds_overwrite_toggle = False
 
         # RUN ARGUMENTS
         self.run_arguments = ""
@@ -280,6 +286,9 @@ class GameConfiguration(QObject):
         )
         self.settings_panel.steam_mods_update_checkbox.setChecked(
             self.steam_mods_update_check_toggle
+        )
+        self.settings_panel.todds_overwrite_checkbox.setChecked(
+            self.todds_overwrite_toggle
         )
 
         logger.info("Finished GameConfiguration initialization")
@@ -397,6 +406,21 @@ class GameConfiguration(QObject):
                         logger.warning(
                             f"The local folder that was loaded does not exist: {local_folder_path}"
                         )
+                if not settings_data.get("todds_preset"):
+                    settings_data["todds_preset"] = "medium"
+                self.todds_preset = settings_data["todds_preset"]
+                if self.todds_preset == "low":
+                    self.settings_panel.todds_presets_cb.setCurrentText(
+                        "Low (for toasters)"
+                    )
+                if self.todds_preset == "medium":
+                    self.settings_panel.todds_presets_cb.setCurrentText(
+                        "Medium (recommended)"
+                    )
+                if self.todds_preset == "high":
+                    self.settings_panel.todds_presets_cb.setCurrentText(
+                        "High (supercomputers!)"
+                    )
                 if settings_data.get("sorting_algorithm"):
                     self.settings_panel.sorting_algorithm_cb.setCurrentText(
                         settings_data["sorting_algorithm"]
@@ -452,6 +476,14 @@ class GameConfiguration(QObject):
             self.settings_panel.external_metadata_cb.currentText(),
         )
 
+        if "Low" in self.settings_panel.todds_presets_cb.currentText():
+            self.todds_preset = "low"
+        if "Medium" in self.settings_panel.todds_presets_cb.currentText():
+            self.todds_preset = "medium"
+        if "High" in self.settings_panel.todds_presets_cb.currentText():
+            self.todds_preset = "high"
+        self.update_persistent_storage("todds_preset", self.todds_preset)
+
         if self.settings_panel.duplicate_mods_checkbox.isChecked():
             self.duplicate_mods_warning_toggle = True
             self.update_persistent_storage("duplicate_mods_warning", True)
@@ -464,6 +496,13 @@ class GameConfiguration(QObject):
             self.update_persistent_storage("steam_mods_update_check", True)
         else:
             self.steam_mods_update_check_toggle = False
+            self.update_persistent_storage("steam_mods_update_check", False)
+
+        if self.settings_panel.todds_overwrite_checkbox.isChecked():
+            self.todds_overwrite_toggle = True
+            self.update_persistent_storage("steam_mods_update_check", True)
+        else:
+            self.todds_overwrite_toggle = False
             self.update_persistent_storage("steam_mods_update_check", False)
 
     def open_directory(self, callable: Any) -> None:

@@ -32,6 +32,7 @@ if _SYSTEM == "Darwin":
         "--macos-app-icon=./data/AppIcon_a.icns",
         "--enable-plugin=pyside6",
         "--include-data-dir=./data/=data",
+        "--include-data-dir=./todds/=todds",
         f"--include-data-file=./SteamworksPy_{_PROCESSOR}.dylib=SteamworksPy.dylib",
         "--include-data-file=./libsteam_api.dylib=libsteam_api.dylib",
         "--include-data-file=./steam_appid.txt=steam_appid.txt",
@@ -47,6 +48,7 @@ elif _SYSTEM == "Linux":
         "--onefile",
         "--enable-plugin=pyside6",
         "--include-data-dir=./data/=data",
+        "--include-data-dir=./todds/=todds",
         f"--include-data-file=./SteamworksPy_{_PROCESSOR}.so=SteamworksPy.so",
         "--include-data-file=./libsteam_api.so=libsteam_api.so",
         "--include-data-file=./steam_appid.txt=steam_appid.txt",
@@ -64,6 +66,7 @@ elif _SYSTEM == "Windows" and _ARCH == "64bit":
         "--windows-icon-from-ico=./data/AppIcon_a.png",
         "--enable-plugin=pyside6",
         "--include-data-dir=./data/=data",
+        "--include-data-dir=./todds/=todds",
         "--include-data-file=./SteamworksPy64.dll=SteamworksPy64.dll",
         "--include-data-file=./steam_api64.dll=steam_api64.dll",
         "--include-data-file=./steam_appid.txt=steam_appid.txt",
@@ -316,6 +319,55 @@ def build_steamworkspy() -> None:
         shutil.copyfile(STEAMWORKSPY_BIN_FIN_PATH, STEAMWORKSPY_BIN_LINUX_LINK_PATH)
 
 
+def get_latest_todds_release() -> None:
+    print("\nGetting latest release of todds...\n")
+
+    raw = requests.get("https://api.github.com/repos/joseasoler/todds/releases/latest")
+    json_response = raw.json()
+    tag_name = json_response["tag_name"]
+    todds_path = os.path.join(_CWD, "todds")
+
+    print(f"Latest release: {tag_name}\n")
+    # print(f'{json_response["body"]}\n')
+
+    if _SYSTEM == "Darwin":
+        if _PROCESSOR == "i386" or _PROCESSOR == "arm":
+            print(f"Darwin/MacOS system detected with a {arch} {processor} CPU...")
+            target_archive = f"todds_{_SYSTEM}_{_PROCESSOR}_{tag_name}.zip"
+        else:
+            print(f"Unsupported processor {_SYSTEM} {_ARCH} {_PROCESSOR}")
+    elif _SYSTEM == "Linux":
+        print(f"Linux system detected with a {_ARCH} {_PROCESSOR} CPU...")
+        target_archive = f"todds_{_SYSTEM}_{_PROCESSOR}_{tag_name}.zip"
+    elif _SYSTEM == "Windows":
+        print(f"Windows system detected with a {_ARCH} {_PROCESSOR} CPU...")
+        target_archive = f"todds_{_SYSTEM}_{tag_name}.zip"
+    else:
+        print(f"Unsupported system {_SYSTEM} {_ARCH} {_PROCESSOR}")
+        exit()
+
+    # Try to find a valid release
+    for asset in json_response["assets"]:
+        if asset["name"] == target_archive:
+            browser_download_url = asset["browser_download_url"]
+    if not "browser_download_url" in locals():
+        print(
+            f"Failed to find valid joseasoler/todds release for {_SYSTEM} {_ARCH} {_PROCESSOR}"
+        )
+        exit()
+    # Try to download & extract todds release from browser_download_url
+    target_archive_extracted = target_archive.replace(".zip", "")
+    try:
+        print(f"Downloading & extracting todds release from: {browser_download_url}")
+        with ZipFile(BytesIO(requests.get(browser_download_url).content)) as zipobj:
+            zipobj.extractall(todds_path)
+    except:
+        print(f"Failed to download: {browser_download_url}")
+        print(
+            "Did the file/url change?\nDoes your environment have access to the internet?"
+        )
+
+
 def freeze_application() -> None:
     # Nuitka
     print(f"Running on {_SYSTEM} {_ARCH} {_PROCESSOR}...")
@@ -392,6 +444,9 @@ except FileExistsError:
     print(
         "Destination already exists, or you don't have permission. You can safely ignore this as long as you are able to run RimSort after completing runtime setup."
     )
+
+# Grab latest todds release
+get_latest_todds_release()
 
 # Build Nuitka distributable binary
 _execute(_NUITKA_CMD)

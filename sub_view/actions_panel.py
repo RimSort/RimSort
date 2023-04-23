@@ -44,6 +44,9 @@ class Actions(QWidget):
         # Create button widgets. Each button, when clicked, emits a signal
         # with a string representing its action.
         self.refresh_button = QPushButton("Refresh")
+        self.refresh_button.setToolTip(
+            "Right-click to configure Steam Apikey with DynamicQuery!"
+        )
         self.refresh_button.clicked.connect(
             partial(self.actions_signal.emit, "refresh")
         )
@@ -69,12 +72,26 @@ class Actions(QWidget):
         self.export_button = QPushButton("Export List")
         self.export_button.clicked.connect(partial(self.actions_signal.emit, "export"))
 
+        self.optimize_textures_button = QPushButton("Optimize textures")
+        self.optimize_textures_button.setToolTip(
+            "Quality presets configurable in settings!\nRight-click to delete .dds textures"
+        )
+        self.optimize_textures_button.clicked.connect(
+            partial(self.actions_signal.emit, "optimize_textures")
+        )
+        self.optimize_textures_button.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.optimize_textures_button.customContextMenuRequested.connect(
+            self.optimizeTexContextMenuEvent
+        )
+
         self.browse_workshop_button = QPushButton("Browse workshop")
+        self.browse_workshop_button.setToolTip("Downloader coming soon!")
         self.browse_workshop_button.clicked.connect(
             partial(self.actions_signal.emit, "browse_workshop")
         )
 
         self.setup_steamcmd_button = QPushButton("Setup steamcmd")
+        self.setup_steamcmd_button.setToolTip("Requires an internet connection!")
         self.setup_steamcmd_button.clicked.connect(
             partial(self.actions_signal.emit, "setup_steamcmd")
         )
@@ -83,6 +100,7 @@ class Actions(QWidget):
         self.save_button.clicked.connect(partial(self.actions_signal.emit, "save"))
 
         self.run_button = QPushButton("Run")
+        self.run_button.setToolTip("Right-click to set RimWorld game arguments!")
         self.run_button.clicked.connect(partial(self.actions_signal.emit, "run"))
         self.run_button.setContextMenuPolicy(Qt.CustomContextMenu)
         self.run_button.customContextMenuRequested.connect(self.runArgsContextMenuEvent)
@@ -92,6 +110,7 @@ class Actions(QWidget):
         self.top_panel.addWidget(self.clear_button)
         self.top_panel.addWidget(self.restore_button)
         self.top_panel.addWidget(self.sort_button)
+        self.middle_panel.addWidget(self.optimize_textures_button)
         self.middle_panel.addWidget(self.browse_workshop_button)
         self.middle_panel.addWidget(self.setup_steamcmd_button)
         self.bottom_panel.addWidget(self.import_button)
@@ -104,6 +123,16 @@ class Actions(QWidget):
     @property
     def panel(self) -> QVBoxLayout:
         return self._panel
+
+    def optimizeTexContextMenuEvent(self, point: QPoint) -> None:
+        contextMenu = QMenu(self)  # Actions Panel context menu event
+        delete_dds_tex_action = contextMenu.addAction(
+            "Delete optimized textures"
+        )  # delete .dds
+        delete_dds_tex_action.triggered.connect(
+            partial(self.actions_signal.emit, "delete_textures")
+        )
+        action = contextMenu.exec_(self.optimize_textures_button.mapToGlobal(point))
 
     def runArgsContextMenuEvent(self, point: QPoint) -> None:
         contextMenu = QMenu(self)  # Actions Panel context menu event

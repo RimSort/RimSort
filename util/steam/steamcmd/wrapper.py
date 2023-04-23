@@ -4,16 +4,18 @@ import os
 from pathlib import Path
 import platform
 import requests
-import subprocess
 import sys
 import tarfile
 from zipfile import ZipFile
 from typing import Any, Dict, List, Optional, Tuple
 
-from util.error import show_fatal_error, show_information, show_warning
+from model.dialogue import (
+    show_dialogue_conditional,
+    show_fatal_error,
+    show_information,
+    show_warning,
+)
 from window.runner_panel import RunnerPanel
-
-from PySide6.QtWidgets import QMessageBox
 
 import shutil
 
@@ -25,8 +27,6 @@ class SteamcmdInterface:
 
     def __init__(self, storage_path: str) -> None:
         logger.info("SteamcmdInterface initilizing...")
-        self.cwd = os.getcwd()
-        self.log = ""
         self.steamcmd_path = Path(storage_path, "steamcmd").resolve()
         self.system = platform.system()
         self.steamcmd_mods_path = Path(storage_path, "steam").resolve()
@@ -56,21 +56,6 @@ class SteamcmdInterface:
         if not os.path.exists(self.steamcmd_mods_path):
             os.makedirs(self.steamcmd_mods_path)
 
-    def _steamcmd_dialogue(
-        self, title: str, text: str, info: str, runner: RunnerPanel
-    ) -> Any:
-        logger.info(
-            f"Showing _steamcmd_dialogue box with input: [{title}], [{text}], [{info}]"
-        )
-        dialogue = QMessageBox()
-        dialogue.setWindowTitle(title)
-        dialogue.setText(text)
-        dialogue.setInformativeText(info)
-        dialogue.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-        dialogue.exec_()
-        response = dialogue.clickedButton()
-        return response.text()
-
     def download_publishedfileids(
         self, appid: str, publishedfileids: list, runner: RunnerPanel
     ):
@@ -79,7 +64,8 @@ class SteamcmdInterface:
 
         https://developer.valvesoftware.com/wiki/SteamCMD
 
-        :param ids: list of publishedfileids
+        :param appid: a Steam AppID to pass to steamcmd
+        :param publishedfileids: list of publishedfileids
         """
         runner.message("Checking for steamcmd...")
         if self.steamcmd is not None:
@@ -105,6 +91,7 @@ class SteamcmdInterface:
                 script_output.write("\n".join(script))
             runner.message(f"Compiled & using script: {script_path}")
             runner.execute(self.steamcmd, [f"+runscript {script_path}"])
+            runner.process.waitForFinished()
         else:
             runner.message("steamcmd was not found. Please setup steamcmd first!")
 
@@ -143,11 +130,10 @@ class SteamcmdInterface:
                     "SteamcmdInterface",
                     f"A steamcmd runner already exists at: {self.steamcmd}",
                 )
-                answer = self._steamcmd_dialogue(
+                answer = show_dialogue_conditional(
                     "Reinstall?",
                     "Would you like to reinstall steamcmd?",
                     f"Existing install: {self.steamcmd_path}",
-                    runner,
                 )
                 if answer == "&Yes":
                     runner.message(f"Reinstalling steamcmd: {self.steamcmd_path}")
@@ -178,11 +164,10 @@ class SteamcmdInterface:
                     "SteamcmdInterface",
                     f"A steamcmd runner already exists at: {self.steamcmd}",
                 )
-                answer = self._steamcmd_dialogue(
+                answer = show_dialogue_conditional(
                     "Reinstall?",
                     "Would you like to reinstall steamcmd?",
                     f"Existing install: {self.steamcmd_path}",
-                    runner,
                 )
                 if answer == "&Yes":
                     runner.message(f"Reinstalling steamcmd: {self.steamcmd_path}")
@@ -204,11 +189,10 @@ class SteamcmdInterface:
                     f"Symlink destination already exists! Please remove existing destination: {symlink_destination_path}"
                 )
             else:
-                answer = self._steamcmd_dialogue(
+                answer = show_dialogue_conditional(
                     "Create symlink?",
                     "Would you like to create a symlink as followed?",
                     f"[{symlink_source_path}] -> " + symlink_destination_path,
-                    runner,
                 )
                 if answer == "&Yes":
                     runner.message(

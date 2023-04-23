@@ -4,6 +4,27 @@ from typing import Optional
 from logger_tt import logger
 
 
+def show_dialogue_conditional(title: str, text: str, information: str) -> str:
+    """
+    Displays a dialogue, prompting the user for input
+
+    :param title: text to pass to setWindowTitle
+    :param text: text to pass to setText
+    :param information: text to pass to setInformativeText
+    """
+    logger.info(
+        f"Showing _todds_dialogue box with input: [{title}], [{text}], [{information}]"
+    )
+    dialogue = QMessageBox()
+    dialogue.setWindowTitle(title)
+    dialogue.setText(text)
+    dialogue.setInformativeText(information)
+    dialogue.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+    dialogue.exec_()
+    response = dialogue.clickedButton()
+    return response.text()
+
+
 def show_information(
     text: Optional[str] = None,
     information: Optional[str] = None,

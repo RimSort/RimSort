@@ -9,7 +9,7 @@ import traceback
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
 
-from util.error import show_fatal_error, show_information, show_warning
+from model.dialogue import show_fatal_error, show_information, show_warning
 from util.steam.steamfiles.wrapper import acf_to_dict
 from util.steam.webapi.wrapper import DynamicQuery
 from util.schema import validate_mods_config_format

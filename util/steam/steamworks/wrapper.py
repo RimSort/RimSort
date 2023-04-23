@@ -11,7 +11,7 @@ from steamworks import STEAMWORKS
 from steamworks.exceptions import SteamNotRunningException
 import traceback
 
-from util.error import show_warning
+from model.dialogue import show_warning
 
 print(f"steamworks.wrapper: {multiprocessing.current_process()}")
 print(f"__name__: {__name__}\nsys.argv: {sys.argv}")

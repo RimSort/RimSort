@@ -27,25 +27,30 @@ class RunnerPanel(QWidget):
 
         self.message("ヽ༼ ຈل͜ຈ༼ ▀̿̿Ĺ̯̿̿▀̿ ̿༽Ɵ͆ل͜Ɵ͆ ༽ﾉ")
 
+    def closeEvent(self, event):
+        self.process.kill()
+        event.accept()
+
     def execute(self, command: str, args: list):
-        logger.info(f"Executing command: {command} " + f"with args {args}")
-        self.message(f"Executing command: {command} " + f"with args {args}")
+        logger.info("RunnerPanel subprocess initiating...")
         self.process = QProcess(self)
         self.process.setProgram(command)
         self.process.setArguments(args)
         self.process.setProcessChannelMode(QProcess.MergedChannels)
-        self.process.readyReadStandardOutput.connect(self.readyReadStandardOutput)
+        self.process.readyReadStandardError.connect(self.handle_output)
+        self.process.readyReadStandardOutput.connect(self.handle_output)
         self.process.finished.connect(self.finished)
+        self.message(f"\nExecuting command:\n{command} {args}")
         self.process.start()
+
+    def handle_output(self):
+        data = self.process.readAllStandardOutput()
+        stdout = bytes(data).decode("utf8")
+        self.message(stdout)
 
     def message(self, line: str):
         logger.info(line)
         self.text.appendPlainText(line)
 
-    def readyReadStandardOutput(self):
-        text = self.process.readAllStandardOutput().data().decode()
-        self.text.appendPlainText(text)
-
     def finished(self):
-        logger.info("Subprocess completed")
-        # self.destroy()
+        self.message("Subprocess completed.")
