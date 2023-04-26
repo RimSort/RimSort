@@ -72,6 +72,11 @@ class SettingsPanel(QDialog):
             "Show Steam mods update check on refresh"
         )
         self.steam_mods_update_checkbox.setObjectName("summaryValue")
+        self.steam_mods_update_checkbox.setToolTip(
+            "This option requires you to have a Steam apikey configured with\n"
+            + 'the below "Metadata" option set to "RimSort Dynamic Query"\n\n'
+            + '"Metadata" should be set to RimPy MMDB when sorting for now.'
+        )
         self.steam_mods_update_checkbox.stateChanged.connect(
             self.steam_mods_update_check_signal.emit
         )

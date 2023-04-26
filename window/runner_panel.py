@@ -1,6 +1,9 @@
 from logger_tt import logger
+from platform import system
+from re import compile
 
 from PySide6.QtCore import QProcess
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QPlainTextEdit,
     QWidget,
@@ -17,8 +20,16 @@ class RunnerPanel(QWidget):
     def __init__(self):
         super().__init__()
         logger.info("Initializing RunnerPanel")
+        self.ansi_escape = compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
+        self.system = system()
         self.text = QPlainTextEdit(readOnly=True)
         self.text.verticalScrollBar().setValue(self.text.verticalScrollBar().maximum())
+        if self.system == "Darwin":
+            self.text.setFont(QFont("Monaco"))
+        elif self.system == "Linux":
+            self.text.setFont(QFont("DejaVu Sans Mono"))
+        elif self.system == "Windows":
+            self.text.setFont(QFont("Cascadia Code"))
 
         self.process = QProcess = None
 
@@ -48,7 +59,7 @@ class RunnerPanel(QWidget):
 
     def handle_output(self):
         data = self.process.readAllStandardOutput()
-        stdout = bytes(data).decode("utf8")
+        stdout = self.ansi_escape.sub("", bytes(data).decode("utf8"))
         self.message(stdout)
 
     def message(self, line: str):

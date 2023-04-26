@@ -965,7 +965,6 @@ class MainContent:
 
     def _do_setup_steamcmd(self):
         self.steamcmd_runner = RunnerPanel()
-        self.steamcmd_runner.setWindowModality(Qt.ApplicationModal)
         self.steamcmd_runner.show()
         self.steamcmd_runner.message("Setting up steamcmd...")
         self.steamcmd_wrapper.setup_steamcmd(

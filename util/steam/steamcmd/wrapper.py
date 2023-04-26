@@ -40,8 +40,6 @@ from window.runner_panel import RunnerPanel
 import shutil
 
 
-# Create a class that is our Web Browser; uses WorkshopMessageHandler and WorkshopTransporter
-# in an effort to communicate with JavaScript to/from the QWebEngineView
 class SteamcmdDownloader(QWidget):
     """
     A generic panel used to browse web content
@@ -223,7 +221,7 @@ class SteamcmdInterface:
         :param publishedfileids: list of publishedfileids
         """
         runner.message("Checking for steamcmd...")
-        if self.steamcmd is not None:
+        if self.steamcmd is not None and os.path.exists(self.steamcmd):
             runner.message(
                 f"Got it: {self.steamcmd}\n"
                 + f"Downloading list of {str(len(publishedfileids))} "

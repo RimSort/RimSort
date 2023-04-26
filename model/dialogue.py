@@ -1,4 +1,5 @@
-from PySide6.QtWidgets import QMessageBox
+from PySide6.QtCore import QEventLoop
+from PySide6.QtWidgets import QApplication, QMessageBox
 from typing import Optional
 
 from logger_tt import logger

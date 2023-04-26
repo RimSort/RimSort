@@ -30,7 +30,7 @@ if _SYSTEM == "Darwin":
         "-m",
         "nuitka",
         "--standalone",
-        "--onefile",
+        # "--onefile",
         "--macos-create-app-bundle",
         "--macos-app-icon=./data/AppIcon_a.icns",
         "--enable-plugin=pyside6",
@@ -48,7 +48,7 @@ elif _SYSTEM == "Linux":
         "-m",
         "nuitka",
         "--standalone",
-        "--onefile",
+        # "--onefile",
         "--linux-icon=./data/AppIcon_a.png",
         "--enable-plugin=pyside6",
         "--include-data-dir=./data/=data",
@@ -66,7 +66,7 @@ elif _SYSTEM == "Windows" and _ARCH == "64bit":
         "-m",
         "nuitka",
         "--standalone",
-        "--onefile",
+        # "--onefile",
         "--windows-icon-from-ico=./data/AppIcon_a.png",
         "--enable-plugin=pyside6",
         "--include-data-dir=./data/=data",
@@ -414,8 +414,8 @@ print(f"Leaving {STEAMFILES_SRC}")
 os.chdir(_CWD)
 
 # Build SteamworksPy
-print("Building SteamworksPy library...")
-#build_steamworkspy()
+# print("Building SteamworksPy library...")
+# build_steamworkspy()
 # Copy libs
 if _SYSTEM != "Windows":
     if _SYSTEM == "Darwin":
