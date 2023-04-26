@@ -20,6 +20,8 @@ class RunnerPanel(QWidget):
         self.text = QPlainTextEdit(readOnly=True)
         self.text.verticalScrollBar().setValue(self.text.verticalScrollBar().maximum())
 
+        self.process = QProcess = None
+
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.text)
         self.setLayout(self.layout)
@@ -28,7 +30,8 @@ class RunnerPanel(QWidget):
         self.message("ヽ༼ ຈل͜ຈ༼ ▀̿̿Ĺ̯̿̿▀̿ ̿༽Ɵ͆ل͜Ɵ͆ ༽ﾉ")
 
     def closeEvent(self, event):
-        self.process.kill()
+        if self.process is not None:
+            self.process.kill()
         event.accept()
 
     def execute(self, command: str, args: list):
