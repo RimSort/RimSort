@@ -13,7 +13,7 @@ def show_dialogue_conditional(title: str, text: str, information: str) -> str:
     :param information: text to pass to setInformativeText
     """
     logger.info(
-        f"Showing _todds_dialogue box with input: [{title}], [{text}], [{information}]"
+        f"Showing dialogue box with input: [{title}], [{text}], [{information}]"
     )
     dialogue = QMessageBox()
     dialogue.setWindowTitle(title)

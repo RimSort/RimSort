@@ -1,3 +1,4 @@
+bs4==0.0.1
 imageio==2.27.0
 logger-tt==1.7.3
 mypy==1.2.0

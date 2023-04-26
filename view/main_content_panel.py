@@ -24,7 +24,7 @@ from sub_view.inactive_mods_panel import InactiveModList
 from sub_view.mod_info_panel import ModInfo
 from util.mods import *
 from util.schema import validate_mods_config_format
-from util.steam.steamcmd.wrapper import SteamcmdInterface
+from util.steam.steamcmd.wrapper import SteamcmdDownloader, SteamcmdInterface
 from util.steam.steamworks.wrapper import (
     launch_game_process,
     steamworks_subscriptions_handler,
@@ -34,7 +34,6 @@ from util.todds.wrapper import ToddsInterface
 from util.xml import json_to_xml_write, xml_path_to_json
 from view.game_configuration_panel import GameConfiguration
 from window.runner_panel import RunnerPanel
-from window.web_content_panel import WebContentPanel
 
 
 print(f"main_content_panel.py: {multiprocessing.current_process()}")
@@ -958,9 +957,10 @@ class MainContent:
             )
 
     def _do_browse_workshop(self):
-        self.browser = WebContentPanel(
+        self.browser = SteamcmdDownloader(
             "https://steamcommunity.com/app/294100/workshop/"
         )
+        self.browser.downloader_signal.connect(self._do_download_mods_with_steamcmd)
         self.browser.show()
 
     def _do_setup_steamcmd(self):
@@ -968,8 +968,19 @@ class MainContent:
         self.steamcmd_runner.setWindowModality(Qt.ApplicationModal)
         self.steamcmd_runner.show()
         self.steamcmd_runner.message("Setting up steamcmd...")
-        self.steamcmd_wrapper.get_steamcmd(
+        self.steamcmd_wrapper.setup_steamcmd(
             self.game_configuration.get_local_folder_path(), False, self.steamcmd_runner
+        )
+
+    def _do_download_mods_with_steamcmd(self, publishedfileids: list):
+        self.steamcmd_runner = RunnerPanel()
+        self.steamcmd_runner.setWindowModality(Qt.ApplicationModal)
+        self.steamcmd_runner.show()
+        self.steamcmd_runner.message(
+            f"Downloading the following list of mods with steamcmd:\n{publishedfileids}"
+        )
+        self.steamcmd_wrapper.download_publishedfileids(
+            "294100", publishedfileids, self.steamcmd_runner
         )
 
     def _insert_data_into_lists(

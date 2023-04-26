@@ -169,7 +169,6 @@ pyvenv.cfg
 .vscode/
 test*
 data/steam*
-todds*
 *.xml
 *_AppIDQuery*
 /steamworks

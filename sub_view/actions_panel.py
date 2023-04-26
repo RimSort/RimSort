@@ -85,7 +85,9 @@ class Actions(QWidget):
         )
 
         self.browse_workshop_button = QPushButton("Browse workshop")
-        self.browse_workshop_button.setToolTip("Downloader coming soon!")
+        self.browse_workshop_button.setToolTip(
+            "Download mods anonymously with steamcmd\n" + "No Steam account required!"
+        )
         self.browse_workshop_button.clicked.connect(
             partial(self.actions_signal.emit, "browse_workshop")
         )
