@@ -87,7 +87,7 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__()
 
         # Create the main application window
-        self.setWindowTitle("RimSort Alpha v1.0.3")
+        self.setWindowTitle("RimSort Alpha v1.0.4")
         self.setMinimumSize(QSize(1200, 700))
 
         # Create the window layout
