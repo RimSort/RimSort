@@ -416,7 +416,7 @@ class MainContent:
                 self.steam_db_rules, self.community_rules = get_rimpy_database_mod(
                     all_mods
                 )
-            else:
+            elif external_metadata_source == "RimSort Dynamic Query":
                 self.steam_db_rules, self.community_rules = get_3rd_party_metadata(
                     self.game_configuration.steam_apikey,
                     self.game_configuration.webapi_query_expiry,
@@ -427,6 +427,10 @@ class MainContent:
                     get_external_time_data_for_workshop_mods(
                         self.steam_db_rules, all_mods
                     )
+                )
+            else:
+                logger.info(
+                    "External metadata disabled by user. Please choose a Metadata source in settings."
                 )
         else:
             logger.warning(

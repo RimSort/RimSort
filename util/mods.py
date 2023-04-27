@@ -1006,8 +1006,9 @@ def get_dependencies_for_mods(
                         f"package_id not found for steam id [{dependency_steam_id}] in Steam metadata"
                     )
         logger.info("Finished adding dependencies from Steam db")
-
-    _log_deps_order_info(all_mods)
+        _log_deps_order_info(all_mods)
+    else:
+        logger.info("No Steam database supplied from external metadata. skipping.")
 
     # Add load order to installed mods based on dependencies from community rules
     if community_rules:
@@ -1053,12 +1054,11 @@ def get_dependencies_for_mods(
                             all_mods,
                         )
         logger.info("Finished adding dependencies from Community Rules")
+        _log_deps_order_info(all_mods)
     else:
         logger.info(
             "No Community Rules database supplied from external metadata. skipping."
         )
-
-    _log_deps_order_info(all_mods)
 
     logger.info("Returing all mods now")
     return all_mods, info_from_steam_package_id_to_name
