@@ -5,6 +5,7 @@ import os
 import platform
 import requests
 import shutil
+from stat import S_IEXEC
 import subprocess
 import sys
 import time
@@ -330,6 +331,7 @@ def get_latest_todds_release() -> None:
     json_response = raw.json()
     tag_name = json_response["tag_name"]
     todds_path = os.path.join(_CWD, "todds")
+    todds_executable_name = "todds"
 
     print(f"Latest release: {tag_name}\n")
     # print(f'{json_response["body"]}\n')
@@ -346,6 +348,7 @@ def get_latest_todds_release() -> None:
     elif _SYSTEM == "Windows":
         print(f"Windows system detected with a {_ARCH} {_PROCESSOR} CPU...")
         target_archive = f"todds_{_SYSTEM}_{tag_name}.zip"
+        todds_executable_name = "todds.exe"
     else:
         print(f"Unsupported system {_SYSTEM} {_ARCH} {_PROCESSOR}")
         exit()
@@ -365,6 +368,11 @@ def get_latest_todds_release() -> None:
         print(f"Downloading & extracting todds release from: {browser_download_url}")
         with ZipFile(BytesIO(requests.get(browser_download_url).content)) as zipobj:
             zipobj.extractall(todds_path)
+        # Set executable permissions as ZipFile does not preserve this in the zip archive
+        todds_executable_path = os.path.join(todds_path, todds_executable_name)
+        if os.path.exists(todds_executable_path):
+            original_stat = os.stat(todds_executable_path)
+            os.chmod(todds_executable_path, original_stat.st_mode | S_IEXEC)
     except:
         print(f"Failed to download: {browser_download_url}")
         print(
