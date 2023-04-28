@@ -2,6 +2,8 @@ from logger_tt import logger
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
+    QComboBox,
+    QHBoxLayout,
     QLabel,
     QLineEdit,
     QListWidgetItem,
@@ -35,11 +37,13 @@ class InactiveModList:
         self.num_mods.setAlignment(Qt.AlignCenter)
         self.num_mods.setObjectName("summaryValue")
 
-        self.inactive_mods_list = ModListWidget()
-
+        # Search widgets
+        # Search widgets
+        self.inactive_mods_search_layout = QHBoxLayout()
         self.inactive_mods_search = QLineEdit()
         self.inactive_mods_search.setClearButtonEnabled(True)
         self.inactive_mods_search.textChanged.connect(self.signal_inactive_mods_search)
+        self.inactive_mods_search.setPlaceholderText("Search inactive mods...")
         self.inactive_mods_search_clear_button = self.inactive_mods_search.findChild(
             QToolButton
         )
@@ -47,11 +51,20 @@ class InactiveModList:
         self.inactive_mods_search_clear_button.clicked.connect(
             self.clear_inactive_mods_search
         )
-        self.inactive_mods_search.setPlaceholderText("Search inactive mods...")
+        self.inactive_mods_search_filter = QComboBox()
+        self.inactive_mods_search_filter.setMaximumWidth(125)
+        self.inactive_mods_search_filter.addItems(
+            ["PackageId", "Name", "Author(s)", "PublishedFileId"]
+        )
+        self.inactive_mods_search_layout.addWidget(self.inactive_mods_search, 75)
+        self.inactive_mods_search_layout.addWidget(self.inactive_mods_search_filter)
+
+        # Inactive mod list
+        self.inactive_mods_list = ModListWidget()
 
         # Add widgets to base layout
         self.panel.addWidget(self.num_mods)
-        self.panel.addWidget(self.inactive_mods_search)
+        self.panel.addLayout(self.inactive_mods_search_layout)
         self.panel.addWidget(self.inactive_mods_list)
 
         # Adding Completer.
@@ -76,11 +89,20 @@ class InactiveModList:
 
     def signal_inactive_mods_search(self, pattern: str) -> None:
         wni = self.inactive_mods_list.get_widgets_and_items()
+        # Use the configured search filter
+        if self.inactive_mods_search_filter.currentText() == "PackageId":
+            search_filter = "packageId"
+        elif self.inactive_mods_search_filter.currentText() == "Name":
+            search_filter = "name"
+        elif self.inactive_mods_search_filter.currentText() == "Author(s)":
+            search_filter = "author"
+        elif self.inactive_mods_search_filter.currentText() == "PublishedFileId":
+            search_filter = "publishedfileid"
         for widget, item in wni:
             if (
                 pattern
-                and not pattern.lower() in widget.json_data["name"].lower()
-                and not pattern.lower() in widget.json_data["packageId"].lower()
+                and widget.json_data.get(search_filter)
+                and not pattern.lower() in widget.json_data[search_filter].lower()
             ):
                 item.setHidden(True)
             else:

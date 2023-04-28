@@ -3,6 +3,7 @@ from typing import Any
 
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtWidgets import (
+    QComboBox,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -42,11 +43,12 @@ class ActiveModList(QWidget):
         self.num_mods.setAlignment(Qt.AlignCenter)
         self.num_mods.setObjectName("summaryValue")
 
-        self.active_mods_list = ModListWidget()
-
+        # Search widgets
+        self.active_mods_search_layout = QHBoxLayout()
         self.active_mods_search = QLineEdit()
         self.active_mods_search.setClearButtonEnabled(True)
         self.active_mods_search.textChanged.connect(self.signal_active_mods_search)
+        self.active_mods_search.setPlaceholderText("Search active mods...")
         self.active_mods_search_clear_button = self.active_mods_search.findChild(
             QToolButton
         )
@@ -54,8 +56,18 @@ class ActiveModList(QWidget):
         self.active_mods_search_clear_button.clicked.connect(
             self.clear_active_mods_search
         )
-        self.active_mods_search.setPlaceholderText("Search active mods...")
+        self.active_mods_search_filter = QComboBox()
+        self.active_mods_search_filter.setMaximumWidth(125)
+        self.active_mods_search_filter.addItems(
+            ["PackageId", "Name", "Author(s)", "PublishedFileId"]
+        )
+        self.active_mods_search_layout.addWidget(self.active_mods_search, 75)
+        self.active_mods_search_layout.addWidget(self.active_mods_search_filter)
 
+        # Active mod list
+        self.active_mods_list = ModListWidget()
+
+        # Errors/warnings
         self.errors_summary_frame = QFrame()
         self.errors_summary_frame.setObjectName("errorFrame")
         self.errors_summary_layout = QHBoxLayout()
@@ -92,7 +104,7 @@ class ActiveModList(QWidget):
 
         # Add widgets to base layout
         self.panel.addWidget(self.num_mods, 1)
-        self.panel.addWidget(self.active_mods_search, 1)
+        self.panel.addLayout(self.active_mods_search_layout, 1)
         self.panel.addWidget(self.active_mods_list, 97)
         self.panel.addWidget(self.errors_summary_frame, 1)
 
@@ -354,11 +366,20 @@ class ActiveModList(QWidget):
 
     def signal_active_mods_search(self, pattern: str) -> None:
         wni = self.active_mods_list.get_widgets_and_items()
+        # Use the configured search filter
+        if self.active_mods_search_filter.currentText() == "PackageId":
+            search_filter = "packageId"
+        elif self.active_mods_search_filter.currentText() == "Name":
+            search_filter = "name"
+        elif self.active_mods_search_filter.currentText() == "Author(s)":
+            search_filter = "author"
+        elif self.active_mods_search_filter.currentText() == "PublishedFileId":
+            search_filter = "publishedfileid"
         for widget, item in wni:
             if (
                 pattern
-                and not pattern.lower() in widget.json_data["name"].lower()
-                and not pattern.lower() in widget.json_data["packageId"].lower()
+                and widget.json_data.get(search_filter)
+                and not pattern.lower() in widget.json_data[search_filter].lower()
             ):
                 item.setHidden(True)
             else:

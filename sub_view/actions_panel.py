@@ -62,6 +62,10 @@ class Actions(QWidget):
         self.restore_button.clicked.connect(
             partial(self.actions_signal.emit, "restore")
         )
+        self.restore_button.setToolTip(
+            "Attempts to restore an active mods list state that was\n"
+            + "cached on RimSort startup."
+        )
 
         self.sort_button = QPushButton("Sort")
         self.sort_button.clicked.connect(partial(self.actions_signal.emit, "sort"))
