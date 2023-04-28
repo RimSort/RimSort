@@ -240,7 +240,7 @@ class MainContent:
                 iml.setCurrentRow(self._get_relative_middle(iml))
             self.mod_list_slot(iml.selectedItems()[0].data(Qt.UserRole)["uuid"])
 
-        elif key == "Return" or key == "Space":
+        elif key == "Return" or key == "Space" or key == "DoubleClick":
             # TODO: graphical bug where if you hold down the key, items are
             # inserted too quickly and become empty items
 
@@ -291,7 +291,7 @@ class MainContent:
                 aml.setCurrentRow(self._get_relative_middle(aml))
             self.mod_list_slot(aml.selectedItems()[0].data(Qt.UserRole)["uuid"])
 
-        elif key == "Return" or key == "Space":
+        elif key == "Return" or key == "Space" or key == "DoubleClick":
             # TODO: graphical bug where if you hold down the key, items are
             # inserted too quickly and become empty items
 

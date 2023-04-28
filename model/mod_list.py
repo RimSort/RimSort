@@ -52,8 +52,11 @@ class ModListWidget(QListWidget):
         # Allow for selecting and moving multiple items
         self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
 
-        # When an item is clicked, display the mod information TODO
+        # When an item is clicked, display the mod information
         self.currentItemChanged.connect(self.mod_clicked)
+
+        # When an item is double clicked, move it to the opposite list
+        self.itemDoubleClicked.connect(self.mod_double_clicked)
 
         # Add an eventFilter for per mod_list_item context menu
         self.installEventFilter(self)
@@ -335,6 +338,11 @@ class ModListWidget(QListWidget):
         """
         if current is not None:
             self.mod_info_signal.emit(current.data(Qt.UserRole)["uuid"])
+
+    def mod_double_clicked(self, item: QListWidgetItem):
+        widget = ModListItemInner = self.itemWidget(item)
+        # print(f"DoubleClick\n{widget.json_data}")
+        self.key_press_signal.emit("DoubleClick")
 
     def get_mod_url(self, widget_json_data) -> str:
         url = ""
