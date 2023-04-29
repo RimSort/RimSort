@@ -72,10 +72,6 @@ class Actions(QWidget):
         )
 
         # REFRESH BUTTON FLASHING ANIMATION
-        # Create the animation object and set its target to the button's palette
-        # palette = self.refresh_button.palette()
-        # palette.setColor(self.refresh_button.backgroundRole(), QColor("#455364"))
-        # self.refresh_button.setPalette(palette)
         self.refresh_button_flashing_animation = QTimer()
         self.refresh_button_flashing_animation.timeout.connect(
             lambda: self.refresh_button.setStyleSheet(
@@ -138,6 +134,20 @@ class Actions(QWidget):
 
         self.save_button = QPushButton("Save")
         self.save_button.clicked.connect(partial(self.actions_signal.emit, "save"))
+
+        # SAVE BUTTON FLASHING ANIMATION
+        self.save_button_flashing_animation = QTimer()
+        self.save_button_flashing_animation.timeout.connect(
+            lambda: self.save_button.setStyleSheet(
+                "QPushButton { background-color: %s; }"
+                % (
+                    "#455364"
+                    if self.save_button.styleSheet()
+                    == "QPushButton { background-color: #54687a; }"
+                    else "#54687a"
+                )
+            )
+        )
 
         self.run_button = QPushButton("Run")
         self.run_button.setToolTip("Right-click to set RimWorld game arguments!")

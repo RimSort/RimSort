@@ -115,13 +115,15 @@ class MainContent:
 
         # SIGNALS AND SLOTS
         self.actions_panel.actions_signal.connect(self.actions_slot)  # Actions
+        self.active_mods_panel.list_updated_signal.connect(
+            self._do_save_animation
+        )  # Save btn animation
         self.active_mods_panel.active_mods_list.key_press_signal.connect(
             self.handle_active_mod_key_press
         )
         self.inactive_mods_panel.inactive_mods_list.key_press_signal.connect(
             self.handle_inactive_mod_key_press
         )
-
         self.active_mods_panel.active_mods_list.mod_info_signal.connect(
             self.mod_list_slot
         )
@@ -146,6 +148,7 @@ class MainContent:
         self.inactive_mods_panel.inactive_mods_list.refresh_signal.connect(
             self.actions_slot
         )
+
         self.game_configuration.settings_panel.appidquery_signal.connect(
             self._do_appidquery_thread
         )
@@ -1041,9 +1044,38 @@ class MainContent:
         """
         Refresh expensive calculations & repopulate lists with that refreshed data
         """
+        self.active_mods_panel.list_updated = False
+        # Stop the refresh button from blinking if it is blinking
         if self.actions_panel.refresh_button_flashing_animation.isActive():
             self.actions_panel.refresh_button_flashing_animation.stop()
             self.actions_panel.refresh_button.setStyleSheet(
+                """
+                QPushButton {
+                    color: white;
+                    background-color: #455364;
+                    border-style: solid;
+                    border-width: 0px;
+                    border-radius: 5px;
+                    /* border-color: beige; */
+                    /* font: bold 14px; */
+                    min-width: 6em;
+                    padding: 1px;
+                }
+
+                QPushButton:hover {
+                    background-color: #54687a;
+                }
+
+                QPushButton:pressed {
+                    background-color: #3e4a52;
+                    border-style: inset;
+                }
+                """
+            )
+        # Stop the save button from blinking if it is blinking
+        if self.actions_panel.save_button_flashing_animation.isActive():
+            self.actions_panel.save_button_flashing_animation.stop()
+            self.actions_panel.save_button.setStyleSheet(
                 """
                 QPushButton {
                     color: white;
@@ -1330,7 +1362,45 @@ class MainContent:
             )
         else:
             logger.error("Could not save active mods")
+        # Stop the save button from blinking if it is blinking
+        if self.actions_panel.save_button_flashing_animation.isActive():
+            self.actions_panel.save_button_flashing_animation.stop()
+            self.actions_panel.save_button.setStyleSheet(
+                """
+                QPushButton {
+                    color: white;
+                    background-color: #455364;
+                    border-style: solid;
+                    border-width: 0px;
+                    border-radius: 5px;
+                    /* border-color: beige; */
+                    /* font: bold 14px; */
+                    min-width: 6em;
+                    padding: 1px;
+                }
+
+                QPushButton:hover {
+                    background-color: #54687a;
+                }
+
+                QPushButton:pressed {
+                    background-color: #3e4a52;
+                    border-style: inset;
+                }
+                """
+            )
         logger.info("Finished saving active mods")
+
+    def _do_save_animation(self) -> None:
+        logger.warning("Active mods list updated")
+        if (
+            self.active_mods_panel.list_updated  # This will only evaluate True if this is initialization, or _do_refresh()
+            and not self.actions_panel.save_button_flashing_animation.isActive()  # No need to reenable if it's already blinking
+        ):
+            logger.warning("Starting save button animation")
+            self.actions_panel.save_button_flashing_animation.start(
+                500
+            )  # Blink every 500 milliseconds
 
     def _do_restore(self) -> None:
         """

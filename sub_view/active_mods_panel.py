@@ -2,7 +2,7 @@ from logger_tt import logger
 import os
 from typing import Any
 
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QComboBox,
@@ -27,6 +27,8 @@ class ActiveModList(QWidget):
     active mods list panel on the GUI.
     """
 
+    list_updated_signal = Signal()
+
     def __init__(self) -> None:
         """
         Initialize the class.
@@ -34,6 +36,7 @@ class ActiveModList(QWidget):
         create a row for every key-value pair in the dict.
         """
         logger.info("Starting ActiveModList initialization")
+        self.list_updated = False
 
         super(ActiveModList, self).__init__()
 
@@ -370,6 +373,10 @@ class ActiveModList(QWidget):
         logger.info("Finished recalculating internal list errors")
 
     def handle_internal_mod_list_updated(self, count: str) -> None:
+        # First time, and when Refreshing, the slot will evaluate false and do nothing.
+        # The purpose of this is for the _do_save_animation slot in the main_content_panel
+        self.list_updated_signal.emit()
+        self.list_updated = True
         # 'drop' indicates that the update was just a drag and drop
         # within the list.
         if count != "drop":
