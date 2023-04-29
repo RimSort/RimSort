@@ -199,6 +199,11 @@ QLabel#StatusLabel {
     background-color: #455364;
 }
 
+QLabel#gameVersion {
+    color: white;
+    margin-right: 4px;
+}
+
 QPushButton {
     color: white;
     background-color: #455364;
@@ -211,9 +216,13 @@ QPushButton {
     padding: 1px;
 }
 
-QLabel#gameVersion {
-    color: white;
-    margin-right: 4px;
+QPushButton:hover {
+    background-color: #54687a;
+}
+
+QPushButton:pressed {
+    background-color: #3e4a52;
+    border-style: inset;
 }
 
 QPushButton#LeftButton {
@@ -224,11 +233,45 @@ QPushButton#RightButton {
     margin-left: 4px;
 }
 
-QPushButton:hover {
-    background-color: #54687a;
+QComboBox {
+  color: white;
+  background-color: #455364;
+  border-style: solid;
+  border-width: 0px;
+  border-radius: 5px;
+  padding: 1px;
 }
 
-QPushButton:pressed {
-    background-color: #3e4a52;
-    border-style: inset;
+QComboBox:hover {
+  background-color: #54687a;
+}
+
+QComboBox::drop-down {
+  width: 0;
+  height: 0;
+}
+
+QComboBox QAbstractItemView {
+  background-color: #54687a;
+  color: white;
+  selection-background-color: #455364;
+  selection-color: white;
+}
+
+QToolButton {
+  background-color: #455364;
+  border-style: solid;
+  border-width: 0px;
+  border-radius: 5px;
+  color: white;
+  padding: 1px;
+}
+
+QToolButton:hover {
+  background-color: #54687a;
+}
+
+QToolButton:pressed {
+  background-color: #3e4a52;
+  border-style: inset;
 }

@@ -3,7 +3,7 @@ from platform import system
 from re import compile
 
 from PySide6.QtCore import QProcess
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont, QTextCursor
 from PySide6.QtWidgets import (
     QPlainTextEdit,
     QWidget,
@@ -63,8 +63,16 @@ class RunnerPanel(QWidget):
         self.message(stdout)
 
     def message(self, line: str):
-        logger.info(line)
-        self.text.appendPlainText(line)
+        logger.debug(line)
+        # Hardcoded todds progress output support
+        if self.process and "todds" in self.process.program() and "Progress: " in line:
+            cursor = self.text.textCursor()
+            cursor.movePosition(QTextCursor.End)
+            cursor.movePosition(QTextCursor.StartOfLine, QTextCursor.KeepAnchor)
+            cursor.removeSelectedText()
+            cursor.insertText(line.strip())
+        else:
+            self.text.appendPlainText(line)
 
     def finished(self):
         self.message("Subprocess completed.")

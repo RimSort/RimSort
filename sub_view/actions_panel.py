@@ -1,8 +1,19 @@
 from logger_tt import logger
 from functools import partial
 
-from PySide6.QtCore import QPoint, Qt, Signal
-from PySide6.QtWidgets import QMenu, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtCore import (
+    QPoint,
+    QTimer,
+    Qt,
+    Signal,
+)
+from PySide6.QtGui import QColor
+from PySide6.QtWidgets import (
+    QMenu,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
 
 
 class Actions(QWidget):
@@ -44,15 +55,38 @@ class Actions(QWidget):
         # Create button widgets. Each button, when clicked, emits a signal
         # with a string representing its action.
         self.refresh_button = QPushButton("Refresh")
+        self.refresh_button.setAutoFillBackground(True)
+
+        # Set tooltip and connect signal
         self.refresh_button.setToolTip(
             "Right-click to configure Steam Apikey with DynamicQuery!"
         )
         self.refresh_button.clicked.connect(
             partial(self.actions_signal.emit, "refresh")
         )
+
+        # Set context menu policy and connect custom context menu event
         self.refresh_button.setContextMenuPolicy(Qt.CustomContextMenu)
         self.refresh_button.customContextMenuRequested.connect(
             self.steamApikeyContextMenuEvent
+        )
+
+        # REFRESH BUTTON FLASHING ANIMATION
+        # Create the animation object and set its target to the button's palette
+        # palette = self.refresh_button.palette()
+        # palette.setColor(self.refresh_button.backgroundRole(), QColor("#455364"))
+        # self.refresh_button.setPalette(palette)
+        self.refresh_button_flashing_animation = QTimer()
+        self.refresh_button_flashing_animation.timeout.connect(
+            lambda: self.refresh_button.setStyleSheet(
+                "QPushButton { background-color: %s; }"
+                % (
+                    "#455364"
+                    if self.refresh_button.styleSheet()
+                    == "QPushButton { background-color: #54687a; }"
+                    else "#54687a"
+                )
+            )
         )
 
         self.clear_button = QPushButton("Clear")

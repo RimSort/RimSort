@@ -156,7 +156,10 @@ def main_thread():
         logger.error(stacktrace)
         show_fatal_error(details=stacktrace)
     finally:
-        logger.info("Exiting program")
+        logger.debug("Stopping watchdog...")
+        window.main_content_panel.game_configuration_config_observer.stop()
+        window.main_content_panel.game_configuration_config_observer.join()
+        logger.info("Exiting!")
         sys.exit()
 
 

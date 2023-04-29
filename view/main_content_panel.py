@@ -1,3 +1,5 @@
+from functools import partial
+from logging import getLogger, WARNING
 from logger_tt import logger
 import multiprocessing
 from multiprocessing import active_children, Process
@@ -11,8 +13,10 @@ from time import sleep
 from threading import Thread
 from typing import Any, Dict
 from urllib3.exceptions import HTTPError
+from watchdog.events import FileSystemEventHandler
+from watchdog.observers import Observer
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QObject, Signal
 from PySide6.QtWidgets import QFileDialog, QFrame, QHBoxLayout, QInputDialog, QLineEdit
 
 from sort.dependencies import *
@@ -39,6 +43,8 @@ from window.runner_panel import RunnerPanel
 print(f"main_content_panel.py: {multiprocessing.current_process()}")
 print(f"__name__: {__name__}\nsys.argv: {sys.argv}")
 
+getLogger("watchdog.observers.inotify_buffer").setLevel(WARNING)
+
 
 class MainContent:
     """
@@ -62,7 +68,7 @@ class MainContent:
         self.main_layout.setContentsMargins(
             5, 5, 5, 5
         )  # Space between widgets and Frame border
-        self.main_layout.setSpacing(5)  # Space beteen mod lists and action buttons
+        self.main_layout.setSpacing(5)  # Space between mod lists and action buttons
 
         # FRAME REQUIRED - to allow for styling
         self.main_layout_frame = QFrame()
@@ -87,6 +93,25 @@ class MainContent:
         # Fetch paths dynamically from game configuration panel
         logger.info("Loading GameConfiguration instance")
         self.game_configuration = game_configuration
+
+        # INITIALIZE WATCHDOG - WE WAIT TO START UNTIL DONE PARSING MOD LIST
+        self.game_configuration_watchdog_event_handler = RSFileSystemEventHandler()
+        self.game_configuration_config_observer = Observer()
+        self.game_configuration_config_observer.schedule(
+            self.game_configuration_watchdog_event_handler,
+            self.game_configuration.get_game_folder_path(),
+            recursive=True,
+        )
+        self.game_configuration_config_observer.schedule(
+            self.game_configuration_watchdog_event_handler,
+            self.game_configuration.get_local_folder_path(),
+            recursive=True,
+        )
+        self.game_configuration_config_observer.schedule(
+            self.game_configuration_watchdog_event_handler,
+            self.game_configuration.get_workshop_folder_path(),
+            recursive=True,
+        )
 
         # SIGNALS AND SLOTS
         self.actions_panel.actions_signal.connect(self.actions_slot)  # Actions
@@ -130,6 +155,9 @@ class MainContent:
         self.game_configuration.settings_panel.set_webapi_query_expiry_signal.connect(
             self._do_set_webapi_query_expiry
         )
+        self.game_configuration_watchdog_event_handler.file_changes_signal.connect(
+            self._do_refresh_animation
+        )
 
         # Restore cache initially set to empty
         self.active_mods_data_restore_state: Dict[str, Any] = {}
@@ -172,6 +200,10 @@ class MainContent:
         self.appidquery_thread = Thread()
 
         logger.info("Finished MainContent initialization")
+
+        # Start watchdog
+        logger.debug("Starting watchdog")
+        self.game_configuration_config_observer.start()
 
     @property
     def panel(self):
@@ -1009,6 +1041,32 @@ class MainContent:
         """
         Refresh expensive calculations & repopulate lists with that refreshed data
         """
+        if self.actions_panel.refresh_button_flashing_animation.isActive():
+            self.actions_panel.refresh_button_flashing_animation.stop()
+            self.actions_panel.refresh_button.setStyleSheet(
+                """
+                QPushButton {
+                    color: white;
+                    background-color: #455364;
+                    border-style: solid;
+                    border-width: 0px;
+                    border-radius: 5px;
+                    /* border-color: beige; */
+                    /* font: bold 14px; */
+                    min-width: 6em;
+                    padding: 1px;
+                }
+
+                QPushButton:hover {
+                    background-color: #54687a;
+                }
+
+                QPushButton:pressed {
+                    background-color: #3e4a52;
+                    border-style: inset;
+                }
+                """
+            )
         self.active_mods_panel.clear_active_mods_search()
         self.inactive_mods_panel.clear_inactive_mods_search()
         if self.game_configuration.check_if_essential_paths_are_set():
@@ -1022,6 +1080,14 @@ class MainContent:
             logger.warning(
                 "Essential paths have not been set. Passing refresh and resetting mod lists"
             )
+
+    def _do_refresh_animation(self, path: str) -> None:
+        logger.debug(f"File change detected: {path}")
+        if not self.actions_panel.refresh_button_flashing_animation.isActive():
+            logger.debug("Starting refresh button animation")
+            self.actions_panel.refresh_button_flashing_animation.start(
+                500
+            )  # blink every 500 milliseconds
 
     def _do_clear(self) -> None:
         """
@@ -1286,3 +1352,19 @@ class MainContent:
             logger.warning(
                 "Cached mod lists for restore function not set as client started improperly. Passing on restore"
             )
+
+
+class RSFileSystemEventHandler(FileSystemEventHandler, QObject):
+    file_changes_signal = Signal(str)
+
+    def on_created(self, event):
+        self.file_changes_signal.emit(event.src_path)
+
+    def on_deleted(self, event):
+        self.file_changes_signal.emit(event.src_path)
+
+    def on_modified(self, event):
+        self.file_changes_signal.emit(event.src_path)
+
+    def on_moved(self, event):
+        self.file_changes_signal.emit(event.src_path)
