@@ -1,7 +1,9 @@
 from logger_tt import logger
+import os
 from typing import Any
 
 from PySide6.QtCore import QSize, Qt
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QComboBox,
     QFrame,
@@ -45,10 +47,24 @@ class ActiveModList(QWidget):
 
         # Search widgets
         self.active_mods_search_layout = QHBoxLayout()
+        self.active_mods_search_filter_state = True
+        self.active_mods_search_mode_filter_icon = QIcon(
+            os.path.join(os.path.dirname(__file__), "../data/filter.png")
+        )
+        self.active_mods_search_mode_nofilter_icon = QIcon(
+            os.path.join(os.path.dirname(__file__), "../data/nofilter.png")
+        )
+        self.active_mods_search_mode_filter_button = QToolButton()
+        self.active_mods_search_mode_filter_button.setIcon(
+            self.active_mods_search_mode_filter_icon
+        )
         self.active_mods_search = QLineEdit()
         self.active_mods_search.setClearButtonEnabled(True)
         self.active_mods_search.textChanged.connect(self.signal_active_mods_search)
-        self.active_mods_search.setPlaceholderText("Search active mods...")
+        self.active_mods_search_mode_filter_button.clicked.connect(
+            self.signal_active_mods_search_filter_toggle
+        )
+        self.active_mods_search.setPlaceholderText("Search by...")
         self.active_mods_search_clear_button = self.active_mods_search.findChild(
             QToolButton
         )
@@ -59,7 +75,10 @@ class ActiveModList(QWidget):
         self.active_mods_search_filter = QComboBox()
         self.active_mods_search_filter.setMaximumWidth(125)
         self.active_mods_search_filter.addItems(
-            ["PackageId", "Name", "Author(s)", "PublishedFileId"]
+            ["Name", "PackageId", "Author(s)", "PublishedFileId"]
+        )
+        self.active_mods_search_layout.addWidget(
+            self.active_mods_search_mode_filter_button
         )
         self.active_mods_search_layout.addWidget(self.active_mods_search, 75)
         self.active_mods_search_layout.addWidget(self.active_mods_search_filter)
@@ -366,11 +385,13 @@ class ActiveModList(QWidget):
 
     def signal_active_mods_search(self, pattern: str) -> None:
         wni = self.active_mods_list.get_widgets_and_items()
+        filtered_qlabel_stylesheet = "QLabel { color : grey; }"
+        unfiltered_qlabel_stylesheet = "QLabel { color : white; }"
         # Use the configured search filter
-        if self.active_mods_search_filter.currentText() == "PackageId":
-            search_filter = "packageId"
-        elif self.active_mods_search_filter.currentText() == "Name":
+        if self.active_mods_search_filter.currentText() == "Name":
             search_filter = "name"
+        elif self.active_mods_search_filter.currentText() == "PackageId":
+            search_filter = "packageId"
         elif self.active_mods_search_filter.currentText() == "Author(s)":
             search_filter = "author"
         elif self.active_mods_search_filter.currentText() == "PublishedFileId":
@@ -381,10 +402,37 @@ class ActiveModList(QWidget):
                 and widget.json_data.get(search_filter)
                 and not pattern.lower() in widget.json_data[search_filter].lower()
             ):
-                item.setHidden(True)
+                if self.active_mods_search_filter_state:
+                    item.setHidden(True)
+                elif not self.active_mods_search_filter_state:
+                    widget.findChild(QLabel, "ListItemLabel").setStyleSheet(
+                        filtered_qlabel_stylesheet
+                    )
             else:
-                item.setHidden(False)
+                if self.active_mods_search_filter_state:
+                    item.setHidden(False)
+                elif not self.active_mods_search_filter_state:
+                    widget.findChild(QLabel, "ListItemLabel").setStyleSheet(
+                        unfiltered_qlabel_stylesheet
+                    )
         self.update_count(wni)
+
+    def signal_active_mods_search_filter_toggle(self) -> None:
+        buffer = self.active_mods_search.text()
+        self.clear_active_mods_search()
+        if self.active_mods_search_filter_state:
+            self.active_mods_search_filter_state = False
+            self.active_mods_search_mode_filter_button.setIcon(
+                self.active_mods_search_mode_nofilter_icon
+            )
+        else:
+            self.active_mods_search_filter_state = True
+            self.active_mods_search_mode_filter_button.setIcon(
+                self.active_mods_search_mode_filter_icon
+            )
+        self.active_mods_search.setFocus()
+        self.active_mods_search.setText(buffer)
+        self.active_mods_search.textChanged.emit(buffer)
 
     def update_count(
         self, widgets_and_items: list[tuple[ModListItemInner, QListWidgetItem]]

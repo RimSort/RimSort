@@ -74,7 +74,7 @@ class SteamcmdDownloader(QWidget):
         self.downloader_list.setItemAlignment(Qt.AlignCenter)
         self.download_button = QPushButton("Download mod(s)")
         self.download_button.clicked.connect(
-            lambda: self.downloader_signal.emit(self.downloader_tracking_list)
+            partial(self.downloader_signal.emit, self.downloader_tracking_list)
         )
 
         # BROWSER WIDGETS
