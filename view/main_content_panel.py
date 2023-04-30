@@ -95,23 +95,29 @@ class MainContent:
         self.game_configuration = game_configuration
 
         # INITIALIZE WATCHDOG - WE WAIT TO START UNTIL DONE PARSING MOD LIST
+        game_folder_path = self.game_configuration.get_game_folder_path()
+        local_folder_path = self.game_configuration.get_local_folder_path()
+        workshop_folder_path = self.game_configuration.get_workshop_folder_path()
         self.game_configuration_watchdog_event_handler = RSFileSystemEventHandler()
         self.game_configuration_config_observer = Observer()
-        self.game_configuration_config_observer.schedule(
-            self.game_configuration_watchdog_event_handler,
-            self.game_configuration.get_game_folder_path(),
-            recursive=True,
-        )
-        self.game_configuration_config_observer.schedule(
-            self.game_configuration_watchdog_event_handler,
-            self.game_configuration.get_local_folder_path(),
-            recursive=True,
-        )
-        self.game_configuration_config_observer.schedule(
-            self.game_configuration_watchdog_event_handler,
-            self.game_configuration.get_workshop_folder_path(),
-            recursive=True,
-        )
+        if game_folder_path != "":
+            self.game_configuration_config_observer.schedule(
+                self.game_configuration_watchdog_event_handler,
+                game_folder_path,
+                recursive=True,
+            )
+        if local_folder_path != "":
+            self.game_configuration_config_observer.schedule(
+                self.game_configuration_watchdog_event_handler,
+                local_folder_path,
+                recursive=True,
+            )
+        if workshop_folder_path != "":
+            self.game_configuration_config_observer.schedule(
+                self.game_configuration_watchdog_event_handler,
+                workshop_folder_path,
+                recursive=True,
+            )
 
         # SIGNALS AND SLOTS
         self.actions_panel.actions_signal.connect(self.actions_slot)  # Actions
