@@ -24,7 +24,7 @@ class ToddsInterface:
     Create ToddsInterface object to provide an interface for todds functionality
     """
 
-    def __init__(self, overwrite=False) -> None:
+    def __init__(self, preset="medium", dry_run=False, overwrite=False) -> None:
         logger.info("ToddsInterface initilizing...")
         if overwrite:
             overwrite_flag = "-o"
@@ -32,7 +32,16 @@ class ToddsInterface:
             overwrite_flag = "-on"
         self.cwd = os.getcwd()
         self.system = platform.system()
+        self.preset = preset
         self.todds_presets = {
+            "clean": [
+                "-cl",
+                "-o",
+                "-r",
+                "Textures",
+                "-p",
+                "-t",
+            ],
             "low": [
                 "-f",
                 "BC1_ALPHA_BC7",
@@ -43,7 +52,6 @@ class ToddsInterface:
                 "Textures",
                 "-p",
                 "-t",
-                "-v",
             ],
             "medium": [
                 "-f",
@@ -55,7 +63,6 @@ class ToddsInterface:
                 "Textures",
                 "-p",
                 "-t",
-                "-v",
             ],
             "high": [
                 "-f",
@@ -69,13 +76,16 @@ class ToddsInterface:
                 "Textures",
                 "-p",
                 "-t",
-                "-v",
             ],
         }
+        if dry_run:
+            for preset in self.todds_presets:
+                self.todds_presets[preset].remove("-p")
+                self.todds_presets[preset].remove("-t")
+                self.todds_presets[preset].append("-v")
+                self.todds_presets[preset].append("-dr")
 
-    def execute_todds_cmd(
-        self, todds_arguments: list, target_path: str, runner: RunnerPanel
-    ):
+    def execute_todds_cmd(self, target_path: str, runner: RunnerPanel):
         """
         This function launches a todds command using a RunnerPanel (uses QProcess)
 
@@ -96,8 +106,12 @@ class ToddsInterface:
         logger.info("Checking for todds...")
         if os.path.exists(todds_exe_path):
             logger.warning(f"Found todds executable at: {todds_exe_path}")
-            args = todds_arguments.copy()
+            args = self.todds_presets[self.preset]
             args.append(target_path)
+            if not runner.todds_dry_run_support:
+                runner.message("Initiating todds...")
+                runner.message("Courtesy of joseasoler#1824")
+                runner.message(f"Using configured preset: {self.preset}\n\n")
             runner.execute(todds_exe_path, args)
         else:
             runner.message(

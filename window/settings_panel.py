@@ -19,11 +19,8 @@ from util.filesystem import platform_specific_open
 class SettingsPanel(QDialog):
     appidquery_signal = Signal(str)
     clear_paths_signal = Signal(str)
-    dupe_mods_warning_signal = Signal(str)
     metadata_comparison_signal = Signal(str)
     set_webapi_query_expiry_signal = Signal(str)
-    steam_mods_update_check_signal = Signal(str)
-    todds_overwrite_signal = Signal(str)
 
     def __init__(self) -> None:
         logger.info("Starting SettingsPanel initialization")
@@ -61,26 +58,14 @@ class SettingsPanel(QDialog):
                 QStandardPaths.writableLocation(QStandardPaths.AppLocalDataLocation),
             )
         )
-        self.duplicate_mods_checkbox = QCheckBox(
-            "Show duplicate mods warning on refresh"
-        )
-        self.duplicate_mods_checkbox.setObjectName("summaryValue")
-        self.duplicate_mods_checkbox.stateChanged.connect(
-            self.dupe_mods_warning_signal.emit
-        )
-        self.steam_mods_update_checkbox = QCheckBox(
-            "Show Steam mods update check on refresh"
-        )
-        self.steam_mods_update_checkbox.setObjectName("summaryValue")
-        self.steam_mods_update_checkbox.setToolTip(
-            "This option requires you to have a Steam apikey configured with\n"
-            + 'the below "Metadata" option set to "RimSort Dynamic Query"\n\n'
-            + '"Metadata" should be set to RimPy MMDB when sorting for now.'
-        )
-        self.steam_mods_update_checkbox.stateChanged.connect(
-            self.steam_mods_update_check_signal.emit
-        )
 
+        # sorting algorithm
+        self.sorting_algorithm_label = QLabel("Sorting Algorithm")
+        self.sorting_algorithm_label.setObjectName("summaryValue")
+        self.sorting_algorithm_cb = QComboBox()
+        self.sorting_algorithm_cb.addItems(["RimPy", "Topological"])
+
+        # metadata
         self.metadata_label = QLabel("Metadata")
         self.metadata_label.setObjectName("summaryValue")
         self.external_metadata_cb = QComboBox()
@@ -103,11 +88,23 @@ class SettingsPanel(QDialog):
             partial(self.set_webapi_query_expiry_signal.emit, "set_webapi_query_expiry")
         )
 
-        self.sorting_algorithm_label = QLabel("Sorting Algorithm")
-        self.sorting_algorithm_label.setObjectName("summaryValue")
-        self.sorting_algorithm_cb = QComboBox()
-        self.sorting_algorithm_cb.addItems(["RimPy", "Topological"])
+        # duplicate mods warning
+        self.duplicate_mods_checkbox = QCheckBox(
+            "Show duplicate mods warning on refresh"
+        )
+        self.duplicate_mods_checkbox.setObjectName("summaryValue")
+        # steam mods update check
+        self.steam_mods_update_checkbox = QCheckBox(
+            "Show Steam mods update check on refresh"
+        )
+        self.steam_mods_update_checkbox.setObjectName("summaryValue")
+        self.steam_mods_update_checkbox.setToolTip(
+            "This option requires you to have a Steam apikey configured with\n"
+            + 'the below "Metadata" option set to "RimSort Dynamic Query"\n\n'
+            + '"Metadata" should be set to RimPy MMDB when sorting for now.'
+        )
 
+        # todds
         self.todds_label = QLabel("todds options")
         self.todds_label.setObjectName("summaryValue")
         self.todds_presets_cb = QComboBox()
@@ -118,6 +115,23 @@ class SettingsPanel(QDialog):
                 "High (supercomputers!)",
             ]
         )
+        self.todds_active_mods_target_checkbox = QCheckBox(
+            "Force todds to only target mods in the active mods list"
+        )
+        self.todds_active_mods_target_checkbox.setToolTip(
+            "If unchecked, todds will convert textures for all\n"
+            + "applicable mods parsed from a mod data source."
+        )
+        self.todds_active_mods_target_checkbox.setObjectName("summaryValue")
+        self.todds_dry_run_checkbox = QCheckBox(
+            'Force todds to use a special "dry run" mode'
+        )
+        self.todds_dry_run_checkbox.setToolTip(
+            "You can save this output to file using the action in the runner panel.\n"
+            + "This will not write any changes to the disk, and is useful to get a list\n"
+            + "of all input files that will be converted to .dds format by todds."
+        )
+        self.todds_dry_run_checkbox.setObjectName("summaryValue")
         self.todds_overwrite_checkbox = QCheckBox(
             "Force todds to overwrite existing optimized textures"
         )
@@ -128,9 +142,6 @@ class SettingsPanel(QDialog):
             + "This option will force all textures to be converted again."
         )
         self.todds_overwrite_checkbox.setObjectName("summaryValue")
-        self.todds_overwrite_checkbox.stateChanged.connect(
-            self.todds_overwrite_signal.emit
-        )
 
         # Add widgets to layout
         self.layout.addWidget(self.general_label)
@@ -151,6 +162,8 @@ class SettingsPanel(QDialog):
 
         self.layout.addWidget(self.todds_label)
         self.layout.addWidget(self.todds_presets_cb)
+        self.layout.addWidget(self.todds_active_mods_target_checkbox)
+        self.layout.addWidget(self.todds_dry_run_checkbox)
         self.layout.addWidget(self.todds_overwrite_checkbox)
 
         # Display items

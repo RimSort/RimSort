@@ -578,18 +578,27 @@ class MainContent:
             todds_txt_path = os.path.join(tempdir, "todds.txt")
             if os.path.exists(todds_txt_path):
                 os.remove(todds_txt_path)
-            if self.game_configuration.get_local_folder_path() != None or "":
-                local_mods_target = self.game_configuration.get_local_folder_path()
-            if self.game_configuration.get_workshop_folder_path() != None or "":
-                workshop_mods_target = (
-                    self.game_configuration.get_workshop_folder_path()
-                )
-            if "local_mods_target" in locals():
+            if not self.game_configuration.todds_active_mods_target_toggle:
+                if self.game_configuration.get_local_folder_path() != None or "":
+                    local_mods_target = self.game_configuration.get_local_folder_path()
+                if self.game_configuration.get_workshop_folder_path() != None or "":
+                    workshop_mods_target = (
+                        self.game_configuration.get_workshop_folder_path()
+                    )
+                if "local_mods_target" in locals():
+                    with open(todds_txt_path, "a") as todds_txt_file:
+                        todds_txt_file.write(local_mods_target + "\n")
+                if "workshop_mods_target" in locals():
+                    with open(todds_txt_path, "a") as todds_txt_file:
+                        todds_txt_file.write(workshop_mods_target + "\n")
+            else:
                 with open(todds_txt_path, "a") as todds_txt_file:
-                    todds_txt_file.write(local_mods_target + "\n")
-            if "workshop_mods_target" in locals():
-                with open(todds_txt_path, "a") as todds_txt_file:
-                    todds_txt_file.write(workshop_mods_target + "\n")
+                    for (
+                        json_data
+                    ) in (
+                        self.active_mods_panel.active_mods_list.get_list_items_by_dict().values()
+                    ):
+                        todds_txt_file.write(json_data["path"] + "\n")
             if action == "optimize_textures":
                 self._do_optimize_textures(todds_txt_path)
             if action == "delete_textures":
@@ -860,45 +869,36 @@ class MainContent:
 
     def _do_optimize_textures(self, todds_txt_path: str) -> None:
         # Setup environment
-        preset = self.game_configuration.todds_preset
-        todds_interface = ToddsInterface(self.game_configuration.todds_overwrite_toggle)
-        todds_args_preset = todds_interface.todds_presets[preset]
+        todds_interface = ToddsInterface(
+            preset=self.game_configuration.todds_preset,
+            dry_run=self.game_configuration.todds_dry_run_toggle,
+            overwrite=self.game_configuration.todds_overwrite_toggle,
+        )
 
         # UI
-        self.todds_runner = RunnerPanel()
+        self.todds_runner = RunnerPanel(
+            todds_dry_run_support=self.game_configuration.todds_dry_run_toggle
+        )
         self.todds_runner.setWindowModality(Qt.ApplicationModal)
         self.todds_runner.show()
-        self.todds_runner.message("Initiating texture optimization with todds...")
-        self.todds_runner.message("Courtesy of joseasoler#1824")
-        self.todds_runner.message(f"Using configured preset: {preset}\n\n\n")
 
-        todds_interface.execute_todds_cmd(
-            todds_args_preset, todds_txt_path, self.todds_runner
-        )
+        todds_interface.execute_todds_cmd(todds_txt_path, self.todds_runner)
 
     def _do_delete_dds_textures(self, todds_txt_path: str) -> None:
-        todds_interface = ToddsInterface()
-        todds_clean_args = [
-            "-cl",
-            "-o",
-            "-r",
-            "Textures",
-            "-p",
-            "-t",
-            "-v",
-        ]
+        todds_interface = ToddsInterface(
+            preset="clean",
+            dry_run=self.game_configuration.todds_dry_run_toggle,
+        )
 
         # UI
-        self.todds_runner = RunnerPanel()
+        self.todds_runner = RunnerPanel(
+            todds_dry_run_support=self.game_configuration.todds_dry_run_toggle
+        )
         self.todds_runner.setWindowModality(Qt.ApplicationModal)
         self.todds_runner.show()
-        self.todds_runner.message("Deleting .dds textures using todds...")
-        self.todds_runner.message("Courtesy of joseasoler#1824\n\n\n")
 
         # Delete all .dds textures using todds
-        todds_interface.execute_todds_cmd(
-            todds_clean_args, todds_txt_path, self.todds_runner
-        )
+        todds_interface.execute_todds_cmd(todds_txt_path, self.todds_runner)
 
     def _do_set_webapi_query_expiry(self) -> None:
         """
@@ -1392,12 +1392,12 @@ class MainContent:
         logger.info("Finished saving active mods")
 
     def _do_save_animation(self) -> None:
-        logger.warning("Active mods list updated")
+        logger.debug("Active mods list updated")
         if (
             self.active_mods_panel.list_updated  # This will only evaluate True if this is initialization, or _do_refresh()
             and not self.actions_panel.save_button_flashing_animation.isActive()  # No need to reenable if it's already blinking
         ):
-            logger.warning("Starting save button animation")
+            logger.debug("Starting save button animation")
             self.actions_panel.save_button_flashing_animation.start(
                 500
             )  # Blink every 500 milliseconds

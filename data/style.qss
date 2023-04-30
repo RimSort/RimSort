@@ -41,6 +41,14 @@ QWidget#MainPanel {
     margin: 7px; /* Space between frame and app edge */
 }
 
+QWidget#RunnerPanel {
+    border-style: solid;
+    border-color: #455364;
+    border-width: 1px;
+    border-radius: 3px;
+    margin: 7px; /* Space between frame and app edge */
+}
+
 QScrollBar:vertical {
     border: 1px solid #455364;
     border-radius: 5px;

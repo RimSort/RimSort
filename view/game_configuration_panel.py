@@ -227,14 +227,20 @@ class GameConfiguration(QObject):
         self.local_folder_row.addWidget(self.local_folder_line)
         self.local_folder_row.addWidget(self.local_folder_select_button)
 
-        # TODDS PRESET
-        self.todds_preset = "medium"
-
         # DUPE MODS WARNING TOGGLE
         self.duplicate_mods_warning_toggle = False
 
         # STEAM MODS UPDATE CHECK TOGGLE
         self.steam_mods_update_check_toggle = False
+
+        # TODDS PRESET
+        self.todds_preset = "medium"
+
+        # TODDS ACTIVE MODS TARGET TOGGLE
+        self.todds_active_mods_target_toggle = False
+
+        # TODDS DRY RUN TOGGLE
+        self.todds_dry_run_toggle = False
 
         # TODDS OVERWRITE TOGGLE
         self.todds_overwrite_toggle = False
@@ -287,6 +293,12 @@ class GameConfiguration(QObject):
         self.settings_panel.steam_mods_update_checkbox.setChecked(
             self.steam_mods_update_check_toggle
         )
+
+        # TODDS
+        self.settings_panel.todds_active_mods_target_checkbox.setChecked(
+            self.todds_active_mods_target_toggle
+        )
+        self.settings_panel.todds_dry_run_checkbox.setChecked(self.todds_dry_run_toggle)
         self.settings_panel.todds_overwrite_checkbox.setChecked(
             self.todds_overwrite_toggle
         )
@@ -406,6 +418,38 @@ class GameConfiguration(QObject):
                         logger.warning(
                             f"The local folder that was loaded does not exist: {local_folder_path}"
                         )
+                # sorting algorithm
+                if settings_data.get("sorting_algorithm"):
+                    self.settings_panel.sorting_algorithm_cb.setCurrentText(
+                        settings_data["sorting_algorithm"]
+                    )
+                # metadata
+                if settings_data.get("external_metadata_source"):
+                    self.settings_panel.external_metadata_cb.setCurrentText(
+                        settings_data["external_metadata_source"]
+                    )
+                # game & steam settings
+                if settings_data.get("runArgs"):
+                    self.run_arguments = settings_data["runArgs"]
+                if settings_data.get("steam_apikey"):
+                    self.steam_apikey = settings_data["steam_apikey"]
+                if not settings_data.get("webapi_query_expiry"):
+                    settings_data["webapi_query_expiry"] = 1800
+                self.webapi_query_expiry = settings_data["webapi_query_expiry"]
+
+                # misc
+                if not settings_data.get("duplicate_mods_warning"):
+                    settings_data["duplicate_mods_warning"] = False
+                self.duplicate_mods_warning_toggle = settings_data[
+                    "duplicate_mods_warning"
+                ]
+                if not settings_data.get("steam_mods_update_check"):
+                    settings_data["steam_mods_update_check"] = True
+                self.steam_mods_update_check_toggle = settings_data[
+                    "steam_mods_update_check"
+                ]
+
+                # todds
                 if not settings_data.get("todds_preset"):
                     settings_data["todds_preset"] = "medium"
                 self.todds_preset = settings_data["todds_preset"]
@@ -421,31 +465,18 @@ class GameConfiguration(QObject):
                     self.settings_panel.todds_presets_cb.setCurrentText(
                         "High (supercomputers!)"
                     )
-                if settings_data.get("sorting_algorithm"):
-                    self.settings_panel.sorting_algorithm_cb.setCurrentText(
-                        settings_data["sorting_algorithm"]
-                    )
-                if settings_data.get("external_metadata_source"):
-                    self.settings_panel.external_metadata_cb.setCurrentText(
-                        settings_data["external_metadata_source"]
-                    )
-                if settings_data.get("runArgs"):
-                    self.run_arguments = settings_data["runArgs"]
-                if settings_data.get("steam_apikey"):
-                    self.steam_apikey = settings_data["steam_apikey"]
-                if not settings_data.get("webapi_query_expiry"):
-                    settings_data["webapi_query_expiry"] = 1800
-                self.webapi_query_expiry = settings_data["webapi_query_expiry"]
-                if not settings_data.get("duplicate_mods_warning"):
-                    settings_data["duplicate_mods_warning"] = False
-                self.duplicate_mods_warning_toggle = settings_data[
-                    "duplicate_mods_warning"
+                if not settings_data.get("todds_active_mods_target"):
+                    settings_data["todds_active_mods_target"] = False
+                self.todds_active_mods_target_toggle = settings_data[
+                    "todds_active_mods_target"
                 ]
-                if not settings_data.get("steam_mods_update_check"):
-                    settings_data["steam_mods_update_check"] = True
-                self.steam_mods_update_check_toggle = settings_data[
-                    "steam_mods_update_check"
-                ]
+                if not settings_data.get("todds_dry_run"):
+                    settings_data["todds_dry_run"] = False
+                self.todds_dry_run_toggle = settings_data["todds_dry_run"]
+                if not settings_data.get("todds_overwrite"):
+                    settings_data["todds_overwrite"] = False
+                self.todds_overwrite_toggle = settings_data["todds_overwrite"]
+
         logger.info("Finished storage initialization")
 
     def initialize_settings_panel(self) -> None:
@@ -466,24 +497,22 @@ class GameConfiguration(QObject):
         logger.info(
             "Settings panel closed, updating persistent storage for these options..."
         )
+
+        # close the window
         self.settings_panel.close()
+
+        # sorting algorithm
         self.update_persistent_storage(
             "sorting_algorithm", self.settings_panel.sorting_algorithm_cb.currentText()
         )
 
+        # metadata
         self.update_persistent_storage(
             "external_metadata_source",
             self.settings_panel.external_metadata_cb.currentText(),
         )
 
-        if "Low" in self.settings_panel.todds_presets_cb.currentText():
-            self.todds_preset = "low"
-        if "Medium" in self.settings_panel.todds_presets_cb.currentText():
-            self.todds_preset = "medium"
-        if "High" in self.settings_panel.todds_presets_cb.currentText():
-            self.todds_preset = "high"
-        self.update_persistent_storage("todds_preset", self.todds_preset)
-
+        # duplicate mods check
         if self.settings_panel.duplicate_mods_checkbox.isChecked():
             self.duplicate_mods_warning_toggle = True
             self.update_persistent_storage("duplicate_mods_warning", True)
@@ -491,6 +520,7 @@ class GameConfiguration(QObject):
             self.duplicate_mods_warning_toggle = False
             self.update_persistent_storage("duplicate_mods_warning", False)
 
+        # steam mods update check
         if self.settings_panel.steam_mods_update_checkbox.isChecked():
             self.steam_mods_update_check_toggle = True
             self.update_persistent_storage("steam_mods_update_check", True)
@@ -498,12 +528,35 @@ class GameConfiguration(QObject):
             self.steam_mods_update_check_toggle = False
             self.update_persistent_storage("steam_mods_update_check", False)
 
+        # todds preset
+        if "Low" in self.settings_panel.todds_presets_cb.currentText():
+            self.todds_preset = "low"
+        if "Medium" in self.settings_panel.todds_presets_cb.currentText():
+            self.todds_preset = "medium"
+        if "High" in self.settings_panel.todds_presets_cb.currentText():
+            self.todds_preset = "high"
+        self.update_persistent_storage("todds_preset", self.todds_preset)
+        # todds active mods target
+        if self.settings_panel.todds_active_mods_target_checkbox.isChecked():
+            self.todds_active_mods_target_toggle = True
+            self.update_persistent_storage("todds_active_mods_target", True)
+        else:
+            self.todds_active_mods_target_toggle = False
+            self.update_persistent_storage("todds_active_mods_target", False)
+        # todds dry run
+        if self.settings_panel.todds_dry_run_checkbox.isChecked():
+            self.todds_dry_run_toggle = True
+            self.update_persistent_storage("todds_dry_run", True)
+        else:
+            self.todds_dry_run_toggle = False
+            self.update_persistent_storage("todds_dry_run", False)
+        # todds overwrite textures
         if self.settings_panel.todds_overwrite_checkbox.isChecked():
             self.todds_overwrite_toggle = True
-            self.update_persistent_storage("steam_mods_update_check", True)
+            self.update_persistent_storage("todds_overwrite", True)
         else:
             self.todds_overwrite_toggle = False
-            self.update_persistent_storage("steam_mods_update_check", False)
+            self.update_persistent_storage("todds_overwrite", False)
 
     def open_directory(self, callable: Any) -> None:
         """
