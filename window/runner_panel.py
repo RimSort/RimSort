@@ -50,9 +50,9 @@ class RunnerPanel(QWidget):
         # SET STYLESHEET TO CONFORM WITH GLOBAL CFG
         self.setObjectName("RunnerPanel")
         self.setStyleSheet(  # Add style sheet for styling layouts and widgets
-            Path(
-                os.path.join(os.path.dirname(__file__), "../data/style.qss")
-            ).read_text()
+            Path(os.path.join(os.path.dirname(__file__), "../data/style.qss"))
+            .resolve()
+            .read_text()
         )
 
         # CREATE WIDGETS
