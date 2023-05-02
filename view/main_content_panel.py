@@ -43,8 +43,14 @@ from window.runner_panel import RunnerPanel
 print(f"main_content_panel.py: {multiprocessing.current_process()}")
 print(f"__name__: {__name__}\nsys.argv: {sys.argv}")
 
+# Comment to see logging for watchdog handler on Darwin
+getLogger("watchdog.observers.fsevents").setLevel(WARNING)
+
+# Comment to see logging for watchdog handler on Linux
 getLogger("watchdog.observers.inotify_buffer").setLevel(WARNING)
 
+# Comment to see logging for watchdog handler on Windows
+#getLogger("").setLevel(WARNING)
 
 class MainContent:
     """
