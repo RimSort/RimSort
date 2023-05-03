@@ -330,7 +330,7 @@ class GameConfiguration(QObject):
             )
             return False
         if not os.path.exists(game_folder_path) or not os.path.exists(
-                config_folder_path
+            config_folder_path
         ):
             logger.warning("One or more paths not exists, returning False")
             show_warning(
