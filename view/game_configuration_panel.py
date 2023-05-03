@@ -802,6 +802,7 @@ class GameConfiguration(QObject):
                 f"{expanduser('~')}/.config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios/Config",
                 f"{expanduser('~')}/.steam/steam/steamapps/workshop/content/294100",
             ]
+        
         windows_paths = [
             os.path.join(
                 "C:" + os.sep,
