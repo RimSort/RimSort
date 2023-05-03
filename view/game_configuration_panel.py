@@ -25,7 +25,6 @@ from model.dialogue import *
 from util.filesystem import *
 from window.settings_panel import SettingsPanel
 
-
 logger.setLevel(INFO)
 
 
@@ -331,7 +330,7 @@ class GameConfiguration(QObject):
             )
             return False
         if not os.path.exists(game_folder_path) or not os.path.exists(
-            config_folder_path
+                config_folder_path
         ):
             logger.warning("One or more paths not exists, returning False")
             show_warning(
@@ -790,11 +789,19 @@ class GameConfiguration(QObject):
             f"/Users/{getpass.getuser()}/Library/Application Support/Rimworld/Config/",
             f"/Users/{getpass.getuser()}/Library/Application Support/Steam/steamapps/workshop/content/294100/",
         ]
-        linux_paths = [
-            f"{expanduser('~')}/.steam/debian-installation/steamapps/common/RimWorld",
-            f"{expanduser('~')}/.config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios/Config",
-            f"{expanduser('~')}/.steam/debian-installation/steamapps/workshop/content/294100",
-        ]
+
+        if os.path.exists("{expanduser('~')}/.steam/debian-installation"):
+            linux_paths = [
+                f"{expanduser('~')}/.steam/debian-installation/steamapps/common/RimWorld",
+                f"{expanduser('~')}/.config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios/Config",
+                f"{expanduser('~')}/.steam/debian-installation/steamapps/workshop/content/294100",
+            ]
+        else:
+            linux_paths = [
+                f"{expanduser('~')}/.steam/steam/steamapps/common/RimWorld",
+                f"{expanduser('~')}/.config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios/Config",
+                f"{expanduser('~')}/.steam/steam/steamapps/workshop/content/294100",
+            ]
         windows_paths = [
             os.path.join(
                 "C:" + os.sep,
