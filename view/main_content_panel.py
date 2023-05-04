@@ -13,8 +13,23 @@ from time import sleep
 from threading import Thread
 from typing import Any, Dict
 from urllib3.exceptions import HTTPError
+
 from watchdog.events import FileSystemEventHandler
-from watchdog.observers import Observer
+# Watchdog conditionals
+_SYSTEM = platform.system()
+if _SYSTEM == "Darwin":
+    from watchdog.observers import Observer
+    # Comment to see logging for watchdog handler on Darwin
+    getLogger("watchdog.observers.fsevents").setLevel(WARNING)
+elif _SYSTEM == "Linux":
+    from watchdog.observers import Observer
+    # Comment to see logging for watchdog handler on Linux
+    getLogger("watchdog.observers.inotify_buffer").setLevel(WARNING)
+elif _SYSTEM == "Windows":
+    from watchdog.observers.polling import PollingObserver
+    # Comment to see logging for watchdog handler on Windows
+    # This is a stub if it's ever even needed... i still can't figure out why it won't log at all on Windows...?
+    # getLogger("").setLevel(WARNING)
 
 from PySide6.QtCore import Qt, QObject, Signal
 from PySide6.QtWidgets import QFileDialog, QFrame, QHBoxLayout, QInputDialog, QLineEdit
@@ -39,18 +54,9 @@ from util.xml import json_to_xml_write, xml_path_to_json
 from view.game_configuration_panel import GameConfiguration
 from window.runner_panel import RunnerPanel
 
-
 print(f"main_content_panel.py: {multiprocessing.current_process()}")
 print(f"__name__: {__name__}\nsys.argv: {sys.argv}")
 
-# Comment to see logging for watchdog handler on Darwin
-getLogger("watchdog.observers.fsevents").setLevel(WARNING)
-
-# Comment to see logging for watchdog handler on Linux
-getLogger("watchdog.observers.inotify_buffer").setLevel(WARNING)
-
-# Comment to see logging for watchdog handler on Windows
-#getLogger("").setLevel(WARNING)
 
 class MainContent:
     """
@@ -105,21 +111,24 @@ class MainContent:
         local_folder_path = self.game_configuration.get_local_folder_path()
         workshop_folder_path = self.game_configuration.get_workshop_folder_path()
         self.game_configuration_watchdog_event_handler = RSFileSystemEventHandler()
-        self.game_configuration_config_observer = Observer()
+        if _SYSTEM == "Windows":
+            self.game_configuration_watchdog_observer = PollingObserver()
+        else:
+            self.game_configuration_watchdog_observer = Observer()
         if game_folder_path != "":
-            self.game_configuration_config_observer.schedule(
+            self.game_configuration_watchdog_observer.schedule(
                 self.game_configuration_watchdog_event_handler,
                 game_folder_path,
                 recursive=True,
             )
         if local_folder_path != "":
-            self.game_configuration_config_observer.schedule(
+            self.game_configuration_watchdog_observer.schedule(
                 self.game_configuration_watchdog_event_handler,
                 local_folder_path,
                 recursive=True,
             )
         if workshop_folder_path != "":
-            self.game_configuration_config_observer.schedule(
+            self.game_configuration_watchdog_observer.schedule(
                 self.game_configuration_watchdog_event_handler,
                 workshop_folder_path,
                 recursive=True,
@@ -218,7 +227,7 @@ class MainContent:
 
         # Start watchdog
         logger.debug("Starting watchdog")
-        self.game_configuration_config_observer.start()
+        self.game_configuration_watchdog_observer.start()
 
     @property
     def panel(self):
@@ -1439,14 +1448,29 @@ class MainContent:
 class RSFileSystemEventHandler(FileSystemEventHandler, QObject):
     file_changes_signal = Signal(str)
 
+    def __init__(self):
+        super().__init__()
+
     def on_created(self, event):
         self.file_changes_signal.emit(event.src_path)
+        logger.debug(f"FILE CREATED: {event}")
 
     def on_deleted(self, event):
         self.file_changes_signal.emit(event.src_path)
+        logger.debug(f"FILE DELETED: {event}")
 
     def on_modified(self, event):
         self.file_changes_signal.emit(event.src_path)
+        logger.debug(f"FILE MODIFIED: {event}")
 
     def on_moved(self, event):
         self.file_changes_signal.emit(event.src_path)
+        logger.debug(f"FILE MOVED: {event}")
+
+    def on_closed(self, event):
+        logger.debug(f"FILE CLOSED: {event}")
+        return
+
+    def on_opened(self, event):
+        logger.debug(f"FILE OPENED: {event}")
+        return

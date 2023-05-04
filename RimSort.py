@@ -157,8 +157,8 @@ def main_thread():
         show_fatal_error(details=stacktrace)
     finally:
         logger.debug("Stopping watchdog...")
-        window.main_content_panel.game_configuration_config_observer.stop()
-        window.main_content_panel.game_configuration_config_observer.join()
+        window.main_content_panel.game_configuration_watchdog_observer.stop()
+        window.main_content_panel.game_configuration_watchdog_observer.join()
         logger.info("Exiting!")
         sys.exit()
 
