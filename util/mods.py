@@ -305,62 +305,66 @@ def get_installed_expansions(game_path: str, game_version: str) -> Dict[str, Any
     :param path: path to the Rimworld install folder
     :return: a Dict of expansions by package id
     """
-    logger.info(f"Getting installed expansions with Game Folder path: {game_path}")
-    # RimWorld folder on mac contains RimWorldMac.app which
-    # is actually a folder itself
-    if platform.system() == "Darwin" and game_path:
-        game_path = os.path.join(game_path, "RimWorldMac.app")
-        logger.info(f"Running on MacOS, generating new game path: {game_path}")
+    mod_data = {}
+    if game_path != "":
+        logger.info(f"Getting installed expansions with Game Folder path: {game_path}")
+        # RimWorld folder on mac contains RimWorldMac.app which
+        # is actually a folder itself
+        if platform.system() == "Darwin" and game_path:
+            game_path = os.path.join(game_path, "RimWorldMac.app")
+            logger.info(f"Running on MacOS, generating new game path: {game_path}")
 
-    # Get mod data
-    data_path = os.path.join(game_path, "Data")
-    logger.info(
-        f"Attempting to get BASE/EXPANSIONS data from Rimworld's /Data folder: {data_path}"
-    )
-    mod_data = parse_mod_data(data_path, "game install")
-    logger.info("Finished getting BASE/EXPANSION data")
-    logger.debug(mod_data)
+        # Get mod data
+        data_path = os.path.join(game_path, "Data")
+        logger.info(
+            f"Attempting to get BASE/EXPANSIONS data from Rimworld's /Data folder: {data_path}"
+        )
+        mod_data = parse_mod_data(data_path, "game install")
+        logger.info("Finished getting BASE/EXPANSION data")
+        logger.debug(mod_data)
 
-    # Base game and expansion About.xml do not contain name, so these
-    # must be manually added
-    logger.info("Manually populating names for BASE/EXPANSION data")
-    for data in mod_data.values():
-        package_id = data["packageId"]
-        if package_id == "ludeon.rimworld":
-            data["name"] = "RimWorld"
-            data["steam_url"] = "https://store.steampowered.com/app/294100/RimWorld"
-            data["steamAppId"] = "294100"
-            data["description"] = "Base game"
-        elif package_id == "ludeon.rimworld.royalty":
-            data["name"] = "RimWorld - Royalty"
-            data[
-                "steam_url"
-            ] = "https://store.steampowered.com/app/1149640/RimWorld__Royalty"
-            data["steamAppId"] = "1149640"
-            data["description"] = "DLC #1"
-        elif package_id == "ludeon.rimworld.ideology":
-            data["name"] = "RimWorld - Ideology"
-            data[
-                "steam_url"
-            ] = "https://store.steampowered.com/app/1392840/RimWorld__Ideology"
-            data["steamAppId"] = "1392840"
-            data["description"] = "DLC #2"
-        elif package_id == "ludeon.rimworld.biotech":
-            data["name"] = "RimWorld - Biotech"
-            data[
-                "steam_url"
-            ] = "https://store.steampowered.com/app/1826140/RimWorld__Biotech"
-            data["steamAppId"] = "1826140"
-            data["description"] = "DLC #3"
-        else:
-            logger.error(
-                f"An unknown mod has been found in the expansions folder: {package_id} {data}"
-            )
-        data["supportedVersions"] = {"li": game_version}
-    logger.info(
-        "Finished getting installed expansions, returning final BASE/EXPANSIONS data now"
-    )
-    logger.debug(mod_data)
+        # Base game and expansion About.xml do not contain name, so these
+        # must be manually added
+        logger.info("Manually populating names for BASE/EXPANSION data")
+        for data in mod_data.values():
+            package_id = data["packageId"]
+            if package_id == "ludeon.rimworld":
+                data["name"] = "RimWorld"
+                data["steam_url"] = "https://store.steampowered.com/app/294100/RimWorld"
+                data["steamAppId"] = "294100"
+                data["description"] = "Base game"
+            elif package_id == "ludeon.rimworld.royalty":
+                data["name"] = "RimWorld - Royalty"
+                data[
+                    "steam_url"
+                ] = "https://store.steampowered.com/app/1149640/RimWorld__Royalty"
+                data["steamAppId"] = "1149640"
+                data["description"] = "DLC #1"
+            elif package_id == "ludeon.rimworld.ideology":
+                data["name"] = "RimWorld - Ideology"
+                data[
+                    "steam_url"
+                ] = "https://store.steampowered.com/app/1392840/RimWorld__Ideology"
+                data["steamAppId"] = "1392840"
+                data["description"] = "DLC #2"
+            elif package_id == "ludeon.rimworld.biotech":
+                data["name"] = "RimWorld - Biotech"
+                data[
+                    "steam_url"
+                ] = "https://store.steampowered.com/app/1826140/RimWorld__Biotech"
+                data["steamAppId"] = "1826140"
+                data["description"] = "DLC #3"
+            else:
+                logger.error(
+                    f"An unknown mod has been found in the expansions folder: {package_id} {data}"
+                )
+            data["supportedVersions"] = {"li": game_version}
+        logger.info(
+            "Finished getting installed expansions, returning final BASE/EXPANSIONS data now"
+        )
+        logger.debug(mod_data)
+    else:
+        logger.warning("Skipping parsing data from empty game data path. Is the game path configured?")
     return mod_data
 
 
@@ -375,24 +379,28 @@ def get_local_mods(local_path: str, game_path: Optional[str] = None) -> Dict[str
     :param path: path to the Rimworld workshop mods folder
     :return: a Dict of workshop mods by package id, and dict of community rules
     """
-    logger.info(f"Getting local mods with Local path: {local_path}")
-    logger.info(f"Supplementing call with Game Folder path: {game_path}")
+    mod_data = {}
+    if local_path != "":
+        logger.info(f"Getting local mods with Local path: {local_path}")
+        logger.info(f"Supplementing call with Game Folder path: {game_path}")
 
-    # If local mods path is same as game path and we're running on a Mac,
-    # that means use the default local mods folder
+        # If local mods path is same as game path and we're running on a Mac,
+        # that means use the default local mods folder
 
-    system_name = platform.system()
-    if system_name == "Darwin" and local_path and local_path == game_path:
-        local_path = os.path.join(local_path, "RimWorldMac.app", "Mods")
-        logger.info(f"Running on MacOS, generating new local mods path: {local_path}")
+        system_name = platform.system()
+        if system_name == "Darwin" and local_path and local_path == game_path:
+            local_path = os.path.join(local_path, "RimWorldMac.app", "Mods")
+            logger.info(f"Running on MacOS, generating new local mods path: {local_path}")
 
-    # Get mod data
-    logger.info(
-        f"Attempting to get LOCAL mods data from custom local path or Rimworld's /Mods folder: {local_path}"
-    )
-    mod_data = parse_mod_data(local_path, "local mods")
-    logger.info("Finished getting LOCAL mods data, returning LOCAL mods data now")
-    logger.debug(mod_data)
+        # Get mod data
+        logger.info(
+            f"Attempting to get LOCAL mods data from custom local path or Rimworld's /Mods folder: {local_path}"
+        )
+        mod_data = parse_mod_data(local_path, "local mods")
+        logger.info("Finished getting LOCAL mods data, returning LOCAL mods data now")
+        logger.debug(mod_data)
+    else:
+        logger.warning("Skipping parsing data from empty local mods path. Is the local mods path configured?")
     return mod_data
 
 
@@ -407,10 +415,14 @@ def get_workshop_mods(workshop_path: str) -> Dict[str, Any]:
     :param path: path to the Rimworld workshop mods folder
     :return: a Dict of workshop mods by package id, and dict of community rules
     """
-    logger.info(f"Getting WORKSHOP data with Workshop path: {workshop_path}")
-    mod_data = parse_mod_data(workshop_path, "workshop mods")
-    logger.info("Finished getting WORKSHOP data, returning WORKSHOP data now")
-    logger.debug(mod_data)
+    mod_data = {}
+    if workshop_path != "":
+        logger.info(f"Getting WORKSHOP data with Workshop path: {workshop_path}")
+        mod_data = parse_mod_data(workshop_path, "workshop mods")
+        logger.info("Finished getting WORKSHOP data, returning WORKSHOP data now")
+        logger.debug(mod_data)
+    else:
+        logger.warning("Skipping parsing data from empty workshop mods path. Is the workshop mods path configured?")
     return mod_data
 
 
