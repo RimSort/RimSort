@@ -5,7 +5,7 @@ from pathlib import Path
 from platform import system
 from re import compile
 
-from PySide6.QtCore import QProcess
+from PySide6.QtCore import QProcess, Signal
 from PySide6.QtGui import QFont, QIcon, QTextCursor
 from PySide6.QtWidgets import (
     QFileDialog,
@@ -16,13 +16,11 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-
 class RunnerPanel(QWidget):
     """
     A generic, read-only panel that can be used to display output from something.
     It also has a built-in QProcess functionality.
     """
-
     def __init__(self, todds_dry_run_support=False):
         super().__init__()
         logger.info("Initializing RunnerPanel")
@@ -202,3 +200,7 @@ class RunnerPanel(QWidget):
                 self.process_killed = False
             else:
                 self.message("Subprocess completed.")
+                logger.info("Clossing subprocess")
+                self.close()
+
+
