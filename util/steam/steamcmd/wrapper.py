@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from io import BytesIO
 from logger_tt import logger
@@ -121,20 +122,46 @@ class SteamcmdDownloader(QWidget):
         self.resize(800, 600)
 
     def _add_to_list(self):
-        publishedfileid = self.current_url.split(
-            "https://steamcommunity.com/sharedfiles/filedetails/?id=", 1
-        )[1]
-        logger.debug(f"Tried to add PFID to downloader list: {publishedfileid}")
+        publishedfileid = self.current_url[self.current_url.index("=")+1:]
+        print(publishedfileid)
+        #use steam api
+        Stapi = requests.post("https://api.steampowered.com/ISteamRemoteStorage/GetCollectionDetails/v1/",data={"collectioncount":"1","publishedfileids[0]":publishedfileid})
+        JRequest = Stapi.json()["response"]
+
+
+        if (JRequest["resultcount"] == 0): #0:item 1:collection
+            logger.debug(f"Tried to add PFID to downloader list: {publishedfileid}")
+            self._INTERNAL_add_to_list(publishedfileid,self.current_title.split("Steam Workshop::")[1])
+
+        elif (JRequest["resultcount"] == 1):
+            logger.debug(f"Tried to add all PFID of the collection to downloader list: {publishedfileid}")
+            IDcolReq = JRequest["collectiondetails"][0]["children"]
+            ID=[]
+            for id in IDcolReq:
+                ID=ID+[id["publishedfileid"]]
+
+            with ThreadPoolExecutor() as execu:
+                test = execu.map(self._INTERNALL_get_title,ID)
+            for i1,i2 in test:
+                self._INTERNAL_add_to_list(i1,i2)
+
+    def _INTERNALL_get_title(self,ids):
+        t = requests.get("https://steamcommunity.com/sharedfiles/filedetails/?id="+ids)
+        t = t.text[t.text.index("<title>")+7:t.text.index("</title>")-1].split("Steam Workshop::")[1]
+
+        return ids,t
+
+    def _INTERNAL_add_to_list(self, publishedfileid,name):
         if publishedfileid not in self.downloader_tracking_list:
             self.downloader_tracking_list.append(publishedfileid)
             logger.debug(f"Downloader list tracking: {self.downloader_tracking_list}")
-            label = QLabel(self.current_title.split("Steam Workshop::", 1)[1])
+            label = QLabel(name)
             label.setObjectName("ListItemLabel")
             item = QListWidgetItem()
             item.setSizeHint(
                 label.sizeHint()
             )  # Set the size hint of the item to be the size of the label
-            item.setToolTip(f"{label.text()}\n--> {self.current_url}")
+            item.setToolTip(f"{label.text()}\n--> {'https://steamcommunity.com/sharedfiles/filedetails/?id='+str(publishedfileid)}")
             item.setData(Qt.UserRole, publishedfileid)
             self.downloader_list.addItem(item)
             self.downloader_list.setItemWidget(item, label)
