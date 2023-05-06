@@ -15,18 +15,22 @@ from typing import Any, Dict
 from urllib3.exceptions import HTTPError
 
 from watchdog.events import FileSystemEventHandler
+
 # Watchdog conditionals
 _SYSTEM = platform.system()
 if _SYSTEM == "Darwin":
     from watchdog.observers import Observer
+
     # Comment to see logging for watchdog handler on Darwin
     getLogger("watchdog.observers.fsevents").setLevel(WARNING)
 elif _SYSTEM == "Linux":
     from watchdog.observers import Observer
+
     # Comment to see logging for watchdog handler on Linux
     getLogger("watchdog.observers.inotify_buffer").setLevel(WARNING)
 elif _SYSTEM == "Windows":
     from watchdog.observers.polling import PollingObserver
+
     # Comment to see logging for watchdog handler on Windows
     # This is a stub if it's ever even needed... i still can't figure out why it won't log at all on Windows...?
     # getLogger("").setLevel(WARNING)

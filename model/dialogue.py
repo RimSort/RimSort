@@ -143,7 +143,7 @@ def show_fatal_error(
             "RimSort has encountered a fatal uncaught exception. "
             "Please reach out to us at https://github.com/oceancabbage/RimSort "
             "with the Stack Trace below and the application log file. You can "
-            "find the log file (data/RimSort.log) in the RimSort folder."
+            "find the log file (RimSort.log) in the RimSort folder."
         )
     else:
         fatal_message_box.setInformativeText(information)

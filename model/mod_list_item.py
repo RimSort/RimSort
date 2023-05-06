@@ -2,7 +2,7 @@ from logger_tt import logger
 from typing import Any, Dict
 
 from PySide6.QtCore import QRectF, QSize, Qt
-from PySide6.QtGui import QFontMetrics, QIcon
+from PySide6.QtGui import QFontMetrics, QIcon, QResizeEvent
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QStyle, QWidget
 
 
@@ -15,7 +15,7 @@ class ModListItemInner(QWidget):
     def __init__(
         self,
         data: Dict[str, Any],
-        container_width: float,
+        local_icon_path: str,
         steam_icon_path: str,
         ludeon_icon_path: str,
     ) -> None:
@@ -38,25 +38,18 @@ class ModListItemInner(QWidget):
         # in this variable. This is exactly equal to the dict value of a
         # single all_mods key-value
         self.json_data = data
-        self.steam_icon_path = steam_icon_path
+        self.item_name = self.json_data.get("name", "UNKNOWN")
         self.ludeon_icon_path = ludeon_icon_path
+        self.local_icon_path = local_icon_path
+        self.steam_icon_path = steam_icon_path
+        self.main_label = QLabel()
 
         # Visuals
         self.setToolTip(self.get_tool_tip_text())
         self.main_item_layout = QHBoxLayout()
         self.main_item_layout.setContentsMargins(0, 0, 0, 0)
         self.main_item_layout.setSpacing(0)
-        item_name = self.json_data.get("name", "UNKNOWN")
         self.font_metrics = QFontMetrics(self.font())
-        text_width_needed = QRectF(self.font_metrics.boundingRect(item_name)).width()
-        if text_width_needed > container_width - 70:
-            available_width = container_width - 70
-            shortened_text = self.font_metrics.elidedText(
-                item_name, Qt.ElideRight, int(available_width)
-            )
-            self.main_label = QLabel(str(shortened_text))
-        else:
-            self.main_label = QLabel(item_name)
 
         # Icons by mod source
         self.mod_source_icon = QLabel()
@@ -70,9 +63,9 @@ class ModListItemInner(QWidget):
         self.warning_icon_label.setHidden(True)
 
         self.main_label.setObjectName("ListItemLabel")
-        self.main_item_layout.addWidget(self.mod_source_icon, 10)
-        self.main_item_layout.addWidget(self.main_label, 90)
-        self.main_item_layout.addWidget(self.warning_icon_label, 10)
+        self.main_item_layout.addWidget(self.mod_source_icon, Qt.AlignRight)
+        self.main_item_layout.addWidget(self.main_label, Qt.AlignCenter)
+        self.main_item_layout.addWidget(self.warning_icon_label, Qt.AlignRight)
         self.main_item_layout.addStretch()
         self.setLayout(self.main_item_layout)
 
@@ -111,11 +104,32 @@ class ModListItemInner(QWidget):
         """
         if self.json_data.get("data_source") == "expansion":
             return QIcon(self.ludeon_icon_path)
+        elif self.json_data.get("data_source") == "local":
+            return QIcon(self.local_icon_path)
         elif self.json_data.get("data_source") == "workshop":
             return QIcon(self.steam_icon_path)
-        elif self.json_data.get("data_source") == "local":
-            return self.style().standardIcon(QStyle.SP_FileDialogStart)
         else:
             logger.error(
                 f"No type found for ModListItemInner with package id {self.json_data.get('packageId')}"
             )
+
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        """
+        When the label is resized (as the window is resized),
+        also elide the label if needed.
+
+        :param event: the resize event
+        """
+        self.item_width = super().width()
+        text_width_needed = QRectF(
+            self.font_metrics.boundingRect(self.item_name)
+        ).width()
+        if text_width_needed > self.item_width - 50:
+            available_width = self.item_width - 50
+            shortened_text = self.font_metrics.elidedText(
+                self.item_name, Qt.ElideRight, int(available_width)
+            )
+            self.main_label.setText(str(shortened_text))
+        else:
+            self.main_label.setText(self.item_name)
+        return super().resizeEvent(event)

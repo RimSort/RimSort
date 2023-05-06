@@ -66,6 +66,11 @@ class ModListWidget(QListWidget):
         self.horizontalScrollBar().setVisible(False)
 
         # Store icon paths
+        self.local_icon_path = str(
+            Path(
+                os.path.join(os.path.dirname(__file__), "../data/local_icon.png")
+            ).resolve()
+        )
         self.steam_icon_path = str(
             Path(
                 os.path.join(os.path.dirname(__file__), "../data/steam_icon.png")
@@ -239,7 +244,10 @@ class ModListWidget(QListWidget):
             if item is not None and self.itemWidget(item) is None:
                 data = item.data(Qt.UserRole)
                 widget = ModListItemInner(
-                    data, self.width(), self.steam_icon_path, self.ludeon_icon_path
+                    data,
+                    self.local_icon_path,
+                    self.steam_icon_path,
+                    self.ludeon_icon_path,
                 )
                 if data.get("invalid"):
                     widget.main_label.setStyleSheet("QLabel { color : red; }")
