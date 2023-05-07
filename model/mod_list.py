@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (
 
 from model.mod_list_item import ModListItemInner
 from model.dialogue import show_warning
-from util.filesystem import platform_specific_open
+from util.generic import platform_specific_open
 
 
 class ModListWidget(QListWidget):

@@ -352,6 +352,7 @@ def ISteamRemoteStorage_GetPublishedFileDetails(publishedfileids: list):
     https://steamapi.xpaw.me/#ISteamRemoteStorage/GetPublishedFileDetails
 
     :param publishedfileids: a list of 1 or more publishedfileids to lookup metadata for
+    :return: a JSON object that is the response from your WebAPI query
     """
     # Construct the URL to retrieve information about the mod
     url = (

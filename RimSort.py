@@ -34,6 +34,7 @@ logging_file_path = os.path.join(os.path.dirname(sys.argv[0]), "RimSort.log")
 
 # Setup Environment
 if system == "Linux":
+    # logger_tt
     setup_logging(
         config_path=logging_config_path,
         log_path=logging_file_path,
@@ -42,6 +43,7 @@ if system == "Linux":
     # Disable IBus integration on Linux
     os.environ["QT_IM_MODULE"] = ""
 else:
+    # logger_tt
     setup_logging(
         config_path=logging_config_path,
         log_path=logging_file_path,

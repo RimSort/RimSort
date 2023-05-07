@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (
 )
 
 from model.dialogue import *
-from util.filesystem import *
+from util.generic import *
 from window.settings_panel import SettingsPanel
 
 

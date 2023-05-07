@@ -1,6 +1,7 @@
 from functools import partial
 from logger_tt import logger
 import os
+from pathlib import Path
 import sys
 
 from PySide6.QtCore import QStandardPaths, Qt, Signal
@@ -13,7 +14,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from util.filesystem import platform_specific_open
+from util.generic import platform_specific_open, upload_data_to_0x0_st
 
 
 class SettingsPanel(QDialog):
@@ -48,6 +49,17 @@ class SettingsPanel(QDialog):
         self.open_log_button.clicked.connect(
             partial(
                 platform_specific_open,
+                os.path.join(os.path.dirname(sys.argv[0]), "RimSort.log"),
+            )
+        )
+        self.upload_log_button = QPushButton("Upload RimSort Log")
+        self.upload_log_button.setToolTip(
+            "Log will be uploaded to http://0x0.st/ and\n"
+            + "the URL will be copied to your clipboard."
+        )
+        self.upload_log_button.clicked.connect(
+            partial(
+                upload_data_to_0x0_st,
                 os.path.join(os.path.dirname(sys.argv[0]), "RimSort.log"),
             )
         )
@@ -147,6 +159,7 @@ class SettingsPanel(QDialog):
         self.layout.addWidget(self.general_label)
         self.layout.addWidget(self.clear_paths_button)
         self.layout.addWidget(self.open_log_button)
+        self.layout.addWidget(self.upload_log_button)
         self.layout.addWidget(self.open_storage_button)
         self.layout.addWidget(self.duplicate_mods_checkbox)
         self.layout.addWidget(self.steam_mods_update_checkbox)
