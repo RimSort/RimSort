@@ -27,6 +27,7 @@ def show_dialogue_conditional(title: str, text: str, information: str) -> str:
 
 
 def show_information(
+    title: Optional[str] = None,
     text: Optional[str] = None,
     information: Optional[str] = None,
     details: Optional[str] = None,
@@ -44,7 +45,10 @@ def show_information(
     # Set up the message box
     info_message_box = QMessageBox()
     info_message_box.setIcon(QMessageBox.Warning)
-    info_message_box.setWindowTitle("Information")
+    if title:
+        info_message_box.setWindowTitle(title)
+    else:
+        info_message_box.setWindowTitle("Information")
 
     # Add text
     if text is None:
@@ -69,6 +73,7 @@ def show_information(
 
 
 def show_warning(
+    title: Optional[str] = None,
     text: Optional[str] = None,
     information: Optional[str] = None,
     details: Optional[str] = None,
@@ -86,7 +91,10 @@ def show_warning(
     # Set up the message box
     warning_message_box = QMessageBox()
     warning_message_box.setIcon(QMessageBox.Warning)
-    warning_message_box.setWindowTitle("Warning")
+    if title:
+        warning_message_box.setWindowTitle(title)
+    else:
+        warning_message_box.setWindowTitle("Warning")
 
     # Add text
     if text is None:
@@ -111,6 +119,7 @@ def show_warning(
 
 
 def show_fatal_error(
+    title: Optional[str] = None,
     text: Optional[str] = None,
     information: Optional[str] = None,
     details: Optional[str] = None,
@@ -131,7 +140,10 @@ def show_fatal_error(
     # Set up the message box
     fatal_message_box = QMessageBox()
     fatal_message_box.setIcon(QMessageBox.Critical)
-    fatal_message_box.setWindowTitle("Fatal Error")
+    if title:
+        fatal_message_box.setWindowTitle(title)
+    else:
+        fatal_message_box.setWindowTitle("Fatal Error")
 
     # Add text
     if text is None:

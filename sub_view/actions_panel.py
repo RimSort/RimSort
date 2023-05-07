@@ -52,11 +52,9 @@ class Actions(QWidget):
         self._panel.addLayout(self.middle_panel, 25)
         self._panel.addLayout(self.bottom_panel, 25)
 
-        # Create button widgets. Each button, when clicked, emits a signal
-        # with a string representing its action.
+        # REFRESH BUTTON
         self.refresh_button = QPushButton("Refresh")
         self.refresh_button.setAutoFillBackground(True)
-
         # Set tooltip and connect signal
         self.refresh_button.setToolTip(
             "Right-click to configure Steam Apikey with DynamicQuery!"
@@ -64,14 +62,12 @@ class Actions(QWidget):
         self.refresh_button.clicked.connect(
             partial(self.actions_signal.emit, "refresh")
         )
-
         # Set context menu policy and connect custom context menu event
         self.refresh_button.setContextMenuPolicy(Qt.CustomContextMenu)
         self.refresh_button.customContextMenuRequested.connect(
             self.steamApikeyContextMenuEvent
         )
-
-        # REFRESH BUTTON FLASHING ANIMATION
+        # Refresh button flashing animation
         self.refresh_button_flashing_animation = QTimer()
         self.refresh_button_flashing_animation.timeout.connect(
             lambda: self.refresh_button.setStyleSheet(
@@ -85,9 +81,11 @@ class Actions(QWidget):
             )
         )
 
+        # CLEAR BUTTON
         self.clear_button = QPushButton("Clear")
         self.clear_button.clicked.connect(partial(self.actions_signal.emit, "clear"))
 
+        # RESTORE BUTTON
         self.restore_button = QPushButton("Restore")
         self.restore_button.clicked.connect(
             partial(self.actions_signal.emit, "restore")
@@ -97,15 +95,29 @@ class Actions(QWidget):
             + "cached on RimSort startup."
         )
 
+        # SORT BUTTON
         self.sort_button = QPushButton("Sort")
         self.sort_button.clicked.connect(partial(self.actions_signal.emit, "sort"))
 
+        # IMPORT BUTTON
         self.import_button = QPushButton("Import List")
-        self.import_button.clicked.connect(partial(self.actions_signal.emit, "import"))
+        self.import_button.clicked.connect(
+            partial(self.actions_signal.emit, "import_list_file_xml")
+        )
 
+        # EXPORT BUTTON
         self.export_button = QPushButton("Export List")
-        self.export_button.clicked.connect(partial(self.actions_signal.emit, "export"))
+        self.export_button.clicked.connect(
+            partial(self.actions_signal.emit, "export_list_file_xml")
+        )
+        self.export_button.setToolTip("Right-click for additional sharing options")
+        # Set context menu policy and connect custom context menu event
+        self.export_button.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.export_button.customContextMenuRequested.connect(
+            self.exportButtonAddionalOptions
+        )
 
+        # OPTIMIZE TEXTURES BUTTON
         self.optimize_textures_button = QPushButton("Optimize textures")
         self.optimize_textures_button.setToolTip(
             "Quality presets configurable in settings!\nRight-click to delete .dds textures"
@@ -113,11 +125,13 @@ class Actions(QWidget):
         self.optimize_textures_button.clicked.connect(
             partial(self.actions_signal.emit, "optimize_textures")
         )
+        # Set context menu policy and connect custom context menu event
         self.optimize_textures_button.setContextMenuPolicy(Qt.CustomContextMenu)
         self.optimize_textures_button.customContextMenuRequested.connect(
             self.optimizeTexContextMenuEvent
         )
 
+        # BROWSER WORKSHOP BUTTON
         self.browse_workshop_button = QPushButton("Browse workshop")
         self.browse_workshop_button.setToolTip(
             "Download mods anonymously with steamcmd\n" + "No Steam account required!"
@@ -126,16 +140,17 @@ class Actions(QWidget):
             partial(self.actions_signal.emit, "browse_workshop")
         )
 
+        # SETUP STEAMCMD BUTTON
         self.setup_steamcmd_button = QPushButton("Setup steamcmd")
         self.setup_steamcmd_button.setToolTip("Requires an internet connection!")
         self.setup_steamcmd_button.clicked.connect(
             partial(self.actions_signal.emit, "setup_steamcmd")
         )
 
+        # SAVE BUTTON
         self.save_button = QPushButton("Save")
         self.save_button.clicked.connect(partial(self.actions_signal.emit, "save"))
-
-        # SAVE BUTTON FLASHING ANIMATION
+        # Save button flashing animation
         self.save_button_flashing_animation = QTimer()
         self.save_button_flashing_animation.timeout.connect(
             lambda: self.save_button.setStyleSheet(
@@ -149,9 +164,11 @@ class Actions(QWidget):
             )
         )
 
+        # RUN BUTTON
         self.run_button = QPushButton("Run")
         self.run_button.setToolTip("Right-click to set RimWorld game arguments!")
         self.run_button.clicked.connect(partial(self.actions_signal.emit, "run"))
+        # Set context menu policy and connect custom context menu event
         self.run_button.setContextMenuPolicy(Qt.CustomContextMenu)
         self.run_button.customContextMenuRequested.connect(self.runArgsContextMenuEvent)
 
@@ -173,6 +190,22 @@ class Actions(QWidget):
     @property
     def panel(self) -> QVBoxLayout:
         return self._panel
+
+    def exportButtonAddionalOptions(self, point: QPoint) -> None:
+        contextMenu = QMenu(self)  # Actions Panel context menu event
+        export_list_clipboard_action = contextMenu.addAction(
+            "Export list to clipboard"
+        )  # rentry
+        export_list_clipboard_action.triggered.connect(
+            partial(self.actions_signal.emit, "export_list_clipboard")
+        )
+        export_list_rentry_action = contextMenu.addAction(
+            "Upload list with Rentry.co"
+        )  # rentry
+        export_list_rentry_action.triggered.connect(
+            partial(self.actions_signal.emit, "upload_list_rentry")
+        )
+        action = contextMenu.exec_(self.export_button.mapToGlobal(point))
 
     def optimizeTexContextMenuEvent(self, point: QPoint) -> None:
         contextMenu = QMenu(self)  # Actions Panel context menu event

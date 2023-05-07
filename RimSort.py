@@ -32,13 +32,18 @@ data_path = os.path.join(os.path.dirname(__file__), "data")
 logging_config_path = os.path.join(data_path, "logging_config.json")
 logging_file_path = os.path.join(os.path.dirname(sys.argv[0]), "RimSort.log")
 
+# Setup Environment
 if system == "Linux":
+    # logger_tt
     setup_logging(
         config_path=logging_config_path,
         log_path=logging_file_path,
         use_multiprocessing="fork",
     )
+    # Disable IBus integration on Linux
+    os.environ["QT_IM_MODULE"] = ""
 else:
+    # logger_tt
     setup_logging(
         config_path=logging_config_path,
         log_path=logging_file_path,
@@ -85,9 +90,9 @@ class MainWindow(QMainWindow):
         """
         logger.info("Starting MainWindow initialization")
         super(MainWindow, self).__init__()
-
         # Create the main application window
-        self.setWindowTitle("RimSort Alpha v1.0.4.1")
+        self.version_string = "Alpha v1.0.4.1"
+        self.setWindowTitle(f"RimSort {self.version_string}")
         self.setMinimumSize(QSize(1200, 700))
 
         # Create the window layout
@@ -98,7 +103,9 @@ class MainWindow(QMainWindow):
         # Create various panels on the application GUI
         logger.info("Start creating main panels")
         self.game_configuration_panel = GameConfiguration()
-        self.main_content_panel = MainContent(self.game_configuration_panel)
+        self.main_content_panel = MainContent(
+            self.game_configuration_panel, self.version_string
+        )
         self.bottom_panel = Status()
         logger.info("Finished creating main panels")
 
