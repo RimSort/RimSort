@@ -32,12 +32,15 @@ data_path = os.path.join(os.path.dirname(__file__), "data")
 logging_config_path = os.path.join(data_path, "logging_config.json")
 logging_file_path = os.path.join(os.path.dirname(sys.argv[0]), "RimSort.log")
 
+# Setup Environment
 if system == "Linux":
     setup_logging(
         config_path=logging_config_path,
         log_path=logging_file_path,
         use_multiprocessing="fork",
     )
+    # Disable IBus integration on Linux
+    os.environ["QT_IM_MODULE"] = ""
 else:
     setup_logging(
         config_path=logging_config_path,
