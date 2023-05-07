@@ -2,6 +2,7 @@ import json
 from logging import getLogger, WARNING
 from logger_tt import logger
 from math import ceil
+from requests import post as requests_post
 from requests.exceptions import HTTPError
 import sys
 from time import time
@@ -341,6 +342,32 @@ class DynamicQuery:
             ):  # If there is somehow an unpublished mod in missing_children, remove it
                 missing_children.remove(missing_child)
         return result, missing_children
+
+
+def ISteamRemoteStorage_GetPublishedFileDetails(publishedfileids: list):
+    """
+    Given a list of PublishedFileIds, return a dict of json data queried
+    from Steam WebAPI, containing data to be parsed during db update.
+
+    https://steamapi.xpaw.me/#ISteamRemoteStorage/GetPublishedFileDetails
+
+    :param publishedfileids: a list of 1 or more publishedfileids to lookup metadata for
+    """
+    # Construct the URL to retrieve information about the mod
+    url = (
+        f"https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/"
+    )
+    # Construct arguments to pass to the API call
+    data = {"itemcount": f"{str(len(publishedfileids))}"}
+    for publishedfileid in publishedfileids:
+        count = publishedfileids.index(publishedfileid)
+        data[f"publishedfileids[{count}]"] = publishedfileid
+    # Make a request to the Steam Web API
+    request = requests_post(url, data=data)
+    # Parse the JSON response
+    response = request.json()
+    logger.debug(f"Received WebAPI response from query: {response}")
+    return response
 
 
 if __name__ == "__main__":

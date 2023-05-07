@@ -70,7 +70,7 @@ class SettingsPanel(QDialog):
         self.metadata_label.setObjectName("summaryValue")
         self.external_metadata_cb = QComboBox()
         self.external_metadata_cb.addItems(
-            ["RimPy Mod Manager Database", "Rimsort Dynamic Query", "None"]
+            ["RimPy Mod Manager Database", "RimSort Dynamic Query", "None"]
         )
         self.appidquery_button = QPushButton("Cache AppIDQuery")
         self.appidquery_button.clicked.connect(

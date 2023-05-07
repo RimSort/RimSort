@@ -85,9 +85,9 @@ class MainWindow(QMainWindow):
         """
         logger.info("Starting MainWindow initialization")
         super(MainWindow, self).__init__()
-
         # Create the main application window
-        self.setWindowTitle("RimSort Alpha v1.0.4.1")
+        self.version_string = "Alpha v1.0.4.1"
+        self.setWindowTitle(f"RimSort {self.version_string}")
         self.setMinimumSize(QSize(1200, 700))
 
         # Create the window layout
@@ -98,7 +98,9 @@ class MainWindow(QMainWindow):
         # Create various panels on the application GUI
         logger.info("Start creating main panels")
         self.game_configuration_panel = GameConfiguration()
-        self.main_content_panel = MainContent(self.game_configuration_panel)
+        self.main_content_panel = MainContent(
+            self.game_configuration_panel, self.version_string
+        )
         self.bottom_panel = Status()
         logger.info("Finished creating main panels")
 

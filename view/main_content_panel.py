@@ -5,6 +5,7 @@ import multiprocessing
 from multiprocessing import active_children, Process
 import os
 import platform
+from requests import post as requests_post
 from requests.exceptions import SSLError
 import subprocess
 import sys
@@ -14,7 +15,11 @@ from threading import Thread
 from typing import Any, Dict
 from urllib3.exceptions import HTTPError
 
+from pyperclip import copy as copy_to_clipboard
 from watchdog.events import FileSystemEventHandler
+
+from util.rentry.wrapper import RentryUploader
+from util.steam.webapi.wrapper import ISteamRemoteStorage_GetPublishedFileDetails
 
 # Watchdog conditionals
 _SYSTEM = platform.system()
@@ -71,13 +76,17 @@ class MainContent:
     and their dependencies.
     """
 
-    def __init__(self, game_configuration: GameConfiguration) -> None:
+    def __init__(
+        self, game_configuration: GameConfiguration, rimsort_version: str
+    ) -> None:
         """
         Initialize the main content panel.
 
         :param game_configuration: game configuration panel to get paths
         """
         logger.info("Starting MainContent initialization")
+
+        self.rimsort_version = rimsort_version
 
         # BASE LAYOUT
         self.main_layout = QHBoxLayout()
@@ -632,10 +641,14 @@ class MainContent:
             self._do_browse_workshop()
         if action == "setup_steamcmd":
             self._do_setup_steamcmd()
-        if action == "import":
-            self._do_import()
-        if action == "export":
-            self._do_export()
+        if action == "import_list_file_xml":
+            self._do_import_list_file_xml()()
+        if action == "export_list_file_xml":
+            self._do_export_list_file_xml()
+        if action == "export_list_clipboard":
+            self._do_export_list_clipboard()
+        if action == "upload_list_rentry":
+            self._do_upload_list_rentry()
         if action == "save":
             self._do_save()
         if action == "run":
@@ -1269,7 +1282,7 @@ class MainContent:
         logger.info("Finished combining all tiers of mods. Inserting into mod lists")
         self._insert_data_into_lists(combined_mods, inactive_mods)
 
-    def _do_import(self) -> None:
+    def _do_import_list_file_xml(self) -> None:
         """
         Open a user-selected XML file. Calculate
         and display active and inactive lists based on this file.
@@ -1299,7 +1312,7 @@ class MainContent:
         else:
             logger.info("User pressed cancel, passing")
 
-    def _do_export(self) -> None:
+    def _do_export_list_file_xml(self) -> None:
         """
         Export the current list of active mods to a user-designated
         file. The current list does not need to have been saved.
@@ -1345,11 +1358,196 @@ class MainContent:
                 logger.info(
                     f"Saving generated ModsConfig.xml to selected path: {file_path[0]}"
                 )
-                json_to_xml_write(mods_config_data, file_path[0])
+                json_to_xml_write(mods_config_data, file_path[0] + ".xml")
             else:
                 logger.error("Could not export active mods")
         else:
             logger.info("User pressed cancel, passing")
+
+    def _do_export_list_clipboard(self) -> None:
+        """
+        Export the current list of active mods to the clipboard in a
+        readable format. The current list does not need to have been saved.
+        """
+        logger.info("Generating report to export mod list to clipboard")
+        # Build our lists
+        active_mods = []
+        active_mods_json = (
+            self.active_mods_panel.active_mods_list.get_list_items_by_dict()
+        )
+        active_mods_packageId_to_uuid = {}
+        for uuid, mod_data in active_mods_json.items():
+            package_id = mod_data["packageId"]
+            if package_id in active_mods:  # This should NOT be happening
+                logger.critical(
+                    f"Tried to export more than 1 identical package ids to the same mod list. "
+                    + f"Skipping duplicate {package_id}"
+                )
+                continue
+            else:  # Otherwise, proceed with adding the mod package_id
+                active_mods.append(package_id)
+                active_mods_packageId_to_uuid[package_id] = uuid
+        logger.info(f"Collected {len(active_mods)} active mods for export")
+        # Build our report
+        active_mods_clipboard_report = (
+            f"Created with RimSort {self.rimsort_version}"
+            + f"\nRimWorld game version this list was created for: {self.game_version}"
+            + f"\nTotal # of mods: {len(active_mods)}\n"
+        )
+        for package_id in active_mods:
+            uuid = active_mods_packageId_to_uuid[package_id]
+            if active_mods_json[uuid].get("name"):
+                name = active_mods_json[uuid]["name"]
+            else:
+                name = "No name specified"
+            if active_mods_json[uuid].get("url"):
+                url = active_mods_json[uuid]["url"]
+            elif active_mods_json[uuid].get("steam_url"):
+                url = active_mods_json[uuid]["steam_url"]
+            else:
+                url = "No url specified"
+            active_mods_clipboard_report = (
+                active_mods_clipboard_report
+                + f"\n{name} "
+                + f"[{package_id}]"
+                + f"[{url}]"
+            )
+        # Copy report to clipboard
+        show_information(
+            title="Export active mod list",
+            text=f"Copied active mod list report to clipboard...",
+            information='Click "Show Details" to see the full report!',
+            details=f"{active_mods_clipboard_report}",
+        )
+        copy_to_clipboard(active_mods_clipboard_report)
+
+    def _do_upload_list_rentry(self) -> None:
+        """
+        Export the current list of active mods to the clipboard in a
+        readable format. The current list does not need to have been saved.
+        """
+        # Define our lists
+        active_mods = []
+        active_mods_json = (
+            self.active_mods_panel.active_mods_list.get_list_items_by_dict()
+        )
+        active_mods_packageId_to_uuid = {}
+        active_steam_mods_packageId_to_pfid = {}
+        active_steam_mods_pfid_to_preview_url = {}
+        pfids = []
+        # Build our lists
+        for uuid, mod_data in active_mods_json.items():
+            package_id = mod_data["packageId"]
+            if package_id in active_mods:  # This should NOT be happening
+                logger.critical(
+                    f"Tried to export more than 1 identical package ids to the same mod list. "
+                    + f"Skipping duplicate {package_id}"
+                )
+                continue
+            else:  # Otherwise, proceed with adding the mod package_id
+                active_mods.append(package_id)
+                active_mods_packageId_to_uuid[package_id] = uuid
+                if mod_data["data_source"] == "workshop" and mod_data.get(
+                    "publishedfileid"
+                ):
+                    publishedfileid = mod_data["publishedfileid"]
+                    active_steam_mods_packageId_to_pfid[package_id] = publishedfileid
+                    pfids.append(publishedfileid)
+        logger.info(f"Collected {len(active_mods)} active mods for export")
+        # Compile list of Steam Workshop publishing preview images that correspond
+        # to a Steam mod in the active mod list
+        webapi_response = ISteamRemoteStorage_GetPublishedFileDetails(pfids)
+        for metadata in webapi_response["response"]["publishedfiledetails"]:
+            if metadata["result"] != 1:
+                logger.debug("Unpublished mod")
+            else:
+                # Retrieve the preview image URL from the response
+                pfid = metadata["publishedfileid"]
+                active_steam_mods_pfid_to_preview_url[pfid] = metadata["preview_url"]
+        # Build our report
+        active_mods_rentry_report = (
+            f"# RimWorld Mod List       ![](https://github.com/oceancabbage/RimSort/blob/main/rentry_preview.png?raw=true)"
+            + f"\nCreated with RimSort {self.rimsort_version}"
+            + f"\nMod list was created for game version: `{self.game_version}`"
+            + f"\n!!! info Local mods are marked as yellow labels with packageId in brackets."
+            + f"\n\n\n\n!!! note Mod list length: `{len(active_mods)}`\n"
+        )
+        # Add a line for each mod
+        for package_id in active_mods:
+            count = active_mods.index(package_id) + 1
+            uuid = active_mods_packageId_to_uuid[package_id]
+            if active_mods_json[uuid].get("name"):
+                name = active_mods_json[uuid]["name"]
+            else:
+                name = "No name specified"
+            if (
+                active_mods_json[uuid]["data_source"] == "expansion"
+                or active_mods_json[uuid]["data_source"] == "local"
+            ):
+                if active_mods_json[uuid].get("url"):
+                    url = active_mods_json[uuid]["url"]
+                elif active_mods_json[uuid].get("steam_url"):
+                    url = active_mods_json[uuid]["steam_url"]
+                else:
+                    url = None
+                if url is None:
+                    active_mods_rentry_report = (
+                        active_mods_rentry_report
+                        + f"\n!!! warning {str(count) + '.'} {name} "
+                        + "{"
+                        + f"packageId: {package_id}"
+                        + "} "
+                    )
+                else:
+                    active_mods_rentry_report = (
+                        active_mods_rentry_report
+                        + f"\n!!! warning {str(count) + '.'} [{name}]({url}) "
+                        + "{"
+                        + f"packageId: {package_id}"
+                        + "} "
+                    )
+            elif active_mods_json[uuid]["data_source"] == "workshop":
+                preview_url_args = "?imw=100&imh=100&impolicy=Letterbox"
+                if active_mods_json[uuid].get("steam_url"):
+                    url = active_mods_json[uuid]["steam_url"]
+                elif active_mods_json[uuid].get("url"):
+                    url = active_mods_json[uuid]["url"]
+                else:
+                    url is None
+                if url is None:
+                    if package_id in active_steam_mods_packageId_to_pfid.keys():
+                        pfid = active_steam_mods_packageId_to_pfid[package_id]
+                        if pfid in active_steam_mods_pfid_to_preview_url.keys():
+                            preview_url = active_steam_mods_pfid_to_preview_url[pfid]
+                            active_mods_rentry_report = (
+                                active_mods_rentry_report
+                                + f"\n{str(count) + '.'} ![]({preview_url + preview_url_args}) {name} packageId: {package_id}"
+                            )
+                else:
+                    if package_id in active_steam_mods_packageId_to_pfid.keys():
+                        pfid = active_steam_mods_packageId_to_pfid[package_id]
+                        if pfid in active_steam_mods_pfid_to_preview_url.keys():
+                            preview_url = active_steam_mods_pfid_to_preview_url[pfid]
+                            active_mods_rentry_report = (
+                                active_mods_rentry_report
+                                + f"\n{str(count) + '.'} ![]({preview_url + preview_url_args}) [{name}]({url} packageId: {package_id})"
+                            )
+        # Upload the report to Rentry.co
+        rentry_uploader = RentryUploader(active_mods_rentry_report)
+        if (
+            rentry_uploader.upload_success
+            and rentry_uploader.url != None
+            and "https://rentry.co/" in rentry_uploader.url
+        ):
+            copy_to_clipboard(rentry_uploader.url)
+            show_information(
+                title="Uploaded active mod list",
+                text=f"Uploaded active mod list report to Rentry.co!\nThe URL has been copied to your clipboard!",
+                information='Click "Show Details" to see the full report!',
+                details=f"{active_mods_rentry_report}",
+            )
+        else:
+            show_warning(text="Failed to upload exported active mod list to Rentry.co")
 
     def _do_save(self) -> None:
         """
