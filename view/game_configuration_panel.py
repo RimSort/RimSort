@@ -826,11 +826,18 @@ class GameConfiguration(QObject):
             f"/Users/{getpass.getuser()}/Library/Application Support/Rimworld/Config/",
             f"/Users/{getpass.getuser()}/Library/Application Support/Steam/steamapps/workshop/content/294100/",
         ]
-        linux_paths = [
-            f"{expanduser('~')}/.steam/debian-installation/steamapps/common/RimWorld",
-            f"{expanduser('~')}/.config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios/Config",
-            f"{expanduser('~')}/.steam/debian-installation/steamapps/workshop/content/294100",
-        ]
+        if os.path.exists("{expanduser('~')}/.steam/debian-installation"):
+            linux_paths = [
+                f"{expanduser('~')}/.steam/debian-installation/steamapps/common/RimWorld",
+                f"{expanduser('~')}/.config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios/Config",
+                f"{expanduser('~')}/.steam/debian-installation/steamapps/workshop/content/294100",
+            ]
+        else:
+            linux_paths = [ #TODO detect the path and not having hardcoded thing
+                f"{expanduser('~')}/.steam/steam/steamapps/common/RimWorld",
+                f"{expanduser('~')}/.config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios/Config",
+                f"{expanduser('~')}/.steam/steam/steamapps/workshop/content/294100",
+            ]
         windows_paths = [
             os.path.join(
                 "C:" + os.sep,
