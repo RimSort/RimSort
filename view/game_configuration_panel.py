@@ -26,9 +26,6 @@ from util.generic import *
 from window.settings_panel import SettingsPanel
 
 
-logger.setLevel(INFO)
-
-
 class GameConfiguration(QObject):
     """
     This class controls the layout and functionality of the top-most
@@ -233,6 +230,9 @@ class GameConfiguration(QObject):
         # STEAM MODS UPDATE CHECK TOGGLE
         self.steam_mods_update_check_toggle = False
 
+        # STEAMCMD VALIDATE DOWNLOADS TOGGLE
+        self.steamcmd_validate_downloads_toggle = False
+
         # TODDS PRESET
         self.todds_preset = "medium"
 
@@ -292,6 +292,11 @@ class GameConfiguration(QObject):
         )
         self.settings_panel.steam_mods_update_checkbox.setChecked(
             self.steam_mods_update_check_toggle
+        )
+
+        # STEAMCMD
+        self.settings_panel.steamcmd_validate_downloads_checkbox.setChecked(
+            self.steamcmd_validate_downloads_toggle
         )
 
         # TODDS
@@ -386,6 +391,8 @@ class GameConfiguration(QObject):
                 settings_data = json.load(infile)
                 logger.debug(f"JSON has been loaded: {settings_data}")
                 logger.info("Setting relevant QLineEdits now")
+
+                # Game configuration paths
                 if settings_data.get("game_folder"):
                     game_folder_path = settings_data["game_folder"]
                     if os.path.exists(game_folder_path):
@@ -418,16 +425,19 @@ class GameConfiguration(QObject):
                         logger.warning(
                             f"The local folder that was loaded does not exist: {local_folder_path}"
                         )
+
                 # sorting algorithm
                 if settings_data.get("sorting_algorithm"):
                     self.settings_panel.sorting_algorithm_cb.setCurrentText(
                         settings_data["sorting_algorithm"]
                     )
+
                 # metadata
                 if settings_data.get("external_metadata_source"):
                     self.settings_panel.external_metadata_cb.setCurrentText(
                         settings_data["external_metadata_source"]
                     )
+
                 # game & steam settings
                 if settings_data.get("runArgs"):
                     self.run_arguments = settings_data["runArgs"]
@@ -448,6 +458,24 @@ class GameConfiguration(QObject):
                 self.steam_mods_update_check_toggle = settings_data[
                     "steam_mods_update_check"
                 ]
+
+                # steamcmd
+                if not settings_data.get("steamcmd_validate_downloads"):
+                    settings_data["steamcmd_validate_downloads"] = False
+                self.steamcmd_validate_downloads_toggle = settings_data[
+                    "steamcmd_validate_downloads"
+                ]
+                if not settings_data.get("steamcmd_install_path"):
+                    settings_data["steamcmd_install_path"] = self.storage_path
+                self.steamcmd_install_path = settings_data["steamcmd_install_path"]
+                if os.path.exists(self.steamcmd_install_path):
+                    self.update_persistent_storage(
+                        "steamcmd_install_path", self.steamcmd_install_path
+                    )
+                else:
+                    logger.warning(
+                        f"Configured steamcmd prefix does not exist. Creating new steamcmd prefix at: {self.steamcmd_install_path}"
+                    )
 
                 # todds
                 if not settings_data.get("todds_preset"):
@@ -527,6 +555,14 @@ class GameConfiguration(QObject):
         else:
             self.steam_mods_update_check_toggle = False
             self.update_persistent_storage("steam_mods_update_check", False)
+
+        # steamcmd validate downloads
+        if self.settings_panel.steamcmd_validate_downloads_checkbox.isChecked():
+            self.steamcmd_validate_downloads_toggle = True
+            self.update_persistent_storage("steamcmd_validate_downloads", True)
+        else:
+            self.steamcmd_validate_downloads_toggle = False
+            self.update_persistent_storage("steamcmd_validate_downloads", False)
 
         # todds preset
         if "Low" in self.settings_panel.todds_presets_cb.currentText():

@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 import sys
 
-from PySide6.QtCore import QStandardPaths, Qt, Signal
+from PySide6.QtCore import QSize, QStandardPaths, Qt, Signal
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -28,7 +28,7 @@ class SettingsPanel(QDialog):
         super(SettingsPanel, self).__init__()
 
         # Create window
-        self.setFixedSize(400, 400)
+        self.setFixedSize(QSize(500, 500))
         self.setWindowTitle("Settings")
 
         # Allow for styling
@@ -116,6 +116,14 @@ class SettingsPanel(QDialog):
             + '"Metadata" should be set to RimPy MMDB when sorting for now.'
         )
 
+        # steamcmd
+        self.steamcmd_label = QLabel("steamcmd")
+        self.steamcmd_label.setObjectName("summaryValue")
+        self.steamcmd_validate_downloads_checkbox = QCheckBox(
+            "Force SteamCMD to validate downloaded workshop mods"
+        )
+        self.steamcmd_validate_downloads_checkbox.setObjectName("summaryValue")
+
         # todds
         self.todds_label = QLabel("todds options")
         self.todds_label.setObjectName("summaryValue")
@@ -172,6 +180,9 @@ class SettingsPanel(QDialog):
 
         self.layout.addWidget(self.sorting_algorithm_label)
         self.layout.addWidget(self.sorting_algorithm_cb)
+
+        self.layout.addWidget(self.steamcmd_label)
+        self.layout.addWidget(self.steamcmd_validate_downloads_checkbox)
 
         self.layout.addWidget(self.todds_label)
         self.layout.addWidget(self.todds_presets_cb)

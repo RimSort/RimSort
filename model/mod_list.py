@@ -349,7 +349,6 @@ class ModListWidget(QListWidget):
 
     def mod_double_clicked(self, item: QListWidgetItem):
         widget = ModListItemInner = self.itemWidget(item)
-        # print(f"DoubleClick\n{widget.json_data}")
         self.key_press_signal.emit("DoubleClick")
 
     def get_mod_url(self, widget_json_data) -> str:

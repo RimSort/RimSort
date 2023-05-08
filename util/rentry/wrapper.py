@@ -36,7 +36,7 @@ class UrllibClient:
         return response
 
 
-class RentryUploader:
+class RentryUpload:
     """Uploader class to attempt to upload data to Rentry.co"""
 
     def __init__(self, text: str):
@@ -47,15 +47,15 @@ class RentryUploader:
             logger.error("error: {}".format(response["content"]))
             try:
                 for i in response["errors"].split("."):
-                    i and print(i)
-                logger.error("RentryUploader failed!")
+                    i and logger.warning(i)
+                logger.error("RentryUpload failed!")
             except:
-                logger.error("RentryUploader failed!")
+                logger.error("RentryUpload failed!")
         else:
             self.upload_success = True
             self.url = response["url"]
             logger.warning(
-                "RentryUploader successfully uploaded data!\n\nUrl:        {}\nEdit code:  {}".format(
+                "RentryUpload successfully uploaded data!\n\nUrl:        {}\nEdit code:  {}".format(
                     response["url"], response["edit_code"]
                 )
             )

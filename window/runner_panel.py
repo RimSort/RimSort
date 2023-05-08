@@ -172,26 +172,52 @@ class RunnerPanel(QWidget):
         self.process.start()
 
     def handle_output(self):
-        data = self.process.readAllStandardOutput()
+        data = self.process.readAll()
         stdout = self.ansi_escape.sub("", bytes(data).decode("utf8"))
         self.message(stdout)
 
     def message(self, line: str):
-        logger.debug(line)
+        overwrite = False
+        logger.debug(f"{self.process.program()}: {line}")
+        # Hardcoded steamcmd progress output support
+        if (
+            self.process.state() == QProcess.Running
+            and "steamcmd" in self.process.program()
+            and "] Downloading update (" in line
+        ):
+            overwrite = True
+        elif (
+            self.process.state() == QProcess.Running
+            and "steamcmd" in self.process.program()
+            and "] Extracting package" in line
+        ):
+            overwrite = True
+        elif (
+            self.process.state() == QProcess.Running
+            and "steamcmd" in self.process.program()
+            and "] Installing update" in line
+        ):
+            overwrite = True
         # Hardcoded todds progress output support
-        if self.process and "todds" in self.process.program() and "Progress: " in line:
+        elif (
+            self.process.state() == QProcess.Running
+            and "todds" in self.process.program()
+            and "Progress: " in line
+        ):
+            overwrite = True
+        elif (  # Hardcoded todds --dry-run support - we don't want the total time output until jose fixes
+            self.todds_dry_run_support  # TODO: REMOVE THIS
+            and self.process.state() == QProcess.Running
+            and "todds" in self.process.program()
+            and "Total time: " in line
+        ):
+            return
+        if overwrite:
             cursor = self.text.textCursor()
             cursor.movePosition(QTextCursor.End)
             cursor.movePosition(QTextCursor.StartOfLine, QTextCursor.KeepAnchor)
             cursor.removeSelectedText()
             cursor.insertText(line.strip())
-        elif (  # Hardcoded todds --dry-run support - we don't want the total time output
-            self.todds_dry_run_support
-            and self.process
-            and "todds" in self.process.program()
-            and "Total time: " in line
-        ):
-            return
         else:
             self.text.appendPlainText(line)
 

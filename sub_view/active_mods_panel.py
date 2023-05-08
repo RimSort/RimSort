@@ -83,8 +83,8 @@ class ActiveModList(QWidget):
         self.active_mods_search_layout.addWidget(
             self.active_mods_search_mode_filter_button
         )
-        self.active_mods_search_layout.addWidget(self.active_mods_search, 75)
-        self.active_mods_search_layout.addWidget(self.active_mods_search_filter)
+        self.active_mods_search_layout.addWidget(self.active_mods_search, 35)
+        self.active_mods_search_layout.addWidget(self.active_mods_search_filter, 70)
 
         # Active mod list
         self.active_mods_list = ModListWidget()

@@ -18,7 +18,7 @@ from urllib3.exceptions import HTTPError
 from pyperclip import copy as copy_to_clipboard
 from watchdog.events import FileSystemEventHandler
 
-from util.rentry.wrapper import RentryUploader
+from util.rentry.wrapper import RentryUpload
 from util.steam.webapi.wrapper import ISteamRemoteStorage_GetPublishedFileDetails
 
 # Watchdog conditionals
@@ -224,7 +224,10 @@ class MainContent:
 
         # Instantiate steamcmd utils
         self.steamcmd_runner = RunnerPanel = None
-        self.steamcmd_wrapper = SteamcmdInterface(self.game_configuration.storage_path)
+        self.steamcmd_wrapper = SteamcmdInterface(
+            self.game_configuration.steamcmd_install_path,
+            self.game_configuration.steamcmd_validate_downloads_toggle,
+        )
 
         # Steamworks bool - use this to check any Steamworks processes you try to initialize
         self.steamworks_initialized = False
@@ -641,6 +644,10 @@ class MainContent:
             self._do_browse_workshop()
         if action == "setup_steamcmd":
             self._do_setup_steamcmd()
+        if action == "set_steamcmd_path":
+            self._do_set_steamcmd_path()
+        if action == "show_steamcmd_status":
+            self._do_show_steamcmd_status()
         if action == "import_list_file_xml":
             self._do_import_list_file_xml()()
         if action == "export_list_file_xml":
@@ -1048,14 +1055,50 @@ class MainContent:
             self.game_configuration.get_local_folder_path(), False, self.steamcmd_runner
         )
 
+    def _do_set_steamcmd_path(self):
+        """
+        Open a file dialog to allow the user to select the game executable.
+        """
+        logger.info("USER ACTION: set the steamcmd folder")
+        steamcmd_folder = os.path.normpath(
+            str(
+                QFileDialog.getExistingDirectory(
+                    caption="Select steamcmd folder", dir=os.path.expanduser("~")
+                )
+            )
+        )
+        logger.info(f"Selected path: {steamcmd_folder}")
+        if steamcmd_folder:
+            logger.info(
+                f"steamcmd install folder chosen. Updating storage with new path: {steamcmd_folder}"
+            )
+            self.game_configuration.steamcmd_install_path = steamcmd_folder
+            self.game_configuration.update_persistent_storage(
+                "steamcmd_install_path", steamcmd_folder
+            )
+            self.steamcmd_wrapper = SteamcmdInterface(
+                self.game_configuration.steamcmd_install_path,
+                self.game_configuration.steamcmd_validate_downloads_toggle,
+            )
+        else:
+            logger.info("User pressed cancel, passing")
+
+    def _do_show_steamcmd_status(self):
+        self.steamcmd_runner = RunnerPanel()
+        self.steamcmd_runner.setWindowModality(Qt.ApplicationModal)
+        self.steamcmd_runner.show()
+        self.steamcmd_runner.message("Showing steamcmd status...")
+        self.steamcmd_wrapper.show_workshop_status("294100", self.steamcmd_runner)
+
     def _do_download_mods_with_steamcmd(self, publishedfileids: list):
+        self.browser.close()
         self.steamcmd_runner = RunnerPanel()
         self.steamcmd_runner.setWindowModality(Qt.ApplicationModal)
         self.steamcmd_runner.show()
         self.steamcmd_runner.message(
             f"Downloading the following list of mods with steamcmd:\n{publishedfileids}"
         )
-        self.steamcmd_wrapper.download_publishedfileids(
+        self.steamcmd_wrapper.download_mods(
             "294100", publishedfileids, self.steamcmd_runner
         )
 
@@ -1459,7 +1502,8 @@ class MainContent:
         webapi_response = ISteamRemoteStorage_GetPublishedFileDetails(pfids)
         for metadata in webapi_response["response"]["publishedfiledetails"]:
             if metadata["result"] != 1:
-                logger.debug("Unpublished mod")
+                logger.debug("Invalid result returned from WebAPI")
+                return
             else:
                 # Retrieve the preview image URL from the response
                 pfid = metadata["publishedfileid"]
@@ -1533,7 +1577,7 @@ class MainContent:
                                 + f"\n{str(count) + '.'} ![]({preview_url + preview_url_args}) [{name}]({url} packageId: {package_id})"
                             )
         # Upload the report to Rentry.co
-        rentry_uploader = RentryUploader(active_mods_rentry_report)
+        rentry_uploader = RentryUpload(active_mods_rentry_report)
         if (
             rentry_uploader.upload_success
             and rentry_uploader.url != None
@@ -1542,7 +1586,7 @@ class MainContent:
             copy_to_clipboard(rentry_uploader.url)
             show_information(
                 title="Uploaded active mod list",
-                text=f"Uploaded active mod list report to Rentry.co!\nThe URL has been copied to your clipboard!",
+                text=f"Uploaded active mod list report to Rentry.co! The URL has been copied to your clipboard:\n\n{rentry_uploader.url}",
                 information='Click "Show Details" to see the full report!',
                 details=f"{active_mods_rentry_report}",
             )

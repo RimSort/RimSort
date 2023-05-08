@@ -67,15 +67,15 @@ class InactiveModList:
             self.clear_inactive_mods_search
         )
         self.inactive_mods_search_filter = QComboBox()
-        self.inactive_mods_search_filter.setMaximumWidth(125)
+        self.inactive_mods_search_filter.setMaximumWidth(140)
         self.inactive_mods_search_filter.addItems(
             ["Name", "PackageId", "Author(s)", "PublishedFileId"]
         )
         self.inactive_mods_search_layout.addWidget(
             self.inactive_mods_search_mode_filter_button
         )
-        self.inactive_mods_search_layout.addWidget(self.inactive_mods_search, 75)
-        self.inactive_mods_search_layout.addWidget(self.inactive_mods_search_filter)
+        self.inactive_mods_search_layout.addWidget(self.inactive_mods_search, 35)
+        self.inactive_mods_search_layout.addWidget(self.inactive_mods_search_filter, 70)
 
         # Inactive mod list
         self.inactive_mods_list = ModListWidget()

@@ -344,10 +344,35 @@ class DynamicQuery:
         return result, missing_children
 
 
+def ISteamRemoteStorage_GetCollectionDetails(publishedfileids: list):
+    """
+    Given a list of Steam Workshopmod collection PublishedFileIds, return a dict of
+    json data queried from Steam WebAPI, containing data to be parsed.
+
+    https://steamapi.xpaw.me/#ISteamRemoteStorage/GetCollectionDetails
+
+    :param publishedfileids: a list of 1 or more publishedfileids to lookup metadata for
+    :return: a JSON object that is the response from your WebAPI query
+    """
+    # Construct the URL to retrieve information about the collection
+    url = f"https://api.steampowered.com/ISteamRemoteStorage/GetCollectionDetails/v1/"
+    # Construct arguments to pass to the API call
+    data = {"collectioncount": f"{str(len(publishedfileids))}"}
+    for publishedfileid in publishedfileids:
+        count = publishedfileids.index(publishedfileid)
+        data[f"publishedfileids[{count}]"] = publishedfileid
+    # Make a request to the Steam Web API
+    request = requests_post(url, data=data)
+    # Parse the JSON response
+    response = request.json()
+    logger.debug(f"Received WebAPI response from query: {response}")
+    return response
+
+
 def ISteamRemoteStorage_GetPublishedFileDetails(publishedfileids: list):
     """
     Given a list of PublishedFileIds, return a dict of json data queried
-    from Steam WebAPI, containing data to be parsed during db update.
+    from Steam WebAPI, containing data to be parsed.
 
     https://steamapi.xpaw.me/#ISteamRemoteStorage/GetPublishedFileDetails
 

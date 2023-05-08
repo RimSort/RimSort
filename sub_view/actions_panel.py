@@ -9,6 +9,7 @@ from PySide6.QtCore import (
 )
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
+    QLabel,
     QMenu,
     QPushButton,
     QVBoxLayout,
@@ -51,6 +52,11 @@ class Actions(QWidget):
         self._panel.addLayout(self.top_panel, 50)
         self._panel.addLayout(self.middle_panel, 25)
         self._panel.addLayout(self.bottom_panel, 25)
+
+        # LIST OPTIONS LABEL
+        self.list_options_label = QLabel("List Options")
+        self.list_options_label.setObjectName("summaryValue")
+        self.list_options_label.setAlignment(Qt.AlignCenter)
 
         # REFRESH BUTTON
         self.refresh_button = QPushButton("Refresh")
@@ -117,6 +123,11 @@ class Actions(QWidget):
             self.exportButtonAddionalOptions
         )
 
+        # TODDS LABEL
+        self.todds_label = QLabel("todds")
+        self.todds_label.setObjectName("summaryValue")
+        self.todds_label.setAlignment(Qt.AlignCenter)
+
         # OPTIMIZE TEXTURES BUTTON
         self.optimize_textures_button = QPushButton("Optimize textures")
         self.optimize_textures_button.setToolTip(
@@ -131,21 +142,56 @@ class Actions(QWidget):
             self.optimizeTexContextMenuEvent
         )
 
-        # BROWSER WORKSHOP BUTTON
+        # STEAMCMD LABEL
+        self.steamcmd_label = QLabel("SteamCMD")
+        self.steamcmd_label.setObjectName("summaryValue")
+        self.steamcmd_label.setAlignment(Qt.AlignCenter)
+
+        # BROWSE WORKSHOP BUTTON
         self.browse_workshop_button = QPushButton("Browse workshop")
         self.browse_workshop_button.setToolTip(
-            "Download mods anonymously with steamcmd\n" + "No Steam account required!"
+            "Download mods anonymously with SteamCMD\n" + "No Steam account required!"
         )
         self.browse_workshop_button.clicked.connect(
             partial(self.actions_signal.emit, "browse_workshop")
         )
 
         # SETUP STEAMCMD BUTTON
-        self.setup_steamcmd_button = QPushButton("Setup steamcmd")
-        self.setup_steamcmd_button.setToolTip("Requires an internet connection!")
+        self.setup_steamcmd_button = QPushButton("Setup SteamCMD")
+        self.setup_steamcmd_button.setToolTip(
+            "Right-click to change/configure the installed SteamCMD prefix\n"
+            + 'Set to the folder you would like to contain the "SteamCMD" folder'
+        )
         self.setup_steamcmd_button.clicked.connect(
             partial(self.actions_signal.emit, "setup_steamcmd")
         )
+        # Set context menu policy and connect custom context menu event
+        self.setup_steamcmd_button.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.setup_steamcmd_button.customContextMenuRequested.connect(
+            self.setupSteamcmdContextMenuEvent
+        )
+
+        # SHOW STEAMCMD WORKSHOP MODS STATUS
+        self.show_steamcmd_status_button = QPushButton("SteamCMD status")
+        self.show_steamcmd_status_button.setToolTip(
+            "Shows steamcmd workshop mod status for the detected prefix"
+        )
+        self.show_steamcmd_status_button.clicked.connect(
+            partial(self.actions_signal.emit, "show_steamcmd_status")
+        )
+
+        # RIMWORLD LABEL
+        self.rimworld_label = QLabel("RimWorld")
+        self.rimworld_label.setObjectName("summaryValue")
+        self.rimworld_label.setAlignment(Qt.AlignCenter)
+
+        # RUN BUTTON
+        self.run_button = QPushButton("Run")
+        self.run_button.setToolTip("Right-click to set RimWorld game arguments!")
+        self.run_button.clicked.connect(partial(self.actions_signal.emit, "run"))
+        # Set context menu policy and connect custom context menu event
+        self.run_button.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.run_button.customContextMenuRequested.connect(self.runArgsContextMenuEvent)
 
         # SAVE BUTTON
         self.save_button = QPushButton("Save")
@@ -164,26 +210,23 @@ class Actions(QWidget):
             )
         )
 
-        # RUN BUTTON
-        self.run_button = QPushButton("Run")
-        self.run_button.setToolTip("Right-click to set RimWorld game arguments!")
-        self.run_button.clicked.connect(partial(self.actions_signal.emit, "run"))
-        # Set context menu policy and connect custom context menu event
-        self.run_button.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.run_button.customContextMenuRequested.connect(self.runArgsContextMenuEvent)
-
-        # Add buttons to sub-layouts and sub-layouts to the main layout.
+        # Add buttons to sub-layouts and sub-layouts to the main layout
+        self.top_panel.addWidget(self.list_options_label)
         self.top_panel.addWidget(self.refresh_button)
         self.top_panel.addWidget(self.clear_button)
         self.top_panel.addWidget(self.restore_button)
         self.top_panel.addWidget(self.sort_button)
+        self.middle_panel.addWidget(self.todds_label)
         self.middle_panel.addWidget(self.optimize_textures_button)
+        self.middle_panel.addWidget(self.steamcmd_label)
         self.middle_panel.addWidget(self.browse_workshop_button)
         self.middle_panel.addWidget(self.setup_steamcmd_button)
+        self.middle_panel.addWidget(self.show_steamcmd_status_button)
+        self.bottom_panel.addWidget(self.rimworld_label)
         self.bottom_panel.addWidget(self.import_button)
         self.bottom_panel.addWidget(self.export_button)
-        self.bottom_panel.addWidget(self.save_button)
         self.bottom_panel.addWidget(self.run_button)
+        self.bottom_panel.addWidget(self.save_button)
 
         logger.info("Finished Actions initialization")
 
@@ -224,6 +267,16 @@ class Actions(QWidget):
             partial(self.actions_signal.emit, "edit_run_args")
         )
         action = contextMenu.exec_(self.run_button.mapToGlobal(point))
+
+    def setupSteamcmdContextMenuEvent(self, point: QPoint) -> None:
+        contextMenu = QMenu(self)  # Actions Panel context menu event
+        set_steamcmd_path = contextMenu.addAction(
+            "Configure steamcmd prefix"
+        )  # steamcmd path
+        set_steamcmd_path.triggered.connect(
+            partial(self.actions_signal.emit, "set_steamcmd_path")
+        )
+        action = contextMenu.exec_(self.setup_steamcmd_button.mapToGlobal(point))
 
     def steamApikeyContextMenuEvent(self, point: QPoint) -> None:
         contextMenu = QMenu(self)  # Actions Panel context menu event

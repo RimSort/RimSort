@@ -33,6 +33,10 @@ logging_config_path = os.path.join(data_path, "logging_config.json")
 logging_file_path = os.path.join(os.path.dirname(sys.argv[0]), "RimSort.log")
 
 # Setup Environment
+if is_nuitka:
+    os.environ[
+        "QTWEBENGINE_LOCALES_PATH"
+    ] = f'{Path(os.path.join(os.path.dirname(__file__), "qtwebengine_locales")).resolve()}'
 if system == "Linux":
     # logger_tt
     setup_logging(
@@ -93,7 +97,7 @@ class MainWindow(QMainWindow):
         # Create the main application window
         self.version_string = "Alpha v1.0.4.1"
         self.setWindowTitle(f"RimSort {self.version_string}")
-        self.setMinimumSize(QSize(1200, 700))
+        self.setMinimumSize(QSize(1152, 864))
 
         # Create the window layout
         app_layout = QVBoxLayout()
