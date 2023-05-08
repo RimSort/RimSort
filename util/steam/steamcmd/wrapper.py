@@ -163,12 +163,17 @@ class SteamcmdDownloader(QWidget):
         self.setMinimumSize(QSize(1024, 768))
 
     def _add_collection_or_mod_to_list(self):
+        searchtext_string = "&searchtext="
         # Ascertain the pfid depending on the url prefix
         if self.url_prefix_mod in self.current_url:
             publishedfileid = self.current_url.split(self.url_prefix_mod, 1)[1]
+            if searchtext_string in publishedfileid:
+                publishedfileid = publishedfileid.split(searchtext_string)[0]
             self._add_mod_to_list(publishedfileid)
         elif self.url_prefix_collection in self.current_url:
             publishedfileid = self.current_url.split(self.url_prefix_collection, 1)[1]
+            if searchtext_string in publishedfileid:
+                publishedfileid = publishedfileid.split(searchtext_string)[0]
             collection_mods_pfid_to_title = self.__compile_collection_datas(
                 publishedfileid
             )
