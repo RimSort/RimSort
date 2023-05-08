@@ -61,7 +61,7 @@ class SteamcmdDownloader(QWidget):
         # This is used to fix issue described here on non-Windows platform:
         # https://doc.qt.io/qt-6/qtwebengine-platform-notes.html#sandboxing-support
         if platform.system() != "Windows":
-            logger.info("Setting QTWEBENGINE_DISABLE_SANDBOX for non-Windows platform")
+            logger.debug("Setting QTWEBENGINE_DISABLE_SANDBOX for non-Windows platform")
             os.environ["QTWEBENGINE_DISABLE_SANDBOX"] = "1"
 
         # FOR CONVENIENCE
@@ -70,10 +70,8 @@ class SteamcmdDownloader(QWidget):
         self.downloader_tracking_list = []
         self.startpage = QUrl(startpage)
         self.url_prefix_steam = "https://steamcommunity.com"
-        self.url_prefix_mod = "https://steamcommunity.com/sharedfiles/filedetails/?id="
-        self.url_prefix_collection = (
-            "https://steamcommunity.com/workshop/filedetails/?id="
-        )
+        self.url_prefix = "https://steamcommunity.com/sharedfiles/filedetails/?id="
+
 
         # LAYOUTS
         self.window_layout = QHBoxLayout()
@@ -130,7 +128,7 @@ class SteamcmdDownloader(QWidget):
 
         # Nav bar
         self.add_to_list_button = QAction("Add to list")
-        self.add_to_list_button.triggered.connect(self._add_collection_or_mod_to_list)
+        self.add_to_list_button.triggered.connect(self._add_to_list)
         self.nav_bar = QToolBar()
         self.nav_bar.addAction(self.web_view.pageAction(QWebEnginePage.Back))
         self.nav_bar.addAction(self.web_view.pageAction(QWebEnginePage.Forward))
@@ -161,85 +159,56 @@ class SteamcmdDownloader(QWidget):
         self.setWindowTitle(self.current_title)
         self.setLayout(self.window_layout)
         self.setMinimumSize(QSize(1024, 768))
+        self.warningmod=""
+    def _add_to_list(self):
 
-    def _add_collection_or_mod_to_list(self):
-        searchtext_string = "&searchtext="
         # Ascertain the pfid depending on the url prefix
-        if self.url_prefix_mod in self.current_url:
-            publishedfileid = self.current_url.split(self.url_prefix_mod, 1)[1]
-            if searchtext_string in publishedfileid:
-                publishedfileid = publishedfileid.split(searchtext_string)[0]
+        publishedfileid = self.current_url[self.current_url.index("=")+1:]
+        if "&searchtext=" in publishedfileid:
+            publishedfileid = publishedfileid[:publishedfileid.index("&searchtext=")]
+        Collectiondata = ISteamRemoteStorage_GetCollectionDetails([publishedfileid])
+
+        if not Collectiondata["RS_isCollection"]:
             self._add_mod_to_list(publishedfileid)
-        elif self.url_prefix_collection in self.current_url:
-            publishedfileid = self.current_url.split(self.url_prefix_collection, 1)[1]
-            if searchtext_string in publishedfileid:
-                publishedfileid = publishedfileid.split(searchtext_string)[0]
-            collection_mods_pfid_to_title = self.__compile_collection_datas(
-                publishedfileid
-            )
+            if self.warningmod:
+                show_warning(  # TODO resize the box
+                    title="SteamCMD downloader",
+                    text=f"Unable to add mod to list",
+                    information="You already have some in the download list!\n"
+                                "Only the mod who isn't already in the list can be added",
+                    details=self.warningmod)
+        else:
+            collection_mods_pfid_to_title = self.__compile_collection_datas(publishedfileid)
             if len(collection_mods_pfid_to_title) > 0:
                 for pfid, title in collection_mods_pfid_to_title.items():
                     self._add_mod_to_list(publishedfileid=pfid, title=title)
-            else:
-                logger.warning(
-                    "Empty list of mods returned, unable to add collection to list!"
-                )
-                show_warning(
-                    title="SteamCMD downloader",
-                    text="Empty list of mods returned, unable to add collection to list!",
-                    information="Please reach out to us on Github Issues page or\n#rimsort-testing on the Rocketman/CAI discord",
-                )
-        else:
-            logger.error(f"Unable to parse pfid from url: {self.current_url}")
-
+            if self.warningmod:
+                show_warning( # TODO resize the box
+                title="SteamCMD downloader",
+                text=f"Unable to add all the to list",
+                information="You already have some in the download list!\n"
+                            "Only the mod who wasn't already in the list got added",
+                details=self.warningmod)
+        self.warningmod=""
     def __compile_collection_datas(self, publishedfileid: str) -> Dict[str, Any]:
         collection_mods_pfid_to_title = {}
-        collection_webapi_result = ISteamRemoteStorage_GetCollectionDetails(
-            [publishedfileid]
-        )
+        collection_webapi_result = ISteamRemoteStorage_GetCollectionDetails([publishedfileid])
         collection_pfids = []
-        if (
-            collection_webapi_result["response"]["result"] == 1
-            and collection_webapi_result["response"]["resultcount"] > 0
-            and len(collection_webapi_result["response"]["collectiondetails"]) > 0
-        ):
-            for mod in collection_webapi_result["response"]["collectiondetails"][0][
-                "children"
-            ]:
-                if mod.get("publishedfileid"):
-                    collection_pfids.append(mod["publishedfileid"])
-            if len(collection_pfids) > 0:
-                collection_mods_webapi_response = (
-                    ISteamRemoteStorage_GetPublishedFileDetails(collection_pfids)
-                )
-            else:
-                return collection_mods_pfid_to_title
-            for metadata in collection_mods_webapi_response["response"][
-                "publishedfiledetails"
-            ]:
-                if metadata["result"] != 1:
-                    logger.warning(
-                        f"Invalid result returned from WebAPI: {collection_mods_webapi_response}"
-                    )
-                else:
-                    # Retrieve the published mod's title from the response
-                    pfid = metadata["publishedfileid"]
-                    collection_mods_pfid_to_title[pfid] = metadata["title"]
-        else:
-            logger.warning(
-                f"Invalid result returned from WebAPI: {collection_webapi_result}"
-            )
+        for mod in collection_webapi_result["collectiondetails"][0]["children"]:
+            collection_pfids.append(mod["publishedfileid"])
+        for metadata in (ISteamRemoteStorage_GetPublishedFileDetails(collection_pfids))["publishedfiledetails"]:
+            # Retrieve the published mod's title from the response
+            pfid = metadata["publishedfileid"]
+            collection_mods_pfid_to_title[pfid] = metadata["title"]
         return collection_mods_pfid_to_title
 
-    def _add_mod_to_list(
-        self,
-        publishedfileid: str,
-        title: Optional[str] = None,
-    ):
+    def _add_mod_to_list(self,
+            publishedfileid: str,
+            title: Optional[str] = None):
         if publishedfileid not in self.downloader_tracking_list:
             self.downloader_tracking_list.append(publishedfileid)
             logger.debug(f"Downloader list tracking: {self.downloader_tracking_list}")
-            if title is None or "":
+            if title is None:
                 label = QLabel(self.current_title.split("Steam Workshop::", 1)[1])
             else:
                 label = QLabel(title)
@@ -256,11 +225,10 @@ class SteamcmdDownloader(QWidget):
             logger.warning(
                 f"Tried to add duplicate PFID to downloader list: {publishedfileid}"
             )
-            show_warning(
-                title="SteamCMD downloader",
-                text=f"Unable to add to list: {publishedfileid}",
-                information="You already have this mod in your download list!",
-            )
+            if not title:
+                title=self.current_title.split("Steam Workshop::", 1)[1]
+            self.warningmod=self.warningmod+title+"\n"
+
 
     def _downloader_item_ContextMenuEvent(self, point: QPoint) -> None:
         context_menu = QMenu(self)  # Downloader item context menu event
@@ -313,7 +281,7 @@ class SteamcmdDownloader(QWidget):
                 elements[0].parentNode.removeChild(elements[0]);
             }
             """
-            if self.url_prefix_mod in self.current_url:
+            if self.url_prefix in self.current_url:
                 # Remove area that shows "Subscribe to download" and "Subscribe"/"Unsubscribe" button
                 mod_subscribe_area_removal_script = """
                 var elements = document.getElementsByClassName("game_area_purchase_game");
@@ -326,7 +294,8 @@ class SteamcmdDownloader(QWidget):
                 )
                 # Show the add_to_list_button
                 self.nav_bar.addAction(self.add_to_list_button)
-            elif self.url_prefix_collection in self.current_url:
+            elif (self.url_prefix in self.current_url)\
+                    or ("https://steamcommunity.com/workshop/filedetails/?id=" in self.current_url):
                 # Remove area that shows "Subscribe to all" and "Unsubscribe to all" buttons
                 mod_unsubscribe_button_removal_script = """
                 var elements = document.getElementsByClassName("subscribeCollection");
@@ -429,7 +398,7 @@ class SteamcmdInterface:
             runner.message("SteamCMD was not found. Please setup SteamCMD first!")
 
     def setup_steamcmd(
-        self, symlink_source_path: str, reinstall: bool, runner: RunnerPanel
+            self, symlink_source_path: str, reinstall: bool, runner: RunnerPanel
     ) -> None:
         installed = None
         if reinstall:
@@ -446,14 +415,14 @@ class SteamcmdInterface:
                 )
                 if ".zip" in self.steamcmd_url:
                     with ZipFile(
-                        BytesIO(requests.get(self.steamcmd_url).content)
+                            BytesIO(requests.get(self.steamcmd_url).content)
                     ) as zipobj:
                         zipobj.extractall(self.steamcmd_path)
                     runner.message(f"Installation completed")
                     installed = True
                 elif ".tar.gz" in self.steamcmd_url:
                     with requests.get(
-                        self.steamcmd_url, stream=True
+                            self.steamcmd_url, stream=True
                     ) as rx, tarfile.open(fileobj=rx.raw, mode="r:gz") as tarobj:
                         tarobj.extractall(self.steamcmd_path)
                     runner.message(f"Installation completed")

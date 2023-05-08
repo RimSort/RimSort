@@ -1504,10 +1504,10 @@ class MainContent:
             if metadata["result"] != 1:
                 logger.debug("Invalid result returned from WebAPI")
                 return
-            else:
+
                 # Retrieve the preview image URL from the response
-                pfid = metadata["publishedfileid"]
-                active_steam_mods_pfid_to_preview_url[pfid] = metadata["preview_url"]
+            pfid = metadata["publishedfileid"]
+            active_steam_mods_pfid_to_preview_url[pfid] = metadata["preview_url"]
         # Build our report
         active_mods_rentry_report = (
             f"# RimWorld Mod List       ![](https://github.com/oceancabbage/RimSort/blob/main/rentry_preview.png?raw=true)"

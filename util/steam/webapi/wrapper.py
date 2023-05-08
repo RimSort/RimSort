@@ -361,11 +361,15 @@ def ISteamRemoteStorage_GetCollectionDetails(publishedfileids: list):
     for publishedfileid in publishedfileids:
         count = publishedfileids.index(publishedfileid)
         data[f"publishedfileids[{count}]"] = publishedfileid
-    # Make a request to the Steam Web API
-    request = requests_post(url, data=data)
-    # Parse the JSON response
-    response = request.json()
-    logger.debug(f"Received WebAPI response from query: {response}")
+    # Make a request to the Steam Web API and Parse the JSON response
+    response = requests_post(url, data=data)
+    if not response:
+        return
+    response = response.json()["response"]
+    if response["resultcount"]: # 0+ :is collection
+        response["RS_isCollection"] = True
+    else: #0:is not collection
+        response["RS_isCollection"] = False
     return response
 
 
@@ -391,8 +395,7 @@ def ISteamRemoteStorage_GetPublishedFileDetails(publishedfileids: list):
     # Make a request to the Steam Web API
     request = requests_post(url, data=data)
     # Parse the JSON response
-    response = request.json()
-    logger.debug(f"Received WebAPI response from query: {response}")
+    response = request.json()["response"]
     return response
 
 
