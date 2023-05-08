@@ -1497,7 +1497,7 @@ class MainContent:
         # Compile list of Steam Workshop publishing preview images that correspond
         # to a Steam mod in the active mod list
         webapi_response = ISteamRemoteStorage_GetPublishedFileDetails(pfids)
-        for metadata in webapi_response["response"]["publishedfiledetails"]:
+        for metadata in webapi_response["publishedfiledetails"]:
             if metadata["result"] != 1:
                 logger.debug("Invalid result returned from WebAPI")
                 return
