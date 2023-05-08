@@ -160,7 +160,7 @@ class SteamcmdDownloader(QWidget):
         # Put it all together
         self.setWindowTitle(self.current_title)
         self.setLayout(self.window_layout)
-        self.setMinimumSize(QSize(1024, 768))
+        self.setMinimumSize(QSize(800, 600))
 
     def _add_collection_or_mod_to_list(self):
         searchtext_string = "&searchtext="
