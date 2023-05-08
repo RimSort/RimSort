@@ -649,7 +649,7 @@ class MainContent:
         if action == "show_steamcmd_status":
             self._do_show_steamcmd_status()
         if action == "import_list_file_xml":
-            self._do_import_list_file_xml()()
+            self._do_import_list_file_xml()
         if action == "export_list_file_xml":
             self._do_export_list_file_xml()
         if action == "export_list_clipboard":
