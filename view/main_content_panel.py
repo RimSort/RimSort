@@ -1336,6 +1336,7 @@ class MainContent:
             dir=os.path.join(self.game_configuration.storage_path, "ModLists"),
             filter="XML (*.xml)",
         )
+        logger.info(f"Selected path: {file_path[0]}")
         if file_path[0]:
             self.active_mods_panel.clear_active_mods_search()
             self.inactive_mods_panel.clear_inactive_mods_search()
@@ -1351,6 +1352,8 @@ class MainContent:
             )
             logger.info("Got new mods according to imported XML")
             self._insert_data_into_lists(active_mods_data, inactive_mods_data)
+        else:
+            logger.info("User pressed cancel, passing")
 
     def _do_export_list_file_xml(self) -> None:
         """
