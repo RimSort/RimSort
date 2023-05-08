@@ -95,7 +95,7 @@ class MainWindow(QMainWindow):
         logger.info("Starting MainWindow initialization")
         super(MainWindow, self).__init__()
         # Create the main application window
-        self.version_string = "Alpha v1.0.4.1"
+        self.version_string = "Alpha v1.0.4.2"
         self.setWindowTitle(f"RimSort {self.version_string}")
         self.setMinimumSize(QSize(1152, 864))
 
