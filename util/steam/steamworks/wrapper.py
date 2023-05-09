@@ -155,7 +155,7 @@ def launch_game_process(instruction: list, override: bool) -> None:
                 else:  # Windows
                     p = subprocess.Popen(
                         [executable_path, args],
-                        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+                        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP, shell=True
                     )
             logger.info(f"Launched independent RimWorld game process with PID: {p.pid}")
             if (
