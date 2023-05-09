@@ -482,7 +482,12 @@ class SteamcmdInterface:
             with open(script_path, "w") as script_output:
                 script_output.write("\n".join(script))
             runner.message(f"Compiled & using script: {script_path}")
-            runner.execute(self.steamcmd, [f"+runscript {script_path}"])
+            runner.execute(
+                self.steamcmd,
+                [f"+runscript {script_path}"],
+                True,
+                len(publishedfileids),
+            )
         else:
             runner.message("SteamCMD was not found. Please setup SteamCMD first!")
 

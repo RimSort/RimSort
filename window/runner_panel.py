@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QToolButton,
     QWidget,
     QVBoxLayout,
+    QProgressBar,
 )
 
 
@@ -95,11 +96,16 @@ class RunnerPanel(QWidget):
         self.save_runner_output_button = QToolButton()
         self.save_runner_output_button.setIcon(self.save_runner_icon)
         self.save_runner_output_button.clicked.connect(self._do_save_runner_output)
+        # Progress bar
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setValue(0)
+        self.progress_bar.hide()
         # CREATE LAYOUTS
         self.main_layout = QHBoxLayout()
         self.runner_layout = QVBoxLayout()
         self.actions_bar_layout = QVBoxLayout()
         # ADD WIDGETS TO LAYOUTS
+        self.runner_layout.addWidget(self.progress_bar)
         self.runner_layout.addWidget(self.text)
         self.actions_bar_layout.addWidget(self.clear_runner_button)
         self.actions_bar_layout.addWidget(self.restart_process_button)
@@ -154,7 +160,7 @@ class RunnerPanel(QWidget):
                     logger.info("Writing to file")
                     outfile.write(self.text.toPlainText())
 
-    def execute(self, command: str, args: list):
+    def execute(self, command: str, args: list, show_bar=False, additional=None):
         logger.info("RunnerPanel subprocess initiating...")
         self.restart_process_button.show()
         self.kill_process_button.show()
@@ -167,6 +173,10 @@ class RunnerPanel(QWidget):
         self.process.readyReadStandardError.connect(self.handle_output)
         self.process.readyReadStandardOutput.connect(self.handle_output)
         self.process.finished.connect(self.finished)
+        if show_bar:
+            self.progress_bar.show()
+            if "steamcmd" in command:
+                self.progress_bar.setRange(0, additional)
         if not self.todds_dry_run_support:
             self.message(f"\nExecuting command:\n{command} {args}\n\n")
         self.process.start()
@@ -183,9 +193,11 @@ class RunnerPanel(QWidget):
         if (
             self.process.state() == QProcess.Running
             and "steamcmd" in self.process.program()
-            and "] Downloading update (" in line
         ):
-            overwrite = True
+            if "] Downloading update (" in line:
+                overwrite = True
+            elif "Success. Downloaded item " in line:
+                self.progress_bar.setValue(self.progress_bar.value() + 1)
         elif (
             self.process.state() == QProcess.Running
             and "steamcmd" in self.process.program()
