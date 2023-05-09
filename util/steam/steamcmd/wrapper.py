@@ -130,11 +130,11 @@ class SteamcmdDownloader(QWidget):
 
         # Location box
         self.location = QLineEdit()
-        self.location.setReadOnly(True)
         self.location.setSizePolicy(
             QSizePolicy.Expanding, self.location.sizePolicy().verticalPolicy()
         )
         self.location.setText(self.startpage.url())
+        self.location.returnPressed.connect(self.__browse_to_location)
 
         # Nav bar
         self.add_to_list_button = QAction("Add to list")
@@ -170,6 +170,11 @@ class SteamcmdDownloader(QWidget):
         self.setWindowTitle(self.current_title)
         self.setLayout(self.window_layout)
         self.setMinimumSize(QSize(800, 600))
+
+    def __browse_to_location(self):
+        url = QUrl(self.location.text())
+        logger.warning(f"Browsing to: {url.url()}")
+        self.web_view.load(url)
 
     def _add_collection_or_mod_to_list(self):
         # Ascertain the pfid depending on the url prefix
