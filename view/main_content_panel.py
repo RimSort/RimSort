@@ -1402,7 +1402,7 @@ class MainContent:
                     f"Saving generated ModsConfig.xml to selected path: {file_path[0]}"
                 )
                 if not file_path[0].endswith(".xml"):
-                    json_to_xml_write(mods_config_data, file_path[0]+".xml")
+                    json_to_xml_write(mods_config_data, file_path[0] + ".xml")
                 else:
                     json_to_xml_write(mods_config_data, file_path[0])
             else:
@@ -1500,17 +1500,22 @@ class MainContent:
                     active_steam_mods_packageId_to_pfid[package_id] = publishedfileid
                     pfids.append(publishedfileid)
         logger.info(f"Collected {len(active_mods)} active mods for export")
-        # Compile list of Steam Workshop publishing preview images that correspond
-        # to a Steam mod in the active mod list
-        webapi_response = ISteamRemoteStorage_GetPublishedFileDetails(pfids)
-        for metadata in webapi_response["response"]["publishedfiledetails"]:
-            if metadata["result"] != 1:
-                logger.debug("Invalid result returned from WebAPI")
-                return
-            else:
-                # Retrieve the preview image URL from the response
+        if len(pfids) > 0:  # No empty queries...
+            # Compile list of Steam Workshop publishing preview images that correspond
+            # to a Steam mod in the active mod list
+            webapi_response = ISteamRemoteStorage_GetPublishedFileDetails(pfids)
+            for metadata in webapi_response["response"]["publishedfiledetails"]:
                 pfid = metadata["publishedfileid"]
-                active_steam_mods_pfid_to_preview_url[pfid] = metadata["preview_url"]
+                if metadata["result"] != 1:
+                    logger.warning("Rentry.co export: Unable to get data for mod!")
+                    logger.warning(
+                        f"Invalid result returned from WebAPI for mod {pfid}"
+                    )
+                else:
+                    # Retrieve the preview image URL from the response
+                    active_steam_mods_pfid_to_preview_url[pfid] = metadata[
+                        "preview_url"
+                    ]
         # Build our report
         active_mods_rentry_report = (
             f"# RimWorld Mod List       ![](https://github.com/oceancabbage/RimSort/blob/main/rentry_preview.png?raw=true)"
@@ -1554,7 +1559,14 @@ class MainContent:
                         + "} "
                     )
             elif active_mods_json[uuid]["data_source"] == "workshop":
-                preview_url_args = "?imw=100&imh=100&impolicy=Letterbox"
+                pfid = active_steam_mods_packageId_to_pfid[package_id]
+                if active_steam_mods_pfid_to_preview_url.get(pfid):
+                    preview_url = (
+                        active_steam_mods_pfid_to_preview_url[pfid]
+                        + "?imw=100&imh=100&impolicy=Letterbox"
+                    )
+                else:
+                    preview_url = "https://github.com/oceancabbage/RimSort/blob/main/rentry_steam_icon.png?raw=true"
                 if active_mods_json[uuid].get("steam_url"):
                     url = active_mods_json[uuid]["steam_url"]
                 elif active_mods_json[uuid].get("url"):
@@ -1563,22 +1575,17 @@ class MainContent:
                     url is None
                 if url is None:
                     if package_id in active_steam_mods_packageId_to_pfid.keys():
-                        pfid = active_steam_mods_packageId_to_pfid[package_id]
-                        if pfid in active_steam_mods_pfid_to_preview_url.keys():
-                            preview_url = active_steam_mods_pfid_to_preview_url[pfid]
-                            active_mods_rentry_report = (
-                                active_mods_rentry_report
-                                + f"\n{str(count) + '.'} ![]({preview_url + preview_url_args}) {name} packageId: {package_id}"
-                            )
+                        active_mods_rentry_report = (
+                            active_mods_rentry_report
+                            + f"\n{str(count) + '.'} ![]({preview_url}) {name} packageId: {package_id}"
+                        )
                 else:
                     if package_id in active_steam_mods_packageId_to_pfid.keys():
-                        pfid = active_steam_mods_packageId_to_pfid[package_id]
-                        if pfid in active_steam_mods_pfid_to_preview_url.keys():
-                            preview_url = active_steam_mods_pfid_to_preview_url[pfid]
-                            active_mods_rentry_report = (
-                                active_mods_rentry_report
-                                + f"\n{str(count) + '.'} ![]({preview_url + preview_url_args}) [{name}]({url} packageId: {package_id})"
-                            )
+                        active_mods_rentry_report = (
+                            active_mods_rentry_report
+                            + f"\n{str(count) + '.'} ![]({preview_url}) [{name}]({url} packageId: {package_id})"
+                        )
+
         # Upload the report to Rentry.co
         rentry_uploader = RentryUpload(active_mods_rentry_report)
         if (

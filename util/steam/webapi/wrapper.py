@@ -3,7 +3,7 @@ from logging import getLogger, WARNING
 from logger_tt import logger
 from math import ceil
 from requests import post as requests_post
-from requests.exceptions import HTTPError
+from requests.exceptions import HTTPError, JSONDecodeError
 import sys
 from time import time
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -363,10 +363,21 @@ def ISteamRemoteStorage_GetCollectionDetails(publishedfileids: list):
         data[f"publishedfileids[{count}]"] = publishedfileid
     # Make a request to the Steam Web API
     request = requests_post(url, data=data)
-    # Parse the JSON response
-    response = request.json()
-    logger.debug(f"Received WebAPI response from query: {response}")
-    return response
+
+    # Check the response status code
+    if request.status_code == 200:
+        try:
+            # Parse the JSON response
+            json_response = request.json()
+            logger.debug(f"Received WebAPI response from query: {json_response}")
+        except JSONDecodeError as e:
+            logger.error(f"Invalid JSON response: {e}")
+            return None
+    else:
+        logger.error(f"Error {request.status_code} retrieving data from Steam Web API")
+        return None
+
+    return json_response
 
 
 def ISteamRemoteStorage_GetPublishedFileDetails(publishedfileids: list):
@@ -390,10 +401,21 @@ def ISteamRemoteStorage_GetPublishedFileDetails(publishedfileids: list):
         data[f"publishedfileids[{count}]"] = publishedfileid
     # Make a request to the Steam Web API
     request = requests_post(url, data=data)
-    # Parse the JSON response
-    response = request.json()
-    logger.debug(f"Received WebAPI response from query: {response}")
-    return response
+
+    # Check the response status code
+    if request.status_code == 200:
+        try:
+            # Parse the JSON response
+            json_response = request.json()
+            logger.debug(f"Received WebAPI response from query: {json_response}")
+        except JSONDecodeError as e:
+            logger.error(f"Invalid JSON response: {e}")
+            return None
+    else:
+        logger.error(f"Error {request.status_code} retrieving data from Steam Web API")
+        return None
+
+    return json_response
 
 
 if __name__ == "__main__":

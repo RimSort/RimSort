@@ -30,6 +30,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QVBoxLayout,
 )
+import shutil
 
 from model.dialogue import (
     show_dialogue_conditional,
@@ -43,8 +44,6 @@ from util.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetPublishedFileDetails,
 )
 from window.runner_panel import RunnerPanel
-
-import shutil
 
 
 class SteamcmdDownloader(QWidget):
@@ -64,14 +63,21 @@ class SteamcmdDownloader(QWidget):
             logger.info("Setting QTWEBENGINE_DISABLE_SANDBOX for non-Windows platform")
             os.environ["QTWEBENGINE_DISABLE_SANDBOX"] = "1"
 
-        # FOR CONVENIENCE
-        self.current_url = startpage
+        # VARIABLES
+        self.current_html = ""
         self.current_title = "SteamCMD downloader"
-        self.downloader_tracking_list = []
+        self.current_url = startpage
+
+        self.downloader_list_mods_tracking = []
+        self.downloader_list_dupe_tracking = {}
         self.startpage = QUrl(startpage)
+
+        self.searchtext_string = "&searchtext="
         self.url_prefix_steam = "https://steamcommunity.com"
-        self.url_prefix_mod = "https://steamcommunity.com/sharedfiles/filedetails/?id="
-        self.url_prefix_collection = (
+        self.url_prefix_sharedfiles = (
+            "https://steamcommunity.com/sharedfiles/filedetails/?id="
+        )
+        self.url_prefix_workshop = (
             "https://steamcommunity.com/workshop/filedetails/?id="
         )
 
@@ -89,9 +95,11 @@ class SteamcmdDownloader(QWidget):
         self.downloader_list.customContextMenuRequested.connect(
             self._downloader_item_ContextMenuEvent
         )
+        self.clear_list_button = QPushButton("Clear List")
+        self.clear_list_button.clicked.connect(self._clear_downloader_list)
         self.download_button = QPushButton("Download mod(s)")
         self.download_button.clicked.connect(
-            partial(self.downloader_signal.emit, self.downloader_tracking_list)
+            partial(self.downloader_signal.emit, self.downloader_list_mods_tracking)
         )
 
         # BROWSER WIDGETS
@@ -144,6 +152,7 @@ class SteamcmdDownloader(QWidget):
         # Build the downloader layout
         self.downloader_layout.addWidget(self.downloader_label)
         self.downloader_layout.addWidget(self.downloader_list)
+        self.downloader_layout.addWidget(self.clear_list_button)
         self.downloader_layout.addWidget(self.download_button)
 
         # Build the browser layout
@@ -163,17 +172,21 @@ class SteamcmdDownloader(QWidget):
         self.setMinimumSize(QSize(800, 600))
 
     def _add_collection_or_mod_to_list(self):
-        searchtext_string = "&searchtext="
         # Ascertain the pfid depending on the url prefix
-        if self.url_prefix_mod in self.current_url:
-            publishedfileid = self.current_url.split(self.url_prefix_mod, 1)[1]
-            if searchtext_string in publishedfileid:
-                publishedfileid = publishedfileid.split(searchtext_string)[0]
+        if self.url_prefix_sharedfiles in self.current_url:
+            publishedfileid = self.current_url.split(self.url_prefix_sharedfiles, 1)[1]
+        elif self.url_prefix_workshop in self.current_url:
+            publishedfileid = self.current_url.split(self.url_prefix_workshop, 1)[1]
+        else:
+            logger.error(f"Unable to parse pfid from url: {self.current_url}")
+        # If there is extra data after the PFID, strip it
+        if self.searchtext_string in publishedfileid:
+            publishedfileid = publishedfileid.split(self.searchtext_string)[0]
+        # Handle collection vs individual mod
+        if "collectionItemDetails" not in self.current_html:
             self._add_mod_to_list(publishedfileid)
-        elif self.url_prefix_collection in self.current_url:
-            publishedfileid = self.current_url.split(self.url_prefix_collection, 1)[1]
-            if searchtext_string in publishedfileid:
-                publishedfileid = publishedfileid.split(searchtext_string)[0]
+        else:
+            # Use WebAPI to get titles for all the mods
             collection_mods_pfid_to_title = self.__compile_collection_datas(
                 publishedfileid
             )
@@ -189,8 +202,19 @@ class SteamcmdDownloader(QWidget):
                     text="Empty list of mods returned, unable to add collection to list!",
                     information="Please reach out to us on Github Issues page or\n#rimsort-testing on the Rocketman/CAI discord",
                 )
-        else:
-            logger.error(f"Unable to parse pfid from url: {self.current_url}")
+        if len(self.downloader_list_dupe_tracking.keys()) > 0:
+            # Build a report from our dict
+            dupe_report = ""
+            for pfid, name in self.downloader_list_dupe_tracking.items():
+                dupe_report = dupe_report + f"{name} | {pfid}\n"
+            # Notify the user
+            show_warning(
+                title="SteamCMD downloader",
+                text="You already have these mods in your download list!",
+                information="Skipping the following mods which are already present in your download list!",
+                details=dupe_report,
+            )
+            self.downloader_list_dupe_tracking = {}
 
     def __compile_collection_datas(self, publishedfileid: str) -> Dict[str, Any]:
         collection_mods_pfid_to_title = {}
@@ -236,31 +260,45 @@ class SteamcmdDownloader(QWidget):
         publishedfileid: str,
         title: Optional[str] = None,
     ):
-        if publishedfileid not in self.downloader_tracking_list:
-            self.downloader_tracking_list.append(publishedfileid)
-            logger.debug(f"Downloader list tracking: {self.downloader_tracking_list}")
-            if title is None or "":
-                label = QLabel(self.current_title.split("Steam Workshop::", 1)[1])
-            else:
-                label = QLabel(title)
-            label.setObjectName("ListItemLabel")
+        # Get the name from the page title
+        page_title = self.current_title.split("Steam Workshop::", 1)[1]
+        if publishedfileid not in self.downloader_list_mods_tracking:
+            # Add pfid to tracking list
+            logger.debug(
+                f"Downloader list tracking: {self.downloader_list_mods_tracking}"
+            )
+            self.downloader_list_mods_tracking.append(publishedfileid)
+            # Create our list item
             item = QListWidgetItem()
-            item.setSizeHint(
-                label.sizeHint()
-            )  # Set the size hint of the item to be the size of the label
-            item.setToolTip(f"{label.text()}\n--> {self.current_url}")
             item.setData(Qt.UserRole, publishedfileid)
+            # Set list item label
+            if not title:  # If title wasn't passed, get it from the web_view title
+                label = QLabel(page_title)
+                item.setToolTip(f"{label.text()}\n--> {self.current_url}")
+            else:  # If the title passed, use it
+                label = QLabel(title)
+                item.setToolTip(
+                    f"{label.text()}\n--> {self.url_prefix_sharedfiles}{publishedfileid}"
+                )
+            label.setObjectName("ListItemLabel")
+            # Set the size hint of the item to be the size of the label
+            item.setSizeHint(label.sizeHint())
             self.downloader_list.addItem(item)
             self.downloader_list.setItemWidget(item, label)
         else:
-            logger.warning(
+            logger.debug(
                 f"Tried to add duplicate PFID to downloader list: {publishedfileid}"
             )
-            show_warning(
-                title="SteamCMD downloader",
-                text=f"Unable to add to list: {publishedfileid}",
-                information="You already have this mod in your download list!",
-            )
+            if not publishedfileid in self.downloader_list_dupe_tracking.keys():
+                if not title:
+                    self.downloader_list_dupe_tracking[publishedfileid] = page_title
+                else:
+                    self.downloader_list_dupe_tracking[publishedfileid] = title
+
+    def _clear_downloader_list(self) -> None:
+        self.downloader_list.clear()
+        self.downloader_list_mods_tracking = []
+        self.downloader_list_dupe_tracking = {}
 
     def _downloader_item_ContextMenuEvent(self, point: QPoint) -> None:
         context_menu = QMenu(self)  # Downloader item context menu event
@@ -273,28 +311,39 @@ class SteamcmdDownloader(QWidget):
 
     def _remove_mod_from_list(self, context_item: QListWidgetItem) -> None:
         publishedfileid = context_item.data(Qt.UserRole)
-        if publishedfileid in self.downloader_tracking_list:
+        if publishedfileid in self.downloader_list_mods_tracking:
             self.downloader_list.takeItem(self.downloader_list.row(context_item))
-            self.downloader_tracking_list.remove(publishedfileid)
+            self.downloader_list_mods_tracking.remove(publishedfileid)
 
     def _web_view_load_started(self):
+        # Progress bar start, placeholder start
         self.progress_bar.show()
         self.web_view.hide()
         self.web_view_loading_placeholder.show()
 
     def _web_view_load_progress(self, progress: int):
+        # Progress bar progress
         self.progress_bar.setValue(progress)
+        # Placeholder done after page begins to load
         if progress > 25:
             self.web_view_loading_placeholder.hide()
             self.web_view.show()
 
     def _web_view_load_finished(self):
+        # Progress bar done
         self.progress_bar.hide()
         self.progress_bar.setValue(0)
-        self.current_url = self.web_view.url().toString()
+
+        # Cache information from page
         self.current_title = self.web_view.title()
+        self.web_view.page().toHtml(self.__set_current_html)
+        self.current_url = self.web_view.url().toString()
+
+        # Update UI elements
         self.setWindowTitle(self.current_title)
         self.location.setText(self.current_url)
+
+        # Check if we are browsing a collection/mod - remove elements if found
         if self.url_prefix_steam in self.current_url:
             # Remove "Install Steam" button
             install_button_removal_script = """
@@ -313,8 +362,11 @@ class SteamcmdDownloader(QWidget):
                 elements[0].parentNode.removeChild(elements[0]);
             }
             """
-            if self.url_prefix_mod in self.current_url:
-                # Remove area that shows "Subscribe to download" and "Subscribe"/"Unsubscribe" button
+            if (
+                self.url_prefix_sharedfiles in self.current_url
+                or self.url_prefix_workshop in self.current_url
+            ):
+                # Remove area that shows "Subscribe to download" and "Subscribe"/"Unsubscribe" button for mods
                 mod_subscribe_area_removal_script = """
                 var elements = document.getElementsByClassName("game_area_purchase_game");
                 while (elements.length > 0) {
@@ -324,10 +376,7 @@ class SteamcmdDownloader(QWidget):
                 self.web_view.page().runJavaScript(
                     mod_subscribe_area_removal_script, 0, lambda result: None
                 )
-                # Show the add_to_list_button
-                self.nav_bar.addAction(self.add_to_list_button)
-            elif self.url_prefix_collection in self.current_url:
-                # Remove area that shows "Subscribe to all" and "Unsubscribe to all" buttons
+                # Remove area that shows "Subscribe to all" and "Unsubscribe to all" buttons for collections
                 mod_unsubscribe_button_removal_script = """
                 var elements = document.getElementsByClassName("subscribeCollection");
                 while (elements.length > 0) {
@@ -337,7 +386,7 @@ class SteamcmdDownloader(QWidget):
                 self.web_view.page().runJavaScript(
                     mod_unsubscribe_button_removal_script, 0, lambda result: None
                 )
-                # Remove "Subscribe" buttons from any mods shown in the collection
+                # Remove "Subscribe" buttons from any mods shown in a collection
                 subscribe_buttons_removal_script = """
                 var elements = document.getElementsByClassName("general_btn subscribe");
                 while (elements.length > 0) {
@@ -351,6 +400,10 @@ class SteamcmdDownloader(QWidget):
                 self.nav_bar.addAction(self.add_to_list_button)
             else:
                 self.nav_bar.removeAction(self.add_to_list_button)
+
+    def __set_current_html(self, html: str) -> None:
+        # Update cached html with html from current page
+        self.current_html = html
 
 
 class SteamcmdInterface:
