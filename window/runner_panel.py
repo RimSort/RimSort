@@ -190,40 +190,36 @@ class RunnerPanel(QWidget):
         overwrite = False
         logger.debug(f"{self.process.program()}: {line}")
         # Hardcoded steamcmd progress output support
-        if (
+        if (  # -------STEAM-------
             self.process.state() == QProcess.Running
             and "steamcmd" in self.process.program()
         ):
-            if "] Downloading update (" in line:
+            if (
+                ("] Downloading update (" in line)
+                or ("] Installing update" in line)
+                or ("] Extracting package" in line)
+            ):
                 overwrite = True
             elif "Success. Downloaded item " in line:
                 self.progress_bar.setValue(self.progress_bar.value() + 1)
-        elif (
-            self.process.state() == QProcess.Running
-            and "steamcmd" in self.process.program()
-            and "] Extracting package" in line
-        ):
-            overwrite = True
-        elif (
-            self.process.state() == QProcess.Running
-            and "steamcmd" in self.process.program()
-            and "] Installing update" in line
-        ):
-            overwrite = True
+            # -------STEAM-------
+
+            # -------TODDS-------
         # Hardcoded todds progress output support
         elif (
             self.process.state() == QProcess.Running
             and "todds" in self.process.program()
-            and "Progress: " in line
         ):
-            overwrite = True
-        elif (  # Hardcoded todds --dry-run support - we don't want the total time output until jose fixes
-            self.todds_dry_run_support  # TODO: REMOVE THIS
-            and self.process.state() == QProcess.Running
-            and "todds" in self.process.program()
-            and "Total time: " in line
-        ):
-            return
+            if "Progress: " in line:
+                overwrite = True
+            elif (
+                self.todds_dry_run_support  # TODO: REMOVE THIS
+                # Hardcoded todds --dry-run support - we don't want the total time output until jose fixes
+                and ("Total time: " in line)
+            ):
+                return
+            # -------TODDS-------
+
         if overwrite:
             cursor = self.text.textCursor()
             cursor.movePosition(QTextCursor.End)
