@@ -8,7 +8,6 @@ import sys
 from time import time
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from window.runner_panel import RunnerPanel
 
 from steam.webapi import WebAPI
 

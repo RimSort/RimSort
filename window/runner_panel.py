@@ -17,6 +17,11 @@ from PySide6.QtWidgets import (
     QProgressBar,
 )
 
+from model.dialogue import show_warning
+from util.steam.webapi.wrapper import (
+    ISteamRemoteStorage_GetPublishedFileDetails as get_mod_data,
+)
+
 
 class RunnerPanel(QWidget):
     """
@@ -29,7 +34,7 @@ class RunnerPanel(QWidget):
         logger.info("Initializing RunnerPanel")
         self.ansi_escape = compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
         self.system = system()
-
+        self.warningmod = []
         # The "runner"
         self.text = QPlainTextEdit(readOnly=True)
         self.text.verticalScrollBar().setValue(self.text.verticalScrollBar().maximum())
@@ -202,6 +207,12 @@ class RunnerPanel(QWidget):
                 overwrite = True
             elif "Success. Downloaded item " in line:
                 self.progress_bar.setValue(self.progress_bar.value() + 1)
+            elif "ERROR ! Download item " in line:
+                self.progress_bar.setValue(self.progress_bar.value() + 1)
+                tempdata = line.split("ERROR ! Download item ")[1]
+                self.warningmod = self.warningmod + [
+                    tempdata[: tempdata.index("f") - 1]
+                ]  # f for failed
             # -------STEAM-------
 
             # -------TODDS-------
@@ -236,3 +247,16 @@ class RunnerPanel(QWidget):
                 self.process_killed = False
             else:
                 self.message("Subprocess completed.")
+                if "steamcmd" in self.process.program():
+                    if self.warningmod:
+                        tempdata = ""
+                        for i in get_mod_data(self.warningmod)["response"][
+                            "publishedfiledetails"
+                        ]:
+                            tempdata = tempdata + i["title"] + "\n"
+                    show_warning(
+                        title="WARNING steamcmd",
+                        text="Warning! some mod has failed to download.",
+                        information='Click "Show Details" to see the full report.',
+                        details=tempdata,
+                    )
