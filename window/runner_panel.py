@@ -248,15 +248,15 @@ class RunnerPanel(QWidget):
             else:
                 self.message("Subprocess completed.")
                 if "steamcmd" in self.process.program():
-                    if self.warningmod:
+                    if self.warningmod != []:
                         tempdata = ""
                         for i in get_mod_data(self.warningmod)["response"][
                             "publishedfiledetails"
                         ]:
                             tempdata = tempdata + i["title"] + "\n"
-                    show_warning(
-                        title="WARNING steamcmd",
-                        text="Warning! some mod has failed to download.",
-                        information='Click "Show Details" to see the full report.',
-                        details=tempdata,
-                    )
+                        show_warning(
+                            title="WARNING steamcmd",
+                            text="Warning! some mod has failed to download.",
+                            information='Click "Show Details" to see the full report.',
+                            details=tempdata,
+                        )
