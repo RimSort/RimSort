@@ -207,9 +207,9 @@ class RunnerPanel(QWidget):
                 overwrite = True
             elif "Success. Downloaded item " in line:
                 self.progress_bar.setValue(self.progress_bar.value() + 1)
-            elif "ERROR ! Download item " in line:
+            elif "ERROR! Download item " in line:
                 self.progress_bar.setValue(self.progress_bar.value() + 1)
-                tempdata = line.split("ERROR ! Download item ")[1]
+                tempdata = line.split("ERROR! Download item ")[1]
                 self.warningmod = self.warningmod + [
                     tempdata[: tempdata.index("f") - 1]
                 ]  # f for failed
