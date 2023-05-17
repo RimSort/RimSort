@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
 
 from model.dialogue import show_warning
 from util.steam.webapi.wrapper import (
-    ISteamRemoteStorage_GetPublishedFileDetails as get_mod_data,
+    ISteamRemoteStorage_GetPublishedFileDetails,
 )
 
 
@@ -31,10 +31,13 @@ class RunnerPanel(QWidget):
 
     def __init__(self, todds_dry_run_support=False):
         super().__init__()
+
         logger.info("Initializing RunnerPanel")
         self.ansi_escape = compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
         self.system = system()
-        self.warningmod = []
+
+        self.steamcmd_failed_mods = []  # Store failed mod ids
+        self.previousline = ""
         # The "runner"
         self.text = QPlainTextEdit(readOnly=True)
         self.text.verticalScrollBar().setValue(self.text.verticalScrollBar().maximum())
@@ -207,12 +210,12 @@ class RunnerPanel(QWidget):
                 overwrite = True
             elif "Success. Downloaded item " in line:
                 self.progress_bar.setValue(self.progress_bar.value() + 1)
-            elif "ERROR! Download item " in line:
+            elif "ERROR!" in line:
                 self.progress_bar.setValue(self.progress_bar.value() + 1)
-                tempdata = line.split("ERROR! Download item ")[1]
-                self.warningmod = self.warningmod + [
-                    tempdata[: tempdata.index("f") - 1]
-                ]  # f for failed
+                tempdata = self.previousline.split("workshop_download_item 294100")[1]
+                self.steamcmd_failed_mods = self.steamcmd_failed_mods + [
+                    tempdata[: tempdata.index("\n")]
+                ]
             # -------STEAM-------
 
             # -------TODDS-------
@@ -228,6 +231,7 @@ class RunnerPanel(QWidget):
                 # Hardcoded todds --dry-run support - we don't want the total time output until jose fixes
                 and ("Total time: " in line)
             ):
+                self.previousline = line
                 return
             # -------TODDS-------
 
@@ -239,6 +243,7 @@ class RunnerPanel(QWidget):
             cursor.insertText(line.strip())
         else:
             self.text.appendPlainText(line)
+        self.previousline = line
 
     def finished(self):
         if not self.todds_dry_run_support:
@@ -248,15 +253,22 @@ class RunnerPanel(QWidget):
             else:
                 self.message("Subprocess completed.")
                 if "steamcmd" in self.process.program():
-                    if self.warningmod != []:
-                        tempdata = ""
-                        for i in get_mod_data(self.warningmod)["response"][
-                            "publishedfiledetails"
-                        ]:
-                            tempdata = tempdata + i["title"] + "\n"
+                    if self.steamcmd_failed_mods != []:
+                        tempdata = "Failed to connect"  # Default value
+                        GetPublishedFileDetails = (
+                            ISteamRemoteStorage_GetPublishedFileDetails(
+                                self.steamcmd_failed_mods
+                            )
+                        )
+                        if GetPublishedFileDetails != None:
+                            tempdata = ""
+                            for i in GetPublishedFileDetails["response"][
+                                "publishedfiledetails"
+                            ]:
+                                tempdata = tempdata + i["title"] + "\n"
                         show_warning(
-                            title="WARNING steamcmd",
-                            text="Warning! some mod has failed to download.",
+                            title="SteamCMD downloader",
+                            text="SteamCMD failed to download mod(s)! Please try to download these mods again!",
                             information='Click "Show Details" to see the full report.',
                             details=tempdata,
                         )
