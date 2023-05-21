@@ -48,7 +48,9 @@ class GameConfiguration(QObject):
         logger.info("Starting GameConfiguration initialization")
         super(GameConfiguration, self).__init__()
 
-        self.storage_path = ""
+        self.storage_path = QStandardPaths.writableLocation(
+            QStandardPaths.AppLocalDataLocation
+        )
 
         # BASE LAYOUT
         self._panel = QVBoxLayout()
@@ -224,11 +226,23 @@ class GameConfiguration(QObject):
         self.local_folder_row.addWidget(self.local_folder_line)
         self.local_folder_row.addWidget(self.local_folder_select_button)
 
+        # RUN ARGUMENTS
+        self.run_arguments = ""
+
+        # STEAM APIKEY
+        self.steam_apikey = ""
+
+        # WEBAPI QUERY EXPIRY
+        self.webapi_query_expiry = 1800
+
         # DUPE MODS WARNING TOGGLE
         self.duplicate_mods_warning_toggle = False
 
         # STEAM MODS UPDATE CHECK TOGGLE
         self.steam_mods_update_check_toggle = False
+
+        # STEAMCMD INSTALL PATH
+        self.steamcmd_install_path = ""
 
         # STEAMCMD VALIDATE DOWNLOADS TOGGLE
         self.steamcmd_validate_downloads_toggle = False
@@ -244,15 +258,6 @@ class GameConfiguration(QObject):
 
         # TODDS OVERWRITE TOGGLE
         self.todds_overwrite_toggle = False
-
-        # RUN ARGUMENTS
-        self.run_arguments = ""
-
-        # STEAM APIKEY
-        self.steam_apikey = ""
-
-        # WEBAPI QUERY EXPIRY
-        self.webapi_query_expiry = 1800
 
         # CONTAINER LAYOUTS INTO BASE LAYOUT
         self.client_settings_frame = QFrame()
@@ -293,13 +298,12 @@ class GameConfiguration(QObject):
         self.settings_panel.steam_mods_update_checkbox.setChecked(
             self.steam_mods_update_check_toggle
         )
-
-        # STEAMCMD
+        # SteamCMD
         self.settings_panel.steamcmd_validate_downloads_checkbox.setChecked(
             self.steamcmd_validate_downloads_toggle
         )
 
-        # TODDS
+        # todds
         self.settings_panel.todds_active_mods_target_checkbox.setChecked(
             self.todds_active_mods_target_toggle
         )
@@ -359,10 +363,8 @@ class GameConfiguration(QObject):
         to have paths written on the settings.json.
         """
         logger.info("Starting storage initialization")
-        self.storage_path = QStandardPaths.writableLocation(
-            QStandardPaths.AppLocalDataLocation
-        )
         logger.info(f"Determined storage path: {self.storage_path}")
+        # Always check for storage path, create in OS-specific "app data" if it doesn't exist
         if not os.path.exists(self.storage_path):
             logger.info(f"Storage path [{self.storage_path}] does not exist")
             information = (
@@ -375,135 +377,126 @@ class GameConfiguration(QObject):
             os.makedirs(self.storage_path)
         settings_path = os.path.join(self.storage_path, "settings.json")
         logger.info(f"Determined settings file path: {settings_path}")
+        # Always check for settings path, create with defaults if it doesn't exist
         if not os.path.exists(settings_path):
             logger.info(f"Settings file [{settings_path}] does not exist")
             # Create a new empty settings.json file
-            init_settings: dict[str, Any] = {}
-            json_object = json.dumps(init_settings, indent=4)
-            logger.info(f"Creating empty JSON to write: [{json_object}]")
+            default_settings: dict[str, Any] = {
+                "sorting_algorithm": "RimPy",
+                "external_metadata_source": "None",
+                "webapi_query_expiry": 1800,
+                "duplicate_mods_warning": False,
+                "steam_mods_update_check": False,
+                "steamcmd_install_path": self.storage_path,
+                "steamcmd_validate_downloads": True,
+                "todds_preset": "medium",
+                "todds_active_mods_target": True,
+                "todds_dry_run": False,
+                "todds_overwrite": False,
+            }
+            json_object = json.dumps(default_settings, indent=4)
+            logger.info(f"Writing default settings to: [{json_object}]")
             with open(settings_path, "w") as outfile:
                 logger.info("Writing empty JSON to file")
                 outfile.write(json_object)
-        else:
-            logger.info(f"Settings file [{settings_path}] exists. Opening file")
-            with open(settings_path) as infile:
-                logger.info("Loading JSON from file")
-                settings_data = json.load(infile)
-                logger.debug(f"JSON has been loaded: {settings_data}")
-                logger.info("Setting relevant QLineEdits now")
+        # RimSort depends on this settings.json file existing.
+        # This should automatically be prepopulated with defaults above, or from user configuration.
+        logger.info(f"Settings file [{settings_path}] exists. Opening file")
+        with open(settings_path) as infile:
+            logger.info("Loading JSON from file")
+            settings_data = json.load(infile)
+            logger.info("Setting relevant QLineEdits now")
 
-                # Game configuration paths
-                if settings_data.get("game_folder"):
-                    game_folder_path = settings_data["game_folder"]
-                    if os.path.exists(game_folder_path):
-                        self.game_folder_line.setText(game_folder_path)
-                    else:
-                        logger.warning(
-                            f"The game folder that was loaded does not exist: {game_folder_path}"
-                        )
-                if settings_data.get("config_folder"):
-                    config_folder_path = settings_data["config_folder"]
-                    if os.path.exists(config_folder_path):
-                        self.config_folder_line.setText(config_folder_path)
-                    else:
-                        logger.warning(
-                            f"The config folder that was loaded does not exist: {config_folder_path}"
-                        )
-                if settings_data.get("workshop_folder"):
-                    workshop_folder_path = settings_data["workshop_folder"]
-                    if os.path.exists(workshop_folder_path):
-                        self.workshop_folder_line.setText(workshop_folder_path)
-                    else:
-                        logger.warning(
-                            f"The workshop folder that was loaded does not exist: {workshop_folder_path}"
-                        )
-                if settings_data.get("local_folder"):
-                    local_folder_path = settings_data["local_folder"]
-                    if os.path.exists(local_folder_path):
-                        self.local_folder_line.setText(local_folder_path)
-                    else:
-                        logger.warning(
-                            f"The local folder that was loaded does not exist: {local_folder_path}"
-                        )
-
-                # sorting algorithm
-                if settings_data.get("sorting_algorithm"):
-                    self.settings_panel.sorting_algorithm_cb.setCurrentText(
-                        settings_data["sorting_algorithm"]
-                    )
-
-                # metadata
-                if settings_data.get("external_metadata_source"):
-                    self.settings_panel.external_metadata_cb.setCurrentText(
-                        settings_data["external_metadata_source"]
-                    )
-
-                # game & steam settings
-                if settings_data.get("runArgs"):
-                    self.run_arguments = settings_data["runArgs"]
-                if settings_data.get("steam_apikey"):
-                    self.steam_apikey = settings_data["steam_apikey"]
-                if not settings_data.get("webapi_query_expiry"):
-                    settings_data["webapi_query_expiry"] = 1800
-                self.webapi_query_expiry = settings_data["webapi_query_expiry"]
-
-                # misc
-                if not settings_data.get("duplicate_mods_warning"):
-                    settings_data["duplicate_mods_warning"] = False
-                self.duplicate_mods_warning_toggle = settings_data[
-                    "duplicate_mods_warning"
-                ]
-                if not settings_data.get("steam_mods_update_check"):
-                    settings_data["steam_mods_update_check"] = True
-                self.steam_mods_update_check_toggle = settings_data[
-                    "steam_mods_update_check"
-                ]
-
-                # steamcmd
-                if not settings_data.get("steamcmd_validate_downloads"):
-                    settings_data["steamcmd_validate_downloads"] = False
-                self.steamcmd_validate_downloads_toggle = settings_data[
-                    "steamcmd_validate_downloads"
-                ]
-                if not settings_data.get("steamcmd_install_path"):
-                    settings_data["steamcmd_install_path"] = self.storage_path
-                self.steamcmd_install_path = settings_data["steamcmd_install_path"]
-                if os.path.exists(self.steamcmd_install_path):
-                    self.update_persistent_storage(
-                        "steamcmd_install_path", self.steamcmd_install_path
-                    )
+            # Game configuration paths
+            if settings_data.get("game_folder"):
+                game_folder_path = settings_data["game_folder"]
+                if os.path.exists(game_folder_path):
+                    self.game_folder_line.setText(game_folder_path)
                 else:
                     logger.warning(
-                        f"Configured steamcmd prefix does not exist. Creating new steamcmd prefix at: {self.steamcmd_install_path}"
+                        f"The game folder that was loaded does not exist: {game_folder_path}"
+                    )
+            if settings_data.get("config_folder"):
+                config_folder_path = settings_data["config_folder"]
+                if os.path.exists(config_folder_path):
+                    self.config_folder_line.setText(config_folder_path)
+                else:
+                    logger.warning(
+                        f"The config folder that was loaded does not exist: {config_folder_path}"
+                    )
+            if settings_data.get("workshop_folder"):
+                workshop_folder_path = settings_data["workshop_folder"]
+                if os.path.exists(workshop_folder_path):
+                    self.workshop_folder_line.setText(workshop_folder_path)
+                else:
+                    logger.warning(
+                        f"The workshop folder that was loaded does not exist: {workshop_folder_path}"
+                    )
+            if settings_data.get("local_folder"):
+                local_folder_path = settings_data["local_folder"]
+                if os.path.exists(local_folder_path):
+                    self.local_folder_line.setText(local_folder_path)
+                else:
+                    logger.warning(
+                        f"The local folder that was loaded does not exist: {local_folder_path}"
                     )
 
-                # todds
-                if not settings_data.get("todds_preset"):
-                    settings_data["todds_preset"] = "medium"
-                self.todds_preset = settings_data["todds_preset"]
-                if self.todds_preset == "low":
-                    self.settings_panel.todds_presets_cb.setCurrentText(
-                        "Low (for toasters)"
-                    )
-                if self.todds_preset == "medium":
-                    self.settings_panel.todds_presets_cb.setCurrentText(
-                        "Medium (recommended)"
-                    )
-                if self.todds_preset == "high":
-                    self.settings_panel.todds_presets_cb.setCurrentText(
-                        "High (supercomputers!)"
-                    )
-                if not settings_data.get("todds_active_mods_target"):
-                    settings_data["todds_active_mods_target"] = False
-                self.todds_active_mods_target_toggle = settings_data[
-                    "todds_active_mods_target"
-                ]
-                if not settings_data.get("todds_dry_run"):
-                    settings_data["todds_dry_run"] = False
-                self.todds_dry_run_toggle = settings_data["todds_dry_run"]
-                if not settings_data.get("todds_overwrite"):
-                    settings_data["todds_overwrite"] = False
-                self.todds_overwrite_toggle = settings_data["todds_overwrite"]
+            # sorting algorithm
+            if settings_data.get("sorting_algorithm"):
+                self.settings_panel.sorting_algorithm_cb.setCurrentText(
+                    settings_data["sorting_algorithm"]
+                )
+
+            # metadata
+            if settings_data.get("external_metadata_source"):
+                self.settings_panel.external_metadata_cb.setCurrentText(
+                    settings_data["external_metadata_source"]
+                )
+
+            # game & steam settings
+            if settings_data.get("runArgs"):
+                self.run_arguments = settings_data["runArgs"]
+            if settings_data.get("steam_apikey"):
+                self.steam_apikey = settings_data["steam_apikey"]
+            if settings_data.get("webapi_query_expiry"):
+                self.webapi_query_expiry = settings_data["webapi_query_expiry"]
+
+            # misc
+            self.duplicate_mods_warning_toggle = settings_data["duplicate_mods_warning"]
+            self.steam_mods_update_check_toggle = settings_data[
+                "steam_mods_update_check"
+            ]
+
+            # steamcmd
+            self.steamcmd_validate_downloads_toggle = settings_data[
+                "steamcmd_validate_downloads"
+            ]
+            self.steamcmd_install_path = settings_data["steamcmd_install_path"]
+            if not os.path.exists(self.steamcmd_install_path):
+                logger.warning(
+                    f"Configured steamcmd prefix does not exist. Creating new steamcmd prefix at: {self.steamcmd_install_path}"
+                )  # This shouldn't be happening, but we check it anyways.
+                os.makedirs(self.steamcmd_install_path)
+
+            # todds
+            self.todds_preset = settings_data["todds_preset"]
+            if self.todds_preset == "low":
+                self.settings_panel.todds_presets_cb.setCurrentText(
+                    "Low quality (for low VRAM/older GPU, optimize for VRAM)"
+                )
+            if self.todds_preset == "medium":
+                self.settings_panel.todds_presets_cb.setCurrentText(
+                    "High quality (default, good textures, long encode time)"
+                )
+            if self.todds_preset == "high":
+                self.settings_panel.todds_presets_cb.setCurrentText(
+                    "Very high quality (better textures, longer encode time)"
+                )
+            self.todds_active_mods_target_toggle = settings_data[
+                "todds_active_mods_target"
+            ]
+            self.todds_dry_run_toggle = settings_data["todds_dry_run"]
+            self.todds_overwrite_toggle = settings_data["todds_overwrite"]
 
         logger.info("Finished storage initialization")
 
@@ -517,7 +510,7 @@ class GameConfiguration(QObject):
         the rest of the application while the settings panel is open.
         """
         logger.info("Calling Settings Panel initialization")
-        self.settings_panel = SettingsPanel()
+        self.settings_panel = SettingsPanel(self.storage_path)
         self.settings_panel.setWindowModality(Qt.ApplicationModal)
         self.settings_panel.finished.connect(self.on_settings_close)
 
@@ -565,11 +558,11 @@ class GameConfiguration(QObject):
             self.update_persistent_storage("steamcmd_validate_downloads", False)
 
         # todds preset
-        if "Low" in self.settings_panel.todds_presets_cb.currentText():
+        if "Low quality" in self.settings_panel.todds_presets_cb.currentText():
             self.todds_preset = "low"
-        if "Medium" in self.settings_panel.todds_presets_cb.currentText():
+        if "High quality" in self.settings_panel.todds_presets_cb.currentText():
             self.todds_preset = "medium"
-        if "High" in self.settings_panel.todds_presets_cb.currentText():
+        if "Very high quality" in self.settings_panel.todds_presets_cb.currentText():
             self.todds_preset = "high"
         self.update_persistent_storage("todds_preset", self.todds_preset)
         # todds active mods target
@@ -741,19 +734,14 @@ class GameConfiguration(QObject):
         :param value: value to replace
         """
         logger.info("Updating persistent storage")
-        self.storage_path = QStandardPaths.writableLocation(
-            QStandardPaths.AppLocalDataLocation
-        )
         settings_path = os.path.join(self.storage_path, "settings.json")
         logger.info(f"Generated settings.json path: {settings_path}")
         if os.path.exists(settings_path):
             logger.info("settings.json exists, opening to write")
             with open(settings_path) as infile:
                 settings_data = json.load(infile)
-                logger.debug(f"Read JSON data: {settings_data}")
                 settings_data[key] = value
                 json_object = json.dumps(settings_data, indent=4)
-                logger.debug(f"JSON data to write: {json_object}")
                 with open(settings_path, "w") as outfile:
                     outfile.write(json_object)
                     logger.info("JSON data written")
@@ -833,7 +821,7 @@ class GameConfiguration(QObject):
                 f"{expanduser('~')}/.steam/debian-installation/steamapps/workshop/content/294100",
             ]
         else:
-            linux_paths = [ #TODO detect the path and not having hardcoded thing
+            linux_paths = [  # TODO detect the path and not having hardcoded thing
                 f"{expanduser('~')}/.steam/steam/steamapps/common/RimWorld",
                 f"{expanduser('~')}/.config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios/Config",
                 f"{expanduser('~')}/.steam/steam/steamapps/workshop/content/294100",

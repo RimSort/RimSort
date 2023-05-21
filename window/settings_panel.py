@@ -3,18 +3,27 @@ from logger_tt import logger
 import os
 from pathlib import Path
 import sys
+from tempfile import gettempdir
 
 from PySide6.QtCore import QSize, QStandardPaths, Qt, Signal
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QDialog,
+    QHBoxLayout,
     QLabel,
     QPushButton,
+    QStyledItemDelegate,
     QVBoxLayout,
 )
 
 from util.generic import platform_specific_open, upload_data_to_0x0_st
+
+
+class CenteredItemDelegate(QStyledItemDelegate):
+    def initStyleOption(self, option, index):
+        super().initStyleOption(option, index)
+        option.displayAlignment = Qt.AlignCenter
 
 
 class SettingsPanel(QDialog):
@@ -23,15 +32,18 @@ class SettingsPanel(QDialog):
     metadata_comparison_signal = Signal(str)
     set_webapi_query_expiry_signal = Signal(str)
 
-    def __init__(self) -> None:
+    def __init__(self, storage_path: str) -> None:
         logger.info("Starting SettingsPanel initialization")
         super(SettingsPanel, self).__init__()
+
+        self.storage_path = storage_path
 
         # Create window
         self.setFixedSize(QSize(500, 500))
         self.setWindowTitle("Settings")
 
         # Allow for styling
+        self.centered_item_delegate = CenteredItemDelegate()
         self.setObjectName("settingsPanel")
 
         # Create main layout
@@ -41,6 +53,7 @@ class SettingsPanel(QDialog):
         # Create widgets
         self.general_label = QLabel("General")
         self.general_label.setObjectName("summaryValue")
+        self.general_label.setAlignment(Qt.AlignCenter)
         self.clear_paths_button = QPushButton("Clear Paths")
         self.clear_paths_button.clicked.connect(
             partial(self.clear_paths_signal.emit, "clear_paths")
@@ -49,7 +62,7 @@ class SettingsPanel(QDialog):
         self.open_log_button.clicked.connect(
             partial(
                 platform_specific_open,
-                os.path.join(os.path.dirname(sys.argv[0]), "RimSort.log"),
+                os.path.join(gettempdir(), "RimSort.log"),
             )
         )
         self.upload_log_button = QPushButton("Upload RimSort Log")
@@ -60,30 +73,34 @@ class SettingsPanel(QDialog):
         self.upload_log_button.clicked.connect(
             partial(
                 upload_data_to_0x0_st,
-                os.path.join(os.path.dirname(sys.argv[0]), "RimSort.log"),
+                os.path.join(gettempdir(), "RimSort.log"),
             )
         )
         self.open_storage_button = QPushButton("Open Storage Dir")
         self.open_storage_button.clicked.connect(
             partial(
                 platform_specific_open,
-                QStandardPaths.writableLocation(QStandardPaths.AppLocalDataLocation),
+                self.storage_path,
             )
         )
 
         # sorting algorithm
         self.sorting_algorithm_label = QLabel("Sorting Algorithm")
         self.sorting_algorithm_label.setObjectName("summaryValue")
+        self.sorting_algorithm_label.setAlignment(Qt.AlignCenter)
         self.sorting_algorithm_cb = QComboBox()
         self.sorting_algorithm_cb.addItems(["RimPy", "Topological"])
+        self.sorting_algorithm_cb.setItemDelegate(self.centered_item_delegate)
 
         # metadata
         self.metadata_label = QLabel("Metadata")
         self.metadata_label.setObjectName("summaryValue")
+        self.metadata_label.setAlignment(Qt.AlignCenter)
         self.external_metadata_cb = QComboBox()
         self.external_metadata_cb.addItems(
             ["RimPy Mod Manager Database", "RimSort Dynamic Query", "None"]
         )
+        self.external_metadata_cb.setItemDelegate(self.centered_item_delegate)
         self.appidquery_button = QPushButton("Cache AppIDQuery")
         self.appidquery_button.clicked.connect(
             partial(self.appidquery_signal.emit, 294100)
@@ -117,24 +134,34 @@ class SettingsPanel(QDialog):
         )
 
         # steamcmd
-        self.steamcmd_label = QLabel("steamcmd")
+        self.steamcmd_label = QLabel("SteamCMD")
         self.steamcmd_label.setObjectName("summaryValue")
+        self.steamcmd_label.setAlignment(Qt.AlignCenter)
         self.steamcmd_validate_downloads_checkbox = QCheckBox(
             "Force SteamCMD to validate downloaded workshop mods"
         )
         self.steamcmd_validate_downloads_checkbox.setObjectName("summaryValue")
 
         # todds
-        self.todds_label = QLabel("todds options")
+        self.todds_label = QLabel("todds Options")
         self.todds_label.setObjectName("summaryValue")
+        self.todds_label.setAlignment(Qt.AlignCenter)
+        # layout for Quality preset
+        self.todds_preset_layout = QHBoxLayout()
+        self.todds_preset_label = QLabel("Quality preset:")
+        self.todds_preset_label.setObjectName("summaryValue")
         self.todds_presets_cb = QComboBox()
         self.todds_presets_cb.addItems(
             [
-                "Low (for toasters)",
-                "Medium (recommended)",
-                "High (supercomputers!)",
+                "Low quality (for low VRAM/older GPU, optimize for VRAM)",
+                "High quality (default, good textures, long encode time)",
+                "Very high quality (better textures, longer encode time)",
             ]
         )
+        # QComboBox alignment is hardcoded...? too lazy to override...
+        # https://stackoverflow.com/questions/41497773/align-text-in-a-qcombobox-without-making-it-editable
+        self.todds_presets_cb.setStyleSheet("QComboBox {" "   padding-left: 25px;" "}")
+        self.todds_presets_cb.setItemDelegate(self.centered_item_delegate)
         self.todds_active_mods_target_checkbox = QCheckBox(
             "Force todds to only target mods in the active mods list"
         )
@@ -185,7 +212,9 @@ class SettingsPanel(QDialog):
         self.layout.addWidget(self.steamcmd_validate_downloads_checkbox)
 
         self.layout.addWidget(self.todds_label)
-        self.layout.addWidget(self.todds_presets_cb)
+        self.todds_preset_layout.addWidget(self.todds_preset_label, 0)
+        self.todds_preset_layout.addWidget(self.todds_presets_cb, 10)
+        self.layout.addLayout(self.todds_preset_layout)
         self.layout.addWidget(self.todds_active_mods_target_checkbox)
         self.layout.addWidget(self.todds_dry_run_checkbox)
         self.layout.addWidget(self.todds_overwrite_checkbox)

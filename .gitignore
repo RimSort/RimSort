@@ -166,7 +166,6 @@ pyvenv.cfg
 
 # RimSort
 .DS_Store
-.vscode/
 test*
 data/steam*
 *.xml

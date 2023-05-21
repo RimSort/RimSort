@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import platform
 from requests.exceptions import HTTPError
+from tempfile import gettempdir
 import traceback
 
 from logger_tt import handlers, logger, setup_logging
@@ -30,7 +31,7 @@ system = platform.system()
 # Otherwise, use sys.argv[0] to get the actual relative path to the executable
 data_path = os.path.join(os.path.dirname(__file__), "data")
 logging_config_path = os.path.join(data_path, "logging_config.json")
-logging_file_path = os.path.join(os.path.dirname(sys.argv[0]), "RimSort.log")
+logging_file_path = os.path.join(gettempdir(), "RimSort.log")
 
 # Setup Environment
 if is_nuitka:

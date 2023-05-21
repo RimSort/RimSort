@@ -477,8 +477,7 @@ class SteamcmdInterface:
                 else:
                     script.append(f"workshop_download_item {appid} {publishedfileid}")
             script.extend(["quit\n"])
-            tempdir = gettempdir()
-            script_path = os.path.join(tempdir, "steamcmd_download_mods.txt")
+            script_path = os.path.join(gettempdir(), "steamcmd_download_mods.txt")
             with open(script_path, "w") as script_output:
                 script_output.write("\n".join(script))
             runner.message(f"Compiled & using script: {script_path}")
@@ -600,8 +599,7 @@ class SteamcmdInterface:
                 f"workshop_status {appid}",
                 "quit\n",
             ]
-            tempdir = gettempdir()
-            script_path = os.path.join(tempdir, "steamcmd_script.txt")
+            script_path = os.path.join(gettempdir(), "steamcmd_script.txt")
             with open(script_path, "w") as script_output:
                 script_output.write("\n".join(script))
             runner.message(f"Compiled & using script: {script_path}")

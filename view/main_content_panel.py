@@ -611,8 +611,7 @@ class MainContent:
         if "textures" in action:
             logger.warning("Initiating new todds operation...")
             # Setup Environment
-            tempdir = gettempdir()
-            todds_txt_path = os.path.join(tempdir, "todds.txt")
+            todds_txt_path = os.path.join(gettempdir(), "todds.txt")
             if os.path.exists(todds_txt_path):
                 os.remove(todds_txt_path)
             if not self.game_configuration.todds_active_mods_target_toggle:
