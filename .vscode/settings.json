@@ -1,5 +1,8 @@
 {
-    "python.linting.mypyEnabled": true,
     "python.linting.enabled": true,
+    "python.linting.mypyEnabled": true,
+    "python.linting.pylintArgs": [
+        "--enable=W0614"
+    ],
     "python.terminal.activateEnvironment": true
 }

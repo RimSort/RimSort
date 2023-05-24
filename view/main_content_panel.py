@@ -712,76 +712,97 @@ class MainContent:
             len(self.game_configuration.steam_apikey) == 32
         ):  # If apikey is 32 characters
             logger.info("Retreived valid Steam API key from settings")
-            try:  # Since the key is valid, we try to launch a live query
-                appid = 294100
-                logger.info(
-                    f"Initializing AppIDQuery with configured Steam API key for AppID: {appid}..."
-                )
-                appid_query = AppIDQuery(self.game_configuration.steam_apikey, appid)
-                all_publishings_metadata_query = DynamicQuery(
-                    self.game_configuration.steam_apikey,
-                    appid,
-                    self.game_configuration.webapi_query_expiry,
-                )
-                db = {}
-                db["version"] = all_publishings_metadata_query.expiry
-                db["database"] = {}
-                logger.info(
-                    f"Populating {str(len(appid_query.publishedfileids))} empty keys into initial database for "
-                    + f"{appid}."
-                )
-                for publishedfileid in appid_query.publishedfileids:
-                    db["database"][publishedfileid] = {
-                        "url": f"https://steamcommunity.com/sharedfiles/filedetails/?id={publishedfileid}"
-                    }
-                publishedfileids = appid_query.publishedfileids
-                logger.info(
-                    f"Populated {str(len(appid_query.publishedfileids))} PublishedFileIds into database"
-                )
-                appid_query.all_mods_metadata = (
-                    all_publishings_metadata_query.cache_parsable_db_data(
-                        db, publishedfileids
-                    )
-                )
-                db_output_path = os.path.join(
-                    self.game_configuration.storage_path, f"{appid}_AppIDQuery.json"
-                )
-                logger.info(f"Caching DynamicQuery result: {db_output_path}")
-                with open(db_output_path, "w") as output:
-                    json.dump(appid_query.all_mods_metadata, output, indent=4)
-            except HTTPError:
-                stacktrace = traceback.format_exc()
-                pattern = "&key="
-                stacktrace = stacktrace[
-                    : len(stacktrace)
-                    - (len(stacktrace) - (stacktrace.find(pattern) + len(pattern)))
-                ]  # If an HTTPError from steam/urllib3 module(s) somehow is uncaught, try to remove the Steam API key from the stacktrace
-                show_fatal_error(
-                    text="RimSort Dynamic Query",
-                    information="DynamicQuery failed to initialize database.\nThere is no external metadata being factored for sorting!\n\nCached Dynamic Query database not found!\n\nFailed to initialize new DynamicQuery with configured Steam API key.\n\nAre you connected to the internet?\n\nIs your configured key invalid or revoked?\n\nPlease right-click the 'Refresh' button and configure a valid Steam API key so that you can generate a database.\n\nPlease reference: https://github.com/oceancabbage/RimSort/wiki/User-Guide#obtaining-your-steam-api-key--using-it-with-rimsort-dynamic-query",
-                    details=stacktrace,
-                )
-            except SSLError:
-                stacktrace = traceback.format_exc()
-                pattern = "&key="
-                stacktrace = stacktrace[
-                    : len(stacktrace)
-                    - (len(stacktrace) - (stacktrace.find(pattern) + len(pattern)))
-                ]  # If an SSLError from steam/urllib3 module(s) somehow is uncaught, try to remove the Steam API key from the stacktrace
-                show_fatal_error(
-                    text="RimSort Dynamic Query",
-                    information="DynamicQuery failed to initialize database.\nThere is no external metadata being factored for sorting!\n\nCached Dynamic Query database not found!\n\nFailed to initialize new DynamicQuery with configured Steam API key.\n\nAre you connected to the internet?\n\nIs your configured key invalid or revoked?\n\nPlease right-click the 'Refresh' button and configure a valid Steam API key so that you can generate a database.\n\nPlease reference: https://github.com/oceancabbage/RimSort/wiki/User-Guide#obtaining-your-steam-api-key--using-it-with-rimsort-dynamic-query",
-                    details=stacktrace,
-                )
-            finally:
+            # Since the key is valid, we try to launch a live query
+            appid = 294100
+            logger.info(
+                f"Initializing AppIDQuery with configured Steam API key for AppID: {appid}..."
+            )
+            appid_query = AppIDQuery(self.game_configuration.steam_apikey, appid)
+            all_publishings_metadata_query = DynamicQuery(
+                self.game_configuration.steam_apikey,
+                appid,
+                self.game_configuration.webapi_query_expiry,
+            )
+            if not len(appid_query.publishedfileids) > 0:  # If we didn't get any pfids
                 # We always want to reset this when we are done
                 self.appidquery_live = False
                 try:
                     self.appidquery_thread.join()
-                except:
-                    logger.debug(
+                except Exception as e:
+                    e_name = e.__class__.__name__
+                    stacktrace = traceback.format_exc()
+                    logger.warning(
+                        f"AppIDQuery failed to join thread. Received exception: {e_name}"
+                    )
+                    logger.debug(f"{stacktrace}")
+                    logger.warning(
                         "Unable to join AppIDQuery thread to main thread. This is probably because you closed the main thread while your AppIDQuery was still running. Silly goose."
                     )
+                return  # Exit operation
+            db = {}
+            db["version"] = all_publishings_metadata_query.expiry
+            db["database"] = {}
+            logger.info(
+                f"Populating {str(len(appid_query.publishedfileids))} empty keys into initial database for "
+                + f"{appid}."
+            )
+            for publishedfileid in appid_query.publishedfileids:
+                db["database"][publishedfileid] = {
+                    "url": f"https://steamcommunity.com/sharedfiles/filedetails/?id={publishedfileid}"
+                }
+            publishedfileids = appid_query.publishedfileids
+            logger.info(
+                f"Populated {str(len(appid_query.publishedfileids))} PublishedFileIds into database"
+            )
+            appid_query.all_mods_metadata = (
+                all_publishings_metadata_query.cache_parsable_db_data(
+                    db, publishedfileids
+                )
+            )
+            # None check, if None, this means that our query failed!
+            if appid_query.all_mods_metadata is None:
+                show_warning(
+                    text="Unable to complete AppIDQuery",
+                    information="DynamicQuery failed to initialize database.\nThere is no external metadata being factored for sorting!\n\n"
+                    + "Failed to initialize new DynamicQuery with configured Steam API key.\n\n"
+                    + "Please right-click the 'Refresh' button and ensure that you have configure a valid Steam API key so that you can generate a database.\n\n"
+                    + "Please reference: https://github.com/oceancabbage/RimSort/wiki/User-Guide#obtaining-your-steam-api-key--using-it-with-rimsort-dynamic-query",
+                )
+                # We always want to reset this when we are done
+                self.appidquery_live = False
+                try:
+                    self.appidquery_thread.join()
+                except Exception as e:
+                    e_name = e.__class__.__name__
+                    stacktrace = traceback.format_exc()
+                    logger.warning(
+                        f"AppIDQuery failed to join thread. Received exception: {e_name}"
+                    )
+                    logger.debug(f"{stacktrace}")
+                    logger.warning(
+                        "Unable to join AppIDQuery thread to main thread. This is probably because you closed the main thread while your AppIDQuery was still running. Silly goose."
+                    )
+                return
+            db_output_path = os.path.join(
+                self.game_configuration.storage_path, f"{appid}_AppIDQuery.json"
+            )
+            logger.info(f"Caching DynamicQuery result: {db_output_path}")
+            with open(db_output_path, "w") as output:
+                json.dump(appid_query.all_mods_metadata, output, indent=4)
+            # We always want to reset this when we are done
+            self.appidquery_live = False
+            try:
+                self.appidquery_thread.join()
+            except Exception as e:
+                e_name = e.__class__.__name__
+                stacktrace = traceback.format_exc()
+                logger.warning(
+                    f"AppIDQuery failed to join thread. Received exception: {e_name}"
+                )
+                logger.debug(f"{stacktrace}")
+                logger.warning(
+                    "Unable to join AppIDQuery thread to main thread. This is probably because you closed the main thread while your AppIDQuery was still running. Silly goose."
+                )
 
     def _do_appidquery_thread(self, appid: int) -> None:
         logger.info("Checking for live AppIDQuery...")

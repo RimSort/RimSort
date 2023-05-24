@@ -6,11 +6,13 @@ from requests import post as requests_post
 from requests.exceptions import HTTPError, JSONDecodeError
 import sys
 from time import time
+import traceback
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from window.runner_panel import RunnerPanel
 
 from steam.webapi import WebAPI
+from model.dialogue import show_fatal_error
 
 
 # This is redundant since it is also done in `logger-tt` config,
@@ -27,23 +29,50 @@ class AppIDQuery:
 
     def __init__(self, apikey: str, appid: int):
         self.all_mods_metadata = {}
-        self.api = WebAPI(apikey, format="json", https=True)
+        try:  # Try to initialize the API
+            self.api = WebAPI(apikey, format="json", https=True)
+        except Exception as e:
+            self.api = None
+            # Catch exceptions that can potentially leak Steam API key
+            e_name = e.__class__.__name__
+            stacktrace = traceback.format_exc()
+            pattern = "&key="
+            if pattern in stacktrace:
+                stacktrace = stacktrace[
+                    : len(stacktrace)
+                    - (len(stacktrace) - (stacktrace.find(pattern) + len(pattern)))
+                ]  # If an HTTPError/SSLError from steam/urllib3 module(s) somehow is uncaught, try to remove the Steam API key from the stacktrace
+            logger.error(
+                f"Dynamic Query received an uncaught exception: {e_name}\nPlease reach out to us on Discord/Github!"
+            )
+            show_fatal_error(
+                text="RimSort Dynamic Query",
+                information="DynamicQuery failed to initialize WebAPI query!\n\n"
+                + "Are you connected to the internet?\n\nIs your configured key invalid or revoked?\n\n",
+                details=stacktrace,
+            )
         self.apikey = apikey
         self.appid = appid
         self.next_cursor = "*"
         self.pagenum = 1
         self.pages = 1
         self.publishedfileids = []
-        self.query = True
         self.total = 0
-        logger.info(
-            f"AppIDQuery initializing... Compiling list of all Workshop mod PublishedFileIDs for {self.appid}..."
-        )
-        while self.query:
-            if self.pagenum > self.pages:
-                self.query = False
-                break
-            self.next_cursor = self.IPublishedFileService_QueryFiles(self.next_cursor)
+        if self.api:
+            self.query = True
+            logger.info(
+                f"AppIDQuery initializing... Compiling list of all Workshop mod PublishedFileIDs for {self.appid}..."
+            )
+            while self.query:
+                if self.pagenum > self.pages:
+                    self.query = False
+                    break
+                self.next_cursor = self.IPublishedFileService_QueryFiles(
+                    self.next_cursor
+                )
+        else:
+            self.query = False
+            logger.warning(f"AppIDQuery: WebAPI failed to initialize!")
 
     def IPublishedFileService_QueryFiles(self, cursor: str) -> str:
         """
@@ -64,7 +93,6 @@ class AppIDQuery:
         `cursor` parameter being returned to the FOLLOWING loop in our series of
         WebAPI.call() results that are being are parsing
         """
-
         result = self.api.call(
             method_path="IPublishedFileService.QueryFiles",
             key=self.apikey,
@@ -136,7 +164,28 @@ class DynamicQuery:
     """
 
     def __init__(self, apikey: str, appid: int, life: int):
-        self.api = WebAPI(apikey, format="json", https=True)
+        try:  # Try to initialize the API
+            self.api = WebAPI(apikey, format="json", https=True)
+        except Exception as e:
+            self.api = None
+            # Catch exceptions that can potentially leak Steam API key
+            e_name = e.__class__.__name__
+            stacktrace = traceback.format_exc()
+            pattern = "&key="
+            if pattern in stacktrace:
+                stacktrace = stacktrace[
+                    : len(stacktrace)
+                    - (len(stacktrace) - (stacktrace.find(pattern) + len(pattern)))
+                ]  # If an HTTPError/SSLError from steam/urllib3 module(s) somehow is uncaught, try to remove the Steam API key from the stacktrace
+            logger.error(
+                f"Dynamic Query received an uncaught exception: {e_name}\nPlease reach out to us on Discord/Github!"
+            )
+            show_fatal_error(
+                text="RimSort Dynamic Query",
+                information="DynamicQuery failed to initialize WebAPI query!\n\n"
+                + "Are you connected to the internet?\n\nIs your configured key invalid or revoked?\n\n",
+                details=stacktrace,
+            )
         self.apikey = apikey
         self.appid = appid
         self.expiry = self.__expires(life)
@@ -158,7 +207,7 @@ class DynamicQuery:
 
     def cache_parsable_db_data(
         self, database: Dict[str, Any], publishedfileids: list
-    ) -> Dict[Any, Any]:
+    ) -> Optional[Dict[Any, Any]]:
         """
         Builds a database using a chunked WebAPI query of all available PublishedFileIds
         that are pulled from local mod metadata.
@@ -167,7 +216,9 @@ class DynamicQuery:
         :return: a RimPy Mod Manager db_data["database"] equivalent, stitched together from
         local database provided, as well as the Workshop metadata results from a live WebAPI
         query of those publishedfileids
+            OR None - which indicates we weren't able to piece together a database (if DQ failure)
         """
+
         logger.info(f"DynamicQuery initializing for {len(publishedfileids)} mods")
         query = database
         query["version"] = self.expiry
@@ -178,6 +229,9 @@ class DynamicQuery:
                 query,
                 missing_children,
             ) = self.IPublishedFileService_GetDetails(query, publishedfileids)
+            # None check, if None, this indicates the Query failed...
+            if query is None or missing_children is None:
+                return None
             if (
                 len(missing_children) > 0
             ):  # If we have missing data for any dependency...
@@ -209,26 +263,33 @@ class DynamicQuery:
 
     def IPublishedFileService_GetDetails(
         self, json_to_update: Dict[Any, Any], publishedfileids: list
-    ) -> Tuple[Dict[Any, Any], list]:
+    ) -> Optional[Tuple[Dict[Any, Any], list]]:
         """
         Given a list of PublishedFileIds, return a dict of json data queried
         from Steam WebAPI, containing data to be parsed during db update.
 
         https://steamapi.xpaw.me/#IPublishedFileService/GetDetails
-        https://steamwebapi.azurewebsites.net (Ctrl + F search: "IPublishedFileService/GetUserFiles")
+        https://steamwebapi.azurewebsites.net (Ctrl + F search: "IPublishedFileService/GetDetails")
 
         :param json_to_update: a Dict of json data, containing a query to update in
         RimPy db_data["database"] format, or the skeleton of one from local_metadata
         :param publishedfileids: a list of PublishedFileIds to query Steam Workshop mod metadata for
         :return: Tuple containing the updated json data from PublishedFileIds query, as well as
         a list of any missing children's PublishedFileIds to consider for additional queries
+            OR None, None -  which indicates a critical failure in an ongoing Dynamic Query
         """
+        if not self.api:  # If we don't have API initialized
+            return None, None  # Exit query
         missing_children = []
         result = json_to_update
+        # Uncomment to see the all pfids to be queried
+        # logger.debug(f"PublishedFileIds being queried: {publishedfileids}")
         for batch in self.__chunks(
             publishedfileids, 215
         ):  # Batch limit appears to be 215 PublishedFileIds at a time - this appears to be a WebAPI limitation
             logger.info(f"Retrieving metadata for {len(batch)} mods")
+            # Uncomment to see the pfids from each batch
+            # logger.debug(f"PublishedFileIds in batch: {batch}")
             response = self.api.call(
                 method_path="IPublishedFileService.GetDetails",
                 key=self.apikey,
@@ -252,7 +313,7 @@ class DynamicQuery:
                 ]  # Set the PublishedFileId to that of the metadata we are parsing
 
                 # Uncomment this to view the metadata being parsed in real time
-                # logger.debug(f"{publishedfileid}: {metadata}")
+                logger.debug(f"{publishedfileid}: {metadata}")
 
                 # If the mod is no longer published
                 if metadata["result"] != 1:

@@ -364,7 +364,9 @@ def get_installed_expansions(game_path: str, game_version: str) -> Dict[str, Any
         )
         logger.debug(mod_data)
     else:
-        logger.warning("Skipping parsing data from empty game data path. Is the game path configured?")
+        logger.warning(
+            "Skipping parsing data from empty game data path. Is the game path configured?"
+        )
     return mod_data
 
 
@@ -390,7 +392,9 @@ def get_local_mods(local_path: str, game_path: Optional[str] = None) -> Dict[str
         system_name = platform.system()
         if system_name == "Darwin" and local_path and local_path == game_path:
             local_path = os.path.join(local_path, "RimWorldMac.app", "Mods")
-            logger.info(f"Running on MacOS, generating new local mods path: {local_path}")
+            logger.info(
+                f"Running on MacOS, generating new local mods path: {local_path}"
+            )
 
         # Get mod data
         logger.info(
@@ -400,7 +404,9 @@ def get_local_mods(local_path: str, game_path: Optional[str] = None) -> Dict[str
         logger.info("Finished getting LOCAL mods data, returning LOCAL mods data now")
         logger.debug(mod_data)
     else:
-        logger.warning("Skipping parsing data from empty local mods path. Is the local mods path configured?")
+        logger.warning(
+            "Skipping parsing data from empty local mods path. Is the local mods path configured?"
+        )
     return mod_data
 
 
@@ -422,7 +428,9 @@ def get_workshop_mods(workshop_path: str) -> Dict[str, Any]:
         logger.info("Finished getting WORKSHOP data, returning WORKSHOP data now")
         logger.debug(mod_data)
     else:
-        logger.warning("Skipping parsing data from empty workshop mods path. Is the workshop mods path configured?")
+        logger.warning(
+            "Skipping parsing data from empty workshop mods path. Is the workshop mods path configured?"
+        )
     return mod_data
 
 
@@ -676,86 +684,84 @@ def get_3rd_party_metadata(
     if len(apikey) == 32:  # If apikey is less than 32 characters
         logger.info("Retreived valid Steam API key from settings")
         if len(mods.keys()) > 0:  # No empty queries!
-            try:  # Since the key is valid, we try to launch a live query
-                appid = 294100
-                logger.info(
-                    f"Initializing DynamicQuery with configured Steam API key for {appid}..."
-                )
-                authors = ""
-                gameVersions = []
-                pfid = ""
-                pid = ""
-                name = ""
-                local_metadata = {"version": 0, "database": {}}
-                publishedfileids = []
-                for v in mods.values():
-                    if v.get("publishedfileid"):
-                        pfid = v["publishedfileid"]
-                        url = f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
-                        local_metadata["database"][pfid] = {}
-                        local_metadata["database"][pfid]["url"] = url
-                        publishedfileids.append(pfid)
-                        if v.get("packageId"):
-                            pid = v["packageId"]
-                            local_metadata["database"][pfid]["packageId"] = pid
-                        if v.get("name"):
-                            name = v["name"]
-                            local_metadata["database"][pfid]["name"] = name
-                        if v.get("author"):
-                            authors = v["author"]
-                            local_metadata["database"][pfid]["authors"] = authors
+            # Since the key is valid, and we have a list of pfid, we try to launch a live query
+            appid = 294100
+            logger.info(
+                f"Initializing DynamicQuery with configured Steam API key for {appid}..."
+            )
+            authors = ""
+            gameVersions = []
+            pfid = ""
+            pid = ""
+            name = ""
+            local_metadata = {"version": 0, "database": {}}
+            publishedfileids = []
+            for v in mods.values():
+                if v.get("publishedfileid"):
+                    pfid = v["publishedfileid"]
+                    url = (
+                        f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
+                    )
+                    local_metadata["database"][pfid] = {}
+                    local_metadata["database"][pfid]["url"] = url
+                    publishedfileids.append(pfid)
+                    if v.get("packageId"):
+                        pid = v["packageId"]
+                        local_metadata["database"][pfid]["packageId"] = pid
+                    if v.get("name"):
+                        name = v["name"]
+                        local_metadata["database"][pfid]["name"] = name
+                    if v.get("author"):
+                        authors = v["author"]
+                        local_metadata["database"][pfid]["authors"] = authors
+                    if v["supportedVersions"].get("li"):
+                        gameVersions = v["supportedVersions"]["li"]
+                        local_metadata["database"][pfid]["gameVersions"] = gameVersions
+                elif v.get("steamAppId"):
+                    appid = v["steamAppId"]
+                    url = f"https://store.steampowered.com/app/{appid}"
+                    local_metadata["database"][appid] = {}
+                    local_metadata["database"][appid]["appid"] = True
+                    local_metadata["database"][appid]["url"] = url
+                    if v.get("packageId"):
+                        pid = v["packageId"]
+                        local_metadata["database"][appid]["packageId"] = pid
+                    if v.get("name"):
+                        name = v["name"]
+                        local_metadata["database"][appid]["name"] = name
+                    if v.get("author"):
+                        authors = v["author"]
+                        local_metadata["database"][appid]["authors"] = authors
+                    if v.get("supportedVersions"):
                         if v["supportedVersions"].get("li"):
                             gameVersions = v["supportedVersions"]["li"]
-                            local_metadata["database"][pfid][
+                            local_metadata["database"][appid][
                                 "gameVersions"
                             ] = gameVersions
-                    elif v.get("steamAppId"):
-                        appid = v["steamAppId"]
-                        url = f"https://store.steampowered.com/app/{appid}"
-                        local_metadata["database"][appid] = {}
-                        local_metadata["database"][appid]["appid"] = True
-                        local_metadata["database"][appid]["url"] = url
-                        if v.get("packageId"):
-                            pid = v["packageId"]
-                            local_metadata["database"][appid]["packageId"] = pid
-                        if v.get("name"):
-                            name = v["name"]
-                            local_metadata["database"][appid]["name"] = name
-                        if v.get("author"):
-                            authors = v["author"]
-                            local_metadata["database"][appid]["authors"] = authors
-                        if v.get("supportedVersions"):
-                            if v["supportedVersions"].get("li"):
-                                gameVersions = v["supportedVersions"]["li"]
-                                local_metadata["database"][appid][
-                                    "gameVersions"
-                                ] = gameVersions
-                        local_metadata["database"][appid]["dependencies"] = {}
-                        logger.debug(
-                            f"Populated local metadata for Steam appid: [{pid} | {appid}]"
-                        )
-                mods_query = DynamicQuery(apikey, appid, db_json_data_life)
-                mods_query.workshop_json_data = mods_query.cache_parsable_db_data(
-                    local_metadata, publishedfileids
+                    local_metadata["database"][appid]["dependencies"] = {}
+                    logger.debug(
+                        f"Populated local metadata for Steam appid: [{pid} | {appid}]"
+                    )
+            mods_query = DynamicQuery(apikey, appid, db_json_data_life)
+            mods_query.workshop_json_data = mods_query.cache_parsable_db_data(
+                local_metadata, publishedfileids
+            )
+            if mods_query.workshop_json_data is None:
+                show_warning(
+                    text="Unable to complete DynamicQuery",
+                    information="DynamicQuery failed to initialize database.\nThere is no external metadata being factored for sorting!\n\n"
+                    + "Cached Dynamic Query database not found!\n\n"
+                    + "Failed to initialize new DynamicQuery with configured Steam API key.\n\n"
+                    + "Please right-click the 'Refresh' button and ensure that you have configure a valid Steam API key so that you can generate a database.\n\n"
+                    + "Please reference: https://github.com/oceancabbage/RimSort/wiki/User-Guide#obtaining-your-steam-api-key--using-it-with-rimsort-dynamic-query",
                 )
-                logger.info(f"Caching DynamicQuery result: {db_json_data_path}")
-                with open(db_json_data_path, "w") as output:
-                    json.dump(mods_query.workshop_json_data, output, indent=4)
-                db_json_data = mods_query.workshop_json_data[
-                    "database"
-                ]  # Get json data directly from memory upon query completion
-            except HTTPError:
-                stacktrace = traceback.format_exc()
-                pattern = "&key="
-                stacktrace = stacktrace[
-                    : len(stacktrace)
-                    - (len(stacktrace) - (stacktrace.find(pattern) + len(pattern)))
-                ]  # If an HTTPError from steam/urllib3 module(s) somehow is uncaught, try to remove the Steam API key from the stacktrace
-                show_fatal_error(
-                    text="RimSort Dynamic Query",
-                    information="DynamicQuery failed to initialize database.\nThere is no external metadata being factored for sorting!\n\nCached Dynamic Query database not found!\n\nFailed to initialize new DynamicQuery with configured Steam API key.\n\nAre you connected to the internet?\n\nIs your configured key invalid or revoked?\n\nPlease right-click the 'Refresh' button and configure a valid Steam API key so that you can generate a database.\n\nPlease reference: https://github.com/oceancabbage/RimSort/wiki/User-Guide#obtaining-your-steam-api-key--using-it-with-rimsort-dynamic-query",
-                    details=stacktrace,
-                )
+                return db_json_data, community_rules_json_data
+            logger.info(f"Caching DynamicQuery result: {db_json_data_path}")
+            with open(db_json_data_path, "w") as output:
+                json.dump(mods_query.workshop_json_data, output, indent=4)
+            db_json_data = mods_query.workshop_json_data[
+                "database"
+            ]  # Get json data directly from memory upon query completion
         else:
             logger.warning(
                 "Tried to generate DynamicQuery with 0 mods...? Unable to initialize DynamicQuery for live metadata..."
