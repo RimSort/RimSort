@@ -238,6 +238,7 @@ class MainContent:
         # WebAPI bool - don't allow more than 1 AppIDQuery run at once
         self.appidquery_live = False
         self.appidquery_thread = Thread()
+        self.appidquery_thread_finisher = Thread()
 
         logger.info("Finished MainContent initialization")
 
@@ -713,31 +714,16 @@ class MainContent:
         ):  # If apikey is 32 characters
             logger.info("Retreived valid Steam API key from settings")
             # Since the key is valid, we try to launch a live query
-            appid = 294100
             logger.info(
                 f"Initializing AppIDQuery with configured Steam API key for AppID: {appid}..."
             )
             appid_query = AppIDQuery(self.game_configuration.steam_apikey, appid)
             all_publishings_metadata_query = DynamicQuery(
-                self.game_configuration.steam_apikey,
-                appid,
-                self.game_configuration.webapi_query_expiry,
+                apikey=self.game_configuration.steam_apikey,
+                appid=appid,
+                life=self.game_configuration.webapi_query_expiry,
             )
             if not len(appid_query.publishedfileids) > 0:  # If we didn't get any pfids
-                # We always want to reset this when we are done
-                self.appidquery_live = False
-                try:
-                    self.appidquery_thread.join()
-                except Exception as e:
-                    e_name = e.__class__.__name__
-                    stacktrace = traceback.format_exc()
-                    logger.warning(
-                        f"AppIDQuery failed to join thread. Received exception: {e_name}"
-                    )
-                    logger.debug(f"{stacktrace}")
-                    logger.warning(
-                        "Unable to join AppIDQuery thread to main thread. This is probably because you closed the main thread while your AppIDQuery was still running. Silly goose."
-                    )
                 return  # Exit operation
             db = {}
             db["version"] = all_publishings_metadata_query.expiry
@@ -768,20 +754,6 @@ class MainContent:
                     + "Please right-click the 'Refresh' button and ensure that you have configure a valid Steam API key so that you can generate a database.\n\n"
                     + "Please reference: https://github.com/oceancabbage/RimSort/wiki/User-Guide#obtaining-your-steam-api-key--using-it-with-rimsort-dynamic-query",
                 )
-                # We always want to reset this when we are done
-                self.appidquery_live = False
-                try:
-                    self.appidquery_thread.join()
-                except Exception as e:
-                    e_name = e.__class__.__name__
-                    stacktrace = traceback.format_exc()
-                    logger.warning(
-                        f"AppIDQuery failed to join thread. Received exception: {e_name}"
-                    )
-                    logger.debug(f"{stacktrace}")
-                    logger.warning(
-                        "Unable to join AppIDQuery thread to main thread. This is probably because you closed the main thread while your AppIDQuery was still running. Silly goose."
-                    )
                 return
             db_output_path = os.path.join(
                 self.game_configuration.storage_path, f"{appid}_AppIDQuery.json"
@@ -789,6 +761,36 @@ class MainContent:
             logger.info(f"Caching DynamicQuery result: {db_output_path}")
             with open(db_output_path, "w") as output:
                 json.dump(appid_query.all_mods_metadata, output, indent=4)
+            logger.info("AppIDQuery: Completed!")
+        else:
+            logger.error("AppIDQuery: Invalid Steam WebAPI key!")
+            logger.error("AppIDQuery: Exiting thread...")
+
+    def _do_appidquery_thread(self, appid: str) -> None:
+        appid = int(appid)
+        logger.info("Checking for live AppIDQuery...")
+        if self.appidquery_live:
+            show_information(
+                "Unable to create new AppIDQuery",
+                "There is an AppIDQuery already running. Please allow it to complete before trying again.\n\nYou can monitor it's progress in RimSort.log!",
+            )
+            return
+            logger.warning(
+                "Skipping AppIDQuery - there is already a live query running!"
+            )
+        logger.info(f"All clear! Starting AppIDQuery for {appid}...")
+        self.appidquery_live = True
+        self.appidquery_thread = Thread(target=self._do_appidquery, args=[appid])
+        self.appidquery_thread.start()
+        self.appidquery_thread_finisher = Thread(
+            target=self._do_appidquery_thread_finisher
+        )
+        self.appidquery_thread_finisher.start()
+
+    def _do_appidquery_thread_finisher(self) -> None:
+        while self.appidquery_thread.is_alive():
+            sleep(1)
+        else:
             # We always want to reset this when we are done
             self.appidquery_live = False
             try:
@@ -803,22 +805,6 @@ class MainContent:
                 logger.warning(
                     "Unable to join AppIDQuery thread to main thread. This is probably because you closed the main thread while your AppIDQuery was still running. Silly goose."
                 )
-
-    def _do_appidquery_thread(self, appid: int) -> None:
-        logger.info("Checking for live AppIDQuery...")
-        if self.appidquery_live:
-            show_information(
-                "Unable to create new AppIDQuery",
-                "There is an AppIDQuery already running. Please allow it to complete before trying again.\n\nYou can monitor it's progress in RimSort.log!",
-            )
-            return
-            logger.warning(
-                "Skipping AppIDQuery - there is already a live query running!"
-            )
-        logger.info("All clear! Starting AppIDQuery...")
-        self.appidquery_live = True
-        self.appidquery_thread = Thread(target=self._do_appidquery, args=[appid])
-        self.appidquery_thread.start()
 
     def _do_generate_metadata_comparison_report(self) -> None:
         # TODO: Refactor this...

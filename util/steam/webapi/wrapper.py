@@ -29,6 +29,13 @@ class AppIDQuery:
 
     def __init__(self, apikey: str, appid: int):
         self.all_mods_metadata = {}
+        self.apikey = apikey
+        self.appid = appid
+        self.next_cursor = "*"
+        self.pagenum = 1
+        self.pages = 1
+        self.publishedfileids = []
+        self.total = 0
         try:  # Try to initialize the API
             self.api = WebAPI(apikey, format="json", https=True)
         except Exception as e:
@@ -51,13 +58,6 @@ class AppIDQuery:
                 + "Are you connected to the internet?\n\nIs your configured key invalid or revoked?\n\n",
                 details=stacktrace,
             )
-        self.apikey = apikey
-        self.appid = appid
-        self.next_cursor = "*"
-        self.pagenum = 1
-        self.pages = 1
-        self.publishedfileids = []
-        self.total = 0
         if self.api:
             self.query = True
             logger.info(
@@ -164,6 +164,10 @@ class DynamicQuery:
     """
 
     def __init__(self, apikey: str, appid: int, life: int):
+        self.apikey = apikey
+        self.appid = appid
+        self.expiry = self.__expires(life)
+        self.workshop_json_data = {}
         try:  # Try to initialize the API
             self.api = WebAPI(apikey, format="json", https=True)
         except Exception as e:
@@ -186,11 +190,7 @@ class DynamicQuery:
                 + "Are you connected to the internet?\n\nIs your configured key invalid or revoked?\n\n",
                 details=stacktrace,
             )
-        self.apikey = apikey
-        self.appid = appid
-        self.expiry = self.__expires(life)
-        self.workshop_json_data = {}
-        logger.info(f"DynamicQuery initialized...")
+        logger.info(f"DynamicQuery initialized for {self.appid}...")
 
     def __chunks(self, _list: list, limit: int):
         """
@@ -313,7 +313,7 @@ class DynamicQuery:
                 ]  # Set the PublishedFileId to that of the metadata we are parsing
 
                 # Uncomment this to view the metadata being parsed in real time
-                logger.debug(f"{publishedfileid}: {metadata}")
+                # logger.debug(f"{publishedfileid}: {metadata}")
 
                 # If the mod is no longer published
                 if metadata["result"] != 1:

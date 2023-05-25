@@ -718,29 +718,29 @@ def get_3rd_party_metadata(
                         gameVersions = v["supportedVersions"]["li"]
                         local_metadata["database"][pfid]["gameVersions"] = gameVersions
                 elif v.get("steamAppId"):
-                    appid = v["steamAppId"]
-                    url = f"https://store.steampowered.com/app/{appid}"
-                    local_metadata["database"][appid] = {}
-                    local_metadata["database"][appid]["appid"] = True
-                    local_metadata["database"][appid]["url"] = url
+                    steam_appid = v["steamAppId"]
+                    url = f"https://store.steampowered.com/app/{steam_appid}"
+                    local_metadata["database"][steam_appid] = {}
+                    local_metadata["database"][steam_appid]["appid"] = True
+                    local_metadata["database"][steam_appid]["url"] = url
                     if v.get("packageId"):
                         pid = v["packageId"]
-                        local_metadata["database"][appid]["packageId"] = pid
+                        local_metadata["database"][steam_appid]["packageId"] = pid
                     if v.get("name"):
                         name = v["name"]
-                        local_metadata["database"][appid]["name"] = name
+                        local_metadata["database"][steam_appid]["name"] = name
                     if v.get("author"):
                         authors = v["author"]
-                        local_metadata["database"][appid]["authors"] = authors
+                        local_metadata["database"][steam_appid]["authors"] = authors
                     if v.get("supportedVersions"):
                         if v["supportedVersions"].get("li"):
                             gameVersions = v["supportedVersions"]["li"]
-                            local_metadata["database"][appid][
+                            local_metadata["database"][steam_appid][
                                 "gameVersions"
                             ] = gameVersions
-                    local_metadata["database"][appid]["dependencies"] = {}
+                    local_metadata["database"][steam_appid]["dependencies"] = {}
                     logger.debug(
-                        f"Populated local metadata for Steam appid: [{pid} | {appid}]"
+                        f"Populated local metadata for Steam appid: [{pid} | {steam_appid}]"
                     )
             mods_query = DynamicQuery(apikey, appid, db_json_data_life)
             mods_query.workshop_json_data = mods_query.cache_parsable_db_data(

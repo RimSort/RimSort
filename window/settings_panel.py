@@ -103,7 +103,7 @@ class SettingsPanel(QDialog):
         self.external_metadata_cb.setItemDelegate(self.centered_item_delegate)
         self.appidquery_button = QPushButton("Cache AppIDQuery")
         self.appidquery_button.clicked.connect(
-            partial(self.appidquery_signal.emit, 294100)
+            partial(self.appidquery_signal.emit, "294100")
         )
         self.comparison_report_button = QPushButton("External metadata comparison")
         self.comparison_report_button.clicked.connect(

@@ -23,7 +23,7 @@ if _PROCESSOR == "":
 
 _SYSTEM = platform.system()
 
-PY_CMD = "python3"
+PY_CMD = sys.executable
 _PYINSTALLER_SPEC_PATH = f"pyinstaller_{_SYSTEM}.spec"
 if _SYSTEM == "Darwin":
     _NUITKA_CMD = [
@@ -61,7 +61,6 @@ elif _SYSTEM == "Linux":
         "--output-dir=./dist/",
     ]
 elif _SYSTEM == "Windows" and _ARCH == "64bit":
-    PY_CMD = "python"
     _NUITKA_CMD = [
         PY_CMD,
         "-m",
