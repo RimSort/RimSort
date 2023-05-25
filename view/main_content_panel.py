@@ -54,6 +54,7 @@ from util.mods import *
 from util.schema import validate_mods_config_format
 from util.steam.steamcmd.wrapper import SteamcmdDownloader, SteamcmdInterface
 from util.steam.steamworks.wrapper import (
+    steamworks_app_dependencies_query,
     launch_game_process,
     steamworks_subscriptions_handler,
 )
@@ -244,6 +245,18 @@ class MainContent:
         # Start watchdog
         logger.debug("Starting watchdog")
         self.game_configuration_watchdog_observer.start()
+
+        logger.warning("Python prints:")
+        # self._do_steamworks_api_call(
+        #     ["get_app_dependencies", "2975771801"]
+        # )  # VRE: Androids (1 DLC dep)
+        self._do_steamworks_api_call(
+            ["get_app_dependencies", "2524548731"]
+        )  # X.E.N.O (2 DLC dep)
+        # logger.warning("Test RPMMDB GetAppDependencies")
+        # self._do_steamworks_api_call(
+        #     ["get_app_dependencies", "1847679158"]
+        # )  # RPMMDB (0 DLC dep)
 
     @property
     def panel(self):
@@ -993,6 +1006,10 @@ class MainContent:
         """
         Create & launch Steamworks API process to handle instructions received from connected signals
 
+        FOR "get_app_dependencies"...
+        :param instruction: a list where:
+            instruction[0] is a string that cooresponds with the following supported_actions[]
+            instruction[1] is an int that corresponds with a Steam mod's PublishedFileId
         FOR subscription_actions[]...
         :param instruction: a list where:
             instruction[0] is a string that corresponds with the following supported_actions[]
@@ -1005,7 +1022,7 @@ class MainContent:
         logger.info(f"Received Steamworks API instruction: {instruction}")
         if not self.steamworks_initialized:
             subscription_actions = ["subscribe", "unsubscribe"]
-            supported_actions = ["launch_game_process"]
+            supported_actions = ["get_app_dependencies", "launch_game_process"]
             supported_actions.extend(subscription_actions)
             if (
                 instruction[0] in supported_actions
@@ -1025,6 +1042,12 @@ class MainContent:
                         steamworks_api_process = Process(
                             target=steamworks_subscriptions_handler, args=(instruction,)
                         )
+                elif instruction[0] == "get_app_dependencies":
+                    self.steamworks_initialized = True
+                    steamworks_api_process = Process(
+                        target=steamworks_app_dependencies_query,
+                        args=([instruction[1]]),
+                    )
                 elif instruction[0] == "launch_game_process":
                     # Temporarily disable Steam API game launch with Nuitka builds for Mac/Win
                     if platform.system() != "Linux" and "__compiled__" in globals():

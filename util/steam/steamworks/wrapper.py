@@ -50,6 +50,9 @@ class SteamworksInterface:
             self.steamworks.Workshop.SetItemUnsubscribedCallback(
                 self._cb_subscription_action
             )
+            self.steamworks.Workshop.SetGetAppDependenciesResultCallback(
+                self._cb_app_dependencies_result_callback
+            )
             # Start the thread
             logger.info("Starting thread...")
             self.steamworks_thread = self._daemon()
@@ -68,6 +71,24 @@ class SteamworksInterface:
             sleep(0.1)
         else:
             logger.info("Callback received. Ending thread...")
+
+    def _cb_app_dependencies_result_callback(self, *args, **kwargs) -> None:
+        """
+        Executes upon Steamworks API callback response
+        """
+        logger.warning(f"GetAppDependencies query: {args}, {kwargs}")
+        logger.warning(f"result : {args[0].result}")
+        logger.warning(f"publishedFileId : {args[0].publishedFileId}")
+        logger.warning(f"array_app_dependencies : {args[0].array_app_dependencies}")
+        logger.warning(
+            f"array_num_app_dependencies : {args[0].array_num_app_dependencies}"
+        )
+        logger.warning(
+            f"total_num_app_dependencies : {args[0].total_num_app_dependencies}"
+        )
+        logger.warning(f"app_dependencies_list : {args[0].get_app_dependencies_list()}")
+        # Set flag so that _callbacks cease
+        self.callback_received = True
 
     def _cb_subscription_action(self, *args, **kwargs) -> None:
         """
@@ -155,7 +176,8 @@ def launch_game_process(instruction: list, override: bool) -> None:
                 else:  # Windows
                     p = subprocess.Popen(
                         [executable_path, args],
-                        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP, shell=True
+                        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+                        shell=True,
                     )
             logger.info(f"Launched independent RimWorld game process with PID: {p.pid}")
             if (
@@ -187,6 +209,37 @@ def launch_game_process(instruction: list, override: bool) -> None:
         )
 
 
+def steamworks_app_dependencies_query(published_file_id: str) -> None:
+    """
+    Handle Steam mod get_app_dependencies instruction received from connected signals
+
+    :param published_file_id: an integer representing a PublishedFileID to query
+    """
+    logger.info(
+        f"Creating SteamworksInterface and passing PublishedFileID {published_file_id}"
+    )
+    steamworks_interface = SteamworksInterface()
+    if not steamworks_interface.steam_not_running:  # Skip if True
+        while (
+            not steamworks_interface.steamworks.loaded()
+        ):  # Ensure that Steamworks API is initialized before attempting any instruction
+            break
+            sleep(0.1)
+        else:
+            steamworks_interface.steamworks.Workshop.GetAppDependencies(
+                int(published_file_id)
+            )
+            # Wait for thread to complete with 5 second timeout
+            steamworks_interface.steamworks_thread.join(5)
+            # While the thread is alive, we wait for it. This means that the above Thread.join() reached the timeout...
+            # This is not good! Steam is not responding to your instruction!)
+            if steamworks_interface.steamworks_thread.is_alive():
+                logger.error("No response from Steam!")
+            else:  # This means that Steam responded to our instruction. We are done with Steamworks API now, so we dispose of everything.
+                logger.info("Thread completed. Unloading Steamworks...")
+            steamworks_interface.steamworks.unload()
+
+
 def steamworks_subscriptions_handler(instruction: list) -> None:
     """
     Handle Steam mod subscription instructions received from connected signals
@@ -208,7 +261,13 @@ def steamworks_subscriptions_handler(instruction: list) -> None:
                 steamworks_interface.steamworks.Workshop.SubscribeItem(
                     int(instruction[1])
                 )
+                steamworks_interface.steamworks.Workshop.SubscribeItem(
+                    int(instruction[1])
+                )
             elif instruction[0] == "unsubscribe":
+                steamworks_interface.steamworks.Workshop.UnsubscribeItem(
+                    int(instruction[1])
+                )
                 steamworks_interface.steamworks.Workshop.UnsubscribeItem(
                     int(instruction[1])
                 )
