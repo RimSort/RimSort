@@ -87,9 +87,23 @@ STEAMWORKSPY_BUILD_CMD = [PY_CMD, "build_steamworkspy.py"]
 SUBMODULE_UPDATE_INIT_CMD = ["git", "submodule", "update", "--init", "--recursive"]
 
 
+def get_rimsort_deps() -> None:
+    print("Installing core RimSort requirements with pip...")
+    _execute(GET_REQ_CMD)
+    print("Ensuring we have all submodules initiated & up-to-date...")
+    _execute(SUBMODULE_UPDATE_INIT_CMD)
+    # Get Steamfiles requirements
+    print("Building submodules...")
+    print(f"Changing directory to {STEAMFILES_SRC}")
+    os.chdir(STEAMFILES_SRC)
+    print("Building steamfiles module...")
+    _execute(GET_REQ_CMD)
+    print(f"Leaving {STEAMFILES_SRC}")
+    os.chdir(_CWD)
+
+
 def build_steamworkspy() -> None:
     # Setup environment
-
     print("Setting up environment...")
     MODULE_SRC_PATH = os.path.join(_CWD, "SteamworksPy", "steamworks")
     MODULE_DEST_PATH = os.path.join(_CWD, "steamworks")
@@ -155,7 +169,8 @@ def build_steamworkspy() -> None:
         "&",
         "exit",
     ]
-    STEAMWORKS_SDK_URL = "https://github.com/oceancabbage/RimSort/raw/steamworks-sdk/steamworks_sdk_155.zip"  # "https://partner.steamgames.com/downloads/steamworks_sdk_155.zip"
+    # SOURCE: "https://partner.steamgames.com/downloads/steamworks_sdk_155.zip"
+    STEAMWORKS_SDK_URL = "https://github.com/oceancabbage/RimSort/raw/steamworks-sdk/steamworks_sdk_155.zip"
     SUBMODULE_UPDATE_INIT_CMD = ["git", "submodule", "update", "--init", "--recursive"]
     STEAMWORKS_PY_PATH = os.path.join(_CWD, "SteamworksPy", "library")
     STEAMWORKS_MODULE_PATH = os.path.join(_CWD, "SteamworksPy", "steamworks")
@@ -323,18 +338,54 @@ def build_steamworkspy() -> None:
         shutil.copyfile(STEAMWORKSPY_BIN_FIN_PATH, STEAMWORKSPY_BIN_LINUX_LINK_PATH)
 
 
-def get_latest_todds_release() -> None:
-    print("\nGetting latest release of todds...\n")
+def copy_swp_libs() -> None:
+    # Copy libs
+    if _SYSTEM != "Windows":
+        if _SYSTEM == "Darwin":
+            STEAMWORKSPY_BUILT_LIB = os.path.join(
+                _CWD, f"SteamworksPy_{_PROCESSOR}.dylib"
+            )
+            STEAMWORKSPY_LIB_FIN = os.path.join(_CWD, "SteamworksPy.dylib")
+        elif _SYSTEM == "Linux":
+            STEAMWORKSPY_BUILT_LIB = os.path.join(_CWD, f"SteamworksPy_{_PROCESSOR}.so")
+            STEAMWORKSPY_LIB_FIN = os.path.join(_CWD, "SteamworksPy.so")
+        print("Copying libs for non-Windows platform")
+        shutil.copyfile(STEAMWORKSPY_BUILT_LIB, STEAMWORKSPY_LIB_FIN)
 
+        # Symlink built module
+        print("Creating symlink to built module...")
+        MODULE_SRC_PATH = os.path.join(_CWD, "SteamworksPy", "steamworks")
+        MODULE_DEST_PATH = os.path.join(_CWD, "steamworks")
+        try:
+            if _SYSTEM != "Windows":
+                os.symlink(
+                    MODULE_SRC_PATH,
+                    MODULE_DEST_PATH,
+                    target_is_directory=True,
+                )
+            else:
+                from _winapi import CreateJunction
+
+                CreateJunction(MODULE_SRC_PATH, MODULE_DEST_PATH)
+        except FileExistsError:
+            print(
+                f"Unable to create symlink from source: {MODULE_SRC_PATH} to destination: {MODULE_DEST_PATH}"
+            )
+            print(
+                "Destination already exists, or you don't have permission."
+                + " You can safely ignore this as long as you are able to run RimSort after completing runtime setup."
+            )
+
+
+def get_latest_todds_release() -> None:
+    # Parse latest release
     raw = requests.get("https://api.github.com/repos/joseasoler/todds/releases/latest")
     json_response = raw.json()
     tag_name = json_response["tag_name"]
     todds_path = os.path.join(_CWD, "todds")
     todds_executable_name = "todds"
-
     print(f"Latest release: {tag_name}\n")
-    # print(f'{json_response["body"]}\n')
-
+    # Setup environment
     if _SYSTEM == "Darwin":
         if _PROCESSOR == "i386" or _PROCESSOR == "arm":
             print(f"Darwin/MacOS system detected with a {_ARCH} {_PROCESSOR} CPU...")
@@ -351,7 +402,6 @@ def get_latest_todds_release() -> None:
     else:
         print(f"Unsupported system {_SYSTEM} {_ARCH} {_PROCESSOR}")
         exit()
-
     # Try to find a valid release
     for asset in json_response["assets"]:
         if asset["name"] == target_archive:
@@ -405,59 +455,21 @@ Do stuff!
 """
 
 # RimSort dependencies
-# print("Installing core RimSort requirements")
-# _execute(GET_REQ_CMD)
-
-# print("Ensuring we have all submodules initiated & up-to-date...")
-# _execute(SUBMODULE_UPDATE_INIT_CMD)
-
-# Get Steamfiles requirements
-# print("Building submodules...")
-# print(f"Changing directory to {STEAMFILES_SRC}")
-# os.chdir(STEAMFILES_SRC)
-# print("Building steamfiles module...")
-# _execute(GET_REQ_CMD)
-# print(f"Leaving {STEAMFILES_SRC}")
-# os.chdir(_CWD)
+print("Getting RimSort dependencies...")
+get_rimsort_deps()
 
 # Build SteamworksPy
-print("Building SteamworksPy library...")
-build_steamworkspy()
-# Copy libs
-if _SYSTEM != "Windows":
-    if _SYSTEM == "Darwin":
-        STEAMWORKSPY_BUILT_LIB = os.path.join(_CWD, f"SteamworksPy_{_PROCESSOR}.dylib")
-        STEAMWORKSPY_LIB_FIN = os.path.join(_CWD, "SteamworksPy.dylib")
-    elif _SYSTEM == "Linux":
-        STEAMWORKSPY_BUILT_LIB = os.path.join(_CWD, f"SteamworksPy_{_PROCESSOR}.so")
-        STEAMWORKSPY_LIB_FIN = os.path.join(_CWD, "SteamworksPy.so")
-    print("Copying libs for non-Windows platform")
-    shutil.copyfile(STEAMWORKSPY_BUILT_LIB, STEAMWORKSPY_LIB_FIN)
-# Symlink built module
-print("Creating symlink to built module...")
-MODULE_SRC_PATH = os.path.join(_CWD, "SteamworksPy", "steamworks")
-MODULE_DEST_PATH = os.path.join(_CWD, "steamworks")
-try:
-    if _SYSTEM != "Windows":
-        os.symlink(
-            MODULE_SRC_PATH,
-            MODULE_DEST_PATH,
-            target_is_directory=True,
-        )
-    else:
-        from _winapi import CreateJunction
+# print("Building SteamworksPy library...")
+# build_steamworkspy()
 
-        CreateJunction(MODULE_SRC_PATH, MODULE_DEST_PATH)
-except FileExistsError:
-    print(
-        f"Unable to create symlink from source: {MODULE_SRC_PATH} to destination: {MODULE_DEST_PATH}"
-    )
-    print(
-        "Destination already exists, or you don't have permission. You can safely ignore this as long as you are able to run RimSort after completing runtime setup."
-    )
+# Copy SteamworksPy prebuilt libs
+print("Copying SteamworksPy libs for release...")
+copy_swp_libs()
 
 # Grab latest todds release
-# get_latest_todds_release()
+print("Grabbing latest todds release...")
+get_latest_todds_release()
 
 # Build Nuitka distributable binary
-# _execute(_NUITKA_CMD)
+print("Building RimSort application with Nuitka...")
+_execute(_NUITKA_CMD)
