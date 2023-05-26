@@ -2,6 +2,7 @@ import json
 from logging import getLogger, WARNING
 from logger_tt import logger
 from math import ceil
+from multiprocessing import Queue
 from requests import post as requests_post
 from requests.exceptions import HTTPError, JSONDecodeError
 import sys
@@ -9,6 +10,8 @@ from time import time
 import traceback
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+from util.steam.constants import RIMWORLD_DLC_METADATA
+from util.steam.steamworks.wrapper import SteamworksAppDependenciesQuery
 from window.runner_panel import RunnerPanel
 
 from steam.webapi import WebAPI
@@ -257,6 +260,30 @@ class DynamicQuery:
             else:  # Stop querying once we have 0 missing_children
                 missing_children = []
                 querying = False
+        # ISteamUGC/GetAppDependencies
+        queue = Queue()
+        steamworks_api_process = SteamworksAppDependenciesQuery(
+            [eval(str_pfid) for str_pfid in publishedfileids], queue=queue
+        )  # Convert the list of string pfid to integers - SW API requirement
+        # Launch query & pass Queue for metadata return
+        steamworks_api_process.start()
+        steamworks_api_process.join()
+        pfids_appid_deps = (
+            queue.get()
+        )  # Queue contains our metadata: {int publishedFileId: [int appid(s)]}
+        for pfid in query["database"].keys():
+            if int(pfid) in pfids_appid_deps:
+                for appid in pfids_appid_deps[int(pfid)]:
+                    query["database"][pfid]["dependencies"].update(
+                        {
+                            str(appid): [
+                                RIMWORLD_DLC_METADATA[str(appid)]["name"],
+                                RIMWORLD_DLC_METADATA[str(appid)]["steam_url"],
+                            ]
+                        }
+                    )
+
+        # Notify & return
         total = len(query["database"])
         logger.info(f"Returning Steam Workshop metadata for {total} PublishedFileIds")
         return query
@@ -313,7 +340,7 @@ class DynamicQuery:
                 ]  # Set the PublishedFileId to that of the metadata we are parsing
 
                 # Uncomment this to view the metadata being parsed in real time
-                # logger.debug(f"{publishedfileid}: {metadata}")
+                logger.debug(f"{publishedfileid}: {metadata}")
 
                 # If the mod is no longer published
                 if metadata["result"] != 1:

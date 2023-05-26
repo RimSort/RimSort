@@ -75,7 +75,6 @@ class SteamworksInterface:
             logger.info("Steamworks loaded!")
         while not self.end_callbacks:
             self.steamworks.run_callbacks()
-            sleep(0.1)
         else:
             logger.info(
                 f"{self.callbacks_count} callback(s) received. Ending thread..."
@@ -164,7 +163,6 @@ class SteamworksAppDependenciesQuery(Process):
                 not steamworks_interface.steamworks.loaded()
             ):  # Ensure that Steamworks API is initialized before attempting any instruction
                 break
-                sleep(0.1)
             else:
                 if not multiple_queries:
                     logger.debug(
@@ -185,7 +183,7 @@ class SteamworksAppDependenciesQuery(Process):
                         steamworks_interface.steamworks.Workshop.GetAppDependencies(
                             pfid
                         )
-                        sleep(0.5)
+                        sleep(0.7)
                 # While the thread is alive, we wait for it.
                 while steamworks_interface.steamworks_thread.is_alive():
                     logger.debug("Waiting for Steamworks API callbacks to complete...")
@@ -222,7 +220,6 @@ class SteamworksGameLaunch(Process):
                 not steamworks_interface.steamworks.loaded()
             ):  # Ensure that Steamworks API is initialized before attempting any instruction
                 break
-                sleep(0.1)
             else:
                 # Launch the game
                 launch_game_process(self.instruction)
@@ -260,7 +257,6 @@ class SteamworksSubscriptionHandler(Process):
                 not steamworks_interface.steamworks.loaded()
             ):  # Ensure that Steamworks API is initialized before attempting any instruction
                 break
-                sleep(0.1)
             else:
                 if self.instruction[0] == "subscribe":
                     if not multiple_actions:
@@ -284,7 +280,7 @@ class SteamworksSubscriptionHandler(Process):
                             )
                             # Create API call
                             steamworks_interface.steamworks.Workshop.SubscribeItem(pfid)
-                            sleep(0.5)
+                            sleep(0.7)
                 elif self.instruction[0] == "unsubscribe":
                     if not multiple_actions:
                         logger.debug(
@@ -315,7 +311,7 @@ class SteamworksSubscriptionHandler(Process):
                             steamworks_interface.steamworks.Workshop.UnsubscribeItem(
                                 pfid
                             )
-                            sleep(0.5)
+                            sleep(0.7)
                 # While the thread is alive, we wait for it.
                 while steamworks_interface.steamworks_thread.is_alive():
                     logger.debug("Waiting for Steamworks API callbacks to complete...")
