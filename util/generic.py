@@ -5,7 +5,83 @@ from pyperclip import copy as copy_to_clipboard
 import subprocess
 from requests import post as requests_post
 
-from model.dialogue import show_information
+from model.dialogue import show_information, show_warning
+
+
+def launch_game_process(instruction: list) -> None:
+    """
+    This function starts the Rimworld game process in it's own Process,
+    by launching the executable found in the configured game directory.
+
+    This function initializes the Steamworks API to be used by the RimWorld game.
+
+    :param instruction: a list containing [path: str, args: str] respectively
+    :param override: a bool when if set to True, skips initiating Steamworks
+    """
+    game_path = instruction[0]
+    args = instruction[1]
+    logger.info(f"Attempting to find the game in the game folder {game_path}")
+    if game_path:
+        system_name = platform.system()
+        if system_name == "Darwin":
+            executable_path = os.path.join(game_path, "RimWorldMac.app")
+        elif system_name == "Linux":
+            # Linux
+            executable_path = os.path.join(game_path, "RimWorldLinux")
+        elif "Windows":
+            # Windows
+            executable_path = os.path.join(game_path, "RimWorldWin64.exe")
+        else:
+            logger.error("Unable to launch the game on an unknown system")
+        logger.info(f"Path to game executable generated: {executable_path}")
+        if os.path.exists(executable_path):
+            logger.info(
+                f"Launching the game with subprocess.Popen(): `"
+                + executable_path
+                + "` with args: `"
+                + args
+                + "`"
+            )
+            # https://stackoverflow.com/a/21805723
+            if system_name == "Darwin":  # MacOS
+                p = subprocess.Popen(["open", executable_path, "--args", args])
+            else:
+                try:
+                    subprocess.CREATE_NEW_PROCESS_GROUP
+                except (
+                    AttributeError
+                ):  # not Windows, so assume POSIX; if not, we'll get a usable exception
+                    p = subprocess.Popen(
+                        [executable_path, args], start_new_session=True
+                    )
+                else:  # Windows
+                    p = subprocess.Popen(
+                        [executable_path, args],
+                        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+                        shell=True,
+                    )
+            logger.info(f"Launched independent RimWorld game process with PID: {p.pid}")
+        else:
+            logger.warning("The game executable path does not exist")
+            show_warning(
+                text="Error Starting the Game",
+                information=(
+                    "RimSort could not start RimWorld as the game executable does "
+                    f"not exist at the specified path: {executable_path}. Please check "
+                    "that this directory is correct and the RimWorld game executable "
+                    "exists in it."
+                ),
+            )
+    else:
+        logger.error("The path to the game folder is empty")
+        show_warning(
+            text="Error Starting the Game",
+            information=(
+                "RimSort could not start RimWorld as the game folder is empty or invalid: [{game_path}] "
+                "Please check that the game folder is properly set and that the RimWorld executable "
+                "exists in it."
+            ),
+        )
 
 
 def platform_specific_open(path: str) -> None:

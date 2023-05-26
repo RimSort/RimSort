@@ -1,8 +1,7 @@
 from functools import partial
 from logging import getLogger, WARNING
 from logger_tt import logger
-import multiprocessing
-from multiprocessing import active_children, Process
+from multiprocessing import current_process, Process, Queue
 import os
 import platform
 from requests import post as requests_post
@@ -50,13 +49,14 @@ from sub_view.actions_panel import Actions
 from sub_view.active_mods_panel import ActiveModList
 from sub_view.inactive_mods_panel import InactiveModList
 from sub_view.mod_info_panel import ModInfo
+from util.generic import launch_game_process
 from util.mods import *
 from util.schema import validate_mods_config_format
 from util.steam.steamcmd.wrapper import SteamcmdDownloader, SteamcmdInterface
 from util.steam.steamworks.wrapper import (
-    steamworks_app_dependencies_query,
-    launch_game_process,
-    steamworks_subscriptions_handler,
+    SteamworksAppDependenciesQuery,
+    SteamworksGameLaunch,
+    SteamworksSubscriptionHandler,
 )
 from util.steam.webapi.wrapper import AppIDQuery
 from util.todds.wrapper import ToddsInterface
@@ -64,7 +64,7 @@ from util.xml import json_to_xml_write, xml_path_to_json
 from view.game_configuration_panel import GameConfiguration
 from window.runner_panel import RunnerPanel
 
-print(f"main_content_panel.py: {multiprocessing.current_process()}")
+print(f"main_content_panel.py: {current_process()}")
 print(f"__name__: {__name__}\nsys.argv: {sys.argv}")
 
 
@@ -133,19 +133,19 @@ class MainContent:
             self.game_configuration_watchdog_observer.schedule(
                 self.game_configuration_watchdog_event_handler,
                 game_folder_path,
-                recursive=True,
+                recursive=False,
             )
         if local_folder_path != "":
             self.game_configuration_watchdog_observer.schedule(
                 self.game_configuration_watchdog_event_handler,
                 local_folder_path,
-                recursive=True,
+                recursive=False,
             )
         if workshop_folder_path != "":
             self.game_configuration_watchdog_observer.schedule(
                 self.game_configuration_watchdog_event_handler,
                 workshop_folder_path,
-                recursive=True,
+                recursive=False,
             )
 
         # SIGNALS AND SLOTS
@@ -246,17 +246,31 @@ class MainContent:
         logger.debug("Starting watchdog")
         self.game_configuration_watchdog_observer.start()
 
-        logger.warning("Python prints:")
+        # Steamworks API tests
         # self._do_steamworks_api_call(
         #     ["get_app_dependencies", "2975771801"]
         # )  # VRE: Androids (1 DLC dep)
-        self._do_steamworks_api_call(
-            ["get_app_dependencies", "2524548731"]
-        )  # X.E.N.O (2 DLC dep)
+        # self._do_steamworks_api_call(
+        #     [
+        #         "get_app_dependencies",
+        #         int("2524548731"),
+        #     ]
+        # )  # X.E.N.O (2 DLC dep)
         # logger.warning("Test RPMMDB GetAppDependencies")
         # self._do_steamworks_api_call(
         #     ["get_app_dependencies", "1847679158"]
         # )  # RPMMDB (0 DLC dep)
+        # query = self._do_steamworks_api_call(
+        #     [
+        #         "get_app_dependencies",
+        #         [int("2524548731"), int("2975771801"), int("1847679158")],
+        #     ]
+        # )
+        # logger.warning(query)
+        # All 3 mods at once
+        # self._do_steamworks_api_call(
+        #     ["unsubscribe", [int("2979598490"), int("2978572782")]]
+        # )  # multiple subscription actions
 
     @property
     def panel(self):
@@ -1014,6 +1028,7 @@ class MainContent:
         :param instruction: a list where:
             instruction[0] is a string that corresponds with the following supported_actions[]
             instruction[1] is an int that corresponds with a subscribed Steam mod's PublishedFileId
+                        OR is a list of int that corresponds with multiple subscribed Steam mod's PublishedFileId
         FOR "launch_game_process"...
         :param instruction: a list where:
             instruction[0] is a string that corresponds with the following supported_actions[]
@@ -1027,7 +1042,42 @@ class MainContent:
             if (
                 instruction[0] in supported_actions
             ):  # Actions can be added as functions are implemented in util.steam.steamworks.wrapper
-                if instruction[0] in subscription_actions:
+                if (
+                    instruction[0] == "get_app_dependencies"
+                ):  # ISteamUGC/GetAppDependencies
+                    if platform.system() != "Linux" and "__compiled__" in globals():
+                        logger.warning(
+                            "Steamworks API game launch is currently disabled on frozen Nuitka bundles due to issues with logger_tt and multiprocessing."
+                        )
+                        logger.warning(
+                            "Launching independent game process without Steamworks API!"
+                        )
+                        return
+                    else:
+                        self.steamworks_initialized = True
+                        queue = Queue()
+                        steamworks_api_process = SteamworksAppDependenciesQuery(
+                            instruction[1], queue=queue
+                        )
+                elif (
+                    instruction[0] == "launch_game_process"
+                ):  # SW API init + game launch
+                    # Temporarily disable Steam API game launch with Nuitka builds for Mac/Win
+                    if platform.system() != "Linux" and "__compiled__" in globals():
+                        logger.warning(
+                            "Steamworks API game launch is currently disabled on frozen Nuitka bundles due to issues with logger_tt and multiprocessing."
+                        )
+                        logger.warning(
+                            "Launching independent game process without Steamworks API!"
+                        )
+                        launch_game_process(instruction[1])
+                        return
+                    else:
+                        self.steamworks_initialized = True
+                        steamworks_api_process = SteamworksGameLaunch(instruction[1])
+                elif (
+                    instruction[0] in subscription_actions
+                ):  # ISteamUGC/{SubscribeItem/UnsubscribeItem}
                     logger.info(
                         f"Creating Steamworks API process with instruction {instruction}"
                     )
@@ -1039,32 +1089,13 @@ class MainContent:
                         return
                     else:
                         self.steamworks_initialized = True
-                        steamworks_api_process = Process(
-                            target=steamworks_subscriptions_handler, args=(instruction,)
+                        steamworks_api_process = SteamworksSubscriptionHandler(
+                            instruction
                         )
-                elif instruction[0] == "get_app_dependencies":
-                    self.steamworks_initialized = True
-                    steamworks_api_process = Process(
-                        target=steamworks_app_dependencies_query,
-                        args=([instruction[1]]),
+                else:
+                    logger.warning(
+                        "Skipping Steamworks API call - only 1 Steamworks API initialization allowed at a time!!"
                     )
-                elif instruction[0] == "launch_game_process":
-                    # Temporarily disable Steam API game launch with Nuitka builds for Mac/Win
-                    if platform.system() != "Linux" and "__compiled__" in globals():
-                        logger.warning(
-                            "Steamworks API game launch is currently disabled on frozen Nuitka bundles due to issues with logger_tt and multiprocessing."
-                        )
-                        logger.warning(
-                            "Launching independent game process without Steamworks API!"
-                        )
-                        launch_game_process(instruction[1], True)
-                        return
-                    else:
-                        self.steamworks_initialized = True
-                        steamworks_api_process = Process(
-                            target=launch_game_process,
-                            args=(instruction[1], False),
-                        )
             else:
                 logger.error(f"Unsupported instruction {instruction}")
                 return
@@ -1078,6 +1109,10 @@ class MainContent:
                 f"Steamworks API process wrapper completed for PID: {steamworks_api_process.pid}"
             )
             self.steamworks_initialized = False
+            # If a query was returned (example: GetAppDependencies)
+            if "queue" in locals():
+                return queue.get()
+
         else:
             logger.warning(
                 "Steamworks API is already initialized! We do NOT want multiple interactions. Skipping instruction..."
