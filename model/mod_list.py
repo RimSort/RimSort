@@ -183,7 +183,7 @@ class ModListWidget(QListWidget):
                     ):  # ACTION: Unsubscribe & delete mod
                         logger.info(f"Unsubscribing from mod: {mod_pfid}")
                         self.steamworks_subscription_signal.emit(
-                            ["unsubscribe", mod_pfid]
+                            ["unsubscribe", int(mod_pfid)]
                         )
             return True
         return super().eventFilter(source_object, event)

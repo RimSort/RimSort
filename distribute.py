@@ -405,24 +405,24 @@ Do stuff!
 """
 
 # RimSort dependencies
-print("Installing core RimSort requirements")
-_execute(GET_REQ_CMD)
+# print("Installing core RimSort requirements")
+# _execute(GET_REQ_CMD)
 
-print("Ensuring we have all submodules initiated & up-to-date...")
-_execute(SUBMODULE_UPDATE_INIT_CMD)
+# print("Ensuring we have all submodules initiated & up-to-date...")
+# _execute(SUBMODULE_UPDATE_INIT_CMD)
 
 # Get Steamfiles requirements
-print("Building submodules...")
-print(f"Changing directory to {STEAMFILES_SRC}")
-os.chdir(STEAMFILES_SRC)
-print("Building steamfiles module...")
-_execute(GET_REQ_CMD)
-print(f"Leaving {STEAMFILES_SRC}")
-os.chdir(_CWD)
+# print("Building submodules...")
+# print(f"Changing directory to {STEAMFILES_SRC}")
+# os.chdir(STEAMFILES_SRC)
+# print("Building steamfiles module...")
+# _execute(GET_REQ_CMD)
+# print(f"Leaving {STEAMFILES_SRC}")
+# os.chdir(_CWD)
 
 # Build SteamworksPy
-# print("Building SteamworksPy library...")
-# build_steamworkspy()
+print("Building SteamworksPy library...")
+build_steamworkspy()
 # Copy libs
 if _SYSTEM != "Windows":
     if _SYSTEM == "Darwin":
@@ -457,7 +457,7 @@ except FileExistsError:
     )
 
 # Grab latest todds release
-get_latest_todds_release()
+# get_latest_todds_release()
 
 # Build Nuitka distributable binary
-_execute(_NUITKA_CMD)
+# _execute(_NUITKA_CMD)
