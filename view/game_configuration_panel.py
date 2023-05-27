@@ -7,7 +7,7 @@ import platform
 import webbrowser
 from functools import partial
 from os.path import expanduser
-from typing import Any
+from typing import Any, Dict
 
 from PySide6.QtCore import QObject, QStandardPaths, Qt, Signal
 from PySide6.QtWidgets import (
@@ -41,12 +41,14 @@ class GameConfiguration(QObject):
     # Signal emitter for this class
     configuration_signal = Signal(str)
 
-    def __init__(self) -> None:
+    def __init__(self, debug_mode=None) -> None:
         """
         Initialize the game configuration.
         """
         logger.info("Starting GameConfiguration initialization")
         super(GameConfiguration, self).__init__()
+
+        self.debug_mode = debug_mode
 
         self.storage_path = QStandardPaths.writableLocation(
             QStandardPaths.AppLocalDataLocation
@@ -232,14 +234,20 @@ class GameConfiguration(QObject):
         # STEAM APIKEY
         self.steam_apikey = ""
 
-        # WEBAPI QUERY EXPIRY
-        self.webapi_query_expiry = 1800
+        # DATABASE EXPIRY
+        self.database_expiry = 604800
+
+        # WATCHDOG TOGGLE
+        self.watchdog_toggle = True
 
         # DUPE MODS WARNING TOGGLE
         self.duplicate_mods_warning_toggle = False
 
         # STEAM MODS UPDATE CHECK TOGGLE
         self.steam_mods_update_check_toggle = False
+
+        # DQ GETAPPDEPENDENCIES TOGGLE
+        self.build_steam_database_dlc_data_toggle = False
 
         # STEAMCMD INSTALL PATH
         self.steamcmd_install_path = ""
@@ -251,7 +259,7 @@ class GameConfiguration(QObject):
         self.todds_preset = "medium"
 
         # TODDS ACTIVE MODS TARGET TOGGLE
-        self.todds_active_mods_target_toggle = False
+        self.todds_active_mods_target_toggle = True
 
         # TODDS DRY RUN TOGGLE
         self.todds_dry_run_toggle = False
@@ -291,13 +299,21 @@ class GameConfiguration(QObject):
             self.delete_all_paths_data
         )  # Actions delete_all_paths_data
 
-        # MISC
+        # General Preferences
+        self.settings_panel.watchdog_checkbox.setChecked(self.debug_mode)
+        self.settings_panel.watchdog_checkbox.setChecked(self.watchdog_toggle)
         self.settings_panel.duplicate_mods_checkbox.setChecked(
             self.duplicate_mods_warning_toggle
         )
         self.settings_panel.steam_mods_update_checkbox.setChecked(
             self.steam_mods_update_check_toggle
         )
+
+        # DQ GetAppDependencies
+        self.settings_panel.build_steam_database_dlc_data_checkbox.setChecked(
+            self.build_steam_database_dlc_data_toggle
+        )
+
         # SteamCMD
         self.settings_panel.steamcmd_validate_downloads_checkbox.setChecked(
             self.steamcmd_validate_downloads_toggle
@@ -383,8 +399,11 @@ class GameConfiguration(QObject):
             # Create a new empty settings.json file
             default_settings: dict[str, Any] = {
                 "sorting_algorithm": "RimPy",
-                "external_metadata_source": "None",
-                "webapi_query_expiry": 1800,
+                "external_steam_metadata_source": "None",
+                "external_community_rules_metadata_source": "None",
+                "build_steam_database_dlc_data": True,
+                "database_expiry": 1814400,
+                "watchdog_toggle": True,
                 "duplicate_mods_warning": False,
                 "steam_mods_update_check": False,
                 "steamcmd_install_path": self.storage_path,
@@ -441,6 +460,18 @@ class GameConfiguration(QObject):
                         f"The local folder that was loaded does not exist: {local_folder_path}"
                     )
 
+            # general
+            if settings_data.get("watchdog_toggle"):
+                self.watchdog_toggle = settings_data["watchdog_toggle"]
+            if settings_data.get("duplicate_mods_warning"):
+                self.duplicate_mods_warning_toggle = settings_data[
+                    "duplicate_mods_warning"
+                ]
+            if settings_data.get("steam_mods_update_check"):
+                self.steam_mods_update_check_toggle = settings_data[
+                    "steam_mods_update_check"
+                ]
+
             # sorting algorithm
             if settings_data.get("sorting_algorithm"):
                 self.settings_panel.sorting_algorithm_cb.setCurrentText(
@@ -448,30 +479,33 @@ class GameConfiguration(QObject):
                 )
 
             # metadata
-            if settings_data.get("external_metadata_source"):
-                self.settings_panel.external_metadata_cb.setCurrentText(
-                    settings_data["external_metadata_source"]
+            if settings_data.get("external_steam_metadata_source"):
+                self.settings_panel.external_steam_metadata_cb.setCurrentText(
+                    settings_data["external_steam_metadata_source"]
+                )
+            if settings_data.get("external_community_rules_metadata_source"):
+                self.settings_panel.external_community_rules_metadata_cb.setCurrentText(
+                    settings_data["external_community_rules_metadata_source"]
                 )
 
-            # game & steam settings
+            # game args
             if settings_data.get("runArgs"):
                 self.run_arguments = settings_data["runArgs"]
+
+            # db builder
+            if settings_data.get("database_expiry"):
+                self.database_expiry = settings_data["database_expiry"]
             if settings_data.get("steam_apikey"):
                 self.steam_apikey = settings_data["steam_apikey"]
-            if settings_data.get("webapi_query_expiry"):
-                self.webapi_query_expiry = settings_data["webapi_query_expiry"]
-
-            # misc
-            self.duplicate_mods_warning_toggle = settings_data["duplicate_mods_warning"]
-            self.steam_mods_update_check_toggle = settings_data[
-                "steam_mods_update_check"
-            ]
 
             # steamcmd
-            self.steamcmd_validate_downloads_toggle = settings_data[
-                "steamcmd_validate_downloads"
-            ]
-            self.steamcmd_install_path = settings_data["steamcmd_install_path"]
+            if settings_data.get("steamcmd_validate_downloads"):
+                self.steamcmd_validate_downloads_toggle = settings_data[
+                    "steamcmd_validate_downloads"
+                ]
+
+            if settings_data.get("steamcmd_install_path"):
+                self.steamcmd_install_path = settings_data["steamcmd_install_path"]
             if not os.path.exists(self.steamcmd_install_path):
                 logger.warning(
                     f"Configured steamcmd prefix does not exist. Creating new steamcmd prefix at: {self.steamcmd_install_path}"
@@ -479,7 +513,8 @@ class GameConfiguration(QObject):
                 os.makedirs(self.steamcmd_install_path)
 
             # todds
-            self.todds_preset = settings_data["todds_preset"]
+            if settings_data.get("todds_preset"):
+                self.todds_preset = settings_data["todds_preset"]
             if self.todds_preset == "low":
                 self.settings_panel.todds_presets_cb.setCurrentText(
                     "Low quality (for low VRAM/older GPU, optimize for VRAM)"
@@ -492,11 +527,14 @@ class GameConfiguration(QObject):
                 self.settings_panel.todds_presets_cb.setCurrentText(
                     "Very high quality (better textures, longer encode time)"
                 )
-            self.todds_active_mods_target_toggle = settings_data[
-                "todds_active_mods_target"
-            ]
-            self.todds_dry_run_toggle = settings_data["todds_dry_run"]
-            self.todds_overwrite_toggle = settings_data["todds_overwrite"]
+            if settings_data.get("todds_active_mods_target"):
+                self.todds_active_mods_target_toggle = settings_data[
+                    "todds_active_mods_target"
+                ]
+            if settings_data.get("todds_dry_run"):
+                self.todds_dry_run_toggle = settings_data["todds_dry_run"]
+            if settings_data.get("todds_overwrite"):
+                self.todds_overwrite_toggle = settings_data["todds_overwrite"]
 
         logger.info("Finished storage initialization")
 
@@ -506,7 +544,7 @@ class GameConfiguration(QObject):
         not show it. The settings panel allows the user to
         tweak certain settings of RimSort, like which sorting
         algorithm to use, or what theme to use.
-        Widndow modality is set so the user cannot interact with
+        Window modality is set so the user cannot interact with
         the rest of the application while the settings panel is open.
         """
         logger.info("Calling Settings Panel initialization")
@@ -519,43 +557,38 @@ class GameConfiguration(QObject):
             "Settings panel closed, updating persistent storage for these options..."
         )
 
-        # close the window
+        # Close the window
         self.settings_panel.close()
 
-        # sorting algorithm
-        self.update_persistent_storage(
-            "sorting_algorithm", self.settings_panel.sorting_algorithm_cb.currentText()
-        )
-
-        # metadata
-        self.update_persistent_storage(
-            "external_metadata_source",
-            self.settings_panel.external_metadata_cb.currentText(),
-        )
-
-        # duplicate mods check
+        # Determine configurations
+        # watchdog toggle
+        if self.settings_panel.duplicate_mods_checkbox.isChecked():
+            self.watchdog_toggle = True
+        else:
+            self.watchdog_toggle = False
+        # duplicate mods check toggle
         if self.settings_panel.duplicate_mods_checkbox.isChecked():
             self.duplicate_mods_warning_toggle = True
-            self.update_persistent_storage("duplicate_mods_warning", True)
         else:
             self.duplicate_mods_warning_toggle = False
-            self.update_persistent_storage("duplicate_mods_warning", False)
 
-        # steam mods update check
+        # steam mods update check toggle
         if self.settings_panel.steam_mods_update_checkbox.isChecked():
             self.steam_mods_update_check_toggle = True
-            self.update_persistent_storage("steam_mods_update_check", True)
         else:
             self.steam_mods_update_check_toggle = False
-            self.update_persistent_storage("steam_mods_update_check", False)
 
-        # steamcmd validate downloads
+        # dq getappdependencies toggle
+        if self.settings_panel.build_steam_database_dlc_data_checkbox.isChecked():
+            self.build_steam_database_dlc_data_toggle = True
+        else:
+            self.build_steam_database_dlc_data_toggle = False
+
+        # steamcmd validate downloads toggle
         if self.settings_panel.steamcmd_validate_downloads_checkbox.isChecked():
             self.steamcmd_validate_downloads_toggle = True
-            self.update_persistent_storage("steamcmd_validate_downloads", True)
         else:
             self.steamcmd_validate_downloads_toggle = False
-            self.update_persistent_storage("steamcmd_validate_downloads", False)
 
         # todds preset
         if "Low quality" in self.settings_panel.todds_presets_cb.currentText():
@@ -564,28 +597,39 @@ class GameConfiguration(QObject):
             self.todds_preset = "medium"
         if "Very high quality" in self.settings_panel.todds_presets_cb.currentText():
             self.todds_preset = "high"
-        self.update_persistent_storage("todds_preset", self.todds_preset)
         # todds active mods target
         if self.settings_panel.todds_active_mods_target_checkbox.isChecked():
             self.todds_active_mods_target_toggle = True
-            self.update_persistent_storage("todds_active_mods_target", True)
         else:
             self.todds_active_mods_target_toggle = False
-            self.update_persistent_storage("todds_active_mods_target", False)
         # todds dry run
         if self.settings_panel.todds_dry_run_checkbox.isChecked():
             self.todds_dry_run_toggle = True
-            self.update_persistent_storage("todds_dry_run", True)
         else:
             self.todds_dry_run_toggle = False
-            self.update_persistent_storage("todds_dry_run", False)
         # todds overwrite textures
         if self.settings_panel.todds_overwrite_checkbox.isChecked():
             self.todds_overwrite_toggle = True
-            self.update_persistent_storage("todds_overwrite", True)
         else:
             self.todds_overwrite_toggle = False
-            self.update_persistent_storage("todds_overwrite", False)
+
+        # Update settings.json
+        self.update_persistent_storage(
+            {
+                "build_steam_database_dlc_data": self.build_steam_database_dlc_data_toggle,
+                "duplicate_mods_warning": self.duplicate_mods_warning_toggle,
+                "external_steam_metadata_source": self.settings_panel.external_steam_metadata_cb.currentText(),
+                "external_community_rules_metadata_source": self.settings_panel.external_community_rules_metadata_cb.currentText(),
+                "sorting_algorithm": self.settings_panel.sorting_algorithm_cb.currentText(),
+                "steam_mods_update_check": self.steam_mods_update_check_toggle,
+                "steamcmd_validate_downloads": self.steamcmd_validate_downloads_toggle,
+                "todds_active_mods_target": self.todds_active_mods_target_toggle,
+                "todds_dry_run": self.todds_dry_run_toggle,
+                "todds_overwrite": self.todds_overwrite_toggle,
+                "todds_preset": self.todds_preset,
+                "watchdog_toggle": self.watchdog_toggle,
+            }
+        )
 
     def open_directory(self, callable: Any) -> None:
         """
@@ -638,7 +682,7 @@ class GameConfiguration(QObject):
                 f"Game install folder chosen. Setting UI and updating storage: {game_exe_folder_path}"
             )
             self.game_folder_line.setText(game_exe_folder_path)
-            self.update_persistent_storage("game_folder", game_exe_folder_path)
+            self.update_persistent_storage({"game_folder": game_exe_folder_path})
         else:
             logger.info("User pressed cancel, passing")
 
@@ -665,7 +709,7 @@ class GameConfiguration(QObject):
                 f"ModsConfig.xml folder chosen. Setting UI and updating storage: {config_folder_path}"
             )
             self.config_folder_line.setText(config_folder_path)
-            self.update_persistent_storage("config_folder", config_folder_path)
+            self.update_persistent_storage({"config_folder": config_folder_path})
         else:
             logger.info("User pressed cancel, passing")
 
@@ -693,7 +737,7 @@ class GameConfiguration(QObject):
                 f"Workshop folder chosen. Setting UI and updating storage: {workshop_path}"
             )
             self.workshop_folder_line.setText(workshop_path)
-            self.update_persistent_storage("workshop_folder", workshop_path)
+            self.update_persistent_storage({"workshop_folder": workshop_path})
         else:
             logger.info("User pressed cancel, passing")
 
@@ -721,11 +765,11 @@ class GameConfiguration(QObject):
                 f"Local mods folder chosen. Setting UI and updating storage: {local_path}"
             )
             self.local_folder_line.setText(local_path)
-            self.update_persistent_storage("local_folder", local_path)
+            self.update_persistent_storage({"local_folder": local_path})
         else:
             logger.info("User pressed cancel, passing")
 
-    def update_persistent_storage(self, key: str, value: Any) -> None:
+    def update_persistent_storage(self, settings: Dict[str, Any]) -> None:
         """
         Given a key and value, write this key and value to the
         persistent settings.json.
@@ -740,7 +784,7 @@ class GameConfiguration(QObject):
             logger.info("settings.json exists, opening to write")
             with open(settings_path) as infile:
                 settings_data = json.load(infile)
-                settings_data[key] = value
+                settings_data.update(settings)
                 json_object = json.dumps(settings_data, indent=4)
                 with open(settings_path, "w") as outfile:
                     outfile.write(json_object)
@@ -755,7 +799,7 @@ class GameConfiguration(QObject):
         folders = ["workshop_folder", "game_folder", "config_folder", "local_folder"]
         # Update storage to remove all paths data
         for folder in folders:
-            self.update_persistent_storage(folder, "")
+            self.update_persistent_storage({folder: ""})
 
         # Visually delete paths data
         self.game_folder_line.setText("")
@@ -764,42 +808,24 @@ class GameConfiguration(QObject):
         self.local_folder_line.setText("")
         self.game_version_line.setText("")
 
-    def dupe_mods_warning_setting(self) -> None:
-        logger.info(f"USER ACTION: change dupe mods warning state")
-        if self.settings_panel.duplicate_mods_checkbox.isChecked():
-            self.duplicate_mods_warning_toggle = True
-            self.update_persistent_storage("duplicate_mods_warning", True)
-        else:
-            self.duplicate_mods_warning_toggle = False
-            self.update_persistent_storage("duplicate_mods_warning", False)
-
-    def steam_mods_update_check_setting(self) -> None:
-        logger.info(f"USER ACTION: change Steam mods update check state")
-        if self.settings_panel.steam_mods_update_checkbox.isChecked():
-            self.steam_mods_update_check_toggle = True
-            self.update_persistent_storage("steam_mods_update_check", True)
-        else:
-            self.steam_mods_update_check_toggle = False
-            self.update_persistent_storage("steam_mods_update_check", False)
-
     def clear_game_folder_line(self) -> None:
         logger.info("USER ACTION: clear game folder line")
-        self.update_persistent_storage("game_folder", "")
+        self.update_persistent_storage({"game_folder": ""})
         self.game_folder_line.setText("")
 
     def clear_config_folder_line(self) -> None:
         logger.info("USER ACTION: clear config folder line")
-        self.update_persistent_storage("config_folder", "")
+        self.update_persistent_storage({"config_folder": ""})
         self.config_folder_line.setText("")
 
     def clear_workshop_folder_line(self) -> None:
         logger.info("USER ACTION: clear workshop folder line")
-        self.update_persistent_storage("workshop_folder", "")
+        self.update_persistent_storage({"workshop_folder": ""})
         self.workshop_folder_line.setText("")
 
     def clear_local_folder_line(self) -> None:
         logger.info("USER ACTION: clear local folder line")
-        self.update_persistent_storage("local_folder", "")
+        self.update_persistent_storage({"local_folder": ""})
         self.local_folder_line.setText("")
 
     def autodetect_paths_by_platform(self) -> None:
@@ -877,7 +903,7 @@ class GameConfiguration(QObject):
                     "No value set currently for game folder. Overwriting with autodetected path"
                 )
                 self.game_folder_line.setText(os_paths[0])
-                self.update_persistent_storage("game_folder", os_paths[0])
+                self.update_persistent_storage({"game_folder": os_paths[0]})
             else:
                 logger.info("Value already set for game folder. Passing")
         else:
@@ -893,7 +919,7 @@ class GameConfiguration(QObject):
                     "No value set currently for config folder. Overwriting with autodetected path"
                 )
                 self.config_folder_line.setText(os_paths[1])
-                self.update_persistent_storage("config_folder", os_paths[1])
+                self.update_persistent_storage({"config_folder": os_paths[1]})
             else:
                 logger.info("Value already set for config folder. Passing")
         else:
@@ -909,7 +935,7 @@ class GameConfiguration(QObject):
                     "No value set currently for workshop folder. Overwriting with autodetected path"
                 )
                 self.workshop_folder_line.setText(os_paths[2])
-                self.update_persistent_storage("workshop_folder", os_paths[2])
+                self.update_persistent_storage({"workshop_folder": os_paths[2]})
             else:
                 logger.info("Value already set for workshop folder. Passing")
         else:
@@ -932,7 +958,7 @@ class GameConfiguration(QObject):
                     "No value set currently for local mods folder. Overwriting with autodetected path"
                 )
                 self.local_folder_line.setText(rimworld_mods_path)
-                self.update_persistent_storage("local_folder", rimworld_mods_path)
+                self.update_persistent_storage({"local_folder": rimworld_mods_path})
             else:
                 logger.info("Value already set for local mods folder. Passing")
         else:
