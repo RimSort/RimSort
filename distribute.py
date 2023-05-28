@@ -352,29 +352,31 @@ def copy_swp_libs() -> None:
         print("Copying libs for non-Windows platform")
         shutil.copyfile(STEAMWORKSPY_BUILT_LIB, STEAMWORKSPY_LIB_FIN)
 
-        # Symlink built module
-        print("Creating symlink to built module...")
-        MODULE_SRC_PATH = os.path.join(_CWD, "SteamworksPy", "steamworks")
-        MODULE_DEST_PATH = os.path.join(_CWD, "steamworks")
-        try:
-            if _SYSTEM != "Windows":
-                os.symlink(
-                    MODULE_SRC_PATH,
-                    MODULE_DEST_PATH,
-                    target_is_directory=True,
-                )
-            else:
-                from _winapi import CreateJunction
+    # Symlink built module
+    print("Creating symlink to built module...")
+    MODULE_SRC_PATH = os.path.join(_CWD, "SteamworksPy", "steamworks")
+    MODULE_DEST_PATH = os.path.join(_CWD, "steamworks")
+    try:
+        if _SYSTEM != "Windows":
+            os.symlink(
+                MODULE_SRC_PATH,
+                MODULE_DEST_PATH,
+                target_is_directory=True,
+            )
+            print(f"Symlink created: [{MODULE_SRC_PATH}] -> {MODULE_DEST_PATH}")
+        else:
+            from _winapi import CreateJunction
 
-                CreateJunction(MODULE_SRC_PATH, MODULE_DEST_PATH)
-        except FileExistsError:
-            print(
-                f"Unable to create symlink from source: {MODULE_SRC_PATH} to destination: {MODULE_DEST_PATH}"
-            )
-            print(
-                "Destination already exists, or you don't have permission."
-                + " You can safely ignore this as long as you are able to run RimSort after completing runtime setup."
-            )
+            CreateJunction(MODULE_SRC_PATH, MODULE_DEST_PATH)
+            print(f"Symlink created: [{MODULE_SRC_PATH}] -> {MODULE_DEST_PATH}")
+    except FileExistsError:
+        print(
+            f"Unable to create symlink from source: {MODULE_SRC_PATH} to destination: {MODULE_DEST_PATH}"
+        )
+        print(
+            "Destination already exists, or you don't have permission."
+            + " You can safely ignore this as long as you are able to run RimSort after completing runtime setup."
+        )
 
 
 def get_latest_todds_release() -> None:
@@ -471,5 +473,5 @@ print("Grabbing latest todds release...")
 get_latest_todds_release()
 
 # Build Nuitka distributable binary
-print("Building RimSort application with Nuitka...")
-_execute(_NUITKA_CMD)
+# print("Building RimSort application with Nuitka...")
+# _execute(_NUITKA_CMD)
