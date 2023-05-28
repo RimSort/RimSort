@@ -10,12 +10,13 @@ from time import time
 import traceback
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+from PySide6.QtCore import QObject, Signal
+
+from model.dialogue import show_fatal_error
+from steam.webapi import WebAPI
 from util.constants import RIMWORLD_DLC_METADATA
 from util.steam.steamworks.wrapper import SteamworksAppDependenciesQuery
 from window.runner_panel import RunnerPanel
-
-from steam.webapi import WebAPI
-from model.dialogue import show_fatal_error
 
 
 # This is redundant since it is also done in `logger-tt` config,
@@ -25,28 +26,32 @@ from model.dialogue import show_fatal_error
 getLogger("urllib3").setLevel(WARNING)
 
 
-class AppIDQuery:
+class AppIDQuery(QObject):
     """
     Create AppIDQuery object to initialize the scraped data from Workshop
     """
+
+    appid_messaging_signal = Signal(str)
 
     def __init__(
         self,
         apikey: str,
         appid: int,
-        query_runner=RunnerPanel,
     ):
-        self.all_mods_metadata = {}
+        QObject.__init__(self)
+
+        logger.info("Initializing AppIDQuery...")
         self.apikey = apikey
         self.appid = appid
         self.next_cursor = "*"
         self.pagenum = 1
         self.pages = 1
         self.publishedfileids = []
-        self.query_runner = query_runner
         self.total = 0
+
+    def __initialize_webapi(self) -> None:
         try:  # Try to initialize the API
-            self.api = WebAPI(apikey, format="json", https=True)
+            self.api = WebAPI(self.apikey, format="json", https=True)
         except Exception as e:
             self.api = None
             # Catch exceptions that can potentially leak Steam API key
@@ -58,19 +63,29 @@ class AppIDQuery:
                     : len(stacktrace)
                     - (len(stacktrace) - (stacktrace.find(pattern) + len(pattern)))
                 ]  # If an HTTPError/SSLError from steam/urllib3 module(s) somehow is uncaught, try to remove the Steam API key from the stacktrace
-            self.query_runner.message(
+            self.appid_messaging_signal.emit(
                 f"Dynamic Query received an uncaught exception: {e_name}\nPlease reach out to us on Discord/Github!"
             )
             show_fatal_error(
-                text="RimSort Dynamic Query",
-                information="DynamicQuery failed to initialize WebAPI query!\n\n"
+                text="RimSort AppIDQuery",
+                information="AppIDQuery failed to initialize WebAPI query!\n\n"
                 + "Are you connected to the internet?\n\nIs your configured key invalid or revoked?\n\n",
                 details=stacktrace,
             )
+
+    def compile_pfids_by_appid(self):
+        """
+        Builds a total collection of PublishedFileIds representing a list of all workshop mods
+        for any given Steam AppID. These PublishedFileIds can be used in a many ways!
+        """
+        self.appid_messaging_signal.emit(f"AppIDQuery initializing for {self.appid}")
+
+        self.__initialize_webapi()
+
         if self.api:
             self.query = True
-            self.query_runner.message(
-                f"AppIDQuery initializing... Compiling list of all Workshop mod PublishedFileIDs for {self.appid}..."
+            self.appid_messaging_signal.emit(
+                f"WebAPI initialized! Compiling list of all Workshop mod PublishedFileIDs for {self.appid}..."
             )
             while self.query:
                 if self.pagenum > self.pages:
@@ -81,7 +96,9 @@ class AppIDQuery:
                 )
         else:
             self.query = False
-            self.query_runner.message(f"AppIDQuery: WebAPI failed to initialize!")
+            self.appid_messaging_signal.emit(
+                f"AppIDQuery: WebAPI failed to initialize!"
+            )
 
     def IPublishedFileService_QueryFiles(self, cursor: str) -> str:
         """
@@ -149,10 +166,10 @@ class AppIDQuery:
                 self.pages = ceil(
                     self.total / len(result["response"]["publishedfiledetails"])
                 )
-                self.query_runner.message(
+                self.appid_messaging_signal.emit(
                     f"Total mod items to parse: {str(self.total)}"
                 )
-        self.query_runner.message(
+        self.appid_messaging_signal.emit(
             f"IPublishedFileService.QueryFiles page [{str(self.pagenum)}"
             + f"/{str(self.pages)}]"
         )
@@ -164,7 +181,7 @@ class AppIDQuery:
         return result["response"]["next_cursor"]
 
 
-class DynamicQuery:
+class DynamicQuery(QObject):
     """
     Create DynamicQuery object to initialize the scraped data from Workshop
 
@@ -174,43 +191,23 @@ class DynamicQuery:
     database generation. This adds an 'expiry' to the data being cached.
     """
 
+    dq_messaging_signal = Signal(str)
+
     def __init__(
         self,
         apikey: str,
         appid: int,
         life: int,
-        query_runner=RunnerPanel,
         get_appid_deps=None,
     ):
+        QObject.__init__(self)
+
+        logger.info("Initializing DynamicQuery...")
         self.apikey = apikey
         self.appid = appid
         self.expiry = self.__expires(life)
-        self.query_runner = query_runner
         self.workshop_json_data = {}
         self.get_appid_deps = get_appid_deps
-        try:  # Try to initialize the API
-            self.api = WebAPI(apikey, format="json", https=True)
-        except Exception as e:
-            self.api = None
-            # Catch exceptions that can potentially leak Steam API key
-            e_name = e.__class__.__name__
-            stacktrace = traceback.format_exc()
-            pattern = "&key="
-            if pattern in stacktrace:
-                stacktrace = stacktrace[
-                    : len(stacktrace)
-                    - (len(stacktrace) - (stacktrace.find(pattern) + len(pattern)))
-                ]  # If an HTTPError/SSLError from steam/urllib3 module(s) somehow is uncaught, try to remove the Steam API key from the stacktrace
-            self.query_runner.message(
-                f"Dynamic Query received an uncaught exception: {e_name}\nPlease reach out to us on Discord/Github!"
-            )
-            show_fatal_error(
-                text="RimSort Dynamic Query",
-                information="DynamicQuery failed to initialize WebAPI query!\n\n"
-                + "Are you connected to the internet?\n\nIs your configured key invalid or revoked?\n\n",
-                details=stacktrace,
-            )
-        self.query_runner.message(f"DynamicQuery initialized for {self.appid}...")
 
     def __chunks(self, _list: list, limit: int):
         """
@@ -225,23 +222,46 @@ class DynamicQuery:
     def __expires(self, life: int) -> int:
         return int(time() + life)  # current seconds since epoch + 30 minutes
 
+    def __initialize_webapi(self) -> None:
+        try:  # Try to initialize the API
+            self.api = WebAPI(self.apikey, format="json", https=True)
+        except Exception as e:
+            self.api = None
+            # Catch exceptions that can potentially leak Steam API key
+            e_name = e.__class__.__name__
+            stacktrace = traceback.format_exc()
+            pattern = "&key="
+            if pattern in stacktrace:
+                stacktrace = stacktrace[
+                    : len(stacktrace)
+                    - (len(stacktrace) - (stacktrace.find(pattern) + len(pattern)))
+                ]  # If an HTTPError/SSLError from steam/urllib3 module(s) somehow is uncaught, try to remove the Steam API key from the stacktrace
+            self.dq_messaging_signal.emit(
+                f"Dynamic Query received an uncaught exception: {e_name}\nPlease reach out to us on Discord/Github!"
+            )
+            show_fatal_error(
+                text="RimSort Dynamic Query",
+                information="DynamicQuery failed to initialize WebAPI query!\n\n"
+                + "Are you connected to the internet?\n\nIs your configured key invalid or revoked?\n\n",
+                details=stacktrace,
+            )
+
     def cache_parsable_db_data(
         self, database: Dict[str, Any], publishedfileids: list
-    ) -> Optional[Dict[Any, Any]]:
+    ) -> None:
         """
         Builds a database using a chunked WebAPI query of all available PublishedFileIds
         that are pulled from local mod metadata.
 
         :param database: a database to update using IPublishedFileService_GetDetails queries
-        :return: a RimPy Mod Manager db_data["database"] equivalent, stitched together from
-        local database provided, as well as the Workshop metadata results from a live WebAPI
-        query of those publishedfileids
-            OR None - which indicates we weren't able to piece together a database (if DQ failure)
         """
 
-        self.query_runner.message(
-            f"DynamicQuery initializing for {len(publishedfileids)} mods"
+        self.dq_messaging_signal.emit(
+            f"\nDynamicQuery initializing for {len(publishedfileids)} mods"
         )
+
+        self.__initialize_webapi()
+
         query = database
         query["version"] = self.expiry
         query["database"] = database["database"]
@@ -257,7 +277,7 @@ class DynamicQuery:
             if (
                 len(missing_children) > 0
             ):  # If we have missing data for any dependency...
-                self.query_runner.message(
+                self.dq_messaging_signal.emit(
                     f"Retrieving dependency information for the following missing children: {missing_children}"
                 )
                 # Extend publishedfileids with the missing_children PublishedFileIds for final query
@@ -281,6 +301,12 @@ class DynamicQuery:
                 querying = False
 
         if self.get_appid_deps:
+            self.dq_messaging_signal.emit(
+                "Parameter `get_appid_deps` is set to True. Retrieving AppID dependency information with Steamworks API..."
+            )
+            self.dq_messaging_signal.emit(
+                "Starting ISteamUGC/GetAppDependencies... This may take awhile..."
+            )
             # ISteamUGC/GetAppDependencies
             queue = Queue()
             steamworks_api_process = SteamworksAppDependenciesQuery(
@@ -294,6 +320,9 @@ class DynamicQuery:
             )  # Queue contains our metadata: {int publishedFileId: [int appid(s)]}
             for pfid in query["database"].keys():
                 if int(pfid) in pfids_appid_deps:
+                    self.dq_messaging_signal.emit(
+                        f"Populating AppID dependency information for mod {pfid}..."
+                    )
                     for appid in pfids_appid_deps[int(pfid)]:
                         query["database"][pfid]["dependencies"].update(
                             {
@@ -304,17 +333,17 @@ class DynamicQuery:
                             }
                         )
         else:
-            self.query_runner.message(
+            self.dq_messaging_signal.emit(
                 "Parameter `get_appid_deps` is set to False or was not passed."
             )
-            self.query_runner.message("Skipping ISteamUGC/GetAppDependencies...")
+            self.dq_messaging_signal.emit("Skipping ISteamUGC/GetAppDependencies...")
 
         # Notify & return
         total = len(query["database"])
-        self.query_runner.message(
+        self.dq_messaging_signal.emit(
             f"Returning Steam Workshop metadata for {total} PublishedFileIds"
         )
-        return query
+        self.workshop_json_data = query.copy()
 
     def IPublishedFileService_GetDetails(
         self, json_to_update: Dict[Any, Any], publishedfileids: list
@@ -338,13 +367,13 @@ class DynamicQuery:
         missing_children = []
         result = json_to_update
         # Uncomment to see the all pfids to be queried
-        # self.query_runner.message(f"PublishedFileIds being queried: {publishedfileids}")
+        # self.dq_messaging_signal.emit(f"PublishedFileIds being queried: {publishedfileids}")
         for batch in self.__chunks(
             publishedfileids, 215
         ):  # Batch limit appears to be 215 PublishedFileIds at a time - this appears to be a WebAPI limitation
-            self.query_runner.message(f"Retrieving metadata for {len(batch)} mods")
+            self.dq_messaging_signal.emit(f"Retrieving metadata for {len(batch)} mods")
             # Uncomment to see the pfids from each batch
-            # self.query_runner.message(f"PublishedFileIds in batch: {batch}")
+            # self.dq_messaging_signal.emit(f"PublishedFileIds in batch: {batch}")
             response = self.api.call(
                 method_path="IPublishedFileService.GetDetails",
                 key=self.apikey,
@@ -368,7 +397,7 @@ class DynamicQuery:
                 ]  # Set the PublishedFileId to that of the metadata we are parsing
 
                 # Uncomment this to view the metadata being parsed in real time
-                # self.query_runner.message(f"{publishedfileid}: {metadata}")
+                # self.dq_messaging_signal.emit(f"{publishedfileid}: {metadata}")
 
                 # If the mod is no longer published
                 if metadata["result"] != 1:
@@ -376,7 +405,7 @@ class DynamicQuery:
                         publishedfileid
                     ):  # If we don't already have a ["database"] entry for this pfid
                         result["database"][publishedfileid] = {}
-                    self.query_runner.message(
+                    self.dq_messaging_signal.emit(
                         f"Tried to parse metadata for a mod that is deleted/private/removed/unposted: {publishedfileid}"
                     )
                     result["database"][
@@ -446,7 +475,7 @@ class DynamicQuery:
                                     ] = [child_name, child_url]
                             else:  # Child was not found in database, track it's pfid for later
                                 if child_pfid not in missing_children:
-                                    self.query_runner.message(
+                                    self.dq_messaging_signal.emit(
                                         f"Could not find pfid {child_pfid} in database. Adding child to missing_children..."
                                     )
                                     missing_children.append(child_pfid)
@@ -460,7 +489,7 @@ class DynamicQuery:
         return result, missing_children
 
 
-def ISteamRemoteStorage_GetCollectionDetails(publishedfileids: list):
+def ISteamRemoteStorage_GetCollectionDetails(publishedfileids: list) -> Dict[str, Any]:
     """
     Given a list of Steam Workshopmod collection PublishedFileIds, return a dict of
     json data queried from Steam WebAPI, containing data to be parsed.
@@ -485,22 +514,20 @@ def ISteamRemoteStorage_GetCollectionDetails(publishedfileids: list):
         try:
             # Parse the JSON response
             json_response = request.json()
-            self.query_runner.message(
-                f"Received WebAPI response from query: {json_response}"
-            )
+            logger.debug(f"Received WebAPI response from query: {json_response}")
         except JSONDecodeError as e:
-            self.query_runner.message(f"Invalid JSON response: {e}")
+            logger.warning(f"Invalid JSON response: {e}")
             return None
     else:
-        self.query_runner.message(
-            f"Error {request.status_code} retrieving data from Steam Web API"
-        )
+        logger.error(f"Error {request.status_code} retrieving data from Steam Web API")
         return None
 
     return json_response
 
 
-def ISteamRemoteStorage_GetPublishedFileDetails(publishedfileids: list):
+def ISteamRemoteStorage_GetPublishedFileDetails(
+    publishedfileids: list,
+) -> Dict[str, Any]:
     """
     Given a list of PublishedFileIds, return a dict of json data queried
     from Steam WebAPI, containing data to be parsed.
@@ -527,16 +554,12 @@ def ISteamRemoteStorage_GetPublishedFileDetails(publishedfileids: list):
         try:
             # Parse the JSON response
             json_response = request.json()
-            self.query_runner.message(
-                f"Received WebAPI response from query: {json_response}"
-            )
+            logger.debug(f"Received WebAPI response from query: {json_response}")
         except JSONDecodeError as e:
-            self.query_runner.message(f"Invalid JSON response: {e}")
+            logger.warning(f"Invalid JSON response: {e}")
             return None
     else:
-        self.query_runner.message(
-            f"Error {request.status_code} retrieving data from Steam Web API"
-        )
+        logger.error(f"Error {request.status_code} retrieving data from Steam Web API")
         return None
 
     return json_response

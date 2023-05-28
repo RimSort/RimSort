@@ -238,7 +238,7 @@ class GameConfiguration(QObject):
         self.database_expiry = 604800
 
         # WATCHDOG TOGGLE
-        self.watchdog_toggle = True
+        self.watchdog_toggle = False
 
         # DUPE MODS WARNING TOGGLE
         self.duplicate_mods_warning_toggle = False
@@ -246,8 +246,14 @@ class GameConfiguration(QObject):
         # STEAM MODS UPDATE CHECK TOGGLE
         self.steam_mods_update_check_toggle = False
 
+        # DB BUILDER MODE
+        self.db_builder_include = "all_mods"
+
         # DQ GETAPPDEPENDENCIES TOGGLE
         self.build_steam_database_dlc_data_toggle = False
+
+        # DB BUILDER UPDATE TOGGLE
+        self.build_steam_database_update_toggle = False
 
         # STEAMCMD INSTALL PATH
         self.steamcmd_install_path = ""
@@ -259,7 +265,7 @@ class GameConfiguration(QObject):
         self.todds_preset = "medium"
 
         # TODDS ACTIVE MODS TARGET TOGGLE
-        self.todds_active_mods_target_toggle = True
+        self.todds_active_mods_target_toggle = False
 
         # TODDS DRY RUN TOGGLE
         self.todds_dry_run_toggle = False
@@ -312,6 +318,11 @@ class GameConfiguration(QObject):
         # DQ GetAppDependencies
         self.settings_panel.build_steam_database_dlc_data_checkbox.setChecked(
             self.build_steam_database_dlc_data_toggle
+        )
+
+        # DB Builder update toggle
+        self.settings_panel.build_steam_database_update_checkbox.setChecked(
+            self.build_steam_database_update_toggle
         )
 
         # SteamCMD
@@ -401,8 +412,10 @@ class GameConfiguration(QObject):
                 "sorting_algorithm": "RimPy",
                 "external_steam_metadata_source": "None",
                 "external_community_rules_metadata_source": "None",
-                "build_steam_database_dlc_data": True,
                 "database_expiry": 1814400,
+                "db_builder_include": "all_mods",
+                "build_steam_database_dlc_data": True,
+                "build_steam_database_update_toggle": False,
                 "watchdog_toggle": True,
                 "duplicate_mods_warning": False,
                 "steam_mods_update_check": False,
@@ -493,6 +506,24 @@ class GameConfiguration(QObject):
                 self.run_arguments = settings_data["runArgs"]
 
             # db builder
+            if settings_data.get("db_builder_include"):
+                self.db_builder_include = settings_data["db_builder_include"]
+            if self.db_builder_include == "no_local":
+                self.settings_panel.build_steam_database_include_cb.setCurrentText(
+                    "No local data"
+                )
+            if self.db_builder_include == "all_mods":
+                self.settings_panel.build_steam_database_include_cb.setCurrentText(
+                    "Local Only"
+                )
+            if settings_data.get("build_steam_database_dlc_data"):
+                self.build_steam_database_dlc_data_toggle = settings_data[
+                    "build_steam_database_dlc_data"
+                ]
+            if settings_data.get("build_steam_database_update_toggle"):
+                self.build_steam_database_update_toggle = settings_data[
+                    "build_steam_database_update_toggle"
+                ]
             if settings_data.get("database_expiry"):
                 self.database_expiry = settings_data["database_expiry"]
             if settings_data.get("steam_apikey"):
@@ -503,7 +534,6 @@ class GameConfiguration(QObject):
                 self.steamcmd_validate_downloads_toggle = settings_data[
                     "steamcmd_validate_downloads"
                 ]
-
             if settings_data.get("steamcmd_install_path"):
                 self.steamcmd_install_path = settings_data["steamcmd_install_path"]
             if not os.path.exists(self.steamcmd_install_path):
@@ -571,18 +601,33 @@ class GameConfiguration(QObject):
             self.duplicate_mods_warning_toggle = True
         else:
             self.duplicate_mods_warning_toggle = False
-
         # steam mods update check toggle
         if self.settings_panel.steam_mods_update_checkbox.isChecked():
             self.steam_mods_update_check_toggle = True
         else:
             self.steam_mods_update_check_toggle = False
 
+        # db builder mode
+        if (
+            "No local data"
+            in self.settings_panel.build_steam_database_include_cb.currentText()
+        ):
+            self.db_builder_include = "no_local"
+        elif (
+            "All Mods"
+            in self.settings_panel.build_steam_database_include_cb.currentText()
+        ):
+            self.db_builder_include = "all_mods"
         # dq getappdependencies toggle
         if self.settings_panel.build_steam_database_dlc_data_checkbox.isChecked():
             self.build_steam_database_dlc_data_toggle = True
         else:
             self.build_steam_database_dlc_data_toggle = False
+        # db builder update toggle
+        if self.settings_panel.build_steam_database_update_checkbox.isChecked():
+            self.build_steam_database_update_toggle = True
+        else:
+            self.build_steam_database_update_toggle = False
 
         # steamcmd validate downloads toggle
         if self.settings_panel.steamcmd_validate_downloads_checkbox.isChecked():
@@ -617,6 +662,8 @@ class GameConfiguration(QObject):
         self.update_persistent_storage(
             {
                 "build_steam_database_dlc_data": self.build_steam_database_dlc_data_toggle,
+                "build_steam_database_update_toggle": self.build_steam_database_update_toggle,
+                "db_builder_include": self.db_builder_include,
                 "duplicate_mods_warning": self.duplicate_mods_warning_toggle,
                 "external_steam_metadata_source": self.settings_panel.external_steam_metadata_cb.currentText(),
                 "external_community_rules_metadata_source": self.settings_panel.external_community_rules_metadata_cb.currentText(),

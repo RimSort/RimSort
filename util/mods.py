@@ -539,7 +539,7 @@ def get_active_mods_from_config(
                                     continue
 
         missing_mods = list(set(to_populate) - set(populated_mods))
-        logger.info(
+        logger.debug(
             f"Generated active_mods_dict with {len(active_mods_dict)} entries: {active_mods_dict}"
         )
         logger.info(f"Returning missing mods: {missing_mods}")
@@ -1274,8 +1274,8 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                             )
             else:
                 files_scanned.append(file.name)
-        logger.info(f"Scanned the following files in mods path: {files_scanned}")
-        logger.info(f"Scanned the following dirs in mods path: {dirs_scanned}")
+        logger.debug(f"Scanned the following files in mods path: {files_scanned}")
+        logger.debug(f"Scanned the following dirs in mods path: {dirs_scanned}")
         if invalid_dirs:
             logger.warning(
                 f"The following scanned dirs did not contain mod info: {invalid_dirs}"

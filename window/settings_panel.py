@@ -57,7 +57,7 @@ class SettingsPanel(QDialog):
         self.general_label = QLabel("General")
         self.general_label.setObjectName("summaryValue")
         self.general_label.setAlignment(Qt.AlignCenter)
-        self.rimsort_actions_label = QLabel("RimSort Actions")
+        self.rimsort_actions_label = QLabel("RimSort Actions:")
         self.rimsort_actions_label.setObjectName("summaryValue")
         self.rimsort_actions_label.setAlignment(Qt.AlignCenter)
         self.clear_paths_button = QPushButton("Clear Paths")
@@ -89,10 +89,12 @@ class SettingsPanel(QDialog):
                 self.storage_path,
             )
         )
-        self.rimsort_options_label = QLabel("RimSort Options")
+        self.rimsort_options_label = QLabel("RimSort Options:")
         self.rimsort_options_label.setObjectName("summaryValue")
         self.rimsort_options_label.setAlignment(Qt.AlignCenter)
-        self.logger_debug_checkbox = QCheckBox("Enable RimSort logger DEBUG mode")
+        self.logger_debug_checkbox = QCheckBox(
+            "Enable RimSort logger verbose DEBUG mode"
+        )
         self.logger_debug_checkbox.setObjectName("summaryValue")
         self.logger_debug_checkbox.setToolTip(
             "If enabled, changes logger level from INFO to DEBUG, enabling us to supply\n"
@@ -100,7 +102,9 @@ class SettingsPanel(QDialog):
             + "This option is applied on RimSort initialization."
         )
         self.logger_debug_checkbox.clicked.connect(self.loggerDebugCheckboxEvent)
-        self.watchdog_checkbox = QCheckBox("Enable RimSort to use watchdog daemon")
+        self.watchdog_checkbox = QCheckBox(
+            "Enable RimSort to use watchdog file monitor daemon"
+        )
         self.watchdog_checkbox.setObjectName("summaryValue")
         self.watchdog_checkbox.setToolTip(
             "Primarily used to detect file-changes to mods and activate the Refresh\n"
@@ -108,11 +112,11 @@ class SettingsPanel(QDialog):
             + "This option is applied on RimSort initialization."
         )
         self.duplicate_mods_checkbox = QCheckBox(
-            "Show duplicate mods warning on refresh"
+            "Show duplicate mods check UI warning on refresh"
         )
         self.duplicate_mods_checkbox.setObjectName("summaryValue")
         self.steam_mods_update_checkbox = QCheckBox(
-            "Show Steam mods update check on refresh"
+            "Show Steam mods check + UI warning on refresh"
         )
         self.steam_mods_update_checkbox.setObjectName("summaryValue")
         self.steam_mods_update_checkbox.setToolTip(
@@ -131,8 +135,8 @@ class SettingsPanel(QDialog):
         self.general_preferences_layout.addWidget(self.watchdog_checkbox)
         self.general_preferences_layout.addWidget(self.duplicate_mods_checkbox)
         self.general_preferences_layout.addWidget(self.steam_mods_update_checkbox)
-        self.general_options_layout.addLayout(self.general_actions_layout)
-        self.general_options_layout.addLayout(self.general_preferences_layout)
+        self.general_options_layout.addLayout(self.general_actions_layout, 5)
+        self.general_options_layout.addLayout(self.general_preferences_layout, 10)
 
         # sorting algorithm
         self.sorting_algorithm_label = QLabel("Sorting Algorithm")
@@ -146,6 +150,8 @@ class SettingsPanel(QDialog):
         self.metadata_options_layout = QHBoxLayout()
         self.metadata_configuration_layout = QVBoxLayout()
         self.database_tools_layout = QVBoxLayout()
+        self.database_tools_builder_layout = QHBoxLayout()
+        self.database_tools_actions_layout = QHBoxLayout()
         # metadata widgets
         self.external_metadata_label = QLabel("External Metadata")
         self.external_metadata_label.setObjectName("summaryValue")
@@ -170,13 +176,21 @@ class SettingsPanel(QDialog):
         self.external_community_rules_metadata_cb.setItemDelegate(
             self.centered_item_delegate
         )
-        self.build_steam_database_label = QLabel("DB Tools:")
+        self.build_steam_database_label = QLabel("Steam DB Builder Options:")
         self.build_steam_database_label.setObjectName("summaryValue")
         self.build_steam_database_label.setAlignment(Qt.AlignCenter)
-        self.build_steam_database_button = QPushButton("Build Steam database")
+        self.build_steam_database_include_label = QLabel("Include:")
+        self.build_steam_database_include_label.setObjectName("summaryValue")
+        self.build_steam_database_include_label.setAlignment(Qt.AlignCenter)
+        self.build_steam_database_include_cb = QComboBox()
+        self.build_steam_database_include_cb.addItems(["No local data", "All Mods"])
+        self.build_steam_database_include_cb.setItemDelegate(
+            self.centered_item_delegate
+        )
+        self.build_steam_database_button = QPushButton("Build database")
         self.build_steam_database_button.setToolTip(
             "Right-click to set:\n"
-            + "- Database expiry\n\tDefault: 1 week (604800 seconds)\n\n"
+            + "- Database expiry\n\tDefault: 1 week (604800 seconds)\n"
             + "- Steam WebAPI key\n\t"
             + "You can get this from Steam.\n\t"
             + 'Please consult the "User Guide" on the RimSort wiki\n\n'
@@ -187,7 +201,7 @@ class SettingsPanel(QDialog):
         # Set context menu policy and connect custom context menu event
         self.build_steam_database_button.setContextMenuPolicy(Qt.CustomContextMenu)
         self.build_steam_database_button.customContextMenuRequested.connect(
-            self.databaseExpiryContextMenuEvent
+            self.buildDatabaseBtnContextMenuEvent
         )
         self.build_steam_database_button.clicked.connect(
             partial(
@@ -203,11 +217,25 @@ class SettingsPanel(QDialog):
             + "- An online Steam client with RimWorld purchased & present in library"
         )
         self.build_steam_database_dlc_data_checkbox.setObjectName("summaryValue")
-        self.comparison_report_button = QPushButton("External metadata comparison")
+        self.build_steam_database_update_checkbox = QCheckBox(
+            "Update database instead of overwriting"
+        )
+        self.build_steam_database_update_checkbox.setToolTip(
+            "If the designated database exists, update it instead of overwriting it."
+        )
+        self.build_steam_database_update_checkbox.setObjectName("summaryValue")
+        self.comparison_report_button = QPushButton("Comparison report")
         self.comparison_report_button.clicked.connect(
-            partial(
-                self.settings_panel_actions_signal.emit, "external_metadata_comparison"
-            )
+            partial(self.settings_panel_actions_signal.emit, "comparison_report")
+        )
+        self.download_all_mods_btn = QPushButton("Download all mods")
+        self.download_all_mods_btn.setToolTip(
+            "Right-click me to access my options...\n"
+            + "Use this to attempt to download every mod that is available on Steam Workshop"
+        )
+        self.download_all_mods_btn.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.download_all_mods_btn.customContextMenuRequested.connect(
+            self.downloadAllModsContextMenuEvent
         )
         # Build the metadata options layout
         self.metadata_configuration_layout.addWidget(self.external_steam_metadata_label)
@@ -219,13 +247,24 @@ class SettingsPanel(QDialog):
             self.external_community_rules_metadata_cb
         )
         self.database_tools_layout.addWidget(self.build_steam_database_label)
-        self.database_tools_layout.addWidget(self.build_steam_database_button)
+        self.database_tools_builder_layout.addWidget(
+            self.build_steam_database_include_label
+        )
+        self.database_tools_builder_layout.addWidget(
+            self.build_steam_database_include_cb
+        )
+        self.database_tools_builder_layout.addWidget(self.build_steam_database_button)
+        self.database_tools_layout.addLayout(self.database_tools_builder_layout)
         self.database_tools_layout.addWidget(
             self.build_steam_database_dlc_data_checkbox
         )
-        self.database_tools_layout.addWidget(self.comparison_report_button)
+        self.database_tools_layout.addWidget(self.build_steam_database_update_checkbox)
+        self.database_tools_actions_layout.addWidget(self.comparison_report_button)
+        self.database_tools_actions_layout.addWidget(self.download_all_mods_btn)
+
         self.metadata_options_layout.addLayout(self.metadata_configuration_layout)
         self.metadata_options_layout.addLayout(self.database_tools_layout)
+        self.database_tools_layout.addLayout(self.database_tools_actions_layout)
 
         # steamcmd
         self.steamcmd_label = QLabel("SteamCMD")
@@ -309,15 +348,49 @@ class SettingsPanel(QDialog):
 
         logger.info("Finished SettingsPanel initialization")
 
-    def databaseExpiryContextMenuEvent(self, point: QPoint) -> None:
-        contextMenu = QMenu(self)  # Actions Panel context menu event
+    def buildDatabaseBtnContextMenuEvent(self, point: QPoint) -> None:
+        contextMenu = QMenu(self)  # Build Database btn context menu event
+        merge_databases = contextMenu.addAction(
+            "Merge Steam databases"
+        )  # merge databases
         set_database_expiry = contextMenu.addAction(
             "Set database expiry"
-        )  # steam_apikey
+        )  # db builder expiry
+        set_steam_apikey = contextMenu.addAction(
+            "Set Steam WebAPI key"
+        )  # steam webapi key
+        merge_databases.triggered.connect(
+            partial(self.settings_panel_actions_signal.emit, "merge_databases")
+        )
         set_database_expiry.triggered.connect(
             partial(self.settings_panel_actions_signal.emit, "set_database_expiry")
         )
+        set_steam_apikey.triggered.connect(
+            partial(self.settings_panel_actions_signal.emit, "edit_steam_webapi_key")
+        )
         action = contextMenu.exec_(self.build_steam_database_button.mapToGlobal(point))
+
+    def downloadAllModsContextMenuEvent(self, point: QPoint) -> None:
+        contextMenu = QMenu(self)  # Download all mods btn context menu event
+        download_with_steamcmd = contextMenu.addAction(
+            "Download with SteamCMD"
+        )  # steamcmd
+        download_with_steamworks = contextMenu.addAction(
+            "Download with Steam client"
+        )  # steamworks
+        download_with_steamcmd.triggered.connect(
+            partial(
+                self.settings_panel_actions_signal.emit,
+                "download_entire_workshop_steamcmd",
+            )
+        )
+        download_with_steamworks.triggered.connect(
+            partial(
+                self.settings_panel_actions_signal.emit,
+                "download_entire_workshop_steamworks",
+            )
+        )
+        action = contextMenu.exec_(self.download_all_mods_btn.mapToGlobal(point))
 
     def loggerDebugCheckboxEvent(self) -> None:
         data_path = os.path.join(os.path.dirname(__file__), "../data")

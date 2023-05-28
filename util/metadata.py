@@ -7,7 +7,7 @@ from time import localtime, strftime, time
 import traceback
 from typing import Any, Dict, List, Optional, Tuple
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QThread, Signal
 
 from model.dialogue import show_warning
 from util.steam.steamfiles.wrapper import acf_to_dict
@@ -17,7 +17,9 @@ from window.runner_panel import RunnerPanel
 # Steam metadata / Community Rules
 
 
-class SteamDatabaseBuilder:
+class SteamDatabaseBuilder(QThread):
+    db_builder_message_output_signal = Signal(str)
+
     def __init__(
         self,
         apikey: str,
@@ -26,295 +28,237 @@ class SteamDatabaseBuilder:
         mode: str,
         output_database_path: str,
         get_appid_deps=None,
+        update=None,
         mods=None,
     ):
-        if mods:
-            self.mods = mods
+        QThread.__init__(self)
         self.apikey = apikey
         self.appid = appid
-        self.database = {}
         self.database_expiry = database_expiry
         self.get_appid_deps = get_appid_deps
         self.mode = mode
+        self.mods = mods
         self.output_database_path = output_database_path
-        self.query_runner = RunnerPanel()
-        # self.query_runner.setWindowModality(Qt.ApplicationModal)
-        self.query_runner.message(
-            f"\nInitiating RimSort Steam Database Builder with mode : {self.mode}\n"
-        )
+        self.publishedfileids = []
+        self.to_update = None
+        self.update = update
+        if self.update:
+            self.db_builder_message_output_signal.emit(
+                "Received `update` parameter. Attempting to load existing database to update..."
+            )
+            if self.output_database_path and os.path.exists(self.output_database_path):
+                with open(self.output_database_path, encoding="utf-8") as f:
+                    json_string = f.read()
+                    self.db_builder_message_output_signal.emit(f"Reading info...")
+                    self.to_update = json.loads(json_string)
+                    self.db_builder_message_output_signal.emit(
+                        "Retreived cached database..."
+                    )
+                    self.db_builder_message_output_signal.emit(
+                        f"Path: {self.output_database_path}"
+                    )
+            else:
+                self.db_builder_message_output_signal.emit(
+                    "Unable to load database from specified path! Does the file exist...?"
+                )
+                self.db_builder_message_output_signal.emit(
+                    f"Path: {self.output_database_path}"
+                )
 
     def run(self):
-        self.query_runner.show()
-        if self.mode is "complete":
-            self.database = self._build_database_complete()
-        elif self.mode is "local_only":
-            if not self.mods:
-                self.query_runner.message(
-                    "SteamDatabaseBuilder: Please passthrough a dict of mod metadata for this mode."
-                )
-                return
-            else:
-                self.database = self._build_database_local_only()
-        else:
-            self.query_runner.message("SteamDatabaseBuilder: Invalid mode specified.")
-
-    def _build_database_complete(self) -> Optional[Dict[str, Any]]:
-        if len(self.apikey) == 32:  # If apikey is 32 characters
-            self.query_runner.message("Received valid Steam API key from settings")
+        self.db_builder_message_output_signal.emit(
+            f"\nInitiating RimSort Steam Database Builder with mode : {self.mode}\n"
+        )
+        if len(self.apikey) == 32:  # If supplied WebAPI key is 32 characters
+            self.db_builder_message_output_signal.emit(
+                "Received valid Steam API key from settings"
+            )
             # Since the key is valid, we try to launch a live query
-            self.query_runner.message(
-                f"\nInitializing AppIDQuery with configured Steam API key for AppID: {self.appid}...\n"
-            )
-            appid_query = AppIDQuery(
-                self.apikey, self.appid, query_runner=self.query_runner
-            )
-            all_publishings_metadata_query = DynamicQuery(
-                apikey=self.apikey,
-                appid=self.appid,
-                life=self.database_expiry,
-                query_runner=self.query_runner,
-                get_appid_deps=self.get_appid_deps,
-            )
-            if not len(appid_query.publishedfileids) > 0:  # If we didn't get any pfids
-                return  # Exit operation
-            db = {}
-            db["version"] = all_publishings_metadata_query.expiry
-            db["database"] = {}
-            self.query_runner.message(
-                f"Populating {str(len(appid_query.publishedfileids))} empty keys into initial database for "
-                + f"{self.appid}."
-            )
-            for publishedfileid in appid_query.publishedfileids:
-                db["database"][publishedfileid] = {
-                    "url": f"https://steamcommunity.com/sharedfiles/filedetails/?id={publishedfileid}"
-                }
-            publishedfileids = appid_query.publishedfileids
-            self.query_runner.message(
-                f"Populated {str(len(appid_query.publishedfileids))} PublishedFileIds into database"
-            )
-            appid_query.all_mods_metadata = (
-                all_publishings_metadata_query.cache_parsable_db_data(
-                    db, publishedfileids
+            if self.mode == "no_local":
+                self.db_builder_message_output_signal.emit(
+                    f"\nInitializing AppIDQuery with configured Steam API key for AppID: {self.appid}...\n"
                 )
-            )
-            # None check, if None, this means that our query failed!
-            if appid_query.all_mods_metadata is None:
-                self.query_runner.message("Unable to complete AppIDQuery!\n")
-                self.query_runner.message("DynamicQuery failed to initialize database.")
-                self.query_runner.message(
-                    "There is no external metadata being factored for sorting!"
+                # Create query
+                appid_query = AppIDQuery(self.apikey, self.appid)
+                # Connect messaging signal
+                appid_query.appid_messaging_signal.connect(
+                    self.db_builder_message_output_signal.emit
                 )
-                self.query_runner.message(
-                    "Failed to initialize new DynamicQuery with configured Steam API key."
+                # Compile PublishedFileIds
+                appid_query.compile_pfids_by_appid()
+                self.db_builder_message_output_signal.emit(
+                    f"\nInitializing DynamicQuery with configured Steam API key for AppID: {self.appid}...\n"
                 )
-                self.query_runner.message(
-                    "Please right-click the 'Refresh' button and ensure that you have configure a valid Steam API key so that you can generate a database."
-                )
-                self.query_runner.message(
-                    "Please reference: https://github.com/oceancabbage/RimSort/wiki/User-Guide#obtaining-your-steam-api-key--using-it-with-rimsort-dynamic-query"
-                )
-                return db
-            self.query_runner.message(
-                f"Caching DynamicQuery result: {self.output_database_path}"
-            )
-            with open(self.output_database_path, "w") as output:
-                json.dump(appid_query.all_mods_metadata, output, indent=4)
-            self.query_runner.message("AppIDQuery: Completed!")
-            return db
-        else:
-            self.query_runner.message(
-                "SteamWorkshopDatabaseBuilder (complete): Invalid Steam WebAPI key!"
-            )
-            self.query_runner.message(
-                "SteamWorkshopDatabaseBuilder (complete): Exiting..."
-            )
-
-    def _build_database_local_only(self) -> Optional[Dict[str, Any]]:
-        """
-        Query Steam Workshop metadata for any active/inactive mods found that have a 'publishedfileid'.
-        attribute contained in their mod metadata, used for the sorting functions.
-        The resultant database is cached to the path specified.
-
-        :param apikey: a Steam apikey that is pulled from game_configuration.steam_apikey
-        :param db_json_data_life: expiry timer used for a cached Dynamic Query
-        :param self.output_database_path: path to be used for caching the Dynamic Query
-        :param mods: A Dict equivalent to 'all_mods' or mod_list.get_list_items_by_dict() in
-        which contains possible Steam mods to lookup metadata for
-        :return: Tuple containing the updated json data from database, and community_rules
-        """
-        db_data = {}  # This is kept to fall back on.
-        db_data_expired = None
-        db_data_missing = None
-        db_json_data = {}
-        self.query_runner.message(
-            "Checking for cached Steam db..."
-        )  # TODO: Make this info visible to the user
-        if os.path.exists(
-            self.output_database_path
-        ):  # Look for cached data & load it if available & not expired
-            self.query_runner.message(
-                f"Found cached Steam db at {self.output_database_path}"
-            )
-            with open(self.output_database_path, encoding="utf-8") as f:
-                json_string = f.read()
-                self.query_runner.message(
-                    f"Reading info from {self.output_database_path}"
-                )
-                db_data = json.loads(json_string)
-                current_time = int(time())
-                db_time = int(db_data["version"])
-                if (
-                    current_time - db_time > self.database_expiry
-                ):  # If the duration elapsed since db creation is greater than expiry
-                    db_json_data = db_data[
-                        "database"
-                    ]  # TODO: additional check to verify integrity of this data's schema
-                    self.query_runner.message(
-                        f"Cached Steam metadata is valid: {db_json_data}"
-                    )
-                    return db_json_data
-                else:
-                    db_data_expired = True
-        else:
-            db_data_missing = True
-        if db_data_expired or db_data_missing:
-            self.query_runner.message(
-                "Cached data expired or missing. Attempting live query..."
-            )
-        # Attempt live query & cache the query
-        if len(self.apikey) == 32:  # If apikey is less than 32 characters
-            self.query_runner.message("Received valid Steam API key from settings")
-            if len(self.mods.keys()) > 0:  # No empty queries!
-                # Since the key is valid, and we have a list of pfid, we try to launch a live query
-                self.query_runner.message(
-                    f"\nInitializing DynamicQuery with configured Steam API key for {self.appid}...\n"
-                )
-                authors = ""
-                gameVersions = []
-                pfid = ""
-                pid = ""
-                name = ""
-                local_metadata = {"version": 0, "database": {}}
-                publishedfileids = []
-                for v in self.mods.values():
-                    if v.get("publishedfileid"):
-                        pfid = v["publishedfileid"]
-                        url = f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
-                        local_metadata["database"][pfid] = {}
-                        local_metadata["database"][pfid]["url"] = url
-                        publishedfileids.append(pfid)
-                        if v.get("packageId"):
-                            pid = v["packageId"]
-                            local_metadata["database"][pfid]["packageId"] = pid
-                        if v.get("name"):
-                            name = v["name"]
-                            local_metadata["database"][pfid]["name"] = name
-                        if v.get("author"):
-                            authors = v["author"]
-                            local_metadata["database"][pfid]["authors"] = authors
-                        if v["supportedVersions"].get("li"):
-                            gameVersions = v["supportedVersions"]["li"]
-                            local_metadata["database"][pfid][
-                                "gameVersions"
-                            ] = gameVersions
-                    elif v.get("steamAppId"):
-                        steam_appid = v["steamAppId"]
-                        url = f"https://store.steampowered.com/app/{steam_appid}"
-                        local_metadata["database"][steam_appid] = {}
-                        local_metadata["database"][steam_appid]["appid"] = True
-                        local_metadata["database"][steam_appid]["url"] = url
-                        if v.get("packageId"):
-                            pid = v["packageId"]
-                            local_metadata["database"][steam_appid]["packageId"] = pid
-                        if v.get("name"):
-                            name = v["name"]
-                            local_metadata["database"][steam_appid]["name"] = name
-                        if v.get("author"):
-                            authors = v["author"]
-                            local_metadata["database"][steam_appid]["authors"] = authors
-                        if v.get("supportedVersions"):
-                            if v["supportedVersions"].get("li"):
-                                gameVersions = v["supportedVersions"]["li"]
-                                local_metadata["database"][steam_appid][
-                                    "gameVersions"
-                                ] = gameVersions
-                        local_metadata["database"][steam_appid]["dependencies"] = {}
-                        self.query_runner.message(
-                            f"Populated local metadata for Steam appid: [{pid} | {steam_appid}]"
-                        )
-                mods_query = DynamicQuery(
+                # Create query
+                dynamic_query = DynamicQuery(
                     apikey=self.apikey,
                     appid=self.appid,
                     life=self.database_expiry,
-                    query_runner=self.query_runner,
                     get_appid_deps=self.get_appid_deps,
                 )
-                mods_query.workshop_json_data = mods_query.cache_parsable_db_data(
-                    local_metadata, publishedfileids
+                # Connect messaging signal
+                dynamic_query.dq_messaging_signal.connect(
+                    self.db_builder_message_output_signal.emit
                 )
-                if mods_query.workshop_json_data is None:
-                    self.query_runner.message("Unable to complete DynamicQuery!\n")
-                    self.query_runner.message(
-                        "DynamicQuery failed to initialize database."
+                # Make sure we have PublishedFileIds to work with...
+                if (
+                    not len(appid_query.publishedfileids) > 0
+                ):  # If we didn't get any pfids
+                    self.db_builder_message_output_signal.emit(
+                        "Did not receive any PublishedFileIds from AppIDQuery! Cannot continue!"
                     )
-                    self.query_runner.message(
-                        "There is no external metadata being factored for sorting!"
-                    )
-                    self.query_runner.message(
-                        "Cached Dynamic Query database not found!"
-                    )
-                    self.query_runner.message(
-                        "Failed to initialize new DynamicQuery with configured Steam API key."
-                    )
-                    self.query_runner.message(
-                        "Please right-click the 'Refresh' button and ensure that you have configure a valid Steam API key so that you can generate a database."
-                    )
-                    self.query_runner.message(
-                        "Please reference: https://github.com/oceancabbage/RimSort/wiki/User-Guide#obtaining-your-steam-api-key--using-it-with-rimsort-dynamic-query"
-                    )
-                    return db_json_data
-                self.query_runner.message(
+                    return  # Exit operation
+
+                local_metadata = self._init_empty_db_from_publishedfileids(
+                    appid_query.publishedfileids
+                )
+                self.db_builder_message_output_signal.emit(
+                    f"Populated empty k/v for {str(len(appid_query.publishedfileids))} PublishedFileIds into database"
+                )
+                dynamic_query.cache_parsable_db_data(
+                    local_metadata, appid_query.publishedfileids
+                )
+                self.db_builder_message_output_signal.emit(
                     f"Caching DynamicQuery result: {self.output_database_path}"
                 )
-                with open(self.output_database_path, "w") as output:
-                    json.dump(mods_query.workshop_json_data, output, indent=4)
-                db_json_data = mods_query.workshop_json_data[
-                    "database"
-                ]  # Get json data directly from memory upon query completion
+                # If user-configured `update` parameter, update old db with new query data recursively
+                if self.update and self.to_update:
+                    recursively_update_dict(
+                        self.to_update, dynamic_query.workshop_json_data
+                    )
+                    with open(self.output_database_path, "w") as output:
+                        json.dump(self.to_update, output, indent=4)
+                else:  # Dump new db to specified path, effectively "overwriting" the db with fresh data
+                    with open(self.output_database_path, "w") as output:
+                        json.dump(dynamic_query.workshop_json_data, output, indent=4)
+                self.db_builder_message_output_signal.emit(
+                    "SteamDatabasebuilder: Completed!"
+                )
+            elif self.mode == "all_mods":
+                if not self.mods:
+                    self.db_builder_message_output_signal.emit(
+                        "SteamDatabaseBuilder: Please passthrough a dict of mod metadata for this mode."
+                    )
+                    return
+                else:
+                    if len(self.mods.keys()) > 0:  # No empty queries!
+                        # Since the key is valid, and we have a list of pfid, we try to launch a live query
+                        self.db_builder_message_output_signal.emit(
+                            f"\nInitializing DynamicQuery with configured Steam API key for {self.appid}...\n"
+                        )
+                        (
+                            local_metadata,
+                            publishedfileids,
+                        ) = self._init_db_from_local_metadata()
+                        dynamic_query = DynamicQuery(
+                            apikey=self.apikey,
+                            appid=self.appid,
+                            life=self.database_expiry,
+                            get_appid_deps=self.get_appid_deps,
+                        )
+                        dynamic_query.dq_messaging_signal.connect(
+                            self.db_builder_message_output_signal.emit
+                        )
+                        dynamic_query.cache_parsable_db_data(
+                            local_metadata, publishedfileids
+                        )
+                        self.db_builder_message_output_signal.emit(
+                            f"Caching DynamicQuery result: {self.output_database_path}"
+                        )
+                        # If user-configured `update` parameter, update old db with new query data recursively
+                        if self.update and self.to_update:
+                            recursively_update_dict(
+                                self.to_update, dynamic_query.workshop_json_data
+                            )
+                            with open(self.output_database_path, "w") as output:
+                                json.dump(self.to_update, output, indent=4)
+                        else:  # Dump new db to specified path, effectively "overwriting" the db with fresh data
+                            with open(self.output_database_path, "w") as output:
+                                json.dump(
+                                    dynamic_query.workshop_json_data, output, indent=4
+                                )
+                                self.db_builder_message_output_signal.emit(
+                                    "SteamDatabasebuilder: Completed!"
+                                )
+                    else:
+                        self.db_builder_message_output_signal.emit(
+                            "Tried to generate DynamicQuery with 0 mods...? Unable to initialize DynamicQuery for live metadata..."
+                        )  # TODO: Make this warning visible to the user
+                        return
+            elif self.mode == "pfid_by_appid":
+                self.db_builder_message_output_signal.emit(
+                    f"\nInitializing AppIDQuery with configured Steam API key for AppID: {self.appid}...\n"
+                )
+                # Create query
+                appid_query = AppIDQuery(self.apikey, self.appid)
+                # Connect messaging signal
+                appid_query.appid_messaging_signal.connect(
+                    self.db_builder_message_output_signal.emit
+                )
+                # Compile PublishedFileIds
+                appid_query.compile_pfids_by_appid()
+                self.publishedfileids = appid_query.publishedfileids.copy()
+                self.db_builder_message_output_signal.emit(
+                    "SteamDatabasebuilder: Completed!"
+                )
             else:
-                self.query_runner.message(
-                    "Tried to generate DynamicQuery with 0 mods...? Unable to initialize DynamicQuery for live metadata..."
-                )  # TODO: Make this warning visible to the user
+                self.db_builder_message_output_signal.emit(
+                    "SteamDatabaseBuilder: Invalid mode specified."
+                )
         else:  # Otherwise, API key is not valid
-            if (
-                db_data_expired and not db_data_missing
-            ):  # If the cached db data is expired but NOT missing
-                # Fallback to the expired metadata
-                self.query_runner.message(
-                    "\nFailed to read a valid Steam API key from settings.json"
+            self.db_builder_message_output_signal.emit(
+                f"SteamDatabaseBuilder ({self.mode}): Invalid Steam WebAPI key!"
+            )
+            self.db_builder_message_output_signal.emit(
+                f"SteamDatabaseBuilder ({self.mode}): Exiting..."
+            )
+
+    def _init_db_from_local_metadata(self) -> Tuple[Dict[str, Any], list]:
+        local_metadata = {"version": 0, "database": {}}
+        publishedfileids = []
+        for v in self.mods.values():
+            if v.get("publishedfileid"):
+                pfid = v["publishedfileid"]
+                local_metadata["database"][pfid] = {
+                    "url": f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}",
+                    "packageId": v.get("packageId"),
+                    "name": v.get("name"),
+                    "authors": v.get("author"),
+                    "gameVersions": v["supportedVersions"].get("li"),
+                }
+                publishedfileids.append(pfid)
+                self.db_builder_message_output_signal.emit(
+                    f"Populated local metadata for Steam pfid: [{v.get('packageId')} | {pfid}]"
                 )
-                self.query_runner.message(
-                    "Unable to initialize DynamicQuery for live metadata!"
-                )
-                self.query_runner.message(
-                    "Falling back to cached, but EXPIRED Dynamic Query database..."
-                )
-                db_json_data = db_data[
-                    "database"
-                ]  # TODO: additional check to verify integrity of this data's schema
-            else:  # Assume db_data_missing
-                self.query_runner.message("Unable to initialize external metadata.")
-                self.query_runner.message(
-                    "There is no external metadata being factored for sorting!"
-                )
-                self.query_runner.message("Cached Dynamic Query database not found!")
-                self.query_runner.message(
-                    "Please right-click the 'Refresh' button and configure a valid Steam API key so that you can generate a database."
-                )
-                self.query_runner.message(
-                    "Please reference: https://github.com/oceancabbage/RimSort/wiki/User-Guide#obtaining-your-steam-api-key--using-it-with-rimsort-dynamic-query"
-                )
-        return db_json_data
+            elif v.get("steamAppId"):
+                steam_appid = v["steamAppId"]
+                local_metadata["database"][steam_appid] = {
+                    "appid": True,
+                    "url": f"https://store.steampowered.com/app/{steam_appid}",
+                    "packageId": v.get("packageId"),
+                    "name": v.get("name"),
+                    "authors": v.get("author"),
+                    "gameVersions": v.get("supportedVersions", {}).get("li"),
+                    "dependencies": {},
+                }
+        return local_metadata, publishedfileids
+
+    def _init_empty_db_from_publishedfileids(
+        self, publishedfileids: list
+    ) -> Dict[str, Any]:
+        self.db_builder_message_output_signal.emit(
+            f"Populating {str(len(publishedfileids))} empty keys into initial database for "
+            + f"{self.appid}..."
+        )
+        return {
+            "version": self.database_expiry,
+            "database": {
+                publishedfileid: {
+                    "url": f"https://steamcommunity.com/sharedfiles/filedetails/?id={publishedfileid}"
+                }
+                for publishedfileid in publishedfileids
+            },
+        }
 
 
 def get_rpmmdb_community_rules_db(mods: Dict[str, Any]) -> Dict[str, Any]:
@@ -529,3 +473,15 @@ def get_workshop_acf_data(
                     publishedfileid
                 ]["timeupdated"]
             )  # I think this is always equivalent to the external_metadata entry for this same data. Unsure. Probably not unless a mod is outdated by quite some time
+
+
+# Recursive function to update dictionary values
+def recursively_update_dict(a_dict, b_dict):
+    for key, value in b_dict.items():
+        if key in a_dict and isinstance(a_dict[key], dict) and isinstance(value, dict):
+            # If the key exists in both dictionaries and the values are dictionaries,
+            # recursively update the nested dictionaries
+            recursively_update_dict(a_dict[key], value)
+        else:
+            # Otherwise, update the value in A with the value from B
+            a_dict[key] = value
