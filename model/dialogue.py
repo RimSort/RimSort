@@ -4,8 +4,14 @@ from typing import Optional
 
 from logger_tt import logger
 
+DEFAULT_TITLE = "RimSort"
 
-def show_dialogue_conditional(title: str, text: str, information: str) -> str:
+
+def show_dialogue_conditional(
+    title: Optional[str] = None,
+    text: Optional[str] = None,
+    information: Optional[str] = None,
+) -> str:
     """
     Displays a dialogue, prompting the user for input
 
@@ -17,9 +23,14 @@ def show_dialogue_conditional(title: str, text: str, information: str) -> str:
         f"Showing dialogue box with input: [{title}], [{text}], [{information}]"
     )
     dialogue = QMessageBox()
-    dialogue.setWindowTitle(title)
-    dialogue.setText(text)
-    dialogue.setInformativeText(information)
+    if title:
+        dialogue.setWindowTitle(title)
+    else:
+        dialogue.setWindowTitle(DEFAULT_TITLE)
+    if text:
+        dialogue.setText(text)
+    if information:
+        dialogue.setInformativeText(information)
     dialogue.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
     dialogue.exec_()
     response = dialogue.clickedButton()
@@ -40,7 +51,7 @@ def show_information(
     :param details: text to pass to setDetailedText
     """
     logger.info(
-        f"Showing information box with input: [{text}], [{information}], [{details}]"
+        f"Showing information box with input: [{title}], [{text}], [{information}], [{details}]"
     )
     # Set up the message box
     info_message_box = QMessageBox()
@@ -48,23 +59,14 @@ def show_information(
     if title:
         info_message_box.setWindowTitle(title)
     else:
-        info_message_box.setWindowTitle("Information")
+        info_message_box.setWindowTitle(DEFAULT_TITLE)
 
-    # Add text
-    if text is None:
-        info_message_box.setText("RimSort has alerted!")
-    else:
+    # Add data
+    if text:
         info_message_box.setText(text)
-    if information is None:
-        info_message_box.setInformativeText(
-            "This is an informational alert. Nothing has gone wrong, but if "
-            "you are seeing this message that means we forgot to put proper "
-            "information here. Please let us know at https://github.com/oceancabbage/RimSort."
-        )
-    else:
+    if information:
         info_message_box.setInformativeText(information)
-
-    if details is not None:
+    if details:
         info_message_box.setDetailedText(details)
 
     # Show the message box
@@ -86,7 +88,7 @@ def show_warning(
     :param details: text to pass to setDetailedText
     """
     logger.info(
-        f"Showing warning box with input: [{text}], [{information}], [{details}]"
+        f"Showing warning box with input: [{title}], [{text}], [{information}], [{details}]"
     )
     # Set up the message box
     warning_message_box = QMessageBox()
@@ -94,23 +96,14 @@ def show_warning(
     if title:
         warning_message_box.setWindowTitle(title)
     else:
-        warning_message_box.setWindowTitle("Warning")
+        warning_message_box.setWindowTitle(DEFAULT_TITLE)
 
-    # Add text
-    if text is None:
-        warning_message_box.setText("Unexpected Behavior")
-    else:
+    # Add data
+    if text:
         warning_message_box.setText(text)
-    if information is None:
-        warning_message_box.setInformativeText(
-            "RimSort has encountered a non-fatal uncaught exception. "
-            "Please reach out to us at https://github.com/oceancabbage/RimSort "
-            "with the Stack Trace below."
-        )
-    else:
+    if information:
         warning_message_box.setInformativeText(information)
-
-    if details is not None:
+    if details:
         warning_message_box.setDetailedText(details)
 
     # Show the message box
@@ -135,7 +128,7 @@ def show_fatal_error(
     :param details: text to pass to setDetailedText
     """
     logger.info(
-        f"Showing fatal error box with input: [{text}], [{information}], [{details}]"
+        f"Showing fatal error box with input: [{title}], [{text}], [{information}], [{details}]"
     )
     # Set up the message box
     fatal_message_box = QMessageBox()
@@ -143,24 +136,14 @@ def show_fatal_error(
     if title:
         fatal_message_box.setWindowTitle(title)
     else:
-        fatal_message_box.setWindowTitle("Fatal Error")
+        fatal_message_box.setWindowTitle(DEFAULT_TITLE)
 
-    # Add text
-    if text is None:
-        fatal_message_box.setText("Fatal Error")
-    else:
+    # Add data
+    if text:
         fatal_message_box.setText(text)
-    if information is None:
-        fatal_message_box.setInformativeText(
-            "RimSort has encountered a fatal uncaught exception. "
-            "Please reach out to us at https://github.com/oceancabbage/RimSort "
-            "with the Stack Trace below and the application log file. You can "
-            "find the log file (RimSort.log) in the RimSort folder."
-        )
-    else:
+    if information:
         fatal_message_box.setInformativeText(information)
-
-    if details is not None:
+    if details:
         fatal_message_box.setDetailedText(details)
 
     # Show the message box

@@ -17,6 +17,7 @@ from urllib3.exceptions import HTTPError
 from pyperclip import copy as copy_to_clipboard
 from watchdog.events import FileSystemEventHandler
 
+from util.metadata import SteamDatabaseBuilder, recursively_update_dict
 from util.rentry.wrapper import RentryUpload
 from util.steam.webapi.wrapper import ISteamRemoteStorage_GetPublishedFileDetails
 
@@ -39,7 +40,7 @@ elif _SYSTEM == "Windows":
     # This is a stub if it's ever even needed... i still can't figure out why it won't log at all on Windows...?
     # getLogger("").setLevel(WARNING)
 
-from PySide6.QtCore import Qt, QObject, Signal
+from PySide6.QtCore import Qt, QEventLoop, QObject, Signal
 from PySide6.QtWidgets import QFileDialog, QFrame, QHBoxLayout, QInputDialog, QLineEdit
 
 from sort.dependencies import *
@@ -50,6 +51,7 @@ from sub_view.active_mods_panel import ActiveModList
 from sub_view.inactive_mods_panel import InactiveModList
 from sub_view.mod_info_panel import ModInfo
 from util.generic import launch_game_process
+from util.metadata import *
 from util.mods import *
 from util.schema import validate_mods_config_format
 from util.steam.steamcmd.wrapper import SteamcmdDownloader, SteamcmdInterface
@@ -120,36 +122,41 @@ class MainContent:
         logger.info("Loading GameConfiguration instance")
         self.game_configuration = game_configuration
 
-        # INITIALIZE WATCHDOG - WE WAIT TO START UNTIL DONE PARSING MOD LIST
-        game_folder_path = self.game_configuration.get_game_folder_path()
-        local_folder_path = self.game_configuration.get_local_folder_path()
-        workshop_folder_path = self.game_configuration.get_workshop_folder_path()
-        self.game_configuration_watchdog_event_handler = RSFileSystemEventHandler()
-        if _SYSTEM == "Windows":
-            self.game_configuration_watchdog_observer = PollingObserver()
-        else:
-            self.game_configuration_watchdog_observer = Observer()
-        if game_folder_path != "":
-            self.game_configuration_watchdog_observer.schedule(
-                self.game_configuration_watchdog_event_handler,
-                game_folder_path,
-                recursive=False,
-            )
-        if local_folder_path != "":
-            self.game_configuration_watchdog_observer.schedule(
-                self.game_configuration_watchdog_event_handler,
-                local_folder_path,
-                recursive=False,
-            )
-        if workshop_folder_path != "":
-            self.game_configuration_watchdog_observer.schedule(
-                self.game_configuration_watchdog_event_handler,
-                workshop_folder_path,
-                recursive=False,
-            )
+        # CHECK USER PREFERENCE FOR WATCHDOG
+        if self.game_configuration.watchdog_toggle:
+            # INITIALIZE WATCHDOG - WE WAIT TO START UNTIL DONE PARSING MOD LIST
+            game_folder_path = self.game_configuration.get_game_folder_path()
+            local_folder_path = self.game_configuration.get_local_folder_path()
+            workshop_folder_path = self.game_configuration.get_workshop_folder_path()
+            self.game_configuration_watchdog_event_handler = RSFileSystemEventHandler()
+            if _SYSTEM == "Windows":
+                self.game_configuration_watchdog_observer = PollingObserver()
+            else:
+                self.game_configuration_watchdog_observer = Observer()
+            if game_folder_path != "":
+                self.game_configuration_watchdog_observer.schedule(
+                    self.game_configuration_watchdog_event_handler,
+                    game_folder_path,
+                    recursive=False,
+                )
+            if local_folder_path != "":
+                self.game_configuration_watchdog_observer.schedule(
+                    self.game_configuration_watchdog_event_handler,
+                    local_folder_path,
+                    recursive=False,
+                )
+            if workshop_folder_path != "":
+                self.game_configuration_watchdog_observer.schedule(
+                    self.game_configuration_watchdog_event_handler,
+                    workshop_folder_path,
+                    recursive=False,
+                )
 
         # SIGNALS AND SLOTS
         self.actions_panel.actions_signal.connect(self.actions_slot)  # Actions
+        self.game_configuration.settings_panel.settings_panel_actions_signal.connect(
+            self.actions_slot
+        )  # Settings
         self.active_mods_panel.list_updated_signal.connect(
             self._do_save_animation
         )  # Save btn animation
@@ -184,18 +191,12 @@ class MainContent:
             self.actions_slot
         )
 
-        self.game_configuration.settings_panel.appidquery_signal.connect(
-            self._do_appidquery_thread
-        )
-        self.game_configuration.settings_panel.metadata_comparison_signal.connect(
-            self._do_generate_metadata_comparison_report
-        )
-        self.game_configuration.settings_panel.set_webapi_query_expiry_signal.connect(
-            self._do_set_webapi_query_expiry
-        )
-        self.game_configuration_watchdog_event_handler.file_changes_signal.connect(
-            self._do_refresh_animation
-        )
+        # CHECK USER PREFERENCE FOR WATCHDOG
+        if self.game_configuration.watchdog_toggle:
+            # Connect watchdog to our refresh button animation
+            self.game_configuration_watchdog_event_handler.file_changes_signal.connect(
+                self._do_refresh_animation
+            )
 
         # Restore cache initially set to empty
         self.active_mods_data_restore_state: Dict[str, Any] = {}
@@ -205,6 +206,9 @@ class MainContent:
         self.cached_dynamic_query_target_path = os.path.join(
             self.game_configuration.storage_path, "steam_metadata.json"
         )
+
+        # Instantiate query runner
+        self.query_runner = RunnerPanel = None
 
         # Store duplicate_mods for global access
         self.duplicate_mods = {}
@@ -236,42 +240,13 @@ class MainContent:
         # Instantiate todds runner
         self.todds_runner = RunnerPanel = None
 
-        # WebAPI bool - don't allow more than 1 AppIDQuery run at once
-        self.appidquery_live = False
-        self.appidquery_thread = Thread()
-        self.appidquery_thread_finisher = Thread()
-
         logger.info("Finished MainContent initialization")
 
-        # Start watchdog
-        logger.debug("Starting watchdog")
-        self.game_configuration_watchdog_observer.start()
-
-        # Steamworks API tests
-        # self._do_steamworks_api_call(
-        #     ["get_app_dependencies", "2975771801"]
-        # )  # VRE: Androids (1 DLC dep)
-        # self._do_steamworks_api_call(
-        #     [
-        #         "get_app_dependencies",
-        #         int("2524548731"),
-        #     ]
-        # )  # X.E.N.O (2 DLC dep)
-        # logger.warning("Test RPMMDB GetAppDependencies")
-        # self._do_steamworks_api_call(
-        #     ["get_app_dependencies", "1847679158"]
-        # )  # RPMMDB (0 DLC dep)
-        # query = self._do_steamworks_api_call(
-        #     [
-        #         "get_app_dependencies",
-        #         [int("2524548731"), int("2975771801"), int("1847679158")],
-        #     ]
-        # )
-        # logger.warning(query)
-        # All 3 mods at once
-        # self._do_steamworks_api_call(
-        #     ["unsubscribe", [int("2979598490"), int("2978572782")]]
-        # )  # multiple subscription actions
+        # CHECK USER PREFERENCE FOR WATCHDOG
+        if self.game_configuration.watchdog_toggle:
+            # Start watchdog
+            logger.debug("Starting watchdog")
+            self.game_configuration_watchdog_observer.start()
 
     @property
     def panel(self):
@@ -498,8 +473,8 @@ class MainContent:
             f"Combined {len(self.expansions)} expansions, {len(self.local_mods)} local mods, and {len(self.workshop_mods)}. Total elements to get dependencies for: {len(all_mods)}"
         )
 
-        self.steam_db_rules = {}
-        self.community_rules = {}
+        self.external_steam_metadata = {}
+        self.external_community_rules = {}
         self.workshop_mods_potential_updates = {}
 
         # If there are mods at all, check for a mod DB.
@@ -507,30 +482,82 @@ class MainContent:
             logger.info(
                 "Looking for a load order / dependency rules contained within mods"
             )
-            external_metadata_source = (
-                self.game_configuration.settings_panel.external_metadata_cb.currentText()
+            # External Steam metadata
+            external_steam_metadata_source = (
+                self.game_configuration.settings_panel.external_steam_metadata_cb.currentText()
             )
-            if external_metadata_source == "RimPy Mod Manager Database":
+            if external_steam_metadata_source == "RimPy Mod Manager Database":
                 # Get and cache RimPy Steam db.json rules data for ALL mods
-                # Get and cache RimPy Community Rules communityRules.json for ALL mods
-                self.steam_db_rules, self.community_rules = get_rimpy_database_mod(
-                    all_mods
+                self.external_steam_metadata = get_rpmmdb_steam_metadata(all_mods)
+            elif external_steam_metadata_source == "RimSort Dynamic Query":
+                logger.info(
+                    f"Checking for cached Dynamic Query: {self.cached_dynamic_query_target_path}"
                 )
-            elif external_metadata_source == "RimSort Dynamic Query":
-                self.steam_db_rules, self.community_rules = get_3rd_party_metadata(
-                    self.game_configuration.steam_apikey,
-                    self.game_configuration.webapi_query_expiry,
-                    self.cached_dynamic_query_target_path,
-                    all_mods,
-                )
-                self.workshop_mods_potential_updates = (
-                    get_external_time_data_for_workshop_mods(
-                        self.steam_db_rules, all_mods
+                if os.path.exists(
+                    self.cached_dynamic_query_target_path
+                ):  # Look for cached data & load it if available & not expired
+                    logger.info(
+                        f"Found cached Steam metadata!",
                     )
-                )
+                    with open(
+                        self.cached_dynamic_query_target_path, encoding="utf-8"
+                    ) as f:
+                        json_string = f.read()
+                        logger.info(f"Checking metadata expiry against database...")
+                        db_data = json.loads(json_string)
+                        current_time = int(time())
+                        db_time = int(db_data["version"])
+                        elapsed = current_time - db_time
+                        if (
+                            elapsed <= self.game_configuration.database_expiry
+                        ):  # If the duration elapsed since db creation is less than expiry than expiry
+                            # The data is valid
+                            db_json_data = db_data[
+                                "database"
+                            ]  # TODO: additional check to verify integrity of this data's schema
+                            show_information(
+                                title="RimSort Dynamic Query",
+                                text=f"Cached Steam metadata is valid! Returning data to RimSort...",
+                            )
+                        else:  # If the cached db data is expired but NOT missing
+                            # Fallback to the expired metadata
+                            show_warning(
+                                title="RimSort Dynamic Query",
+                                text="Cached Steam metadata is expired! Consider updating!\n",
+                                information="Unable to initialize Dynamic Query for live metadata!\n"
+                                + "Falling back to cached, but EXPIRED Dynamic Query database...\n",
+                            )
+                            db_json_data = db_data[
+                                "database"
+                            ]  # TODO: additional check to verify integrity of this data's schema
+                        self.external_steam_metadata = db_json_data
+                        if self.game_configuration.steam_mods_update_check_toggle:
+                            self.workshop_mods_potential_updates = (
+                                get_external_time_data_for_workshop_mods(
+                                    self.external_steam_metadata, all_mods
+                                )
+                            )
+                else:  # Assume db_data_missing
+                    show_information(
+                        title="RimSort Dynamic Query",
+                        text="Cached Dynamic Query database not found!\n",
+                        information="Unable to initialize external metadata. There is no external Steam metadata being factored!\n"
+                        + "Please use DB Builder to create a database, or update to the latest RimSort provided DB.\n\n",
+                    )
             else:
                 logger.info(
-                    "External metadata disabled by user. Please choose a Metadata source in settings."
+                    "External Steam metadata disabled by user. Please choose a metadata source in settings."
+                )
+            # External Community Rules metadata
+            external_community_rules_metadata_source = (
+                self.game_configuration.settings_panel.external_community_rules_metadata_cb.currentText()
+            )
+            if external_community_rules_metadata_source == "RimPy Mod Manager Database":
+                # Get and cache RimPy Community Rules communityRules.json for ALL mods
+                self.external_community_rules = get_rpmmdb_community_rules_db(all_mods)
+            else:
+                logger.info(
+                    "External Community Rules metadata disabled by user. Please choose a metadata source in settings."
                 )
         else:
             logger.warning(
@@ -543,8 +570,8 @@ class MainContent:
             self.info_from_steam_package_id_to_name,
         ) = get_dependencies_for_mods(
             all_mods,
-            self.steam_db_rules,
-            self.community_rules,  # TODO add user defined customRules from future customRules.json
+            self.external_steam_metadata,
+            self.external_community_rules,  # TODO add user defined customRules from future customRules.json
         )
         # If we parsed this data from Steam client appworkshop_294100.acf
         if self.appworkshop_acf_data_parsed:
@@ -561,7 +588,8 @@ class MainContent:
                     for time_data in self.workshop_mods_potential_updates.values():
                         list_of_potential_updates += time_data["ui_string"]
                     show_information(
-                        text="RimSort Dynamic Query: The following list of Steam mods may have updates available!",
+                        title="RimSort Dynamic Query",
+                        text="The following list of Steam mods may have updates available!",
                         information=(
                             "This metadata was parsed directly from your Steam client's workshop data, and compared with the "
                             "'time updated' metadata returned from your most recent Dynamic Query."
@@ -626,10 +654,9 @@ class MainContent:
         :param action: string indicating action
         """
         logger.info(f"USER ACTION: received action {action}")
+        # actions panel actions
         if action == "refresh":
             self._do_refresh()
-        if action == "edit_steam_apikey":
-            self._do_edit_steam_apikey()
         if action == "clear":
             self._do_clear()
         if action == "restore":
@@ -698,6 +725,163 @@ class MainContent:
         if action == "edit_run_args":
             self._do_edit_run_args()
 
+        # settings panel actions
+        if action == "build_steam_database_thread":
+            self.game_configuration.settings_panel.close()
+            if self.game_configuration.db_builder_include == "no_local":
+                logger.info("Opening file dialog to specify output file")
+                output_path = QFileDialog.getSaveFileName(
+                    caption="Designate output path",
+                    dir=os.path.join(self.game_configuration.storage_path),
+                    filter="JSON (*.json)",
+                )
+                if output_path[0] and not output_path[0].endswith(".json"):
+                    output_path[0].extend(".json")
+                logger.info(f"Selected path: {output_path[0]}")
+                if output_path[0]:
+                    self.db_builder = SteamDatabaseBuilder(
+                        apikey=self.game_configuration.steam_apikey,
+                        appid=294100,
+                        database_expiry=self.game_configuration.database_expiry,
+                        mode=self.game_configuration.db_builder_include,
+                        output_database_path=output_path[0],
+                        get_appid_deps=self.game_configuration.build_steam_database_dlc_data_toggle,
+                        update=self.game_configuration.build_steam_database_update_toggle,
+                    )
+                    # Create query runner
+                    self.query_runner = RunnerPanel()
+                    self.query_runner.show()
+                    # Connect message signal
+                    self.db_builder.db_builder_message_output_signal.connect(
+                        self.query_runner.message
+                    )
+                    # Start DB builder
+                    self.db_builder.start()
+                else:
+                    logger.warning("User cancelled selection...")
+            elif self.game_configuration.db_builder_include == "all_mods":
+                self.db_builder = SteamDatabaseBuilder(
+                    apikey=self.game_configuration.steam_apikey,
+                    appid=294100,
+                    database_expiry=self.game_configuration.database_expiry,
+                    mode=self.game_configuration.db_builder_include,
+                    output_database_path=self.cached_dynamic_query_target_path,
+                    get_appid_deps=self.game_configuration.build_steam_database_dlc_data_toggle,
+                    mods=self.all_mods_with_dependencies,
+                    update=self.game_configuration.build_steam_database_update_toggle,
+                )
+                # Create query runner
+                self.query_runner = RunnerPanel()
+                self.query_runner.show()
+                # Connect message signal
+                self.db_builder.db_builder_message_output_signal.connect(
+                    self.query_runner.message
+                )
+                # Start DB builder
+                self.db_builder.start()
+        if action == "merge_databases":
+            # Notify user
+            show_information(
+                title="Steam DB Builder",
+                text="This operation will merge 2 databases, A & B, by updating A with B's data.",
+                information="This will effectively overwrite A with B! The resultant database, C,\n"
+                + "is saved to a user-specified path. You will be prompted for these paths:\n"
+                + "\n\t1) Select input A"
+                + "\n\t2) Select input B"
+                + "\n\t3) Select output C",
+            )
+            # Input A
+            logger.info("Opening file dialog to specify input file A")
+            input_path_a = QFileDialog.getSaveFileName(
+                caption='Input "to-be-updated" database, input A',
+                dir=os.path.join(self.game_configuration.storage_path),
+                filter="JSON (*.json)",
+            )
+            if input_path_a[0] and not input_path_a[0].endswith(".json"):
+                input_path_a[0] = input_path_a[0] + ".json"
+            logger.info(f"Selected path: {input_path_a[0]}")
+            if input_path_a[0] and os.path.exists(input_path_a[0]):
+                with open(input_path_a[0], encoding="utf-8") as f:
+                    json_string = f.read()
+                    logger.debug(f"Reading info...")
+                    db_input_a = json.loads(json_string)
+                    logger.debug("Retreived database A...")
+            else:
+                logger.warning("Steam DB Builder: User cancelled selection...")
+                return
+            # Input B
+            logger.info("Opening file dialog to specify input file B")
+            input_path_b = QFileDialog.getSaveFileName(
+                caption='Input "to-be-updated" database, input A',
+                dir=os.path.join(self.game_configuration.storage_path),
+                filter="JSON (*.json)",
+            )
+            if input_path_b[0] and not input_path_b[0].endswith(".json"):
+                input_path_b[0] = input_path_b[0] + ".json"
+            logger.info(f"Selected path: {input_path_b[0]}")
+            if input_path_b[0] and os.path.exists(input_path_b[0]):
+                with open(input_path_b[0], encoding="utf-8") as f:
+                    json_string = f.read()
+                    logger.debug(f"Reading info...")
+                    db_input_b = json.loads(json_string)
+                    logger.debug("Retreived database B...")
+            else:
+                logger.warning("Steam DB Builder: User cancelled selection...")
+                return
+            # Output C
+            db_output_c = db_input_a.copy()
+            recursively_update_dict(db_output_c, db_input_b)
+            logger.info("Updated DB A with DB B!")
+            logger.debug(db_output_c)
+            logger.info("Opening file dialog to specify output file")
+            output_path = QFileDialog.getSaveFileName(
+                caption="Designate output path for resultant database:",
+                dir=os.path.join(self.game_configuration.storage_path),
+                filter="JSON (*.json)",
+            )
+            if output_path[0] and not output_path[0].endswith(".json"):
+                output_path[0] = output_path[0] + ".json"
+            logger.info(f"Selected path: {output_path[0]}")
+            if output_path[0]:
+                with open(output_path[0], "w") as output:
+                    json.dump(db_output_c, output, indent=4)
+            else:
+                logger.warning("Steam DB Builder: User cancelled selection...")
+                return
+        if action == "set_database_expiry":
+            self._do_set_database_expiry()
+        if action == "edit_steam_webapi_key":
+            self._do_edit_steam_webapi_key()
+        if action == "comparison_report":
+            self._do_generate_metadata_comparison_report()
+        if "download_entire_workshop" in action:
+            self.db_builder = SteamDatabaseBuilder(
+                apikey=self.game_configuration.steam_apikey,
+                appid=294100,
+                database_expiry=self.game_configuration.database_expiry,
+                mode="pfid_by_appid",
+                output_database_path=self.cached_dynamic_query_target_path,
+                update=self.game_configuration.build_steam_database_update_toggle,
+            )
+            # Create query runner
+            self.query_runner = RunnerPanel()
+            self.query_runner.show()
+            # Connect message signal
+            self.db_builder.db_builder_message_output_signal.connect(
+                self.query_runner.message
+            )
+            # Start DB builder
+            self.db_builder.start()
+            loop = QEventLoop()
+            self.db_builder.finished.connect(loop.quit)
+            loop.exec_()
+            self.query_runner.close()
+            self.query_runner = None
+            if "steamcmd" in action:
+                self._do_download_mods_with_steamcmd(self.db_builder.publishedfileids)
+            elif "steamworks" in action:
+                self._do_download_mods_with_steamworks(self.db_builder.publishedfileids)
+
     def _do_edit_run_args(self) -> None:
         """
         Opens a QDialogInput that allows the user to edit the run args
@@ -713,10 +897,10 @@ class MainContent:
         if ok:
             self.game_configuration.run_arguments = args
             self.game_configuration.update_persistent_storage(
-                "runArgs", self.game_configuration.run_arguments
+                {"runArgs": self.game_configuration.run_arguments}
             )
 
-    def _do_edit_steam_apikey(self) -> None:
+    def _do_edit_steam_webapi_key(self) -> None:
         """
         Opens a QDialogInput that allows the user to edit their Steam apikey
         that are configured to be passed to the "Dynamic Query" feature for
@@ -732,106 +916,8 @@ class MainContent:
         if ok:
             self.game_configuration.steam_apikey = args
             self.game_configuration.update_persistent_storage(
-                "steam_apikey", self.game_configuration.steam_apikey
+                {"steam_apikey": self.game_configuration.steam_apikey}
             )
-
-    def _do_appidquery(self, appid: int) -> None:
-        if (
-            len(self.game_configuration.steam_apikey) == 32
-        ):  # If apikey is 32 characters
-            logger.info("Retreived valid Steam API key from settings")
-            # Since the key is valid, we try to launch a live query
-            logger.info(
-                f"Initializing AppIDQuery with configured Steam API key for AppID: {appid}..."
-            )
-            appid_query = AppIDQuery(self.game_configuration.steam_apikey, appid)
-            all_publishings_metadata_query = DynamicQuery(
-                apikey=self.game_configuration.steam_apikey,
-                appid=appid,
-                life=self.game_configuration.webapi_query_expiry,
-            )
-            if not len(appid_query.publishedfileids) > 0:  # If we didn't get any pfids
-                return  # Exit operation
-            db = {}
-            db["version"] = all_publishings_metadata_query.expiry
-            db["database"] = {}
-            logger.info(
-                f"Populating {str(len(appid_query.publishedfileids))} empty keys into initial database for "
-                + f"{appid}."
-            )
-            for publishedfileid in appid_query.publishedfileids:
-                db["database"][publishedfileid] = {
-                    "url": f"https://steamcommunity.com/sharedfiles/filedetails/?id={publishedfileid}"
-                }
-            publishedfileids = appid_query.publishedfileids
-            logger.info(
-                f"Populated {str(len(appid_query.publishedfileids))} PublishedFileIds into database"
-            )
-            appid_query.all_mods_metadata = (
-                all_publishings_metadata_query.cache_parsable_db_data(
-                    db, publishedfileids
-                )
-            )
-            # None check, if None, this means that our query failed!
-            if appid_query.all_mods_metadata is None:
-                show_warning(
-                    text="Unable to complete AppIDQuery",
-                    information="DynamicQuery failed to initialize database.\nThere is no external metadata being factored for sorting!\n\n"
-                    + "Failed to initialize new DynamicQuery with configured Steam API key.\n\n"
-                    + "Please right-click the 'Refresh' button and ensure that you have configure a valid Steam API key so that you can generate a database.\n\n"
-                    + "Please reference: https://github.com/oceancabbage/RimSort/wiki/User-Guide#obtaining-your-steam-api-key--using-it-with-rimsort-dynamic-query",
-                )
-                return
-            db_output_path = os.path.join(
-                self.game_configuration.storage_path, f"{appid}_AppIDQuery.json"
-            )
-            logger.info(f"Caching DynamicQuery result: {db_output_path}")
-            with open(db_output_path, "w") as output:
-                json.dump(appid_query.all_mods_metadata, output, indent=4)
-            logger.info("AppIDQuery: Completed!")
-        else:
-            logger.error("AppIDQuery: Invalid Steam WebAPI key!")
-            logger.error("AppIDQuery: Exiting thread...")
-
-    def _do_appidquery_thread(self, appid: str) -> None:
-        appid = int(appid)
-        logger.info("Checking for live AppIDQuery...")
-        if self.appidquery_live:
-            show_information(
-                "Unable to create new AppIDQuery",
-                "There is an AppIDQuery already running. Please allow it to complete before trying again.\n\nYou can monitor it's progress in RimSort.log!",
-            )
-            return
-            logger.warning(
-                "Skipping AppIDQuery - there is already a live query running!"
-            )
-        logger.info(f"All clear! Starting AppIDQuery for {appid}...")
-        self.appidquery_live = True
-        self.appidquery_thread = Thread(target=self._do_appidquery, args=[appid])
-        self.appidquery_thread.start()
-        self.appidquery_thread_finisher = Thread(
-            target=self._do_appidquery_thread_finisher
-        )
-        self.appidquery_thread_finisher.start()
-
-    def _do_appidquery_thread_finisher(self) -> None:
-        while self.appidquery_thread.is_alive():
-            sleep(1)
-        else:
-            # We always want to reset this when we are done
-            self.appidquery_live = False
-            try:
-                self.appidquery_thread.join()
-            except Exception as e:
-                e_name = e.__class__.__name__
-                stacktrace = traceback.format_exc()
-                logger.warning(
-                    f"AppIDQuery failed to join thread. Received exception: {e_name}"
-                )
-                logger.debug(f"{stacktrace}")
-                logger.warning(
-                    "Unable to join AppIDQuery thread to main thread. This is probably because you closed the main thread while your AppIDQuery was still running. Silly goose."
-                )
 
     def _do_generate_metadata_comparison_report(self) -> None:
         # TODO: Refactor this...
@@ -854,12 +940,10 @@ class MainContent:
             if os.path.exists(file_path[0]):
                 with open(file_path[0], encoding="utf-8") as f:
                     json_string = f.read()
-                    logger.info(
-                        "Reading info from cached RimSort Dynamic Query steam_metadata.json"
-                    )
+                    logger.info("Reading info from cached RimSort Dynamic Query")
                     rimsort_steam_data = json.loads(json_string)
             else:
-                show_warning("The could not find a cached RimSort Dynamic Query!")
+                show_warning("Could not find a cached RimSort Dynamic Query!")
                 return
             for uuid in mods:
                 if (
@@ -978,7 +1062,7 @@ class MainContent:
         # Delete all .dds textures using todds
         todds_interface.execute_todds_cmd(todds_txt_path, self.todds_runner)
 
-    def _do_set_webapi_query_expiry(self) -> None:
+    def _do_set_database_expiry(self) -> None:
         """
         Opens a QDialogInput that allows the user to edit their preferred
         WebAPI Query Expiry (in seconds)
@@ -986,15 +1070,15 @@ class MainContent:
         args, ok = QInputDialog().getText(
             None,
             "Edit WebAPI Query Expiry:",
-            "Enter your preferred expiry duration in seconds (default 30 min/1800 sec):",
+            "Enter your preferred expiry duration in seconds (default 1 week/604800 sec):",
             QLineEdit.Normal,
-            str(self.game_configuration.webapi_query_expiry),
+            str(self.game_configuration.database_expiry),
         )
         if ok:
             try:
-                self.game_configuration.webapi_query_expiry = int(args)
+                self.game_configuration.database_expiry = int(args)
                 self.game_configuration.update_persistent_storage(
-                    "webapi_query_expiry", self.game_configuration.webapi_query_expiry
+                    {"database_expiry": self.game_configuration.database_expiry}
                 )
             except ValueError:
                 show_warning(
@@ -1010,6 +1094,7 @@ class MainContent:
         :param instruction: a list where:
             instruction[0] is a string that cooresponds with the following supported_actions[]
             instruction[1] is an int that corresponds with a Steam mod's PublishedFileId
+                        OR is a list of int that corresponds with multiple Steam mods's PublishedFileId
         FOR subscription_actions[]...
         :param instruction: a list where:
             instruction[0] is a string that corresponds with the following supported_actions[]
@@ -1138,7 +1223,7 @@ class MainContent:
             )
             self.game_configuration.steamcmd_install_path = steamcmd_folder
             self.game_configuration.update_persistent_storage(
-                "steamcmd_install_path", steamcmd_folder
+                {"steamcmd_install_path": steamcmd_folder}
             )
             self.steamcmd_wrapper = SteamcmdInterface(
                 self.game_configuration.steamcmd_install_path,
@@ -1155,7 +1240,8 @@ class MainContent:
         self.steamcmd_wrapper.show_workshop_status("294100", self.steamcmd_runner)
 
     def _do_download_mods_with_steamcmd(self, publishedfileids: list):
-        self.browser.close()
+        if self.browser:
+            self.browser.close()
         self.steamcmd_runner = RunnerPanel()
         self.steamcmd_runner.setWindowModality(Qt.ApplicationModal)
         self.steamcmd_runner.show()
@@ -1164,6 +1250,11 @@ class MainContent:
         )
         self.steamcmd_wrapper.download_mods(
             "294100", publishedfileids, self.steamcmd_runner
+        )
+
+    def _do_download_mods_with_steamworks(self, publishedfileids: list):
+        self._do_steamworks_api_call(
+            ["subscribe", [eval(str_pfid) for str_pfid in publishedfileids]]
         )
 
     def _insert_data_into_lists(

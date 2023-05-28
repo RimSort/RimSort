@@ -48,7 +48,7 @@ from window.runner_panel import RunnerPanel
 
 class SteamcmdDownloader(QWidget):
     """
-    A generic panel used to browse web content
+    A generic panel used to browse Workshop content - downloader included
     """
 
     downloader_signal = Signal(list)
