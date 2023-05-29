@@ -1,3 +1,4 @@
+DB_BUILDER_EXCEPTIONS = ["dependencies"]
 RIMWORLD_DLC_METADATA = {
     "294100": {
         "packageId": "ludeon.rimworld",

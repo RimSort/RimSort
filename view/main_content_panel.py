@@ -17,6 +17,7 @@ from urllib3.exceptions import HTTPError
 from pyperclip import copy as copy_to_clipboard
 from watchdog.events import FileSystemEventHandler
 
+from util.constants import DB_BUILDER_EXCEPTIONS
 from util.metadata import SteamDatabaseBuilder, recursively_update_dict
 from util.rentry.wrapper import RentryUpload
 from util.steam.webapi.wrapper import ISteamRemoteStorage_GetPublishedFileDetails
@@ -228,6 +229,7 @@ class MainContent:
             self.repopulate_lists(True)
 
         # Instantiate steamcmd utils
+        self.steam_browser = SteamcmdDownloader = None
         self.steamcmd_runner = RunnerPanel = None
         self.steamcmd_wrapper = SteamcmdInterface(
             self.game_configuration.steamcmd_install_path,
@@ -490,59 +492,16 @@ class MainContent:
                 # Get and cache RimPy Steam db.json rules data for ALL mods
                 self.external_steam_metadata = get_rpmmdb_steam_metadata(all_mods)
             elif external_steam_metadata_source == "RimSort Dynamic Query":
-                logger.info(
-                    f"Checking for cached Dynamic Query: {self.cached_dynamic_query_target_path}"
+                self.external_steam_metadata = get_cached_dynamic_query_db(
+                    life=self.game_configuration.database_expiry,
+                    path=self.cached_dynamic_query_target_path,
+                    mods=all_mods,
                 )
-                if os.path.exists(
-                    self.cached_dynamic_query_target_path
-                ):  # Look for cached data & load it if available & not expired
-                    logger.info(
-                        f"Found cached Steam metadata!",
-                    )
-                    with open(
-                        self.cached_dynamic_query_target_path, encoding="utf-8"
-                    ) as f:
-                        json_string = f.read()
-                        logger.info(f"Checking metadata expiry against database...")
-                        db_data = json.loads(json_string)
-                        current_time = int(time())
-                        db_time = int(db_data["version"])
-                        elapsed = current_time - db_time
-                        if (
-                            elapsed <= self.game_configuration.database_expiry
-                        ):  # If the duration elapsed since db creation is less than expiry than expiry
-                            # The data is valid
-                            db_json_data = db_data[
-                                "database"
-                            ]  # TODO: additional check to verify integrity of this data's schema
-                            show_information(
-                                title="RimSort Dynamic Query",
-                                text=f"Cached Steam metadata is valid! Returning data to RimSort...",
-                            )
-                        else:  # If the cached db data is expired but NOT missing
-                            # Fallback to the expired metadata
-                            show_warning(
-                                title="RimSort Dynamic Query",
-                                text="Cached Steam metadata is expired! Consider updating!\n",
-                                information="Unable to initialize Dynamic Query for live metadata!\n"
-                                + "Falling back to cached, but EXPIRED Dynamic Query database...\n",
-                            )
-                            db_json_data = db_data[
-                                "database"
-                            ]  # TODO: additional check to verify integrity of this data's schema
-                        self.external_steam_metadata = db_json_data
-                        if self.game_configuration.steam_mods_update_check_toggle:
-                            self.workshop_mods_potential_updates = (
-                                get_external_time_data_for_workshop_mods(
-                                    self.external_steam_metadata, all_mods
-                                )
-                            )
-                else:  # Assume db_data_missing
-                    show_information(
-                        title="RimSort Dynamic Query",
-                        text="Cached Dynamic Query database not found!\n",
-                        information="Unable to initialize external metadata. There is no external Steam metadata being factored!\n"
-                        + "Please use DB Builder to create a database, or update to the latest RimSort provided DB.\n\n",
+                if self.game_configuration.steam_mods_update_check_toggle:
+                    self.workshop_mods_potential_updates = (
+                        get_external_time_data_for_workshop_mods(
+                            self.external_steam_metadata, all_mods
+                        )
                     )
             else:
                 logger.info(
@@ -783,12 +742,15 @@ class MainContent:
             # Notify user
             show_information(
                 title="Steam DB Builder",
-                text="This operation will merge 2 databases, A & B, by updating A with B's data.",
-                information="This will effectively overwrite A with B! The resultant database, C,\n"
-                + "is saved to a user-specified path. You will be prompted for these paths:\n"
-                + "\n\t1) Select input A"
-                + "\n\t2) Select input B"
-                + "\n\t3) Select output C",
+                text="This operation will merge 2 databases, A & B, by recursively updating A with B, barring exceptions.",
+                information="- This will effectively recursively overwrite A's key/value with B's key/value to the resultant database.\n"
+                + "- Exceptions will not be recursively updated. Instead, they will be overwritten with B's key entirely.\n"
+                + "- The following exceptions will be made:\n"
+                + f"\n\t{DB_BUILDER_EXCEPTIONS}\n\n"
+                + "The resultant database, C, is saved to a user-specified path. You will be prompted for these paths in order:\n"
+                + "\n\t1) Select input A (db to-be-updated)"
+                + "\n\t2) Select input B (update source)"
+                + "\n\t3) Select output C (resultant db)",
             )
             # Input A
             logger.info("Opening file dialog to specify input file A")
@@ -830,7 +792,11 @@ class MainContent:
                 return
             # Output C
             db_output_c = db_input_a.copy()
-            recursively_update_dict(db_output_c, db_input_b)
+            recursively_update_dict(
+                db_output_c,
+                db_input_b,
+                exceptions=DB_BUILDER_EXCEPTIONS,
+            )
             logger.info("Updated DB A with DB B!")
             logger.debug(db_output_c)
             logger.info("Opening file dialog to specify output file")
@@ -982,7 +948,9 @@ class MainContent:
             rimsort_total_dependencies = len(rimsort_deps)
             rimpy_total_dependencies = len(rimpy_deps)
             report = (
-                "#######################\nExternal metadata comparison:\n#######################"
+                "#############################\n"
+                + "External metadata comparison:\n"
+                + "#############################"
                 # + f"\nTotal # of deps from Dynamic Query: {rimsort_total_dependencies}"
                 # + f"\nTotal # of deps from RimPy db.json: {rimpy_total_dependencies}"
             )
@@ -1022,9 +990,10 @@ class MainContent:
                 f"Comparison skipped for {len(comparison_skipped)} unpublished mods: {comparison_skipped}"
             )
             show_information(
-                "RimSort Dynamic Query: External Steam metadata comparison report",
-                "Click 'Show Details' to see the full report!",
-                report,
+                title="RimSort Dynamic Query",
+                text="External Steam metadata comparison report",
+                information="Click 'Show Details' to see the full report!",
+                details=report,
             )
         else:
             logger.info("User pressed cancel, passing")
@@ -1190,11 +1159,13 @@ class MainContent:
             )
 
     def _do_browse_workshop(self):
-        self.browser = SteamcmdDownloader(
+        self.steam_browser = SteamcmdDownloader(
             "https://steamcommunity.com/app/294100/workshop/"
         )
-        self.browser.downloader_signal.connect(self._do_download_mods_with_steamcmd)
-        self.browser.show()
+        self.steam_browser.downloader_signal.connect(
+            self._do_download_mods_with_steamcmd
+        )
+        self.steam_browser.show()
 
     def _do_setup_steamcmd(self):
         self.steamcmd_runner = RunnerPanel()
@@ -1240,8 +1211,8 @@ class MainContent:
         self.steamcmd_wrapper.show_workshop_status("294100", self.steamcmd_runner)
 
     def _do_download_mods_with_steamcmd(self, publishedfileids: list):
-        if self.browser:
-            self.browser.close()
+        if self.steam_browser:
+            self.steam_browser.close()
         self.steamcmd_runner = RunnerPanel()
         self.steamcmd_runner.setWindowModality(Qt.ApplicationModal)
         self.steamcmd_runner.show()

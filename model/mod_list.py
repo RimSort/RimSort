@@ -4,7 +4,7 @@ import shutil
 import webbrowser
 from pathlib import Path
 from time import sleep
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 from PySide6.QtCore import Qt, QEvent, QModelIndex, QObject, Signal
 from PySide6.QtGui import QAction, QDropEvent, QFocusEvent, QKeySequence
@@ -110,81 +110,170 @@ class ModListWidget(QListWidget):
         """
         if event.type() == QEvent.ContextMenu and source_object is self:
             logger.info("USER ACTION: Open right-click mod_list_item contextMenu")
+
+            # A list to track any PublishedFileIds that may be passed to Steamworks
+            publishedfileids = []
+
+            # Define our QMenu & QActions/bools
             contextMenu = QMenu()
-            source_item = source_object.itemAt(
-                event.pos()
-            )  # Which QListWidgetItem was right clicked?
-            if type(source_item) is QListWidgetItem:
-                source_widget = self.itemWidget(source_item)
-                widget_json_data = source_widget.json_data
-                mod_data_source = widget_json_data.get("data_source")
-                widget_package_id = widget_json_data["packageId"]
-                mod_path = widget_json_data[
-                    "path"
-                ]  # Set local data folder path from metadata
-                open_folder = contextMenu.addAction("Open folder")  # Open folder
-                if widget_json_data.get("url") or widget_json_data.get("steam_url"):
-                    url = self.get_mod_url(widget_json_data)
-                    if url != "":
-                        open_url_browser = contextMenu.addAction(
-                            "Open URL in browser"
-                        )  # Open URL in browser
-                    else:
-                        show_warning(
-                            f"No URL was returned to open from mod metadata... Is the metadata correct? Result: {url}"
+            # Open folder action
+            open_folder_action = QAction()
+            open_folder_bool = True
+            # Open URL in browser action
+            open_url_browser_action = QAction()
+            open_url_browser_bool = None
+            # Open URL in Steam
+            open_mod_steam_action = QAction()
+            open_mod_steam_bool = None
+            # Unsubscribe + delete mod
+            unsubscribe_mod_steam_action = QAction(
+                "Unsubscribe mod from Steam Workshop"
+            )
+            unsubscribe_mod_steam_bool = None
+            # Delete mod
+            delete_mod_action = QAction()
+            delete_mod_bool = True
+
+            # Get all selected QListWidgetItems
+            selected_items = self.selectedItems()
+
+            # Single item selected
+            if len(selected_items) == 1:
+                source_item = selected_items[0]
+                if type(source_item) is QListWidgetItem:
+                    source_widget = self.itemWidget(source_item)
+                    # Retreive metadata
+                    widget_json_data = source_widget.json_data
+                    mod_data_source = widget_json_data.get("data_source")
+                    # Open folder action text
+                    open_folder_action.setText("Open folder")
+                    # If we have a "url" or "steam_url"
+                    if widget_json_data.get("url") or widget_json_data.get("steam_url"):
+                        open_url_browser_bool = True
+                        open_url_browser_action.setText("Open URL in browser")
+                    # If we have a "steam_uri"
+                    if widget_json_data.get("steam_uri"):
+                        open_mod_steam_bool = True
+                        open_mod_steam_action.setText("Open mod in Steam")
+                    # If Workshop, try unsub + delete
+                    if mod_data_source == "workshop" and widget_json_data.get(
+                        "publishedfileid"
+                    ):
+                        publishedfileid = widget_json_data["publishedfileid"]
+                        logger.debug(
+                            f"Tracking PublishedFileID for ISteamUGC/UnsubscribeItem: {publishedfileid}"
                         )
-                if widget_json_data.get("steam_uri"):
-                    steam_uri = widget_json_data.get("steam_uri")
-                    open_mod_steam = contextMenu.addAction("Open mod in Steam")
-                if mod_data_source == "workshop" and widget_json_data.get(
-                    "publishedfileid"
-                ):
-                    mod_pfid = widget_json_data["publishedfileid"]
-                    unsubscribe_delete_mod = contextMenu.addAction(
-                        "Unsubscribe + delete mod"
-                    )  # Unsubscribe + delete mod
-                else:
-                    delete_mod = contextMenu.addAction("Delete mod")  # Delete mod
-                action = contextMenu.exec_(
-                    self.mapToGlobal(event.pos())
-                )  # Execute QMenu and return it's ACTION
-                if action == open_folder:  # ACTION: Open folder
-                    if os.path.exists(mod_path):  # If the path actually exists
-                        logger.info(f"Opening folder: {mod_path}")
-                        platform_specific_open(mod_path)  # Open it
-                    else:  # Otherwise, warn & do nothing
-                        show_warning(
-                            "Cannot 'Open folder'!",
-                            f"Failed to 'Open folder' for {widget_package_id}! ",
-                            f"Path does not exist: {mod_path}",
+                        publishedfileids.append(int(publishedfileid))
+                        unsubscribe_mod_steam_bool = True
+                        unsubscribe_mod_steam_action.setText(
+                            "Unsubscribe mod with Steam"
                         )
-                        logger.warning(
-                            f"Failed to 'Open folder' for {widget_package_id}! "
-                            + f"Path does not exist: {mod_path}"
-                        )
+                    # Delete mod action text
+                    delete_mod_action.setText("Delete mod")
+            # Multiple items selected
+            elif len(selected_items) > 1:  # Multiple items selected
+                for source_item in selected_items:
+                    if type(source_item) is QListWidgetItem:
+                        source_widget = self.itemWidget(source_item)
+                        # Retreive metadata
+                        widget_json_data = source_widget.json_data
+                        mod_data_source = widget_json_data.get("data_source")
+                        # Open folder action text
+                        open_folder_action.setText("Open folder(s)")
+                        # If we have a "url" or "steam_url"
+                        if widget_json_data.get("url") or widget_json_data.get(
+                            "steam_url"
+                        ):
+                            open_url_browser_bool = True
+                            open_url_browser_action.setText("Open URL(s) in browser")
+                        # If we have a "steam_uri"
+                        if widget_json_data.get("steam_uri"):
+                            open_mod_steam_bool = True
+                            open_mod_steam_action.setText("Open mod(s) in Steam")
+                        # If Workshop, try unsub + delete
+                        if mod_data_source == "workshop" and widget_json_data.get(
+                            "publishedfileid"
+                        ):
+                            publishedfileid = widget_json_data["publishedfileid"]
+                            logger.debug(
+                                f"Tracking PublishedFileID for ISteamUGC/UnsubscribeItem: {publishedfileid}"
+                            )
+                            publishedfileids.append(int(publishedfileid))
+                            unsubscribe_mod_steam_bool = True
+                            unsubscribe_mod_steam_action.setText(
+                                "Unsubscribe mod(s) with Steam"
+                            )
+                        # Delete mod action text
+                        delete_mod_action.setText("Delete mod(s)")
+
+            # Put together our contextMenu
+            if open_folder_bool:
+                contextMenu.addAction(open_folder_action)
+            if open_url_browser_bool:
+                contextMenu.addAction(open_url_browser_action)
+            if open_mod_steam_bool:
+                contextMenu.addAction(open_mod_steam_action)
+            if unsubscribe_mod_steam_bool:
+                contextMenu.addAction(unsubscribe_mod_steam_action)
+            if delete_mod_bool:
+                contextMenu.addAction(delete_mod_action)
+
+            # Execute QMenu and return it's ACTION
+            action = contextMenu.exec_(self.mapToGlobal(event.pos()))
+            if action:  # Handle the action for all selected items
+                # Unsubscribe/delete mods with Steam action
                 if (
-                    "open_url_browser" in locals()
-                ):  # This action is conditionally created
-                    if action == open_url_browser:  # ACTION: Open URL in browser
-                        logger.info(f"Opening url in browser: {url}")
-                        self.open_mod_url(url)
-                if "open_mod_steam" in locals():  # This action is conditionally created
-                    if action == open_mod_steam:  # ACTION: Open steam:// uri in Steam
-                        platform_specific_open(steam_uri)
-                if "delete_mod" in locals():  # This action is conditionally created
-                    if action == delete_mod:  # ACTION: Delete mod
-                        logger.info(f"Deleting mod at: {mod_path}")
-                        shutil.rmtree(mod_path)
-                if (
-                    "unsubscribe_delete_mod" in locals()
-                ):  # This action is conditionally created
-                    if (
-                        action == unsubscribe_delete_mod
-                    ):  # ACTION: Unsubscribe & delete mod
-                        logger.info(f"Unsubscribing from mod: {mod_pfid}")
-                        self.steamworks_subscription_signal.emit(
-                            ["unsubscribe", int(mod_pfid)]
-                        )
+                    action == unsubscribe_mod_steam_action
+                ):  # ACTION: Unsubscribe & delete mod
+                    if type(source_item) is QListWidgetItem:
+                        source_widget = self.itemWidget(source_item)
+                        # Retreive metadata
+                        widget_json_data = source_widget.json_data
+                        if mod_data_source == "workshop" and widget_json_data.get(
+                            "publishedfileid"
+                        ):
+                            logger.info(
+                                f"Unsubscribing from mod(s): {publishedfileids}"
+                            )
+                            self.steamworks_subscription_signal.emit(
+                                ["unsubscribe", publishedfileids]
+                            )
+                    return True
+                for source_item in selected_items:
+                    if type(source_item) is QListWidgetItem:
+                        source_widget = self.itemWidget(source_item)
+                        # Retreive metadata
+                        widget_json_data = source_widget.json_data
+                        mod_data_source = widget_json_data.get("data_source")
+                        mod_path = widget_json_data["path"]
+                        # Open folder action
+                        if action == open_folder_action:  # ACTION: Open folder
+                            if os.path.exists(mod_path):  # If the path actually exists
+                                logger.info(f"Opening folder: {mod_path}")
+                                platform_specific_open(mod_path)
+                        # Open url action
+                        if (
+                            action == open_url_browser_action
+                        ):  # ACTION: Open URL in browser
+                            if widget_json_data.get("url") or widget_json_data.get(
+                                "steam_url"
+                            ):  # If we have some form of "url" to work with...
+                                url = self.get_mod_url(widget_json_data)
+                                if url != "":
+                                    logger.info(f"Opening url in browser: {url}")
+                                    self.open_mod_url(url)
+                        # Open Steam URI with Steam action
+                        elif (
+                            action == open_mod_steam_action
+                        ):  # ACTION: Open steam:// uri in Steam
+                            if widget_json_data.get(
+                                "steam_uri"
+                            ):  # If we have steam_uri
+                                platform_specific_open(widget_json_data["steam_uri"])
+                        # Delete mods action
+                        elif action == delete_mod_action:  # ACTION: Delete mod
+                            logger.info(f"Deleting mod at: {mod_path}")
+                            shutil.rmtree(mod_path)
             return True
         return super().eventFilter(source_object, event)
 

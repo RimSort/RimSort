@@ -9,7 +9,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from PySide6.QtCore import Qt, QThread, Signal
 
-from model.dialogue import show_warning
+from model.dialogue import show_information, show_warning
+from util.constants import DB_BUILDER_EXCEPTIONS
 from util.steam.steamfiles.wrapper import acf_to_dict
 from util.steam.webapi.wrapper import AppIDQuery, DynamicQuery
 from window.runner_panel import RunnerPanel
@@ -124,7 +125,9 @@ class SteamDatabaseBuilder(QThread):
                 # If user-configured `update` parameter, update old db with new query data recursively
                 if self.update and self.to_update:
                     recursively_update_dict(
-                        self.to_update, dynamic_query.workshop_json_data
+                        self.to_update,
+                        dynamic_query.workshop_json_data,
+                        exceptions=DB_BUILDER_EXCEPTIONS,
                     )
                     with open(self.output_database_path, "w") as output:
                         json.dump(self.to_update, output, indent=4)
@@ -168,7 +171,9 @@ class SteamDatabaseBuilder(QThread):
                         # If user-configured `update` parameter, update old db with new query data recursively
                         if self.update and self.to_update:
                             recursively_update_dict(
-                                self.to_update, dynamic_query.workshop_json_data
+                                self.to_update,
+                                dynamic_query.workshop_json_data,
+                                exceptions=DB_BUILDER_EXCEPTIONS,
                             )
                             with open(self.output_database_path, "w") as output:
                                 json.dump(self.to_update, output, indent=4)
@@ -261,6 +266,59 @@ class SteamDatabaseBuilder(QThread):
         }
 
 
+def get_cached_dynamic_query_db(
+    life: int, path: str, mods: Dict[str, Any]
+) -> Dict[str, Any]:
+    logger.info(f"Checking for cached Dynamic Query: {path}")
+    db_json_data = {}
+    if os.path.exists(
+        path
+    ):  # Look for cached data & load it if available & not expired
+        logger.info(
+            f"Found cached Steam metadata!",
+        )
+        with open(path, encoding="utf-8") as f:
+            json_string = f.read()
+            logger.info(f"Checking metadata expiry against database...")
+            db_data = json.loads(json_string)
+            current_time = int(time())
+            db_time = int(db_data["version"])
+            elapsed = current_time - db_time
+            if (
+                elapsed <= life
+            ):  # If the duration elapsed since db creation is less than expiry than expiry
+                # The data is valid
+                db_json_data = db_data[
+                    "database"
+                ]  # TODO: additional check to verify integrity of this data's schema
+                show_information(
+                    title="RimSort Dynamic Query",
+                    text=f"Cached Steam metadata is valid!",
+                    information="Returning data to RimSort...",
+                )
+            else:  # If the cached db data is expired but NOT missing
+                # Fallback to the expired metadata
+                show_warning(
+                    title="RimSort Dynamic Query",
+                    text="Cached Steam metadata is expired! Consider updating!\n",
+                    information="Unable to initialize Dynamic Query for live metadata!\n"
+                    + "Falling back to cached, but EXPIRED Dynamic Query database...\n",
+                )
+                db_json_data = db_data[
+                    "database"
+                ]  # TODO: additional check to verify integrity of this data's schema
+            return db_json_data
+
+    else:  # Assume db_data_missing
+        show_information(
+            title="RimSort Dynamic Query",
+            text="Cached Dynamic Query database not found!\n",
+            information="Unable to initialize external metadata. There is no external Steam metadata being factored!\n"
+            + "Please use DB Builder to create a database, or update to the latest RimSort provided DB.\n\n",
+        )
+        return db_json_data
+
+
 def get_rpmmdb_community_rules_db(mods: Dict[str, Any]) -> Dict[str, Any]:
     """
     Extract the RimPy Mod Manager Database mod's `communityRules.json` database, which is
@@ -289,6 +347,10 @@ def get_rpmmdb_community_rules_db(mods: Dict[str, Any]) -> Dict[str, Any]:
                     rule_data = json.loads(json_string)
                     logger.debug(
                         "Returning communityRules.json, this data is long so we forego logging it here"
+                    )
+                    total_entries = len(rule_data["rules"])
+                    logger.info(
+                        f"Loaded {total_entries} additional sorting rules from RPMMDB Community Rules"
                     )
                     community_rules_json_data = rule_data["rules"]
             else:
@@ -331,6 +393,10 @@ def get_rpmmdb_steam_metadata(mods: Dict[str, Any]) -> Dict[str, Any]:
                     db_data = json.loads(json_string)
                     logger.debug(
                         "Returning db.json, this data is long so we forego logging it here."
+                    )
+                    total_entries = len(db_data["database"])
+                    logger.info(
+                        f"Loaded {total_entries} additional sorting rules from RPMMDB Steam DB"
                     )
                     db_json_data = db_data["database"]
             else:
@@ -475,13 +541,18 @@ def get_workshop_acf_data(
             )  # I think this is always equivalent to the external_metadata entry for this same data. Unsure. Probably not unless a mod is outdated by quite some time
 
 
-# Recursive function to update dictionary values
-def recursively_update_dict(a_dict, b_dict):
+# Recursive function to update dictionary values with exceptions
+def recursively_update_dict(a_dict, b_dict, exceptions=None):
     for key, value in b_dict.items():
-        if key in a_dict and isinstance(a_dict[key], dict) and isinstance(value, dict):
+        if exceptions and key in exceptions:
+            # If the key is an exception, update its value directly from B
+            a_dict[key] = value
+        elif (
+            key in a_dict and isinstance(a_dict[key], dict) and isinstance(value, dict)
+        ):
             # If the key exists in both dictionaries and the values are dictionaries,
-            # recursively update the nested dictionaries
-            recursively_update_dict(a_dict[key], value)
+            # recursively update the nested dictionaries with exceptions
+            recursively_update_dict(a_dict[key], value, exceptions)
         else:
             # Otherwise, update the value in A with the value from B
             a_dict[key] = value
