@@ -509,7 +509,7 @@ class GameConfiguration(QObject):
                 )
             if self.db_builder_include == "all_mods":
                 self.settings_panel.build_steam_database_include_cb.setCurrentText(
-                    "Local Only"
+                    "All Mods"
                 )
             if settings_data.get("build_steam_database_dlc_data"):
                 self.build_steam_database_dlc_data_toggle = settings_data[

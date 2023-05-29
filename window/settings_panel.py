@@ -112,7 +112,7 @@ class SettingsPanel(QDialog):
             + "This option is applied on RimSort initialization."
         )
         self.duplicate_mods_checkbox = QCheckBox(
-            "Show duplicate mods check UI warning on refresh"
+            "Show duplicate mods check + UI warning on refresh"
         )
         self.duplicate_mods_checkbox.setObjectName("summaryValue")
         self.steam_mods_update_checkbox = QCheckBox(
@@ -130,8 +130,9 @@ class SettingsPanel(QDialog):
         self.try_download_missing_mods_checkbox.setObjectName("summaryValue")
         self.try_download_missing_mods_checkbox.setToolTip(
             "This option will allow you to attempt to download any missing mods\n"
-            + "detected when importing mods, or when the active mods list\n\n"
-            + "is refreshed. Prompts a choice betwen SteamCMD and Steam client."
+            + "detected when importing mods, or when the active mods list is refreshed. \n"
+            + "Relies on a Steam DB which contains accurate dependency information.\n\n"
+            + "Prompts a choice between SteamCMD and Steam client to retrieve the missing mods."
         )
         # Build the general options layout
         self.general_actions_layout.addWidget(self.rimsort_actions_label)
@@ -201,14 +202,14 @@ class SettingsPanel(QDialog):
         )
         self.build_steam_database_button = QPushButton("Build database")
         self.build_steam_database_button.setToolTip(
-            "Right-click to set:\n"
-            + "- Database expiry\n\tDefault: 1 week (604800 seconds)\n"
-            + "- Steam WebAPI key\n\t"
-            + "You can get this from Steam.\n\t"
-            + 'Please consult the "User Guide" on the RimSort wiki\n\n'
-            + "Requires: \n"
-            + "- A live internet connection"
-            + "-A Steam WebAPI key configured"
+            "Right-click to:"
+            + "\n\n- Merge 2 databases"
+            + "\n- Set Database expiry"
+            + "\n- Set Steam WebAPI key"
+            + '\n\nPlease consult the "User Guide" on the RimSort wiki'
+            + "\n\nRequires:"
+            + "\n- A live internet connection"
+            + "\n- A Steam WebAPI key configured"
         )
         # Set context menu policy and connect custom context menu event
         self.build_steam_database_button.setContextMenuPolicy(Qt.CustomContextMenu)

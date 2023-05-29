@@ -17,7 +17,7 @@ from urllib3.exceptions import HTTPError
 
 from logger_tt import logger
 from model.dialogue import show_dialogue_conditional
-from util.constants import DB_BUILDER_EXCEPTIONS
+from util.constants import DB_BUILDER_EXCEPTIONS, RIMWORLD_DLC_METADATA
 from util.metadata import SteamDatabaseBuilder, recursively_update_dict
 from util.rentry.wrapper import RentryUpload
 from util.steam.webapi.wrapper import ISteamRemoteStorage_GetPublishedFileDetails
@@ -386,25 +386,72 @@ class MainContent:
             logger.debug(
                 f"Could not find data for the list of active mods: {missing_mods}"
             )
-            if self.game_configuration.try_download_missing_mods_toggle:
+            if (  # User configuration
+                len(self.external_steam_metadata.keys()) > 0
+            ):  # Do we even have metadata to lookup...?
+                # Generate a list of all missing mods + any missing mod dependencies listed
+                # in the user-configured Steam metadata.
+                DEPENDENCY_TAG = "_-_DEPENDENCY_-_"
+                packageIds_to_pfids = {}
+                for publishedfileid, metadata in self.external_steam_metadata.items():
+                    if metadata["packageId"].lower() in missing_mods:
+                        missing_mod_packageId = metadata["packageId"]
+                        packageIds_to_pfids[missing_mod_packageId] = publishedfileid
+                        for dependency_pfid, dependency_crumbs in metadata[
+                            "dependencies"
+                        ].items():
+                            packageIds_to_pfids.update(
+                                {DEPENDENCY_TAG + dependency_crumbs[0]: dependency_pfid}
+                            )
+                # Remove AppId dependencies from this list. They cannot be subscribed like mods.
                 packageIds_to_pfids = {
-                    metadata["packageId"]: publishedfileid
-                    for publishedfileid, metadata in self.external_steam_metadata.items()
-                    if metadata["packageId"].lower() in missing_mods
+                    packageId: pfid
+                    for packageId, pfid in packageIds_to_pfids.items()
+                    if pfid not in RIMWORLD_DLC_METADATA.keys()
                 }
+                # If we don't have anything to download
+                if not len(packageIds_to_pfids.keys()) > 0:
+                    show_warning(
+                        text="No dependencies generated from external Steam metadata! Is your database complete?",
+                        information="This happens due to there not being metadata available in your configured Steam DB.",
+                    )
+                    return
+                # Generate our report
+                logger.warning(
+                    f"{len(packageIds_to_pfids)} PublishedFileIds generated from external Steam metadata!"
+                )
+                logger.warning(packageIds_to_pfids)
+                list_of_needed_dependencies = {}
+                list_of_missing_mods = ""
+                for (
+                    packageId_or_dependency_name,
+                    publishedfileid,
+                ) in packageIds_to_pfids.items():
+                    if not DEPENDENCY_TAG in packageId_or_dependency_name:
+                        list_of_missing_mods += (
+                            f"* {packageId_or_dependency_name} -> {publishedfileid}\n"
+                        )
+                    else:  # We want listed dependencies added to our report
+                        list_of_needed_dependencies[
+                            packageId_or_dependency_name.replace(DEPENDENCY_TAG, "")
+                        ] = publishedfileid
+                # If any dependencies were generated, add them to the bottom of our report
+                if len(list_of_needed_dependencies.keys()) > 0:
+                    list_of_missing_mods += (
+                        "\n\nAdditional mod dependencies needed:\n\n"
+                    )
+                    for (
+                        dependency_name,
+                        publishedfileid,
+                    ) in list_of_needed_dependencies.items():
+                        list_of_missing_mods += (
+                            f"* {dependency_name} -> {publishedfileid}\n"
+                        )
+                # Generate our list of PublishedFileIds
                 publishedfileids = [
                     publishedfileid for publishedfileid in packageIds_to_pfids.values()
                 ]
-
-                logger.debug(
-                    f"{len(packageIds_to_pfids)} PublishedFileIds generated from external Steam metadata!"
-                )
-                list_of_missing_mods = ""
-                for missing_mod in missing_mods:
-                    list_of_missing_mods = (
-                        list_of_missing_mods
-                        + f"* {missing_mod} -> {packageIds_to_pfids[missing_mod]}\n"
-                    )
+                # Prompt the user
                 answer = show_dialogue_conditional(
                     text="Could not find data for some mods!",
                     information=(
@@ -431,7 +478,7 @@ class MainContent:
             else:
                 list_of_missing_mods = ""
                 for missing_mod in missing_mods:
-                    list_of_missing_mods = list_of_missing_mods + f"* {missing_mod}\n"
+                    list_of_missing_mods += f"* {missing_mod}\n"
                 show_information(
                     text="Could not find data for some mods!",
                     information=(
@@ -624,7 +671,7 @@ class MainContent:
                     for time_data in self.workshop_mods_potential_updates.values():
                         list_of_potential_updates += time_data["ui_string"]
                     show_information(
-                        title="RimSort Dynamic Query",
+                        title="Mod update(s) available!",
                         text="The following list of Steam mods may have updates available!",
                         information=(
                             "This metadata was parsed directly from your Steam client's workshop data, and compared with the "
@@ -1663,16 +1710,16 @@ class MainContent:
 
     def _do_build_database_thread(self) -> None:
         self.game_configuration.settings_panel.close()
+        logger.info("Opening file dialog to specify output file")
+        output_path = QFileDialog.getSaveFileName(
+            caption="Designate output path",
+            dir=os.path.join(self.game_configuration.storage_path),
+            filter="JSON (*.json)",
+        )
+        if output_path[0] and not output_path[0].endswith(".json"):
+            output_path[0].extend(".json")
+        logger.info(f"Selected path: {output_path[0]}")
         if self.game_configuration.db_builder_include == "no_local":
-            logger.info("Opening file dialog to specify output file")
-            output_path = QFileDialog.getSaveFileName(
-                caption="Designate output path",
-                dir=os.path.join(self.game_configuration.storage_path),
-                filter="JSON (*.json)",
-            )
-            if output_path[0] and not output_path[0].endswith(".json"):
-                output_path[0].extend(".json")
-            logger.info(f"Selected path: {output_path[0]}")
             if output_path[0]:
                 self.db_builder = SteamDatabaseBuilder(
                     apikey=self.game_configuration.steam_apikey,
@@ -1700,7 +1747,7 @@ class MainContent:
                 appid=294100,
                 database_expiry=self.game_configuration.database_expiry,
                 mode=self.game_configuration.db_builder_include,
-                output_database_path=self.cached_dynamic_query_target_path,
+                output_database_path=output_path[0],
                 get_appid_deps=self.game_configuration.build_steam_database_dlc_data_toggle,
                 mods=self.all_mods_with_dependencies,
                 update=self.game_configuration.build_steam_database_update_toggle,

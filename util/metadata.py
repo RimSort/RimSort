@@ -292,14 +292,14 @@ def get_cached_dynamic_query_db(
                     "database"
                 ]  # TODO: additional check to verify integrity of this data's schema
                 show_information(
-                    title="RimSort Dynamic Query",
+                    title="Dynamic Query",
                     text=f"Cached Steam metadata is valid!",
                     information="Returning data to RimSort...",
                 )
             else:  # If the cached db data is expired but NOT missing
                 # Fallback to the expired metadata
                 show_warning(
-                    title="RimSort Dynamic Query",
+                    title="Dynamic Query",
                     text="Cached Steam metadata is expired! Consider updating!\n",
                     information="Unable to initialize Dynamic Query for live metadata!\n"
                     + "Falling back to cached, but EXPIRED Dynamic Query database...\n",
@@ -311,7 +311,7 @@ def get_cached_dynamic_query_db(
 
     else:  # Assume db_data_missing
         show_information(
-            title="RimSort Dynamic Query",
+            title="Dynamic Query",
             text="Cached Dynamic Query database not found!\n",
             information="Unable to initialize external metadata. There is no external Steam metadata being factored!\n"
             + "Please use DB Builder to create a database, or update to the latest RimSort provided DB.\n\n",

@@ -199,7 +199,7 @@ class SteamworksAppDependenciesQuery(Process):
                     else:
                         tick += 1
                         logger.debug(
-                            f"Waiting for Steamworks API callbacks to complete [{self.steamworks_interface.callbacks_count}/{self.steamworks_interface.callbacks_total}]"
+                            f"Waiting for Steamworks API callbacks to complete [{steamworks_interface.callbacks_count}/{steamworks_interface.callbacks_total}]"
                         )
                         sleep(5)
                 else:  # This means that the callbacks thread has ended. We are done with Steamworks API now, so we dispose of everything.
@@ -331,7 +331,7 @@ class SteamworksSubscriptionHandler(Process):
                     else:
                         tick += 1
                         logger.debug(
-                            f"Waiting for Steamworks API callbacks to complete [{self.steamworks_interface.callbacks_count}/{self.steamworks_interface.callbacks_total}]"
+                            f"Waiting for Steamworks API callbacks to complete [{steamworks_interface.callbacks_count}/{steamworks_interface.callbacks_total}]"
                         )
                         sleep(5)
                 else:  # This means that the callbacks thread has ended. We are done with Steamworks API now, so we dispose of everything.
