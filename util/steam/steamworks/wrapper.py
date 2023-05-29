@@ -75,6 +75,7 @@ class SteamworksInterface:
             logger.info("Steamworks loaded!")
         while not self.end_callbacks:
             self.steamworks.run_callbacks()
+            sleep(0.1)
         else:
             logger.info(
                 f"{self.callbacks_count} callback(s) received. Ending thread..."
@@ -91,13 +92,13 @@ class SteamworksInterface:
         logger.debug(f"result : {args[0].result}")
         pfid = args[0].publishedFileId
         logger.debug(f"publishedFileId : {pfid}")
-        logger.debug(f"array_app_dependencies : {args[0].array_app_dependencies}")
-        logger.debug(
-            f"array_num_app_dependencies : {args[0].array_num_app_dependencies}"
-        )
-        logger.debug(
-            f"total_num_app_dependencies : {args[0].total_num_app_dependencies}"
-        )
+        # logger.debug(f"array_app_dependencies : {args[0].array_app_dependencies}")
+        # logger.debug(
+        #     f"array_num_app_dependencies : {args[0].array_num_app_dependencies}"
+        # )
+        # logger.debug(
+        #     f"total_num_app_dependencies : {args[0].total_num_app_dependencies}"
+        # )
         app_dependencies_list = args[0].get_app_dependencies_list()
         logger.debug(f"app_dependencies_list : {app_dependencies_list}")
         # Collect data for our query
@@ -120,6 +121,7 @@ class SteamworksInterface:
         logger.debug(f"Subscription action callback: {args}, {kwargs}")
         logger.debug(f"result: {args[0].result}")
         logger.debug(f"PublishedFileId: {args[0].publishedFileId}")
+        logger.info(self.steamworks.Workshop.Get(args[0].publishedFileId))
         # Check for multiple actions
         if self.multiple_queries and self.callbacks_count == self.callbacks_total:
             # Set flag so that _callbacks cease
@@ -185,9 +187,19 @@ class SteamworksAppDependenciesQuery(Process):
                         )
                         sleep(0.7)
                 # While the thread is alive, we wait for it.
+                tick = 0
                 while steamworks_interface.steamworks_thread.is_alive():
-                    logger.debug("Waiting for Steamworks API callbacks to complete...")
-                    sleep(5)
+                    if (
+                        tick > 24
+                    ):  # Wait ~2 min without additional responses before we quit forcefully
+                        self.steamworks_interface.end_callbacks = True
+                        break
+                    else:
+                        tick += 1
+                        logger.debug(
+                            f"Waiting for Steamworks API callbacks to complete [{self.steamworks_interface.callbacks_count}/{self.steamworks_interface.callbacks_total}]"
+                        )
+                        sleep(5)
                 else:  # This means that the callbacks thread has ended. We are done with Steamworks API now, so we dispose of everything.
                     logger.info("Thread completed. Unloading Steamworks...")
                     steamworks_interface.steamworks_thread.join()
@@ -294,9 +306,6 @@ class SteamworksSubscriptionHandler(Process):
                         steamworks_interface.steamworks.Workshop.UnsubscribeItem(
                             self.instruction[1]
                         )
-                        steamworks_interface.steamworks.Workshop.UnsubscribeItem(
-                            self.instruction[1]
-                        )
                     else:
                         for pfid in self.instruction[1]:
                             logger.debug(f"ISteamUGC/UnsubscribeItem Action : {pfid}")
@@ -308,14 +317,21 @@ class SteamworksSubscriptionHandler(Process):
                             steamworks_interface.steamworks.Workshop.UnsubscribeItem(
                                 pfid
                             )
-                            steamworks_interface.steamworks.Workshop.UnsubscribeItem(
-                                pfid
-                            )
                             sleep(0.7)
                 # While the thread is alive, we wait for it.
+                tick = 0
                 while steamworks_interface.steamworks_thread.is_alive():
-                    logger.debug("Waiting for Steamworks API callbacks to complete...")
-                    sleep(5)
+                    if (
+                        tick > 24
+                    ):  # Wait ~2 min without additional responses before we quit forcefully
+                        self.steamworks_interface.end_callbacks = True
+                        break
+                    else:
+                        tick += 1
+                        logger.debug(
+                            f"Waiting for Steamworks API callbacks to complete [{self.steamworks_interface.callbacks_count}/{self.steamworks_interface.callbacks_total}]"
+                        )
+                        sleep(5)
                 else:  # This means that the callbacks thread has ended. We are done with Steamworks API now, so we dispose of everything.
                     logger.info("Thread completed. Unloading Steamworks...")
                     steamworks_interface.steamworks_thread.join()

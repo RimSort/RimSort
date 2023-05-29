@@ -1414,9 +1414,6 @@ class MainContent:
                         logger.warning(
                             "Steamworks API game launch is currently disabled on frozen Nuitka bundles due to issues with logger_tt and multiprocessing."
                         )
-                        logger.warning(
-                            "Launching independent game process without Steamworks API!"
-                        )
                         return
                     else:
                         self.steamworks_initialized = True
