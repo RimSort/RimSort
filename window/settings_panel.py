@@ -124,6 +124,15 @@ class SettingsPanel(QDialog):
             + 'the below "Metadata" option set to "RimSort Dynamic Query"\n\n'
             + '"Metadata" should be set to RimPy MMDB when sorting for now.'
         )
+        self.try_download_missing_mods_checkbox = QCheckBox(
+            "Try to download missing mods when detected"
+        )
+        self.try_download_missing_mods_checkbox.setObjectName("summaryValue")
+        self.try_download_missing_mods_checkbox.setToolTip(
+            "This option will allow you to attempt to download any missing mods\n"
+            + "detected when importing mods, or when the active mods list\n\n"
+            + "is refreshed. Prompts a choice betwen SteamCMD and Steam client."
+        )
         # Build the general options layout
         self.general_actions_layout.addWidget(self.rimsort_actions_label)
         self.general_actions_layout.addWidget(self.clear_paths_button)
@@ -135,6 +144,9 @@ class SettingsPanel(QDialog):
         self.general_preferences_layout.addWidget(self.watchdog_checkbox)
         self.general_preferences_layout.addWidget(self.duplicate_mods_checkbox)
         self.general_preferences_layout.addWidget(self.steam_mods_update_checkbox)
+        self.general_preferences_layout.addWidget(
+            self.try_download_missing_mods_checkbox
+        )
         self.general_options_layout.addLayout(self.general_actions_layout, 5)
         self.general_options_layout.addLayout(self.general_preferences_layout, 10)
 

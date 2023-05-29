@@ -1,6 +1,6 @@
-from PySide6.QtCore import QEventLoop
-from PySide6.QtWidgets import QApplication, QMessageBox
 from typing import Optional
+
+from PySide6.QtWidgets import QMessageBox, QPushButton, QHBoxLayout, QVBoxLayout
 
 from logger_tt import logger
 
@@ -11,6 +11,8 @@ def show_dialogue_conditional(
     title: Optional[str] = None,
     text: Optional[str] = None,
     information: Optional[str] = None,
+    details: Optional[str] = None,
+    button_text_override: Optional[list] = None,
 ) -> str:
     """
     Displays a dialogue, prompting the user for input
@@ -20,18 +22,47 @@ def show_dialogue_conditional(
     :param information: text to pass to setInformativeText
     """
     logger.info(
-        f"Showing dialogue box with input: [{title}], [{text}], [{information}]"
+        f"Showing dialogue box with input: [{title}], [{text}], [{information}] [{details}] BTN OVERRIDES: [{button_text_override}]"
     )
+
+    # Set up the message box
     dialogue = QMessageBox()
+    dialogue.setIcon(QMessageBox.Question)
     if title:
         dialogue.setWindowTitle(title)
     else:
         dialogue.setWindowTitle(DEFAULT_TITLE)
+
+    # Create our buttons (accomodate any overrides passed)
+    if button_text_override:
+        # Remove standard buttons
+        dialogue.setStandardButtons(QMessageBox.Cancel)
+
+        # Add custom buttons
+
+        # Custom 1
+        custom_btn_1 = QPushButton(button_text_override[0])
+        custom_btn_1.setFixedWidth(custom_btn_1.sizeHint().width())
+        dialogue.addButton(custom_btn_1, QMessageBox.ActionRole)
+        # Custom 2
+        custom_btn_2 = QPushButton(button_text_override[1])
+        custom_btn_2.setFixedWidth(custom_btn_2.sizeHint().width())
+        dialogue.addButton(custom_btn_2, QMessageBox.ActionRole)
+        dialogue.setEscapeButton(QMessageBox.Cancel)
+    else:
+        # Configure buttons
+        dialogue.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        dialogue.setEscapeButton(QMessageBox.No)
+
+    # Add data
     if text:
         dialogue.setText(text)
     if information:
         dialogue.setInformativeText(information)
-    dialogue.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+    if details:
+        dialogue.setDetailedText(details)
+
+    # Show the message box & return response
     dialogue.exec_()
     response = dialogue.clickedButton()
     return response.text()
@@ -55,7 +86,7 @@ def show_information(
     )
     # Set up the message box
     info_message_box = QMessageBox()
-    info_message_box.setIcon(QMessageBox.Warning)
+    info_message_box.setIcon(QMessageBox.Information)
     if title:
         info_message_box.setWindowTitle(title)
     else:

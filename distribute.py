@@ -169,7 +169,7 @@ def build_steamworkspy() -> None:
         "&",
         "exit",
     ]
-    # SOURCE: "https://partner.steamgames.com/downloads/steamworks_sdk_155.zip"
+    # SOURCE: "https://partner.steamgames.com/downloads/steamworks_sdk_*.zip"
     STEAMWORKS_SDK_URL = "https://github.com/oceancabbage/RimSort/raw/steamworks-sdk/steamworks_sdk_155.zip"
     SUBMODULE_UPDATE_INIT_CMD = ["git", "submodule", "update", "--init", "--recursive"]
     STEAMWORKS_PY_PATH = os.path.join(_CWD, "SteamworksPy", "library")
@@ -458,11 +458,11 @@ Do stuff!
 
 # RimSort dependencies
 print("Getting RimSort dependencies...")
-get_rimsort_deps()
+# get_rimsort_deps()
 
 # Build SteamworksPy
 # print("Building SteamworksPy library...")
-# build_steamworkspy()
+build_steamworkspy()
 
 # Copy SteamworksPy prebuilt libs
 print("Copying SteamworksPy libs for release...")
@@ -470,7 +470,7 @@ copy_swp_libs()
 
 # Grab latest todds release
 print("Grabbing latest todds release...")
-get_latest_todds_release()
+# get_latest_todds_release()
 
 # Build Nuitka distributable binary
 # print("Building RimSort application with Nuitka...")

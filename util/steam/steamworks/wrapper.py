@@ -121,7 +121,9 @@ class SteamworksInterface:
         logger.debug(f"Subscription action callback: {args}, {kwargs}")
         logger.debug(f"result: {args[0].result}")
         logger.debug(f"PublishedFileId: {args[0].publishedFileId}")
-        logger.info(self.steamworks.Workshop.Get(args[0].publishedFileId))
+        logger.info(
+            self.steamworks.Workshop.GetItemInstallInfo(args[0].publishedFileId)
+        )
         # Check for multiple actions
         if self.multiple_queries and self.callbacks_count == self.callbacks_total:
             # Set flag so that _callbacks cease

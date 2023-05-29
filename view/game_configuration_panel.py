@@ -247,6 +247,9 @@ class GameConfiguration(QObject):
         # STEAM MODS UPDATE CHECK TOGGLE
         self.steam_mods_update_check_toggle = False
 
+        # TRY TO DOWNLOAD MISSING MODS TOGGLE
+        self.try_download_missing_mods_toggle = False
+
         # DB BUILDER MODE
         self.db_builder_include = "all_mods"
 
@@ -314,6 +317,9 @@ class GameConfiguration(QObject):
         )
         self.settings_panel.steam_mods_update_checkbox.setChecked(
             self.steam_mods_update_check_toggle
+        )
+        self.settings_panel.try_download_missing_mods_checkbox.setChecked(
+            self.try_download_missing_mods_toggle
         )
 
         # DQ GetAppDependencies
@@ -469,6 +475,10 @@ class GameConfiguration(QObject):
                 self.steam_mods_update_check_toggle = settings_data[
                     "steam_mods_update_check"
                 ]
+            if settings_data.get("try_download_missing_mods"):
+                self.try_download_missing_mods_toggle = settings_data[
+                    "try_download_missing_mods"
+                ]
 
             # sorting algorithm
             if settings_data.get("sorting_algorithm"):
@@ -591,6 +601,11 @@ class GameConfiguration(QObject):
             self.steam_mods_update_check_toggle = True
         else:
             self.steam_mods_update_check_toggle = False
+        # missing mods download toggle
+        if self.settings_panel.try_download_missing_mods_checkbox.isChecked():
+            self.try_download_missing_mods_toggle = True
+        else:
+            self.try_download_missing_mods_toggle = False
 
         # db builder mode
         if (
@@ -655,6 +670,7 @@ class GameConfiguration(QObject):
                 "sorting_algorithm": self.settings_panel.sorting_algorithm_cb.currentText(),
                 "steam_mods_update_check": self.steam_mods_update_check_toggle,
                 "steamcmd_validate_downloads": self.steamcmd_validate_downloads_toggle,
+                "try_download_missing_mods": self.try_download_missing_mods_toggle,
                 "todds_active_mods_target": self.todds_active_mods_target_toggle,
                 "todds_dry_run": self.todds_dry_run_toggle,
                 "todds_overwrite": self.todds_overwrite_toggle,

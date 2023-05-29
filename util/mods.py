@@ -1,18 +1,19 @@
 import json
-from logger_tt import logger
-from natsort import natsorted
 import os
 import platform
-from requests.exceptions import HTTPError
-from time import localtime, strftime, time
 import traceback
+from time import localtime, strftime, time
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
 
+from natsort import natsorted
+from requests.exceptions import HTTPError
+
+from logger_tt import logger
 from model.dialogue import show_fatal_error, show_information, show_warning
 from util.constants import RIMWORLD_DLC_METADATA
-from util.steam.webapi.wrapper import DynamicQuery
 from util.schema import validate_mods_config_format
+from util.steam.webapi.wrapper import DynamicQuery
 from util.xml import non_utf8_xml_path_to_json, xml_path_to_json
 
 
@@ -247,7 +248,7 @@ def get_active_inactive_mods(
     config_path: str,
     workshop_and_expansions: Dict[str, Any],
     duplicate_mods_warning_toggle: bool,
-) -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any]]:
+) -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any], list]:
     """
     Given a path to the ModsConfig.xml folder and a complete list of
     mods (including base game and DLC) and their dependencies,
@@ -306,27 +307,13 @@ def get_active_inactive_mods(
             logger.debug(
                 "User preference is not configured to display duplicate mods. Skipping..."
             )
-    if missing_mods:
-        logger.debug(f"Could not find data for the list of active mods: {missing_mods}")
-        list_of_missing_mods = ""
-        for missing_mod in missing_mods:
-            list_of_missing_mods = list_of_missing_mods + f"* {missing_mod}\n"
-        show_warning(
-            text="Could not find data for some mods",
-            information=(
-                "The following list of mods were set active in your ModsConfig.xml but "
-                "no data could be found from the workshop or in your local mods. "
-                "Did you set your game install and workshop/local mods path correctly?"
-            ),
-            details=list_of_missing_mods,
-        )
     # Get the inactive mods by subtracting active mods from workshop + expansions
     logger.info("Calling get inactive mods")
     inactive_mods = get_inactive_mods(workshop_and_expansions, active_mods)
     logger.info(
         f"Returning newly generated active mods [{len(active_mods)}] and inactive mods [{len(inactive_mods)}] list"
     )
-    return active_mods, inactive_mods, duplicate_mods
+    return active_mods, inactive_mods, duplicate_mods, missing_mods
 
 
 def get_active_mods_from_config(
@@ -1277,7 +1264,7 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
         logger.debug(f"Scanned the following files in mods path: {files_scanned}")
         logger.debug(f"Scanned the following dirs in mods path: {dirs_scanned}")
         if invalid_dirs:
-            logger.warning(
+            logger.debug(
                 f"The following scanned dirs did not contain mod info: {invalid_dirs}"
             )
     else:

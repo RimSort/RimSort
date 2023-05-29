@@ -1,21 +1,22 @@
-from functools import partial
-from logging import getLogger, WARNING
-from logger_tt import logger
-from multiprocessing import current_process, Process, Queue
 import os
 import platform
-from requests import post as requests_post
-from requests.exceptions import SSLError
 import subprocess
 import sys
+from functools import partial
+from logging import WARNING, getLogger
+from multiprocessing import Process, Queue, current_process
 from tempfile import gettempdir
-from time import sleep
 from threading import Thread
+from time import sleep
 from typing import Any, Dict
-from urllib3.exceptions import HTTPError
 
 from pyperclip import copy as copy_to_clipboard
+from requests import post as requests_post
+from requests.exceptions import SSLError
+from urllib3.exceptions import HTTPError
 
+from logger_tt import logger
+from model.dialogue import show_dialogue_conditional
 from util.constants import DB_BUILDER_EXCEPTIONS
 from util.metadata import SteamDatabaseBuilder, recursively_update_dict
 from util.rentry.wrapper import RentryUpload
@@ -41,7 +42,7 @@ elif _SYSTEM == "Windows":
     # This is a stub if it's ever even needed... i still can't figure out why it won't log at all on Windows...?
     # getLogger("").setLevel(WARNING)
 
-from PySide6.QtCore import Qt, QEventLoop, QObject, QProcess, Signal
+from PySide6.QtCore import QEventLoop, QObject, QProcess, Qt, Signal
 from PySide6.QtWidgets import QFileDialog, QFrame, QHBoxLayout, QInputDialog, QLineEdit
 
 from sort.dependencies import *
@@ -123,36 +124,6 @@ class MainContent:
         logger.info("Loading GameConfiguration instance")
         self.game_configuration = game_configuration
 
-        # CHECK USER PREFERENCE FOR WATCHDOG
-        if self.game_configuration.watchdog_toggle:
-            # INITIALIZE WATCHDOG - WE WAIT TO START UNTIL DONE PARSING MOD LIST
-            game_folder_path = self.game_configuration.get_game_folder_path()
-            local_folder_path = self.game_configuration.get_local_folder_path()
-            workshop_folder_path = self.game_configuration.get_workshop_folder_path()
-            self.game_configuration_watchdog_event_handler = RSFileSystemEventHandler()
-            if _SYSTEM == "Windows":
-                self.game_configuration_watchdog_observer = PollingObserver()
-            else:
-                self.game_configuration_watchdog_observer = Observer()
-            if game_folder_path != "":
-                self.game_configuration_watchdog_observer.schedule(
-                    self.game_configuration_watchdog_event_handler,
-                    game_folder_path,
-                    recursive=True,
-                )
-            if local_folder_path != "":
-                self.game_configuration_watchdog_observer.schedule(
-                    self.game_configuration_watchdog_event_handler,
-                    local_folder_path,
-                    recursive=True,
-                )
-            if workshop_folder_path != "":
-                self.game_configuration_watchdog_observer.schedule(
-                    self.game_configuration_watchdog_event_handler,
-                    workshop_folder_path,
-                    recursive=True,
-                )
-
         # SIGNALS AND SLOTS
         self.actions_panel.actions_signal.connect(self.actions_slot)  # Actions
         self.game_configuration.settings_panel.settings_panel_actions_signal.connect(
@@ -192,12 +163,8 @@ class MainContent:
             self.actions_slot
         )
 
-        # CHECK USER PREFERENCE FOR WATCHDOG
-        if self.game_configuration.watchdog_toggle:
-            # Connect watchdog to our refresh button animation
-            self.game_configuration_watchdog_event_handler.file_changes_signal.connect(
-                self._do_refresh_animation
-            )
+        # State used if appworkshop metadata is parsed from Steam workshop install
+        self.appworkshop_acf_data_parsed = False
 
         # Restore cache initially set to empty
         self.active_mods_data_restore_state: Dict[str, Any] = {}
@@ -208,25 +175,14 @@ class MainContent:
             self.game_configuration.storage_path, "steam_metadata.json"
         )
 
-        # Instantiate query runner
-        self.query_runner = RunnerPanel = None
-
         # Store duplicate_mods for global access
         self.duplicate_mods = {}
-
-        # State used if appworkshop metadata is parsed from Steam workshop install
-        self.appworkshop_acf_data_parsed = False
 
         # Empty game version string unless the data is populated
         self.game_version = ""
 
-        # Check if paths have been set
-        if self.game_configuration.check_if_essential_paths_are_set():
-            # Run expensive calculations to set cache data
-            self.__refresh_cache_calculations()
-
-            # Insert mod data into list (is_initial = True)
-            self.__repopulate_lists(True)
+        # Instantiate query runner
+        self.query_runner = RunnerPanel = None
 
         # Instantiate steamcmd utils
         self.steam_browser = SteamcmdDownloader = None
@@ -242,13 +198,25 @@ class MainContent:
         # Instantiate todds runner
         self.todds_runner = RunnerPanel = None
 
-        logger.info("Finished MainContent initialization")
+        # Check if paths have been set
+        if self.game_configuration.check_if_essential_paths_are_set():
+            # Run expensive calculations to set cache data
+            self.__refresh_cache_calculations()
+
+            # Insert mod data into list (is_initial = True)
+            self.__repopulate_lists(True)
+
+        # CHECK USER PREFERENCE FOR WATCHDOG
+        if self.game_configuration.watchdog_toggle:
+            self.__initialize_watchdog()
 
         # CHECK USER PREFERENCE FOR WATCHDOG
         if self.game_configuration.watchdog_toggle:
             # Start watchdog
             logger.debug("Starting watchdog")
             self.game_configuration_watchdog_observer.start()
+
+        logger.info("Finished MainContent initialization")
 
     def ___get_relative_middle(self, some_list):
         rect = some_list.contentsRect()
@@ -361,6 +329,39 @@ class MainContent:
                 # If the other list is the active mod list, recalculate errors
                 self.active_mods_panel.recalculate_internal_list_errors()
 
+    def __initialize_watchdog(self) -> None:
+        # INITIALIZE WATCHDOG - WE WAIT TO START UNTIL DONE PARSING MOD LIST
+        game_folder_path = self.game_configuration.get_game_folder_path()
+        local_folder_path = self.game_configuration.get_local_folder_path()
+        workshop_folder_path = self.game_configuration.get_workshop_folder_path()
+        self.game_configuration_watchdog_event_handler = RSFileSystemEventHandler()
+        if _SYSTEM == "Windows":
+            self.game_configuration_watchdog_observer = PollingObserver()
+        else:
+            self.game_configuration_watchdog_observer = Observer()
+        if game_folder_path != "":
+            self.game_configuration_watchdog_observer.schedule(
+                self.game_configuration_watchdog_event_handler,
+                game_folder_path,
+                recursive=True,
+            )
+        if local_folder_path != "":
+            self.game_configuration_watchdog_observer.schedule(
+                self.game_configuration_watchdog_event_handler,
+                local_folder_path,
+                recursive=True,
+            )
+        if workshop_folder_path != "":
+            self.game_configuration_watchdog_observer.schedule(
+                self.game_configuration_watchdog_event_handler,
+                workshop_folder_path,
+                recursive=True,
+            )
+        # Connect watchdog to our refresh button animation
+        self.game_configuration_watchdog_event_handler.file_changes_signal.connect(
+            self._do_refresh_animation
+        )
+
     def __insert_data_into_lists(
         self, active_mods: Dict[str, Any], inactive_mods: Dict[str, Any]
     ) -> None:
@@ -379,6 +380,67 @@ class MainContent:
         logger.info(
             f"Finished inserting mod data into active [{len(active_mods)}] and inactive [{len(inactive_mods)}] mod lists"
         )
+
+    def __missing_mods_prompt(self, missing_mods: list) -> None:
+        if missing_mods:
+            logger.debug(
+                f"Could not find data for the list of active mods: {missing_mods}"
+            )
+            if self.game_configuration.try_download_missing_mods_toggle:
+                packageIds_to_pfids = {
+                    metadata["packageId"]: publishedfileid
+                    for publishedfileid, metadata in self.external_steam_metadata.items()
+                    if metadata["packageId"].lower() in missing_mods
+                }
+                publishedfileids = [
+                    publishedfileid for publishedfileid in packageIds_to_pfids.values()
+                ]
+
+                logger.debug(
+                    f"{len(packageIds_to_pfids)} PublishedFileIds generated from external Steam metadata!"
+                )
+                list_of_missing_mods = ""
+                for missing_mod in missing_mods:
+                    list_of_missing_mods = (
+                        list_of_missing_mods
+                        + f"* {missing_mod} -> {packageIds_to_pfids[missing_mod]}\n"
+                    )
+                answer = show_dialogue_conditional(
+                    text="Could not find data for some mods!",
+                    information=(
+                        "The following list of mods were set active in your mods list but "
+                        + "no data could be found for these mods in local/workshop mod paths. "
+                        + "\n\nAre your game configuration paths correctly?"
+                        + "\n\nHow would you like to try to re-download these mods?"
+                    ),
+                    details=list_of_missing_mods,
+                    button_text_override=[
+                        "SteamCMD",
+                        "Steam client",
+                    ],
+                )
+                # If the user wants to try to download them, allow it.
+                if answer == "&Cancel":
+                    logger.warning(
+                        "User cancelled prompt. Skipping missing mods download."
+                    )
+                elif answer == "SteamCMD":
+                    self._do_download_mods_with_steamcmd(publishedfileids)
+                elif answer == "Steam client":
+                    self._do_download_mods_with_steamworks(publishedfileids)
+            else:
+                list_of_missing_mods = ""
+                for missing_mod in missing_mods:
+                    list_of_missing_mods = list_of_missing_mods + f"* {missing_mod}\n"
+                show_information(
+                    text="Could not find data for some mods!",
+                    information=(
+                        "The following list of mods were set active in your mods list but "
+                        + "no data could be found for these mods in local/workshop mod paths. "
+                        + "\n\nAre your game configuration paths correctly?"
+                    ),
+                    details=list_of_missing_mods,
+                )
 
     def __mod_list_slot(self, uuid: str) -> None:
         """
@@ -597,6 +659,7 @@ class MainContent:
             active_mods_data,
             inactive_mods_data,
             self.duplicate_mods,
+            self.missing_mods,
         ) = get_active_inactive_mods(
             self.game_configuration.get_config_path(),
             self.all_mods_with_dependencies,
@@ -610,6 +673,10 @@ class MainContent:
             self.inactive_mods_data_restore_state = inactive_mods_data
 
         self.__insert_data_into_lists(active_mods_data, inactive_mods_data)
+
+        # If we have missing mods, prompt user
+        if self.missing_mods and len(self.missing_mods) >= 1:
+            self.__missing_mods_prompt(self.missing_mods)
 
     @property
     def panel(self):
@@ -840,6 +907,7 @@ class MainContent:
             active_mods_data,
             inactive_mods_data,
             self.duplicate_mods,
+            self.missing_mods,
         ) = get_active_inactive_mods(
             self.game_configuration.get_config_path(),
             self.all_mods_with_dependencies,
@@ -972,6 +1040,7 @@ class MainContent:
                 active_mods_data,
                 inactive_mods_data,
                 self.duplicate_mods,
+                self.missing_mods,
             ) = get_active_inactive_mods(
                 file_path[0],
                 self.all_mods_with_dependencies,
@@ -979,6 +1048,9 @@ class MainContent:
             )
             logger.info("Got new mods according to imported XML")
             self.__insert_data_into_lists(active_mods_data, inactive_mods_data)
+            # If we have missing mods, prompt user
+            if self.missing_mods and len(self.missing_mods) >= 1:
+                self.__missing_mods_prompt(self.missing_mods)
         else:
             logger.info("User pressed cancel, passing")
 
@@ -1380,106 +1452,6 @@ class MainContent:
 
     # STEAM{CMD, WORKS} ACTIONS
 
-    def _do_steamworks_api_call(self, instruction: list):
-        """
-        Create & launch Steamworks API process to handle instructions received from connected signals
-
-        FOR "get_app_dependencies"...
-        :param instruction: a list where:
-            instruction[0] is a string that cooresponds with the following supported_actions[]
-            instruction[1] is an int that corresponds with a Steam mod's PublishedFileId
-                        OR is a list of int that corresponds with multiple Steam mods's PublishedFileId
-        FOR subscription_actions[]...
-        :param instruction: a list where:
-            instruction[0] is a string that corresponds with the following supported_actions[]
-            instruction[1] is an int that corresponds with a subscribed Steam mod's PublishedFileId
-                        OR is a list of int that corresponds with multiple subscribed Steam mod's PublishedFileId
-        FOR "launch_game_process"...
-        :param instruction: a list where:
-            instruction[0] is a string that corresponds with the following supported_actions[]
-            instruction[1] is a list containing [path: str, args: str] respectively
-        """
-        logger.info(f"Received Steamworks API instruction: {instruction}")
-        if not self.steamworks_initialized:
-            subscription_actions = ["subscribe", "unsubscribe"]
-            supported_actions = ["get_app_dependencies", "launch_game_process"]
-            supported_actions.extend(subscription_actions)
-            if (
-                instruction[0] in supported_actions
-            ):  # Actions can be added as functions are implemented in util.steam.steamworks.wrapper
-                if (
-                    instruction[0] == "get_app_dependencies"
-                ):  # ISteamUGC/GetAppDependencies
-                    if platform.system() != "Linux" and "__compiled__" in globals():
-                        logger.warning(
-                            "Steamworks API game launch is currently disabled on frozen Nuitka bundles due to issues with logger_tt and multiprocessing."
-                        )
-                        return
-                    else:
-                        self.steamworks_initialized = True
-                        queue = Queue()
-                        steamworks_api_process = SteamworksAppDependenciesQuery(
-                            instruction[1], queue=queue
-                        )
-                elif (
-                    instruction[0] == "launch_game_process"
-                ):  # SW API init + game launch
-                    # Temporarily disable Steam API game launch with Nuitka builds for Mac/Win
-                    if platform.system() != "Linux" and "__compiled__" in globals():
-                        logger.warning(
-                            "Steamworks API game launch is currently disabled on frozen Nuitka bundles due to issues with logger_tt and multiprocessing."
-                        )
-                        logger.warning(
-                            "Launching independent game process without Steamworks API!"
-                        )
-                        launch_game_process(instruction[1])
-                        return
-                    else:
-                        self.steamworks_initialized = True
-                        steamworks_api_process = SteamworksGameLaunch(instruction[1])
-                elif (
-                    instruction[0] in subscription_actions
-                ):  # ISteamUGC/{SubscribeItem/UnsubscribeItem}
-                    logger.info(
-                        f"Creating Steamworks API process with instruction {instruction}"
-                    )
-                    # Temporarily disable Steam API subscription interactions with Nuitka builds for Mac/Win
-                    if platform.system() != "Linux" and "__compiled__" in globals():
-                        logger.warning(
-                            "Steamworks API subscription interactions are currently disabled on frozen Nuitka bundles due to issues with logger_tt and multiprocessing."
-                        )
-                        return
-                    else:
-                        self.steamworks_initialized = True
-                        steamworks_api_process = SteamworksSubscriptionHandler(
-                            instruction
-                        )
-                else:
-                    logger.warning(
-                        "Skipping Steamworks API call - only 1 Steamworks API initialization allowed at a time!!"
-                    )
-            else:
-                logger.error(f"Unsupported instruction {instruction}")
-                return
-            # Start the Steamworks API Process
-            steamworks_api_process.start()
-            logger.info(
-                f"Steamworks API process wrapper started with PID: {steamworks_api_process.pid}"
-            )
-            steamworks_api_process.join()
-            logger.info(
-                f"Steamworks API process wrapper completed for PID: {steamworks_api_process.pid}"
-            )
-            self.steamworks_initialized = False
-            # If a query was returned (example: GetAppDependencies)
-            if "queue" in locals():
-                return queue.get()
-
-        else:
-            logger.warning(
-                "Steamworks API is already initialized! We do NOT want multiple interactions. Skipping instruction..."
-            )
-
     def _do_browse_workshop(self):
         self.steam_browser = SteamcmdDownloader(
             "https://steamcommunity.com/app/294100/workshop/"
@@ -1581,6 +1553,106 @@ class MainContent:
         self.steamcmd_wrapper.download_mods(
             "294100", publishedfileids, self.steamcmd_runner
         )
+
+    def _do_steamworks_api_call(self, instruction: list):
+        """
+        Create & launch Steamworks API process to handle instructions received from connected signals
+
+        FOR "get_app_dependencies"...
+        :param instruction: a list where:
+            instruction[0] is a string that cooresponds with the following supported_actions[]
+            instruction[1] is an int that corresponds with a Steam mod's PublishedFileId
+                        OR is a list of int that corresponds with multiple Steam mods's PublishedFileId
+        FOR subscription_actions[]...
+        :param instruction: a list where:
+            instruction[0] is a string that corresponds with the following supported_actions[]
+            instruction[1] is an int that corresponds with a subscribed Steam mod's PublishedFileId
+                        OR is a list of int that corresponds with multiple subscribed Steam mod's PublishedFileId
+        FOR "launch_game_process"...
+        :param instruction: a list where:
+            instruction[0] is a string that corresponds with the following supported_actions[]
+            instruction[1] is a list containing [path: str, args: str] respectively
+        """
+        logger.info(f"Received Steamworks API instruction: {instruction}")
+        if not self.steamworks_initialized:
+            subscription_actions = ["subscribe", "unsubscribe"]
+            supported_actions = ["get_app_dependencies", "launch_game_process"]
+            supported_actions.extend(subscription_actions)
+            if (
+                instruction[0] in supported_actions
+            ):  # Actions can be added as functions are implemented in util.steam.steamworks.wrapper
+                if (
+                    instruction[0] == "get_app_dependencies"
+                ):  # ISteamUGC/GetAppDependencies
+                    if platform.system() != "Linux" and "__compiled__" in globals():
+                        logger.warning(
+                            "Steamworks API game launch is currently disabled on frozen Nuitka bundles due to issues with logger_tt and multiprocessing."
+                        )
+                        return
+                    else:
+                        self.steamworks_initialized = True
+                        queue = Queue()
+                        steamworks_api_process = SteamworksAppDependenciesQuery(
+                            instruction[1], queue=queue
+                        )
+                elif (
+                    instruction[0] == "launch_game_process"
+                ):  # SW API init + game launch
+                    # Temporarily disable Steam API game launch with Nuitka builds for Mac/Win
+                    if platform.system() != "Linux" and "__compiled__" in globals():
+                        logger.warning(
+                            "Steamworks API game launch is currently disabled on frozen Nuitka bundles due to issues with logger_tt and multiprocessing."
+                        )
+                        logger.warning(
+                            "Launching independent game process without Steamworks API!"
+                        )
+                        launch_game_process(instruction[1])
+                        return
+                    else:
+                        self.steamworks_initialized = True
+                        steamworks_api_process = SteamworksGameLaunch(instruction[1])
+                elif (
+                    instruction[0] in subscription_actions
+                ):  # ISteamUGC/{SubscribeItem/UnsubscribeItem}
+                    logger.info(
+                        f"Creating Steamworks API process with instruction {instruction}"
+                    )
+                    # Temporarily disable Steam API subscription interactions with Nuitka builds for Mac/Win
+                    if platform.system() != "Linux" and "__compiled__" in globals():
+                        logger.warning(
+                            "Steamworks API subscription interactions are currently disabled on frozen Nuitka bundles due to issues with logger_tt and multiprocessing."
+                        )
+                        return
+                    else:
+                        self.steamworks_initialized = True
+                        steamworks_api_process = SteamworksSubscriptionHandler(
+                            instruction
+                        )
+                else:
+                    logger.warning(
+                        "Skipping Steamworks API call - only 1 Steamworks API initialization allowed at a time!!"
+                    )
+            else:
+                logger.error(f"Unsupported instruction {instruction}")
+                return
+            # Start the Steamworks API Process
+            steamworks_api_process.start()
+            logger.info(
+                f"Steamworks API process wrapper started with PID: {steamworks_api_process.pid}"
+            )
+            steamworks_api_process.join()
+            logger.info(
+                f"Steamworks API process wrapper completed for PID: {steamworks_api_process.pid}"
+            )
+            self.steamworks_initialized = False
+            # If a query was returned (example: GetAppDependencies)
+            if "queue" in locals():
+                return queue.get()
+
+        else:
+            logger.warning(
+                "Steamworks API is already initialized! We do NOT want multiple interactions. Skipping instruction..."
+            )
 
     def _do_download_mods_with_steamworks(self, publishedfileids: list):
         self._do_steamworks_api_call(
