@@ -307,7 +307,7 @@ class GameConfiguration(QObject):
         )  # Actions delete_all_paths_data
 
         # General Preferences
-        self.settings_panel.watchdog_checkbox.setChecked(self.debug_mode)
+        self.settings_panel.logger_debug_checkbox.setChecked(self.debug_mode)
         self.settings_panel.watchdog_checkbox.setChecked(self.watchdog_toggle)
         self.settings_panel.duplicate_mods_checkbox.setChecked(
             self.duplicate_mods_warning_toggle
@@ -577,7 +577,7 @@ class GameConfiguration(QObject):
 
         # Determine configurations
         # watchdog toggle
-        if self.settings_panel.duplicate_mods_checkbox.isChecked():
+        if self.settings_panel.watchdog_checkbox.isChecked():
             self.watchdog_toggle = True
         else:
             self.watchdog_toggle = False

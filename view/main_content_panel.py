@@ -138,19 +138,19 @@ class MainContent:
                 self.game_configuration_watchdog_observer.schedule(
                     self.game_configuration_watchdog_event_handler,
                     game_folder_path,
-                    recursive=False,
+                    recursive=True,
                 )
             if local_folder_path != "":
                 self.game_configuration_watchdog_observer.schedule(
                     self.game_configuration_watchdog_event_handler,
                     local_folder_path,
-                    recursive=False,
+                    recursive=True,
                 )
             if workshop_folder_path != "":
                 self.game_configuration_watchdog_observer.schedule(
                     self.game_configuration_watchdog_event_handler,
                     workshop_folder_path,
-                    recursive=False,
+                    recursive=True,
                 )
 
         # SIGNALS AND SLOTS
