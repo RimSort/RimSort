@@ -15,12 +15,12 @@ from typing import Any, Dict
 from urllib3.exceptions import HTTPError
 
 from pyperclip import copy as copy_to_clipboard
-from watchdog.events import FileSystemEventHandler
 
 from util.constants import DB_BUILDER_EXCEPTIONS
 from util.metadata import SteamDatabaseBuilder, recursively_update_dict
 from util.rentry.wrapper import RentryUpload
 from util.steam.webapi.wrapper import ISteamRemoteStorage_GetPublishedFileDetails
+from util.watchdog import RSFileSystemEventHandler
 
 # Watchdog conditionals
 _SYSTEM = platform.system()
@@ -41,7 +41,7 @@ elif _SYSTEM == "Windows":
     # This is a stub if it's ever even needed... i still can't figure out why it won't log at all on Windows...?
     # getLogger("").setLevel(WARNING)
 
-from PySide6.QtCore import Qt, QEventLoop, QObject, Signal
+from PySide6.QtCore import Qt, QEventLoop, QObject, QProcess, Signal
 from PySide6.QtWidgets import QFileDialog, QFrame, QHBoxLayout, QInputDialog, QLineEdit
 
 from sort.dependencies import *
@@ -162,16 +162,16 @@ class MainContent:
             self._do_save_animation
         )  # Save btn animation
         self.active_mods_panel.active_mods_list.key_press_signal.connect(
-            self.handle_active_mod_key_press
+            self.__handle_active_mod_key_press
         )
         self.inactive_mods_panel.inactive_mods_list.key_press_signal.connect(
-            self.handle_inactive_mod_key_press
+            self.__handle_inactive_mod_key_press
         )
         self.active_mods_panel.active_mods_list.mod_info_signal.connect(
-            self.mod_list_slot
+            self.__mod_list_slot
         )
         self.inactive_mods_panel.inactive_mods_list.mod_info_signal.connect(
-            self.mod_list_slot
+            self.__mod_list_slot
         )
         self.active_mods_panel.active_mods_list.item_added_signal.connect(
             self.inactive_mods_panel.inactive_mods_list.handle_other_list_row_added
@@ -223,10 +223,10 @@ class MainContent:
         # Check if paths have been set
         if self.game_configuration.check_if_essential_paths_are_set():
             # Run expensive calculations to set cache data
-            self.refresh_cache_calculations()
+            self.__refresh_cache_calculations()
 
             # Insert mod data into list (is_initial = True)
-            self.repopulate_lists(True)
+            self.__repopulate_lists(True)
 
         # Instantiate steamcmd utils
         self.steam_browser = SteamcmdDownloader = None
@@ -250,11 +250,137 @@ class MainContent:
             logger.debug("Starting watchdog")
             self.game_configuration_watchdog_observer.start()
 
-    @property
-    def panel(self):
-        return self._panel
+    def ___get_relative_middle(self, some_list):
+        rect = some_list.contentsRect()
+        top = some_list.indexAt(rect.topLeft())
+        if top.isValid():
+            bottom = some_list.indexAt(rect.bottomLeft())
+            if not bottom.isValid():
+                bottom = some_list.model().index(some_list.count() - 1)
+            return (top.row() + bottom.row() + 1) / 2
+        return 0
 
-    def mod_list_slot(self, uuid: str) -> None:
+    def __handle_active_mod_key_press(self, key) -> None:
+        """
+        If the Left Arrow key is pressed while the user is focused on the
+        Active Mods List, the focus is shifted to the Inactive Mods List.
+        If no Inactive Mod was previously selected, the middle (relative)
+        one is selected. `__mod_list_slot` is also called to update the
+        Mod Info Panel.
+
+        If the Return or Space button is pressed the selected mods in the
+        current list are deleted from the current list and inserted
+        into the other list.
+        """
+        aml = self.active_mods_panel.active_mods_list
+        iml = self.inactive_mods_panel.inactive_mods_list
+        if key == "Left":
+            iml.setFocus()
+            if not iml.selectedIndexes():
+                iml.setCurrentRow(self.___get_relative_middle(iml))
+            self.__mod_list_slot(iml.selectedItems()[0].data(Qt.UserRole)["uuid"])
+
+        elif key == "Return" or key == "Space" or key == "DoubleClick":
+            # TODO: graphical bug where if you hold down the key, items are
+            # inserted too quickly and become empty items
+
+            items_to_move = aml.selectedItems().copy()
+            if items_to_move:
+                first_selected = sorted(aml.row(i) for i in items_to_move)[0]
+
+                # Remove items from current list
+                for item in items_to_move:
+                    aml.takeItem(aml.row(item))
+                    aml.uuids.discard(item.data(Qt.UserRole)["uuid"])
+                if aml.count():
+                    if aml.count() == first_selected:
+                        aml.setCurrentRow(aml.count() - 1)
+                    else:
+                        aml.setCurrentRow(first_selected)
+
+                # Insert items into other list
+                if not iml.selectedIndexes():
+                    count = self.___get_relative_middle(iml)
+                else:
+                    count = iml.row(iml.selectedItems()[-1]) + 1
+                for item in items_to_move:
+                    iml.insertItem(count, item)
+                    count += 1
+
+                # If the other list is the active mod list, recalculate errors
+                self.active_mods_panel.recalculate_internal_list_errors()
+
+    def __handle_inactive_mod_key_press(self, key) -> None:
+        """
+        If the Right Arrow key is pressed while the user is focused on the
+        Inactive Mods List, the focus is shifted to the Active Mods List.
+        If no Active Mod was previously selected, the middle (relative)
+        one is selected. `__mod_list_slot` is also called to update the
+        Mod Info Panel.
+
+        If the Return or Space button is pressed the selected mods in the
+        current list are deleted from the current list and inserted
+        into the other list.
+        """
+
+        aml = self.active_mods_panel.active_mods_list
+        iml = self.inactive_mods_panel.inactive_mods_list
+        if key == "Right":
+            aml.setFocus()
+            if not aml.selectedIndexes():
+                aml.setCurrentRow(self.___get_relative_middle(aml))
+            self.__mod_list_slot(aml.selectedItems()[0].data(Qt.UserRole)["uuid"])
+
+        elif key == "Return" or key == "Space" or key == "DoubleClick":
+            # TODO: graphical bug where if you hold down the key, items are
+            # inserted too quickly and become empty items
+
+            items_to_move = iml.selectedItems().copy()
+            if items_to_move:
+                first_selected = sorted(iml.row(i) for i in items_to_move)[0]
+
+                # Remove items from current list
+                for item in items_to_move:
+                    iml.takeItem(iml.row(item))
+                    iml.uuids.discard(item.data(Qt.UserRole)["uuid"])
+                if iml.count():
+                    if iml.count() == first_selected:
+                        iml.setCurrentRow(iml.count() - 1)
+                    else:
+                        iml.setCurrentRow(first_selected)
+
+                # Insert items into other list
+                if not aml.selectedIndexes():
+                    count = self.___get_relative_middle(aml)
+                else:
+                    count = aml.row(aml.selectedItems()[-1]) + 1
+                for item in items_to_move:
+                    aml.insertItem(count, item)
+                    count += 1
+
+                # If the other list is the active mod list, recalculate errors
+                self.active_mods_panel.recalculate_internal_list_errors()
+
+    def __insert_data_into_lists(
+        self, active_mods: Dict[str, Any], inactive_mods: Dict[str, Any]
+    ) -> None:
+        """
+        Insert active mods and inactive mods into respective mod list widgets.
+
+        :param active_mods: dict of active mods
+        :param inactive_mods: dict of inactive mods
+        """
+        logger.info(
+            f"Inserting mod data into active [{len(active_mods)}] and inactive [{len(inactive_mods)}] mod lists"
+        )
+        self.active_mods_panel.active_mods_list.recreate_mod_list(active_mods)
+        self.inactive_mods_panel.inactive_mods_list.recreate_mod_list(inactive_mods)
+
+        logger.info(
+            f"Finished inserting mod data into active [{len(active_mods)}] and inactive [{len(inactive_mods)}] mod lists"
+        )
+
+    def __mod_list_slot(self, uuid: str) -> None:
         """
         This slot method is triggered when the user clicks on an item
         on a mod list. It takes the internal uuid and gets the
@@ -297,118 +423,7 @@ class MainContent:
                     invalid_qlabel_stylesheet
                 )
 
-    def handle_active_mod_key_press(self, key) -> None:
-        """
-        If the Left Arrow key is pressed while the user is focused on the
-        Active Mods List, the focus is shifted to the Inactive Mods List.
-        If no Inactive Mod was previously selected, the middle (relative)
-        one is selected. `mod_list_slot` is also called to update the
-        Mod Info Panel.
-
-        If the Return or Space button is pressed the selected mods in the
-        current list are deleted from the current list and inserted
-        into the other list.
-        """
-        aml = self.active_mods_panel.active_mods_list
-        iml = self.inactive_mods_panel.inactive_mods_list
-        if key == "Left":
-            iml.setFocus()
-            if not iml.selectedIndexes():
-                iml.setCurrentRow(self._get_relative_middle(iml))
-            self.mod_list_slot(iml.selectedItems()[0].data(Qt.UserRole)["uuid"])
-
-        elif key == "Return" or key == "Space" or key == "DoubleClick":
-            # TODO: graphical bug where if you hold down the key, items are
-            # inserted too quickly and become empty items
-
-            items_to_move = aml.selectedItems().copy()
-            if items_to_move:
-                first_selected = sorted(aml.row(i) for i in items_to_move)[0]
-
-                # Remove items from current list
-                for item in items_to_move:
-                    aml.takeItem(aml.row(item))
-                    aml.uuids.discard(item.data(Qt.UserRole)["uuid"])
-                if aml.count():
-                    if aml.count() == first_selected:
-                        aml.setCurrentRow(aml.count() - 1)
-                    else:
-                        aml.setCurrentRow(first_selected)
-
-                # Insert items into other list
-                if not iml.selectedIndexes():
-                    count = self._get_relative_middle(iml)
-                else:
-                    count = iml.row(iml.selectedItems()[-1]) + 1
-                for item in items_to_move:
-                    iml.insertItem(count, item)
-                    count += 1
-
-                # If the other list is the active mod list, recalculate errors
-                self.active_mods_panel.recalculate_internal_list_errors()
-
-    def handle_inactive_mod_key_press(self, key) -> None:
-        """
-        If the Right Arrow key is pressed while the user is focused on the
-        Inactive Mods List, the focus is shifted to the Active Mods List.
-        If no Active Mod was previously selected, the middle (relative)
-        one is selected. `mod_list_slot` is also called to update the
-        Mod Info Panel.
-
-        If the Return or Space button is pressed the selected mods in the
-        current list are deleted from the current list and inserted
-        into the other list.
-        """
-
-        aml = self.active_mods_panel.active_mods_list
-        iml = self.inactive_mods_panel.inactive_mods_list
-        if key == "Right":
-            aml.setFocus()
-            if not aml.selectedIndexes():
-                aml.setCurrentRow(self._get_relative_middle(aml))
-            self.mod_list_slot(aml.selectedItems()[0].data(Qt.UserRole)["uuid"])
-
-        elif key == "Return" or key == "Space" or key == "DoubleClick":
-            # TODO: graphical bug where if you hold down the key, items are
-            # inserted too quickly and become empty items
-
-            items_to_move = iml.selectedItems().copy()
-            if items_to_move:
-                first_selected = sorted(iml.row(i) for i in items_to_move)[0]
-
-                # Remove items from current list
-                for item in items_to_move:
-                    iml.takeItem(iml.row(item))
-                    iml.uuids.discard(item.data(Qt.UserRole)["uuid"])
-                if iml.count():
-                    if iml.count() == first_selected:
-                        iml.setCurrentRow(iml.count() - 1)
-                    else:
-                        iml.setCurrentRow(first_selected)
-
-                # Insert items into other list
-                if not aml.selectedIndexes():
-                    count = self._get_relative_middle(aml)
-                else:
-                    count = aml.row(aml.selectedItems()[-1]) + 1
-                for item in items_to_move:
-                    aml.insertItem(count, item)
-                    count += 1
-
-                # If the other list is the active mod list, recalculate errors
-                self.active_mods_panel.recalculate_internal_list_errors()
-
-    def _get_relative_middle(self, some_list):
-        rect = some_list.contentsRect()
-        top = some_list.indexAt(rect.topLeft())
-        if top.isValid():
-            bottom = some_list.indexAt(rect.bottomLeft())
-            if not bottom.isValid():
-                bottom = some_list.model().index(some_list.count() - 1)
-            return (top.row() + bottom.row() + 1) / 2
-        return 0
-
-    def refresh_cache_calculations(self) -> None:
+    def __refresh_cache_calculations(self) -> None:
         """
         This function contains expensive calculations for getting workshop
         mods, known expansions, community rules, and most importantly, calculating
@@ -569,7 +584,7 @@ class MainContent:
 
         logger.info("Finished refreshing cache calculations")
 
-    def repopulate_lists(self, is_initial: bool = False) -> None:
+    def __repopulate_lists(self, is_initial: bool = False) -> None:
         """
         Get active and inactive mod lists based on the config path
         and write them to the list widgets. is_initial indicates if
@@ -594,7 +609,17 @@ class MainContent:
             self.active_mods_data_restore_state = active_mods_data
             self.inactive_mods_data_restore_state = inactive_mods_data
 
-        self._insert_data_into_lists(active_mods_data, inactive_mods_data)
+        self.__insert_data_into_lists(active_mods_data, inactive_mods_data)
+
+    @property
+    def panel(self):
+        return self._panel
+
+    #########
+    # SLOTS # Can this be cleaned up & moved to own module...?
+    #########
+
+    # ACTIONS PANEL ACTIONS
 
     def actions_slot(self, action: str) -> None:
         """
@@ -686,134 +711,9 @@ class MainContent:
 
         # settings panel actions
         if action == "build_steam_database_thread":
-            self.game_configuration.settings_panel.close()
-            if self.game_configuration.db_builder_include == "no_local":
-                logger.info("Opening file dialog to specify output file")
-                output_path = QFileDialog.getSaveFileName(
-                    caption="Designate output path",
-                    dir=os.path.join(self.game_configuration.storage_path),
-                    filter="JSON (*.json)",
-                )
-                if output_path[0] and not output_path[0].endswith(".json"):
-                    output_path[0].extend(".json")
-                logger.info(f"Selected path: {output_path[0]}")
-                if output_path[0]:
-                    self.db_builder = SteamDatabaseBuilder(
-                        apikey=self.game_configuration.steam_apikey,
-                        appid=294100,
-                        database_expiry=self.game_configuration.database_expiry,
-                        mode=self.game_configuration.db_builder_include,
-                        output_database_path=output_path[0],
-                        get_appid_deps=self.game_configuration.build_steam_database_dlc_data_toggle,
-                        update=self.game_configuration.build_steam_database_update_toggle,
-                    )
-                    # Create query runner
-                    self.query_runner = RunnerPanel()
-                    self.query_runner.show()
-                    # Connect message signal
-                    self.db_builder.db_builder_message_output_signal.connect(
-                        self.query_runner.message
-                    )
-                    # Start DB builder
-                    self.db_builder.start()
-                else:
-                    logger.warning("User cancelled selection...")
-            elif self.game_configuration.db_builder_include == "all_mods":
-                self.db_builder = SteamDatabaseBuilder(
-                    apikey=self.game_configuration.steam_apikey,
-                    appid=294100,
-                    database_expiry=self.game_configuration.database_expiry,
-                    mode=self.game_configuration.db_builder_include,
-                    output_database_path=self.cached_dynamic_query_target_path,
-                    get_appid_deps=self.game_configuration.build_steam_database_dlc_data_toggle,
-                    mods=self.all_mods_with_dependencies,
-                    update=self.game_configuration.build_steam_database_update_toggle,
-                )
-                # Create query runner
-                self.query_runner = RunnerPanel()
-                self.query_runner.show()
-                # Connect message signal
-                self.db_builder.db_builder_message_output_signal.connect(
-                    self.query_runner.message
-                )
-                # Start DB builder
-                self.db_builder.start()
+            self._do_build_database_thread()
         if action == "merge_databases":
-            # Notify user
-            show_information(
-                title="Steam DB Builder",
-                text="This operation will merge 2 databases, A & B, by recursively updating A with B, barring exceptions.",
-                information="- This will effectively recursively overwrite A's key/value with B's key/value to the resultant database.\n"
-                + "- Exceptions will not be recursively updated. Instead, they will be overwritten with B's key entirely.\n"
-                + "- The following exceptions will be made:\n"
-                + f"\n\t{DB_BUILDER_EXCEPTIONS}\n\n"
-                + "The resultant database, C, is saved to a user-specified path. You will be prompted for these paths in order:\n"
-                + "\n\t1) Select input A (db to-be-updated)"
-                + "\n\t2) Select input B (update source)"
-                + "\n\t3) Select output C (resultant db)",
-            )
-            # Input A
-            logger.info("Opening file dialog to specify input file A")
-            input_path_a = QFileDialog.getSaveFileName(
-                caption='Input "to-be-updated" database, input A',
-                dir=os.path.join(self.game_configuration.storage_path),
-                filter="JSON (*.json)",
-            )
-            if input_path_a[0] and not input_path_a[0].endswith(".json"):
-                input_path_a[0] = input_path_a[0] + ".json"
-            logger.info(f"Selected path: {input_path_a[0]}")
-            if input_path_a[0] and os.path.exists(input_path_a[0]):
-                with open(input_path_a[0], encoding="utf-8") as f:
-                    json_string = f.read()
-                    logger.debug(f"Reading info...")
-                    db_input_a = json.loads(json_string)
-                    logger.debug("Retreived database A...")
-            else:
-                logger.warning("Steam DB Builder: User cancelled selection...")
-                return
-            # Input B
-            logger.info("Opening file dialog to specify input file B")
-            input_path_b = QFileDialog.getSaveFileName(
-                caption='Input "to-be-updated" database, input A',
-                dir=os.path.join(self.game_configuration.storage_path),
-                filter="JSON (*.json)",
-            )
-            if input_path_b[0] and not input_path_b[0].endswith(".json"):
-                input_path_b[0] = input_path_b[0] + ".json"
-            logger.info(f"Selected path: {input_path_b[0]}")
-            if input_path_b[0] and os.path.exists(input_path_b[0]):
-                with open(input_path_b[0], encoding="utf-8") as f:
-                    json_string = f.read()
-                    logger.debug(f"Reading info...")
-                    db_input_b = json.loads(json_string)
-                    logger.debug("Retreived database B...")
-            else:
-                logger.warning("Steam DB Builder: User cancelled selection...")
-                return
-            # Output C
-            db_output_c = db_input_a.copy()
-            recursively_update_dict(
-                db_output_c,
-                db_input_b,
-                exceptions=DB_BUILDER_EXCEPTIONS,
-            )
-            logger.info("Updated DB A with DB B!")
-            logger.debug(db_output_c)
-            logger.info("Opening file dialog to specify output file")
-            output_path = QFileDialog.getSaveFileName(
-                caption="Designate output path for resultant database:",
-                dir=os.path.join(self.game_configuration.storage_path),
-                filter="JSON (*.json)",
-            )
-            if output_path[0] and not output_path[0].endswith(".json"):
-                output_path[0] = output_path[0] + ".json"
-            logger.info(f"Selected path: {output_path[0]}")
-            if output_path[0]:
-                with open(output_path[0], "w") as output:
-                    json.dump(db_output_c, output, indent=4)
-            else:
-                logger.warning("Steam DB Builder: User cancelled selection...")
-                return
+            self._do_merge_databases()
         if action == "set_database_expiry":
             self._do_set_database_expiry()
         if action == "edit_steam_webapi_key":
@@ -847,405 +747,6 @@ class MainContent:
                 self._do_download_mods_with_steamcmd(self.db_builder.publishedfileids)
             elif "steamworks" in action:
                 self._do_download_mods_with_steamworks(self.db_builder.publishedfileids)
-
-    def _do_edit_run_args(self) -> None:
-        """
-        Opens a QDialogInput that allows the user to edit the run args
-        that are configured to be passed to the Rimworld executable
-        """
-        args, ok = QInputDialog().getText(
-            None,
-            "Edit run arguments:",
-            "Enter the arguments you would like to pass to the Rimworld executable:",
-            QLineEdit.Normal,
-            self.game_configuration.run_arguments,
-        )
-        if ok:
-            self.game_configuration.run_arguments = args
-            self.game_configuration.update_persistent_storage(
-                {"runArgs": self.game_configuration.run_arguments}
-            )
-
-    def _do_edit_steam_webapi_key(self) -> None:
-        """
-        Opens a QDialogInput that allows the user to edit their Steam apikey
-        that are configured to be passed to the "Dynamic Query" feature for
-        the Steam Workshop metadata needed for sorting
-        """
-        args, ok = QInputDialog().getText(
-            None,
-            "Edit Steam apikey:",
-            "Enter your personal 32 character Steam apikey here:",
-            QLineEdit.Normal,
-            self.game_configuration.steam_apikey,
-        )
-        if ok:
-            self.game_configuration.steam_apikey = args
-            self.game_configuration.update_persistent_storage(
-                {"steam_apikey": self.game_configuration.steam_apikey}
-            )
-
-    def _do_generate_metadata_comparison_report(self) -> None:
-        # TODO: Refactor this...
-        discrepancies = []
-        mods = self.all_mods_with_dependencies
-        rimpy_deps = {}
-        rimsort_deps = {}
-        """
-        Open a user-selected JSON file. Calculate and display discrepencies
-        found between RimPy Mod Manager database and this file.
-        """
-        logger.info("Opening file dialog to select input file")
-        file_path = QFileDialog.getOpenFileName(
-            caption="Open Mod List",
-            dir=os.path.join(self.game_configuration.storage_path),
-            filter="JSON (*.json)",
-        )
-        logger.info(f"Selected path: {file_path[0]}")
-        if file_path[0]:
-            if os.path.exists(file_path[0]):
-                with open(file_path[0], encoding="utf-8") as f:
-                    json_string = f.read()
-                    logger.info("Reading info from cached RimSort Dynamic Query")
-                    rimsort_steam_data = json.loads(json_string)
-            else:
-                show_warning("Could not find a cached RimSort Dynamic Query!")
-                return
-            for uuid in mods:
-                if (
-                    mods[uuid].get("packageId") == "rupal.rimpymodmanagerdatabase"
-                    or mods[uuid].get("publishedfileid") == "1847679158"
-                ):
-                    rimpy_db_json_path = os.path.join(
-                        mods[uuid]["path"], "db", "db.json"
-                    )
-                    if os.path.exists(rimpy_db_json_path):
-                        with open(rimpy_db_json_path, encoding="utf-8") as f:
-                            json_string = f.read()
-                            logger.info(
-                                "Reading info from Rimpy Mod Manager Database db.json"
-                            )
-                            rimpy_steam_data = json.loads(json_string)
-                    else:
-                        show_warning(
-                            "The could not find RimPy Mod Manager Database mod!"
-                        )
-                        return
-            for k, v in rimsort_steam_data["database"].items():
-                # print(k, v['dependencies'])
-                rimsort_deps[k] = set()
-                if v.get("dependencies"):
-                    for dep_key in v["dependencies"]:
-                        rimsort_deps[k].add(dep_key)
-            for k, v in rimpy_steam_data["database"].items():
-                # print(k, v['dependencies'])
-                if k in rimsort_deps:
-                    rimpy_deps[k] = set()
-                    if v.get("dependencies"):
-                        for dep_key in v["dependencies"]:
-                            rimpy_deps[k].add(dep_key)
-            no_deps_str = "*no explicit dependencies listed*"
-            rimsort_total_dependencies = len(rimsort_deps)
-            rimpy_total_dependencies = len(rimpy_deps)
-            report = (
-                "#############################\n"
-                + "External metadata comparison:\n"
-                + "#############################"
-                # + f"\nTotal # of deps from Dynamic Query: {rimsort_total_dependencies}"
-                # + f"\nTotal # of deps from RimPy db.json: {rimpy_total_dependencies}"
-            )
-            comparison_skipped = []
-            for k, v in rimsort_deps.items():
-                if rimsort_steam_data["database"][k].get("unpublished"):
-                    comparison_skipped.append(k)
-                    # logger.debug(f"Skipping comparison for unpublished mod: {k}")
-                else:
-                    # If the deps are different...
-                    if v != rimpy_deps.get(k):
-                        pp = rimpy_deps.get(k)
-                        if pp:
-                            # Normalize here (get rid of core/dlc deps)
-                            pp.discard("294100")
-                            pp.discard("1149640")
-                            pp.discard("1392840")
-                            pp.discard("1826140")
-                            if v != pp:
-                                discrepancies.append(k)
-                                pp_total = len(pp)
-                                v_total = len(v)
-                                if v == set():
-                                    v = no_deps_str
-                                if pp == set():
-                                    pp = no_deps_str
-                                mod_name = rimpy_steam_data["database"][k]["name"]
-                                report += "\n\n################################"
-                                report += f"\nDISCREPANCY FOUND for {k}:"
-                                report += f"\nhttps://steamcommunity.com/sharedfiles/filedetails/?id={k}"
-                                report += "\n################################"
-                                report += f"\nMod name: {mod_name}"
-                                report += f"\n\nRimSort Dynamic Query:\n{v_total} dependencies found:\n{v}"
-                                report += f"\n\nRimPy Mod Mgr Database:\n{pp_total} dependencies found:\n{pp}"
-            report += f"\n\nTotal # of discrepancies: {len(discrepancies)}"
-            logger.debug(
-                f"Comparison skipped for {len(comparison_skipped)} unpublished mods: {comparison_skipped}"
-            )
-            show_information(
-                title="RimSort Dynamic Query",
-                text="External Steam metadata comparison report",
-                information="Click 'Show Details' to see the full report!",
-                details=report,
-            )
-        else:
-            logger.info("User pressed cancel, passing")
-
-    def _do_optimize_textures(self, todds_txt_path: str) -> None:
-        # Setup environment
-        todds_interface = ToddsInterface(
-            preset=self.game_configuration.todds_preset,
-            dry_run=self.game_configuration.todds_dry_run_toggle,
-            overwrite=self.game_configuration.todds_overwrite_toggle,
-        )
-
-        # UI
-        self.todds_runner = RunnerPanel(
-            todds_dry_run_support=self.game_configuration.todds_dry_run_toggle
-        )
-        self.todds_runner.setWindowModality(Qt.ApplicationModal)
-        self.todds_runner.show()
-
-        todds_interface.execute_todds_cmd(todds_txt_path, self.todds_runner)
-
-    def _do_delete_dds_textures(self, todds_txt_path: str) -> None:
-        todds_interface = ToddsInterface(
-            preset="clean",
-            dry_run=self.game_configuration.todds_dry_run_toggle,
-        )
-
-        # UI
-        self.todds_runner = RunnerPanel(
-            todds_dry_run_support=self.game_configuration.todds_dry_run_toggle
-        )
-        self.todds_runner.setWindowModality(Qt.ApplicationModal)
-        self.todds_runner.show()
-
-        # Delete all .dds textures using todds
-        todds_interface.execute_todds_cmd(todds_txt_path, self.todds_runner)
-
-    def _do_set_database_expiry(self) -> None:
-        """
-        Opens a QDialogInput that allows the user to edit their preferred
-        WebAPI Query Expiry (in seconds)
-        """
-        args, ok = QInputDialog().getText(
-            None,
-            "Edit WebAPI Query Expiry:",
-            "Enter your preferred expiry duration in seconds (default 1 week/604800 sec):",
-            QLineEdit.Normal,
-            str(self.game_configuration.database_expiry),
-        )
-        if ok:
-            try:
-                self.game_configuration.database_expiry = int(args)
-                self.game_configuration.update_persistent_storage(
-                    {"database_expiry": self.game_configuration.database_expiry}
-                )
-            except ValueError:
-                show_warning(
-                    "Tried configuring Dynamic Query with a value that is not an integer.",
-                    "Please reconfigure the expiry value with an integer in terms of the seconds from epoch you would like your query to expire.",
-                )
-
-    def _do_steamworks_api_call(self, instruction: list):
-        """
-        Create & launch Steamworks API process to handle instructions received from connected signals
-
-        FOR "get_app_dependencies"...
-        :param instruction: a list where:
-            instruction[0] is a string that cooresponds with the following supported_actions[]
-            instruction[1] is an int that corresponds with a Steam mod's PublishedFileId
-                        OR is a list of int that corresponds with multiple Steam mods's PublishedFileId
-        FOR subscription_actions[]...
-        :param instruction: a list where:
-            instruction[0] is a string that corresponds with the following supported_actions[]
-            instruction[1] is an int that corresponds with a subscribed Steam mod's PublishedFileId
-                        OR is a list of int that corresponds with multiple subscribed Steam mod's PublishedFileId
-        FOR "launch_game_process"...
-        :param instruction: a list where:
-            instruction[0] is a string that corresponds with the following supported_actions[]
-            instruction[1] is a list containing [path: str, args: str] respectively
-        """
-        logger.info(f"Received Steamworks API instruction: {instruction}")
-        if not self.steamworks_initialized:
-            subscription_actions = ["subscribe", "unsubscribe"]
-            supported_actions = ["get_app_dependencies", "launch_game_process"]
-            supported_actions.extend(subscription_actions)
-            if (
-                instruction[0] in supported_actions
-            ):  # Actions can be added as functions are implemented in util.steam.steamworks.wrapper
-                if (
-                    instruction[0] == "get_app_dependencies"
-                ):  # ISteamUGC/GetAppDependencies
-                    if platform.system() != "Linux" and "__compiled__" in globals():
-                        logger.warning(
-                            "Steamworks API game launch is currently disabled on frozen Nuitka bundles due to issues with logger_tt and multiprocessing."
-                        )
-                        logger.warning(
-                            "Launching independent game process without Steamworks API!"
-                        )
-                        return
-                    else:
-                        self.steamworks_initialized = True
-                        queue = Queue()
-                        steamworks_api_process = SteamworksAppDependenciesQuery(
-                            instruction[1], queue=queue
-                        )
-                elif (
-                    instruction[0] == "launch_game_process"
-                ):  # SW API init + game launch
-                    # Temporarily disable Steam API game launch with Nuitka builds for Mac/Win
-                    if platform.system() != "Linux" and "__compiled__" in globals():
-                        logger.warning(
-                            "Steamworks API game launch is currently disabled on frozen Nuitka bundles due to issues with logger_tt and multiprocessing."
-                        )
-                        logger.warning(
-                            "Launching independent game process without Steamworks API!"
-                        )
-                        launch_game_process(instruction[1])
-                        return
-                    else:
-                        self.steamworks_initialized = True
-                        steamworks_api_process = SteamworksGameLaunch(instruction[1])
-                elif (
-                    instruction[0] in subscription_actions
-                ):  # ISteamUGC/{SubscribeItem/UnsubscribeItem}
-                    logger.info(
-                        f"Creating Steamworks API process with instruction {instruction}"
-                    )
-                    # Temporarily disable Steam API subscription interactions with Nuitka builds for Mac/Win
-                    if platform.system() != "Linux" and "__compiled__" in globals():
-                        logger.warning(
-                            "Steamworks API subscription interactions are currently disabled on frozen Nuitka bundles due to issues with logger_tt and multiprocessing."
-                        )
-                        return
-                    else:
-                        self.steamworks_initialized = True
-                        steamworks_api_process = SteamworksSubscriptionHandler(
-                            instruction
-                        )
-                else:
-                    logger.warning(
-                        "Skipping Steamworks API call - only 1 Steamworks API initialization allowed at a time!!"
-                    )
-            else:
-                logger.error(f"Unsupported instruction {instruction}")
-                return
-            # Start the Steamworks API Process
-            steamworks_api_process.start()
-            logger.info(
-                f"Steamworks API process wrapper started with PID: {steamworks_api_process.pid}"
-            )
-            steamworks_api_process.join()
-            logger.info(
-                f"Steamworks API process wrapper completed for PID: {steamworks_api_process.pid}"
-            )
-            self.steamworks_initialized = False
-            # If a query was returned (example: GetAppDependencies)
-            if "queue" in locals():
-                return queue.get()
-
-        else:
-            logger.warning(
-                "Steamworks API is already initialized! We do NOT want multiple interactions. Skipping instruction..."
-            )
-
-    def _do_browse_workshop(self):
-        self.steam_browser = SteamcmdDownloader(
-            "https://steamcommunity.com/app/294100/workshop/"
-        )
-        self.steam_browser.downloader_signal.connect(
-            self._do_download_mods_with_steamcmd
-        )
-        self.steam_browser.show()
-
-    def _do_setup_steamcmd(self):
-        self.steamcmd_runner = RunnerPanel()
-        self.steamcmd_runner.show()
-        self.steamcmd_runner.message("Setting up steamcmd...")
-        self.steamcmd_wrapper.setup_steamcmd(
-            self.game_configuration.get_local_folder_path(), False, self.steamcmd_runner
-        )
-
-    def _do_set_steamcmd_path(self):
-        """
-        Open a file dialog to allow the user to select the game executable.
-        """
-        logger.info("USER ACTION: set the steamcmd folder")
-        steamcmd_folder = os.path.normpath(
-            str(
-                QFileDialog.getExistingDirectory(
-                    caption="Select steamcmd folder", dir=os.path.expanduser("~")
-                )
-            )
-        )
-        logger.info(f"Selected path: {steamcmd_folder}")
-        if steamcmd_folder:
-            logger.info(
-                f"steamcmd install folder chosen. Updating storage with new path: {steamcmd_folder}"
-            )
-            self.game_configuration.steamcmd_install_path = steamcmd_folder
-            self.game_configuration.update_persistent_storage(
-                {"steamcmd_install_path": steamcmd_folder}
-            )
-            self.steamcmd_wrapper = SteamcmdInterface(
-                self.game_configuration.steamcmd_install_path,
-                self.game_configuration.steamcmd_validate_downloads_toggle,
-            )
-        else:
-            logger.info("User pressed cancel, passing")
-
-    def _do_show_steamcmd_status(self):
-        self.steamcmd_runner = RunnerPanel()
-        self.steamcmd_runner.setWindowModality(Qt.ApplicationModal)
-        self.steamcmd_runner.show()
-        self.steamcmd_runner.message("Showing steamcmd status...")
-        self.steamcmd_wrapper.show_workshop_status("294100", self.steamcmd_runner)
-
-    def _do_download_mods_with_steamcmd(self, publishedfileids: list):
-        if self.steam_browser:
-            self.steam_browser.close()
-        self.steamcmd_runner = RunnerPanel()
-        self.steamcmd_runner.setWindowModality(Qt.ApplicationModal)
-        self.steamcmd_runner.show()
-        self.steamcmd_runner.message(
-            f"Downloading the following list of mods with steamcmd:\n{publishedfileids}"
-        )
-        self.steamcmd_wrapper.download_mods(
-            "294100", publishedfileids, self.steamcmd_runner
-        )
-
-    def _do_download_mods_with_steamworks(self, publishedfileids: list):
-        self._do_steamworks_api_call(
-            ["subscribe", [eval(str_pfid) for str_pfid in publishedfileids]]
-        )
-
-    def _insert_data_into_lists(
-        self, active_mods: Dict[str, Any], inactive_mods: Dict[str, Any]
-    ) -> None:
-        """
-        Insert active mods and inactive mods into respective mod list widgets.
-
-        :param active_mods: dict of active mods
-        :param inactive_mods: dict of inactive mods
-        """
-        logger.info(
-            f"Inserting mod data into active [{len(active_mods)}] and inactive [{len(inactive_mods)}] mod lists"
-        )
-        self.active_mods_panel.active_mods_list.recreate_mod_list(active_mods)
-        self.inactive_mods_panel.inactive_mods_list.recreate_mod_list(inactive_mods)
-
-        logger.info(
-            f"Finished inserting mod data into active [{len(active_mods)}] and inactive [{len(inactive_mods)}] mod lists"
-        )
 
     def _do_refresh(self) -> None:
         """
@@ -1310,12 +811,12 @@ class MainContent:
         self.inactive_mods_panel.clear_inactive_mods_search()
         if self.game_configuration.check_if_essential_paths_are_set():
             # Run expensive calculations to set cache data
-            self.refresh_cache_calculations()
+            self.__refresh_cache_calculations()
 
             # Insert mod data into list
-            self.repopulate_lists()
+            self.__repopulate_lists()
         else:
-            self._insert_data_into_lists({}, {})
+            self.__insert_data_into_lists({}, {})
             logger.warning(
                 "Essential paths have not been set. Passing refresh and resetting mod lists"
             )
@@ -1360,7 +861,7 @@ class MainContent:
             else:
                 inactive_mod_data[uuid] = mod_data
         logger.info("Finished re-organizing mods for clear")
-        self._insert_data_into_lists(active_mod_data, inactive_mod_data)
+        self.__insert_data_into_lists(active_mod_data, inactive_mod_data)
 
     def _do_sort(self) -> None:
         """
@@ -1449,7 +950,7 @@ class MainContent:
             combined_mods[uuid] = mod_data
 
         logger.info("Finished combining all tiers of mods. Inserting into mod lists")
-        self._insert_data_into_lists(combined_mods, inactive_mods)
+        self.__insert_data_into_lists(combined_mods, inactive_mods)
 
     def _do_import_list_file_xml(self) -> None:
         """
@@ -1477,7 +978,7 @@ class MainContent:
                 self.game_configuration.duplicate_mods_warning_toggle,
             )
             logger.info("Got new mods according to imported XML")
-            self._insert_data_into_lists(active_mods_data, inactive_mods_data)
+            self.__insert_data_into_lists(active_mods_data, inactive_mods_data)
         else:
             logger.info("User pressed cancel, passing")
 
@@ -1817,7 +1318,7 @@ class MainContent:
             logger.info(
                 f"Restoring cached mod lists with active list [{len(self.active_mods_data_restore_state)}] and inactive list [{len(self.inactive_mods_data_restore_state)}]"
             )
-            self._insert_data_into_lists(
+            self.__insert_data_into_lists(
                 self.active_mods_data_restore_state,
                 self.inactive_mods_data_restore_state,
             )
@@ -1826,33 +1327,565 @@ class MainContent:
                 "Cached mod lists for restore function not set as client started improperly. Passing on restore"
             )
 
+    def _do_edit_run_args(self) -> None:
+        """
+        Opens a QDialogInput that allows the user to edit the run args
+        that are configured to be passed to the Rimworld executable
+        """
+        args, ok = QInputDialog().getText(
+            None,
+            "Edit run arguments:",
+            "Enter the arguments you would like to pass to the Rimworld executable:",
+            QLineEdit.Normal,
+            self.game_configuration.run_arguments,
+        )
+        if ok:
+            self.game_configuration.run_arguments = args
+            self.game_configuration.update_persistent_storage(
+                {"runArgs": self.game_configuration.run_arguments}
+            )
 
-class RSFileSystemEventHandler(FileSystemEventHandler, QObject):
-    file_changes_signal = Signal(str)
+    # TODDS ACTIONS
 
-    def __init__(self):
-        super().__init__()
+    def _do_optimize_textures(self, todds_txt_path: str) -> None:
+        # Setup environment
+        todds_interface = ToddsInterface(
+            preset=self.game_configuration.todds_preset,
+            dry_run=self.game_configuration.todds_dry_run_toggle,
+            overwrite=self.game_configuration.todds_overwrite_toggle,
+        )
 
-    def on_created(self, event):
-        self.file_changes_signal.emit(event.src_path)
-        logger.debug(f"FILE CREATED: {event}")
+        # UI
+        self.todds_runner = RunnerPanel(
+            todds_dry_run_support=self.game_configuration.todds_dry_run_toggle
+        )
+        self.todds_runner.show()
 
-    def on_deleted(self, event):
-        self.file_changes_signal.emit(event.src_path)
-        logger.debug(f"FILE DELETED: {event}")
+        todds_interface.execute_todds_cmd(todds_txt_path, self.todds_runner)
 
-    def on_modified(self, event):
-        self.file_changes_signal.emit(event.src_path)
-        logger.debug(f"FILE MODIFIED: {event}")
+    def _do_delete_dds_textures(self, todds_txt_path: str) -> None:
+        todds_interface = ToddsInterface(
+            preset="clean",
+            dry_run=self.game_configuration.todds_dry_run_toggle,
+        )
 
-    def on_moved(self, event):
-        self.file_changes_signal.emit(event.src_path)
-        logger.debug(f"FILE MOVED: {event}")
+        # UI
+        self.todds_runner = RunnerPanel(
+            todds_dry_run_support=self.game_configuration.todds_dry_run_toggle
+        )
+        self.todds_runner.show()
 
-    def on_closed(self, event):
-        logger.debug(f"FILE CLOSED: {event}")
-        return
+        # Delete all .dds textures using todds
+        todds_interface.execute_todds_cmd(todds_txt_path, self.todds_runner)
 
-    def on_opened(self, event):
-        logger.debug(f"FILE OPENED: {event}")
-        return
+    # STEAM{CMD, WORKS} ACTIONS
+
+    def _do_steamworks_api_call(self, instruction: list):
+        """
+        Create & launch Steamworks API process to handle instructions received from connected signals
+
+        FOR "get_app_dependencies"...
+        :param instruction: a list where:
+            instruction[0] is a string that cooresponds with the following supported_actions[]
+            instruction[1] is an int that corresponds with a Steam mod's PublishedFileId
+                        OR is a list of int that corresponds with multiple Steam mods's PublishedFileId
+        FOR subscription_actions[]...
+        :param instruction: a list where:
+            instruction[0] is a string that corresponds with the following supported_actions[]
+            instruction[1] is an int that corresponds with a subscribed Steam mod's PublishedFileId
+                        OR is a list of int that corresponds with multiple subscribed Steam mod's PublishedFileId
+        FOR "launch_game_process"...
+        :param instruction: a list where:
+            instruction[0] is a string that corresponds with the following supported_actions[]
+            instruction[1] is a list containing [path: str, args: str] respectively
+        """
+        logger.info(f"Received Steamworks API instruction: {instruction}")
+        if not self.steamworks_initialized:
+            subscription_actions = ["subscribe", "unsubscribe"]
+            supported_actions = ["get_app_dependencies", "launch_game_process"]
+            supported_actions.extend(subscription_actions)
+            if (
+                instruction[0] in supported_actions
+            ):  # Actions can be added as functions are implemented in util.steam.steamworks.wrapper
+                if (
+                    instruction[0] == "get_app_dependencies"
+                ):  # ISteamUGC/GetAppDependencies
+                    if platform.system() != "Linux" and "__compiled__" in globals():
+                        logger.warning(
+                            "Steamworks API game launch is currently disabled on frozen Nuitka bundles due to issues with logger_tt and multiprocessing."
+                        )
+                        logger.warning(
+                            "Launching independent game process without Steamworks API!"
+                        )
+                        return
+                    else:
+                        self.steamworks_initialized = True
+                        queue = Queue()
+                        steamworks_api_process = SteamworksAppDependenciesQuery(
+                            instruction[1], queue=queue
+                        )
+                elif (
+                    instruction[0] == "launch_game_process"
+                ):  # SW API init + game launch
+                    # Temporarily disable Steam API game launch with Nuitka builds for Mac/Win
+                    if platform.system() != "Linux" and "__compiled__" in globals():
+                        logger.warning(
+                            "Steamworks API game launch is currently disabled on frozen Nuitka bundles due to issues with logger_tt and multiprocessing."
+                        )
+                        logger.warning(
+                            "Launching independent game process without Steamworks API!"
+                        )
+                        launch_game_process(instruction[1])
+                        return
+                    else:
+                        self.steamworks_initialized = True
+                        steamworks_api_process = SteamworksGameLaunch(instruction[1])
+                elif (
+                    instruction[0] in subscription_actions
+                ):  # ISteamUGC/{SubscribeItem/UnsubscribeItem}
+                    logger.info(
+                        f"Creating Steamworks API process with instruction {instruction}"
+                    )
+                    # Temporarily disable Steam API subscription interactions with Nuitka builds for Mac/Win
+                    if platform.system() != "Linux" and "__compiled__" in globals():
+                        logger.warning(
+                            "Steamworks API subscription interactions are currently disabled on frozen Nuitka bundles due to issues with logger_tt and multiprocessing."
+                        )
+                        return
+                    else:
+                        self.steamworks_initialized = True
+                        steamworks_api_process = SteamworksSubscriptionHandler(
+                            instruction
+                        )
+                else:
+                    logger.warning(
+                        "Skipping Steamworks API call - only 1 Steamworks API initialization allowed at a time!!"
+                    )
+            else:
+                logger.error(f"Unsupported instruction {instruction}")
+                return
+            # Start the Steamworks API Process
+            steamworks_api_process.start()
+            logger.info(
+                f"Steamworks API process wrapper started with PID: {steamworks_api_process.pid}"
+            )
+            steamworks_api_process.join()
+            logger.info(
+                f"Steamworks API process wrapper completed for PID: {steamworks_api_process.pid}"
+            )
+            self.steamworks_initialized = False
+            # If a query was returned (example: GetAppDependencies)
+            if "queue" in locals():
+                return queue.get()
+
+        else:
+            logger.warning(
+                "Steamworks API is already initialized! We do NOT want multiple interactions. Skipping instruction..."
+            )
+
+    def _do_browse_workshop(self):
+        self.steam_browser = SteamcmdDownloader(
+            "https://steamcommunity.com/app/294100/workshop/"
+        )
+        self.steam_browser.downloader_signal.connect(
+            self._do_download_mods_with_steamcmd
+        )
+        self.steam_browser.show()
+
+    def _do_setup_steamcmd(self):
+        if (
+            self.steamcmd_runner
+            and self.steamcmd_runner.process
+            and self.steamcmd_runner.process.state() == QProcess.Running
+        ):
+            show_warning(
+                title="RimSort",
+                text="Unable to create SteamCMD runner!",
+                information="There is an active process already running!",
+                details=f"PID {self.steamcmd_runner.process.processId()} : "
+                + self.steamcmd_runner.process.program(),
+            )
+            return
+        self.steamcmd_runner = RunnerPanel()
+        self.steamcmd_runner.show()
+        self.steamcmd_runner.message("Setting up steamcmd...")
+        self.steamcmd_wrapper.setup_steamcmd(
+            self.game_configuration.get_local_folder_path(), False, self.steamcmd_runner
+        )
+
+    def _do_set_steamcmd_path(self):
+        """
+        Open a file dialog to allow the user to select the game executable.
+        """
+        logger.info("USER ACTION: set the steamcmd folder")
+        steamcmd_folder = os.path.normpath(
+            str(
+                QFileDialog.getExistingDirectory(
+                    caption="Select steamcmd folder", dir=os.path.expanduser("~")
+                )
+            )
+        )
+        logger.info(f"Selected path: {steamcmd_folder}")
+        if steamcmd_folder:
+            logger.info(
+                f"steamcmd install folder chosen. Updating storage with new path: {steamcmd_folder}"
+            )
+            self.game_configuration.steamcmd_install_path = steamcmd_folder
+            self.game_configuration.update_persistent_storage(
+                {"steamcmd_install_path": steamcmd_folder}
+            )
+            self.steamcmd_wrapper = SteamcmdInterface(
+                self.game_configuration.steamcmd_install_path,
+                self.game_configuration.steamcmd_validate_downloads_toggle,
+            )
+        else:
+            logger.info("User pressed cancel, passing")
+
+    def _do_show_steamcmd_status(self):
+        if (
+            self.steamcmd_runner
+            and self.steamcmd_runner.process
+            and self.steamcmd_runner.process.state() == QProcess.Running
+        ):
+            show_warning(
+                title="RimSort",
+                text="Unable to create SteamCMD runner!",
+                information="There is an active process already running!",
+                details=f"PID {self.steamcmd_runner.process.processId()} : "
+                + self.steamcmd_runner.process.program(),
+            )
+            return
+        self.steamcmd_runner = RunnerPanel()
+        self.steamcmd_runner.show()
+        self.steamcmd_runner.message("Showing steamcmd status...")
+        self.steamcmd_wrapper.show_workshop_status("294100", self.steamcmd_runner)
+
+    def _do_download_mods_with_steamcmd(self, publishedfileids: list):
+        if (
+            self.steamcmd_runner
+            and self.steamcmd_runner.process
+            and self.steamcmd_runner.process.state() == QProcess.Running
+        ):
+            show_warning(
+                title="RimSort",
+                text="Unable to create SteamCMD runner!",
+                information="There is an active process already running!",
+                details=f"PID {self.steamcmd_runner.process.processId()} : "
+                + self.steamcmd_runner.process.program(),
+            )
+            return
+        if self.steam_browser:
+            self.steam_browser.close()
+        self.steamcmd_runner = RunnerPanel()
+        self.steamcmd_runner.show()
+        self.steamcmd_runner.message(
+            f"Downloading the following list of mods with steamcmd:\n{publishedfileids}"
+        )
+        self.steamcmd_wrapper.download_mods(
+            "294100", publishedfileids, self.steamcmd_runner
+        )
+
+    def _do_download_mods_with_steamworks(self, publishedfileids: list):
+        self._do_steamworks_api_call(
+            ["subscribe", [eval(str_pfid) for str_pfid in publishedfileids]]
+        )
+
+    # DB BUILDER
+
+    def _do_build_database_thread(self) -> None:
+        self.game_configuration.settings_panel.close()
+        if self.game_configuration.db_builder_include == "no_local":
+            logger.info("Opening file dialog to specify output file")
+            output_path = QFileDialog.getSaveFileName(
+                caption="Designate output path",
+                dir=os.path.join(self.game_configuration.storage_path),
+                filter="JSON (*.json)",
+            )
+            if output_path[0] and not output_path[0].endswith(".json"):
+                output_path[0].extend(".json")
+            logger.info(f"Selected path: {output_path[0]}")
+            if output_path[0]:
+                self.db_builder = SteamDatabaseBuilder(
+                    apikey=self.game_configuration.steam_apikey,
+                    appid=294100,
+                    database_expiry=self.game_configuration.database_expiry,
+                    mode=self.game_configuration.db_builder_include,
+                    output_database_path=output_path[0],
+                    get_appid_deps=self.game_configuration.build_steam_database_dlc_data_toggle,
+                    update=self.game_configuration.build_steam_database_update_toggle,
+                )
+                # Create query runner
+                self.query_runner = RunnerPanel()
+                self.query_runner.show()
+                # Connect message signal
+                self.db_builder.db_builder_message_output_signal.connect(
+                    self.query_runner.message
+                )
+                # Start DB builder
+                self.db_builder.start()
+            else:
+                logger.warning("User cancelled selection...")
+        elif self.game_configuration.db_builder_include == "all_mods":
+            self.db_builder = SteamDatabaseBuilder(
+                apikey=self.game_configuration.steam_apikey,
+                appid=294100,
+                database_expiry=self.game_configuration.database_expiry,
+                mode=self.game_configuration.db_builder_include,
+                output_database_path=self.cached_dynamic_query_target_path,
+                get_appid_deps=self.game_configuration.build_steam_database_dlc_data_toggle,
+                mods=self.all_mods_with_dependencies,
+                update=self.game_configuration.build_steam_database_update_toggle,
+            )
+            # Create query runner
+            self.query_runner = RunnerPanel()
+            self.query_runner.show()
+            # Connect message signal
+            self.db_builder.db_builder_message_output_signal.connect(
+                self.query_runner.message
+            )
+            # Start DB builder
+            self.db_builder.start()
+
+    def _do_edit_steam_webapi_key(self) -> None:
+        """
+        Opens a QDialogInput that allows the user to edit their Steam apikey
+        that are configured to be passed to the "Dynamic Query" feature for
+        the Steam Workshop metadata needed for sorting
+        """
+        args, ok = QInputDialog().getText(
+            None,
+            "Edit Steam apikey:",
+            "Enter your personal 32 character Steam apikey here:",
+            QLineEdit.Normal,
+            self.game_configuration.steam_apikey,
+        )
+        if ok:
+            self.game_configuration.steam_apikey = args
+            self.game_configuration.update_persistent_storage(
+                {"steam_apikey": self.game_configuration.steam_apikey}
+            )
+
+    def _do_generate_metadata_comparison_report(self) -> None:
+        """
+        Open a user-selected JSON file. Calculate and display discrepencies
+        found between RimPy Mod Manager database and this file.
+        """
+        # TODO: Refactor this...
+        discrepancies = []
+        mods = self.all_mods_with_dependencies
+        database_a_deps = {}
+        database_b_deps = {}
+        # Notify user
+        show_information(
+            title="Steam DB Builder",
+            text="This operation will compare 2 databases, A & B, by checking dependencies from A with dependencies from B.",
+            information="- This will produce an accurate comparison of depedency data between 2 Steam DBs.\n"
+            + "A report of discrepancies is generated. You will be prompted for these paths in order:\n"
+            + "\n\t1) Select input A"
+            + "\n\t2) Select input B",
+        )
+        # Input A
+        logger.info("Opening file dialog to specify input file A")
+        input_path_a = QFileDialog.getSaveFileName(
+            caption='Input "to-be-updated" database, input A',
+            dir=os.path.join(self.game_configuration.storage_path),
+            filter="JSON (*.json)",
+        )
+        if input_path_a[0] and not input_path_a[0].endswith(".json"):
+            input_path_a[0] = input_path_a[0] + ".json"
+        logger.info(f"Selected path: {input_path_a[0]}")
+        if input_path_a[0] and os.path.exists(input_path_a[0]):
+            with open(input_path_a[0], encoding="utf-8") as f:
+                json_string = f.read()
+                logger.debug(f"Reading info...")
+                db_input_a = json.loads(json_string)
+                logger.debug("Retreived database A...")
+        else:
+            logger.warning("Steam DB Builder: User cancelled selection...")
+            return
+        # Input B
+        logger.info("Opening file dialog to specify input file B")
+        input_path_b = QFileDialog.getSaveFileName(
+            caption='Input "to-be-updated" database, input A',
+            dir=os.path.join(self.game_configuration.storage_path),
+            filter="JSON (*.json)",
+        )
+        if input_path_b[0] and not input_path_b[0].endswith(".json"):
+            input_path_b[0] = input_path_b[0] + ".json"
+        logger.info(f"Selected path: {input_path_b[0]}")
+        if input_path_b[0] and os.path.exists(input_path_b[0]):
+            with open(input_path_b[0], encoding="utf-8") as f:
+                json_string = f.read()
+                logger.debug(f"Reading info...")
+                db_input_b = json.loads(json_string)
+                logger.debug("Retreived database B...")
+        else:
+            logger.warning("Steam DB Builder: User cancelled selection...")
+            return
+        for k, v in db_input_a["database"].items():
+            # print(k, v['dependencies'])
+            database_b_deps[k] = set()
+            if v.get("dependencies"):
+                for dep_key in v["dependencies"]:
+                    database_b_deps[k].add(dep_key)
+        for k, v in db_input_b["database"].items():
+            # print(k, v['dependencies'])
+            if k in database_b_deps:
+                database_a_deps[k] = set()
+                if v.get("dependencies"):
+                    for dep_key in v["dependencies"]:
+                        database_a_deps[k].add(dep_key)
+        no_deps_str = "*no explicit dependencies listed*"
+        database_a_total_deps = len(database_a_deps)
+        database_b_total_deps = len(database_b_deps)
+        report = (
+            "###########################\n"
+            + "Steam DB comparison report:\n"
+            + "###########################"
+            + f"\nTotal # of deps from database A:\n"
+            + f"{database_a_total_deps}"
+            + f"\nTotal # of deps from database B:\n"
+            + f"{database_b_total_deps}"
+        )
+        comparison_skipped = []
+        for k, v in database_b_deps.items():
+            if db_input_a["database"][k].get("unpublished"):
+                comparison_skipped.append(k)
+                # logger.debug(f"Skipping comparison for unpublished mod: {k}")
+            else:
+                # If the deps are different...
+                if v != database_a_deps.get(k):
+                    pp = database_a_deps.get(k)
+                    if pp:
+                        # Normalize here (get rid of core/dlc deps)
+                        if v != pp:
+                            discrepancies.append(k)
+                            pp_total = len(pp)
+                            v_total = len(v)
+                            if v == set():
+                                v = no_deps_str
+                            if pp == set():
+                                pp = no_deps_str
+                            mod_name = db_input_b["database"][k]["name"]
+                            report += "\n\n################################"
+                            report += f"\nDISCREPANCY FOUND for {k}:"
+                            report += f"\nhttps://steamcommunity.com/sharedfiles/filedetails/?id={k}"
+                            report += "\n################################"
+                            report += f"\nMod name: {mod_name}"
+                            report += (
+                                f"\n\nDatabase A:\n{pp_total} dependencies found:\n{pp}"
+                            )
+                            report += (
+                                f"\n\nDatabase B:\n{v_total} dependencies found:\n{v}"
+                            )
+        report += f"\n\nTotal # of discrepancies: {len(discrepancies)}"
+        logger.debug(
+            f"Comparison skipped for {len(comparison_skipped)} unpublished mods: {comparison_skipped}"
+        )
+        show_information(
+            title="Steam DB Builder",
+            text=f"Steam DB comparison report: {len(discrepancies)} found",
+            information="Click 'Show Details' to see the full report!",
+            details=report,
+        )
+
+    def _do_merge_databases(self) -> None:
+        # Notify user
+        show_information(
+            title="Steam DB Builder",
+            text="This operation will merge 2 databases, A & B, by recursively updating A with B, barring exceptions.",
+            information="- This will effectively recursively overwrite A's key/value with B's key/value to the resultant database.\n"
+            + "- Exceptions will not be recursively updated. Instead, they will be overwritten with B's key entirely.\n"
+            + "- The following exceptions will be made:\n"
+            + f"\n\t{DB_BUILDER_EXCEPTIONS}\n\n"
+            + "The resultant database, C, is saved to a user-specified path. You will be prompted for these paths in order:\n"
+            + "\n\t1) Select input A (db to-be-updated)"
+            + "\n\t2) Select input B (update source)"
+            + "\n\t3) Select output C (resultant db)",
+        )
+        # Input A
+        logger.info("Opening file dialog to specify input file A")
+        input_path_a = QFileDialog.getSaveFileName(
+            caption='Input "to-be-updated" database, input A',
+            dir=os.path.join(self.game_configuration.storage_path),
+            filter="JSON (*.json)",
+        )
+        if input_path_a[0] and not input_path_a[0].endswith(".json"):
+            input_path_a[0] = input_path_a[0] + ".json"
+        logger.info(f"Selected path: {input_path_a[0]}")
+        if input_path_a[0] and os.path.exists(input_path_a[0]):
+            with open(input_path_a[0], encoding="utf-8") as f:
+                json_string = f.read()
+                logger.debug(f"Reading info...")
+                db_input_a = json.loads(json_string)
+                logger.debug("Retreived database A...")
+        else:
+            logger.warning("Steam DB Builder: User cancelled selection...")
+            return
+        # Input B
+        logger.info("Opening file dialog to specify input file B")
+        input_path_b = QFileDialog.getSaveFileName(
+            caption='Input "to-be-updated" database, input A',
+            dir=os.path.join(self.game_configuration.storage_path),
+            filter="JSON (*.json)",
+        )
+        if input_path_b[0] and not input_path_b[0].endswith(".json"):
+            input_path_b[0] = input_path_b[0] + ".json"
+        logger.info(f"Selected path: {input_path_b[0]}")
+        if input_path_b[0] and os.path.exists(input_path_b[0]):
+            with open(input_path_b[0], encoding="utf-8") as f:
+                json_string = f.read()
+                logger.debug(f"Reading info...")
+                db_input_b = json.loads(json_string)
+                logger.debug("Retreived database B...")
+        else:
+            logger.warning("Steam DB Builder: User cancelled selection...")
+            return
+        # Output C
+        db_output_c = db_input_a.copy()
+        recursively_update_dict(
+            db_output_c,
+            db_input_b,
+            exceptions=DB_BUILDER_EXCEPTIONS,
+        )
+        logger.info("Updated DB A with DB B!")
+        logger.debug(db_output_c)
+        logger.info("Opening file dialog to specify output file")
+        output_path = QFileDialog.getSaveFileName(
+            caption="Designate output path for resultant database:",
+            dir=os.path.join(self.game_configuration.storage_path),
+            filter="JSON (*.json)",
+        )
+        if output_path[0] and not output_path[0].endswith(".json"):
+            output_path[0] = output_path[0] + ".json"
+        logger.info(f"Selected path: {output_path[0]}")
+        if output_path[0]:
+            with open(output_path[0], "w") as output:
+                json.dump(db_output_c, output, indent=4)
+        else:
+            logger.warning("Steam DB Builder: User cancelled selection...")
+            return
+
+    def _do_set_database_expiry(self) -> None:
+        """
+        Opens a QDialogInput that allows the user to edit their preferred
+        WebAPI Query Expiry (in seconds)
+        """
+        args, ok = QInputDialog().getText(
+            None,
+            "Edit WebAPI Query Expiry:",
+            "Enter your preferred expiry duration in seconds (default 1 week/604800 sec):",
+            QLineEdit.Normal,
+            str(self.game_configuration.database_expiry),
+        )
+        if ok:
+            try:
+                self.game_configuration.database_expiry = int(args)
+                self.game_configuration.update_persistent_storage(
+                    {"database_expiry": self.game_configuration.database_expiry}
+                )
+            except ValueError:
+                show_warning(
+                    "Tried configuring Dynamic Query with a value that is not an integer.",
+                    "Please reconfigure the expiry value with an integer in terms of the seconds from epoch you would like your query to expire.",
+                )

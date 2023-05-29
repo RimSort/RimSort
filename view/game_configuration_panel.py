@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
 )
 
 from model.dialogue import *
+from util.constants import DEFAULT_SETTINGS
 from util.generic import *
 from window.settings_panel import SettingsPanel
 
@@ -408,24 +409,8 @@ class GameConfiguration(QObject):
         if not os.path.exists(settings_path):
             logger.info(f"Settings file [{settings_path}] does not exist")
             # Create a new empty settings.json file
-            default_settings: dict[str, Any] = {
-                "sorting_algorithm": "RimPy",
-                "external_steam_metadata_source": "None",
-                "external_community_rules_metadata_source": "None",
-                "database_expiry": 1814400,
-                "db_builder_include": "all_mods",
-                "build_steam_database_dlc_data": True,
-                "build_steam_database_update_toggle": False,
-                "watchdog_toggle": True,
-                "duplicate_mods_warning": False,
-                "steam_mods_update_check": False,
-                "steamcmd_install_path": self.storage_path,
-                "steamcmd_validate_downloads": True,
-                "todds_preset": "medium",
-                "todds_active_mods_target": True,
-                "todds_dry_run": False,
-                "todds_overwrite": False,
-            }
+            default_settings: dict[str, Any] = DEFAULT_SETTINGS
+            default_settings["steamcmd_install_path"] = self.storage_path
             json_object = json.dumps(default_settings, indent=4)
             logger.info(f"Writing default settings to: [{json_object}]")
             with open(settings_path, "w") as outfile:
