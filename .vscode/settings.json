@@ -16,5 +16,6 @@
     "python.linting.pylintArgs": [
         "--enable=W0611", "--enable=W0614"
     ],
-    "python.terminal.activateEnvironment": true
+    "python.terminal.activateEnvironment": true,
+    "search.maxResults": 100000
 }

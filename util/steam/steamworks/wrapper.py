@@ -92,17 +92,11 @@ class SteamworksInterface:
         logger.debug(f"result : {args[0].result}")
         pfid = args[0].publishedFileId
         logger.debug(f"publishedFileId : {pfid}")
-        # logger.debug(f"array_app_dependencies : {args[0].array_app_dependencies}")
-        # logger.debug(
-        #     f"array_num_app_dependencies : {args[0].array_num_app_dependencies}"
-        # )
-        # logger.debug(
-        #     f"total_num_app_dependencies : {args[0].total_num_app_dependencies}"
-        # )
         app_dependencies_list = args[0].get_app_dependencies_list()
         logger.debug(f"app_dependencies_list : {app_dependencies_list}")
-        # Collect data for our query
-        self.get_app_deps_query_result[pfid] = app_dependencies_list
+        # Collect data for our query if dependencies were returned
+        if len(app_dependencies_list) > 0:
+            self.get_app_deps_query_result[pfid] = app_dependencies_list
         # Check for multiple actions
         if self.multiple_queries and self.callbacks_count == self.callbacks_total:
             # Set flag so that _callbacks cease
@@ -139,13 +133,11 @@ class SteamworksInterface:
         return Thread(target=self._callbacks, daemon=True)
 
 
-class SteamworksAppDependenciesQuery(Process):
-    def __init__(self, pfid_or_pfids: Union[int, list], queue: Queue) -> None:
-        Process.__init__(self)
+class SteamworksAppDependenciesQuery:
+    def __init__(self, pfid_or_pfids: Union[int, list]):
         self.pfid_or_pfids = pfid_or_pfids
-        self.queue = queue
 
-    def run(self) -> None:
+    def run(self) -> dict:
         """
         Handle Steam mod get_app_dependencies instruction received from connected signals
 
@@ -162,6 +154,7 @@ class SteamworksAppDependenciesQuery(Process):
                 callbacks=True, callbacks_total=len(self.pfid_or_pfids)
             )
             multiple_queries = True
+
         if not steamworks_interface.steam_not_running:  # Skip if True
             while (
                 not steamworks_interface.steamworks.loaded()
@@ -170,7 +163,7 @@ class SteamworksAppDependenciesQuery(Process):
             else:
                 if not multiple_queries:
                     logger.debug(
-                        f"ISteamUGC/GetAppDependencies Query : {self.pfid_or_pfids}"
+                        f"ISteamUGC/GetAppDependencies Query: {self.pfid_or_pfids}"
                     )
                     steamworks_interface.steamworks.Workshop.SetGetAppDependenciesResultCallback(
                         steamworks_interface._cb_app_dependencies_result_callback
@@ -180,36 +173,37 @@ class SteamworksAppDependenciesQuery(Process):
                     )
                 else:
                     for pfid in self.pfid_or_pfids:
-                        logger.debug(f"ISteamUGC/GetAppDependencies Query : {pfid}")
+                        logger.debug(f"ISteamUGC/GetAppDependencies Query: {pfid}")
                         steamworks_interface.steamworks.Workshop.SetGetAppDependenciesResultCallback(
                             steamworks_interface._cb_app_dependencies_result_callback
                         )
                         steamworks_interface.steamworks.Workshop.GetAppDependencies(
                             pfid
                         )
-                        sleep(0.7)
+                        sleep(1)
+
                 # While the thread is alive, we wait for it.
                 tick = 0
                 while steamworks_interface.steamworks_thread.is_alive():
                     if (
-                        tick > 24
-                    ):  # Wait ~2 min without additional responses before we quit forcefully
-                        self.steamworks_interface.end_callbacks = True
+                        tick == 3
+                    ):  # Wait ~30 sec without additional responses before we quit forcefully
+                        steamworks_interface.end_callbacks = True
                         break
                     else:
                         tick += 1
                         logger.debug(
-                            f"Waiting for Steamworks API callbacks to complete [{steamworks_interface.callbacks_count}/{steamworks_interface.callbacks_total}]"
+                            f"Waiting for Steamworks API callbacks to complete {tick} : [{steamworks_interface.callbacks_count}/{steamworks_interface.callbacks_total}]"
                         )
-                        sleep(5)
-                else:  # This means that the callbacks thread has ended. We are done with Steamworks API now, so we dispose of everything.
-                    logger.info("Thread completed. Unloading Steamworks...")
-                    steamworks_interface.steamworks_thread.join()
-                    # If a non-empty query was returned, grab the data
-                    if len(steamworks_interface.get_app_deps_query_result.keys()) > 0:
-                        self.queue.put(steamworks_interface.get_app_deps_query_result)
-                # Unload Steamworks API
-                steamworks_interface.steamworks.unload()
+                        sleep(10)
+                # This means that the callbacks thread has ended. We are done with Steamworks API now, so we dispose of everything.
+                logger.info("Thread completed. Unloading Steamworks...")
+                steamworks_interface.steamworks_thread.join()
+                # Grab the data and return it
+                logger.warning(
+                    f"Returning {len(steamworks_interface.get_app_deps_query_result.keys())} results..."
+                )
+                return steamworks_interface.get_app_deps_query_result
 
 
 class SteamworksGameLaunch(Process):
@@ -324,9 +318,9 @@ class SteamworksSubscriptionHandler(Process):
                 tick = 0
                 while steamworks_interface.steamworks_thread.is_alive():
                     if (
-                        tick > 24
-                    ):  # Wait ~2 min without additional responses before we quit forcefully
-                        self.steamworks_interface.end_callbacks = True
+                        tick > 3
+                    ):  # Wait ~30 sec without additional responses before we quit forcefully
+                        steamworks_interface.end_callbacks = True
                         break
                     else:
                         tick += 1

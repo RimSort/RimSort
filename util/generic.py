@@ -8,6 +8,17 @@ from requests import post as requests_post
 from model.dialogue import show_information, show_warning
 
 
+def chunks(list: list, limit: int):
+    """
+    Split list into chunks no larger than the configured limit
+
+    :param list: a list to break into chunks
+    :param limit: maximum size of the returned list
+    """
+    for i in range(0, len(list), limit):
+        yield list[i : i + limit]
+
+
 def launch_game_process(instruction: list) -> None:
     """
     This function starts the Rimworld game process in it's own Process,

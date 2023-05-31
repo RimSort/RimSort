@@ -62,7 +62,6 @@ from util.steam.steamworks.wrapper import (
     SteamworksGameLaunch,
     SteamworksSubscriptionHandler,
 )
-from util.steam.webapi.wrapper import AppIDQuery
 from util.todds.wrapper import ToddsInterface
 from util.xml import json_to_xml_write, xml_path_to_json
 from view.game_configuration_panel import GameConfiguration
@@ -839,9 +838,7 @@ class MainContent:
                 apikey=self.game_configuration.steam_apikey,
                 appid=294100,
                 database_expiry=self.game_configuration.database_expiry,
-                mode="pfid_by_appid",
-                output_database_path=self.cached_dynamic_query_target_path,
-                update=self.game_configuration.build_steam_database_update_toggle,
+                mode="pfids_by_appid",
             )
             # Create query runner
             self.query_runner = RunnerPanel()
@@ -1075,7 +1072,7 @@ class MainContent:
         logger.info("Opening file dialog to select input file")
         file_path = QFileDialog.getOpenFileName(
             caption="Open Mod List",
-            dir=os.path.join(self.game_configuration.storage_path, "ModLists"),
+            dir=os.path.join(self.game_configuration.storage_path),
             filter="XML (*.xml)",
         )
         logger.info(f"Selected path: {file_path[0]}")
@@ -1109,7 +1106,7 @@ class MainContent:
         logger.info("Opening file dialog to specify output file")
         file_path = QFileDialog.getSaveFileName(
             caption="Save Mod List",
-            dir=os.path.join(self.game_configuration.storage_path, "ModLists"),
+            dir=os.path.join(self.game_configuration.storage_path),
             filter="XML (*.xml)",
         )
         logger.info(f"Selected path: {file_path[0]}")
@@ -1534,15 +1531,11 @@ class MainContent:
         Open a file dialog to allow the user to select the game executable.
         """
         logger.info("USER ACTION: set the steamcmd folder")
-        steamcmd_folder = os.path.normpath(
-            str(
-                QFileDialog.getExistingDirectory(
-                    caption="Select steamcmd folder", dir=os.path.expanduser("~")
-                )
-            )
+        steamcmd_folder = QFileDialog.getExistingDirectory(
+            caption="Select steamcmd folder", dir=os.path.expanduser("~")
         )
-        logger.info(f"Selected path: {steamcmd_folder}")
         if steamcmd_folder:
+            logger.info(f"Selected path: {steamcmd_folder}")
             logger.info(
                 f"steamcmd install folder chosen. Updating storage with new path: {steamcmd_folder}"
             )
@@ -1605,11 +1598,6 @@ class MainContent:
         """
         Create & launch Steamworks API process to handle instructions received from connected signals
 
-        FOR "get_app_dependencies"...
-        :param instruction: a list where:
-            instruction[0] is a string that cooresponds with the following supported_actions[]
-            instruction[1] is an int that corresponds with a Steam mod's PublishedFileId
-                        OR is a list of int that corresponds with multiple Steam mods's PublishedFileId
         FOR subscription_actions[]...
         :param instruction: a list where:
             instruction[0] is a string that corresponds with the following supported_actions[]
@@ -1623,28 +1611,12 @@ class MainContent:
         logger.info(f"Received Steamworks API instruction: {instruction}")
         if not self.steamworks_initialized:
             subscription_actions = ["subscribe", "unsubscribe"]
-            supported_actions = ["get_app_dependencies", "launch_game_process"]
+            supported_actions = ["launch_game_process"]
             supported_actions.extend(subscription_actions)
             if (
                 instruction[0] in supported_actions
             ):  # Actions can be added as functions are implemented in util.steam.steamworks.wrapper
-                if (
-                    instruction[0] == "get_app_dependencies"
-                ):  # ISteamUGC/GetAppDependencies
-                    if platform.system() != "Linux" and "__compiled__" in globals():
-                        logger.warning(
-                            "Steamworks API game launch is currently disabled on frozen Nuitka bundles due to issues with logger_tt and multiprocessing."
-                        )
-                        return
-                    else:
-                        self.steamworks_initialized = True
-                        queue = Queue()
-                        steamworks_api_process = SteamworksAppDependenciesQuery(
-                            instruction[1], queue=queue
-                        )
-                elif (
-                    instruction[0] == "launch_game_process"
-                ):  # SW API init + game launch
+                if instruction[0] == "launch_game_process":  # SW API init + game launch
                     # Temporarily disable Steam API game launch with Nuitka builds for Mac/Win
                     if platform.system() != "Linux" and "__compiled__" in globals():
                         logger.warning(
@@ -1692,10 +1664,6 @@ class MainContent:
                 f"Steamworks API process wrapper completed for PID: {steamworks_api_process.pid}"
             )
             self.steamworks_initialized = False
-            # If a query was returned (example: GetAppDependencies)
-            if "queue" in locals():
-                return queue.get()
-
         else:
             logger.warning(
                 "Steamworks API is already initialized! We do NOT want multiple interactions. Skipping instruction..."
@@ -1709,49 +1677,50 @@ class MainContent:
     # DB BUILDER
 
     def _do_build_database_thread(self) -> None:
-        self.game_configuration.settings_panel.close()
+        # If settings panel is still open, close it.
+        if self.game_configuration.settings_panel.isVisible():
+            self.game_configuration.settings_panel.close()
+        # Prompt user file dialog to choose/create new DB
         logger.info("Opening file dialog to specify output file")
         output_path = QFileDialog.getSaveFileName(
             caption="Designate output path",
             dir=os.path.join(self.game_configuration.storage_path),
             filter="JSON (*.json)",
         )
-        if output_path[0] and not output_path[0].endswith(".json"):
-            output_path[0].extend(".json")
-        logger.info(f"Selected path: {output_path[0]}")
-        if self.game_configuration.db_builder_include == "no_local":
-            if output_path[0]:
+        # Check file path and launch DB Builder with user configured mode
+        if output_path[0]:  # If output path was returned
+            path = output_path[0]
+            if not path.endswith(".json"):
+                path += ".json"  # Handle file extension if needed
+            # RimWorld Workshop contains 30,000+ PublishedFileIDs (mods) as of 2023!
+            logger.info(f"Selected path: {path}")
+            # "No local data": Produce accurate, complete DB by QueryFiles via WebAPI
+            # Queries ALL available PublishedFileIDs (mods) it can find via Steam WebAPI.
+            # Does not use metadata from locally available mods. This means no packageIds!
+            if self.game_configuration.db_builder_include == "no_local":
                 self.db_builder = SteamDatabaseBuilder(
                     apikey=self.game_configuration.steam_apikey,
                     appid=294100,
                     database_expiry=self.game_configuration.database_expiry,
                     mode=self.game_configuration.db_builder_include,
-                    output_database_path=output_path[0],
+                    output_database_path=path,
                     get_appid_deps=self.game_configuration.build_steam_database_dlc_data_toggle,
                     update=self.game_configuration.build_steam_database_update_toggle,
                 )
-                # Create query runner
-                self.query_runner = RunnerPanel()
-                self.query_runner.show()
-                # Connect message signal
-                self.db_builder.db_builder_message_output_signal.connect(
-                    self.query_runner.message
+            # "All Mods": Produce accurate, possibly semi-incomplete DB without QueryFiles via API
+            # CAN produce a complete DB! Only includes metadata parsed from mods you have downloaded.
+            # Produces DB which contains metadata from locally available mods. Includes packageIds!
+            elif self.game_configuration.db_builder_include == "all_mods":
+                self.db_builder = SteamDatabaseBuilder(
+                    apikey=self.game_configuration.steam_apikey,
+                    appid=294100,
+                    database_expiry=self.game_configuration.database_expiry,
+                    mode=self.game_configuration.db_builder_include,
+                    output_database_path=path,
+                    get_appid_deps=self.game_configuration.build_steam_database_dlc_data_toggle,
+                    mods=self.all_mods_with_dependencies,
+                    update=self.game_configuration.build_steam_database_update_toggle,
                 )
-                # Start DB builder
-                self.db_builder.start()
-            else:
-                logger.warning("User cancelled selection...")
-        elif self.game_configuration.db_builder_include == "all_mods":
-            self.db_builder = SteamDatabaseBuilder(
-                apikey=self.game_configuration.steam_apikey,
-                appid=294100,
-                database_expiry=self.game_configuration.database_expiry,
-                mode=self.game_configuration.db_builder_include,
-                output_database_path=output_path[0],
-                get_appid_deps=self.game_configuration.build_steam_database_dlc_data_toggle,
-                mods=self.all_mods_with_dependencies,
-                update=self.game_configuration.build_steam_database_update_toggle,
-            )
             # Create query runner
             self.query_runner = RunnerPanel()
             self.query_runner.show()
@@ -1761,6 +1730,8 @@ class MainContent:
             )
             # Start DB builder
             self.db_builder.start()
+        else:
+            logger.warning("User cancelled selection...")
 
     def _do_edit_steam_webapi_key(self) -> None:
         """
@@ -1807,8 +1778,6 @@ class MainContent:
             dir=os.path.join(self.game_configuration.storage_path),
             filter="JSON (*.json)",
         )
-        if input_path_a[0] and not input_path_a[0].endswith(".json"):
-            input_path_a[0] = input_path_a[0] + ".json"
         logger.info(f"Selected path: {input_path_a[0]}")
         if input_path_a[0] and os.path.exists(input_path_a[0]):
             with open(input_path_a[0], encoding="utf-8") as f:
@@ -1826,8 +1795,6 @@ class MainContent:
             dir=os.path.join(self.game_configuration.storage_path),
             filter="JSON (*.json)",
         )
-        if input_path_b[0] and not input_path_b[0].endswith(".json"):
-            input_path_b[0] = input_path_b[0] + ".json"
         logger.info(f"Selected path: {input_path_b[0]}")
         if input_path_b[0] and os.path.exists(input_path_b[0]):
             with open(input_path_b[0], encoding="utf-8") as f:
@@ -1855,13 +1822,12 @@ class MainContent:
         database_a_total_deps = len(database_a_deps)
         database_b_total_deps = len(database_b_deps)
         report = (
-            "###########################\n"
-            + "Steam DB comparison report:\n"
-            + "###########################"
+            "\nSteam DB comparison report:\n"
             + f"\nTotal # of deps from database A:\n"
             + f"{database_a_total_deps}"
             + f"\nTotal # of deps from database B:\n"
             + f"{database_b_total_deps}"
+            + f"\nTotal # of discrepancies:\n{len(discrepancies)}"
         )
         comparison_skipped = []
         for k, v in database_b_deps.items():
@@ -1883,18 +1849,15 @@ class MainContent:
                             if pp == set():
                                 pp = no_deps_str
                             mod_name = db_input_b["database"][k]["name"]
-                            report += "\n\n################################"
-                            report += f"\nDISCREPANCY FOUND for {k}:"
+                            report += f"\n\nDISCREPANCY FOUND for {k}:"
                             report += f"\nhttps://steamcommunity.com/sharedfiles/filedetails/?id={k}"
-                            report += "\n################################"
                             report += f"\nMod name: {mod_name}"
                             report += (
-                                f"\n\nDatabase A:\n{pp_total} dependencies found:\n{pp}"
+                                f"\n\nDatabase A:\n{v_total} dependencies found:\n{v}"
                             )
                             report += (
-                                f"\n\nDatabase B:\n{v_total} dependencies found:\n{v}"
+                                f"\n\nDatabase B:\n{pp_total} dependencies found:\n{pp}"
                             )
-        report += f"\n\nTotal # of discrepancies: {len(discrepancies)}"
         logger.debug(
             f"Comparison skipped for {len(comparison_skipped)} unpublished mods: {comparison_skipped}"
         )
@@ -1926,8 +1889,6 @@ class MainContent:
             dir=os.path.join(self.game_configuration.storage_path),
             filter="JSON (*.json)",
         )
-        if input_path_a[0] and not input_path_a[0].endswith(".json"):
-            input_path_a[0] = input_path_a[0] + ".json"
         logger.info(f"Selected path: {input_path_a[0]}")
         if input_path_a[0] and os.path.exists(input_path_a[0]):
             with open(input_path_a[0], encoding="utf-8") as f:
@@ -1945,8 +1906,6 @@ class MainContent:
             dir=os.path.join(self.game_configuration.storage_path),
             filter="JSON (*.json)",
         )
-        if input_path_b[0] and not input_path_b[0].endswith(".json"):
-            input_path_b[0] = input_path_b[0] + ".json"
         logger.info(f"Selected path: {input_path_b[0]}")
         if input_path_b[0] and os.path.exists(input_path_b[0]):
             with open(input_path_b[0], encoding="utf-8") as f:
@@ -1972,11 +1931,12 @@ class MainContent:
             dir=os.path.join(self.game_configuration.storage_path),
             filter="JSON (*.json)",
         )
-        if output_path[0] and not output_path[0].endswith(".json"):
-            output_path[0] = output_path[0] + ".json"
         logger.info(f"Selected path: {output_path[0]}")
         if output_path[0]:
-            with open(output_path[0], "w") as output:
+            path = output_path[0]
+            if not path.endswith(".json"):
+                path += ".json"  # Handle file extension if needed
+            with open(path, "w") as output:
                 json.dump(db_output_c, output, indent=4)
         else:
             logger.warning("Steam DB Builder: User cancelled selection...")

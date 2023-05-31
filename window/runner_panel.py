@@ -172,7 +172,9 @@ class RunnerPanel(QWidget):
                     logger.info("Writing to file")
                     outfile.write(self.text.toPlainText())
 
-    def execute(self, command: str, args: list, show_bar=False, additional=None):
+    def execute(
+        self, command: str, args: list, progress_bar=None, progress_bar_total=None
+    ):
         logger.info("RunnerPanel subprocess initiating...")
         self.restart_process_button.show()
         self.kill_process_button.show()
@@ -185,10 +187,10 @@ class RunnerPanel(QWidget):
         self.process.readyReadStandardError.connect(self.handle_output)
         self.process.readyReadStandardOutput.connect(self.handle_output)
         self.process.finished.connect(self.finished)
-        if show_bar:
+        if progress_bar:
             self.progress_bar.show()
             if "steamcmd" in command:
-                self.progress_bar.setRange(0, additional)
+                self.progress_bar.setRange(0, progress_bar_total)
         if not self.todds_dry_run_support:
             self.message(f"\nExecuting command:\n{command} {args}\n\n")
         self.process.start()
@@ -236,8 +238,12 @@ class RunnerPanel(QWidget):
             ):
                 return
             # -------TODDS-------
+
+        # Hardcoded query progress output support
         # -------QUERY-------
-        elif "IPublishedFileService.QueryFiles page" in line:
+        elif "IPublishedFileService/QueryFiles page" in line:
+            overwrite = True
+        elif "IPublishedFileService/GetDetails chunk" in line:
             overwrite = True
         # -------QUERY-------
 
