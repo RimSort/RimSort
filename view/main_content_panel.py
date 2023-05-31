@@ -4,7 +4,8 @@ import subprocess
 import sys
 from functools import partial
 from logging import WARNING, getLogger
-from multiprocessing import Process, Queue, current_process
+from math import ceil
+from multiprocessing import cpu_count, current_process, Pool
 from tempfile import gettempdir
 from threading import Thread
 from time import sleep
@@ -18,8 +19,10 @@ from urllib3.exceptions import HTTPError
 from logger_tt import logger
 from model.dialogue import show_dialogue_conditional
 from util.constants import DB_BUILDER_EXCEPTIONS, RIMWORLD_DLC_METADATA
+from util.generic import chunks
 from util.metadata import SteamDatabaseBuilder, recursively_update_dict
 from util.rentry.wrapper import RentryUpload
+from util.steam.browser import SteamBrowser
 from util.steam.webapi.wrapper import ISteamRemoteStorage_GetPublishedFileDetails
 from util.watchdog import RSFileSystemEventHandler
 
@@ -56,7 +59,7 @@ from util.generic import launch_game_process
 from util.metadata import *
 from util.mods import *
 from util.schema import validate_mods_config_format
-from util.steam.steamcmd.wrapper import SteamcmdDownloader, SteamcmdInterface
+from util.steam.steamcmd.wrapper import SteamcmdInterface
 from util.steam.steamworks.wrapper import (
     SteamworksAppDependenciesQuery,
     SteamworksGameLaunch,
@@ -192,7 +195,7 @@ class MainContent:
         )
 
         # Steamworks bool - use this to check any Steamworks processes you try to initialize
-        self.steamworks_initialized = False
+        self.steamworks_in_use = False
 
         # Instantiate todds runner
         self.todds_runner = RunnerPanel = None
@@ -1497,11 +1500,14 @@ class MainContent:
     # STEAM{CMD, WORKS} ACTIONS
 
     def _do_browse_workshop(self):
-        self.steam_browser = SteamcmdDownloader(
+        self.steam_browser = SteamBrowser(
             "https://steamcommunity.com/app/294100/workshop/"
         )
-        self.steam_browser.downloader_signal.connect(
+        self.steam_browser.steamcmd_downloader_signal.connect(
             self._do_download_mods_with_steamcmd
+        )
+        self.steam_browser.steamworks_downloader_signal.connect(
+            self._do_download_mods_with_steamworks
         )
         self.steam_browser.show()
 
@@ -1609,7 +1615,7 @@ class MainContent:
             instruction[1] is a list containing [path: str, args: str] respectively
         """
         logger.info(f"Received Steamworks API instruction: {instruction}")
-        if not self.steamworks_initialized:
+        if not self.steamworks_in_use:
             subscription_actions = ["subscribe", "unsubscribe"]
             supported_actions = ["launch_game_process"]
             supported_actions.extend(subscription_actions)
@@ -1617,36 +1623,46 @@ class MainContent:
                 instruction[0] in supported_actions
             ):  # Actions can be added as functions are implemented in util.steam.steamworks.wrapper
                 if instruction[0] == "launch_game_process":  # SW API init + game launch
-                    # Temporarily disable Steam API game launch with Nuitka builds for Mac/Win
-                    if platform.system() != "Linux" and "__compiled__" in globals():
-                        logger.warning(
-                            "Steamworks API game launch is currently disabled on frozen Nuitka bundles due to issues with logger_tt and multiprocessing."
-                        )
-                        logger.warning(
-                            "Launching independent game process without Steamworks API!"
-                        )
-                        launch_game_process(instruction[1])
-                        return
-                    else:
-                        self.steamworks_initialized = True
-                        steamworks_api_process = SteamworksGameLaunch(instruction[1])
+                    self.steamworks_in_use = True
+                    steamworks_api_process = SteamworksGameLaunch(instruction[1])
+                    # Start the Steamworks API Process
+                    steamworks_api_process.start()
+                    logger.info(
+                        f"Steamworks API process wrapper started with PID: {steamworks_api_process.pid}"
+                    )
+                    steamworks_api_process.join()
+                    logger.info(
+                        f"Steamworks API process wrapper completed for PID: {steamworks_api_process.pid}"
+                    )
+                    self.steamworks_in_use = False
                 elif (
                     instruction[0] in subscription_actions
                 ):  # ISteamUGC/{SubscribeItem/UnsubscribeItem}
                     logger.info(
                         f"Creating Steamworks API process with instruction {instruction}"
                     )
-                    # Temporarily disable Steam API subscription interactions with Nuitka builds for Mac/Win
-                    if platform.system() != "Linux" and "__compiled__" in globals():
-                        logger.warning(
-                            "Steamworks API subscription interactions are currently disabled on frozen Nuitka bundles due to issues with logger_tt and multiprocessing."
+                    self.steamworks_in_use = True
+                    # Maximum processes
+                    num_processes = cpu_count()
+                    # Chunk the publishedfileids
+                    pfids_chunked = list(
+                        chunks(
+                            _list=instruction[1],
+                            limit=ceil(len(instruction[1]) / num_processes),
                         )
-                        return
-                    else:
-                        self.steamworks_initialized = True
-                        steamworks_api_process = SteamworksSubscriptionHandler(
-                            instruction
-                        )
+                    )
+                    # Create a pool of worker processes
+                    with Pool(processes=num_processes) as pool:
+                        # Create instances of SteamworksSubscriptionHandler for each chunk
+                        actions = [
+                            SteamworksSubscriptionHandler(
+                                action=instruction[0], pfid_or_pfids=chunk, interval=0.5
+                            )
+                            for chunk in pfids_chunked
+                        ]
+                        # Map the execution of the subscription actions to the pool of processes
+                        pool.map(SteamworksSubscriptionHandler.run, actions)
+                    self.steamworks_in_use = False
                 else:
                     logger.warning(
                         "Skipping Steamworks API call - only 1 Steamworks API initialization allowed at a time!!"
@@ -1654,16 +1670,6 @@ class MainContent:
             else:
                 logger.error(f"Unsupported instruction {instruction}")
                 return
-            # Start the Steamworks API Process
-            steamworks_api_process.start()
-            logger.info(
-                f"Steamworks API process wrapper started with PID: {steamworks_api_process.pid}"
-            )
-            steamworks_api_process.join()
-            logger.info(
-                f"Steamworks API process wrapper completed for PID: {steamworks_api_process.pid}"
-            )
-            self.steamworks_initialized = False
         else:
             logger.warning(
                 "Steamworks API is already initialized! We do NOT want multiple interactions. Skipping instruction..."

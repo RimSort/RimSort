@@ -68,9 +68,7 @@ class DynamicQuery(QObject):
     def __initialize_webapi(self) -> None:
         if self.api:
             # Make a request to GetServerInfo to check if the API is active
-            response = self.api.call(
-                interface="ISteamWebAPIUtil", method="GetServerInfo", version="v1"
-            )
+            response = self.api.call(method_path="ISteamWebAPIUtil.GetServerInfo")
             # Check if the API request was successful and contains server info
             if response.get("servertime") is not None:
                 # The API request was successful, and the WebAPI class is active
@@ -166,7 +164,7 @@ class DynamicQuery(QObject):
         # Notify & return
         total = len(query["database"])
         self.dq_messaging_signal.emit(
-            f"\nReturning Steam Workshop metadata for {total} PublishedFileIds"
+            f"\nReturning Steam Workshop metadata for {total} items..."
         )
         self.database.update(query)
 
@@ -221,7 +219,7 @@ class DynamicQuery(QObject):
         # Uncomment to see the all pfids to be queried
         # logger.debug(f"PublishedFileIds being queried: {publishedfileids}")
         for chunk in chunks(
-            list=publishedfileids, limit=215
+            _list=publishedfileids, limit=215
         ):  # Chunk limit appears to be 215 PublishedFileIds at a time - this appears to be a WebAPI limitation
             chunk_total = len(chunk)
             chunks_processed += chunk_total
@@ -436,13 +434,18 @@ class DynamicQuery(QObject):
         num_processes = cpu_count()
         # Chunk the publishedfileids
         pfids_chunked = list(
-            chunks(publishedfileids, len(publishedfileids) // num_processes)
+            chunks(
+                _list=publishedfileids,
+                limit=ceil(len(publishedfileids) / num_processes),
+            )
         )
         # Create a pool of worker processes
         with Pool(processes=num_processes) as pool:
             # Create instances of SteamworksAppDependenciesQuery for each chunk
             queries = [
-                SteamworksAppDependenciesQuery([eval(str_pfid) for str_pfid in chunk])
+                SteamworksAppDependenciesQuery(
+                    pfid_or_pfids=[eval(str_pfid) for str_pfid in chunk], interval=0.5
+                )
                 for chunk in pfids_chunked
             ]
             # Map the execution of the queries to the pool of processes
