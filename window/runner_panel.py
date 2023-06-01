@@ -1,4 +1,6 @@
 from functools import partial
+from tempfile import gettempdir
+
 from logger_tt import logger
 import os
 from pathlib import Path
@@ -17,6 +19,9 @@ from PySide6.QtWidgets import (
     QProgressBar,
 )
 
+from model.dialogue import show_warning, show_dialogue_conditional
+from util.steam.webapi.wrapper import ISteamRemoteStorage_GetPublishedFileDetails
+
 
 class RunnerPanel(QWidget):
     """
@@ -26,11 +31,14 @@ class RunnerPanel(QWidget):
 
     def __init__(self, todds_dry_run_support=False):
         super().__init__()
+
         logger.info("Initializing RunnerPanel")
         self.ansi_escape = compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
         self.system = system()
         self.installEventFilter(self)
 
+        self.steamcmd_failed_mods = []  # Store failed mod ids
+        self.previousline = ""
         # The "runner"
         self.text = QPlainTextEdit(readOnly=True)
         self.text.verticalScrollBar().setValue(self.text.verticalScrollBar().maximum())
@@ -172,9 +180,7 @@ class RunnerPanel(QWidget):
                     logger.info("Writing to file")
                     outfile.write(self.text.toPlainText())
 
-    def execute(
-        self, command: str, args: list, progress_bar=None, progress_bar_total=None
-    ):
+    def execute(self, command: str, args: list, progress_bar=None, additional=None):
         logger.info("RunnerPanel subprocess initiating...")
         self.restart_process_button.show()
         self.kill_process_button.show()
@@ -190,7 +196,9 @@ class RunnerPanel(QWidget):
         if progress_bar:
             self.progress_bar.show()
             if "steamcmd" in command:
-                self.progress_bar.setRange(0, progress_bar_total)
+                self.progress_bar.setValue(0)
+                self.progress_bar.setRange(0, additional)
+                self.progress_bar.setFormat("%v/%m")
         if not self.todds_dry_run_support:
             self.message(f"\nExecuting command:\n{command} {args}\n\n")
         self.process.start()
@@ -221,6 +229,13 @@ class RunnerPanel(QWidget):
                 overwrite = True
             elif "Success. Downloaded item " in line:
                 self.progress_bar.setValue(self.progress_bar.value() + 1)
+            elif "ERROR!" in line:
+                self._BAR_change_color("yellow")
+                self.progress_bar.setValue(self.progress_bar.value() + 1)
+                tempdata = self.previousline.split("workshop_download_item 294100")[1]
+                self.steamcmd_failed_mods = self.steamcmd_failed_mods + [
+                    tempdata[: tempdata.index("\n")]
+                ]
             # -------STEAM-------
 
         # Hardcoded todds progress output support
@@ -236,6 +251,7 @@ class RunnerPanel(QWidget):
                 # Hardcoded todds --dry-run support - we don't want the total time output until jose fixes
                 and ("Total time: " in line)
             ):
+                self.previousline = line
                 return
             # -------TODDS-------
 
@@ -255,6 +271,7 @@ class RunnerPanel(QWidget):
             cursor.insertText(line.strip())
         else:
             self.text.appendPlainText(line)
+        self.previousline = line
 
     def finished(self):
         if not self.todds_dry_run_support:
@@ -263,3 +280,90 @@ class RunnerPanel(QWidget):
                 self.process_killed = False
             else:
                 self.message("Subprocess completed.")
+                if "steamcmd" in self.process.program():
+                    if self.steamcmd_failed_mods != []:
+                        self._BAR_change_color("red")
+                        tempdata = "Failed to connect"  # Default value
+                        GetPublishedFileDetails = (
+                            ISteamRemoteStorage_GetPublishedFileDetails(
+                                self.steamcmd_failed_mods
+                            )
+                        )
+                        if GetPublishedFileDetails != None:
+                            tempdata = ""
+                            for i in GetPublishedFileDetails["response"][
+                                "publishedfiledetails"
+                            ]:
+                                tempdata = tempdata + i["title"] + "\n"
+                        if tempdata == "Failed to connect":
+                            show_warning(
+                                title="SteamCMD downloader",
+                                text="SteamCMD failed to download mod(s)! Please try to download these mods again!",
+                                information='Click "Show Details" to see the full report.',
+                                details=tempdata,
+                            )
+                        else:
+                            if (
+                                show_dialogue_conditional(
+                                    title="SteamCMD downloader",
+                                    text="SteamCMD failed to download mod(s)! Retry ?",
+                                    information='Click "Show Details" to see the full report.',
+                                    details=tempdata,
+                                )
+                                == "&Yes"
+                            ):
+                                with open(
+                                    os.path.join(
+                                        gettempdir(), "steamcmd_download_mods.txt"
+                                    ),
+                                    "r",
+                                ) as re:
+                                    steamcmd_mods_path = re.readline().split(
+                                        "force_install_dir"
+                                    )[1][1:]
+                                    print(steamcmd_mods_path)
+                                    script = [
+                                        f"force_install_dir {steamcmd_mods_path}",
+                                        "login anonymous",
+                                    ]
+                                    re.close()
+
+                                for i in self.steamcmd_failed_mods:
+                                    script.append(f"workshop_download_item 294100 {i}")
+                                script.extend(["quit\n"])
+                                with open(
+                                    os.path.join(
+                                        gettempdir(), "steamcmd_download_mods.txt"
+                                    ),
+                                    "w",
+                                ) as wr:
+                                    wr.write("\n".join(script))
+
+                                self.execute(
+                                    self.process_last_command,
+                                    self.process_last_args,
+                                    True,
+                                    len(self.steamcmd_failed_mods),
+                                )
+                            else:
+                                self.close()
+                    else:
+                        self._BAR_change_color("green")
+
+    def _BAR_change_color(self, color: str):
+        default = """
+                    QProgressBar {
+                        text-align: center;
+                    }
+                """
+        color = "background: {};".format(color)
+        self.progress_bar.setStyleSheet(
+            default
+            + """
+                    QProgressBar::chunk {
+                        0000_TOREPLACE
+                    }
+                    """.replace(
+                "0000_TOREPLACE", color
+            )
+        )

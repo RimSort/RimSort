@@ -10,14 +10,15 @@ from time import time
 import traceback
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+
 from PySide6.QtCore import QObject, Signal
+
 
 from model.dialogue import show_fatal_error
 from steam.webapi import WebAPI
 from util.constants import RIMWORLD_DLC_METADATA
 from util.generic import chunks
 from util.steam.steamworks.wrapper import SteamworksAppDependenciesQuery
-from window.runner_panel import RunnerPanel
 
 
 # This is redundant since it is also done in `logger-tt` config,
@@ -542,7 +543,7 @@ def ISteamRemoteStorage_GetPublishedFileDetails(
     if request.status_code == 200:
         try:
             # Parse the JSON response
-            json_response = request.json()
+            json_response = request.json() #lib crash when network interface is down, crashing the all prog. lib need to be patchs
             logger.debug(f"Received WebAPI response from query: {json_response}")
         except JSONDecodeError as e:
             logger.warning(f"Invalid JSON response: {e}")
