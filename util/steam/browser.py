@@ -91,7 +91,7 @@ class SteamBrowser(QWidget):
                 self.steamcmd_downloader_signal.emit, self.downloader_list_mods_tracking
             )
         )
-        self.download_steamworks_button = QPushButton("Download mod(s) (Steam)")
+        self.download_steamworks_button = QPushButton("Download mod(s) (Steam app)")
         self.download_steamworks_button.clicked.connect(
             partial(
                 self.steamworks_downloader_signal.emit,
