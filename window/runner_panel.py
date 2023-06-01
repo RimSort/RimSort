@@ -5,7 +5,7 @@ from pathlib import Path
 from platform import system
 from re import compile
 
-from PySide6.QtCore import QProcess
+from PySide6.QtCore import Qt, QEvent, QProcess
 from PySide6.QtGui import QFont, QIcon, QTextCursor
 from PySide6.QtWidgets import (
     QFileDialog,
@@ -35,6 +35,7 @@ class RunnerPanel(QWidget):
         logger.info("Initializing RunnerPanel")
         self.ansi_escape = compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
         self.system = system()
+        self.installEventFilter(self)
 
         self.steamcmd_failed_mods = []  # Store failed mod ids
         self.previousline = ""
@@ -132,15 +133,26 @@ class RunnerPanel(QWidget):
         self._do_kill_process()
         event.accept()
 
+    def eventFilter(self, obj, event):
+        if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Escape:
+            self.close()
+            return True
+
+        return super().eventFilter(obj, event)
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Escape:
+            self.close()
+
     def _do_clear_runner(self):
         self.text.clear()
         if not self.todds_dry_run_support:
             self.message("ヽ༼ ຈل͜ຈ༼ ▀̿̿Ĺ̯̿̿▀̿ ̿༽Ɵ͆ل͜Ɵ͆ ༽ﾉ")
 
     def _do_kill_process(self):
-        self.process_killed = True
-        if self.process != None:
+        if self.process and self.process.state() == QProcess.Running:
             self.process.kill()
+            self.process_killed = True
 
     def _do_restart_process(self):
         if self.process_last_command != "":
@@ -168,7 +180,9 @@ class RunnerPanel(QWidget):
                     logger.info("Writing to file")
                     outfile.write(self.text.toPlainText())
 
-    def execute(self, command: str, args: list, show_bar=False, additional=None):
+    def execute(
+        self, command: str, args: list, progress_bar=None, progress_bar_total=None
+    ):
         logger.info("RunnerPanel subprocess initiating...")
         self.restart_process_button.show()
         self.kill_process_button.show()
@@ -181,10 +195,10 @@ class RunnerPanel(QWidget):
         self.process.readyReadStandardError.connect(self.handle_output)
         self.process.readyReadStandardOutput.connect(self.handle_output)
         self.process.finished.connect(self.finished)
-        if show_bar:
+        if progress_bar:
             self.progress_bar.show()
             if "steamcmd" in command:
-                self.progress_bar.setRange(0, additional)
+                self.progress_bar.setRange(0, progress_bar_total)
         if not self.todds_dry_run_support:
             self.message(f"\nExecuting command:\n{command} {args}\n\n")
         self.process.start()
@@ -196,10 +210,15 @@ class RunnerPanel(QWidget):
 
     def message(self, line: str):
         overwrite = False
-        logger.debug(f"{self.process.program()}: {line}")
+        if self.process and self.process.state() == QProcess.Running:
+            logger.debug(f"{self.process.program()} {line}")
+        else:
+            logger.debug(f"{line}")
+
         # Hardcoded steamcmd progress output support
         if (  # -------STEAM-------
-            self.process.state() == QProcess.Running
+            self.process
+            and self.process.state() == QProcess.Running
             and "steamcmd" in self.process.program()
         ):
             if (
@@ -218,10 +237,10 @@ class RunnerPanel(QWidget):
                 ]
             # -------STEAM-------
 
-            # -------TODDS-------
         # Hardcoded todds progress output support
-        elif (
-            self.process.state() == QProcess.Running
+        elif (  # -------TODDS-------
+            self.process
+            and self.process.state() == QProcess.Running
             and "todds" in self.process.program()
         ):
             if "Progress: " in line:
@@ -234,6 +253,14 @@ class RunnerPanel(QWidget):
                 self.previousline = line
                 return
             # -------TODDS-------
+
+        # Hardcoded query progress output support
+        # -------QUERY-------
+        elif "IPublishedFileService/QueryFiles page" in line:
+            overwrite = True
+        elif "IPublishedFileService/GetDetails chunk" in line:
+            overwrite = True
+        # -------QUERY-------
 
         if overwrite:
             cursor = self.text.textCursor()

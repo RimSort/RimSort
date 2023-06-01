@@ -6,4 +6,4 @@
 	path = SteamworksPy
 	url = https://github.com/twstagg/SteamworksPy
 	ignore = dirty
-	branch = nuitka-onefile
+	branch = master
