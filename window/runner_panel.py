@@ -181,6 +181,14 @@ class RunnerPanel(QWidget):
                     outfile.write(self.text.toPlainText())
 
     def execute(self, command: str, args: list, progress_bar=None, additional=None):
+        """"
+            Execute the given command in a new terminal like gui
+
+            command:str, path to .exe
+            args:list, argument for .exe
+            progress_bar:Optional int, value for the progress bar, -1 to not set value
+            additional:Optional, data to parse to the runner
+        """
         logger.info("RunnerPanel subprocess initiating...")
         self.restart_process_button.show()
         self.kill_process_button.show()
@@ -195,10 +203,11 @@ class RunnerPanel(QWidget):
         self.process.finished.connect(self.finished)
         if progress_bar:
             self.progress_bar.show()
-            if "steamcmd" in command:
-                self.progress_bar.setValue(0)
-                self.progress_bar.setRange(0, additional)
-                self.progress_bar.setFormat("%v/%m")
+            self.progress_bar.setValue(0)
+            if progress_bar > 0:
+                if "steamcmd" in command:
+                    self.progress_bar.setRange(0, progress_bar)
+                    self.progress_bar.setFormat("%v/%m")
         if not self.todds_dry_run_support:
             self.message(f"\nExecuting command:\n{command} {args}\n\n")
         self.process.start()
@@ -217,14 +226,14 @@ class RunnerPanel(QWidget):
 
         # Hardcoded steamcmd progress output support
         if (  # -------STEAM-------
-            self.process
-            and self.process.state() == QProcess.Running
-            and "steamcmd" in self.process.program()
+                self.process
+                and self.process.state() == QProcess.Running
+                and "steamcmd" in self.process.program()
         ):
             if (
-                ("] Downloading update (" in line)
-                or ("] Installing update" in line)
-                or ("] Extracting package" in line)
+                    ("] Downloading update (" in line)
+                    or ("] Installing update" in line)
+                    or ("] Extracting package" in line)
             ):
                 overwrite = True
             elif "Success. Downloaded item " in line:
@@ -240,16 +249,21 @@ class RunnerPanel(QWidget):
 
         # Hardcoded todds progress output support
         elif (  # -------TODDS-------
-            self.process
-            and self.process.state() == QProcess.Running
-            and "todds" in self.process.program()
+                self.process
+                and self.process.state() == QProcess.Running
+                and "todds" in self.process.program()
         ):
+
+            if line[1:10] == 'Progress:':
+                self.progress_bar.setValue(int(line[line.index(":") + 1:line.index("/")]))
+            if ("Progress: 1/" in line):
+                self.progress_bar.setRange(0, int(line.split("Progress: 1/")[1]))
             if "Progress: " in line:
                 overwrite = True
             elif (
-                self.todds_dry_run_support  # TODO: REMOVE THIS
-                # Hardcoded todds --dry-run support - we don't want the total time output until jose fixes
-                and ("Total time: " in line)
+                    self.todds_dry_run_support  # TODO: REMOVE THIS
+                    # Hardcoded todds --dry-run support - we don't want the total time output until jose fixes
+                    and ("Total time: " in line)
             ):
                 self.previousline = line
                 return
@@ -304,19 +318,19 @@ class RunnerPanel(QWidget):
                             )
                         else:
                             if (
-                                show_dialogue_conditional(
-                                    title="SteamCMD downloader",
-                                    text="SteamCMD failed to download mod(s)! Retry ?",
-                                    information='Click "Show Details" to see the full report.',
-                                    details=tempdata,
-                                )
-                                == "&Yes"
+                                    show_dialogue_conditional(
+                                        title="SteamCMD downloader",
+                                        text="SteamCMD failed to download mod(s)! Retry ?",
+                                        information='Click "Show Details" to see the full report.',
+                                        details=tempdata,
+                                    )
+                                    == "&Yes"
                             ):
                                 with open(
-                                    os.path.join(
-                                        gettempdir(), "steamcmd_download_mods.txt"
-                                    ),
-                                    "r",
+                                        os.path.join(
+                                            gettempdir(), "steamcmd_download_mods.txt"
+                                        ),
+                                        "r",
                                 ) as re:
                                     steamcmd_mods_path = re.readline().split(
                                         "force_install_dir"
@@ -332,23 +346,26 @@ class RunnerPanel(QWidget):
                                     script.append(f"workshop_download_item 294100 {i}")
                                 script.extend(["quit\n"])
                                 with open(
-                                    os.path.join(
-                                        gettempdir(), "steamcmd_download_mods.txt"
-                                    ),
-                                    "w",
+                                        os.path.join(
+                                            gettempdir(), "steamcmd_download_mods.txt"
+                                        ),
+                                        "w",
                                 ) as wr:
                                     wr.write("\n".join(script))
 
                                 self.execute(
                                     self.process_last_command,
                                     self.process_last_args,
-                                    True,
                                     len(self.steamcmd_failed_mods),
                                 )
                             else:
                                 self.close()
                     else:
                         self._BAR_change_color("green")
+                # ----END-STEAM----
+                # ----START-TODDS----
+                if "todds" in self.process_last_command:
+                    self._BAR_change_color("green")
 
     def _BAR_change_color(self, color: str):
         default = """
