@@ -65,7 +65,7 @@ class SteamcmdDownloader(QWidget):
 
         # VARIABLES
         self.current_html = ""
-        self.current_title = "SteamCMD downloader"
+        self.current_title = "RimSort SteamCMD downloader"
         self.current_url = startpage
 
         self.downloader_list_mods_tracking = []

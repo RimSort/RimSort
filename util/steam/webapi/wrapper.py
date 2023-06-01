@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 
 from steam.webapi import WebAPI
-
+from urllib3.exceptions import NewConnectionError
 
 # This is redundant since it is also done in `logger-tt` config,
 # however, it can't hurt, just in case!
@@ -405,7 +405,7 @@ def ISteamRemoteStorage_GetPublishedFileDetails(publishedfileids: list):
     if request.status_code == 200:
         try:
             # Parse the JSON response
-            json_response = request.json()
+            json_response = request.json() #lib crash when network interface is down, crashing the all prog. lib need to be patchs
             logger.debug(f"Received WebAPI response from query: {json_response}")
         except JSONDecodeError as e:
             logger.error(f"Invalid JSON response: {e}")
