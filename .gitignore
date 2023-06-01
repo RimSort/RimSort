@@ -165,8 +165,8 @@ lib64
 pyvenv.cfg
 
 # RimSort
+data/DEBUG
 .DS_Store
-.vscode/
 test*
 data/steam*
 *.xml

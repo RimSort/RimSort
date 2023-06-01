@@ -10,7 +10,7 @@ def validate_mods_config_format(mods_config_data: Dict[str, Any]) -> bool:
 
     :return: True if the ModsConfig is in the expected format, otherwise False.
     """
-    logger.info(f"Validating mods config: {mods_config_data}")
+    logger.debug(f"Validating mods config: {mods_config_data}")
     if mods_config_data:
         if mods_config_data.get("ModsConfigData"):
             if mods_config_data["ModsConfigData"].get("activeMods"):

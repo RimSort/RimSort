@@ -16,7 +16,7 @@ def xml_path_to_json(path: str) -> Dict[str, Any]:
     """
     data: Dict[str, Any] = {}
     if os.path.exists(path):
-        logger.info(f"Parsing XML file at: {path}")
+        logger.debug(f"Parsing XML file at: {path}")
         with open(path, encoding="utf-8") as f:
             data = xmltodict.parse(f.read())
             logger.debug(f"XML file parsed with the following data: {data}")
@@ -36,7 +36,7 @@ def non_utf8_xml_path_to_json(path: str) -> Dict[str, Any]:
     """
     data: Dict[str, Any] = {}
     if os.path.exists(path):
-        logger.info(f"Parsing non UTF-8 XML file at: {path}")
+        logger.debug(f"Parsing non UTF-8 XML file at: {path}")
         data = xmltodict.parse(fix_non_utf8_xml(path))
         logger.debug(f"XML file parsed with the following data: {data}")
     else:
@@ -55,7 +55,7 @@ def fix_non_utf8_xml(path: str) -> bytes:
     :param path: path to the problematic file
     :return: the contents of the file
     """
-    logger.info("Transforming non UTF-8 XML")
+    logger.debug("Transforming non UTF-8 XML")
     t = b""
     with open(path, "rb") as problematic_file:
         t = problematic_file.read()
@@ -70,8 +70,8 @@ def json_to_xml_write(data: Dict[str, Any], path: str) -> None:
     :param data: json data to write
     :param path: path to write the xml file to
     """
-    logger.info("Starting writing JSON to XML")
+    logger.debug("Starting writing JSON to XML")
     new_xml_data = xmltodict.unparse(data, pretty=True, newl="\n", indent="  ")
     with open(path, "w") as f:
         f.write(new_xml_data)
-    logger.info("Finshed writing JSON to XML")
+    logger.debug("Finished writing JSON to XML")

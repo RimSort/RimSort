@@ -63,15 +63,10 @@ class Actions(QWidget):
         self.refresh_button.setAutoFillBackground(True)
         # Set tooltip and connect signal
         self.refresh_button.setToolTip(
-            "Right-click to configure Steam Apikey with DynamicQuery!"
+            "Recalculate the heavy stuff and refresh RimSort"
         )
         self.refresh_button.clicked.connect(
             partial(self.actions_signal.emit, "refresh")
-        )
-        # Set context menu policy and connect custom context menu event
-        self.refresh_button.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.refresh_button.customContextMenuRequested.connect(
-            self.steamApikeyContextMenuEvent
         )
         # Refresh button flashing animation
         self.refresh_button_flashing_animation = QTimer()
@@ -142,15 +137,16 @@ class Actions(QWidget):
             self.optimizeTexContextMenuEvent
         )
 
-        # STEAMCMD LABEL
-        self.steamcmd_label = QLabel("SteamCMD")
-        self.steamcmd_label.setObjectName("summaryValue")
-        self.steamcmd_label.setAlignment(Qt.AlignCenter)
+        # STEAM LABEL
+        self.steam_label = QLabel("Steam/SteamCMD")
+        self.steam_label.setObjectName("summaryValue")
+        self.steam_label.setAlignment(Qt.AlignCenter)
 
         # BROWSE WORKSHOP BUTTON
         self.browse_workshop_button = QPushButton("Browse workshop")
         self.browse_workshop_button.setToolTip(
-            "Download mods anonymously with SteamCMD\n" + "No Steam account required!"
+            "Download mods anonymously with SteamCMD, or subscribe with Steam!\n"
+            + "No Steam account required to use SteamCMD!"
         )
         self.browse_workshop_button.clicked.connect(
             partial(self.actions_signal.emit, "browse_workshop")
@@ -218,7 +214,7 @@ class Actions(QWidget):
         self.top_panel.addWidget(self.sort_button)
         self.middle_panel.addWidget(self.todds_label)
         self.middle_panel.addWidget(self.optimize_textures_button)
-        self.middle_panel.addWidget(self.steamcmd_label)
+        self.middle_panel.addWidget(self.steam_label)
         self.middle_panel.addWidget(self.browse_workshop_button)
         self.middle_panel.addWidget(self.setup_steamcmd_button)
         self.middle_panel.addWidget(self.show_steamcmd_status_button)
@@ -277,11 +273,3 @@ class Actions(QWidget):
             partial(self.actions_signal.emit, "set_steamcmd_path")
         )
         action = contextMenu.exec_(self.setup_steamcmd_button.mapToGlobal(point))
-
-    def steamApikeyContextMenuEvent(self, point: QPoint) -> None:
-        contextMenu = QMenu(self)  # Actions Panel context menu event
-        set_steam_apikey = contextMenu.addAction("Edit Steam Apikey")  # steam_apikey
-        set_steam_apikey.triggered.connect(
-            partial(self.actions_signal.emit, "edit_steam_apikey")
-        )
-        action = contextMenu.exec_(self.refresh_button.mapToGlobal(point))

@@ -1,6 +1,7 @@
+autoflake>=1.5.2
 black
 mypy
-types-pyside6
+#types-pyside6
 types-requests
 types-toposort
 types-xmltodict

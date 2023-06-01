@@ -1,13 +1,16 @@
-import multiprocessing
 import sys
 
-print(f"RimSort.py: {multiprocessing.current_process()}")
-print(f"__name__: {__name__}\nsys.argv: {sys.argv}")
-from multiprocessing import freeze_support, set_start_method
+from multiprocessing import current_process, freeze_support, set_start_method
+
+# print(f"RimSort.py: {current_process()}")
+# print(f"__name__: {__name__}")
+# print(f"sys.argv: {sys.argv}")
+
 import os
 from pathlib import Path
 import platform
 from requests.exceptions import HTTPError
+from tempfile import gettempdir
 import traceback
 
 from logger_tt import handlers, logger, setup_logging
@@ -29,8 +32,16 @@ system = platform.system()
 # See also: https://nuitka.net/doc/user-manual.html#use-case-4-program-distribution
 # Otherwise, use sys.argv[0] to get the actual relative path to the executable
 data_path = os.path.join(os.path.dirname(__file__), "data")
-logging_config_path = os.path.join(data_path, "logging_config.json")
-logging_file_path = os.path.join(os.path.dirname(sys.argv[0]), "RimSort.log")
+debug_file = os.path.join(data_path, "DEBUG")
+
+if os.path.exists(debug_file):
+    logging_config_path = os.path.join(data_path, "logger_tt-DEBUG.json")
+    DEBUG_MODE = True
+else:
+    logging_config_path = os.path.join(data_path, "logger_tt-INFO.json")
+    DEBUG_MODE = False
+
+logging_file_path = os.path.join(gettempdir(), "RimSort.log")
 
 # Setup Environment
 if is_nuitka:
@@ -63,9 +74,9 @@ def handle_exception(exc_type, exc_value, exc_traceback):
     """
 
     # Ignore KeyboardInterrupt exceptions, for when running through the terminal
-    if issubclass(exc_type, KeyboardInterrupt):
-        sys.__excepthook__(exc_type, exc_value, exc_traceback)
-        return
+    # if issubclass(exc_type, KeyboardInterrupt):
+    #     sys.__excepthook__(exc_type, exc_value, exc_traceback)
+    #     return
 
     logger.error(
         "The main application loop has failed with an uncaught exception",
@@ -87,15 +98,17 @@ class MainWindow(QMainWindow):
     Subclass QMainWindow to customize the main application window.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, debug_mode=None) -> None:
         """
         Initialize the main application window. Construct the layout,
         add the three main views, and set up relevant signals and slots.
         """
         logger.info("Starting MainWindow initialization")
         super(MainWindow, self).__init__()
+
         # Create the main application window
-        self.version_string = "Alpha v1.0.4.2"
+        self.debug_mode = debug_mode
+        self.version_string = "Alpha v1.0.5.1"
         self.setWindowTitle(f"RimSort {self.version_string}")
         self.setMinimumSize(QSize(1024, 768))
 
@@ -106,7 +119,7 @@ class MainWindow(QMainWindow):
 
         # Create various panels on the application GUI
         logger.info("Start creating main panels")
-        self.game_configuration_panel = GameConfiguration()
+        self.game_configuration_panel = GameConfiguration(debug_mode=self.debug_mode)
         self.main_content_panel = MainContent(
             self.game_configuration_panel, self.version_string
         )
@@ -143,7 +156,7 @@ def main_thread():
         app.setStyleSheet(  # Add style sheet for styling layouts and widgets
             Path(os.path.join(os.path.dirname(__file__), "data/style.qss")).read_text()
         )
-        window = MainWindow()
+        window = MainWindow(debug_mode=DEBUG_MODE)
         logger.info("Showing MainWindow")
         window.show()
         app.exec()
@@ -167,9 +180,10 @@ def main_thread():
         logger.error(stacktrace)
         show_fatal_error(details=stacktrace)
     finally:
-        logger.debug("Stopping watchdog...")
-        window.main_content_panel.game_configuration_watchdog_observer.stop()
-        window.main_content_panel.game_configuration_watchdog_observer.join()
+        if window.main_content_panel.game_configuration.watchdog_toggle:
+            logger.debug("Stopping watchdog...")
+            window.main_content_panel.game_configuration_watchdog_observer.stop()
+            window.main_content_panel.game_configuration_watchdog_observer.join()
         logger.info("Exiting!")
         sys.exit()
 
