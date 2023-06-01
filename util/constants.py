@@ -1,5 +1,6 @@
 DB_BUILDER_EXCEPTIONS = ["dependencies"]
 DEFAULT_SETTINGS = {
+    "check_for_update_startup": True,
     "sorting_algorithm": "RimPy",
     "external_steam_metadata_file_path": "steamDB.json",
     "external_steam_metadata_repo": "https://github.com/RimSort/Steam-Workshop-Database",

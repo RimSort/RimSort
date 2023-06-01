@@ -23,7 +23,6 @@ from view.game_configuration_panel import GameConfiguration
 from view.main_content_panel import MainContent
 from view.status_panel import Status
 
-is_nuitka = "__compiled__" in globals()
 system = platform.system()
 
 # If RimSort is running from a --onefile Nuitka build, there are some nuances to consider:
@@ -44,7 +43,7 @@ else:
 logging_file_path = os.path.join(gettempdir(), "RimSort.log")
 
 # Setup Environment
-if is_nuitka:
+if "__compiled__" in globals():
     os.environ[
         "QTWEBENGINE_LOCALES_PATH"
     ] = f'{Path(os.path.join(os.path.dirname(__file__), "qtwebengine_locales")).resolve()}'
@@ -108,7 +107,7 @@ class MainWindow(QMainWindow):
 
         # Create the main application window
         self.debug_mode = debug_mode
-        self.version_string = "Alpha v1.0.5.1"
+        self.version_string = "Alpha-v1.0.5.1"
         self.setWindowTitle(f"RimSort {self.version_string}")
         self.setMinimumSize(QSize(1024, 768))
 
@@ -163,7 +162,9 @@ def main_thread():
     except Exception as e:
         # Catch exceptions during initial application instantiation
         # Uncaught exceptions during the application loop are caught with excepthook
-        if (
+        if e is SystemExit:
+            logger.warning("Exiting application...")
+        elif (
             e.__class__.__name__ == "HTTPError" or e.__class__.__name__ == "SSLError"
         ):  # requests.exceptions.HTTPError OR urllib3.exceptions.SSLError
             stacktrace = traceback.format_exc()
@@ -180,11 +181,20 @@ def main_thread():
         logger.error(stacktrace)
         show_fatal_error(details=stacktrace)
     finally:
-        if window.main_content_panel.game_configuration.watchdog_toggle:
-            logger.debug("Stopping watchdog...")
-            window.main_content_panel.game_configuration_watchdog_observer.stop()
-            window.main_content_panel.game_configuration_watchdog_observer.join()
-        logger.info("Exiting!")
+        if (
+            "window" in locals()
+            and window.main_content_panel.game_configuration.watchdog_toggle
+        ):
+            try:
+                logger.debug("Stopping watchdog...")
+                window.main_content_panel.game_configuration_watchdog_observer.stop()
+                window.main_content_panel.game_configuration_watchdog_observer.join()
+            except:
+                stacktrace = traceback.format_exc()
+                logger.warning(
+                    f"watchdog received the following exception while exiting: {stacktrace}"
+                )
+        logger.info("Exiting application!")
         sys.exit()
 
 
@@ -203,7 +213,7 @@ if __name__ == "__main__":
     #     logger.warning("Running using Python interpreter")
 
     # This check is used whether RimSort is running via Nuitka bundle
-    if is_nuitka:
+    if "__compiled__" in globals():
         logger.warning("Running using Nuitka bundle")
         if system != "Linux":
             logger.warning(

@@ -4,21 +4,27 @@ import subprocess
 import sys
 import datetime
 from functools import partial
+from io import BytesIO
 from logging import WARNING, getLogger
 from math import ceil
 from multiprocessing import cpu_count, current_process, Pool
 import pytz
-from shutil import rmtree
+from stat import S_IEXEC
+from shutil import copytree, rmtree
+from signal import SIGTERM
+from subprocess import Popen
 from tempfile import gettempdir
 from threading import Thread
 from time import localtime, sleep, strftime
 from typing import Any, Dict
+from zipfile import ZipFile
 
 from git import Repo
 from git.exc import GitCommandError
 from github import Github
 from logger_tt import logger
 from pyperclip import copy as copy_to_clipboard
+from requests import get as requests_get
 from requests import post as requests_post
 from requests.exceptions import SSLError
 from urllib3.exceptions import HTTPError
@@ -33,18 +39,18 @@ from util.steam.webapi.wrapper import ISteamRemoteStorage_GetPublishedFileDetail
 from util.watchdog import RSFileSystemEventHandler
 
 # Watchdog conditionals
-_SYSTEM = platform.system()
-if _SYSTEM == "Darwin":
+SYSTEM = platform.system()
+if SYSTEM == "Darwin":
     from watchdog.observers import Observer
 
     # Comment to see logging for watchdog handler on Darwin
     getLogger("watchdog.observers.fsevents").setLevel(WARNING)
-elif _SYSTEM == "Linux":
+elif SYSTEM == "Linux":
     from watchdog.observers import Observer
 
     # Comment to see logging for watchdog handler on Linux
     getLogger("watchdog.observers.inotify_buffer").setLevel(WARNING)
-elif _SYSTEM == "Windows":
+elif SYSTEM == "Windows":
     from watchdog.observers.polling import PollingObserver
 
     # Comment to see logging for watchdog handler on Windows
@@ -100,7 +106,17 @@ class MainContent:
         """
         logger.info("Starting MainContent initialization")
 
+        # VERSION PASSED FROM & CONFIGURED IN MAIN SCRIPT (RimSort.py)
         self.rimsort_version = rimsort_version
+
+        # INITIALIZE WIDGETS
+        # Fetch paths dynamically from game configuration panel
+        logger.info("Loading GameConfiguration instance")
+        self.game_configuration = game_configuration
+
+        # IF CHECK FOR UPDATE ON STARTUP...
+        if self.game_configuration.check_for_updates_action.isChecked():
+            self.actions_slot("check_for_update")
 
         # BASE LAYOUT
         self.main_layout = QHBoxLayout()
@@ -128,13 +144,9 @@ class MainContent:
         self.main_layout.addLayout(self.active_mods_panel.panel, 20)
         self.main_layout.addLayout(self.actions_panel.panel, 10)
 
-        # INITIALIZE WIDGETS
-        # Fetch paths dynamically from game configuration panel
-        logger.info("Loading GameConfiguration instance")
-        self.game_configuration = game_configuration
-
         # SIGNALS AND SLOTS
         self.actions_panel.actions_signal.connect(self.actions_slot)  # Actions
+        self.game_configuration.configuration_signal.connect(self.actions_slot)
         self.game_configuration.settings_panel.settings_panel_actions_signal.connect(
             self.actions_slot
         )  # Settings
@@ -344,7 +356,7 @@ class MainContent:
         local_folder_path = self.game_configuration.get_local_folder_path()
         workshop_folder_path = self.game_configuration.get_workshop_folder_path()
         self.game_configuration_watchdog_event_handler = RSFileSystemEventHandler()
-        if _SYSTEM == "Windows":
+        if SYSTEM == "Windows":
             self.game_configuration_watchdog_observer = PollingObserver()
         else:
             self.game_configuration_watchdog_observer = Observer()
@@ -655,9 +667,11 @@ class MainContent:
             external_community_rules_metadata_source = (
                 self.game_configuration.settings_panel.external_community_rules_metadata_cb.currentText()
             )
-            if external_steam_metadata_source == "Configured file path":
+            if external_community_rules_metadata_source == "Configured file path":
                 print()
-            elif external_steam_metadata_source == "Configured git repository":
+            elif (
+                external_community_rules_metadata_source == "Configured git repository"
+            ):
                 print()
             elif (
                 external_community_rules_metadata_source == "RimPy Mod Manager Database"
@@ -778,6 +792,9 @@ class MainContent:
         :param action: string indicating action
         """
         logger.info(f"USER ACTION: received action {action}")
+        # game configuration panel actions
+        if action == "check_for_update":
+            self._do_check_for_update()
         # actions panel actions
         if action == "refresh":
             self._do_refresh()
@@ -912,6 +929,128 @@ class MainContent:
                 self._do_download_mods_with_steamcmd(self.db_builder.publishedfileids)
             elif "steamworks" in action:
                 self._do_download_mods_with_steamworks(self.db_builder.publishedfileids)
+
+    # GAME CONFIGURATION PANEL
+
+    def _do_check_for_update(self) -> None:
+        # NOT NUITKA
+        if not "__compiled__" in globals():
+            logger.warning(
+                "You are running from Python interpreter. Skipping update check..."
+            )
+            return
+        # NUITKA
+        logger.warning("Checking for RimSort update...")
+        # Parse latest release
+        raw = requests_get(
+            "https://api.github.com/repos/RimSort/RimSort/releases/latest"
+        )
+        json_response = raw.json()
+        current_version = self.rimsort_version.lower()
+        tag_name = json_response["tag_name"]
+        tag_name_updated = tag_name.replace("alpha", "Alpha")
+        install_path = os.getcwd()
+        logger.warning(f"Current RimSort release found: {tag_name}")
+        logger.warning(f"Current RimSort version found: {current_version}")
+        if current_version != tag_name:
+            answer = show_dialogue_conditional(
+                title="RimSort update found",
+                text=f"An update to RimSort has been released: {tag_name}",
+                information=f"You are running RimSort {current_version}\nDo you want to update now?",
+            )
+            if answer == "&Yes":
+                # Setup environment
+                ARCH = platform.architecture()[0]
+                CWD = os.getcwd()
+                PROCESSOR = platform.processor()
+                if PROCESSOR == "":
+                    PROCESSOR = platform.machine()
+                SYSTEM = platform.system()
+                if SYSTEM == "Darwin":
+                    executable_name = "RimSort"
+                    if PROCESSOR == "i386" or PROCESSOR == "arm":
+                        logger.warning(
+                            f"Darwin/MacOS system detected with a {ARCH} {PROCESSOR} CPU..."
+                        )
+                        targetARCHive = (
+                            f"RimSort-{tag_name_updated}_{SYSTEM}_{PROCESSOR}.zip"
+                        )
+                    else:
+                        logger.warning(
+                            f"Unsupported processor {SYSTEM} {ARCH} {PROCESSOR}"
+                        )
+                        return
+                elif SYSTEM == "Linux":
+                    executable_name = "RimSort.bin"
+                    logger.warning(
+                        f"Linux system detected with a {ARCH} {PROCESSOR} CPU..."
+                    )
+                    targetARCHive = (
+                        f"RimSort-{tag_name_updated}_{SYSTEM}_{PROCESSOR}.zip"
+                    )
+                elif SYSTEM == "Windows":
+                    executable_name = "RimSort.exe"
+                    logger.warning(
+                        f"Windows system detected with a {ARCH} {PROCESSOR} CPU..."
+                    )
+                    targetARCHive = f"RimSort-{tag_name_updated}_{SYSTEM}.zip"
+                else:
+                    logger.warning(f"Unsupported system {SYSTEM} {ARCH} {PROCESSOR}")
+                    return
+                logger.warning(
+                    f"Attempting to retrieve archive from release: {targetARCHive}"
+                )
+                # Try to find a valid release from our generated archive name
+                for asset in json_response["assets"]:
+                    if asset["name"] == targetARCHive:
+                        browser_download_url = asset["browser_download_url"]
+                # If we don't have it from our query...
+                if not "browser_download_url" in locals():
+                    show_warning(
+                        title="Unable to complete update",
+                        text=f"Failed to find valid RimSort release for {SYSTEM} {ARCH} {PROCESSOR}",
+                    )
+                    return
+                # Try to download & extract todds release from browser_download_url
+                current_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
+                targetARCHive_extracted = targetARCHive.replace(".zip", "")
+                try:
+                    logger.warning(
+                        f"Downloading & extracting RimSort release from: {browser_download_url}"
+                    )
+                    with ZipFile(
+                        BytesIO(requests_get(browser_download_url).content)
+                    ) as zipobj:
+                        zipobj.extractall(gettempdir())
+                except:
+                    stacktrace = traceback.format_exc()
+                    show_warning(
+                        title="Failed to download update",
+                        text="Failed to download latest RimSort release!",
+                        information=f"Did the file/url change? "
+                        + "Does your environment have access to the internet?\n"
+                        + f"URL: {browser_download_url}",
+                        details=stacktrace,
+                    )
+
+                # Replace the current program directory with the new version
+                rmtree(current_dir)
+                copytree(os.path.join(gettempdir(), "RimSort"), current_dir)
+                # Set executable permissions as ZipFile does not preserve this in the zip archive
+                executable_path = os.path.join(current_dir, executable_name)
+                if os.path.exists(executable_path):
+                    original_stat = os.stat(executable_path)
+                    os.chmod(executable_path, original_stat.st_mode | S_IEXEC)
+                show_information(
+                    title="Update completed",
+                    text=f"RimSort has applied an update: {current_version} -> {tag_name}",
+                    information="The application needs restarted. RimSort will now exit.",
+                )
+                sys.exit()
+        else:
+            logger.warning("Up-to-date!")
+
+    # ACTIONS PANEL
 
     def _do_refresh(self) -> None:
         """
@@ -1125,7 +1264,7 @@ class MainContent:
         """
         logger.info("Opening file dialog to select input file")
         file_path = QFileDialog.getOpenFileName(
-            caption="Open Mod List",
+            caption="Open mod list",
             dir=os.path.join(self.game_configuration.storage_path),
             filter="XML (*.xml)",
         )
@@ -1159,7 +1298,7 @@ class MainContent:
         """
         logger.info("Opening file dialog to specify output file")
         file_path = QFileDialog.getSaveFileName(
-            caption="Save Mod List",
+            caption="Save mod list",
             dir=os.path.join(self.game_configuration.storage_path),
             filter="XML (*.xml)",
         )
@@ -1315,7 +1454,7 @@ class MainContent:
                     ]
         # Build our report
         active_mods_rentry_report = (
-            f"# RimWorld Mod List       ![](https://github.com/oceancabbage/RimSort/blob/main/rentry_preview.png?raw=true)"
+            f"# RimWorld mod list       ![](https://github.com/oceancabbage/RimSort/blob/main/rentry_preview.png?raw=true)"
             + f"\nCreated with RimSort {self.rimsort_version}"
             + f"\nMod list was created for game version: `{self.game_version}`"
             + f"\n!!! info Local mods are marked as yellow labels with packageId in brackets."
@@ -2077,6 +2216,7 @@ class MainContent:
             self.game_configuration.update_persistent_storage(
                 {"external_steam_metadata_file_path": input_path[0]}
             )
+            self.game_configuration.steam_db_file_path = input_path[0]
         else:
             logger.warning("User cancelled selection!")
             return

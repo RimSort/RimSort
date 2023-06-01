@@ -105,8 +105,7 @@ def open_url_browser(url: str) -> None:
 
 def platform_specific_open(path: str) -> None:
     """
-    Function to open a folder in the platform-specific
-    explorer app.
+    Function to open a file/folder in the platform-specific file-explorer app.
 
     :param path: path to open
     """

@@ -9,13 +9,15 @@ from functools import partial
 from os.path import expanduser
 from typing import Any, Dict
 
-from PySide6.QtCore import QObject, QStandardPaths, Qt, Signal
+from PySide6.QtCore import QObject, QPoint, QStandardPaths, Qt, Signal
+from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
     QFileDialog,
     QFrame,
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QMenu,
     QPushButton,
     QToolButton,
     QVBoxLayout,
@@ -82,22 +84,32 @@ class GameConfiguration(QObject):
         self.client_settings_button = QPushButton("Settings")
         self.client_settings_button.clicked.connect(self.open_settings_panel)
         self.client_settings_button.setObjectName("LeftButton")
-        self.auto_detect_paths_button = QPushButton("Autodetect Paths")
-        self.auto_detect_paths_button.clicked.connect(self.do_autodetect)
+        self.auto_detect_paths_button = QPushButton("Autodetect paths")
+        self.auto_detect_paths_button.clicked.connect(self.autodetect_paths_by_platform)
         self.auto_detect_paths_button.setObjectName("LeftButton")
-        self.game_version_label = QLabel("Game Version:")
+        self.game_version_label = QLabel("Game version:")
         self.game_version_label.setObjectName("gameVersion")
         self.game_version_line = QLineEdit()
         self.game_version_line.setDisabled(True)
         self.game_version_line.setPlaceholderText("Unknown")
+        self.check_for_updates_action = QAction("Check for update on startup")
+        self.check_for_updates_action.setCheckable(True)
+        self.check_for_updates_button = QPushButton("Check for update")
+        self.check_for_updates_button.clicked.connect(
+            partial(self.configuration_signal.emit, "check_for_update")
+        )
+        self.check_for_updates_button.setObjectName("RightButton")
+        self.check_for_updates_button.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.check_for_updates_button.customContextMenuRequested.connect(
+            self.checkForUpdateBtnContextMenuEvent
+        )
         self.wiki_button = QPushButton("Wiki")
-        self.wiki_button.clicked.connect(self.open_wiki_webbrowser)
+        self.wiki_button.clicked.connect(
+            partial(open_url_browser, "https://github.com/RimSort/RimSort/wiki")
+        )
         self.wiki_button.setObjectName("RightButton")
-        self.github_button = QPushButton("GitHub")
-        self.github_button.clicked.connect(self.open_github_webbrowser)
-        self.github_button.setObjectName("RightButton")
 
-        self.game_folder_open_button = QPushButton("Game Folder")
+        self.game_folder_open_button = QPushButton("Game folder")
         self.game_folder_open_button.clicked.connect(
             partial(self.open_directory, self.get_game_folder_path)
         )
@@ -119,14 +131,18 @@ class GameConfiguration(QObject):
         self.game_folder_select_button = QPushButton("...")
         self.game_folder_select_button.clicked.connect(self.set_game_exe_folder)
         self.game_folder_select_button.setObjectName("RightButton")
-        self.game_folder_select_button.setToolTip("Set the game installation directory")
+        self.game_folder_select_button.setToolTip(
+            "Set the RimWorld game installation directory"
+        )
 
-        self.config_folder_open_button = QPushButton("Config Folder")
+        self.config_folder_open_button = QPushButton("Config folder")
         self.config_folder_open_button.clicked.connect(
             partial(self.open_directory, self.get_config_folder_path)
         )
         self.config_folder_open_button.setObjectName("LeftButton")
-        self.config_folder_open_button.setToolTip("Open the ModsConfig.xml directory")
+        self.config_folder_open_button.setToolTip(
+            "Open the RimWorld game configuration directory"
+        )
         self.config_folder_line = QLineEdit()
         self.config_folder_line.setReadOnly(True)
         self.config_folder_line.setClearButtonEnabled(True)
@@ -139,22 +155,24 @@ class GameConfiguration(QObject):
         )
         self.config_folder_line.setPlaceholderText("Unknown")
         self.config_folder_line.setToolTip(
-            "The this directory contains the ModsConfig.xml file, which\n"
-            "shows your active mods and their load order."
-            "Set the ModsConfig.xml directory with the button on the right."
+            "The this directory contains the ModsConfig.xml file, which shows your\n"
+            "active mods and their load order. It may also contain other mod configs."
+            "Set the ModsConfig.xml directory manually with the button on the right."
         )
         self.config_folder_select_button = QPushButton("...")
         self.config_folder_select_button.clicked.connect(self.set_config_folder)
         self.config_folder_select_button.setObjectName("RightButton")
-        self.config_folder_select_button.setToolTip("Set the ModsConfig.xml directory")
+        self.config_folder_select_button.setToolTip(
+            "Set the RimWorld game configuration directory"
+        )
 
-        self.workshop_folder_open_button = QPushButton("Steam Mods")
+        self.workshop_folder_open_button = QPushButton("Steam mods")
         self.workshop_folder_open_button.clicked.connect(
             partial(self.open_directory, self.get_workshop_folder_path)
         )
         self.workshop_folder_open_button.setObjectName("LeftButton")
         self.workshop_folder_open_button.setToolTip(
-            "Open the Steam Workshop Mods directory"
+            "Open the Steam Workshop mods directory"
         )
         self.workshop_folder_line = QLineEdit()
         self.workshop_folder_line.setReadOnly(True)
@@ -168,8 +186,8 @@ class GameConfiguration(QObject):
         )
         self.workshop_folder_line.setPlaceholderText("Unknown")
         self.workshop_folder_line.setToolTip(
-            "The Steam Workshop Mods directory contains mods downloaded from Steam.\n"
-            "Set the Steam Workshop Mods directory with the button on the right."
+            "The Steam Workshop mods directory contains mods downloaded from Steam client.\n"
+            "Set the Steam Workshop mods directory manually with the button on the right."
         )
         self.workshop_folder_select_button = QPushButton("...")
         self.workshop_folder_select_button.clicked.connect(self.set_workshop_folder)
@@ -178,12 +196,12 @@ class GameConfiguration(QObject):
             "Set the Steam Workshop Mods directory"
         )
 
-        self.local_folder_open_button = QPushButton("Local Mods")
+        self.local_folder_open_button = QPushButton("Local mods")
         self.local_folder_open_button.clicked.connect(
             partial(self.open_directory, self.get_local_folder_path)
         )
         self.local_folder_open_button.setObjectName("LeftButton")
-        self.local_folder_open_button.setToolTip("Open the Local Mods directory")
+        self.local_folder_open_button.setToolTip("Open the local mods directory")
         self.local_folder_line = QLineEdit()
         self.local_folder_line.setReadOnly(True)
         self.local_folder_line.setClearButtonEnabled(True)
@@ -196,22 +214,23 @@ class GameConfiguration(QObject):
         )
         self.local_folder_line.setPlaceholderText("Unknown")
         self.local_folder_line.setToolTip(
-            "The Local Mods directory contains downloaded mod folders.\n"
+            "The local mods directory contains manually downloaded mod folders.\n"
             "By default, this folder is located in the game install directory.\n"
-            "Set the Local Mods directory with the button on the right."
+            "If you are a SteamCMD user, this is also where mods will be located."
+            "Set the Local mods directory manually with the button on the right."
         )
         self.local_folder_select_button = QPushButton("...")
         self.local_folder_select_button.clicked.connect(self.set_local_folder)
         self.local_folder_select_button.setObjectName("RightButton")
-        self.local_folder_select_button.setToolTip("Set the Local Mods directory.")
+        self.local_folder_select_button.setToolTip("Set the local mods directory.")
 
         # WIDGETS INTO CONTAINER LAYOUTS
         self.client_settings_row.addWidget(self.client_settings_button)
         self.client_settings_row.addWidget(self.auto_detect_paths_button)
         self.client_settings_row.addWidget(self.game_version_label)
         self.client_settings_row.addWidget(self.game_version_line)
+        self.client_settings_row.addWidget(self.check_for_updates_button)
         self.client_settings_row.addWidget(self.wiki_button)
-        self.client_settings_row.addWidget(self.github_button)
 
         self.game_folder_row.addWidget(self.game_folder_open_button)
         self.game_folder_row.addWidget(self.game_folder_line)
@@ -317,6 +336,7 @@ class GameConfiguration(QObject):
         self.initialize_storage()
 
         # SIGNALS AND SLOTS
+        self.check_for_updates_action.toggled.connect(self.check_updates_toggle)
         self.settings_panel.clear_paths_signal.connect(
             self.delete_all_paths_data
         )  # Actions delete_all_paths_data
@@ -448,6 +468,12 @@ class GameConfiguration(QObject):
             logger.info("Loading JSON from file")
             settings_data = json.load(infile)
             logger.info("Setting relevant QLineEdits now")
+
+            # Update check
+            if settings_data.get("check_for_update_startup"):
+                self.check_for_updates_action.setChecked(
+                    settings_data["check_for_update_startup"]
+                )
 
             # Game configuration paths
             if settings_data.get("game_folder"):
@@ -1098,13 +1124,16 @@ class GameConfiguration(QObject):
         logger.info("USER ACTION: opening settings panel")
         self.settings_panel.show()
 
-    def do_autodetect(self) -> None:
-        self.autodetect_paths_by_platform()
+    def check_updates_toggle(self) -> None:
+        self.update_persistent_storage(
+            settings={
+                "check_for_update_startup": self.check_for_updates_action.isChecked()
+            }
+        )
 
-    def open_wiki_webbrowser(self) -> None:
-        logger.info("USER ACTION: opening wiki")
-        webbrowser.open("https://github.com/oceancabbage/RimSort/wiki")
-
-    def open_github_webbrowser(self) -> None:
-        logger.info("USER ACTION: opening GitHub")
-        webbrowser.open("https://github.com/oceancabbage/RimSort")
+    def checkForUpdateBtnContextMenuEvent(self, point: QPoint) -> None:
+        contextMenu = QMenu()  # Check for update context menu event
+        contextMenu.addAction(
+            self.check_for_updates_action
+        )  # check for update on startup
+        action = contextMenu.exec_(self.check_for_updates_button.mapToGlobal(point))

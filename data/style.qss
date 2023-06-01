@@ -172,15 +172,15 @@ QListWidget::item {
 
 /* Styling for a selected mod item */
 QListWidget::item:selected:!active {
-    background: #37414f;
+    background: #272e37;
 }
 
 QListWidget::item:selected:active {
-    background: #346792;
+    background: #37414f;
 }
 
 QListWidget::item:hover {
-    background: #37414f;
+    background: #272e37;
 }
 
 QStyle::PE_IndicatorItemViewItemDrop {

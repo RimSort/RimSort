@@ -49,7 +49,6 @@ class SettingsPanel(QDialog):
 
         # Create main layout
         self.layout = QVBoxLayout()
-        self.layout.setAlignment(Qt.AlignTop)
 
         # General layouts
         self.general_options_layout = QHBoxLayout()
@@ -59,21 +58,21 @@ class SettingsPanel(QDialog):
         self.general_label = QLabel("General")
         self.general_label.setObjectName("summaryValue")
         self.general_label.setAlignment(Qt.AlignCenter)
-        self.rimsort_actions_label = QLabel("RimSort Actions:")
+        self.rimsort_actions_label = QLabel("RimSort actions:")
         self.rimsort_actions_label.setObjectName("summaryValue")
         self.rimsort_actions_label.setAlignment(Qt.AlignCenter)
-        self.clear_paths_button = QPushButton("Clear Paths")
+        self.clear_paths_button = QPushButton("Clear paths")
         self.clear_paths_button.clicked.connect(
             partial(self.clear_paths_signal.emit, "clear_paths")
         )
-        self.open_log_button = QPushButton("Open RimSort Log")
+        self.open_log_button = QPushButton("Open RimSort.log")
         self.open_log_button.clicked.connect(
             partial(
                 platform_specific_open,
                 os.path.join(gettempdir(), "RimSort.log"),
             )
         )
-        self.upload_log_button = QPushButton("Upload RimSort Log")
+        self.upload_log_button = QPushButton("Upload RimSort.log")
         self.upload_log_button.setToolTip(
             "Log will be uploaded to http://0x0.st/ and\n"
             + "the URL will be copied to your clipboard."
@@ -84,14 +83,14 @@ class SettingsPanel(QDialog):
                 os.path.join(gettempdir(), "RimSort.log"),
             )
         )
-        self.open_storage_button = QPushButton("Open Storage Dir")
+        self.open_storage_button = QPushButton("Open RimSort storage")
         self.open_storage_button.clicked.connect(
             partial(
                 platform_specific_open,
                 self.storage_path,
             )
         )
-        self.set_github_identity_button = QPushButton("Set Github identity")
+        self.set_github_identity_button = QPushButton("Configure Github identity")
         self.set_github_identity_button.clicked.connect(
             partial(
                 self.settings_panel_actions_signal.emit, "configure_github_identity"
@@ -287,6 +286,9 @@ class SettingsPanel(QDialog):
         )
         self.build_steam_database_update_checkbox.setObjectName("summaryValue")
         self.comparison_report_button = QPushButton("Comparison report")
+        self.comparison_report_button.setToolTip(
+            "Generate dependency comparison report between 2 Steam DBs"
+        )
         self.comparison_report_button.clicked.connect(
             partial(self.settings_panel_actions_signal.emit, "comparison_report")
         )

@@ -474,5 +474,5 @@ print("Grabbing latest todds release...")
 get_latest_todds_release()
 
 # Build Nuitka distributable binary
-# print("Building RimSort application with Nuitka...")
-# _execute(_NUITKA_CMD)
+print("Building RimSort application with Nuitka...")
+_execute(_NUITKA_CMD)
