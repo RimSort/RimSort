@@ -19,7 +19,6 @@ from steam.webapi import WebAPI
 from util.constants import RIMWORLD_DLC_METADATA
 from util.generic import chunks
 from util.steam.steamworks.wrapper import SteamworksAppDependenciesQuery
-from window.runner_panel import RunnerPanel
 
 
 # This is redundant since it is also done in `logger-tt` config,

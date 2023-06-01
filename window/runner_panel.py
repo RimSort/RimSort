@@ -1,4 +1,6 @@
 from functools import partial
+from tempfile import gettempdir
+
 from logger_tt import logger
 import os
 from pathlib import Path
@@ -18,9 +20,7 @@ from PySide6.QtWidgets import (
 )
 
 from model.dialogue import show_warning, show_dialogue_conditional
-from util.steam.webapi.wrapper import (
-    ISteamRemoteStorage_GetPublishedFileDetails,
-)
+from util.steam.webapi.wrapper import ISteamRemoteStorage_GetPublishedFileDetails
 
 
 class RunnerPanel(QWidget):
@@ -180,9 +180,7 @@ class RunnerPanel(QWidget):
                     logger.info("Writing to file")
                     outfile.write(self.text.toPlainText())
 
-    def execute(
-        self, command: str, args: list, progress_bar=None, additional=None
-    ):
+    def execute(self, command: str, args: list, progress_bar=None, additional=None):
         logger.info("RunnerPanel subprocess initiating...")
         self.restart_process_button.show()
         self.kill_process_button.show()
@@ -198,9 +196,9 @@ class RunnerPanel(QWidget):
         if progress_bar:
             self.progress_bar.show()
             if "steamcmd" in command:
+                self.progress_bar.setValue(0)
                 self.progress_bar.setRange(0, additional)
                 self.progress_bar.setFormat("%v/%m")
-                self.progress_bar.setRange(0, progress_bar_total)
         if not self.todds_dry_run_support:
             self.message(f"\nExecuting command:\n{command} {args}\n\n")
         self.process.start()
@@ -305,9 +303,50 @@ class RunnerPanel(QWidget):
                                 details=tempdata,
                             )
                         else:
-                            if show_dialogue_conditional("SteamCMD downloader","SteamCMD failed to download mod(s)! ","Do you want to retry") == "yes":
-                                print("TODO")
+                            if (
+                                show_dialogue_conditional(
+                                    title="SteamCMD downloader",
+                                    text="SteamCMD failed to download mod(s)! Retry ?",
+                                    information='Click "Show Details" to see the full report.',
+                                    details=tempdata,
+                                )
+                                == "&Yes"
+                            ):
+                                with open(
+                                    os.path.join(
+                                        gettempdir(), "steamcmd_download_mods.txt"
+                                    ),
+                                    "r",
+                                ) as re:
+                                    steamcmd_mods_path = re.readline().split(
+                                        "force_install_dir"
+                                    )[1][1:]
+                                    print(steamcmd_mods_path)
+                                    script = [
+                                        f"force_install_dir {steamcmd_mods_path}",
+                                        "login anonymous",
+                                    ]
+                                    re.close()
 
+                                for i in self.steamcmd_failed_mods:
+                                    script.append(f"workshop_download_item 294100 {i}")
+                                script.extend(["quit\n"])
+                                with open(
+                                    os.path.join(
+                                        gettempdir(), "steamcmd_download_mods.txt"
+                                    ),
+                                    "w",
+                                ) as wr:
+                                    wr.write("\n".join(script))
+
+                                self.execute(
+                                    self.process_last_command,
+                                    self.process_last_args,
+                                    True,
+                                    len(self.steamcmd_failed_mods),
+                                )
+                            else:
+                                self.close()
                     else:
                         self._BAR_change_color("green")
 
@@ -318,8 +357,13 @@ class RunnerPanel(QWidget):
                     }
                 """
         color = "background: {};".format(color)
-        self.progress_bar.setStyleSheet(default + """
+        self.progress_bar.setStyleSheet(
+            default
+            + """
                     QProgressBar::chunk {
                         0000_TOREPLACE
                     }
-                    """.replace("0000_TOREPLACE",color))
+                    """.replace(
+                "0000_TOREPLACE", color
+            )
+        )
