@@ -210,7 +210,7 @@ class DynamicQuery(QObject):
         chunks_processed = 0
         total = len(publishedfileids)
         self.dq_messaging_signal.emit(
-            f"Steam WebAPI: IPublishedFileService/GetDetails initializing for {total} mods...\n\n"
+            f"\nSteam WebAPI: IPublishedFileService/GetDetails initializing for {total} mods...\n\n"
         )
         if not self.api:  # If we don't have API initialized
             return None, None  # Exit query
@@ -269,7 +269,6 @@ class DynamicQuery(QObject):
                         publishedfileid
                     ):  # If we don't already have a ["database"] entry for this pfid
                         result["database"][publishedfileid] = {}  # Add in skeleton data
-                        result["database"][publishedfileid]["missing"] = True
                     # We populate the data
                     result["database"][publishedfileid]["steamName"] = metadata["title"]
                     result["database"][publishedfileid][
@@ -321,9 +320,9 @@ class DynamicQuery(QObject):
                                         f"Could not find pfid {child_pfid} in database. Adding child to missing_children..."
                                     )
                                     missing_children.append(child_pfid)
-                    self.dq_messaging_signal.emit(
-                        f"IPublishedFileService/GetDetails chunk [{chunks_processed}/{total}]"
-                    )
+            self.dq_messaging_signal.emit(
+                f"IPublishedFileService/GetDetails chunk [{chunks_processed}/{total}]"
+            )
         for missing_child in missing_children:
             if result["database"].get(missing_child) and result["database"][
                 missing_child
@@ -444,7 +443,7 @@ class DynamicQuery(QObject):
             # Create instances of SteamworksAppDependenciesQuery for each chunk
             queries = [
                 SteamworksAppDependenciesQuery(
-                    pfid_or_pfids=[eval(str_pfid) for str_pfid in chunk], interval=0.5
+                    pfid_or_pfids=[eval(str_pfid) for str_pfid in chunk], interval=0.9
                 )
                 for chunk in pfids_chunked
             ]

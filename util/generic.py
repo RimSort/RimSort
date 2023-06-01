@@ -4,6 +4,7 @@ import platform
 from pyperclip import copy as copy_to_clipboard
 import subprocess
 from requests import post as requests_post
+import webbrowser
 
 from model.dialogue import show_information, show_warning
 
@@ -19,29 +20,27 @@ def chunks(_list: list, limit: int):
         yield _list[i : i + limit]
 
 
-def launch_game_process(instruction: list) -> None:
+def launch_game_process(game_executable: str, args: str) -> None:
     """
     This function starts the Rimworld game process in it's own Process,
     by launching the executable found in the configured game directory.
 
     This function initializes the Steamworks API to be used by the RimWorld game.
 
-    :param instruction: a list containing [path: str, args: str] respectively
-    :param override: a bool when if set to True, skips initiating Steamworks
+    :param game_executable: is a string path to the game folder
+    :param args: is a string representing the args to pass to the generated executable path
     """
-    game_path = instruction[0]
-    args = instruction[1]
-    logger.info(f"Attempting to find the game in the game folder {game_path}")
-    if game_path:
+    logger.info(f"Attempting to find the game in the game folder {game_executable}")
+    if game_executable:
         system_name = platform.system()
         if system_name == "Darwin":
-            executable_path = os.path.join(game_path, "RimWorldMac.app")
+            executable_path = os.path.join(game_executable, "RimWorldMac.app")
         elif system_name == "Linux":
             # Linux
-            executable_path = os.path.join(game_path, "RimWorldLinux")
+            executable_path = os.path.join(game_executable, "RimWorldLinux")
         elif "Windows":
             # Windows
-            executable_path = os.path.join(game_path, "RimWorldWin64.exe")
+            executable_path = os.path.join(game_executable, "RimWorldWin64.exe")
         else:
             logger.error("Unable to launch the game on an unknown system")
         logger.info(f"Path to game executable generated: {executable_path}")
@@ -88,11 +87,20 @@ def launch_game_process(instruction: list) -> None:
         show_warning(
             text="Error Starting the Game",
             information=(
-                "RimSort could not start RimWorld as the game folder is empty or invalid: [{game_path}] "
+                "RimSort could not start RimWorld as the game folder is empty or invalid: [{game_executable}] "
                 "Please check that the game folder is properly set and that the RimWorld executable "
                 "exists in it."
             ),
         )
+
+
+def open_url_browser(url: str) -> None:
+    """
+    Open the url of a mod of a url in a user's default web browser
+    """
+    browser = webbrowser.get().name
+    logger.info(f"USER ACTION: Opening mod url {url} in " + f"{browser}")
+    webbrowser.open_new_tab(url)
 
 
 def platform_specific_open(path: str) -> None:

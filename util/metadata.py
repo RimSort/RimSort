@@ -245,16 +245,16 @@ class SteamDatabaseBuilder(QThread):
                 json.dump(database, output, indent=4)
 
 
-def get_cached_dynamic_query_db(
+def get_configured_steam_db(
     life: int, path: str, mods: Dict[str, Any]
 ) -> Dict[str, Any]:
-    logger.info(f"Checking for cached Dynamic Query: {path}")
+    logger.info(f"Checking for Steam DB at: {path}")
     db_json_data = {}
     if os.path.exists(
         path
     ):  # Look for cached data & load it if available & not expired
         logger.info(
-            f"Found cached Steam metadata!",
+            f"Steam DB exists!",
         )
         with open(path, encoding="utf-8") as f:
             json_string = f.read()
@@ -270,18 +270,14 @@ def get_cached_dynamic_query_db(
                 db_json_data = db_data[
                     "database"
                 ]  # TODO: additional check to verify integrity of this data's schema
-                show_information(
-                    title="Dynamic Query",
-                    text=f"Cached Steam metadata is valid!",
-                    information="Returning data to RimSort...",
-                )
+                logger.info("Cached Steam DB is valid! Returning data to RimSort...")
             else:  # If the cached db data is expired but NOT missing
                 # Fallback to the expired metadata
                 show_warning(
-                    title="Dynamic Query",
-                    text="Cached Steam metadata is expired! Consider updating!\n",
+                    title="Steam DB metadata expired",
+                    text="Steam DB is expired! Consider updating!\n",
                     information="Unable to initialize Dynamic Query for live metadata!\n"
-                    + "Falling back to cached, but EXPIRED Dynamic Query database...\n",
+                    + "Falling back to cached, but EXPIRED Steam Database...\n",
                 )
                 db_json_data = db_data[
                     "database"
@@ -289,11 +285,11 @@ def get_cached_dynamic_query_db(
             return db_json_data
 
     else:  # Assume db_data_missing
-        show_information(
-            title="Dynamic Query",
-            text="Cached Dynamic Query database not found!\n",
+        show_warning(
+            title="Steam DB is missing",
+            text="Configured Steam DB not found!",
             information="Unable to initialize external metadata. There is no external Steam metadata being factored!\n"
-            + "Please use DB Builder to create a database, or update to the latest RimSort provided DB.\n\n",
+            + "\nPlease use DB Builder to create a database, or update to the latest RimSort Steam Workshop Database.",
         )
         return db_json_data
 

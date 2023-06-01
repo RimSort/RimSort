@@ -1,7 +1,6 @@
 from logger_tt import logger
 import os
 import shutil
-import webbrowser
 from pathlib import Path
 from time import sleep
 from typing import Any, List, Optional
@@ -17,7 +16,7 @@ from PySide6.QtWidgets import (
 
 from model.mod_list_item import ModListItemInner
 from model.dialogue import show_warning
-from util.generic import platform_specific_open
+from util.generic import open_url_browser, platform_specific_open
 
 
 class ModListWidget(QListWidget):
@@ -261,7 +260,7 @@ class ModListWidget(QListWidget):
                                 url = self.get_mod_url(widget_json_data)
                                 if url != "":
                                     logger.info(f"Opening url in browser: {url}")
-                                    self.open_mod_url(url)
+                                    open_mod_url(url)
                         # Open Steam URI with Steam action
                         elif (
                             action == open_mod_steam_action
@@ -490,11 +489,3 @@ class ModListWidget(QListWidget):
                 f"Tried to parse URL for a mod that does not have a data_source? Erroneous json data: {widget_json_data}"
             )
         return url
-
-    def open_mod_url(self, url: str) -> None:
-        """
-        Open the url of a mod of a url in a user's default web browser
-        """
-        browser = webbrowser.get().name
-        logger.info(f"USER ACTION: Opening mod url {url} in " + f"{browser}")
-        webbrowser.open_new_tab(url)

@@ -1,7 +1,11 @@
 DB_BUILDER_EXCEPTIONS = ["dependencies"]
 DEFAULT_SETTINGS = {
     "sorting_algorithm": "RimPy",
+    "external_steam_metadata_file_path": "steamDB.json",
+    "external_steam_metadata_repo": "https://github.com/RimSort/Steam-Workshop-Database",
     "external_steam_metadata_source": "None",
+    "external_community_rules_file_path": "communityRules.json",
+    "external_community_rules_repo": "https://github.com/RimSort/Community-Rules-Database",
     "external_community_rules_metadata_source": "None",
     "db_builder_include": "all_mods",
     "database_expiry": 604800,

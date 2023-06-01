@@ -66,6 +66,7 @@ elif _SYSTEM == "Windows" and _ARCH == "64bit":
         "-m",
         "nuitka",
         "--standalone",
+        # "--disable-console",
         # "--onefile",
         "--windows-icon-from-ico=./data/AppIcon_a.png",
         "--enable-plugin=pyside6",

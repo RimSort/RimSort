@@ -1,9 +1,11 @@
-import multiprocessing
 import sys
 
-print(f"RimSort.py: {multiprocessing.current_process()}")
-print(f"__name__: {__name__}\nsys.argv: {sys.argv}")
-from multiprocessing import freeze_support, set_start_method
+from multiprocessing import current_process, freeze_support, set_start_method
+
+# print(f"RimSort.py: {current_process()}")
+# print(f"__name__: {__name__}")
+# print(f"sys.argv: {sys.argv}")
+
 import os
 from pathlib import Path
 import platform
@@ -72,9 +74,9 @@ def handle_exception(exc_type, exc_value, exc_traceback):
     """
 
     # Ignore KeyboardInterrupt exceptions, for when running through the terminal
-    if issubclass(exc_type, KeyboardInterrupt):
-        sys.__excepthook__(exc_type, exc_value, exc_traceback)
-        return
+    # if issubclass(exc_type, KeyboardInterrupt):
+    #     sys.__excepthook__(exc_type, exc_value, exc_traceback)
+    #     return
 
     logger.error(
         "The main application loop has failed with an uncaught exception",

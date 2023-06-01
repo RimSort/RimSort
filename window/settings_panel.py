@@ -6,6 +6,7 @@ import sys
 from tempfile import gettempdir
 
 from PySide6.QtCore import QPoint, QSize, QStandardPaths, Qt, Signal
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -15,6 +16,7 @@ from PySide6.QtWidgets import (
     QMenu,
     QPushButton,
     QStyledItemDelegate,
+    QToolButton,
     QVBoxLayout,
 )
 
@@ -38,7 +40,7 @@ class SettingsPanel(QDialog):
         self.storage_path = storage_path
 
         # Create window
-        self.setFixedSize(QSize(500, 525))
+        self.setFixedSize(QSize(560, 560))
         self.setWindowTitle("Settings")
 
         # Allow for styling
@@ -89,6 +91,12 @@ class SettingsPanel(QDialog):
                 self.storage_path,
             )
         )
+        self.set_github_identity_button = QPushButton("Set Github identity")
+        self.set_github_identity_button.clicked.connect(
+            partial(
+                self.settings_panel_actions_signal.emit, "configure_github_identity"
+            )
+        )
         self.rimsort_options_label = QLabel("RimSort Options:")
         self.rimsort_options_label.setObjectName("summaryValue")
         self.rimsort_options_label.setAlignment(Qt.AlignCenter)
@@ -120,9 +128,8 @@ class SettingsPanel(QDialog):
         )
         self.steam_mods_update_checkbox.setObjectName("summaryValue")
         self.steam_mods_update_checkbox.setToolTip(
-            "This option requires you to have a Steam apikey configured with\n"
-            + 'the below "Metadata" option set to "RimSort Dynamic Query"\n\n'
-            + '"Metadata" should be set to RimPy MMDB when sorting for now.'
+            "This option requires you to have a Steam DB which \n"
+            + "contains time data from Steam Workshop WebAPI."
         )
         self.try_download_missing_mods_checkbox = QCheckBox(
             "Try to download missing mods when detected"
@@ -140,6 +147,7 @@ class SettingsPanel(QDialog):
         self.general_actions_layout.addWidget(self.open_log_button)
         self.general_actions_layout.addWidget(self.upload_log_button)
         self.general_actions_layout.addWidget(self.open_storage_button)
+        self.general_actions_layout.addWidget(self.set_github_identity_button)
         self.general_preferences_layout.addWidget(self.rimsort_options_label)
         self.general_preferences_layout.addWidget(self.logger_debug_checkbox)
         self.general_preferences_layout.addWidget(self.watchdog_checkbox)
@@ -162,29 +170,70 @@ class SettingsPanel(QDialog):
         # metadata layouts
         self.metadata_options_layout = QHBoxLayout()
         self.metadata_configuration_layout = QVBoxLayout()
+        self.metadata_steam_configuration_layout = QHBoxLayout()
+        self.metadata_community_rules_configuration_layout = QHBoxLayout()
         self.database_tools_layout = QVBoxLayout()
         self.database_tools_builder_layout = QHBoxLayout()
         self.database_tools_actions_layout = QHBoxLayout()
         # metadata widgets
+        self.external_metadata_icon = QIcon(
+            os.path.join(os.path.dirname(__file__), "../data/database.png")
+        )
         self.external_metadata_label = QLabel("External Metadata")
         self.external_metadata_label.setObjectName("summaryValue")
         self.external_metadata_label.setAlignment(Qt.AlignCenter)
         # external steam metadata
-        self.external_steam_metadata_label = QLabel("Steam Workshop:")
+        self.external_steam_metadata_label = QLabel("Steam Workshop DB")
         self.external_steam_metadata_label.setObjectName("summaryValue")
         self.external_steam_metadata_label.setAlignment(Qt.AlignCenter)
+        self.external_steam_metadata_button = QToolButton()
+        self.external_steam_metadata_button.setIcon(self.external_metadata_icon)
+        self.external_steam_metadata_button.setToolTip(
+            "Right-click to access Steam Workshop Database options"
+        )
+        # Set context menu policy and connect custom context menu event
+        self.external_steam_metadata_button.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.external_steam_metadata_button.customContextMenuRequested.connect(
+            self.externalSteamDbBtnContextMenuEvent
+        )
+        # external steam metadata combobox
         self.external_steam_metadata_cb = QComboBox()
         self.external_steam_metadata_cb.addItems(
-            ["RimPy Mod Manager Database", "RimSort Dynamic Query", "None"]
+            [
+                "Configured file path",
+                "Configured git repository",
+                "RimPy Mod Manager Database",
+                "None",
+            ]
         )
         self.external_steam_metadata_cb.setItemDelegate(self.centered_item_delegate)
         # external community rules metadata
-        self.external_community_rules_metadata_label = QLabel("Community Rules:")
+        self.external_community_rules_metadata_label = QLabel("Community Rules DB")
         self.external_community_rules_metadata_label.setObjectName("summaryValue")
         self.external_community_rules_metadata_label.setAlignment(Qt.AlignCenter)
+        self.external_community_rules_metadata_button = QToolButton()
+        self.external_community_rules_metadata_button.setIcon(
+            self.external_metadata_icon
+        )
+        self.external_community_rules_metadata_button.setToolTip(
+            "Right-click to access Community Rules Database options"
+        )
+        # Set context menu policy and connect custom context menu event
+        self.external_community_rules_metadata_button.setContextMenuPolicy(
+            Qt.CustomContextMenu
+        )
+        self.external_community_rules_metadata_button.customContextMenuRequested.connect(
+            self.externalCommunityRulesDbBtnContextMenuEvent
+        )
+        # external community rules metadata combobox
         self.external_community_rules_metadata_cb = QComboBox()
         self.external_community_rules_metadata_cb.addItems(
-            ["RimPy Mod Manager Database", "None"]
+            [
+                "Configured file path",
+                "Configured git repository",
+                "RimPy Mod Manager Database",
+                "None",
+            ]
         )
         self.external_community_rules_metadata_cb.setItemDelegate(
             self.centered_item_delegate
@@ -212,14 +261,14 @@ class SettingsPanel(QDialog):
             + "\n- A Steam WebAPI key configured"
         )
         # Set context menu policy and connect custom context menu event
-        self.build_steam_database_button.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.build_steam_database_button.customContextMenuRequested.connect(
-            self.buildDatabaseBtnContextMenuEvent
-        )
         self.build_steam_database_button.clicked.connect(
             partial(
                 self.settings_panel_actions_signal.emit, "build_steam_database_thread"
             )
+        )
+        self.build_steam_database_button.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.build_steam_database_button.customContextMenuRequested.connect(
+            self.buildDatabaseBtnContextMenuEvent
         )
         self.build_steam_database_dlc_data_checkbox = QCheckBox(
             "Include DLC dependency data in database"
@@ -251,10 +300,24 @@ class SettingsPanel(QDialog):
             self.downloadAllModsContextMenuEvent
         )
         # Build the metadata options layout
-        self.metadata_configuration_layout.addWidget(self.external_steam_metadata_label)
+        self.metadata_steam_configuration_layout.addWidget(
+            self.external_steam_metadata_label
+        )
+        self.metadata_steam_configuration_layout.addWidget(
+            self.external_steam_metadata_button
+        )
+        self.metadata_configuration_layout.addLayout(
+            self.metadata_steam_configuration_layout
+        )
         self.metadata_configuration_layout.addWidget(self.external_steam_metadata_cb)
-        self.metadata_configuration_layout.addWidget(
+        self.metadata_community_rules_configuration_layout.addWidget(
             self.external_community_rules_metadata_label
+        )
+        self.metadata_community_rules_configuration_layout.addWidget(
+            self.external_community_rules_metadata_button
+        )
+        self.metadata_configuration_layout.addLayout(
+            self.metadata_community_rules_configuration_layout
         )
         self.metadata_configuration_layout.addWidget(
             self.external_community_rules_metadata_cb
@@ -405,8 +468,86 @@ class SettingsPanel(QDialog):
         )
         action = contextMenu.exec_(self.download_all_mods_btn.mapToGlobal(point))
 
+    def externalSteamDbBtnContextMenuEvent(self, point: QPoint) -> None:
+        contextMenu = QMenu(self)  # Build Database btn context menu event
+        config_steam_db_path = contextMenu.addAction(
+            "Configure Steam Database file path"
+        )  # configure file path
+        config_steam_db_repo = contextMenu.addAction(
+            "Configure Steam Database repository"
+        )  # configure repo URL
+        download_steam_db = contextMenu.addAction(
+            "Download Steam Database from repository"
+        )  # download db from repo
+        upload_steam_db_changes = contextMenu.addAction(
+            "Upload Steam Database changes to repository"
+        )  # make pull request with changes
+        # ACTIONS
+        config_steam_db_path.triggered.connect(
+            partial(
+                self.settings_panel_actions_signal.emit, "configure_steam_database_path"
+            )
+        )
+        config_steam_db_repo.triggered.connect(
+            partial(
+                self.settings_panel_actions_signal.emit, "configure_steam_database_repo"
+            )
+        )
+        download_steam_db.triggered.connect(
+            partial(self.settings_panel_actions_signal.emit, "download_steam_database")
+        )
+        upload_steam_db_changes.triggered.connect(
+            partial(self.settings_panel_actions_signal.emit, "upload_steam_database")
+        )
+        action = contextMenu.exec_(
+            self.external_steam_metadata_button.mapToGlobal(point)
+        )
+
+    def externalCommunityRulesDbBtnContextMenuEvent(self, point: QPoint) -> None:
+        contextMenu = QMenu(self)  # Build Database btn context menu event
+        config_community_rules_db_path = contextMenu.addAction(
+            "Configure Community Rules Database file path"
+        )  # configure file path
+        config_community_rules_db_repo = contextMenu.addAction(
+            "Configure Community Rules Database repository"
+        )  # configure repo URL
+        download_community_rules_db = contextMenu.addAction(
+            "Download/Update Community Rules Database from repository"
+        )  # download db from repo
+        upload_community_rules_changes = contextMenu.addAction(
+            "Upload Community Rules Database changes to repository"
+        )  # make pull request with changes
+        # ACTIONS
+        config_community_rules_db_path.triggered.connect(
+            partial(
+                self.settings_panel_actions_signal.emit,
+                "configure_community_rules_db_path",
+            )
+        )
+        config_community_rules_db_repo.triggered.connect(
+            partial(
+                self.settings_panel_actions_signal.emit,
+                "configure_community_rules_db_repo",
+            )
+        )
+        download_community_rules_db.triggered.connect(
+            partial(
+                self.settings_panel_actions_signal.emit,
+                "download_community_rules_database",
+            )
+        )
+        upload_community_rules_changes.triggered.connect(
+            partial(
+                self.settings_panel_actions_signal.emit,
+                "upload_community_rules_database",
+            )
+        )
+        action = contextMenu.exec_(
+            self.external_community_rules_metadata_button.mapToGlobal(point)
+        )
+
     def loggerDebugCheckboxEvent(self) -> None:
-        data_path = os.path.join(os.path.dirname(__file__), "../data")
+        data_path = os.path.join(os.path.split(os.path.dirname(__file__))[0], "data")
         debug_file = os.path.join(data_path, "DEBUG")
         if self.logger_debug_checkbox.isChecked():
             if not os.path.exists(debug_file):

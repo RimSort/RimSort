@@ -2,24 +2,30 @@ import os
 import platform
 import subprocess
 import sys
+import datetime
 from functools import partial
 from logging import WARNING, getLogger
 from math import ceil
 from multiprocessing import cpu_count, current_process, Pool
+import pytz
+from shutil import rmtree
 from tempfile import gettempdir
 from threading import Thread
-from time import sleep
+from time import localtime, sleep, strftime
 from typing import Any, Dict
 
+from git import Repo
+from git.exc import GitCommandError
+from github import Github
+from logger_tt import logger
 from pyperclip import copy as copy_to_clipboard
 from requests import post as requests_post
 from requests.exceptions import SSLError
 from urllib3.exceptions import HTTPError
 
-from logger_tt import logger
 from model.dialogue import show_dialogue_conditional
 from util.constants import DB_BUILDER_EXCEPTIONS, RIMWORLD_DLC_METADATA
-from util.generic import chunks
+from util.generic import chunks, open_url_browser
 from util.metadata import SteamDatabaseBuilder, recursively_update_dict
 from util.rentry.wrapper import RentryUpload
 from util.steam.browser import SteamBrowser
@@ -70,8 +76,9 @@ from util.xml import json_to_xml_write, xml_path_to_json
 from view.game_configuration_panel import GameConfiguration
 from window.runner_panel import RunnerPanel
 
-print(f"main_content_panel.py: {current_process()}")
-print(f"__name__: {__name__}\nsys.argv: {sys.argv}")
+# print(f"main_content_panel.py: {current_process()}")
+# print(f"__name__: {__name__}")
+# print(f"sys.argv: {sys.argv}")
 
 
 class MainContent:
@@ -614,30 +621,47 @@ class MainContent:
             external_steam_metadata_source = (
                 self.game_configuration.settings_panel.external_steam_metadata_cb.currentText()
             )
-            if external_steam_metadata_source == "RimPy Mod Manager Database":
-                # Get and cache RimPy Steam db.json rules data for ALL mods
-                self.external_steam_metadata = get_rpmmdb_steam_metadata(all_mods)
-            elif external_steam_metadata_source == "RimSort Dynamic Query":
-                self.external_steam_metadata = get_cached_dynamic_query_db(
+            if external_steam_metadata_source == "Configured file path":
+                self.external_steam_metadata = get_configured_steam_db(
                     life=self.game_configuration.database_expiry,
-                    path=self.cached_dynamic_query_target_path,
+                    path=os.path.join(self.game_configuration.steam_db_file_path),
                     mods=all_mods,
                 )
-                if self.game_configuration.steam_mods_update_check_toggle:
-                    self.workshop_mods_potential_updates = (
-                        get_external_time_data_for_workshop_mods(
-                            self.external_steam_metadata, all_mods
-                        )
-                    )
+            elif external_steam_metadata_source == "Configured git repository":
+                self.external_steam_metadata = get_configured_steam_db(
+                    life=self.game_configuration.database_expiry,
+                    path=os.path.join(
+                        self.game_configuration.storage_path,
+                        os.path.split(self.game_configuration.steam_db_repo)[1],
+                        "steamDB.json",
+                    ),
+                    mods=all_mods,
+                )
+            elif external_steam_metadata_source == "RimPy Mod Manager Database":
+                # Get and cache RimPy Steam db.json rules data for ALL mods
+                self.external_steam_metadata = get_rpmmdb_steam_metadata(all_mods)
             else:
                 logger.info(
                     "External Steam metadata disabled by user. Please choose a metadata source in settings."
+                )
+            # Steam mods update check (if DB has data)
+            if self.game_configuration.steam_mods_update_check_toggle:
+                self.workshop_mods_potential_updates = (
+                    get_external_time_data_for_workshop_mods(
+                        self.external_steam_metadata, all_mods
+                    )
                 )
             # External Community Rules metadata
             external_community_rules_metadata_source = (
                 self.game_configuration.settings_panel.external_community_rules_metadata_cb.currentText()
             )
-            if external_community_rules_metadata_source == "RimPy Mod Manager Database":
+            if external_steam_metadata_source == "Configured file path":
+                print()
+            elif external_steam_metadata_source == "Configured git repository":
+                print()
+            elif (
+                external_community_rules_metadata_source == "RimPy Mod Manager Database"
+            ):
                 # Get and cache RimPy Community Rules communityRules.json for ALL mods
                 self.external_community_rules = get_rpmmdb_community_rules_db(all_mods)
             else:
@@ -826,6 +850,33 @@ class MainContent:
             self._do_edit_run_args()
 
         # settings panel actions
+        if action == "configure_github_identity":
+            self._do_configure_github_identity()
+        if action == "configure_steam_database_path":
+            self._do_configure_steam_db_file_path()
+        if action == "configure_steam_database_repo":
+            self._do_configure_steam_database_repo()
+        if action == "download_steam_database":
+            self._do_clone_repo_to_storage_path(
+                repo_url=self.game_configuration.steam_db_repo
+            )
+        if action == "upload_steam_database":
+            self._do_upload_db_to_repo(
+                repo_url=self.game_configuration.steam_db_repo, file_name="steamDB.json"
+            )
+        if action == "configure_community_rules_db_path":
+            self._do_configure_community_rules_db_path()
+        if action == "configure_community_rules_db_repo":
+            self._do_configure_community_rules_db_repo()
+        if action == "download_community_rules_database":
+            self._do_clone_repo_to_storage_path(
+                repo_url=self.game_configuration.community_rules_repo
+            )
+        if action == "upload_community_rules_database":
+            self._do_upload_db_to_repo(
+                repo_url=self.game_configuration.community_rules_repo,
+                file_name="communityRules.json",
+            )
         if action == "build_steam_database_thread":
             self._do_build_database_thread()
         if action == "merge_databases":
@@ -1532,6 +1583,31 @@ class MainContent:
             self.game_configuration.get_local_folder_path(), False, self.steamcmd_runner
         )
 
+    def _do_download_mods_with_steamcmd(self, publishedfileids: list):
+        if (
+            self.steamcmd_runner
+            and self.steamcmd_runner.process
+            and self.steamcmd_runner.process.state() == QProcess.Running
+        ):
+            show_warning(
+                title="RimSort",
+                text="Unable to create SteamCMD runner!",
+                information="There is an active process already running!",
+                details=f"PID {self.steamcmd_runner.process.processId()} : "
+                + self.steamcmd_runner.process.program(),
+            )
+            return
+        if self.steam_browser:
+            self.steam_browser.close()
+        self.steamcmd_runner = RunnerPanel()
+        self.steamcmd_runner.show()
+        self.steamcmd_runner.message(
+            f"Downloading the following list of mods with steamcmd:\n{publishedfileids}"
+        )
+        self.steamcmd_wrapper.download_mods(
+            "294100", publishedfileids, self.steamcmd_runner
+        )
+
     def _do_set_steamcmd_path(self):
         """
         Open a file dialog to allow the user to select the game executable.
@@ -1575,29 +1651,11 @@ class MainContent:
         self.steamcmd_runner.message("Showing steamcmd status...")
         self.steamcmd_wrapper.show_workshop_status("294100", self.steamcmd_runner)
 
-    def _do_download_mods_with_steamcmd(self, publishedfileids: list):
-        if (
-            self.steamcmd_runner
-            and self.steamcmd_runner.process
-            and self.steamcmd_runner.process.state() == QProcess.Running
-        ):
-            show_warning(
-                title="RimSort",
-                text="Unable to create SteamCMD runner!",
-                information="There is an active process already running!",
-                details=f"PID {self.steamcmd_runner.process.processId()} : "
-                + self.steamcmd_runner.process.program(),
-            )
-            return
+    def _do_download_mods_with_steamworks(self, publishedfileids: list):
         if self.steam_browser:
             self.steam_browser.close()
-        self.steamcmd_runner = RunnerPanel()
-        self.steamcmd_runner.show()
-        self.steamcmd_runner.message(
-            f"Downloading the following list of mods with steamcmd:\n{publishedfileids}"
-        )
-        self.steamcmd_wrapper.download_mods(
-            "294100", publishedfileids, self.steamcmd_runner
+        self._do_steamworks_api_call(
+            ["subscribe", [eval(str_pfid) for str_pfid in publishedfileids]]
         )
 
     def _do_steamworks_api_call(self, instruction: list):
@@ -1624,7 +1682,9 @@ class MainContent:
             ):  # Actions can be added as functions are implemented in util.steam.steamworks.wrapper
                 if instruction[0] == "launch_game_process":  # SW API init + game launch
                     self.steamworks_in_use = True
-                    steamworks_api_process = SteamworksGameLaunch(instruction[1])
+                    steamworks_api_process = SteamworksGameLaunch(
+                        game_executable=instruction[1][0], args=instruction[1][1]
+                    )
                     # Start the Steamworks API Process
                     steamworks_api_process.start()
                     logger.info(
@@ -1675,10 +1735,406 @@ class MainContent:
                 "Steamworks API is already initialized! We do NOT want multiple interactions. Skipping instruction..."
             )
 
-    def _do_download_mods_with_steamworks(self, publishedfileids: list):
-        self._do_steamworks_api_call(
-            ["subscribe", [eval(str_pfid) for str_pfid in publishedfileids]]
+    # STEAM/COMMUNITY RULES DATABASE CONFIGURATION
+
+    def _do_configure_github_identity(self) -> None:
+        """
+        Opens a QDialogInput that allows user to edit their Github token
+        This token is used for DB repo related actions, as well as any
+        "Github mod" related actions
+        """
+        args, ok = QInputDialog().getText(
+            None,
+            "Edit username",
+            "Enter your Github username:",
+            QLineEdit.Normal,
+            self.game_configuration.github_username,
         )
+        if ok:
+            self.game_configuration.github_username = args
+            self.game_configuration.update_persistent_storage(
+                {"github_username": self.game_configuration.github_username}
+            )
+        else:
+            logger.warning("User cancelled input!")
+            return
+        args, ok = QInputDialog().getText(
+            None,
+            "Edit token",
+            "Enter your Github personal access token here (ghp_*):",
+            QLineEdit.Normal,
+            self.game_configuration.github_token,
+        )
+        if ok:
+            self.game_configuration.github_token = args
+            self.game_configuration.update_persistent_storage(
+                {"github_token": self.game_configuration.github_token}
+            )
+        else:
+            logger.warning("User cancelled input!")
+            return
+
+    def _do_clone_repo_to_storage_path(self, repo_url: str) -> None:
+        """
+        Checks validity of configured git repo, as well as if it exists
+        Handles possible existing repo, and prompts (re)download of repo
+        Otherwise it just clones the repo and notifies user
+        """
+        if (
+            repo_url
+            and repo_url != ""
+            and repo_url.startswith("http://")
+            or repo_url.startswith("https://")
+        ):
+            # Calculate folder name from provided URL
+            repo_folder_name = os.path.split(repo_url)[1]
+            # Calculate path from generated folder name
+            repo_path = os.path.join(
+                self.game_configuration.storage_path, repo_folder_name
+            )
+            if os.path.exists(repo_path):  # If local repo does exists
+                # Prompt to user to handle
+                answer = show_dialogue_conditional(
+                    title="Existing repository found",
+                    text="An existing local repo that matches this repository was found:",
+                    information=(
+                        f"{repo_path}\n\n"
+                        + "How would you like to handle? Choose option:\n"
+                        + "\n1) Clone new repository (deletes existing and replaces)"
+                        + "\n2) Update existing repository (in-place force-update)"
+                    ),
+                    button_text_override=[
+                        "Clone new",
+                        "Update existing",
+                    ],
+                )
+                if answer == "&Cancel":
+                    logger.warning(
+                        f"User cancelled prompt. Skipping any {repo_folder_name} repository actions."
+                    )
+                    return
+                elif answer == "Clone new":
+                    logger.info(f"Deleting local git repo at: {repo_path}")
+                    rmtree(repo_path)
+                elif answer == "Update existing":
+                    self._do_force_update_existing_repo(repo_url=repo_url)
+                    return
+            # Clone the repo to storage path and notify user
+            logger.info(f"Cloning {repo_url} to: {repo_path}")
+            try:
+                Repo.clone_from(repo_url, repo_path)
+                show_information(
+                    title="Repo retrieved",
+                    text="The configured repository was cloned!",
+                    information=f"{repo_url} ->\n" + f"{repo_path}",
+                )
+            except GitCommandError:
+                stacktrace = traceback.format_exc()
+                show_warning(
+                    title="Failed to clone repo!",
+                    text="The configured repo failed to clone!"
+                    + "Are you connected to the internet?"
+                    + "Is your configured repo valid?",
+                    information=f"Configured repository: {repo_url}",
+                    details=stacktrace,
+                )
+        else:
+            # Warn the user so they know to configure in settings
+            show_warning(
+                title="Invalid repository",
+                text="An invalid repository was detected!",
+                information="Please reconfigure a repository in settings!\n"
+                + "A valid repository is a repository URL which is not\n"
+                + 'empty and is prefixed with "http://" or "https://"',
+            )
+
+    def _do_force_update_existing_repo(self, repo_url: str) -> None:
+        """
+        Checks validity of configured git repo, as well as if it exists
+        Handles possible existing repo, and prompts (re)download of repo
+        Otherwise it just clones the repo and notifies user
+        """
+        if (
+            repo_url
+            and repo_url != ""
+            and repo_url.startswith("http://")
+            or repo_url.startswith("https://")
+        ):
+            # Calculate folder name from provided URL
+            repo_folder_name = os.path.split(repo_url)[1]
+            # Calculate path from generated folder name
+            repo_path = os.path.join(
+                self.game_configuration.storage_path, repo_folder_name
+            )
+            if os.path.exists(repo_path):  # If local repo does exists
+                # Clone the repo to storage path and notify user
+                logger.info(f"Force updating git repository at: {repo_path}")
+                try:
+                    # Open repo
+                    repo = Repo(repo_path)
+                    # Reset the repository to HEAD in case of changes not committed
+                    repo.head.reset(index=True, working_tree=True)
+                    # Perform a pull with rebase
+                    origin = repo.remotes.origin
+                    origin.pull(rebase=True)
+                    show_information(
+                        title="Repo force updated",
+                        text="The configured repository was updated!",
+                        information=f"{repo_path} ->\n "
+                        + f"{repo.head.commit.message}",
+                    )
+                except GitCommandError:
+                    stacktrace = traceback.format_exc()
+                    show_warning(
+                        title="Failed to update repo!",
+                        text="The configured repo failed to update!"
+                        + "Are you connected to the internet?"
+                        + "Is your configured repo valid?",
+                        information=f"Configured repository: {repo_url}",
+                        details=stacktrace,
+                    )
+            else:
+                answer = show_dialogue_conditional(
+                    title="Repository does not exist",
+                    text="Tried to update a git repository that does not exist!",
+                    information="Would you like to clone a new copy of this repository?",
+                )
+                if answer == "&Yes":
+                    self._do_clone_repo_to_storage_path(repo_url=repo_url)
+        else:
+            # Warn the user so they know to configure in settings
+            show_warning(
+                title="Invalid repository",
+                text="An invalid repository was detected!",
+                information="Please reconfigure a repository in settings!\n"
+                + "A valid repository is a repository URL which is not\n"
+                + 'empty and is prefixed with "http://" or "https://"',
+            )
+
+    def _do_upload_db_to_repo(self, repo_url: str, file_name: str) -> None:
+        """
+        Checks validity of configured git repo, as well as if it exists
+        Commits file & submits PR based on version tag found in DB
+        """
+        if (
+            repo_url
+            and repo_url != ""
+            and (repo_url.startswith("http://") or repo_url.startswith("https://"))
+        ):
+            # Calculate folder name from provided URL
+            repo_user_or_org = os.path.split(os.path.split(repo_url)[0])[1]
+            repo_folder_name = os.path.split(repo_url)[1]
+            # Calculate path from generated folder name
+            repo_path = os.path.join(
+                self.game_configuration.storage_path, repo_folder_name
+            )
+            if os.path.exists(repo_path):  # If local repo exists
+                # Update the file, commit + PR to repo
+                logger.info(
+                    f"Attempting to commit changes to {file_name} in git repository: {repo_path}"
+                )
+                try:
+                    # Specify the file path relative to the local repository
+                    file_full_path = os.path.join(repo_path, file_name)
+                    if os.path.exists(file_full_path):
+                        # Load JSON data
+                        with open(file_full_path, encoding="utf-8") as f:
+                            json_string = f.read()
+                            logger.debug(f"Reading info...")
+                            database = json.loads(json_string)
+                            logger.debug("Retrieved database...")
+                        database_version = (
+                            database["version"]
+                            - self.game_configuration.database_expiry
+                        )
+                        # Get the abbreviated timezone
+                        timezone_abbreviation = (
+                            datetime.datetime.now(datetime.timezone.utc)
+                            .astimezone()
+                            .tzinfo
+                        )
+                        database_version_human_readable = (
+                            strftime("%Y-%m-%d %H:%M:%S", localtime(database_version))
+                            + f" {timezone_abbreviation}"
+                        )
+                    else:
+                        show_warning(
+                            title="File does not exist",
+                            text="Please ensure the file exists and then try to upload again!",
+                            information=f"File not found:\n{file_full_path}\nRepository:\n{repo_url}",
+                        )
+                        return
+
+                    # Create a GitHub instance
+                    g = Github(
+                        self.game_configuration.github_username,
+                        self.game_configuration.github_token,
+                    )
+
+                    # Specify the repository
+                    repo = g.get_repo(f"{repo_user_or_org}/{repo_folder_name}")
+
+                    # Specify the branch names
+                    base_branch = "main"
+                    new_branch_name = f"{database_version}"
+
+                    # Specify commit message
+                    commit_message = f"DB Update: {database_version_human_readable}"
+
+                    # Specify the Pull Request fields
+                    pull_request_title = f"DB update {database_version}"
+                    pull_request_body = f"Steam Workshop {commit_message}"
+
+                    # Open repo
+                    local_repo = Repo(repo_path)
+
+                    # Create our new branch and checkout
+                    new_branch = local_repo.create_head(new_branch_name)
+                    local_repo.head.reference = new_branch
+
+                    # Add the file to the index on our new branch
+                    local_repo.index.add([file_full_path])
+
+                    # Commit changes to the new branch
+                    local_repo.index.commit(commit_message)
+                    try:
+                        # Push the changes to the remote repository and create a pull request from new_branch
+                        origin = local_repo.remote()
+                        origin.push(new_branch)
+                    except:
+                        stacktrace = traceback.format_exc()
+                        show_warning(
+                            title="Failed to push new branch to repo!",
+                            text=f"Failed to push a new branch {new_branch_name} to {repo_folder_name}! Try to see "
+                            + "if you can manually push + Pull Request. Otherwise, checkout main and try again!",
+                            information=f"Configured repository: {repo_url}",
+                            details=stacktrace,
+                        )
+                    try:
+                        # Create the pull request
+                        pull_request = repo.create_pull(
+                            title=pull_request_title,
+                            body=pull_request_body,
+                            base=base_branch,
+                            head=f"{repo_user_or_org}:{new_branch_name}",
+                        )
+                        pull_request_url = pull_request.html_url
+                    except:
+                        stacktrace = traceback.format_exc()
+                        show_warning(
+                            title="Failed to create pull request!",
+                            text=f"Failed to create a pull request for branch {base_branch} <- {new_branch_name}!\n"
+                            + "The branch should be pushed. Check on Github to see if you can manually"
+                            + " make a Pull Request there! Otherwise, checkout main and try again!",
+                            information=f"Configured repository: {repo_url}",
+                            details=stacktrace,
+                        )
+                    # Notify the pull request URL
+                    answer = show_dialogue_conditional(
+                        title="Pull request created",
+                        text="Successfully created pull request!",
+                        information="Do you want to try to open it in your web browser?\n\n"
+                        + f"URL: {pull_request_url}",
+                    )
+                    if answer == "&Yes":
+                        # Open the url in user's web browser
+                        open_url_browser(url=pull_request_url)
+                except:
+                    stacktrace = traceback.format_exc()
+                    show_warning(
+                        title="Failed to update repo!",
+                        text=f"The configured repo failed to update!\nFile name: {file_name}",
+                        information=f"Configured repository: {repo_url}",
+                        details=stacktrace,
+                    )
+            else:
+                answer = show_dialogue_conditional(
+                    title="Repository does not exist",
+                    text="Tried to update a git repository that does not exist!",
+                    information="Would you like to clone a new copy of this repository?",
+                )
+                if answer == "&Yes":
+                    self._do_clone_repo_to_storage_path(repo_url=repo_url)
+        else:
+            # Warn the user so they know to configure in settings
+            show_warning(
+                title="Invalid repository",
+                text="An invalid repository was detected!",
+                information="Please reconfigure a repository in settings!\n"
+                + 'A valid repository is a repository URL which is not empty and is prefixed with "http://" or "https://"',
+            )
+
+    def _do_configure_steam_db_file_path(self) -> None:
+        # Input file
+        logger.info("Opening file dialog to specify Steam DB")
+        input_path = QFileDialog.getSaveFileName(
+            caption="Choose Steam DB:",
+            dir=os.path.join(self.game_configuration.storage_path),
+            filter="JSON (*.json)",
+        )
+        logger.info(f"Selected path: {input_path[0]}")
+        if input_path[0] and os.path.exists(input_path[0]):
+            self.game_configuration.update_persistent_storage(
+                {"external_steam_metadata_file_path": input_path[0]}
+            )
+        else:
+            logger.warning("User cancelled selection!")
+            return
+
+    def _do_configure_community_rules_db_path(self) -> None:
+        # Input file
+        logger.info("Opening file dialog to specify Community Rules DB")
+        input_path = QFileDialog.getSaveFileName(
+            caption="Choose Community Rules DB:",
+            dir=os.path.join(self.game_configuration.storage_path),
+            filter="JSON (*.json)",
+        )
+        logger.info(f"Selected path: {input_path[0]}")
+        if input_path[0] and os.path.exists(input_path[0]):
+            self.game_configuration.update_persistent_storage(
+                {"external_community_rules_file_path": input_path[0]}
+            )
+        else:
+            logger.warning("User cancelled selection!")
+            return
+
+    def _do_configure_steam_database_repo(self) -> None:
+        """
+        Opens a QDialogInput that allows user to edit their Steam DB repo
+        This URL is used for Steam DB repo related actions.
+        """
+        args, ok = QInputDialog().getText(
+            None,
+            "Edit Steam DB repo",
+            "Enter URL (https://github.com/AccountName/RepositoryName):",
+            QLineEdit.Normal,
+            self.game_configuration.steam_db_repo,
+        )
+        if ok:
+            self.game_configuration.steam_db_repo = args
+            self.game_configuration.update_persistent_storage(
+                {"external_steam_metadata_repo": self.game_configuration.steam_db_repo}
+            )
+
+    def _do_configure_community_rules_db_repo(self) -> None:
+        """
+        Opens a QDialogInput that allows user to edit their Community Rules
+        DB repo. This URL is used for Steam DB repo related actions.
+        """
+        args, ok = QInputDialog().getText(
+            None,
+            "Edit Community Rules DB repo",
+            "Enter URL (https://github.com/AccountName/RepositoryName):",
+            QLineEdit.Normal,
+            self.game_configuration.community_rules_repo,
+        )
+        if ok:
+            self.game_configuration.community_rules_repo = args
+            self.game_configuration.update_persistent_storage(
+                {
+                    "external_community_rules_repo": self.game_configuration.community_rules_repo
+                }
+            )
 
     # DB BUILDER
 
@@ -1747,8 +2203,8 @@ class MainContent:
         """
         args, ok = QInputDialog().getText(
             None,
-            "Edit Steam apikey:",
-            "Enter your personal 32 character Steam apikey here:",
+            "Edit WebAPI key",
+            "Enter your personal 32 character Steam WebAPI key here:",
             QLineEdit.Normal,
             self.game_configuration.steam_apikey,
         )

@@ -15,8 +15,9 @@ from util.generic import launch_game_process
 
 from model.dialogue import show_warning
 
-print(f"steamworks.wrapper: {current_process()}")
-print(f"__name__: {__name__}\nsys.argv: {sys.argv}")
+# print(f"steamworks.wrapper: {current_process()}")
+# print(f"__name__: {__name__}\n")
+# print(f"sys.argv: {sys.argv}")
 
 
 class SteamworksInterface:
@@ -207,21 +208,19 @@ class SteamworksAppDependenciesQuery:
 
 
 class SteamworksGameLaunch(Process):
-    def __init__(self, instruction: list) -> None:
+    def __init__(self, game_executable: str, args: str) -> None:
         Process.__init__(self)
-        self.instruction = instruction
+        self.game_executable = game_executable
+        self.args = args
 
     def run(self) -> None:
         """
         Handle SW game launch; instructions received from connected signals
 
-        :param instruction: a list where:
-            instruction[0] is a string path to the game folder
-            instruction[1] is a string representing the args to pass to the generated executable path
+        :param game_executable: is a string path to the game folder
+        :param args: is a string representing the args to pass to the generated executable path
         """
-        logger.info(
-            f"Creating SteamworksInterface and launching game instruction {self.instruction}"
-        )
+        logger.info(f"Creating SteamworksInterface and launching game executable")
         steamworks_interface = SteamworksInterface(callbacks=False)
         if not steamworks_interface.steam_not_running:  # Skip if True
             while (
@@ -230,7 +229,9 @@ class SteamworksGameLaunch(Process):
                 break
             else:
                 # Launch the game
-                launch_game_process(self.instruction)
+                launch_game_process(
+                    game_executable=self.game_executable, args=self.args
+                )
                 # Unload Steamworks API
                 steamworks_interface.steamworks.unload()
 

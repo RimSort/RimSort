@@ -137,15 +137,16 @@ class Actions(QWidget):
             self.optimizeTexContextMenuEvent
         )
 
-        # STEAMCMD LABEL
-        self.steamcmd_label = QLabel("SteamCMD")
-        self.steamcmd_label.setObjectName("summaryValue")
-        self.steamcmd_label.setAlignment(Qt.AlignCenter)
+        # STEAM LABEL
+        self.steam_label = QLabel("Steam/SteamCMD")
+        self.steam_label.setObjectName("summaryValue")
+        self.steam_label.setAlignment(Qt.AlignCenter)
 
         # BROWSE WORKSHOP BUTTON
         self.browse_workshop_button = QPushButton("Browse workshop")
         self.browse_workshop_button.setToolTip(
-            "Download mods anonymously with SteamCMD\n" + "No Steam account required!"
+            "Download mods anonymously with SteamCMD, or subscribe with Steam!\n"
+            + "No Steam account required to use SteamCMD!"
         )
         self.browse_workshop_button.clicked.connect(
             partial(self.actions_signal.emit, "browse_workshop")
@@ -213,7 +214,7 @@ class Actions(QWidget):
         self.top_panel.addWidget(self.sort_button)
         self.middle_panel.addWidget(self.todds_label)
         self.middle_panel.addWidget(self.optimize_textures_button)
-        self.middle_panel.addWidget(self.steamcmd_label)
+        self.middle_panel.addWidget(self.steam_label)
         self.middle_panel.addWidget(self.browse_workshop_button)
         self.middle_panel.addWidget(self.setup_steamcmd_button)
         self.middle_panel.addWidget(self.show_steamcmd_status_button)

@@ -7,7 +7,6 @@ import sys
 from typing import Any, Dict, List, Optional, Tuple
 
 from model.dialogue import (
-    show_dialogue_conditional,
     show_fatal_error,
     show_information,
     show_warning,

@@ -232,6 +232,18 @@ class GameConfiguration(QObject):
         # RUN ARGUMENTS
         self.run_arguments = ""
 
+        # GITHUB IDENTITY
+        self.github_username = ""
+        self.github_token = ""
+
+        # DB FILE PATHS
+        self.steam_db_file_path = ""
+        self.community_rules_file_path = ""
+
+        # DB REPOS
+        self.steam_db_repo = ""
+        self.community_rules_repo = ""
+
         # STEAM APIKEY
         self.steam_apikey = ""
 
@@ -365,7 +377,7 @@ class GameConfiguration(QObject):
         if not game_folder_path or not config_folder_path:
             logger.warning("One or more paths not set, returning False")
             show_warning(
-                text="Essential Paths not set",
+                text="Essential Paths not set!",
                 information=(
                     "RimSort requires, at the minimum, for the game install folder and the "
                     "ModsConfig.xml folder paths to be set. Please set both these either manually "
@@ -416,6 +428,13 @@ class GameConfiguration(QObject):
             logger.info(f"Settings file [{settings_path}] does not exist")
             # Create a new empty settings.json file
             default_settings: dict[str, Any] = DEFAULT_SETTINGS
+            default_settings["external_steam_metadata_file_path"] = os.path.join(
+                self.storage_path, default_settings["external_steam_metadata_file_path"]
+            )
+            default_settings["external_community_rules_file_path"] = os.path.join(
+                self.storage_path,
+                default_settings["external_community_rules_file_path"],
+            )
             default_settings["steamcmd_install_path"] = self.storage_path
             json_object = json.dumps(default_settings, indent=4)
             logger.info(f"Writing default settings to: [{json_object}]")
@@ -487,10 +506,24 @@ class GameConfiguration(QObject):
                 )
 
             # metadata
+            if settings_data.get("external_steam_metadata_file_path"):
+                self.steam_db_file_path = settings_data[
+                    "external_steam_metadata_file_path"
+                ]
+            if settings_data.get("external_steam_metadata_repo"):
+                self.steam_db_repo = settings_data["external_steam_metadata_repo"]
             if settings_data.get("external_steam_metadata_source"):
                 self.settings_panel.external_steam_metadata_cb.setCurrentText(
                     settings_data["external_steam_metadata_source"]
                 )
+            if settings_data.get("external_community_rules_file_path"):
+                self.community_rules_file_path = settings_data[
+                    "external_community_rules_file_path"
+                ]
+            if settings_data.get("external_community_rules_repo"):
+                self.community_rules_repo = settings_data[
+                    "external_community_rules_repo"
+                ]
             if settings_data.get("external_community_rules_metadata_source"):
                 self.settings_panel.external_community_rules_metadata_cb.setCurrentText(
                     settings_data["external_community_rules_metadata_source"]
@@ -523,6 +556,12 @@ class GameConfiguration(QObject):
                 self.database_expiry = settings_data["database_expiry"]
             if settings_data.get("steam_apikey"):
                 self.steam_apikey = settings_data["steam_apikey"]
+
+            # github
+            if settings_data.get("github_username"):
+                self.github_username = settings_data["github_username"]
+            if settings_data.get("github_token"):
+                self.github_token = settings_data["github_token"]
 
             # steamcmd
             if settings_data.get("steamcmd_validate_downloads"):
