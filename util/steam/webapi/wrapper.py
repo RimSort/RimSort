@@ -479,7 +479,9 @@ class DynamicQuery(QObject):
         return query
 
 
-def ISteamRemoteStorage_GetCollectionDetails(publishedfileids: list) -> Dict[str, Any]:
+def ISteamRemoteStorage_GetCollectionDetails(
+    publishedfileids: list,
+) -> Optional[Dict[str, Any]]:
     """
     Given a list of Steam Workshopmod collection PublishedFileIds, return a dict of
     json data queried from Steam WebAPI, containing data to be parsed.
@@ -523,7 +525,7 @@ def ISteamRemoteStorage_GetCollectionDetails(publishedfileids: list) -> Dict[str
 
 def ISteamRemoteStorage_GetPublishedFileDetails(
     publishedfileids: list,
-) -> Dict[str, Any]:
+) -> Optional[Dict[str, Any]]:
     """
     Given a list of PublishedFileIds, return a dict of json data queried
     from Steam WebAPI, containing data to be parsed.
