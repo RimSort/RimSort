@@ -82,10 +82,10 @@ def handle_exception(exc_type, exc_value, exc_traceback):
         exc_info=(exc_type, exc_value, exc_traceback),
     )
     show_fatal_error(
-        title="uncaught exception",
-        text="Application crash! Sorry for the inconvenience",
-        information="If the crash repeat contact us on the github page by making a new issue",
-        details="".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+        title="RimSort crashed",
+        text="The RimSort application crashed! Sorry for the inconvenience!",
+        information="Please contact us on the Discord/Github to report the issue.",
+        details="".join(traceback.format_exception(exc_type, exc_value, exc_traceback)),
     )
     sys.exit()
 
