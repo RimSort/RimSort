@@ -1739,7 +1739,7 @@ class MainContent:
         if self.steam_browser:
             self.steam_browser.close()
         self.steamcmd_runner = RunnerPanel()
-        self.steamcmd_runner.Runner_Signal.connect(
+        self.steamcmd_runner.steamcmd_downloader_signal.connect(
             self._do_download_mods_with_steamcmd
         )
         self.steamcmd_runner.show()

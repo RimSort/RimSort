@@ -28,7 +28,9 @@ class RunnerPanel(QWidget):
     A generic, read-only panel that can be used to display output from something.
     It also has a built-in QProcess functionality.
     """
-    Runner_Signal = Signal(list)
+
+    steamcmd_downloader_signal = Signal(list)
+
     def __init__(self, todds_dry_run_support=False):
         super().__init__()
 
@@ -180,14 +182,32 @@ class RunnerPanel(QWidget):
                     logger.info("Writing to file")
                     outfile.write(self.text.toPlainText())
 
-    def execute(self, command: str, args: list, progress_bar=None, additional=None):
-        """"
-            Execute the given command in a new terminal like gui
+    def change_progress_bar_color(self, color: str):
+        default = """
+                    QProgressBar {
+                        text-align: center;
+                    }
+                """
+        color = "background: {};".format(color)
+        self.progress_bar.setStyleSheet(
+            default
+            + """
+                    QProgressBar::chunk {
+                        0000_TOREPLACE
+                    }
+                    """.replace(
+                "0000_TOREPLACE", color
+            )
+        )
 
-            command:str, path to .exe
-            args:list, argument for .exe
-            progress_bar:Optional int, value for the progress bar, -1 to not set value
-            additional:Optional, data to parse to the runner
+    def execute(self, command: str, args: list, progress_bar=None, additional=None):
+        """ "
+        Execute the given command in a new terminal like gui
+
+        command:str, path to .exe
+        args:list, argument for .exe
+        progress_bar:Optional int, value for the progress bar, -1 to not set value
+        additional:Optional, data to parse to the runner
         """
         logger.info("RunnerPanel subprocess initiating...")
         self.restart_process_button.show()
@@ -226,20 +246,20 @@ class RunnerPanel(QWidget):
 
         # Hardcoded steamcmd progress output support
         if (  # -------STEAM-------
-                self.process
-                and self.process.state() == QProcess.Running
-                and "steamcmd" in self.process.program()
+            self.process
+            and self.process.state() == QProcess.Running
+            and "steamcmd" in self.process.program()
         ):
             if (
-                    ("] Downloading update (" in line)
-                    or ("] Installing update" in line)
-                    or ("] Extracting package" in line)
+                ("] Downloading update (" in line)
+                or ("] Installing update" in line)
+                or ("] Extracting package" in line)
             ):
                 overwrite = True
             elif "Success. Downloaded item " in line:
                 self.progress_bar.setValue(self.progress_bar.value() + 1)
             elif "ERROR!" in line:
-                self._BAR_change_color("yellow")
+                self.change_progress_bar_color("yellow")
                 self.progress_bar.setValue(self.progress_bar.value() + 1)
                 tempdata = self.previousline.split("workshop_download_item 294100")[1]
                 self.steamcmd_failed_mods = self.steamcmd_failed_mods + [
@@ -249,21 +269,22 @@ class RunnerPanel(QWidget):
 
         # Hardcoded todds progress output support
         elif (  # -------TODDS-------
-                self.process
-                and self.process.state() == QProcess.Running
-                and "todds" in self.process.program()
+            self.process
+            and self.process.state() == QProcess.Running
+            and "todds" in self.process.program()
         ):
-
-            if line[1:10] == 'Progress:':
-                self.progress_bar.setValue(int(line[line.index(":") + 1:line.index("/")]))
-            if ("Progress: 1/" in line):
+            if line[1:10] == "Progress:":
+                self.progress_bar.setValue(
+                    int(line[line.index(":") + 1 : line.index("/")])
+                )
+            if "Progress: 1/" in line:
                 self.progress_bar.setRange(0, int(line.split("Progress: 1/")[1]))
             if "Progress: " in line:
                 overwrite = True
             elif (
-                    self.todds_dry_run_support  # TODO: REMOVE THIS
-                    # Hardcoded todds --dry-run support - we don't want the total time output until jose fixes
-                    and ("Total time: " in line)
+                self.todds_dry_run_support  # TODO: REMOVE THIS
+                # Hardcoded todds --dry-run support - we don't want the total time output until jose fixes
+                and ("Total time: " in line)
             ):
                 self.previousline = line
                 return
@@ -296,8 +317,8 @@ class RunnerPanel(QWidget):
                 self.message("Subprocess completed.")
                 if "steamcmd" in self.process.program():
                     if self.steamcmd_failed_mods != []:
-                        self._BAR_change_color("red")
-                        details = "Failed to connect, showing ids instated of name:"  # Default value
+                        self.change_progress_bar_color("red")
+                        details = "Failed to connect, showing ids instated of name: "  # Default value
                         GetPublishedFileDetails = (
                             ISteamRemoteStorage_GetPublishedFileDetails(
                                 self.steamcmd_failed_mods
@@ -311,41 +332,25 @@ class RunnerPanel(QWidget):
                                 details = details + i["title"] + "\n"
                         else:
                             for i in self.steamcmd_failed_mods:
-                                details = details+"\n"+i
+                                details = details + "\n" + i
 
                         if (
-                                show_dialogue_conditional(
-                                    title="SteamCMD downloader",
-                                    text="SteamCMD failed to download mod(s)! Retry ?",
-                                    information='Click "Show Details" to see the full report.',
-                                    details=details,
-                                )
-                                == "&Yes"
+                            show_dialogue_conditional(
+                                title="SteamCMD downloader",
+                                text="SteamCMD failed to download mod(s)!",
+                                information='Would you like to retry? Click "Show Details" to see the full report.',
+                                details=details,
+                            )
+                            == "&Yes"
                         ):
-                            self.Runner_Signal.emit(self.steamcmd_failed_mods)
+                            self.steamcmd_downloader_signal.emit(
+                                self.steamcmd_failed_mods
+                            )
                         else:
                             self.close()
                     else:
-                        self._BAR_change_color("green")
+                        self.change_progress_bar_color("green")
                 # ----END-STEAM----
                 # ----START-TODDS----
                 if "todds" in self.process_last_command:
-                    self._BAR_change_color("green")
-
-    def _BAR_change_color(self, color: str):
-        default = """
-                    QProgressBar {
-                        text-align: center;
-                    }
-                """
-        color = "background: {};".format(color)
-        self.progress_bar.setStyleSheet(
-            default
-            + """
-                    QProgressBar::chunk {
-                        0000_TOREPLACE
-                    }
-                    """.replace(
-                "0000_TOREPLACE", color
-            )
-        )
+                    self.change_progress_bar_color("green")

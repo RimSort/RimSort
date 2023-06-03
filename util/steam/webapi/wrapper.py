@@ -497,8 +497,14 @@ def ISteamRemoteStorage_GetCollectionDetails(publishedfileids: list) -> Dict[str
         count = publishedfileids.index(publishedfileid)
         data[f"publishedfileids[{count}]"] = publishedfileid
     # Make a request to the Steam Web API
-    request = requests_post(url, data=data)
-
+    try:
+        request = requests_post(url, data=data)
+    except ConnectionError:
+        stacktrace = traceback.format_exc()
+        logger.warning(
+            f"Unable to complete request! Are you connected to the internet?\n{stacktrace}"
+        )
+        return None
     # Check the response status code
     if request.status_code == 200:
         try:
@@ -539,14 +545,19 @@ def ISteamRemoteStorage_GetPublishedFileDetails(
     # Make a request to the Steam Web API
     try:
         request = requests_post(url, data=data)
-    except ConnectionError as e:
-        logger.warning(f"could not connect to the internet!, err: {e}")
+    except ConnectionError:
+        stacktrace = traceback.format_exc()
+        logger.warning(
+            f"Unable to complete request! Are you connected to the internet?\n{stacktrace}"
+        )
         return None
     # Check the response status code
     if request.status_code == 200:
         try:
             # Parse the JSON response
-            json_response = request.json() #lib crash when network interface is down, crashing the all prog. lib need to be patchs
+            json_response = (
+                request.json()
+            )  # lib crash when network interface is down, crashing the all prog. lib need to be patchs
             logger.debug(f"Received WebAPI response from query: {json_response}")
         except JSONDecodeError as e:
             logger.warning(f"Invalid JSON response: {e}")
