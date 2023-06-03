@@ -4,7 +4,7 @@ from logger_tt import logger
 from math import ceil
 from multiprocessing import cpu_count, Pool
 from requests import post as requests_post
-from requests.exceptions import HTTPError, JSONDecodeError
+from requests.exceptions import HTTPError, JSONDecodeError, ConnectionError
 import sys
 from time import time
 import traceback
@@ -537,8 +537,11 @@ def ISteamRemoteStorage_GetPublishedFileDetails(
         count = publishedfileids.index(publishedfileid)
         data[f"publishedfileids[{count}]"] = publishedfileid
     # Make a request to the Steam Web API
-    request = requests_post(url, data=data)
-
+    try:
+        request = requests_post(url, data=data)
+    except ConnectionError as e:
+        logger.warning(f"could not connect to the internet!, err: {e}")
+        return None
     # Check the response status code
     if request.status_code == 200:
         try:

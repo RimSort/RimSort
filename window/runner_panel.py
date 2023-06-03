@@ -7,7 +7,7 @@ from pathlib import Path
 from platform import system
 from re import compile
 
-from PySide6.QtCore import Qt, QEvent, QProcess
+from PySide6.QtCore import Qt, QEvent, QProcess, Signal
 from PySide6.QtGui import QFont, QIcon, QTextCursor
 from PySide6.QtWidgets import (
     QFileDialog,
@@ -28,7 +28,7 @@ class RunnerPanel(QWidget):
     A generic, read-only panel that can be used to display output from something.
     It also has a built-in QProcess functionality.
     """
-
+    Runner_Signal = Signal(list)
     def __init__(self, todds_dry_run_support=False):
         super().__init__()
 
@@ -297,69 +297,34 @@ class RunnerPanel(QWidget):
                 if "steamcmd" in self.process.program():
                     if self.steamcmd_failed_mods != []:
                         self._BAR_change_color("red")
-                        tempdata = "Failed to connect"  # Default value
+                        details = "Failed to connect, showing ids instated of name:"  # Default value
                         GetPublishedFileDetails = (
                             ISteamRemoteStorage_GetPublishedFileDetails(
                                 self.steamcmd_failed_mods
                             )
                         )
                         if GetPublishedFileDetails != None:
-                            tempdata = ""
+                            details = ""
                             for i in GetPublishedFileDetails["response"][
                                 "publishedfiledetails"
                             ]:
-                                tempdata = tempdata + i["title"] + "\n"
-                        if tempdata == "Failed to connect":
-                            show_warning(
-                                title="SteamCMD downloader",
-                                text="SteamCMD failed to download mod(s)! Please try to download these mods again!",
-                                information='Click "Show Details" to see the full report.',
-                                details=tempdata,
-                            )
+                                details = details + i["title"] + "\n"
                         else:
-                            if (
-                                    show_dialogue_conditional(
-                                        title="SteamCMD downloader",
-                                        text="SteamCMD failed to download mod(s)! Retry ?",
-                                        information='Click "Show Details" to see the full report.',
-                                        details=tempdata,
-                                    )
-                                    == "&Yes"
-                            ):
-                                with open(
-                                        os.path.join(
-                                            gettempdir(), "steamcmd_download_mods.txt"
-                                        ),
-                                        "r",
-                                ) as re:
-                                    steamcmd_mods_path = re.readline().split(
-                                        "force_install_dir"
-                                    )[1][1:]
-                                    print(steamcmd_mods_path)
-                                    script = [
-                                        f"force_install_dir {steamcmd_mods_path}",
-                                        "login anonymous",
-                                    ]
-                                    re.close()
+                            for i in self.steamcmd_failed_mods:
+                                details = details+"\n"+i
 
-                                for i in self.steamcmd_failed_mods:
-                                    script.append(f"workshop_download_item 294100 {i}")
-                                script.extend(["quit\n"])
-                                with open(
-                                        os.path.join(
-                                            gettempdir(), "steamcmd_download_mods.txt"
-                                        ),
-                                        "w",
-                                ) as wr:
-                                    wr.write("\n".join(script))
-
-                                self.execute(
-                                    self.process_last_command,
-                                    self.process_last_args,
-                                    len(self.steamcmd_failed_mods),
+                        if (
+                                show_dialogue_conditional(
+                                    title="SteamCMD downloader",
+                                    text="SteamCMD failed to download mod(s)! Retry ?",
+                                    information='Click "Show Details" to see the full report.',
+                                    details=details,
                                 )
-                            else:
-                                self.close()
+                                == "&Yes"
+                        ):
+                            self.Runner_Signal.emit(self.steamcmd_failed_mods)
+                        else:
+                            self.close()
                     else:
                         self._BAR_change_color("green")
                 # ----END-STEAM----
