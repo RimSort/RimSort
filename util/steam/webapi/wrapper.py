@@ -444,7 +444,7 @@ class DynamicQuery(QObject):
             # Create instances of SteamworksAppDependenciesQuery for each chunk
             queries = [
                 SteamworksAppDependenciesQuery(
-                    pfid_or_pfids=[eval(str_pfid) for str_pfid in chunk], interval=0.9
+                    pfid_or_pfids=[eval(str_pfid) for str_pfid in chunk], interval=1
                 )
                 for chunk in pfids_chunked
             ]

@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from PySide6.QtCore import Qt, QThread, Signal
 
 from model.dialogue import show_information, show_warning
-from util.constants import DB_BUILDER_EXCEPTIONS
+from util.constants import DB_BUILDER_EXCEPTIONS, RIMWORLD_DLC_METADATA
 from util.steam.steamfiles.wrapper import acf_to_dict
 from util.steam.webapi.wrapper import DynamicQuery
 from window.runner_panel import RunnerPanel
@@ -100,10 +100,13 @@ class SteamDatabaseBuilder(QThread):
                         self.db_builder_message_output_signal.emit(
                             f"\nInitializing DynamicQuery with configured Steam API key for {self.appid}...\n"
                         )
-                        (
-                            database,
-                            publishedfileids,
-                        ) = self._init_db_from_local_metadata()
+                        database = self._init_db_from_local_metadata()
+                        publishedfileids = []
+                        for publishedfileid, metadata in database["database"].items():
+                            if not metadata.get("appid"):  # If it's not an appid
+                                publishedfileids.append(
+                                    publishedfileid
+                                )  # Add it to our list
                         dynamic_query = DynamicQuery(
                             apikey=self.apikey,
                             appid=self.appid,
@@ -151,52 +154,73 @@ class SteamDatabaseBuilder(QThread):
                 f"SteamDatabaseBuilder ({self.mode}): Exiting..."
             )
 
-    def _init_db_from_local_metadata(self) -> Tuple[Dict[str, Any], list]:
-        local_metadata = {"version": 0, "database": {}}
-        publishedfileids = []
-        for v in self.mods.values():
-            if v.get("publishedfileid"):
-                pfid = v["publishedfileid"]
-                local_metadata["database"][pfid] = {
-                    "url": f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}",
+    def _init_db_from_local_metadata(self) -> Dict[str, Any]:
+        db_from_local_metadata = {
+            "version": 0,
+            "database": {
+                v["publishedfileid"]: {
+                    "url": f"https://steamcommunity.com/sharedfiles/filedetails/?id={v['publishedfileid']}",
                     "packageId": v.get("packageId"),
                     "name": v.get("name"),
                     "authors": v.get("author"),
                     "gameVersions": v["supportedVersions"].get("li"),
                 }
-                publishedfileids.append(pfid)
-                logger.debug(
-                    f"Populated local metadata for Steam pfid: [{v.get('packageId')} | {pfid}]"
-                )
-            elif v.get("steamAppId"):
-                steam_appid = v["steamAppId"]
-                local_metadata["database"][steam_appid] = {
+                for v in self.mods.values()
+                if v.get("publishedfileid")
+            },
+        }
+
+        db_from_local_metadata["database"].update(
+            {
+                v["steamAppId"]: {
                     "appid": True,
-                    "url": f"https://store.steampowered.com/app/{steam_appid}",
+                    "url": f"https://store.steampowered.com/app/{v['steamAppId']}",
                     "packageId": v.get("packageId"),
                     "name": v.get("name"),
                     "authors": v.get("author"),
                     "gameVersions": v.get("supportedVersions", {}).get("li"),
                     "dependencies": {},
                 }
-        return local_metadata, publishedfileids
+                for v in self.mods.values()
+                if v.get("steamAppId")
+            }
+        )
+        total = len(db_from_local_metadata["database"].keys())
+        self.db_builder_message_output_signal.emit(
+            f"Populated {total} items from locally found metadata into initial database for "
+            + f"{self.appid}..."
+        )
+        return db_from_local_metadata
 
     def _init_empty_db_from_publishedfileids(
         self, publishedfileids: list
     ) -> Dict[str, Any]:
-        self.db_builder_message_output_signal.emit(
-            f"Populating {str(len(publishedfileids))} empty keys into initial database for "
-            + f"{self.appid}..."
-        )
-        return {
-            "version": self.database_expiry,
+        database = {
+            "version": 0,
             "database": {
-                publishedfileid: {
-                    "url": f"https://steamcommunity.com/sharedfiles/filedetails/?id={publishedfileid}"
-                }
-                for publishedfileid in publishedfileids
+                **{
+                    appid: {
+                        "appid": True,
+                        "url": f"https://store.steampowered.com/app/{appid}",
+                        "packageId": metadata.get("packageId"),
+                        "name": metadata.get("name"),
+                    }
+                    for appid, metadata in RIMWORLD_DLC_METADATA.items()
+                },
+                **{
+                    publishedfileid: {
+                        "url": f"https://steamcommunity.com/sharedfiles/filedetails/?id={publishedfileid}"
+                    }
+                    for publishedfileid in publishedfileids
+                },
             },
         }
+        total = len(database["database"].keys())
+        self.db_builder_message_output_signal.emit(
+            f"Populated {total} items queried from Steam Workshop into initial database for "
+            + f"{self.appid}..."
+        )
+        return database
 
     def _output_database(self, database: Dict[str, Any]) -> None:
         # If user-configured `update` parameter, update old db with new query data recursively

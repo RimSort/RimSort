@@ -324,7 +324,6 @@ class RunnerPanel(QWidget):
         # -------QUERY-------
 
         # Overwrite support - set the overwrite bool to overwrite the last line instead of appending
-        logger.warning(overwrite)
         if overwrite:
             cursor = self.text.textCursor()
             cursor.movePosition(QTextCursor.End)
@@ -411,7 +410,7 @@ class RunnerPanel(QWidget):
                                 self.steamcmd_download_tracking
                             )
                         else:  # Otherwise do nothing
-                            logger.warning("User declined redownload of failed mods.")
+                            logger.warning("User declined re-download of failed mods.")
                     else:
                         self.change_progress_bar_color("green")
                 # -------STEAM-------
