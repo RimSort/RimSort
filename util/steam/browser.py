@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from model.dialogue import show_warning
 from model.image_label import ImageLabel
 from util.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetCollectionDetails,
@@ -52,7 +53,7 @@ class SteamBrowser(QWidget):
 
         # VARIABLES
         self.current_html = ""
-        self.current_title = "Steam Browser"
+        self.current_title = "RimSort - Steam Browser"
         self.current_url = startpage
 
         self.downloader_list_mods_tracking = []
@@ -90,7 +91,7 @@ class SteamBrowser(QWidget):
                 self.steamcmd_downloader_signal.emit, self.downloader_list_mods_tracking
             )
         )
-        self.download_steamworks_button = QPushButton("Download mod(s) (Steam)")
+        self.download_steamworks_button = QPushButton("Download mod(s) (Steam app)")
         self.download_steamworks_button.clicked.connect(
             partial(
                 self.steamworks_downloader_signal.emit,

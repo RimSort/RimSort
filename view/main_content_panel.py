@@ -913,6 +913,9 @@ class MainContent:
             )
             # Create query runner
             self.query_runner = RunnerPanel()
+            self.query_runner.setWindowTitle(
+                "RimSort - DB Builder PublishedFileIDs query"
+            )
             self.query_runner.show()
             # Connect message signal
             self.db_builder.db_builder_message_output_signal.connect(
@@ -1668,6 +1671,7 @@ class MainContent:
         self.todds_runner = RunnerPanel(
             todds_dry_run_support=self.game_configuration.todds_dry_run_toggle
         )
+        self.todds_runner.setWindowTitle("RimSort - todds texture encoder")
         self.todds_runner.show()
 
         todds_interface.execute_todds_cmd(todds_txt_path, self.todds_runner)
@@ -1682,6 +1686,7 @@ class MainContent:
         self.todds_runner = RunnerPanel(
             todds_dry_run_support=self.game_configuration.todds_dry_run_toggle
         )
+        self.todds_runner.setWindowTitle("RimSort - todds texture encoder")
         self.todds_runner.show()
 
         # Delete all .dds textures using todds
@@ -1716,6 +1721,7 @@ class MainContent:
             )
             return
         self.steamcmd_runner = RunnerPanel()
+        self.steamcmd_runner.setWindowTitle("RimSort - SteamCMD setup")
         self.steamcmd_runner.show()
         self.steamcmd_runner.message("Setting up steamcmd...")
         self.steamcmd_wrapper.setup_steamcmd(
@@ -1738,11 +1744,22 @@ class MainContent:
             return
         if self.steam_browser:
             self.steam_browser.close()
-        self.steamcmd_runner = RunnerPanel()
+        self.steamcmd_runner = RunnerPanel(
+            steamcmd_download_tracking=publishedfileids,
+            steam_db=self.external_steam_metadata,
+        )
+        self.steamcmd_runner.steamcmd_downloader_signal.connect(
+            self._do_download_mods_with_steamcmd
+        )
+        self.steamcmd_runner.setWindowTitle("RimSort - SteamCMD downloader")
         self.steamcmd_runner.show()
         self.steamcmd_runner.message(
-            f"Downloading the following list of mods with steamcmd:\n{publishedfileids}"
+            f"Downloading {len(publishedfileids)} mods with SteamCMD..."
         )
+        # Uncomment to print the pfids in the runner as well
+        # self.steamcmd_runner.message(
+        #     f"List of mods:\n{publishedfileids}"
+        # )
         self.steamcmd_wrapper.download_mods(
             "294100", publishedfileids, self.steamcmd_runner
         )
@@ -1786,6 +1803,7 @@ class MainContent:
             )
             return
         self.steamcmd_runner = RunnerPanel()
+        self.steamcmd_runner.setWindowTitle("RimSort - SteamCMD status")
         self.steamcmd_runner.show()
         self.steamcmd_runner.message("Showing steamcmd status...")
         self.steamcmd_wrapper.show_workshop_status("294100", self.steamcmd_runner)
@@ -2325,6 +2343,9 @@ class MainContent:
                 )
             # Create query runner
             self.query_runner = RunnerPanel()
+            self.query_runner.setWindowTitle(
+                f"RimSort - DB Builder ({self.game_configuration.db_builder_include})"
+            )
             self.query_runner.show()
             # Connect message signal
             self.db_builder.db_builder_message_output_signal.connect(

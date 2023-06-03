@@ -94,7 +94,6 @@ class SteamcmdInterface:
             runner.execute(
                 self.steamcmd,
                 [f"+runscript {script_path}"],
-                True,
                 len(publishedfileids),
             )
         else:

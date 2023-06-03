@@ -111,7 +111,7 @@ class ToddsInterface:
                 runner.message("Initiating todds...")
                 runner.message("Courtesy of joseasoler#1824")
                 runner.message(f"Using configured preset: {self.preset}\n\n")
-            runner.execute(todds_exe_path, args)
+            runner.execute(todds_exe_path, args, -1)
         else:
             runner.message(
                 "ERROR: todds was not found. If you are running from source, please ensure you have followed the correct steps in the Development Guide:\n"
