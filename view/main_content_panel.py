@@ -1,5 +1,8 @@
 import os
 import platform
+
+SYSTEM = platform.system()
+
 import subprocess
 import sys
 import datetime
@@ -18,7 +21,12 @@ from threading import Thread
 from time import localtime, sleep, strftime
 from typing import Any, Dict
 from zipfile import ZipFile
+import git
 
+if SYSTEM == "Windows":
+    git.refresh("git/" + SYSTEM + "/bin/git.exe")
+#else:
+#    git.refresh("git/" + SYSTEM + "/bin/git")
 from git import Repo
 from git.exc import GitCommandError
 from github import Github
@@ -39,7 +47,7 @@ from util.steam.webapi.wrapper import ISteamRemoteStorage_GetPublishedFileDetail
 from util.watchdog import RSFileSystemEventHandler
 
 # Watchdog conditionals
-SYSTEM = platform.system()
+
 if SYSTEM == "Darwin":
     from watchdog.observers import Observer
 
@@ -83,6 +91,7 @@ from view.game_configuration_panel import GameConfiguration
 from window.rule_editor_panel import RuleEditor
 from window.runner_panel import RunnerPanel
 
+
 # print(f"main_content_panel.py: {current_process()}")
 # print(f"__name__: {__name__}")
 # print(f"sys.argv: {sys.argv}")
@@ -98,7 +107,7 @@ class MainContent:
     """
 
     def __init__(
-        self, game_configuration: GameConfiguration, rimsort_version: str
+            self, game_configuration: GameConfiguration, rimsort_version: str
     ) -> None:
         """
         Initialize the main content panel.
@@ -391,7 +400,7 @@ class MainContent:
         )
 
     def __insert_data_into_lists(
-        self, active_mods: Dict[str, Any], inactive_mods: Dict[str, Any]
+            self, active_mods: Dict[str, Any], inactive_mods: Dict[str, Any]
     ) -> None:
         """
         Insert active mods and inactive mods into respective mod list widgets.
@@ -415,7 +424,7 @@ class MainContent:
                 f"Could not find data for the list of active mods: {missing_mods}"
             )
             if (  # User configuration
-                len(self.external_steam_metadata.keys()) > 0
+                    len(self.external_steam_metadata.keys()) > 0
             ):  # Do we even have metadata to lookup...?
                 # Generate a list of all missing mods + any missing mod dependencies listed
                 # in the user-configured Steam metadata.
@@ -452,8 +461,8 @@ class MainContent:
                 list_of_needed_dependencies = {}
                 list_of_missing_mods = ""
                 for (
-                    packageId_or_dependency_name,
-                    publishedfileid,
+                        packageId_or_dependency_name,
+                        publishedfileid,
                 ) in packageIds_to_pfids.items():
                     if not DEPENDENCY_TAG in packageId_or_dependency_name:
                         list_of_missing_mods += (
@@ -469,8 +478,8 @@ class MainContent:
                         "\n\nAdditional mod dependencies needed:\n\n"
                     )
                     for (
-                        dependency_name,
-                        publishedfileid,
+                            dependency_name,
+                            publishedfileid,
                     ) in list_of_needed_dependencies.items():
                         list_of_missing_mods += (
                             f"* {dependency_name} -> {publishedfileid}\n"
@@ -483,10 +492,10 @@ class MainContent:
                 answer = show_dialogue_conditional(
                     text="Could not find data for some mods!",
                     information=(
-                        "The following list of mods were set active in your mods list but "
-                        + "no data could be found for these mods in local/workshop mod paths. "
-                        + "\n\nAre your game configuration paths correctly?"
-                        + "\n\nHow would you like to try to re-download these mods?"
+                            "The following list of mods were set active in your mods list but "
+                            + "no data could be found for these mods in local/workshop mod paths. "
+                            + "\n\nAre your game configuration paths correctly?"
+                            + "\n\nHow would you like to try to re-download these mods?"
                     ),
                     details=list_of_missing_mods,
                     button_text_override=[
@@ -510,9 +519,9 @@ class MainContent:
                 show_information(
                     text="Could not find data for some mods!",
                     information=(
-                        "The following list of mods were set active in your mods list but "
-                        + "no data could be found for these mods in local/workshop mod paths. "
-                        + "\n\nAre your game configuration paths correctly?"
+                            "The following list of mods were set active in your mods list but "
+                            + "no data could be found for these mods in local/workshop mod paths. "
+                            + "\n\nAre your game configuration paths correctly?"
                     ),
                     details=list_of_missing_mods,
                 )
@@ -683,7 +692,7 @@ class MainContent:
                     path=os.path.join(self.game_configuration.community_rules_file_path)
                 )
             elif (
-                external_community_rules_metadata_source == "Configured git repository"
+                    external_community_rules_metadata_source == "Configured git repository"
             ):
                 self.external_community_rules = get_configured_community_rules_db(
                     path=os.path.join(
@@ -693,7 +702,7 @@ class MainContent:
                     )
                 )
             elif (
-                external_community_rules_metadata_source == "RimPy Mod Manager Database"
+                    external_community_rules_metadata_source == "RimPy Mod Manager Database"
             ):
                 # Get and cache RimPy Community Rules communityRules.json for ALL mods
                 self.external_community_rules = get_rpmmdb_community_rules_db(
@@ -706,7 +715,7 @@ class MainContent:
             if os.path.exists(self.game_configuration.user_rules_file_path):
                 logger.info("Loading userRules.json")
                 with open(
-                    self.game_configuration.user_rules_file_path, encoding="utf-8"
+                        self.game_configuration.user_rules_file_path, encoding="utf-8"
                 ) as f:
                     json_string = f.read()
                     self.internal_user_rules = json.loads(json_string)["rules"]
@@ -731,10 +740,10 @@ class MainContent:
         # If we parsed this data from Steam client appworkshop_294100.acf
         if self.appworkshop_acf_data_parsed:
             if (
-                self.game_configuration.steam_mods_update_check_toggle
+                    self.game_configuration.steam_mods_update_check_toggle
             ):  # ... and the user desires this information to be displayed
                 if (
-                    len(self.workshop_mods_potential_updates) > 0
+                        len(self.workshop_mods_potential_updates) > 0
                 ):  # ... and we have potential updates to show
                     logger.info(
                         "User preference is configured to check Steam mods for updates. Displaying potential updates..."
@@ -858,9 +867,9 @@ class MainContent:
             else:
                 with open(todds_txt_path, "a") as todds_txt_file:
                     for (
-                        json_data
+                            json_data
                     ) in (
-                        self.active_mods_panel.active_mods_list.get_list_items_by_dict().values()
+                            self.active_mods_panel.active_mods_list.get_list_items_by_dict().values()
                     ):
                         todds_txt_file.write(json_data["path"] + "\n")
             if action == "optimize_textures":
@@ -1061,7 +1070,7 @@ class MainContent:
                         f"Downloading & extracting RimSort release from: {browser_download_url}"
                     )
                     with ZipFile(
-                        BytesIO(requests_get(browser_download_url).content)
+                            BytesIO(requests_get(browser_download_url).content)
                     ) as zipobj:
                         zipobj.extractall(gettempdir())
                 except:
@@ -1070,8 +1079,8 @@ class MainContent:
                         title="Failed to download update",
                         text="Failed to download latest RimSort release!",
                         information=f"Did the file/url change? "
-                        + "Does your environment have access to the internet?\n"
-                        + f"URL: {browser_download_url}",
+                                    + "Does your environment have access to the internet?\n"
+                                    + f"URL: {browser_download_url}",
                         details=stacktrace,
                     )
 
@@ -1371,7 +1380,7 @@ class MainContent:
                     continue
                 else:  # Otherwise, proceed with adding the mod package_id
                     if (
-                        package_id in self.duplicate_mods.keys()
+                            package_id in self.duplicate_mods.keys()
                     ):  # Check if mod has duplicates
                         if mod_data["data_source"] == "workshop":
                             active_mods.append(package_id + "_steam")
@@ -1425,9 +1434,9 @@ class MainContent:
         logger.info(f"Collected {len(active_mods)} active mods for export")
         # Build our report
         active_mods_clipboard_report = (
-            f"Created with RimSort {self.rimsort_version}"
-            + f"\nRimWorld game version this list was created for: {self.game_version}"
-            + f"\nTotal # of mods: {len(active_mods)}\n"
+                f"Created with RimSort {self.rimsort_version}"
+                + f"\nRimWorld game version this list was created for: {self.game_version}"
+                + f"\nTotal # of mods: {len(active_mods)}\n"
         )
         for package_id in active_mods:
             uuid = active_mods_packageId_to_uuid[package_id]
@@ -1442,10 +1451,10 @@ class MainContent:
             else:
                 url = "No url specified"
             active_mods_clipboard_report = (
-                active_mods_clipboard_report
-                + f"\n{name} "
-                + f"[{package_id}]"
-                + f"[{url}]"
+                    active_mods_clipboard_report
+                    + f"\n{name} "
+                    + f"[{package_id}]"
+                    + f"[{url}]"
             )
         # Copy report to clipboard
         show_information(
@@ -1483,7 +1492,7 @@ class MainContent:
                 active_mods.append(package_id)
                 active_mods_packageId_to_uuid[package_id] = uuid
                 if mod_data["data_source"] == "workshop" and mod_data.get(
-                    "publishedfileid"
+                        "publishedfileid"
                 ):
                     publishedfileid = mod_data["publishedfileid"]
                     active_steam_mods_packageId_to_pfid[package_id] = publishedfileid
@@ -1507,11 +1516,11 @@ class MainContent:
                     ]
         # Build our report
         active_mods_rentry_report = (
-            f"# RimWorld mod list       ![](https://github.com/oceancabbage/RimSort/blob/main/rentry_preview.png?raw=true)"
-            + f"\nCreated with RimSort {self.rimsort_version}"
-            + f"\nMod list was created for game version: `{self.game_version}`"
-            + f"\n!!! info Local mods are marked as yellow labels with packageId in brackets."
-            + f"\n\n\n\n!!! note Mod list length: `{len(active_mods)}`\n"
+                f"# RimWorld mod list       ![](https://github.com/oceancabbage/RimSort/blob/main/rentry_preview.png?raw=true)"
+                + f"\nCreated with RimSort {self.rimsort_version}"
+                + f"\nMod list was created for game version: `{self.game_version}`"
+                + f"\n!!! info Local mods are marked as yellow labels with packageId in brackets."
+                + f"\n\n\n\n!!! note Mod list length: `{len(active_mods)}`\n"
         )
         # Add a line for each mod
         for package_id in active_mods:
@@ -1522,8 +1531,8 @@ class MainContent:
             else:
                 name = "No name specified"
             if (
-                active_mods_json[uuid]["data_source"] == "expansion"
-                or active_mods_json[uuid]["data_source"] == "local"
+                    active_mods_json[uuid]["data_source"] == "expansion"
+                    or active_mods_json[uuid]["data_source"] == "local"
             ):
                 if active_mods_json[uuid].get("url"):
                     url = active_mods_json[uuid]["url"]
@@ -1533,26 +1542,26 @@ class MainContent:
                     url = None
                 if url is None:
                     active_mods_rentry_report = (
-                        active_mods_rentry_report
-                        + f"\n!!! warning {str(count) + '.'} {name} "
-                        + "{"
-                        + f"packageId: {package_id}"
-                        + "} "
+                            active_mods_rentry_report
+                            + f"\n!!! warning {str(count) + '.'} {name} "
+                            + "{"
+                            + f"packageId: {package_id}"
+                            + "} "
                     )
                 else:
                     active_mods_rentry_report = (
-                        active_mods_rentry_report
-                        + f"\n!!! warning {str(count) + '.'} [{name}]({url}) "
-                        + "{"
-                        + f"packageId: {package_id}"
-                        + "} "
+                            active_mods_rentry_report
+                            + f"\n!!! warning {str(count) + '.'} [{name}]({url}) "
+                            + "{"
+                            + f"packageId: {package_id}"
+                            + "} "
                     )
             elif active_mods_json[uuid]["data_source"] == "workshop":
                 pfid = active_steam_mods_packageId_to_pfid[package_id]
                 if active_steam_mods_pfid_to_preview_url.get(pfid):
                     preview_url = (
-                        active_steam_mods_pfid_to_preview_url[pfid]
-                        + "?imw=100&imh=100&impolicy=Letterbox"
+                            active_steam_mods_pfid_to_preview_url[pfid]
+                            + "?imw=100&imh=100&impolicy=Letterbox"
                     )
                 else:
                     preview_url = "https://github.com/oceancabbage/RimSort/blob/main/rentry_steam_icon.png?raw=true"
@@ -1565,22 +1574,22 @@ class MainContent:
                 if url is None:
                     if package_id in active_steam_mods_packageId_to_pfid.keys():
                         active_mods_rentry_report = (
-                            active_mods_rentry_report
-                            + f"\n{str(count) + '.'} ![]({preview_url}) {name} packageId: {package_id}"
+                                active_mods_rentry_report
+                                + f"\n{str(count) + '.'} ![]({preview_url}) {name} packageId: {package_id}"
                         )
                 else:
                     if package_id in active_steam_mods_packageId_to_pfid.keys():
                         active_mods_rentry_report = (
-                            active_mods_rentry_report
-                            + f"\n{str(count) + '.'} ![]({preview_url}) [{name}]({url} packageId: {package_id})"
+                                active_mods_rentry_report
+                                + f"\n{str(count) + '.'} ![]({preview_url}) [{name}]({url} packageId: {package_id})"
                         )
 
         # Upload the report to Rentry.co
         rentry_uploader = RentryUpload(active_mods_rentry_report)
         if (
-            rentry_uploader.upload_success
-            and rentry_uploader.url != None
-            and "https://rentry.co/" in rentry_uploader.url
+                rentry_uploader.upload_success
+                and rentry_uploader.url != None
+                and "https://rentry.co/" in rentry_uploader.url
         ):
             copy_to_clipboard(rentry_uploader.url)
             show_information(
@@ -1610,7 +1619,7 @@ class MainContent:
                 continue
             else:  # Otherwise, proceed with adding the mod package_id
                 if (
-                    package_id in self.duplicate_mods.keys()
+                        package_id in self.duplicate_mods.keys()
                 ):  # Check if mod has duplicates
                     if mod_data["data_source"] == "workshop":
                         active_mods.append(package_id + "_steam")
@@ -1660,8 +1669,9 @@ class MainContent:
     def _do_save_animation(self) -> None:
         logger.debug("Active mods list updated")
         if (
-            self.active_mods_panel.list_updated  # This will only evaluate True if this is initialization, or _do_refresh()
-            and not self.actions_panel.save_button_flashing_animation.isActive()  # No need to reenable if it's already blinking
+                self.active_mods_panel.list_updated  # This will only evaluate True if this is initialization, or _do_refresh()
+                and not self.actions_panel.save_button_flashing_animation.isActive()
+                # No need to reenable if it's already blinking
         ):
             logger.debug("Starting save button animation")
             self.actions_panel.save_button_flashing_animation.start(
@@ -1758,16 +1768,16 @@ class MainContent:
 
     def _do_setup_steamcmd(self):
         if (
-            self.steamcmd_runner
-            and self.steamcmd_runner.process
-            and self.steamcmd_runner.process.state() == QProcess.Running
+                self.steamcmd_runner
+                and self.steamcmd_runner.process
+                and self.steamcmd_runner.process.state() == QProcess.Running
         ):
             show_warning(
                 title="RimSort",
                 text="Unable to create SteamCMD runner!",
                 information="There is an active process already running!",
                 details=f"PID {self.steamcmd_runner.process.processId()} : "
-                + self.steamcmd_runner.process.program(),
+                        + self.steamcmd_runner.process.program(),
             )
             return
         self.steamcmd_runner = RunnerPanel()
@@ -1780,16 +1790,16 @@ class MainContent:
 
     def _do_download_mods_with_steamcmd(self, publishedfileids: list):
         if (
-            self.steamcmd_runner
-            and self.steamcmd_runner.process
-            and self.steamcmd_runner.process.state() == QProcess.Running
+                self.steamcmd_runner
+                and self.steamcmd_runner.process
+                and self.steamcmd_runner.process.state() == QProcess.Running
         ):
             show_warning(
                 title="RimSort",
                 text="Unable to create SteamCMD runner!",
                 information="There is an active process already running!",
                 details=f"PID {self.steamcmd_runner.process.processId()} : "
-                + self.steamcmd_runner.process.program(),
+                        + self.steamcmd_runner.process.program(),
             )
             return
         if self.steam_browser:
@@ -1840,16 +1850,16 @@ class MainContent:
 
     def _do_show_steamcmd_status(self):
         if (
-            self.steamcmd_runner
-            and self.steamcmd_runner.process
-            and self.steamcmd_runner.process.state() == QProcess.Running
+                self.steamcmd_runner
+                and self.steamcmd_runner.process
+                and self.steamcmd_runner.process.state() == QProcess.Running
         ):
             show_warning(
                 title="RimSort",
                 text="Unable to create SteamCMD runner!",
                 information="There is an active process already running!",
                 details=f"PID {self.steamcmd_runner.process.processId()} : "
-                + self.steamcmd_runner.process.program(),
+                        + self.steamcmd_runner.process.program(),
             )
             return
         self.steamcmd_runner = RunnerPanel()
@@ -1885,7 +1895,7 @@ class MainContent:
             supported_actions = ["launch_game_process"]
             supported_actions.extend(subscription_actions)
             if (
-                instruction[0] in supported_actions
+                    instruction[0] in supported_actions
             ):  # Actions can be added as functions are implemented in util.steam.steamworks.wrapper
                 if instruction[0] == "launch_game_process":  # SW API init + game launch
                     self.steamworks_in_use = True
@@ -1903,7 +1913,7 @@ class MainContent:
                     )
                     self.steamworks_in_use = False
                 elif (
-                    instruction[0] in subscription_actions
+                        instruction[0] in subscription_actions
                 ):  # ISteamUGC/{SubscribeItem/UnsubscribeItem}
                     logger.info(
                         f"Creating Steamworks API process with instruction {instruction}"
@@ -1988,10 +1998,10 @@ class MainContent:
         Otherwise it just clones the repo and notifies user
         """
         if (
-            repo_url
-            and repo_url != ""
-            and repo_url.startswith("http://")
-            or repo_url.startswith("https://")
+                repo_url
+                and repo_url != ""
+                and repo_url.startswith("http://")
+                or repo_url.startswith("https://")
         ):
             # Calculate folder name from provided URL
             repo_folder_name = os.path.split(repo_url)[1]
@@ -2007,10 +2017,10 @@ class MainContent:
                     title="Existing repository found",
                     text="An existing local repo that matches this repository was found:",
                     information=(
-                        f"{repo_path}\n\n"
-                        + "How would you like to handle? Choose option:\n"
-                        + "\n1) Clone new repository (deletes existing and replaces)"
-                        + "\n2) Update existing repository (in-place force-update)"
+                            f"{repo_path}\n\n"
+                            + "How would you like to handle? Choose option:\n"
+                            + "\n1) Clone new repository (deletes existing and replaces)"
+                            + "\n2) Update existing repository (in-place force-update)"
                     ),
                     button_text_override=[
                         "Clone new",
@@ -2042,8 +2052,8 @@ class MainContent:
                 show_warning(
                     title="Failed to clone repo!",
                     text="The configured repo failed to clone!"
-                    + "Are you connected to the internet?"
-                    + "Is your configured repo valid?",
+                         + "Are you connected to the internet?"
+                         + "Is your configured repo valid?",
                     information=f"Configured repository: {repo_url}",
                     details=stacktrace,
                 )
@@ -2053,8 +2063,8 @@ class MainContent:
                 title="Invalid repository",
                 text="An invalid repository was detected!",
                 information="Please reconfigure a repository in settings!\n"
-                + "A valid repository is a repository URL which is not\n"
-                + 'empty and is prefixed with "http://" or "https://"',
+                            + "A valid repository is a repository URL which is not\n"
+                            + 'empty and is prefixed with "http://" or "https://"',
             )
 
     def _do_force_update_existing_repo(self, repo_url: str) -> None:
@@ -2064,10 +2074,10 @@ class MainContent:
         Otherwise it just clones the repo and notifies user
         """
         if (
-            repo_url
-            and repo_url != ""
-            and repo_url.startswith("http://")
-            or repo_url.startswith("https://")
+                repo_url
+                and repo_url != ""
+                and repo_url.startswith("http://")
+                or repo_url.startswith("https://")
         ):
             # Calculate folder name from provided URL
             repo_folder_name = os.path.split(repo_url)[1]
@@ -2092,15 +2102,15 @@ class MainContent:
                         title="Repo force updated",
                         text="The configured repository was updated!",
                         information=f"{repo_path} ->\n "
-                        + f"{repo.head.commit.message}",
+                                    + f"{repo.head.commit.message}",
                     )
                 except GitCommandError:
                     stacktrace = traceback.format_exc()
                     show_warning(
                         title="Failed to update repo!",
                         text="The configured repo failed to update!"
-                        + "Are you connected to the internet?"
-                        + "Is your configured repo valid?",
+                             + "Are you connected to the internet?"
+                             + "Is your configured repo valid?",
                         information=f"Configured repository: {repo_url}",
                         details=stacktrace,
                     )
@@ -2118,8 +2128,8 @@ class MainContent:
                 title="Invalid repository",
                 text="An invalid repository was detected!",
                 information="Please reconfigure a repository in settings!\n"
-                + "A valid repository is a repository URL which is not\n"
-                + 'empty and is prefixed with "http://" or "https://"',
+                            + "A valid repository is a repository URL which is not\n"
+                            + 'empty and is prefixed with "http://" or "https://"',
             )
 
     def _do_upload_db_to_repo(self, repo_url: str, file_name: str) -> None:
@@ -2128,9 +2138,9 @@ class MainContent:
         Commits file & submits PR based on version tag found in DB
         """
         if (
-            repo_url
-            and repo_url != ""
-            and (repo_url.startswith("http://") or repo_url.startswith("https://"))
+                repo_url
+                and repo_url != ""
+                and (repo_url.startswith("http://") or repo_url.startswith("https://"))
         ):
             # Calculate folder name from provided URL
             repo_user_or_org = os.path.split(os.path.split(repo_url)[0])[1]
@@ -2157,8 +2167,8 @@ class MainContent:
                             database = json.loads(json_string)
                             logger.debug("Retrieved database...")
                         database_version = (
-                            database["version"]
-                            - self.game_configuration.database_expiry
+                                database["version"]
+                                - self.game_configuration.database_expiry
                         )
                         # Get the abbreviated timezone
                         timezone_abbreviation = (
@@ -2167,8 +2177,8 @@ class MainContent:
                             .tzinfo
                         )
                         database_version_human_readable = (
-                            strftime("%Y-%m-%d %H:%M:%S", localtime(database_version))
-                            + f" {timezone_abbreviation}"
+                                strftime("%Y-%m-%d %H:%M:%S", localtime(database_version))
+                                + f" {timezone_abbreviation}"
                         )
                     else:
                         show_warning(
@@ -2219,7 +2229,7 @@ class MainContent:
                         show_warning(
                             title="Failed to push new branch to repo!",
                             text=f"Failed to push a new branch {new_branch_name} to {repo_folder_name}! Try to see "
-                            + "if you can manually push + Pull Request. Otherwise, checkout main and try again!",
+                                 + "if you can manually push + Pull Request. Otherwise, checkout main and try again!",
                             information=f"Configured repository: {repo_url}",
                             details=stacktrace,
                         )
@@ -2237,8 +2247,8 @@ class MainContent:
                         show_warning(
                             title="Failed to create pull request!",
                             text=f"Failed to create a pull request for branch {base_branch} <- {new_branch_name}!\n"
-                            + "The branch should be pushed. Check on Github to see if you can manually"
-                            + " make a Pull Request there! Otherwise, checkout main and try again!",
+                                 + "The branch should be pushed. Check on Github to see if you can manually"
+                                 + " make a Pull Request there! Otherwise, checkout main and try again!",
                             information=f"Configured repository: {repo_url}",
                             details=stacktrace,
                         )
@@ -2247,7 +2257,7 @@ class MainContent:
                         title="Pull request created",
                         text="Successfully created pull request!",
                         information="Do you want to try to open it in your web browser?\n\n"
-                        + f"URL: {pull_request_url}",
+                                    + f"URL: {pull_request_url}",
                     )
                     if answer == "&Yes":
                         # Open the url in user's web browser
@@ -2274,11 +2284,11 @@ class MainContent:
                 title="Invalid repository",
                 text="An invalid repository was detected!",
                 information="Please reconfigure a repository in settings!\n"
-                + 'A valid repository is a repository URL which is not empty and is prefixed with "http://" or "https://"',
+                            + 'A valid repository is a repository URL which is not empty and is prefixed with "http://" or "https://"',
             )
 
     def _do_open_rule_editor(
-        self, compact: bool, initial_mode=str, packageid=None
+            self, compact: bool, initial_mode=str, packageid=None
     ) -> None:
         if self.game_configuration.settings_panel.isVisible():
             self.game_configuration.settings_panel.close()  # Close this if we came from game configuration
@@ -2466,9 +2476,9 @@ class MainContent:
             title="Steam DB Builder",
             text="This operation will compare 2 databases, A & B, by checking dependencies from A with dependencies from B.",
             information="- This will produce an accurate comparison of depedency data between 2 Steam DBs.\n"
-            + "A report of discrepancies is generated. You will be prompted for these paths in order:\n"
-            + "\n\t1) Select input A"
-            + "\n\t2) Select input B",
+                        + "A report of discrepancies is generated. You will be prompted for these paths in order:\n"
+                        + "\n\t1) Select input A"
+                        + "\n\t2) Select input B",
         )
         # Input A
         logger.info("Opening file dialog to specify input file A")
@@ -2521,12 +2531,12 @@ class MainContent:
         database_a_total_deps = len(database_a_deps)
         database_b_total_deps = len(database_b_deps)
         report = (
-            "\nSteam DB comparison report:\n"
-            + f"\nTotal # of deps from database A:\n"
-            + f"{database_a_total_deps}"
-            + f"\nTotal # of deps from database B:\n"
-            + f"{database_b_total_deps}"
-            + f"\nTotal # of discrepancies:\n{len(discrepancies)}"
+                "\nSteam DB comparison report:\n"
+                + f"\nTotal # of deps from database A:\n"
+                + f"{database_a_total_deps}"
+                + f"\nTotal # of deps from database B:\n"
+                + f"{database_b_total_deps}"
+                + f"\nTotal # of discrepancies:\n{len(discrepancies)}"
         )
         comparison_skipped = []
         for k, v in database_b_deps.items():
@@ -2573,13 +2583,13 @@ class MainContent:
             title="Steam DB Builder",
             text="This operation will merge 2 databases, A & B, by recursively updating A with B, barring exceptions.",
             information="- This will effectively recursively overwrite A's key/value with B's key/value to the resultant database.\n"
-            + "- Exceptions will not be recursively updated. Instead, they will be overwritten with B's key entirely.\n"
-            + "- The following exceptions will be made:\n"
-            + f"\n\t{DB_BUILDER_EXCEPTIONS}\n\n"
-            + "The resultant database, C, is saved to a user-specified path. You will be prompted for these paths in order:\n"
-            + "\n\t1) Select input A (db to-be-updated)"
-            + "\n\t2) Select input B (update source)"
-            + "\n\t3) Select output C (resultant db)",
+                        + "- Exceptions will not be recursively updated. Instead, they will be overwritten with B's key entirely.\n"
+                        + "- The following exceptions will be made:\n"
+                        + f"\n\t{DB_BUILDER_EXCEPTIONS}\n\n"
+                        + "The resultant database, C, is saved to a user-specified path. You will be prompted for these paths in order:\n"
+                        + "\n\t1) Select input A (db to-be-updated)"
+                        + "\n\t2) Select input B (update source)"
+                        + "\n\t3) Select output C (resultant db)",
         )
         # Input A
         logger.info("Opening file dialog to specify input file A")
