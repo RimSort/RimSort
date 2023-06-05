@@ -1,6 +1,6 @@
 #! /bin/sh
 #
-# Copyright (C) 1995-1998, 2000-2016 Free Software Foundation, Inc.
+# Copyright (C) 1995-1998, 2000-2020 Free Software Foundation, Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,7 +13,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
 # This file is meant for authors or maintainers which want to
@@ -22,8 +22,8 @@
 
 progname=$0
 package=gettext-tools
-version=0.19.8.1
-archive_version=0.19.8
+version=0.21
+archive_version=0.21
 
 # Set variables
 # - gettext_datadir     directory where the data files are stored.
@@ -192,13 +192,13 @@ Options:
       --help           print this help and exit
       --version        print version information and exit
   -f, --force          force writing of new files even if old exist
-      --intl           install libintl in a subdirectory (deprecated)
       --po-dir=DIR     specify directory with PO files
       --no-changelog   don't update or create ChangeLog files
       --symlink        make symbolic links instead of copying files
   -n, --dry-run        print modifications but don't perform them
 
-Report bugs to <bug-gnu-gettext@gnu.org>."
+Report bugs in the bug tracker at <https://savannah.gnu.org/projects/gettext>
+or by email to <bug-gettext@gnu.org>."
 }
 
 # func_version
@@ -206,8 +206,8 @@ Report bugs to <bug-gnu-gettext@gnu.org>."
 func_version ()
 {
   echo "$progname (GNU $package) $version"
-  echo "Copyright (C) 1995-1998, 2000-2013 Free Software Foundation, Inc.
-License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+  echo "Copyright (C) 1995-2020 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>
 This is free software: you are free to change and redistribute it.
 There is NO WARRANTY, to the extent permitted by law."
   echo "Written by" "Ulrich Drepper"
@@ -299,8 +299,21 @@ unset CLICOLOR_FORCE GREP_OPTIONS
 
 # Warn about deprecated options.
 if test -n "$intldir"; then
-  echo "gettextize: warning: the option '--intl' is deprecated and will be removed" 1>&2
+  func_fatal_error "The option '--intl' is no longer available."
 fi
+
+# Require automake 1.9 or newer.
+have_automake19=
+if (aclocal --version) >/dev/null 2>/dev/null; then
+  aclocal_version=`aclocal --version | sed -n -e 1p | sed -e 's/^[^0-9]*//'`
+  case $aclocal_version in
+    1.9* | 1.[1-9][0-9]* | [2-9]*) have_automake19=yes ;;
+  esac
+fi
+if test -z "$have_automake19"; then
+  func_fatal_error "You need the 'aclocal' program from automake 1.9 or newer."
+fi
+min_automake_version=1.9
 
 # Command-line argument processing.
 # Analyzes the remaining arguments.
@@ -613,10 +626,7 @@ func_m4ChangeLog_finish ()
 }
 using_m4ChangeLog=yes
 
-if test ! -f "$srcdir/intl/Makefile.in" && test -n "$intldir"; then
-  added_acoutput="$added_acoutput intl/Makefile"
-fi
-if test -f "$srcdir/intl/Makefile.in" && test -z "$intldir"; then
+if test -f "$srcdir/intl/Makefile.in"; then
   removed_acoutput="$removed_acoutput intl/Makefile"
 fi
 if test -d "$srcdir/intl"; then
@@ -633,19 +643,7 @@ if test -d "$srcdir/intl"; then
   else
     echo "Wipe out intl/ subdirectory"
   fi
-  if test -z "$intldir"; then
-    removed_directory=intl
-  fi
-else
-  if test -n "$intldir"; then
-    if $doit; then
-      echo "Creating intl/ subdirectory"
-      mkdir "$srcdir/intl" || func_fatal_error "failed to create intl/ subdirectory"
-    else
-      echo "Create intl/ subdirectory"
-    fi
-    added_directories="$added_directories intl"
-  fi
+  removed_directory=intl
 fi
 
 $do_changelog && func_ChangeLog_init
@@ -681,54 +679,36 @@ for file in *; do
       func_linkorcopy $file "$gettext_datadir/$file" $file
       ;;
     config.rpath)
-      if test -f "$srcdir/$auxdir$file"; then
-        :
-      else
-        added_extradist="$added_extradist $auxdir$file"
-      fi
       func_linkorcopy $file "$gettext_datadir/$file" "$auxdir$file"
       ;;
   esac
 done
 
-# Copy files to intl/ subdirectory.
-if test -n "$intldir"; then
-  cd intl
-  for file in *; do
-    if test $file != COPYING.LIB-2.0 && test $file != COPYING.LIB-2.1; then
-      if test $file != plural.c; then
-        func_linkorcopy $file "$gettext_datadir/intl/$file" intl/$file
-      else
-        # plural.c is a generated file; it must be copied and touched.
-        func_copy $file intl/$file
-        if $doit; then
-          (sleep 2; touch "$srcdir/intl/$file") &
-        fi
-      fi
-    fi
-  done
-  cd ..
-else
-  echo "Not copying intl/ directory."
-  # Tell the user what to put into configure.ac, if it is not already there.
-  external=
-  # Need to use func_trace_sed instead of $func_trace, since
-  # AM_GNU_GETTEXT is not a standard Autoconf trace.
-  xargs=`func_trace_sed AM_GNU_GETTEXT "$srcdir/$configure_in"`
-  save_IFS="$IFS"; IFS=:
-  for arg in $xargs; do
-    if test 'external' = "$arg"; then
-      external=yes
-      break
-    fi
-  done
-  IFS="$save_IFS"
-  if test -z "$external"; then
-    please="$please
+# Tell the user what to put into configure.ac, if it is not already there.
+external=
+# Need to use func_trace_sed instead of $func_trace, since
+# AM_GNU_GETTEXT is not a standard Autoconf trace.
+xargs=`func_trace_sed AM_GNU_GETTEXT "$srcdir/$configure_in"`
+save_IFS="$IFS"; IFS=:
+for arg in $xargs; do
+  if test 'external' = "$arg"; then
+    external=yes
+    break
+  fi
+done
+IFS="$save_IFS"
+if test -z "$external"; then
+  please="$please
 Please use AM_GNU_GETTEXT([external]) in order to cause autoconfiguration
 to look for an external libintl.
 "
-  fi
+fi
+
+# Tell the user to remove invocations of macros that no longer exist.
+if sed -e 's,#.*$,,; s,^dnl .*$,,; s, dnl .*$,,' "$srcdir/$configure_in" | grep AM_GNU_GETTEXT_INTL_SUBDIR >/dev/null; then
+  please="$please
+Please remove the invocation of AM_GNU_GETTEXT_INTL_SUBDIR.
+"
 fi
 
 # Copy files to po/ subdirectory.
@@ -763,7 +743,7 @@ for podir in $podirs; do
         func_linkorcopy Makevars.template "$gettext_datadir/po/Makevars.template" "$podir/Makevars.template"
         if test -f "$srcdir/po/Makevars"; then
           LC_ALL=C sed -n -e 's/[ 	]*\([A-Za-z0-9_]*\)[ 	]*=.*/\1/p' < "$srcdir/$podir/Makevars" | LC_ALL=C sort > "$srcdir/$podir/Makevars.tmp1"
-          LC_ALL=C sed -n -e 's/[ 	]*\([A-Za-z0-9_]*\)[ 	]*=.*/\1/p' < "$srcdir/$podir/Makevars.template" | LC_ALL=C sort > "$srcdir/$podir/Makevars.tmp2"
+          LC_ALL=C sed -n -e 's/[ 	]*\([A-Za-z0-9_]*\)[ 	]*=.*/\1/p' < "$gettext_datadir/po/Makevars.template" | LC_ALL=C sort > "$srcdir/$podir/Makevars.tmp2"
           missingvars=`LC_ALL=C comm -13 "$srcdir/$podir/Makevars.tmp1" "$srcdir/$podir/Makevars.tmp2"`
           rm -f "$srcdir/$podir/Makevars.tmp1" "$srcdir/$podir/Makevars.tmp2"
           if test -n "$missingvars"; then
@@ -822,29 +802,14 @@ Please fill $podir/POTFILES.in as described in the documentation.
   $do_changelog && func_poChangeLog_finish
 done
 
-# Determine whether we can assume automake 1.9 or newer.
-have_automake19=
-if (aclocal --version) >/dev/null 2>/dev/null; then
-  aclocal_version=`aclocal --version | sed -n -e 1p | sed -e 's/^[^0-9]*//'`
-  case $aclocal_version in
-    1.9* | 1.[1-9][0-9]* | [2-9]*) have_automake19=yes ;;
-  esac
-fi
-
-m4filelist='gettext.m4 iconv.m4 lib-ld.m4 lib-link.m4 lib-prefix.m4 nls.m4
- po.m4 progtest.m4'
-# With aclocal versions < 1.9 we need all m4 files, otherwise "aclocal -I m4"
-# might give an error. (aclocal < 1.9 didn't know which macros are really
-# needed, it looked which macros are potentially needed.)
-min_automake_version=1.9
-if test -n "$intldir" || test -z "$have_automake19"; then
-  # Add intldir.m4, intl.m4 and its dependencies.
-  m4filelist=$m4filelist' codeset.m4 fcntl-o.m4 glibc2.m4 glibc21.m4 intdiv0.m4
-   intl.m4 intldir.m4 intlmacosx.m4 intmax.m4 inttypes_h.m4 inttypes-pri.m4
-   lcmessage.m4 lock.m4 longlong.m4 printf-posix.m4 size_max.m4 stdint_h.m4
-   threadlib.m4 uintmax_t.m4 visibility.m4 wchar_t.m4 wint_t.m4 xsize.m4'
-  min_automake_version=1.8
-fi
+m4filelist='
+  gettext.m4
+  host-cpu-c-abi.m4
+  iconv.m4
+  intlmacosx.m4
+  lib-ld.m4 lib-link.m4 lib-prefix.m4
+  nls.m4
+  po.m4 progtest.m4'
 
 # All sorts of bugs could occur if the configure file was remade with the wrong
 # version of gettext.m4 et al. (because then the configure and the po/Makefile.in.in
@@ -1237,7 +1202,7 @@ func_modify_configure_in "(AC_OUTPUT): Remove command that created po/Makefile."
 sed -e '/^\(dnl \|\)AC_LINK_FILES(\$nls_cv_header_libgt, \$nls_cv_header_intl)$/d' < "$srcdir/$configure_in" > "$srcdir/$configure_in.tmp"
 func_modify_configure_in "(AC_LINK_FILES): Remove invocation."
 # AM_GNU_GETTEXT_VERSION may not be present, when AM_GNU_GETTEXT_REQUIRE_VERSION is used.
-if grep '^AM_GNU_GETTEXT_VERSION(' "$srcdir/$configure_in" 2>&1 >/dev/null; then
+if grep '^AM_GNU_GETTEXT_VERSION(' "$srcdir/$configure_in" >/dev/null; then
   sed -e 's/^AM_GNU_GETTEXT_VERSION([^()]*)/AM_GNU_GETTEXT_VERSION(['"$archive_version"'])/' < "$srcdir/$configure_in" > "$srcdir/$configure_in.tmp"
   func_modify_configure_in "(AM_GNU_GETTEXT_VERSION): Bump to $archive_version."
 fi
@@ -1252,7 +1217,7 @@ for file in `(cd "$srcdir"; find . -name Makefile.am -print; find . -name Makefi
     fi
     # INTLLIBS is deprecated because it doesn't distinguish the two
     # cases: with libtool, without libtool.
-    if grep '@''INTLLIBS''@' "$srcdir/$file" >/dev/null 2>&1; then
+    if grep '@''INTLLIBS''@' "$srcdir/$file" >/dev/null; then
       if test -n "$use_libtool"; then
         please="$please
 Please change $file to use @""LTLIBINTL""@ or @""LIBINTL""@ instead of
@@ -1268,7 +1233,7 @@ Please change $file to use @""LIBINTL""@ instead of @""INTLLIBS""@.
     fi
     # DATADIRNAME is deprecated because we install only .gmo files nowadays,
     # which can be stored in the platform independent $prefix/share hierarchy.
-    if grep '@''DATADIRNAME''@' "$srcdir/$file" >/dev/null 2>&1; then
+    if grep '@''DATADIRNAME''@' "$srcdir/$file" >/dev/null; then
       please="$please
 Please change $file to use the constant string \"share\" instead of
 @""DATADIRNAME""@. @""DATADIRNAME""@ will go away.
@@ -1276,14 +1241,14 @@ Please change $file to use the constant string \"share\" instead of
     fi
     # INSTOBJEXT is deprecated because we install only .gmo files nowadays,
     # no catgets .cat catalogs.
-    if grep '@''INSTOBJEXT''@' "$srcdir/$file" >/dev/null 2>&1; then
+    if grep '@''INSTOBJEXT''@' "$srcdir/$file" >/dev/null; then
       please="$please
 Please change $file to use the constant string \".mo\" instead of
 @""INSTOBJEXT""@. @""INSTOBJEXT""@ will go away.
 "
     fi
     # GENCAT is deprecated because we install no catgets catalogs anymore.
-    if grep '@''GENCAT''@' "$srcdir/$file" >/dev/null 2>&1; then
+    if grep '@''GENCAT''@' "$srcdir/$file" >/dev/null; then
       please="$please
 Please change $file to use the constant string \"gencat\" instead of
 @""GENCAT""@. @""GENCAT""@ will go away. Maybe you don't even need it any more?
@@ -1291,7 +1256,7 @@ Please change $file to use the constant string \"gencat\" instead of
     fi
     # POSUB is deprecated because it causes "./configure --disable-nls", "make",
     # "make dist" to create a buggy tarfile.
-    if grep '@''POSUB''@' "$srcdir/$file" >/dev/null 2>&1; then
+    if grep '@''POSUB''@' "$srcdir/$file" >/dev/null; then
       please="$please
 Please change $file to use the constant string \"po\" instead of
 @""POSUB""@. @""POSUB""@ will go away.
@@ -1301,7 +1266,7 @@ Please change $file to use the constant string \"po\" instead of
 done
 
 # Recommend replacement for deprecated configure variables.
-if grep '\$nls_cv_header_' "$srcdir/$configure_in" >/dev/null 2>&1; then
+if grep '\$nls_cv_header_' "$srcdir/$configure_in" >/dev/null; then
   please="$please
 Please stop using \$nls_cv_header_intl or \$nls_cv_header_libgt in the
 $configure_in file. Both will go away. Use <libintl.h> or \"gettext.h\" instead.
@@ -1314,10 +1279,10 @@ if test -f "$srcdir/$auxdir"config.guess && test -f "$srcdir/$auxdir"config.sub;
 else
   please="$please
 You will also need config.guess and config.sub, which you can get from the CVS
-of the 'config' project at http://savannah.gnu.org/. The commands to fetch them
+of the 'config' project at https://savannah.gnu.org/. The commands to fetch them
 are
-\$ wget 'http://savannah.gnu.org/cgi-bin/viewcvs/*checkout*/config/config/config.guess'
-\$ wget 'http://savannah.gnu.org/cgi-bin/viewcvs/*checkout*/config/config/config.sub'
+\$ wget 'https://savannah.gnu.org/cgi-bin/viewcvs/*checkout*/config/config/config.guess'
+\$ wget 'https://savannah.gnu.org/cgi-bin/viewcvs/*checkout*/config/config/config.sub'
 "
 fi
 

@@ -226,7 +226,7 @@ my %options;
 
     use strict;
     use warnings;
-    use base qw(LWP::UserAgent);
+    use parent qw(LWP::UserAgent);
 
     sub new {
         my $self = LWP::UserAgent::new(@_);

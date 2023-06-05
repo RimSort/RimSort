@@ -26,14 +26,14 @@
 # configuration section:
 #	these variables are filled in by the make target in Makefile
 #
-MACHINE="i686"
+MACHINE="x86_64"
 OS="msys"
 CC="gcc"
-CFLAGS="-march=i686 -mtune=generic -O2 -pipe -D_STATIC_BUILD"
+CFLAGS="-march=nocona -msahf -mtune=generic -O2 -pipe -D_STATIC_BUILD"
 RELEASE="5.2"
 PATCHLEVEL="15"
 RELSTATUS="release"
-MACHTYPE="i686-pc-msys"
+MACHTYPE="x86_64-pc-msys"
 
 PATH=/bin:/usr/bin:/usr/local/bin:$PATH
 export PATH

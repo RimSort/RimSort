@@ -24,6 +24,7 @@ from zipfile import ZipFile
 import git
 
 if SYSTEM == "Windows":
+    print("git/" + SYSTEM + "/bin/git.exe")
     git.refresh("git/" + SYSTEM + "/bin/git.exe")
 #else:
 #    git.refresh("git/" + SYSTEM + "/bin/git")
