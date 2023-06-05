@@ -213,6 +213,9 @@ class DynamicQuery(QObject):
         self.dq_messaging_signal.emit(
             f"\nSteam WebAPI: IPublishedFileService/GetDetails initializing for {total} mods...\n\n"
         )
+        self.dq_messaging_signal.emit(
+            f"IPublishedFileService/GetDetails chunk [0/{total}]"
+        )
         if not self.api:  # If we don't have API initialized
             return None, None  # Exit query
         missing_children = []
@@ -402,6 +405,9 @@ class DynamicQuery(QObject):
                 self.dq_messaging_signal.emit(
                     f"Total mod items to parse: {str(self.total)}"
                 )
+        self.dq_messaging_signal.emit(
+            f"IPublishedFileService/QueryFiles page [0" + f"/{str(self.pages)}]"
+        )
         self.dq_messaging_signal.emit(
             f"IPublishedFileService/QueryFiles page [{str(self.pagenum)}"
             + f"/{str(self.pages)}]"

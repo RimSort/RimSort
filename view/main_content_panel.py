@@ -2346,6 +2346,7 @@ class MainContent:
             self.query_runner.setWindowTitle(
                 f"RimSort - DB Builder ({self.game_configuration.db_builder_include})"
             )
+            self.query_runner.progress_bar.show()
             self.query_runner.show()
             # Connect message signal
             self.db_builder.db_builder_message_output_signal.connect(
