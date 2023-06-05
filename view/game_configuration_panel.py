@@ -24,7 +24,7 @@ from PySide6.QtWidgets import (
 )
 
 from model.dialogue import *
-from util.constants import DEFAULT_SETTINGS
+from util.constants import DEFAULT_SETTINGS, DEFAULT_USER_RULES
 from util.generic import *
 from window.settings_panel import SettingsPanel
 
@@ -53,6 +53,7 @@ class GameConfiguration(QObject):
 
         self.debug_mode = debug_mode
 
+        self.dbs_path = "."
         self.storage_path = QStandardPaths.writableLocation(
             QStandardPaths.AppLocalDataLocation
         )
@@ -435,15 +436,25 @@ class GameConfiguration(QObject):
             logger.info(f"Storage path [{self.storage_path}] does not exist")
             information = (
                 "It looks like you may be running RimSort for the first time! RimSort stores some client "
-                f"information in this directory: [{self.storage_path}]. It doesn't look like this directory "
-                "exists, so we'll make it for you now."
+                + f"information in this directory:\n[{self.storage_path}].\n"
+                + "It doesn't look like this directory exists, so we'll make it for you now."
             )
             show_information(text="Welcome to RimSort!", information=information)
             logger.info("Making storage directory")
             os.makedirs(self.storage_path)
+        # Always check for dbs/userRules.json path, create if it doesn't exist
+        self.dbs_path = os.path.join(self.storage_path, "dbs")
+        self.user_rules_file_path = os.path.join(self.dbs_path, "userRules.json")
+        logger.info(f"Determined dbs path: {self.dbs_path}")
+        if not os.path.exists(self.dbs_path):
+            os.makedirs(self.dbs_path)
+        if not os.path.exists(self.user_rules_file_path):
+            initial_rules_db = DEFAULT_USER_RULES
+            with open(self.user_rules_file_path, "w") as output:
+                json.dump(initial_rules_db, output, indent=4)
+        # Always check for settings path, create with defaults if it doesn't exist
         settings_path = os.path.join(self.storage_path, "settings.json")
         logger.info(f"Determined settings file path: {settings_path}")
-        # Always check for settings path, create with defaults if it doesn't exist
         if not os.path.exists(settings_path):
             logger.info(f"Settings file [{settings_path}] does not exist")
             # Create a new empty settings.json file

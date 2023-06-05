@@ -80,6 +80,7 @@ from util.steam.steamworks.wrapper import (
 from util.todds.wrapper import ToddsInterface
 from util.xml import json_to_xml_write, xml_path_to_json
 from view.game_configuration_panel import GameConfiguration
+from window.rule_editor_panel import RuleEditor
 from window.runner_panel import RunnerPanel
 
 # print(f"main_content_panel.py: {current_process()}")
@@ -171,17 +172,23 @@ class MainContent:
         self.inactive_mods_panel.inactive_mods_list.item_added_signal.connect(
             self.active_mods_panel.active_mods_list.handle_other_list_row_added
         )
-        self.active_mods_panel.active_mods_list.steamworks_subscription_signal.connect(
-            self._do_steamworks_api_call
-        )
-        self.inactive_mods_panel.inactive_mods_list.steamworks_subscription_signal.connect(
-            self._do_steamworks_api_call
-        )
         self.active_mods_panel.active_mods_list.refresh_signal.connect(
             self.actions_slot
         )
         self.inactive_mods_panel.inactive_mods_list.refresh_signal.connect(
             self.actions_slot
+        )
+        self.active_mods_panel.active_mods_list.edit_rules_signal.connect(
+            self._do_open_rule_editor
+        )
+        self.inactive_mods_panel.inactive_mods_list.edit_rules_signal.connect(
+            self._do_open_rule_editor
+        )
+        self.active_mods_panel.active_mods_list.steamworks_subscription_signal.connect(
+            self._do_steamworks_api_call
+        )
+        self.inactive_mods_panel.inactive_mods_list.steamworks_subscription_signal.connect(
+            self._do_steamworks_api_call
         )
 
         # State used if appworkshop metadata is parsed from Steam workshop install
@@ -615,17 +622,21 @@ class MainContent:
             self.local_mods[uuid]["data_source"] = "local"
 
         # One working Dictionary for ALL mods
-        all_mods = merge_mod_data(self.expansions, self.local_mods, self.workshop_mods)
+        self.internal_local_metadata = merge_mod_data(
+            self.expansions, self.local_mods, self.workshop_mods
+        )
         logger.info(
-            f"Combined {len(self.expansions)} expansions, {len(self.local_mods)} local mods, and {len(self.workshop_mods)}. Total elements to get dependencies for: {len(all_mods)}"
+            f"Combined {len(self.expansions)} expansions, {len(self.local_mods)} local mods, and {len(self.workshop_mods)}. Total elements to get dependencies for: {len(self.internal_local_metadata)}"
         )
 
         self.external_steam_metadata = {}
         self.external_community_rules = {}
+        self.internal_user_rules = {}
+
         self.workshop_mods_potential_updates = {}
 
-        # If there are mods at all, check for a mod DB.
-        if all_mods:
+        # If there are mods at all, check for dbs for additional metadata sources.
+        if self.internal_local_metadata:
             logger.info(
                 "Looking for a load order / dependency rules contained within mods"
             )
@@ -637,21 +648,21 @@ class MainContent:
                 self.external_steam_metadata = get_configured_steam_db(
                     life=self.game_configuration.database_expiry,
                     path=os.path.join(self.game_configuration.steam_db_file_path),
-                    mods=all_mods,
                 )
             elif external_steam_metadata_source == "Configured git repository":
                 self.external_steam_metadata = get_configured_steam_db(
                     life=self.game_configuration.database_expiry,
                     path=os.path.join(
-                        self.game_configuration.storage_path,
+                        self.game_configuration.dbs_path,
                         os.path.split(self.game_configuration.steam_db_repo)[1],
                         "steamDB.json",
                     ),
-                    mods=all_mods,
                 )
             elif external_steam_metadata_source == "RimPy Mod Manager Database":
                 # Get and cache RimPy Steam db.json rules data for ALL mods
-                self.external_steam_metadata = get_rpmmdb_steam_metadata(all_mods)
+                self.external_steam_metadata = get_rpmmdb_steam_metadata(
+                    self.internal_local_metadata
+                )
             else:
                 logger.info(
                     "External Steam metadata disabled by user. Please choose a metadata source in settings."
@@ -660,7 +671,7 @@ class MainContent:
             if self.game_configuration.steam_mods_update_check_toggle:
                 self.workshop_mods_potential_updates = (
                     get_external_time_data_for_workshop_mods(
-                        self.external_steam_metadata, all_mods
+                        self.external_steam_metadata, self.internal_local_metadata
                     )
                 )
             # External Community Rules metadata
@@ -668,19 +679,40 @@ class MainContent:
                 self.game_configuration.settings_panel.external_community_rules_metadata_cb.currentText()
             )
             if external_community_rules_metadata_source == "Configured file path":
-                print()
+                self.external_community_rules = get_configured_community_rules_db(
+                    path=os.path.join(self.game_configuration.community_rules_file_path)
+                )
             elif (
                 external_community_rules_metadata_source == "Configured git repository"
             ):
-                print()
+                self.external_community_rules = get_configured_community_rules_db(
+                    path=os.path.join(
+                        self.game_configuration.dbs_path,
+                        os.path.split(self.game_configuration.community_rules_repo)[1],
+                        "communityRules.json",
+                    )
+                )
             elif (
                 external_community_rules_metadata_source == "RimPy Mod Manager Database"
             ):
                 # Get and cache RimPy Community Rules communityRules.json for ALL mods
-                self.external_community_rules = get_rpmmdb_community_rules_db(all_mods)
+                self.external_community_rules = get_rpmmdb_community_rules_db(
+                    self.internal_local_metadata
+                )
             else:
                 logger.info(
                     "External Community Rules metadata disabled by user. Please choose a metadata source in settings."
+                )
+            if os.path.exists(self.game_configuration.user_rules_file_path):
+                logger.info("Loading userRules.json")
+                with open(
+                    self.game_configuration.user_rules_file_path, encoding="utf-8"
+                ) as f:
+                    json_string = f.read()
+                    self.internal_user_rules = json.loads(json_string)["rules"]
+            else:
+                logger.error(
+                    "userRules.json was not accessible. There are no user rules available!"
                 )
         else:
             logger.warning(
@@ -692,7 +724,7 @@ class MainContent:
             self.all_mods_with_dependencies,
             self.info_from_steam_package_id_to_name,
         ) = get_dependencies_for_mods(
-            all_mods,
+            self.internal_local_metadata,
             self.external_steam_metadata,
             self.external_community_rules,  # TODO add user defined customRules from future customRules.json
         )
@@ -882,13 +914,15 @@ class MainContent:
                 repo_url=self.game_configuration.steam_db_repo, file_name="steamDB.json"
             )
         if action == "configure_community_rules_db_path":
-            self._do_configure_community_rules_db_path()
+            self._do_configure_community_rules_db_file_path()
         if action == "configure_community_rules_db_repo":
             self._do_configure_community_rules_db_repo()
         if action == "download_community_rules_database":
             self._do_clone_repo_to_storage_path(
                 repo_url=self.game_configuration.community_rules_repo
             )
+        if action == "open_community_rules_with_rule_editor":
+            self._do_open_rule_editor(compact=False, initial_mode="community_rules")
         if action == "upload_community_rules_database":
             self._do_upload_db_to_repo(
                 repo_url=self.game_configuration.community_rules_repo,
@@ -1947,7 +1981,9 @@ class MainContent:
             repo_folder_name = os.path.split(repo_url)[1]
             # Calculate path from generated folder name
             repo_path = os.path.join(
-                self.game_configuration.storage_path, repo_folder_name
+                self.game_configuration.storage_path,
+                self.game_configuration.dbs_path,
+                repo_folder_name,
             )
             if os.path.exists(repo_path):  # If local repo does exists
                 # Prompt to user to handle
@@ -2021,7 +2057,9 @@ class MainContent:
             repo_folder_name = os.path.split(repo_url)[1]
             # Calculate path from generated folder name
             repo_path = os.path.join(
-                self.game_configuration.storage_path, repo_folder_name
+                self.game_configuration.storage_path,
+                self.game_configuration.dbs_path,
+                repo_folder_name,
             )
             if os.path.exists(repo_path):  # If local repo does exists
                 # Clone the repo to storage path and notify user
@@ -2083,7 +2121,9 @@ class MainContent:
             repo_folder_name = os.path.split(repo_url)[1]
             # Calculate path from generated folder name
             repo_path = os.path.join(
-                self.game_configuration.storage_path, repo_folder_name
+                self.game_configuration.storage_path,
+                self.game_configuration.dbs_path,
+                repo_folder_name,
             )
             if os.path.exists(repo_path):  # If local repo exists
                 # Update the file, commit + PR to repo
@@ -2221,6 +2261,26 @@ class MainContent:
                 + 'A valid repository is a repository URL which is not empty and is prefixed with "http://" or "https://"',
             )
 
+    def _do_open_rule_editor(
+        self, compact: bool, initial_mode=str, packageid=None
+    ) -> None:
+        if self.game_configuration.settings_panel.isVisible():
+            self.game_configuration.settings_panel.close()  # Close this if we came from game configuration
+        self.rule_editor = RuleEditor(
+            # Initialization options
+            compact=compact,
+            edit_packageId=packageid,
+            initial_mode=initial_mode,
+            # Required metadata
+            local_metadata=self.internal_local_metadata,
+            community_rules=self.external_community_rules,
+            user_rules=self.internal_user_rules,
+            # Optional metadata - used to get names instead of packageId for About.xml rules
+            steam_workshop_metadata=self.external_steam_metadata,
+        )
+        self.rule_editor.setWindowModality(Qt.ApplicationModal)
+        self.rule_editor.show()
+
     def _do_configure_steam_db_file_path(self) -> None:
         # Input file
         logger.info("Opening file dialog to specify Steam DB")
@@ -2239,7 +2299,7 @@ class MainContent:
             logger.warning("User cancelled selection!")
             return
 
-    def _do_configure_community_rules_db_path(self) -> None:
+    def _do_configure_community_rules_db_file_path(self) -> None:
         # Input file
         logger.info("Opening file dialog to specify Community Rules DB")
         input_path = QFileDialog.getSaveFileName(

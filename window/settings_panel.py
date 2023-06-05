@@ -516,6 +516,9 @@ class SettingsPanel(QDialog):
         download_community_rules_db = contextMenu.addAction(
             "Download/Update Community Rules Database from repository"
         )  # download db from repo
+        open_rule_editor = contextMenu.addAction(
+            "Open Community Rules Database with Rule Editor"
+        )
         upload_community_rules_changes = contextMenu.addAction(
             "Upload Community Rules Database changes to repository"
         )  # make pull request with changes
@@ -536,6 +539,12 @@ class SettingsPanel(QDialog):
             partial(
                 self.settings_panel_actions_signal.emit,
                 "download_community_rules_database",
+            )
+        )
+        open_rule_editor.triggered.connect(
+            partial(
+                self.settings_panel_actions_signal.emit,
+                "open_community_rules_with_rule_editor",
             )
         )
         upload_community_rules_changes.triggered.connect(

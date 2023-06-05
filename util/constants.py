@@ -23,6 +23,7 @@ DEFAULT_SETTINGS = {
     "todds_dry_run": False,
     "todds_overwrite": False,
 }
+DEFAULT_USER_RULES = {"timestamp": 0, "rules": {}}
 RIMWORLD_DLC_METADATA = {
     "294100": {
         "packageId": "ludeon.rimworld",

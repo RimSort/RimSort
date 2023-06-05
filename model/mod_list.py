@@ -6,7 +6,7 @@ from time import sleep
 from typing import Any, List, Optional
 
 from PySide6.QtCore import Qt, QEvent, QModelIndex, QObject, Signal
-from PySide6.QtGui import QAction, QDropEvent, QFocusEvent, QKeySequence
+from PySide6.QtGui import QAction, QCursor, QDropEvent, QFocusEvent, QKeySequence
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QListWidget,
@@ -30,6 +30,7 @@ class ModListWidget(QListWidget):
     list_update_signal = Signal(str)
     mod_info_signal = Signal(str)
     refresh_signal = Signal(str)
+    edit_rules_signal = Signal(bool, str, str)
     steamworks_subscription_signal = Signal(list)
     key_press_signal = Signal(str)
 
@@ -108,6 +109,17 @@ class ModListWidget(QListWidget):
         :param event: the QEvent type
         """
         if event.type() == QEvent.ContextMenu and source_object is self:
+            # Get the position of the right-click event
+            pos = QCursor.pos()
+            # Convert the global position to the list widget's coordinate system
+            pos_local = self.mapFromGlobal(pos)
+            # Get the item at the local position
+            item = self.itemAt(pos_local)
+            if not isinstance(item, QListWidgetItem):
+                logger.debug("Mod list right-click non-QListWidgetItem")
+                return super().eventFilter(source_object, event)
+
+            # Otherwise, begin calculation
             logger.info("USER ACTION: Open right-click mod_list_item contextMenu")
 
             # A list to track any PublishedFileIds that may be passed to Steamworks
@@ -124,10 +136,11 @@ class ModListWidget(QListWidget):
             # Open URL in Steam
             open_mod_steam_action = QAction()
             open_mod_steam_bool = None
+            # Edit mod rules
+            edit_mod_rules_action = QAction()
+            edit_mod_rules_bool = None
             # Unsubscribe + delete mod
-            unsubscribe_mod_steam_action = QAction(
-                "Unsubscribe mod from Steam Workshop"
-            )
+            unsubscribe_mod_steam_action = QAction()
             unsubscribe_mod_steam_bool = None
             # Delete mod
             delete_mod_action = QAction()
@@ -154,6 +167,9 @@ class ModListWidget(QListWidget):
                     if widget_json_data.get("steam_uri"):
                         open_mod_steam_bool = True
                         open_mod_steam_action.setText("Open mod in Steam")
+                    # Edit mod rules with Rule Editor (only for individual mods)
+                    edit_mod_rules_bool = True
+                    edit_mod_rules_action.setText("Edit mod rules")
                     # If Workshop, try unsub + delete
                     if mod_data_source == "workshop" and widget_json_data.get(
                         "publishedfileid"
@@ -189,14 +205,13 @@ class ModListWidget(QListWidget):
                         if widget_json_data.get("steam_uri"):
                             open_mod_steam_bool = True
                             open_mod_steam_action.setText("Open mod(s) in Steam")
+                        # No "Edit mod rules" when multiple selected
+                        edit_mod_rules_bool = False
                         # If Workshop, try unsub + delete
                         if mod_data_source == "workshop" and widget_json_data.get(
                             "publishedfileid"
                         ):
                             publishedfileid = widget_json_data["publishedfileid"]
-                            logger.debug(
-                                f"Tracking PublishedFileID for ISteamUGC/UnsubscribeItem: {publishedfileid}"
-                            )
                             publishedfileids.append(int(publishedfileid))
                             unsubscribe_mod_steam_bool = True
                             unsubscribe_mod_steam_action.setText(
@@ -212,6 +227,8 @@ class ModListWidget(QListWidget):
                 contextMenu.addAction(open_url_browser_action)
             if open_mod_steam_bool:
                 contextMenu.addAction(open_mod_steam_action)
+            if edit_mod_rules_bool:
+                contextMenu.addAction(edit_mod_rules_action)
             if unsubscribe_mod_steam_bool:
                 contextMenu.addAction(unsubscribe_mod_steam_action)
             if delete_mod_bool:
@@ -269,6 +286,11 @@ class ModListWidget(QListWidget):
                                 "steam_uri"
                             ):  # If we have steam_uri
                                 platform_specific_open(widget_json_data["steam_uri"])
+                        # Edit mod rules action
+                        elif action == edit_mod_rules_action:
+                            self.edit_rules_signal.emit(
+                                True, "user_rules", widget_json_data["packageId"]
+                            )
                         # Delete mods action
                         elif action == delete_mod_action:  # ACTION: Delete mod
                             logger.info(f"Deleting mod at: {mod_path}")

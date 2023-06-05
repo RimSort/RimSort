@@ -269,9 +269,7 @@ class SteamDatabaseBuilder(QThread):
                 json.dump(database, output, indent=4)
 
 
-def get_configured_steam_db(
-    life: int, path: str, mods: Dict[str, Any]
-) -> Dict[str, Any]:
+def get_configured_steam_db(life: int, path: str) -> Dict[str, Any]:
     logger.info(f"Checking for Steam DB at: {path}")
     db_json_data = {}
     if os.path.exists(
@@ -316,6 +314,85 @@ def get_configured_steam_db(
             + "\nPlease use DB Builder to create a database, or update to the latest RimSort Steam Workshop Database.",
         )
         return db_json_data
+
+
+def get_configured_community_rules_db(path: str) -> Dict[str, Any]:
+    logger.info(f"Checking for Community Rules DB at: {path}")
+    community_rules_json_data = {}
+    if os.path.exists(
+        path
+    ):  # Look for cached data & load it if available & not expired
+        logger.info(
+            f"Community Rules DB exists!",
+        )
+        with open(path, encoding="utf-8") as f:
+            json_string = f.read()
+            logger.info("Reading info from communityRules.json")
+            rule_data = json.loads(json_string)
+            logger.debug(
+                "Returning communityRules.json, this data is long so we forego logging it here"
+            )
+            total_entries = len(rule_data["rules"])
+            logger.info(
+                f"Loaded {total_entries} additional sorting rules from Community Rules"
+            )
+            community_rules_json_data = rule_data["rules"]
+            return community_rules_json_data
+
+    else:  # Assume db_data_missing
+        show_warning(
+            title="Community Rules DB is missing",
+            text="Configured Community Rules DB not found!",
+            information="Unable to initialize external metadata. There is no external Community Rules metadata being factored!\n"
+            + "\nPlease use Rule Editor to create a database, or update to the latest RimSort Community Rules database.",
+        )
+        return community_rules_json_data
+
+
+def get_rpmmdb_steam_metadata(mods: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Extract the RimPy Mod Manager Database mod's `db.json` Steam Workshop metadata, which is
+    used for sorting. Produces an error if the DB mod is not found.
+    """
+    logger.info(
+        "Using Paladin's RimPy Mod Manager Database mod for external Steam Workshop metadata..."
+    )
+    db_json_data = {}
+    for uuid in mods:
+        if (
+            mods[uuid].get("packageId") == "rupal.rimpymodmanagerdatabase"
+            or mods[uuid].get("publishedfileid") == "1847679158"
+        ):
+            logger.info("Found RimPy Mod Manager Database mod")
+            steam_db_rules_path = os.path.join(mods[uuid]["path"], "db", "db.json")
+            logger.info(f"Generated path to db.json: {steam_db_rules_path}")
+            if os.path.exists(steam_db_rules_path):
+                with open(steam_db_rules_path, encoding="utf-8") as f:
+                    json_string = f.read()
+                    logger.info("Reading info from db.json")
+                    db_data = json.loads(json_string)
+                    logger.debug(
+                        "Returning db.json, this data is long so we forego logging it here."
+                    )
+                    total_entries = len(db_data["database"])
+                    logger.info(
+                        f"Loaded {total_entries} additional sorting rules from RPMMDB Steam DB"
+                    )
+                    db_json_data = db_data["database"]
+            else:
+                logger.error("The db.json path does not exist")
+            return db_json_data
+    logger.warning(
+        "RimPy Mod Manager Database was not found! Unable to load database from RPMMDB db.json!"
+    )
+    show_warning(
+        text="RimPy Mod Manager Database mod was not found!",
+        information=(
+            "RimSort was unable to find this mod in your workshop or local mods folder.\n"
+            + "Do you have the mod installed and/or are your paths set correctly?"
+        ),
+    )
+    return db_json_data
 
 
 def get_rpmmdb_community_rules_db(mods: Dict[str, Any]) -> Dict[str, Any]:
@@ -366,52 +443,6 @@ def get_rpmmdb_community_rules_db(mods: Dict[str, Any]) -> Dict[str, Any]:
         ),
     )
     return community_rules_json_data
-
-
-def get_rpmmdb_steam_metadata(mods: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Extract the RimPy Mod Manager Database mod's `db.json` Steam Workshop metadata, which is
-    used for sorting. Produces an error if the DB mod is not found.
-    """
-    logger.info(
-        "Using Paladin's RimPy Mod Manager Database mod for external Steam Workshop metadata..."
-    )
-    db_json_data = {}
-    for uuid in mods:
-        if (
-            mods[uuid].get("packageId") == "rupal.rimpymodmanagerdatabase"
-            or mods[uuid].get("publishedfileid") == "1847679158"
-        ):
-            logger.info("Found RimPy Mod Manager Database mod")
-            steam_db_rules_path = os.path.join(mods[uuid]["path"], "db", "db.json")
-            logger.info(f"Generated path to db.json: {steam_db_rules_path}")
-            if os.path.exists(steam_db_rules_path):
-                with open(steam_db_rules_path, encoding="utf-8") as f:
-                    json_string = f.read()
-                    logger.info("Reading info from db.json")
-                    db_data = json.loads(json_string)
-                    logger.debug(
-                        "Returning db.json, this data is long so we forego logging it here."
-                    )
-                    total_entries = len(db_data["database"])
-                    logger.info(
-                        f"Loaded {total_entries} additional sorting rules from RPMMDB Steam DB"
-                    )
-                    db_json_data = db_data["database"]
-            else:
-                logger.error("The db.json path does not exist")
-            return db_json_data
-    logger.warning(
-        "RimPy Mod Manager Database was not found! Unable to load database from RPMMDB db.json!"
-    )
-    show_warning(
-        text="RimPy Mod Manager Database mod was not found!",
-        information=(
-            "RimSort was unable to find this mod in your workshop or local mods folder.\n"
-            + "Do you have the mod installed and/or are your paths set correctly?"
-        ),
-    )
-    return db_json_data
 
 
 # Steam client / SteamCMD metadata
