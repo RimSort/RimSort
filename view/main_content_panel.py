@@ -1004,12 +1004,12 @@ class MainContent:
                     PROCESSOR = platform.machine()
                 SYSTEM = platform.system()
                 if SYSTEM == "Darwin":
-                    executable_name = "RimSort"
+                    executable_name = "RimSort.app"
                     if PROCESSOR == "i386" or PROCESSOR == "arm":
                         logger.warning(
                             f"Darwin/MacOS system detected with a {ARCH} {PROCESSOR} CPU..."
                         )
-                        targetARCHive = (
+                        target_archive = (
                             f"RimSort-{tag_name_updated}_{SYSTEM}_{PROCESSOR}.zip"
                         )
                     else:
@@ -1022,7 +1022,7 @@ class MainContent:
                     logger.warning(
                         f"Linux system detected with a {ARCH} {PROCESSOR} CPU..."
                     )
-                    targetARCHive = (
+                    target_archive = (
                         f"RimSort-{tag_name_updated}_{SYSTEM}_{PROCESSOR}.zip"
                     )
                 elif SYSTEM == "Windows":
@@ -1030,16 +1030,16 @@ class MainContent:
                     logger.warning(
                         f"Windows system detected with a {ARCH} {PROCESSOR} CPU..."
                     )
-                    targetARCHive = f"RimSort-{tag_name_updated}_{SYSTEM}.zip"
+                    target_archive = f"RimSort-{tag_name_updated}_{SYSTEM}.zip"
                 else:
                     logger.warning(f"Unsupported system {SYSTEM} {ARCH} {PROCESSOR}")
                     return
                 logger.warning(
-                    f"Attempting to retrieve archive from release: {targetARCHive}"
+                    f"Attempting to retrieve archive from release: {target_archive}"
                 )
                 # Try to find a valid release from our generated archive name
                 for asset in json_response["assets"]:
-                    if asset["name"] == targetARCHive:
+                    if asset["name"] == target_archive:
                         browser_download_url = asset["browser_download_url"]
                 # If we don't have it from our query...
                 if not "browser_download_url" in locals():
@@ -1049,8 +1049,13 @@ class MainContent:
                     )
                     return
                 # Try to download & extract todds release from browser_download_url
-                current_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
-                targetARCHive_extracted = targetARCHive.replace(".zip", "")
+                if SYSTEM == "Darwin":
+                    current_dir = os.path.split(
+                        os.path.split(os.path.dirname(os.path.abspath(sys.argv[0])))[0]
+                    )[0]
+                else:
+                    current_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
+                target_archive_extracted = target_archive.replace(".zip", "")
                 try:
                     logger.warning(
                         f"Downloading & extracting RimSort release from: {browser_download_url}"
@@ -1072,12 +1077,23 @@ class MainContent:
 
                 # Replace the current program directory with the new version
                 rmtree(current_dir)
-                copytree(os.path.join(gettempdir(), "RimSort"), current_dir)
+                copytree(
+                    os.path.join(
+                        gettempdir(),
+                        executable_name if SYSTEM == "Darwin" else "RimSort",
+                    ),
+                    current_dir,
+                )
                 # Set executable permissions as ZipFile does not preserve this in the zip archive
                 executable_path = os.path.join(current_dir, executable_name)
                 if os.path.exists(executable_path):
                     original_stat = os.stat(executable_path)
-                    os.chmod(executable_path, original_stat.st_mode | S_IEXEC)
+                    os.chmod(
+                        os.path.join(executable_path, "Contents", "MacOS", "RimSort")
+                        if SYSTEM == "Darwin"
+                        else executable_path,
+                        original_stat.st_mode | S_IEXEC,
+                    )
                 show_information(
                     title="Update completed",
                     text=f"RimSort has applied an update: {current_version} -> {tag_name}",
