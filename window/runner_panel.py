@@ -346,73 +346,74 @@ class RunnerPanel(QWidget):
                 # -------STEAM-------
                 if "steamcmd" in self.process.program():
                     # If we have mods that did not successfully download
-                    if len(self.steamcmd_download_tracking) > 0:
-                        self.change_progress_bar_color("red")
-                        # Try to get the names of our mods
-                        pfids_to_name = {}
-                        failed_mods_no_names = []
-                        # Use Steam DB as initial source
-                        if self.steam_db and len(self.steam_db.keys()) > 0:
+                    if self.steamcmd_download_tracking is not None:
+                        if len(self.steamcmd_download_tracking) > 0:
+                            self.change_progress_bar_color("red")
+                            # Try to get the names of our mods
+                            pfids_to_name = {}
+                            failed_mods_no_names = []
+                            # Use Steam DB as initial source
+                            if self.steam_db and len(self.steam_db.keys()) > 0:
+                                for failed_mod_pfid in self.steamcmd_download_tracking:
+                                    if failed_mod_pfid in self.steam_db.keys():
+                                        if self.steam_db[failed_mod_pfid].get("steamName"):
+                                            pfids_to_name[failed_mod_pfid] = self.steam_db[
+                                                failed_mod_pfid
+                                            ]["steamName"]
+                                        elif self.steam_db[failed_mod_pfid].get("name"):
+                                            pfids_to_name[failed_mod_pfid] = self.steam_db[
+                                                failed_mod_pfid
+                                            ]["name"]
+                                        else:
+                                            failed_mods_no_names.append(failed_mod_pfid)
+                            # If we didn't return all names from Steam DB, try to look them up using WebAPI
+                            if len(failed_mods_no_names) > 0:
+                                failed_mods_name_lookup = (
+                                    ISteamRemoteStorage_GetPublishedFileDetails(
+                                        self.steamcmd_download_tracking
+                                    )
+                                )
+                                if failed_mods_name_lookup != None:
+                                    for mod_metadata in failed_mods_name_lookup["response"][
+                                        "publishedfiledetails"
+                                    ]:
+                                        if (
+                                            mod_metadata["publishedfileid"]
+                                            not in pfids_to_name
+                                        ):
+                                            if mod_metadata.get("title"):
+                                                pfids_to_name[
+                                                    mod_metadata["publishedfileid"]
+                                                ] = mod_metadata["title"]
+                            # Build our report
+                            details = ""
                             for failed_mod_pfid in self.steamcmd_download_tracking:
-                                if failed_mod_pfid in self.steam_db.keys():
-                                    if self.steam_db[failed_mod_pfid].get("steamName"):
-                                        pfids_to_name[failed_mod_pfid] = self.steam_db[
-                                            failed_mod_pfid
-                                        ]["steamName"]
-                                    elif self.steam_db[failed_mod_pfid].get("name"):
-                                        pfids_to_name[failed_mod_pfid] = self.steam_db[
-                                            failed_mod_pfid
-                                        ]["name"]
-                                    else:
-                                        failed_mods_no_names.append(failed_mod_pfid)
-                        # If we didn't return all names from Steam DB, try to look them up using WebAPI
-                        if len(failed_mods_no_names) > 0:
-                            failed_mods_name_lookup = (
-                                ISteamRemoteStorage_GetPublishedFileDetails(
+                                if failed_mod_pfid in pfids_to_name:
+                                    details = (
+                                        details
+                                        + f"{pfids_to_name[failed_mod_pfid]} - {failed_mod_pfid}\n"
+                                    )
+                                else:
+                                    details = (
+                                        details
+                                        + f"*Mod name not found!* - {failed_mod_pfid}\n"
+                                    )
+                            # Prompt user to redownload mods
+                            if (
+                                show_dialogue_conditional(
+                                    title="SteamCMD downloader",
+                                    text='SteamCMD failed to download mod(s)! Would you like to retry download of the mods that failed?\n\nClick "Show Details" to see a list of mods that failed.',
+                                    details=details,
+                                )
+                                == "&Yes"
+                            ):
+                                self.steamcmd_downloader_signal.emit(
                                     self.steamcmd_download_tracking
                                 )
-                            )
-                            if failed_mods_name_lookup != None:
-                                for mod_metadata in failed_mods_name_lookup["response"][
-                                    "publishedfiledetails"
-                                ]:
-                                    if (
-                                        mod_metadata["publishedfileid"]
-                                        not in pfids_to_name
-                                    ):
-                                        if mod_metadata.get("title"):
-                                            pfids_to_name[
-                                                mod_metadata["publishedfileid"]
-                                            ] = mod_metadata["title"]
-                        # Build our report
-                        details = ""
-                        for failed_mod_pfid in self.steamcmd_download_tracking:
-                            if failed_mod_pfid in pfids_to_name:
-                                details = (
-                                    details
-                                    + f"{pfids_to_name[failed_mod_pfid]} - {failed_mod_pfid}\n"
-                                )
-                            else:
-                                details = (
-                                    details
-                                    + f"*Mod name not found!* - {failed_mod_pfid}\n"
-                                )
-                        # Prompt user to redownload mods
-                        if (
-                            show_dialogue_conditional(
-                                title="SteamCMD downloader",
-                                text='SteamCMD failed to download mod(s)! Would you like to retry download of the mods that failed?\n\nClick "Show Details" to see a list of mods that failed.',
-                                details=details,
-                            )
-                            == "&Yes"
-                        ):
-                            self.steamcmd_downloader_signal.emit(
-                                self.steamcmd_download_tracking
-                            )
-                        else:  # Otherwise do nothing
-                            logger.warning("User declined re-download of failed mods.")
-                    else:
-                        self.change_progress_bar_color("green")
+                            else:  # Otherwise do nothing
+                                logger.warning("User declined re-download of failed mods.")
+                        else:
+                            self.change_progress_bar_color("green")
                 # -------STEAM-------
                 # -------TODDS-------
                 if "todds" in self.process.program():
