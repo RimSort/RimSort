@@ -425,7 +425,10 @@ class MainContent:
                 DEPENDENCY_TAG = "_-_DEPENDENCY_-_"
                 packageIds_to_pfids = {}
                 for publishedfileid, metadata in self.external_steam_metadata.items():
-                    if metadata["packageId"].lower() in missing_mods:
+                    if (
+                        metadata.get("packageId")
+                        and metadata["packageId"].lower() in missing_mods
+                    ):
                         missing_mod_packageId = metadata["packageId"]
                         packageIds_to_pfids[missing_mod_packageId] = publishedfileid
                         for dependency_pfid, dependency_crumbs in metadata[
