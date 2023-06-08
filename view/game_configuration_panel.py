@@ -96,6 +96,9 @@ class GameConfiguration(QObject):
         self.check_for_updates_action = QAction("Check for update on startup")
         self.check_for_updates_action.setCheckable(True)
         self.check_for_updates_button = QPushButton("Check for update")
+        self.check_for_updates_button.setToolTip(
+            "Right-click to configure automatic update check"
+        )
         self.check_for_updates_button.clicked.connect(
             partial(self.configuration_signal.emit, "check_for_update")
         )
