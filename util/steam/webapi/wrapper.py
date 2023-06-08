@@ -180,6 +180,9 @@ class DynamicQuery(QObject):
         if self.api:
             self.query = True
             self.dq_messaging_signal.emit(f"WebAPI initialized! Starting query...\n")
+            self.dq_messaging_signal.emit(
+                f"Total mod items to parse: {str(self.total)}"
+            )
             while self.query:
                 if self.pagenum > self.pages:
                     self.query = False
@@ -401,9 +404,6 @@ class DynamicQuery(QObject):
                 self.total = result["response"]["total"]
                 self.pages = ceil(
                     self.total / len(result["response"]["publishedfiledetails"])
-                )
-                self.dq_messaging_signal.emit(
-                    f"Total mod items to parse: {str(self.total)}"
                 )
         self.dq_messaging_signal.emit(
             f"IPublishedFileService/QueryFiles page [0" + f"/{str(self.pages)}]"
