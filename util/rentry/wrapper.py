@@ -54,7 +54,7 @@ class RentryUpload:
         else:
             self.upload_success = True
             self.url = response["url"]
-            logger.info(
+            logger.warning(
                 "RentryUpload successfully uploaded data!\n\nUrl:        {}\nEdit code:  {}".format(
                     response["url"], response["edit_code"]
                 )
