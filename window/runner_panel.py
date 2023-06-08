@@ -259,6 +259,9 @@ class RunnerPanel(QWidget):
             and self.process.state() == QProcess.Running
             and "steamcmd" in self.process.program()
         ):
+            if "Downloading item " in line:
+                pfid = line.split("Downloading item ")[1].replace("...", "").strip()
+                pfid = str(pfid[: pfid.index(" ")])
             # Overwrite when SteamCMD client is doing updates
             if (
                 ("] Downloading update (" in line)
@@ -275,13 +278,6 @@ class RunnerPanel(QWidget):
                 line = line.replace(") quit", ")\n\nquit")
             # Progress bar output support
             if "Success. Downloaded item " in line:
-                pfid = (
-                    self.previous_line.split("workshop_download_item 294100 ")[
-                        1
-                    ]  # PFID is found after this substring
-                    .replace(" validate", "")  # Support "validate" option for SteamCMD
-                    .strip()  # Strip any special thingy that may mess up our item
-                )
                 self.steamcmd_download_tracking.remove(pfid)
                 self.progress_bar.setValue(self.progress_bar.value() + 1)
             elif "ERROR! Download item " in line:
@@ -356,14 +352,18 @@ class RunnerPanel(QWidget):
                             if self.steam_db and len(self.steam_db.keys()) > 0:
                                 for failed_mod_pfid in self.steamcmd_download_tracking:
                                     if failed_mod_pfid in self.steam_db.keys():
-                                        if self.steam_db[failed_mod_pfid].get("steamName"):
-                                            pfids_to_name[failed_mod_pfid] = self.steam_db[
+                                        if self.steam_db[failed_mod_pfid].get(
+                                            "steamName"
+                                        ):
+                                            pfids_to_name[
                                                 failed_mod_pfid
-                                            ]["steamName"]
+                                            ] = self.steam_db[failed_mod_pfid][
+                                                "steamName"
+                                            ]
                                         elif self.steam_db[failed_mod_pfid].get("name"):
-                                            pfids_to_name[failed_mod_pfid] = self.steam_db[
+                                            pfids_to_name[
                                                 failed_mod_pfid
-                                            ]["name"]
+                                            ] = self.steam_db[failed_mod_pfid]["name"]
                                         else:
                                             failed_mods_no_names.append(failed_mod_pfid)
                             # If we didn't return all names from Steam DB, try to look them up using WebAPI
@@ -374,9 +374,9 @@ class RunnerPanel(QWidget):
                                     )
                                 )
                                 if failed_mods_name_lookup != None:
-                                    for mod_metadata in failed_mods_name_lookup["response"][
-                                        "publishedfiledetails"
-                                    ]:
+                                    for mod_metadata in failed_mods_name_lookup[
+                                        "response"
+                                    ]["publishedfiledetails"]:
                                         if (
                                             mod_metadata["publishedfileid"]
                                             not in pfids_to_name
@@ -411,7 +411,9 @@ class RunnerPanel(QWidget):
                                     self.steamcmd_download_tracking
                                 )
                             else:  # Otherwise do nothing
-                                logger.warning("User declined re-download of failed mods.")
+                                logger.warning(
+                                    "User declined re-download of failed mods."
+                                )
                         else:
                             self.change_progress_bar_color("green")
                 # -------STEAM-------
