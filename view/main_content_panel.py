@@ -446,15 +446,16 @@ class MainContent:
                 # If we don't have anything to download
                 if not len(packageIds_to_pfids.keys()) > 0:
                     show_warning(
+                        title="No metadata available",
                         text="No dependencies generated from external Steam metadata! Is your database complete?",
                         information="This happens due to there not being metadata available in your configured Steam DB.",
                     )
                     return
                 # Generate our report
-                logger.warning(
-                    f"{len(packageIds_to_pfids)} PublishedFileIds generated from external Steam metadata!"
-                )
-                logger.warning(packageIds_to_pfids)
+                # logger.warning(
+                #     f"{len(packageIds_to_pfids)} PublishedFileIds generated from external Steam metadata!"
+                # )
+                # logger.warning(packageIds_to_pfids)
                 list_of_needed_dependencies = {}
                 list_of_missing_mods = ""
                 for (
@@ -849,16 +850,14 @@ class MainContent:
             if os.path.exists(todds_txt_path):
                 os.remove(todds_txt_path)
             if not self.game_configuration.todds_active_mods_target_toggle:
-                if self.game_configuration.get_local_folder_path() != None or "":
-                    local_mods_target = self.game_configuration.get_local_folder_path()
-                if self.game_configuration.get_workshop_folder_path() != None or "":
-                    workshop_mods_target = (
-                        self.game_configuration.get_workshop_folder_path()
-                    )
-                if "local_mods_target" in locals():
+                local_mods_target = self.game_configuration.get_local_folder_path()
+                if local_mods_target and local_mods_target != "":
                     with open(todds_txt_path, "a") as todds_txt_file:
                         todds_txt_file.write(local_mods_target + "\n")
-                if "workshop_mods_target" in locals():
+                workshop_mods_target = (
+                    self.game_configuration.get_workshop_folder_path()
+                )
+                if workshop_mods_target and workshop_mods_target != "":
                     with open(todds_txt_path, "a") as todds_txt_file:
                         todds_txt_file.write(workshop_mods_target + "\n")
             else:
