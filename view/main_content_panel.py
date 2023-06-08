@@ -19,10 +19,9 @@ from time import localtime, sleep, strftime
 from typing import Any, Dict
 from zipfile import ZipFile
 
-from git import Repo
-from git.exc import GitCommandError
 from github import Github
 from logger_tt import logger
+
 from pyperclip import copy as copy_to_clipboard
 from requests import get as requests_get
 from requests import post as requests_post
@@ -30,6 +29,7 @@ from requests.exceptions import SSLError
 from urllib3.exceptions import HTTPError
 
 from model.dialogue import show_dialogue_conditional
+
 from util.constants import DB_BUILDER_EXCEPTIONS, RIMWORLD_DLC_METADATA
 from util.generic import chunks, open_url_browser
 from util.metadata import SteamDatabaseBuilder, recursively_update_dict
@@ -38,8 +38,8 @@ from util.steam.browser import SteamBrowser
 from util.steam.webapi.wrapper import ISteamRemoteStorage_GetPublishedFileDetails
 from util.watchdog import RSFileSystemEventHandler
 
-# Watchdog conditionals
 SYSTEM = platform.system()
+# Watchdog conditionals
 if SYSTEM == "Darwin":
     from watchdog.observers import Observer
 
@@ -106,6 +106,9 @@ class MainContent:
         :param game_configuration: game configuration panel to get paths
         """
         logger.info("Starting MainContent initialization")
+
+        # Check for git availability
+        self.git_exists = self._do_check_for_git()
 
         # VERSION PASSED FROM & CONFIGURED IN MAIN SCRIPT (RimSort.py)
         self.rimsort_version = rimsort_version
@@ -906,28 +909,41 @@ class MainContent:
         if action == "configure_steam_database_repo":
             self._do_configure_steam_database_repo()
         if action == "download_steam_database":
-            self._do_clone_repo_to_storage_path(
-                repo_url=self.game_configuration.steam_db_repo
-            )
+            if self.git_exists:
+                self._do_clone_repo_to_storage_path(
+                    repo_url=self.game_configuration.steam_db_repo
+                )
+            else:
+                self._do_notify_no_git()
         if action == "upload_steam_database":
-            self._do_upload_db_to_repo(
-                repo_url=self.game_configuration.steam_db_repo, file_name="steamDB.json"
-            )
+            if self.git_exists:
+                self._do_upload_db_to_repo(
+                    repo_url=self.game_configuration.steam_db_repo,
+                    file_name="steamDB.json",
+                )
+            else:
+                self._do_notify_no_git()
         if action == "configure_community_rules_db_path":
             self._do_configure_community_rules_db_file_path()
         if action == "configure_community_rules_db_repo":
             self._do_configure_community_rules_db_repo()
         if action == "download_community_rules_database":
-            self._do_clone_repo_to_storage_path(
-                repo_url=self.game_configuration.community_rules_repo
-            )
+            if self.git_exists:
+                self._do_clone_repo_to_storage_path(
+                    repo_url=self.game_configuration.community_rules_repo
+                )
+            else:
+                self._do_notify_no_git()
         if action == "open_community_rules_with_rule_editor":
             self._do_open_rule_editor(compact=False, initial_mode="community_rules")
         if action == "upload_community_rules_database":
-            self._do_upload_db_to_repo(
-                repo_url=self.game_configuration.community_rules_repo,
-                file_name="communityRules.json",
-            )
+            if self.git_exists:
+                self._do_upload_db_to_repo(
+                    repo_url=self.game_configuration.community_rules_repo,
+                    file_name="communityRules.json",
+                )
+            else:
+                self._do_notify_no_git()
         if action == "build_steam_database_thread":
             self._do_build_database_thread()
         if action == "merge_databases":
@@ -966,6 +982,28 @@ class MainContent:
                 self._do_download_mods_with_steamcmd(self.db_builder.publishedfileids)
             elif "steamworks" in action:
                 self._do_download_mods_with_steamworks(self.db_builder.publishedfileids)
+
+    # INITIALIZATION
+    def _do_check_for_git(self) -> bool:
+        try:
+            from git import Repo
+            from git.exc import GitCommandError
+
+            return True
+        except ImportError:
+            logger.warning(
+                "git not detected in your PATH! Do you have git installed...? git integration will be disabled!"
+            )
+            return False
+
+    def _do_notify_no_git(self) -> None:
+        answer = show_dialogue_conditional(  # We import last so we can use gui + utils
+            title="git not found",
+            text="git executable was not found in $PATH!",
+            information="git integration will not work without git installed! Do you want to open download page for git?",
+        )
+        if answer == "&Yes":
+            open_url_browser("https://git-scm.com/downloads")
 
     # GAME CONFIGURATION PANEL
 
