@@ -277,7 +277,7 @@ class ModListWidget(QListWidget):
                                 url = self.get_mod_url(widget_json_data)
                                 if url != "":
                                     logger.info(f"Opening url in browser: {url}")
-                                    open_mod_url(url)
+                                    open_url_browser(url)
                         # Open Steam URI with Steam action
                         elif (
                             action == open_mod_steam_action
