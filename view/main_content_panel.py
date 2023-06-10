@@ -969,6 +969,11 @@ class MainContent:
         if action == "comparison_report":
             self._do_generate_metadata_comparison_report()
         if "download_entire_workshop" in action:
+            # If settings panel is still open, close it.
+            if self.game_configuration.settings_panel.isVisible():
+                self.game_configuration.settings_panel.close()
+            # DB Builder is used to run DQ and grab entirety of
+            # any available Steam Workshop PublishedFileIDs
             self.db_builder = SteamDatabaseBuilder(
                 apikey=self.game_configuration.steam_apikey,
                 appid=294100,
@@ -980,6 +985,7 @@ class MainContent:
             self.query_runner.setWindowTitle(
                 "RimSort - DB Builder PublishedFileIDs query"
             )
+            self.query_runner.progress_bar.show()
             self.query_runner.show()
             # Connect message signal
             self.db_builder.db_builder_message_output_signal.connect(
@@ -990,12 +996,24 @@ class MainContent:
             loop = QEventLoop()
             self.db_builder.finished.connect(loop.quit)
             loop.exec_()
-            self.query_runner.close()
-            self.query_runner = None
-            if "steamcmd" in action:
-                self._do_download_mods_with_steamcmd(self.db_builder.publishedfileids)
-            elif "steamworks" in action:
-                self._do_download_mods_with_steamworks(self.db_builder.publishedfileids)
+            if len(self.db_builder.publishedfileids) < 1:
+                show_warning(
+                    title="No PublishedFileIDs",
+                    text="DB Builder query did not return any PublishedFileIDs!",
+                    information="This is typically caused by invalid/missing Steam WebAPI key, or a connectivity issue to the Steam WebAPI.\n"
+                    + "PublishedFileIDs are needed to retrieve mods from Steam!",
+                )
+            else:
+                self.query_runner.close()
+                self.query_runner = None
+                if "steamcmd" in action:
+                    self._do_download_mods_with_steamcmd(
+                        self.db_builder.publishedfileids
+                    )
+                elif "steamworks" in action:
+                    self._do_download_mods_with_steamworks(
+                        self.db_builder.publishedfileids
+                    )
 
     def _do_notify_no_git(self) -> None:
         answer = show_dialogue_conditional(  # We import last so we can use gui + utils
@@ -1943,6 +1961,7 @@ class MainContent:
                     self.steamworks_in_use = False
                 elif (
                     instruction[0] in subscription_actions
+                    and not len(instruction[1]) < 1
                 ):  # ISteamUGC/{SubscribeItem/UnsubscribeItem}
                     logger.info(
                         f"Creating Steamworks API process with instruction {instruction}"
@@ -1962,7 +1981,7 @@ class MainContent:
                         # Create instances of SteamworksSubscriptionHandler for each chunk
                         actions = [
                             SteamworksSubscriptionHandler(
-                                action=instruction[0], pfid_or_pfids=chunk, interval=0.5
+                                action=instruction[0], pfid_or_pfids=chunk, interval=1
                             )
                             for chunk in pfids_chunked
                         ]
@@ -2069,7 +2088,9 @@ class MainContent:
                     return
                 elif answer == "Clone new":
                     logger.info(f"Deleting local git repo at: {repo_path}")
-                    shutil_rmtree(repo_path, ignore_errors=False, onerror=handle_remove_read_only)
+                    shutil_rmtree(
+                        repo_path, ignore_errors=False, onerror=handle_remove_read_only
+                    )
                 elif answer == "Update existing":
                     self._do_force_update_existing_repo(repo_url=repo_url)
                     return

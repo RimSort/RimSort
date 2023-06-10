@@ -27,7 +27,7 @@ class SteamDatabaseBuilder(QThread):
         appid: int,
         database_expiry: int,
         mode: str,
-        output_database_path: None,
+        output_database_path=None,
         get_appid_deps=None,
         update=None,
         mods=None,
@@ -54,7 +54,7 @@ class SteamDatabaseBuilder(QThread):
             # Since the key is valid, we try to launch a live query
             if self.mode == "no_local":
                 self.db_builder_message_output_signal.emit(
-                    f"\nInitializing DynamicQuery with configured Steam API key for AppID: {self.appid}\n\n"
+                    f'\nInitializing "DynamicQuery" with configured Steam API key for AppID: {self.appid}\n\n'
                 )
                 # Create query
                 dynamic_query = DynamicQuery(
@@ -98,7 +98,7 @@ class SteamDatabaseBuilder(QThread):
                     if len(self.mods.keys()) > 0:  # No empty queries!
                         # Since the key is valid, and we have a list of pfid, we try to launch a live query
                         self.db_builder_message_output_signal.emit(
-                            f"\nInitializing DynamicQuery with configured Steam API key for {self.appid}...\n"
+                            f'\nInitializing "DynamicQuery" with configured Steam API key for {self.appid}...\n'
                         )
                         database = self._init_db_from_local_metadata()
                         publishedfileids = []
@@ -128,7 +128,7 @@ class SteamDatabaseBuilder(QThread):
                         return
             elif self.mode == "pfids_by_appid":
                 self.db_builder_message_output_signal.emit(
-                    f"\nInitializing AppIDQuery with configured Steam API key for AppID: {self.appid}...\n"
+                    f'\nInitializing "PublishedFileIDs by AppID" Query with configured Steam API key for AppID: {self.appid}...\n\n'
                 )
                 # Create query
                 dynamic_query = DynamicQuery(self.apikey, self.appid)

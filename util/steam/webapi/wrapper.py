@@ -45,8 +45,8 @@ class DynamicQuery(QObject):
         self,
         apikey: str,
         appid: int,
-        life: int,
         get_appid_deps=None,
+        life=None,
     ):
         QObject.__init__(self)
 
@@ -54,7 +54,8 @@ class DynamicQuery(QObject):
         self.api = None
         self.apikey = apikey
         self.appid = appid
-        self.expiry = self.__expires(life)
+        if life:
+            self.expiry = self.__expires(life)
         self.get_appid_deps = get_appid_deps
         self.next_cursor = "*"
         self.pagenum = 1
