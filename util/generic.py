@@ -1,7 +1,9 @@
 from logger_tt import logger
+from errno import EACCES
 import os
 import platform
 from pyperclip import copy as copy_to_clipboard
+from stat import S_IRWXU, S_IRWXG, S_IRWXO
 import subprocess
 from requests import post as requests_post
 import webbrowser
@@ -19,6 +21,13 @@ def chunks(_list: list, limit: int):
     for i in range(0, len(_list), limit):
         yield _list[i : i + limit]
 
+def handle_remove_read_only(func, path: str, exc):
+    excvalue = exc[1]
+    if func in (os.rmdir, os.remove, os.unlink) and excvalue.errno == EACCES:
+        os.chmod(path, S_IRWXU|S_IRWXG| S_IRWXO) # 0777
+        func(path)
+    else:
+        raise
 
 def launch_game_process(game_executable: str, args: str) -> None:
     """

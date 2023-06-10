@@ -1,3 +1,4 @@
+from gc import collect
 import os
 import platform
 import subprocess
@@ -10,7 +11,8 @@ from math import ceil
 from multiprocessing import cpu_count, current_process, Pool
 import pytz
 from stat import S_IEXEC
-from shutil import copytree, rmtree
+from shutil import copytree
+from shutil import rmtree as shutil_rmtree
 from signal import SIGTERM
 from subprocess import Popen
 from tempfile import gettempdir
@@ -19,8 +21,21 @@ from time import localtime, sleep, strftime
 from typing import Any, Dict
 from zipfile import ZipFile
 
-from github import Github
 from logger_tt import logger
+
+# GitPython depends on git executable being available in PATH
+try:
+    from git import Repo
+    from git.exc import GitCommandError
+
+    GIT_EXISTS = True
+except ImportError:
+    logger.warning(
+        "git not detected in your PATH! Do you have git installed...? git integration will be disabled!"
+    )
+    GIT_EXISTS = False
+
+from github import Github
 
 from pyperclip import copy as copy_to_clipboard
 from requests import get as requests_get
@@ -31,7 +46,7 @@ from urllib3.exceptions import HTTPError
 from model.dialogue import show_dialogue_conditional
 
 from util.constants import DB_BUILDER_EXCEPTIONS, RIMWORLD_DLC_METADATA
-from util.generic import chunks, open_url_browser
+from util.generic import chunks, handle_remove_read_only, open_url_browser
 from util.metadata import SteamDatabaseBuilder, recursively_update_dict
 from util.rentry.wrapper import RentryUpload
 from util.steam.browser import SteamBrowser
@@ -106,9 +121,6 @@ class MainContent:
         :param game_configuration: game configuration panel to get paths
         """
         logger.info("Starting MainContent initialization")
-
-        # Check for git availability
-        self.git_exists = self._do_check_for_git()
 
         # VERSION PASSED FROM & CONFIGURED IN MAIN SCRIPT (RimSort.py)
         self.rimsort_version = rimsort_version
@@ -911,14 +923,14 @@ class MainContent:
         if action == "configure_steam_database_repo":
             self._do_configure_steam_database_repo()
         if action == "download_steam_database":
-            if self.git_exists:
+            if GIT_EXISTS:
                 self._do_clone_repo_to_storage_path(
                     repo_url=self.game_configuration.steam_db_repo
                 )
             else:
                 self._do_notify_no_git()
         if action == "upload_steam_database":
-            if self.git_exists:
+            if GIT_EXISTS:
                 self._do_upload_db_to_repo(
                     repo_url=self.game_configuration.steam_db_repo,
                     file_name="steamDB.json",
@@ -930,7 +942,7 @@ class MainContent:
         if action == "configure_community_rules_db_repo":
             self._do_configure_community_rules_db_repo()
         if action == "download_community_rules_database":
-            if self.git_exists:
+            if GIT_EXISTS:
                 self._do_clone_repo_to_storage_path(
                     repo_url=self.game_configuration.community_rules_repo
                 )
@@ -939,7 +951,7 @@ class MainContent:
         if action == "open_community_rules_with_rule_editor":
             self._do_open_rule_editor(compact=False, initial_mode="community_rules")
         if action == "upload_community_rules_database":
-            if self.git_exists:
+            if GIT_EXISTS:
                 self._do_upload_db_to_repo(
                     repo_url=self.game_configuration.community_rules_repo,
                     file_name="communityRules.json",
@@ -984,19 +996,6 @@ class MainContent:
                 self._do_download_mods_with_steamcmd(self.db_builder.publishedfileids)
             elif "steamworks" in action:
                 self._do_download_mods_with_steamworks(self.db_builder.publishedfileids)
-
-    # INITIALIZATION
-    def _do_check_for_git(self) -> bool:
-        try:
-            from git import Repo
-            from git.exc import GitCommandError
-
-            return True
-        except ImportError:
-            logger.warning(
-                "git not detected in your PATH! Do you have git installed...? git integration will be disabled!"
-            )
-            return False
 
     def _do_notify_no_git(self) -> None:
         answer = show_dialogue_conditional(  # We import last so we can use gui + utils
@@ -1116,7 +1115,7 @@ class MainContent:
                     )
 
                 # Replace the current program directory with the new version
-                rmtree(current_dir)
+                shutil_rmtree(current_dir)
                 copytree(
                     os.path.join(
                         gettempdir(),
@@ -2021,6 +2020,12 @@ class MainContent:
             logger.warning("User cancelled input!")
             return
 
+    def _do_cleanup_gitpython(self, repo: Repo) -> None:
+        # Cleanup GitPython
+        collect()
+        repo.git.clear_cache()
+        del repo
+
     def _do_clone_repo_to_storage_path(self, repo_url: str) -> None:
         """
         Checks validity of configured git repo, as well as if it exists
@@ -2064,7 +2069,7 @@ class MainContent:
                     return
                 elif answer == "Clone new":
                     logger.info(f"Deleting local git repo at: {repo_path}")
-                    rmtree(repo_path)
+                    shutil_rmtree(repo_path, ignore_errors=False, onerror=handle_remove_read_only)
                 elif answer == "Update existing":
                     self._do_force_update_existing_repo(repo_url=repo_url)
                     return
@@ -2123,17 +2128,22 @@ class MainContent:
                 try:
                     # Open repo
                     repo = Repo(repo_path)
+                    # Make sure we are on main branch
+                    repo.git.checkout("main")
                     # Reset the repository to HEAD in case of changes not committed
                     repo.head.reset(index=True, working_tree=True)
                     # Perform a pull with rebase
                     origin = repo.remotes.origin
                     origin.pull(rebase=True)
+                    # Notify user
                     show_information(
                         title="Repo force updated",
                         text="The configured repository was updated!",
                         information=f"{repo_path} ->\n "
                         + f"{repo.head.commit.message}",
                     )
+                    # Cleanup
+                    self._do_cleanup_gitpython(repo=repo)
                 except GitCommandError:
                     stacktrace = traceback.format_exc()
                     show_warning(
@@ -2151,7 +2161,10 @@ class MainContent:
                     information="Would you like to clone a new copy of this repository?",
                 )
                 if answer == "&Yes":
-                    self._do_clone_repo_to_storage_path(repo_url=repo_url)
+                    if GIT_EXISTS:
+                        self._do_clone_repo_to_storage_path(repo_url=repo_url)
+                    else:
+                        self._do_notify_no_git()
         else:
             # Warn the user so they know to configure in settings
             show_warning(
@@ -2282,6 +2295,8 @@ class MainContent:
                             information=f"Configured repository: {repo_url}",
                             details=stacktrace,
                         )
+                    # Cleanup
+                    self._do_cleanup_gitpython(repo=local_repo)
                     # Notify the pull request URL
                     answer = show_dialogue_conditional(
                         title="Pull request created",
@@ -2307,7 +2322,10 @@ class MainContent:
                     information="Would you like to clone a new copy of this repository?",
                 )
                 if answer == "&Yes":
-                    self._do_clone_repo_to_storage_path(repo_url=repo_url)
+                    if GIT_EXISTS:
+                        self._do_clone_repo_to_storage_path(repo_url=repo_url)
+                    else:
+                        self._do_notify_no_git()
         else:
             # Warn the user so they know to configure in settings
             show_warning(
