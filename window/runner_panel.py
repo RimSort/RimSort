@@ -313,9 +313,17 @@ class RunnerPanel(QWidget):
 
         # Hardcoded query progress output support
         # -------QUERY-------
-        elif "IPublishedFileService/QueryFiles page" in line:
-            overwrite = True
-        elif "IPublishedFileService/GetDetails chunk" in line:
+        elif (
+            "IPublishedFileService/QueryFiles page" in line
+            or "IPublishedFileService/GetDetails chunk" in line
+        ):
+            if int(line[line.index("[") + 1 : line.index("/", 22)]) == 0:
+                self.progress_bar.setRange(
+                    0, int(line[line.index("/", 22) + 1 : line.index("]")])
+                )
+            self.progress_bar.setValue(
+                int(line[line.index("[") + 1 : line.index("/", 22)])
+            )
             overwrite = True
         # -------QUERY-------
 

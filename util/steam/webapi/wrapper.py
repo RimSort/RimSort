@@ -179,7 +179,6 @@ class DynamicQuery(QObject):
 
         if self.api:
             self.query = True
-            self.dq_messaging_signal.emit(f"WebAPI initialized! Starting query...\n")
             while self.query:
                 if self.pagenum > self.pages:
                     self.query = False
@@ -212,6 +211,9 @@ class DynamicQuery(QObject):
         total = len(publishedfileids)
         self.dq_messaging_signal.emit(
             f"\nSteam WebAPI: IPublishedFileService/GetDetails initializing for {total} mods...\n\n"
+        )
+        self.dq_messaging_signal.emit(
+            f"IPublishedFileService/GetDetails chunk [0/{total}]"
         )
         if not self.api:  # If we don't have API initialized
             return None, None  # Exit query
@@ -399,8 +401,10 @@ class DynamicQuery(QObject):
                 self.pages = ceil(
                     self.total / len(result["response"]["publishedfiledetails"])
                 )
+                # Since this is only run during the initial loop, we print out the 0
+                # needed for RunnerPanel progress bar calculations
                 self.dq_messaging_signal.emit(
-                    f"Total mod items to parse: {str(self.total)}"
+                    f"IPublishedFileService/QueryFiles page [0" + f"/{str(self.pages)}]"
                 )
         self.dq_messaging_signal.emit(
             f"IPublishedFileService/QueryFiles page [{str(self.pagenum)}"

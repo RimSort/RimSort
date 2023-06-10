@@ -54,7 +54,7 @@ class SteamDatabaseBuilder(QThread):
             # Since the key is valid, we try to launch a live query
             if self.mode == "no_local":
                 self.db_builder_message_output_signal.emit(
-                    f"\nInitializing DynamicQuery with configured Steam API key for AppID: {self.appid}\n"
+                    f"\nInitializing DynamicQuery with configured Steam API key for AppID: {self.appid}\n\n"
                 )
                 # Create query
                 dynamic_query = DynamicQuery(
@@ -217,7 +217,7 @@ class SteamDatabaseBuilder(QThread):
         }
         total = len(database["database"].keys())
         self.db_builder_message_output_signal.emit(
-            f"Populated {total} items queried from Steam Workshop into initial database for "
+            f"\nPopulated {total} items queried from Steam Workshop into initial database for "
             + f"{self.appid}..."
         )
         return database
