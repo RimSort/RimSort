@@ -110,7 +110,7 @@ class MainWindow(QMainWindow):
 
         # Create the main application window
         self.debug_mode = debug_mode
-        self.version_string = "Alpha-v1.0.5.2"
+        self.version_string = "Alpha-v1.0.5.3"
         self.setWindowTitle(f"RimSort {self.version_string}")
         self.setMinimumSize(QSize(1024, 768))
 
