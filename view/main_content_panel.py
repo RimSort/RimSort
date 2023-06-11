@@ -1133,7 +1133,9 @@ class MainContent:
                     )
 
                 # Replace the current program directory with the new version
-                shutil_rmtree(current_dir)
+                shutil_rmtree(
+                    current_dir, ignore_errors=False, onerror=handle_remove_read_only
+                )
                 copytree(
                     os.path.join(
                         gettempdir(),
