@@ -1,25 +1,17 @@
 from gc import collect
-import os
 from pathlib import Path
 import platform
 import subprocess
 import sys
 import datetime
-from functools import partial
 from io import BytesIO
 from logging import WARNING, getLogger
 from math import ceil
 from multiprocessing import cpu_count, current_process, Pool
-import pytz
 from stat import S_IEXEC
 from shutil import copytree
 from shutil import rmtree as shutil_rmtree
-from signal import SIGTERM
-from subprocess import Popen
 from tempfile import gettempdir
-from threading import Thread
-from time import localtime, sleep, strftime
-from typing import Any, Dict
 from zipfile import ZipFile
 
 from logger_tt import logger
@@ -40,15 +32,15 @@ from github import Github
 
 from pyperclip import copy as copy_to_clipboard
 from requests import get as requests_get
-from requests import post as requests_post
-from requests.exceptions import SSLError
-from urllib3.exceptions import HTTPError
 
 from model.dialogue import show_dialogue_conditional
 
-from util.constants import DB_BUILDER_EXCEPTIONS, RIMWORLD_DLC_METADATA
-from util.generic import chunks, handle_remove_read_only, open_url_browser
-from util.metadata import SteamDatabaseBuilder, recursively_update_dict
+from util.generic import (
+    chunks,
+    handle_remove_read_only,
+    open_url_browser,
+    upload_data_to_0x0_st,
+)
 from util.rentry.wrapper import RentryUpload
 from util.steam.browser import SteamBrowser
 from util.steam.webapi.wrapper import ISteamRemoteStorage_GetPublishedFileDetails
@@ -89,7 +81,6 @@ from util.mods import *
 from util.schema import validate_mods_config_format
 from util.steam.steamcmd.wrapper import SteamcmdInterface
 from util.steam.steamworks.wrapper import (
-    SteamworksAppDependenciesQuery,
     SteamworksGameLaunch,
     SteamworksSubscriptionHandler,
 )
@@ -901,6 +892,10 @@ class MainContent:
             self._do_export_list_clipboard()
         if action == "upload_list_rentry":
             self._do_upload_list_rentry()
+        if action == "upload_rw_log":
+            self._do_upload_rw_log()
+        if action == "upload_rs_log":
+            self._upload_rs_log()
         if action == "save":
             self._do_save()
         if action == "run":
@@ -1655,6 +1650,28 @@ class MainContent:
             )
         else:
             show_warning(text="Failed to upload exported active mod list to Rentry.co")
+
+    def _do_upload_rw_log(self):
+        touplaod = self.game_configuration.get_config_folder_path() + "/../Player.log"
+        if os.path.exists(touplaod):
+            ret = upload_data_to_0x0_st(touplaod)
+            if ret:
+                copy_to_clipboard(ret)
+                show_information(
+                    title="Uploaded file to http://0x0.st/",
+                    text=f"Uploaded RimWorld log to http://0x0.st!",
+                    information=f"The URL has been copied to your clipboard:\n\n{ret}",
+                )
+
+    def _upload_rs_log(self):
+        ret = upload_data_to_0x0_st(os.path.join(gettempdir(), "RimSort.log"))
+        if ret:
+            copy_to_clipboard(ret)
+            show_information(
+                title="Uploaded file to http://0x0.st/",
+                text=f"Uploaded RimSort log to http://0x0.st!",
+                information=f"The URL has been copied to your clipboard:\n\n{ret}",
+            )
 
     def _do_save(self) -> None:
         """

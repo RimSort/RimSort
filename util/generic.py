@@ -21,13 +21,15 @@ def chunks(_list: list, limit: int):
     for i in range(0, len(_list), limit):
         yield _list[i : i + limit]
 
+
 def handle_remove_read_only(func, path: str, exc):
     excvalue = exc[1]
     if func in (os.rmdir, os.remove, os.unlink) and excvalue.errno == EACCES:
-        os.chmod(path, S_IRWXU|S_IRWXG| S_IRWXO) # 0777
+        os.chmod(path, S_IRWXU | S_IRWXG | S_IRWXO)  # 0777
         func(path)
     else:
         raise
+
 
 def launch_game_process(game_executable: str, args: str) -> None:
     """
@@ -133,7 +135,7 @@ def platform_specific_open(path: str) -> None:
         logger.error("Attempting to open directory on an unknown system")
 
 
-def upload_data_to_0x0_st(path: str) -> None:
+def upload_data_to_0x0_st(path: str) -> str:
     """
     Function to upload data to http://0x0.st/
 
@@ -147,11 +149,7 @@ def upload_data_to_0x0_st(path: str) -> None:
     if request.status_code == 200:
         url = request.text.strip()
         logger.info(f"Uploaded! Uploaded data can be found at: {url}")
-        copy_to_clipboard(url)
-        show_information(
-            title="Uploaded file to http://0x0.st/",
-            text=f"Uploaded active mod list report to http://0x0.st!",
-            information=f"The URL has been copied to your clipboard:\n\n{url}",
-        )
+        return url
     else:
         logger.warning(f"Failed to upload data to http://0x0.st")
+        return None

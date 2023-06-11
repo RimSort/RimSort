@@ -181,6 +181,12 @@ class Actions(QWidget):
         self.rimworld_label.setObjectName("summaryValue")
         self.rimworld_label.setAlignment(Qt.AlignCenter)
 
+        # UPLOAD LOG BUTTON
+        self.upload_rwlog_button = QPushButton("Upload log")
+        self.upload_rwlog_button.setToolTip("Upload RimWorld log to 0x0.st")
+        self.upload_rwlog_button.clicked.connect(
+            partial(self.actions_signal.emit, "upload_rw_log")
+        )
         # RUN BUTTON
         self.run_button = QPushButton("Run")
         self.run_button.setToolTip("Right-click to set RimWorld game arguments!")
@@ -219,6 +225,7 @@ class Actions(QWidget):
         self.middle_panel.addWidget(self.setup_steamcmd_button)
         self.middle_panel.addWidget(self.show_steamcmd_status_button)
         self.bottom_panel.addWidget(self.rimworld_label)
+        self.bottom_panel.addWidget(self.upload_rwlog_button)
         self.bottom_panel.addWidget(self.import_button)
         self.bottom_panel.addWidget(self.export_button)
         self.bottom_panel.addWidget(self.run_button)
