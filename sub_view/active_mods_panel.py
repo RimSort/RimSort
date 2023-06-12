@@ -143,7 +143,6 @@ class ActiveModList(QWidget):
         self.active_mods_list.list_update_signal.connect(
             self.handle_internal_mod_list_updated
         )
-
         logger.info("Finished ActiveModList initialization")
 
     def recalculate_internal_list_errors(self) -> None:
@@ -210,7 +209,11 @@ class ActiveModList(QWidget):
                                     logger.error(
                                         f"supportedVersion in list is not str: {supported_versions}"
                                     )
-                            if is_supported:
+                            if (
+                                is_supported
+                                or mod_data["packageId"]
+                                in self.active_mods_list.ignore_error_list
+                            ):
                                 package_id_to_errors[uuid]["version_mismatch"] = False
                         else:
                             logger.error(
@@ -224,57 +227,64 @@ class ActiveModList(QWidget):
                     logger.error(
                         f"No supportedVersions key found in mod data: {mod_data}"
                     )
+            if not mod_data["packageId"] in self.active_mods_list.ignore_error_list:
+                # Check dependencies
+                if mod_data.get("dependencies"):
+                    for dependency in mod_data["dependencies"]:
+                        if dependency not in package_ids_set:
+                            package_id_to_errors[uuid]["missing_dependencies"].add(
+                                dependency
+                            )
 
-            # Check dependencies
-            if mod_data.get("dependencies"):
-                for dependency in mod_data["dependencies"]:
-                    if dependency not in package_ids_set:
-                        package_id_to_errors[uuid]["missing_dependencies"].add(
-                            dependency
-                        )
+                # Check incompatibilities
+                if mod_data.get("incompatibilities"):
+                    for incompatibility in mod_data["incompatibilities"]:
+                        if incompatibility in package_ids_set:
+                            package_id_to_errors[uuid][
+                                "conflicting_incompatibilities"
+                            ].add(incompatibility)
 
-            # Check incompatibilities
-            if mod_data.get("incompatibilities"):
-                for incompatibility in mod_data["incompatibilities"]:
-                    if incompatibility in package_ids_set:
-                        package_id_to_errors[uuid]["conflicting_incompatibilities"].add(
-                            incompatibility
-                        )
+                # Check loadTheseBefore
+                if mod_data.get("loadTheseBefore"):
+                    current_mod_index = uuid_to_index[uuid]
+                    for load_this_before in mod_data["loadTheseBefore"]:
+                        if not isinstance(load_this_before, tuple):
+                            logger.error(
+                                f"Expected load order rule to be a tuple: [{load_this_before}]"
+                            )
+                        # Only if explict_bool = True then we show error
+                        if load_this_before[1]:
+                            # Note: we cannot use uuid_to_index.get(load_this_before) as 0 is falsy but valid
+                            if load_this_before[0] in uuid_to_index:
+                                if (
+                                    current_mod_index
+                                    <= uuid_to_index[load_this_before[0]]
+                                ):
+                                    package_id_to_errors[uuid][
+                                        "load_before_violations"
+                                    ].add(load_this_before[0])
 
-            # Check loadTheseBefore
-            if mod_data.get("loadTheseBefore"):
-                current_mod_index = uuid_to_index[uuid]
-                for load_this_before in mod_data["loadTheseBefore"]:
-                    if not isinstance(load_this_before, tuple):
-                        logger.error(
-                            f"Expected load order rule to be a tuple: [{load_this_before}]"
-                        )
-                    # Only if explict_bool = True then we show error
-                    if load_this_before[1]:
-                        # Note: we cannot use uuid_to_index.get(load_this_before) as 0 is falsy but valid
-                        if load_this_before[0] in uuid_to_index:
-                            if current_mod_index <= uuid_to_index[load_this_before[0]]:
-                                package_id_to_errors[uuid][
-                                    "load_before_violations"
-                                ].add(load_this_before[0])
-
-            # Check loadTheseAfter
-            if mod_data.get("loadTheseAfter"):
-                current_mod_index = uuid_to_index[uuid]
-                for load_this_after in mod_data["loadTheseAfter"]:
-                    if not isinstance(load_this_after, tuple):
-                        logger.error(
-                            f"Expected load order rule to be a tuple: [{load_this_after}]"
-                        )
-                    # Only if explict_bool = True then we show error
-                    if load_this_after[1]:
-                        if load_this_after[0] in uuid_to_index:
-                            if current_mod_index >= uuid_to_index[load_this_after[0]]:
-                                package_id_to_errors[uuid]["load_after_violations"].add(
-                                    load_this_after[0]
-                                )
+                # Check loadTheseAfter
+                if mod_data.get("loadTheseAfter"):
+                    current_mod_index = uuid_to_index[uuid]
+                    for load_this_after in mod_data["loadTheseAfter"]:
+                        if not isinstance(load_this_after, tuple):
+                            logger.error(
+                                f"Expected load order rule to be a tuple: [{load_this_after}]"
+                            )
+                        # Only if explict_bool = True then we show error
+                        if load_this_after[1]:
+                            if load_this_after[0] in uuid_to_index:
+                                if (
+                                    current_mod_index
+                                    >= uuid_to_index[load_this_after[0]]
+                                ):
+                                    package_id_to_errors[uuid][
+                                        "load_after_violations"
+                                    ].add(load_this_after[0])
 
             # Consolidate results
+            self.ignore_error = self.active_mods_list.ignore_error_list
             error_tool_tip_text = ""
             warning_tool_tip_text = ""
             missing_dependencies = package_id_to_errors[uuid]["missing_dependencies"]
@@ -322,7 +332,7 @@ class ActiveModList(QWidget):
                     warning_tool_tip_text += f"\n  * {load_after_name}"
 
             version_mismatch = package_id_to_errors[uuid]["version_mismatch"]
-            if version_mismatch:
+            if version_mismatch and not self.ignore_error:
                 warning_tool_tip_text += "\n\nMod and Game Version Mismatch"
 
             # Set icon if necessary
