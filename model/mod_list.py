@@ -1,3 +1,5 @@
+# Need rework
+
 from logger_tt import logger
 import os
 import shutil
@@ -95,7 +97,7 @@ class ModListWidget(QListWidget):
         # This set is used to keep track of mods that have been loaded
         # into widgets. Used for an optimization strategy for `handle_rows_inserted`
         self.uuids = set()
-
+        self.ignore_error_list = []
         logger.info("Finished ModListWidget initialization")
 
     def eventFilter(self, source_object: QObject, event: QEvent) -> None:
@@ -128,6 +130,8 @@ class ModListWidget(QListWidget):
             # Define our QMenu & QActions/bools
             contextMenu = QMenu()
             # Open folder action
+            ignore_error_action = QAction()
+            ignore_error_bool = True
             open_folder_action = QAction()
             open_folder_bool = True
             # Open URL in browser action
@@ -148,7 +152,6 @@ class ModListWidget(QListWidget):
 
             # Get all selected QListWidgetItems
             selected_items = self.selectedItems()
-
             # Single item selected
             if len(selected_items) == 1:
                 source_item = selected_items[0]
@@ -157,6 +160,8 @@ class ModListWidget(QListWidget):
                     # Retreive metadata
                     widget_json_data = source_widget.json_data
                     mod_data_source = widget_json_data.get("data_source")
+                    # Ignore error action
+                    ignore_error_action.setText("Toggle warning")
                     # Open folder action text
                     open_folder_action.setText("Open folder")
                     # If we have a "url" or "steam_url"
@@ -193,6 +198,7 @@ class ModListWidget(QListWidget):
                         # Retreive metadata
                         widget_json_data = source_widget.json_data
                         mod_data_source = widget_json_data.get("data_source")
+                        ignore_error_action.setText("Toggle warning")
                         # Open folder action text
                         open_folder_action.setText("Open folder(s)")
                         # If we have a "url" or "steam_url"
@@ -219,8 +225,9 @@ class ModListWidget(QListWidget):
                             )
                         # Delete mod action text
                         delete_mod_action.setText("Delete mod(s)")
-
             # Put together our contextMenu
+            if ignore_error_bool:
+                contextMenu.addAction(ignore_error_action)
             if open_folder_bool:
                 contextMenu.addAction(open_folder_action)
             if open_url_browser_bool:
@@ -262,13 +269,27 @@ class ModListWidget(QListWidget):
                         widget_json_data = source_widget.json_data
                         mod_data_source = widget_json_data.get("data_source")
                         mod_path = widget_json_data["path"]
+                        if action == ignore_error_action:
+                            if not (
+                                widget_json_data["packageId"] in self.ignore_error_list
+                            ):
+                                self.ignore_error_list.append(
+                                    widget_json_data["packageId"]
+                                )
+                            else:
+                                self.ignore_error_list.remove(
+                                    widget_json_data["packageId"]
+                                )
+                            print(self.ignore_error_list)
+                            self.list_update_signal.emit(str(self.count()))
+
                         # Open folder action
                         if action == open_folder_action:  # ACTION: Open folder
                             if os.path.exists(mod_path):  # If the path actually exists
                                 logger.info(f"Opening folder: {mod_path}")
                                 platform_specific_open(mod_path)
                         # Open url action
-                        if (
+                        elif (
                             action == open_url_browser_action
                         ):  # ACTION: Open URL in browser
                             if widget_json_data.get("url") or widget_json_data.get(
