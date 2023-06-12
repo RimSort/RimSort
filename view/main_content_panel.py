@@ -921,7 +921,9 @@ class MainContent:
                     [
                         self.game_configuration.get_game_folder_path() + "/" + rwexec,
                         self.game_configuration.run_arguments,
-                    ]
+                    ],
+                    creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+                    shell=True,
                 )
 
         if action == "edit_run_args":
