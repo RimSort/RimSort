@@ -54,7 +54,8 @@ def show_dialogue_conditional(
         # Configure buttons
         dialogue.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
         dialogue.setEscapeButton(QMessageBox.No)
-
+    dialogue.setTextFormat(Qt.RichText)
+    text, information, details = url_to_html(text, information, details)
     # Add data
     if text:
         dialogue.setText(text)
@@ -81,6 +82,10 @@ def show_information(
     :param text: text to pass to setText
     :param information: text to pass to setInformativeText
     :param details: text to pass to setDetailedText
+
+    Warning: text ignore '\n';
+    Url in information can only be in the first line, it will ignore others
+    (details urls is not tested)
     """
     logger.info(
         f"Showing information box with input: [{title}], [{text}], [{information}], [{details}]"
@@ -92,7 +97,8 @@ def show_information(
         info_message_box.setWindowTitle(title)
     else:
         info_message_box.setWindowTitle(DEFAULT_TITLE)
-
+    info_message_box.setTextFormat(Qt.RichText)
+    text, information, details = url_to_html(text, information, details)
     # Add data
     if text:
         info_message_box.setText(text)
@@ -129,7 +135,8 @@ def show_warning(
         warning_message_box.setWindowTitle(title)
     else:
         warning_message_box.setWindowTitle(DEFAULT_TITLE)
-
+    warning_message_box.setTextFormat(Qt.RichText)
+    text, information, details = url_to_html(text, information, details)
     # Add data
     if text:
         warning_message_box.setText(text)
@@ -169,7 +176,8 @@ def show_fatal_error(
         fatal_message_box.setWindowTitle(title)
     else:
         fatal_message_box.setWindowTitle(DEFAULT_TITLE)
-
+    fatal_message_box.setTextFormat(Qt.RichText)
+    text, information, details = url_to_html(text, information, details)
     # Add data
     if text:
         fatal_message_box.setText(text)
@@ -181,3 +189,19 @@ def show_fatal_error(
     # Show the message box
     logger.info("Finished showing fatal error box")
     fatal_message_box.exec_()
+
+
+def url_to_html(*args):
+    ret = ()
+    # manage url
+    for text in args:
+        if text != None:
+            text = text + "\n"
+            # for some reason InformativeText don't accept Qt.RichText after a \n
+            fl = text[: text.index("\n")]
+            for i in fl.split():
+                if i.startswith("https:") or i.startswith("http:"):
+                    text = text.replace(i, f"<a href={i}>{i}</a>")
+        ret = ret + tuple([text])  # need  to find a better way
+    print(ret)
+    return ret

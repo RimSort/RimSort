@@ -1672,7 +1672,7 @@ class MainContent:
                 show_information(
                     title="Uploaded file to http://0x0.st/",
                     text=f"Uploaded RimWorld log to http://0x0.st!",
-                    information=f"The URL has been copied to your clipboard:\n\n{ret}",
+                    information=f"The URL has been copied to your clipboard: {ret}",
                 )
 
     def _upload_rs_log(self):
@@ -1682,7 +1682,7 @@ class MainContent:
             show_information(
                 title="Uploaded file to http://0x0.st/",
                 text=f"Uploaded RimSort log to http://0x0.st!",
-                information=f"The URL has been copied to your clipboard:\n\n{ret}",
+                information=f"The URL has been copied to your clipboard: {ret}",
             )
 
     def _do_save(self) -> None:
