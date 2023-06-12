@@ -85,7 +85,7 @@ def show_information(
 
     Warning: text ignore '\n';
     Url in information can only be in the first line, it will ignore others
-    (details urls is not tested)
+    Url in details don't work
     """
     logger.info(
         f"Showing information box with input: [{title}], [{text}], [{information}], [{details}]"
@@ -124,6 +124,10 @@ def show_warning(
     :param text: text to pass to setText
     :param information: text to pass to setInformativeText
     :param details: text to pass to setDetailedText
+
+    Warning: text ignore '\n';
+    Url in information can only be in the first line, it will ignore others
+    Url in details don't work
     """
     logger.info(
         f"Showing warning box with input: [{title}], [{text}], [{information}], [{details}]"
@@ -165,6 +169,10 @@ def show_fatal_error(
     :param text: text to pass to setText
     :param information: text to pass to setInformativeText
     :param details: text to pass to setDetailedText
+
+    Warning: text ignore '\n';
+    Url in information can only be in the first line, it will ignore others
+    Url in details don't work
     """
     logger.info(
         f"Showing fatal error box with input: [{title}], [{text}], [{information}], [{details}]"
@@ -201,7 +209,8 @@ def url_to_html(*args):
             fl = text[: text.index("\n")]
             for i in fl.split():
                 if i.startswith("https:") or i.startswith("http:"):
-                    text = text.replace(i, f"<a href={i}>{i}</a>")
+                    if not f"<a href={i}>{i}</a>" in text:
+                        text = text.replace(i, f"<a href={i}>{i}</a>")
         ret = ret + tuple([text])  # need  to find a better way
     print(ret)
     return ret

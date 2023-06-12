@@ -80,7 +80,7 @@ class SettingsPanel(QDialog):
             + "the URL will be copied to your clipboard."
         )
         self.upload_log_button.clicked.connect(
-            partial(self.settings_panel_actions_signal, "upload_rs_log")
+            partial(self.settings_panel_actions_signal.emit, "upload_rs_log")
         )
         self.open_storage_button = QPushButton("Open RimSort storage")
         self.open_storage_button.clicked.connect(
