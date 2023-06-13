@@ -292,7 +292,11 @@ class ModListWidget(QListWidget):
                                 True, "user_rules", widget_json_data["packageId"]
                             )
                         # Delete mods action
-                        elif action == delete_mod_action:  # ACTION: Delete mod
+                        elif action == delete_mod_action and not widget_json_data[
+                            "packageId"
+                        ].startswith(
+                            "ludeon.rimworld"
+                        ):  # ACTION: Delete mod
                             logger.info(f"Deleting mod at: {mod_path}")
                             shutil.rmtree(mod_path)
             return True
