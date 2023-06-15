@@ -358,6 +358,16 @@ class SteamBrowser(QWidget):
             self.web_view.page().runJavaScript(
                 install_button_removal_script, 0, lambda result: None
             )
+            # change target <a>
+            change_target_a_script = """
+            var elements = document.getElementsByTagName("a");
+            for (var i = 0, l = elements.length; i < l; i++) {
+                elements[i].target = "_self";
+            }
+            """
+            self.web_view.page().runJavaScript(
+                change_target_a_script, 0, lambda result: None
+            )
             # Remove "Login" button
             login_button_removal_script = """
             var elements = document.getElementsByClassName("global_action_link");
