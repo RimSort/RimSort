@@ -39,6 +39,7 @@ QDialog#settingsPanel {
 }
 QCheckBox#summaryValue {
     color: white;
+    font-size: 9pt;
 }
 
 
