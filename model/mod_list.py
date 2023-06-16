@@ -154,7 +154,7 @@ class ModListWidget(QListWidget):
                 source_item = selected_items[0]
                 if type(source_item) is QListWidgetItem:
                     source_widget = self.itemWidget(source_item)
-                    # Retreive metadata
+                    # Retrieve metadata
                     widget_json_data = source_widget.json_data
                     mod_data_source = widget_json_data.get("data_source")
                     # Open folder action text
@@ -170,7 +170,7 @@ class ModListWidget(QListWidget):
                     # Edit mod rules with Rule Editor (only for individual mods)
                     edit_mod_rules_bool = True
                     edit_mod_rules_action.setText("Edit mod rules")
-                    # If Workshop, try unsub + delete
+                    # If Workshop, try Unsubscribe + delete
                     if mod_data_source == "workshop" and widget_json_data.get(
                         "publishedfileid"
                     ):
@@ -190,7 +190,7 @@ class ModListWidget(QListWidget):
                 for source_item in selected_items:
                     if type(source_item) is QListWidgetItem:
                         source_widget = self.itemWidget(source_item)
-                        # Retreive metadata
+                        # Retrieve metadata
                         widget_json_data = source_widget.json_data
                         mod_data_source = widget_json_data.get("data_source")
                         # Open folder action text
@@ -207,7 +207,7 @@ class ModListWidget(QListWidget):
                             open_mod_steam_action.setText("Open mod(s) in Steam")
                         # No "Edit mod rules" when multiple selected
                         edit_mod_rules_bool = False
-                        # If Workshop, try unsub + delete
+                        # If Workshop, try Unsubscribe + delete
                         if mod_data_source == "workshop" and widget_json_data.get(
                             "publishedfileid"
                         ):
@@ -243,7 +243,7 @@ class ModListWidget(QListWidget):
                 ):  # ACTION: Unsubscribe & delete mod
                     if type(source_item) is QListWidgetItem:
                         source_widget = self.itemWidget(source_item)
-                        # Retreive metadata
+                        # Retrieve metadata
                         widget_json_data = source_widget.json_data
                         if mod_data_source == "workshop" and widget_json_data.get(
                             "publishedfileid"
@@ -258,7 +258,7 @@ class ModListWidget(QListWidget):
                 for source_item in selected_items:
                     if type(source_item) is QListWidgetItem:
                         source_widget = self.itemWidget(source_item)
-                        # Retreive metadata
+                        # Retrieve metadata
                         widget_json_data = source_widget.json_data
                         mod_data_source = widget_json_data.get("data_source")
                         mod_path = widget_json_data["path"]
@@ -333,7 +333,7 @@ class ModListWidget(QListWidget):
         list items that do not have widgets assigned to them.
 
         However, inserting the initial `n` mods with `recreate_mod_list` has
-        has an inefficiency: it is only able to insert one at a time. This means
+        an inefficiency: it is only able to insert one at a time. This means
         this method is called `n` times for the first `n` mods.
         One optimization here (saving about 1 second with a 200 mod list) is
         to not emit the list update signal until the number of widgets is
