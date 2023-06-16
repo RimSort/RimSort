@@ -7,7 +7,6 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from PySide6.QtCore import Qt, QObject, QPoint, QSize, QUrl, Signal
 from PySide6.QtGui import QAction, QPixmap
-from PySide6.QtWebChannel import QWebChannel
 from PySide6.QtWebEngineCore import QWebEnginePage
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtWidgets import (
@@ -76,6 +75,7 @@ class SteamBrowser(QWidget):
 
         # DOWNLOADER WIDGETS
         self.downloader_label = QLabel("Mod Downloader")
+        self.downloader_label.setObjectName("browserPaneldownloader_label")
         self.downloader_list = QListWidget()
         self.downloader_list.setFixedWidth(200)
         self.downloader_list.setItemAlignment(Qt.AlignCenter)
@@ -84,6 +84,7 @@ class SteamBrowser(QWidget):
             self._downloader_item_ContextMenuEvent
         )
         self.clear_list_button = QPushButton("Clear List")
+        self.clear_list_button.setObjectName("browserPanelClearList")
         self.clear_list_button.clicked.connect(self._clear_downloader_list)
         self.download_steamcmd_button = QPushButton("Download mod(s) (SteamCMD)")
         self.download_steamcmd_button.clicked.connect(
@@ -137,11 +138,12 @@ class SteamBrowser(QWidget):
         self.add_to_list_button = QAction("Add to list")
         self.add_to_list_button.triggered.connect(self._add_collection_or_mod_to_list)
         self.nav_bar = QToolBar()
+        self.nav_bar.setObjectName("browserPanelnav_bar")
         self.nav_bar.addAction(self.web_view.pageAction(QWebEnginePage.Back))
         self.nav_bar.addAction(self.web_view.pageAction(QWebEnginePage.Forward))
         self.nav_bar.addAction(self.web_view.pageAction(QWebEnginePage.Stop))
         self.nav_bar.addAction(self.web_view.pageAction(QWebEnginePage.Reload))
-        self.nav_bar.addSeparator()
+        # self.nav_bar.addSeparator()
         self.progress_bar = QProgressBar()
         self.progress_bar.setMinimum(0)
         self.progress_bar.setMaximum(100)
@@ -164,6 +166,7 @@ class SteamBrowser(QWidget):
         self.window_layout.addLayout(self.downloader_layout)
         self.window_layout.addLayout(self.browser_layout)
 
+        self.setObjectName("browserPanel")
         # Put it all together
         self.setWindowTitle(self.current_title)
         self.setLayout(self.window_layout)
@@ -357,6 +360,23 @@ class SteamBrowser(QWidget):
             """
             self.web_view.page().runJavaScript(
                 install_button_removal_script, 0, lambda result: None
+            )
+            remove_top_banner = """
+            var element = document.getElementById("global_header"); 
+            var elements = document.getElementsByClassName("responsive_header")
+            if (element) {
+                element.parentNode.removeChild(element);
+            }
+            if (elements){
+                elements[0].parentNode.removeChild(elements[0])
+                document.getElementsByClassName("responsive_page_content")[0].setAttribute("style","padding-top: 0px;")
+                document.getElementsByClassName("apphub_HeaderTop workshop")[0].setAttribute("style","padding-top: 0px;")
+                document.getElementsByClassName("apphub_HomeHeaderContent")[0].setAttribute("style","padding-top: 0px;")
+            }
+            
+            """
+            self.web_view.page().runJavaScript(
+                remove_top_banner, 0, lambda result: None
             )
             # change target <a>
             change_target_a_script = """
