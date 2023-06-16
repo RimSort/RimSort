@@ -24,15 +24,6 @@ Accent alert button: a3c1da
 QMainWindow {
     background-color: #19232d;
 }
-
-QDialog#settingsPanel {
-    background-color: #22303d;
-}
-
-QCheckBox#summaryValue {
-    color: white;
-}
-
 QWidget#MainPanel {
     border-style: solid;
     border-color: #455364;
@@ -41,14 +32,44 @@ QWidget#MainPanel {
     margin: 7px; /* Space between frame and app edge */
 }
 
+/* ===== Settings (window/settings_panel.py) ===== */
+QDialog#settingsPanel {
+    background-color: #22303d;
+
+}
+QCheckBox#summaryValue {
+    color: white;
+}
+
+
+/* ===== RunnerPanel (window/runner_panel.py) ===== */
 QWidget#RunnerPanel {
     border-style: solid;
     border-color: #455364;
     border-width: 1px;
     border-radius: 3px;
     margin: 7px; /* Space between frame and app edge */
+    background-color: #1B2838;
+}
+QPlainTextEdit#RunnerPaneltext {
+    background-color: #22303d;
+    color: white;
 }
 
+
+/* ===== Browser (util/steam/browser.py) ===== */
+QWidget#browserPanel {
+    background-color: #1B2838;
+}
+QLabel#browserPaneldownloader_label {
+    color: white;
+}
+QPushButton#browserPanelClearList{
+    background-color: #BA412D;
+}
+
+
+/* ===== General ===== */
 QScrollBar:vertical {
     border: 1px solid #455364;
     border-radius: 5px;
