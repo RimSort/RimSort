@@ -252,8 +252,11 @@ class ActiveModList(QWidget):
                     # Only if explict_bool = True then we show error
                     if load_this_before[1]:
                         # Note: we cannot use uuid_to_index.get(load_this_before) as 0 is falsy but valid
-                        if load_this_before[0] in uuid_to_index:
-                            if current_mod_index <= uuid_to_index[load_this_before[0]]:
+                        if load_this_before[0] in packageId_to_uuid:
+                            if (
+                                current_mod_index
+                                <= uuid_to_index[packageId_to_uuid[load_this_before[0]]]
+                            ):
                                 package_id_to_errors[uuid][
                                     "load_before_violations"
                                 ].add(load_this_before[0])
@@ -268,8 +271,11 @@ class ActiveModList(QWidget):
                         )
                     # Only if explict_bool = True then we show error
                     if load_this_after[1]:
-                        if load_this_after[0] in uuid_to_index:
-                            if current_mod_index >= uuid_to_index[load_this_after[0]]:
+                        if load_this_after[0] in packageId_to_uuid:
+                            if (
+                                current_mod_index
+                                >= uuid_to_index[packageId_to_uuid[load_this_after[0]]]
+                            ):
                                 package_id_to_errors[uuid]["load_after_violations"].add(
                                     load_this_after[0]
                                 )
