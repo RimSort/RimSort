@@ -64,9 +64,6 @@ QWidget#browserPanel {
 QLabel#browserPaneldownloader_label {
     color: white;
 }
-QPushButton#browserPanelClearList{
-    background-color: #BA412D;
-}
 
 
 /* ===== General ===== */
