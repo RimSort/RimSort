@@ -150,7 +150,7 @@ class ModListWidget(QListWidget):
             unsubscribe_mod_steam_bool = None
             # Delete mod
             delete_mod_action = QAction()
-            delete_mod_bool = True
+            delete_mod_bool = None
 
             # Get all selected QListWidgetItems
             selected_items = self.selectedItems()
@@ -190,8 +190,14 @@ class ModListWidget(QListWidget):
                         unsubscribe_mod_steam_action.setText(
                             "Unsubscribe mod with Steam"
                         )
-                    # Delete mod action text
-                    delete_mod_action.setText("Delete mod")
+                    # Prohibit deletion of game files
+                    if not (
+                        widget_json_data["data_source"] == "expansion"
+                        or widget_json_data["packageId"].startswith("ludeon.rimworld")
+                    ):
+                        delete_mod_bool = True
+                        # Delete mod action text
+                        delete_mod_action.setText("Delete mod")
             # Multiple items selected
             elif len(selected_items) > 1:  # Multiple items selected
                 for source_item in selected_items:
@@ -225,8 +231,16 @@ class ModListWidget(QListWidget):
                             unsubscribe_mod_steam_action.setText(
                                 "Unsubscribe mod(s) with Steam"
                             )
-                        # Delete mod action text
-                        delete_mod_action.setText("Delete mod(s)")
+                        # Prohibit deletion of game files
+                        if not (
+                            widget_json_data["data_source"] == "expansion"
+                            or widget_json_data["packageId"].startswith(
+                                "ludeon.rimworld"
+                            )
+                        ):
+                            delete_mod_bool = True
+                            # Delete mod action text
+                            delete_mod_action.setText("Delete mod")
             # Put together our contextMenu
             if toggle_warning_bool:
                 contextMenu.addAction(toggle_warning_action)
@@ -316,10 +330,11 @@ class ModListWidget(QListWidget):
                                 True, "user_rules", widget_json_data["packageId"]
                             )
                         # Delete mods action
-                        elif action == delete_mod_action and not widget_json_data[
-                            "packageId"
-                        ].startswith(
-                            "ludeon.rimworld"
+                        elif action == delete_mod_action and (
+                            not widget_json_data["data_source"] == "expansion"
+                            or not widget_json_data["packageId"].startswith(
+                                "ludeon.rimworld"
+                            )
                         ):  # ACTION: Delete mod
                             logger.info(f"Deleting mod at: {mod_path}")
                             shutil.rmtree(mod_path)

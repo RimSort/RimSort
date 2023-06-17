@@ -178,3 +178,4 @@ SteamworksPy.dylib
 *.onefile-build/
 logger_tt/
 /todds
+.vs
