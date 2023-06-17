@@ -28,13 +28,14 @@ class ModListWidget(QListWidget):
     their own lists or moved from one list to another.
     """
 
+    edit_rules_signal = Signal(bool, str, str)
     item_added_signal = Signal(str)
+    key_press_signal = Signal(str)
     list_update_signal = Signal(str)
     mod_info_signal = Signal(str)
     refresh_signal = Signal(str)
-    edit_rules_signal = Signal(bool, str, str)
+    recalculate_warnings_signal = Signal()
     steamworks_subscription_signal = Signal(list)
-    key_press_signal = Signal(str)
 
     def __init__(self) -> None:
         """
@@ -284,7 +285,7 @@ class ModListWidget(QListWidget):
                                 self.ignore_warning_list.remove(
                                     widget_json_data["packageId"]
                                 )
-                            self.list_update_signal.emit(str(self.count()))
+                            self.recalculate_warnings_signal.emit()
                         # Open folder action
                         elif action == open_folder_action:  # ACTION: Open folder
                             if os.path.exists(mod_path):  # If the path actually exists

@@ -182,6 +182,9 @@ class MainContent:
         self.active_mods_panel.active_mods_list.refresh_signal.connect(
             self.actions_slot
         )
+        self.active_mods_panel.active_mods_list.recalculate_warnings_signal.connect(
+            self.active_mods_panel.recalculate_internal_list_errors
+        )
         self.inactive_mods_panel.inactive_mods_list.refresh_signal.connect(
             self.actions_slot
         )
