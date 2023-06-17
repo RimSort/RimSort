@@ -20,6 +20,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from model.dialogue import show_information
+from pyperclip import copy as copy_to_clipboard
 from util.generic import platform_specific_open, upload_data_to_0x0_st
 
 
@@ -78,10 +80,7 @@ class SettingsPanel(QDialog):
             + "the URL will be copied to your clipboard."
         )
         self.upload_log_button.clicked.connect(
-            partial(
-                upload_data_to_0x0_st,
-                os.path.join(gettempdir(), "RimSort.log"),
-            )
+            partial(self.settings_panel_actions_signal, "upload_rs_log")
         )
         self.open_storage_button = QPushButton("Open RimSort storage")
         self.open_storage_button.clicked.connect(

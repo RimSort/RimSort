@@ -1,3 +1,5 @@
+# Need rework
+
 from logger_tt import logger
 import os
 import shutil
@@ -26,13 +28,14 @@ class ModListWidget(QListWidget):
     their own lists or moved from one list to another.
     """
 
+    edit_rules_signal = Signal(bool, str, str)
     item_added_signal = Signal(str)
+    key_press_signal = Signal(str)
     list_update_signal = Signal(str)
     mod_info_signal = Signal(str)
     refresh_signal = Signal(str)
-    edit_rules_signal = Signal(bool, str, str)
+    recalculate_warnings_signal = Signal()
     steamworks_subscription_signal = Signal(list)
-    key_press_signal = Signal(str)
 
     def __init__(self) -> None:
         """
@@ -95,7 +98,7 @@ class ModListWidget(QListWidget):
         # This set is used to keep track of mods that have been loaded
         # into widgets. Used for an optimization strategy for `handle_rows_inserted`
         self.uuids = set()
-
+        self.ignore_warning_list = []
         logger.info("Finished ModListWidget initialization")
 
     def eventFilter(self, source_object: QObject, event: QEvent) -> None:
@@ -127,6 +130,9 @@ class ModListWidget(QListWidget):
 
             # Define our QMenu & QActions/bools
             contextMenu = QMenu()
+            # Toggle warning action
+            toggle_warning_action = QAction()
+            toggle_warning_bool = True
             # Open folder action
             open_folder_action = QAction()
             open_folder_bool = True
@@ -144,19 +150,20 @@ class ModListWidget(QListWidget):
             unsubscribe_mod_steam_bool = None
             # Delete mod
             delete_mod_action = QAction()
-            delete_mod_bool = True
+            delete_mod_bool = None
 
             # Get all selected QListWidgetItems
             selected_items = self.selectedItems()
-
             # Single item selected
             if len(selected_items) == 1:
                 source_item = selected_items[0]
                 if type(source_item) is QListWidgetItem:
                     source_widget = self.itemWidget(source_item)
-                    # Retreive metadata
+                    # Retrieve metadata
                     widget_json_data = source_widget.json_data
                     mod_data_source = widget_json_data.get("data_source")
+                    # Ignore error action
+                    toggle_warning_action.setText("Toggle warning")
                     # Open folder action text
                     open_folder_action.setText("Open folder")
                     # If we have a "url" or "steam_url"
@@ -170,7 +177,7 @@ class ModListWidget(QListWidget):
                     # Edit mod rules with Rule Editor (only for individual mods)
                     edit_mod_rules_bool = True
                     edit_mod_rules_action.setText("Edit mod rules")
-                    # If Workshop, try unsub + delete
+                    # If Workshop, try Unsubscribe + delete
                     if mod_data_source == "workshop" and widget_json_data.get(
                         "publishedfileid"
                     ):
@@ -183,16 +190,23 @@ class ModListWidget(QListWidget):
                         unsubscribe_mod_steam_action.setText(
                             "Unsubscribe mod with Steam"
                         )
-                    # Delete mod action text
-                    delete_mod_action.setText("Delete mod")
+                    # Prohibit deletion of game files
+                    if not (
+                        widget_json_data["data_source"] == "expansion"
+                        or widget_json_data["packageId"].startswith("ludeon.rimworld")
+                    ):
+                        delete_mod_bool = True
+                        # Delete mod action text
+                        delete_mod_action.setText("Delete mod")
             # Multiple items selected
             elif len(selected_items) > 1:  # Multiple items selected
                 for source_item in selected_items:
                     if type(source_item) is QListWidgetItem:
                         source_widget = self.itemWidget(source_item)
-                        # Retreive metadata
+                        # Retrieve metadata
                         widget_json_data = source_widget.json_data
                         mod_data_source = widget_json_data.get("data_source")
+                        toggle_warning_action.setText("Toggle warning")
                         # Open folder action text
                         open_folder_action.setText("Open folder(s)")
                         # If we have a "url" or "steam_url"
@@ -207,7 +221,7 @@ class ModListWidget(QListWidget):
                             open_mod_steam_action.setText("Open mod(s) in Steam")
                         # No "Edit mod rules" when multiple selected
                         edit_mod_rules_bool = False
-                        # If Workshop, try unsub + delete
+                        # If Workshop, try Unsubscribe + delete
                         if mod_data_source == "workshop" and widget_json_data.get(
                             "publishedfileid"
                         ):
@@ -217,10 +231,19 @@ class ModListWidget(QListWidget):
                             unsubscribe_mod_steam_action.setText(
                                 "Unsubscribe mod(s) with Steam"
                             )
-                        # Delete mod action text
-                        delete_mod_action.setText("Delete mod(s)")
-
+                        # Prohibit deletion of game files
+                        if not (
+                            widget_json_data["data_source"] == "expansion"
+                            or widget_json_data["packageId"].startswith(
+                                "ludeon.rimworld"
+                            )
+                        ):
+                            delete_mod_bool = True
+                            # Delete mod action text
+                            delete_mod_action.setText("Delete mod")
             # Put together our contextMenu
+            if toggle_warning_bool:
+                contextMenu.addAction(toggle_warning_action)
             if open_folder_bool:
                 contextMenu.addAction(open_folder_action)
             if open_url_browser_bool:
@@ -243,7 +266,7 @@ class ModListWidget(QListWidget):
                 ):  # ACTION: Unsubscribe & delete mod
                     if type(source_item) is QListWidgetItem:
                         source_widget = self.itemWidget(source_item)
-                        # Retreive metadata
+                        # Retrieve metadata
                         widget_json_data = source_widget.json_data
                         if mod_data_source == "workshop" and widget_json_data.get(
                             "publishedfileid"
@@ -255,20 +278,35 @@ class ModListWidget(QListWidget):
                                 ["unsubscribe", publishedfileids]
                             )
                     return True
+                # Execute action for each selected mod
                 for source_item in selected_items:
                     if type(source_item) is QListWidgetItem:
                         source_widget = self.itemWidget(source_item)
-                        # Retreive metadata
+                        # Retrieve metadata
                         widget_json_data = source_widget.json_data
                         mod_data_source = widget_json_data.get("data_source")
                         mod_path = widget_json_data["path"]
+                        # Toggle warning action
+                        if action == toggle_warning_action:
+                            if not (
+                                widget_json_data["packageId"]
+                                in self.ignore_warning_list
+                            ):
+                                self.ignore_warning_list.append(
+                                    widget_json_data["packageId"]
+                                )
+                            else:
+                                self.ignore_warning_list.remove(
+                                    widget_json_data["packageId"]
+                                )
+                            self.recalculate_warnings_signal.emit()
                         # Open folder action
-                        if action == open_folder_action:  # ACTION: Open folder
+                        elif action == open_folder_action:  # ACTION: Open folder
                             if os.path.exists(mod_path):  # If the path actually exists
                                 logger.info(f"Opening folder: {mod_path}")
                                 platform_specific_open(mod_path)
                         # Open url action
-                        if (
+                        elif (
                             action == open_url_browser_action
                         ):  # ACTION: Open URL in browser
                             if widget_json_data.get("url") or widget_json_data.get(
@@ -292,7 +330,12 @@ class ModListWidget(QListWidget):
                                 True, "user_rules", widget_json_data["packageId"]
                             )
                         # Delete mods action
-                        elif action == delete_mod_action:  # ACTION: Delete mod
+                        elif action == delete_mod_action and (
+                            not widget_json_data["data_source"] == "expansion"
+                            or not widget_json_data["packageId"].startswith(
+                                "ludeon.rimworld"
+                            )
+                        ):  # ACTION: Delete mod
                             logger.info(f"Deleting mod at: {mod_path}")
                             shutil.rmtree(mod_path)
             return True
@@ -333,7 +376,7 @@ class ModListWidget(QListWidget):
         list items that do not have widgets assigned to them.
 
         However, inserting the initial `n` mods with `recreate_mod_list` has
-        has an inefficiency: it is only able to insert one at a time. This means
+        an inefficiency: it is only able to insert one at a time. This means
         this method is called `n` times for the first `n` mods.
         One optimization here (saving about 1 second with a 200 mod list) is
         to not emit the list update signal until the number of widgets is

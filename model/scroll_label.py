@@ -8,7 +8,7 @@ class ScrollLabel(QScrollArea):
     """
     Subclass for QScrollArea. Creates a read-only
     text box that scrolls. Used specifically for the description
-    part of the mod ifo panel.
+    part of the mod info panel.
     """
 
     def __init__(self) -> None:

@@ -644,7 +644,7 @@ class GameConfiguration(QObject):
 
     def initialize_settings_panel(self) -> None:
         """
-        Initializes the app's settings popup dialog, but does
+        Initializes the app's settings pop up dialog, but does
         not show it. The settings panel allows the user to
         tweak certain settings of RimSort, like which sorting
         algorithm to use, or what theme to use.
@@ -1054,7 +1054,7 @@ class GameConfiguration(QObject):
                 f"Autodetected config folder path does not exist: {os_paths[1]}"
             )
 
-        # If the workshop folder eixsts
+        # If the workshop folder exists
         if os.path.exists(os_paths[2]):
             logger.info(f"Autodetected workshop folder path exists: {os_paths[2]}")
             if not self.workshop_folder_line.text():

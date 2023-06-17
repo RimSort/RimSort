@@ -78,7 +78,7 @@ def recursively_force_insert(
         if dep_id not in mods_load_order:
             # We can't just insert it here. This is because deps in deps_of_package_alphabetized
             # may contain deps that depend on each other. Therefore, before we insert a dep,
-            # we need to interate through the sublist starting at the original package_id index
+            # we need to iterate through the sublist starting at the original package_id index
             # and ending at the live index of the package_id (this gives the sublist of deps)
             # that have been inserted for this package_id, this also works for recursively
             # inserted deps of deps). We iterate through this list backwards, as we want to check

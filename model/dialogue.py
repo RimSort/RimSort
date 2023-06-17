@@ -34,7 +34,7 @@ def show_dialogue_conditional(
     else:
         dialogue.setWindowTitle(DEFAULT_TITLE)
 
-    # Create our buttons (accomodate any overrides passed)
+    # Create our buttons (accommodate any overrides passed)
     if button_text_override:
         # Remove standard buttons
         dialogue.setStandardButtons(QMessageBox.Cancel)
