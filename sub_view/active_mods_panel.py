@@ -212,7 +212,7 @@ class ActiveModList(QWidget):
                             if (
                                 is_supported
                                 or mod_data["packageId"]
-                                in self.active_mods_list.ignore_error_list
+                                in self.active_mods_list.ignore_warning_list
                             ):
                                 package_id_to_errors[uuid]["version_mismatch"] = False
                         else:
@@ -227,7 +227,11 @@ class ActiveModList(QWidget):
                     logger.error(
                         f"No supportedVersions key found in mod data: {mod_data}"
                     )
-            if not mod_data["packageId"] in self.active_mods_list.ignore_error_list:
+            if (
+                mod_data.get("packageId")
+                and not mod_data["packageId"]
+                in self.active_mods_list.ignore_warning_list
+            ):
                 # Check dependencies
                 if mod_data.get("dependencies"):
                     for dependency in mod_data["dependencies"]:
@@ -284,7 +288,7 @@ class ActiveModList(QWidget):
                                     ].add(load_this_after[0])
 
             # Consolidate results
-            self.ignore_error = self.active_mods_list.ignore_error_list
+            self.ignore_error = self.active_mods_list.ignore_warning_list
             error_tool_tip_text = ""
             warning_tool_tip_text = ""
             missing_dependencies = package_id_to_errors[uuid]["missing_dependencies"]

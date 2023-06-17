@@ -892,8 +892,6 @@ class MainContent:
             self._do_export_list_clipboard()
         if action == "upload_list_rentry":
             self._do_upload_list_rentry()
-        if action == "upload_rw_log":
-            self._do_upload_rw_log()
         if action == "upload_rs_log":
             self._upload_rs_log()
         if action == "save":
@@ -912,6 +910,8 @@ class MainContent:
             self._do_edit_run_args()
 
         # settings panel actions
+        if action == "upload_rw_log":
+            self._do_upload_rw_log()
         if action == "configure_github_identity":
             self._do_configure_github_identity()
         if action == "configure_steam_database_path":
@@ -1129,12 +1129,16 @@ class MainContent:
                     )
                     return
                 if SYSTEM == "Windows":
-                    os.system(f'start /wait cmd /c {Path(os.path.join(os.path.dirname(__file__), "../update.bat"))}')
+                    os.system(
+                        f'start /wait cmd /c {Path(os.path.join(os.path.dirname(__file__), "../update.bat"))}'
+                    )
                     sys.exit()
                 else:
                     # Replace the current program directory with the new version
                     shutil_rmtree(
-                        current_dir, ignore_errors=False, onerror=handle_remove_read_only
+                        current_dir,
+                        ignore_errors=False,
+                        onerror=handle_remove_read_only,
                     )
                     copytree(
                         os.path.join(
@@ -1148,7 +1152,9 @@ class MainContent:
                     if os.path.exists(executable_path):
                         original_stat = os.stat(executable_path)
                         os.chmod(
-                            os.path.join(executable_path, "Contents", "MacOS", "RimSort")
+                            os.path.join(
+                                executable_path, "Contents", "MacOS", "RimSort"
+                            )
                             if SYSTEM == "Darwin"
                             else executable_path,
                             original_stat.st_mode | S_IEXEC,

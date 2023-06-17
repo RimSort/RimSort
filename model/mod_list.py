@@ -97,7 +97,7 @@ class ModListWidget(QListWidget):
         # This set is used to keep track of mods that have been loaded
         # into widgets. Used for an optimization strategy for `handle_rows_inserted`
         self.uuids = set()
-        self.ignore_error_list = []
+        self.ignore_warning_list = []
         logger.info("Finished ModListWidget initialization")
 
     def eventFilter(self, source_object: QObject, event: QEvent) -> None:
@@ -129,9 +129,10 @@ class ModListWidget(QListWidget):
 
             # Define our QMenu & QActions/bools
             contextMenu = QMenu()
+            # Toggle warning action
+            toggle_warning_action = QAction()
+            toggle_warning_bool = True
             # Open folder action
-            ignore_error_action = QAction()
-            ignore_error_bool = True
             open_folder_action = QAction()
             open_folder_bool = True
             # Open URL in browser action
@@ -161,7 +162,7 @@ class ModListWidget(QListWidget):
                     widget_json_data = source_widget.json_data
                     mod_data_source = widget_json_data.get("data_source")
                     # Ignore error action
-                    ignore_error_action.setText("Toggle warning")
+                    toggle_warning_action.setText("Toggle warning")
                     # Open folder action text
                     open_folder_action.setText("Open folder")
                     # If we have a "url" or "steam_url"
@@ -198,7 +199,7 @@ class ModListWidget(QListWidget):
                         # Retrieve metadata
                         widget_json_data = source_widget.json_data
                         mod_data_source = widget_json_data.get("data_source")
-                        ignore_error_action.setText("Toggle warning")
+                        toggle_warning_action.setText("Toggle warning")
                         # Open folder action text
                         open_folder_action.setText("Open folder(s)")
                         # If we have a "url" or "steam_url"
@@ -226,8 +227,8 @@ class ModListWidget(QListWidget):
                         # Delete mod action text
                         delete_mod_action.setText("Delete mod(s)")
             # Put together our contextMenu
-            if ignore_error_bool:
-                contextMenu.addAction(ignore_error_action)
+            if toggle_warning_bool:
+                contextMenu.addAction(toggle_warning_action)
             if open_folder_bool:
                 contextMenu.addAction(open_folder_action)
             if open_url_browser_bool:
@@ -262,6 +263,7 @@ class ModListWidget(QListWidget):
                                 ["unsubscribe", publishedfileids]
                             )
                     return True
+                # Execute action for each selected mod
                 for source_item in selected_items:
                     if type(source_item) is QListWidgetItem:
                         source_widget = self.itemWidget(source_item)
@@ -269,22 +271,22 @@ class ModListWidget(QListWidget):
                         widget_json_data = source_widget.json_data
                         mod_data_source = widget_json_data.get("data_source")
                         mod_path = widget_json_data["path"]
-                        if action == ignore_error_action:
+                        # Toggle warning action
+                        if action == toggle_warning_action:
                             if not (
-                                widget_json_data["packageId"] in self.ignore_error_list
+                                widget_json_data["packageId"]
+                                in self.ignore_warning_list
                             ):
-                                self.ignore_error_list.append(
+                                self.ignore_warning_list.append(
                                     widget_json_data["packageId"]
                                 )
                             else:
-                                self.ignore_error_list.remove(
+                                self.ignore_warning_list.remove(
                                     widget_json_data["packageId"]
                                 )
-                            print(self.ignore_error_list)
                             self.list_update_signal.emit(str(self.count()))
-
                         # Open folder action
-                        if action == open_folder_action:  # ACTION: Open folder
+                        elif action == open_folder_action:  # ACTION: Open folder
                             if os.path.exists(mod_path):  # If the path actually exists
                                 logger.info(f"Opening folder: {mod_path}")
                                 platform_specific_open(mod_path)
