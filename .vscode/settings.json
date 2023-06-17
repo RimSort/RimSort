@@ -17,5 +17,6 @@
         "--enable=W0611", "--enable=W0614"
     ],
     "python.terminal.activateEnvironment": true,
-    "search.maxResults": 100000
+    "search.maxResults": 100000,
+    "python.formatting.provider": "black"
 }
