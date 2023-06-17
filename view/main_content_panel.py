@@ -1,5 +1,6 @@
 from gc import collect
 import os
+from pathlib import Path
 import platform
 import subprocess
 import sys
@@ -1131,34 +1132,38 @@ class MainContent:
                         + f"URL: {browser_download_url}",
                         details=stacktrace,
                     )
-
-                # Replace the current program directory with the new version
-                shutil_rmtree(
-                    current_dir, ignore_errors=False, onerror=handle_remove_read_only
-                )
-                copytree(
-                    os.path.join(
-                        gettempdir(),
-                        executable_name if SYSTEM == "Darwin" else "RimSort",
-                    ),
-                    current_dir,
-                )
-                # Set executable permissions as ZipFile does not preserve this in the zip archive
-                executable_path = os.path.join(current_dir, executable_name)
-                if os.path.exists(executable_path):
-                    original_stat = os.stat(executable_path)
-                    os.chmod(
-                        os.path.join(executable_path, "Contents", "MacOS", "RimSort")
-                        if SYSTEM == "Darwin"
-                        else executable_path,
-                        original_stat.st_mode | S_IEXEC,
+                    return
+                if SYSTEM == "Windows":
+                    os.system(f'start /wait cmd /c {Path(os.path.join(os.path.dirname(__file__), "../update.bat"))}')
+                    sys.exit()
+                else:
+                    # Replace the current program directory with the new version
+                    shutil_rmtree(
+                        current_dir, ignore_errors=False, onerror=handle_remove_read_only
                     )
-                show_information(
-                    title="Update completed",
-                    text=f"RimSort has applied an update: {current_version} -> {tag_name}",
-                    information="The application needs restarted. RimSort will now exit.",
-                )
-                sys.exit()
+                    copytree(
+                        os.path.join(
+                            gettempdir(),
+                            executable_name if SYSTEM == "Darwin" else "RimSort",
+                        ),
+                        current_dir,
+                    )
+                    # Set executable permissions as ZipFile does not preserve this in the zip archive
+                    executable_path = os.path.join(current_dir, executable_name)
+                    if os.path.exists(executable_path):
+                        original_stat = os.stat(executable_path)
+                        os.chmod(
+                            os.path.join(executable_path, "Contents", "MacOS", "RimSort")
+                            if SYSTEM == "Darwin"
+                            else executable_path,
+                            original_stat.st_mode | S_IEXEC,
+                        )
+                    show_information(
+                        title="Update completed",
+                        text=f"RimSort has applied an update: {current_version} -> {tag_name}",
+                        information="The application needs restarted. RimSort will now exit.",
+                    )
+                    sys.exit()
         else:
             logger.warning("Up-to-date!")
 
