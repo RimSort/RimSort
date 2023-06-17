@@ -240,13 +240,21 @@ class ActiveModList(QWidget):
                                 dependency
                             )
 
+                # Check dependencies
+                if mod_data.get("dependencies"):
+                    for dependency in mod_data["dependencies"]:
+                        if dependency not in package_ids_set:
+                            package_id_to_errors[uuid]["missing_dependencies"].add(
+                                dependency
+                            )
+
                 # Check incompatibilities
                 if mod_data.get("incompatibilities"):
                     for incompatibility in mod_data["incompatibilities"]:
                         if incompatibility in package_ids_set:
-                            package_id_to_errors[uuid][
-                                "conflicting_incompatibilities"
-                            ].add(incompatibility)
+                            package_id_to_errors[uuid]["conflicting_incompatibilities"].add(
+                                incompatibility
+                            )
 
                 # Check loadTheseBefore
                 if mod_data.get("loadTheseBefore"):
@@ -259,10 +267,10 @@ class ActiveModList(QWidget):
                         # Only if explict_bool = True then we show error
                         if load_this_before[1]:
                             # Note: we cannot use uuid_to_index.get(load_this_before) as 0 is falsy but valid
-                            if load_this_before[0] in uuid_to_index:
+                            if load_this_before[0] in packageId_to_uuid:
                                 if (
                                     current_mod_index
-                                    <= uuid_to_index[load_this_before[0]]
+                                    <= uuid_to_index[packageId_to_uuid[load_this_before[0]]]
                                 ):
                                     package_id_to_errors[uuid][
                                         "load_before_violations"
@@ -278,14 +286,14 @@ class ActiveModList(QWidget):
                             )
                         # Only if explict_bool = True then we show error
                         if load_this_after[1]:
-                            if load_this_after[0] in uuid_to_index:
+                            if load_this_after[0] in packageId_to_uuid:
                                 if (
                                     current_mod_index
-                                    >= uuid_to_index[load_this_after[0]]
+                                    >= uuid_to_index[packageId_to_uuid[load_this_after[0]]]
                                 ):
-                                    package_id_to_errors[uuid][
-                                        "load_after_violations"
-                                    ].add(load_this_after[0])
+                                    package_id_to_errors[uuid]["load_after_violations"].add(
+                                        load_this_after[0]
+                                    )
 
             # Consolidate results
             self.ignore_error = self.active_mods_list.ignore_warning_list
