@@ -72,6 +72,7 @@ elif _SYSTEM == "Windows" and _ARCH == "64bit":
         "--enable-plugin=pyside6",
         "--include-data-dir=./data/=data",
         "--include-data-dir=./todds/=todds",
+        "--include-data-file=./update.bat=update.bat",
         "--include-data-file=./SteamworksPy64.dll=SteamworksPy64.dll",
         "--include-data-file=./steam_api64.dll=steam_api64.dll",
         "--include-data-file=./steam_appid.txt=steam_appid.txt",
