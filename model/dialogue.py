@@ -28,6 +28,7 @@ def show_dialogue_conditional(
 
     # Set up the message box
     dialogue = QMessageBox()
+    dialogue.setTextFormat(Qt.RichText)
     dialogue.setIcon(QMessageBox.Question)
     if title:
         dialogue.setWindowTitle(title)
@@ -87,6 +88,7 @@ def show_information(
     )
     # Set up the message box
     info_message_box = QMessageBox()
+    info_message_box.setTextFormat(Qt.RichText)
     info_message_box.setIcon(QMessageBox.Information)
     if title:
         info_message_box.setWindowTitle(title)
@@ -124,6 +126,7 @@ def show_warning(
     )
     # Set up the message box
     warning_message_box = QMessageBox()
+    warning_message_box.setTextFormat(Qt.RichText)
     warning_message_box.setIcon(QMessageBox.Warning)
     if title:
         warning_message_box.setWindowTitle(title)
@@ -164,6 +167,7 @@ def show_fatal_error(
     )
     # Set up the message box
     fatal_message_box = QMessageBox()
+    fatal_message_box.setTextFormat(Qt.RichText)
     fatal_message_box.setIcon(QMessageBox.Critical)
     if title:
         fatal_message_box.setWindowTitle(title)
