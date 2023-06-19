@@ -134,6 +134,22 @@ class SteamworksInterface:
         """
         return Thread(target=self._callbacks, daemon=True)
 
+    def _wait_for_callbacks(self, timeout: int) -> None:
+        # While the thread is alive, we wait for it.
+        tick = 0
+        while self.steamworks_thread.is_alive():
+            if (
+                tick == timeout
+            ):  # Wait the specified interval without additional responses before we quit forcefully
+                self.end_callbacks = True
+                break
+            else:
+                tick += 1
+                logger.debug(
+                    f"Waiting for Steamworks API callbacks to complete {tick} : [{self.callbacks_count}/{self.callbacks_total}]"
+                )
+                sleep(1)
+
 
 class SteamworksAppDependenciesQuery:
     def __init__(self, pfid_or_pfids: Union[int, list], interval=1):
@@ -184,20 +200,8 @@ class SteamworksAppDependenciesQuery:
                             pfid
                         )
                         sleep(self.interval)
-                # While the thread is alive, we wait for it.
-                tick = 0
-                while steamworks_interface.steamworks_thread.is_alive():
-                    if (
-                        tick == 3
-                    ):  # Wait ~30 sec without additional responses before we quit forcefully
-                        steamworks_interface.end_callbacks = True
-                        break
-                    else:
-                        tick += 1
-                        logger.debug(
-                            f"Waiting for Steamworks API callbacks to complete {tick} : [{steamworks_interface.callbacks_count}/{steamworks_interface.callbacks_total}]"
-                        )
-                        sleep(10)
+                # Patience, but don't wait forever
+                steamworks_interface._wait_for_callbacks(timeout=60)
                 # This means that the callbacks thread has ended. We are done with Steamworks API now, so we dispose of everything.
                 logger.info("Thread completed. Unloading Steamworks...")
                 steamworks_interface.steamworks_thread.join()
@@ -317,20 +321,8 @@ class SteamworksSubscriptionHandler:
                                 pfid
                             )
                             sleep(self.interval)
-                # While the thread is alive, we wait for it.
-                tick = 0
-                while steamworks_interface.steamworks_thread.is_alive():
-                    if (
-                        tick == 3
-                    ):  # Wait ~30 sec without additional responses before we quit forcefully
-                        steamworks_interface.end_callbacks = True
-                        break
-                    else:
-                        tick += 1
-                        logger.debug(
-                            f"Waiting for Steamworks API callbacks to complete {tick} : [{steamworks_interface.callbacks_count}/{steamworks_interface.callbacks_total}]"
-                        )
-                        sleep(10)
+                # Patience, but don't wait forever
+                steamworks_interface._wait_for_callbacks(timeout=60)
                 # This means that the callbacks thread has ended. We are done with Steamworks API now, so we dispose of everything.
                 logger.info("Thread completed. Unloading Steamworks...")
                 steamworks_interface.steamworks_thread.join()

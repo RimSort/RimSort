@@ -76,6 +76,7 @@ class ActiveModList(QWidget):
             self.clear_active_mods_search
         )
         self.active_mods_search_filter = QComboBox()
+        self.active_mods_search_filter.setObjectName("MainUI")
         self.active_mods_search_filter.setMaximumWidth(125)
         self.active_mods_search_filter.addItems(
             ["Name", "PackageId", "Author(s)", "PublishedFileId"]
@@ -252,9 +253,9 @@ class ActiveModList(QWidget):
                 if mod_data.get("incompatibilities"):
                     for incompatibility in mod_data["incompatibilities"]:
                         if incompatibility in package_ids_set:
-                            package_id_to_errors[uuid]["conflicting_incompatibilities"].add(
-                                incompatibility
-                            )
+                            package_id_to_errors[uuid][
+                                "conflicting_incompatibilities"
+                            ].add(incompatibility)
 
                 # Check loadTheseBefore
                 if mod_data.get("loadTheseBefore"):
@@ -270,7 +271,9 @@ class ActiveModList(QWidget):
                             if load_this_before[0] in packageId_to_uuid:
                                 if (
                                     current_mod_index
-                                    <= uuid_to_index[packageId_to_uuid[load_this_before[0]]]
+                                    <= uuid_to_index[
+                                        packageId_to_uuid[load_this_before[0]]
+                                    ]
                                 ):
                                     package_id_to_errors[uuid][
                                         "load_before_violations"
@@ -289,11 +292,13 @@ class ActiveModList(QWidget):
                             if load_this_after[0] in packageId_to_uuid:
                                 if (
                                     current_mod_index
-                                    >= uuid_to_index[packageId_to_uuid[load_this_after[0]]]
+                                    >= uuid_to_index[
+                                        packageId_to_uuid[load_this_after[0]]
+                                    ]
                                 ):
-                                    package_id_to_errors[uuid]["load_after_violations"].add(
-                                        load_this_after[0]
-                                    )
+                                    package_id_to_errors[uuid][
+                                        "load_after_violations"
+                                    ].add(load_this_after[0])
 
             # Consolidate results
             self.ignore_error = self.active_mods_list.ignore_warning_list

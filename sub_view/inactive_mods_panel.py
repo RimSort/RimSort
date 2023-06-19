@@ -67,6 +67,7 @@ class InactiveModList:
             self.clear_inactive_mods_search
         )
         self.inactive_mods_search_filter = QComboBox()
+        self.inactive_mods_search_filter.setObjectName("MainUI")
         self.inactive_mods_search_filter.setMaximumWidth(140)
         self.inactive_mods_search_filter.addItems(
             ["Name", "PackageId", "Author(s)", "PublishedFileId"]
