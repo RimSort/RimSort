@@ -207,6 +207,7 @@ class MissingModsPrompt(QWidget):
                 publishedfileid = combo_box.currentText()
                 if publishedfileid != "":
                     publishedfileids.append(publishedfileid)
+        self.close()
         if mode == "steamcmd":
             self.steamcmd_downloader_signal.emit(publishedfileids)
         elif mode == "steamworks":
