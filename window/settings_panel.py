@@ -162,6 +162,7 @@ class SettingsPanel(QDialog):
         self.sorting_algorithm_label.setObjectName("summaryValue")
         self.sorting_algorithm_label.setAlignment(Qt.AlignCenter)
         self.sorting_algorithm_cb = QComboBox()
+        self.sorting_algorithm_cb.setObjectName("MainUI")
         self.sorting_algorithm_cb.addItems(["RimPy", "Topological"])
         self.sorting_algorithm_cb.setItemDelegate(self.centered_item_delegate)
 
@@ -196,6 +197,7 @@ class SettingsPanel(QDialog):
         )
         # external steam metadata combobox
         self.external_steam_metadata_cb = QComboBox()
+        self.external_steam_metadata_cb.setObjectName("MainUI")
         self.external_steam_metadata_cb.addItems(
             [
                 "Configured file path",
@@ -225,6 +227,7 @@ class SettingsPanel(QDialog):
         )
         # external community rules metadata combobox
         self.external_community_rules_metadata_cb = QComboBox()
+        self.external_community_rules_metadata_cb.setObjectName("MainUI")
         self.external_community_rules_metadata_cb.addItems(
             [
                 "Configured file path",
@@ -243,6 +246,7 @@ class SettingsPanel(QDialog):
         self.build_steam_database_include_label.setObjectName("summaryValue")
         self.build_steam_database_include_label.setAlignment(Qt.AlignCenter)
         self.build_steam_database_include_cb = QComboBox()
+        self.build_steam_database_include_cb.setObjectName("MainUI")
         self.build_steam_database_include_cb.addItems(["No local data", "All Mods"])
         self.build_steam_database_include_cb.setItemDelegate(
             self.centered_item_delegate
@@ -360,6 +364,7 @@ class SettingsPanel(QDialog):
         self.todds_preset_label = QLabel("Quality preset:")
         self.todds_preset_label.setObjectName("summaryValue")
         self.todds_presets_cb = QComboBox()
+        self.todds_presets_cb.setObjectName("MainUI")
         self.todds_presets_cb.addItems(
             [
                 "Low quality (for low VRAM/older GPU, optimize for VRAM)",
