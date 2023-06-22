@@ -87,6 +87,7 @@ from util.steam.steamworks.wrapper import (
 from util.todds.wrapper import ToddsInterface
 from util.xml import json_to_xml_write, xml_path_to_json
 from view.game_configuration_panel import GameConfiguration
+from window.missing_mods_panel import MissingModsPrompt
 from window.rule_editor_panel import RuleEditor
 from window.runner_panel import RunnerPanel
 
@@ -427,96 +428,18 @@ class MainContent:
             if (  # User configuration
                 len(self.external_steam_metadata.keys()) > 0
             ):  # Do we even have metadata to lookup...?
-                # Generate a list of all missing mods + any missing mod dependencies listed
-                # in the user-configured Steam metadata.
-                DEPENDENCY_TAG = "_-_DEPENDENCY_-_"
-                packageIds_to_pfids = {}
-                for publishedfileid, metadata in self.external_steam_metadata.items():
-                    if (
-                        metadata.get("packageId")
-                        and metadata["packageId"].lower() in missing_mods
-                    ):
-                        missing_mod_packageId = metadata["packageId"]
-                        packageIds_to_pfids[missing_mod_packageId] = publishedfileid
-                        for dependency_pfid, dependency_crumbs in metadata[
-                            "dependencies"
-                        ].items():
-                            packageIds_to_pfids.update(
-                                {DEPENDENCY_TAG + dependency_crumbs[0]: dependency_pfid}
-                            )
-                # Remove AppId dependencies from this list. They cannot be subscribed like mods.
-                packageIds_to_pfids = {
-                    packageId: pfid
-                    for packageId, pfid in packageIds_to_pfids.items()
-                    if pfid not in RIMWORLD_DLC_METADATA.keys()
-                }
-                # If we don't have anything to download
-                if not len(packageIds_to_pfids.keys()) > 0:
-                    show_warning(
-                        title="No metadata available",
-                        text="No dependencies generated from external Steam metadata! Is your database complete?",
-                        information="This happens due to there not being metadata available in your configured Steam DB.",
-                    )
-                    return
-                # Generate our report
-                # logger.warning(
-                #     f"{len(packageIds_to_pfids)} PublishedFileIds generated from external Steam metadata!"
-                # )
-                # logger.warning(packageIds_to_pfids)
-                list_of_needed_dependencies = {}
-                list_of_missing_mods = ""
-                for (
-                    packageId_or_dependency_name,
-                    publishedfileid,
-                ) in packageIds_to_pfids.items():
-                    if not DEPENDENCY_TAG in packageId_or_dependency_name:
-                        list_of_missing_mods += (
-                            f"* {packageId_or_dependency_name} -> {publishedfileid}\n"
-                        )
-                    else:  # We want listed dependencies added to our report
-                        list_of_needed_dependencies[
-                            packageId_or_dependency_name.replace(DEPENDENCY_TAG, "")
-                        ] = publishedfileid
-                # If any dependencies were generated, add them to the bottom of our report
-                if len(list_of_needed_dependencies.keys()) > 0:
-                    list_of_missing_mods += (
-                        "\n\nAdditional mod dependencies needed:\n\n"
-                    )
-                    for (
-                        dependency_name,
-                        publishedfileid,
-                    ) in list_of_needed_dependencies.items():
-                        list_of_missing_mods += (
-                            f"* {dependency_name} -> {publishedfileid}\n"
-                        )
-                # Generate our list of PublishedFileIds
-                publishedfileids = [
-                    publishedfileid for publishedfileid in packageIds_to_pfids.values()
-                ]
-                # Prompt the user
-                answer = show_dialogue_conditional(
-                    text="Could not find data for some mods!",
-                    information=(
-                        "The following list of mods were set active in your mods list but "
-                        + "no data could be found for these mods in local/workshop mod paths. "
-                        + "\n\nAre your game configuration paths correctly?"
-                        + "\n\nHow would you like to try to re-download these mods?"
-                    ),
-                    details=list_of_missing_mods,
-                    button_text_override=[
-                        "SteamCMD",
-                        "Steam client",
-                    ],
+                self.missing_mods_prompt = MissingModsPrompt(
+                    packageIds=missing_mods,
+                    steam_workshop_metadata=self.external_steam_metadata,
                 )
-                # If the user wants to try to download them, allow it.
-                if answer == "&Cancel":
-                    logger.warning(
-                        "User cancelled prompt. Skipping missing mods download."
-                    )
-                elif answer == "SteamCMD":
-                    self._do_download_mods_with_steamcmd(publishedfileids)
-                elif answer == "Steam client":
-                    self._do_download_mods_with_steamworks(publishedfileids)
+                self.missing_mods_prompt.steamcmd_downloader_signal.connect(
+                    self._do_download_mods_with_steamcmd
+                )
+                self.missing_mods_prompt.steamworks_downloader_signal.connect(
+                    self._do_download_mods_with_steamworks
+                )
+                self.missing_mods_prompt.setWindowModality(Qt.ApplicationModal)
+                self.missing_mods_prompt.show()
             else:
                 list_of_missing_mods = ""
                 for missing_mod in missing_mods:
@@ -2072,7 +1995,7 @@ class MainContent:
             logger.warning("User cancelled input!")
             return
 
-    def _do_cleanup_gitpython(self, repo: Repo) -> None:
+    def _do_cleanup_gitpython(self, repo) -> None:
         # Cleanup GitPython
         collect()
         repo.git.clear_cache()

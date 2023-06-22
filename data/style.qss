@@ -272,9 +272,13 @@ QComboBox:hover {
   background-color: #54687a;
 }
 
-QComboBox::drop-down {
+QComboBox::drop-down#MainUI {
   width: 0;
   height: 0;
+}
+
+QComboBox::drop-down#MissingModsUI {
+  border-style: solid;
 }
 
 QComboBox QAbstractItemView {
