@@ -1157,7 +1157,7 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                         f"Found a variation of /About/PublishedFileId.txt at: {pfid_path}"
                     )
                     try:
-                        with open(pfid_path) as pfid_file:
+                        with open(pfid_path, encoding="utf-8-sig") as pfid_file:
                             pfid = pfid_file.read()
                             pfid = pfid.strip()
                     except:
