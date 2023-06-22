@@ -69,12 +69,13 @@ class RunnerPanel(QWidget):
         self.todds_dry_run_support = todds_dry_run_support
 
         # SET STYLESHEET TO CONFORM WITH GLOBAL CFG
+        self.text.setObjectName("RunnerPaneltext")
         self.setObjectName("RunnerPanel")
-        self.setStyleSheet(  # Add style sheet for styling layouts and widgets
-            Path(os.path.join(os.path.dirname(__file__), "../data/style.qss"))
-            .resolve()
-            .read_text()
-        )
+        # self.setStyleSheet(  # Add style sheet for styling layouts and widgets
+        #    Path(os.path.join(os.path.dirname(__file__), "../data/style.qss"))
+        #    .resolve()
+        #    .read_text()
+        # ) useless because of super().__init__()
 
         # CREATE WIDGETS
         # Clear btn

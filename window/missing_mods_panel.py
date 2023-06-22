@@ -53,7 +53,7 @@ class MissingModsPrompt(QWidget):
         self.DEPENDENCY_TAG = "_-_DEPENDENCY_-_"
         self.packageIds = packageIds
         self.steam_workshop_metadata = steam_workshop_metadata
-
+        self.setObjectName("missingModsPannel")
         # MOD LABEL
         self.missing_mods_label = QLabel(
             "There are mods missing from the active mods list!"
@@ -93,10 +93,17 @@ class MissingModsPrompt(QWidget):
         )
         # Create the table view and set the model
         self.editor_table_view = QTableView()
+        self.editor_table_view.setObjectName("missingModPannelTableView")
         self.editor_table_view.setModel(self.editor_model)
         self.editor_table_view.setSortingEnabled(True)  # Enable sorting on the columns
         self.editor_table_view.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.editor_table_view.setSelectionMode(QAbstractItemView.NoSelection)
+        self.editor_table_view.horizontalHeader().setObjectName(
+            "missingModPannelTableView"
+        )
+        self.editor_table_view.verticalHeader().setObjectName(
+            "missingModPannelTableView"
+        )
         # Set default stretch for each column
         self.editor_table_view.horizontalHeader().setSectionResizeMode(
             0, QHeaderView.Stretch

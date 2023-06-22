@@ -21,32 +21,9 @@ Accent alert button: a3c1da
     border-radius: 3px;
 } */
 
-QMainWindow {
-    background-color: #19232d;
-}
-
-QDialog#settingsPanel {
-    background-color: #22303d;
-}
-
-QCheckBox#summaryValue {
-    color: white;
-}
-
-QWidget#MainPanel {
-    border-style: solid;
-    border-color: #455364;
-    border-width: 1px;
-    border-radius: 3px;
-    margin: 7px; /* Space between frame and app edge */
-}
-
-QWidget#RunnerPanel {
-    border-style: solid;
-    border-color: #455364;
-    border-width: 1px;
-    border-radius: 3px;
-    margin: 7px; /* Space between frame and app edge */
+/* ===== General ===== */
+QLabel {
+    color: white
 }
 
 QScrollBar:vertical {
@@ -62,11 +39,9 @@ QScrollBar::handle:vertical {
     border-radius: 4px;
     min-height: 0px;
 }
-
 QScrollBar::handle:vertical:hover {
     background: #346792;
 }
-
 QScrollBar::add-line:vertical {
     height: 10px;
     background: #455364;
@@ -76,11 +51,9 @@ QScrollBar::add-line:vertical {
     border: 0px;
     border-radius: 5px;
 }
-
 QScrollBar::add-line:vertical:hover {
     background: #dddee1;
 }
-
 QScrollBar::sub-line:vertical {
     height: 10px;
     background: #455364;
@@ -89,17 +62,88 @@ QScrollBar::sub-line:vertical {
     margin-top: 5px;
     border-radius: 5px;
 }
-
 QScrollBar::sub-line:vertical:hover {
     background: #dddee1;
 }
-
 QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
     background: none;
 }
-
-QScrollBar:horizontal {              
+QScrollBar:horizontal {
     height: 0px;
+}
+QMessageBox#dialogue{
+    background: #1B2838;
+}
+
+
+
+/* ===== MainWindow (view/main_content_panel.py) ===== */
+QMainWindow {
+    background-color: #19232d;
+}
+QWidget#MainPanel {
+    border-style: solid;
+    border-color: #455364;
+    border-width: 1px;
+    border-radius: 3px;
+    margin: 7px; /* Space between frame and app edge */
+}
+
+
+
+/* ===== Missing mods prompt (window/missing_mods_panel.py) ===== */
+QTableView#missingModPannelTableView {
+    background-color: #22303d;
+    color: white
+}
+QTableView#missingModPannelTableView QTableCornerButton{
+    background-color: #1B2838;
+}
+QWidget#missingModsPannel{
+    background-color: #1B2838
+}
+QHeaderView#missingModPannelTableView {
+    background-color: #1B2838;
+    color: white;
+}
+QComboBox#missing_mods_variant_cb{
+    background-color: #1B2838;
+    color: white;
+    border-radius: 0;
+}
+
+
+/* ===== Settings (window/settings_panel.py) ===== */
+QDialog#settingsPanel {
+    background-color: #22303d;
+
+}
+QCheckBox#summaryValue {
+    color: white;
+}
+
+
+/* ===== RunnerPanel (window/runner_panel.py) ===== */
+QWidget#RunnerPanel {
+    border-style: solid;
+    border-color: #455364;
+    border-width: 1px;
+    border-radius: 3px;
+    margin: 7px; /* Space between frame and app edge */
+    background-color: #1B2838;
+}
+QPlainTextEdit#RunnerPaneltext {
+    background-color: #22303d;
+    color: white;
+}
+
+
+/* ===== Browser (util/steam/browser.py) ===== */
+QWidget#browserPanel {
+    background-color: #1B2838;
+}
+QLabel#browserPaneldownloader_label {
+    color: white;
 }
 
 
@@ -114,8 +158,8 @@ QLabel#summaryValue {
     color: white;
 }
 
-/* ===== Mod Description Scroll Area ===== */
 
+/* ===== Mod Description Scroll Area ===== */
 QWidget#descriptionWidget { /* Outer-most encapsulator */
     background-color: #19232d;
     border-style: solid;
