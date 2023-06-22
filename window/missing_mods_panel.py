@@ -271,12 +271,14 @@ class MissingModsPrompt(QWidget):
         combo_box = self.editor_table_view.indexWidget(index)
         packageId = self.editor_model.item(index.row(), 1).text()
         self.editor_model.item(index.row(), 0).setText(
-            self.data_by_variants.get(packageId, {}).get(publishedfileid)["name"]
+            self.data_by_variants.get(packageId)
+            .get(publishedfileid, {})
+            .get("name", "No variant found!")
         )
         self.editor_model.item(index.row(), 2).setText(
             str(
-                self.data_by_variants.get(packageId, {}).get(publishedfileid)[
-                    "gameVersions"
-                ]
+                self.data_by_variants.get(packageId)
+                .get(publishedfileid, {})
+                .get("gameVersions", "No variant found!")
             )
         )
