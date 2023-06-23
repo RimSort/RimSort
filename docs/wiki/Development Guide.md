@@ -88,7 +88,7 @@ Reference: https://philippj.github.io/SteamworksPy/
 
 #### Texture optimization (todds)
 * RimSort uses [todds](https://github.com/joseasoler/todds) as a dependency for texture optimization. It is shipped with RimSort, archived into the binary releases. If you are building/running from source, you will want to place a todds binary at `./todds/todds` (for Linux/Mac) OR `.\todds\todds.exe` (for Windows)
-* You can run `distribute.py` and this is automatically taken care of you if you are building on a supported platform
+* You can run `distribute.py` and this is automatically taken care of if you are building on a supported platform.
     * You need to enable this first. Edit the script and remove the comment for string `build_steamworkspy()`
 
 #### Running RimSort from source
@@ -105,7 +105,7 @@ Reference: https://philippj.github.io/SteamworksPy/
 
 #### Developing Features
 
-Please discuss with maintainers first, but we are tracking features and issues related to RimSort in the Github repo's "Issues" tab
+Please make sure if you have any feature request to check if there is already something planned. We are tracking features and issues related to RimSort in the Github repo's "Issues" tab. If it is not already in the issues tab you can discuss this with maintainers first throught the RimSort discordserver. 
 
 #### Misc Coding Style
 
