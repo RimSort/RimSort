@@ -1,4 +1,4 @@
-DB_BUILDER_EXCEPTIONS = ["dependencies"]
+DB_BUILDER_EXCEPTIONS = ["dependencies", "loadBefore", "loadAfter"]
 DEFAULT_SETTINGS = {
     "check_for_update_startup": True,
     "sorting_algorithm": "RimPy",

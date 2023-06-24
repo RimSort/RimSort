@@ -58,6 +58,8 @@ class RuleEditor(QWidget):
     A generic panel used to edit Paladin communityRules.json style rules
     """
 
+    update_database_signal = Signal(list)
+
     def __init__(
         self,
         initial_mode: str,
@@ -78,9 +80,9 @@ class RuleEditor(QWidget):
         # THE METADATA
         self.local_metadata = local_metadata
         self.local_rules_hidden = None
-        self.community_rules = community_rules
+        self.community_rules = community_rules.copy()
         self.community_rules_hidden = None
-        self.user_rules = user_rules
+        self.user_rules = user_rules.copy()
         self.user_rules_hidden = None
         # Can be used to get proper names for mods found in list
         # items that are not locally available
@@ -132,7 +134,29 @@ class RuleEditor(QWidget):
             "Community Rules (loadBefore)"
         )
         self.external_community_rules_loadAfter_list = QListWidget()
+        self.external_community_rules_loadAfter_list.setContextMenuPolicy(
+            Qt.CustomContextMenu
+        )
+        self.external_community_rules_loadAfter_list.customContextMenuRequested.connect(
+            partial(
+                self.ruleItemContextMenuEvent,
+                _list=self.external_community_rules_loadAfter_list,
+            )
+        )
+        self.external_community_rules_loadAfter_list.setDefaultDropAction(Qt.MoveAction)
+        self.external_community_rules_loadAfter_list.setDragDropMode(
+            QAbstractItemView.DragDropMode.DragDrop
+        )
         self.external_community_rules_loadBefore_list = QListWidget()
+        self.external_community_rules_loadBefore_list.setContextMenuPolicy(
+            Qt.CustomContextMenu
+        )
+        self.external_community_rules_loadBefore_list.customContextMenuRequested.connect(
+            partial(
+                self.ruleItemContextMenuEvent,
+                _list=self.external_community_rules_loadBefore_list,
+            )
+        )
         self.external_community_rules_loadBefore_list.setDefaultDropAction(
             Qt.MoveAction
         )
@@ -143,7 +167,33 @@ class RuleEditor(QWidget):
         self.internal_user_rules_loadAfter_label = QLabel("User Rules (loadAfter)")
         self.internal_user_rules_loadBefore_label = QLabel("User Rules (loadBefore)")
         self.internal_user_rules_loadAfter_list = QListWidget()
+        self.internal_user_rules_loadAfter_list.setContextMenuPolicy(
+            Qt.CustomContextMenu
+        )
+        self.internal_user_rules_loadAfter_list.customContextMenuRequested.connect(
+            partial(
+                self.ruleItemContextMenuEvent,
+                _list=self.internal_user_rules_loadAfter_list,
+            )
+        )
+        self.internal_user_rules_loadAfter_list.setDefaultDropAction(Qt.MoveAction)
+        self.internal_user_rules_loadAfter_list.setDragDropMode(
+            QAbstractItemView.DragDropMode.DragDrop
+        )
         self.internal_user_rules_loadBefore_list = QListWidget()
+        self.internal_user_rules_loadBefore_list.setContextMenuPolicy(
+            Qt.CustomContextMenu
+        )
+        self.internal_user_rules_loadBefore_list.customContextMenuRequested.connect(
+            partial(
+                self.ruleItemContextMenuEvent,
+                _list=self.internal_user_rules_loadBefore_list,
+            )
+        )
+        self.internal_user_rules_loadBefore_list.setDefaultDropAction(Qt.MoveAction)
+        self.internal_user_rules_loadBefore_list.setDragDropMode(
+            QAbstractItemView.DragDropMode.DragDrop
+        )
 
         # EDITOR WIDGETS
         # Create the model and set column headers
@@ -178,13 +228,31 @@ class RuleEditor(QWidget):
             4, QHeaderView.Stretch
         )
         # Editor actions
-        self.editor_save_icon = QIcon(
-            os.path.join(os.path.dirname(__file__), "../data/save_runner_output.png")
+        # community rules
+        self.editor_save_community_rules_icon = QIcon(
+            os.path.join(os.path.dirname(__file__), "../data/save_community_rules.png")
         )
-        self.editor_save_button = QToolButton()
-        self.editor_save_button.setToolTip("Save changes")
-        self.editor_save_button.setIcon(self.editor_save_icon)
-        # self.editor_save_button.clicked.connect(self.)
+        self.editor_save_community_rules_button = QToolButton()
+        self.editor_save_community_rules_button.setToolTip(
+            "Save rules to communityRules.json"
+        )
+        self.editor_save_community_rules_button.setIcon(
+            self.editor_save_community_rules_icon
+        )
+        self.editor_save_community_rules_button.clicked.connect(
+            partial(self._save_editor_rules, rules_source="Community Rules")
+        )
+        # user rules
+        # Editor actions
+        self.editor_save_user_rules_icon = QIcon(
+            os.path.join(os.path.dirname(__file__), "../data/save_user_rules.png")
+        )
+        self.editor_save_user_rules_button = QToolButton()
+        self.editor_save_user_rules_button.setToolTip("Save rules to userRules.json")
+        self.editor_save_user_rules_button.setIcon(self.editor_save_user_rules_icon)
+        self.editor_save_user_rules_button.clicked.connect(
+            partial(self._save_editor_rules, rules_source="User Rules")
+        )
 
         # MODS WIDGETS
         # Mods search
@@ -263,7 +331,8 @@ class RuleEditor(QWidget):
         self.details_layout.addLayout(self.internal_user_rules_layout)
 
         # Build the editor layouts
-        self.editor_actions_layout.addWidget(self.editor_save_button)
+        self.editor_actions_layout.addWidget(self.editor_save_community_rules_button)
+        self.editor_actions_layout.addWidget(self.editor_save_user_rules_button)
         self.editor_layout.addWidget(self.editor_table_view)
         self.editor_layout.addLayout(self.editor_actions_layout)
 
@@ -388,7 +457,7 @@ class RuleEditor(QWidget):
             QStandardItem(rule_type),
             QStandardItem(comment),
         ]
-
+        items[0].setToolTip(name)
         # Set the items as a new row in the model
         self.editor_model.appendRow(items)
 
@@ -660,6 +729,57 @@ class RuleEditor(QWidget):
                                 hidden=self.user_rules_hidden,
                             )
 
+    def _remove_rule(self, context_item: QListWidgetItem, _list: QListWidget) -> None:
+        _list.takeItem(_list.row(context_item))
+        rule_data = context_item.data(Qt.UserRole)
+        # Determine action mode
+        if _list is self.external_community_rules_loadAfter_list:
+            mode = ["community", "loadAfter"]
+
+        elif _list is self.external_community_rules_loadBefore_list:
+            mode = ["community", "loadBefore"]
+
+        elif _list is self.internal_user_rules_loadAfter_list:
+            mode = ["user", "loadAfter"]
+
+        elif _list is self.internal_user_rules_loadBefore_list:
+            mode = ["user", "loadBefore"]
+        # Select database for editing
+        if mode[0] == "community":
+            metadata = self.community_rules
+        elif mode[0] == "user":
+            metadata = self.user_rules
+        # Remove rule from the database
+        if metadata.get(self.edit_packageId, "").get(mode[1], "").get(rule_data):
+            metadata[self.edit_packageId][mode[1]].pop(rule_data)
+        # Search for & remove the rule's row entry from the editor table
+        for row in range(self.editor_model.rowCount()):
+            # Define criteria
+            packageId_value = self.editor_model.item(
+                row, 1
+            )  # Get the item in column 2 (index 1)
+            rule_source_value = self.editor_model.item(
+                row, 2
+            )  # Get the item in column 3 (index 2)
+            rule_type_value = self.editor_model.item(
+                row, 3
+            )  # Get the item in column 4 (index 3)
+            # Search table for rows that match
+            if (
+                (packageId_value and rule_data in packageId_value.text())
+                and (rule_source_value and mode[0] in rule_source_value.text().lower())
+                and (rule_type_value and mode[1] in rule_type_value.text())
+            ):  # Remove row if criteria matches search
+                self.editor_model.removeRow(row)
+
+    def _save_editor_rules(self, rules_source: str) -> None:
+        # Overwrite rules source with any changes to our metadata
+        if rules_source == "Community Rules":
+            metadata = self.community_rules
+        elif rules_source == "User Rules":
+            metadata = self.user_rules
+        self.update_database_signal.emit([rules_source, metadata])
+
     def _toggle_details_layout_widgets(
         self, layout: QVBoxLayout, override=None
     ) -> None:
@@ -723,13 +843,28 @@ class RuleEditor(QWidget):
                 self.editor_table_view.setRowHidden(row, visibility)
 
     def modItemContextMenuEvent(self, point: QPoint) -> None:
-        context_menu = QMenu(self)  # Downloader item context menu event
+        context_menu = QMenu(self)  # Mod item context menu event
         context_item = self.mods_list.itemAt(point)
         open_mod = context_menu.addAction(
             "Open this mod in the editor"
         )  # open mod in editor
-        open_mod.triggered.connect(partial(self._open_mod_in_editor, context_item))
+        open_mod.triggered.connect(
+            partial(self._open_mod_in_editor, context_item=context_item)
+        )
         action = context_menu.exec_(self.mods_list.mapToGlobal(point))
+
+    def ruleItemContextMenuEvent(self, point: QPoint, _list: QListWidget) -> None:
+        context_menu = QMenu(self)  # Rule item context menu event
+        context_item = _list.itemAt(point)
+        remove_rule = context_menu.addAction("Remove this rule")  # remove this rule
+        remove_rule.triggered.connect(
+            partial(
+                self._remove_rule,
+                context_item=context_item,
+                _list=_list,
+            )
+        )
+        action = context_menu.exec_(_list.mapToGlobal(point))
 
     def clear_mods_search(self) -> None:
         self.mods_search.setText("")

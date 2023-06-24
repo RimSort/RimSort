@@ -567,7 +567,9 @@ class MainContent:
         )
 
         self.external_steam_metadata = {}
+        self.external_steam_metadata_path = None
         self.external_community_rules = {}
+        self.external_community_rules_path = None
         self.internal_user_rules = {}
 
         self.workshop_mods_potential_updates = {}
@@ -582,12 +584,18 @@ class MainContent:
                 self.game_configuration.settings_panel.external_steam_metadata_cb.currentText()
             )
             if external_steam_metadata_source == "Configured file path":
-                self.external_steam_metadata = get_configured_steam_db(
+                (
+                    self.external_steam_metadata,
+                    self.external_steam_metadata_path,
+                ) = get_configured_steam_db(
                     life=self.game_configuration.database_expiry,
                     path=os.path.join(self.game_configuration.steam_db_file_path),
                 )
             elif external_steam_metadata_source == "Configured git repository":
-                self.external_steam_metadata = get_configured_steam_db(
+                (
+                    self.external_steam_metadata,
+                    self.external_steam_metadata_path,
+                ) = get_configured_steam_db(
                     life=self.game_configuration.database_expiry,
                     path=os.path.join(
                         self.game_configuration.dbs_path,
@@ -597,9 +605,10 @@ class MainContent:
                 )
             elif external_steam_metadata_source == "RimPy Mod Manager Database":
                 # Get and cache RimPy Steam db.json rules data for ALL mods
-                self.external_steam_metadata = get_rpmmdb_steam_metadata(
-                    self.internal_local_metadata
-                )
+                (
+                    self.external_steam_metadata,
+                    self.external_steam_metadata_path,
+                ) = get_rpmmdb_steam_metadata(self.internal_local_metadata)
             else:
                 logger.info(
                     "External Steam metadata disabled by user. Please choose a metadata source in settings."
@@ -616,13 +625,19 @@ class MainContent:
                 self.game_configuration.settings_panel.external_community_rules_metadata_cb.currentText()
             )
             if external_community_rules_metadata_source == "Configured file path":
-                self.external_community_rules = get_configured_community_rules_db(
+                (
+                    self.external_community_rules,
+                    self.external_community_rules_path,
+                ) = get_configured_community_rules_db(
                     path=os.path.join(self.game_configuration.community_rules_file_path)
                 )
             elif (
                 external_community_rules_metadata_source == "Configured git repository"
             ):
-                self.external_community_rules = get_configured_community_rules_db(
+                (
+                    self.external_community_rules,
+                    self.external_community_rules_path,
+                ) = get_configured_community_rules_db(
                     path=os.path.join(
                         self.game_configuration.dbs_path,
                         os.path.split(self.game_configuration.community_rules_repo)[1],
@@ -633,9 +648,10 @@ class MainContent:
                 external_community_rules_metadata_source == "RimPy Mod Manager Database"
             ):
                 # Get and cache RimPy Community Rules communityRules.json for ALL mods
-                self.external_community_rules = get_rpmmdb_community_rules_db(
-                    self.internal_local_metadata
-                )
+                (
+                    self.external_community_rules,
+                    self.external_community_rules_path,
+                ) = get_rpmmdb_community_rules_db(self.internal_local_metadata)
             else:
                 logger.info(
                     "External Community Rules metadata disabled by user. Please choose a metadata source in settings."
@@ -2330,6 +2346,7 @@ class MainContent:
             steam_workshop_metadata=self.external_steam_metadata,
         )
         self.rule_editor.setWindowModality(Qt.ApplicationModal)
+        self.rule_editor.update_database_signal.connect(self._do_update_rules_database)
         self.rule_editor.show()
 
     def _do_configure_steam_db_file_path(self) -> None:
@@ -2676,6 +2693,51 @@ class MainContent:
         else:
             logger.warning("Steam DB Builder: User cancelled selection...")
             return
+
+    def _do_update_rules_database(self, instruction: list) -> None:
+        rules_source = instruction[0]
+        rules_data = instruction[1]
+        # Get path based on rules source
+        if rules_source == "Community Rules" and self.external_community_rules_path:
+            path = self.external_community_rules_path
+        elif (
+            rules_source == "User Rules"
+            and self.game_configuration.user_rules_file_path
+        ):
+            path = self.game_configuration.user_rules_file_path
+        else:
+            logger.warning(
+                f"No {rules_source} file path is set. There is no configured database to update!"
+            )
+            return
+        # Retrieve original database
+        try:
+            with open(path, encoding="utf-8") as f:
+                json_string = f.read()
+                logger.debug(f"Reading info...")
+                db_input_a = json.loads(json_string)
+                logger.debug(
+                    f"Retreived copy of existing {rules_source} database to update."
+                )
+        except:
+            logger.error("Failed to read info from existing database")
+        db_input_b = {"timestamp": time(), "rules": rules_data}
+        db_output_c = db_input_a.copy()
+        # Update database in place
+        recursively_update_dict(
+            db_output_c, db_input_b, exceptions=DB_BUILDER_EXCEPTIONS
+        )
+        # Overwrite rules database
+        answer = show_dialogue_conditional(
+            title="RimSort - DB Builder",
+            text="Do you want to continue?",
+            information=f"This operation will overwrite the {rules_source} database located at the following path:\n\n{path}",
+        )
+        if answer == "&Yes":
+            with open(path, "w") as output:
+                json.dump(db_output_c, output, indent=4)
+        else:
+            logger.warning("User declined to continue rules database update.")
 
     def _do_set_database_expiry(self) -> None:
         """

@@ -269,7 +269,7 @@ class SteamDatabaseBuilder(QThread):
                 json.dump(database, output, indent=4)
 
 
-def get_configured_steam_db(life: int, path: str) -> Dict[str, Any]:
+def get_configured_steam_db(life: int, path: str) -> Tuple[Dict[str, Any], Any]:
     logger.info(f"Checking for Steam DB at: {path}")
     db_json_data = {}
     if os.path.exists(
@@ -304,7 +304,7 @@ def get_configured_steam_db(life: int, path: str) -> Dict[str, Any]:
                 db_json_data = db_data[
                     "database"
                 ]  # TODO: additional check to verify integrity of this data's schema
-            return db_json_data
+            return db_json_data, path
 
     else:  # Assume db_data_missing
         show_warning(
@@ -313,10 +313,10 @@ def get_configured_steam_db(life: int, path: str) -> Dict[str, Any]:
             information="Unable to initialize external metadata. There is no external Steam metadata being factored!\n"
             + "\nPlease use DB Builder to create a database, or update to the latest RimSort Steam Workshop Database.",
         )
-        return db_json_data
+        return db_json_data, None
 
 
-def get_configured_community_rules_db(path: str) -> Dict[str, Any]:
+def get_configured_community_rules_db(path: str) -> Tuple[Dict[str, Any], Any]:
     logger.info(f"Checking for Community Rules DB at: {path}")
     community_rules_json_data = {}
     if os.path.exists(
@@ -337,7 +337,7 @@ def get_configured_community_rules_db(path: str) -> Dict[str, Any]:
                 f"Loaded {total_entries} additional sorting rules from Community Rules"
             )
             community_rules_json_data = rule_data["rules"]
-            return community_rules_json_data
+            return community_rules_json_data, path
 
     else:  # Assume db_data_missing
         show_warning(
@@ -346,10 +346,10 @@ def get_configured_community_rules_db(path: str) -> Dict[str, Any]:
             information="Unable to initialize external metadata. There is no external Community Rules metadata being factored!\n"
             + "\nPlease use Rule Editor to create a database, or update to the latest RimSort Community Rules database.",
         )
-        return community_rules_json_data
+        return community_rules_json_data, None
 
 
-def get_rpmmdb_steam_metadata(mods: Dict[str, Any]) -> Dict[str, Any]:
+def get_rpmmdb_steam_metadata(mods: Dict[str, Any]) -> Tuple[Dict[str, Any], Any]:
     """
     Extract the RimPy Mod Manager Database mod's `db.json` Steam Workshop metadata, which is
     used for sorting. Produces an error if the DB mod is not found.
@@ -379,11 +379,11 @@ def get_rpmmdb_steam_metadata(mods: Dict[str, Any]) -> Dict[str, Any]:
                         f"Loaded {total_entries} additional sorting rules from RPMMDB Steam DB"
                     )
                     db_json_data = db_data["database"]
+                    return db_Json_data, steam_db_rules_path
             else:
-                logger.error("The db.json path does not exist")
-            return db_json_data
+                logger.error("The db.json path does not exist!")
     logger.warning(
-        "RimPy Mod Manager Database was not found! Unable to load database from RPMMDB db.json!"
+        "No RimPy Mod Manager Database mod was not found, or db.json was not found. Unable to load database from RPMMDB db.json!"
     )
     show_warning(
         text="RimPy Mod Manager Database mod was not found!",
@@ -392,10 +392,10 @@ def get_rpmmdb_steam_metadata(mods: Dict[str, Any]) -> Dict[str, Any]:
             + "Do you have the mod installed and/or are your paths set correctly?"
         ),
     )
-    return db_json_data
+    return db_json_data, None
 
 
-def get_rpmmdb_community_rules_db(mods: Dict[str, Any]) -> Dict[str, Any]:
+def get_rpmmdb_community_rules_db(mods: Dict[str, Any]) -> Tuple[Dict[str, Any], Any]:
     """
     Extract the RimPy Mod Manager Database mod's `communityRules.json` database, which is
     used for sorting. Produces an error if the DB mod is not found.
@@ -429,11 +429,11 @@ def get_rpmmdb_community_rules_db(mods: Dict[str, Any]) -> Dict[str, Any]:
                         f"Loaded {total_entries} additional sorting rules from RPMMDB Community Rules"
                     )
                     community_rules_json_data = rule_data["rules"]
+                    return community_rules_json_data, community_rules_path
             else:
                 logger.error("The communityRules.json path does not exist")
-            return community_rules_json_data
     logger.warning(
-        "No RimPy Mod Manager Database was found. Unable to load rules from RPMMDB communityRules.json!"
+        "No RimPy Mod Manager Database mod was found, or communityRules.json was not found. Unable to load rules from RPMMDB communityRules.json!"
     )
     show_warning(
         text="RimPy Mod Manager Database mod was not found!",
@@ -442,7 +442,7 @@ def get_rpmmdb_community_rules_db(mods: Dict[str, Any]) -> Dict[str, Any]:
             + "Do you have the mod installed and/or are your paths set correctly?"
         ),
     )
-    return community_rules_json_data
+    return community_rules_json_data, None
 
 
 # Steam client / SteamCMD metadata
