@@ -18,6 +18,7 @@ class ModListItemInner(QWidget):
         local_icon_path: str,
         steam_icon_path: str,
         ludeon_icon_path: str,
+        git_icon_path: str,        
     ) -> None:
         """
         Initialize the QWidget with mod data.
@@ -42,6 +43,7 @@ class ModListItemInner(QWidget):
         self.ludeon_icon_path = ludeon_icon_path
         self.local_icon_path = local_icon_path
         self.steam_icon_path = steam_icon_path
+        self.git_icon_path = git_icon_path
         self.main_label = QLabel()
 
         # Visuals
@@ -108,6 +110,8 @@ class ModListItemInner(QWidget):
             return QIcon(self.local_icon_path)
         elif self.json_data.get("data_source") == "workshop":
             return QIcon(self.steam_icon_path)
+        elif self.json_data.get("data_source") == "local_git":
+            return QIcon(self.git_icon_path)
         else:
             logger.error(
                 f"No type found for ModListItemInner with package id {self.json_data.get('packageId')}"

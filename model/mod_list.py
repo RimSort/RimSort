@@ -84,6 +84,11 @@ class ModListWidget(QListWidget):
                 os.path.join(os.path.dirname(__file__), "../data/ludeon_icon.png")
             ).resolve()
         )
+        self.git_icon_path = str(
+            Path(
+                os.path.join(os.path.dirname(__file__), "../data/git.png")
+            ).resolve()
+        )
 
         # Allow inserting custom list items
         self.model().rowsInserted.connect(
@@ -401,6 +406,7 @@ class ModListWidget(QListWidget):
                     self.local_icon_path,
                     self.steam_icon_path,
                     self.ludeon_icon_path,
+                    self.git_icon_path,
                 )
                 if data.get("invalid"):
                     widget.main_label.setStyleSheet("QLabel { color : red; }")

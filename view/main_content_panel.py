@@ -528,6 +528,11 @@ class MainContent:
             self.game_configuration.get_local_folder_path()
         )
 
+        # Get and cache installed local_git mods
+        self.local_git_mods = get_local_git_mods(
+            self.game_configuration.get_local_folder_path()
+        ) 
+
         # Get and cache installed workshop mods
         self.workshop_mods = get_workshop_mods(
             self.game_configuration.get_workshop_folder_path()
@@ -558,6 +563,8 @@ class MainContent:
             self.workshop_mods[uuid]["data_source"] = "workshop"
         for uuid in self.local_mods:
             self.local_mods[uuid]["data_source"] = "local"
+        for uuid in self.local_git_mods:
+            self.local_git_mods[uuid]["data_source"] = "local_git"
 
         # One working Dictionary for ALL mods
         self.internal_local_metadata = merge_mod_data(
