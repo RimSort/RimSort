@@ -112,7 +112,7 @@ class RunnerPanel(QWidget):
         self.kill_process_button.hide()  # Hide this by default - it will be enabled if self.execute()
         # Save process output btn
         self.save_runner_icon = QIcon(
-            os.path.join(os.path.dirname(__file__), "../data/save_runner_output.png")
+            os.path.join(os.path.dirname(__file__), "../data/save_output.png")
         )
         self.save_runner_output_button = QToolButton()
         self.save_runner_output_button.setIcon(self.save_runner_icon)

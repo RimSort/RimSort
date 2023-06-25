@@ -263,7 +263,6 @@ class RuleEditor(QWidget):
             partial(self._save_editor_rules, rules_source="Community Rules")
         )
         # user rules
-        # Editor actions
         self.editor_save_user_rules_icon = QIcon(
             os.path.join(os.path.dirname(__file__), "../data/save_user_rules.png")
         )
