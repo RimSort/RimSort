@@ -97,10 +97,10 @@ class ModListItemInner(QWidget):
 
     def get_icon(self) -> QIcon:  # type: ignore
         """
-        Check custom tags added to mod metadata upon initialization, and return the cooresponding
+        Check custom tags added to mod metadata upon initialization, and return the corresponding
         QIcon for the mod's source type (expansion, workshop, or local mod?)
 
-        :return: QIcon object set to the path of the cooresponding icon image
+        :return: QIcon object set to the path of the corresponding icon image
         """
         if self.json_data.get("data_source") == "expansion":
             return QIcon(self.ludeon_icon_path)

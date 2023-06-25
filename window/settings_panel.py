@@ -259,7 +259,7 @@ class SettingsPanel(QDialog):
             + "\n- Set Steam WebAPI key"
             + '\n\nPlease consult the "User Guide" on the RimSort wiki'
             + "\n\nRequires:"
-            + "\n- A live internet connection"
+            + "\n- A live Internet connection"
             + "\n- A Steam WebAPI key configured"
         )
         # Set context menu policy and connect custom context menu event
@@ -277,7 +277,7 @@ class SettingsPanel(QDialog):
         )
         self.build_steam_database_dlc_data_checkbox.setToolTip(
             "Requires:\n"
-            + "- A live internet connection\n"
+            + "- A live Internet connection\n"
             + "- An online Steam client with RimWorld purchased & present in library"
         )
         self.build_steam_database_dlc_data_checkbox.setObjectName("summaryValue")
@@ -440,7 +440,7 @@ class SettingsPanel(QDialog):
         )  # db builder expiry
         set_steam_apikey = contextMenu.addAction(
             "Set Steam WebAPI key"
-        )  # steam webapi key
+        )  # steam API-key
         merge_databases.triggered.connect(
             partial(self.settings_panel_actions_signal.emit, "merge_databases")
         )

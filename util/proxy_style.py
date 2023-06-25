@@ -23,7 +23,7 @@ class ProxyStyle(QProxyStyle):
         widget: Optional[QWidget] = ...,
     ) -> None:
         """
-        Overries the primitive-element-drawer. Currently used to
+        Overrides the primitive-element-drawer. Currently used to
         change how the drag/drop indicator for QListWidgetItems looks like.
         """
         if element == QStyle.PE_IndicatorItemViewItemDrop:
