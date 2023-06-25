@@ -113,6 +113,7 @@ def get_dependencies_recursive(
 def gen_tier_three_deps_graph(
     dependencies_graph: dict[str, set[str]],
     reverse_dependencies_graph: dict[str, set[str]],
+    active_mods: dict[str, Any],
 ) -> tuple[dict[str, set[str]], set[str]]:
     # Below is a list of mods determined to be "tier three", in the sense that they
     # should be loaded after any other regular mod, potentially at the very end of the load order.
@@ -121,7 +122,12 @@ def gen_tier_three_deps_graph(
     # into this list as well.
     # TODO: pull from a config
     logger.info("Generating dependencies graph for tier three mods")
-    known_tier_three_mods = {"rim.job.world", "krkr.rocketman"}
+    known_tier_three_mods = {
+        metadata.get("packageId")
+        for metadata in active_mods.values()
+        if metadata.get("loadBottom")
+    }
+    known_tier_three_mods.update({"krkr.rocketman"})
     tier_three_mods = set()
     for known_tier_three_mod in known_tier_three_mods:
         if known_tier_three_mod in dependencies_graph:
