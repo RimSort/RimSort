@@ -379,7 +379,7 @@ def get_rpmmdb_steam_metadata(mods: Dict[str, Any]) -> Tuple[Dict[str, Any], Any
                         f"Loaded {total_entries} additional sorting rules from RPMMDB Steam DB"
                     )
                     db_json_data = db_data["database"]
-                    return db_Json_data, steam_db_rules_path
+                    return db_json_data, steam_db_rules_path
             else:
                 logger.error("The db.json path does not exist!")
     logger.warning(

@@ -5,12 +5,20 @@ import platform
 from typing import Any, Dict, List, Optional, Tuple
 
 
-from PySide6.QtCore import Qt, QModelIndex, QObject, QPoint, QSize, Signal
-from PySide6.QtGui import QAction, QIcon, QPixmap, QStandardItemModel, QStandardItem
+from PySide6.QtCore import Qt, QMimeData, QModelIndex, QObject, QPoint, QSize, Signal
+from PySide6.QtGui import (
+    QAction,
+    QDrag,
+    QIcon,
+    QPixmap,
+    QStandardItemModel,
+    QStandardItem,
+)
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QGridLayout,
     QHeaderView,
+    QInputDialog,
     QItemDelegate,
     QLabel,
     QLineEdit,
@@ -143,9 +151,12 @@ class RuleEditor(QWidget):
                 _list=self.external_community_rules_loadAfter_list,
             )
         )
-        self.external_community_rules_loadAfter_list.setDefaultDropAction(Qt.MoveAction)
+        self.external_community_rules_loadAfter_list.setAcceptDrops(True)
         self.external_community_rules_loadAfter_list.setDragDropMode(
-            QAbstractItemView.DragDropMode.DragDrop
+            QListWidget.DropOnly
+        )
+        self.external_community_rules_loadAfter_list.dropEvent = self.createDropEvent(
+            self.external_community_rules_loadAfter_list
         )
         self.external_community_rules_loadBefore_list = QListWidget()
         self.external_community_rules_loadBefore_list.setContextMenuPolicy(
@@ -157,11 +168,12 @@ class RuleEditor(QWidget):
                 _list=self.external_community_rules_loadBefore_list,
             )
         )
-        self.external_community_rules_loadBefore_list.setDefaultDropAction(
-            Qt.MoveAction
-        )
+        self.external_community_rules_loadBefore_list.setAcceptDrops(True)
         self.external_community_rules_loadBefore_list.setDragDropMode(
-            QAbstractItemView.DragDropMode.DragDrop
+            QListWidget.DropOnly
+        )
+        self.external_community_rules_loadBefore_list.dropEvent = self.createDropEvent(
+            self.external_community_rules_loadBefore_list
         )
         # user rules
         self.internal_user_rules_loadAfter_label = QLabel("User Rules (loadAfter)")
@@ -176,9 +188,10 @@ class RuleEditor(QWidget):
                 _list=self.internal_user_rules_loadAfter_list,
             )
         )
-        self.internal_user_rules_loadAfter_list.setDefaultDropAction(Qt.MoveAction)
-        self.internal_user_rules_loadAfter_list.setDragDropMode(
-            QAbstractItemView.DragDropMode.DragDrop
+        self.internal_user_rules_loadAfter_list.setAcceptDrops(True)
+        self.internal_user_rules_loadAfter_list.setDragDropMode(QListWidget.DropOnly)
+        self.internal_user_rules_loadAfter_list.dropEvent = self.createDropEvent(
+            self.internal_user_rules_loadAfter_list
         )
         self.internal_user_rules_loadBefore_list = QListWidget()
         self.internal_user_rules_loadBefore_list.setContextMenuPolicy(
@@ -190,9 +203,10 @@ class RuleEditor(QWidget):
                 _list=self.internal_user_rules_loadBefore_list,
             )
         )
-        self.internal_user_rules_loadBefore_list.setDefaultDropAction(Qt.MoveAction)
-        self.internal_user_rules_loadBefore_list.setDragDropMode(
-            QAbstractItemView.DragDropMode.DragDrop
+        self.internal_user_rules_loadBefore_list.setAcceptDrops(True)
+        self.internal_user_rules_loadBefore_list.setDragDropMode(QListWidget.DropOnly)
+        self.internal_user_rules_loadBefore_list.dropEvent = self.createDropEvent(
+            self.internal_user_rules_loadBefore_list
         )
 
         # EDITOR WIDGETS
@@ -267,6 +281,7 @@ class RuleEditor(QWidget):
         self.mods_list = QListWidget()
         self.mods_list.setContextMenuPolicy(Qt.CustomContextMenu)
         self.mods_list.customContextMenuRequested.connect(self.modItemContextMenuEvent)
+        self.mods_list.setDragEnabled(True)
 
         # Actions
         self.local_metadata_button = QPushButton()
@@ -354,28 +369,6 @@ class RuleEditor(QWidget):
         self.layout.addLayout(self.upper_layout, 66)
         self.layout.addLayout(self.lower_layout, 33)
 
-        # Allow for dragging and dropping between lists
-        # self.mods_list.setDefaultDropAction(Qt.MoveAction)
-        # self.mods_list.setDragDropMode(QAbstractItemView.DragDropMode.DragDrop)
-        # self.external_community_rules_loadAfter_list.setDefaultDropAction(Qt.MoveAction)
-        # self.external_community_rules_loadAfter_list.setDragDropMode(
-        #     QAbstractItemView.DragDropMode.DragDrop
-        # )
-        # self.external_community_rules_loadBefore_list.setDefaultDropAction(
-        #     Qt.MoveAction
-        # )
-        # self.external_community_rules_loadBefore_list.setDragDropMode(
-        #     QAbstractItemView.DragDropMode.DragDrop
-        # )
-        # self.internal_user_rules_loadAfter_list.setDefaultDropAction(Qt.MoveAction)
-        # self.internal_user_rules_loadAfter_list.setDragDropMode(
-        #     QAbstractItemView.DragDropMode.DragDrop
-        # )
-        # self.internal_user_rules_loadBefore_list.setDefaultDropAction(Qt.MoveAction)
-        # self.internal_user_rules_loadBefore_list.setDragDropMode(
-        #     QAbstractItemView.DragDropMode.DragDrop
-        # )
-
         # Allow toggle layouts based on context
         if self.compact:
             self._toggle_details_layout_widgets(
@@ -405,42 +398,101 @@ class RuleEditor(QWidget):
         self.setLayout(self.layout)
         self.setMinimumSize(QSize(800, 600))
 
-    def current_list_widget(self, position):
-        widgets = [
-            self.mods_list,
-            self.external_community_rules_loadAfter_list,
-            self.external_community_rules_loadBefore_list,
-            self.internal_user_rules_loadAfter_list,
-            self.internal_user_rules_loadBefore_list,
-        ]
-        for widget in widgets:
-            if widget.geometry().contains(position):
-                return widget
-        return None
+    def createDropEvent(self, destination_list: QListWidget):
+        def dropEvent(event):
+            # If the item was sourced from mods list
+            if event.source() == self.mods_list:
+                # Accept event
+                event.setDropAction(Qt.CopyAction)
+                event.accept()
+                # Create new item for destination list & copy source item
+                source_item = self.mods_list.currentItem()
+                item_label = source_item.listWidget().itemWidget(source_item)
+                item_label_text = item_label.text()
+                rule_data = source_item.data(Qt.UserRole)
+                copied_item = QListWidgetItem()
+                copied_item.setData(Qt.UserRole, rule_data)
+                # Create editor row & append rule to metadata after item is populated into the destination list
+                # Determine action mode
+                if destination_list is self.external_community_rules_loadAfter_list:
+                    mode = ["Community Rules", "loadAfter"]
 
-    # def dragEnterEvent(self, event):
-    #     if event.mimeData().hasFormat("application/x-qabstractitemmodeldatalist"):
-    #         event.accept()
-    #     else:
-    #         event.ignore()
+                elif destination_list is self.external_community_rules_loadBefore_list:
+                    mode = ["Community Rules", "loadBefore"]
 
-    # def dropEvent(self, event):
-    #     if event.mimeData().hasFormat("application/x-qabstractitemmodeldatalist"):
-    #         data = event.mimeData()
-    #         items = data.data("application/x-qabstractitemmodeldatalist").split(b"\x00")
-    #         list_widget = self.current_list_widget(event.pos())
-    #         if list_widget:
-    #             for item_data in items:
-    #                 item = QListWidgetItem(item_data.decode())
-    #                 list_widget.addItem(item)
+                elif destination_list is self.internal_user_rules_loadAfter_list:
+                    mode = ["User Rules", "loadAfter"]
 
-    #             event.accept()
-    #     else:
-    #         event.ignore()
+                elif destination_list is self.internal_user_rules_loadBefore_list:
+                    mode = ["User Rules", "loadBefore"]
+                # Append row
+                # Search for & remove the rule's row entry from the editor table
+                for row in range(self.editor_model.rowCount()):
+                    # Define criteria
+                    packageId_value = self.editor_model.item(
+                        row, 1
+                    )  # Get the item in column 2 (index 1)
+                    rule_source_value = self.editor_model.item(
+                        row, 2
+                    )  # Get the item in column 3 (index 2)
+                    rule_type_value = self.editor_model.item(
+                        row, 3
+                    )  # Get the item in column 4 (index 3)
+                    # Search table for rows that match.
+                    if (
+                        (packageId_value and rule_data in packageId_value.text())
+                        and (rule_source_value and mode[0] in rule_source_value.text())
+                        and (rule_type_value and mode[1] in rule_type_value.text())
+                    ):
+                        show_warning(
+                            title="Duplicate rule",
+                            text="Tried to add duplicate rule.",
+                            information="Skipping creation of duplicate rule!",
+                        )
+                        return
+                # If we don't find anything existing that matches...
+                # Add the item to the destination list
+                destination_list.addItem(copied_item)
+                destination_list.setItemWidget(copied_item, QLabel(item_label_text))
+                # Add a new row in the editor - prompt user to enter a comment for their rule addition
+                args, ok = QInputDialog().getText(
+                    None,
+                    "Enter comment",
+                    "Enter a comment to annotate why this rule exists. This is useful for your own records, as well as others.",
+                    QLineEdit.Normal,
+                )
+                if ok:
+                    comment = args
+                else:
+                    comment = ""
+                # Populate new row for our rule
+                self._add_rule_to_table(
+                    item_label_text, rule_data, mode[0], mode[1], comment
+                )
+                # Select database for editing
+                if mode[0] == "Community Rules":
+                    metadata = self.community_rules
+                elif mode[0] == "User Rules":
+                    metadata = self.user_rules
+                # Add rule to the database if it doesn't already exist
+                if not metadata.get(self.edit_packageId):
+                    metadata[self.edit_packageId] = {}
+                if not metadata[self.edit_packageId].get(mode[1]):
+                    metadata[self.edit_packageId][mode[1]] = {}
+                if not metadata[self.edit_packageId][mode[1]].get(rule_data):
+                    metadata[self.edit_packageId][mode[1]][rule_data] = {}
+                metadata[self.edit_packageId][mode[1]][rule_data][
+                    "name"
+                ] = item_label_text
+                metadata[self.edit_packageId][mode[1]][rule_data]["comment"] = comment
+            else:
+                event.ignore()
+
+        return dropEvent
 
     # RULES
 
-    def _add_rule(
+    def _add_rule_to_table(
         self,
         name: str,
         packageId: str,
@@ -524,7 +576,7 @@ class RuleEditor(QWidget):
                                 else loadAfters,
                                 metadata=loadAfters,
                             )
-                            self._add_rule(
+                            self._add_rule_to_table(
                                 name=self.steam_workshop_metadata_packageIds_to_name[
                                     loadAfters.lower()
                                 ]
@@ -555,7 +607,7 @@ class RuleEditor(QWidget):
                                     else rule,
                                     metadata=rule,
                                 )
-                                self._add_rule(
+                                self._add_rule_to_table(
                                     name=self.steam_workshop_metadata_packageIds_to_name[
                                         rule.lower()
                                     ]
@@ -589,7 +641,7 @@ class RuleEditor(QWidget):
                                 else loadBefores,
                                 metadata=loadBefores,
                             )
-                            self._add_rule(
+                            self._add_rule_to_table(
                                 name=self.steam_workshop_metadata_packageIds_to_name[
                                     loadAfters.lower()
                                 ]
@@ -620,7 +672,7 @@ class RuleEditor(QWidget):
                                     else rule,
                                     metadata=rule,
                                 )
-                                self._add_rule(
+                                self._add_rule_to_table(
                                     name=self.steam_workshop_metadata_packageIds_to_name[
                                         rule.lower()
                                     ]
@@ -640,11 +692,9 @@ class RuleEditor(QWidget):
                     self._create_list_item(
                         _list=self.mods_list,
                         title=metadata["name"],
-                        metadata={
-                            "packageId": metadata["packageId"]
-                            if metadata.get("packageId")
-                            else None,
-                        },
+                        metadata=metadata["packageId"]
+                        if metadata.get("packageId")
+                        else None,
                     )
         # Community Rules rulez
         if self.community_rules and len(self.community_rules.keys()) > 0:
@@ -660,7 +710,7 @@ class RuleEditor(QWidget):
                                 title=rule_data["name"][0],
                                 metadata=rule_id,
                             )
-                            self._add_rule(
+                            self._add_rule_to_table(
                                 name=rule_data["name"][0],
                                 packageId=rule_id,
                                 rule_source="Community Rules",
@@ -677,7 +727,7 @@ class RuleEditor(QWidget):
                                 title=rule_data["name"][0],
                                 metadata=rule_id,
                             )
-                            self._add_rule(
+                            self._add_rule_to_table(
                                 name=rule_data["name"][0],
                                 packageId=rule_id,
                                 rule_source="Community Rules",
@@ -701,7 +751,7 @@ class RuleEditor(QWidget):
                                 title=rule_data["name"][0],
                                 metadata=rule_id,
                             )
-                            self._add_rule(
+                            self._add_rule_to_table(
                                 name=rule_data["name"][0],
                                 packageId=rule_id,
                                 rule_source="User Rules",
@@ -718,7 +768,7 @@ class RuleEditor(QWidget):
                                 title=rule_data["name"][0],
                                 metadata=rule_id,
                             )
-                            self._add_rule(
+                            self._add_rule_to_table(
                                 name=rule_data["name"][0],
                                 packageId=rule_id,
                                 rule_source="User Rules",
@@ -734,24 +784,21 @@ class RuleEditor(QWidget):
         rule_data = context_item.data(Qt.UserRole)
         # Determine action mode
         if _list is self.external_community_rules_loadAfter_list:
-            mode = ["community", "loadAfter"]
+            mode = ["Community Rules", "loadAfter"]
 
         elif _list is self.external_community_rules_loadBefore_list:
-            mode = ["community", "loadBefore"]
+            mode = ["Community Rules", "loadBefore"]
 
         elif _list is self.internal_user_rules_loadAfter_list:
-            mode = ["user", "loadAfter"]
+            mode = ["User Rules", "loadAfter"]
 
         elif _list is self.internal_user_rules_loadBefore_list:
-            mode = ["user", "loadBefore"]
+            mode = ["User Rules", "loadBefore"]
         # Select database for editing
-        if mode[0] == "community":
+        if mode[0] == "Community Rules":
             metadata = self.community_rules
-        elif mode[0] == "user":
+        elif mode[0] == "User Rules":
             metadata = self.user_rules
-        # Remove rule from the database
-        if metadata.get(self.edit_packageId, "").get(mode[1], "").get(rule_data):
-            metadata[self.edit_packageId][mode[1]].pop(rule_data)
         # Search for & remove the rule's row entry from the editor table
         for row in range(self.editor_model.rowCount()):
             # Define criteria
@@ -771,6 +818,9 @@ class RuleEditor(QWidget):
                 and (rule_type_value and mode[1] in rule_type_value.text())
             ):  # Remove row if criteria matches search
                 self.editor_model.removeRow(row)
+        # Remove rule from the database
+        if metadata.get(self.edit_packageId, "").get(mode[1], "").get(rule_data):
+            metadata[self.edit_packageId][mode[1]].pop(rule_data)
 
     def _save_editor_rules(self, rules_source: str) -> None:
         # Overwrite rules source with any changes to our metadata
