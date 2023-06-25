@@ -1262,7 +1262,7 @@ class MainContent:
 
         # Get dependencies graph for tier three mods (load at bottom mods)
         tier_three_dependency_graph, tier_three_mods = gen_tier_three_deps_graph(
-            dependencies_graph, reverse_dependencies_graph
+            dependencies_graph, reverse_dependencies_graph, active_mods
         )
 
         # Get dependencies graph for tier two mods (load in middle)
