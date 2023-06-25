@@ -16,6 +16,7 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import (
     QAbstractItemView,
+    QCheckBox,
     QGridLayout,
     QHeaderView,
     QInputDialog,
@@ -175,6 +176,9 @@ class RuleEditor(QWidget):
         self.external_community_rules_loadBefore_list.dropEvent = self.createDropEvent(
             self.external_community_rules_loadBefore_list
         )
+        self.external_community_rules_loadBottom_checkbox = QCheckBox(
+            "Force load at bottom of list"
+        )
         # user rules
         self.internal_user_rules_loadAfter_label = QLabel("User Rules (loadAfter)")
         self.internal_user_rules_loadBefore_label = QLabel("User Rules (loadBefore)")
@@ -208,7 +212,9 @@ class RuleEditor(QWidget):
         self.internal_user_rules_loadBefore_list.dropEvent = self.createDropEvent(
             self.internal_user_rules_loadBefore_list
         )
-
+        self.internal_user_rules_loadBottom_checkbox = QCheckBox(
+            "Force load at bottom of list"
+        )
         # EDITOR WIDGETS
         # Create the model and set column headers
         self.editor_model = QStandardItemModel(0, 5)
@@ -267,13 +273,12 @@ class RuleEditor(QWidget):
         self.editor_save_user_rules_button.clicked.connect(
             partial(self._save_editor_rules, rules_source="User Rules")
         )
-
         # MODS WIDGETS
         # Mods search
         self.mods_search = QLineEdit()
         self.mods_search.setClearButtonEnabled(True)
         self.mods_search.textChanged.connect(self.signal_mods_search)
-        self.mods_search.setPlaceholderText("Search mods by name or packageId")
+        self.mods_search.setPlaceholderText("Search mods by name")
         self.mods_search_clear_button = self.mods_search.findChild(QToolButton)
         self.mods_search_clear_button.setEnabled(True)
         self.mods_search_clear_button.clicked.connect(self.clear_mods_search)
@@ -329,6 +334,9 @@ class RuleEditor(QWidget):
         self.external_community_rules_layout.addWidget(
             self.external_community_rules_loadBefore_list
         )
+        self.external_community_rules_layout.addWidget(
+            self.external_community_rules_loadBottom_checkbox
+        )
         self.internal_user_rules_layout.addWidget(
             self.internal_user_rules_loadAfter_label
         )
@@ -340,6 +348,9 @@ class RuleEditor(QWidget):
         )
         self.internal_user_rules_layout.addWidget(
             self.internal_user_rules_loadBefore_list
+        )
+        self.internal_user_rules_layout.addWidget(
+            self.internal_user_rules_loadBottom_checkbox
         )
         self.details_layout.addLayout(self.internal_local_metadata_layout)
         self.details_layout.addLayout(self.external_community_rules_layout)
@@ -394,6 +405,14 @@ class RuleEditor(QWidget):
             )
         # Put it all together
         self._populate_from_metadata()
+        # Connect these after metadata population
+        self.external_community_rules_loadBottom_checkbox.stateChanged.connect(
+            partial(self._toggle_loadBottom_rule, "Community Rules")
+        )
+        self.internal_user_rules_loadBottom_checkbox.stateChanged.connect(
+            partial(self._toggle_loadBottom_rule, "User Rules")
+        )
+        # Setup the window
         self.setWindowTitle("RimSort - Rule Editor")
         self.setLayout(self.layout)
         self.setMinimumSize(QSize(800, 600))
@@ -544,8 +563,7 @@ class RuleEditor(QWidget):
         _list.setItemWidget(item, label)
 
     def _open_mod_in_editor(self, context_item: QListWidgetItem) -> None:
-        json_data = context_item.data(Qt.UserRole)
-        self.edit_packageId = json_data["packageId"]
+        self.edit_packageId = context_item.data(Qt.UserRole)
         self._clear_widget()
         self._populate_from_metadata()
 
@@ -559,7 +577,8 @@ class RuleEditor(QWidget):
                     and self.edit_packageId
                     and metadata["packageId"].lower() == self.edit_packageId.lower()
                 ):
-                    self.mod_label.setText(f'Editing rules for: {metadata["name"]}')
+                    self.edit_name = metadata["name"]
+                    self.mod_label.setText(f"Editing rules for: {self.edit_name}")
                     if metadata.get("loadAfter") and metadata["loadAfter"].get("li"):
                         loadAfters = metadata["loadAfter"]["li"]
                         if isinstance(loadAfters, str):
@@ -737,6 +756,22 @@ class RuleEditor(QWidget):
                                 else "",
                                 hidden=self.community_rules_hidden,
                             )
+                    if metadata.get("loadBottom") and metadata["loadBottom"].get(
+                        "value"
+                    ):
+                        self.external_community_rules_loadBottom_checkbox.setChecked(
+                            True
+                        )
+                        self._add_rule_to_table(
+                            name=self.edit_name,
+                            packageId=self.edit_packageId,
+                            rule_source="Community Rules",
+                            rule_type="loadBottom",
+                            comment=rule_data["comment"][0]
+                            if rule_data.get("comment")
+                            else "",
+                            hidden=self.community_rules_hidden,
+                        )
         # User Rules rulez
         if self.user_rules and len(self.user_rules.keys()) > 0:
             for packageId, metadata in self.user_rules.items():
@@ -778,6 +813,20 @@ class RuleEditor(QWidget):
                                 else "",
                                 hidden=self.user_rules_hidden,
                             )
+                    if metadata.get("loadBottom") and metadata["loadBottom"].get(
+                        "value"
+                    ):
+                        self.internal_user_rules_loadBottom_checkbox.setChecked(True)
+                        self._add_rule_to_table(
+                            name=self.edit_name,
+                            packageId=self.edit_packageId,
+                            rule_source="User Rules",
+                            rule_type="loadBottom",
+                            comment=rule_data["comment"][0]
+                            if rule_data.get("comment")
+                            else "",
+                            hidden=self.user_rules_hidden,
+                        )
 
     def _remove_rule(self, context_item: QListWidgetItem, _list: QListWidget) -> None:
         _list.takeItem(_list.row(context_item))
@@ -814,12 +863,12 @@ class RuleEditor(QWidget):
             # Search table for rows that match
             if (
                 (packageId_value and rule_data in packageId_value.text())
-                and (rule_source_value and mode[0] in rule_source_value.text().lower())
+                and (rule_source_value and mode[0] in rule_source_value.text())
                 and (rule_type_value and mode[1] in rule_type_value.text())
             ):  # Remove row if criteria matches search
                 self.editor_model.removeRow(row)
         # Remove rule from the database
-        if metadata.get(self.edit_packageId, "").get(mode[1], "").get(rule_data):
+        if metadata.get(self.edit_packageId, {}).get(mode[1], {}).get(rule_data):
             metadata[self.edit_packageId][mode[1]].pop(rule_data)
 
     def _save_editor_rules(self, rules_source: str) -> None:
@@ -892,6 +941,62 @@ class RuleEditor(QWidget):
             ):  # Toggle row visibility based on the value
                 self.editor_table_view.setRowHidden(row, visibility)
 
+    def _toggle_loadBottom_rule(self, rule_source: str, state) -> None:
+        # Select database for editing
+        if rule_source == "Community Rules":
+            metadata = self.community_rules
+        elif rule_source == "User Rules":
+            metadata = self.user_rules
+        if state == 2:
+            # Add a new row in the editor - prompt user to enter a comment for their rule addition
+            args, ok = QInputDialog().getText(
+                None,
+                "Enter comment",
+                "Enter a comment to annotate why this rule exists. This is useful for your own records, as well as others.",
+                QLineEdit.Normal,
+            )
+            if ok:
+                comment = args
+            else:
+                comment = ""
+            self._add_rule_to_table(
+                name=self.edit_name,
+                packageId=self.edit_packageId,
+                rule_source=rule_source,
+                rule_type="loadBottom",
+                comment=comment,
+            )
+            # Add rule to the database if it doesn't already exist
+            if not metadata.get(self.edit_packageId):
+                metadata[self.edit_packageId] = {}
+            if not metadata[self.edit_packageId].get("loadBottom"):
+                metadata[self.edit_packageId]["loadBottom"] = {}
+            metadata[self.edit_packageId]["loadBottom"]["value"] = True
+            metadata[self.edit_packageId]["loadBottom"]["comment"] = comment
+        else:
+            # Search for & remove the rule's row entry from the editor table
+            for row in range(self.editor_model.rowCount()):
+                # Define criteria
+                packageId_value = self.editor_model.item(
+                    row, 1
+                )  # Get the item in column 2 (index 1)
+                rule_source_value = self.editor_model.item(
+                    row, 2
+                )  # Get the item in column 3 (index 2)
+                rule_type_value = self.editor_model.item(
+                    row, 3
+                )  # Get the item in column 4 (index 3)
+                # Search table for rows that match
+                if (
+                    (packageId_value and self.edit_packageId in packageId_value.text())
+                    and (rule_source_value and rule_source in rule_source_value.text())
+                    and (rule_type_value and "loadBottom" in rule_type_value.text())
+                ):  # Remove row if criteria matches search
+                    self.editor_model.removeRow(row)
+            # Remove rule from the database
+            if metadata.get(self.edit_packageId, {}).get("loadBottom", {}).get("value"):
+                metadata[self.edit_packageId].pop("loadBottom")
+
     def modItemContextMenuEvent(self, point: QPoint) -> None:
         context_menu = QMenu(self)  # Mod item context menu event
         context_item = self.mods_list.itemAt(point)
@@ -924,20 +1029,8 @@ class RuleEditor(QWidget):
         # Loop through the items
         for index in range(self.mods_list.count()):
             item = self.mods_list.item(index)
-            json_data = item.data(Qt.UserRole)
-            if (
-                pattern
-                and json_data.get("name")
-                and not pattern.lower() in json_data["name"].lower()
-            ):
-                item.setHidden(True)
-            else:
-                item.setHidden(False)
-            if (
-                pattern
-                and json_data.get("packageId")
-                and not pattern.lower() in json_data["packageId"].lower()
-            ):
+            name = item.listWidget().itemWidget(item).text()
+            if pattern and name and not pattern.lower() in name.lower():
                 item.setHidden(True)
             else:
                 item.setHidden(False)

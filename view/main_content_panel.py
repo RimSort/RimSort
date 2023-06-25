@@ -75,6 +75,7 @@ from sub_view.actions_panel import Actions
 from sub_view.active_mods_panel import ActiveModList
 from sub_view.inactive_mods_panel import InactiveModList
 from sub_view.mod_info_panel import ModInfo
+from util.constants import DEFAULT_USER_RULES
 from util.generic import launch_game_process
 from util.metadata import *
 from util.mods import *
@@ -664,9 +665,10 @@ class MainContent:
                     json_string = f.read()
                     self.internal_user_rules = json.loads(json_string)["rules"]
             else:
-                logger.error(
-                    "userRules.json was not accessible. There are no user rules available!"
-                )
+                initial_rules_db = DEFAULT_USER_RULES
+                with open(self.game_configuration.user_rules_file_path, "w") as output:
+                    json.dump(initial_rules_db, output, indent=4)
+                self.internal_user_rules = initial_rules_db["rules"]
         else:
             logger.warning(
                 "No LOCAL or WORKSHOP mods found at all. Are you playing Vanilla?"
