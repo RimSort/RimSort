@@ -127,7 +127,7 @@ class RuleEditor(QWidget):
         # SUB SUB LAYOUTS
         self.internal_local_metadata_layout = QVBoxLayout()
         self.external_community_rules_layout = QVBoxLayout()
-        self.internal_user_rules_layout = QVBoxLayout()
+        self.external_user_rules_layout = QVBoxLayout()
 
         # DETAILS WIDGETS
         # local metadata
@@ -180,39 +180,39 @@ class RuleEditor(QWidget):
             "Force load at bottom of list"
         )
         # user rules
-        self.internal_user_rules_loadAfter_label = QLabel("User Rules (loadAfter)")
-        self.internal_user_rules_loadBefore_label = QLabel("User Rules (loadBefore)")
-        self.internal_user_rules_loadAfter_list = QListWidget()
-        self.internal_user_rules_loadAfter_list.setContextMenuPolicy(
+        self.external_user_rules_loadAfter_label = QLabel("User Rules (loadAfter)")
+        self.external_user_rules_loadBefore_label = QLabel("User Rules (loadBefore)")
+        self.external_user_rules_loadAfter_list = QListWidget()
+        self.external_user_rules_loadAfter_list.setContextMenuPolicy(
             Qt.CustomContextMenu
         )
-        self.internal_user_rules_loadAfter_list.customContextMenuRequested.connect(
+        self.external_user_rules_loadAfter_list.customContextMenuRequested.connect(
             partial(
                 self.ruleItemContextMenuEvent,
-                _list=self.internal_user_rules_loadAfter_list,
+                _list=self.external_user_rules_loadAfter_list,
             )
         )
-        self.internal_user_rules_loadAfter_list.setAcceptDrops(True)
-        self.internal_user_rules_loadAfter_list.setDragDropMode(QListWidget.DropOnly)
-        self.internal_user_rules_loadAfter_list.dropEvent = self.createDropEvent(
-            self.internal_user_rules_loadAfter_list
+        self.external_user_rules_loadAfter_list.setAcceptDrops(True)
+        self.external_user_rules_loadAfter_list.setDragDropMode(QListWidget.DropOnly)
+        self.external_user_rules_loadAfter_list.dropEvent = self.createDropEvent(
+            self.external_user_rules_loadAfter_list
         )
-        self.internal_user_rules_loadBefore_list = QListWidget()
-        self.internal_user_rules_loadBefore_list.setContextMenuPolicy(
+        self.external_user_rules_loadBefore_list = QListWidget()
+        self.external_user_rules_loadBefore_list.setContextMenuPolicy(
             Qt.CustomContextMenu
         )
-        self.internal_user_rules_loadBefore_list.customContextMenuRequested.connect(
+        self.external_user_rules_loadBefore_list.customContextMenuRequested.connect(
             partial(
                 self.ruleItemContextMenuEvent,
-                _list=self.internal_user_rules_loadBefore_list,
+                _list=self.external_user_rules_loadBefore_list,
             )
         )
-        self.internal_user_rules_loadBefore_list.setAcceptDrops(True)
-        self.internal_user_rules_loadBefore_list.setDragDropMode(QListWidget.DropOnly)
-        self.internal_user_rules_loadBefore_list.dropEvent = self.createDropEvent(
-            self.internal_user_rules_loadBefore_list
+        self.external_user_rules_loadBefore_list.setAcceptDrops(True)
+        self.external_user_rules_loadBefore_list.setDragDropMode(QListWidget.DropOnly)
+        self.external_user_rules_loadBefore_list.dropEvent = self.createDropEvent(
+            self.external_user_rules_loadBefore_list
         )
-        self.internal_user_rules_loadBottom_checkbox = QCheckBox(
+        self.external_user_rules_loadBottom_checkbox = QCheckBox(
             "Force load at bottom of list"
         )
         # EDITOR WIDGETS
@@ -306,7 +306,7 @@ class RuleEditor(QWidget):
         self.user_rules_button.clicked.connect(
             partial(
                 self._toggle_details_layout_widgets,
-                self.internal_user_rules_layout,
+                self.external_user_rules_layout,
             )
         )
         # Build the details layout
@@ -337,24 +337,24 @@ class RuleEditor(QWidget):
         self.external_community_rules_layout.addWidget(
             self.external_community_rules_loadBottom_checkbox
         )
-        self.internal_user_rules_layout.addWidget(
-            self.internal_user_rules_loadAfter_label
+        self.external_user_rules_layout.addWidget(
+            self.external_user_rules_loadAfter_label
         )
-        self.internal_user_rules_layout.addWidget(
-            self.internal_user_rules_loadAfter_list
+        self.external_user_rules_layout.addWidget(
+            self.external_user_rules_loadAfter_list
         )
-        self.internal_user_rules_layout.addWidget(
-            self.internal_user_rules_loadBefore_label
+        self.external_user_rules_layout.addWidget(
+            self.external_user_rules_loadBefore_label
         )
-        self.internal_user_rules_layout.addWidget(
-            self.internal_user_rules_loadBefore_list
+        self.external_user_rules_layout.addWidget(
+            self.external_user_rules_loadBefore_list
         )
-        self.internal_user_rules_layout.addWidget(
-            self.internal_user_rules_loadBottom_checkbox
+        self.external_user_rules_layout.addWidget(
+            self.external_user_rules_loadBottom_checkbox
         )
         self.details_layout.addLayout(self.internal_local_metadata_layout)
         self.details_layout.addLayout(self.external_community_rules_layout)
-        self.details_layout.addLayout(self.internal_user_rules_layout)
+        self.details_layout.addLayout(self.external_user_rules_layout)
 
         # Build the editor layouts
         self.editor_actions_layout.addWidget(self.editor_save_community_rules_button)
@@ -394,14 +394,14 @@ class RuleEditor(QWidget):
                 layout=self.external_community_rules_layout, override=False
             )
             self._toggle_details_layout_widgets(
-                layout=self.internal_user_rules_layout, override=True
+                layout=self.external_user_rules_layout, override=True
             )
         elif self.initial_mode == "user_rules":
             self._toggle_details_layout_widgets(
                 layout=self.external_community_rules_layout, override=True
             )
             self._toggle_details_layout_widgets(
-                layout=self.internal_user_rules_layout, override=False
+                layout=self.external_user_rules_layout, override=False
             )
         # Put it all together
         self._populate_from_metadata()
@@ -409,7 +409,7 @@ class RuleEditor(QWidget):
         self.external_community_rules_loadBottom_checkbox.stateChanged.connect(
             partial(self._toggle_loadBottom_rule, "Community Rules")
         )
-        self.internal_user_rules_loadBottom_checkbox.stateChanged.connect(
+        self.external_user_rules_loadBottom_checkbox.stateChanged.connect(
             partial(self._toggle_loadBottom_rule, "User Rules")
         )
         # Setup the window
@@ -439,10 +439,10 @@ class RuleEditor(QWidget):
                 elif destination_list is self.external_community_rules_loadBefore_list:
                     mode = ["Community Rules", "loadBefore"]
 
-                elif destination_list is self.internal_user_rules_loadAfter_list:
+                elif destination_list is self.external_user_rules_loadAfter_list:
                     mode = ["User Rules", "loadAfter"]
 
-                elif destination_list is self.internal_user_rules_loadBefore_list:
+                elif destination_list is self.external_user_rules_loadBefore_list:
                     mode = ["User Rules", "loadBefore"]
                 # Append row
                 # Search for & remove the rule's row entry from the editor table
@@ -544,8 +544,8 @@ class RuleEditor(QWidget):
         self.local_metadata_loadBefore_list.clear()
         self.external_community_rules_loadAfter_list.clear()
         self.external_community_rules_loadBefore_list.clear()
-        self.internal_user_rules_loadAfter_list.clear()
-        self.internal_user_rules_loadBefore_list.clear()
+        self.external_user_rules_loadAfter_list.clear()
+        self.external_user_rules_loadBefore_list.clear()
         self.editor_model.removeRows(0, self.editor_model.rowCount())
 
     def _create_list_item(self, _list: QListWidget, title: str, metadata=None) -> None:
@@ -782,7 +782,7 @@ class RuleEditor(QWidget):
                     if metadata.get("loadAfter"):
                         for rule_id, rule_data in metadata["loadAfter"].items():
                             self._create_list_item(
-                                _list=self.internal_user_rules_loadAfter_list,
+                                _list=self.external_user_rules_loadAfter_list,
                                 title=rule_data["name"][0],
                                 metadata=rule_id,
                             )
@@ -799,7 +799,7 @@ class RuleEditor(QWidget):
                     if metadata.get("loadBefore"):
                         for rule_id, rule_data in metadata["loadBefore"].items():
                             self._create_list_item(
-                                _list=self.internal_user_rules_loadBefore_list,
+                                _list=self.external_user_rules_loadBefore_list,
                                 title=rule_data["name"][0],
                                 metadata=rule_id,
                             )
@@ -816,7 +816,7 @@ class RuleEditor(QWidget):
                     if metadata.get("loadBottom") and metadata["loadBottom"].get(
                         "value"
                     ):
-                        self.internal_user_rules_loadBottom_checkbox.setChecked(True)
+                        self.external_user_rules_loadBottom_checkbox.setChecked(True)
                         self._add_rule_to_table(
                             name=self.edit_name,
                             packageId=self.edit_packageId,
@@ -838,10 +838,10 @@ class RuleEditor(QWidget):
         elif _list is self.external_community_rules_loadBefore_list:
             mode = ["Community Rules", "loadBefore"]
 
-        elif _list is self.internal_user_rules_loadAfter_list:
+        elif _list is self.external_user_rules_loadAfter_list:
             mode = ["User Rules", "loadAfter"]
 
-        elif _list is self.internal_user_rules_loadBefore_list:
+        elif _list is self.external_user_rules_loadBefore_list:
             mode = ["User Rules", "loadBefore"]
         # Select database for editing
         if mode[0] == "Community Rules":
@@ -907,7 +907,7 @@ class RuleEditor(QWidget):
                 self._toggle_editor_table_rows(
                     rule_type="Community Rules", visibility=visibility
                 )
-            elif layout is self.internal_user_rules_layout:
+            elif layout is self.external_user_rules_layout:
                 self.user_rules_hidden = False
                 self.user_rules_button.setText("Edit User Rules")
                 self._toggle_editor_table_rows(
@@ -926,7 +926,7 @@ class RuleEditor(QWidget):
                 self._toggle_editor_table_rows(
                     rule_type="Community Rules", visibility=visibility
                 )
-            elif layout is self.internal_user_rules_layout:
+            elif layout is self.external_user_rules_layout:
                 self.user_rules_hidden = False
                 self.user_rules_button.setText("Lock User Rules")
                 self._toggle_editor_table_rows(

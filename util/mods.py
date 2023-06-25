@@ -542,6 +542,7 @@ def get_dependencies_for_mods(
     all_mods: Dict[str, Any],
     steam_db_rules: Dict[str, Any],
     community_rules: Dict[str, Any],
+    user_rules: Dict[str, Any],
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
     Iterate through each workshop mod + known expansion + base game and add new key-values
@@ -551,6 +552,7 @@ def get_dependencies_for_mods(
     :param all_mods: dict of all mods from local mod (and expansion) metadata
     :param steam_db_rules: a dict containing the ["database"] rules from external metadata
     :param community_rules: dict of community established rules from external metadata
+    :param user_rules: dict of user-configured rules from external metadata
     :return workshop_and_expansions: workshop mods + official modules with dependency data
     """
     logger.info("Starting getting dependencies for all mods")
@@ -809,24 +811,86 @@ def get_dependencies_for_mods(
                     logger.debug(
                         f"Current mod should load after these mods: {load_these_before}"
                     )
-                    # In Rimpy, load_these_before is at least an empty dict
+                    # In RimPy, load_these_before is at least an empty dict
                     for load_this_before in load_these_before:
                         add_load_rule_to_mod(
                             all_mods[
                                 package_id_to_uuid[package_id.lower()]
                             ],  # Already checked above
-                            load_this_before,  # Lower() done in call
+                            load_this_before,  # lower() done in call
                             "loadTheseBefore",
                             "loadTheseAfter",
                             all_mods,
                         )
+                load_this_bottom = community_rules[package_id].get("loadBottom")
+                if load_this_bottom:
+                    logger.debug(
+                        f'Current mod should load at the bottom of a mods list, and will be considered a "tier 3" mod'
+                    )
+                    all_mods[package_id_to_uuid[package_id.lower()]][
+                        "loadBottom"
+                    ] = True
         logger.info("Finished adding dependencies from Community Rules")
         log_deps_order_info(all_mods)
     else:
         logger.info(
             "No Community Rules database supplied from external metadata. skipping."
         )
+    # Add load order rules to installed mods based on rules from user rules
+    if user_rules:
+        logger.info("Starting adding rules from User Rules")
+        for package_id in user_rules:
+            # Note: requiring the package be in all_mods should be fine, as
+            # if the mod doesn't exist all_mods, then either mod_data or dependency_id
+            # will be None, and then we don't insert a dependency
+            if package_id.lower() in package_id_to_uuid:
+                load_these_after = user_rules[package_id].get("loadBefore")
+                if load_these_after:
+                    logger.debug(
+                        f"Current mod should load before these mods: {load_these_after}"
+                    )
+                    # In RimPy, load_these_after is at least an empty dict
+                    # Cannot call add_load_rule_to_mod outside of this for loop,
+                    # as that expects a list
+                    for load_this_after in load_these_after:
+                        add_load_rule_to_mod(
+                            all_mods[
+                                package_id_to_uuid[package_id.lower()]
+                            ],  # Already checked above
+                            load_this_after,  # lower() done in call
+                            "loadTheseAfter",
+                            "loadTheseBefore",
+                            all_mods,
+                        )
 
+                load_these_before = community_rules[package_id].get("loadAfter")
+                if load_these_before:
+                    logger.debug(
+                        f"Current mod should load after these mods: {load_these_before}"
+                    )
+                    # In RimPy, load_these_before is at least an empty dict
+                    for load_this_before in load_these_before:
+                        add_load_rule_to_mod(
+                            all_mods[
+                                package_id_to_uuid[package_id.lower()]
+                            ],  # Already checked above
+                            load_this_before,  # lower() done in call
+                            "loadTheseBefore",
+                            "loadTheseAfter",
+                            all_mods,
+                        )
+                load_this_bottom = community_rules[package_id].get("loadBottom")
+                if load_this_bottom:
+                    logger.debug(
+                        f'Current mod should load at the bottom of a mods list, and will be considered a "tier 3" mod'
+                    )
+                    all_mods[package_id_to_uuid[package_id.lower()]][
+                        "loadBottom"
+                    ] = True
+        logger.info("Finished adding dependencies from User Rules")
+        log_deps_order_info(all_mods)
+    else:
+        logger.info("No User Rules database supplied from external metadata. skipping.")
     logger.info("Returing all mods now")
     return all_mods, info_from_steam_package_id_to_name
 

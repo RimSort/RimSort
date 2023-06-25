@@ -571,7 +571,7 @@ class MainContent:
         self.external_steam_metadata_path = None
         self.external_community_rules = {}
         self.external_community_rules_path = None
-        self.internal_user_rules = {}
+        self.external_user_rules = {}
 
         self.workshop_mods_potential_updates = {}
 
@@ -663,12 +663,12 @@ class MainContent:
                     self.game_configuration.user_rules_file_path, encoding="utf-8"
                 ) as f:
                     json_string = f.read()
-                    self.internal_user_rules = json.loads(json_string)["rules"]
+                    self.external_user_rules = json.loads(json_string)["rules"]
             else:
                 initial_rules_db = DEFAULT_USER_RULES
                 with open(self.game_configuration.user_rules_file_path, "w") as output:
                     json.dump(initial_rules_db, output, indent=4)
-                self.internal_user_rules = initial_rules_db["rules"]
+                self.external_user_rules = initial_rules_db["rules"]
         else:
             logger.warning(
                 "No LOCAL or WORKSHOP mods found at all. Are you playing Vanilla?"
@@ -681,7 +681,8 @@ class MainContent:
         ) = get_dependencies_for_mods(
             self.internal_local_metadata,
             self.external_steam_metadata,
-            self.external_community_rules,  # TODO add user defined customRules from future customRules.json
+            self.external_community_rules,
+            self.external_user_rules,
         )
         # If we parsed this data from Steam client appworkshop_294100.acf
         if self.appworkshop_acf_data_parsed:
@@ -2343,7 +2344,7 @@ class MainContent:
             # Required metadata
             local_metadata=self.internal_local_metadata,
             community_rules=self.external_community_rules,
-            user_rules=self.internal_user_rules,
+            user_rules=self.external_user_rules,
             # Optional metadata - used to get names instead of packageId for About.xml rules
             steam_workshop_metadata=self.external_steam_metadata,
         )
