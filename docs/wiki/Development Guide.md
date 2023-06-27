@@ -88,7 +88,7 @@ Reference: https://philippj.github.io/SteamworksPy/
 
 #### Texture optimization (todds)
 * RimSort uses [todds](https://github.com/joseasoler/todds) as a dependency for texture optimization. It is shipped with RimSort, archived into the binary releases. If you are building/running from source, you will want to place a todds binary at `./todds/todds` (for Linux/Mac) OR `.\todds\todds.exe` (for Windows)
-* You can run `distribute.py` and this is automatically taken care of you if you are building on a supported platform
+* You can run `distribute.py` and this is automatically taken care of if you are building on a supported platform
     * You need to enable this first. Edit the script and remove the comment for string `build_steamworkspy()`
 
 #### Running RimSort from source
@@ -97,18 +97,15 @@ Reference: https://philippj.github.io/SteamworksPy/
 3. From the project root, execute `python3 RimSort.py`
 
 #### Packaging RimSort
-
 1. First, clone this repository to a local directory.
 2. Packaging with `nuitka`:
     - Follow the prerequisite setup instructions, and then run `python distribute.py`
     - Alternatively, see the commands used by platform in the aforementioned script. 
 
 #### Developing Features
-
-Please discuss with maintainers first, but we are tracking features and issues related to RimSort in the Github repo's "Issues" tab
+Please make sure if you have any feature request to check if there is already something planned. We are tracking features and issues related to RimSort in the Github repo's "Issues" tab. If it is not already in the issues tab you can discuss this with maintainers first through the RimSort discord server. 
 
 #### Misc Coding Style
-
 * The preferred Python formatter is: black (`pip3 install black`)
     * Here is a nice little article for VSCode: https://dev.to/adamlombard/how-to-use-the-black-python-code-formatter-in-vscode-3lo0
 * The preferred Docstring format is: [Sphinx reST](https://sphinx-rtd-tutorial.readthedocs.io/en/latest/docstrings.html)
@@ -122,5 +119,4 @@ Please discuss with maintainers first, but we are tracking features and issues r
     * `pip install -r requirements_develop.txt`
 
 #### Misc information
-
 * On MacOS, to see open sockets, use: `netstat -anvp tcp | awk 'NR<3 || /LISTEN/'`
