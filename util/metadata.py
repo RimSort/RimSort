@@ -10,7 +10,12 @@ from typing import Any, Dict, List, Optional, Tuple
 from PySide6.QtCore import Qt, QThread, Signal
 
 from model.dialogue import show_information, show_warning
-from util.constants import DB_BUILDER_EXCEPTIONS, RIMWORLD_DLC_METADATA
+from util.constants import (
+    DB_BUILDER_PRUNE_EXCEPTIONS,
+    DB_BUILDER_PURGE_KEYS,
+    DB_BUILDER_RECURSE_EXCEPTIONS,
+    RIMWORLD_DLC_METADATA,
+)
 from util.steam.steamfiles.wrapper import acf_to_dict
 from util.steam.webapi.wrapper import DynamicQuery
 from window.runner_panel import RunnerPanel
@@ -244,7 +249,9 @@ class SteamDatabaseBuilder(QThread):
                 recursively_update_dict(
                     db_to_update,
                     database,
-                    exceptions=DB_BUILDER_EXCEPTIONS,
+                    prune_exceptions=DB_BUILDER_PRUNE_EXCEPTIONS,
+                    purge_keys=DB_BUILDER_PURGE_KEYS,
+                    recurse_exceptions=DB_BUILDER_RECURSE_EXCEPTIONS,
                 )
                 with open(self.output_database_path, "w") as output:
                     json.dump(db_to_update, output, indent=4)
@@ -571,18 +578,45 @@ def get_workshop_acf_data(
             )  # I think this is always equivalent to the external_metadata entry for this same data. Unsure. Probably not unless a mod is outdated by quite some time
 
 
-# Recursive function to update dictionary values with exceptions
-def recursively_update_dict(a_dict, b_dict, exceptions=None):
+def recursively_update_dict(
+    a_dict, b_dict, prune_exceptions=None, purge_keys=None, recurse_exceptions=None
+):
+    # Check for keys in recurse_exceptions in a_dict that are not in b_dict and remove them
+    for key in set(a_dict.keys()) - set(b_dict.keys()):
+        if key in recurse_exceptions:
+            del a_dict[key]
+    # Recursively update A with B, excluding recurse exceptions (list of keys to just overwrite)
     for key, value in b_dict.items():
-        if exceptions and key in exceptions:
+        if recurse_exceptions and key in recurse_exceptions:
             # If the key is an exception, update its value directly from B
             a_dict[key] = value
         elif (
             key in a_dict and isinstance(a_dict[key], dict) and isinstance(value, dict)
         ):
             # If the key exists in both dictionaries and the values are dictionaries,
-            # recursively update the nested dictionaries with exceptions
-            recursively_update_dict(a_dict[key], value, exceptions)
+            # recursively update the nested dictionaries except for the recurse exceptions list
+            recursively_update_dict(
+                a_dict[key],
+                value,
+                prune_exceptions=prune_exceptions,
+                purge_keys=purge_keys,
+                recurse_exceptions=recurse_exceptions,
+            )
         else:
             # Otherwise, update the value in A with the value from B
             a_dict[key] = value
+    # Prune keys with empty dictionary values (except for keys in prune exceptions list)
+    keys_to_delete = [
+        key
+        for key, value in a_dict.items()
+        if isinstance(value, dict)
+        and not value
+        and (prune_exceptions is None or key not in prune_exceptions)
+    ]
+    for key in keys_to_delete:
+        del a_dict[key]
+    # Delete keys from the list of keys to delete
+    if purge_keys is not None:
+        for key in purge_keys:
+            if key in a_dict:
+                del a_dict[key]

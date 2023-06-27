@@ -279,13 +279,13 @@ class DynamicQuery(QObject):
                         "url"
                     ] = f"https://steamcommunity.com/sharedfiles/filedetails/?id={publishedfileid}"
                     # Track time publishing created
-                    result["database"][publishedfileid][
-                        "external_time_created"
-                    ] = metadata["time_created"]
-                    # Track time publishing last updated
-                    result["database"][publishedfileid][
-                        "external_time_updated"
-                    ] = metadata["time_updated"]
+                    # result["database"][publishedfileid][
+                    #     "external_time_created"
+                    # ] = metadata["time_created"]
+                    # # Track time publishing last updated
+                    # result["database"][publishedfileid][
+                    #     "external_time_updated"
+                    # ] = metadata["time_updated"]
                     result["database"][publishedfileid]["dependencies"] = {}
                     # If the publishing has listed mod dependencies
                     if metadata.get("children"):

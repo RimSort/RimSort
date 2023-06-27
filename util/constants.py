@@ -1,4 +1,14 @@
-DB_BUILDER_EXCEPTIONS = ["dependencies", "loadBefore", "loadAfter"]
+DB_BUILDER_PRUNE_EXCEPTIONS = [
+    "database",
+    "rules",
+]
+DB_BUILDER_PURGE_KEYS = ["external_time_created", "external_time_updated"]
+DB_BUILDER_RECURSE_EXCEPTIONS = [
+    "dependencies",
+    "loadBefore",
+    "loadAfter",
+    "loadBottom",
+]
 DEFAULT_SETTINGS = {
     "check_for_update_startup": True,
     "sorting_algorithm": "RimPy",

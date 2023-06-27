@@ -39,6 +39,8 @@ from model.dialogue import show_warning
 
 
 class EditableDelegate(QItemDelegate):
+    comment_edited_signal = Signal(list)
+
     def createEditor(self, parent, option, index):
         if index.column() == 4:  # Check if it's the 5th column
             model = index.model()
@@ -60,6 +62,16 @@ class EditableDelegate(QItemDelegate):
     def setModelData(self, editor, model, index):
         if index.column() == 4:  # Only set data for the 5th column
             super().setModelData(editor, model, index)
+            # Send the column data back to the editor so we can update the metadata
+            # edited_data = model.data(index, Qt.DisplayRole)  # Get the edited data
+            column_values = [
+                model.data(model.index(index.row(), column), Qt.DisplayRole)
+                for column in range(model.columnCount())
+            ]  # Get the values of all columns in the edited row
+
+            self.comment_edited_signal.emit(
+                column_values
+            )  # Emit the signal with column values and edited data
 
 
 class RuleEditor(QWidget):
@@ -83,6 +95,9 @@ class RuleEditor(QWidget):
         logger.info("Initializing RuleEditor")
 
         # LAUNCH OPTIONS
+        self.block_comment_prompt = (
+            None  # Used to block comment prompt when metadata is being populated
+        )
         self.compact = compact
         self.edit_packageId = edit_packageId
         self.initial_mode = initial_mode
@@ -222,11 +237,15 @@ class RuleEditor(QWidget):
             ["Name", "PackageId", "Rule source", "Rule type", "Comment"]
         )
         # Create the table view and set the model
+        self.editor_delegate = EditableDelegate()
+        self.editor_delegate.comment_edited_signal.connect(
+            self._comment_edited
+        )  # Connect the signal to the slot
         self.editor_table_view = QTableView()
         self.editor_table_view.setModel(self.editor_model)
         self.editor_table_view.setSortingEnabled(True)  # Enable sorting on the columns
         self.editor_table_view.setItemDelegate(
-            EditableDelegate()
+            self.editor_delegate
         )  # Set the delegate for editing
         self.editor_table_view.setEditTriggers(
             QTableView.DoubleClicked | QTableView.EditKeyPressed
@@ -547,6 +566,13 @@ class RuleEditor(QWidget):
         self.external_user_rules_loadBefore_list.clear()
         self.editor_model.removeRows(0, self.editor_model.rowCount())
 
+    def _comment_edited(self, instruction: list) -> None:
+        if instruction[2] == "Community Rules":
+            metadata = self.community_rules
+        elif instruction[2] == "User Rules":
+            metadata = self.user_rules
+        metadata[instruction[1]][instruction[3]]["comment"] = instruction[4]
+
     def _create_list_item(self, _list: QListWidget, title: str, metadata=None) -> None:
         # Create our list item
         item = QListWidgetItem()
@@ -758,9 +784,11 @@ class RuleEditor(QWidget):
                     if metadata.get("loadBottom") and metadata["loadBottom"].get(
                         "value"
                     ):
+                        self.block_comment_prompt = True
                         self.external_community_rules_loadBottom_checkbox.setChecked(
                             True
                         )
+                        self.block_comment_prompt = False
                         self._add_rule_to_table(
                             name=self.edit_name,
                             packageId=self.edit_packageId,
@@ -815,6 +843,7 @@ class RuleEditor(QWidget):
                     if metadata.get("loadBottom") and metadata["loadBottom"].get(
                         "value"
                     ):
+                        self.block_comment_prompt = True
                         self.external_user_rules_loadBottom_checkbox.setChecked(True)
                         self._add_rule_to_table(
                             name=self.edit_name,
@@ -826,6 +855,7 @@ class RuleEditor(QWidget):
                             else "",
                             hidden=self.user_rules_hidden,
                         )
+                        self.block_comment_prompt = False
 
     def _remove_rule(self, context_item: QListWidgetItem, _list: QListWidget) -> None:
         _list.takeItem(_list.row(context_item))
@@ -947,31 +977,32 @@ class RuleEditor(QWidget):
         elif rule_source == "User Rules":
             metadata = self.user_rules
         if state == 2:
-            # Add a new row in the editor - prompt user to enter a comment for their rule addition
-            args, ok = QInputDialog().getText(
-                None,
-                "Enter comment",
-                "Enter a comment to annotate why this rule exists. This is useful for your own records, as well as others.",
-                QLineEdit.Normal,
-            )
-            if ok:
-                comment = args
-            else:
-                comment = ""
-            self._add_rule_to_table(
-                name=self.edit_name,
-                packageId=self.edit_packageId,
-                rule_source=rule_source,
-                rule_type="loadBottom",
-                comment=comment,
-            )
+            comment = None
+            if not self.block_comment_prompt:
+                # Add a new row in the editor - prompt user to enter a comment for their rule addition
+                args, ok = QInputDialog().getText(
+                    None,
+                    "Enter comment",
+                    "Enter a comment to annotate why this rule exists. This is useful for your own records, as well as others.",
+                    QLineEdit.Normal,
+                )
+                if ok:
+                    comment = args
+                self._add_rule_to_table(
+                    name=self.edit_name,
+                    packageId=self.edit_packageId,
+                    rule_source=rule_source,
+                    rule_type="loadBottom",
+                    comment=comment if comment else "",
+                )
             # Add rule to the database if it doesn't already exist
             if not metadata.get(self.edit_packageId):
                 metadata[self.edit_packageId] = {}
             if not metadata[self.edit_packageId].get("loadBottom"):
                 metadata[self.edit_packageId]["loadBottom"] = {}
             metadata[self.edit_packageId]["loadBottom"]["value"] = True
-            metadata[self.edit_packageId]["loadBottom"]["comment"] = comment
+            if comment:
+                metadata[self.edit_packageId]["loadBottom"]["comment"] = comment
         else:
             # Search for & remove the rule's row entry from the editor table
             for row in range(self.editor_model.rowCount()):

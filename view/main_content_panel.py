@@ -2631,7 +2631,7 @@ class MainContent:
             information="- This will effectively recursively overwrite A's key/value with B's key/value to the resultant database.\n"
             + "- Exceptions will not be recursively updated. Instead, they will be overwritten with B's key entirely.\n"
             + "- The following exceptions will be made:\n"
-            + f"\n\t{DB_BUILDER_EXCEPTIONS}\n\n"
+            + f"\n\t{DB_BUILDER_RECURSE_EXCEPTIONS}\n\n"
             + "The resultant database, C, is saved to a user-specified path. You will be prompted for these paths in order:\n"
             + "\n\t1) Select input A (db to-be-updated)"
             + "\n\t2) Select input B (update source)"
@@ -2676,7 +2676,8 @@ class MainContent:
         recursively_update_dict(
             db_output_c,
             db_input_b,
-            exceptions=DB_BUILDER_EXCEPTIONS,
+            prune_exceptions=DB_BUILDER_PRUNE_EXCEPTIONS,
+            recurse_exceptions=DB_BUILDER_RECURSE_EXCEPTIONS,
         )
         logger.info("Updated DB A with DB B!")
         logger.debug(db_output_c)
@@ -2724,11 +2725,14 @@ class MainContent:
                 )
         except:
             logger.error("Failed to read info from existing database")
-        db_input_b = {"timestamp": time(), "rules": rules_data}
+        db_input_b = {"timestamp": int(time()), "rules": rules_data}
         db_output_c = db_input_a.copy()
         # Update database in place
         recursively_update_dict(
-            db_output_c, db_input_b, exceptions=DB_BUILDER_EXCEPTIONS
+            db_output_c,
+            db_input_b,
+            prune_exceptions=DB_BUILDER_PRUNE_EXCEPTIONS,
+            recurse_exceptions=DB_BUILDER_RECURSE_EXCEPTIONS,
         )
         # Overwrite rules database
         answer = show_dialogue_conditional(
@@ -2739,6 +2743,7 @@ class MainContent:
         if answer == "&Yes":
             with open(path, "w") as output:
                 json.dump(db_output_c, output, indent=4)
+            self._do_refresh()
         else:
             logger.warning("User declined to continue rules database update.")
 
