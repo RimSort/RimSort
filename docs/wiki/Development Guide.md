@@ -1,4 +1,4 @@
-## Development
+## Development Guide
 
 ### Quick Start
 
@@ -102,8 +102,20 @@ Reference: https://philippj.github.io/SteamworksPy/
     - Follow the prerequisite setup instructions, and then run `python distribute.py`
     - Alternatively, see the commands used by platform in the aforementioned script. 
 
+### Contributor Guidelines
+
+1) Please submit Pull Requests which contain feature specific changes only. I do not want PRs that lump multiple changes into one thing. I appreciate initiative but we need to do this so we can be more selective in discussion. This is a requirement, and deviation will cause PR to be closed. We always code review before PR merges! PRs need to be made AFTER all guidelines are met. Its OK if we miss some stuff because we can catch it in review, but we need to be proactive with docstrings, code formatting, etc.
+
+2) There are Github Issue templates available on RimSort repository. Bug Reports and Feature Requests are to be submitted there, and if there is consensus on request, it will become an "Implement ...." Issue. Please do not deviate from template and allow maintainers to modify Issue to include relevant tasks and title information once consensus is reached.
+    - Consensus = consensus between maintainers. That being said, we rely on your feedback, so you will have a say.
+    - You are also welcome to fork this repository and make whatever changes you deem fit privately.
+
+3) ALL PRs need to have a corresponding Issue and/or Issue sub-task(s) to reference. This is for transparency and overall will help anybody else helping to keep track of things. 
+    - Anybody can contribute to RimSort. That being said, we are a community and these guidelines will help encourage and enforce consistency with RimSort growth.
+    - Maintainer or not - you do not have to be a maintainer to submit PR! Feel free to work from a fork or something if that's how you roll.
+
 #### Developing Features
-Please make sure if you have any feature request to check if there is already something planned. We are tracking features and issues related to RimSort in the Github repo's "Issues" tab. If it is not already in the issues tab you can discuss this with maintainers first through the RimSort discord server. 
+Please make sure if you have any feature request to check if there is already something planned. We are tracking features and issues related to RimSort in the Github repo's "Issues" tab. If it is not already in the issues tab you can discuss this with maintainers first through the RimSort Discord server.
 
 #### Misc Coding Style
 * The preferred Python formatter is: black (`pip3 install black`)
