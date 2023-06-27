@@ -2205,10 +2205,17 @@ class MainContent:
                             logger.debug(f"Reading info...")
                             database = json.loads(json_string)
                             logger.debug("Retrieved database...")
-                        database_version = (
-                            database["version"]
-                            - self.game_configuration.database_expiry
-                        )
+                        if database.get("version"):
+                            database_version = (
+                                database["version"]
+                                - self.game_configuration.database_expiry
+                            )
+                        elif database.get("timestamp"):
+                            database_version = database["timestamp"]
+                        else:
+                            logger.error(
+                                "Unable to parse version or timestamp from database. Cancelling upload."
+                            )
                         # Get the abbreviated timezone
                         timezone_abbreviation = (
                             datetime.datetime.now(datetime.timezone.utc)
