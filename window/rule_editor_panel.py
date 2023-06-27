@@ -380,7 +380,7 @@ class RuleEditor(QWidget):
         self.editor_layout.addWidget(self.editor_table_view)
         self.editor_layout.addLayout(self.editor_actions_layout)
 
-        # Build the mods layout layout
+        # Build the mods layouts
         self.mods_layout.addWidget(self.mods_search)
         self.mods_actions_layout.addWidget(self.local_metadata_button)
         self.mods_actions_layout.addWidget(self.community_rules_button)
@@ -393,7 +393,7 @@ class RuleEditor(QWidget):
         self.upper_layout.addLayout(self.mods_layout, 50)
         self.lower_layout.addLayout(self.editor_layout)
 
-        # Add our layouts to the main layout
+        # Add our layouts to the main layouts
         self.layout.addWidget(self.mod_label)
         self.layout.addLayout(self.upper_layout, 66)
         self.layout.addLayout(self.lower_layout, 33)

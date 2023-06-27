@@ -429,7 +429,7 @@ def get_latest_todds_release() -> None:
     except:
         print(f"Failed to download: {browser_download_url}")
         print(
-            "Did the file/url change?\nDoes your environment have access to the internet?"
+            "Did the file/url change?\nDoes your environment have access to the Internet?"
         )
 
 

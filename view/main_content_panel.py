@@ -1068,7 +1068,7 @@ class MainContent:
                         title="Failed to download update",
                         text="Failed to download latest RimSort release!",
                         information=f"Did the file/url change? "
-                        + "Does your environment have access to the internet?\n"
+                        + "Does your environment have access to the Internet?\n"
                         + f"URL: {browser_download_url}",
                         details=stacktrace,
                     )
@@ -1693,7 +1693,7 @@ class MainContent:
         logger.debug("Active mods list updated")
         if (
             self.active_mods_panel.list_updated  # This will only evaluate True if this is initialization, or _do_refresh()
-            and not self.actions_panel.save_button_flashing_animation.isActive()  # No need to reenable if it's already blinking
+            and not self.actions_panel.save_button_flashing_animation.isActive()  # No need to re-enable if it's already blinking
         ):
             logger.debug("Starting save button animation")
             self.actions_panel.save_button_flashing_animation.start(
@@ -2083,7 +2083,7 @@ class MainContent:
                 show_warning(
                     title="Failed to clone repo!",
                     text="The configured repo failed to clone!"
-                    + "Are you connected to the internet?"
+                    + "Are you connected to the Internet?"
                     + "Is your configured repo valid?",
                     information=f"Configured repository: {repo_url}",
                     details=stacktrace,
@@ -2145,7 +2145,7 @@ class MainContent:
                     show_warning(
                         title="Failed to update repo!",
                         text="The configured repo failed to update!"
-                        + "Are you connected to the internet?"
+                        + "Are you connected to the Internet?"
                         + "Is your configured repo valid?",
                         information=f"Configured repository: {repo_url}",
                         details=stacktrace,
@@ -2490,14 +2490,14 @@ class MainContent:
 
     def _do_edit_steam_webapi_key(self) -> None:
         """
-        Opens a QDialogInput that allows the user to edit their Steam apikey
+        Opens a QDialogInput that allows the user to edit their Steam API-key
         that are configured to be passed to the "Dynamic Query" feature for
         the Steam Workshop metadata needed for sorting
         """
         args, ok = QInputDialog().getText(
             None,
-            "Edit WebAPI key",
-            "Enter your personal 32 character Steam WebAPI key here:",
+            "Edit API-key",
+            "Enter your personal 32 character Steam API-key here:",
             QLineEdit.Normal,
             self.game_configuration.steam_apikey,
         )
@@ -2521,7 +2521,7 @@ class MainContent:
         show_information(
             title="Steam DB Builder",
             text="This operation will compare 2 databases, A & B, by checking dependencies from A with dependencies from B.",
-            information="- This will produce an accurate comparison of depedency data between 2 Steam DBs.\n"
+            information="- This will produce an accurate comparison of dependency data between 2 Steam DBs.\n"
             + "A report of discrepancies is generated. You will be prompted for these paths in order:\n"
             + "\n\t1) Select input A"
             + "\n\t2) Select input B",
@@ -2539,7 +2539,7 @@ class MainContent:
                 json_string = f.read()
                 logger.debug(f"Reading info...")
                 db_input_a = json.loads(json_string)
-                logger.debug("Retreived database A...")
+                logger.debug("Retrieved database A...")
         else:
             logger.warning("Steam DB Builder: User cancelled selection...")
             return
@@ -2556,7 +2556,7 @@ class MainContent:
                 json_string = f.read()
                 logger.debug(f"Reading info...")
                 db_input_b = json.loads(json_string)
-                logger.debug("Retreived database B...")
+                logger.debug("Retrieved database B...")
         else:
             logger.warning("Steam DB Builder: User cancelled selection...")
             return
@@ -2650,7 +2650,7 @@ class MainContent:
                 json_string = f.read()
                 logger.debug(f"Reading info...")
                 db_input_a = json.loads(json_string)
-                logger.debug("Retreived database A...")
+                logger.debug("Retrieved database A...")
         else:
             logger.warning("Steam DB Builder: User cancelled selection...")
             return
@@ -2667,7 +2667,7 @@ class MainContent:
                 json_string = f.read()
                 logger.debug(f"Reading info...")
                 db_input_b = json.loads(json_string)
-                logger.debug("Retreived database B...")
+                logger.debug("Retrieved database B...")
         else:
             logger.warning("Steam DB Builder: User cancelled selection...")
             return
@@ -2721,7 +2721,7 @@ class MainContent:
                 logger.debug(f"Reading info...")
                 db_input_a = json.loads(json_string)
                 logger.debug(
-                    f"Retreived copy of existing {rules_source} database to update."
+                    f"Retrieved copy of existing {rules_source} database to update."
                 )
         except:
             logger.error("Failed to read info from existing database")

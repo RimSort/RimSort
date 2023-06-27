@@ -337,7 +337,7 @@ def get_active_mods_from_config(
     if validate_mods_config_format(mod_data):
         for package_id in mod_data["ModsConfigData"]["activeMods"][
             "li"
-        ]:  # Go thru active mods
+        ]:  # Go through active mods
             package_id_normalized = package_id.lower()
             to_populate.append(package_id_normalized)
             for (
@@ -350,7 +350,7 @@ def get_active_mods_from_config(
                     package_id_steam_suffix, ""
                 )
                 if metadata_package_id == package_id_normalized:
-                    # If the mod to populate DOESN'T have have duplicates, populate like normal
+                    # If the mod to populate DOESN'T have duplicates, populate like normal
                     if not package_id_normalized in duplicate_mods.keys():
                         logger.debug(f"Adding mod to active: {package_id_normalized}")
                         populated_mods.append(package_id_normalized)
@@ -364,7 +364,7 @@ def get_active_mods_from_config(
                             expansion_paths = []
                             local_paths = []
                             workshop_paths = []
-                            # Go thru each duplicate path by data_source
+                            # Go through each duplicate path by data_source
                             for dupe_uuid, data_source in duplicate_mods[
                                 package_id_normalized
                             ].items():
@@ -480,7 +480,7 @@ def get_active_mods_from_config(
                                 )
                                 workshop_paths = []
                                 local_paths = []
-                                # Go thru each duplicate path by data_source
+                                # Go through each duplicate path by data_source
                                 for dupe_uuid, data_source in duplicate_mods[
                                     package_id_normalized_stripped
                                 ].items():
@@ -891,7 +891,7 @@ def get_dependencies_for_mods(
         log_deps_order_info(all_mods)
     else:
         logger.info("No User Rules database supplied from external metadata. skipping.")
-    logger.info("Returing all mods now")
+    logger.info("Returning all mods now")
     return all_mods, info_from_steam_package_id_to_name
 
 
@@ -969,7 +969,7 @@ def get_installed_expansions(game_path: str, game_version: str) -> Dict[str, Any
     """
     Given a path to the game's install folder, return a dict
     containing data for all of the installed expansions
-    keyed to their package ids. The dict values are the convereted
+    keyed to their package ids. The dict values are the converted
     About.xmls. If the path does not exist, the dict
     will be empty.
 
@@ -1260,7 +1260,7 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                     mod_data = {}
                     try:
                         try:
-                            # Default: try to parse About.xml with UTF-8 encodnig
+                            # Default: try to parse About.xml with UTF-8 encoding
                             mod_data = xml_path_to_json(mod_data_path)
                         except UnicodeDecodeError:
                             # It may be necessary to remove all non-UTF-8 characters and parse again
@@ -1309,7 +1309,7 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                                     mod_data["modmetadata"][
                                         "name"
                                     ] = "Mod name unspecified"
-                                # Add the uuid that cooresponds to metadata entry, to the list item's json data for future usage
+                                # Add the uuid that corresponds to metadata entry, to the list item's json data for future usage
                                 mod_data["modmetadata"]["uuid"] = uuid
                                 logger.debug(
                                     f"Finished editing XML content, adding final content to larger list: {mod_data['modmetadata']}"
