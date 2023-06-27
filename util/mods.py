@@ -863,7 +863,7 @@ def get_dependencies_for_mods(
                             all_mods,
                         )
 
-                load_these_before = community_rules[package_id].get("loadAfter")
+                load_these_before = user_rules[package_id].get("loadAfter")
                 if load_these_before:
                     logger.debug(
                         f"Current mod should load after these mods: {load_these_before}"
@@ -879,7 +879,7 @@ def get_dependencies_for_mods(
                             "loadTheseAfter",
                             all_mods,
                         )
-                load_this_bottom = community_rules[package_id].get("loadBottom")
+                load_this_bottom = user_rules[package_id].get("loadBottom")
                 if load_this_bottom:
                     logger.debug(
                         f'Current mod should load at the bottom of a mods list, and will be considered a "tier 3" mod'
