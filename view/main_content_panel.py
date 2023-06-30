@@ -570,15 +570,24 @@ class MainContent:
 
         # If a mod contains C# assemblies, we want to visually represent these mods
         for uuid, metadata in self.internal_local_metadata.items():
-            assemblies_path = os.path.join(
-                self.internal_local_metadata[uuid]["path"], "Assemblies"
-            )
+            path = self.internal_local_metadata[uuid]["path"]
+            assemblies_path = os.path.join(path, "Assemblies")
             if os.path.exists(assemblies_path):
                 if any(
                     filename.endswith(".dll") or filename.endswith(".DLL")
                     for filename in os.listdir(assemblies_path)
                 ):
                     self.internal_local_metadata[uuid]["csharp"] = True
+            else:
+                subfolder_paths = [os.path.join(path, "Current"), os.path.join(path, "1.3"), os.path.join(path, "1.4")]
+                for subfolder_path in subfolder_paths:
+                    assemblies_path = os.path.join(subfolder_path, "Assemblies")
+                    if os.path.exists(assemblies_path):
+                        if any(
+                            filename.endswith(".dll") or filename.endswith(".DLL")
+                            for filename in os.listdir(assemblies_path)
+                        ):
+                            self.internal_local_metadata[uuid]["csharp"] = True
 
         logger.info(
             f"Combined {len(self.expansions)} expansions, {len(self.local_mods)} local mods, and {len(self.workshop_mods)}. Total elements to get dependencies for: {len(self.internal_local_metadata)}"
