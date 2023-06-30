@@ -364,7 +364,6 @@ def get_active_mods_from_config(
                             expansion_paths = []
                             local_paths = []
                             workshop_paths = []
-                            local_git_paths = []
                             # Go thru each duplicate path by data_source
                             for dupe_uuid, data_source in duplicate_mods[
                                 package_id_normalized
@@ -377,13 +376,10 @@ def get_active_mods_from_config(
                                     local_paths.append(data_source[1])
                                 if data_source[0] == "workshop":
                                     workshop_paths.append(data_source[1])
-                                if data_source[0] == "local_git":
-                                    local_git_paths.append(data_source[1])
                             # Naturally sorted paths
                             natsort_expansion_paths = natsorted(expansion_paths)
                             natsort_local_paths = natsorted(local_paths)
                             natsort_workshop_paths = natsorted(workshop_paths)
-                            natsort_local_git_paths = natsorted(local_git_paths)
                             logger.debug(
                                 f"Natsorted expansion paths: {natsort_expansion_paths}"
                             )
@@ -392,9 +388,6 @@ def get_active_mods_from_config(
                             )
                             logger.debug(
                                 f"Natsorted workshop paths: {natsort_workshop_paths}"
-                            )
-                            logger.debug(
-                                f"Natsorted local_git paths: {natsort_local_git_paths}"
                             )
                             # SOURCE PRIORITY: Expansions > Local > Workshop
                             # IF we have multiple duplicate paths in SAME data_source, set the first naturally occurring mod
@@ -1054,46 +1047,6 @@ def get_installed_expansions(game_path: str, game_version: str) -> Dict[str, Any
     else:
         logger.warning(
             "Skipping parsing data from empty game data path. Is the game path configured?"
-        )
-    return mod_data
-
-
-def get_local_git_mods(local_path: str, game_path: Optional[str] = None) -> Dict[str, Any]:
-    """
-    Given a path to the local GAME_INSTALL_DIR/Mods folder, return a dict
-    containing data for all the mods keyed to their package ids.
-    The root-level key is the uuid, and the root-level value
-    is the converted About.xml. If the path does not exist, the dict
-    will be empty.
-
-    :param path: path to the Rimworld workshop mods folder
-    :return: a Dict of workshop mods by package id, and dict of community rules
-    """
-    mod_data = {}
-    if local_path != "":
-        logger.info(f"Getting local mods with Local path: {local_path}")
-        logger.info(f"Supplementing call with Game Folder path: {game_path}")
-
-        # If local mods path is same as game path and we're running on a Mac,
-        # that means use the default local mods folder
-
-        system_name = platform.system()
-        if system_name == "Darwin" and local_path and local_path == game_path:
-            local_path = os.path.join(local_path, "RimWorldMac.app", "Mods")
-            logger.info(
-                f"Running on MacOS, generating new local mods path: {local_path}"
-            )
-
-        # Get mod data
-        logger.info(
-            f"Attempting to get LOCAL mods data from custom local path or Rimworld's /Mods folder: {local_path}"
-        )
-        mod_data = parse_mod_data(local_path, "local mods")
-        logger.info("Finished getting LOCAL mods data, returning LOCAL mods data now")
-        logger.debug(mod_data)
-    else:
-        logger.warning(
-            "Skipping parsing data from empty local mods path. Is the local mods path configured?"
         )
     return mod_data
 

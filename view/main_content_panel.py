@@ -528,11 +528,6 @@ class MainContent:
             self.game_configuration.get_local_folder_path()
         )
 
-        # Get and cache installed local_git mods
-        self.local_git_mods = get_local_git_mods(
-            self.game_configuration.get_local_folder_path()
-        ) 
-
         # Get and cache installed workshop mods
         self.workshop_mods = get_workshop_mods(
             self.game_configuration.get_workshop_folder_path()
@@ -557,19 +552,34 @@ class MainContent:
             logger.info(f"Unable to parse Steam client appworkshop_acf metadata")
 
         # Set custom tags for each data source to be used with setIcon later
-        for uuid in self.expansions:
+        for uuid in self.expansions.keys():
             self.expansions[uuid]["data_source"] = "expansion"
-        for uuid in self.workshop_mods:
+        for uuid in self.workshop_mods.keys():
             self.workshop_mods[uuid]["data_source"] = "workshop"
-        for uuid in self.local_mods:
+        for uuid in self.local_mods.keys():
             self.local_mods[uuid]["data_source"] = "local"
-        for uuid in self.local_git_mods:
-            self.local_git_mods[uuid]["data_source"] = "local_git"
+            # Check for git repository inside local mods, tag appropriately
+            git_repo_path = os.path.join(self.local_mods[uuid]["path"], ".git")
+            if os.path.exists(git_repo_path):
+                self.local_mods[uuid]["git_repo"] = True
 
         # One working Dictionary for ALL mods
         self.internal_local_metadata = merge_mod_data(
             self.expansions, self.local_mods, self.workshop_mods
         )
+
+        # If a mod contains C# assemblies, we want to visually represent these mods
+        for uuid, metadata in self.internal_local_metadata.items():
+            assemblies_path = os.path.join(
+                self.internal_local_metadata[uuid]["path"], "Assemblies"
+            )
+            if os.path.exists(assemblies_path):
+                if any(
+                    filename.endswith(".dll") or filename.endswith(".DLL")
+                    for filename in os.listdir(assemblies_path)
+                ):
+                    self.internal_local_metadata[uuid]["csharp"] = True
+
         logger.info(
             f"Combined {len(self.expansions)} expansions, {len(self.local_mods)} local mods, and {len(self.workshop_mods)}. Total elements to get dependencies for: {len(self.internal_local_metadata)}"
         )

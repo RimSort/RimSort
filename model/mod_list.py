@@ -69,14 +69,17 @@ class ModListWidget(QListWidget):
         self.horizontalScrollBar().setVisible(False)
 
         # Store icon paths
+        self.csharp_icon_path = str(
+            Path(
+                os.path.join(os.path.dirname(__file__), "../data/csharp.png")
+            ).resolve()
+        )
+        self.git_icon_path = str(
+            Path(os.path.join(os.path.dirname(__file__), "../data/git.png")).resolve()
+        )
         self.local_icon_path = str(
             Path(
                 os.path.join(os.path.dirname(__file__), "../data/local_icon.png")
-            ).resolve()
-        )
-        self.steam_icon_path = str(
-            Path(
-                os.path.join(os.path.dirname(__file__), "../data/steam_icon.png")
             ).resolve()
         )
         self.ludeon_icon_path = str(
@@ -84,9 +87,9 @@ class ModListWidget(QListWidget):
                 os.path.join(os.path.dirname(__file__), "../data/ludeon_icon.png")
             ).resolve()
         )
-        self.git_icon_path = str(
+        self.steam_icon_path = str(
             Path(
-                os.path.join(os.path.dirname(__file__), "../data/git.png")
+                os.path.join(os.path.dirname(__file__), "../data/steam_icon.png")
             ).resolve()
         )
 
@@ -403,10 +406,11 @@ class ModListWidget(QListWidget):
                 data = item.data(Qt.UserRole)
                 widget = ModListItemInner(
                     data,
-                    self.local_icon_path,
-                    self.steam_icon_path,
-                    self.ludeon_icon_path,
-                    self.git_icon_path,
+                    csharp_icon_path=self.csharp_icon_path,
+                    git_icon_path=self.git_icon_path,
+                    local_icon_path=self.local_icon_path,
+                    ludeon_icon_path=self.ludeon_icon_path,
+                    steam_icon_path=self.steam_icon_path,
                 )
                 if data.get("invalid"):
                     widget.main_label.setStyleSheet("QLabel { color : red; }")
