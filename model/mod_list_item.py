@@ -15,9 +15,12 @@ class ModListItemInner(QWidget):
     def __init__(
         self,
         data: Dict[str, Any],
+        csharp_icon_path: str,
+        git_icon_path: str,
         local_icon_path: str,
-        steam_icon_path: str,
         ludeon_icon_path: str,
+        steamcmd_icon_path: str,
+        steam_icon_path: str,
     ) -> None:
         """
         Initialize the QWidget with mod data.
@@ -38,11 +41,16 @@ class ModListItemInner(QWidget):
         # in this variable. This is exactly equal to the dict value of a
         # single all_mods key-value
         self.json_data = data
-        self.item_name = self.json_data.get("name", "UNKNOWN")
-        self.ludeon_icon_path = ludeon_icon_path
-        self.local_icon_path = local_icon_path
-        self.steam_icon_path = steam_icon_path
+        self.list_item_name = self.json_data.get("name", "UNKNOWN")
         self.main_label = QLabel()
+
+        # Icon paths
+        self.csharp_icon_path = csharp_icon_path
+        self.git_icon_path = git_icon_path
+        self.local_icon_path = local_icon_path
+        self.ludeon_icon_path = ludeon_icon_path
+        self.steamcmd_icon_path = steamcmd_icon_path
+        self.steam_icon_path = steam_icon_path
 
         # Visuals
         self.setToolTip(self.get_tool_tip_text())
@@ -51,9 +59,44 @@ class ModListItemInner(QWidget):
         self.main_item_layout.setSpacing(0)
         self.font_metrics = QFontMetrics(self.font())
 
+        # Icons that are conditional
+        self.csharp_icon = None
+        if self.json_data.get("csharp"):
+            self.csharp_icon = QLabel()
+            self.csharp_icon.setPixmap(
+                QIcon(self.csharp_icon_path).pixmap(QSize(20, 20))
+            )
+            self.csharp_icon.setToolTip("Contains C# assemblies")
+        self.git_icon = None
+        if (
+            self.json_data["data_source"] == "local"
+            and self.json_data.get("git_repo")
+            and not self.json_data.get("steamcmd")
+        ):
+            self.git_icon = QLabel()
+            self.git_icon.setPixmap(QIcon(self.git_icon_path).pixmap(QSize(20, 20)))
+            self.git_icon.setToolTip("Contains a git repository")
+        self.steamcmd_icon = None
+        if self.json_data["data_source"] == "local" and self.json_data.get("steamcmd"):
+            self.steamcmd_icon = QLabel()
+            self.steamcmd_icon.setPixmap(
+                QIcon(self.steamcmd_icon_path).pixmap(QSize(20, 20))
+            )
+            self.steamcmd_icon.setToolTip("Downloaded with SteamCMD")
+
         # Icons by mod source
-        self.mod_source_icon = QLabel()
-        self.mod_source_icon.setPixmap(self.get_icon().pixmap(QSize(20, 20)))
+        self.mod_source_icon = None
+        if not self.git_icon and not self.steamcmd_icon:
+            self.mod_source_icon = QLabel()
+            self.mod_source_icon.setPixmap(self.get_icon().pixmap(QSize(20, 20)))
+            # Set tooltip based on mod source
+            data_source = self.json_data.get("data_source")
+            if data_source == "expansion":
+                self.mod_source_icon.setToolTip("Official RimWorld content")
+            elif data_source == "local":
+                self.mod_source_icon.setToolTip("Installed locally")
+            elif data_source == "workshop":
+                self.mod_source_icon.setToolTip("Subscribed via Steam")
 
         # Warning icon hidden by default
         self.warning_icon_label = QLabel()
@@ -63,11 +106,31 @@ class ModListItemInner(QWidget):
         self.warning_icon_label.setHidden(True)
 
         self.main_label.setObjectName("ListItemLabel")
-        self.main_item_layout.addWidget(self.mod_source_icon, Qt.AlignRight)
+        if self.git_icon:
+            self.main_item_layout.addWidget(self.git_icon, Qt.AlignRight)
+        if self.steamcmd_icon:
+            self.main_item_layout.addWidget(self.steamcmd_icon, Qt.AlignRight)
+        if self.mod_source_icon:
+            self.main_item_layout.addWidget(self.mod_source_icon, Qt.AlignRight)
+        if self.csharp_icon:
+            self.main_item_layout.addWidget(self.csharp_icon, Qt.AlignRight)
         self.main_item_layout.addWidget(self.main_label, Qt.AlignCenter)
         self.main_item_layout.addWidget(self.warning_icon_label, Qt.AlignRight)
         self.main_item_layout.addStretch()
         self.setLayout(self.main_item_layout)
+
+    def count_icons(self, widget) -> int:
+        count = 0
+        if isinstance(widget, QLabel):
+            pixmap = widget.pixmap()
+            if pixmap and not pixmap.isNull():
+                count += 1
+
+        if isinstance(widget, QWidget):
+            for child in widget.children():
+                count += self.count_icons(child)
+
+        return count
 
     def get_tool_tip_text(self) -> str:
         """
@@ -120,16 +183,20 @@ class ModListItemInner(QWidget):
 
         :param event: the resize event
         """
+
+        # Count the number of QLabel widgets with QIcon and calculate total icon width
+        icon_count = self.count_icons(self)
+        icon_width = icon_count * 20
         self.item_width = super().width()
         text_width_needed = QRectF(
-            self.font_metrics.boundingRect(self.item_name)
+            self.font_metrics.boundingRect(self.list_item_name)
         ).width()
-        if text_width_needed > self.item_width - 50:
-            available_width = self.item_width - 50
+        if text_width_needed > self.item_width - icon_width:
+            available_width = self.item_width - icon_width
             shortened_text = self.font_metrics.elidedText(
-                self.item_name, Qt.ElideRight, int(available_width)
+                self.list_item_name, Qt.ElideRight, int(available_width)
             )
             self.main_label.setText(str(shortened_text))
         else:
-            self.main_label.setText(self.item_name)
+            self.main_label.setText(self.list_item_name)
         return super().resizeEvent(event)

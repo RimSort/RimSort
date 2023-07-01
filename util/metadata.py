@@ -17,7 +17,10 @@ from util.constants import (
     RIMWORLD_DLC_METADATA,
 )
 from util.steam.steamfiles.wrapper import acf_to_dict
-from util.steam.webapi.wrapper import DynamicQuery
+from util.steam.webapi.wrapper import (
+    DynamicQuery,
+    ISteamRemoteStorage_GetPublishedFileDetails,
+)
 from window.runner_panel import RunnerPanel
 
 # Steam metadata / Community Rules
@@ -371,10 +374,10 @@ def get_rpmmdb_steam_metadata(mods: Dict[str, Any]) -> Tuple[Dict[str, Any], Any
             or mods[uuid].get("publishedfileid") == "1847679158"
         ):
             logger.info("Found RimPy Mod Manager Database mod")
-            steam_db_rules_path = os.path.join(mods[uuid]["path"], "db", "db.json")
-            logger.info(f"Generated path to db.json: {steam_db_rules_path}")
-            if os.path.exists(steam_db_rules_path):
-                with open(steam_db_rules_path, encoding="utf-8") as f:
+            steam_db_path = os.path.join(mods[uuid]["path"], "db", "db.json")
+            logger.info(f"Generated path to db.json: {steam_db_path}")
+            if os.path.exists(steam_db_path):
+                with open(steam_db_path, encoding="utf-8") as f:
                     json_string = f.read()
                     logger.info("Reading info from db.json")
                     db_data = json.loads(json_string)
@@ -386,7 +389,7 @@ def get_rpmmdb_steam_metadata(mods: Dict[str, Any]) -> Tuple[Dict[str, Any], Any
                         f"Loaded {total_entries} additional sorting rules from RPMMDB Steam DB"
                     )
                     db_json_data = db_data["database"]
-                    return db_json_data, steam_db_rules_path
+                    return db_json_data, steam_db_path
             else:
                 logger.error("The db.json path does not exist!")
     logger.warning(
@@ -455,85 +458,8 @@ def get_rpmmdb_community_rules_db(mods: Dict[str, Any]) -> Tuple[Dict[str, Any],
 # Steam client / SteamCMD metadata
 
 
-def get_external_time_data_for_workshop_mods(
-    steam_db_rules: Dict[str, Any], mods: Dict[str, Any]
-) -> Dict[str, Any]:
-    """
-    Query Steam Workshop metadata for time data, for any mods that have a 'publishedfileid'
-    attribute contained in their mod_data, and from there, populate mod_json_data with it.
-
-    Return a dict of any potential mod updates found for Steam Workshop mods, with time data
-
-    :param steam_db_rules: a dict containing the ["database"] rules from external metadata
-    :param mods: A Dict equivalent to 'all_mods' or mod_list.get_list_items_by_dict() in
-    which contains possible Steam mods to lookup metadata for
-    :return: a dict of any potential mod updates found for Steam Workshop mods, with time data
-    """
-    logger.info("Parsing Steam mod metadata for most recent time data")
-    workshop_mods_potential_updates = {}
-    for v in mods.values():
-        if v["data_source"] == "workshop":  # If the mod we are parsing is a Steam mod
-            if v.get("publishedfileid"):
-                pfid = v["publishedfileid"]  # ... assume pfid exists in mod metadata
-                uuid = v["uuid"]
-                # It is possible for a mod to not have metadata in an outdated/stale Dynamic Query
-                if steam_db_rules.get(pfid):
-                    if steam_db_rules[pfid].get("external_time_created"):
-                        mods[uuid]["external_time_created"] = steam_db_rules[pfid][
-                            "external_time_created"  # ... populate external metadata into mod_json_data
-                        ]
-                    if steam_db_rules[pfid].get("external_time_updated"):
-                        mods[uuid]["external_time_updated"] = steam_db_rules[pfid][
-                            "external_time_updated"  # ... populate external metadata into mod_json_data
-                        ]
-                # logger.debug(f"Checking time data for mod {pfid}")
-                try:
-                    if v.get("name"):
-                        name = v["name"]
-                    elif steam_db_rules[pfid].get("steamName"):
-                        name = steam_db_rules[pfid]["steamName"]
-                    else:
-                        name = "UNKNOWN"
-                    name = f"############################\n{name}"  # ... get the name
-                    etc = v["external_time_created"]
-                    etu = v["external_time_updated"]
-                    itt = v["internal_time_touched"]
-                    itu = v["internal_time_updated"]
-                    time_data_human_readable = (  # ... create human readable string
-                        f"\n{name}"
-                        + f"\nInstalled mod last touched: {strftime('%Y-%m-%d %H:%M:%S', localtime(itt))}"
-                        + f"\nPublishing last updated: {strftime('%Y-%m-%d %H:%M:%S', localtime(etu))}\n"
-                    )
-                    # logger.debug(time_data_human_readable)
-                    if (
-                        itt != 0 and etu > itt
-                    ):  # If external_mod_updated time is PAST the time Steam client last touched a Steam mod
-                        logger.info(f"Potential update found for Steam mod: {pfid}")
-                        workshop_mods_potential_updates[pfid] = {}
-                        workshop_mods_potential_updates[pfid][
-                            "external_time_created"
-                        ] = etc
-                        workshop_mods_potential_updates[pfid][
-                            "external_time_updated"
-                        ] = etu
-                        workshop_mods_potential_updates[pfid][
-                            "internal_time_touched"
-                        ] = itt
-                        workshop_mods_potential_updates[pfid][
-                            "internal_time_updated"
-                        ] = itu
-                        workshop_mods_potential_updates[pfid][
-                            "ui_string"
-                        ] = time_data_human_readable
-                except KeyError as e:
-                    stacktrace = traceback.format_exc()
-                    logger.info(f"Missing time data for Steam mod: {pfid}")
-                    logger.info(stacktrace)
-    return workshop_mods_potential_updates
-
-
 def get_workshop_acf_data(
-    appworkshop_acf_path: str, workshop_mods: Dict[str, Any]
+    appworkshop_acf_path: str, workshop_mods: Dict[str, Any], steamcmd_mode=None
 ) -> None:
     """
     Given a path to the Rimworld Steam Workshop appworkshop_294100.acf file, and parse it into a dict.
@@ -543,39 +469,82 @@ def get_workshop_acf_data(
     :param appworkshop_acf_path: path to the Rimworld Steam Workshop appworkshop_294100.acf file
     :param workshop_mods: a Dict containing parsed mod metadata from Steam workshop mods. This can be
     all_mods or just a dict of Steam mods where their ["data_source"] is "workshop".
+    :param steamcmd_mode: set to True for mode which forces match of folder name + publishedfileid for parsing
     """
     workshop_acf_data = acf_to_dict(appworkshop_acf_path)
-    workshop_mods_pfid_to_uuid = {}
-    for v in workshop_mods.values():
-        if v.get("invalid"):
-            logger.debug(f"Unable to parse acf data for invalid mod: {v}")
-            continue
-        else:
-            if v.get("publishedfileid"):
-                pfid = v["publishedfileid"]
-                workshop_mods_pfid_to_uuid[pfid] = v["uuid"]
-    for publishedfileid in workshop_acf_data["AppWorkshop"][
-        "WorkshopItemDetails"
-    ].keys():
-        if publishedfileid in workshop_mods_pfid_to_uuid:
-            mod_uuid = workshop_mods_pfid_to_uuid[publishedfileid]
-            workshop_mods[mod_uuid]["internal_time_touched"] = int(
-                workshop_acf_data["AppWorkshop"]["WorkshopItemDetails"][
-                    publishedfileid
-                ][
-                    "timetouched"
-                ]  # The last time Steam client touched a mod according to it's entry in appworkshop_294100.acf
-            )
-    for publishedfileid in workshop_acf_data["AppWorkshop"][
+    if steamcmd_mode:
+        workshop_mods_pfid_to_uuid = {
+            v["publishedfileid"]: v["uuid"]
+            for v in workshop_mods.values()
+            if not v.get("invalid") and v.get("folder") == v.get("publishedfileid")
+        }
+    else:
+        workshop_mods_pfid_to_uuid = {
+            v["publishedfileid"]: v["uuid"]
+            for v in workshop_mods.values()
+            if not v.get("invalid") and v.get("publishedfileid")
+        }
+    # Reference needed information from appworkshop_294100.acf
+    workshop_item_details = workshop_acf_data["AppWorkshop"]["WorkshopItemDetails"]
+    workshop_items_installed = workshop_acf_data["AppWorkshop"][
         "WorkshopItemsInstalled"
-    ].keys():
-        if publishedfileid in workshop_mods_pfid_to_uuid:
-            mod_uuid = workshop_mods_pfid_to_uuid[publishedfileid]
+    ]
+    # Loop through our metadata, append values
+    for publishedfileid, mod_uuid in workshop_mods_pfid_to_uuid.items():
+        if steamcmd_mode:  # If we are here, then we have found a steamcmd mod!
+            workshop_mods[mod_uuid]["steamcmd"] = True
+        if publishedfileid in workshop_item_details:
+            # The last time SteamCMD/Steam client touched a mod according to its entry in appworkshop_294100.acf
+            workshop_mods[mod_uuid]["internal_time_touched"] = int(
+                workshop_item_details[publishedfileid]["timetouched"]
+            )
+        if publishedfileid in workshop_items_installed:
+            # Unlikely this will differ from corresponding external metadata entry unless a mod is outdated by some time
             workshop_mods[mod_uuid]["internal_time_updated"] = int(
-                workshop_acf_data["AppWorkshop"]["WorkshopItemsInstalled"][
-                    publishedfileid
-                ]["timeupdated"]
-            )  # I think this is always equivalent to the external_metadata entry for this same data. Unsure. Probably not unless a mod is outdated by quite some time
+                workshop_items_installed[publishedfileid]["timeupdated"]
+            )
+
+
+def query_workshop_update_data(mods: Dict[str, Any]) -> None:
+    """
+    Query Steam WebAPI for update data, for any workshop mods that have a 'publishedfileid'
+    attribute contained in their mod_data, and from there, populate mod_json_data with it.
+
+    Append mod update data found for Steam Workshop mods to internal metadata
+
+    :param mods: A Dict equivalent to 'all_mods' or mod_list.get_list_items_by_dict() in
+    which contains possible Steam mods to lookup metadata for
+    """
+    logger.info("Querying Steam WebAPI for SteamCMD/Steam mod update metadata")
+    workshop_mods_pfid_to_uuid = {
+        metadata["publishedfileid"]: uuid
+        for uuid, metadata in mods.items()
+        if (metadata.get("steamcmd") or metadata.get("data_source") == "workshop")
+        and metadata.get("publishedfileid")
+    }
+
+    workshop_mods_query_updates = ISteamRemoteStorage_GetPublishedFileDetails(
+        list(workshop_mods_pfid_to_uuid.keys())
+    )
+
+    if (
+        workshop_mods_query_updates
+        and workshop_mods_query_updates.get("response")
+        and workshop_mods_query_updates["response"].get("publishedfiledetails")
+        and len(workshop_mods_query_updates["response"]["publishedfiledetails"]) > 0
+    ):
+        for workshop_mod_metadata in workshop_mods_query_updates["response"][
+            "publishedfiledetails"
+        ]:
+            uuid = workshop_mods_pfid_to_uuid[workshop_mod_metadata["publishedfileid"]]
+            if workshop_mod_metadata.get("time_created"):
+                mods[uuid]["external_time_created"] = workshop_mod_metadata[
+                    "time_created"
+                ]
+            if workshop_mod_metadata.get("time_updated"):
+                mods[uuid]["external_time_updated"] = workshop_mod_metadata[
+                    "time_updated"
+                ]
 
 
 def recursively_update_dict(

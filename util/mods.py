@@ -540,7 +540,7 @@ def get_active_mods_from_config(
 
 def get_dependencies_for_mods(
     all_mods: Dict[str, Any],
-    steam_db_rules: Dict[str, Any],
+    steam_db: Dict[str, Any],
     community_rules: Dict[str, Any],
     user_rules: Dict[str, Any],
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
@@ -550,7 +550,7 @@ def get_dependencies_for_mods(
     (currently not being used).
 
     :param all_mods: dict of all mods from local mod (and expansion) metadata
-    :param steam_db_rules: a dict containing the ["database"] rules from external metadata
+    :param steam_db: a dict containing the ["database"] rules from external metadata
     :param community_rules: dict of community established rules from external metadata
     :param user_rules: dict of user-configured rules from external metadata
     :return workshop_and_expansions: workshop mods + official modules with dependency data
@@ -707,12 +707,12 @@ def get_dependencies_for_mods(
 
     # Steam's WebAPI references dependencies based on PublishedFileID, not package ID
     info_from_steam_package_id_to_name = {}
-    if steam_db_rules:
+    if steam_db:
         logger.info("Starting adding dependencies from Steam db")
         tracking_dict: dict[str, set[str]] = {}
         steam_id_to_package_id = {}
         # Iterate through all workshop items in the Steam DB.
-        for publishedfileid, mod_data in steam_db_rules.items():
+        for publishedfileid, mod_data in steam_db.items():
             try:
                 db_package_id = mod_data["packageId"].lower()
                 # Record the Steam ID => package_id

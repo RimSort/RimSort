@@ -103,8 +103,8 @@ class SettingsPanel(QDialog):
         )
         self.logger_debug_checkbox.setObjectName("summaryValue")
         self.logger_debug_checkbox.setToolTip(
-            "If enabled, changes logger level from INFO to DEBUG, enabling us to supply\n"
-            + "a multitude of information relevant to debugging if needed.\n\n"
+            "If enabled, changes logger level from INFO to DEBUG, enabling us to\n"
+            + "supply a multitude of information relevant to debugging if needed.\n\n"
             + "This option is applied on RimSort initialization."
         )
         self.logger_debug_checkbox.clicked.connect(self.loggerDebugCheckboxEvent)
@@ -118,16 +118,16 @@ class SettingsPanel(QDialog):
             + "This option is applied on RimSort initialization."
         )
         self.duplicate_mods_checkbox = QCheckBox(
-            "Show duplicate mods check + UI warning on refresh"
+            "Show list of detected duplicate mods on refresh"
         )
         self.duplicate_mods_checkbox.setObjectName("summaryValue")
         self.steam_mods_update_checkbox = QCheckBox(
-            "Show Steam mods check + UI warning on refresh"
+            "Show available Workshop mods updates on refresh"
         )
         self.steam_mods_update_checkbox.setObjectName("summaryValue")
         self.steam_mods_update_checkbox.setToolTip(
-            "This option requires you to have a Steam DB which \n"
-            + "contains time data from Steam Workshop WebAPI."
+            "This option requires a live internet connection to function properly.\n"
+            + 'Uses Steam WebAPI to query "Last Updated" timestamp from mod publishings'
         )
         self.try_download_missing_mods_checkbox = QCheckBox(
             "Try to download missing mods when detected"
