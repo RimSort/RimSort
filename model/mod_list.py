@@ -87,6 +87,11 @@ class ModListWidget(QListWidget):
                 os.path.join(os.path.dirname(__file__), "../data/ludeon_icon.png")
             ).resolve()
         )
+        self.steamcmd_icon_path = str(
+            Path(
+                os.path.join(os.path.dirname(__file__), "../data/steamcmd_icon.png")
+            ).resolve()
+        )
         self.steam_icon_path = str(
             Path(
                 os.path.join(os.path.dirname(__file__), "../data/steam_icon.png")
@@ -410,6 +415,7 @@ class ModListWidget(QListWidget):
                     git_icon_path=self.git_icon_path,
                     local_icon_path=self.local_icon_path,
                     ludeon_icon_path=self.ludeon_icon_path,
+                    steamcmd_icon_path=self.steamcmd_icon_path,
                     steam_icon_path=self.steam_icon_path,
                 )
                 if data.get("invalid"):

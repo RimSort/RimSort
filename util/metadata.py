@@ -526,7 +526,7 @@ def get_external_time_data_for_workshop_mods(
 
 
 def get_workshop_acf_data(
-    appworkshop_acf_path: str, workshop_mods: Dict[str, Any]
+    appworkshop_acf_path: str, workshop_mods: Dict[str, Any], steamcmd_mode=None
 ) -> None:
     """
     Given a path to the Rimworld Steam Workshop appworkshop_294100.acf file, and parse it into a dict.
@@ -536,39 +536,40 @@ def get_workshop_acf_data(
     :param appworkshop_acf_path: path to the Rimworld Steam Workshop appworkshop_294100.acf file
     :param workshop_mods: a Dict containing parsed mod metadata from Steam workshop mods. This can be
     all_mods or just a dict of Steam mods where their ["data_source"] is "workshop".
+    :param steamcmd_mode: set to True for mode which forces match of folder name + publishedfileid for parsing
     """
     workshop_acf_data = acf_to_dict(appworkshop_acf_path)
-    workshop_mods_pfid_to_uuid = {}
-    for v in workshop_mods.values():
-        if v.get("invalid"):
-            logger.debug(f"Unable to parse acf data for invalid mod: {v}")
-            continue
-        else:
-            if v.get("publishedfileid"):
-                pfid = v["publishedfileid"]
-                workshop_mods_pfid_to_uuid[pfid] = v["uuid"]
-    for publishedfileid in workshop_acf_data["AppWorkshop"][
-        "WorkshopItemDetails"
-    ].keys():
-        if publishedfileid in workshop_mods_pfid_to_uuid:
-            mod_uuid = workshop_mods_pfid_to_uuid[publishedfileid]
-            workshop_mods[mod_uuid]["internal_time_touched"] = int(
-                workshop_acf_data["AppWorkshop"]["WorkshopItemDetails"][
-                    publishedfileid
-                ][
-                    "timetouched"
-                ]  # The last time Steam client touched a mod according to it's entry in appworkshop_294100.acf
-            )
-    for publishedfileid in workshop_acf_data["AppWorkshop"][
+    if steamcmd_mode:
+        workshop_mods_pfid_to_uuid = {
+            v["publishedfileid"]: v["uuid"]
+            for v in workshop_mods.values()
+            if not v.get("invalid") and v.get("folder") == v.get("publishedfileid")
+        }
+    else:
+        workshop_mods_pfid_to_uuid = {
+            v["publishedfileid"]: v["uuid"]
+            for v in workshop_mods.values()
+            if not v.get("invalid") and v.get("publishedfileid")
+        }
+    # Reference needed information from appworkshop_294100.acf
+    workshop_item_details = workshop_acf_data["AppWorkshop"]["WorkshopItemDetails"]
+    workshop_items_installed = workshop_acf_data["AppWorkshop"][
         "WorkshopItemsInstalled"
-    ].keys():
-        if publishedfileid in workshop_mods_pfid_to_uuid:
-            mod_uuid = workshop_mods_pfid_to_uuid[publishedfileid]
+    ]
+    # Loop through our metadata, append values
+    for publishedfileid, mod_uuid in workshop_mods_pfid_to_uuid.items():
+        if steamcmd_mode:  # If we are here, then we have found a steamcmd mod!
+            workshop_mods[mod_uuid]["steamcmd"] = True
+        if publishedfileid in workshop_item_details:
+            # The last time SteamCMD/Steam client touched a mod according to its entry in appworkshop_294100.acf
+            workshop_mods[mod_uuid]["internal_time_touched"] = int(
+                workshop_item_details[publishedfileid]["timetouched"]
+            )
+        if publishedfileid in workshop_items_installed:
+            # Unlikely this will differ from corresponding external metadata entry unless a mod is outdated by some time
             workshop_mods[mod_uuid]["internal_time_updated"] = int(
-                workshop_acf_data["AppWorkshop"]["WorkshopItemsInstalled"][
-                    publishedfileid
-                ]["timeupdated"]
-            )  # I think this is always equivalent to the external_metadata entry for this same data. Unsure. Probably not unless a mod is outdated by quite some time
+                workshop_items_installed[publishedfileid]["timeupdated"]
+            )
 
 
 # Recursive function to update dictionary values with exceptions

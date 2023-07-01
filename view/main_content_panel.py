@@ -203,9 +203,6 @@ class MainContent:
             self._do_steamworks_api_call
         )
 
-        # State used if appworkshop metadata is parsed from Steam workshop install
-        self.appworkshop_acf_data_parsed = False
-
         # Restore cache initially set to empty
         self.active_mods_data_restore_state: Dict[str, Any] = {}
         self.inactive_mods_data_restore_state: Dict[str, Any] = {}
@@ -532,24 +529,50 @@ class MainContent:
         self.workshop_mods = get_workshop_mods(
             self.game_configuration.get_workshop_folder_path()
         )
-        # If we can find the appworkshop_294100.acf file based on Workshop mods path,
-        # then we want to parse it and add desired information for later usage
-        appworkshop_path = os.path.split(
+
+        # If we can find the appworkshop_294100.acf files from SteamCMD or Steam client
+        # SteamCMD
+        steamcmd_appworkshop_acf_path = os.path.join(
+            self.game_configuration.steamcmd_install_path,
+            "steam",
+            "steamapps",
+            "workshop",
+            "appworkshop_294100.acf",
+        )
+        if os.path.exists(
+            steamcmd_appworkshop_acf_path
+        ):  # If the file we want to parse exists
+            get_workshop_acf_data(
+                appworkshop_acf_path=steamcmd_appworkshop_acf_path,
+                workshop_mods=self.local_mods,
+                steamcmd_mode=True,
+            )  # ... get data
+            logger.info(
+                f"Successfully parsed SteamCMD appworkshop.acf metadata from: {steamcmd_appworkshop_acf_path}"
+            )
+        else:
+            logger.info(f"Unable to parse SteamCMD appworkshop.acf metadata")
+        # Steam client
+        steam_appworkshop_path = os.path.split(
             # This is just getting the path 2 directories up from content/294100,
             # so that we can find workshop/appworkshop_294100.acf
             os.path.split(self.game_configuration.get_workshop_folder_path())[0]
         )[0]
-        appworkshop_acf_path = os.path.join(appworkshop_path, "appworkshop_294100.acf")
-        if os.path.exists(appworkshop_acf_path):  # If the file we want to parse exists
+        steam_appworkshop_acf_path = os.path.join(
+            steam_appworkshop_path, "appworkshop_294100.acf"
+        )
+        if os.path.exists(
+            steam_appworkshop_acf_path
+        ):  # If the file we want to parse exists
             get_workshop_acf_data(
-                appworkshop_acf_path, self.workshop_mods
+                appworkshop_acf_path=steam_appworkshop_acf_path,
+                workshop_mods=self.workshop_mods,
             )  # ... get data
             logger.info(
-                f"Successfully parsed Steam client appworkshop_acf metadata: {appworkshop_acf_path}"
+                f"Successfully parsed Steam client appworkshop.acf metadata from: {steam_appworkshop_acf_path}"
             )
-            self.appworkshop_acf_data_parsed = True
         else:
-            logger.info(f"Unable to parse Steam client appworkshop_acf metadata")
+            logger.info(f"Unable to parse Steam client appworkshop.acf metadata")
 
         # Set custom tags for each data source to be used with setIcon later
         for uuid in self.expansions.keys():
@@ -568,26 +591,30 @@ class MainContent:
             self.expansions, self.local_mods, self.workshop_mods
         )
 
-        # If a mod contains C# assemblies, we want to visually represent these mods
+        # If a mod contains C# assemblies, we want to tag the mod
         for uuid, metadata in self.internal_local_metadata.items():
-            path = self.internal_local_metadata[uuid]["path"]
+            path = metadata["path"]
             assemblies_path = os.path.join(path, "Assemblies")
+
             if os.path.exists(assemblies_path):
                 if any(
-                    filename.endswith(".dll") or filename.endswith(".DLL")
+                    filename.endswith((".dll", ".DLL"))
                     for filename in os.listdir(assemblies_path)
                 ):
-                    self.internal_local_metadata[uuid]["csharp"] = True
+                    metadata["csharp"] = True
             else:
-                subfolder_paths = [os.path.join(path, "Current"), os.path.join(path, "1.3"), os.path.join(path, "1.4")]
+                subfolder_paths = [
+                    os.path.join(path, folder)
+                    for folder in ["Current", "1.0", "1.1", "1.2", "1.3", "1.4"]
+                ]
                 for subfolder_path in subfolder_paths:
                     assemblies_path = os.path.join(subfolder_path, "Assemblies")
                     if os.path.exists(assemblies_path):
                         if any(
-                            filename.endswith(".dll") or filename.endswith(".DLL")
+                            filename.endswith((".dll", ".DLL"))
                             for filename in os.listdir(assemblies_path)
                         ):
-                            self.internal_local_metadata[uuid]["csharp"] = True
+                            metadata["csharp"] = True
 
         logger.info(
             f"Combined {len(self.expansions)} expansions, {len(self.local_mods)} local mods, and {len(self.workshop_mods)}. Total elements to get dependencies for: {len(self.internal_local_metadata)}"
@@ -710,34 +737,33 @@ class MainContent:
             self.external_community_rules,
             self.external_user_rules,
         )
-        # If we parsed this data from Steam client appworkshop_294100.acf
-        if self.appworkshop_acf_data_parsed:
+
+        if (
+            self.game_configuration.steam_mods_update_check_toggle
+        ):  # If the user desires this information to be displayed
             if (
-                self.game_configuration.steam_mods_update_check_toggle
-            ):  # ... and the user desires this information to be displayed
-                if (
-                    len(self.workshop_mods_potential_updates) > 0
-                ):  # ... and we have potential updates to show
-                    logger.info(
-                        "User preference is configured to check Steam mods for updates. Displaying potential updates..."
-                    )
-                    list_of_potential_updates = ""
-                    for time_data in self.workshop_mods_potential_updates.values():
-                        list_of_potential_updates += time_data["ui_string"]
-                    show_information(
-                        title="Mod update(s) available!",
-                        text="The following list of Steam mods may have updates available!",
-                        information=(
-                            "This metadata was parsed directly from your Steam client's workshop data, and compared with the "
-                            "'time updated' metadata returned from your most recent Dynamic Query."
-                            # "\nDo you want the Steam client to do a verification check of your mods now?"
-                        ),
-                        details=list_of_potential_updates,
-                    )
-            else:
-                logger.debug(
-                    "User preference is not configured to check Steam mods for updates. Skipping..."
+                len(self.workshop_mods_potential_updates) > 0
+            ):  # ... and we have potential updates to show
+                logger.info(
+                    "User preference is configured to check Steam mods for updates. Displaying potential updates..."
                 )
+                list_of_potential_updates = ""
+                for time_data in self.workshop_mods_potential_updates.values():
+                    list_of_potential_updates += time_data["ui_string"]
+                show_information(
+                    title="Mod update(s) available!",
+                    text="The following list of Steam mods may have updates available!",
+                    information=(
+                        "This metadata was parsed directly from your Steam client's workshop data, and compared with the "
+                        "'time updated' metadata returned from your most recent Dynamic Query."
+                        # "\nDo you want the Steam client to do a verification check of your mods now?"
+                    ),
+                    details=list_of_potential_updates,
+                )
+        else:
+            logger.debug(
+                "User preference is not configured to check Steam mods for updates. Skipping..."
+            )
         # Feed all_mods and Steam DB info to Active Mods list to surface
         # names instead of package_ids when able
         self.active_mods_panel.all_mods = self.all_mods_with_dependencies

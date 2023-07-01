@@ -19,6 +19,7 @@ class ModListItemInner(QWidget):
         git_icon_path: str,
         local_icon_path: str,
         ludeon_icon_path: str,
+        steamcmd_icon_path: str,
         steam_icon_path: str,
     ) -> None:
         """
@@ -48,6 +49,7 @@ class ModListItemInner(QWidget):
         self.git_icon_path = git_icon_path
         self.local_icon_path = local_icon_path
         self.ludeon_icon_path = ludeon_icon_path
+        self.steamcmd_icon_path = steamcmd_icon_path
         self.steam_icon_path = steam_icon_path
 
         # Visuals
@@ -65,13 +67,25 @@ class ModListItemInner(QWidget):
                 QIcon(self.csharp_icon_path).pixmap(QSize(20, 20))
             )
         self.git_icon = None
-        if self.json_data["data_source"] == "local" and self.json_data.get("git_repo"):
+        if (
+            self.json_data["data_source"] == "local"
+            and self.json_data.get("git_repo")
+            and not self.json_data.get("steamcmd")
+        ):
             self.git_icon = QLabel()
             self.git_icon.setPixmap(QIcon(self.git_icon_path).pixmap(QSize(20, 20)))
+        self.steamcmd_icon = None
+        if self.json_data["data_source"] == "local" and self.json_data.get("steamcmd"):
+            self.steamcmd_icon = QLabel()
+            self.steamcmd_icon.setPixmap(
+                QIcon(self.steamcmd_icon_path).pixmap(QSize(20, 20))
+            )
 
         # Icons by mod source
-        self.mod_source_icon = QLabel()
-        self.mod_source_icon.setPixmap(self.get_icon().pixmap(QSize(20, 20)))
+        self.mod_source_icon = None
+        if not self.git_icon and not self.steamcmd_icon:
+            self.mod_source_icon = QLabel()
+            self.mod_source_icon.setPixmap(self.get_icon().pixmap(QSize(20, 20)))
 
         # Warning icon hidden by default
         self.warning_icon_label = QLabel()
@@ -81,11 +95,14 @@ class ModListItemInner(QWidget):
         self.warning_icon_label.setHidden(True)
 
         self.main_label.setObjectName("ListItemLabel")
-        if self.csharp_icon:
-            self.main_item_layout.addWidget(self.csharp_icon, Qt.AlignRight)
         if self.git_icon:
             self.main_item_layout.addWidget(self.git_icon, Qt.AlignRight)
-        self.main_item_layout.addWidget(self.mod_source_icon, Qt.AlignRight)
+        if self.steamcmd_icon:
+            self.main_item_layout.addWidget(self.steamcmd_icon, Qt.AlignRight)
+        if self.mod_source_icon:
+            self.main_item_layout.addWidget(self.mod_source_icon, Qt.AlignRight)
+        if self.csharp_icon:
+            self.main_item_layout.addWidget(self.csharp_icon, Qt.AlignRight)
         self.main_item_layout.addWidget(self.main_label, Qt.AlignCenter)
         self.main_item_layout.addWidget(self.warning_icon_label, Qt.AlignRight)
         self.main_item_layout.addStretch()

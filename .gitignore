@@ -168,7 +168,6 @@ pyvenv.cfg
 data/DEBUG
 .DS_Store
 test*
-data/steam*
 *.xml
 *_AppIDQuery*
 /steamworks
