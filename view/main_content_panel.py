@@ -574,47 +574,10 @@ class MainContent:
         else:
             logger.info(f"Unable to parse Steam client appworkshop.acf metadata")
 
-        # Set custom tags for each data source to be used with setIcon later
-        for uuid in self.expansions.keys():
-            self.expansions[uuid]["data_source"] = "expansion"
-        for uuid in self.workshop_mods.keys():
-            self.workshop_mods[uuid]["data_source"] = "workshop"
-        for uuid in self.local_mods.keys():
-            self.local_mods[uuid]["data_source"] = "local"
-            # Check for git repository inside local mods, tag appropriately
-            git_repo_path = os.path.join(self.local_mods[uuid]["path"], ".git")
-            if os.path.exists(git_repo_path):
-                self.local_mods[uuid]["git_repo"] = True
-
         # One working Dictionary for ALL mods
         self.internal_local_metadata = merge_mod_data(
             self.expansions, self.local_mods, self.workshop_mods
         )
-
-        # If a mod contains C# assemblies, we want to tag the mod
-        for uuid, metadata in self.internal_local_metadata.items():
-            path = metadata["path"]
-            assemblies_path = os.path.join(path, "Assemblies")
-
-            if os.path.exists(assemblies_path):
-                if any(
-                    filename.endswith((".dll", ".DLL"))
-                    for filename in os.listdir(assemblies_path)
-                ):
-                    metadata["csharp"] = True
-            else:
-                subfolder_paths = [
-                    os.path.join(path, folder)
-                    for folder in ["Current", "1.0", "1.1", "1.2", "1.3", "1.4"]
-                ]
-                for subfolder_path in subfolder_paths:
-                    assemblies_path = os.path.join(subfolder_path, "Assemblies")
-                    if os.path.exists(assemblies_path):
-                        if any(
-                            filename.endswith((".dll", ".DLL"))
-                            for filename in os.listdir(assemblies_path)
-                        ):
-                            metadata["csharp"] = True
 
         logger.info(
             f"Combined {len(self.expansions)} expansions, {len(self.local_mods)} local mods, and {len(self.workshop_mods)}. Total elements to get dependencies for: {len(self.internal_local_metadata)}"
@@ -765,7 +728,9 @@ class MainContent:
                         )
 
                         if itt != 0 and etu > itt:
-                            logger.info(f"Potential update found for Steam mod: {pfid}")
+                            logger.debug(
+                                f"Potential update found for Steam mod: {pfid}"
+                            )
                             self.workshop_mods_potential_updates[pfid] = {
                                 "external_time_created": etc,
                                 "external_time_updated": etu,
@@ -775,7 +740,7 @@ class MainContent:
                             }
                     except KeyError as e:
                         stacktrace = traceback.format_exc()
-                        logger.info(f"Missing time data for Steam mod: {pfid}")
+                        logger.debug(f"Missing time data for Steam mod: {pfid}")
                         logger.info(stacktrace)
             # Generate our report
             list_of_potential_updates = ""

@@ -990,7 +990,7 @@ def get_installed_expansions(game_path: str, game_version: str) -> Dict[str, Any
         logger.info(
             f"Attempting to get BASE/EXPANSIONS data from Rimworld's /Data folder: {data_path}"
         )
-        mod_data = parse_mod_data(data_path, "game install")
+        mod_data = parse_mod_data(data_path, "expansion")
         logger.info("Finished getting BASE/EXPANSION data")
         logger.debug(mod_data)
 
@@ -1081,7 +1081,7 @@ def get_local_mods(local_path: str, game_path: Optional[str] = None) -> Dict[str
         logger.info(
             f"Attempting to get LOCAL mods data from custom local path or Rimworld's /Mods folder: {local_path}"
         )
-        mod_data = parse_mod_data(local_path, "local mods")
+        mod_data = parse_mod_data(local_path, "local")
         logger.info("Finished getting LOCAL mods data, returning LOCAL mods data now")
         logger.debug(mod_data)
     else:
@@ -1114,7 +1114,7 @@ def get_workshop_mods(workshop_path: str) -> Dict[str, Any]:
     mod_data = {}
     if workshop_path != "":
         logger.info(f"Getting WORKSHOP data with Workshop path: {workshop_path}")
-        mod_data = parse_mod_data(workshop_path, "workshop mods")
+        mod_data = parse_mod_data(workshop_path, "workshop")
         logger.info("Finished getting WORKSHOP data, returning WORKSHOP data now")
         logger.debug(mod_data)
     else:
@@ -1164,7 +1164,7 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
         invalid_dirs = []
         for file in os.scandir(mods_path):
             if file.is_dir():  # Mods are contained in folders
-                pfid = ""
+                pfid = None
                 dirs_scanned.append(file.name)
                 # Look for a case-insensitive "About" folder
                 invalid_folder_path_found = True
@@ -1237,19 +1237,20 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                     invalid_dirs.append(file.name)
                     logger.info(f"Populating invalid mod: {file.path}")
                     uuid = str(uuid4())
-                    mods[uuid] = {}
-                    mods[uuid]["invalid"] = True
-                    mods[uuid]["folder"] = file.name
-                    mods[uuid]["path"] = file.path
-                    mods[uuid]["name"] = "UNKNOWN"
-                    mods[uuid]["packageId"] = "UNKNOWN"
-                    mods[uuid]["author"] = "UNKNOWN"
-                    mods[uuid]["description"] = (
-                        "This mod is considered invalid by RimSort (and the RimWorld game)."
-                        + "\n\nThis mod does NOT contain an ./About/About.xml and is likely leftover from previous usage."
-                        + "\n\nThis can happen sometimes with Steam mods if there are leftover .dds textures or unexpected data."
-                    )
-                    mods[uuid]["uuid"] = uuid
+                    mods[uuid] = {
+                        "invalid": True,
+                        "folder": file.name,
+                        "path": file.path,
+                        "name": "UNKNOWN",
+                        "packageId": "UNKNOWN",
+                        "author": "UNKNOWN",
+                        "description": (
+                            "This mod is considered invalid by RimSort (and the RimWorld game)."
+                            + "\n\nThis mod does NOT contain an ./About/About.xml and is likely leftover from previous usage."
+                            + "\n\nThis can happen sometimes with Steam mods if there are leftover .dds textures or unexpected data."
+                        ),
+                        "uuid": uuid,
+                    }
                 else:
                     mod_data_path = os.path.join(
                         file.path, about_folder_name, about_file_name
@@ -1280,41 +1281,82 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                         logger.debug(f"Normalized XML content: {mod_data}")
                         logger.debug("Editing XML content")
                         if mod_data.get("modmetadata"):
-                            if mod_data["modmetadata"].get("packageId"):
-                                uuid = str(uuid4())
-                                mod_data["modmetadata"]["packageId"] = mod_data[
-                                    "modmetadata"
-                                ][
+                            if "modmetadata" in mod_data and mod_data[
+                                "modmetadata"
+                            ].get(
+                                "packageId"
+                            ):  # If our About.xml metadata has a packageId key
+                                # Initialize our dict from the formatted About.xml metadata
+                                mod_metadata = mod_data["modmetadata"]
+                                # Normalize package ID in metadata
+                                mod_metadata["packageId"] = mod_metadata[
                                     "packageId"
-                                ].lower()  # normalize package ID in metadata
-                                mod_data["modmetadata"]["folder"] = file.name
-                                mod_data["modmetadata"]["path"] = file.path
-                                if pfid:  # If we parsed a pfid earlier...
-                                    mod_data["modmetadata"]["publishedfileid"] = pfid
-                                    mod_data["modmetadata"][
-                                        "steam_uri"
-                                    ] = f"steam://url/CommunityFilePage/{pfid}"
-                                    mod_data["modmetadata"][
-                                        "steam_url"
-                                    ] = f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
+                                ].lower()
+                                # Track pfid if we parsed one earlier
+                                if pfid:
+                                    mod_metadata["publishedfileid"] = pfid
+                                # If a mod contains C# assemblies, we want to tag the mod
+                                assemblies_path = os.path.join(file.path, "Assemblies")
+                                if os.path.exists(assemblies_path):
+                                    if any(
+                                        filename.endswith((".dll", ".DLL"))
+                                        for filename in os.listdir(assemblies_path)
+                                    ):
+                                        mod_metadata["csharp"] = True
+                                else:
+                                    subfolder_paths = [
+                                        os.path.join(file.path, folder)
+                                        for folder in [
+                                            "Current",
+                                            "1.0",
+                                            "1.1",
+                                            "1.2",
+                                            "1.3",
+                                            "1.4",
+                                        ]
+                                    ]
+                                    for subfolder_path in subfolder_paths:
+                                        assemblies_path = os.path.join(
+                                            subfolder_path, "Assemblies"
+                                        )
+                                        if os.path.exists(assemblies_path):
+                                            if any(
+                                                filename.endswith((".dll", ".DLL"))
+                                                for filename in os.listdir(
+                                                    assemblies_path
+                                                )
+                                            ):
+                                                mod_metadata["csharp"] = True
+                                # Check for git repository inside local mods, tag appropriately
+                                if intent == "local":
+                                    git_repo_path = os.path.join(file.path, ".git")
+                                    if os.path.exists(git_repo_path):
+                                        mod_metadata["git"] = True
                                 elif (
-                                    intent == "workshop mods"
+                                    intent == "workshop"
                                 ):  # ... otherwise, if workshop mods intent
-                                    mod_data["modmetadata"][
-                                        "publishedfileid"
-                                    ] = mod_data["modmetadata"][
+                                    mod_metadata["publishedfileid"] = mod_metadata[
                                         "folder"
                                     ]  # ... set the pfid to the folder name
-                                if not mod_data["modmetadata"].get("name"):
-                                    mod_data["modmetadata"][
-                                        "name"
-                                    ] = "Mod name unspecified"
-                                # Add the uuid that corresponds to metadata entry, to the list item's json data for future usage
-                                mod_data["modmetadata"]["uuid"] = uuid
+                                # Make some assumptions if we have a pfid
+                                if mod_metadata.get("publishedfileid"):
+                                    mod_metadata[
+                                        "steam_uri"
+                                    ] = f"steam://url/CommunityFilePage/{pfid}"
+                                    mod_metadata[
+                                        "steam_url"
+                                    ] = f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
+                                # Track source & uuid in case metadata becomes detached
+                                # data_source will be used with setIcon later
+                                mod_metadata["data_source"] = intent
+                                mod_metadata["folder"] = file.name
+                                mod_metadata["path"] = file.path
+                                uuid = str(uuid4())
+                                mod_metadata["uuid"] = uuid
                                 logger.debug(
-                                    f"Finished editing XML content, adding final content to larger list: {mod_data['modmetadata']}"
+                                    f"Finished editing XML content, adding final content to larger list: {mod_metadata}"
                                 )
-                                mods[uuid] = mod_data["modmetadata"]
+                                mods[uuid] = mod_metadata
                             else:
                                 logger.error(
                                     f"Key [packageId] does not exist in this data's [modmetadata]: {mod_data}"
