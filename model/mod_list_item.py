@@ -66,6 +66,7 @@ class ModListItemInner(QWidget):
             self.csharp_icon.setPixmap(
                 QIcon(self.csharp_icon_path).pixmap(QSize(20, 20))
             )
+            self.csharp_icon.setToolTip("Contains C# assemblies")
         self.git_icon = None
         if (
             self.json_data["data_source"] == "local"
@@ -74,18 +75,28 @@ class ModListItemInner(QWidget):
         ):
             self.git_icon = QLabel()
             self.git_icon.setPixmap(QIcon(self.git_icon_path).pixmap(QSize(20, 20)))
+            self.git_icon.setToolTip("Contains a git repository")
         self.steamcmd_icon = None
         if self.json_data["data_source"] == "local" and self.json_data.get("steamcmd"):
             self.steamcmd_icon = QLabel()
             self.steamcmd_icon.setPixmap(
                 QIcon(self.steamcmd_icon_path).pixmap(QSize(20, 20))
             )
+            self.steamcmd_icon.setToolTip("Downloaded with SteamCMD")
 
         # Icons by mod source
         self.mod_source_icon = None
         if not self.git_icon and not self.steamcmd_icon:
             self.mod_source_icon = QLabel()
             self.mod_source_icon.setPixmap(self.get_icon().pixmap(QSize(20, 20)))
+            # Set tooltip based on mod source
+            data_source = self.json_data.get("data_source")
+            if data_source == "expansion":
+                self.mod_source_icon.setToolTip("Official RimWorld content")
+            elif data_source == "local":
+                self.mod_source_icon.setToolTip("Installed locally")
+            elif data_source == "workshop":
+                self.mod_source_icon.setToolTip("Subscribed via Steam")
 
         # Warning icon hidden by default
         self.warning_icon_label = QLabel()
