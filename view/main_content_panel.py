@@ -667,13 +667,7 @@ class MainContent:
                 logger.info(
                     "External Steam metadata disabled by user. Please choose a metadata source in settings."
                 )
-            # Steam mods update check (if DB has data)
-            if self.game_configuration.steam_mods_update_check_toggle:
-                self.workshop_mods_potential_updates = (
-                    get_external_time_data_for_workshop_mods(
-                        self.external_steam_metadata, self.internal_local_metadata
-                    )
-                )
+
             # External Community Rules metadata
             external_community_rules_metadata_source = (
                 self.game_configuration.settings_panel.external_community_rules_metadata_cb.currentText()
@@ -740,26 +734,63 @@ class MainContent:
 
         if (
             self.game_configuration.steam_mods_update_check_toggle
-        ):  # If the user desires this information to be displayed
-            if (
-                len(self.workshop_mods_potential_updates) > 0
-            ):  # ... and we have potential updates to show
-                logger.info(
-                    "User preference is configured to check Steam mods for updates. Displaying potential updates..."
-                )
-                list_of_potential_updates = ""
-                for time_data in self.workshop_mods_potential_updates.values():
-                    list_of_potential_updates += time_data["ui_string"]
-                show_information(
-                    title="Mod update(s) available!",
-                    text="The following list of Steam mods may have updates available!",
-                    information=(
-                        "This metadata was parsed directly from your Steam client's workshop data, and compared with the "
-                        "'time updated' metadata returned from your most recent Dynamic Query."
-                        # "\nDo you want the Steam client to do a verification check of your mods now?"
-                    ),
-                    details=list_of_potential_updates,
-                )
+        ):  # Check SteamCMD/Steam mods for updates if configured
+            query_workshop_update_data(mods=self.internal_local_metadata)
+            logger.info(
+                "User preference is configured to check Steam mods for updates. Displaying potential updates..."
+            )
+            for v in self.all_mods_with_dependencies.values():
+                if (v.get("steamcmd") or v["data_source"] == "workshop") and v.get(
+                    "publishedfileid"
+                ):
+                    pfid = v["publishedfileid"]
+                    uuid = v["uuid"]
+                    try:
+                        name = (
+                            v.get("name")
+                            or self.external_steam_metadata[pfid].get("steamName")
+                            or "UNKNOWN"
+                        )
+                        name = f"############################\n{name}"
+
+                        etc = v["external_time_created"]
+                        etu = v["external_time_updated"]
+                        itt = v["internal_time_touched"]
+                        itu = v["internal_time_updated"]
+
+                        time_data_human_readable = (
+                            f"\n{name}"
+                            + f"\nInstalled mod last touched: {strftime('%Y-%m-%d %H:%M:%S', localtime(itt))}"
+                            + f"\nPublishing last updated: {strftime('%Y-%m-%d %H:%M:%S', localtime(etu))}\n"
+                        )
+
+                        if itt != 0 and etu > itt:
+                            logger.info(f"Potential update found for Steam mod: {pfid}")
+                            self.workshop_mods_potential_updates[pfid] = {
+                                "external_time_created": etc,
+                                "external_time_updated": etu,
+                                "internal_time_touched": itt,
+                                "internal_time_updated": itu,
+                                "ui_string": time_data_human_readable,
+                            }
+                    except KeyError as e:
+                        stacktrace = traceback.format_exc()
+                        logger.info(f"Missing time data for Steam mod: {pfid}")
+                        logger.info(stacktrace)
+            # Generate our report
+            list_of_potential_updates = ""
+            for time_data in self.workshop_mods_potential_updates.values():
+                list_of_potential_updates += time_data["ui_string"]
+            show_information(
+                title="Mod update(s) available!",
+                text="The following list of Steam mods may have updates available!",
+                information=(
+                    "This metadata was parsed directly from your Steam client's workshop data, and compared with the "
+                    "'time updated' metadata returned from your most recent Dynamic Query."
+                    # "\nDo you want the Steam client to do a verification check of your mods now?"
+                ),
+                details=list_of_potential_updates,
+            )
         else:
             logger.debug(
                 "User preference is not configured to check Steam mods for updates. Skipping..."
