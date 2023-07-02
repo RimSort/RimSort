@@ -701,53 +701,44 @@ def get_dependencies_for_mods(
     log_deps_order_info(all_mods)
 
     # Next two sections utilize this helper dict
-    package_id_to_uuid = {}
-    for mod_uuid, modmetadata in all_mods.items():
-        package_id_to_uuid[modmetadata["packageId"]] = mod_uuid
+    packageId_to_uuid = {
+        metadata["packageId"]: metadata["uuid"]
+        for metadata in all_mods.values()
+        if metadata.get("packageId")
+    }
 
-    # Steam's WebAPI references dependencies based on PublishedFileID, not package ID
+    # Steam references dependencies based on PublishedFileID, not package ID
     info_from_steam_package_id_to_name = {}
     if steam_db:
-        logger.info("Starting adding dependencies from Steam db")
+        logger.info("Starting adding dependencies from SteamDB")
         tracking_dict: dict[str, set[str]] = {}
-        steam_id_to_package_id = {}
-        # Iterate through all workshop items in the Steam DB.
+        steam_id_to_package_id: dict[str, str] = {}
         for publishedfileid, mod_data in steam_db.items():
-            try:
-                db_package_id = mod_data["packageId"].lower()
-                # Record the Steam ID => package_id
-                steam_id_to_package_id[publishedfileid] = db_package_id
-                # Also record package_ids to names (use in tooltips)
-                info_from_steam_package_id_to_name[db_package_id] = mod_data["name"]
-                # Skip dependency info for appids for now
-                # TODO: handle these dependencies separately once we are populating that info in Dynamic Query
-                # This is useless for RimPy Mod Manager Database as these AppID dependencies are not keyed
-                if mod_data.get("appid") and mod_data["appid"]:
-                    logger.debug(
-                        f"Skipping Steam dependency data for appid {publishedfileid}"
-                    )
-                    continue
-                # If the package_id is in all_mods...
-                elif db_package_id in package_id_to_uuid:
-                    # Iterate through each dependency (Steam ID) listed on Steam
-                    for dependency_id, steam_dep_data in mod_data[
-                        "dependencies"
-                    ].items():
-                        # Track mod dependency information
-                        if db_package_id not in tracking_dict:
-                            tracking_dict[db_package_id] = set()
-                        logger.debug(
-                            f"Tracking Steam dependency data for mod: {publishedfileid}"
-                        )
-                        # Add Steam ID to dependencies of mod
-                        tracking_dict[db_package_id].add(dependency_id)
-            except KeyError as e:
-                logger.debug(
-                    f"Unable to find complete Steam metadata. Skipping parsing Steam dependency metadata for item: {publishedfileid}"
-                )
-                # Uncomment to see the missing key (not needed, just leaving here for info)
-                # logger.debug(f"\n{traceback.format_exc()}")
+            db_packageId = mod_data.get("packageId")
+            # If our DB has a packageId for this
+            if db_packageId:
+                db_packageId = db_packageId.lower()  # Normalize packageId
+                steam_id_to_package_id[publishedfileid] = db_packageId
+                info_from_steam_package_id_to_name[db_packageId] = mod_data.get("name")
+                package_uuid = packageId_to_uuid.get(db_packageId)
+                if (
+                    package_uuid
+                    and all_mods[package_uuid].get("publishedfileid") == publishedfileid
+                ):
+                    dependencies = mod_data.get("dependencies")
+                    if dependencies:
+                        if db_packageId not in tracking_dict:
+                            tracking_dict[db_packageId] = set(dependencies.keys())
+                        else:
+                            tracking_dict[db_packageId].update(dependencies.keys())
+            else:  # Otherwise, skip the entry
                 continue
+        logger.debug(
+            f"Tracking {len(steam_id_to_package_id)} SteamDB packageIds for lookup"
+        )
+        logger.debug(
+            f"Tracking Steam dependency data for installed mods: {tracking_dict}"
+        )
 
         # For each mod that exists in all_mods -> dependencies (in Steam ID form)
         for (
@@ -762,7 +753,7 @@ def get_dependencies_for_mods(
                 if dependency_steam_id in steam_id_to_package_id:
                     add_single_str_dependency_to_mod(
                         all_mods[
-                            package_id_to_uuid[installed_mod_package_id]
+                            packageId_to_uuid[installed_mod_package_id]
                         ],  # Already checked above
                         steam_id_to_package_id[dependency_steam_id],
                         all_mods,
@@ -772,9 +763,9 @@ def get_dependencies_for_mods(
                     # keyed information for Core + DLCs in it's ["database"] - this is only referenced by
                     # RPMMDB with the ["database"][pfid]["children"] values.
                     logger.debug(
-                        f"package_id not found for steam id [{dependency_steam_id}] in Steam metadata"
+                        f"Unable to lookup Steam AppID/PublishedFileID in Steam metadata: {dependency_steam_id}"
                     )
-        logger.info("Finished adding dependencies from Steam db")
+        logger.info("Finished adding dependencies from SteamDB")
         log_deps_order_info(all_mods)
     else:
         logger.info("No Steam database supplied from external metadata. skipping.")
@@ -786,7 +777,7 @@ def get_dependencies_for_mods(
             # Note: requiring the package be in all_mods should be fine, as
             # if the mod doesn't exist all_mods, then either mod_data or dependency_id
             # will be None, and then we don't insert a dependency
-            if package_id.lower() in package_id_to_uuid:
+            if package_id.lower() in packageId_to_uuid:
                 load_these_after = community_rules[package_id].get("loadBefore")
                 if load_these_after:
                     logger.debug(
@@ -798,7 +789,7 @@ def get_dependencies_for_mods(
                     for load_this_after in load_these_after:
                         add_load_rule_to_mod(
                             all_mods[
-                                package_id_to_uuid[package_id.lower()]
+                                packageId_to_uuid[package_id.lower()]
                             ],  # Already checked above
                             load_this_after,  # Lower() done in call
                             "loadTheseAfter",
@@ -815,7 +806,7 @@ def get_dependencies_for_mods(
                     for load_this_before in load_these_before:
                         add_load_rule_to_mod(
                             all_mods[
-                                package_id_to_uuid[package_id.lower()]
+                                packageId_to_uuid[package_id.lower()]
                             ],  # Already checked above
                             load_this_before,  # lower() done in call
                             "loadTheseBefore",
@@ -827,9 +818,7 @@ def get_dependencies_for_mods(
                     logger.debug(
                         f'Current mod should load at the bottom of a mods list, and will be considered a "tier 3" mod'
                     )
-                    all_mods[package_id_to_uuid[package_id.lower()]][
-                        "loadBottom"
-                    ] = True
+                    all_mods[packageId_to_uuid[package_id.lower()]]["loadBottom"] = True
         logger.info("Finished adding dependencies from Community Rules")
         log_deps_order_info(all_mods)
     else:
@@ -843,7 +832,7 @@ def get_dependencies_for_mods(
             # Note: requiring the package be in all_mods should be fine, as
             # if the mod doesn't exist all_mods, then either mod_data or dependency_id
             # will be None, and then we don't insert a dependency
-            if package_id.lower() in package_id_to_uuid:
+            if package_id.lower() in packageId_to_uuid:
                 load_these_after = user_rules[package_id].get("loadBefore")
                 if load_these_after:
                     logger.debug(
@@ -855,7 +844,7 @@ def get_dependencies_for_mods(
                     for load_this_after in load_these_after:
                         add_load_rule_to_mod(
                             all_mods[
-                                package_id_to_uuid[package_id.lower()]
+                                packageId_to_uuid[package_id.lower()]
                             ],  # Already checked above
                             load_this_after,  # lower() done in call
                             "loadTheseAfter",
@@ -872,7 +861,7 @@ def get_dependencies_for_mods(
                     for load_this_before in load_these_before:
                         add_load_rule_to_mod(
                             all_mods[
-                                package_id_to_uuid[package_id.lower()]
+                                packageId_to_uuid[package_id.lower()]
                             ],  # Already checked above
                             load_this_before,  # lower() done in call
                             "loadTheseBefore",
@@ -884,9 +873,7 @@ def get_dependencies_for_mods(
                     logger.debug(
                         f'Current mod should load at the bottom of a mods list, and will be considered a "tier 3" mod'
                     )
-                    all_mods[package_id_to_uuid[package_id.lower()]][
-                        "loadBottom"
-                    ] = True
+                    all_mods[packageId_to_uuid[package_id.lower()]]["loadBottom"] = True
         logger.info("Finished adding dependencies from User Rules")
         log_deps_order_info(all_mods)
     else:
@@ -997,49 +984,43 @@ def get_installed_expansions(game_path: str, game_version: str) -> Dict[str, Any
         # Base game and expansion About.xml do not contain name, so these
         # must be manually added
         logger.info("Manually populating names for BASE/EXPANSION data")
+        dlc_mapping = {
+            "ludeon.rimworld": {
+                "steamAppId": "294100",
+                "description": RIMWORLD_DLC_METADATA["294100"]["description"],
+            },
+            "ludeon.rimworld.royalty": {
+                "steamAppId": "1149640",
+                "description": RIMWORLD_DLC_METADATA["1149640"]["description"],
+            },
+            "ludeon.rimworld.ideology": {
+                "steamAppId": "1392840",
+                "description": RIMWORLD_DLC_METADATA["1392840"]["description"],
+            },
+            "ludeon.rimworld.biotech": {
+                "steamAppId": "1826140",
+                "description": RIMWORLD_DLC_METADATA["1826140"]["description"],
+            },
+        }
         for data in mod_data.values():
             package_id = data["packageId"]
-            if package_id == "ludeon.rimworld":
-                data["steamAppId"] = "294100"
-                data["name"] = RIMWORLD_DLC_METADATA[data["steamAppId"]]["name"]
-                data["steam_url"] = RIMWORLD_DLC_METADATA[data["steamAppId"]][
-                    "steam_url"
-                ]
-                data["description"] = RIMWORLD_DLC_METADATA[data["steamAppId"]][
-                    "description"
-                ]
-            elif package_id == "ludeon.rimworld.royalty":
-                data["steamAppId"] = "1149640"
-                data["name"] = RIMWORLD_DLC_METADATA[data["steamAppId"]]["name"]
-                data["steam_url"] = RIMWORLD_DLC_METADATA[data["steamAppId"]][
-                    "steam_url"
-                ]
-                data["description"] = RIMWORLD_DLC_METADATA[data["steamAppId"]][
-                    "description"
-                ]
-            elif package_id == "ludeon.rimworld.ideology":
-                data["steamAppId"] = "1392840"
-                data["name"] = RIMWORLD_DLC_METADATA[data["steamAppId"]]["name"]
-                data["steam_url"] = RIMWORLD_DLC_METADATA[data["steamAppId"]][
-                    "steam_url"
-                ]
-                data["description"] = RIMWORLD_DLC_METADATA[data["steamAppId"]][
-                    "description"
-                ]
-            elif package_id == "ludeon.rimworld.biotech":
-                data["steamAppId"] = "1826140"
-                data["name"] = RIMWORLD_DLC_METADATA[data["steamAppId"]]["name"]
-                data["steam_url"] = RIMWORLD_DLC_METADATA[data["steamAppId"]][
-                    "steam_url"
-                ]
-                data["description"] = RIMWORLD_DLC_METADATA[data["steamAppId"]][
-                    "description"
-                ]
+            if package_id in dlc_mapping:
+                dlc_data = dlc_mapping[package_id]
+                data.update(
+                    {
+                        "steamAppId": dlc_data["steamAppId"],
+                        "name": RIMWORLD_DLC_METADATA[dlc_data["steamAppId"]]["name"],
+                        "steam_url": RIMWORLD_DLC_METADATA[dlc_data["steamAppId"]][
+                            "steam_url"
+                        ],
+                        "description": dlc_data["description"],
+                        "supportedVersions": {"li": game_version},
+                    }
+                )
             else:
                 logger.error(
                     f"An unknown mod has been found in the expansions folder: {package_id} {data}"
                 )
-            data["supportedVersions"] = {"li": game_version}
         logger.info(
             "Finished getting installed expansions, returning final BASE/EXPANSIONS data now"
         )
@@ -1295,6 +1276,22 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                                 # Track pfid if we parsed one earlier
                                 if pfid:
                                     mod_metadata["publishedfileid"] = pfid
+                                if intent == "workshop" and not mod_metadata.get(
+                                    "publishedfileid"
+                                ):  # If workshop mods intent and we don't have a pfid...
+                                    mod_metadata[
+                                        "publishedfileid"
+                                    ] = file.name  # ... set the pfid to the folder name
+                                # Make some assumptions if we have a pfid
+                                if mod_metadata.get("publishedfileid"):
+                                    mod_metadata[
+                                        "steam_uri"
+                                    ] = f"steam://url/CommunityFilePage/{pfid}"
+                                    mod_metadata[
+                                        "steam_url"
+                                    ] = f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
+                                # Track source & uuid in case metadata becomes detached
+                                # data_source will be used with setIcon later
                                 # If a mod contains C# assemblies, we want to tag the mod
                                 assemblies_path = os.path.join(file.path, "Assemblies")
                                 if os.path.exists(assemblies_path):
@@ -1306,14 +1303,10 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                                 else:
                                     subfolder_paths = [
                                         os.path.join(file.path, folder)
-                                        for folder in [
-                                            "Current",
-                                            "1.0",
-                                            "1.1",
-                                            "1.2",
-                                            "1.3",
-                                            "1.4",
-                                        ]
+                                        for folder in os.listdir(file.path)
+                                        if os.path.isdir(
+                                            os.path.join(file.path, folder)
+                                        )
                                     ]
                                     for subfolder_path in subfolder_paths:
                                         assemblies_path = os.path.join(
@@ -1331,23 +1324,7 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                                 if intent == "local":
                                     git_repo_path = os.path.join(file.path, ".git")
                                     if os.path.exists(git_repo_path):
-                                        mod_metadata["git"] = True
-                                elif (
-                                    intent == "workshop"
-                                ):  # ... otherwise, if workshop mods intent
-                                    mod_metadata["publishedfileid"] = mod_metadata[
-                                        "folder"
-                                    ]  # ... set the pfid to the folder name
-                                # Make some assumptions if we have a pfid
-                                if mod_metadata.get("publishedfileid"):
-                                    mod_metadata[
-                                        "steam_uri"
-                                    ] = f"steam://url/CommunityFilePage/{pfid}"
-                                    mod_metadata[
-                                        "steam_url"
-                                    ] = f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
-                                # Track source & uuid in case metadata becomes detached
-                                # data_source will be used with setIcon later
+                                        mod_metadata["git_repo"] = True
                                 mod_metadata["data_source"] = intent
                                 mod_metadata["folder"] = file.name
                                 mod_metadata["path"] = file.path

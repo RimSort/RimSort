@@ -486,9 +486,6 @@ def get_workshop_acf_data(
         }
     # Reference needed information from appworkshop_294100.acf
     workshop_item_details = workshop_acf_data["AppWorkshop"]["WorkshopItemDetails"]
-    workshop_items_installed = workshop_acf_data["AppWorkshop"][
-        "WorkshopItemsInstalled"
-    ]
     # Loop through our metadata, append values
     for publishedfileid, mod_uuid in workshop_mods_pfid_to_uuid.items():
         if steamcmd_mode:  # If we are here, then we have found a steamcmd mod!
@@ -498,10 +495,8 @@ def get_workshop_acf_data(
             workshop_mods[mod_uuid]["internal_time_touched"] = int(
                 workshop_item_details[publishedfileid]["timetouched"]
             )
-        if publishedfileid in workshop_items_installed:
-            # Unlikely this will differ from corresponding external metadata entry unless a mod is outdated by some time
             workshop_mods[mod_uuid]["internal_time_updated"] = int(
-                workshop_items_installed[publishedfileid]["timeupdated"]
+                workshop_item_details[publishedfileid]["timeupdated"]
             )
 
 

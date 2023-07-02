@@ -589,8 +589,6 @@ class MainContent:
         self.external_community_rules_path = None
         self.external_user_rules = {}
 
-        self.workshop_mods_potential_updates = {}
-
         # If there are mods at all, check for dbs for additional metadata sources.
         if self.internal_local_metadata:
             logger.info(
@@ -684,6 +682,69 @@ class MainContent:
                 "No LOCAL or WORKSHOP mods found at all. Are you playing Vanilla?"
             )
 
+        if (
+            self.game_configuration.steam_mods_update_check_toggle
+        ):  # Check SteamCMD/Steam mods for updates if configured
+            self.workshop_mods_potential_updates = {}
+            logger.info(
+                "User preference is configured to check Steam mods for updates. Displaying potential updates..."
+            )
+            query_workshop_update_data(mods=self.internal_local_metadata)
+            for v in self.internal_local_metadata.values():
+                if v.get("publishedfileid") and (
+                    v.get("steamcmd") or v["data_source"] == "workshop"
+                ):
+                    try:
+                        pfid = v["publishedfileid"]
+                        uuid = v["uuid"]
+                        name = (
+                            v.get("name")
+                            or self.external_steam_metadata[pfid].get("steamName")
+                            or "UNKNOWN"
+                        )
+                        name = f"############################\n{name}"
+                        if (
+                            # If we have data for itt
+                            v["internal_time_touched"] != 0
+                            # ...and mod has been updated since this timestamp
+                            and v["external_time_updated"] > v["internal_time_touched"]
+                        ):
+                            logger.debug(
+                                f"Potential update found for Steam mod: {pfid}"
+                            )
+                            self.workshop_mods_potential_updates[pfid] = {
+                                "external_time_updated": v["external_time_updated"],
+                                "internal_time_touched": v["internal_time_touched"],
+                                "ui_string": (
+                                    f"\n{name}"
+                                    + f'\nInstalled mod last touched: {strftime("%Y-%m-%d %H:%M:%S", localtime(v["internal_time_touched"]))}'
+                                    + f'\nPublishing last updated: {strftime("%Y-%m-%d %H:%M:%S", localtime(v["external_time_updated"]))}\n'
+                                ),
+                            }
+                    except KeyError as e:
+                        stacktrace = traceback.format_exc()
+                        logger.debug(f"Missing time data for Steam mod: {pfid}")
+                        logger.debug(stacktrace)
+            # If we have updates available...
+            if len(self.workshop_mods_potential_updates) > 0:
+                # ...generate our report
+                list_of_potential_updates = ""
+                for time_data in self.workshop_mods_potential_updates.values():
+                    list_of_potential_updates += time_data["ui_string"]
+                show_information(
+                    title="Mod update(s) available!",
+                    text="The following list of Steam mods may have updates available!",
+                    information=(
+                        "This metadata was parsed directly from your Steam client's workshop data, and "
+                        "compared with the 'time updated' metadata returned from Steam Workshop."
+                        # "\nDo you want the Steam client to do a verification check of your mods now?"
+                    ),
+                    details=list_of_potential_updates,
+                )
+        else:
+            logger.debug(
+                "User preference is not configured to check Steam mods for updates. Skipping..."
+            )
         # Calculate and cache dependencies for ALL mods
         (
             self.all_mods_with_dependencies,
@@ -694,72 +755,6 @@ class MainContent:
             self.external_community_rules,
             self.external_user_rules,
         )
-
-        if (
-            self.game_configuration.steam_mods_update_check_toggle
-        ):  # Check SteamCMD/Steam mods for updates if configured
-            query_workshop_update_data(mods=self.internal_local_metadata)
-            logger.info(
-                "User preference is configured to check Steam mods for updates. Displaying potential updates..."
-            )
-            for v in self.all_mods_with_dependencies.values():
-                if (v.get("steamcmd") or v["data_source"] == "workshop") and v.get(
-                    "publishedfileid"
-                ):
-                    pfid = v["publishedfileid"]
-                    uuid = v["uuid"]
-                    try:
-                        name = (
-                            v.get("name")
-                            or self.external_steam_metadata[pfid].get("steamName")
-                            or "UNKNOWN"
-                        )
-                        name = f"############################\n{name}"
-
-                        etc = v["external_time_created"]
-                        etu = v["external_time_updated"]
-                        itt = v["internal_time_touched"]
-                        itu = v["internal_time_updated"]
-
-                        time_data_human_readable = (
-                            f"\n{name}"
-                            + f"\nInstalled mod last touched: {strftime('%Y-%m-%d %H:%M:%S', localtime(itt))}"
-                            + f"\nPublishing last updated: {strftime('%Y-%m-%d %H:%M:%S', localtime(etu))}\n"
-                        )
-
-                        if itt != 0 and etu > itt:
-                            logger.debug(
-                                f"Potential update found for Steam mod: {pfid}"
-                            )
-                            self.workshop_mods_potential_updates[pfid] = {
-                                "external_time_created": etc,
-                                "external_time_updated": etu,
-                                "internal_time_touched": itt,
-                                "internal_time_updated": itu,
-                                "ui_string": time_data_human_readable,
-                            }
-                    except KeyError as e:
-                        stacktrace = traceback.format_exc()
-                        logger.debug(f"Missing time data for Steam mod: {pfid}")
-                        logger.info(stacktrace)
-            # Generate our report
-            list_of_potential_updates = ""
-            for time_data in self.workshop_mods_potential_updates.values():
-                list_of_potential_updates += time_data["ui_string"]
-            show_information(
-                title="Mod update(s) available!",
-                text="The following list of Steam mods may have updates available!",
-                information=(
-                    "This metadata was parsed directly from your Steam client's workshop data, and compared with the "
-                    "'time updated' metadata returned from your most recent Dynamic Query."
-                    # "\nDo you want the Steam client to do a verification check of your mods now?"
-                ),
-                details=list_of_potential_updates,
-            )
-        else:
-            logger.debug(
-                "User preference is not configured to check Steam mods for updates. Skipping..."
-            )
         # Feed all_mods and Steam DB info to Active Mods list to surface
         # names instead of package_ids when able
         self.active_mods_panel.all_mods = self.all_mods_with_dependencies
@@ -875,8 +870,6 @@ class MainContent:
             self._do_setup_steamcmd()
         if action == "set_steamcmd_path":
             self._do_set_steamcmd_path()
-        if action == "show_steamcmd_status":
-            self._do_show_steamcmd_status()
         if action == "import_list_file_xml":
             self._do_import_list_file_xml()
         if action == "export_list_file_xml":

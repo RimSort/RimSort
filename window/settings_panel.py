@@ -122,7 +122,7 @@ class SettingsPanel(QDialog):
         )
         self.duplicate_mods_checkbox.setObjectName("summaryValue")
         self.steam_mods_update_checkbox = QCheckBox(
-            "Show available Workshop mods updates on refresh"
+            "Show list of available Workshop mod updates on refresh"
         )
         self.steam_mods_update_checkbox.setObjectName("summaryValue")
         self.steam_mods_update_checkbox.setToolTip(

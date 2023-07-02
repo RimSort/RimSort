@@ -167,15 +167,6 @@ class Actions(QWidget):
             self.setupSteamcmdContextMenuEvent
         )
 
-        # SHOW STEAMCMD WORKSHOP MODS STATUS
-        self.show_steamcmd_status_button = QPushButton("SteamCMD status")
-        self.show_steamcmd_status_button.setToolTip(
-            "Shows steamcmd workshop mod status for the detected prefix"
-        )
-        self.show_steamcmd_status_button.clicked.connect(
-            partial(self.actions_signal.emit, "show_steamcmd_status")
-        )
-
         # RIMWORLD LABEL
         self.rimworld_label = QLabel("RimWorld")
         self.rimworld_label.setObjectName("summaryValue")
@@ -223,7 +214,6 @@ class Actions(QWidget):
         self.middle_panel.addWidget(self.steam_label)
         self.middle_panel.addWidget(self.browse_workshop_button)
         self.middle_panel.addWidget(self.setup_steamcmd_button)
-        self.middle_panel.addWidget(self.show_steamcmd_status_button)
         self.bottom_panel.addWidget(self.rimworld_label)
         self.bottom_panel.addWidget(self.upload_rwlog_button)
         self.bottom_panel.addWidget(self.import_button)
