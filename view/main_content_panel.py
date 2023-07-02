@@ -143,8 +143,12 @@ class MainContent:
         # INSTANTIATE WIDGETS
         logger.info("Instantiating MainContent QWidget subclasses")
         self.mod_info_panel = ModInfo()
-        self.active_mods_panel = ActiveModList()
-        self.inactive_mods_panel = InactiveModList()
+        self.active_mods_panel = ActiveModList(
+            csharp_icon_enable=self.game_configuration.csharp_mods_toggle
+        )
+        self.inactive_mods_panel = InactiveModList(
+            csharp_icon_enable=self.game_configuration.csharp_mods_toggle
+        )
         self.actions_panel = Actions()
         logger.info("Finished instantiating MainContent QWidget subclasses")
 

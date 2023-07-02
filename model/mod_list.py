@@ -37,7 +37,7 @@ class ModListWidget(QListWidget):
     recalculate_warnings_signal = Signal()
     steamworks_subscription_signal = Signal(list)
 
-    def __init__(self) -> None:
+    def __init__(self, csharp_icon_enable: bool) -> None:
         """
         Initialize the ListWidget with a dict of mods.
         Keys are the package ids and values are a dict of
@@ -69,6 +69,7 @@ class ModListWidget(QListWidget):
         self.horizontalScrollBar().setVisible(False)
 
         # Store icon paths
+        self.csharp_icon_enable = csharp_icon_enable
         self.csharp_icon_path = str(
             Path(
                 os.path.join(os.path.dirname(__file__), "../data/csharp.png")
@@ -121,6 +122,11 @@ class ModListWidget(QListWidget):
         self.uuids = set()
         self.ignore_warning_list = []
         logger.info("Finished ModListWidget initialization")
+
+    def dropEvent(self, event: QDropEvent) -> None:
+        ret = super().dropEvent(event)
+        self.list_update_signal.emit("drop")
+        return ret
 
     def eventFilter(self, source_object: QObject, event: QEvent) -> None:
         """
@@ -309,18 +315,7 @@ class ModListWidget(QListWidget):
                         mod_path = widget_json_data["path"]
                         # Toggle warning action
                         if action == toggle_warning_action:
-                            if not (
-                                widget_json_data["packageId"]
-                                in self.ignore_warning_list
-                            ):
-                                self.ignore_warning_list.append(
-                                    widget_json_data["packageId"]
-                                )
-                            else:
-                                self.ignore_warning_list.remove(
-                                    widget_json_data["packageId"]
-                                )
-                            self.recalculate_warnings_signal.emit()
+                            self.toggle_warning(widget_json_data["packageId"])
                         # Open folder action
                         elif action == open_folder_action:  # ACTION: Open folder
                             if os.path.exists(mod_path):  # If the path actually exists
@@ -362,20 +357,32 @@ class ModListWidget(QListWidget):
             return True
         return super().eventFilter(source_object, event)
 
-    def recreate_mod_list(self, mods: dict[str, Any]) -> None:
+    def focusOutEvent(self, e: QFocusEvent) -> None:
         """
-        Clear all mod items and add new ones from a dict.
+        Slot to handle unhighlighting any items in the
+        previous list when clicking out of that list.
+        """
+        self.clearFocus()
+        return super().focusOutEvent(e)
 
-        :param mods: dict of mod data
+    def keyPressEvent(self, e):
         """
-        logger.info("Internally recreating mod list")
-        self.clear()
-        self.uuids = set()
-        if mods:
-            for mod_json_data in mods.values():
-                list_item = QListWidgetItem(self)
-                list_item.setData(Qt.UserRole, mod_json_data)
-                self.addItem(list_item)
+        This event occurs when the user presses a key while the mod
+        list is in focus.
+        """
+        key_pressed = QKeySequence(e.key()).toString()
+        if (
+            key_pressed == "Left"
+            or key_pressed == "Right"
+            or key_pressed == "Return"
+            or key_pressed == "Space"
+        ):
+            self.key_press_signal.emit(key_pressed)
+        else:
+            return super().keyPressEvent(e)
+
+    def handle_other_list_row_added(self, uuid: str) -> None:
+        self.uuids.discard(uuid)
 
     def handle_rows_inserted(self, parent: QModelIndex, first: int, last: int) -> None:
         """
@@ -419,6 +426,7 @@ class ModListWidget(QListWidget):
                 data = item.data(Qt.UserRole)
                 widget = ModListItemInner(
                     data,
+                    csharp_icon_enable=self.csharp_icon_enable,
                     csharp_icon_path=self.csharp_icon_path,
                     git_icon_path=self.git_icon_path,
                     local_icon_path=self.local_icon_path,
@@ -427,6 +435,7 @@ class ModListWidget(QListWidget):
                     steam_icon_path=self.steam_icon_path,
                     warning_icon_path=self.warning_icon_path,
                 )
+                widget.toggle_warning_signal.connect(self.toggle_warning)
                 if data.get("invalid"):
                     widget.main_label.setStyleSheet("QLabel { color : red; }")
                 item.setSizeHint(widget.sizeHint())
@@ -436,9 +445,6 @@ class ModListWidget(QListWidget):
 
         if len(self.uuids) == self.count():
             self.list_update_signal.emit(str(self.count()))
-
-    def handle_other_list_row_added(self, uuid: str) -> None:
-        self.uuids.discard(uuid)
 
     def handle_rows_removed(self, parent: QModelIndex, first: int, last: int) -> None:
         """
@@ -460,37 +466,11 @@ class ModListWidget(QListWidget):
         if len(self.uuids) == self.count():
             self.list_update_signal.emit(str(self.count()))
 
-    def dropEvent(self, event: QDropEvent) -> None:
-        ret = super().dropEvent(event)
-        self.list_update_signal.emit("drop")
-        return ret
-
     def get_item_widget_at_index(self, idx: int) -> Optional[ModListItemInner]:
         item = self.item(idx)
         if item:
             return self.itemWidget(item)
         return None
-
-    def keyPressEvent(self, e):
-        """
-        This event occurs when the user presses a key while the mod
-        list is in focus.
-        """
-        key_pressed = QKeySequence(e.key()).toString()
-        if (
-            key_pressed == "Left"
-            or key_pressed == "Right"
-            or key_pressed == "Return"
-            or key_pressed == "Space"
-        ):
-            self.key_press_signal.emit(key_pressed)
-        else:
-            return super().keyPressEvent(e)
-
-    def get_widgets_and_items(self) -> list[tuple[ModListItemInner, QListWidgetItem]]:
-        return [
-            (self.itemWidget(self.item(i)), self.item(i)) for i in range(self.count())
-        ]
 
     def get_list_items_by_dict(self) -> dict[str, Any]:
         """
@@ -508,26 +488,6 @@ class ModListWidget(QListWidget):
                 mod_dict[item.json_data["uuid"]] = item.json_data
         logger.info(f"Collected json data for {len(mod_dict)} mods")
         return mod_dict
-
-    def focusOutEvent(self, e: QFocusEvent) -> None:
-        """
-        Slot to handle unhighlighting any items in the
-        previous list when clicking out of that list.
-        """
-        self.clearFocus()
-        return super().focusOutEvent(e)
-
-    def mod_clicked(self, current: QListWidgetItem, previous: QListWidgetItem) -> None:
-        """
-        Method to handle clicking on a row or navigating between rows with
-        the keyboard. Look up the mod's data by uuid
-        """
-        if current is not None:
-            self.mod_info_signal.emit(current.data(Qt.UserRole)["uuid"])
-
-    def mod_double_clicked(self, item: QListWidgetItem):
-        widget = ModListItemInner = self.itemWidget(item)
-        self.key_press_signal.emit("DoubleClick")
 
     def get_mod_url(self, widget_json_data) -> str:
         url = ""
@@ -579,3 +539,42 @@ class ModListWidget(QListWidget):
                 f"Tried to parse URL for a mod that does not have a data_source? Erroneous json data: {widget_json_data}"
             )
         return url
+
+    def get_widgets_and_items(self) -> list[tuple[ModListItemInner, QListWidgetItem]]:
+        return [
+            (self.itemWidget(self.item(i)), self.item(i)) for i in range(self.count())
+        ]
+
+    def mod_clicked(self, current: QListWidgetItem, previous: QListWidgetItem) -> None:
+        """
+        Method to handle clicking on a row or navigating between rows with
+        the keyboard. Look up the mod's data by uuid
+        """
+        if current is not None:
+            self.mod_info_signal.emit(current.data(Qt.UserRole)["uuid"])
+
+    def mod_double_clicked(self, item: QListWidgetItem):
+        widget = ModListItemInner = self.itemWidget(item)
+        self.key_press_signal.emit("DoubleClick")
+
+    def recreate_mod_list(self, mods: dict[str, Any]) -> None:
+        """
+        Clear all mod items and add new ones from a dict.
+
+        :param mods: dict of mod data
+        """
+        logger.info("Internally recreating mod list")
+        self.clear()
+        self.uuids = set()
+        if mods:
+            for mod_json_data in mods.values():
+                list_item = QListWidgetItem(self)
+                list_item.setData(Qt.UserRole, mod_json_data)
+                self.addItem(list_item)
+
+    def toggle_warning(self, packageId: str) -> None:
+        if not (packageId in self.ignore_warning_list):
+            self.ignore_warning_list.append(packageId)
+        else:
+            self.ignore_warning_list.remove(packageId)
+        self.recalculate_warnings_signal.emit()

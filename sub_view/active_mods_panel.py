@@ -29,13 +29,14 @@ class ActiveModList(QWidget):
 
     list_updated_signal = Signal()
 
-    def __init__(self) -> None:
+    def __init__(self, csharp_icon_enable: bool) -> None:
         """
         Initialize the class.
         Create a ListWidget using the dict of mods. This will
         create a row for every key-value pair in the dict.
         """
         logger.info("Starting ActiveModList initialization")
+        self.csharp_icon_enable = csharp_icon_enable
         self.list_updated = False
 
         super(ActiveModList, self).__init__()
@@ -88,7 +89,9 @@ class ActiveModList(QWidget):
         self.active_mods_search_layout.addWidget(self.active_mods_search_filter, 70)
 
         # Active mod list
-        self.active_mods_list = ModListWidget()
+        self.active_mods_list = ModListWidget(
+            csharp_icon_enable=self.csharp_icon_enable
+        )
 
         # Errors/warnings
         self.errors_summary_frame = QFrame()

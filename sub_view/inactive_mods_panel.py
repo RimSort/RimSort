@@ -23,13 +23,15 @@ class InactiveModList:
     inactive mods list panel on the GUI.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, csharp_icon_enable: bool) -> None:
         """
         Initialize the class.
         Create a ListWidget using the dict of mods. This will
         create a row for every key-value pair in the dict.
         """
         logger.info("Starting InactiveModList initialization")
+
+        self.csharp_icon_enable = csharp_icon_enable
 
         # Base layout type
         self.panel = QVBoxLayout()
@@ -79,7 +81,9 @@ class InactiveModList:
         self.inactive_mods_search_layout.addWidget(self.inactive_mods_search_filter, 70)
 
         # Inactive mod list
-        self.inactive_mods_list = ModListWidget()
+        self.inactive_mods_list = ModListWidget(
+            csharp_icon_enable=self.csharp_icon_enable
+        )
 
         # Add widgets to base layout
         self.panel.addWidget(self.num_mods)

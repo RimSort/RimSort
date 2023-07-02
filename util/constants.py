@@ -23,6 +23,7 @@ DEFAULT_SETTINGS = {
     "build_steam_database_dlc_data": True,
     "build_steam_database_update_toggle": False,
     "watchdog_toggle": True,
+    "csharp_mods": True,
     "duplicate_mods_warning": False,
     "steam_mods_update_check": False,
     "try_download_missing_mods": False,

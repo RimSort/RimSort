@@ -1,9 +1,18 @@
+from functools import partial
 from logger_tt import logger
 from typing import Any, Dict
 
-from PySide6.QtCore import QRectF, QSize, Qt
+from PySide6.QtCore import QRectF, QSize, Qt, Signal
 from PySide6.QtGui import QFontMetrics, QIcon, QResizeEvent
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QStyle, QWidget
+
+
+class ClickableQLabel(QLabel):
+    clicked = Signal()
+
+    def mousePressEvent(self, event):
+        self.clicked.emit()
+        super().mousePressEvent(event)
 
 
 class ModListItemInner(QWidget):
@@ -12,9 +21,12 @@ class ModListItemInner(QWidget):
     mod and display relevant data on a mod list.
     """
 
+    toggle_warning_signal = Signal(str)
+
     def __init__(
         self,
         data: Dict[str, Any],
+        csharp_icon_enable: bool,
         csharp_icon_path: str,
         git_icon_path: str,
         local_icon_path: str,
@@ -46,6 +58,7 @@ class ModListItemInner(QWidget):
         self.main_label = QLabel()
 
         # Icon paths
+        self.csharp_icon_enable = csharp_icon_enable
         self.csharp_icon_path = csharp_icon_path
         self.git_icon_path = git_icon_path
         self.local_icon_path = local_icon_path
@@ -63,7 +76,7 @@ class ModListItemInner(QWidget):
 
         # Icons that are conditional
         self.csharp_icon = None
-        if self.json_data.get("csharp"):
+        if self.json_data.get("csharp") and self.csharp_icon_enable:
             self.csharp_icon = QLabel()
             self.csharp_icon.setPixmap(
                 QIcon(self.csharp_icon_path).pixmap(QSize(20, 20))
@@ -86,7 +99,10 @@ class ModListItemInner(QWidget):
             )
             self.steamcmd_icon.setToolTip("Downloaded with SteamCMD")
         # Warning icon hidden by default
-        self.warning_icon_label = QLabel()
+        self.warning_icon_label = ClickableQLabel()
+        self.warning_icon_label.clicked.connect(
+            partial(self.toggle_warning_signal.emit, self.json_data["packageId"])
+        )
         self.warning_icon_label.setPixmap(
             QIcon(self.warning_icon_path).pixmap(QSize(20, 20))
         )
