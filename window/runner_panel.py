@@ -80,7 +80,7 @@ class RunnerPanel(QWidget):
         # CREATE WIDGETS
         # Clear btn
         self.clear_runner_icon = QIcon(
-            os.path.join(os.path.dirname(__file__), "../data/clear_runner.png")
+            os.path.join(os.path.dirname(__file__), "../data/clear.png")
         )
         self.clear_runner_button = QToolButton()
         self.clear_runner_button.setIcon(self.clear_runner_icon)

@@ -264,7 +264,10 @@ def get_active_inactive_mods(
     duplicate_mods = {}
     packageId_to_uuids = {}
     for mod_uuid, mod_data in workshop_and_expansions.items():
-        data_source = mod_data["data_source"]  # Track data_source
+        try:
+            data_source = mod_data["data_source"]  # Track data_source
+        except:
+            print(mod_data)
         package_id = mod_data["packageId"]  # Track packageId to UUIDs
         mod_path = mod_data["path"]  # Track path
         if package_id not in packageId_to_uuids:
@@ -1220,8 +1223,6 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                     uuid = str(uuid4())
                     mods[uuid] = {
                         "invalid": True,
-                        "folder": file.name,
-                        "path": file.path,
                         "name": "UNKNOWN",
                         "packageId": "UNKNOWN",
                         "author": "UNKNOWN",
@@ -1230,6 +1231,9 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                             + "\n\nThis mod does NOT contain an ./About/About.xml and is likely leftover from previous usage."
                             + "\n\nThis can happen sometimes with Steam mods if there are leftover .dds textures or unexpected data."
                         ),
+                        "data_source": intent,
+                        "folder": file.name,
+                        "path": file.path,
                         "uuid": uuid,
                     }
                 else:

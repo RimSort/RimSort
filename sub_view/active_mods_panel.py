@@ -98,15 +98,13 @@ class ActiveModList(QWidget):
         self.errors_summary_layout.setSpacing(2)
         self.warnings_icon = QLabel()
         self.warnings_icon.setPixmap(
-            self.style().standardIcon(QStyle.SP_MessageBoxWarning).pixmap(QSize(20, 20))
+            QIcon(self.active_mods_list.warning_icon_path).pixmap(QSize(20, 20))
         )
         self.warnings_text = QLabel("0 warnings(s)")
         self.warnings_text.setObjectName("summaryValue")
         self.errors_icon = QLabel()
         self.errors_icon.setPixmap(
-            self.style()
-            .standardIcon(QStyle.SP_MessageBoxCritical)
-            .pixmap(QSize(20, 20))
+            QIcon(self.active_mods_list.error_icon_path).pixmap(QSize(20, 20))
         )
         self.errors_text = QLabel("0 error(s)")
         self.errors_text.setObjectName("summaryValue")

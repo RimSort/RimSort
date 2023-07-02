@@ -21,6 +21,7 @@ class ModListItemInner(QWidget):
         ludeon_icon_path: str,
         steamcmd_icon_path: str,
         steam_icon_path: str,
+        warning_icon_path: str,
     ) -> None:
         """
         Initialize the QWidget with mod data.
@@ -51,6 +52,7 @@ class ModListItemInner(QWidget):
         self.ludeon_icon_path = ludeon_icon_path
         self.steamcmd_icon_path = steamcmd_icon_path
         self.steam_icon_path = steam_icon_path
+        self.warning_icon_path = warning_icon_path
 
         # Visuals
         self.setToolTip(self.get_tool_tip_text())
@@ -83,6 +85,12 @@ class ModListItemInner(QWidget):
                 QIcon(self.steamcmd_icon_path).pixmap(QSize(20, 20))
             )
             self.steamcmd_icon.setToolTip("Downloaded with SteamCMD")
+        # Warning icon hidden by default
+        self.warning_icon_label = QLabel()
+        self.warning_icon_label.setPixmap(
+            QIcon(self.warning_icon_path).pixmap(QSize(20, 20))
+        )
+        self.warning_icon_label.setHidden(True)
 
         # Icons by mod source
         self.mod_source_icon = None
@@ -97,13 +105,6 @@ class ModListItemInner(QWidget):
                 self.mod_source_icon.setToolTip("Installed locally")
             elif data_source == "workshop":
                 self.mod_source_icon.setToolTip("Subscribed via Steam")
-
-        # Warning icon hidden by default
-        self.warning_icon_label = QLabel()
-        self.warning_icon_label.setPixmap(
-            self.style().standardIcon(QStyle.SP_MessageBoxWarning).pixmap(QSize(20, 20))
-        )
-        self.warning_icon_label.setHidden(True)
 
         self.main_label.setObjectName("ListItemLabel")
         if self.git_icon:

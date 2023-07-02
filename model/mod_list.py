@@ -97,6 +97,14 @@ class ModListWidget(QListWidget):
                 os.path.join(os.path.dirname(__file__), "../data/steam_icon.png")
             ).resolve()
         )
+        self.warning_icon_path = str(
+            Path(
+                os.path.join(os.path.dirname(__file__), "../data/warning.png")
+            ).resolve()
+        )
+        self.error_icon_path = str(
+            Path(os.path.join(os.path.dirname(__file__), "../data/error.png")).resolve()
+        )
 
         # Allow inserting custom list items
         self.model().rowsInserted.connect(
@@ -417,6 +425,7 @@ class ModListWidget(QListWidget):
                     ludeon_icon_path=self.ludeon_icon_path,
                     steamcmd_icon_path=self.steamcmd_icon_path,
                     steam_icon_path=self.steam_icon_path,
+                    warning_icon_path=self.warning_icon_path,
                 )
                 if data.get("invalid"):
                     widget.main_label.setStyleSheet("QLabel { color : red; }")
