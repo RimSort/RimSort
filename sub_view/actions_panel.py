@@ -264,9 +264,15 @@ class Actions(QWidget):
     def setupSteamcmdContextMenuEvent(self, point: QPoint) -> None:
         contextMenu = QMenu(self)  # Actions Panel context menu event
         set_steamcmd_path = contextMenu.addAction(
-            "Configure steamcmd prefix"
+            "Configure SteamCMD prefix"
         )  # steamcmd path
+        import_acf_data = contextMenu.addAction(
+            "Import ACF data from another SteamCMD prefix"
+        )
         set_steamcmd_path.triggered.connect(
             partial(self.actions_signal.emit, "set_steamcmd_path")
+        )
+        import_acf_data.triggered.connect(
+            partial(self.actions_signal.emit, "import_steamcmd_acf_data")
         )
         action = contextMenu.exec_(self.setup_steamcmd_button.mapToGlobal(point))

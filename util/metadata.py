@@ -8,6 +8,7 @@ import traceback
 from typing import Any, Dict, List, Optional, Tuple
 
 from PySide6.QtCore import Qt, QThread, Signal
+from PySide6.QtWidgets import QFileDialog
 
 from model.dialogue import show_information, show_warning
 from util.constants import (
@@ -16,7 +17,7 @@ from util.constants import (
     DB_BUILDER_RECURSE_EXCEPTIONS,
     RIMWORLD_DLC_METADATA,
 )
-from util.steam.steamfiles.wrapper import acf_to_dict
+from util.steam.steamfiles.wrapper import acf_to_dict, dict_to_acf
 from util.steam.webapi.wrapper import (
     DynamicQuery,
     ISteamRemoteStorage_GetPublishedFileDetails,
@@ -500,6 +501,61 @@ def get_workshop_acf_data(
             )
 
 
+def import_steamcmd_acf_data(
+    rimsort_storage_path: str, steamcmd_appworkshop_acf_path: str
+) -> None:
+    logger.info(f"SteamCMD acf data path to update: {steamcmd_appworkshop_acf_path}")
+    if os.path.exists(steamcmd_appworkshop_acf_path):
+        logger.debug(f"Reading info...")
+        steamcmd_appworkshop_acf = acf_to_dict(steamcmd_appworkshop_acf_path)
+        logger.debug("Retrieved SteamCMD data to update...")
+    else:
+        logger.warning("SteamCMD acf file not found! Nothing was done...")
+        return
+    logger.info("Opening file dialog to specify acf file to import")
+    acf_to_import_path = QFileDialog.getSaveFileName(
+        caption="Input appworkshop_294100.acf from another SteamCMD prefix",
+        dir=rimsort_storage_path,
+        filter="ACF (*.acf)",
+    )
+    logger.info(f"SteamCMD acf data path to import: {acf_to_import_path[0]}")
+    if acf_to_import_path[0] and os.path.exists(acf_to_import_path[0]):
+        logger.debug(f"Reading info...")
+        acf_to_import = acf_to_dict(acf_to_import_path[0])
+        logger.debug("Retrieved SteamCMD data to import...")
+    else:
+        logger.warning("Specified SteamCMD acf file not found! Nothing was done...")
+        return
+    # Output
+    items_installed_before = len(
+        steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemsInstalled"].keys()
+    )
+    logger.warning(f"WorkshopItemsInstalled beforehand: {items_installed_before}")
+    item_details_before = len(
+        steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemDetails"].keys()
+    )
+    logger.warning(f"WorkshopItemDetails beforehand: {item_details_before}")
+    recursively_update_dict(
+        steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemsInstalled"],
+        acf_to_import["AppWorkshop"]["WorkshopItemsInstalled"],
+    )
+    recursively_update_dict(
+        steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemDetails"],
+        acf_to_import["AppWorkshop"]["WorkshopItemDetails"],
+    )
+    items_installed_after = len(
+        steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemsInstalled"].keys()
+    )
+    logger.warning(f"WorkshopItemsInstalled beforehand: {items_installed_after}")
+    item_details_after = len(
+        steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemDetails"].keys()
+    )
+    logger.warning(f"WorkshopItemDetails beforehand: {item_details_after}")
+    logger.info("Successfully imported data!")
+    logger.info(f"Writing updated data back to path: {steamcmd_appworkshop_acf_path}")
+    dict_to_acf(data=steamcmd_appworkshop_acf, path=steamcmd_appworkshop_acf_path)
+
+
 def query_workshop_update_data(mods: Dict[str, Any]) -> None:
     """
     Query Steam WebAPI for update data, for any workshop mods that have a 'publishedfileid'
@@ -547,7 +603,7 @@ def recursively_update_dict(
 ):
     # Check for keys in recurse_exceptions in a_dict that are not in b_dict and remove them
     for key in set(a_dict.keys()) - set(b_dict.keys()):
-        if key in recurse_exceptions:
+        if recurse_exceptions and key in recurse_exceptions:
             del a_dict[key]
     # Recursively update A with B, excluding recurse exceptions (list of keys to just overwrite)
     for key, value in b_dict.items():

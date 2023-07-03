@@ -13,3 +13,11 @@ def acf_to_dict(path: str) -> Dict[str, Any]:
         "rb",
     ) as f:
         return acf.loads(str(f.read(), encoding="utf=8"))
+
+
+def dict_to_acf(data: Dict[str, Any], path: str) -> None:
+    """
+    Uses steamfiles module to dump a dict of data to a Steam client .acf file in a SteamCMD/Steam format
+    """
+    with open(path, "w") as f:
+        acf.dump(data, f)

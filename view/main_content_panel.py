@@ -536,7 +536,7 @@ class MainContent:
 
         # If we can find the appworkshop_294100.acf files from SteamCMD or Steam client
         # SteamCMD
-        steamcmd_appworkshop_acf_path = os.path.join(
+        self.steamcmd_appworkshop_acf_path = os.path.join(
             self.game_configuration.steamcmd_install_path,
             "steam",
             "steamapps",
@@ -544,15 +544,15 @@ class MainContent:
             "appworkshop_294100.acf",
         )
         if os.path.exists(
-            steamcmd_appworkshop_acf_path
+            self.steamcmd_appworkshop_acf_path
         ):  # If the file we want to parse exists
             get_workshop_acf_data(
-                appworkshop_acf_path=steamcmd_appworkshop_acf_path,
+                appworkshop_acf_path=self.steamcmd_appworkshop_acf_path,
                 workshop_mods=self.local_mods,
                 steamcmd_mode=True,
             )  # ... get data
             logger.info(
-                f"Successfully parsed SteamCMD appworkshop.acf metadata from: {steamcmd_appworkshop_acf_path}"
+                f"Successfully parsed SteamCMD appworkshop.acf metadata from: {self.steamcmd_appworkshop_acf_path}"
             )
         else:
             logger.info(f"Unable to parse SteamCMD appworkshop.acf metadata")
@@ -562,18 +562,18 @@ class MainContent:
             # so that we can find workshop/appworkshop_294100.acf
             os.path.split(self.game_configuration.get_workshop_folder_path())[0]
         )[0]
-        steam_appworkshop_acf_path = os.path.join(
+        self.steam_appworkshop_acf_path = os.path.join(
             steam_appworkshop_path, "appworkshop_294100.acf"
         )
         if os.path.exists(
-            steam_appworkshop_acf_path
+            self.steam_appworkshop_acf_path
         ):  # If the file we want to parse exists
             get_workshop_acf_data(
-                appworkshop_acf_path=steam_appworkshop_acf_path,
+                appworkshop_acf_path=self.steam_appworkshop_acf_path,
                 workshop_mods=self.workshop_mods,
             )  # ... get data
             logger.info(
-                f"Successfully parsed Steam client appworkshop.acf metadata from: {steam_appworkshop_acf_path}"
+                f"Successfully parsed Steam client appworkshop.acf metadata from: {self.steam_appworkshop_acf_path}"
             )
         else:
             logger.info(f"Unable to parse Steam client appworkshop.acf metadata")
@@ -872,6 +872,11 @@ class MainContent:
             self._do_browse_workshop()
         if action == "setup_steamcmd":
             self._do_setup_steamcmd()
+        if action == "import_steamcmd_acf_data":
+            import_steamcmd_acf_data(
+                rimsort_storage_path=self.game_configuration.storage_path,
+                steamcmd_appworkshop_acf_path=self.steamcmd_appworkshop_acf_path,
+            )
         if action == "set_steamcmd_path":
             self._do_set_steamcmd_path()
         if action == "import_list_file_xml":
