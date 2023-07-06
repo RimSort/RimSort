@@ -695,15 +695,6 @@ class MainContent:
                 "No LOCAL or WORKSHOP mods found at all. Are you playing Vanilla?"
             )
 
-        if (
-            self.game_configuration.steam_mods_update_check_toggle
-        ):  # Check SteamCMD/Steam mods for updates if configured
-            self._do_check_for_workshop_updates()
-            self._do_generate_mod_update_report()
-        else:
-            logger.debug(
-                "User preference is not configured to check Steam mods for updates. Skipping..."
-            )
         # Calculate and cache dependencies for ALL mods
         (
             self.all_mods_with_dependencies,
@@ -955,7 +946,7 @@ class MainContent:
                 for metadata in self.internal_local_metadata.values():
                     mod_pfid = metadata.get("publishedfileid")
                     if mod_pfid in self.db_builder.publishedfileids:
-                        logger.warning(f"Skipping download of exising mod: {mod_pfid}")
+                        logger.warning(f"Skipping download of existing mod: {mod_pfid}")
                         self.db_builder.publishedfileids.remove(mod_pfid)
                 if "steamcmd" in action:
                     self._do_download_mods_with_steamcmd(
@@ -1273,6 +1264,17 @@ class MainContent:
 
             # Insert mod data into list
             self.__repopulate_lists()
+
+            # Check Workshop mods for updates if configured
+            if (
+                self.game_configuration.steam_mods_update_check_toggle
+            ):  # Check SteamCMD/Steam mods for updates if configured
+                self._do_check_for_workshop_updates()
+                self._do_generate_mod_update_report()
+            else:
+                logger.debug(
+                    "User preference is not configured to check Steam mods for updates. Skipping..."
+                )
         else:
             self.__insert_data_into_lists({}, {})
             logger.warning(
