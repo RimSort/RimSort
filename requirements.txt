@@ -1,6 +1,8 @@
+bs4==0.0.1
 GitPython==3.1.31
 imageio==2.27.0
 logger-tt==1.7.3
+lxml==4.9.3
 mypy==1.2.0
 natsort==8.3.1
 nuitka==1.5.6

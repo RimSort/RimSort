@@ -14,7 +14,7 @@ from model.dialogue import show_fatal_error, show_information, show_warning
 from util.constants import RIMWORLD_DLC_METADATA
 from util.schema import validate_mods_config_format
 from util.steam.webapi.wrapper import DynamicQuery
-from util.xml import non_utf8_xml_path_to_json, xml_path_to_json
+from util.xml import xml_path_to_json
 
 
 def add_dependency_to_mod(
@@ -609,95 +609,131 @@ def get_dependencies_for_mods(
         # that they "depend" on them. But, if they exist in the same mod list, they
         # should be loaded before.
         if all_mods[uuid].get("loadAfter"):
-            load_these_before = all_mods[uuid]["loadAfter"].get("li")
-            if load_these_before:
-                logger.debug(
-                    f"Current mod should load after these mods: {load_these_before}"
-                )
-                add_load_rule_to_mod(
-                    all_mods[uuid],
-                    load_these_before,
-                    "loadTheseBefore",
-                    "loadTheseAfter",
-                    all_mods,
+            try:
+                load_these_before = all_mods[uuid]["loadAfter"].get("li")
+                if load_these_before:
+                    logger.debug(
+                        f"Current mod should load after these mods: {load_these_before}"
+                    )
+                    add_load_rule_to_mod(
+                        all_mods[uuid],
+                        load_these_before,
+                        "loadTheseBefore",
+                        "loadTheseAfter",
+                        all_mods,
+                    )
+            except:
+                mod_path = all_mods[uuid]["path"]
+                logger.warning(
+                    f"About.xml syntax error. Unable to read <loadAfter> tag from XML: {mod_path}"
                 )
 
         if all_mods[uuid].get("forceLoadAfter"):
-            force_load_these_before = all_mods[uuid]["forceLoadAfter"].get("li")
-            if force_load_these_before:
-                logger.debug(
-                    f"Current mod should force load after these mods: {force_load_these_before}"
-                )
-                add_load_rule_to_mod(
-                    all_mods[uuid],
-                    force_load_these_before,
-                    "loadTheseBefore",
-                    "loadTheseAfter",
-                    all_mods,
+            try:
+                force_load_these_before = all_mods[uuid]["forceLoadAfter"].get("li")
+                if force_load_these_before:
+                    logger.debug(
+                        f"Current mod should force load after these mods: {force_load_these_before}"
+                    )
+                    add_load_rule_to_mod(
+                        all_mods[uuid],
+                        force_load_these_before,
+                        "loadTheseBefore",
+                        "loadTheseAfter",
+                        all_mods,
+                    )
+            except:
+                mod_path = all_mods[uuid]["path"]
+                logger.warning(
+                    f"About.xml syntax error. Unable to read <forceLoadAFter> tag from XML: {mod_path}"
                 )
 
         if all_mods[uuid].get("loadAfterByVersion"):
             if all_mods[uuid]["loadAfterByVersion"].get("v1.4"):
-                load_these_before_by_ver = all_mods[uuid]["loadAfterByVersion"][
-                    "v1.4"
-                ].get("li")
-                if load_these_before_by_ver:
-                    logger.debug(
-                        f"Current mod should load after these mods for v1.4: {load_these_before_by_ver}"
-                    )
-                    add_load_rule_to_mod(
-                        all_mods[uuid],
-                        load_these_before_by_ver,
-                        "loadTheseBefore",
-                        "loadTheseAfter",
-                        all_mods,
+                try:
+                    load_these_before_by_ver = all_mods[uuid]["loadAfterByVersion"][
+                        "v1.4"
+                    ].get("li")
+                    if load_these_before_by_ver:
+                        logger.debug(
+                            f"Current mod should load after these mods for v1.4: {load_these_before_by_ver}"
+                        )
+                        add_load_rule_to_mod(
+                            all_mods[uuid],
+                            load_these_before_by_ver,
+                            "loadTheseBefore",
+                            "loadTheseAfter",
+                            all_mods,
+                        )
+                except:
+                    mod_path = all_mods[uuid]["path"]
+                    logger.warning(
+                        f"About.xml syntax error. Unable to read <loadAfterByVersion><v1.4> tag from XML: {mod_path}"
                     )
 
         # Current mod should be loaded BEFORE these mods
         # The current mod is a dependency for all these mods
         if all_mods[uuid].get("loadBefore"):
-            load_these_after = all_mods[uuid]["loadBefore"].get("li")
-            if load_these_after:
-                logger.debug(
-                    f"Current mod should load before these mods: {load_these_after}"
-                )
-                add_load_rule_to_mod(
-                    all_mods[uuid],
-                    load_these_after,
-                    "loadTheseAfter",
-                    "loadTheseBefore",
-                    all_mods,
+            try:
+                load_these_after = all_mods[uuid]["loadBefore"].get("li")
+                if load_these_after:
+                    logger.debug(
+                        f"Current mod should load before these mods: {load_these_after}"
+                    )
+                    add_load_rule_to_mod(
+                        all_mods[uuid],
+                        load_these_after,
+                        "loadTheseAfter",
+                        "loadTheseBefore",
+                        all_mods,
+                    )
+            except:
+                mod_path = all_mods[uuid]["path"]
+                logger.warning(
+                    f"About.xml syntax error. Unable to read <loadBefore> tag from XML: {mod_path}"
                 )
 
         if all_mods[uuid].get("forceLoadBefore"):
-            force_load_these_after = all_mods[uuid]["forceLoadBefore"].get("li")
-            if force_load_these_after:
-                logger.debug(
-                    f"Current mod should force load before these mods: {force_load_these_after}"
-                )
-                add_load_rule_to_mod(
-                    all_mods[uuid],
-                    force_load_these_after,
-                    "loadTheseAfter",
-                    "loadTheseBefore",
-                    all_mods,
+            try:
+                force_load_these_after = all_mods[uuid]["forceLoadBefore"].get("li")
+                if force_load_these_after:
+                    logger.debug(
+                        f"Current mod should force load before these mods: {force_load_these_after}"
+                    )
+                    add_load_rule_to_mod(
+                        all_mods[uuid],
+                        force_load_these_after,
+                        "loadTheseAfter",
+                        "loadTheseBefore",
+                        all_mods,
+                    )
+            except:
+                mod_path = all_mods[uuid]["path"]
+                logger.warning(
+                    f"About.xml syntax error. Unable to read <forceLoadBefore> tag from XML: {mod_path}"
                 )
 
         if all_mods[uuid].get("loadBeforeByVersion"):
             if all_mods[uuid]["loadBeforeByVersion"].get("v1.4"):
-                load_these_after_by_ver = all_mods[uuid]["loadBeforeByVersion"][
-                    "v1.4"
-                ].get("li")
-                if load_these_after_by_ver:
-                    logger.debug(
-                        f"Current mod should load before these mods for v1.4: {load_these_after_by_ver}"
-                    )
-                    add_load_rule_to_mod(
-                        all_mods[uuid],
-                        load_these_after_by_ver,
-                        "loadTheseAfter",
-                        "loadTheseBefore",
-                        all_mods,
+                try:
+                    load_these_after_by_ver = all_mods[uuid]["loadBeforeByVersion"][
+                        "v1.4"
+                    ].get("li")
+                    if load_these_after_by_ver:
+                        logger.debug(
+                            f"Current mod should load before these mods for v1.4: {load_these_after_by_ver}"
+                        )
+                        add_load_rule_to_mod(
+                            all_mods[uuid],
+                            load_these_after_by_ver,
+                            "loadTheseAfter",
+                            "loadTheseBefore",
+                            all_mods,
+                        )
+                except:
+                    mod_path = all_mods[uuid]["path"]
+                    logger.warning(
+                        f"About.xml syntax error. Unable to read <loadBeforeByVersion><v1.4> tag from XML: {mod_path}"
                     )
 
     logger.info("Finished adding dependencies through About.xml information")
@@ -1245,15 +1281,8 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                     )
                     mod_data = {}
                     try:
-                        try:
-                            # Default: try to parse About.xml with UTF-8 encoding
-                            mod_data = xml_path_to_json(mod_data_path)
-                        except UnicodeDecodeError:
-                            # It may be necessary to remove all non-UTF-8 characters and parse again
-                            logger.debug(
-                                f"Unable to parse About.xml with UTF-8, attempting to decode: {mod_data_path}"
-                            )
-                            mod_data = non_utf8_xml_path_to_json(mod_data_path)
+                        # Try to parse About.xml
+                        mod_data = xml_path_to_json(mod_data_path)
                     except:
                         # If there was an issue parsing the About.xml, track and exit
                         logger.error(
