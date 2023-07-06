@@ -33,7 +33,7 @@ class CenteredItemDelegate(QStyledItemDelegate):
 
 class SettingsPanel(QDialog):
     clear_paths_signal = Signal(str)
-    settings_panel_actions_signal = Signal(str)
+    actions_signal = Signal(str)
 
     def __init__(self, storage_path: str) -> None:
         logger.info("Starting SettingsPanel initialization")
@@ -80,7 +80,7 @@ class SettingsPanel(QDialog):
             + "the URL will be copied to your clipboard."
         )
         self.upload_log_button.clicked.connect(
-            partial(self.settings_panel_actions_signal.emit, "upload_rs_log")
+            partial(self.actions_signal.emit, "upload_rs_log")
         )
         self.open_storage_button = QPushButton("Open RimSort storage")
         self.open_storage_button.clicked.connect(
@@ -91,9 +91,7 @@ class SettingsPanel(QDialog):
         )
         self.set_github_identity_button = QPushButton("Configure Github identity")
         self.set_github_identity_button.clicked.connect(
-            partial(
-                self.settings_panel_actions_signal.emit, "configure_github_identity"
-            )
+            partial(self.actions_signal.emit, "configure_github_identity")
         )
         self.rimsort_options_label = QLabel("RimSort Options:")
         self.rimsort_options_label.setObjectName("summaryValue")
@@ -273,9 +271,7 @@ class SettingsPanel(QDialog):
         )
         # Set context menu policy and connect custom context menu event
         self.build_steam_database_button.clicked.connect(
-            partial(
-                self.settings_panel_actions_signal.emit, "build_steam_database_thread"
-            )
+            partial(self.actions_signal.emit, "build_steam_database_thread")
         )
         self.build_steam_database_button.setContextMenuPolicy(Qt.CustomContextMenu)
         self.build_steam_database_button.customContextMenuRequested.connect(
@@ -302,7 +298,7 @@ class SettingsPanel(QDialog):
             "Generate dependency comparison report between 2 Steam DBs"
         )
         self.comparison_report_button.clicked.connect(
-            partial(self.settings_panel_actions_signal.emit, "comparison_report")
+            partial(self.actions_signal.emit, "comparison_report")
         )
         self.download_all_mods_btn = QPushButton("Download all mods")
         self.download_all_mods_btn.setToolTip(
@@ -451,13 +447,13 @@ class SettingsPanel(QDialog):
             "Set Steam WebAPI key"
         )  # steam API-key
         merge_databases.triggered.connect(
-            partial(self.settings_panel_actions_signal.emit, "merge_databases")
+            partial(self.actions_signal.emit, "merge_databases")
         )
         set_database_expiry.triggered.connect(
-            partial(self.settings_panel_actions_signal.emit, "set_database_expiry")
+            partial(self.actions_signal.emit, "set_database_expiry")
         )
         set_steam_apikey.triggered.connect(
-            partial(self.settings_panel_actions_signal.emit, "edit_steam_webapi_key")
+            partial(self.actions_signal.emit, "edit_steam_webapi_key")
         )
         action = contextMenu.exec_(self.build_steam_database_button.mapToGlobal(point))
 
@@ -471,13 +467,13 @@ class SettingsPanel(QDialog):
         )  # steamworks
         download_with_steamcmd.triggered.connect(
             partial(
-                self.settings_panel_actions_signal.emit,
+                self.actions_signal.emit,
                 "download_entire_workshop_steamcmd",
             )
         )
         download_with_steamworks.triggered.connect(
             partial(
-                self.settings_panel_actions_signal.emit,
+                self.actions_signal.emit,
                 "download_entire_workshop_steamworks",
             )
         )
@@ -499,20 +495,16 @@ class SettingsPanel(QDialog):
         )  # make pull request with changes
         # ACTIONS
         config_steam_db_path.triggered.connect(
-            partial(
-                self.settings_panel_actions_signal.emit, "configure_steam_database_path"
-            )
+            partial(self.actions_signal.emit, "configure_steam_database_path")
         )
         config_steam_db_repo.triggered.connect(
-            partial(
-                self.settings_panel_actions_signal.emit, "configure_steam_database_repo"
-            )
+            partial(self.actions_signal.emit, "configure_steam_database_repo")
         )
         download_steam_db.triggered.connect(
-            partial(self.settings_panel_actions_signal.emit, "download_steam_database")
+            partial(self.actions_signal.emit, "download_steam_database")
         )
         upload_steam_db_changes.triggered.connect(
-            partial(self.settings_panel_actions_signal.emit, "upload_steam_database")
+            partial(self.actions_signal.emit, "upload_steam_database")
         )
         action = contextMenu.exec_(
             self.external_steam_metadata_button.mapToGlobal(point)
@@ -538,31 +530,31 @@ class SettingsPanel(QDialog):
         # ACTIONS
         config_community_rules_db_path.triggered.connect(
             partial(
-                self.settings_panel_actions_signal.emit,
+                self.actions_signal.emit,
                 "configure_community_rules_db_path",
             )
         )
         config_community_rules_db_repo.triggered.connect(
             partial(
-                self.settings_panel_actions_signal.emit,
+                self.actions_signal.emit,
                 "configure_community_rules_db_repo",
             )
         )
         download_community_rules_db.triggered.connect(
             partial(
-                self.settings_panel_actions_signal.emit,
+                self.actions_signal.emit,
                 "download_community_rules_database",
             )
         )
         open_rule_editor.triggered.connect(
             partial(
-                self.settings_panel_actions_signal.emit,
+                self.actions_signal.emit,
                 "open_community_rules_with_rule_editor",
             )
         )
         upload_community_rules_changes.triggered.connect(
             partial(
-                self.settings_panel_actions_signal.emit,
+                self.actions_signal.emit,
                 "upload_community_rules_database",
             )
         )

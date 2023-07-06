@@ -148,7 +148,7 @@ class SteamcmdInterface:
                 f"Existing install: {self.steamcmd_path}",
             )
             if answer == "&Yes":
-                runner.message(f"Reinstalling steamcmd: {self.steamcmd_path}")
+                runner.message(f"Reinstalling SteamCMD: {self.steamcmd_path}")
                 self.setup_steamcmd(symlink_source_path, True, runner)
         if installed:
             workshop_content_path = os.path.join(
@@ -186,35 +186,6 @@ class SteamcmdInterface:
                         from _winapi import CreateJunction
 
                         CreateJunction(symlink_source_path, symlink_destination_path)
-
-    def show_workshop_status(self, appid: str, runner: RunnerPanel):
-        """
-        This function shows steamcmd workshop mod status for the detected prefix
-
-        https://developer.valvesoftware.com/wiki/SteamCMD
-
-        :param appid: a Steam AppID to pass to steamcmd
-        :param runner: a RimSort RunnerPanel to interact with
-        """
-        runner.message("Checking for steamcmd...")
-        if self.steamcmd is not None and os.path.exists(self.steamcmd):
-            runner.message(
-                f"Got it: {self.steamcmd}\n"
-                + f"Showing steamcmd workshop mod status for prefix: {self.steamcmd_mods_path}"
-            )
-            script = [
-                f"force_install_dir {self.steamcmd_mods_path}",
-                "login anonymous",
-                f"workshop_status {appid}",
-                "quit\n",
-            ]
-            script_path = os.path.join(gettempdir(), "steamcmd_script.txt")
-            with open(script_path, "w") as script_output:
-                script_output.write("\n".join(script))
-            runner.message(f"Compiled & using script: {script_path}")
-            runner.execute(self.steamcmd, [f"+runscript {script_path}"])
-        else:
-            runner.message("SteamCMD was not found. Please setup SteamCMD first!")
 
 
 if __name__ == "__main__":

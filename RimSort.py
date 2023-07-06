@@ -129,6 +129,13 @@ class MainWindow(QMainWindow):
         logger.info("Finished creating main panels")
 
         logger.info("Connecting MainWindow signals and slots")
+        # Connect the game configuration actions signals to Status panel to display fading action text
+        self.game_configuration_panel.configuration_signal.connect(
+            self.bottom_panel.actions_slot
+        )
+        self.game_configuration_panel.settings_panel.actions_signal.connect(
+            self.bottom_panel.actions_slot
+        )
         # Connect the actions_signal to Status panel to display fading action text
         self.main_content_panel.actions_panel.actions_signal.connect(
             self.bottom_panel.actions_slot

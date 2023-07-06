@@ -1,3 +1,4 @@
+from functools import partial
 from gc import collect
 from pathlib import Path
 import platform
@@ -34,6 +35,7 @@ from pyperclip import copy as copy_to_clipboard
 from requests import get as requests_get
 
 from model.dialogue import show_dialogue_conditional
+from model.progress_thread import ProgressAnimation
 
 from util.generic import (
     chunks,
@@ -66,7 +68,14 @@ elif SYSTEM == "Windows":
     # getLogger("").setLevel(WARNING)
 
 from PySide6.QtCore import QEventLoop, QObject, QProcess, Qt, Signal
-from PySide6.QtWidgets import QFileDialog, QFrame, QHBoxLayout, QInputDialog, QLineEdit
+from PySide6.QtWidgets import (
+    QApplication,
+    QFileDialog,
+    QFrame,
+    QHBoxLayout,
+    QInputDialog,
+    QLineEdit,
+)
 
 from sort.dependencies import *
 from sort.rimpy_sort import *
@@ -161,7 +170,7 @@ class MainContent:
         # SIGNALS AND SLOTS
         self.actions_panel.actions_signal.connect(self.actions_slot)  # Actions
         self.game_configuration.configuration_signal.connect(self.actions_slot)
-        self.game_configuration.settings_panel.settings_panel_actions_signal.connect(
+        self.game_configuration.settings_panel.actions_signal.connect(
             self.actions_slot
         )  # Settings
         self.active_mods_panel.list_updated_signal.connect(
@@ -201,10 +210,10 @@ class MainContent:
             self._do_open_rule_editor
         )
         self.active_mods_panel.active_mods_list.steamworks_subscription_signal.connect(
-            self._do_steamworks_api_call
+            self._do_steamworks_api_call_animated
         )
         self.inactive_mods_panel.inactive_mods_list.steamworks_subscription_signal.connect(
-            self._do_steamworks_api_call
+            self._do_steamworks_api_call_animated
         )
 
         # Restore cache initially set to empty
@@ -689,62 +698,8 @@ class MainContent:
         if (
             self.game_configuration.steam_mods_update_check_toggle
         ):  # Check SteamCMD/Steam mods for updates if configured
-            self.workshop_mods_potential_updates = {}
-            logger.info(
-                "User preference is configured to check Steam mods for updates. Displaying potential updates..."
-            )
-            query_workshop_update_data(mods=self.internal_local_metadata)
-            for v in self.internal_local_metadata.values():
-                if v.get("publishedfileid") and (
-                    v.get("steamcmd") or v["data_source"] == "workshop"
-                ):
-                    try:
-                        pfid = v["publishedfileid"]
-                        uuid = v["uuid"]
-                        name = (
-                            v.get("name")
-                            or self.external_steam_metadata[pfid].get("steamName")
-                            or "UNKNOWN"
-                        )
-                        name = f"############################\n{name}"
-                        if (
-                            # If we have data for itt
-                            v["internal_time_touched"] != 0
-                            # ...and mod has been updated since this timestamp
-                            and v["external_time_updated"] > v["internal_time_touched"]
-                        ):
-                            logger.debug(
-                                f"Potential update found for Steam mod: {pfid}"
-                            )
-                            self.workshop_mods_potential_updates[pfid] = {
-                                "external_time_updated": v["external_time_updated"],
-                                "internal_time_touched": v["internal_time_touched"],
-                                "ui_string": (
-                                    f"\n{name}"
-                                    + f'\nInstalled mod last touched: {strftime("%Y-%m-%d %H:%M:%S", localtime(v["internal_time_touched"]))}'
-                                    + f'\nPublishing last updated: {strftime("%Y-%m-%d %H:%M:%S", localtime(v["external_time_updated"]))}\n'
-                                ),
-                            }
-                    except KeyError as e:
-                        stacktrace = traceback.format_exc()
-                        logger.debug(f"Missing time data for Steam mod: {pfid}")
-                        logger.debug(stacktrace)
-            # If we have updates available...
-            if len(self.workshop_mods_potential_updates) > 0:
-                # ...generate our report
-                list_of_potential_updates = ""
-                for time_data in self.workshop_mods_potential_updates.values():
-                    list_of_potential_updates += time_data["ui_string"]
-                show_information(
-                    title="Mod update(s) available!",
-                    text="The following list of Steam mods may have updates available!",
-                    information=(
-                        "This metadata was parsed directly from your Steam client's workshop data, and "
-                        "compared with the 'time updated' metadata returned from Steam Workshop."
-                        # "\nDo you want the Steam client to do a verification check of your mods now?"
-                    ),
-                    details=list_of_potential_updates,
-                )
+            self._do_check_for_workshop_updates()
+            self._do_generate_mod_update_report()
         else:
             logger.debug(
                 "User preference is not configured to check Steam mods for updates. Skipping..."
@@ -987,7 +942,7 @@ class MainContent:
             loop = QEventLoop()
             self.db_builder.finished.connect(loop.quit)
             loop.exec_()
-            if len(self.db_builder.publishedfileids) < 1:
+            if not len(self.db_builder.publishedfileids) > 0:
                 show_warning(
                     title="No PublishedFileIDs",
                     text="DB Builder query did not return any PublishedFileIDs!",
@@ -997,14 +952,29 @@ class MainContent:
             else:
                 self.query_runner.close()
                 self.query_runner = None
+                for metadata in self.internal_local_metadata.values():
+                    mod_pfid = metadata.get("publishedfileid")
+                    if mod_pfid in self.db_builder.publishedfileids:
+                        logger.warning(f"Skipping download of exising mod: {mod_pfid}")
+                        self.db_builder.publishedfileids.remove(mod_pfid)
                 if "steamcmd" in action:
                     self._do_download_mods_with_steamcmd(
                         self.db_builder.publishedfileids
                     )
                 elif "steamworks" in action:
-                    self._do_download_mods_with_steamworks(
-                        self.db_builder.publishedfileids
+                    answer = show_dialogue_conditional(
+                        title="Are you sure?",
+                        text="Here be dragons.",
+                        information="WARNING: It is NOT recommended to subscribe to this many mods at once via Steam. "
+                        + "Steam has limitations in place seemingly intentionally and unintentionally for API subscriptions. "
+                        + "It is highly recommended that you instead download these mods to a SteamCMD prefix by using SteamCMD. "
+                        + "This can take longer due to rate limits, but you can also re-use the script generated by RimSort with "
+                        + "a separate, authenticated instance of SteamCMD, if you do not want to anonymously download via RimSort.",
                     )
+                    if answer == "&Yes":
+                        self._do_download_mods_with_steamworks(
+                            self.db_builder.publishedfileids
+                        )
 
     def _do_notify_no_git(self) -> None:
         answer = show_dialogue_conditional(  # We import last so we can use gui + utils
@@ -1162,6 +1132,77 @@ class MainContent:
                     sys.exit()
         else:
             logger.warning("Up-to-date!")
+
+    def _do_check_for_workshop_updates(self) -> None:
+        logger.info(
+            "User preference is configured to check Steam mods for updates. Displaying potential updates..."
+        )
+        progress_animation = ProgressAnimation(
+            gif_path=str(
+                Path(
+                    os.path.join(os.path.dirname(__file__), "../data/query.gif")
+                ).resolve()
+            ),
+            target=partial(
+                query_workshop_update_data, mods=self.internal_local_metadata
+            ),
+        )
+        progress_animation.show()
+        while progress_animation.thread and progress_animation.thread.isRunning():
+            QApplication.instance().processEvents()
+            continue
+
+    def _do_generate_mod_update_report(self) -> None:
+        self.workshop_mods_potential_updates = {}
+        for v in self.internal_local_metadata.values():
+            if v.get("publishedfileid") and (
+                v.get("steamcmd") or v["data_source"] == "workshop"
+            ):
+                try:
+                    pfid = v["publishedfileid"]
+                    uuid = v["uuid"]
+                    name = (
+                        v.get("name")
+                        or self.external_steam_metadata[pfid].get("steamName")
+                        or "UNKNOWN"
+                    )
+                    name = f"############################\n{name}"
+                    if (
+                        # If we have data for itt
+                        v["internal_time_touched"] != 0
+                        # ...and mod has been updated since this timestamp
+                        and v["external_time_updated"] > v["internal_time_touched"]
+                    ):
+                        logger.debug(f"Potential update found for Steam mod: {pfid}")
+                        self.workshop_mods_potential_updates[pfid] = {
+                            "external_time_updated": v["external_time_updated"],
+                            "internal_time_touched": v["internal_time_touched"],
+                            "ui_string": (
+                                f"\n{name}"
+                                + f'\nInstalled mod last touched: {strftime("%Y-%m-%d %H:%M:%S", localtime(v["internal_time_touched"]))}'
+                                + f'\nPublishing last updated: {strftime("%Y-%m-%d %H:%M:%S", localtime(v["external_time_updated"]))}\n'
+                            ),
+                        }
+                except KeyError as e:
+                    stacktrace = traceback.format_exc()
+                    logger.debug(f"Missing time data for Steam mod: {pfid}")
+                    logger.debug(stacktrace)
+        # If we have updates available...
+        if len(self.workshop_mods_potential_updates) > 0:
+            # ...generate our report
+            list_of_potential_updates = ""
+            for time_data in self.workshop_mods_potential_updates.values():
+                list_of_potential_updates += time_data["ui_string"]
+            show_information(
+                title="Mod update(s) available!",
+                text="The following list of Steam mods may have updates available!",
+                information=(
+                    "This metadata was parsed directly from your Steam client's workshop data, and "
+                    "compared with the 'time updated' metadata returned from Steam Workshop."
+                    # "\nDo you want the Steam client to do a verification check of your mods now?"
+                ),
+                details=list_of_potential_updates,
+            )
 
     # ACTIONS PANEL
 
@@ -1653,14 +1694,16 @@ class MainContent:
             show_warning(text="Failed to upload exported active mod list to Rentry.co")
 
     def _do_upload_rw_log(self):
-        touplaod = self.game_configuration.get_config_folder_path() + "/../Player.log"
-        if os.path.exists(touplaod):
-            ret = upload_data_to_0x0_st(touplaod)
+        player_log_path = os.path.join(
+            self.game_configuration.get_config_folder_path() + "/../Player.log"
+        )
+        if os.path.exists(player_log_path):
+            ret = upload_data_to_0x0_st(player_log_path)
             if ret:
                 copy_to_clipboard(ret)
                 show_information(
-                    title="Uploaded file to http://0x0.st/",
-                    text=f"Uploaded RimWorld log to http://0x0.st!",
+                    title="Uploaded file",
+                    text=f"Uploaded RimWorld log to http://0x0.st/",
                     information=f"The URL has been copied to your clipboard:\n\n{ret}",
                 )
 
@@ -1669,8 +1712,8 @@ class MainContent:
         if ret:
             copy_to_clipboard(ret)
             show_information(
-                title="Uploaded file to http://0x0.st/",
-                text=f"Uploaded RimSort log to http://0x0.st!",
+                title="Uploaded file",
+                text=f"Uploaded RimSort log to http://0x0.st/",
                 information=f"The URL has been copied to your clipboard:\n\n{ret}",
             )
 
@@ -1943,7 +1986,7 @@ class MainContent:
     def _do_download_mods_with_steamworks(self, publishedfileids: list):
         if self.steam_browser:
             self.steam_browser.close()
-        self._do_steamworks_api_call(
+        self._do_steamworks_api_call_animated(
             ["subscribe", [eval(str_pfid) for str_pfid in publishedfileids]]
         )
 
@@ -2024,6 +2067,20 @@ class MainContent:
             logger.warning(
                 "Steamworks API is already initialized! We do NOT want multiple interactions. Skipping instruction..."
             )
+
+    def _do_steamworks_api_call_animated(self, instruction: list):
+        progress_animation = ProgressAnimation(
+            gif_path=str(
+                Path(
+                    os.path.join(os.path.dirname(__file__), "../data/steam.gif")
+                ).resolve()
+            ),
+            target=partial(self._do_steamworks_api_call, instruction=instruction),
+        )
+        progress_animation.show()
+        while progress_animation.thread and progress_animation.thread.isRunning():
+            QApplication.instance().processEvents()
+            continue
 
     # STEAM/COMMUNITY RULES DATABASE CONFIGURATION
 

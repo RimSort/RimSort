@@ -1,8 +1,11 @@
+from functools import partial
 import json
 from logging import getLogger, WARNING
 from logger_tt import logger
 from math import ceil
 from multiprocessing import cpu_count, Pool
+import os
+from pathlib import Path
 from requests import post as requests_post
 from requests.exceptions import HTTPError, JSONDecodeError, ConnectionError
 import sys
@@ -12,9 +15,10 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 
 from PySide6.QtCore import QObject, Signal
-
+from PySide6.QtWidgets import QApplication
 
 from model.dialogue import show_fatal_error
+from model.progress_thread import ProgressAnimation
 from steam.webapi import WebAPI
 from util.constants import RIMWORLD_DLC_METADATA
 from util.generic import chunks
@@ -155,9 +159,22 @@ class DynamicQuery(QObject):
                 "\nAppID dependency retrieval enabled. Starting Steamworks API call(s)..."
             )
             # ISteamUGC/GetAppDependencies
-            query = self.ISteamUGC_GetAppDependencies(
-                publishedfileids=publishedfileids, query=query
+            progress_animation = ProgressAnimation(
+                gif_path=str(
+                    Path(
+                        os.path.join(os.path.dirname(__file__), "../data/steam.gif")
+                    ).resolve()
+                ),
+                target=partial(
+                    self.ISteamUGC_GetAppDependencies,
+                    publishedfileids=publishedfileids,
+                    query=query,
+                ),
             )
+            progress_animation.show()
+            while progress_animation.thread and progress_animation.thread.isRunning():
+                QApplication.instance().processEvents()
+                continue
         else:
             self.dq_messaging_signal.emit(
                 "\nAppID dependency retrieval disabled. Starting Steamworks API call(s)!"
@@ -420,7 +437,7 @@ class DynamicQuery(QObject):
 
     def ISteamUGC_GetAppDependencies(
         self, publishedfileids: list, query: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    ) -> None:
         """
         Given a list of PublishedFileIds and a query, return the query after looking up
         and appending DLC dependency data from the Steamworks API.
@@ -481,7 +498,6 @@ class DynamicQuery(QObject):
                                 ]
                             }
                         )
-        return query
 
 
 def ISteamRemoteStorage_GetCollectionDetails(

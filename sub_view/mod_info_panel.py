@@ -42,12 +42,13 @@ class ModInfo:
         self.panel.addLayout(self.description_layout, 30)
 
         # Create widgets
+        self.missing_image_path = os.path.join(os.getcwd(), "data", "missing.png")
         self.preview_picture = ImageLabel()
         self.preview_picture.setAlignment(Qt.AlignCenter)
         self.preview_picture.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.preview_picture.setMinimumSize(1, 1)
         self.preview_picture.setPixmap(
-            QPixmap(os.path.join(os.getcwd(), "data", "missing.png")).scaled(
+            QPixmap(self.missing_image_path).scaled(
                 self.preview_picture.size(), Qt.KeepAspectRatio
             )
         )
@@ -187,8 +188,7 @@ class ModInfo:
                     # If there was an issue getting the expected path, track and exit
                     if invalid_folder_path_found or invalid_file_path_found:
                         logger.info("No preview image found for the mod")
-                        image_path = os.path.join(os.getcwd(), "data", "missing.png")
-                        pixmap = QPixmap(image_path)
+                        pixmap = QPixmap(self.missing_image_path)
                         self.preview_picture.setPixmap(
                             pixmap.scaled(
                                 self.preview_picture.size(), Qt.KeepAspectRatio
@@ -209,8 +209,7 @@ class ModInfo:
                     logger.error(
                         f"The local data for the mod {self.mod_info_package_id_value} was not found. Using cached metadata with missing Preview image."
                     )
-                    image_path = os.path.join(os.getcwd(), "data", "missing.png")
-                    pixmap = QPixmap(image_path)
+                    pixmap = QPixmap(self.missing_image_path)
                     self.preview_picture.setPixmap(
                         pixmap.scaled(self.preview_picture.size(), Qt.KeepAspectRatio)
                     )
@@ -219,8 +218,7 @@ class ModInfo:
             logger.error(
                 f"[path] tag does not exist in mod_info, is empty, or is not string: {mod_info.get('path')}"
             )
-            image_path = os.path.join(os.getcwd(), "data", "missing.png")
-            pixmap = QPixmap(image_path)
+            pixmap = QPixmap(self.missing_image_path)
             self.preview_picture.setPixmap(
                 pixmap.scaled(self.preview_picture.size(), Qt.KeepAspectRatio)
             )

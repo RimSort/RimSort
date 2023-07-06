@@ -35,7 +35,7 @@ class AnimationLabel(QLabel):
     def start_pause_fade(self, text: str) -> None:
         """
         Start the timer for calling the fade animation.
-        The text should be displayed normally for 2 seconds,
+        The text should be displayed normally for 5 seconds,
         after which the fade animation is called.
 
         :param text: the string to display and fade
@@ -46,4 +46,4 @@ class AnimationLabel(QLabel):
         self.setText(text)
         self.effect.setOpacity(1)
         self.setGraphicsEffect(self.effect)
-        self.timer.start(2000)
+        self.timer.start(5000)

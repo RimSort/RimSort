@@ -61,3 +61,11 @@ RIMWORLD_DLC_METADATA = {
         "description": "DLC #3",
     },
 }
+SEARCH_DATA_SOURCE_FILTER_INDEXES = [
+    "all",
+    "expansion",
+    "local",
+    "git_repo",
+    "steamcmd",
+    "workshop",
+]

@@ -116,10 +116,13 @@ class ModListItemInner(QWidget):
             # Set tooltip based on mod source
             data_source = self.json_data.get("data_source")
             if data_source == "expansion":
+                self.mod_source_icon.setObjectName("expansion")
                 self.mod_source_icon.setToolTip("Official RimWorld content")
             elif data_source == "local":
+                self.mod_source_icon.setObjectName("local")
                 self.mod_source_icon.setToolTip("Installed locally")
             elif data_source == "workshop":
+                self.mod_source_icon.setObjectName("workshop")
                 self.mod_source_icon.setToolTip("Subscribed via Steam")
 
         self.main_label.setObjectName("ListItemLabel")
