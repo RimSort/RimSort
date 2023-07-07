@@ -1906,6 +1906,15 @@ class MainContent:
         )
 
     def _do_download_mods_with_steamcmd(self, publishedfileids: list):
+        # No empty publishedfileids
+        if not len(publishedfileids) > 0:
+            show_warning(
+                title="RimSort",
+                text="No PublishedFileIds were supplied in operation.",
+                information="Please add mods to list before attempting to download.",
+            )
+            return
+        # Check for existing steamcmd_runner process
         if (
             self.steamcmd_runner
             and self.steamcmd_runner.process
@@ -1919,6 +1928,7 @@ class MainContent:
                 + self.steamcmd_runner.process.program(),
             )
             return
+        # Check for SteamCMD executable
         if self.steamcmd_wrapper.steamcmd and os.path.exists(
             self.steamcmd_wrapper.steamcmd
         ):
@@ -1995,6 +2005,14 @@ class MainContent:
         self.steamcmd_wrapper.show_workshop_status("294100", self.steamcmd_runner)
 
     def _do_download_mods_with_steamworks(self, publishedfileids: list):
+        # No empty publishedfileids
+        if not len(publishedfileids) > 0:
+            show_warning(
+                title="RimSort",
+                text="No PublishedFileIds were supplied in operation.",
+                information="Please add mods to list before attempting to download.",
+            )
+            return
         if self.steam_browser:
             self.steam_browser.close()
         self._do_steamworks_api_call_animated(
