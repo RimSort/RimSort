@@ -1919,27 +1919,36 @@ class MainContent:
                 + self.steamcmd_runner.process.program(),
             )
             return
-        if self.steam_browser:
-            self.steam_browser.close()
-        self.steamcmd_runner = RunnerPanel(
-            steamcmd_download_tracking=publishedfileids,
-            steam_db=self.external_steam_metadata,
-        )
-        self.steamcmd_runner.steamcmd_downloader_signal.connect(
-            self._do_download_mods_with_steamcmd
-        )
-        self.steamcmd_runner.setWindowTitle("RimSort - SteamCMD downloader")
-        self.steamcmd_runner.show()
-        self.steamcmd_runner.message(
-            f"Downloading {len(publishedfileids)} mods with SteamCMD..."
-        )
-        # Uncomment to print the pfids in the runner as well
-        # self.steamcmd_runner.message(
-        #     f"List of mods:\n{publishedfileids}"
-        # )
-        self.steamcmd_wrapper.download_mods(
-            "294100", publishedfileids, self.steamcmd_runner
-        )
+        if self.steamcmd_wrapper.steamcmd and os.path.exists(
+            self.steamcmd_wrapper.steamcmd
+        ):
+            if self.steam_browser:
+                self.steam_browser.close()
+            self.steamcmd_runner = RunnerPanel(
+                steamcmd_download_tracking=publishedfileids,
+                steam_db=self.external_steam_metadata,
+            )
+            self.steamcmd_runner.steamcmd_downloader_signal.connect(
+                self._do_download_mods_with_steamcmd
+            )
+            self.steamcmd_runner.setWindowTitle("RimSort - SteamCMD downloader")
+            self.steamcmd_runner.show()
+            self.steamcmd_runner.message(
+                f"Downloading {len(publishedfileids)} mods with SteamCMD..."
+            )
+            # Uncomment to print the pfids in the runner as well
+            # self.steamcmd_runner.message(
+            #     f"List of mods:\n{publishedfileids}"
+            # )
+            self.steamcmd_wrapper.download_mods(
+                "294100", publishedfileids, self.steamcmd_runner
+            )
+        else:
+            show_warning(
+                title="SteamCMD not found",
+                text="SteamCMD executable was not found.",
+                information='Please setup an existing SteamCMD prefix, or setup a new prefix with "Setup SteamCMD".',
+            )
 
     def _do_set_steamcmd_path(self):
         """
