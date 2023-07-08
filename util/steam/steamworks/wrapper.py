@@ -55,9 +55,7 @@ class SteamworksInterface:
         try:
             self.steamworks.initialize()  # Init the Steamworks API
         except SteamNotRunningException:
-            logger.warning(
-                "Unable to initiate Steamworks API call. Steam is not responding/running!"
-            )
+            logger.warning("Unable to initiate Steamworks API. Steam was not found!")
             self.steam_not_running = True
         if not self.steam_not_running:  # Skip if True
             if self.callbacks:
@@ -213,32 +211,29 @@ class SteamworksAppDependenciesQuery:
 
 
 class SteamworksGameLaunch(Process):
-    def __init__(self, game_executable: str, args: str) -> None:
+    def __init__(self, game_install_path: str, args: list) -> None:
         Process.__init__(self)
-        self.game_executable = game_executable
+        self.game_install_path = game_install_path
         self.args = args
 
     def run(self) -> None:
         """
         Handle SW game launch; instructions received from connected signals
 
-        :param game_executable: is a string path to the game folder
+        :param game_install_path: is a string path to the game folder
         :param args: is a string representing the args to pass to the generated executable path
         """
         logger.info(f"Creating SteamworksInterface and launching game executable")
+        # Try to initialize the SteamWorks API, but allow game to launch if Steam not found
         steamworks_interface = SteamworksInterface(callbacks=False)
-        if not steamworks_interface.steam_not_running:  # Skip if True
-            while (
-                not steamworks_interface.steamworks.loaded()
-            ):  # Ensure that Steamworks API is initialized before attempting any instruction
-                break
-            else:
-                # Launch the game
-                launch_game_process(
-                    game_executable=self.game_executable, args=self.args
-                )
-                # Unload Steamworks API
-                steamworks_interface.steamworks.unload()
+        if not steamworks_interface.steam_not_running:  # Delete if true
+            steamworks_interface = None
+        # Launch the game
+        launch_game_process(game_install_path=self.game_install_path, args=self.args)
+        # If we had an API initialization, try to unload it
+        if steamworks_interface and steamworks_interface.steamworks:
+            # Unload Steamworks API
+            steamworks_interface.steamworks.unload()
 
 
 class SteamworksSubscriptionHandler:

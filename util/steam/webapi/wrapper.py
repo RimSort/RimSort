@@ -18,7 +18,7 @@ from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QApplication
 
 from model.dialogue import show_fatal_error
-from model.progress_thread import ProgressAnimation
+from model.animations import LoadingAnimation
 from steam.webapi import WebAPI
 from util.constants import RIMWORLD_DLC_METADATA
 from util.generic import chunks
@@ -159,7 +159,7 @@ class DynamicQuery(QObject):
                 "\nAppID dependency retrieval enabled. Starting Steamworks API call(s)..."
             )
             # ISteamUGC/GetAppDependencies
-            progress_animation = ProgressAnimation(
+            progress_animation = LoadingAnimation(
                 gif_path=str(
                     Path(
                         os.path.join(os.path.dirname(__file__), "../data/steam.gif")

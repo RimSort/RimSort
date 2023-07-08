@@ -1261,6 +1261,7 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                         "invalid": True,
                         "name": "UNKNOWN",
                         "packageId": "UNKNOWN",
+                        "publishedfileid": pfid if pfid else None,
                         "author": "UNKNOWN",
                         "description": (
                             "This mod is considered invalid by RimSort (and the RimWorld game)."

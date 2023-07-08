@@ -253,7 +253,7 @@ class GameConfiguration(QObject):
         self.local_folder_row.addWidget(self.local_folder_select_button)
 
         # RUN ARGUMENTS
-        self.run_arguments = ""
+        self.run_arguments = []
 
         # GITHUB IDENTITY
         self.github_username = ""
@@ -823,7 +823,7 @@ class GameConfiguration(QObject):
             self.game_folder_line.setText(game_exe_folder_path)
             self.update_persistent_storage({"game_folder": game_exe_folder_path})
         else:
-            logger.info("User pressed cancel, passing")
+            logger.info("USER ACTION: pressed cancel, passing")
 
     def set_config_folder(self) -> None:
         """
@@ -850,7 +850,7 @@ class GameConfiguration(QObject):
             self.config_folder_line.setText(config_folder_path)
             self.update_persistent_storage({"config_folder": config_folder_path})
         else:
-            logger.info("User pressed cancel, passing")
+            logger.debug("USER ACTION: pressed cancel, passing")
 
     def set_workshop_folder(self) -> None:
         """
@@ -878,7 +878,7 @@ class GameConfiguration(QObject):
             self.workshop_folder_line.setText(workshop_path)
             self.update_persistent_storage({"workshop_folder": workshop_path})
         else:
-            logger.info("User pressed cancel, passing")
+            logger.debug("USER ACTION: pressed cancel, passing")
 
     def set_local_folder(self) -> None:
         """
@@ -906,7 +906,7 @@ class GameConfiguration(QObject):
             self.local_folder_line.setText(local_path)
             self.update_persistent_storage({"local_folder": local_path})
         else:
-            logger.info("User pressed cancel, passing")
+            logger.debug("USER ACTION: pressed cancel, passing")
 
     def update_persistent_storage(self, settings: Dict[str, Any]) -> None:
         """

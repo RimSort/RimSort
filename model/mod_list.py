@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
 from model.mod_list_item import ModListItemInner
 from model.dialogue import show_warning
 from util.generic import open_url_browser, platform_specific_open
+from util.metadata import edit_workshop_acf_data
 
 
 class ModListWidget(QListWidget):
@@ -33,7 +34,6 @@ class ModListWidget(QListWidget):
     key_press_signal = Signal(str)
     list_update_signal = Signal(str)
     mod_info_signal = Signal(str)
-    refresh_signal = Signal(str)
     recalculate_warnings_signal = Signal()
     steamworks_subscription_signal = Signal(list)
 
@@ -47,6 +47,9 @@ class ModListWidget(QListWidget):
         logger.info("Starting ModListWidget initialization")
 
         super(ModListWidget, self).__init__()
+
+        self.steam_db = None
+        self.steamcmd_appworkshop_acf_path = None
 
         # Allow for dragging and dropping between lists
         self.setDefaultDropAction(Qt.MoveAction)
@@ -152,8 +155,14 @@ class ModListWidget(QListWidget):
             # Otherwise, begin calculation
             logger.info("USER ACTION: Open right-click mod_list_item contextMenu")
 
-            # A list to track any PublishedFileIds that may be passed to Steamworks
-            publishedfileids = []
+            # A list to track any publishedfileids for conversion to local from SteamCMD
+            tolocal_publishedfileids = []
+
+            # A list to track any publishedfileids for conversion to SteamCMD from local
+            tosteamcmd_publishedfileids = []
+
+            # A list to track any subscription_publishedfileids that may be passed to Steamworks
+            subscription_publishedfileids = []
 
             # Define our QMenu & QActions/bools
             contextMenu = QMenu()
@@ -169,6 +178,9 @@ class ModListWidget(QListWidget):
             # Open URL in Steam
             open_mod_steam_action = QAction()
             open_mod_steam_bool = None
+            # Local <-> SteamCMD conversion option
+            convert_local_steamcmd_action = QAction()
+            convert_local_steamcmd_bool = None
             # Edit mod rules
             edit_mod_rules_action = QAction()
             edit_mod_rules_bool = None
@@ -201,6 +213,47 @@ class ModListWidget(QListWidget):
                     if widget_json_data.get("steam_uri"):
                         open_mod_steam_bool = True
                         open_mod_steam_action.setText("Open mod in Steam")
+                    # Conversion options (local <-> SteamCMD)
+                    if mod_data_source == "local":
+                        mod_folder_name = widget_json_data["folder"]
+                        mod_folder_path = widget_json_data["path"]
+                        if widget_json_data.get("steamcmd"):
+                            convert_local_steamcmd_bool = True
+                            convert_local_steamcmd_action.setText(
+                                "Convert to local mod"
+                            )
+                            tolocal_publishedfileids.append(
+                                widget_json_data["publishedfileid"]
+                            )
+                        elif (
+                            self.steam_db
+                            and len(self.steam_db) > 0
+                            and mod_folder_name in self.steam_db.keys()
+                        ):
+                            convert_local_steamcmd_bool = True
+                            convert_local_steamcmd_action.setText(
+                                "Try to convert to SteamCMD mod"
+                            )
+                            mod_about_folder_path = os.path.join(
+                                mod_folder_path, "About"
+                            )
+                            if not os.path.exists(mod_about_folder_path):
+                                logger.warning(
+                                    f"Mod About folder missing. Writing {mod_folder_name} to {mod_about_folder_path}"
+                                )
+                                os.makedirs(mod_about_folder_path)
+                            mod_publishedfileid_txt_path = os.path.join(
+                                mod_about_folder_path, "PublishedFileId.txt"
+                            )
+                            if not os.path.exists(mod_publishedfileid_txt_path):
+                                logger.warning(
+                                    f"PublishedFileId.txt missing. Writing {mod_folder_name} to {mod_publishedfileid_txt_path}"
+                                )
+                                with open(
+                                    mod_publishedfileid_txt_path, "w"
+                                ) as mod_publishedfileid_txt:
+                                    mod_publishedfileid_txt.write(mod_folder_name)
+                            tosteamcmd_publishedfileids.append(mod_folder_name)
                     # Edit mod rules with Rule Editor (only for individual mods)
                     edit_mod_rules_bool = True
                     edit_mod_rules_action.setText("Edit mod rules")
@@ -209,10 +262,7 @@ class ModListWidget(QListWidget):
                         "publishedfileid"
                     ):
                         publishedfileid = widget_json_data["publishedfileid"]
-                        logger.debug(
-                            f"Tracking PublishedFileID for ISteamUGC/UnsubscribeItem: {publishedfileid}"
-                        )
-                        publishedfileids.append(int(publishedfileid))
+                        subscription_publishedfileids.append(int(publishedfileid))
                         unsubscribe_mod_steam_bool = True
                         unsubscribe_mod_steam_action.setText(
                             "Unsubscribe mod with Steam"
@@ -246,6 +296,47 @@ class ModListWidget(QListWidget):
                         if widget_json_data.get("steam_uri"):
                             open_mod_steam_bool = True
                             open_mod_steam_action.setText("Open mod(s) in Steam")
+                        # Conversion options (local <-> SteamCMD)
+                        if mod_data_source == "local":
+                            mod_folder_name = widget_json_data["folder"]
+                            mod_folder_path = widget_json_data["path"]
+                            if widget_json_data.get("steamcmd"):
+                                convert_local_steamcmd_bool = True
+                                convert_local_steamcmd_action.setText(
+                                    "Convert mod(s) to local"
+                                )
+                                tolocal_publishedfileids.append(
+                                    widget_json_data["publishedfileid"]
+                                )
+                            elif (
+                                self.steam_db
+                                and len(self.steam_db) > 0
+                                and mod_folder_name in self.steam_db.keys()
+                            ):
+                                convert_local_steamcmd_bool = True
+                                convert_local_steamcmd_action.setText(
+                                    "Try to convert mod(s) to SteamCMD"
+                                )
+                                mod_about_folder_path = os.path.join(
+                                    mod_folder_path, "About"
+                                )
+                                if not os.path.exists(mod_about_folder_path):
+                                    logger.warning(
+                                        f"Mod About folder missing. Writing {mod_folder_name} to {mod_about_folder_path}"
+                                    )
+                                    os.makedirs(mod_about_folder_path)
+                                mod_publishedfileid_txt_path = os.path.join(
+                                    mod_about_folder_path, "PublishedFileId.txt"
+                                )
+                                if not os.path.exists(mod_publishedfileid_txt_path):
+                                    logger.warning(
+                                        f"PublishedFileId.txt missing. Writing {mod_folder_name} to {mod_publishedfileid_txt_path}"
+                                    )
+                                    with open(
+                                        mod_publishedfileid_txt_path, "w"
+                                    ) as mod_publishedfileid_txt:
+                                        mod_publishedfileid_txt.write(mod_folder_name)
+                                tosteamcmd_publishedfileids.append(mod_folder_name)
                         # No "Edit mod rules" when multiple selected
                         edit_mod_rules_bool = False
                         # If Workshop, try Unsubscribe + delete
@@ -253,7 +344,7 @@ class ModListWidget(QListWidget):
                             "publishedfileid"
                         ):
                             publishedfileid = widget_json_data["publishedfileid"]
-                            publishedfileids.append(int(publishedfileid))
+                            subscription_publishedfileids.append(int(publishedfileid))
                             unsubscribe_mod_steam_bool = True
                             unsubscribe_mod_steam_action.setText(
                                 "Unsubscribe mod(s) with Steam"
@@ -277,6 +368,8 @@ class ModListWidget(QListWidget):
                 contextMenu.addAction(open_url_browser_action)
             if open_mod_steam_bool:
                 contextMenu.addAction(open_mod_steam_action)
+            if convert_local_steamcmd_bool:
+                contextMenu.addAction(convert_local_steamcmd_action)
             if edit_mod_rules_bool:
                 contextMenu.addAction(edit_mod_rules_action)
             if unsubscribe_mod_steam_bool:
@@ -287,24 +380,45 @@ class ModListWidget(QListWidget):
             # Execute QMenu and return it's ACTION
             action = contextMenu.exec_(self.mapToGlobal(event.pos()))
             if action:  # Handle the action for all selected items
-                # Unsubscribe/delete mods with Steam action
-                if (
+                if (  # Convert local <-> SteamCMD mods
+                    action == convert_local_steamcmd_action
+                ):  # ACTION: Convert mods
+                    if (
+                        "local" in convert_local_steamcmd_action.text()
+                        and len(tolocal_publishedfileids) > 0
+                    ):
+                        logger.info(
+                            f"Converting {len(tolocal_publishedfileids)} SteamCMD mod(s) to local: {tolocal_publishedfileids}"
+                        )
+                        edit_workshop_acf_data(
+                            appworkshop_acf_path=self.steamcmd_appworkshop_acf_path,
+                            operation="delete",
+                            publishedfileids=tolocal_publishedfileids,
+                        )
+                    elif (
+                        "SteamCMD" in convert_local_steamcmd_action.text()
+                        and len(tosteamcmd_publishedfileids) > 0
+                    ):
+                        logger.info(
+                            f"Converting {len(tosteamcmd_publishedfileids)} local mod(s) to SteamCMD: {tosteamcmd_publishedfileids}"
+                        )
+                        edit_workshop_acf_data(
+                            appworkshop_acf_path=self.steamcmd_appworkshop_acf_path,
+                            operation="add",
+                            publishedfileids=tosteamcmd_publishedfileids,
+                        )
+                    return True
+                elif (  # Unsubscribe/delete mods with Steam action
                     action == unsubscribe_mod_steam_action
                 ):  # ACTION: Unsubscribe & delete mod
-                    if type(source_item) is QListWidgetItem:
-                        source_widget = self.itemWidget(source_item)
-                        # Retrieve metadata
-                        widget_json_data = source_widget.json_data
-                        if mod_data_source == "workshop" and widget_json_data.get(
-                            "publishedfileid"
-                        ):
-                            logger.info(
-                                f"Unsubscribing from mod(s): {publishedfileids}"
-                            )
-                            self.steamworks_subscription_signal.emit(
-                                ["unsubscribe", publishedfileids]
-                            )
-                    return True
+                    if len(subscription_publishedfileids) > 0:
+                        logger.info(
+                            f"Unsubscribing from mod(s): {subscription_publishedfileids}"
+                        )
+                        self.steamworks_subscription_signal.emit(
+                            ["unsubscribe", subscription_publishedfileids]
+                        )
+                        return True
                 # Execute action for each selected mod
                 for source_item in selected_items:
                     if type(source_item) is QListWidgetItem:

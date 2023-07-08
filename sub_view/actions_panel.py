@@ -267,12 +267,16 @@ class Actions(QWidget):
             "Configure SteamCMD prefix"
         )  # steamcmd path
         import_acf_data = contextMenu.addAction(
-            "Import ACF data from another SteamCMD prefix"
-        )
+            "Import SteamCMD ACF data"
+        )  # import acf
+        reset_steamcmd_acf_data = contextMenu.addAction("Reset SteamCMD ACF data")
         set_steamcmd_path.triggered.connect(
             partial(self.actions_signal.emit, "set_steamcmd_path")
         )
         import_acf_data.triggered.connect(
             partial(self.actions_signal.emit, "import_steamcmd_acf_data")
+        )
+        reset_steamcmd_acf_data.triggered.connect(
+            partial(self.actions_signal.emit, "reset_steamcmd_acf_data")
         )
         action = contextMenu.exec_(self.setup_steamcmd_button.mapToGlobal(point))

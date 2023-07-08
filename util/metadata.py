@@ -459,6 +459,59 @@ def get_rpmmdb_community_rules_db(mods: Dict[str, Any]) -> Tuple[Dict[str, Any],
 # Steam client / SteamCMD metadata
 
 
+def edit_workshop_acf_data(
+    appworkshop_acf_path: str, operation: str, publishedfileids: list
+) -> None:
+    logger.info(f"SteamCMD acf data path to update: {appworkshop_acf_path}")
+    if os.path.exists(appworkshop_acf_path):
+        logger.debug(f"Reading info...")
+        steamcmd_appworkshop_acf = acf_to_dict(appworkshop_acf_path)
+        logger.debug("Retrieved SteamCMD data to update...")
+    else:
+        logger.warning("SteamCMD acf file not found! Nothing was done...")
+        return
+    # Output
+    items_installed_before = len(
+        steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemsInstalled"].keys()
+    )
+    logger.warning(f"WorkshopItemsInstalled beforehand: {items_installed_before}")
+    item_details_before = len(
+        steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemDetails"].keys()
+    )
+    logger.warning(f"WorkshopItemDetails beforehand: {item_details_before}")
+    for publishedfileid in publishedfileids:
+        if operation == "add":
+            steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemDetails"][
+                publishedfileid
+            ] = {
+                "timeupdated": "0",
+                "timetouched": "0",
+            }
+            steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemsInstalled"][
+                publishedfileid
+            ] = {
+                "timeupdated": "0",
+            }
+        elif operation == "delete":
+            steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemDetails"].pop(
+                publishedfileid
+            )
+            steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemsInstalled"].pop(
+                publishedfileid
+            )
+        items_installed_after = len(
+            steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemsInstalled"].keys()
+        )
+    logger.warning(f"WorkshopItemsInstalled beforehand: {items_installed_after}")
+    item_details_after = len(
+        steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemDetails"].keys()
+    )
+    logger.warning(f"WorkshopItemDetails beforehand: {item_details_after}")
+    logger.info("Successfully edited data!")
+    logger.info(f"Writing updated data back to path: {appworkshop_acf_path}")
+    dict_to_acf(data=steamcmd_appworkshop_acf, path=appworkshop_acf_path)
+
+
 def get_workshop_acf_data(
     appworkshop_acf_path: str, workshop_mods: Dict[str, Any], steamcmd_mode=None
 ) -> None:
@@ -477,13 +530,13 @@ def get_workshop_acf_data(
         workshop_mods_pfid_to_uuid = {
             v["publishedfileid"]: v["uuid"]
             for v in workshop_mods.values()
-            if not v.get("invalid") and v.get("folder") == v.get("publishedfileid")
+            if v.get("folder") == v.get("publishedfileid")
         }
     else:
         workshop_mods_pfid_to_uuid = {
             v["publishedfileid"]: v["uuid"]
             for v in workshop_mods.values()
-            if not v.get("invalid") and v.get("publishedfileid")
+            if v.get("publishedfileid")
         }
     # Reference needed information from appworkshop_294100.acf
     workshop_item_details = workshop_acf_data["AppWorkshop"]["WorkshopItemDetails"]

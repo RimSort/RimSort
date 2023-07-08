@@ -2,7 +2,7 @@ from logger_tt import logger
 
 from PySide6.QtWidgets import QFrame, QHBoxLayout
 
-from model.animation_label import AnimationLabel
+from model.animations import AnimationLabel
 
 
 class Status:
@@ -75,6 +75,8 @@ class Status:
             self.status_text.start_pause_fade(
                 "Imported data from another SteamCMD instance"
             )
+        if action == "reset_steamcmd_acf_data":
+            self.status_text.start_pause_fade("Deleted SteamCMD ACF data")
         if action == "set_steamcmd_path":
             self.status_text.start_pause_fade("Configured SteamCMD prefix path")
         if "import_list" in action:

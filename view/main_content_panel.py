@@ -35,7 +35,7 @@ from pyperclip import copy as copy_to_clipboard
 from requests import get as requests_get
 
 from model.dialogue import show_dialogue_conditional
-from model.progress_thread import ProgressAnimation
+from model.animations import LoadingAnimation
 
 from util.generic import (
     chunks,
@@ -194,14 +194,8 @@ class MainContent:
         self.inactive_mods_panel.inactive_mods_list.item_added_signal.connect(
             self.active_mods_panel.active_mods_list.handle_other_list_row_added
         )
-        self.active_mods_panel.active_mods_list.refresh_signal.connect(
-            self.actions_slot
-        )
         self.active_mods_panel.active_mods_list.recalculate_warnings_signal.connect(
             self.active_mods_panel.recalculate_internal_list_errors
-        )
-        self.inactive_mods_panel.inactive_mods_list.refresh_signal.connect(
-            self.actions_slot
         )
         self.active_mods_panel.active_mods_list.edit_rules_signal.connect(
             self._do_open_rule_editor
@@ -220,11 +214,6 @@ class MainContent:
         self.active_mods_data_restore_state: Dict[str, Any] = {}
         self.inactive_mods_data_restore_state: Dict[str, Any] = {}
 
-        # Set cached Dynamic Query target path
-        self.cached_dynamic_query_target_path = os.path.join(
-            self.game_configuration.storage_path, "steam_metadata.json"
-        )
-
         # Store duplicate_mods for global access
         self.duplicate_mods = {}
 
@@ -241,6 +230,12 @@ class MainContent:
             self.game_configuration.steamcmd_install_path,
             self.game_configuration.steamcmd_validate_downloads_toggle,
         )
+        self.active_mods_panel.active_mods_list.steamcmd_appworkshop_acf_path = (
+            self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
+        )
+        self.inactive_mods_panel.inactive_mods_list.steamcmd_appworkshop_acf_path = (
+            self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
+        )
 
         # Steamworks bool - use this to check any Steamworks processes you try to initialize
         self.steamworks_in_use = False
@@ -251,10 +246,32 @@ class MainContent:
         # Check if paths have been set
         if self.game_configuration.check_if_essential_paths_are_set():
             # Run expensive calculations to set cache data
-            self.__refresh_cache_calculations()
+            progress_animation = LoadingAnimation(
+                gif_path=str(
+                    Path(
+                        os.path.join(os.path.dirname(__file__), "../data/rimworld.gif")
+                    ).resolve()
+                ),
+                target=self.__refresh_cache_calculations,
+            )
+            progress_animation.show()
+            while progress_animation.thread and progress_animation.thread.isRunning():
+                QApplication.instance().processEvents()
+                continue
 
             # Insert mod data into list (is_initial = True)
             self.__repopulate_lists(True)
+
+            # Check Workshop mods for updates if configured
+            if (
+                self.game_configuration.steam_mods_update_check_toggle
+            ):  # Check SteamCMD/Steam mods for updates if configured
+                self._do_check_for_workshop_updates()
+                self._do_generate_mod_update_report()
+            else:
+                logger.debug(
+                    "User preference is not configured to check Steam mods for updates. Skipping..."
+                )
 
         # CHECK USER PREFERENCE FOR WATCHDOG
         if self.game_configuration.watchdog_toggle:
@@ -437,7 +454,8 @@ class MainContent:
                 f"Could not find data for the list of active mods: {missing_mods}"
             )
             if (  # User configuration
-                len(self.external_steam_metadata.keys()) > 0
+                self.game_configuration.try_download_missing_mods_toggle
+                and len(self.external_steam_metadata.keys()) > 0
             ):  # Do we even have metadata to lookup...?
                 self.missing_mods_prompt = MissingModsPrompt(
                     packageIds=missing_mods,
@@ -545,26 +563,21 @@ class MainContent:
 
         # If we can find the appworkshop_294100.acf files from SteamCMD or Steam client
         # SteamCMD
-        self.steamcmd_appworkshop_acf_path = os.path.join(
-            self.game_configuration.steamcmd_install_path,
-            "steam",
-            "steamapps",
-            "workshop",
-            "appworkshop_294100.acf",
-        )
         if os.path.exists(
-            self.steamcmd_appworkshop_acf_path
+            self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
         ):  # If the file we want to parse exists
             get_workshop_acf_data(
-                appworkshop_acf_path=self.steamcmd_appworkshop_acf_path,
+                appworkshop_acf_path=self.steamcmd_wrapper.steamcmd_appworkshop_acf_path,
                 workshop_mods=self.local_mods,
                 steamcmd_mode=True,
             )  # ... get data
             logger.info(
-                f"Successfully parsed SteamCMD appworkshop.acf metadata from: {self.steamcmd_appworkshop_acf_path}"
+                f"Successfully parsed SteamCMD appworkshop.acf metadata from: {self.steamcmd_wrapper.steamcmd_appworkshop_acf_path}"
             )
         else:
-            logger.info(f"Unable to parse SteamCMD appworkshop.acf metadata")
+            logger.debug(
+                f"SteamCMD client appworkshop.acf metadata not found. Skipping."
+            )
         # Steam client
         steam_appworkshop_path = os.path.split(
             # This is just getting the path 2 directories up from content/294100,
@@ -585,7 +598,7 @@ class MainContent:
                 f"Successfully parsed Steam client appworkshop.acf metadata from: {self.steam_appworkshop_acf_path}"
             )
         else:
-            logger.info(f"Unable to parse Steam client appworkshop.acf metadata")
+            logger.debug(f"Steam client appworkshop.acf metadata not found. Skipping.")
 
         # One working Dictionary for ALL mods
         self.internal_local_metadata = merge_mod_data(
@@ -641,6 +654,13 @@ class MainContent:
                 logger.info(
                     "External Steam metadata disabled by user. Please choose a metadata source in settings."
                 )
+                return
+            self.active_mods_panel.active_mods_list.steam_db = (
+                self.external_steam_metadata
+            )
+            self.inactive_mods_panel.inactive_mods_list.steam_db = (
+                self.external_steam_metadata
+            )
 
             # External Community Rules metadata
             external_community_rules_metadata_source = (
@@ -821,8 +841,16 @@ class MainContent:
         if action == "import_steamcmd_acf_data":
             import_steamcmd_acf_data(
                 rimsort_storage_path=self.game_configuration.storage_path,
-                steamcmd_appworkshop_acf_path=self.steamcmd_appworkshop_acf_path,
+                steamcmd_appworkshop_acf_path=self.steamcmd_wrapper.steamcmd_appworkshop_acf_path,
             )
+        if action == "reset_steamcmd_acf_data":
+            if os.path.exists(self.steamcmd_wrapper.steamcmd_appworkshop_acf_path):
+                logger.debug(
+                    f"Deleting SteamCMD ACF data: {self.steamcmd_wrapper.steamcmd_appworkshop_acf_path}"
+                )
+                os.remove(self.steamcmd_wrapper.steamcmd_appworkshop_acf_path)
+            else:
+                logger.debug("SteamCMD ACF data does not exist. Skipping action.")
         if action == "set_steamcmd_path":
             self._do_set_steamcmd_path()
         if action == "import_list_file_xml":
@@ -1128,7 +1156,7 @@ class MainContent:
         logger.info(
             "User preference is configured to check Steam mods for updates. Displaying potential updates..."
         )
-        progress_animation = ProgressAnimation(
+        progress_animation = LoadingAnimation(
             gif_path=str(
                 Path(
                     os.path.join(os.path.dirname(__file__), "../data/query.gif")
@@ -1260,7 +1288,18 @@ class MainContent:
         self.inactive_mods_panel.clear_inactive_mods_search()
         if self.game_configuration.check_if_essential_paths_are_set():
             # Run expensive calculations to set cache data
-            self.__refresh_cache_calculations()
+            progress_animation = LoadingAnimation(
+                gif_path=str(
+                    Path(
+                        os.path.join(os.path.dirname(__file__), "../data/rimworld.gif")
+                    ).resolve()
+                ),
+                target=self.__refresh_cache_calculations,
+            )
+            progress_animation.show()
+            while progress_animation.thread and progress_animation.thread.isRunning():
+                QApplication.instance().processEvents()
+                continue
 
             # Insert mod data into list
             self.__repopulate_lists()
@@ -1445,7 +1484,7 @@ class MainContent:
             if self.missing_mods and len(self.missing_mods) >= 1:
                 self.__missing_mods_prompt(self.missing_mods)
         else:
-            logger.info("User pressed cancel, passing")
+            logger.debug("USER ACTION: pressed cancel, passing")
 
     def _do_export_list_file_xml(self) -> None:
         """
@@ -1500,7 +1539,7 @@ class MainContent:
             else:
                 logger.error("Could not export active mods")
         else:
-            logger.info("User pressed cancel, passing")
+            logger.debug("USER ACTION: pressed cancel, passing")
 
     def _do_export_list_clipboard(self) -> None:
         """
@@ -1824,12 +1863,12 @@ class MainContent:
         args, ok = QInputDialog().getText(
             None,
             "Edit run arguments:",
-            "Enter the arguments you would like to pass to the Rimworld executable:",
+            "Enter a comma separated list of arguments to pass to the Rimworld executable:",
             QLineEdit.Normal,
-            self.game_configuration.run_arguments,
+            ",".join(self.game_configuration.run_arguments),
         )
         if ok:
-            self.game_configuration.run_arguments = args
+            self.game_configuration.run_arguments = args.split(",")
             self.game_configuration.update_persistent_storage(
                 {"runArgs": self.game_configuration.run_arguments}
             )
@@ -1951,7 +1990,7 @@ class MainContent:
             #     f"List of mods:\n{publishedfileids}"
             # )
             self.steamcmd_wrapper.download_mods(
-                "294100", publishedfileids, self.steamcmd_runner
+                publishedfileids=publishedfileids, runner=self.steamcmd_runner
             )
         else:
             show_warning(
@@ -1981,8 +2020,14 @@ class MainContent:
                 self.game_configuration.steamcmd_install_path,
                 self.game_configuration.steamcmd_validate_downloads_toggle,
             )
+            self.active_mods_panel.active_mods_list.steamcmd_appworkshop_acf_path = (
+                self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
+            )
+            self.inactive_mods_panel.inactive_mods_list.steamcmd_appworkshop_acf_path = (
+                self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
+            )
         else:
-            logger.info("User pressed cancel, passing")
+            logger.debug("USER ACTION: pressed cancel, passing")
 
     def _do_show_steamcmd_status(self):
         if (
@@ -2031,7 +2076,7 @@ class MainContent:
         FOR "launch_game_process"...
         :param instruction: a list where:
             instruction[0] is a string that corresponds with the following supported_actions[]
-            instruction[1] is a list containing [path: str, args: str] respectively
+            instruction[1] is a list containing [game_folder_path: str, args: list] respectively
         """
         logger.info(f"Received Steamworks API instruction: {instruction}")
         if not self.steamworks_in_use:
@@ -2040,11 +2085,11 @@ class MainContent:
             supported_actions.extend(subscription_actions)
             if (
                 instruction[0] in supported_actions
-            ):  # Actions can be added as functions are implemented in util.steam.steamworks.wrapper
+            ):  # Actions can be added as multiprocessing.Process; implemented in util.steam.steamworks.wrapper
                 if instruction[0] == "launch_game_process":  # SW API init + game launch
                     self.steamworks_in_use = True
                     steamworks_api_process = SteamworksGameLaunch(
-                        game_executable=instruction[1][0], args=instruction[1][1]
+                        game_install_path=instruction[1][0], args=instruction[1][1]
                     )
                     # Start the Steamworks API Process
                     steamworks_api_process.start()
@@ -2098,7 +2143,7 @@ class MainContent:
             )
 
     def _do_steamworks_api_call_animated(self, instruction: list):
-        progress_animation = ProgressAnimation(
+        progress_animation = LoadingAnimation(
             gif_path=str(
                 Path(
                     os.path.join(os.path.dirname(__file__), "../data/steam.gif")
@@ -2132,7 +2177,7 @@ class MainContent:
                 {"github_username": self.game_configuration.github_username}
             )
         else:
-            logger.warning("User cancelled input!")
+            logger.debug("USER ACTION: cancelled input!")
             return
         args, ok = QInputDialog().getText(
             None,
@@ -2147,7 +2192,7 @@ class MainContent:
                 {"github_token": self.game_configuration.github_token}
             )
         else:
-            logger.warning("User cancelled input!")
+            logger.debug("USER ACTION: cancelled input!")
             return
 
     def _do_cleanup_gitpython(self, repo) -> None:
@@ -2510,7 +2555,7 @@ class MainContent:
             )
             self.game_configuration.steam_db_file_path = input_path[0]
         else:
-            logger.warning("User cancelled selection!")
+            logger.debug("USER ACTION: cancelled selection!")
             return
 
     def _do_configure_community_rules_db_file_path(self) -> None:
@@ -2527,7 +2572,7 @@ class MainContent:
                 {"external_community_rules_file_path": input_path[0]}
             )
         else:
-            logger.warning("User cancelled selection!")
+            logger.debug("USER ACTION: cancelled selection!")
             return
 
     def _do_configure_steam_database_repo(self) -> None:
@@ -2629,7 +2674,7 @@ class MainContent:
             # Start DB builder
             self.db_builder.start()
         else:
-            logger.warning("User cancelled selection...")
+            logger.debug("USER ACTION: cancelled selection...")
 
     def _do_edit_steam_webapi_key(self) -> None:
         """
@@ -2888,7 +2933,7 @@ class MainContent:
                 json.dump(db_output_c, output, indent=4)
             self._do_refresh()
         else:
-            logger.warning("User declined to continue rules database update.")
+            logger.debug("USER ACTION: declined to continue rules database update.")
 
     def _do_set_database_expiry(self) -> None:
         """

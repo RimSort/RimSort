@@ -31,27 +31,27 @@ def handle_remove_read_only(func, path: str, exc):
         raise
 
 
-def launch_game_process(game_executable: str, args: str) -> None:
+def launch_game_process(game_install_path: str, args: list) -> None:
     """
     This function starts the Rimworld game process in it's own Process,
     by launching the executable found in the configured game directory.
 
     This function initializes the Steamworks API to be used by the RimWorld game.
 
-    :param game_executable: is a string path to the game folder
+    :param game_install_path: is a string path to the game folder
     :param args: is a string representing the args to pass to the generated executable path
     """
-    logger.info(f"Attempting to find the game in the game folder {game_executable}")
-    if game_executable:
+    logger.info(f"Attempting to find the game in the game folder {game_install_path}")
+    if game_install_path:
         system_name = platform.system()
         if system_name == "Darwin":
-            executable_path = os.path.join(game_executable, "RimWorldMac.app")
+            executable_path = os.path.join(game_install_path, "RimWorldMac.app")
         elif system_name == "Linux":
             # Linux
-            executable_path = os.path.join(game_executable, "RimWorldLinux")
+            executable_path = os.path.join(game_install_path, "RimWorldLinux")
         elif "Windows":
             # Windows
-            executable_path = os.path.join(game_executable, "RimWorldWin64.exe")
+            executable_path = os.path.join(game_install_path, "RimWorldWin64.exe")
         else:
             logger.error("Unable to launch the game on an unknown system")
         logger.info(f"Path to game executable generated: {executable_path}")
@@ -60,28 +60,36 @@ def launch_game_process(game_executable: str, args: str) -> None:
                 f"Launching the game with subprocess.Popen(): `"
                 + executable_path
                 + "` with args: `"
-                + args
+                + str(args)
                 + "`"
             )
             # https://stackoverflow.com/a/21805723
             if system_name == "Darwin":  # MacOS
-                p = subprocess.Popen(["open", executable_path, "--args", args])
+                popen_args = ["open", executable_path, "--args"]
+                popen_args.extend(args)
+                args = darwin_args
+                p = subprocess.Popen(popen_args)
             else:
+                popen_args = [executable_path]
+                popen_args.extend(args)
                 try:
                     subprocess.CREATE_NEW_PROCESS_GROUP
                 except (
                     AttributeError
                 ):  # not Windows, so assume POSIX; if not, we'll get a usable exception
                     p = subprocess.Popen(
-                        [executable_path, args], start_new_session=True
+                        popen_args,
+                        start_new_session=True,
                     )
                 else:  # Windows
                     p = subprocess.Popen(
-                        [executable_path, args],
+                        popen_args,
                         creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
                         shell=True,
                     )
-            logger.info(f"Launched independent RimWorld game process with PID: {p.pid}")
+            logger.info(
+                f"Launched independent RimWorld game process with PID {p.pid} using args {popen_args}"
+            )
         else:
             logger.warning("The game executable path does not exist")
             show_warning(
@@ -96,11 +104,11 @@ def launch_game_process(game_executable: str, args: str) -> None:
     else:
         logger.error("The path to the game folder is empty")
         show_warning(
-            text="Error Starting the Game",
+            title="Game launch failed",
+            text="Unable to launch RimWorld",
             information=(
-                "RimSort could not start RimWorld as the game folder is empty or invalid: [{game_executable}] "
-                "Please check that the game folder is properly set and that the RimWorld executable "
-                "exists in it."
+                f"RimSort could not start RimWorld as the game folder is empty or invalid: [{game_install_path}] "
+                "Please check that the game folder is properly set and that the RimWorld executable exists in it."
             ),
         )
 

@@ -7,6 +7,7 @@ from pathlib import Path
 from platform import system
 from re import compile
 
+import psutil
 from PySide6.QtCore import Qt, QEvent, QProcess, Signal
 from PySide6.QtGui import QFont, QIcon, QTextCursor
 from PySide6.QtWidgets import (
@@ -163,7 +164,13 @@ class RunnerPanel(QWidget):
 
     def _do_kill_process(self):
         if self.process and self.process.state() == QProcess.Running:
-            self.process.kill()
+            # Terminate the main process and its child processes
+            parent_process = psutil.Process(self.process.processId())
+            children = parent_process.children(recursive=True)
+            for child in children:
+                child.terminate()
+            parent_process.terminate()
+            self.process.waitForFinished()
             self.process_killed = True
 
     def _do_restart_process(self):
@@ -430,3 +437,5 @@ class RunnerPanel(QWidget):
                 if "todds" in self.process.program():
                     self.change_progress_bar_color("green")
                 # -------TODDS-------
+        # Cleanup process
+        self.process = None
