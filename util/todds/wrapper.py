@@ -115,7 +115,7 @@ class ToddsInterface:
         else:
             runner.message(
                 "ERROR: todds was not found. If you are running from source, please ensure you have followed the correct steps in the Development Guide:\n"
-                + "https://github.com/oceancabbage/RimSort/wiki/Development-Guide\n\nPlease reach out to us for support at: https://github.com/oceancabbage/RimSort/issues"
+                + "https://github.com/RimSort/RimSort/wiki/Development-Guide\n\nPlease reach out to us for support at: https://github.com/oceancabbage/RimSort/issues"
             )
 
 

@@ -1663,9 +1663,9 @@ class MainContent:
             else:  # Otherwise, proceed with adding the mod package_id
                 active_mods.append(package_id)
                 active_mods_packageId_to_uuid[package_id] = uuid
-                if mod_data["data_source"] == "workshop" and mod_data.get(
-                    "publishedfileid"
-                ):
+                if (
+                    mod_data.get("steamcmd") or mod_data["data_source"] == "workshop"
+                ) and mod_data.get("publishedfileid"):
                     publishedfileid = mod_data["publishedfileid"]
                     active_steam_mods_packageId_to_pfid[package_id] = publishedfileid
                     pfids.append(publishedfileid)
@@ -1688,7 +1688,7 @@ class MainContent:
                     ]
         # Build our report
         active_mods_rentry_report = (
-            f"# RimWorld mod list       ![](https://github.com/oceancabbage/RimSort/blob/main/rentry_preview.png?raw=true)"
+            f"# RimWorld mod list       ![](https://github.com/RimSort/RimSort/blob/main/rentry_preview.png?raw=true)"
             + f"\nCreated with RimSort {self.rimsort_version}"
             + f"\nMod list was created for game version: `{self.game_version}`"
             + f"\n!!! info Local mods are marked as yellow labels with packageId in brackets."
@@ -1702,9 +1702,9 @@ class MainContent:
                 name = active_mods_json[uuid]["name"]
             else:
                 name = "No name specified"
-            if (
-                active_mods_json[uuid]["data_source"] == "expansion"
-                or active_mods_json[uuid]["data_source"] == "local"
+            if active_mods_json[uuid]["data_source"] == "expansion" or (
+                active_mods_json[uuid]["data_source"] == "local"
+                and not active_mods_json[uuid].get("steamcmd")
             ):
                 if active_mods_json[uuid].get("url"):
                     url = active_mods_json[uuid]["url"]
@@ -1728,7 +1728,10 @@ class MainContent:
                         + f"packageId: {package_id}"
                         + "} "
                     )
-            elif active_mods_json[uuid]["data_source"] == "workshop":
+            elif (
+                active_mods_json[uuid].get("steamcmd")
+                or active_mods_json[uuid]["data_source"] == "workshop"
+            ):
                 pfid = active_steam_mods_packageId_to_pfid[package_id]
                 if active_steam_mods_pfid_to_preview_url.get(pfid):
                     preview_url = (
@@ -1736,7 +1739,7 @@ class MainContent:
                         + "?imw=100&imh=100&impolicy=Letterbox"
                     )
                 else:
-                    preview_url = "https://github.com/oceancabbage/RimSort/blob/main/rentry_steam_icon.png?raw=true"
+                    preview_url = "https://github.com/RimSort/RimSort/blob/main/rentry_steam_icon.png?raw=true"
                 if active_mods_json[uuid].get("steam_url"):
                     url = active_mods_json[uuid]["steam_url"]
                 elif active_mods_json[uuid].get("url"):
@@ -1771,7 +1774,7 @@ class MainContent:
                 details=f"{active_mods_rentry_report}",
             )
         else:
-            show_warning(text="Failed to upload exported active mod list to Rentry.co")
+            show_warning(title="Failed to upload", text="Failed to upload exported active mod list to Rentry.co")
 
     def _do_upload_rw_log(self):
         player_log_path = os.path.join(
