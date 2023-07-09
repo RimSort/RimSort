@@ -53,204 +53,11 @@ class GameConfiguration(QObject):
 
         self.debug_mode = debug_mode
 
-        self.dbs_path = "."
         self.storage_path = QStandardPaths.writableLocation(
             QStandardPaths.AppLocalDataLocation
         )
-
-        # BASE LAYOUT
-        self._panel = QVBoxLayout()
-        # Represents spacing between edge and layout
-        # Set to 0 on the bottom to maintain consistent spacing to the main content panel
-        self._panel.setContentsMargins(7, 7, 7, 0)
-
-        # CONTAINER LAYOUTS
-        self.client_settings_row = QHBoxLayout()
-        self.client_settings_row.setContentsMargins(0, 0, 0, 2)
-        self.client_settings_row.setSpacing(0)
-        self.game_folder_row = QHBoxLayout()
-        self.game_folder_row.setContentsMargins(0, 0, 0, 2)
-        self.game_folder_row.setSpacing(0)
-        self.config_folder_row = QHBoxLayout()
-        self.config_folder_row.setContentsMargins(0, 0, 0, 2)
-        self.config_folder_row.setSpacing(0)
-        self.workshop_folder_row = QHBoxLayout()
-        self.workshop_folder_row.setContentsMargins(0, 0, 0, 2)
-        self.workshop_folder_row.setSpacing(0)
-        self.local_folder_row = QHBoxLayout()
-        self.local_folder_row.setContentsMargins(0, 0, 0, 0)
-        self.local_folder_row.setSpacing(0)
-
-        # INSTANTIATE WIDGETS
-        self.client_settings_button = QPushButton("Settings")
-        self.client_settings_button.clicked.connect(self.open_settings_panel)
-        self.client_settings_button.setObjectName("LeftButton")
-        self.auto_detect_paths_button = QPushButton("Autodetect paths")
-        self.auto_detect_paths_button.clicked.connect(self.autodetect_paths_by_platform)
-        self.auto_detect_paths_button.setObjectName("LeftButton")
-        self.game_version_label = QLabel("Game version:")
-        self.game_version_label.setObjectName("gameVersion")
-        self.game_version_line = QLineEdit()
-        self.game_version_line.setDisabled(True)
-        self.game_version_line.setPlaceholderText("Unknown")
-        self.check_for_updates_action = QAction("Check for update on startup")
-        self.check_for_updates_action.setCheckable(True)
-        self.check_for_updates_button = QPushButton("Check for update")
-        self.check_for_updates_button.setToolTip(
-            "Right-click to configure automatic update check"
-        )
-        self.check_for_updates_button.clicked.connect(
-            partial(self.configuration_signal.emit, "check_for_update")
-        )
-        self.check_for_updates_button.setObjectName("RightButton")
-        self.check_for_updates_button.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.check_for_updates_button.customContextMenuRequested.connect(
-            self.checkForUpdateBtnContextMenuEvent
-        )
-        self.wiki_button = QPushButton("Wiki")
-        self.wiki_button.clicked.connect(
-            partial(open_url_browser, "https://github.com/RimSort/RimSort/wiki")
-        )
-        self.wiki_button.setObjectName("RightButton")
-
-        self.game_folder_open_button = QPushButton("Game folder")
-        self.game_folder_open_button.clicked.connect(
-            partial(self.open_directory, self.get_game_folder_path)
-        )
-        self.game_folder_open_button.setObjectName("LeftButton")
-        self.game_folder_open_button.setToolTip("Open the game installation directory")
-        self.game_folder_line = QLineEdit()
-        self.game_folder_line.setReadOnly(True)
-        self.game_folder_line.setClearButtonEnabled(True)
-        self.game_folder_line_clear_button = self.game_folder_line.findChild(
-            QToolButton
-        )
-        self.game_folder_line_clear_button.setEnabled(True)
-        self.game_folder_line_clear_button.clicked.connect(self.clear_game_folder_line)
-        self.game_folder_line.setPlaceholderText("Unconfigured")
-        self.game_folder_line.setToolTip(
-            "The game installation directory contains the game executable.\n"
-            "Set the game installation directory with the button on the right."
-        )
-        self.game_folder_select_button = QPushButton("...")
-        self.game_folder_select_button.clicked.connect(self.set_game_exe_folder)
-        self.game_folder_select_button.setObjectName("RightButton")
-        self.game_folder_select_button.setToolTip(
-            "Set the RimWorld game installation directory"
-        )
-
-        self.config_folder_open_button = QPushButton("Config folder")
-        self.config_folder_open_button.clicked.connect(
-            partial(self.open_directory, self.get_config_folder_path)
-        )
-        self.config_folder_open_button.setObjectName("LeftButton")
-        self.config_folder_open_button.setToolTip(
-            "Open the RimWorld game configuration directory"
-        )
-        self.config_folder_line = QLineEdit()
-        self.config_folder_line.setReadOnly(True)
-        self.config_folder_line.setClearButtonEnabled(True)
-        self.config_folder_line_clear_button = self.config_folder_line.findChild(
-            QToolButton
-        )
-        self.config_folder_line_clear_button.setEnabled(True)
-        self.config_folder_line_clear_button.clicked.connect(
-            self.clear_config_folder_line
-        )
-        self.config_folder_line.setPlaceholderText("Unconfigured")
-        self.config_folder_line.setToolTip(
-            "The this directory contains the ModsConfig.xml file, which shows your\n"
-            "active mods and their load order. It may also contain other mod configs."
-            "Set the ModsConfig.xml directory manually with the button on the right."
-        )
-        self.config_folder_select_button = QPushButton("...")
-        self.config_folder_select_button.clicked.connect(self.set_config_folder)
-        self.config_folder_select_button.setObjectName("RightButton")
-        self.config_folder_select_button.setToolTip(
-            "Set the RimWorld game configuration directory"
-        )
-
-        self.workshop_folder_open_button = QPushButton("Steam mods")
-        self.workshop_folder_open_button.clicked.connect(
-            partial(self.open_directory, self.get_workshop_folder_path)
-        )
-        self.workshop_folder_open_button.setObjectName("LeftButton")
-        self.workshop_folder_open_button.setToolTip(
-            "Open the Steam Workshop mods directory"
-        )
-        self.workshop_folder_line = QLineEdit()
-        self.workshop_folder_line.setReadOnly(True)
-        self.workshop_folder_line.setClearButtonEnabled(True)
-        self.workshop_folder_line_clear_button = self.workshop_folder_line.findChild(
-            QToolButton
-        )
-        self.workshop_folder_line_clear_button.setEnabled(True)
-        self.workshop_folder_line_clear_button.clicked.connect(
-            self.clear_workshop_folder_line
-        )
-        self.workshop_folder_line.setPlaceholderText("Unconfigured")
-        self.workshop_folder_line.setToolTip(
-            "The Steam Workshop mods directory contains mods downloaded from Steam client.\n"
-            "Set the Steam Workshop mods directory manually with the button on the right."
-        )
-        self.workshop_folder_select_button = QPushButton("...")
-        self.workshop_folder_select_button.clicked.connect(self.set_workshop_folder)
-        self.workshop_folder_select_button.setObjectName("RightButton")
-        self.workshop_folder_select_button.setToolTip(
-            "Set the Steam Workshop Mods directory"
-        )
-
-        self.local_folder_open_button = QPushButton("Local mods")
-        self.local_folder_open_button.clicked.connect(
-            partial(self.open_directory, self.get_local_folder_path)
-        )
-        self.local_folder_open_button.setObjectName("LeftButton")
-        self.local_folder_open_button.setToolTip("Open the local mods directory")
-        self.local_folder_line = QLineEdit()
-        self.local_folder_line.setReadOnly(True)
-        self.local_folder_line.setClearButtonEnabled(True)
-        self.local_folder_line_clear_button = self.local_folder_line.findChild(
-            QToolButton
-        )
-        self.local_folder_line_clear_button.setEnabled(True)
-        self.local_folder_line_clear_button.clicked.connect(
-            self.clear_local_folder_line
-        )
-        self.local_folder_line.setPlaceholderText("Unconfigured")
-        self.local_folder_line.setToolTip(
-            "The local mods directory contains manually downloaded mod folders.\n"
-            "By default, this folder is located in the game install directory.\n"
-            "If you are a SteamCMD user, this is also where mods will be located."
-            "Set the Local mods directory manually with the button on the right."
-        )
-        self.local_folder_select_button = QPushButton("...")
-        self.local_folder_select_button.clicked.connect(self.set_local_folder)
-        self.local_folder_select_button.setObjectName("RightButton")
-        self.local_folder_select_button.setToolTip("Set the local mods directory.")
-
-        # WIDGETS INTO CONTAINER LAYOUTS
-        self.client_settings_row.addWidget(self.client_settings_button)
-        self.client_settings_row.addWidget(self.auto_detect_paths_button)
-        self.client_settings_row.addWidget(self.game_version_label)
-        self.client_settings_row.addWidget(self.game_version_line)
-        self.client_settings_row.addWidget(self.check_for_updates_button)
-        self.client_settings_row.addWidget(self.wiki_button)
-
-        self.game_folder_row.addWidget(self.game_folder_open_button)
-        self.game_folder_row.addWidget(self.game_folder_line)
-        self.game_folder_row.addWidget(self.game_folder_select_button)
-
-        self.config_folder_row.addWidget(self.config_folder_open_button)
-        self.config_folder_row.addWidget(self.config_folder_line)
-        self.config_folder_row.addWidget(self.config_folder_select_button)
-
-        self.workshop_folder_row.addWidget(self.workshop_folder_open_button)
-        self.workshop_folder_row.addWidget(self.workshop_folder_line)
-        self.workshop_folder_row.addWidget(self.workshop_folder_select_button)
-
-        self.local_folder_row.addWidget(self.local_folder_open_button)
-        self.local_folder_row.addWidget(self.local_folder_line)
-        self.local_folder_row.addWidget(self.local_folder_select_button)
+        self.dbs_path = "."
+        self.show_folder_rows = False
 
         # RUN ARGUMENTS
         self.run_arguments = []
@@ -315,6 +122,203 @@ class GameConfiguration(QObject):
         # TODDS OVERWRITE TOGGLE
         self.todds_overwrite_toggle = False
 
+        # BASE LAYOUT
+        self._panel = QVBoxLayout()
+        # Represents spacing between edge and layout
+        # Set to 0 on the bottom to maintain consistent spacing to the main content panel
+        self._panel.setContentsMargins(7, 7, 7, 0)
+
+        # CONTAINER LAYOUTS
+        self.client_settings_row = QHBoxLayout()
+        self.client_settings_row.setContentsMargins(0, 0, 0, 2)
+        self.client_settings_row.setSpacing(0)
+        self.game_folder_row = QHBoxLayout()
+        self.game_folder_row.setContentsMargins(0, 0, 0, 2)
+        self.game_folder_row.setSpacing(0)
+        self.config_folder_row = QHBoxLayout()
+        self.config_folder_row.setContentsMargins(0, 0, 0, 2)
+        self.config_folder_row.setSpacing(0)
+        self.workshop_folder_row = QHBoxLayout()
+        self.workshop_folder_row.setContentsMargins(0, 0, 0, 2)
+        self.workshop_folder_row.setSpacing(0)
+        self.local_folder_row = QHBoxLayout()
+        self.local_folder_row.setContentsMargins(0, 0, 0, 0)
+        self.local_folder_row.setSpacing(0)
+
+        # INSTANTIATE WIDGETS
+        self.auto_detect_paths_button = QPushButton("Autodetect paths")
+        self.auto_detect_paths_button.clicked.connect(self.autodetect_paths_by_platform)
+        self.auto_detect_paths_button.setObjectName("LeftButton")
+        self.client_settings_button = QPushButton("Settings")
+        self.client_settings_button.clicked.connect(self.open_settings_panel)
+        self.client_settings_button.setObjectName("LeftButton")
+        self.hide_show_folder_rows_button = QPushButton()
+        self.hide_show_folder_rows_button.clicked.connect(self._toggle_folder_rows)
+        self.check_for_updates_action = QAction("Check for update on startup")
+        self.check_for_updates_action.setCheckable(True)
+        self.check_for_updates_button = QPushButton("Check for update")
+        self.check_for_updates_button.setToolTip(
+            "Right-click to configure automatic update check"
+        )
+        self.check_for_updates_button.clicked.connect(
+            partial(self.configuration_signal.emit, "check_for_update")
+        )
+        self.check_for_updates_button.setObjectName("RightButton")
+        self.check_for_updates_button.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.check_for_updates_button.customContextMenuRequested.connect(
+            self.checkForUpdateBtnContextMenuEvent
+        )
+        self.game_version_label = QLabel("Game version:")
+        self.game_version_label.setObjectName("gameVersion")
+        self.game_version_line = QLineEdit()
+        self.game_version_line.setDisabled(True)
+        self.game_version_line.setPlaceholderText("Unknown")
+        self.wiki_button = QPushButton("Wiki")
+        self.wiki_button.clicked.connect(
+            partial(open_url_browser, "https://github.com/RimSort/RimSort/wiki")
+        )
+        self.wiki_button.setObjectName("RightButton")
+
+        self.game_folder_open_button = QPushButton("Game folder")
+        self.game_folder_open_button.clicked.connect(
+            partial(self.open_directory, self.get_game_folder_path)
+        )
+        self.game_folder_open_button.setObjectName("LeftButton")
+        self.game_folder_open_button.setToolTip("Open the game installation directory")
+        self.game_folder_line = QLineEdit()
+        self.game_folder_line.setReadOnly(True)
+        self.game_folder_line.setClearButtonEnabled(True)
+        self.game_folder_line_clear_button = self.game_folder_line.findChild(
+            QToolButton
+        )
+        self.game_folder_line_clear_button.setEnabled(True)
+        self.game_folder_line_clear_button.clicked.connect(self.clear_game_folder_line)
+        self.game_folder_line.setPlaceholderText("Unconfigured")
+        self.game_folder_line.setToolTip(
+            "The game installation directory contains the game executable.\n"
+            "Set the game installation directory with the button on the right."
+        )
+        self.game_folder_select_button = QPushButton("...")
+        self.game_folder_select_button.clicked.connect(self.set_game_exe_folder)
+        self.game_folder_select_button.setObjectName("RightButton")
+        self.game_folder_select_button.setToolTip(
+            "Set the RimWorld game installation directory"
+        )
+
+        self.config_folder_open_button = QPushButton("Config folder")
+        self.config_folder_open_button.clicked.connect(
+            partial(self.open_directory, self.get_config_folder_path)
+        )
+        self.config_folder_open_button.setObjectName("LeftButton")
+        self.config_folder_open_button.setToolTip(
+            "Open the RimWorld game configuration directory"
+        )
+        self.config_folder_line = QLineEdit()
+        self.config_folder_line.setReadOnly(True)
+        self.config_folder_line.setClearButtonEnabled(True)
+        self.config_folder_line_clear_button = self.config_folder_line.findChild(
+            QToolButton
+        )
+        self.config_folder_line_clear_button.setEnabled(True)
+        self.config_folder_line_clear_button.clicked.connect(
+            self.clear_config_folder_line
+        )
+        self.config_folder_line.setPlaceholderText("Unconfigured")
+        self.config_folder_line.setToolTip(
+            "The this directory contains the ModsConfig.xml file, which shows your\n"
+            "active mods and their load order. It may also contain other mod configs."
+            "Set the ModsConfig.xml directory manually with the button on the right."
+        )
+        self.config_folder_select_button = QPushButton("...")
+        self.config_folder_select_button.clicked.connect(self.set_config_folder)
+        self.config_folder_select_button.setObjectName("RightButton")
+        self.config_folder_select_button.setToolTip(
+            "Set the RimWorld game configuration directory"
+        )
+
+        self.local_folder_open_button = QPushButton("Local mods")
+        self.local_folder_open_button.clicked.connect(
+            partial(self.open_directory, self.get_local_folder_path)
+        )
+        self.local_folder_open_button.setObjectName("LeftButton")
+        self.local_folder_open_button.setToolTip("Open the local mods directory")
+        self.local_folder_line = QLineEdit()
+        self.local_folder_line.setReadOnly(True)
+        self.local_folder_line.setClearButtonEnabled(True)
+        self.local_folder_line_clear_button = self.local_folder_line.findChild(
+            QToolButton
+        )
+        self.local_folder_line_clear_button.setEnabled(True)
+        self.local_folder_line_clear_button.clicked.connect(
+            self.clear_local_folder_line
+        )
+        self.local_folder_line.setPlaceholderText("Unconfigured")
+        self.local_folder_line.setToolTip(
+            "The local mods directory contains manually downloaded mod folders.\n"
+            "By default, this folder is located in the game install directory.\n"
+            "If you are a SteamCMD user, this is also where mods will be located."
+            "Set the Local mods directory manually with the button on the right."
+        )
+        self.local_folder_select_button = QPushButton("...")
+        self.local_folder_select_button.clicked.connect(self.set_local_folder)
+        self.local_folder_select_button.setObjectName("RightButton")
+        self.local_folder_select_button.setToolTip("Set the local mods directory.")
+
+        self.workshop_folder_open_button = QPushButton("Steam mods")
+        self.workshop_folder_open_button.clicked.connect(
+            partial(self.open_directory, self.get_workshop_folder_path)
+        )
+        self.workshop_folder_open_button.setObjectName("LeftButton")
+        self.workshop_folder_open_button.setToolTip(
+            "Open the Steam Workshop mods directory"
+        )
+        self.workshop_folder_line = QLineEdit()
+        self.workshop_folder_line.setReadOnly(True)
+        self.workshop_folder_line.setClearButtonEnabled(True)
+        self.workshop_folder_line_clear_button = self.workshop_folder_line.findChild(
+            QToolButton
+        )
+        self.workshop_folder_line_clear_button.setEnabled(True)
+        self.workshop_folder_line_clear_button.clicked.connect(
+            self.clear_workshop_folder_line
+        )
+        self.workshop_folder_line.setPlaceholderText("Unconfigured")
+        self.workshop_folder_line.setToolTip(
+            "The Steam Workshop mods directory contains mods downloaded from Steam client.\n"
+            "Set the Steam Workshop mods directory manually with the button on the right."
+        )
+        self.workshop_folder_select_button = QPushButton("...")
+        self.workshop_folder_select_button.clicked.connect(self.set_workshop_folder)
+        self.workshop_folder_select_button.setObjectName("RightButton")
+        self.workshop_folder_select_button.setToolTip(
+            "Set the Steam Workshop Mods directory"
+        )
+
+        # WIDGETS INTO CONTAINER LAYOUTS
+        self.client_settings_row.addWidget(self.auto_detect_paths_button)
+        self.client_settings_row.addWidget(self.client_settings_button)
+        self.client_settings_row.addWidget(self.hide_show_folder_rows_button)
+        self.client_settings_row.addWidget(self.game_version_label)
+        self.client_settings_row.addWidget(self.game_version_line)
+        self.client_settings_row.addWidget(self.check_for_updates_button)
+        self.client_settings_row.addWidget(self.wiki_button)
+
+        self.game_folder_row.addWidget(self.game_folder_open_button)
+        self.game_folder_row.addWidget(self.game_folder_line)
+        self.game_folder_row.addWidget(self.game_folder_select_button)
+
+        self.config_folder_row.addWidget(self.config_folder_open_button)
+        self.config_folder_row.addWidget(self.config_folder_line)
+        self.config_folder_row.addWidget(self.config_folder_select_button)
+
+        self.local_folder_row.addWidget(self.local_folder_open_button)
+        self.local_folder_row.addWidget(self.local_folder_line)
+        self.local_folder_row.addWidget(self.local_folder_select_button)
+
+        self.workshop_folder_row.addWidget(self.workshop_folder_open_button)
+        self.workshop_folder_row.addWidget(self.workshop_folder_line)
+        self.workshop_folder_row.addWidget(self.workshop_folder_select_button)
+
         # CONTAINER LAYOUTS INTO BASE LAYOUT
         self.client_settings_frame = QFrame()
         self.client_settings_frame.setObjectName("configLine")
@@ -325,18 +329,18 @@ class GameConfiguration(QObject):
         self.config_folder_frame = QFrame()
         self.config_folder_frame.setObjectName("configLine")
         self.config_folder_frame.setLayout(self.config_folder_row)
-        self.workshop_folder_frame = QFrame()
-        self.workshop_folder_frame.setObjectName("configLine")
-        self.workshop_folder_frame.setLayout(self.workshop_folder_row)
         self.local_folder_frame = QFrame()
         self.local_folder_frame.setObjectName("configLine")
         self.local_folder_frame.setLayout(self.local_folder_row)
+        self.workshop_folder_frame = QFrame()
+        self.workshop_folder_frame.setObjectName("configLine")
+        self.workshop_folder_frame.setLayout(self.workshop_folder_row)
 
         self._panel.addWidget(self.client_settings_frame)
         self._panel.addWidget(self.game_folder_frame)
         self._panel.addWidget(self.config_folder_frame)
-        self._panel.addWidget(self.workshop_folder_frame)
         self._panel.addWidget(self.local_folder_frame)
+        self._panel.addWidget(self.workshop_folder_frame)
 
         # INITIALIZE WIDGETS / FEATURES
         self.initialize_settings_panel()
@@ -387,6 +391,20 @@ class GameConfiguration(QObject):
         )
 
         logger.info("Finished GameConfiguration initialization")
+
+    def _toggle_folder_rows(self) -> None:
+        self.show_folder_rows = not self.show_folder_rows
+        self.game_folder_frame.setVisible(self.show_folder_rows)
+        self.config_folder_frame.setVisible(self.show_folder_rows)
+        self.local_folder_frame.setVisible(self.show_folder_rows)
+        self.workshop_folder_frame.setVisible(self.show_folder_rows)
+        if self.show_folder_rows:
+            self.hide_show_folder_rows_button.setText("Hide paths")
+        else:
+            self.hide_show_folder_rows_button.setText("Show paths")
+        self.update_persistent_storage(
+            settings={"show_folder_rows": self.show_folder_rows}
+        )
 
     @property
     def panel(self) -> QVBoxLayout:
@@ -483,9 +501,12 @@ class GameConfiguration(QObject):
         # This should automatically be prepopulated with defaults above, or from user configuration.
         logger.info(f"Settings file [{settings_path}] exists. Opening file")
         with open(settings_path) as infile:
-            logger.info("Loading JSON from file")
+            logger.debug("Loading JSON from file")
             settings_data = json.load(infile)
-            logger.info("Setting relevant QLineEdits now")
+
+            # Hide/show folder rows
+            if settings_data.get("show_folder_rows"):
+                self.show_folder_rows = settings_data["show_folder_rows"]
 
             # Update check
             if settings_data.get("check_for_update_startup"):

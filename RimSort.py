@@ -155,6 +155,32 @@ class MainWindow(QMainWindow):
 
         logger.info("Finished MainWindow initialization")
 
+    def showEvent(self, event) -> None:
+        # Call the original showEvent handler
+        super().showEvent(event)
+        # HIDE/SHOW FOLDER ROWS BASED ON PREFERENCE
+        if self.game_configuration_panel.show_folder_rows:
+            self.game_configuration_panel.hide_show_folder_rows_button.setText(
+                "Hide paths"
+            )
+        else:
+            self.game_configuration_panel.hide_show_folder_rows_button.setText(
+                "Show paths"
+            )
+        # set visibility
+        self.game_configuration_panel.game_folder_frame.setVisible(
+            self.game_configuration_panel.show_folder_rows
+        )
+        self.game_configuration_panel.config_folder_frame.setVisible(
+            self.game_configuration_panel.show_folder_rows
+        )
+        self.game_configuration_panel.local_folder_frame.setVisible(
+            self.game_configuration_panel.show_folder_rows
+        )
+        self.game_configuration_panel.workshop_folder_frame.setVisible(
+            self.game_configuration_panel.show_folder_rows
+        )
+
 
 def main_thread():
     try:
