@@ -42,7 +42,7 @@ class SettingsPanel(QDialog):
         self.storage_path = storage_path
 
         # Create window
-        self.setFixedSize(QSize(560, 560))
+        self.setFixedSize(QSize(575, 625))
         self.setWindowTitle("Settings")
 
         # Allow for styling
@@ -63,15 +63,26 @@ class SettingsPanel(QDialog):
         self.rimsort_actions_label = QLabel("RimSort actions:")
         self.rimsort_actions_label.setObjectName("summaryValue")
         self.rimsort_actions_label.setAlignment(Qt.AlignCenter)
-        self.clear_paths_button = QPushButton("Clear paths")
+        self.clear_paths_button = QPushButton("Clear game cfg paths")
         self.clear_paths_button.clicked.connect(
             partial(self.clear_paths_signal.emit, "clear_paths")
+        )
+        self.set_github_identity_button = QPushButton("Github identity")
+        self.set_github_identity_button.clicked.connect(
+            partial(self.actions_signal.emit, "configure_github_identity")
         )
         self.open_log_button = QPushButton("Open RimSort.log")
         self.open_log_button.clicked.connect(
             partial(
                 platform_specific_open,
                 os.path.join(gettempdir(), "RimSort.log"),
+            )
+        )
+        self.open_storage_button = QPushButton("Open RimSort storage")
+        self.open_storage_button.clicked.connect(
+            partial(
+                platform_specific_open,
+                self.storage_path,
             )
         )
         self.upload_log_button = QPushButton("Upload RimSort.log")
@@ -81,17 +92,6 @@ class SettingsPanel(QDialog):
         )
         self.upload_log_button.clicked.connect(
             partial(self.actions_signal.emit, "upload_rs_log")
-        )
-        self.open_storage_button = QPushButton("Open RimSort storage")
-        self.open_storage_button.clicked.connect(
-            partial(
-                platform_specific_open,
-                self.storage_path,
-            )
-        )
-        self.set_github_identity_button = QPushButton("Configure Github identity")
-        self.set_github_identity_button.clicked.connect(
-            partial(self.actions_signal.emit, "configure_github_identity")
         )
         self.rimsort_options_label = QLabel("RimSort Options:")
         self.rimsort_options_label.setObjectName("summaryValue")
@@ -148,10 +148,10 @@ class SettingsPanel(QDialog):
         # Build the general options layout
         self.general_actions_layout.addWidget(self.rimsort_actions_label)
         self.general_actions_layout.addWidget(self.clear_paths_button)
-        self.general_actions_layout.addWidget(self.open_log_button)
-        self.general_actions_layout.addWidget(self.upload_log_button)
-        self.general_actions_layout.addWidget(self.open_storage_button)
         self.general_actions_layout.addWidget(self.set_github_identity_button)
+        self.general_actions_layout.addWidget(self.open_log_button)
+        self.general_actions_layout.addWidget(self.open_storage_button)
+        self.general_actions_layout.addWidget(self.upload_log_button)
         self.general_preferences_layout.addWidget(self.rimsort_options_label)
         self.general_preferences_layout.addWidget(self.logger_debug_checkbox)
         self.general_preferences_layout.addWidget(self.watchdog_checkbox)

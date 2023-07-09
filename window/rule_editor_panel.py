@@ -94,6 +94,9 @@ class RuleEditor(QWidget):
         super().__init__()
         logger.info("Initializing RuleEditor")
 
+        # STYLESHEET
+        self.setObjectName("RuleEditor")
+
         # LAUNCH OPTIONS
         self.block_comment_prompt = (
             None  # Used to block comment prompt when metadata is being populated
@@ -242,6 +245,13 @@ class RuleEditor(QWidget):
             self._comment_edited
         )  # Connect the signal to the slot
         self.editor_table_view = QTableView()
+        self.editor_table_view.setObjectName("ruleEditorPanelTableView")
+        self.editor_table_view.horizontalHeader().setObjectName(
+            "ruleEditorPanelTableView"
+        )
+        self.editor_table_view.verticalHeader().setObjectName(
+            "ruleEditorPanelTableView"
+        )
         self.editor_table_view.setModel(self.editor_model)
         self.editor_table_view.setSortingEnabled(True)  # Enable sorting on the columns
         self.editor_table_view.setItemDelegate(
@@ -407,6 +417,11 @@ class RuleEditor(QWidget):
             self._toggle_details_layout_widgets(
                 layout=self.internal_local_metadata_layout, override=False
             )
+        # If no initial packageId supplied, lock checkboxes
+        if not self.edit_packageId:
+            self.external_community_rules_loadBottom_checkbox.setCheckable(False)
+            self.external_user_rules_loadBottom_checkbox.setCheckable(False)
+        # Initial mode
         if self.initial_mode == "community_rules":
             self._toggle_details_layout_widgets(
                 layout=self.external_community_rules_layout, override=False
@@ -438,7 +453,8 @@ class RuleEditor(QWidget):
     def createDropEvent(self, destination_list: QListWidget):
         def dropEvent(event):
             # If the item was sourced from mods list
-            if event.source() == self.mods_list:
+            if event.source() == self.mods_list and self.edit_packageId:
+                logger.debug("DROP")
                 # Accept event
                 event.setDropAction(Qt.CopyAction)
                 event.accept()
@@ -537,7 +553,10 @@ class RuleEditor(QWidget):
         rule_type: str,
         comment: str,
         hidden=None,
-    ):
+    ) -> None:
+        if not self.edit_packageId:
+            return
+        logger.debug(f"Adding rule to mod: {self.edit_packageId}")
         # Create the standard items for each column
         items = [
             QStandardItem(name),
@@ -556,6 +575,7 @@ class RuleEditor(QWidget):
             self.editor_table_view.setRowHidden(row, hidden)
 
     def _clear_widget(self) -> None:
+        logger.debug("Clearing editor")
         self.clear_mods_search()
         self.mods_list.clear()
         self.local_metadata_loadAfter_list.clear()
@@ -567,17 +587,31 @@ class RuleEditor(QWidget):
         self.editor_model.removeRows(0, self.editor_model.rowCount())
 
     def _comment_edited(self, instruction: list) -> None:
-        if instruction[2] == "Community Rules":
-            metadata = self.community_rules
-        elif instruction[2] == "User Rules":
-            metadata = self.user_rules
-        metadata[instruction[1]][instruction[3]]["comment"] = instruction[4]
+        if self.edit_packageId:
+            # Select metadata
+            if instruction[2] == "Community Rules":
+                metadata = self.community_rules
+            elif instruction[2] == "User Rules":
+                metadata = self.user_rules
+            # Edit based on type of rule
+            if instruction[3] == "loadAfter" or instruction[3] == "loadBottom":
+                metadata[self.edit_packageId][instruction[3]][instruction[1]][
+                    "comment"
+                ] = instruction[4]
+            elif instruction[3] == "loadBottom":
+                metadata[self.edit_packageId][instruction[3]]["comment"] = instruction[
+                    4
+                ]
 
     def _create_list_item(self, _list: QListWidget, title: str, metadata=None) -> None:
         # Create our list item
         item = QListWidgetItem()
         if metadata:
             item.setData(Qt.UserRole, metadata)
+            if _list == self.mods_list:
+                item.setToolTip(metadata)
+            else:
+                item.setToolTip(title)
         # Set list item label
         label = QLabel(title)
         label.setObjectName("ListItemLabel")
@@ -588,11 +622,17 @@ class RuleEditor(QWidget):
         _list.setItemWidget(item, label)
 
     def _open_mod_in_editor(self, context_item: QListWidgetItem) -> None:
+        logger.debug(f"Opening mod in editor: {self.edit_packageId}")
         self.edit_packageId = context_item.data(Qt.UserRole)
+        if self.edit_packageId:
+            self.external_community_rules_loadBottom_checkbox.setCheckable(True)
+            self.external_user_rules_loadBottom_checkbox.setCheckable(True)
         self._clear_widget()
         self._populate_from_metadata()
 
     def _populate_from_metadata(self) -> None:
+        logger.debug(f"Populating editor from metadata with mod: {self.edit_packageId}")
+        logger.debug("Parsing local metadata")
         if self.local_metadata and len(self.local_metadata.keys()) > 0:
             for metadata in self.local_metadata.values():
                 # Local metadata rulez
@@ -735,13 +775,16 @@ class RuleEditor(QWidget):
                 else:  # Otherwise, add everything else to the mod list
                     self._create_list_item(
                         _list=self.mods_list,
-                        title=metadata["name"],
-                        metadata=metadata["packageId"]
-                        if metadata.get("packageId")
-                        else None,
+                        title=metadata.get("name", "UNKNOWN"),
+                        metadata=metadata.get("packageId", "UNKNOWN"),
                     )
+        logger.debug("Parsing Community Rules")
         # Community Rules rulez
-        if self.community_rules and len(self.community_rules.keys()) > 0:
+        if (
+            self.community_rules
+            and len(self.community_rules.keys()) > 0
+            and self.edit_packageId
+        ):
             for packageId, metadata in self.community_rules.items():
                 if (
                     self.edit_packageId
@@ -799,8 +842,9 @@ class RuleEditor(QWidget):
                             else "",
                             hidden=self.community_rules_hidden,
                         )
+        logger.debug("Parsing User Rules")
         # User Rules rulez
-        if self.user_rules and len(self.user_rules.keys()) > 0:
+        if self.user_rules and len(self.user_rules.keys()) > 0 and self.edit_packageId:
             for packageId, metadata in self.user_rules.items():
                 if (
                     self.edit_packageId
@@ -858,6 +902,7 @@ class RuleEditor(QWidget):
                         self.block_comment_prompt = False
 
     def _remove_rule(self, context_item: QListWidgetItem, _list: QListWidget) -> None:
+        logger.debug(f"Removing rule from mod: {self.edit_packageId}")
         _list.takeItem(_list.row(context_item))
         rule_data = context_item.data(Qt.UserRole)
         # Determine action mode
@@ -901,6 +946,7 @@ class RuleEditor(QWidget):
             metadata[self.edit_packageId][mode[1]].pop(rule_data)
 
     def _save_editor_rules(self, rules_source: str) -> None:
+        logger.debug(f"Updating rules source: {rules_source}")
         # Overwrite rules source with any changes to our metadata
         if rules_source == "Community Rules":
             metadata = self.community_rules
@@ -971,61 +1017,73 @@ class RuleEditor(QWidget):
                 self.editor_table_view.setRowHidden(row, visibility)
 
     def _toggle_loadBottom_rule(self, rule_source: str, state) -> None:
-        # Select database for editing
-        if rule_source == "Community Rules":
-            metadata = self.community_rules
-        elif rule_source == "User Rules":
-            metadata = self.user_rules
-        if state == 2:
-            comment = None
-            if not self.block_comment_prompt:
-                # Add a new row in the editor - prompt user to enter a comment for their rule addition
-                args, ok = QInputDialog().getText(
-                    None,
-                    "Enter comment",
-                    "Enter a comment to annotate why this rule exists. This is useful for your own records, as well as others.",
-                    QLineEdit.Normal,
-                )
-                if ok:
-                    comment = args
-                self._add_rule_to_table(
-                    name=self.edit_name,
-                    packageId=self.edit_packageId,
-                    rule_source=rule_source,
-                    rule_type="loadBottom",
-                    comment=comment if comment else "",
-                )
-            # Add rule to the database if it doesn't already exist
-            if not metadata.get(self.edit_packageId):
-                metadata[self.edit_packageId] = {}
-            if not metadata[self.edit_packageId].get("loadBottom"):
-                metadata[self.edit_packageId]["loadBottom"] = {}
-            metadata[self.edit_packageId]["loadBottom"]["value"] = True
-            if comment:
-                metadata[self.edit_packageId]["loadBottom"]["comment"] = comment
-        else:
-            # Search for & remove the rule's row entry from the editor table
-            for row in range(self.editor_model.rowCount()):
-                # Define criteria
-                packageId_value = self.editor_model.item(
-                    row, 1
-                )  # Get the item in column 2 (index 1)
-                rule_source_value = self.editor_model.item(
-                    row, 2
-                )  # Get the item in column 3 (index 2)
-                rule_type_value = self.editor_model.item(
-                    row, 3
-                )  # Get the item in column 4 (index 3)
-                # Search table for rows that match
+        if self.edit_packageId:
+            logger.debug(f"Toggle loadBottom for {self.edit_packageId}: {state}")
+            # Select database for editing
+            if rule_source == "Community Rules":
+                metadata = self.community_rules
+            elif rule_source == "User Rules":
+                metadata = self.user_rules
+            if state == 2:
+                comment = None
+                if not self.block_comment_prompt:
+                    # Add a new row in the editor - prompt user to enter a comment for their rule addition
+                    args, ok = QInputDialog().getText(
+                        None,
+                        "Enter comment",
+                        "Enter a comment to annotate why this rule exists. This is useful for your own records, as well as others.",
+                        QLineEdit.Normal,
+                    )
+                    if ok:
+                        comment = args
+                    self._add_rule_to_table(
+                        name=self.edit_name,
+                        packageId=self.edit_packageId,
+                        rule_source=rule_source,
+                        rule_type="loadBottom",
+                        comment=comment if comment else "",
+                    )
+                # Add rule to the database if it doesn't already exist
+                if not metadata.get(self.edit_packageId):
+                    metadata[self.edit_packageId] = {}
+                if not metadata[self.edit_packageId].get("loadBottom"):
+                    metadata[self.edit_packageId]["loadBottom"] = {}
+                metadata[self.edit_packageId]["loadBottom"]["value"] = True
+                if comment:
+                    metadata[self.edit_packageId]["loadBottom"]["comment"] = comment
+            else:
+                # Search for & remove the rule's row entry from the editor table
+                for row in range(self.editor_model.rowCount()):
+                    # Define criteria
+                    packageId_value = self.editor_model.item(
+                        row, 1
+                    )  # Get the item in column 2 (index 1)
+                    rule_source_value = self.editor_model.item(
+                        row, 2
+                    )  # Get the item in column 3 (index 2)
+                    rule_type_value = self.editor_model.item(
+                        row, 3
+                    )  # Get the item in column 4 (index 3)
+                    # Search table for rows that match
+                    if (
+                        (
+                            packageId_value
+                            and self.edit_packageId in packageId_value.text()
+                        )
+                        and (
+                            rule_source_value
+                            and rule_source in rule_source_value.text()
+                        )
+                        and (rule_type_value and "loadBottom" in rule_type_value.text())
+                    ):  # Remove row if criteria matches search
+                        self.editor_model.removeRow(row)
+                # Remove rule from the database
                 if (
-                    (packageId_value and self.edit_packageId in packageId_value.text())
-                    and (rule_source_value and rule_source in rule_source_value.text())
-                    and (rule_type_value and "loadBottom" in rule_type_value.text())
-                ):  # Remove row if criteria matches search
-                    self.editor_model.removeRow(row)
-            # Remove rule from the database
-            if metadata.get(self.edit_packageId, {}).get("loadBottom", {}).get("value"):
-                metadata[self.edit_packageId].pop("loadBottom")
+                    metadata.get(self.edit_packageId, {})
+                    .get("loadBottom", {})
+                    .get("value")
+                ):
+                    metadata[self.edit_packageId].pop("loadBottom")
 
     def modItemContextMenuEvent(self, point: QPoint) -> None:
         context_menu = QMenu(self)  # Mod item context menu event

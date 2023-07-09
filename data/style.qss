@@ -92,17 +92,17 @@ QWidget#MainPanel {
 
 
 /* ===== Missing mods prompt (window/missing_mods_panel.py) ===== */
-QTableView#missingModPannelTableView {
+QTableView#missingModPanelTableView {
     background-color: #22303d;
     color: white
 }
-QTableView#missingModPannelTableView QTableCornerButton{
+QTableView#missingModPanelTableView QTableCornerButton{
     background-color: #1B2838;
 }
-QWidget#missingModsPannel{
+QWidget#missingModsPanel{
     background-color: #1B2838
 }
-QHeaderView#missingModPannelTableView {
+QHeaderView#missingModPanelTableView {
     background-color: #1B2838;
     color: white;
 }
@@ -122,6 +122,26 @@ QCheckBox#summaryValue {
     color: white;
 }
 
+/* ===== RuleEditor (window/rule_editor_panel.py) ===== */
+QWidget#RuleEditor {
+    border-style: solid;
+    border-color: #455364;
+    border-width: 1px;
+    border-radius: 3px;
+    margin: 7px; /* Space between frame and app edge */
+    background-color: #1B2838;
+}
+QTableView#ruleEditorPanelTableView {
+    background-color: #22303d;
+    color: white
+}
+QTableView#ruleEditorPanelTableView QTableCornerButton{
+    background-color: #1B2838;
+}
+QHeaderView#ruleEditorPanelTableView {
+    background-color: #1B2838;
+    color: white;
+}
 
 /* ===== RunnerPanel (window/runner_panel.py) ===== */
 QWidget#RunnerPanel {
@@ -262,8 +282,7 @@ QPushButton {
     border-style: solid;
     border-width: 0px;
     border-radius: 5px;
-    /* border-color: beige; */
-    /* font: bold 14px; */
+    min-height: 1em;
     min-width: 6em;
     padding: 1px;
 }
