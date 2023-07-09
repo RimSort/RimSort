@@ -1303,7 +1303,15 @@ class MainContent:
                 """
             )
         self.active_mods_panel.clear_active_mods_search()
+        self.active_mods_panel.active_mods_filter_data_source_index = len(
+            self.active_mods_panel.active_mods_filter_data_source_icons
+        )
+        self.active_mods_panel.signal_active_mods_data_source_filter()
         self.inactive_mods_panel.clear_inactive_mods_search()
+        self.inactive_mods_panel.inactive_mods_filter_data_source_index = len(
+            self.inactive_mods_panel.inactive_mods_filter_data_source_icons
+        )
+        self.inactive_mods_panel.signal_inactive_mods_data_source_filter()
         if self.game_configuration.check_if_essential_paths_are_set():
             # Run expensive calculations to set cache data
             self.__refresh_cache_calculations_animated()
@@ -1341,7 +1349,15 @@ class MainContent:
         list widget and put them all into the inactive list widget.
         """
         self.active_mods_panel.clear_active_mods_search()
+        self.active_mods_panel.active_mods_filter_data_source_index = len(
+            self.active_mods_panel.active_mods_filter_data_source_icons
+        )
+        self.active_mods_panel.signal_active_mods_data_source_filter()
         self.inactive_mods_panel.clear_inactive_mods_search()
+        self.inactive_mods_panel.inactive_mods_filter_data_source_index = len(
+            self.inactive_mods_panel.inactive_mods_filter_data_source_icons
+        )
+        self.inactive_mods_panel.signal_inactive_mods_data_source_filter()
         (
             active_mods_data,
             inactive_mods_data,
@@ -1379,7 +1395,15 @@ class MainContent:
         # will likely sort before saving.
         logger.info("Starting sorting mods")
         self.active_mods_panel.clear_active_mods_search()
+        self.active_mods_panel.active_mods_filter_data_source_index = len(
+            self.active_mods_panel.active_mods_filter_data_source_icons
+        )
+        self.active_mods_panel.signal_active_mods_data_source_filter()
         self.inactive_mods_panel.clear_inactive_mods_search()
+        self.inactive_mods_panel.inactive_mods_filter_data_source_index = len(
+            self.inactive_mods_panel.inactive_mods_filter_data_source_icons
+        )
+        self.inactive_mods_panel.signal_inactive_mods_data_source_filter()
         active_mods = self.active_mods_panel.active_mods_list.get_list_items_by_dict()
         active_mod_ids = list()
         for mod_data in active_mods.values():
@@ -1473,7 +1497,15 @@ class MainContent:
         logger.info(f"Selected path: {file_path[0]}")
         if file_path[0]:
             self.active_mods_panel.clear_active_mods_search()
+            self.active_mods_panel.active_mods_filter_data_source_index = len(
+                self.active_mods_panel.active_mods_filter_data_source_icons
+            )
+            self.active_mods_panel.signal_active_mods_data_source_filter()
             self.inactive_mods_panel.clear_inactive_mods_search()
+            self.inactive_mods_panel.inactive_mods_filter_data_source_index = len(
+                self.inactive_mods_panel.inactive_mods_filter_data_source_icons
+            )
+            self.inactive_mods_panel.signal_inactive_mods_data_source_filter()
             logger.info(f"Trying to import mods list from XML: {file_path}")
             (
                 active_mods_data,
@@ -1849,7 +1881,15 @@ class MainContent:
         """
         if self.active_mods_data_restore_state and self.active_mods_data_restore_state:
             self.active_mods_panel.clear_active_mods_search()
+            self.active_mods_panel.active_mods_filter_data_source_index = len(
+                self.active_mods_panel.active_mods_filter_data_source_icons
+            )
+            self.active_mods_panel.signal_active_mods_data_source_filter()
             self.inactive_mods_panel.clear_inactive_mods_search()
+            self.inactive_mods_panel.inactive_mods_filter_data_source_index = len(
+                self.inactive_mods_panel.inactive_mods_filter_data_source_icons
+            )
+            self.inactive_mods_panel.signal_inactive_mods_data_source_filter()
             logger.info(
                 f"Restoring cached mod lists with active list [{len(self.active_mods_data_restore_state)}] and inactive list [{len(self.inactive_mods_data_restore_state)}]"
             )
