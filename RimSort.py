@@ -123,7 +123,9 @@ class MainWindow(QMainWindow):
         logger.info("Start creating main panels")
         self.game_configuration_panel = GameConfiguration(debug_mode=self.debug_mode)
         self.main_content_panel = MainContent(
-            self.game_configuration_panel, self.version_string
+            game_configuration=self.game_configuration_panel,
+            rimsort_version=self.version_string,
+            window=self,
         )
         self.bottom_panel = Status()
         logger.info("Finished creating main panels")

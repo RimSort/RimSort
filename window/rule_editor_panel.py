@@ -113,13 +113,12 @@ class RuleEditor(QWidget):
         self.user_rules_hidden = None
         # Can be used to get proper names for mods found in list
         # items that are not locally available
-        self.steam_workshop_metadata_packageIds_to_name = None
+        self.steam_workshop_metadata_packageIds_to_name = {}
         self.steam_workshop_metadata = steam_workshop_metadata
         if (
             self.steam_workshop_metadata
             and len(self.steam_workshop_metadata.keys()) > 0
         ):
-            self.steam_workshop_metadata_packageIds_to_name = {}
             for metadata in self.steam_workshop_metadata.values():
                 if metadata.get("packageId"):
                     self.steam_workshop_metadata_packageIds_to_name[
@@ -556,7 +555,7 @@ class RuleEditor(QWidget):
     ) -> None:
         if not self.edit_packageId:
             return
-        logger.debug(f"Adding rule to mod: {self.edit_packageId}")
+        logger.debug(f"Adding {rule_source} {rule_type} rule to mod {self.edit_packageId} with comment: {comment}")
         # Create the standard items for each column
         items = [
             QStandardItem(name),
@@ -594,7 +593,7 @@ class RuleEditor(QWidget):
             elif instruction[2] == "User Rules":
                 metadata = self.user_rules
             # Edit based on type of rule
-            if instruction[3] == "loadAfter" or instruction[3] == "loadBottom":
+            if instruction[3] == "loadAfter" or instruction[3] == "loadBefore":
                 metadata[self.edit_packageId][instruction[3]][instruction[1]][
                     "comment"
                 ] = instruction[4]

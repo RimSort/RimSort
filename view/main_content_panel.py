@@ -76,6 +76,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QInputDialog,
     QLineEdit,
+    QMainWindow,
 )
 
 from sort.dependencies import *
@@ -117,7 +118,10 @@ class MainContent:
     """
 
     def __init__(
-        self, game_configuration: GameConfiguration, rimsort_version: str
+        self,
+        game_configuration: GameConfiguration,
+        rimsort_version: str,
+        window: QMainWindow,
     ) -> None:
         """
         Initialize the main content panel.
@@ -125,6 +129,8 @@ class MainContent:
         :param game_configuration: game configuration panel to get paths
         """
         logger.info("Starting MainContent initialization")
+
+        self.window = window
 
         # VERSION PASSED FROM & CONFIGURED IN MAIN SCRIPT (RimSort.py)
         self.rimsort_version = rimsort_version
@@ -215,10 +221,10 @@ class MainContent:
             self._do_download_mods_with_steamcmd
         )
         self.active_mods_panel.active_mods_list.steamworks_subscription_signal.connect(
-            self._do_download_mods_with_steamworks
+            self._do_steamworks_api_call_animated
         )
         self.inactive_mods_panel.inactive_mods_list.steamworks_subscription_signal.connect(
-            self._do_download_mods_with_steamworks
+            self._do_steamworks_api_call_animated
         )
 
         # Restore cache initially set to empty
@@ -575,7 +581,7 @@ class MainContent:
             )
         else:
             logger.debug(
-                f"SteamCMD client appworkshop.acf metadata not found. Skipping."
+                f"SteamCMD client appworkshop.acf metadata not found. Skipping: {self.steamcmd_wrapper.steamcmd_appworkshop_acf_path}"
             )
         # Steam client
         steam_appworkshop_path = os.path.split(
@@ -597,7 +603,9 @@ class MainContent:
                 f"Successfully parsed Steam client appworkshop.acf metadata from: {self.steam_appworkshop_acf_path}"
             )
         else:
-            logger.debug(f"Steam client appworkshop.acf metadata not found. Skipping.")
+            logger.debug(
+                f"Steam client appworkshop.acf metadata not found. Skipping: {self.steam_appworkshop_acf_path}"
+            )
 
         # One working Dictionary for ALL mods
         self.internal_local_metadata = merge_mod_data(
@@ -792,17 +800,7 @@ class MainContent:
 
     def actions_slot(self, action: str) -> None:
         """
-        Slot for the `actions_signal` signal. Depending on the action,
-        either restore mod lists to the last saved state, or allow the
-        user to import a mod load order into the app.
-
-        Save: current list of active mods is written to the mods config file
-        Export: current list of active mods (may or may not be equal to the list of
-            mods on the mods config file) is exported in a mods config format
-            to an external file. Invalid mods are not loaded into the list and so
-            will not be exported.
-        Restore: regenerate active and inactive mods from ModsConfig
-        Import: import a mod list from a file. Does not automatically save to ModsConfig
+        Slot for the `actions_signal` signals
 
         :param action: string indicating action
         """
@@ -965,6 +963,7 @@ class MainContent:
             )
             # Create query runner
             self.query_runner = RunnerPanel()
+            self.query_runner.closing_signal.connect(self.db_builder.terminate)
             self.query_runner.setWindowTitle(
                 "RimSort - DB Builder PublishedFileIDs query"
             )
@@ -2176,6 +2175,14 @@ class MainContent:
             )
 
     def _do_steamworks_api_call_animated(self, instruction: list):
+        # No empty publishedfileids
+        if not len(instruction[1]) > 0:
+            show_warning(
+                title="RimSort",
+                text="No PublishedFileIds were supplied in operation.",
+                information="Please add mods to list before attempting to download.",
+            )
+            return
         loading_animation = LoadingAnimation(
             gif_path=str(
                 Path(
@@ -2426,8 +2433,8 @@ class MainContent:
                     stacktrace = traceback.format_exc()
                     show_warning(
                         title="Failed to update repo!",
-                        text="The configured repo failed to update!"
-                        + "Are you connected to the Internet?"
+                        text="The configured repo failed to update! "
+                        + "Are you connected to the Internet? "
                         + "Is your configured repo valid?",
                         information=f"Configured repository: {repo_url}",
                         details=stacktrace,
@@ -2769,6 +2776,7 @@ class MainContent:
                 )
             # Create query runner
             self.query_runner = RunnerPanel()
+            self.query_runner.closing_signal.connect(self.db_builder.terminate)
             self.query_runner.setWindowTitle(
                 f"RimSort - DB Builder ({self.game_configuration.db_builder_include})"
             )

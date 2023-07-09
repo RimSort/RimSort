@@ -476,7 +476,7 @@ class ModListWidget(QListWidget):
                     )
                     if answer == "&Yes":
                         logger.debug(
-                            f"Updating {len(git_paths)} git mod(s): {git_paths}"
+                            f"Updating {len(git_paths)} git mod(s)"
                         )
                         self.re_git_signal.emit(git_paths)
                     return True
@@ -512,7 +512,7 @@ class ModListWidget(QListWidget):
                     )
                     if answer == "&Yes":
                         logger.debug(
-                            f"Deleting + redownloading {len(steamcmd_publishedfileids)} SteamCMD mod(s): {steamcmd_publishedfileids}"
+                            f"Deleting + redownloading {len(steamcmd_publishedfileids)} SteamCMD mod(s)"
                         )
                         for path in steamcmd_mod_paths:
                             delete_files_except_extension(
@@ -531,7 +531,7 @@ class ModListWidget(QListWidget):
                     )
                     if answer == "&Yes":
                         logger.debug(
-                            f"Unsubscribing + re-subscribing to {len(steamcmd_publishedfileids)} mod(s): {steam_publishedfileids}"
+                            f"Unsubscribing + re-subscribing to {len(steam_publishedfileids)} mod(s)"
                         )
                         for path in steam_mod_paths:
                             delete_files_except_extension(
@@ -556,7 +556,7 @@ class ModListWidget(QListWidget):
                     )
                     if answer == "&Yes":
                         logger.debug(
-                            f"Unsubscribing from {len(steam_publishedfileids)} mod(s): {steam_publishedfileids}"
+                            f"Unsubscribing from {len(steam_publishedfileids)} mod(s)"
                         )
                         self.steamworks_subscription_signal.emit(
                             ["unsubscribe", steam_publishedfileids]

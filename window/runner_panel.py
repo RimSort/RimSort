@@ -30,6 +30,7 @@ class RunnerPanel(QWidget):
     It also has a built-in QProcess functionality.
     """
 
+    closing_signal = Signal()
     steamcmd_downloader_signal = Signal(list)
 
     def __init__(
@@ -143,6 +144,7 @@ class RunnerPanel(QWidget):
         self._do_clear_runner()
 
     def closeEvent(self, event):
+        self.closing_signal.emit()
         self._do_kill_process()
         event.accept()
         self.destroy()

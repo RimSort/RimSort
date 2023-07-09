@@ -18,7 +18,6 @@ from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QApplication
 
 from model.dialogue import show_fatal_error
-from model.animations import LoadingAnimation
 from steam.webapi import WebAPI
 from util.constants import RIMWORLD_DLC_METADATA
 from util.generic import chunks
@@ -124,7 +123,7 @@ class DynamicQuery(QObject):
                 missing_children,
             ) = self.IPublishedFileService_GetDetails(query, publishedfileids)
             if (
-                len(missing_children) > 0
+                missing_children and len(missing_children) > 0
             ):  # If we have missing data for any dependency...
                 # Uncomment to see the contents of missing_children
                 # logger.debug(missing_children)
@@ -162,13 +161,9 @@ class DynamicQuery(QObject):
             self.ISteamUGC_GetAppDependencies(
                 publishedfileids=publishedfileids, query=query
             )
-            loading_animation.show()
-            while loading_animation.thread and loading_animation.thread.isRunning():
-                QApplication.instance().processEvents()
-                continue
         else:
             self.dq_messaging_signal.emit(
-                "\nAppID dependency retrieval disabled. Starting Steamworks API call(s)!"
+                "\nAppID dependency retrieval disabled. Skipping Steamworks API call(s)!"
             )
 
         # Notify & return
@@ -472,11 +467,11 @@ class DynamicQuery(QObject):
         # Uncomment to see the total metadata returned from all Processes
         # logger.debug(pfids_appid_deps)
         # Add our metadata to the query...
+        logger.debug(
+            f"Populating AppID dependency information into database from query..."
+        )
         for pfid in query["database"].keys():
             if int(pfid) in pfids_appid_deps:
-                logger.debug(
-                    f"Populating AppID dependency information for mod {pfid}..."
-                )
                 for appid in pfids_appid_deps[int(pfid)]:
                     if str(appid) in RIMWORLD_DLC_METADATA.keys():
                         if not query["database"][pfid].get("dependencies"):

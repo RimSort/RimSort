@@ -167,33 +167,35 @@ class SteamDatabaseBuilder(QThread):
         db_from_local_metadata = {
             "version": 0,
             "database": {
-                v["publishedfileid"]: {
-                    "url": f"https://steamcommunity.com/sharedfiles/filedetails/?id={v['publishedfileid']}",
-                    "packageId": v.get("packageId"),
-                    "name": v.get("name"),
-                    "authors": v.get("author"),
-                    "gameVersions": v["supportedVersions"].get("li"),
-                }
-                for v in self.mods.values()
-                if v.get("publishedfileid")
+                **{
+                    v["appid"]: {
+                        "appid": True,
+                        "url": f'https://store.steampowered.com/app/{v["appid"]}',
+                        "packageId": v.get("packageId"),
+                        "name": v.get("name"),
+                        "authors": v.get("author"),
+                        "gameVersions": v.get("supportedVersions").get("li")
+                        if isinstance(v.get("supportedVersions").get("li", {}), list)
+                        else [v.get("supportedVersions", {}).get("li")],
+                    }
+                    for v in self.mods.values()
+                    if v.get("appid")
+                },
+                **{
+                    v["publishedfileid"]: {
+                        "url": f'https://steamcommunity.com/sharedfiles/filedetails/?id={v["publishedfileid"]}',
+                        "packageId": v.get("packageId"),
+                        "name": v.get("name"),
+                        "authors": v.get("author"),
+                        "gameVersions": v.get("supportedVersions").get("li")
+                        if isinstance(v.get("supportedVersions", {}).get("li"), list)
+                        else [v.get("supportedVersions", {}).get("li")],
+                    }
+                    for v in self.mods.values()
+                    if v.get("publishedfileid")
+                },
             },
         }
-
-        db_from_local_metadata["database"].update(
-            {
-                v["steamAppId"]: {
-                    "appid": True,
-                    "url": f"https://store.steampowered.com/app/{v['steamAppId']}",
-                    "packageId": v.get("packageId"),
-                    "name": v.get("name"),
-                    "authors": v.get("author"),
-                    "gameVersions": v.get("supportedVersions", {}).get("li"),
-                    "dependencies": {},
-                }
-                for v in self.mods.values()
-                if v.get("steamAppId")
-            }
-        )
         total = len(db_from_local_metadata["database"].keys())
         self.db_builder_message_output_signal.emit(
             f"Populated {total} items from locally found metadata into initial database for "

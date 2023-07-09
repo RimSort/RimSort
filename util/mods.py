@@ -1016,19 +1016,19 @@ def get_installed_expansions(game_path: str, game_version: str) -> Dict[str, Any
         logger.info("Manually populating names for BASE/EXPANSION data")
         dlc_mapping = {
             "ludeon.rimworld": {
-                "steamAppId": "294100",
+                "appid": "294100",
                 "description": RIMWORLD_DLC_METADATA["294100"]["description"],
             },
             "ludeon.rimworld.royalty": {
-                "steamAppId": "1149640",
+                "appid": "1149640",
                 "description": RIMWORLD_DLC_METADATA["1149640"]["description"],
             },
             "ludeon.rimworld.ideology": {
-                "steamAppId": "1392840",
+                "appid": "1392840",
                 "description": RIMWORLD_DLC_METADATA["1392840"]["description"],
             },
             "ludeon.rimworld.biotech": {
-                "steamAppId": "1826140",
+                "appid": "1826140",
                 "description": RIMWORLD_DLC_METADATA["1826140"]["description"],
             },
         }
@@ -1038,9 +1038,9 @@ def get_installed_expansions(game_path: str, game_version: str) -> Dict[str, Any
                 dlc_data = dlc_mapping[package_id]
                 data.update(
                     {
-                        "steamAppId": dlc_data["steamAppId"],
-                        "name": RIMWORLD_DLC_METADATA[dlc_data["steamAppId"]]["name"],
-                        "steam_url": RIMWORLD_DLC_METADATA[dlc_data["steamAppId"]][
+                        "appid": dlc_data["appid"],
+                        "name": RIMWORLD_DLC_METADATA[dlc_data["appid"]]["name"],
+                        "steam_url": RIMWORLD_DLC_METADATA[dlc_data["appid"]][
                             "steam_url"
                         ],
                         "description": dlc_data["description"],
