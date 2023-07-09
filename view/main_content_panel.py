@@ -215,10 +215,10 @@ class MainContent:
             self._do_download_mods_with_steamcmd
         )
         self.active_mods_panel.active_mods_list.steamworks_subscription_signal.connect(
-            self._do_steamworks_api_call_animated
+            self._do_download_mods_with_steamworks
         )
         self.inactive_mods_panel.inactive_mods_list.steamworks_subscription_signal.connect(
-            self._do_steamworks_api_call_animated
+            self._do_download_mods_with_steamworks
         )
 
         # Restore cache initially set to empty
@@ -256,7 +256,7 @@ class MainContent:
 
         # Check if paths have been set
         if self.game_configuration.check_if_essential_paths_are_set():
-            self.__refresh_cache_calculations_animated()
+            self.__refresh_cache_calculations()
 
             # Insert mod data into list (is_initial = True)
             self.__repopulate_lists(True)
@@ -1314,7 +1314,7 @@ class MainContent:
         self.inactive_mods_panel.signal_inactive_mods_data_source_filter()
         if self.game_configuration.check_if_essential_paths_are_set():
             # Run expensive calculations to set cache data
-            self.__refresh_cache_calculations_animated()
+            self.__refresh_cache_calculations()
 
             # Insert mod data into list
             self.__repopulate_lists()
@@ -1774,7 +1774,10 @@ class MainContent:
                 details=f"{active_mods_rentry_report}",
             )
         else:
-            show_warning(title="Failed to upload", text="Failed to upload exported active mod list to Rentry.co")
+            show_warning(
+                title="Failed to upload",
+                text="Failed to upload exported active mod list to Rentry.co",
+            )
 
     def _do_upload_rw_log(self):
         player_log_path = os.path.join(
@@ -2393,8 +2396,18 @@ class MainContent:
                 try:
                     # Open repo
                     repo = Repo(repo_path)
-                    # Make sure we are on main branch
-                    repo.git.checkout("main")
+                    # Determine the target branch name
+                    target_branch = None
+                    for ref in repo.remotes.origin.refs:
+                        if ref.remote_head in ("main", "master"):
+                            target_branch = ref.remote_head
+                            break
+                    if target_branch:
+                        # Checkout the target branch
+                        repo.git.checkout(target_branch)
+                    else:
+                        # Handle the case when the target branch is not found
+                        logger.warning("Target branch not found.")
                     # Reset the repository to HEAD in case of changes not committed
                     repo.head.reset(index=True, working_tree=True)
                     # Perform a pull with rebase

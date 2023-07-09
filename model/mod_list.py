@@ -166,7 +166,7 @@ class ModListWidget(QListWidget):
             tosteamcmd_publishedfileids = []
 
             # GIT MOD PATHS
-            # A list of git mod paths to remove and re-clone
+            # A list of git mod paths to update
             git_paths = []
 
             # STEAMCMD MOD PFIDS
@@ -196,11 +196,9 @@ class ModListWidget(QListWidget):
             convert_steamcmd_action = None
             # Edit mod rules
             edit_mod_rules_action = None
-            # Re-clone/Re-download/re-subscribe git/steamcmd/steam mods
+            # Update/Re-download/re-subscribe git/steamcmd/steam mods
             re_git_action = None
-            # Re-clone/Re-download/re-subscribe git/steamcmd/steam mods
             re_steamcmd_action = None
-            # Re-clone/Re-download/re-subscribe git/steamcmd/steam mods
             re_steam_action = None
             # Unsubscribe + delete mod
             unsubscribe_mod_steam_action = None
@@ -274,12 +272,12 @@ class ModListWidget(QListWidget):
                                 ) as mod_publishedfileid_txt:
                                     mod_publishedfileid_txt.write(mod_folder_name)
                             tosteamcmd_publishedfileids.append(mod_folder_name)
-                        # Re-clone git mods if local mod with git repo, but not steamcmd
+                        # Update git mods if local mod with git repo, but not steamcmd
                         elif widget_json_data.get(
                             "git_repo"
                         ) and not widget_json_data.get("steamcmd"):
                             re_git_action = QAction()
-                            re_git_action.setText("Re-clone mod with git")
+                            re_git_action.setText("Update mod with git")
                             git_paths.append(mod_folder_path)
                     # Edit mod rules with Rule Editor (only for individual mods)
                     edit_mod_rules_action = QAction()
@@ -382,13 +380,13 @@ class ModListWidget(QListWidget):
                                     ) as mod_publishedfileid_txt:
                                         mod_publishedfileid_txt.write(mod_folder_name)
                                 tosteamcmd_publishedfileids.append(mod_folder_name)
-                            # Re-clone git mods if local mod with git repo, but not steamcmd
+                            # Update git mods if local mod with git repo, but not steamcmd
                             elif widget_json_data.get(
                                 "git_repo"
                             ) and not widget_json_data.get("steamcmd"):
                                 if not re_git_action:
                                     re_git_action = QAction()
-                                    re_git_action.setText("Re-clone mod(s) with git")
+                                    re_git_action.setText("Update mod(s) with git")
                                 git_paths.append(widget_json_data["path"])
                         # No "Edit mod rules" when multiple selected
                         # Toggle warning
@@ -467,19 +465,18 @@ class ModListWidget(QListWidget):
             # Execute QMenu and return it's ACTION
             action = contextMenu.exec_(self.mapToGlobal(event.pos()))
             if action:  # Handle the action for all selected items
-                if (  # ACTION: Re-clone git mod(s)
+                if (  # ACTION: Update git mod(s)
                     action == re_git_action and len(git_paths) > 0
                 ):
                     # Prompt user
                     answer = show_dialogue_conditional(
                         title="Are you sure?",
-                        text=f"You have selected {len(git_paths)} git mods for deletion + re-clone.",
-                        information="\nThis operation will recursively delete all files, except for .dds textures found, "
-                        + "and attempt to re-clone the mods via git. Do you want to proceed?",
+                        text=f"You have selected {len(git_paths)} git mods to be updated.",
+                        information="Do you want to proceed?",
                     )
                     if answer == "&Yes":
                         logger.debug(
-                            f"Deleting and re-cloning {len(git_paths)} git mod(s): {git_paths}"
+                            f"Updating {len(git_paths)} git mod(s): {git_paths}"
                         )
                         self.re_git_signal.emit(git_paths)
                     return True
