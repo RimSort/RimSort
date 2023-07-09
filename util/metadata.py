@@ -474,11 +474,11 @@ def edit_workshop_acf_data(
     items_installed_before = len(
         steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemsInstalled"].keys()
     )
-    logger.warning(f"WorkshopItemsInstalled beforehand: {items_installed_before}")
+    logger.debug(f"WorkshopItemsInstalled beforehand: {items_installed_before}")
     item_details_before = len(
         steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemDetails"].keys()
     )
-    logger.warning(f"WorkshopItemDetails beforehand: {item_details_before}")
+    logger.debug(f"WorkshopItemDetails beforehand: {item_details_before}")
     for publishedfileid in publishedfileids:
         if operation == "add":
             steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemDetails"][
@@ -502,11 +502,11 @@ def edit_workshop_acf_data(
         items_installed_after = len(
             steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemsInstalled"].keys()
         )
-    logger.warning(f"WorkshopItemsInstalled beforehand: {items_installed_after}")
+    logger.warning(f"WorkshopItemsInstalled after: {items_installed_after}")
     item_details_after = len(
         steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemDetails"].keys()
     )
-    logger.warning(f"WorkshopItemDetails beforehand: {item_details_after}")
+    logger.warning(f"WorkshopItemDetails after: {item_details_after}")
     logger.info("Successfully edited data!")
     logger.info(f"Writing updated data back to path: {appworkshop_acf_path}")
     dict_to_acf(data=steamcmd_appworkshop_acf, path=appworkshop_acf_path)
@@ -583,11 +583,11 @@ def import_steamcmd_acf_data(
     items_installed_before = len(
         steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemsInstalled"].keys()
     )
-    logger.warning(f"WorkshopItemsInstalled beforehand: {items_installed_before}")
+    logger.debug(f"WorkshopItemsInstalled beforehand: {items_installed_before}")
     item_details_before = len(
         steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemDetails"].keys()
     )
-    logger.warning(f"WorkshopItemDetails beforehand: {item_details_before}")
+    logger.debug(f"WorkshopItemDetails beforehand: {item_details_before}")
     recursively_update_dict(
         steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemsInstalled"],
         acf_to_import["AppWorkshop"]["WorkshopItemsInstalled"],
@@ -599,11 +599,11 @@ def import_steamcmd_acf_data(
     items_installed_after = len(
         steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemsInstalled"].keys()
     )
-    logger.warning(f"WorkshopItemsInstalled beforehand: {items_installed_after}")
+    logger.debug(f"WorkshopItemsInstalled after: {items_installed_after}")
     item_details_after = len(
         steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemDetails"].keys()
     )
-    logger.warning(f"WorkshopItemDetails beforehand: {item_details_after}")
+    logger.debug(f"WorkshopItemDetails after: {item_details_after}")
     logger.info("Successfully imported data!")
     logger.info(f"Writing updated data back to path: {steamcmd_appworkshop_acf_path}")
     dict_to_acf(data=steamcmd_appworkshop_acf, path=steamcmd_appworkshop_acf_path)

@@ -49,9 +49,9 @@ class Actions(QWidget):
         self.bottom_panel = QVBoxLayout()
         self.bottom_panel.setAlignment(Qt.AlignBottom)
 
-        self._panel.addLayout(self.top_panel, 50)
-        self._panel.addLayout(self.middle_panel, 25)
-        self._panel.addLayout(self.bottom_panel, 25)
+        self._panel.addLayout(self.top_panel, 33)
+        self._panel.addLayout(self.middle_panel, 33)
+        self._panel.addLayout(self.bottom_panel, 33)
 
         # LIST OPTIONS LABEL
         self.list_options_label = QLabel("List Options")
@@ -59,7 +59,7 @@ class Actions(QWidget):
         self.list_options_label.setAlignment(Qt.AlignCenter)
 
         # REFRESH BUTTON
-        self.refresh_button = QPushButton("Refresh")
+        self.refresh_button = QPushButton("Refresh mods")
         self.refresh_button.setAutoFillBackground(True)
         # Set tooltip and connect signal
         self.refresh_button.setToolTip(
@@ -83,11 +83,11 @@ class Actions(QWidget):
         )
 
         # CLEAR BUTTON
-        self.clear_button = QPushButton("Clear")
+        self.clear_button = QPushButton("Clear active mods")
         self.clear_button.clicked.connect(partial(self.actions_signal.emit, "clear"))
 
         # RESTORE BUTTON
-        self.restore_button = QPushButton("Restore")
+        self.restore_button = QPushButton("Restore active state")
         self.restore_button.clicked.connect(
             partial(self.actions_signal.emit, "restore")
         )
@@ -97,17 +97,17 @@ class Actions(QWidget):
         )
 
         # SORT BUTTON
-        self.sort_button = QPushButton("Sort")
+        self.sort_button = QPushButton("Sort active mods")
         self.sort_button.clicked.connect(partial(self.actions_signal.emit, "sort"))
 
         # IMPORT BUTTON
-        self.import_button = QPushButton("Import List")
+        self.import_button = QPushButton("Import mod list")
         self.import_button.clicked.connect(
             partial(self.actions_signal.emit, "import_list_file_xml")
         )
 
         # EXPORT BUTTON
-        self.export_button = QPushButton("Export List")
+        self.export_button = QPushButton("Export mod list")
         self.export_button.clicked.connect(
             partial(self.actions_signal.emit, "export_list_file_xml")
         )
@@ -119,7 +119,7 @@ class Actions(QWidget):
         )
 
         # TODDS LABEL
-        self.todds_label = QLabel("todds")
+        self.todds_label = QLabel("DDS encoder (todds)")
         self.todds_label.setObjectName("summaryValue")
         self.todds_label.setAlignment(Qt.AlignCenter)
 
@@ -138,12 +138,19 @@ class Actions(QWidget):
         )
 
         # STEAM LABEL
-        self.steam_label = QLabel("Steam/SteamCMD")
-        self.steam_label.setObjectName("summaryValue")
-        self.steam_label.setAlignment(Qt.AlignCenter)
+        self.add_mods_label = QLabel("Download mods")
+        self.add_mods_label.setObjectName("summaryValue")
+        self.add_mods_label.setAlignment(Qt.AlignCenter)
+
+        # ADD GIT MOD BUTTON
+        self.add_git_mod_button = QPushButton("Add git mods")
+        self.add_git_mod_button.setToolTip("Clone a mod git repo to your local mods")
+        self.add_git_mod_button.clicked.connect(
+            partial(self.actions_signal.emit, "add_git_mod")
+        )
 
         # BROWSE WORKSHOP BUTTON
-        self.browse_workshop_button = QPushButton("Browse workshop")
+        self.browse_workshop_button = QPushButton("Browse Workshop")
         self.browse_workshop_button.setToolTip(
             "Download mods anonymously with SteamCMD, or subscribe with Steam!\n"
             + "No Steam account required to use SteamCMD!"
@@ -168,18 +175,12 @@ class Actions(QWidget):
         )
 
         # RIMWORLD LABEL
-        self.rimworld_label = QLabel("RimWorld")
+        self.rimworld_label = QLabel("RimWorld options")
         self.rimworld_label.setObjectName("summaryValue")
         self.rimworld_label.setAlignment(Qt.AlignCenter)
 
-        # UPLOAD LOG BUTTON
-        self.upload_rwlog_button = QPushButton("Upload log")
-        self.upload_rwlog_button.setToolTip("Upload RimWorld log to 0x0.st")
-        self.upload_rwlog_button.clicked.connect(
-            partial(self.actions_signal.emit, "upload_rw_log")
-        )
         # RUN BUTTON
-        self.run_button = QPushButton("Run")
+        self.run_button = QPushButton("Run game")
         self.run_button.setToolTip("Right-click to set RimWorld game arguments!")
         self.run_button.clicked.connect(partial(self.actions_signal.emit, "run"))
         # Set context menu policy and connect custom context menu event
@@ -187,7 +188,7 @@ class Actions(QWidget):
         self.run_button.customContextMenuRequested.connect(self.runArgsContextMenuEvent)
 
         # SAVE BUTTON
-        self.save_button = QPushButton("Save")
+        self.save_button = QPushButton("Save mod list")
         self.save_button.clicked.connect(partial(self.actions_signal.emit, "save"))
         # Save button flashing animation
         self.save_button_flashing_animation = QTimer()
@@ -202,6 +203,12 @@ class Actions(QWidget):
                 )
             )
         )
+        # UPLOAD LOG BUTTON
+        self.upload_rwlog_button = QPushButton("Upload logfile")
+        self.upload_rwlog_button.setToolTip("Upload RimWorld log to 0x0.st")
+        self.upload_rwlog_button.clicked.connect(
+            partial(self.actions_signal.emit, "upload_rw_log")
+        )
 
         # Add buttons to sub-layouts and sub-layouts to the main layout
         self.top_panel.addWidget(self.list_options_label)
@@ -209,17 +216,18 @@ class Actions(QWidget):
         self.top_panel.addWidget(self.clear_button)
         self.top_panel.addWidget(self.restore_button)
         self.top_panel.addWidget(self.sort_button)
-        self.middle_panel.addWidget(self.todds_label)
-        self.middle_panel.addWidget(self.optimize_textures_button)
-        self.middle_panel.addWidget(self.steam_label)
+        self.top_panel.addWidget(self.todds_label)
+        self.top_panel.addWidget(self.optimize_textures_button)
+        self.middle_panel.addWidget(self.add_mods_label)
+        self.middle_panel.addWidget(self.add_git_mod_button)
         self.middle_panel.addWidget(self.browse_workshop_button)
         self.middle_panel.addWidget(self.setup_steamcmd_button)
         self.bottom_panel.addWidget(self.rimworld_label)
-        self.bottom_panel.addWidget(self.upload_rwlog_button)
         self.bottom_panel.addWidget(self.import_button)
         self.bottom_panel.addWidget(self.export_button)
         self.bottom_panel.addWidget(self.run_button)
         self.bottom_panel.addWidget(self.save_button)
+        self.bottom_panel.addWidget(self.upload_rwlog_button)
 
         logger.info("Finished Actions initialization")
 
@@ -255,7 +263,7 @@ class Actions(QWidget):
 
     def runArgsContextMenuEvent(self, point: QPoint) -> None:
         contextMenu = QMenu(self)  # Actions Panel context menu event
-        set_run_args = contextMenu.addAction("Edit Run Args")  # runArgs
+        set_run_args = contextMenu.addAction("Edit run args")  # runArgs
         set_run_args.triggered.connect(
             partial(self.actions_signal.emit, "edit_run_args")
         )
@@ -267,9 +275,9 @@ class Actions(QWidget):
             "Configure SteamCMD prefix"
         )  # steamcmd path
         import_acf_data = contextMenu.addAction(
-            "Import SteamCMD ACF data"
+            "Import SteamCMD acf data"
         )  # import acf
-        reset_steamcmd_acf_data = contextMenu.addAction("Reset SteamCMD ACF data")
+        reset_steamcmd_acf_data = contextMenu.addAction("Reset SteamCMD acf data")
         set_steamcmd_path.triggered.connect(
             partial(self.actions_signal.emit, "set_steamcmd_path")
         )

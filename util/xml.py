@@ -27,7 +27,7 @@ def xml_path_to_json(path: str) -> Dict[str, Any]:
                 empty_tag.extract()
             data = xmltodict.parse(str(soup), dict_constructor=dict)
             data = data
-            logger.debug(f"XML file parsed with the following data: {data}")
+            logger.debug(f"XML file parsed")
     else:
         logger.error(f"XML file does not exist at: {path}")
     return data

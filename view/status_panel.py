@@ -67,6 +67,8 @@ class Status:
             self.status_text.start_pause_fade("Optimizing textures with todds")
         if action == "delete_textures":
             self.status_text.start_pause_fade("Deleting .dds textures using todds")
+        if action == "add_git_mod":
+            self.status_text.start_pause_fade("Added git mod repository to local mods")
         if action == "browse_workshop":
             self.status_text.start_pause_fade("Launched Steam Workshop browser")
         if action == "setup_steamcmd":

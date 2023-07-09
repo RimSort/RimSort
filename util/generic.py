@@ -3,6 +3,7 @@ from errno import EACCES
 import os
 import platform
 from pyperclip import copy as copy_to_clipboard
+import shutil
 from stat import S_IRWXU, S_IRWXG, S_IRWXO
 import subprocess
 from requests import post as requests_post
@@ -20,6 +21,22 @@ def chunks(_list: list, limit: int):
     """
     for i in range(0, len(_list), limit):
         yield _list[i : i + limit]
+
+
+def delete_files_except_extension(directory, extension):
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            if not file.endswith(extension):
+                file_path = os.path.join(root, file)
+                os.remove(file_path)
+                logger.debug(f"Deleted: {file_path}")
+
+    for root, dirs, _ in os.walk(directory, topdown=False):
+        for dir in dirs:
+            dir_path = os.path.join(root, dir)
+            if not os.listdir(dir_path):
+                os.rmdir(dir_path)
+                logger.debug(f"Deleted: {dir_path}")
 
 
 def handle_remove_read_only(func, path: str, exc):
@@ -91,9 +108,10 @@ def launch_game_process(game_install_path: str, args: list) -> None:
                 f"Launched independent RimWorld game process with PID {p.pid} using args {popen_args}"
             )
         else:
-            logger.warning("The game executable path does not exist")
+            logger.debug("The game executable path does not exist")
             show_warning(
-                text="Error Starting the Game",
+                title="File not found",
+                text="Unable to launch game process",
                 information=(
                     "RimSort could not start RimWorld as the game executable does "
                     f"not exist at the specified path: {executable_path}. Please check "

@@ -145,6 +145,7 @@ class RunnerPanel(QWidget):
     def closeEvent(self, event):
         self._do_kill_process()
         event.accept()
+        self.destroy()
 
     def eventFilter(self, obj, event):
         if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Escape:
@@ -427,7 +428,7 @@ class RunnerPanel(QWidget):
                                     self.steamcmd_download_tracking
                                 )
                             else:  # Otherwise do nothing
-                                logger.warning(
+                                logger.debug(
                                     "User declined re-download of failed mods."
                                 )
                         else:

@@ -28,9 +28,6 @@ def add_dependency_to_mod(
     of the mods the user currently has installed. Dependencies are one-way, so
     if A depends on B, B does not necessarily depend on A.
     """
-    logger.debug(
-        f"Adding dependencies for packages [{dependency_or_dependency_ids}] to mod data: {mod_data}"
-    )
     if mod_data:
         # Create a new key with empty set as value
         if "dependencies" not in mod_data:
@@ -161,6 +158,7 @@ def add_load_rule_to_mod(
 
         # If the value is a single string...
         if isinstance(dependency_or_dependency_ids, str):
+            total = 1
             dependency_id = dependency_or_dependency_ids.lower()
             for uuid in all_mods:
                 if all_mods[uuid]["packageId"] == dependency_id:
@@ -171,6 +169,7 @@ def add_load_rule_to_mod(
 
         # If the value is a single dict (case of MayRequire rules)
         elif isinstance(dependency_or_dependency_ids, dict):
+            total = len(dependency_or_dependency_ids)
             dependency_id = ""
             if "#text" in dependency_or_dependency_ids:
                 dependency_id = dependency_or_dependency_ids["#text"].lower()
@@ -188,6 +187,7 @@ def add_load_rule_to_mod(
 
         # If the value is a LIST of strings
         elif isinstance(dependency_or_dependency_ids, list):
+            total = len(dependency_or_dependency_ids)
             for dependency in dependency_or_dependency_ids:
                 dependency_id = ""
                 if isinstance(dependency, str):
@@ -219,29 +219,23 @@ def add_load_rule_to_mod(
                 f"Load order rules is not a single string/dict or a list of strigs/dicts: [{dependency_or_dependency_ids}]"
             )
             return
-    logger.debug(
-        f"Added load order rules containing package(s) [{dependency_or_dependency_ids}] for mod data: {mod_data} (and reverse direction too)"
-    )
 
 
-def add_single_str_dependency_to_mod(
-    mod_data: Dict[str, Any],
-    dependency_id: Any,
-    all_mods: Dict[str, Any],
+def add_dependency_to_mod_from_steamdb(
+    mod_data: Dict[str, Any], dependency_id: Any, all_mods: Dict[str, Any]
 ) -> None:
-    logger.debug(
-        f"Adding dependencies for package [{dependency_id}] to mod data: {mod_data}"
-    )
+    mod_name = mod_data.get("name")
     if mod_data:
         # Create a new key with empty set as value
         if "dependencies" not in mod_data:
             mod_data["dependencies"] = set()
 
-        # If the value is a single dict (for modDependencies)
+        # If the value is a single str (for steamDB)
         if isinstance(dependency_id, str):
             mod_data["dependencies"].add(dependency_id)
         else:
             logger.error(f"Dependencies is not a single str: [{dependency_id}]")
+    logger.debug(f"Added dependency to [{mod_name}] from SteamDB: [{dependency_id}]")
 
 
 def get_active_inactive_mods(
@@ -275,11 +269,8 @@ def get_active_inactive_mods(
         packageId_to_uuids[package_id][mod_uuid] = [data_source, mod_path]
     duplicate_mods = packageId_to_uuids.copy()
     for package_id in packageId_to_uuids:  # If a packageId has > 1 UUID listed
-        if len(packageId_to_uuids[package_id]) > 1:  # ...it is a duplicate mod
-            logger.info(
-                f"Duplicate mods found for mod {package_id}: {packageId_to_uuids[package_id]}"
-            )
-        else:  # Otherwise, remove non-duplicates from our tracking dict
+        if not len(packageId_to_uuids[package_id]) > 1:  # ...it is not a duplicate mod
+            # Remove non-duplicates from our tracking dict
             del duplicate_mods[package_id]
     # Get the list of active mods and populate data from workshop + expansions
     logger.info(f"Calling get active mods with Config Path: {config_path}")
@@ -313,9 +304,10 @@ def get_active_inactive_mods(
     # Get the inactive mods by subtracting active mods from workshop + expansions
     logger.info("Calling get inactive mods")
     inactive_mods = get_inactive_mods(workshop_and_expansions, active_mods)
-    logger.info(
-        f"Returning newly generated active mods [{len(active_mods)}] and inactive mods [{len(inactive_mods)}] list"
-    )
+    logger.info(f"# active mods: {len(active_mods)}")
+    logger.info(f"# inactive mods: {len(inactive_mods)}")
+    logger.info(f"# duplicate mods: {len(duplicate_mods)}")
+    logger.info(f"# missing mods: {len(missing_mods)}")
     return active_mods, inactive_mods, duplicate_mods, missing_mods
 
 
@@ -532,7 +524,6 @@ def get_active_mods_from_config(
         logger.debug(
             f"Generated active_mods_dict with {len(active_mods_dict)} entries: {active_mods_dict}"
         )
-        logger.info(f"Returning missing mods: {missing_mods}")
         return active_mods_dict, missing_mods
     else:
         logger.error(
@@ -776,7 +767,7 @@ def get_dependencies_for_mods(
             f"Tracking {len(steam_id_to_package_id)} SteamDB packageIds for lookup"
         )
         logger.debug(
-            f"Tracking Steam dependency data for installed mods: {tracking_dict}"
+            f"Tracking Steam dependency data for {len(tracking_dict)} installed mods"
         )
 
         # For each mod that exists in all_mods -> dependencies (in Steam ID form)
@@ -790,7 +781,7 @@ def get_dependencies_for_mods(
                 # the metadata actually references a Steam ID that itself does not
                 # wire to a package_id defined in an installed & valid mod.
                 if dependency_steam_id in steam_id_to_package_id:
-                    add_single_str_dependency_to_mod(
+                    add_dependency_to_mod_from_steamdb(
                         all_mods[
                             packageId_to_uuid[installed_mod_package_id]
                         ],  # Already checked above
@@ -811,7 +802,7 @@ def get_dependencies_for_mods(
 
     # Add load order to installed mods based on dependencies from community rules
     if community_rules:
-        logger.info("Starting adding dependencies from Community Rules")
+        logger.info("Starting adding rules from configured Community Rules")
         for package_id in community_rules:
             # Note: requiring the package be in all_mods should be fine, as
             # if the mod doesn't exist all_mods, then either mod_data or dependency_id
@@ -953,7 +944,7 @@ def get_game_version(game_path: str) -> str:
                 "file in the game install directory."
             ),
         )
-    logger.info(
+    logger.debug(
         f"Finished getting game version from Game Folder, returning now: {version.strip()}"
     )
     return version.strip()
@@ -1017,8 +1008,8 @@ def get_installed_expansions(game_path: str, game_version: str) -> Dict[str, Any
             f"Attempting to get BASE/EXPANSIONS data from Rimworld's /Data folder: {data_path}"
         )
         mod_data = parse_mod_data(data_path, "expansion")
-        logger.info("Finished getting BASE/EXPANSION data")
-        logger.debug(mod_data)
+        logger.debug("Finished getting BASE/EXPANSION data")
+        # logger.debug(mod_data)
 
         # Base game and expansion About.xml do not contain name, so these
         # must be manually added
@@ -1063,9 +1054,9 @@ def get_installed_expansions(game_path: str, game_version: str) -> Dict[str, Any
         logger.info(
             "Finished getting installed expansions, returning final BASE/EXPANSIONS data now"
         )
-        logger.debug(mod_data)
+        # logger.debug(mod_data)
     else:
-        logger.warning(
+        logger.error(
             "Skipping parsing data from empty game data path. Is the game path configured?"
         )
     return mod_data
@@ -1103,9 +1094,9 @@ def get_local_mods(local_path: str, game_path: Optional[str] = None) -> Dict[str
         )
         mod_data = parse_mod_data(local_path, "local")
         logger.info("Finished getting LOCAL mods data, returning LOCAL mods data now")
-        logger.debug(mod_data)
+        # logger.debug(mod_data)
     else:
-        logger.warning(
+        logger.debug(
             "Skipping parsing data from empty local mods path. Is the local mods path configured?"
         )
     return mod_data
@@ -1136,9 +1127,9 @@ def get_workshop_mods(workshop_path: str) -> Dict[str, Any]:
         logger.info(f"Getting WORKSHOP data with Workshop path: {workshop_path}")
         mod_data = parse_mod_data(workshop_path, "workshop")
         logger.info("Finished getting WORKSHOP data, returning WORKSHOP data now")
-        logger.debug(mod_data)
+        # logger.debug(mod_data)
     else:
-        logger.warning(
+        logger.debug(
             "Skipping parsing data from empty workshop mods path. Is the workshop mods path configured?"
         )
     return mod_data
@@ -1165,11 +1156,10 @@ def merge_mod_data(*dict_args: dict[str, Any]) -> Dict[str, Any]:
     Given any number of dictionaries, shallow copy and merge into a new dict,
     precedence goes to key-value pairs in latter dictionaries.
     """
-    logger.info("Merging LOCAL mods with WORKSHOP mods")
+    logger.info(f"Merging mods from {len(dict_args)} sources")
     result = {}
     for dictionary in dict_args:
         result.update(dictionary)
-    logger.debug(f"Merged LOCAL and WORKSHOP mods: {result}")
     return result
 
 
@@ -1255,7 +1245,7 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                         "^ this may not be an issue, as workshop sometimes forgets to delete unsubscribed mod folders."
                     )
                     invalid_dirs.append(file.name)
-                    logger.info(f"Populating invalid mod: {file.path}")
+                    logger.debug(f"Populating invalid mod: {file.path}")
                     uuid = str(uuid4())
                     mods[uuid] = {
                         "invalid": True,
@@ -1291,9 +1281,8 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                         )
                     else:
                         # Case-insensitive `ModMetaData` key.
-                        logger.debug("Attempting to normalize XML content keys")
+                        logger.debug("Normalizing XML content keys")
                         mod_data = {k.lower(): v for k, v in mod_data.items()}
-                        logger.debug(f"Normalized XML content: {mod_data}")
                         logger.debug("Editing XML content")
                         if mod_data.get("modmetadata"):
                             if "modmetadata" in mod_data and mod_data[
@@ -1378,12 +1367,12 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                             )
             else:
                 files_scanned.append(file.name)
-        logger.debug(f"Scanned the following files in mods path: {files_scanned}")
-        logger.debug(f"Scanned the following dirs in mods path: {dirs_scanned}")
-        if invalid_dirs:
-            logger.debug(
-                f"The following scanned dirs did not contain mod info: {invalid_dirs}"
-            )
+        # logger.debug(f"Scanned the following files in mods path: {files_scanned}")
+        # logger.debug(f"Scanned the following dirs in mods path: {dirs_scanned}")
+        # if invalid_dirs:
+        #     logger.debug(
+        #         f"The following scanned dirs did not contain mod info: {invalid_dirs}"
+        #     )
     else:
         logger.error(f"The provided mods path does not exist: {mods_path}")
         if mods_path:

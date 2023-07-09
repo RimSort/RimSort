@@ -127,7 +127,7 @@ class GameConfiguration(QObject):
         )
         self.game_folder_line_clear_button.setEnabled(True)
         self.game_folder_line_clear_button.clicked.connect(self.clear_game_folder_line)
-        self.game_folder_line.setPlaceholderText("Unknown")
+        self.game_folder_line.setPlaceholderText("Unconfigured")
         self.game_folder_line.setToolTip(
             "The game installation directory contains the game executable.\n"
             "Set the game installation directory with the button on the right."
@@ -157,7 +157,7 @@ class GameConfiguration(QObject):
         self.config_folder_line_clear_button.clicked.connect(
             self.clear_config_folder_line
         )
-        self.config_folder_line.setPlaceholderText("Unknown")
+        self.config_folder_line.setPlaceholderText("Unconfigured")
         self.config_folder_line.setToolTip(
             "The this directory contains the ModsConfig.xml file, which shows your\n"
             "active mods and their load order. It may also contain other mod configs."
@@ -188,7 +188,7 @@ class GameConfiguration(QObject):
         self.workshop_folder_line_clear_button.clicked.connect(
             self.clear_workshop_folder_line
         )
-        self.workshop_folder_line.setPlaceholderText("Unknown")
+        self.workshop_folder_line.setPlaceholderText("Unconfigured")
         self.workshop_folder_line.setToolTip(
             "The Steam Workshop mods directory contains mods downloaded from Steam client.\n"
             "Set the Steam Workshop mods directory manually with the button on the right."
@@ -216,7 +216,7 @@ class GameConfiguration(QObject):
         self.local_folder_line_clear_button.clicked.connect(
             self.clear_local_folder_line
         )
-        self.local_folder_line.setPlaceholderText("Unknown")
+        self.local_folder_line.setPlaceholderText("Unconfigured")
         self.local_folder_line.setToolTip(
             "The local mods directory contains manually downloaded mod folders.\n"
             "By default, this folder is located in the game install directory.\n"
@@ -403,7 +403,7 @@ class GameConfiguration(QObject):
         game_folder_path = self.get_game_folder_path()
         config_folder_path = self.get_config_folder_path()
         if not game_folder_path or not config_folder_path:
-            logger.warning("One or more paths not set, returning False")
+            logger.debug("One or more paths not set, returning False")
             show_warning(
                 text="Essential Paths not set!",
                 information=(
@@ -930,7 +930,7 @@ class GameConfiguration(QObject):
                     logger.info("JSON data written")
         else:
             logger.error(
-                "settings.json does not exist despite already running initialize_storage"
+                "settings.json does not exist despite already running initialize_storage...?!"
             )
 
     def delete_all_paths_data(self) -> None:

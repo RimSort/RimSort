@@ -159,20 +159,11 @@ class DynamicQuery(QObject):
                 "\nAppID dependency retrieval enabled. Starting Steamworks API call(s)..."
             )
             # ISteamUGC/GetAppDependencies
-            progress_animation = LoadingAnimation(
-                gif_path=str(
-                    Path(
-                        os.path.join(os.path.dirname(__file__), "../data/steam.gif")
-                    ).resolve()
-                ),
-                target=partial(
-                    self.ISteamUGC_GetAppDependencies,
-                    publishedfileids=publishedfileids,
-                    query=query,
-                ),
+            self.ISteamUGC_GetAppDependencies(
+                publishedfileids=publishedfileids, query=query
             )
-            progress_animation.show()
-            while progress_animation.thread and progress_animation.thread.isRunning():
+            loading_animation.show()
+            while loading_animation.thread and loading_animation.thread.isRunning():
                 QApplication.instance().processEvents()
                 continue
         else:

@@ -104,7 +104,7 @@ class ToddsInterface:
         )
         logger.info("Checking for todds...")
         if os.path.exists(todds_exe_path):
-            logger.warning(f"Found todds executable at: {todds_exe_path}")
+            logger.debug(f"Found todds executable at: {todds_exe_path}")
             args = self.todds_presets[self.preset]
             args.append(target_path)
             if not runner.todds_dry_run_support:

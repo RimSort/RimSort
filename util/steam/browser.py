@@ -174,7 +174,7 @@ class SteamBrowser(QWidget):
 
     def __browse_to_location(self):
         url = QUrl(self.location.text())
-        logger.warning(f"Browsing to: {url.url()}")
+        logger.debug(f"Browsing to: {url.url()}")
         self.web_view.load(url)
 
     def _add_collection_or_mod_to_list(self):

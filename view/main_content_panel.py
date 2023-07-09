@@ -39,6 +39,7 @@ from model.animations import LoadingAnimation
 
 from util.generic import (
     chunks,
+    delete_files_except_extension,
     handle_remove_read_only,
     open_url_browser,
     upload_data_to_0x0_st,
@@ -163,9 +164,9 @@ class MainContent:
 
         # WIDGETS INTO BASE LAYOUT
         self.main_layout.addLayout(self.mod_info_panel.panel, 50)
-        self.main_layout.addLayout(self.inactive_mods_panel.panel, 20)
-        self.main_layout.addLayout(self.active_mods_panel.panel, 20)
-        self.main_layout.addLayout(self.actions_panel.panel, 10)
+        self.main_layout.addLayout(self.inactive_mods_panel.panel, 25)
+        self.main_layout.addLayout(self.active_mods_panel.panel, 25)
+        self.main_layout.addLayout(self.actions_panel.panel)
 
         # SIGNALS AND SLOTS
         self.actions_panel.actions_signal.connect(self.actions_slot)  # Actions
@@ -202,6 +203,16 @@ class MainContent:
         )
         self.inactive_mods_panel.inactive_mods_list.edit_rules_signal.connect(
             self._do_open_rule_editor
+        )
+        self.active_mods_panel.active_mods_list.re_git_signal.connect(self._do_re_git)
+        self.inactive_mods_panel.inactive_mods_list.re_git_signal.connect(
+            self._do_re_git
+        )
+        self.active_mods_panel.active_mods_list.steamcmd_downloader_signal.connect(
+            self._do_download_mods_with_steamcmd
+        )
+        self.inactive_mods_panel.inactive_mods_list.steamcmd_downloader_signal.connect(
+            self._do_download_mods_with_steamcmd
         )
         self.active_mods_panel.active_mods_list.steamworks_subscription_signal.connect(
             self._do_steamworks_api_call_animated
@@ -245,19 +256,7 @@ class MainContent:
 
         # Check if paths have been set
         if self.game_configuration.check_if_essential_paths_are_set():
-            # Run expensive calculations to set cache data
-            progress_animation = LoadingAnimation(
-                gif_path=str(
-                    Path(
-                        os.path.join(os.path.dirname(__file__), "../data/rimworld.gif")
-                    ).resolve()
-                ),
-                target=self.__refresh_cache_calculations,
-            )
-            progress_animation.show()
-            while progress_animation.thread and progress_animation.thread.isRunning():
-                QApplication.instance().processEvents()
-                continue
+            self.__refresh_cache_calculations_animated()
 
             # Insert mod data into list (is_initial = True)
             self.__repopulate_lists(True)
@@ -269,7 +268,7 @@ class MainContent:
                 self._do_check_for_workshop_updates()
                 self._do_generate_mod_update_report()
             else:
-                logger.debug(
+                logger.info(
                     "User preference is not configured to check Steam mods for updates. Skipping..."
                 )
 
@@ -280,7 +279,7 @@ class MainContent:
         # CHECK USER PREFERENCE FOR WATCHDOG
         if self.game_configuration.watchdog_toggle:
             # Start watchdog
-            logger.debug("Starting watchdog")
+            logger.info("Starting watchdog")
             self.game_configuration_watchdog_observer.start()
 
         logger.info("Finished MainContent initialization")
@@ -734,6 +733,21 @@ class MainContent:
 
         logger.info("Finished refreshing cache calculations")
 
+    def __refresh_cache_calculations_animated(self) -> None:
+        # Run expensive calculations to set cache data
+        loading_animation = LoadingAnimation(
+            gif_path=str(
+                Path(
+                    os.path.join(os.path.dirname(__file__), "../data/rimworld.gif")
+                ).resolve()
+            ),
+            target=self.__refresh_cache_calculations,
+        )
+        loading_animation.show()
+        while loading_animation.thread and loading_animation.thread.isRunning():
+            QApplication.instance().processEvents()
+            continue
+
     def __repopulate_lists(self, is_initial: bool = False) -> None:
         """
         Get active and inactive mod lists based on the config path
@@ -806,7 +820,7 @@ class MainContent:
         if action == "sort":
             self._do_sort()
         if "textures" in action:
-            logger.warning("Initiating new todds operation...")
+            logger.debug("Initiating new todds operation...")
             # Setup Environment
             todds_txt_path = os.path.join(gettempdir(), "todds.txt")
             if os.path.exists(todds_txt_path):
@@ -834,6 +848,8 @@ class MainContent:
                 self._do_optimize_textures(todds_txt_path)
             if action == "delete_textures":
                 self._do_delete_dds_textures(todds_txt_path)
+        if action == "add_git_mod":
+            self._do_add_git_mod()
         if action == "browse_workshop":
             self._do_browse_workshop()
         if action == "setup_steamcmd":
@@ -889,8 +905,9 @@ class MainContent:
             self._do_configure_steam_database_repo()
         if action == "download_steam_database":
             if GIT_EXISTS:
-                self._do_clone_repo_to_storage_path(
-                    repo_url=self.game_configuration.steam_db_repo
+                self._do_clone_repo_to_path(
+                    base_path=self.game_configuration.dbs_path,
+                    repo_url=self.game_configuration.steam_db_repo,
                 )
             else:
                 self._do_notify_no_git()
@@ -908,8 +925,9 @@ class MainContent:
             self._do_configure_community_rules_db_repo()
         if action == "download_community_rules_database":
             if GIT_EXISTS:
-                self._do_clone_repo_to_storage_path(
-                    repo_url=self.game_configuration.community_rules_repo
+                self._do_clone_repo_to_path(
+                    base_path=self.game_configuration.dbs_path,
+                    repo_url=self.game_configuration.community_rules_repo,
                 )
             else:
                 self._do_notify_no_git()
@@ -971,7 +989,7 @@ class MainContent:
             else:
                 self.query_runner.close()
                 self.query_runner = None
-                for metadata in self.internal_local_metadata.values():
+                for metadata in self.all_mods_with_dependencies.values():
                     mod_pfid = metadata.get("publishedfileid")
                     if mod_pfid in self.db_builder.publishedfileids:
                         logger.warning(f"Skipping download of existing mod: {mod_pfid}")
@@ -1156,24 +1174,24 @@ class MainContent:
         logger.info(
             "User preference is configured to check Steam mods for updates. Displaying potential updates..."
         )
-        progress_animation = LoadingAnimation(
+        loading_animation = LoadingAnimation(
             gif_path=str(
                 Path(
                     os.path.join(os.path.dirname(__file__), "../data/query.gif")
                 ).resolve()
             ),
             target=partial(
-                query_workshop_update_data, mods=self.internal_local_metadata
+                query_workshop_update_data, mods=self.all_mods_with_dependencies
             ),
         )
-        progress_animation.show()
-        while progress_animation.thread and progress_animation.thread.isRunning():
+        loading_animation.show()
+        while loading_animation.thread and loading_animation.thread.isRunning():
             QApplication.instance().processEvents()
             continue
 
     def _do_generate_mod_update_report(self) -> None:
         self.workshop_mods_potential_updates = {}
-        for v in self.internal_local_metadata.values():
+        for v in self.all_mods_with_dependencies.values():
             if v.get("publishedfileid") and (
                 v.get("steamcmd") or v["data_source"] == "workshop"
             ):
@@ -1288,18 +1306,7 @@ class MainContent:
         self.inactive_mods_panel.clear_inactive_mods_search()
         if self.game_configuration.check_if_essential_paths_are_set():
             # Run expensive calculations to set cache data
-            progress_animation = LoadingAnimation(
-                gif_path=str(
-                    Path(
-                        os.path.join(os.path.dirname(__file__), "../data/rimworld.gif")
-                    ).resolve()
-                ),
-                target=self.__refresh_cache_calculations,
-            )
-            progress_animation.show()
-            while progress_animation.thread and progress_animation.thread.isRunning():
-                QApplication.instance().processEvents()
-                continue
+            self.__refresh_cache_calculations_animated()
 
             # Insert mod data into list
             self.__repopulate_lists()
@@ -1311,12 +1318,12 @@ class MainContent:
                 self._do_check_for_workshop_updates()
                 self._do_generate_mod_update_report()
             else:
-                logger.debug(
+                logger.info(
                     "User preference is not configured to check Steam mods for updates. Skipping..."
                 )
         else:
             self.__insert_data_into_lists({}, {})
-            logger.warning(
+            logger.debug(
                 "Essential paths have not been set. Passing refresh and resetting mod lists"
             )
 
@@ -2029,26 +2036,6 @@ class MainContent:
         else:
             logger.debug("USER ACTION: pressed cancel, passing")
 
-    def _do_show_steamcmd_status(self):
-        if (
-            self.steamcmd_runner
-            and self.steamcmd_runner.process
-            and self.steamcmd_runner.process.state() == QProcess.Running
-        ):
-            show_warning(
-                title="RimSort",
-                text="Unable to create SteamCMD runner!",
-                information="There is an active process already running!",
-                details=f"PID {self.steamcmd_runner.process.processId()} : "
-                + self.steamcmd_runner.process.program(),
-            )
-            return
-        self.steamcmd_runner = RunnerPanel()
-        self.steamcmd_runner.setWindowTitle("RimSort - SteamCMD status")
-        self.steamcmd_runner.show()
-        self.steamcmd_runner.message("Showing steamcmd status...")
-        self.steamcmd_wrapper.show_workshop_status("294100", self.steamcmd_runner)
-
     def _do_download_mods_with_steamworks(self, publishedfileids: list):
         # No empty publishedfileids
         if not len(publishedfileids) > 0:
@@ -2143,7 +2130,7 @@ class MainContent:
             )
 
     def _do_steamworks_api_call_animated(self, instruction: list):
-        progress_animation = LoadingAnimation(
+        loading_animation = LoadingAnimation(
             gif_path=str(
                 Path(
                     os.path.join(os.path.dirname(__file__), "../data/steam.gif")
@@ -2151,10 +2138,42 @@ class MainContent:
             ),
             target=partial(self._do_steamworks_api_call, instruction=instruction),
         )
-        progress_animation.show()
-        while progress_animation.thread and progress_animation.thread.isRunning():
+        loading_animation.show()
+        while loading_animation.thread and loading_animation.thread.isRunning():
             QApplication.instance().processEvents()
             continue
+
+    # GIT MOD ACTIONS
+
+    def _do_add_git_mod(self) -> None:
+        """
+        Opens a QDialogInput that allows the user to edit the run args
+        that are configured to be passed to the Rimworld executable
+        """
+        args, ok = QInputDialog().getText(
+            None,
+            "Enter git repo",
+            "Enter a git repository url (http/https) to clone to local mods:",
+            QLineEdit.Normal,
+        )
+        if ok:
+            self._do_clone_repo_to_path(
+                base_path=self.game_configuration.get_local_folder_path(), repo_url=args
+            )
+        else:
+            logger.debug("Cancelling operation.")
+
+    def _do_re_git(self, repo_paths: list) -> None:
+        if GIT_EXISTS:
+            for path in repo_paths:
+                repo = Repo(path)
+                origin_url = repo.remote("origin").url
+                self._do_clone_repo_to_path(
+                    base_path=os.path.split(path)[0], repo_url=origin_url
+                )
+                self._do_cleanup_gitpython(repo)
+        else:
+            self._do_notify_no_git()
 
     # STEAM/COMMUNITY RULES DATABASE CONFIGURATION
 
@@ -2201,7 +2220,7 @@ class MainContent:
         repo.git.clear_cache()
         del repo
 
-    def _do_clone_repo_to_storage_path(self, repo_url: str) -> None:
+    def _do_clone_repo_to_path(self, base_path: str, repo_url: str) -> None:
         """
         Checks validity of configured git repo, as well as if it exists
         Handles possible existing repo, and prompts (re)download of repo
@@ -2217,8 +2236,7 @@ class MainContent:
             repo_folder_name = os.path.split(repo_url)[1]
             # Calculate path from generated folder name
             repo_path = os.path.join(
-                self.game_configuration.storage_path,
-                self.game_configuration.dbs_path,
+                base_path,
                 repo_folder_name,
             )
             if os.path.exists(repo_path):  # If local repo does exists
@@ -2238,17 +2256,17 @@ class MainContent:
                     ],
                 )
                 if answer == "&Cancel":
-                    logger.warning(
+                    logger.debug(
                         f"User cancelled prompt. Skipping any {repo_folder_name} repository actions."
                     )
                     return
                 elif answer == "Clone new":
                     logger.info(f"Deleting local git repo at: {repo_path}")
-                    shutil_rmtree(
-                        repo_path, ignore_errors=False, onerror=handle_remove_read_only
-                    )
+                    delete_files_except_extension(directory=repo_path, extension=".dds")
                 elif answer == "Update existing":
-                    self._do_force_update_existing_repo(repo_url=repo_url)
+                    self._do_force_update_existing_repo(
+                        base_path=base_path, repo_url=repo_url
+                    )
                     return
             # Clone the repo to storage path and notify user
             logger.info(f"Cloning {repo_url} to: {repo_path}")
@@ -2260,15 +2278,43 @@ class MainContent:
                     information=f"{repo_url} ->\n" + f"{repo_path}",
                 )
             except GitCommandError:
-                stacktrace = traceback.format_exc()
-                show_warning(
-                    title="Failed to clone repo!",
-                    text="The configured repo failed to clone!"
-                    + "Are you connected to the Internet?"
-                    + "Is your configured repo valid?",
-                    information=f"Configured repository: {repo_url}",
-                    details=stacktrace,
-                )
+                try:
+                    # Initialize a new Git repository
+                    repo = Repo.init(repo_path)
+                    # Add the origin remote
+                    origin_remote = repo.create_remote("origin", repo_url)
+                    # Fetch the remote branches
+                    origin_remote.fetch()
+                    # Determine the target branch name
+                    target_branch = None
+                    for ref in repo.remotes.origin.refs:
+                        if ref.remote_head in ("main", "master"):
+                            target_branch = ref.remote_head
+                            break
+
+                    if target_branch:
+                        # Checkout the target branch
+                        repo.git.checkout(
+                            f"origin/{target_branch}", b=target_branch, force=True
+                        )
+                    else:
+                        # Handle the case when the target branch is not found
+                        logger.warning("Target branch not found.")
+                    show_information(
+                        title="Repo retrieved",
+                        text="The configured repository was reinitialized with existing files! (likely leftover .dds textures)",
+                        information=f"{repo_url} ->\n" + f"{repo_path}",
+                    )
+                except GitCommandError:
+                    stacktrace = traceback.format_exc()
+                    show_warning(
+                        title="Failed to clone repo!",
+                        text="The configured repo failed to clone/initialize! "
+                        + "Are you connected to the Internet? "
+                        + "Is your configured repo valid?",
+                        information=f"Configured repository: {repo_url}",
+                        details=stacktrace,
+                    )
         else:
             # Warn the user so they know to configure in settings
             show_warning(
@@ -2279,7 +2325,7 @@ class MainContent:
                 + 'empty and is prefixed with "http://" or "https://"',
             )
 
-    def _do_force_update_existing_repo(self, repo_url: str) -> None:
+    def _do_force_update_existing_repo(self, base_path: str, repo_url: str) -> None:
         """
         Checks validity of configured git repo, as well as if it exists
         Handles possible existing repo, and prompts (re)download of repo
@@ -2295,8 +2341,7 @@ class MainContent:
             repo_folder_name = os.path.split(repo_url)[1]
             # Calculate path from generated folder name
             repo_path = os.path.join(
-                self.game_configuration.storage_path,
-                self.game_configuration.dbs_path,
+                base_path,
                 repo_folder_name,
             )
             if os.path.exists(repo_path):  # If local repo does exists
@@ -2339,7 +2384,10 @@ class MainContent:
                 )
                 if answer == "&Yes":
                     if GIT_EXISTS:
-                        self._do_clone_repo_to_storage_path(repo_url=repo_url)
+                        self._do_clone_repo_to_path(
+                            base_path=base_path,
+                            repo_url=repo_url,
+                        )
                     else:
                         self._do_notify_no_git()
         else:
@@ -2507,7 +2555,10 @@ class MainContent:
                 )
                 if answer == "&Yes":
                     if GIT_EXISTS:
-                        self._do_clone_repo_to_storage_path(repo_url=repo_url)
+                        self._do_clone_repo_to_path(
+                            base_path=self.game_configuration.dbs_path,
+                            repo_url=repo_url,
+                        )
                     else:
                         self._do_notify_no_git()
         else:
@@ -2530,7 +2581,7 @@ class MainContent:
             edit_packageId=packageid,
             initial_mode=initial_mode,
             # Required metadata
-            local_metadata=self.internal_local_metadata,
+            local_metadata=self.all_mods_with_dependencies,
             community_rules=self.external_community_rules,
             user_rules=self.external_user_rules,
             # Optional metadata - used to get names instead of packageId for About.xml rules
@@ -2746,7 +2797,7 @@ class MainContent:
                 db_input_b = json.loads(json_string)
                 logger.debug("Retrieved database B...")
         else:
-            logger.warning("Steam DB Builder: User cancelled selection...")
+            logger.debug("Steam DB Builder: User cancelled selection...")
             return
         for k, v in db_input_a["database"].items():
             # print(k, v['dependencies'])
@@ -2857,7 +2908,7 @@ class MainContent:
                 db_input_b = json.loads(json_string)
                 logger.debug("Retrieved database B...")
         else:
-            logger.warning("Steam DB Builder: User cancelled selection...")
+            logger.debug("Steam DB Builder: User cancelled selection...")
             return
         # Output C
         db_output_c = db_input_a.copy()
