@@ -196,9 +196,9 @@ class MissingModsPrompt(QWidget):
         combo_box.setEditable(True)
         combo_box.setObjectName("missing_mods_variant_cb")
         combo_box.addItem(publishedfileid)
-        combo_box.currentTextChanged.connect(
-            partial(self._update_mod_info, index=combo_box_index)
-        )
+        # Connect the currentTextChanged signal
+        combo_box.currentTextChanged.connect(self._update_mod_info)
+        # Set the combo_box as the index widget
         self.editor_table_view.setIndexWidget(combo_box_index, combo_box)
 
     def _download_list_from_table(self, mode: str) -> None:
@@ -267,18 +267,21 @@ class MissingModsPrompt(QWidget):
                         publishedfileid=publishedfileid,
                     )
 
-    def _update_mod_info(self, publishedfileid: str, index: QModelIndex):
-        combo_box = self.editor_table_view.indexWidget(index)
-        packageId = self.editor_model.item(index.row(), 1).text()
-        self.editor_model.item(index.row(), 0).setText(
-            self.data_by_variants.get(packageId)
-            .get(publishedfileid, {})
-            .get("name", "No variant found!")
-        )
-        self.editor_model.item(index.row(), 2).setText(
-            str(
+    def _update_mod_info(self, publishedfileid: str):
+        combo_box = self.sender()
+        index = self.editor_table_view.indexAt(combo_box.pos())
+        if index.isValid():
+            row = index.row()
+            packageId = self.editor_model.item(row, 1).text()
+            self.editor_model.item(row, 0).setText(
                 self.data_by_variants.get(packageId)
                 .get(publishedfileid, {})
-                .get("gameVersions", "No variant found!")
+                .get("name", "No variant found!")
             )
-        )
+            self.editor_model.item(row, 2).setText(
+                str(
+                    self.data_by_variants.get(packageId)
+                    .get(publishedfileid, {})
+                    .get("gameVersions", "No variant found!")
+                )
+            )
