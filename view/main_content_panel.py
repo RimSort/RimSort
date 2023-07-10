@@ -661,7 +661,6 @@ class MainContent:
                 logger.info(
                     "External Steam metadata disabled by user. Please choose a metadata source in settings."
                 )
-                return
             self.active_mods_panel.active_mods_list.steam_db = (
                 self.external_steam_metadata
             )
@@ -721,7 +720,6 @@ class MainContent:
             logger.warning(
                 "No LOCAL or WORKSHOP mods found at all. Are you playing Vanilla?"
             )
-
         # Calculate and cache dependencies for ALL mods
         (
             self.all_mods_with_dependencies,
