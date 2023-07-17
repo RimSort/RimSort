@@ -118,19 +118,18 @@ class ModInfo:
         logger.info(f"Starting display mod info for info: {mod_info}")
         self.mod_info_name_value.setText(mod_info.get("name"))
         self.mod_info_package_id_value.setText(mod_info.get("packageId"))
-        if "authors" in mod_info:
-            if "li" in mod_info["authors"]:
-                list_of_authors = mod_info["authors"]["li"]
-                authors_text = ", ".join(list_of_authors)
-                self.mod_info_author_value.setText(authors_text)
-            else:
-                self.mod_info_author_value.setText("UNKNOWN")
-                logger.error(
-                    f"[authors] tag does not contain [li] tag: {mod_info['authors']}"
-                )
+
+        authors_tag = mod_info.get("author", mod_info.get("authors"))
+        if authors_tag and isinstance(authors_tag, dict) and authors_tag.get("li"):
+            list_of_authors = authors_tag["li"]
+            authors_text = ", ".join(list_of_authors)
+            self.mod_info_author_value.setText(authors_text)
         else:
-            self.mod_info_author_value.setText(mod_info.get("author"))
-        if "modVersion" in mod_info:
+            self.mod_info_author_value.setText(
+                f"{authors_tag if authors_tag else 'UNKNOWN'}"
+            )
+
+        if mod_info.get("modVersion"):
             if isinstance(mod_info.get("modVersion"), str):
                 self.mod_info_mod_version_value.setText(mod_info.get("modVersion"))
             elif isinstance(mod_info.get("modVersion"), dict):

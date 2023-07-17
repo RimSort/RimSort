@@ -173,10 +173,15 @@ class SteamDatabaseBuilder(QThread):
                         "url": f'https://store.steampowered.com/app/{v["appid"]}',
                         "packageId": v.get("packageId"),
                         "name": v.get("name"),
-                        "authors": v.get("author"),
-                        "gameVersions": v.get("supportedVersions").get("li")
-                        if isinstance(v.get("supportedVersions").get("li", {}), list)
-                        else [v.get("supportedVersions", {}).get("li")],
+                        "authors": ", ".join(
+                            v.get("author", v.get("authors")).get("li")
+                        )
+                        if v.get("author", v.get("authors"))
+                        and isinstance(v.get("author", v.get("authors")), dict)
+                        and v.get("author", v.get("authors")).get("li")
+                        else v.get(
+                            "author", v.get("authors", "Missing XML: <author(s)>")
+                        ),
                     }
                     for v in self.mods.values()
                     if v.get("appid")
@@ -186,13 +191,21 @@ class SteamDatabaseBuilder(QThread):
                         "url": f'https://steamcommunity.com/sharedfiles/filedetails/?id={v["publishedfileid"]}',
                         "packageId": v.get("packageId"),
                         "name": v.get("name"),
-                        "authors": v.get("author"),
+                        "authors": ", ".join(
+                            v.get("author", v.get("authors")).get("li")
+                        )
+                        if v.get("author", v.get("authors"))
+                        and isinstance(v.get("author", v.get("authors")), dict)
+                        and v.get("author", v.get("authors")).get("li")
+                        else v.get(
+                            "author", v.get("authors", "Missing XML: <author(s)>")
+                        ),
                         "gameVersions": v.get("supportedVersions").get("li")
                         if isinstance(v.get("supportedVersions", {}).get("li"), list)
                         else [v.get("supportedVersions", {}).get("li")],
                     }
                     for v in self.mods.values()
-                    if v.get("publishedfileid")
+                    if v.get("publishedfileid") and not v.get("git_repo")
                 },
             },
         }
@@ -256,7 +269,6 @@ class SteamDatabaseBuilder(QThread):
                     db_to_update,
                     database,
                     prune_exceptions=DB_BUILDER_PRUNE_EXCEPTIONS,
-                    purge_keys=DB_BUILDER_PURGE_KEYS,
                     recurse_exceptions=DB_BUILDER_RECURSE_EXCEPTIONS,
                 )
                 with open(self.output_database_path, "w") as output:

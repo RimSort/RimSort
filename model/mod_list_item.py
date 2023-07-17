@@ -160,18 +160,14 @@ class ModListItemInner(QWidget):
         """
         name_line = f"Mod: {self.json_data.get('name', 'UNKNOWN')}\n"
 
-        author_line = "Author: UNKNOWN\n"
-        if "authors" in self.json_data:
-            if "li" in self.json_data["authors"]:
-                list_of_authors = self.json_data["authors"]["li"]
-                authors_text = ", ".join(list_of_authors)
-                author_line = f"Authors: {authors_text}\n"
-            else:
-                logger.error(
-                    f"[authors] tag does not contain [li] tag: {self.json_data['authors']}"
-                )
+        authors_tag = self.json_data.get("author", self.json_data.get("authors"))
+
+        if authors_tag and isinstance(authors_tag, dict) and authors_tag.get("li"):
+            list_of_authors = authors_tag["li"]
+            authors_text = ", ".join(list_of_authors)
+            author_line = f"Authors: {authors_text}\n"
         else:
-            author_line = f"Author: {self.json_data.get('author', 'UNKNOWN')}\n"
+            author_line = f"Author: {authors_tag if authors_tag else 'UNKNOWN'}\n"
 
         package_id_line = f"PackageID: {self.json_data.get('packageId', 'UNKNOWN')}\n"
         version_line = f"Version: {self.json_data.get('modVersion', 'Not specified')}\n"

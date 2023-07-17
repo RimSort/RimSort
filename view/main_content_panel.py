@@ -1192,35 +1192,30 @@ class MainContent:
             if v.get("publishedfileid") and (
                 v.get("steamcmd") or v["data_source"] == "workshop"
             ):
-                try:
-                    pfid = v["publishedfileid"]
-                    uuid = v["uuid"]
-                    name = (
-                        v.get("name")
-                        or self.external_steam_metadata[pfid].get("steamName")
-                        or "UNKNOWN"
-                    )
-                    name = f"############################\n{name}"
-                    if (
-                        # If we have data for itt
-                        v["internal_time_touched"] != 0
-                        # ...and mod has been updated since this timestamp
-                        and v["external_time_updated"] > v["internal_time_touched"]
-                    ):
-                        logger.debug(f"Potential update found for Steam mod: {pfid}")
-                        self.workshop_mods_potential_updates[pfid] = {
-                            "external_time_updated": v["external_time_updated"],
-                            "internal_time_touched": v["internal_time_touched"],
-                            "ui_string": (
-                                f"\n{name}"
-                                + f'\nInstalled mod last touched: {strftime("%Y-%m-%d %H:%M:%S", localtime(v["internal_time_touched"]))}'
-                                + f'\nPublishing last updated: {strftime("%Y-%m-%d %H:%M:%S", localtime(v["external_time_updated"]))}\n'
-                            ),
-                        }
-                except KeyError as e:
-                    stacktrace = traceback.format_exc()
-                    logger.debug(f"Missing time data for Steam mod: {pfid}")
-                    logger.debug(stacktrace)
+                pfid = v["publishedfileid"]
+                uuid = v["uuid"]
+                name = (
+                    v.get("name")
+                    or self.external_steam_metadata[pfid].get("steamName")
+                    or "UNKNOWN"
+                )
+                name = f"############################\n{name}"
+                if (
+                    # If we have data to compare...
+                    (v.get("internal_time_touched") and v.get("external_time_updated"))
+                    # ...and publishing has been updated since the last time it was touched
+                    and v["external_time_updated"] > v["internal_time_touched"]
+                ):
+                    logger.debug(f"Potential update found for Workshop mod: {pfid}")
+                    self.workshop_mods_potential_updates[pfid] = {
+                        "external_time_updated": v["external_time_updated"],
+                        "internal_time_touched": v["internal_time_touched"],
+                        "ui_string": (
+                            f"\n{name}"
+                            + f'\nInstalled Workshop mod last touched: {strftime("%Y-%m-%d %H:%M:%S", localtime(v["internal_time_touched"]))}'
+                            + f'\nWorkshop publishing last updated: {strftime("%Y-%m-%d %H:%M:%S", localtime(v["external_time_updated"]))}\n'
+                        ),
+                    }
         # If we have updates available...
         if len(self.workshop_mods_potential_updates) > 0:
             # ...generate our report
@@ -1233,7 +1228,6 @@ class MainContent:
                 information=(
                     "This metadata was parsed directly from your Steam client's workshop data, and "
                     "compared with the 'time updated' metadata returned from Steam Workshop."
-                    # "\nDo you want the Steam client to do a verification check of your mods now?"
                 ),
                 details=list_of_potential_updates,
             )

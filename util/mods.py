@@ -1292,6 +1292,11 @@ def parse_mod_data(mods_path: str, intent: str) -> Dict[str, Any]:
                             ):  # If our About.xml metadata has a packageId key
                                 # Initialize our dict from the formatted About.xml metadata
                                 mod_metadata = mod_data["modmetadata"]
+                                # Check type of packageId, use first packageId parsed
+                                if isinstance(mod_metadata["packageId"], list):
+                                    mod_metadata["packageId"] = mod_metadata[
+                                        "packageId"
+                                    ][0]
                                 # Normalize package ID in metadata
                                 mod_metadata["packageId"] = mod_metadata[
                                     "packageId"
