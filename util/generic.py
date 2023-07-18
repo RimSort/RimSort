@@ -7,6 +7,7 @@ import shutil
 from stat import S_IRWXU, S_IRWXG, S_IRWXO
 import subprocess
 from requests import post as requests_post
+import sys
 import webbrowser
 
 from model.dialogue import show_information, show_warning
@@ -31,7 +32,7 @@ def delete_files_except_extension(directory, extension):
                 try:
                     os.remove(file_path)
                 except OSError as e:
-                    handle_remove_read_only(os.remove, file_path, e)
+                    handle_remove_read_only(os.remove, file_path, sys.exc_info())
                 finally:
                     logger.debug(f"Deleted: {file_path}")
 

@@ -54,9 +54,14 @@ class SteamworksInterface:
         self.steamworks = STEAMWORKS()
         try:
             self.steamworks.initialize()  # Init the Steamworks API
-        except SteamNotRunningException:
-            logger.warning("Unable to initiate Steamworks API. Steam was not found!")
-            self.steam_not_running = True
+        except Exception as e:
+            if e.__class__ == OSError or e.__class__ == SteamNotRunningException:
+                logger.warning(
+                    "Unable to initiate Steamworks API. If you are a Steam user, please check that Steam running and that you are logged in..."
+                )
+                self.steam_not_running = True
+            else:
+                raise e
         if not self.steam_not_running:  # Skip if True
             if self.callbacks:
                 # Start the thread
@@ -208,6 +213,9 @@ class SteamworksAppDependenciesQuery:
                     f"Returning {len(steamworks_interface.get_app_deps_query_result.keys())} results..."
                 )
                 return steamworks_interface.get_app_deps_query_result
+        else:
+            steamworks_interface.steamworks.unload()
+            steamworks_interface = None
 
 
 class SteamworksGameLaunch(Process):
@@ -234,6 +242,9 @@ class SteamworksGameLaunch(Process):
         if steamworks_interface and steamworks_interface.steamworks:
             # Unload Steamworks API
             steamworks_interface.steamworks.unload()
+        else:
+            steamworks_interface.steamworks.unload()
+            steamworks_interface = None
 
 
 class SteamworksSubscriptionHandler:
@@ -323,6 +334,9 @@ class SteamworksSubscriptionHandler:
                 steamworks_interface.steamworks_thread.join()
                 # Unload Steamworks API
                 steamworks_interface.steamworks.unload()
+        else:
+            steamworks_interface.steamworks.unload()
+            steamworks_interface = None
 
 
 if __name__ == "__main__":
