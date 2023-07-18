@@ -323,8 +323,8 @@ def get_configured_steam_db(life: int, path: str) -> Tuple[Dict[str, Any], Any]:
                 show_warning(
                     title="Steam DB metadata expired",
                     text="Steam DB is expired! Consider updating!\n",
-                    information="Unable to initialize Dynamic Query for live metadata!\n"
-                    + "Falling back to cached, but EXPIRED Steam Database...\n",
+                    information=f'Steam DB last updated: {strftime("%Y-%m-%d %H:%M:%S", localtime(db_data["version"] - life))}\n\n'
+                    + "Falling back to cached, but EXPIRED Steam Database...",
                 )
                 db_json_data = db_data[
                     "database"
