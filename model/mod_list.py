@@ -475,9 +475,7 @@ class ModListWidget(QListWidget):
                         information="Do you want to proceed?",
                     )
                     if answer == "&Yes":
-                        logger.debug(
-                            f"Updating {len(git_paths)} git mod(s)"
-                        )
+                        logger.debug(f"Updating {len(git_paths)} git mod(s)")
                         self.re_git_signal.emit(git_paths)
                     return True
                 elif (  # ACTION: Convert SteamCMD mod(s) -> local
@@ -610,7 +608,9 @@ class ModListWidget(QListWidget):
                             )
                         ):  # ACTION: Delete mod
                             logger.info(f"Deleting mod at: {mod_path}")
-                            shutil.rmtree(mod_path)
+                            delete_files_except_extension(
+                                directory=mod_path, extension=".dds"
+                            )
             return True
         return super().eventFilter(source_object, event)
 

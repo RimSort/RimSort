@@ -28,15 +28,30 @@ def delete_files_except_extension(directory, extension):
         for file in files:
             if not file.endswith(extension):
                 file_path = os.path.join(root, file)
-                os.remove(file_path)
-                logger.debug(f"Deleted: {file_path}")
+                try:
+                    os.remove(file_path)
+                except OSError as e:
+                    handle_remove_read_only(os.remove, file_path, e)
+                finally:
+                    logger.debug(f"Deleted: {file_path}")
 
     for root, dirs, _ in os.walk(directory, topdown=False):
         for dir in dirs:
             dir_path = os.path.join(root, dir)
             if not os.listdir(dir_path):
-                os.rmdir(dir_path)
+                shutil.rmtree(
+                    dir_path,
+                    ignore_errors=False,
+                    onerror=handle_remove_read_only,
+                )
                 logger.debug(f"Deleted: {dir_path}")
+    if not os.listdir(directory):
+        shutil.rmtree(
+            directory,
+            ignore_errors=False,
+            onerror=handle_remove_read_only,
+        )
+        logger.debug(f"Deleted: {directory}")
 
 
 def handle_remove_read_only(func, path: str, exc):
