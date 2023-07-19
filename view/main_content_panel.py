@@ -34,7 +34,7 @@ from github import Github
 from pyperclip import copy as copy_to_clipboard
 from requests import get as requests_get
 
-from model.dialogue import show_dialogue_conditional
+from model.dialogue import show_dialogue_conditional, show_dialogue_input
 from model.animations import LoadingAnimation
 
 from util.generic import (
@@ -74,7 +74,6 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QFrame,
     QHBoxLayout,
-    QInputDialog,
     QLineEdit,
     QMainWindow,
 )
@@ -1904,12 +1903,10 @@ class MainContent:
         Opens a QDialogInput that allows the user to edit the run args
         that are configured to be passed to the Rimworld executable
         """
-        args, ok = QInputDialog().getText(
-            None,
-            "Edit run arguments:",
-            "Enter a comma separated list of arguments to pass to the Rimworld executable:",
-            QLineEdit.Normal,
-            ",".join(self.game_configuration.run_arguments),
+        args, ok = show_dialogue_input(
+            title="Edit run arguments",
+            text="Enter a comma separated list of arguments to pass to the Rimworld executable:",
+            value=",".join(self.game_configuration.run_arguments),
         )
         if ok:
             self.game_configuration.run_arguments = args.split(",")
@@ -2195,11 +2192,9 @@ class MainContent:
         Opens a QDialogInput that allows the user to edit the run args
         that are configured to be passed to the Rimworld executable
         """
-        args, ok = QInputDialog().getText(
-            None,
-            "Enter git repo",
-            "Enter a git repository url (http/https) to clone to local mods:",
-            QLineEdit.Normal,
+        args, ok = show_dialogue_input(
+            title="Enter git repo",
+            text="Enter a git repository url (http/https) to clone to local mods:",
         )
         if ok:
             self._do_clone_repo_to_path(
@@ -2228,12 +2223,10 @@ class MainContent:
         This token is used for DB repo related actions, as well as any
         "Github mod" related actions
         """
-        args, ok = QInputDialog().getText(
-            None,
-            "Edit username",
-            "Enter your Github username:",
-            QLineEdit.Normal,
-            self.game_configuration.github_username,
+        args, ok = show_dialogue_input(
+            title="Edit username",
+            text="Enter your Github username:",
+            value=self.game_configuration.github_username,
         )
         if ok:
             self.game_configuration.github_username = args
@@ -2243,12 +2236,10 @@ class MainContent:
         else:
             logger.debug("USER ACTION: cancelled input!")
             return
-        args, ok = QInputDialog().getText(
-            None,
-            "Edit token",
-            "Enter your Github personal access token here (ghp_*):",
-            QLineEdit.Normal,
-            self.game_configuration.github_token,
+        args, ok = show_dialogue_input(
+            title="Edit token",
+            text="Enter your Github personal access token here (ghp_*):",
+            value=self.game_configuration.github_token,
         )
         if ok:
             self.game_configuration.github_token = args
@@ -2686,12 +2677,10 @@ class MainContent:
         Opens a QDialogInput that allows user to edit their Steam DB repo
         This URL is used for Steam DB repo related actions.
         """
-        args, ok = QInputDialog().getText(
-            None,
-            "Edit Steam DB repo",
-            "Enter URL (https://github.com/AccountName/RepositoryName):",
-            QLineEdit.Normal,
-            self.game_configuration.steam_db_repo,
+        args, ok = show_dialogue_input(
+            title="Edit Steam DB repo",
+            text="Enter URL (https://github.com/AccountName/RepositoryName):",
+            value=self.game_configuration.steam_db_repo,
         )
         if ok:
             self.game_configuration.steam_db_repo = args
@@ -2704,12 +2693,10 @@ class MainContent:
         Opens a QDialogInput that allows user to edit their Community Rules
         DB repo. This URL is used for Steam DB repo related actions.
         """
-        args, ok = QInputDialog().getText(
-            None,
-            "Edit Community Rules DB repo",
-            "Enter URL (https://github.com/AccountName/RepositoryName):",
-            QLineEdit.Normal,
-            self.game_configuration.community_rules_repo,
+        args, ok = show_dialogue_input(
+            title="Edit Community Rules DB repo",
+            text="Enter URL (https://github.com/AccountName/RepositoryName):",
+            value=self.game_configuration.community_rules_repo,
         )
         if ok:
             self.game_configuration.community_rules_repo = args
@@ -2789,12 +2776,10 @@ class MainContent:
         that are configured to be passed to the "Dynamic Query" feature for
         the Steam Workshop metadata needed for sorting
         """
-        args, ok = QInputDialog().getText(
-            None,
-            "Edit API-key",
-            "Enter your personal 32 character Steam API-key here:",
-            QLineEdit.Normal,
-            self.game_configuration.steam_apikey,
+        args, ok = show_dialogue_input(
+            title="Edit Steam WebAPI key",
+            text="Enter your personal 32 character Steam WebAPI key here:",
+            value=self.game_configuration.steam_apikey,
         )
         if ok:
             self.game_configuration.steam_apikey = args
@@ -3047,12 +3032,10 @@ class MainContent:
         Opens a QDialogInput that allows the user to edit their preferred
         WebAPI Query Expiry (in seconds)
         """
-        args, ok = QInputDialog().getText(
-            None,
-            "Edit WebAPI Query Expiry:",
-            "Enter your preferred expiry duration in seconds (default 1 week/604800 sec):",
-            QLineEdit.Normal,
-            str(self.game_configuration.database_expiry),
+        args, ok = show_dialogue_input(
+            title="Edit SteamDB expiry:",
+            text="Enter your preferred expiry duration in seconds (default 1 week/604800 sec):",
+            value=str(self.game_configuration.database_expiry),
         )
         if ok:
             try:

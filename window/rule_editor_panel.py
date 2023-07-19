@@ -19,7 +19,6 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QGridLayout,
     QHeaderView,
-    QInputDialog,
     QItemDelegate,
     QLabel,
     QLineEdit,
@@ -35,7 +34,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from model.dialogue import show_warning
+from model.dialogue import show_dialogue_input, show_warning
 
 
 class EditableDelegate(QItemDelegate):
@@ -244,13 +243,6 @@ class RuleEditor(QWidget):
             self._comment_edited
         )  # Connect the signal to the slot
         self.editor_table_view = QTableView()
-        self.editor_table_view.setObjectName("ruleEditorPanelTableView")
-        self.editor_table_view.horizontalHeader().setObjectName(
-            "ruleEditorPanelTableView"
-        )
-        self.editor_table_view.verticalHeader().setObjectName(
-            "ruleEditorPanelTableView"
-        )
         self.editor_table_view.setModel(self.editor_model)
         self.editor_table_view.setSortingEnabled(True)  # Enable sorting on the columns
         self.editor_table_view.setItemDelegate(
@@ -507,11 +499,9 @@ class RuleEditor(QWidget):
                 destination_list.addItem(copied_item)
                 destination_list.setItemWidget(copied_item, QLabel(item_label_text))
                 # Add a new row in the editor - prompt user to enter a comment for their rule addition
-                args, ok = QInputDialog().getText(
-                    None,
-                    "Enter comment",
-                    "Enter a comment to annotate why this rule exists. This is useful for your own records, as well as others.",
-                    QLineEdit.Normal,
+                args, ok = show_dialogue_input(
+                    title="Enter comment",
+                    text="Enter a comment to annotate why this rule exists. This is useful for your own records, as well as others.",
                 )
                 if ok:
                     comment = args
@@ -555,7 +545,9 @@ class RuleEditor(QWidget):
     ) -> None:
         if not self.edit_packageId:
             return
-        logger.debug(f"Adding {rule_source} {rule_type} rule to mod {self.edit_packageId} with comment: {comment}")
+        logger.debug(
+            f"Adding {rule_source} {rule_type} rule to mod {self.edit_packageId} with comment: {comment}"
+        )
         # Create the standard items for each column
         items = [
             QStandardItem(name),
@@ -1027,11 +1019,9 @@ class RuleEditor(QWidget):
                 comment = None
                 if not self.block_comment_prompt:
                     # Add a new row in the editor - prompt user to enter a comment for their rule addition
-                    args, ok = QInputDialog().getText(
-                        None,
-                        "Enter comment",
-                        "Enter a comment to annotate why this rule exists. This is useful for your own records, as well as others.",
-                        QLineEdit.Normal,
+                    args, ok = show_dialogue_input(
+                        title="Enter comment",
+                        text="Enter a comment to annotate why this rule exists. This is useful for your own records, as well as others.",
                     )
                     if ok:
                         comment = args

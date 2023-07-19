@@ -1,3 +1,17 @@
+/*
+RimPy theme
+Primary background: 19232d
+Panel borders and normal button: 455364
+Button hover: 54687a
+
+Mod list item hover tile background: 37414f
+
+
+Accent blue: 3688c3
+Accent panel border hover:9da9b5
+Accent alert button: a3c1da
+*/
+
 /* Enable this to see UI guidelines */
 /* QWidget {
     color: white;
@@ -8,11 +22,169 @@
     border-radius: 3px;
 } */
 
-/* ===== General ===== */
+/* ======== General styling ======= */
+/* Styling for combo boxes */
+QComboBox {
+    color: white;
+    background-color: #455364;
+    border-style: solid;
+    border-width: 0px;
+    border-radius: 5px;
+    padding: 1px;
+}
+QComboBox:hover {
+    background-color: #54687a;
+}
+QComboBox::drop-down#MainUI {
+    width: 0;
+    height: 0;
+}
+QComboBox::drop-down#MissingModsUI {
+    border-style: solid;
+}
+QComboBox QAbstractItemView {
+    background-color: #54687a;
+    color: white;
+    selection-background-color: #455364;
+    selection-color: white;
+}
+/* Default input box style */
+QInputDialog#dialogue{
+    background: #1B2838;
+}
+/* Styling for labels */
 QLabel {
     color: white;
 }
+/* Styling for line edit widgets */
+QLineEdit {
+    color: #cfcfcf;
+    background-color: #19232d;
+    border-style: solid;
+    border-color: #455364;
+    border-width: 1px;
+    border-radius: 3px;
+}
+/* Styling for list widgets (mod list and rule editor lists) */
+QListWidget {
+    background-color: #19232d;
+    border-style: solid;
+    border-color: #455364;
+    border-width: 1px;
+    border-radius: 3px;
+    padding-right: 5px;
+}
+QListWidget::item {
+    border: 0px;
+    /* padding-right: 20px; */
+    margin-right: 12px;
+}
 
+/* Styling for a selected mod item */
+QListWidget::item:selected:!active {
+    background: #272e37;
+}
+QListWidget::item:selected:active {
+    background: #37414f;
+}
+QListWidget::item:hover {
+    background: #272e37;
+}
+/* Default context menu style */
+QMenu {
+    background-color: #19232d;
+    border: 1px solid #455364;
+    padding: 4px;
+}
+QMenu::item {
+    background-color: transparent;
+    color: white;
+    padding: 8px 16px;
+}
+QMenu::item:selected {
+    background-color: #54687a;
+}
+QMenu::separator {
+    height: 1px;
+    background-color: #455364;
+    margin: 4px 0;
+}
+QMenu::indicator {
+    width: 13px;
+    height: 13px;
+}
+QMenu::icon {
+    margin-right: 8px;
+}
+QMenu::item:disabled {
+    color: #999999;
+}
+QMenu::item:disabled:selected {
+    background-color: transparent;
+}
+QMenu::item:selected:disabled {
+    color: #999999;
+}
+QMenu::item:hover {
+    background-color: #37414f;
+}
+QMenu::item:checked {
+    background-color: #54687a;
+}
+QMenu::item:checked:selected {
+    background-color: #54687a;
+}
+QMenu::item:checked:hover {
+    background-color: #37414f;
+}
+/* Default message box style */
+QMessageBox#dialogue{
+    background: #1B2838;
+}
+/* Styling for progress bars */
+QProgressBar {
+    border: 1px solid #455364;
+    border-radius: 5px;
+    background-color: #19232d;
+    color: white;
+    text-align: center;
+}
+
+QProgressBar::chunk {
+    background-color: #60798b;
+    width: 10px;
+}
+/* Styling for push buttons */
+QPushButton {
+    color: white;
+    background-color: #455364;
+    border-style: solid;
+    border-width: 0px;
+    border-radius: 5px;
+    min-height: 1em;
+    min-width: 6em;
+    padding: 1px;
+}
+QPushButton:hover {
+    background-color: #54687a;
+}
+QPushButton:pressed {
+    background-color: #3e4a52;
+    border-style: inset;
+}
+QPushButton#LeftButton {
+    margin-right: 4px;
+}
+QPushButton#RightButton {
+    margin-left: 4px;
+}
+/* Default style for tooltips */
+QToolTip {
+    border-style: none;
+    background: #346792;
+    color: white;
+}
+/* Default style for vertical scrollbars */
 QScrollBar:vertical {
     border: 1px solid #455364;
     border-radius: 5px;
@@ -58,235 +230,107 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
 QScrollBar:horizontal {
     height: 0px;
 }
-QMessageBox#dialogue{
-    background: #1B2838;
-}
-
-QMenu {
-    background-color: #19232d;
-    border: 1px solid #455364;
-    padding: 4px;
-}
-
-QMenu::item {
-    background-color: transparent;
-    color: white;
-    padding: 8px 16px;
-}
-
-QMenu::item:selected {
-    background-color: #54687a;
-}
-
-QMenu::separator {
-    height: 1px;
-    background-color: #455364;
-    margin: 4px 0;
-}
-
-QMenu::indicator {
-    width: 13px;
-    height: 13px;
-}
-
-QMenu::icon {
-    margin-right: 8px;
-}
-
-QMenu::item:disabled {
-    color: #999999;
-}
-
-QMenu::item:disabled:selected {
-    background-color: transparent;
-}
-
-QMenu::item:selected:disabled {
-    color: #999999;
-}
-
-QMenu::item:hover {
-    background-color: #37414f;
-}
-
-QMenu::item:checked {
-    background-color: #54687a;
-}
-
-QMenu::item:checked:selected {
-    background-color: #54687a;
-}
-
-QMenu::item:checked:hover {
-    background-color: #37414f;
-}
-
-/* ===== Mod Info Summary Text ===== */
-
-QLabel#summaryLabel {
-    color: white;
-    font-weight: 500;
-}
-
-QLabel#summaryValue {
-    color: white;
-}
-
-
-/* ===== Mod Description Scroll Area ===== */
-QWidget#descriptionWidget { /* Outer-most encapsulator */
-    background-color: #19232d;
-    border-style: solid;
-    border-color: #455364;
-    border-width: 1px;
-    border-radius: 3px;
-    padding: 2px; /* The sharp corner of the text box clips out */
-    padding-right: 5px;
-}
-
-QWidget#errorFrame { /* Outer-most encapsulator */
-    background-color: #19232d;
-    border-style: solid;
-    border-color: #455364;
-    border-width: 1px;
-    border-radius: 3px;
-}
-
-QWidget#descriptionContent { /* Text, minus scroll bar */
-    background-color: #19232d;
-    padding-right: 10px; /* Make some distance between text and scroll bar */
-}
-
-QLabel#descriptionLabel { /* Description text itself */
-    color: white;
-    background-color: #19232d;
-    margin-right: 3px;
-}
-
-QLineEdit {
-    color: #cfcfcf;
-    background-color: #19232d;
-    border-style: solid;
-    border-color: #455364;
-    border-width: 1px;
-    border-radius: 3px;
-}
-
-/* Styling for the mod lists containers. */
-QListWidget {
-    background-color: #19232d;
-    border-style: solid;
-    border-color: #455364;
-    border-width: 1px;
-    border-radius: 3px;
-    padding-right: 5px;
-}
-
-QListWidget::item {
-    border: 0px;
-    /* padding-right: 20px; */
-    margin-right: 12px;
-}
-
-/* Styling for a selected mod item */
-QListWidget::item:selected:!active {
-    background: #272e37;
-}
-
-QListWidget::item:selected:active {
-    background: #37414f;
-}
-
-QListWidget::item:hover {
-    background: #272e37;
-}
-
+/* Used in conjunction with proxy_style.py for drag-drop styling */
 QStyle::PE_IndicatorItemViewItemDrop {
     color: white;
 }
-
-QToolTip {
-    border-style: none;
-    background: #346792;
+/* Style for table view with sortable columns */
+QHeaderView {
+    background-color: #1B2838;
     color: white;
 }
-
-/* Styling for the mod item text */
-QLabel#ListItemLabel {
-    color: white;
-}
-
-QWidget#StatusPanel {
+QHeaderView::section {
     background-color: #455364;
-}
-
-QLabel#StatusLabel {
     color: white;
-    background-color: #455364;
+    padding: 4px;
 }
-
-QLabel#gameVersion {
-    color: white;
-    margin-right: 4px;
-}
-
-QPushButton {
-    color: white;
-    background-color: #455364;
-    border-style: solid;
-    border-width: 0px;
-    border-radius: 5px;
-    min-height: 1em;
-    min-width: 6em;
-    padding: 1px;
-}
-
-QPushButton:hover {
+QHeaderView::section:hover {
     background-color: #54687a;
 }
-
-QPushButton:pressed {
-    background-color: #3e4a52;
-    border-style: inset;
-}
-
-QPushButton#LeftButton {
-    margin-right: 4px;
-}
-
-QPushButton#RightButton {
-    margin-left: 4px;
-}
-
-QComboBox {
+QTableView {
+    background-color: #22303d;
     color: white;
+    alternate-background-color: #19232d;
+}
+QTableView QTableCornerButton{
+    background-color: #1B2838;
+}
+QTableView::indicator {
+    width: 13px;
+    height: 13px;
+}
+QTableView::item {
+    padding: 4px;
+}
+QTableView::item:selected {
+    background-color: #54687a;
+}
+QTableView::item:hover {
+    background-color: #37414f;
+}
+QTableView::item:disabled {
+    color: #999999;
+}
+QTableView::item:disabled:selected {
+    background-color: transparent;
+}
+QTableView::item:selected:disabled {
+    color: #999999;
+}
+QTableView::item:checked {
+    background-color: #54687a;
+}
+QTableView::item:checked:selected {
+    background-color: #54687a;
+}
+QTableView::item:checked:hover {
+    background-color: #37414f;
+}
+QTableView QTableCornerButton::section {
     background-color: #455364;
-    border-style: solid;
-    border-width: 0px;
-    border-radius: 5px;
-    padding: 1px;
-}
-
-QComboBox:hover {
-    background-color: #54687a;
-}
-
-QComboBox::drop-down#MainUI {
-    width: 0;
-    height: 0;
-}
-
-QComboBox::drop-down#MissingModsUI {
-    border-style: solid;
-}
-
-QComboBox QAbstractItemView {
-    background-color: #54687a;
     color: white;
-    selection-background-color: #455364;
-    selection-color: white;
 }
-
+QTableView QTableCornerButton::section:hover {
+    background-color: #54687a;
+}
+QTableView::corner {
+    background-color: #455364;
+    border: none;
+}
+QTableView QHeaderView {
+    background-color: #455364;
+    color: white;
+}
+QTableView QHeaderView::section {
+    background-color: #455364;
+    color: white;
+    padding: 4px;
+}
+QTableView QHeaderView::section:hover {
+    background-color: #54687a;
+}
+QTableView QHeaderView::section:checked {
+    background-color: #54687a;
+}
+QTableView QHeaderView::section:checked:hover {
+    background-color: #37414f;
+}
+QTableView QHeaderView::section:disabled {
+    color: #999999;
+}
+QTableView QHeaderView::section:disabled:checked {
+    background-color: transparent;
+}
+QTableView QHeaderView::section:disabled:checked:hover {
+    background-color: transparent;
+}
+QTableView QHeaderView::section:checked:disabled {
+    color: #999999;
+}
+QTableView QHeaderView::section:checked:disabled:hover {
+    background-color: transparent;
+}
+/* Styling for tool buttons */
 QToolButton {
     background-color: #455364;
     border-style: solid;
@@ -295,17 +339,23 @@ QToolButton {
     color: white;
     padding: 1px;
 }
-
 QToolButton:hover {
     background-color: #54687a;
 }
-
 QToolButton:pressed {
     background-color: #3e4a52;
     border-style: inset;
 }
 
-/* ===== MainWindow (view/main_content_panel.py) ===== */
+/* ===== Browser (util/steam/browser.py) ===== */
+QWidget#browserPanel {
+    background-color: #19232d;
+}
+QLabel#browserPaneldownloader_label {
+    color: white;
+}
+
+/* ======= MainWindow (view/main_content_panel.py) ======= */
 QMainWindow {
     background-color: #19232d;
 }
@@ -316,35 +366,70 @@ QWidget#MainPanel {
     border-radius: 3px;
     margin: 7px; /* Space between frame and app edge */
 }
-
-/* ===== Missing mods prompt (window/missing_mods_panel.py) ===== */
-QTableView#missingModPanelTableView {
-    background-color: #22303d;
+/* Styling for the mod item text */
+QLabel#ListItemLabel {
     color: white;
 }
-QTableView#missingModPanelTableView QTableCornerButton{
-    background-color: #1B2838;
+/* Styling for the errors summary frame */
+QWidget#errorFrame { /* Outer-most encapsulator */
+    background-color: #19232d;
+    border-style: solid;
+    border-color: #455364;
+    border-width: 1px;
+    border-radius: 3px;
 }
+
+/* ===== GameConfiguration (view/game_configuration_panel.py) ===== */
+QLabel#gameVersion {
+    color: white;
+    margin-right: 4px;
+}
+
+/* ===== Mod info panel (sub_view/mod_info_panel.py) ===== */
+/* Metadata value labels + text */
+QLabel#summaryLabel {
+    color: white;
+    font-weight: 500;
+}
+QLabel#summaryValue {
+    color: white;
+}
+/* Outer-most encapsulator */
+/* Contains QScrollArea for mod description */
+QWidget#descriptionWidget {
+    background-color: #19232d;
+    border-style: solid;
+    border-color: #455364;
+    border-width: 1px;
+    border-radius: 3px;
+    padding: 2px; /* The sharp corner of the text box clips out */
+    padding-right: 5px;
+}
+/* Text, minus scroll bar */
+QWidget#descriptionContent { 
+    background-color: #19232d;
+    padding-right: 10px; /* Make some distance between text and scroll bar */
+}
+/* Description text itself */
+QLabel#descriptionLabel { 
+    color: white;
+    background-color: #19232d;
+    margin-right: 3px;
+}
+
+/* ===== Missing mods prompt (window/missing_mods_panel.py) ===== */
 QWidget#missingModsPanel{
     background-color: #1B2838;
 }
+/*
 QHeaderView#missingModPanelTableView {
     background-color: #1B2838;
     color: white;
-}
+}*/
 QComboBox#missing_mods_variant_cb{
     background-color: #1B2838;
     color: white;
     border-radius: 0;
-}
-
-
-/* ===== Settings (window/settings_panel.py) ===== */
-QDialog#settingsPanel {
-    background-color: #22303d;
-}
-QCheckBox#summaryValue {
-    color: white;
 }
 
 /* ===== RuleEditor (window/rule_editor_panel.py) ===== */
@@ -354,18 +439,7 @@ QWidget#RuleEditor {
     border-width: 1px;
     border-radius: 3px;
     margin: 7px; /* Space between frame and app edge */
-    background-color: #1B2838;
-}
-QTableView#ruleEditorPanelTableView {
-    background-color: #22303d;
-    color: white;
-}
-QTableView#ruleEditorPanelTableView QTableCornerButton{
-    background-color: #1B2838;
-}
-QHeaderView#ruleEditorPanelTableView {
-    background-color: #1B2838;
-    color: white;
+    background-color: #19232d;
 }
 
 /* ===== RunnerPanel (window/runner_panel.py) ===== */
@@ -375,17 +449,26 @@ QWidget#RunnerPanel {
     border-width: 1px;
     border-radius: 3px;
     margin: 7px; /* Space between frame and app edge */
-    background-color: #1B2838;
+    background-color: #19232d;
 }
 QPlainTextEdit#RunnerPaneltext {
     background-color: #22303d;
     color: white;
 }
 
-/* ===== Browser (util/steam/browser.py) ===== */
-QWidget#browserPanel {
-    background-color: #1B2838;
+/* ===== Settings (window/settings_panel.py) ===== */
+QDialog#settingsPanel {
+    background-color: #22303d;
 }
-QLabel#browserPaneldownloader_label {
+QCheckBox#summaryValue {
     color: white;
+}
+
+/* ===== Status panel (bottom message bar) */
+QWidget#StatusPanel {
+    background-color: #455364;
+}
+QLabel#StatusLabel {
+    color: white;
+    background-color: #455364;
 }

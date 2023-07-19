@@ -14,7 +14,6 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QItemDelegate,
     QLabel,
-    QLineEdit,
     QListWidget,
     QListWidgetItem,
     QMenu,
@@ -93,23 +92,16 @@ class MissingModsPrompt(QWidget):
         )
         # Create the table view and set the model
         self.editor_table_view = QTableView()
-        self.editor_table_view.setObjectName("missingModPanelTableView")
         self.editor_table_view.setModel(self.editor_model)
         self.editor_table_view.setSortingEnabled(True)  # Enable sorting on the columns
         self.editor_table_view.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.editor_table_view.setSelectionMode(QAbstractItemView.NoSelection)
-        self.editor_table_view.horizontalHeader().setObjectName(
-            "missingModPanelTableView"
-        )
-        self.editor_table_view.verticalHeader().setObjectName(
-            "missingModPanelTableView"
-        )
         # Set default stretch for each column
         self.editor_table_view.horizontalHeader().setSectionResizeMode(
             0, QHeaderView.Stretch
         )
         self.editor_table_view.horizontalHeader().setSectionResizeMode(
-            1, QHeaderView.ResizeToContents
+            1, QHeaderView.Stretch
         )
         self.editor_table_view.horizontalHeader().setSectionResizeMode(
             2, QHeaderView.ResizeToContents

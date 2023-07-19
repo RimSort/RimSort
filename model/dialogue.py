@@ -1,7 +1,13 @@
-from typing import Optional
+from typing import Optional, Tuple
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QMessageBox, QPushButton, QHBoxLayout, QVBoxLayout
+from PySide6.QtWidgets import (
+    QInputDialog,
+    QMessageBox,
+    QPushButton,
+    QHBoxLayout,
+    QVBoxLayout,
+)
 
 from logger_tt import logger
 
@@ -69,6 +75,33 @@ def show_dialogue_conditional(
     dialogue.exec_()
     response = dialogue.clickedButton()
     return response.text()
+
+
+def show_dialogue_input(
+    title: Optional[str] = None,
+    text: Optional[str] = None,
+    value: Optional[str] = None,
+) -> Tuple[str, bool]:
+    # Set up the message box
+    dialogue = QInputDialog()
+    dialogue.setObjectName("dialogue")
+    if title:
+        dialogue.setWindowTitle(title)
+    else:
+        dialogue.setWindowTitle(DEFAULT_TITLE)
+    # Add data
+    if text:
+        dialogue.setLabelText(text)
+    if value:
+        dialogue.setTextValue(value)
+
+    # Show the message box & return response
+    if dialogue.exec() == QInputDialog.Accepted:
+        result = True
+    else:
+        result = False
+    response = dialogue.textValue()
+    return response, result
 
 
 def show_information(
