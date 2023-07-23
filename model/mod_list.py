@@ -50,7 +50,7 @@ class ModListWidget(QListWidget):
         mod attributes. See tags:
         https://rimworldwiki.com/wiki/About.xml
         """
-        logger.info("Starting ModListWidget initialization")
+        logger.debug("Initializing ModListWidget")
 
         super(ModListWidget, self).__init__()
 
@@ -131,7 +131,7 @@ class ModListWidget(QListWidget):
         # into widgets. Used for an optimization strategy for `handle_rows_inserted`
         self.uuids = set()
         self.ignore_warning_list = []
-        logger.info("Finished ModListWidget initialization")
+        logger.debug("Finished ModListWidget initialization")
 
     def dropEvent(self, event: QDropEvent) -> None:
         ret = super().dropEvent(event)
@@ -571,10 +571,10 @@ class ModListWidget(QListWidget):
                                 )
                             ).resolve()
                         )
-                        if os.path.exists(original_mod_path):
+                        if os.path.exists(path):
                             if not os.path.exists(renamed_mod_path):
                                 try:
-                                    os.rename(original_mod_path, renamed_mod_path)
+                                    os.rename(path, renamed_mod_path)
                                     logger.debug(
                                         f'Successfully "converted" Steam mod by moving + renaming from {publishedfileid_from_folder_name} -> {mod_name} and migrating mod to local mods directory'
                                     )
@@ -583,9 +583,7 @@ class ModListWidget(QListWidget):
                                     )
                                 except:
                                     stacktrace = traceback.format_exc()
-                                    logger.error(
-                                        f"Failed to convert mod: {original_mod_path}"
-                                    )
+                                    logger.error(f"Failed to convert mod: {path}")
                                     logger.error(stacktrace)
                             else:
                                 logger.warning(
@@ -596,49 +594,66 @@ class ModListWidget(QListWidget):
                                 f"Unsubscribing from {len(publishedfileids_to_unsubscribe_from)} converted mods"
                             )
                             self.steamworks_subscription_signal.emit(
-                                ["unsubscribe", publishedfileids_to_unsubscribe_from]
+                                [
+                                    "unsubscribe",
+                                    [
+                                        eval(str_pfid)
+                                        for str_pfid in publishedfileids_to_unsubscribe_from
+                                    ],
+                                ]
                             )
                     return True
                 elif (  # ACTION: Re-subscribe to mod(s) with Steam
                     action == re_steam_action and len(steam_publishedfileid_to_name) > 0
                 ):
+                    publishedfileids = steam_publishedfileid_to_name.keys()
                     # Prompt user
                     answer = show_dialogue_conditional(
                         title="Are you sure?",
-                        text=f"You have selected {len(steam_publishedfileid_to_name)} mods for unsubscribe + re-subscribe.",
+                        text=f"You have selected {len(publishedfileids)} mods for unsubscribe + re-subscribe.",
                         information="\nThis operation will potentially delete .dds textures leftover. Steam is unreliable for this. Do you want to proceed?",
                     )
                     if answer == "&Yes":
                         logger.debug(
-                            f"Unsubscribing + re-subscribing to {len(steam_publishedfileid_to_name)} mod(s)"
+                            f"Unsubscribing + re-subscribing to {len(publishedfileids)} mod(s)"
                         )
                         for path in steam_mod_paths:
                             delete_files_except_extension(
                                 directory=path, extension=".dds"
                             )
                         self.steamworks_subscription_signal.emit(
-                            ["unsubscribe", steam_publishedfileid_to_name]
+                            [
+                                "unsubscribe",
+                                [eval(str_pfid) for str_pfid in publishedfileids],
+                            ]
                         )
                         self.steamworks_subscription_signal.emit(
-                            ["subscribe", steam_publishedfileid_to_name]
+                            [
+                                "subscribe",
+                                [eval(str_pfid) for str_pfid in publishedfileids],
+                            ]
                         )
                     return True
                 elif (  # ACTION: Unsubscribe & delete mod(s) with steam
                     action == unsubscribe_mod_steam_action
                     and len(steam_publishedfileid_to_name) > 0
                 ):
+                    publishedfileids = steam_publishedfileid_to_name.keys()
                     # Prompt user
                     answer = show_dialogue_conditional(
                         title="Are you sure?",
-                        text=f"You have selected {len(steam_publishedfileid_to_name)} mods for unsubscribe.",
+                        text=f"You have selected {len(publishedfileids)} mods for unsubscribe.",
                         information="\nDo you want to proceed?",
                     )
                     if answer == "&Yes":
                         logger.debug(
-                            f"Unsubscribing from {len(steam_publishedfileid_to_name)} mod(s)"
+                            f"Unsubscribing from {len(publishedfileids)} mod(s)"
                         )
                         self.steamworks_subscription_signal.emit(
-                            ["unsubscribe", steam_publishedfileid_to_name]
+                            [
+                                "unsubscribe",
+                                [eval(str_pfid) for str_pfid in publishedfileids],
+                            ]
                         )
                     return True
                 # Execute action for each selected mod

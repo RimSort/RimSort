@@ -92,7 +92,7 @@ class RuleEditor(QWidget):
         steam_workshop_metadata=None,
     ):
         super().__init__()
-        logger.info("Initializing RuleEditor")
+        logger.debug("Initializing RuleEditor")
 
         # STYLESHEET
         self.setObjectName("RuleEditor")

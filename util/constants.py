@@ -30,10 +30,14 @@ DEFAULT_SETTINGS = {
     "try_download_missing_mods": False,
     "steamcmd_install_path": ".",
     "steamcmd_validate_downloads": True,
-    "todds_preset": "medium",
+    "todds_preset": "high",
     "todds_active_mods_target": True,
     "todds_dry_run": False,
     "todds_overwrite": False,
+    "game_folder": "",
+    "config_folder": "",
+    "local_folder": "",
+    "workshop_folder": "",
 }
 DEFAULT_USER_RULES = {"timestamp": 0, "rules": {}}
 RIMWORLD_DLC_METADATA = {

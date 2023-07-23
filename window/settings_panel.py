@@ -36,7 +36,7 @@ class SettingsPanel(QDialog):
     actions_signal = Signal(str)
 
     def __init__(self, storage_path: str) -> None:
-        logger.info("Starting SettingsPanel initialization")
+        logger.debug("Initializing SettingsPanel")
         super(SettingsPanel, self).__init__()
 
         self.storage_path = storage_path
@@ -377,7 +377,6 @@ class SettingsPanel(QDialog):
         self.todds_presets_cb.addItems(
             [
                 "Low quality (for low VRAM/older GPU, optimize for VRAM)",
-                "High quality (default, good textures, long encode time)",
                 "Very high quality (better textures, longer encode time)",
             ]
         )
@@ -437,7 +436,7 @@ class SettingsPanel(QDialog):
         # Display items
         self.setLayout(self.layout)
 
-        logger.info("Finished SettingsPanel initialization")
+        logger.debug("Finished SettingsPanel initialization")
 
     def buildDatabaseBtnContextMenuEvent(self, point: QPoint) -> None:
         contextMenu = QMenu(self)  # Build Database btn context menu event

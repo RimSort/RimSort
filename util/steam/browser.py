@@ -43,7 +43,7 @@ class SteamBrowser(QWidget):
 
     def __init__(self, startpage: str):
         super().__init__()
-        logger.info("Initializing SteamBrowser")
+        logger.debug("Initializing SteamBrowser")
 
         # This is used to fix issue described here on non-Windows platform:
         # https://doc.qt.io/qt-6/qtwebengine-platform-notes.html#sandboxing-support

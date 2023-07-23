@@ -41,7 +41,7 @@ class RunnerPanel(QWidget):
     ):
         super().__init__()
 
-        logger.info("Initializing RunnerPanel")
+        logger.debug("Initializing RunnerPanel")
         self.ansi_escape = compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
         self.system = system()
         self.installEventFilter(self)

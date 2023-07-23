@@ -127,7 +127,7 @@ class MainContent:
 
         :param game_configuration: game configuration panel to get paths
         """
-        logger.info("Starting MainContent initialization")
+        logger.debug("Initializing MainContent")
 
         self.window = window
 
@@ -156,18 +156,16 @@ class MainContent:
         self.main_layout_frame.setLayout(self.main_layout)
 
         # INSTANTIATE WIDGETS
-        logger.info("Instantiating MainContent QWidget subclasses")
         self.mod_info_panel = ModInfo()
         self.active_mods_panel = ActiveModList(
             csharp_icon_enable=self.game_configuration.csharp_mods_toggle,
-            local_mods_path=self.game_configuration.get_local_folder_path(),
+            local_mods_path=self.game_configuration.local_folder_line.text(),
         )
         self.inactive_mods_panel = InactiveModList(
             csharp_icon_enable=self.game_configuration.csharp_mods_toggle,
-            local_mods_path=self.game_configuration.get_local_folder_path(),
+            local_mods_path=self.game_configuration.local_folder_line.text(),
         )
         self.actions_panel = Actions()
-        logger.info("Finished instantiating MainContent QWidget subclasses")
 
         # WIDGETS INTO BASE LAYOUT
         self.main_layout.addLayout(self.mod_info_panel.panel, 50)
@@ -270,7 +268,8 @@ class MainContent:
 
             # Check Workshop mods for updates if configured
             if (
-                self.game_configuration.steam_mods_update_check_toggle
+                self.external_steam_metadata
+                and self.game_configuration.steam_mods_update_check_toggle
             ):  # Check SteamCMD/Steam mods for updates if configured
                 self._do_check_for_workshop_updates()
                 self._do_generate_mod_update_report()
@@ -286,7 +285,7 @@ class MainContent:
         # CHECK USER PREFERENCE FOR WATCHDOG
         if self.game_configuration.watchdog_toggle:
             # Start watchdog
-            logger.info("Starting watchdog")
+            logger.info("Initializing watchdog observer")
             self.game_configuration_watchdog_observer.start()
 
         logger.info("Finished MainContent initialization")
@@ -404,9 +403,9 @@ class MainContent:
 
     def __initialize_watchdog(self) -> None:
         # INITIALIZE WATCHDOG - WE WAIT TO START UNTIL DONE PARSING MOD LIST
-        game_folder_path = self.game_configuration.get_game_folder_path()
-        local_folder_path = self.game_configuration.get_local_folder_path()
-        workshop_folder_path = self.game_configuration.get_workshop_folder_path()
+        game_folder_path = self.game_configuration.game_folder_line.text()
+        local_folder_path = self.game_configuration.local_folder_line.text()
+        workshop_folder_path = self.game_configuration.workshop_folder_line.text()
         self.game_configuration_watchdog_event_handler = RSFileSystemEventHandler()
         if SYSTEM == "Windows":
             self.game_configuration_watchdog_observer = PollingObserver()
@@ -456,9 +455,7 @@ class MainContent:
 
     def __missing_mods_prompt(self, missing_mods: list) -> None:
         if missing_mods:
-            logger.debug(
-                f"Could not find data for the list of active mods: {missing_mods}"
-            )
+            logger.debug(f"Could not find data for {len(missing_mods)} active mods")
             if (  # User configuration
                 self.game_configuration.try_download_missing_mods_toggle
                 and len(self.external_steam_metadata.keys()) > 0
@@ -499,9 +496,9 @@ class MainContent:
         :param uuid: uuid of mod
         """
         logger.info(f"USER ACTION: clicked on a mod list item: {uuid}")
-        if uuid in self.all_mods_with_dependencies:
-            self.mod_info_panel.display_mod_info(self.all_mods_with_dependencies[uuid])
-            if self.all_mods_with_dependencies[uuid].get("invalid"):
+        if uuid in self.all_mods_compiled:
+            self.mod_info_panel.display_mod_info(self.all_mods_compiled[uuid])
+            if self.all_mods_compiled[uuid].get("invalid"):
                 # Set label color to red if mod is invalid
                 invalid_qlabel_stylesheet = "QLabel { color : red; }"
                 self.mod_info_panel.mod_info_name_value.setStyleSheet(
@@ -547,7 +544,7 @@ class MainContent:
 
         # Get & set Rimworld version string
         self.game_version = get_game_version(
-            self.game_configuration.get_game_folder_path()
+            self.game_configuration.game_folder_line.text()
         )
         self.game_configuration.game_version_line.setText(self.game_version)
         self.active_mods_panel.game_version = self.game_version
@@ -655,7 +652,14 @@ class MainContent:
             ) as f:
                 json_string = f.read()
                 self.external_user_rules = json.loads(json_string)["rules"]
+            total_entries = len(self.external_user_rules)
+            logger.info(
+                f"Loaded {total_entries} additional sorting rules from Community Rules"
+            )
         else:
+            logger.info(
+                "Unable to find userRules.json in storage. Creating new user rules db!"
+            )
             initial_rules_db = DEFAULT_USER_RULES
             with open(self.game_configuration.user_rules_file_path, "w") as output:
                 json.dump(initial_rules_db, output, indent=4)
@@ -663,18 +667,18 @@ class MainContent:
 
         # Get and cache installed base game / DLC data
         self.expansions = get_installed_expansions(
-            self.game_configuration.get_game_folder_path(), self.game_version
+            self.game_configuration.game_folder_line.text(), self.game_version
         )
 
         # Get and cache installed local/custom mods
         self.local_mods = get_local_mods(
-            self.game_configuration.get_local_folder_path(),
+            self.game_configuration.local_folder_line.text(),
             steam_db=self.external_steam_metadata,
         )
 
         # Get and cache installed workshop mods
         self.workshop_mods = get_workshop_mods(
-            self.game_configuration.get_workshop_folder_path(),
+            self.game_configuration.workshop_folder_line.text(),
             steam_db=self.external_steam_metadata,
         )
 
@@ -698,7 +702,7 @@ class MainContent:
         steam_appworkshop_path = os.path.split(
             # This is just getting the path 2 directories up from content/294100,
             # so that we can find workshop/appworkshop_294100.acf
-            os.path.split(self.game_configuration.get_workshop_folder_path())[0]
+            os.path.split(self.game_configuration.workshop_folder_line.text())[0]
         )[0]
         self.steam_appworkshop_acf_path = str(
             Path(
@@ -731,9 +735,9 @@ class MainContent:
         logger.info("Parsing dependencies & load order rules from metadata")
         # Calculate and cache dependencies for ALL mods
         (
-            self.all_mods_with_dependencies,
+            self.all_mods_compiled,
             self.info_from_steam_package_id_to_name,
-        ) = get_dependencies_for_mods(
+        ) = compile_all_mods(
             self.internal_local_metadata,
             self.external_steam_metadata,
             self.external_community_rules,
@@ -741,7 +745,7 @@ class MainContent:
         )
         # Feed all_mods and Steam DB info to Active Mods list to surface
         # names instead of package_ids when able
-        self.active_mods_panel.all_mods = self.all_mods_with_dependencies
+        self.active_mods_panel.all_mods = self.all_mods_compiled
         self.active_mods_panel.steam_package_id_to_name = (
             self.info_from_steam_package_id_to_name
         )
@@ -778,14 +782,19 @@ class MainContent:
             self.duplicate_mods,
             self.missing_mods,
         ) = get_active_inactive_mods(
-            self.game_configuration.get_config_path(),
-            self.all_mods_with_dependencies,
+            str(
+                Path(
+                    os.path.join(
+                        self.game_configuration.config_folder_line.text(),
+                        "ModsConfig.xml",
+                    )
+                ).resolve()
+            ),
+            self.all_mods_compiled,
             self.game_configuration.duplicate_mods_warning_toggle,
         )
         if is_initial:
-            logger.info(
-                "Populating mod list data for the first time, so cache it for the restore function"
-            )
+            logger.info("Caching initial active/inactive mod lists")
             self.active_mods_data_restore_state = active_mods_data
             self.inactive_mods_data_restore_state = inactive_mods_data
 
@@ -837,12 +846,12 @@ class MainContent:
             if os.path.exists(todds_txt_path):
                 os.remove(todds_txt_path)
             if not self.game_configuration.todds_active_mods_target_toggle:
-                local_mods_target = self.game_configuration.get_local_folder_path()
+                local_mods_target = self.game_configuration.local_folder_line.text()
                 if local_mods_target and local_mods_target != "":
                     with open(todds_txt_path, "a") as todds_txt_file:
                         todds_txt_file.write(local_mods_target + "\n")
                 workshop_mods_target = (
-                    self.game_configuration.get_workshop_folder_path()
+                    self.game_configuration.workshop_folder_line.text()
                 )
                 if workshop_mods_target and workshop_mods_target != "":
                     with open(todds_txt_path, "a") as todds_txt_file:
@@ -897,7 +906,7 @@ class MainContent:
                 [
                     "launch_game_process",
                     [
-                        self.game_configuration.get_game_folder_path(),
+                        self.game_configuration.game_folder_line.text(),
                         self.game_configuration.run_arguments,
                     ],
                 ]
@@ -1012,7 +1021,7 @@ class MainContent:
                         )
                 if "steamcmd" in action:
                     # Filter out existing SteamCMD mods
-                    for metadata in self.all_mods_with_dependencies.values():
+                    for metadata in self.all_mods_compiled.values():
                         mod_pfid = metadata.get("publishedfileid")
                         if (
                             metadata.get("steamcmd")
@@ -1036,7 +1045,7 @@ class MainContent:
                         + "a separate, authenticated instance of SteamCMD, if you do not want to anonymously download via RimSort.",
                     )
                     if answer == "&Yes":
-                        for metadata in self.all_mods_with_dependencies.values():
+                        for metadata in self.all_mods_compiled.values():
                             mod_pfid = metadata.get("publishedfileid")
                             if (
                                 metadata["data_source"] == "workshop"
@@ -1229,9 +1238,7 @@ class MainContent:
                     os.path.join(os.path.dirname(__file__), "../data/query.gif")
                 ).resolve()
             ),
-            target=partial(
-                query_workshop_update_data, mods=self.all_mods_with_dependencies
-            ),
+            target=partial(query_workshop_update_data, mods=self.all_mods_compiled),
         )
         loading_animation.show()
         while loading_animation.thread and loading_animation.thread.isRunning():
@@ -1240,7 +1247,7 @@ class MainContent:
 
     def _do_generate_mod_update_report(self) -> None:
         self.workshop_mods_potential_updates = {}
-        for v in self.all_mods_with_dependencies.values():
+        for v in self.all_mods_compiled.values():
             if v.get("publishedfileid") and (
                 v.get("steamcmd") or v["data_source"] == "workshop"
             ):
@@ -1364,7 +1371,8 @@ class MainContent:
 
             # Check Workshop mods for updates if configured
             if (
-                self.game_configuration.steam_mods_update_check_toggle
+                self.external_steam_metadata
+                and self.game_configuration.steam_mods_update_check_toggle
             ):  # Check SteamCMD/Steam mods for updates if configured
                 self._do_check_for_workshop_updates()
                 self._do_generate_mod_update_report()
@@ -1407,26 +1415,32 @@ class MainContent:
             self.duplicate_mods,
             self.missing_mods,
         ) = get_active_inactive_mods(
-            self.game_configuration.get_config_path(),
-            self.all_mods_with_dependencies,
+            str(
+                Path(
+                    os.path.join(
+                        self.game_configuration.config_folder_line.text(),
+                        "ModsConfig.xml",
+                    )
+                ).resolve()
+            ),
+            self.all_mods_compiled,
             self.game_configuration.duplicate_mods_warning_toggle,
         )
         expansions_uuids = list(self.expansions.keys())
         active_mod_data = {}
         inactive_mod_data = {}
-        logger.info("Moving non-base/expansion active mods to inactive mods list")
+        logger.info("Moving non-expansion active mods to inactive mods list")
         for uuid, mod_data in active_mods_data.items():
             if uuid in expansions_uuids:
                 active_mod_data[uuid] = mod_data
             else:
                 inactive_mod_data[uuid] = mod_data
-        logger.info("Moving base/expansion inactive mods to active mods list")
+        logger.info("Moving expansion inactive mods to active mods list")
         for uuid, mod_data in inactive_mods_data.items():
             if uuid in expansions_uuids:
                 active_mod_data[uuid] = mod_data
             else:
                 inactive_mod_data[uuid] = mod_data
-        logger.info("Finished re-organizing mods for clear")
         self.__insert_data_into_lists(active_mod_data, inactive_mod_data)
 
     def _do_sort(self) -> None:
@@ -1436,7 +1450,7 @@ class MainContent:
         """
         # Get the live list of active and inactive mods. This is because the user
         # will likely sort before saving.
-        logger.info("Starting sorting mods")
+        logger.debug("Starting sorting mods")
         self.active_mods_panel.clear_active_mods_search()
         self.active_mods_panel.active_mods_filter_data_source_index = len(
             self.active_mods_panel.active_mods_filter_data_source_icons
@@ -1523,7 +1537,7 @@ class MainContent:
         for uuid, mod_data in reordered_tier_three_sorted_with_data.items():
             combined_mods[uuid] = mod_data
 
-        logger.info("Finished combining all tiers of mods. Inserting into mod lists")
+        logger.info("Finished combining all tiers of mods. Inserting into mod lists!")
         self.__insert_data_into_lists(combined_mods, inactive_mods)
 
     def _do_import_list_file_xml(self) -> None:
@@ -1557,7 +1571,7 @@ class MainContent:
                 self.missing_mods,
             ) = get_active_inactive_mods(
                 file_path[0],
-                self.all_mods_with_dependencies,
+                self.all_mods_compiled,
                 self.game_configuration.duplicate_mods_warning_toggle,
             )
             logger.info("Got new mods according to imported XML")
@@ -1604,7 +1618,14 @@ class MainContent:
             logger.info(f"Collected {len(active_mods)} active mods for export")
             logger.info("Getting current ModsConfig.xml to use as a reference format")
             mods_config_data = xml_path_to_json(
-                self.game_configuration.get_config_path()
+                str(
+                    Path(
+                        os.path.join(
+                            self.game_configuration.config_folder_line.text(),
+                            "ModsConfig.xml",
+                        )
+                    ).resolve()
+                )
             )
             if validate_mods_config_format(mods_config_data):
                 logger.info(
@@ -1826,7 +1847,7 @@ class MainContent:
         player_log_path = str(
             Path(
                 os.path.join(
-                    self.game_configuration.get_config_folder_path() + "/../Player.log"
+                    self.game_configuration.config_folder_line.text() + "/../Player.log"
                 )
             ).resolve()
         )
@@ -1877,15 +1898,21 @@ class MainContent:
                         continue  # Append `_steam` suffix if Steam mod, continue to next mod
                 active_mods.append(package_id)
         logger.info(f"Collected {len(active_mods)} active mods for saving")
-        mods_config_data = xml_path_to_json(self.game_configuration.get_config_path())
+        mods_config_path = str(
+            Path(
+                os.path.join(
+                    self.game_configuration.config_folder_line.text(),
+                    "ModsConfig.xml",
+                )
+            ).resolve()
+        )
+        mods_config_data = xml_path_to_json(mods_config_path)
         if validate_mods_config_format(mods_config_data):
             logger.info(
                 "Successfully got ModsConfig.xml data. Overwriting with current active mods"
             )
             mods_config_data["ModsConfigData"]["activeMods"]["li"] = active_mods
-            json_to_xml_write(
-                mods_config_data, self.game_configuration.get_config_path()
-            )
+            json_to_xml_write(mods_config_data, mods_config_path)
         else:
             logger.error("Could not save active mods")
         # Stop the save button from blinking if it is blinking
@@ -1970,7 +1997,7 @@ class MainContent:
         )
         if ok:
             self.game_configuration.run_arguments = args.split(",")
-            self.game_configuration.update_persistent_storage(
+            self.game_configuration._update_persistent_storage(
                 {"runArgs": self.game_configuration.run_arguments}
             )
 
@@ -2042,7 +2069,9 @@ class MainContent:
         self.steamcmd_runner.show()
         self.steamcmd_runner.message("Setting up steamcmd...")
         self.steamcmd_wrapper.setup_steamcmd(
-            self.game_configuration.get_local_folder_path(), False, self.steamcmd_runner
+            self.game_configuration.local_folder_line.text(),
+            False,
+            self.steamcmd_runner,
         )
 
     def _do_download_mods_with_steamcmd(self, publishedfileids: list):
@@ -2114,7 +2143,7 @@ class MainContent:
                 f"steamcmd install folder chosen. Updating storage with new path: {steamcmd_folder}"
             )
             self.game_configuration.steamcmd_install_path = steamcmd_folder
-            self.game_configuration.update_persistent_storage(
+            self.game_configuration._update_persistent_storage(
                 {"steamcmd_install_path": steamcmd_folder}
             )
             self.steamcmd_wrapper = SteamcmdInterface(
@@ -2258,7 +2287,8 @@ class MainContent:
         )
         if ok:
             self._do_clone_repo_to_path(
-                base_path=self.game_configuration.get_local_folder_path(), repo_url=args
+                base_path=self.game_configuration.local_folder_line.text(),
+                repo_url=args,
             )
         else:
             logger.debug("Cancelling operation.")
@@ -2290,7 +2320,7 @@ class MainContent:
         )
         if ok:
             self.game_configuration.github_username = args
-            self.game_configuration.update_persistent_storage(
+            self.game_configuration._update_persistent_storage(
                 {"github_username": self.game_configuration.github_username}
             )
         else:
@@ -2303,7 +2333,7 @@ class MainContent:
         )
         if ok:
             self.game_configuration.github_token = args
-            self.game_configuration.update_persistent_storage(
+            self.game_configuration._update_persistent_storage(
                 {"github_token": self.game_configuration.github_token}
             )
         else:
@@ -2701,7 +2731,7 @@ class MainContent:
             edit_packageId=packageid,
             initial_mode=initial_mode,
             # Required metadata
-            local_metadata=self.all_mods_with_dependencies,
+            local_metadata=self.all_mods_compiled,
             community_rules=self.external_community_rules,
             user_rules=self.external_user_rules,
             # Optional metadata - used to get names instead of packageId for About.xml rules
@@ -2721,7 +2751,7 @@ class MainContent:
         )
         logger.info(f"Selected path: {input_path[0]}")
         if input_path[0] and os.path.exists(input_path[0]):
-            self.game_configuration.update_persistent_storage(
+            self.game_configuration._update_persistent_storage(
                 {"external_steam_metadata_file_path": input_path[0]}
             )
             self.game_configuration.steam_db_file_path = input_path[0]
@@ -2739,7 +2769,7 @@ class MainContent:
         )
         logger.info(f"Selected path: {input_path[0]}")
         if input_path[0] and os.path.exists(input_path[0]):
-            self.game_configuration.update_persistent_storage(
+            self.game_configuration._update_persistent_storage(
                 {"external_community_rules_file_path": input_path[0]}
             )
         else:
@@ -2758,7 +2788,7 @@ class MainContent:
         )
         if ok:
             self.game_configuration.steam_db_repo = args
-            self.game_configuration.update_persistent_storage(
+            self.game_configuration._update_persistent_storage(
                 {"external_steam_metadata_repo": self.game_configuration.steam_db_repo}
             )
 
@@ -2774,7 +2804,7 @@ class MainContent:
         )
         if ok:
             self.game_configuration.community_rules_repo = args
-            self.game_configuration.update_persistent_storage(
+            self.game_configuration._update_persistent_storage(
                 {
                     "external_community_rules_repo": self.game_configuration.community_rules_repo
                 }
@@ -2824,7 +2854,7 @@ class MainContent:
                     mode=self.game_configuration.db_builder_include,
                     output_database_path=path,
                     get_appid_deps=self.game_configuration.build_steam_database_dlc_data_toggle,
-                    mods=self.all_mods_with_dependencies,
+                    mods=self.all_mods_compiled,
                     update=self.game_configuration.build_steam_database_update_toggle,
                 )
             # Create query runner
@@ -2857,7 +2887,7 @@ class MainContent:
         )
         if ok:
             self.game_configuration.steam_apikey = args
-            self.game_configuration.update_persistent_storage(
+            self.game_configuration._update_persistent_storage(
                 {"steam_apikey": self.game_configuration.steam_apikey}
             )
 
@@ -2868,7 +2898,7 @@ class MainContent:
         """
         # TODO: Refactor this...
         discrepancies = []
-        mods = self.all_mods_with_dependencies
+        mods = self.all_mods_compiled
         database_a_deps = {}
         database_b_deps = {}
         # Notify user
@@ -3114,7 +3144,7 @@ class MainContent:
         if ok:
             try:
                 self.game_configuration.database_expiry = int(args)
-                self.game_configuration.update_persistent_storage(
+                self.game_configuration._update_persistent_storage(
                     {"database_expiry": self.game_configuration.database_expiry}
                 )
             except ValueError:

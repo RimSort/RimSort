@@ -44,7 +44,7 @@ class MissingModsPrompt(QWidget):
         steam_workshop_metadata: Dict[str, Any],
     ):
         super().__init__()
-        logger.info("Initializing MissingModsPrompt")
+        logger.debug("Initializing MissingModsPrompt")
 
         self.installEventFilter(self)
 

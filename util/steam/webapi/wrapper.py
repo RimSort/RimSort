@@ -52,7 +52,7 @@ class DynamicQuery(QObject):
     ):
         QObject.__init__(self)
 
-        logger.info("Initializing DynamicQuery...")
+        logger.info("Initializing DynamicQuery")
         self.api = None
         self.apikey = apikey
         self.appid = appid

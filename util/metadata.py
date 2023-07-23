@@ -323,6 +323,10 @@ def get_configured_steam_db(life: int, path: str) -> Tuple[Dict[str, Any], Any]:
                     "database"
                 ]  # TODO: additional check to verify integrity of this data's schema
                 logger.info("Cached Steam DB is valid! Returning data to RimSort...")
+                total_entries = len(db_json_data)
+                logger.info(
+                    f"Loaded metadata for {total_entries} Steam Workshop mods from Steam DB"
+                )
             else:  # If the cached db data is expired but NOT missing
                 # Fallback to the expired metadata
                 show_warning(
@@ -334,6 +338,10 @@ def get_configured_steam_db(life: int, path: str) -> Tuple[Dict[str, Any], Any]:
                 db_json_data = db_data[
                     "database"
                 ]  # TODO: additional check to verify integrity of this data's schema
+                total_entries = len(db_json_data)
+                logger.info(
+                    f"Loaded metadata for {total_entries} Steam Workshop mods from Steam DB"
+                )
             return db_json_data, path
 
     else:  # Assume db_data_missing
@@ -359,14 +367,11 @@ def get_configured_community_rules_db(path: str) -> Tuple[Dict[str, Any], Any]:
             json_string = f.read()
             logger.info("Reading info from communityRules.json")
             rule_data = json.loads(json_string)
-            logger.debug(
-                "Returning communityRules.json, this data is long so we forego logging it here"
-            )
-            total_entries = len(rule_data["rules"])
+            community_rules_json_data = rule_data["rules"]
+            total_entries = len(community_rules_json_data)
             logger.info(
                 f"Loaded {total_entries} additional sorting rules from Community Rules"
             )
-            community_rules_json_data = rule_data["rules"]
             return community_rules_json_data, path
 
     else:  # Assume db_data_missing
@@ -411,6 +416,10 @@ def get_rpmmdb_steam_metadata(mods: Dict[str, Any]) -> Tuple[Dict[str, Any], Any
                         f"Loaded {total_entries} additional sorting rules from RPMMDB Steam DB"
                     )
                     db_json_data = db_data["database"]
+                    total_entries = len(db_json_data)
+                    logger.info(
+                        f"Loaded metadata for {total_entries} Steam Workshop mods from Steam DB"
+                    )
                     return db_json_data, steam_db_path
             else:
                 logger.error("The db.json path does not exist!")
@@ -463,6 +472,10 @@ def get_rpmmdb_community_rules_db(mods: Dict[str, Any]) -> Tuple[Dict[str, Any],
                         f"Loaded {total_entries} additional sorting rules from RPMMDB Community Rules"
                     )
                     community_rules_json_data = rule_data["rules"]
+                    total_entries = len(community_rules_json_data)
+                    logger.info(
+                        f"Loaded {total_entries} additional sorting rules from Community Rules"
+                    )
                     return community_rules_json_data, community_rules_path
             else:
                 logger.error("The communityRules.json path does not exist")

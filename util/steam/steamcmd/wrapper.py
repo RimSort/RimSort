@@ -27,7 +27,7 @@ class SteamcmdInterface:
     """
 
     def __init__(self, steamcmd_prefix: str, validate: bool) -> None:
-        logger.info("SteamcmdInterface initilizing...")
+        logger.debug("Initializing SteamcmdInterface")
         self.steamcmd_install_path = str(Path(steamcmd_prefix, "steamcmd").resolve())
         self.steamcmd_steam_path = str(Path(steamcmd_prefix, "steam").resolve())
         self.system = platform.system()
@@ -86,6 +86,7 @@ class SteamcmdInterface:
                 )
             ).resolve()
         )
+        logger.debug("Finished SteamcmdInterface initialization")
 
     def download_mods(self, publishedfileids: list, runner: RunnerPanel):
         """

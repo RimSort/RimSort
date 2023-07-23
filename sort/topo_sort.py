@@ -11,7 +11,7 @@ def do_topo_sort(
     Sort mods using the topological sort algorithm. For each
     topological level, sort the mods alphabetically.
     """
-    logger.info(f"Starting Toposort for {len(dependency_graph)} mods")
+    logger.info(f"Initializing toposort for {len(dependency_graph)} mods")
     sorted_dependencies = toposort(dependency_graph)
     alphabetized_dependencies_w_data = {}
     active_mods_packageid_to_uuid = dict(

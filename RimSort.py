@@ -109,7 +109,7 @@ class MainWindow(QMainWindow):
         Initialize the main application window. Construct the layout,
         add the three main views, and set up relevant signals and slots.
         """
-        logger.info("Starting MainWindow initialization")
+        logger.info("Initializing MainWindow")
         super(MainWindow, self).__init__()
 
         # Create the main application window
@@ -124,7 +124,6 @@ class MainWindow(QMainWindow):
         app_layout.setSpacing(0)  # Space between widgets
 
         # Create various panels on the application GUI
-        logger.info("Start creating main panels")
         self.game_configuration_panel = GameConfiguration(debug_mode=self.debug_mode)
         self.main_content_panel = MainContent(
             game_configuration=self.game_configuration_panel,
@@ -132,9 +131,7 @@ class MainWindow(QMainWindow):
             window=self,
         )
         self.bottom_panel = Status()
-        logger.info("Finished creating main panels")
 
-        logger.info("Connecting MainWindow signals and slots")
         # Connect the game configuration actions signals to Status panel to display fading action text
         self.game_configuration_panel.configuration_signal.connect(
             self.bottom_panel.actions_slot
@@ -157,7 +154,7 @@ class MainWindow(QMainWindow):
         widget.setLayout(app_layout)
         self.setCentralWidget(widget)
 
-        logger.info("Finished MainWindow initialization")
+        logger.debug("Finished MainWindow initialization")
 
     def showEvent(self, event) -> None:
         # Call the original showEvent handler
@@ -190,7 +187,7 @@ def main_thread():
     try:
         app = QApplication(sys.argv)
         app.setApplicationName("RimSort")
-        logger.info("Setting application styles")
+        logger.debug("Setting application style")
         app.setStyle(
             ProxyStyle()
         )  # Add proxy style for overriding some styling elements
@@ -256,14 +253,14 @@ if __name__ == "__main__":
 
     # This check is used whether RimSort is running via Nuitka bundle
     if "__compiled__" in globals():
-        logger.warning("Running using Nuitka bundle")
-        if system != "Linux":
+        logger.debug("Running using Nuitka bundle")
+        if system != "debug":
             logger.warning(
                 "Non-Linux platform detected: using multiprocessing.freeze_support() & setting 'spawn' as MP method"
             )
             freeze_support()
             set_start_method("spawn")
     else:
-        logger.warning("Running using Python interpreter")
-    logger.info("Starting RimSort application")
+        logger.debug("Running using Python interpreter")
+    logger.info("Initializing RimSort application")
     main_thread()

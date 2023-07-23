@@ -139,7 +139,7 @@ def show_information(
         info_message_box.setDetailedText(details)
 
     # Show the message box
-    logger.info("Finished showing information box")
+    logger.debug("Finished showing information box")
     info_message_box.exec_()
 
 
@@ -178,7 +178,7 @@ def show_warning(
         warning_message_box.setDetailedText(details)
 
     # Show the message box
-    logger.info("Finished showing warning box")
+    logger.debug("Finished showing warning box")
     warning_message_box.exec_()
 
 
@@ -220,5 +220,5 @@ def show_fatal_error(
         fatal_message_box.setDetailedText(details)
 
     # Show the message box
-    logger.info("Finished showing fatal error box")
+    logger.debug("Finished showing fatal error box")
     fatal_message_box.exec_()

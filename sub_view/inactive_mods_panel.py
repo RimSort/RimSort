@@ -31,7 +31,7 @@ class InactiveModList:
         Create a ListWidget using the dict of mods. This will
         create a row for every key-value pair in the dict.
         """
-        logger.info("Starting InactiveModList initialization")
+        logger.debug("Initializing InactiveModList")
 
         self.csharp_icon_enable = csharp_icon_enable
         self.local_mods_path = local_mods_path
@@ -142,7 +142,7 @@ class InactiveModList:
         # Connect signals and slots
         self.inactive_mods_list.list_update_signal.connect(self.change_mod_num_display)
 
-        logger.info("Finished InactiveModList initialization")
+        logger.debug("Finished InactiveModList initialization")
 
     def change_mod_num_display(self, count: str) -> None:
         if count != "drop":

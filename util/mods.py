@@ -69,6 +69,30 @@ def add_dependency_to_mod(
             )
 
 
+def add_dependency_to_mod_from_steamdb(
+    mod_data: Dict[str, Any], dependency_id: Any, all_mods: Dict[str, Any]
+) -> None:
+    mod_name = mod_data.get("name")
+    # Create a new key with empty set as value by default
+    mod_data.setdefault("dependencies", set())
+
+    # If the value is a single str (for steamDB)
+    if isinstance(dependency_id, str):
+        mod_data["dependencies"].add(dependency_id)
+    else:
+        logger.error(f"Dependencies is not a single str: [{dependency_id}]")
+    logger.debug(f"Added dependency to [{mod_name}] from SteamDB: [{dependency_id}]")
+
+
+def get_num_dependencies(all_mods: Dict[str, Any], key_name: str) -> int:
+    """Debug func for getting total number of dependencies"""
+    counter = 0
+    for mod_data in all_mods.values():
+        if mod_data.get(key_name):
+            counter = counter + len(mod_data[key_name])
+    return counter
+
+
 def add_incompatibility_to_mod(
     mod_data: Dict[str, Any],
     dependency_or_dependency_ids: Any,
@@ -170,21 +194,6 @@ def add_load_rule_to_mod(
             )
 
 
-def add_dependency_to_mod_from_steamdb(
-    mod_data: Dict[str, Any], dependency_id: Any, all_mods: Dict[str, Any]
-) -> None:
-    mod_name = mod_data.get("name")
-    # Create a new key with empty set as value by default
-    mod_data.setdefault("dependencies", set())
-
-    # If the value is a single str (for steamDB)
-    if isinstance(dependency_id, str):
-        mod_data["dependencies"].add(dependency_id)
-    else:
-        logger.error(f"Dependencies is not a single str: [{dependency_id}]")
-    logger.debug(f"Added dependency to [{mod_name}] from SteamDB: [{dependency_id}]")
-
-
 def get_active_inactive_mods(
     config_path: str,
     workshop_and_expansions: Dict[str, Any],
@@ -200,7 +209,7 @@ def get_active_inactive_mods(
     :param workshop_and_expansions: dict of all mods
     :return: a Dict for active mods and a Dict for inactive mods
     """
-    logger.info("Starting generating active and inactive mods")
+    logger.debug("Started generating active and inactive mods")
     # Calculate duplicate mods (SCHEMA: {str packageId: {str uuid: list[str data_source, str mod_path]} })
     duplicate_mods = {}
     for mod_uuid, mod_data in workshop_and_expansions.items():
@@ -221,22 +230,19 @@ def get_active_inactive_mods(
     }
 
     # Get the list of active mods and populate data from workshop + expansions
-    logger.info(f"Getting active mods from RimWorld mod list: {config_path}")
     active_mods, missing_mods = get_active_mods_from_config(
         config_path, duplicate_mods, workshop_and_expansions
     )
     # Return an error if some active mod was in the ModsConfig but no data
     # could be found for it
     if duplicate_mods:
-        logger.debug(
-            f"The following duplicate mods were found in the list of active mods: {duplicate_mods}"
-        )
         if duplicate_mods_warning_toggle:
             list_of_duplicate_mods = ""
             for duplicate_mod in duplicate_mods.keys():
                 list_of_duplicate_mods = list_of_duplicate_mods + f"* {duplicate_mod}\n"
             show_warning(
-                text="Duplicate mods found for package ID(s) in your ModsConfig.xml (active mods list)",
+                title="Duplicate mod(s) found",
+                text="Duplicate mods(s) found for package ID(s) in your ModsConfig.xml (active mods list)",
                 information=(
                     "The following list of mods were set active in your ModsConfig.xml and "
                     "duplicate instances were found of these mods in your mod data sources. "
@@ -250,7 +256,6 @@ def get_active_inactive_mods(
                 "User preference is not configured to display duplicate mods. Skipping..."
             )
     # Get the inactive mods by subtracting active mods from workshop + expansions
-    logger.info("Calling get inactive mods")
     inactive_mods = get_inactive_mods(workshop_and_expansions, active_mods)
     logger.info(f"# active mods: {len(active_mods)}")
     logger.info(f"# inactive mods: {len(inactive_mods)}")
@@ -270,7 +275,7 @@ def get_active_mods_from_config(
     :param path: path to a ModsConfig.xml file
     :return: a Dict keyed to mod package ids
     """
-    logger.info(f"Getting active mods with Config Path: {config_path}")
+    logger.info(f"Retrieving active mods from RimWorld ModsConfig.xml")
     active_mods_dict: dict[str, Any] = {}
     duplicates_processed = []
     missing_mods = []
@@ -469,9 +474,7 @@ def get_active_mods_from_config(
                                     continue
 
         missing_mods = list(set(to_populate) - set(populated_mods))
-        logger.debug(
-            f"Generated active_mods_dict with {len(active_mods_dict)} entries: {active_mods_dict}"
-        )
+        logger.debug(f"Generated active mods dict with {len(active_mods_dict)} mods")
         return active_mods_dict, missing_mods
     else:
         logger.error(
@@ -480,30 +483,29 @@ def get_active_mods_from_config(
         return active_mods_dict, missing_mods
 
 
-def get_dependencies_for_mods(
+def compile_all_mods(
     all_mods: Dict[str, Any],
     steam_db: Dict[str, Any],
     community_rules: Dict[str, Any],
     user_rules: Dict[str, Any],
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
-    Iterate through each workshop mod + known expansion + base game and add new key-values
-    describing its dependencies (what it should be loaded after), and incompatibilities
-    (currently not being used).
+    Iterate through each expansion or mod and add new key-values describing
+    its dependencies, incompatibilities, and load order rules from metadata.
 
     :param all_mods: dict of all mods from local mod (and expansion) metadata
     :param steam_db: a dict containing the ["database"] rules from external metadata
     :param community_rules: dict of community established rules from external metadata
     :param user_rules: dict of user-configured rules from external metadata
-    :return workshop_and_expansions: workshop mods + official modules with dependency data
+    :return all_mods_compiled: expansions + mods with all data compiled
     """
-    logger.info("Starting getting dependencies for all mods")
+    logger.info("Started compiling all mods from internal/external metadata")
 
     # Create an index for all_mods
     packageId_to_uuid = {mod["packageId"]: uuid for uuid, mod in all_mods.items()}
 
     # Add dependencies to installed mods based on dependencies listed in About.xml TODO manifest.xml
-    logger.info("Starting adding dependencies through About.xml information")
+    logger.info("Started compiling metadata from About.xml")
     for uuid in all_mods:
         logger.debug(f"UUID: {uuid} packageId: " + all_mods[uuid].get("packageId"))
 
@@ -690,7 +692,7 @@ def get_dependencies_for_mods(
     # Steam references dependencies based on PublishedFileID, not package ID
     info_from_steam_package_id_to_name = {}
     if steam_db:
-        logger.info("Starting adding dependencies from SteamDB")
+        logger.info("Started compiling metadata from configured SteamDB")
         tracking_dict: dict[str, set[str]] = {}
         steam_id_to_package_id: dict[str, str] = {}
         for publishedfileid, mod_data in steam_db.items():
@@ -748,7 +750,7 @@ def get_dependencies_for_mods(
 
     # Add load order to installed mods based on dependencies from community rules
     if community_rules:
-        logger.info("Starting adding rules from configured Community Rules")
+        logger.info("Started compiling metadata from configured Community Rules")
         for package_id in community_rules:
             # Note: requiring the package be in all_mods should be fine, as
             # if the mod doesn't exist all_mods, then either mod_data or dependency_id
@@ -805,7 +807,7 @@ def get_dependencies_for_mods(
         )
     # Add load order rules to installed mods based on rules from user rules
     if user_rules:
-        logger.info("Starting adding rules from User Rules")
+        logger.info("Started compiling metadata from User Rules")
         for package_id in user_rules:
             # Note: requiring the package be in all_mods should be fine, as
             # if the mod doesn't exist all_mods, then either mod_data or dependency_id
@@ -874,14 +876,20 @@ def get_game_version(game_path: str) -> str:
     version = ""
     if platform.system() == "Darwin" and game_path:
         game_path = str(Path(os.path.join(game_path, "RimWorldMac.app")).resolve())
-        logger.info(f"Running on MacOS, generating new game path: {game_path}")
+        logger.debug(f"Running on MacOS, generating new game path: {game_path}")
     version_file_path = str(Path(os.path.join(game_path, "Version.txt")).resolve())
-    logger.info(f"Generated Version.txt path: {version_file_path}")
+    logger.debug(f"Generated Version.txt path: {version_file_path}")
     if os.path.exists(version_file_path):
-        logger.info("Version.txt path exists")
-        with open(version_file_path) as f:
-            version = f.read()
-            logger.info(f"Retrieved game version from Version.txt: {version.strip()}")
+        try:
+            with open(version_file_path) as f:
+                version = f.read()
+                logger.info(
+                    f"Retrieved game version from Version.txt: {version.strip()}"
+                )
+        except:
+            logger.error(
+                f"Unable to parse Version.txt from game folder: {version_file_path}"
+            )
     else:
         logger.error(
             f"The provided Version.txt path does not exist: {version_file_path}"
@@ -894,9 +902,6 @@ def get_game_version(game_path: str) -> str:
                 "file in the game install directory."
             ),
         )
-    logger.debug(
-        f"Finished getting game version from Game Folder, returning now: {version.strip()}"
-    )
     return version.strip()
 
 
@@ -917,9 +922,7 @@ def get_inactive_mods(
     :param duplicate_mods: dict keyed with packageIds to list of dupe uuids
     :return: a dict for inactive mods
     """
-    logger.info(
-        "Generating inactive mod lists from subtracting all mods with active mods"
-    )
+    logger.info("Generating inactive mod list")
     inactive_mods = workshop_and_expansions.copy()
 
     # Remove active_mods uuids from inactive_mods in a more efficient way using dict comprehension
@@ -946,7 +949,7 @@ def get_installed_expansions(game_path: str, game_version: str) -> Dict[str, Any
     """
     mod_data = {}
     if game_path != "":
-        logger.info(f"Getting installed expansions with Game Folder path: {game_path}")
+        logger.info(f"Getting installed expansions with game folder path: {game_path}")
         # RimWorld folder on mac contains RimWorldMac.app which
         # is actually a folder itself
         if platform.system() == "Darwin" and game_path:
@@ -956,15 +959,14 @@ def get_installed_expansions(game_path: str, game_version: str) -> Dict[str, Any
         # Get mod data
         data_path = str(Path(os.path.join(game_path, "Data")).resolve())
         logger.info(
-            f"Attempting to get BASE/EXPANSIONS data from Rimworld's /Data folder: {data_path}"
+            f"Attempting to get expansion data from RimWorld's Data folder: {data_path}"
         )
         mod_data = parse_mod_data(data_path, "expansion")
-        logger.debug("Finished getting BASE/EXPANSION data")
-        # logger.debug(mod_data)
+        logger.info("Finished getting expansion data")
 
         # Base game and expansion About.xml do not contain name, so these
         # must be manually added
-        logger.info("Manually populating BASE/EXPANSION data")
+        logger.info("Manually populating expansion data")
         dlcs_packageid_to_appid = {
             "ludeon.rimworld": {
                 "appid": "294100",
@@ -1000,10 +1002,7 @@ def get_installed_expansions(game_path: str, game_version: str) -> Dict[str, Any
                 logger.error(
                     f"An unknown mod has been found in the expansions folder: {package_id} {data}"
                 )
-        logger.info(
-            "Finished getting installed expansions, returning final BASE/EXPANSIONS data now"
-        )
-        # logger.debug(mod_data)
+        logger.info("Finished getting installed expansions")
     else:
         logger.error(
             "Skipping parsing data from empty game data path. Is the game path configured?"
@@ -1026,14 +1025,19 @@ def get_local_mods(
     """
     mod_data = {}
     if local_path != "":
-        logger.info(f"Getting local mods with Local path: {local_path}")
-        logger.info(f"Supplementing call with Game Folder path: {game_path}")
+        if game_path:
+            logger.info(f"Supplementing call with game folder path: {game_path}")
 
         # If local mods path is same as game path and we're running on a Mac,
         # that means use the default local mods folder
 
         system_name = platform.system()
-        if system_name == "Darwin" and local_path and local_path == game_path:
+        if (
+            system_name == "Darwin"
+            and local_path
+            and game_path
+            and local_path == game_path
+        ):
             local_path = str(
                 Path(os.path.join(local_path, "RimWorldMac.app", "Mods")).resolve()
             )
@@ -1042,26 +1046,15 @@ def get_local_mods(
             )
 
         # Get mod data
-        logger.info(
-            f"Attempting to get LOCAL mods data from custom local path or Rimworld's /Mods folder: {local_path}"
-        )
+        logger.info(f"Getting local mods from path: {local_path}")
         mod_data = parse_mod_data(local_path, "local", steam_db)
-        logger.info("Finished getting LOCAL mods data, returning LOCAL mods data now")
+        logger.info("Finished getting local mod data")
         # logger.debug(mod_data)
     else:
         logger.debug(
             "Skipping parsing data from empty local mods path. Is the local mods path configured?"
         )
     return mod_data
-
-
-def get_num_dependencies(all_mods: Dict[str, Any], key_name: str) -> int:
-    """Debug func for getting total number of dependencies"""
-    counter = 0
-    for mod_data in all_mods.values():
-        if mod_data.get(key_name):
-            counter = counter + len(mod_data[key_name])
-    return counter
 
 
 def get_workshop_mods(workshop_path: str, steam_db=None) -> Dict[str, Any]:
@@ -1077,10 +1070,9 @@ def get_workshop_mods(workshop_path: str, steam_db=None) -> Dict[str, Any]:
     """
     mod_data = {}
     if workshop_path != "":
-        logger.info(f"Getting WORKSHOP data with Workshop path: {workshop_path}")
+        logger.info(f"Getting workshop mods from path: {workshop_path}")
         mod_data = parse_mod_data(workshop_path, "workshop", steam_db)
-        logger.info("Finished getting WORKSHOP data, returning WORKSHOP data now")
-        # logger.debug(mod_data)
+        logger.info("Finished getting workshop mods")
     else:
         logger.debug(
             "Skipping parsing data from empty workshop mods path. Is the workshop mods path configured?"
@@ -1117,7 +1109,7 @@ def merge_mod_data(*dict_args: dict[str, Any]) -> Dict[str, Any]:
 
 
 def parse_mod_data(mods_path: str, intent: str, steam_db=None) -> Dict[str, Any]:
-    logger.info(f"Starting parsing mod data for intent: {intent}")
+    logger.info(f"Started parsing mod data for intent: {intent}")
     mods = {}
     if os.path.exists(mods_path):
         logger.info(f"The provided mods path exists: {mods_path}")

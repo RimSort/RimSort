@@ -37,7 +37,7 @@ class ActiveModList(QWidget):
         Create a ListWidget using the dict of mods. This will
         create a row for every key-value pair in the dict.
         """
-        logger.info("Starting ActiveModList initialization")
+        logger.debug("Initializing ActiveModList")
         self.csharp_icon_enable = csharp_icon_enable
         self.list_updated = False
         self.local_mods_path = local_mods_path
@@ -188,7 +188,7 @@ class ActiveModList(QWidget):
         self.active_mods_list.list_update_signal.connect(
             self.handle_internal_mod_list_updated
         )
-        logger.info("Finished ActiveModList initialization")
+        logger.debug("Finished ActiveModList initialization")
 
     def recalculate_internal_list_errors(self) -> None:
         """

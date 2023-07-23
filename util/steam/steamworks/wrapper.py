@@ -65,12 +65,12 @@ class SteamworksInterface:
         if not self.steam_not_running:  # Skip if True
             if self.callbacks:
                 # Start the thread
-                logger.info("Starting thread...")
+                logger.debug("Starting thread")
                 self.steamworks_thread = self._daemon()
                 self.steamworks_thread.start()
 
     def _callbacks(self):
-        logger.info("Starting _callbacks")
+        logger.debug("Starting _callbacks")
         while (
             not self.steamworks.loaded()
         ):  # This should not execute as long as Steamworks API init went OK

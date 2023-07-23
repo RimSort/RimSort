@@ -32,7 +32,7 @@ class Actions(QWidget):
         Initialize the actions panel. Construct the layout,
         add widgets, and emit signals where applicable.
         """
-        logger.info("Starting Actions initialization")
+        logger.debug("Initializing Actions")
         super(Actions, self).__init__()
 
         # Create the main layout.
@@ -229,7 +229,7 @@ class Actions(QWidget):
         self.bottom_panel.addWidget(self.save_button)
         self.bottom_panel.addWidget(self.upload_rwlog_button)
 
-        logger.info("Finished Actions initialization")
+        logger.debug("Finished Actions initialization")
 
     @property
     def panel(self) -> QVBoxLayout:

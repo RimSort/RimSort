@@ -28,7 +28,7 @@ def gen_deps_graph(
                 if dependency[0] in active_mod_ids:
                     dependencies_graph[package_id].add(dependency[0])
     logger.info(
-        f"Finished generating dependencies graph of {len(dependencies_graph)} items, returning"
+        f"Finished generating dependencies graph of {len(dependencies_graph)} items"
     )
     return dependencies_graph
 
@@ -37,7 +37,7 @@ def gen_rev_deps_graph(
     active_mods_json: dict[str, Any], active_mod_ids: list[str]
 ) -> dict[str, set[str]]:
     # Schema: {item: {isDependentOn1, isDependentOn2, ...}}
-    logger.info("Generating reverse dependencies graph")
+    logger.debug("Generating reverse dependencies graph")
     reverse_dependencies_graph: dict[str, set[str]] = {}
     for mod_data in active_mods_json.values():
         package_id = mod_data["packageId"]
@@ -51,8 +51,8 @@ def gen_rev_deps_graph(
                     )
                 if dependent[0] in active_mod_ids:
                     reverse_dependencies_graph[package_id].add(dependent[0])
-    logger.info(
-        f"Finished generating reverse dependencies graph of {len(reverse_dependencies_graph)}, returning"
+    logger.debug(
+        f"Finished generating reverse dependencies graph of {len(reverse_dependencies_graph)}"
     )
     return reverse_dependencies_graph
 

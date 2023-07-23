@@ -21,7 +21,7 @@ class ModInfo:
         """
         Initialize the class.
         """
-        logger.info("Starting ModInfo initialization")
+        logger.debug("Initializing ModInfo")
 
         # Base layout type
         self.panel = QVBoxLayout()
@@ -108,7 +108,7 @@ class ModInfo:
         self.mod_info_layout.addLayout(self.mod_info_path)
         self.description_layout.addWidget(self.description)
 
-        logger.info("Finished ModInfo initialization")
+        logger.debug("Finished ModInfo initialization")
 
     def display_mod_info(self, mod_info: Dict[str, Any]) -> None:
         """
@@ -118,7 +118,7 @@ class ModInfo:
 
         :param mod_info: complete json info for the mod
         """
-        logger.info(f"Starting display mod info for info: {mod_info}")
+        logger.debug(f"Starting display of mod info: {mod_info}")
         self.mod_info_name_value.setText(mod_info.get("name"))
         self.mod_info_package_id_value.setText(mod_info.get("packageId"))
 
@@ -236,4 +236,4 @@ class ModInfo:
             self.preview_picture.setPixmap(
                 pixmap.scaled(self.preview_picture.size(), Qt.KeepAspectRatio)
             )
-        logger.info("Finished displaying mod info")
+        logger.debug("Finished displaying mod info")

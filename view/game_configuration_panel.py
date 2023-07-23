@@ -10,8 +10,8 @@ from functools import partial
 from os.path import expanduser
 from typing import Any, Dict
 
-from PySide6.QtCore import QObject, QPoint, QStandardPaths, Qt, Signal
-from PySide6.QtGui import QAction
+from PySide6.QtCore import QObject, QPoint, QSize, QStandardPaths, Qt, Signal
+from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import (
     QFileDialog,
     QFrame,
@@ -49,7 +49,7 @@ class GameConfiguration(QObject):
         """
         Initialize the game configuration.
         """
-        logger.info("Starting GameConfiguration initialization")
+        logger.debug("Initializing GameConfiguration")
         super(GameConfiguration, self).__init__()
 
         self.debug_mode = debug_mode
@@ -58,6 +58,14 @@ class GameConfiguration(QObject):
             QStandardPaths.AppLocalDataLocation
         )
         self.dbs_path = "."
+        self.lock_icon_path = str(
+            Path(os.path.join(os.path.dirname(__file__), "../data/lock.png")).resolve()
+        )
+        self.unlock_icon_path = str(
+            Path(
+                os.path.join(os.path.dirname(__file__), "../data/unlock.png")
+            ).resolve()
+        )
         self.show_folder_rows = False
 
         # RUN ARGUMENTS
@@ -112,7 +120,7 @@ class GameConfiguration(QObject):
         self.steamcmd_validate_downloads_toggle = False
 
         # TODDS PRESET
-        self.todds_preset = "medium"
+        self.todds_preset = "high"
 
         # TODDS ACTIVE MODS TARGET TOGGLE
         self.todds_active_mods_target_toggle = False
@@ -151,10 +159,10 @@ class GameConfiguration(QObject):
         self.auto_detect_paths_button.clicked.connect(self.autodetect_paths_by_platform)
         self.auto_detect_paths_button.setObjectName("LeftButton")
         self.client_settings_button = QPushButton("Settings")
-        self.client_settings_button.clicked.connect(self.open_settings_panel)
+        self.client_settings_button.clicked.connect(self._open_settings_panel)
         self.client_settings_button.setObjectName("LeftButton")
         self.hide_show_folder_rows_button = QPushButton()
-        self.hide_show_folder_rows_button.clicked.connect(self._toggle_folder_rows)
+        self.hide_show_folder_rows_button.clicked.connect(self.__toggle_folder_rows)
         self.check_for_updates_action = QAction("Check for update on startup")
         self.check_for_updates_action.setCheckable(True)
         self.check_for_updates_button = QPushButton("Check for update")
@@ -181,12 +189,12 @@ class GameConfiguration(QObject):
         self.wiki_button.setObjectName("RightButton")
 
         self.game_folder_open_button = QPushButton("Game folder")
-        self.game_folder_open_button.clicked.connect(
-            partial(self.open_directory, self.get_game_folder_path)
-        )
         self.game_folder_open_button.setObjectName("LeftButton")
         self.game_folder_open_button.setToolTip("Open the game installation directory")
         self.game_folder_line = QLineEdit()
+        self.game_folder_open_button.clicked.connect(
+            partial(self.open_directory, self.game_folder_line.text)
+        )
         self.game_folder_line.setReadOnly(True)
         self.game_folder_line.setClearButtonEnabled(True)
         self.game_folder_line_clear_button = self.game_folder_line.findChild(
@@ -199,6 +207,13 @@ class GameConfiguration(QObject):
             "The game installation directory contains the game executable.\n"
             "Set the game installation directory with the button on the right."
         )
+        self.game_folder_line_edit_button = QToolButton()
+        self.game_folder_line_edit_button.setIcon(
+            QIcon(self.lock_icon_path).pixmap(QSize(20, 20))
+        )
+        self.game_folder_line_edit_button.clicked.connect(
+            partial(self.__toggle_line_editable, "game")
+        )
         self.game_folder_select_button = QPushButton("...")
         self.game_folder_select_button.clicked.connect(self.set_game_exe_folder)
         self.game_folder_select_button.setObjectName("RightButton")
@@ -207,14 +222,14 @@ class GameConfiguration(QObject):
         )
 
         self.config_folder_open_button = QPushButton("Config folder")
-        self.config_folder_open_button.clicked.connect(
-            partial(self.open_directory, self.get_config_folder_path)
-        )
         self.config_folder_open_button.setObjectName("LeftButton")
         self.config_folder_open_button.setToolTip(
             "Open the RimWorld game configuration directory"
         )
         self.config_folder_line = QLineEdit()
+        self.config_folder_open_button.clicked.connect(
+            partial(self.open_directory, self.config_folder_line.text)
+        )
         self.config_folder_line.setReadOnly(True)
         self.config_folder_line.setClearButtonEnabled(True)
         self.config_folder_line_clear_button = self.config_folder_line.findChild(
@@ -230,6 +245,13 @@ class GameConfiguration(QObject):
             "active mods and their load order. It may also contain other mod configs."
             "Set the ModsConfig.xml directory manually with the button on the right."
         )
+        self.config_folder_line_edit_button = QToolButton()
+        self.config_folder_line_edit_button.setIcon(
+            QIcon(self.lock_icon_path).pixmap(QSize(20, 20))
+        )
+        self.config_folder_line_edit_button.clicked.connect(
+            partial(self.__toggle_line_editable, "config")
+        )
         self.config_folder_select_button = QPushButton("...")
         self.config_folder_select_button.clicked.connect(self.set_config_folder)
         self.config_folder_select_button.setObjectName("RightButton")
@@ -238,12 +260,12 @@ class GameConfiguration(QObject):
         )
 
         self.local_folder_open_button = QPushButton("Local mods")
-        self.local_folder_open_button.clicked.connect(
-            partial(self.open_directory, self.get_local_folder_path)
-        )
         self.local_folder_open_button.setObjectName("LeftButton")
         self.local_folder_open_button.setToolTip("Open the local mods directory")
         self.local_folder_line = QLineEdit()
+        self.local_folder_open_button.clicked.connect(
+            partial(self.open_directory, self.local_folder_line.text)
+        )
         self.local_folder_line.setReadOnly(True)
         self.local_folder_line.setClearButtonEnabled(True)
         self.local_folder_line_clear_button = self.local_folder_line.findChild(
@@ -260,20 +282,27 @@ class GameConfiguration(QObject):
             "If you are a SteamCMD user, this is also where mods will be located."
             "Set the Local mods directory manually with the button on the right."
         )
+        self.local_folder_line_edit_button = QToolButton()
+        self.local_folder_line_edit_button.setIcon(
+            QIcon(self.lock_icon_path).pixmap(QSize(20, 20))
+        )
+        self.local_folder_line_edit_button.clicked.connect(
+            partial(self.__toggle_line_editable, "local")
+        )
         self.local_folder_select_button = QPushButton("...")
         self.local_folder_select_button.clicked.connect(self.set_local_folder)
         self.local_folder_select_button.setObjectName("RightButton")
         self.local_folder_select_button.setToolTip("Set the local mods directory.")
 
         self.workshop_folder_open_button = QPushButton("Steam mods")
-        self.workshop_folder_open_button.clicked.connect(
-            partial(self.open_directory, self.get_workshop_folder_path)
-        )
         self.workshop_folder_open_button.setObjectName("LeftButton")
         self.workshop_folder_open_button.setToolTip(
             "Open the Steam Workshop mods directory"
         )
         self.workshop_folder_line = QLineEdit()
+        self.workshop_folder_open_button.clicked.connect(
+            partial(self.open_directory, self.workshop_folder_line.text)
+        )
         self.workshop_folder_line.setReadOnly(True)
         self.workshop_folder_line.setClearButtonEnabled(True)
         self.workshop_folder_line_clear_button = self.workshop_folder_line.findChild(
@@ -287,6 +316,13 @@ class GameConfiguration(QObject):
         self.workshop_folder_line.setToolTip(
             "The Steam Workshop mods directory contains mods downloaded from Steam client.\n"
             "Set the Steam Workshop mods directory manually with the button on the right."
+        )
+        self.workshop_folder_line_edit_button = QToolButton()
+        self.workshop_folder_line_edit_button.setIcon(
+            QIcon(self.lock_icon_path).pixmap(QSize(20, 20))
+        )
+        self.workshop_folder_line_edit_button.clicked.connect(
+            partial(self.__toggle_line_editable, "workshop")
         )
         self.workshop_folder_select_button = QPushButton("...")
         self.workshop_folder_select_button.clicked.connect(self.set_workshop_folder)
@@ -306,18 +342,22 @@ class GameConfiguration(QObject):
 
         self.game_folder_row.addWidget(self.game_folder_open_button)
         self.game_folder_row.addWidget(self.game_folder_line)
+        self.game_folder_row.addWidget(self.game_folder_line_edit_button)
         self.game_folder_row.addWidget(self.game_folder_select_button)
 
         self.config_folder_row.addWidget(self.config_folder_open_button)
         self.config_folder_row.addWidget(self.config_folder_line)
+        self.config_folder_row.addWidget(self.config_folder_line_edit_button)
         self.config_folder_row.addWidget(self.config_folder_select_button)
 
         self.local_folder_row.addWidget(self.local_folder_open_button)
         self.local_folder_row.addWidget(self.local_folder_line)
+        self.local_folder_row.addWidget(self.local_folder_line_edit_button)
         self.local_folder_row.addWidget(self.local_folder_select_button)
 
         self.workshop_folder_row.addWidget(self.workshop_folder_open_button)
         self.workshop_folder_row.addWidget(self.workshop_folder_line)
+        self.workshop_folder_row.addWidget(self.workshop_folder_line_edit_button)
         self.workshop_folder_row.addWidget(self.workshop_folder_select_button)
 
         # CONTAINER LAYOUTS INTO BASE LAYOUT
@@ -344,11 +384,23 @@ class GameConfiguration(QObject):
         self._panel.addWidget(self.workshop_folder_frame)
 
         # INITIALIZE WIDGETS / FEATURES
-        self.initialize_settings_panel()
-        self.initialize_storage()
+        self._initialize_settings_panel()
+        self._initialize_storage()
 
         # SIGNALS AND SLOTS
-        self.check_for_updates_action.toggled.connect(self.check_updates_toggle)
+        self.check_for_updates_action.toggled.connect(self._check_updates_toggle)
+        self.game_folder_line.textChanged.connect(
+            partial(self.__handle_line_edit, line="game")
+        )
+        self.config_folder_line.textChanged.connect(
+            partial(self.__handle_line_edit, line="config")
+        )
+        self.local_folder_line.textChanged.connect(
+            partial(self.__handle_line_edit, line="local")
+        )
+        self.workshop_folder_line.textChanged.connect(
+            partial(self.__handle_line_edit, line="workshop")
+        )
         self.settings_panel.clear_paths_signal.connect(
             self.delete_all_paths_data
         )  # Actions delete_all_paths_data
@@ -391,9 +443,12 @@ class GameConfiguration(QObject):
             self.todds_overwrite_toggle
         )
 
-        logger.info("Finished GameConfiguration initialization")
+        logger.debug("Finished GameConfiguration initialization")
 
-    def _toggle_folder_rows(self) -> None:
+    def __handle_line_edit(self, path: str, line: str) -> None:
+        self._update_persistent_storage({f"{line}_folder": path})
+
+    def __toggle_folder_rows(self) -> None:
         self.show_folder_rows = not self.show_folder_rows
         self.game_folder_frame.setVisible(self.show_folder_rows)
         self.config_folder_frame.setVisible(self.show_folder_rows)
@@ -403,59 +458,68 @@ class GameConfiguration(QObject):
             self.hide_show_folder_rows_button.setText("Hide paths")
         else:
             self.hide_show_folder_rows_button.setText("Show paths")
-        self.update_persistent_storage(
+        self._update_persistent_storage(
             settings={"show_folder_rows": self.show_folder_rows}
         )
+
+    def __toggle_line_editable(self, folder_line: str):
+        # Determine which line to toggle
+        if folder_line == "game":
+            line = self.game_folder_line
+            button = self.game_folder_line_edit_button
+        elif folder_line == "config":
+            line = self.config_folder_line
+            button = self.config_folder_line_edit_button
+        elif folder_line == "local":
+            line = self.local_folder_line
+            button = self.local_folder_line_edit_button
+        elif folder_line == "workshop":
+            line = self.workshop_folder_line
+            button = self.workshop_folder_line_edit_button
+        # Toggle the line's editability
+        if line.isReadOnly():
+            line.setReadOnly(False)
+            line.setClearButtonEnabled(True)
+            line.findChild(QToolButton).setEnabled(True)
+            button.setIcon(QIcon(self.unlock_icon_path).pixmap(QSize(20, 20)))
+        else:
+            line.setReadOnly(True)
+            line.setClearButtonEnabled(True)
+            line.findChild(QToolButton).setEnabled(True)
+            button.setIcon(QIcon(self.lock_icon_path).pixmap(QSize(20, 20)))
 
     @property
     def panel(self) -> QVBoxLayout:
         return self._panel
 
-    def check_if_essential_paths_are_set(self) -> bool:
-        """
-        When the user starts the app for the first time, none
-        of the paths will be set. We should check for this and
-        not throw a fatal error trying to load mods until the
-        user has had a chance to set paths.
-        """
-        logger.info("Checking if essential paths are set")
-        game_folder_path = self.get_game_folder_path()
-        config_folder_path = self.get_config_folder_path()
-        if not game_folder_path or not config_folder_path:
-            logger.debug("One or more paths not set, returning False")
-            show_warning(
-                text="Essential Paths not set!",
-                information=(
-                    "RimSort requires, at the minimum, for the game install folder and the "
-                    "ModsConfig.xml folder paths to be set. Please set both these either manually "
-                    "or using the AutoDetect functionality."
-                ),
-            )
-            return False
-        if not os.path.exists(game_folder_path) or not os.path.exists(
-            config_folder_path
-        ):
-            logger.warning("One or more paths not exists, returning False")
-            show_warning(
-                text="Essential Paths are invalid",
-                information=(
-                    "RimSort has detected that either or both the game install folder and the "
-                    "ModsConfig.xml folder paths are invalid. Please check that both of these paths "
-                    "reference actual folders on the disk."
-                ),
-            )
-            return False
-        logger.info("Paths have been set and exist, returning True")
-        return True
+    def _check_updates_toggle(self) -> None:
+        self._update_persistent_storage(
+            settings={
+                "check_for_update_startup": self.check_for_updates_action.isChecked()
+            }
+        )
 
-    def initialize_storage(self) -> None:
+    def _initialize_settings_panel(self) -> None:
+        """
+        Initializes the app's settings pop up dialog, but does
+        not show it. The settings panel allows the user to
+        tweak certain settings of RimSort, like which sorting
+        algorithm to use, or what theme to use.
+        Window modality is set so the user cannot interact with
+        the rest of the application while the settings panel is open.
+        """
+        self.settings_panel = SettingsPanel(self.storage_path)
+        self.settings_panel.setWindowModality(Qt.ApplicationModal)
+        self.settings_panel.finished.connect(self._on_settings_close)
+
+    def _initialize_storage(self) -> None:
         """
         Initialize the app's storage feature.
         If the storage path or settings.json file do not exist,
         create them. If they do exist, set the path widgets
         to have paths written on the settings.json.
         """
-        logger.info("Starting storage initialization")
+        logger.info("Initializing storage")
         logger.info(f"Determined storage path: {self.storage_path}")
         # Always check for storage path, create in OS-specific "app data" if it doesn't exist
         if not os.path.exists(self.storage_path):
@@ -486,33 +550,36 @@ class GameConfiguration(QObject):
         )
         logger.info(f"Determined settings file path: {settings_path}")
         if not os.path.exists(settings_path):
-            logger.info(f"Settings file [{settings_path}] does not exist")
+            logger.info(f"Settings file does not exist!")
             # Create a new empty settings.json file
             default_settings: dict[str, Any] = DEFAULT_SETTINGS
-            default_settings["external_steam_metadata_file_path"] = str(Path(
-                os.path.join(
-                    self.storage_path,
-                    default_settings["external_steam_metadata_file_path"],
-                )
-            ).resolve())
-            default_settings["external_community_rules_file_path"] = str(Path(
-                os.path.join(
-                    self.storage_path,
-                    default_settings["external_community_rules_file_path"],
-                )
-            ).resolve())
+            default_settings["external_steam_metadata_file_path"] = str(
+                Path(
+                    os.path.join(
+                        self.storage_path,
+                        default_settings["external_steam_metadata_file_path"],
+                    )
+                ).resolve()
+            )
+            default_settings["external_community_rules_file_path"] = str(
+                Path(
+                    os.path.join(
+                        self.storage_path,
+                        default_settings["external_community_rules_file_path"],
+                    )
+                ).resolve()
+            )
             default_settings["steamcmd_install_path"] = self.storage_path
             json_object = json.dumps(default_settings, indent=4)
-            logger.info(f"Writing default settings to: [{json_object}]")
+            logger.info(f"Writing default settings to: {settings_path}")
             with open(settings_path, "w") as outfile:
-                logger.info("Writing empty JSON to file")
                 outfile.write(json_object)
         # RimSort depends on this settings.json file existing.
         # This should automatically be prepopulated with defaults above, or from user configuration.
-        logger.info(f"Settings file [{settings_path}] exists. Opening file")
+        logger.info(f"Settings file exists!")
         with open(settings_path) as infile:
-            logger.debug("Loading JSON from file")
             settings_data = json.load(infile)
+            logger.debug("Loaded JSON from file!")
 
             # Hide/show folder rows
             if settings_data.get("show_folder_rows"):
@@ -660,10 +727,6 @@ class GameConfiguration(QObject):
                 self.settings_panel.todds_presets_cb.setCurrentText(
                     "Low quality (for low VRAM/older GPU, optimize for VRAM)"
                 )
-            if self.todds_preset == "medium":
-                self.settings_panel.todds_presets_cb.setCurrentText(
-                    "High quality (default, good textures, long encode time)"
-                )
             if self.todds_preset == "high":
                 self.settings_panel.todds_presets_cb.setCurrentText(
                     "Very high quality (better textures, longer encode time)"
@@ -679,21 +742,7 @@ class GameConfiguration(QObject):
 
         logger.info("Finished storage initialization")
 
-    def initialize_settings_panel(self) -> None:
-        """
-        Initializes the app's settings pop up dialog, but does
-        not show it. The settings panel allows the user to
-        tweak certain settings of RimSort, like which sorting
-        algorithm to use, or what theme to use.
-        Window modality is set so the user cannot interact with
-        the rest of the application while the settings panel is open.
-        """
-        logger.info("Calling Settings Panel initialization")
-        self.settings_panel = SettingsPanel(self.storage_path)
-        self.settings_panel.setWindowModality(Qt.ApplicationModal)
-        self.settings_panel.finished.connect(self.on_settings_close)
-
-    def on_settings_close(self) -> None:
+    def _on_settings_close(self) -> None:
         logger.info(
             "Settings panel closed, updating persistent storage for these options..."
         )
@@ -759,8 +808,6 @@ class GameConfiguration(QObject):
         # todds preset
         if "Low quality" in self.settings_panel.todds_presets_cb.currentText():
             self.todds_preset = "low"
-        if "High quality" in self.settings_panel.todds_presets_cb.currentText():
-            self.todds_preset = "medium"
         if "Very high quality" in self.settings_panel.todds_presets_cb.currentText():
             self.todds_preset = "high"
         # todds active mods target
@@ -780,7 +827,7 @@ class GameConfiguration(QObject):
             self.todds_overwrite_toggle = False
 
         # Update settings.json
-        self.update_persistent_storage(
+        self._update_persistent_storage(
             {
                 "build_steam_database_dlc_data": self.build_steam_database_dlc_data_toggle,
                 "build_steam_database_update_toggle": self.build_steam_database_update_toggle,
@@ -804,145 +851,18 @@ class GameConfiguration(QObject):
         # Update SteamCMD validate toggle
         self.configuration_signal.emit("update_steamcmd_validate_toggle")
 
-    def open_directory(self, callable: Any) -> None:
+    def _open_settings_panel(self) -> None:
         """
-        This slot is called when the user presses any of the left-side
-        game configuration buttons to open up corresponding folders.
+        Opens the settings panel (as a modal window), blocking
+        access to the rest of the application until it is closed.
+        Do NOT use exec here: https://doc.qt.io/qt-6/qdialog.html#exec
+        For some reason, open() does not work for making this a modal
+        window.
+        """
+        logger.info("USER ACTION: opening settings panel")
+        self.settings_panel.show()
 
-        :param callable: function to get the corresponding folder path
-        """
-        logger.info("USER ACTION: open directory with callable")
-        path = callable()
-        logger.info(f"Directory callable resolved to: {path}")
-        if os.path.exists(path):
-            if os.path.isfile(path) or path.endswith(".app"):
-                logger.info("Opening parent directory of file or MacOS app")
-                platform_specific_open(os.path.dirname(path))
-            else:
-                logger.info("Opening directory")
-                platform_specific_open(path)
-        else:
-            logger.warning(f"The path {path} does not exist")
-            show_warning(
-                text="Could not open invalid path",
-                information=(
-                    f"The path [{path}] you are trying to open does not exist. Has the "
-                    "folder been deleted or moved? Try re-setting the path with the button "
-                    "on the right or using the AutoDetect Paths functionality."
-                ),
-            )
-
-    def set_game_exe_folder(self) -> None:
-        """
-        Open a file dialog to allow the user to select the game executable.
-        """
-        logger.info("USER ACTION: set the game install folder")
-        start_dir = ""
-        if self.game_folder_line.text():
-            possible_dir = self.game_folder_line.text()
-            if os.path.exists(possible_dir):
-                start_dir = possible_dir
-        game_exe_folder_path = os.path.normpath(
-            str(
-                QFileDialog.getExistingDirectory(
-                    caption="Select Game Folder", dir=start_dir
-                )
-            )
-        )
-        logger.info(f"Selected path: {game_exe_folder_path}")
-        if game_exe_folder_path:
-            logger.info(
-                f"Game install folder chosen. Setting UI and updating storage: {game_exe_folder_path}"
-            )
-            self.game_folder_line.setText(game_exe_folder_path)
-            self.update_persistent_storage({"game_folder": game_exe_folder_path})
-        else:
-            logger.info("USER ACTION: pressed cancel, passing")
-
-    def set_config_folder(self) -> None:
-        """
-        Open a file dialog to allow the user to select the ModsConfig.xml directory.
-        """
-        logger.info("USER ACTION: set the ModsConfig.xml folder")
-        start_dir = ""
-        if self.config_folder_line.text():
-            possible_dir = self.config_folder_line.text()
-            if os.path.exists(possible_dir):
-                start_dir = possible_dir
-        config_folder_path = os.path.normpath(
-            str(
-                QFileDialog.getExistingDirectory(
-                    caption="Select Mods Config Folder", dir=start_dir
-                )
-            )
-        )
-        logger.info(f"Selected path: {config_folder_path}")
-        if config_folder_path:
-            logger.info(
-                f"ModsConfig.xml folder chosen. Setting UI and updating storage: {config_folder_path}"
-            )
-            self.config_folder_line.setText(config_folder_path)
-            self.update_persistent_storage({"config_folder": config_folder_path})
-        else:
-            logger.debug("USER ACTION: pressed cancel, passing")
-
-    def set_workshop_folder(self) -> None:
-        """
-        Open a file dialog to allow the user to select a directory
-        to set as the workshop folder.
-        """
-        logger.info("USER ACTION: set the workshop folder")
-        start_dir = ""
-        if self.workshop_folder_line.text():
-            possible_dir = self.workshop_folder_line.text()
-            if os.path.exists(possible_dir):
-                start_dir = possible_dir
-        workshop_path = os.path.normpath(
-            str(
-                QFileDialog.getExistingDirectory(
-                    caption="Select Workshop Folder", dir=start_dir
-                )
-            )
-        )
-        logger.info(f"Selected path: {workshop_path}")
-        if workshop_path:
-            logger.info(
-                f"Workshop folder chosen. Setting UI and updating storage: {workshop_path}"
-            )
-            self.workshop_folder_line.setText(workshop_path)
-            self.update_persistent_storage({"workshop_folder": workshop_path})
-        else:
-            logger.debug("USER ACTION: pressed cancel, passing")
-
-    def set_local_folder(self) -> None:
-        """
-        Open a file dialog to allow the user to select a directory
-        to set as the local mods folder.
-        """
-        logger.info("USER ACTION: set the local mods folder")
-        start_dir = ""
-        if self.local_folder_line.text():
-            possible_dir = self.local_folder_line.text()
-            if os.path.exists(possible_dir):
-                start_dir = possible_dir
-        local_path = os.path.normpath(
-            str(
-                QFileDialog.getExistingDirectory(
-                    caption="Select Local Mods Folder", dir=start_dir
-                )
-            )
-        )
-        logger.info(f"Selected path: {local_path}")
-        if local_path:
-            logger.info(
-                f"Local mods folder chosen. Setting UI and updating storage: {local_path}"
-            )
-            self.local_folder_line.setText(local_path)
-            self.update_persistent_storage({"local_folder": local_path})
-        else:
-            logger.debug("USER ACTION: pressed cancel, passing")
-
-    def update_persistent_storage(self, settings: Dict[str, Any]) -> None:
+    def _update_persistent_storage(self, settings: Dict[str, Any]) -> None:
         """
         Given a key and value, write this key and value to the
         persistent settings.json.
@@ -966,42 +886,10 @@ class GameConfiguration(QObject):
                     logger.info("JSON data written")
         else:
             logger.error(
-                "settings.json does not exist despite already running initialize_storage...?!"
+                "settings.json does not exist despite already running _initialize_storage...?!"
             )
 
-    def delete_all_paths_data(self) -> None:
-        logger.info("USER ACTION: clear all paths")
-        folders = ["workshop_folder", "game_folder", "config_folder", "local_folder"]
-        # Update storage to remove all paths data
-        for folder in folders:
-            self.update_persistent_storage({folder: ""})
-
-        # Visually delete paths data
-        self.game_folder_line.setText("")
-        self.config_folder_line.setText("")
-        self.workshop_folder_line.setText("")
-        self.local_folder_line.setText("")
-        self.game_version_line.setText("")
-
-    def clear_game_folder_line(self) -> None:
-        logger.info("USER ACTION: clear game folder line")
-        self.update_persistent_storage({"game_folder": ""})
-        self.game_folder_line.setText("")
-
-    def clear_config_folder_line(self) -> None:
-        logger.info("USER ACTION: clear config folder line")
-        self.update_persistent_storage({"config_folder": ""})
-        self.config_folder_line.setText("")
-
-    def clear_workshop_folder_line(self) -> None:
-        logger.info("USER ACTION: clear workshop folder line")
-        self.update_persistent_storage({"workshop_folder": ""})
-        self.workshop_folder_line.setText("")
-
-    def clear_local_folder_line(self) -> None:
-        logger.info("USER ACTION: clear local folder line")
-        self.update_persistent_storage({"local_folder": ""})
-        self.local_folder_line.setText("")
+    # PATHS
 
     def autodetect_paths_by_platform(self) -> None:
         """
@@ -1090,7 +978,7 @@ class GameConfiguration(QObject):
                     "No value set currently for game folder. Overwriting with autodetected path"
                 )
                 self.game_folder_line.setText(os_paths[0])
-                self.update_persistent_storage({"game_folder": os_paths[0]})
+                self._update_persistent_storage({"game_folder": os_paths[0]})
             else:
                 logger.info("Value already set for game folder. Passing")
         else:
@@ -1106,7 +994,7 @@ class GameConfiguration(QObject):
                     "No value set currently for config folder. Overwriting with autodetected path"
                 )
                 self.config_folder_line.setText(os_paths[1])
-                self.update_persistent_storage({"config_folder": os_paths[1]})
+                self._update_persistent_storage({"config_folder": os_paths[1]})
             else:
                 logger.info("Value already set for config folder. Passing")
         else:
@@ -1122,7 +1010,7 @@ class GameConfiguration(QObject):
                     "No value set currently for workshop folder. Overwriting with autodetected path"
                 )
                 self.workshop_folder_line.setText(os_paths[2])
-                self.update_persistent_storage({"workshop_folder": os_paths[2]})
+                self._update_persistent_storage({"workshop_folder": os_paths[2]})
             else:
                 logger.info("Value already set for workshop folder. Passing")
         else:
@@ -1147,7 +1035,7 @@ class GameConfiguration(QObject):
                     "No value set currently for local mods folder. Overwriting with autodetected path"
                 )
                 self.local_folder_line.setText(rimworld_mods_path)
-                self.update_persistent_storage({"local_folder": rimworld_mods_path})
+                self._update_persistent_storage({"local_folder": rimworld_mods_path})
             else:
                 logger.info("Value already set for local mods folder. Passing")
         else:
@@ -1155,59 +1043,210 @@ class GameConfiguration(QObject):
                 f"Autodetected game folder path does not exist: {rimworld_mods_path}"
             )
 
-    def get_game_folder_path(self) -> str:
-        logger.info(
-            f"Responding with requested Game Folder: {self.game_folder_line.text()}"
-        )
-        return self.game_folder_line.text()
-
-    def get_config_folder_path(self) -> str:
-        logger.info(
-            f"Responding with requested Config Folder: {self.config_folder_line.text()}"
-        )
-        return self.config_folder_line.text()
-
-    def get_config_path(self) -> str:
-        logger.info("Getting path to ModsConfig.xml")
-        config_folder_path = self.get_config_folder_path()
-        if config_folder_path:
-            config_xml_path = str(
-                Path(os.path.join(config_folder_path, "ModsConfig.xml")).resolve()
+    def check_if_essential_paths_are_set(self) -> bool:
+        """
+        When the user starts the app for the first time, none
+        of the paths will be set. We should check for this and
+        not throw a fatal error trying to load mods until the
+        user has had a chance to set paths.
+        """
+        game_folder_path = self.game_folder_line.text()
+        config_folder_path = self.config_folder_line.text()
+        logger.debug(f"Game folder: {game_folder_path}")
+        logger.debug(f"Config folder: {config_folder_path}")
+        if not game_folder_path or not config_folder_path:
+            logger.warning("Essential path(s) not set!")
+            show_warning(
+                text="Essential path(s) not set!",
+                information=(
+                    "RimSort requires, at the minimum, for the game install folder and the "
+                    "config folder paths to be set. Please set both these either manually "
+                    "or by using the AutoDetect functionality."
+                ),
             )
-            logger.info(f"Determined ModsConfig.xml path: {config_xml_path}")
-            return config_xml_path
-        logger.info("ERROR: unable to get path to ModsConfig.xml")
-        return ""
+            return False
+        if not os.path.exists(game_folder_path) or not os.path.exists(
+            config_folder_path
+        ):
+            logger.warning("Essential path(s) invalid!")
+            show_warning(
+                text="Essential path(s) are invalid!",
+                information=(
+                    "RimSort has detected that the game install folder path or the "
+                    "config folder path is invalid. Please check that both of these path(s) "
+                    "reference folders that actually exist at the specified location."
+                ),
+            )
+            return False
+        logger.info("Essential paths set!")
+        return True
 
-    def get_workshop_folder_path(self) -> str:
-        logger.info(
-            f"Responding with requested Workshop Folder: {self.workshop_folder_line.text()}"
-        )
-        return self.workshop_folder_line.text()
+    def clear_game_folder_line(self) -> None:
+        logger.info("USER ACTION: clear game folder line")
+        self._update_persistent_storage({"game_folder": ""})
+        self.game_folder_line.setText("")
 
-    def get_local_folder_path(self) -> str:
-        logger.info(
-            f"Responding with requested Local Folder: {self.local_folder_line.text()}"
-        )
-        return self.local_folder_line.text()
+    def clear_config_folder_line(self) -> None:
+        logger.info("USER ACTION: clear config folder line")
+        self._update_persistent_storage({"config_folder": ""})
+        self.config_folder_line.setText("")
 
-    def open_settings_panel(self) -> None:
+    def clear_workshop_folder_line(self) -> None:
+        logger.info("USER ACTION: clear workshop folder line")
+        self._update_persistent_storage({"workshop_folder": ""})
+        self.workshop_folder_line.setText("")
+
+    def clear_local_folder_line(self) -> None:
+        logger.info("USER ACTION: clear local folder line")
+        self._update_persistent_storage({"local_folder": ""})
+        self.local_folder_line.setText("")
+
+    def delete_all_paths_data(self) -> None:
+        logger.info("USER ACTION: clear all paths")
+        folders = ["workshop_folder", "game_folder", "config_folder", "local_folder"]
+        # Update storage to remove all paths data
+        self._update_persistent_storage({folder: "" for folder in folders})
+
+        # Visually delete paths data
+        self.game_folder_line.setText("")
+        self.config_folder_line.setText("")
+        self.workshop_folder_line.setText("")
+        self.local_folder_line.setText("")
+        self.game_version_line.setText("")
+
+    def open_directory(self, callable: Any) -> None:
         """
-        Opens the settings panel (as a modal window), blocking
-        access to the rest of the application until it is closed.
-        Do NOT use exec here: https://doc.qt.io/qt-6/qdialog.html#exec
-        For some reason, open() does not work for making this a modal
-        window.
-        """
-        logger.info("USER ACTION: opening settings panel")
-        self.settings_panel.show()
+        This slot is called when the user presses any of the left-side
+        game configuration buttons to open up corresponding folders.
 
-    def check_updates_toggle(self) -> None:
-        self.update_persistent_storage(
-            settings={
-                "check_for_update_startup": self.check_for_updates_action.isChecked()
-            }
+        :param callable: function to get the corresponding folder path
+        """
+        logger.info("USER ACTION: open directory with callable")
+        path = callable()
+        logger.info(f"Directory callable resolved to: {path}")
+        if os.path.exists(path):
+            if os.path.isfile(path) or path.endswith(".app"):
+                logger.info("Opening parent directory of file or MacOS app")
+                platform_specific_open(os.path.dirname(path))
+            else:
+                logger.info("Opening directory")
+                platform_specific_open(path)
+        else:
+            logger.warning(f"The path {path} does not exist")
+            show_warning(
+                text="Could not open invalid path",
+                information=(
+                    f"The path [{path}] you are trying to open does not exist. Has the "
+                    "folder been deleted or moved? Try re-setting the path with the button "
+                    "on the right or using the AutoDetect Paths functionality."
+                ),
+            )
+
+    def set_game_exe_folder(self) -> None:
+        """
+        Open a file dialog to allow the user to select the game executable.
+        """
+        logger.info("USER ACTION: set the game install folder")
+        start_dir = ""
+        if self.game_folder_line.text():
+            possible_dir = self.game_folder_line.text()
+            if os.path.exists(possible_dir):
+                start_dir = possible_dir
+        game_exe_folder_path = os.path.normpath(
+            str(
+                QFileDialog.getExistingDirectory(
+                    caption="Select Game Folder", dir=start_dir
+                )
+            )
         )
+        logger.info(f"Selected path: {game_exe_folder_path}")
+        if game_exe_folder_path:
+            logger.info(
+                f"Game install folder chosen. Setting UI and updating storage: {game_exe_folder_path}"
+            )
+            self.game_folder_line.setText(game_exe_folder_path)
+        else:
+            logger.info("USER ACTION: pressed cancel, passing")
+
+    def set_config_folder(self) -> None:
+        """
+        Open a file dialog to allow the user to select the ModsConfig.xml directory.
+        """
+        logger.info("USER ACTION: set the ModsConfig.xml folder")
+        start_dir = ""
+        if self.config_folder_line.text():
+            possible_dir = self.config_folder_line.text()
+            if os.path.exists(possible_dir):
+                start_dir = possible_dir
+        config_folder_path = os.path.normpath(
+            str(
+                QFileDialog.getExistingDirectory(
+                    caption="Select Mods Config Folder", dir=start_dir
+                )
+            )
+        )
+        logger.info(f"Selected path: {config_folder_path}")
+        if config_folder_path:
+            logger.info(
+                f"ModsConfig.xml folder chosen. Setting UI and updating storage: {config_folder_path}"
+            )
+            self.config_folder_line.setText(config_folder_path)
+        else:
+            logger.debug("USER ACTION: pressed cancel, passing")
+
+    def set_local_folder(self) -> None:
+        """
+        Open a file dialog to allow the user to select a directory
+        to set as the local mods folder.
+        """
+        logger.info("USER ACTION: set the local mods folder")
+        start_dir = ""
+        if self.local_folder_line.text():
+            possible_dir = self.local_folder_line.text()
+            if os.path.exists(possible_dir):
+                start_dir = possible_dir
+        local_path = os.path.normpath(
+            str(
+                QFileDialog.getExistingDirectory(
+                    caption="Select Local Mods Folder", dir=start_dir
+                )
+            )
+        )
+        logger.info(f"Selected path: {local_path}")
+        if local_path:
+            logger.info(
+                f"Local mods folder chosen. Setting UI and updating storage: {local_path}"
+            )
+            self.local_folder_line.setText(local_path)
+        else:
+            logger.debug("USER ACTION: pressed cancel, passing")
+
+    def set_workshop_folder(self) -> None:
+        """
+        Open a file dialog to allow the user to select a directory
+        to set as the workshop folder.
+        """
+        logger.info("USER ACTION: set the workshop folder")
+        start_dir = ""
+        if self.workshop_folder_line.text():
+            possible_dir = self.workshop_folder_line.text()
+            if os.path.exists(possible_dir):
+                start_dir = possible_dir
+        workshop_path = os.path.normpath(
+            str(
+                QFileDialog.getExistingDirectory(
+                    caption="Select Workshop Folder", dir=start_dir
+                )
+            )
+        )
+        logger.info(f"Selected path: {workshop_path}")
+        if workshop_path:
+            logger.info(
+                f"Workshop folder chosen. Setting UI and updating storage: {workshop_path}"
+            )
+            self.workshop_folder_line.setText(workshop_path)
+        else:
+            logger.debug("USER ACTION: pressed cancel, passing")
 
     def checkForUpdateBtnContextMenuEvent(self, point: QPoint) -> None:
         contextMenu = QMenu()  # Check for update context menu event
