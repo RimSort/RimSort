@@ -3,6 +3,7 @@ import json
 from logging import INFO
 from logger_tt import logger
 import os
+from pathlib import Path
 import platform
 import webbrowser
 from functools import partial
@@ -468,8 +469,10 @@ class GameConfiguration(QObject):
             logger.info("Making storage directory")
             os.makedirs(self.storage_path)
         # Always check for dbs/userRules.json path, create if it doesn't exist
-        self.dbs_path = os.path.join(self.storage_path, "dbs")
-        self.user_rules_file_path = os.path.join(self.dbs_path, "userRules.json")
+        self.dbs_path = str(Path(os.path.join(self.storage_path, "dbs")).resolve())
+        self.user_rules_file_path = str(
+            Path(os.path.join(self.dbs_path, "userRules.json")).resolve()
+        )
         logger.info(f"Determined dbs path: {self.dbs_path}")
         if not os.path.exists(self.dbs_path):
             os.makedirs(self.dbs_path)
@@ -478,19 +481,26 @@ class GameConfiguration(QObject):
             with open(self.user_rules_file_path, "w") as output:
                 json.dump(initial_rules_db, output, indent=4)
         # Always check for settings path, create with defaults if it doesn't exist
-        settings_path = os.path.join(self.storage_path, "settings.json")
+        settings_path = str(
+            Path(os.path.join(self.storage_path, "settings.json")).resolve()
+        )
         logger.info(f"Determined settings file path: {settings_path}")
         if not os.path.exists(settings_path):
             logger.info(f"Settings file [{settings_path}] does not exist")
             # Create a new empty settings.json file
             default_settings: dict[str, Any] = DEFAULT_SETTINGS
-            default_settings["external_steam_metadata_file_path"] = os.path.join(
-                self.storage_path, default_settings["external_steam_metadata_file_path"]
-            )
-            default_settings["external_community_rules_file_path"] = os.path.join(
-                self.storage_path,
-                default_settings["external_community_rules_file_path"],
-            )
+            default_settings["external_steam_metadata_file_path"] = str(Path(
+                os.path.join(
+                    self.storage_path,
+                    default_settings["external_steam_metadata_file_path"],
+                )
+            ).resolve())
+            default_settings["external_community_rules_file_path"] = str(Path(
+                os.path.join(
+                    self.storage_path,
+                    default_settings["external_community_rules_file_path"],
+                )
+            ).resolve())
             default_settings["steamcmd_install_path"] = self.storage_path
             json_object = json.dumps(default_settings, indent=4)
             logger.info(f"Writing default settings to: [{json_object}]")
@@ -791,6 +801,9 @@ class GameConfiguration(QObject):
             }
         )
 
+        # Update SteamCMD validate toggle
+        self.configuration_signal.emit("update_steamcmd_validate_toggle")
+
     def open_directory(self, callable: Any) -> None:
         """
         This slot is called when the user presses any of the left-side
@@ -938,7 +951,9 @@ class GameConfiguration(QObject):
         :param value: value to replace
         """
         logger.info("Updating persistent storage")
-        settings_path = os.path.join(self.storage_path, "settings.json")
+        settings_path = str(
+            Path(os.path.join(self.storage_path, "settings.json")).resolve()
+        )
         logger.info(f"Generated settings.json path: {settings_path}")
         if os.path.exists(settings_path):
             logger.info("settings.json exists, opening to write")
@@ -1013,32 +1028,44 @@ class GameConfiguration(QObject):
                 f"{expanduser('~')}/.steam/steam/steamapps/workshop/content/294100",
             ]
         windows_paths = [
-            os.path.join(
-                "C:" + os.sep,
-                "Program Files (x86)",
-                "Steam",
-                "steamapps",
-                "common",
-                "Rimworld",
+            str(
+                Path(
+                    os.path.join(
+                        "C:" + os.sep,
+                        "Program Files (x86)",
+                        "Steam",
+                        "steamapps",
+                        "common",
+                        "Rimworld",
+                    )
+                ).resolve()
             ),
-            os.path.join(
-                "C:" + os.sep,
-                "Users",
-                getpass.getuser(),
-                "AppData",
-                "LocalLow",
-                "Ludeon Studios",
-                "RimWorld by Ludeon Studios",
-                "Config",
+            str(
+                Path(
+                    os.path.join(
+                        "C:" + os.sep,
+                        "Users",
+                        getpass.getuser(),
+                        "AppData",
+                        "LocalLow",
+                        "Ludeon Studios",
+                        "RimWorld by Ludeon Studios",
+                        "Config",
+                    )
+                ).resolve()
             ),
-            os.path.join(
-                "C:" + os.sep,
-                "Program Files (x86)",
-                "Steam",
-                "steamapps",
-                "workshop",
-                "content",
-                "294100",
+            str(
+                Path(
+                    os.path.join(
+                        "C:" + os.sep,
+                        "Program Files (x86)",
+                        "Steam",
+                        "steamapps",
+                        "workshop",
+                        "content",
+                        "294100",
+                    )
+                ).resolve()
             ),
         ]
         system_name = platform.system()
@@ -1106,9 +1133,11 @@ class GameConfiguration(QObject):
         # Checking for an existing Rimworld/Mods folder
         rimworld_mods_path = ""
         if system_name == "Darwin":
-            rimworld_mods_path = os.path.join(os_paths[0], "RimWorldMac.app", "Mods")
+            rimworld_mods_path = str(
+                Path(os.path.join(os_paths[0], "RimWorldMac.app", "Mods")).resolve()
+            )
         else:
-            rimworld_mods_path = os.path.join(os_paths[0], "Mods")
+            rimworld_mods_path = str(Path(os.path.join(os_paths[0], "Mods")).resolve())
         if os.path.exists(rimworld_mods_path):
             logger.info(
                 f"Autodetected local mods folder path exists: {rimworld_mods_path}"
@@ -1142,7 +1171,9 @@ class GameConfiguration(QObject):
         logger.info("Getting path to ModsConfig.xml")
         config_folder_path = self.get_config_folder_path()
         if config_folder_path:
-            config_xml_path = os.path.join(config_folder_path, "ModsConfig.xml")
+            config_xml_path = str(
+                Path(os.path.join(config_folder_path, "ModsConfig.xml")).resolve()
+            )
             logger.info(f"Determined ModsConfig.xml path: {config_xml_path}")
             return config_xml_path
         logger.info("ERROR: unable to get path to ModsConfig.xml")

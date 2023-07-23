@@ -5,7 +5,6 @@ from logger_tt import logger
 from math import ceil
 from multiprocessing import cpu_count, Pool
 import os
-from pathlib import Path
 from requests import post as requests_post
 from requests.exceptions import HTTPError, JSONDecodeError, ConnectionError
 import sys

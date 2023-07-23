@@ -25,7 +25,7 @@ class InactiveModList:
     inactive mods list panel on the GUI.
     """
 
-    def __init__(self, csharp_icon_enable: bool) -> None:
+    def __init__(self, csharp_icon_enable: bool, local_mods_path=None) -> None:
         """
         Initialize the class.
         Create a ListWidget using the dict of mods. This will
@@ -34,6 +34,7 @@ class InactiveModList:
         logger.info("Starting InactiveModList initialization")
 
         self.csharp_icon_enable = csharp_icon_enable
+        self.local_mods_path = local_mods_path
 
         # Base layout type
         self.panel = QVBoxLayout()
@@ -45,7 +46,8 @@ class InactiveModList:
 
         # Inactive mod list
         self.inactive_mods_list = ModListWidget(
-            csharp_icon_enable=self.csharp_icon_enable
+            csharp_icon_enable=self.csharp_icon_enable,
+            local_mods_path=self.local_mods_path,
         )
 
         # Search widgets
@@ -79,10 +81,18 @@ class InactiveModList:
         )
         self.inactive_mods_search_filter_state = True
         self.inactive_mods_search_mode_filter_icon = QIcon(
-            os.path.join(os.path.dirname(__file__), "../data/filter.png")
+            str(
+                Path(
+                    os.path.join(os.path.dirname(__file__), "../data/filter.png")
+                ).resolve()
+            )
         )
         self.inactive_mods_search_mode_nofilter_icon = QIcon(
-            os.path.join(os.path.dirname(__file__), "../data/nofilter.png")
+            str(
+                Path(
+                    os.path.join(os.path.dirname(__file__), "../data/nofilter.png")
+                ).resolve()
+            )
         )
         self.inactive_mods_search_mode_filter_button = QToolButton()
         self.inactive_mods_search_mode_filter_button.setIcon(

@@ -97,10 +97,14 @@ class ToddsInterface:
             todds_executable = "todds.exe"
         else:
             todds_executable = "todds"
-        todds_exe_path = os.path.join(
-            os.path.split(os.path.split(os.path.dirname(__file__))[0])[0],
-            "todds",
-            todds_executable,
+        todds_exe_path = str(
+            Path(
+                os.path.join(
+                    os.path.split(os.path.split(os.path.dirname(__file__))[0])[0],
+                    "todds",
+                    todds_executable,
+                )
+            ).resolve()
         )
         logger.info("Checking for todds...")
         if os.path.exists(todds_exe_path):

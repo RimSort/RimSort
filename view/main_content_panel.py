@@ -159,10 +159,12 @@ class MainContent:
         logger.info("Instantiating MainContent QWidget subclasses")
         self.mod_info_panel = ModInfo()
         self.active_mods_panel = ActiveModList(
-            csharp_icon_enable=self.game_configuration.csharp_mods_toggle
+            csharp_icon_enable=self.game_configuration.csharp_mods_toggle,
+            local_mods_path=self.game_configuration.get_local_folder_path(),
         )
         self.inactive_mods_panel = InactiveModList(
-            csharp_icon_enable=self.game_configuration.csharp_mods_toggle
+            csharp_icon_enable=self.game_configuration.csharp_mods_toggle,
+            local_mods_path=self.game_configuration.get_local_folder_path(),
         )
         self.actions_panel = Actions()
         logger.info("Finished instantiating MainContent QWidget subclasses")
@@ -550,6 +552,115 @@ class MainContent:
         self.game_configuration.game_version_line.setText(self.game_version)
         self.active_mods_panel.game_version = self.game_version
 
+        self.external_steam_metadata = {}
+        self.external_steam_metadata_path = None
+        self.external_community_rules = {}
+        self.external_community_rules_path = None
+        self.external_user_rules = {}
+
+        # Load external metadata
+        # External Steam metadata
+        external_steam_metadata_source = (
+            self.game_configuration.settings_panel.external_steam_metadata_cb.currentText()
+        )
+        if external_steam_metadata_source == "Configured file path":
+            (
+                self.external_steam_metadata,
+                self.external_steam_metadata_path,
+            ) = get_configured_steam_db(
+                life=self.game_configuration.database_expiry,
+                path=str(
+                    Path(
+                        os.path.join(self.game_configuration.steam_db_file_path)
+                    ).resolve()
+                ),
+            )
+        elif external_steam_metadata_source == "Configured git repository":
+            (
+                self.external_steam_metadata,
+                self.external_steam_metadata_path,
+            ) = get_configured_steam_db(
+                life=self.game_configuration.database_expiry,
+                path=str(
+                    Path(
+                        os.path.join(
+                            self.game_configuration.dbs_path,
+                            os.path.split(self.game_configuration.steam_db_repo)[1],
+                            "steamDB.json",
+                        )
+                    ).resolve()
+                ),
+            )
+        elif external_steam_metadata_source == "RimPy Mod Manager Database":
+            # Get and cache RimPy Steam db.json rules data for ALL mods
+            (
+                self.external_steam_metadata,
+                self.external_steam_metadata_path,
+            ) = get_rpmmdb_steam_metadata(self.internal_local_metadata)
+        else:
+            logger.info(
+                "External Steam metadata disabled by user. Please choose a metadata source in settings."
+            )
+        self.active_mods_panel.active_mods_list.steam_db = self.external_steam_metadata
+        self.inactive_mods_panel.inactive_mods_list.steam_db = (
+            self.external_steam_metadata
+        )
+
+        # External Community Rules metadata
+        external_community_rules_metadata_source = (
+            self.game_configuration.settings_panel.external_community_rules_metadata_cb.currentText()
+        )
+        if external_community_rules_metadata_source == "Configured file path":
+            (
+                self.external_community_rules,
+                self.external_community_rules_path,
+            ) = get_configured_community_rules_db(
+                path=str(
+                    Path(
+                        os.path.join(self.game_configuration.community_rules_file_path)
+                    ).resolve()
+                )
+            )
+        elif external_community_rules_metadata_source == "Configured git repository":
+            (
+                self.external_community_rules,
+                self.external_community_rules_path,
+            ) = get_configured_community_rules_db(
+                path=str(
+                    Path(
+                        os.path.join(
+                            self.game_configuration.dbs_path,
+                            os.path.split(self.game_configuration.community_rules_repo)[
+                                1
+                            ],
+                            "communityRules.json",
+                        )
+                    ).resolve()
+                )
+            )
+        elif external_community_rules_metadata_source == "RimPy Mod Manager Database":
+            # Get and cache RimPy Community Rules communityRules.json for ALL mods
+            (
+                self.external_community_rules,
+                self.external_community_rules_path,
+            ) = get_rpmmdb_community_rules_db(self.internal_local_metadata)
+        else:
+            logger.info(
+                "External Community Rules metadata disabled by user. Please choose a metadata source in settings."
+            )
+        if os.path.exists(self.game_configuration.user_rules_file_path):
+            logger.info("Loading userRules.json")
+            with open(
+                self.game_configuration.user_rules_file_path, encoding="utf-8"
+            ) as f:
+                json_string = f.read()
+                self.external_user_rules = json.loads(json_string)["rules"]
+        else:
+            initial_rules_db = DEFAULT_USER_RULES
+            with open(self.game_configuration.user_rules_file_path, "w") as output:
+                json.dump(initial_rules_db, output, indent=4)
+            self.external_user_rules = initial_rules_db["rules"]
+
         # Get and cache installed base game / DLC data
         self.expansions = get_installed_expansions(
             self.game_configuration.get_game_folder_path(), self.game_version
@@ -557,12 +668,14 @@ class MainContent:
 
         # Get and cache installed local/custom mods
         self.local_mods = get_local_mods(
-            self.game_configuration.get_local_folder_path()
+            self.game_configuration.get_local_folder_path(),
+            steam_db=self.external_steam_metadata,
         )
 
         # Get and cache installed workshop mods
         self.workshop_mods = get_workshop_mods(
-            self.game_configuration.get_workshop_folder_path()
+            self.game_configuration.get_workshop_folder_path(),
+            steam_db=self.external_steam_metadata,
         )
 
         # If we can find the appworkshop_294100.acf files from SteamCMD or Steam client
@@ -573,14 +686,13 @@ class MainContent:
             get_workshop_acf_data(
                 appworkshop_acf_path=self.steamcmd_wrapper.steamcmd_appworkshop_acf_path,
                 workshop_mods=self.local_mods,
-                steamcmd_mode=True,
             )  # ... get data
             logger.info(
                 f"Successfully parsed SteamCMD appworkshop.acf metadata from: {self.steamcmd_wrapper.steamcmd_appworkshop_acf_path}"
             )
         else:
             logger.debug(
-                f"SteamCMD client appworkshop.acf metadata not found. Skipping: {self.steamcmd_wrapper.steamcmd_appworkshop_acf_path}"
+                f"SteamCMD appworkshop.acf metadata not found. Skipping: {self.steamcmd_wrapper.steamcmd_appworkshop_acf_path}"
             )
         # Steam client
         steam_appworkshop_path = os.path.split(
@@ -588,8 +700,10 @@ class MainContent:
             # so that we can find workshop/appworkshop_294100.acf
             os.path.split(self.game_configuration.get_workshop_folder_path())[0]
         )[0]
-        self.steam_appworkshop_acf_path = os.path.join(
-            steam_appworkshop_path, "appworkshop_294100.acf"
+        self.steam_appworkshop_acf_path = str(
+            Path(
+                os.path.join(steam_appworkshop_path, "appworkshop_294100.acf")
+            ).resolve()
         )
         if os.path.exists(
             self.steam_appworkshop_acf_path
@@ -614,111 +728,7 @@ class MainContent:
         logger.info(
             f"Combined {len(self.expansions)} expansions, {len(self.local_mods)} local mods, and {len(self.workshop_mods)}. Total elements to get dependencies for: {len(self.internal_local_metadata)}"
         )
-
-        self.external_steam_metadata = {}
-        self.external_steam_metadata_path = None
-        self.external_community_rules = {}
-        self.external_community_rules_path = None
-        self.external_user_rules = {}
-
-        # If there are mods at all, check for dbs for additional metadata sources.
-        if self.internal_local_metadata:
-            logger.info(
-                "Looking for a load order / dependency rules contained within mods"
-            )
-            # External Steam metadata
-            external_steam_metadata_source = (
-                self.game_configuration.settings_panel.external_steam_metadata_cb.currentText()
-            )
-            if external_steam_metadata_source == "Configured file path":
-                (
-                    self.external_steam_metadata,
-                    self.external_steam_metadata_path,
-                ) = get_configured_steam_db(
-                    life=self.game_configuration.database_expiry,
-                    path=os.path.join(self.game_configuration.steam_db_file_path),
-                )
-            elif external_steam_metadata_source == "Configured git repository":
-                (
-                    self.external_steam_metadata,
-                    self.external_steam_metadata_path,
-                ) = get_configured_steam_db(
-                    life=self.game_configuration.database_expiry,
-                    path=os.path.join(
-                        self.game_configuration.dbs_path,
-                        os.path.split(self.game_configuration.steam_db_repo)[1],
-                        "steamDB.json",
-                    ),
-                )
-            elif external_steam_metadata_source == "RimPy Mod Manager Database":
-                # Get and cache RimPy Steam db.json rules data for ALL mods
-                (
-                    self.external_steam_metadata,
-                    self.external_steam_metadata_path,
-                ) = get_rpmmdb_steam_metadata(self.internal_local_metadata)
-            else:
-                logger.info(
-                    "External Steam metadata disabled by user. Please choose a metadata source in settings."
-                )
-            self.active_mods_panel.active_mods_list.steam_db = (
-                self.external_steam_metadata
-            )
-            self.inactive_mods_panel.inactive_mods_list.steam_db = (
-                self.external_steam_metadata
-            )
-
-            # External Community Rules metadata
-            external_community_rules_metadata_source = (
-                self.game_configuration.settings_panel.external_community_rules_metadata_cb.currentText()
-            )
-            if external_community_rules_metadata_source == "Configured file path":
-                (
-                    self.external_community_rules,
-                    self.external_community_rules_path,
-                ) = get_configured_community_rules_db(
-                    path=os.path.join(self.game_configuration.community_rules_file_path)
-                )
-            elif (
-                external_community_rules_metadata_source == "Configured git repository"
-            ):
-                (
-                    self.external_community_rules,
-                    self.external_community_rules_path,
-                ) = get_configured_community_rules_db(
-                    path=os.path.join(
-                        self.game_configuration.dbs_path,
-                        os.path.split(self.game_configuration.community_rules_repo)[1],
-                        "communityRules.json",
-                    )
-                )
-            elif (
-                external_community_rules_metadata_source == "RimPy Mod Manager Database"
-            ):
-                # Get and cache RimPy Community Rules communityRules.json for ALL mods
-                (
-                    self.external_community_rules,
-                    self.external_community_rules_path,
-                ) = get_rpmmdb_community_rules_db(self.internal_local_metadata)
-            else:
-                logger.info(
-                    "External Community Rules metadata disabled by user. Please choose a metadata source in settings."
-                )
-            if os.path.exists(self.game_configuration.user_rules_file_path):
-                logger.info("Loading userRules.json")
-                with open(
-                    self.game_configuration.user_rules_file_path, encoding="utf-8"
-                ) as f:
-                    json_string = f.read()
-                    self.external_user_rules = json.loads(json_string)["rules"]
-            else:
-                initial_rules_db = DEFAULT_USER_RULES
-                with open(self.game_configuration.user_rules_file_path, "w") as output:
-                    json.dump(initial_rules_db, output, indent=4)
-                self.external_user_rules = initial_rules_db["rules"]
-        else:
-            logger.warning(
-                "No LOCAL or WORKSHOP mods found at all. Are you playing Vanilla?"
-            )
+        logger.info("Parsing dependencies & load order rules from metadata")
         # Calculate and cache dependencies for ALL mods
         (
             self.all_mods_with_dependencies,
@@ -805,6 +815,10 @@ class MainContent:
         # game configuration panel actions
         if action == "check_for_update":
             self._do_check_for_update()
+        if action == "update_steamcmd_validate_toggle":
+            self.steamcmd_wrapper.validate_downloads = (
+                self.game_configuration.steamcmd_validate_downloads_toggle
+            )
         # actions panel actions
         if action == "refresh":
             self._do_refresh()
@@ -817,7 +831,9 @@ class MainContent:
         if "textures" in action:
             logger.debug("Initiating new todds operation...")
             # Setup Environment
-            todds_txt_path = os.path.join(gettempdir(), "todds.txt")
+            todds_txt_path = str(
+                Path(os.path.join(gettempdir(), "todds.txt")).resolve()
+            )
             if os.path.exists(todds_txt_path):
                 os.remove(todds_txt_path)
             if not self.game_configuration.todds_active_mods_target_toggle:
@@ -985,12 +1001,27 @@ class MainContent:
             else:
                 self.query_runner.close()
                 self.query_runner = None
-                for metadata in self.all_mods_with_dependencies.values():
-                    mod_pfid = metadata.get("publishedfileid")
-                    if mod_pfid in self.db_builder.publishedfileids:
-                        logger.warning(f"Skipping download of existing mod: {mod_pfid}")
-                        self.db_builder.publishedfileids.remove(mod_pfid)
+                # Skip attempt of unpublished mods
+                for publishedfileid in self.db_builder.publishedfileids:
+                    if self.external_steam_metadata.get(publishedfileid, {}).get(
+                        "unpublished"
+                    ):
+                        self.db_builder.publishedfileids.remove(publishedfileid)
+                        logger.warning(
+                            f"Skipping download of unpublished Workshop mod: {publishedfileid}"
+                        )
                 if "steamcmd" in action:
+                    # Filter out existing SteamCMD mods
+                    for metadata in self.all_mods_with_dependencies.values():
+                        mod_pfid = metadata.get("publishedfileid")
+                        if (
+                            metadata.get("steamcmd")
+                            and mod_pfid in self.db_builder.publishedfileids
+                        ):
+                            logger.warning(
+                                f"Skipping download of existing SteamCMD mod: {mod_pfid}"
+                            )
+                            self.db_builder.publishedfileids.remove(mod_pfid)
                     self._do_download_mods_with_steamcmd(
                         self.db_builder.publishedfileids
                     )
@@ -1005,6 +1036,16 @@ class MainContent:
                         + "a separate, authenticated instance of SteamCMD, if you do not want to anonymously download via RimSort.",
                     )
                     if answer == "&Yes":
+                        for metadata in self.all_mods_with_dependencies.values():
+                            mod_pfid = metadata.get("publishedfileid")
+                            if (
+                                metadata["data_source"] == "workshop"
+                                and mod_pfid in self.db_builder.publishedfileids
+                            ):
+                                logger.warning(
+                                    f"Skipping download of existing Steam mod: {mod_pfid}"
+                                )
+                                self.db_builder.publishedfileids.remove(mod_pfid)
                         self._do_download_mods_with_steamworks(
                             self.db_builder.publishedfileids
                         )
@@ -1128,7 +1169,7 @@ class MainContent:
                     return
                 if SYSTEM == "Windows":
                     os.system(
-                        f'start /wait cmd /c {Path(os.path.join(os.path.dirname(__file__), "../update.bat"))}'
+                        f'start /wait cmd /c {str(Path(os.path.join(os.path.dirname(__file__), "../update.bat")))}'
                     )
                     sys.exit()
                 else:
@@ -1139,19 +1180,31 @@ class MainContent:
                         onerror=handle_remove_read_only,
                     )
                     copytree(
-                        os.path.join(
-                            gettempdir(),
-                            executable_name if SYSTEM == "Darwin" else "RimSort",
+                        str(
+                            Path(
+                                os.path.join(
+                                    gettempdir(),
+                                    executable_name
+                                    if SYSTEM == "Darwin"
+                                    else "RimSort",
+                                )
+                            ).resolve()
                         ),
                         current_dir,
                     )
                     # Set executable permissions as ZipFile does not preserve this in the zip archive
-                    executable_path = os.path.join(current_dir, executable_name)
+                    executable_path = str(
+                        Path(os.path.join(current_dir, executable_name)).resolve()
+                    )
                     if os.path.exists(executable_path):
                         original_stat = os.stat(executable_path)
                         os.chmod(
-                            os.path.join(
-                                executable_path, "Contents", "MacOS", "RimSort"
+                            str(
+                                Path(
+                                    os.path.join(
+                                        executable_path, "Contents", "MacOS", "RimSort"
+                                    )
+                                ).resolve()
                             )
                             if SYSTEM == "Darwin"
                             else executable_path,
@@ -1481,7 +1534,7 @@ class MainContent:
         logger.info("Opening file dialog to select input file")
         file_path = QFileDialog.getOpenFileName(
             caption="Open mod list",
-            dir=os.path.join(self.game_configuration.storage_path),
+            dir=str(Path(os.path.join(self.game_configuration.storage_path)).resolve()),
             filter="XML (*.xml)",
         )
         logger.info(f"Selected path: {file_path[0]}")
@@ -1523,7 +1576,7 @@ class MainContent:
         logger.info("Opening file dialog to specify output file")
         file_path = QFileDialog.getSaveFileName(
             caption="Save mod list",
-            dir=os.path.join(self.game_configuration.storage_path),
+            dir=str(Path(os.path.join(self.game_configuration.storage_path)).resolve()),
             filter="XML (*.xml)",
         )
         logger.info(f"Selected path: {file_path[0]}")
@@ -1770,8 +1823,12 @@ class MainContent:
             )
 
     def _do_upload_rw_log(self):
-        player_log_path = os.path.join(
-            self.game_configuration.get_config_folder_path() + "/../Player.log"
+        player_log_path = str(
+            Path(
+                os.path.join(
+                    self.game_configuration.get_config_folder_path() + "/../Player.log"
+                )
+            ).resolve()
         )
         if os.path.exists(player_log_path):
             ret = upload_data_to_0x0_st(player_log_path)
@@ -1784,7 +1841,9 @@ class MainContent:
                 )
 
     def _upload_rs_log(self):
-        ret = upload_data_to_0x0_st(os.path.join(gettempdir(), "RimSort.log"))
+        ret = upload_data_to_0x0_st(
+            str(Path(os.path.join(gettempdir(), "RimSort.log")).resolve())
+        )
         if ret:
             copy_to_clipboard(ret)
             show_information(
@@ -1905,7 +1964,8 @@ class MainContent:
         """
         args, ok = show_dialogue_input(
             title="Edit run arguments",
-            text="Enter a comma separated list of arguments to pass to the Rimworld executable:",
+            text="Enter a comma separated list of arguments to pass to the Rimworld executable\n\n"
+            + "Example: \n-popupwindow,-logfile,/path/to/file.log",
             value=",".join(self.game_configuration.run_arguments),
         )
         if ok:
@@ -2271,9 +2331,13 @@ class MainContent:
             # Calculate folder name from provided URL
             repo_folder_name = os.path.split(repo_url)[1]
             # Calculate path from generated folder name
-            repo_path = os.path.join(
-                base_path,
-                repo_folder_name,
+            repo_path = str(
+                Path(
+                    os.path.join(
+                        base_path,
+                        repo_folder_name,
+                    )
+                ).resolve()
             )
             if os.path.exists(repo_path):  # If local repo does exists
                 # Prompt to user to handle
@@ -2376,9 +2440,13 @@ class MainContent:
             # Calculate folder name from provided URL
             repo_folder_name = os.path.split(repo_url)[1]
             # Calculate path from generated folder name
-            repo_path = os.path.join(
-                base_path,
-                repo_folder_name,
+            repo_path = str(
+                Path(
+                    os.path.join(
+                        base_path,
+                        repo_folder_name,
+                    )
+                ).resolve()
             )
             if os.path.exists(repo_path):  # If local repo does exists
                 # Clone the repo to storage path and notify user
@@ -2460,10 +2528,14 @@ class MainContent:
             repo_user_or_org = os.path.split(os.path.split(repo_url)[0])[1]
             repo_folder_name = os.path.split(repo_url)[1]
             # Calculate path from generated folder name
-            repo_path = os.path.join(
-                self.game_configuration.storage_path,
-                self.game_configuration.dbs_path,
-                repo_folder_name,
+            repo_path = str(
+                Path(
+                    os.path.join(
+                        self.game_configuration.storage_path,
+                        self.game_configuration.dbs_path,
+                        repo_folder_name,
+                    )
+                ).resolve()
             )
             if os.path.exists(repo_path):  # If local repo exists
                 # Update the file, commit + PR to repo
@@ -2472,7 +2544,9 @@ class MainContent:
                 )
                 try:
                     # Specify the file path relative to the local repository
-                    file_full_path = os.path.join(repo_path, file_name)
+                    file_full_path = str(
+                        Path(os.path.join(repo_path, file_name)).resolve()
+                    )
                     if os.path.exists(file_full_path):
                         # Load JSON data
                         with open(file_full_path, encoding="utf-8") as f:
@@ -2642,7 +2716,7 @@ class MainContent:
         logger.info("Opening file dialog to specify Steam DB")
         input_path = QFileDialog.getSaveFileName(
             caption="Choose Steam DB:",
-            dir=os.path.join(self.game_configuration.storage_path),
+            dir=str(Path(os.path.join(self.game_configuration.storage_path)).resolve()),
             filter="JSON (*.json)",
         )
         logger.info(f"Selected path: {input_path[0]}")
@@ -2660,7 +2734,7 @@ class MainContent:
         logger.info("Opening file dialog to specify Community Rules DB")
         input_path = QFileDialog.getSaveFileName(
             caption="Choose Community Rules DB:",
-            dir=os.path.join(self.game_configuration.storage_path),
+            dir=str(Path(os.path.join(self.game_configuration.storage_path)).resolve()),
             filter="JSON (*.json)",
         )
         logger.info(f"Selected path: {input_path[0]}")
@@ -2716,7 +2790,7 @@ class MainContent:
         logger.info("Opening file dialog to specify output file")
         output_path = QFileDialog.getSaveFileName(
             caption="Designate output path",
-            dir=os.path.join(self.game_configuration.storage_path),
+            dir=str(Path(os.path.join(self.game_configuration.storage_path)).resolve()),
             filter="JSON (*.json)",
         )
         # Check file path and launch DB Builder with user configured mode
@@ -2810,7 +2884,7 @@ class MainContent:
         logger.info("Opening file dialog to specify input file A")
         input_path_a = QFileDialog.getSaveFileName(
             caption='Input "to-be-updated" database, input A',
-            dir=os.path.join(self.game_configuration.storage_path),
+            dir=str(Path(os.path.join(self.game_configuration.storage_path)).resolve()),
             filter="JSON (*.json)",
         )
         logger.info(f"Selected path: {input_path_a[0]}")
@@ -2827,7 +2901,7 @@ class MainContent:
         logger.info("Opening file dialog to specify input file B")
         input_path_b = QFileDialog.getSaveFileName(
             caption='Input "to-be-updated" database, input A',
-            dir=os.path.join(self.game_configuration.storage_path),
+            dir=str(Path(os.path.join(self.game_configuration.storage_path)).resolve()),
             filter="JSON (*.json)",
         )
         logger.info(f"Selected path: {input_path_b[0]}")
@@ -2921,7 +2995,7 @@ class MainContent:
         logger.info("Opening file dialog to specify input file A")
         input_path_a = QFileDialog.getSaveFileName(
             caption='Input "to-be-updated" database, input A',
-            dir=os.path.join(self.game_configuration.storage_path),
+            dir=str(Path(os.path.join(self.game_configuration.storage_path)).resolve()),
             filter="JSON (*.json)",
         )
         logger.info(f"Selected path: {input_path_a[0]}")
@@ -2938,7 +3012,7 @@ class MainContent:
         logger.info("Opening file dialog to specify input file B")
         input_path_b = QFileDialog.getSaveFileName(
             caption='Input "to-be-updated" database, input A',
-            dir=os.path.join(self.game_configuration.storage_path),
+            dir=str(Path(os.path.join(self.game_configuration.storage_path)).resolve()),
             filter="JSON (*.json)",
         )
         logger.info(f"Selected path: {input_path_b[0]}")
@@ -2964,7 +3038,7 @@ class MainContent:
         logger.info("Opening file dialog to specify output file")
         output_path = QFileDialog.getSaveFileName(
             caption="Designate output path for resultant database:",
-            dir=os.path.join(self.game_configuration.storage_path),
+            dir=str(Path(os.path.join(self.game_configuration.storage_path)).resolve()),
             filter="JSON (*.json)",
         )
         logger.info(f"Selected path: {output_path[0]}")

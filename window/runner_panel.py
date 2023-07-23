@@ -82,7 +82,11 @@ class RunnerPanel(QWidget):
         # CREATE WIDGETS
         # Clear btn
         self.clear_runner_icon = QIcon(
-            os.path.join(os.path.dirname(__file__), "../data/clear.png")
+            str(
+                Path(
+                    os.path.join(os.path.dirname(__file__), "../data/clear.png")
+                ).resolve()
+            )
         )
         self.clear_runner_button = QToolButton()
         self.clear_runner_button.setIcon(self.clear_runner_icon)
@@ -92,7 +96,13 @@ class RunnerPanel(QWidget):
         )
         # Restart btn
         self.restart_process_icon = QIcon(
-            os.path.join(os.path.dirname(__file__), "../data/restart_process.png")
+            str(
+                Path(
+                    os.path.join(
+                        os.path.dirname(__file__), "../data/restart_process.png"
+                    )
+                ).resolve()
+            )
         )
         self.restart_process_button = QToolButton()
         self.restart_process_button.setIcon(self.restart_process_icon)
@@ -103,7 +113,11 @@ class RunnerPanel(QWidget):
         self.restart_process_button.hide()  # Hide this by default - it will be enabled if self.execute()
         # Kill btn
         self.kill_process_icon = QIcon(
-            os.path.join(os.path.dirname(__file__), "../data/kill_process.png")
+            str(
+                Path(
+                    os.path.join(os.path.dirname(__file__), "../data/kill_process.png")
+                ).resolve()
+            )
         )
         self.kill_process_button = QToolButton()
         self.kill_process_button.setIcon(self.kill_process_icon)
@@ -114,7 +128,11 @@ class RunnerPanel(QWidget):
         self.kill_process_button.hide()  # Hide this by default - it will be enabled if self.execute()
         # Save process output btn
         self.save_runner_icon = QIcon(
-            os.path.join(os.path.dirname(__file__), "../data/save_output.png")
+            str(
+                Path(
+                    os.path.join(os.path.dirname(__file__), "../data/save_output.png")
+                ).resolve()
+            )
         )
         self.save_runner_output_button = QToolButton()
         self.save_runner_output_button.setIcon(self.save_runner_icon)
@@ -359,6 +377,7 @@ class RunnerPanel(QWidget):
             else:  # Otherwise, alert the user the process was completed
                 self.message("Subprocess completed.")
                 # -------STEAM-------
+                print(self.process.program())
                 if "steamcmd" in self.process.program():
                     # If we have mods that did not successfully download
                     if self.steamcmd_download_tracking is not None:

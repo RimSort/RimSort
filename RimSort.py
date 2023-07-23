@@ -30,23 +30,27 @@ system = platform.system()
 # You can override by passing --onefile-tempdir-spec to `nuitka`
 # See also: https://nuitka.net/doc/user-manual.html#use-case-4-program-distribution
 # Otherwise, use sys.argv[0] to get the actual relative path to the executable
-data_path = os.path.join(os.path.dirname(__file__), "data")
-debug_file = os.path.join(data_path, "DEBUG")
+data_path = str(Path(os.path.join(os.path.dirname(__file__), "data")).resolve())
+debug_file = str(Path(os.path.join(data_path, "DEBUG")).resolve())
 
 if os.path.exists(debug_file):
-    logging_config_path = os.path.join(data_path, "logger_tt-DEBUG.json")
+    logging_config_path = str(
+        Path(os.path.join(data_path, "logger_tt-DEBUG.json")).resolve()
+    )
     DEBUG_MODE = True
 else:
-    logging_config_path = os.path.join(data_path, "logger_tt-INFO.json")
+    logging_config_path = str(
+        Path(os.path.join(data_path, "logger_tt-INFO.json")).resolve()
+    )
     DEBUG_MODE = False
 
-logging_file_path = os.path.join(gettempdir(), "RimSort.log")
+logging_file_path = str(Path(os.path.join(gettempdir(), "RimSort.log")).resolve())
 
 # Setup Environment
 if "__compiled__" in globals():
     os.environ[
         "QTWEBENGINE_LOCALES_PATH"
-    ] = f'{Path(os.path.join(os.path.dirname(__file__), "qtwebengine_locales")).resolve()}'
+    ] = f'{str(Path(os.path.join(os.path.dirname(__file__), "qtwebengine_locales")).resolve())}'
 if system == "Linux":
     # logger_tt
     setup_logging(

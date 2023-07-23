@@ -31,7 +31,7 @@ class ActiveModList(QWidget):
 
     list_updated_signal = Signal()
 
-    def __init__(self, csharp_icon_enable: bool) -> None:
+    def __init__(self, csharp_icon_enable: bool, local_mods_path=None) -> None:
         """
         Initialize the class.
         Create a ListWidget using the dict of mods. This will
@@ -40,6 +40,7 @@ class ActiveModList(QWidget):
         logger.info("Starting ActiveModList initialization")
         self.csharp_icon_enable = csharp_icon_enable
         self.list_updated = False
+        self.local_mods_path = local_mods_path
 
         super(ActiveModList, self).__init__()
 
@@ -52,7 +53,8 @@ class ActiveModList(QWidget):
         self.num_mods.setObjectName("summaryValue")
         # Active mod list
         self.active_mods_list = ModListWidget(
-            csharp_icon_enable=self.csharp_icon_enable
+            csharp_icon_enable=self.csharp_icon_enable,
+            local_mods_path=self.local_mods_path,
         )
 
         # Search widgets
@@ -86,10 +88,18 @@ class ActiveModList(QWidget):
         )
         self.active_mods_search_filter_state = True
         self.active_mods_search_mode_filter_icon = QIcon(
-            os.path.join(os.path.dirname(__file__), "../data/filter.png")
+            str(
+                Path(
+                    os.path.join(os.path.dirname(__file__), "../data/filter.png")
+                ).resolve()
+            )
         )
         self.active_mods_search_mode_nofilter_icon = QIcon(
-            os.path.join(os.path.dirname(__file__), "../data/nofilter.png")
+            str(
+                Path(
+                    os.path.join(os.path.dirname(__file__), "../data/nofilter.png")
+                ).resolve()
+            )
         )
         self.active_mods_search_mode_filter_button = QToolButton()
         self.active_mods_search_mode_filter_button.setIcon(

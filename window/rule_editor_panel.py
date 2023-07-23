@@ -1,6 +1,7 @@
 from functools import partial
 from logger_tt import logger
 import os
+from pathlib import Path
 import platform
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -270,7 +271,13 @@ class RuleEditor(QWidget):
         # Editor actions
         # community rules
         self.editor_save_community_rules_icon = QIcon(
-            os.path.join(os.path.dirname(__file__), "../data/save_community_rules.png")
+            str(
+                Path(
+                    os.path.join(
+                        os.path.dirname(__file__), "../data/save_community_rules.png"
+                    )
+                ).resolve()
+            )
         )
         self.editor_save_community_rules_button = QToolButton()
         self.editor_save_community_rules_button.setToolTip(
@@ -284,7 +291,13 @@ class RuleEditor(QWidget):
         )
         # user rules
         self.editor_save_user_rules_icon = QIcon(
-            os.path.join(os.path.dirname(__file__), "../data/save_user_rules.png")
+            str(
+                Path(
+                    os.path.join(
+                        os.path.dirname(__file__), "../data/save_user_rules.png"
+                    )
+                ).resolve()
+            )
         )
         self.editor_save_user_rules_button = QToolButton()
         self.editor_save_user_rules_button.setToolTip("Save rules to userRules.json")

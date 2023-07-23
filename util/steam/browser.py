@@ -1,5 +1,6 @@
 from functools import partial
 from logger_tt import logger
+from pathlib import Path
 import os
 import platform
 from typing import Any, Dict, List, Optional, Tuple
@@ -109,12 +110,18 @@ class SteamBrowser(QWidget):
         )
         self.web_view_loading_placeholder.setPixmap(
             QPixmap(
-                os.path.join(
-                    os.path.split(
-                        os.path.split(os.path.split(os.path.dirname(__file__))[0])[0]
-                    )[0],
-                    "data",
-                    "AppIcon_b.png",
+                str(
+                    Path(
+                        os.path.join(
+                            os.path.split(
+                                os.path.split(
+                                    os.path.split(os.path.dirname(__file__))[0]
+                                )[0]
+                            )[0],
+                            "data",
+                            "AppIcon_b.png",
+                        )
+                    ).resolve()
                 )
             )
         )

@@ -1,6 +1,7 @@
 from logger_tt import logger
 from errno import EACCES
 import os
+from pathlib import Path
 import platform
 from pyperclip import copy as copy_to_clipboard
 import shutil
@@ -28,7 +29,7 @@ def delete_files_except_extension(directory, extension):
     for root, dirs, files in os.walk(directory):
         for file in files:
             if not file.endswith(extension):
-                file_path = os.path.join(root, file)
+                file_path = str(Path(os.path.join(root, file)).resolve())
                 try:
                     os.remove(file_path)
                 except OSError as e:
@@ -38,7 +39,7 @@ def delete_files_except_extension(directory, extension):
 
     for root, dirs, _ in os.walk(directory, topdown=False):
         for dir in dirs:
-            dir_path = os.path.join(root, dir)
+            dir_path = str(Path(os.path.join(root, dir)).resolve())
             if not os.listdir(dir_path):
                 shutil.rmtree(
                     dir_path,
@@ -78,13 +79,19 @@ def launch_game_process(game_install_path: str, args: list) -> None:
     if game_install_path:
         system_name = platform.system()
         if system_name == "Darwin":
-            executable_path = os.path.join(game_install_path, "RimWorldMac.app")
+            executable_path = str(
+                Path(os.path.join(game_install_path, "RimWorldMac.app")).resolve()
+            )
         elif system_name == "Linux":
             # Linux
-            executable_path = os.path.join(game_install_path, "RimWorldLinux")
+            executable_path = str(
+                Path(os.path.join(game_install_path, "RimWorldLinux")).resolve()
+            )
         elif "Windows":
             # Windows
-            executable_path = os.path.join(game_install_path, "RimWorldWin64.exe")
+            executable_path = str(
+                Path(os.path.join(game_install_path, "RimWorldWin64.exe")).resolve()
+            )
         else:
             logger.error("Unable to launch the game on an unknown system")
         logger.info(f"Path to game executable generated: {executable_path}")

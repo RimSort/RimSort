@@ -1,5 +1,6 @@
 from logger_tt import logger
 import os
+from pathlib import Path
 from typing import Any, Dict
 
 from PySide6.QtCore import Qt
@@ -42,7 +43,9 @@ class ModInfo:
         self.panel.addLayout(self.description_layout, 30)
 
         # Create widgets
-        self.missing_image_path = os.path.join(os.getcwd(), "data", "missing.png")
+        self.missing_image_path = str(
+            Path(os.path.join(os.getcwd(), "data", "missing.png")).resolve()
+        )
         self.preview_picture = ImageLabel()
         self.preview_picture.setAlignment(Qt.AlignCenter)
         self.preview_picture.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -157,8 +160,10 @@ class ModInfo:
             logger.info(f"Got mod path for preview image: {workshop_folder_path}")
             if os.path.exists(workshop_folder_path):
                 about_folder_name = "About"
-                about_folder_target_path = os.path.join(
-                    workshop_folder_path, about_folder_name
+                about_folder_target_path = str(
+                    Path(
+                        os.path.join(workshop_folder_path, about_folder_name)
+                    ).resolve()
                 )
                 if os.path.exists(about_folder_target_path):
                     # Look for a case-insensitive About folder
@@ -175,7 +180,11 @@ class ModInfo:
                     invalid_file_path_found = True
                     preview_file_name = "Preview.png"
                     for temp_file in os.scandir(
-                        os.path.join(workshop_folder_path, about_folder_name)
+                        str(
+                            Path(
+                                os.path.join(workshop_folder_path, about_folder_name)
+                            ).resolve()
+                        )
                     ):
                         if (
                             temp_file.name.lower() == preview_file_name.lower()
@@ -195,8 +204,14 @@ class ModInfo:
                         )
                     else:
                         logger.info("Preview image found")
-                        image_path = os.path.join(
-                            workshop_folder_path, about_folder_name, preview_file_name
+                        image_path = str(
+                            Path(
+                                os.path.join(
+                                    workshop_folder_path,
+                                    about_folder_name,
+                                    preview_file_name,
+                                )
+                            ).resolve()
                         )
                         pixmap = QPixmap(image_path)
                         self.preview_picture.setPixmap(

@@ -75,7 +75,7 @@ class SettingsPanel(QDialog):
         self.open_log_button.clicked.connect(
             partial(
                 platform_specific_open,
-                os.path.join(gettempdir(), "RimSort.log"),
+                str(Path(os.path.join(gettempdir(), "RimSort.log")).resolve()),
             )
         )
         self.open_storage_button = QPushButton("Open RimSort storage")
@@ -183,7 +183,11 @@ class SettingsPanel(QDialog):
         self.database_tools_actions_layout = QHBoxLayout()
         # metadata widgets
         self.external_metadata_icon = QIcon(
-            os.path.join(os.path.dirname(__file__), "../data/database.png")
+            str(
+                Path(
+                    os.path.join(os.path.dirname(__file__), "../data/database.png")
+                ).resolve()
+            )
         )
         self.external_metadata_label = QLabel("External Metadata")
         self.external_metadata_label.setObjectName("summaryValue")
@@ -563,8 +567,12 @@ class SettingsPanel(QDialog):
         )
 
     def loggerDebugCheckboxEvent(self) -> None:
-        data_path = os.path.join(os.path.split(os.path.dirname(__file__))[0], "data")
-        debug_file = os.path.join(data_path, "DEBUG")
+        data_path = str(
+            Path(
+                os.path.join(os.path.split(os.path.dirname(__file__))[0], "data")
+            ).resolve()
+        )
+        debug_file = str(Path(os.path.join(data_path, "DEBUG")).resolve())
         if self.logger_debug_checkbox.isChecked():
             if not os.path.exists(debug_file):
                 # Create an empty file

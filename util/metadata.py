@@ -2,6 +2,7 @@ import json
 from logger_tt import logger
 from model.dialogue import show_warning
 import os
+from pathlib import Path
 
 from time import localtime, strftime, time
 import traceback
@@ -277,9 +278,13 @@ class SteamDatabaseBuilder(QThread):
                 self.db_builder_message_output_signal.emit(
                     "Unable to load database from specified path! Does the file exist...?"
                 )
-                appended_path = os.path.join(
-                    os.path.split(self.output_database_path)[0],
-                    "NEW_" + str(os.path.split(self.output_database_path[1])),
+                appended_path = str(
+                    Path(
+                        os.path.join(
+                            os.path.split(self.output_database_path)[0],
+                            "NEW_" + str(os.path.split(self.output_database_path[1])),
+                        )
+                    ).resolve()
                 )
                 self.db_builder_message_output_signal.emit(
                     f"\nCaching DynamicQuery result:\n\n{appended_path}"
@@ -389,7 +394,9 @@ def get_rpmmdb_steam_metadata(mods: Dict[str, Any]) -> Tuple[Dict[str, Any], Any
             or mods[uuid].get("publishedfileid") == "1847679158"
         ):
             logger.info("Found RimPy Mod Manager Database mod")
-            steam_db_path = os.path.join(mods[uuid]["path"], "db", "db.json")
+            steam_db_path = str(
+                Path(os.path.join(mods[uuid]["path"], "db", "db.json")).resolve()
+            )
             logger.info(f"Generated path to db.json: {steam_db_path}")
             if os.path.exists(steam_db_path):
                 with open(steam_db_path, encoding="utf-8") as f:
@@ -435,8 +442,10 @@ def get_rpmmdb_community_rules_db(mods: Dict[str, Any]) -> Tuple[Dict[str, Any],
             or mods[uuid].get("publishedfileid") == "1847679158"
         ):
             logger.info("Found RimPy Mod Manager Database mod")
-            community_rules_path = os.path.join(
-                mods[uuid]["path"], "db", "communityRules.json"
+            community_rules_path = str(
+                Path(
+                    os.path.join(mods[uuid]["path"], "db", "communityRules.json")
+                ).resolve()
             )
             logger.info(
                 f"Generated path to communityRules.json: {community_rules_path}"
@@ -473,61 +482,8 @@ def get_rpmmdb_community_rules_db(mods: Dict[str, Any]) -> Tuple[Dict[str, Any],
 # Steam client / SteamCMD metadata
 
 
-def edit_workshop_acf_data(
-    appworkshop_acf_path: str, operation: str, publishedfileids: list
-) -> None:
-    logger.info(f"SteamCMD acf data path to update: {appworkshop_acf_path}")
-    if os.path.exists(appworkshop_acf_path):
-        logger.debug(f"Reading info...")
-        steamcmd_appworkshop_acf = acf_to_dict(appworkshop_acf_path)
-        logger.debug("Retrieved SteamCMD data to update...")
-    else:
-        logger.warning("SteamCMD acf file not found! Nothing was done...")
-        return
-    # Output
-    items_installed_before = len(
-        steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemsInstalled"].keys()
-    )
-    logger.debug(f"WorkshopItemsInstalled beforehand: {items_installed_before}")
-    item_details_before = len(
-        steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemDetails"].keys()
-    )
-    logger.debug(f"WorkshopItemDetails beforehand: {item_details_before}")
-    for publishedfileid in publishedfileids:
-        if operation == "add":
-            steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemDetails"][
-                publishedfileid
-            ] = {
-                "timeupdated": "0",
-                "timetouched": "0",
-            }
-            steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemsInstalled"][
-                publishedfileid
-            ] = {
-                "timeupdated": "0",
-            }
-        elif operation == "delete":
-            steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemDetails"].pop(
-                publishedfileid
-            )
-            steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemsInstalled"].pop(
-                publishedfileid
-            )
-        items_installed_after = len(
-            steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemsInstalled"].keys()
-        )
-    logger.warning(f"WorkshopItemsInstalled after: {items_installed_after}")
-    item_details_after = len(
-        steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemDetails"].keys()
-    )
-    logger.warning(f"WorkshopItemDetails after: {item_details_after}")
-    logger.info("Successfully edited data!")
-    logger.info(f"Writing updated data back to path: {appworkshop_acf_path}")
-    dict_to_acf(data=steamcmd_appworkshop_acf, path=appworkshop_acf_path)
-
-
 def get_workshop_acf_data(
-    appworkshop_acf_path: str, workshop_mods: Dict[str, Any], steamcmd_mode=None
+    appworkshop_acf_path: str, workshop_mods: Dict[str, Any]
 ) -> None:
     """
     Given a path to the Rimworld Steam Workshop appworkshop_294100.acf file, and parse it into a dict.
@@ -540,32 +496,35 @@ def get_workshop_acf_data(
     :param steamcmd_mode: set to True for mode which forces match of folder name + publishedfileid for parsing
     """
     workshop_acf_data = acf_to_dict(appworkshop_acf_path)
-    if steamcmd_mode:
-        workshop_mods_pfid_to_uuid = {
-            v["publishedfileid"]: v["uuid"]
-            for v in workshop_mods.values()
-            if v.get("folder") == v.get("publishedfileid")
-        }
-    else:
-        workshop_mods_pfid_to_uuid = {
-            v["publishedfileid"]: v["uuid"]
-            for v in workshop_mods.values()
-            if v.get("publishedfileid")
-        }
+    workshop_mods_pfid_to_uuid = {
+        v["publishedfileid"]: v["uuid"]
+        for v in workshop_mods.values()
+        if v.get("publishedfileid")
+    }
     # Reference needed information from appworkshop_294100.acf
     workshop_item_details = workshop_acf_data["AppWorkshop"]["WorkshopItemDetails"]
+    workshop_items_installed = workshop_acf_data["AppWorkshop"][
+        "WorkshopItemsInstalled"
+    ]
     # Loop through our metadata, append values
     for publishedfileid, mod_uuid in workshop_mods_pfid_to_uuid.items():
-        if steamcmd_mode:  # If we are here, then we have found a steamcmd mod!
-            workshop_mods[mod_uuid]["steamcmd"] = True
         if publishedfileid in workshop_item_details:
-            # The last time SteamCMD/Steam client touched a mod according to its entry in appworkshop_294100.acf
-            workshop_mods[mod_uuid]["internal_time_touched"] = int(
-                workshop_item_details[publishedfileid]["timetouched"]
-            )
-            workshop_mods[mod_uuid]["internal_time_updated"] = int(
-                workshop_item_details[publishedfileid]["timeupdated"]
-            )
+            if workshop_item_details.get("timetouched"):
+                # The last time SteamCMD/Steam client touched a mod according to its entry
+                workshop_mods[mod_uuid]["internal_time_touched"] = int(
+                    workshop_item_details[publishedfileid]["timetouched"]
+                )
+            if workshop_item_details.get("timeupdated"):
+                # The last time SteamCMD/Steam client updated a mod according to its entry
+                workshop_mods[mod_uuid]["internal_time_updated"] = int(
+                    workshop_item_details[publishedfileid]["timeupdated"]
+                )
+        if publishedfileid in workshop_items_installed:
+            if workshop_items_installed.get("timeupdated"):
+                # The last time SteamCMD/Steam client updated a mod according to its entry
+                workshop_mods[mod_uuid]["internal_time_updated"] = int(
+                    workshop_items_installed[publishedfileid]["timeupdated"]
+                )
 
 
 def import_steamcmd_acf_data(
@@ -577,7 +536,7 @@ def import_steamcmd_acf_data(
         steamcmd_appworkshop_acf = acf_to_dict(steamcmd_appworkshop_acf_path)
         logger.debug("Retrieved SteamCMD data to update...")
     else:
-        logger.warning("SteamCMD acf file not found! Nothing was done...")
+        logger.warning("Specified SteamCMD acf file not found! Nothing was done...")
         return
     logger.info("Opening file dialog to specify acf file to import")
     acf_to_import_path = QFileDialog.getSaveFileName(

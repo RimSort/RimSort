@@ -271,20 +271,22 @@ class Actions(QWidget):
 
     def setupSteamcmdContextMenuEvent(self, point: QPoint) -> None:
         contextMenu = QMenu(self)  # Actions Panel context menu event
+        delete_steamcmd_acf_data = contextMenu.addAction(
+            "Delete SteamCMD acf data"
+        )  # delete acf
         set_steamcmd_path = contextMenu.addAction(
             "Configure SteamCMD prefix"
         )  # steamcmd path
         import_acf_data = contextMenu.addAction(
             "Import SteamCMD acf data"
         )  # import acf
-        reset_steamcmd_acf_data = contextMenu.addAction("Reset SteamCMD acf data")
+        delete_steamcmd_acf_data.triggered.connect(
+            partial(self.actions_signal.emit, "reset_steamcmd_acf_data")
+        )
         set_steamcmd_path.triggered.connect(
             partial(self.actions_signal.emit, "set_steamcmd_path")
         )
         import_acf_data.triggered.connect(
             partial(self.actions_signal.emit, "import_steamcmd_acf_data")
-        )
-        reset_steamcmd_acf_data.triggered.connect(
-            partial(self.actions_signal.emit, "reset_steamcmd_acf_data")
         )
         action = contextMenu.exec_(self.setup_steamcmd_button.mapToGlobal(point))

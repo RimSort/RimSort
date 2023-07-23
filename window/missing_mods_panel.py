@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 
 from PySide6.QtCore import Qt, QEvent, QModelIndex, QObject, QPoint, QSize, Signal
-from PySide6.QtGui import QAction, QIcon, QPixmap, QStandardItemModel, QStandardItem
+from PySide6.QtGui import QAction, QPixmap, QStandardItemModel, QStandardItem
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
