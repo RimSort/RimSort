@@ -331,13 +331,6 @@ class RunnerPanel(QWidget):
                 self.progress_bar.setRange(0, int(line.split("Progress: 1/")[1]))
             if "Progress: " in line:
                 overwrite = True
-            elif (
-                self.todds_dry_run_support  # TODO: REMOVE THIS
-                # Hardcoded todds --dry-run support - we don't want the total time output until jose fixes
-                and ("Total time: " in line)
-            ):
-                self.previous_line = line
-                return
             # -------TODDS-------
 
         # Hardcoded query progress output support
@@ -377,7 +370,6 @@ class RunnerPanel(QWidget):
             else:  # Otherwise, alert the user the process was completed
                 self.message("Subprocess completed.")
                 # -------STEAM-------
-                print(self.process.program())
                 if "steamcmd" in self.process.program():
                     # If we have mods that did not successfully download
                     if self.steamcmd_download_tracking is not None:

@@ -1122,7 +1122,7 @@ def parse_mod_data(mods_path: str, intent: str, steam_db=None) -> Dict[str, Any]
                 pfid = None
                 dirs_scanned.append(file.name)
                 # Look for a case-insensitive "About" folder
-                invalid_folder_path_found = True
+                invalid_about_folder_path_found = True
                 about_folder_name = "About"
                 for temp_file in os.scandir(file.path):
                     if (
@@ -1130,11 +1130,11 @@ def parse_mod_data(mods_path: str, intent: str, steam_db=None) -> Dict[str, Any]
                         and temp_file.is_dir()
                     ):
                         about_folder_name = temp_file.name
-                        invalid_folder_path_found = False
+                        invalid_about_folder_path_found = False
                         break
                 # Look for a case-insensitive "About.xml" file
                 invalid_about_file_path_found = True
-                if not invalid_folder_path_found:
+                if not invalid_about_folder_path_found:
                     about_file_name = "About.xml"
                     for temp_file in os.scandir(
                         str(Path(os.path.join(file.path, about_folder_name)).resolve())
@@ -1148,7 +1148,7 @@ def parse_mod_data(mods_path: str, intent: str, steam_db=None) -> Dict[str, Any]
                             break
                 # Look for a case-insensitive "PublishedFileId.txt" file
                 invalid_pfid_file_path_found = True
-                if not invalid_folder_path_found:
+                if not invalid_about_folder_path_found:
                     pfid_file_name = "PublishedFileId.txt"
                     for temp_file in os.scandir(
                         str(Path(os.path.join(file.path, about_folder_name)).resolve())
@@ -1161,9 +1161,9 @@ def parse_mod_data(mods_path: str, intent: str, steam_db=None) -> Dict[str, Any]
                             invalid_pfid_file_path_found = False
                             break
                 # If there was an issue getting the expected path, track and exit
-                if invalid_folder_path_found or invalid_pfid_file_path_found:
+                if invalid_pfid_file_path_found:
                     logger.debug(
-                        f"There was an issue getting the expected sub-path for this path, no variations of /About/PublishedFileId.txt could be found: {file.path}"
+                        f"No variations of /About/PublishedFileId.txt could be found: {file.path}"
                     )
                 else:
                     pfid_path = str(
@@ -1188,51 +1188,190 @@ def parse_mod_data(mods_path: str, intent: str, steam_db=None) -> Dict[str, Any]
                     )
                     logger.debug(f"Using PublishedFileId: {pfid}")
                 # If there was an issue getting the expected path, track and exit
-                if invalid_folder_path_found or invalid_about_file_path_found:
+                if invalid_about_file_path_found:
                     logger.debug(
-                        f"There was an issue getting the expected sub-path for this path, no variations of /About/About.xml could be found: {file.path}"
+                        f"No variations of /About/About.xml could be found! Checking for RimWorld scenario to parse (.rsc file)"
                     )
-                    invalid_dirs.append(file.name)
-                    logger.debug(f"Populating invalid mod: {file.path}")
-                    uuid = str(uuid4())
-                    mods[uuid] = {
-                        "invalid": True,
-                        "name": "UNKNOWN",
-                        "packageId": "UNKNOWN",
-                        "publishedfileid": pfid if pfid else None,
-                        "author": "UNKNOWN",
-                        "description": (
-                            "This mod is considered invalid by RimSort (and the RimWorld game)."
-                            + "\n\nThis mod does NOT contain an ./About/About.xml and is likely leftover from previous usage."
-                            + "\n\nThis can happen sometimes with Steam mods if there are leftover .dds textures or unexpected data."
-                        ),
-                        "data_source": intent,
-                        "folder": file.name,
-                        "path": file.path,
-                        "uuid": uuid,
-                    }
-                    # Additional checks for local mods
-                    if intent == "local":
-                        mod_metadata = mods[uuid]
-                        # Check for git repository inside local mods, tag appropriately
-                        if os.path.exists(
-                            str(Path(os.path.join(file.path, ".git")).resolve())
+                    # Look for .rsc scenario files to load metadata from
+                    scenario_rsc_found = None
+                    for temp_file in os.scandir(file.path):
+                        if (
+                            temp_file.name.lower().endswith(".rsc")
+                            and not temp_file.is_dir()
                         ):
-                            mod_metadata["git_repo"] = True
-                        # Check for local mods that are SteamCMD mods, tag appropriately
-                        if mod_metadata.get("folder") == mod_metadata.get(
-                            "publishedfileid"
-                        ):
-                            mod_metadata["steamcmd"] = True
+                            scenario_rsc_file = temp_file.name
+                            scenario_rsc_found = True
+                            break
+                    if scenario_rsc_found:
+                        scenario_data_path = str(
+                            Path(os.path.join(file.path, scenario_rsc_file)).resolve()
+                        )
+                        logger.debug(
+                            f"Found scenario metadata at: {scenario_data_path}"
+                        )
+                        scenario_data = {}
+                        try:
+                            # Try to parse .rsc
+                            scenario_data = xml_path_to_json(scenario_data_path)
+                        except:
+                            # If there was an issue parsing the .rsc, track and exit
+                            logger.error(
+                                f"Unable to parse {scenario_rsc_file} with the exception: {traceback.format_exc()}"
+                            )
+                        else:
+                            # Case-insensitive `savedscenario` key.
+                            # logger.debug("Normalizing XML content keys")
+                            scenario_data = {
+                                k.lower(): v for k, v in scenario_data.items()
+                            }
+                            logger.debug("Editing XML content")
+                            if scenario_data.get("savedscenario"):
+                                if scenario_data["savedscenario"].get(
+                                    "scenario"
+                                ):  # If our .rsc metadata has a packageId key
+                                    # Initialize our dict from the formatted .rsc metadata
+                                    scenario_metadata = scenario_data["savedscenario"][
+                                        "scenario"
+                                    ]
+                                    # Case-insensitive keys.
+                                    logger.debug("Normalizing XML content keys")
+                                    scenario_metadata = {
+                                        k.lower(): v
+                                        for k, v in scenario_metadata.items()
+                                    }
+                                    scenario_metadata["scenario"] = True
+                                    scenario_metadata.setdefault("packageId", "UNKNOWN")
+                                    scenario_metadata.pop("summary", None)
+                                    scenario_metadata.pop("playerfaction", None)
+                                    scenario_metadata.pop("parts", None)
+                                    if (
+                                        scenario_data["savedscenario"]
+                                        .get("meta", {})
+                                        .get("gameVersion")
+                                    ):
+                                        scenario_metadata["supportedVersions"] = {
+                                            "li": scenario_data["savedscenario"][
+                                                "meta"
+                                            ]["gameVersion"]
+                                        }
+                                    # if scenario_data["savedscenario"].get(
+                                    #     "meta", {}
+                                    # ).get("modIds") and scenario_data[
+                                    #     "savedscenario"
+                                    # ].get(
+                                    #     "meta", {}
+                                    # ).get(
+                                    #     "modNames"
+                                    # ):
+                                    #     modIds_to_modNames = {
+                                    #         modId: modName
+                                    #         for modId in scenario_data["savedscenario"][
+                                    #             "meta"
+                                    #         ]["modIds"]["li"]
+                                    #         for modName in scenario_data[
+                                    #             "savedscenario"
+                                    #         ]["meta"]["modNames"]["li"]
+                                    #     }
+                                    #     scenario_metadata["modDependencies"] = {
+                                    #         "li": {
+                                    #             "packageId": packageId,
+                                    #             "displayName": displayName,
+                                    #         }
+                                    #         for packageId, displayName in modIds_to_modNames.items()
+                                    #     }
+                                    else:
+                                        logger.warning(
+                                            f"Unable to parse [gameversion] from this scenario [meta] tag: {scenario_data}"
+                                        )
+                                    # Track pfid if we parsed one earlier and don't already have one from metadata
+                                    if pfid and not scenario_data.get(
+                                        "publishedfileid"
+                                    ):
+                                        scenario_data["publishedfileid"] = pfid
+                                    if scenario_metadata.get(
+                                        "publishedfileid"
+                                    ):  # Make some assumptions if we have a pfid
+                                        scenario_metadata[
+                                            "steam_uri"
+                                        ] = f"steam://url/CommunityFilePage/{pfid}"
+                                        scenario_metadata[
+                                            "steam_url"
+                                        ] = f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
+                                    # data_source will be used with setIcon later
+                                    scenario_metadata["data_source"] = intent
+                                    scenario_metadata["folder"] = file.name
+                                    scenario_metadata["path"] = file.path
+                                    # Track source & uuid in case metadata becomes detached
+                                    uuid = str(uuid4())
+                                    scenario_metadata["uuid"] = uuid
+                                    # Additional checks for local mods
+                                    if intent == "local":
+                                        # Check for git repository inside local mods, tag appropriately
+                                        if os.path.exists(
+                                            str(
+                                                Path(
+                                                    os.path.join(file.path, ".git")
+                                                ).resolve()
+                                            )
+                                        ):
+                                            scenario_metadata["git_repo"] = True
+                                        # Check for local mods that are SteamCMD mods, tag appropriately
+                                        if scenario_metadata.get(
+                                            "folder"
+                                        ) == scenario_metadata.get("publishedfileid"):
+                                            scenario_metadata["steamcmd"] = True
+                                    logger.debug(
+                                        f"Finished editing XML scenario content, adding final content to larger list: {scenario_metadata}"
+                                    )
+                                    mods[uuid] = scenario_metadata
+                                else:
+                                    logger.error(
+                                        f"Key [scenario] does not exist in this data's [savedscenario]: {scenario_metadata}"
+                                    )
+                            else:
+                                logger.error(
+                                    f"Key [savedscenario] does not exist in this data: {scenario_metadata}"
+                                )
+                    else:
+                        invalid_dirs.append(file.name)
+                        logger.debug(f"Populating invalid mod: {file.path}")
+                        uuid = str(uuid4())
+                        mods[uuid] = {
+                            "invalid": True,
+                            "name": "UNKNOWN",
+                            "packageId": "UNKNOWN",
+                            "publishedfileid": pfid if pfid else None,
+                            "author": "UNKNOWN",
+                            "description": (
+                                "This mod is considered invalid by RimSort (and the RimWorld game)."
+                                + "\n\nThis mod does NOT contain an ./About/About.xml and is likely leftover from previous usage."
+                                + "\n\nThis can happen sometimes with Steam mods if there are leftover .dds textures or unexpected data."
+                            ),
+                            "data_source": intent,
+                            "folder": file.name,
+                            "path": file.path,
+                            "uuid": uuid,
+                        }
+                        # Additional checks for local mods
+                        if intent == "local":
+                            mod_metadata = mods[uuid]
+                            # Check for git repository inside local mods, tag appropriately
+                            if os.path.exists(
+                                str(Path(os.path.join(file.path, ".git")).resolve())
+                            ):
+                                mod_metadata["git_repo"] = True
+                            # Check for local mods that are SteamCMD mods, tag appropriately
+                            if mod_metadata.get("folder") == mod_metadata.get(
+                                "publishedfileid"
+                            ):
+                                mod_metadata["steamcmd"] = True
                 else:
                     mod_data_path = str(
                         Path(
                             os.path.join(file.path, about_folder_name, about_file_name)
                         ).resolve()
                     )
-                    logger.debug(
-                        f"Found a variation of /About/About.xml at: {mod_data_path}"
-                    )
+                    logger.debug(f"Found mod metadata at: {mod_data_path}")
                     mod_data = {}
                     try:
                         # Try to parse About.xml
@@ -1240,7 +1379,7 @@ def parse_mod_data(mods_path: str, intent: str, steam_db=None) -> Dict[str, Any]
                     except:
                         # If there was an issue parsing the About.xml, track and exit
                         logger.error(
-                            f"Unable to parse About.xml with the exception: {traceback.format_exc()}"
+                            f"Unable to parse {about_file_name} with the exception: {traceback.format_exc()}"
                         )
                     else:
                         # Case-insensitive `ModMetaData` key.
@@ -1273,8 +1412,6 @@ def parse_mod_data(mods_path: str, intent: str, steam_db=None) -> Dict[str, Any]
                                     mod_metadata[
                                         "steam_url"
                                     ] = f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
-                                # Track source & uuid in case metadata becomes detached
-                                # data_source will be used with setIcon later
                                 # If a mod contains C# assemblies, we want to tag the mod
                                 assemblies_path = str(
                                     Path(
@@ -1319,9 +1456,11 @@ def parse_mod_data(mods_path: str, intent: str, steam_db=None) -> Dict[str, Any]
                                                 )
                                             ):
                                                 mod_metadata["csharp"] = True
+                                # data_source will be used with setIcon later
                                 mod_metadata["data_source"] = intent
                                 mod_metadata["folder"] = file.name
                                 mod_metadata["path"] = file.path
+                                # Track source & uuid in case metadata becomes detached
                                 uuid = str(uuid4())
                                 mod_metadata["uuid"] = uuid
                                 # Additional checks for local mods
@@ -1341,7 +1480,7 @@ def parse_mod_data(mods_path: str, intent: str, steam_db=None) -> Dict[str, Any]
                                     ):
                                         mod_metadata["steamcmd"] = True
                                 logger.debug(
-                                    f"Finished editing XML content, adding final content to larger list: {mod_metadata}"
+                                    f"Finished editing XML mod content, adding final content to larger list: {mod_metadata}"
                                 )
                                 mods[uuid] = mod_metadata
                             else:
@@ -1354,12 +1493,11 @@ def parse_mod_data(mods_path: str, intent: str, steam_db=None) -> Dict[str, Any]
                             )
             else:
                 files_scanned.append(file.name)
-        # logger.debug(f"Scanned the following files in mods path: {files_scanned}")
-        # logger.debug(f"Scanned the following dirs in mods path: {dirs_scanned}")
-        # if invalid_dirs:
-        #     logger.debug(
-        #         f"The following scanned dirs did not contain mod info: {invalid_dirs}"
-        #     )
+        if invalid_dirs:
+            logger.debug(f"Parsed {len(invalid_dirs)} invalid dirs for {intent} intent")
+            # logger.debug(
+            #     f"The following scanned dirs did not contain mod or scenario info: {invalid_dirs}"
+            # )
     else:
         logger.error(f"The provided mods path does not exist: {mods_path}")
         if mods_path:

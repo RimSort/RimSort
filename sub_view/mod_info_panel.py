@@ -46,6 +46,9 @@ class ModInfo:
         self.missing_image_path = str(
             Path(os.path.join(os.getcwd(), "data", "missing.png")).resolve()
         )
+        self.scenario_image_path = str(
+            Path(os.path.join(os.getcwd(), "data", "rimworld.png")).resolve()
+        )
         self.preview_picture = ImageLabel()
         self.preview_picture.setAlignment(Qt.AlignCenter)
         self.preview_picture.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -153,11 +156,17 @@ class ModInfo:
                     )
         # It is OK for the description value to be None (was not provided)
         # It is OK for the description key to not be in mod_info
-
-        # Get Preview.png
-        if mod_info.get("path") and isinstance(mod_info["path"], str):
+        if mod_info.get("scenario"):
+            pixmap = QPixmap(self.scenario_image_path)
+            self.preview_picture.setPixmap(
+                pixmap.scaled(self.preview_picture.size(), Qt.KeepAspectRatio)
+            )
+        else:
+            # Get Preview.png
             workshop_folder_path = mod_info["path"]
-            logger.info(f"Got mod path for preview image: {workshop_folder_path}")
+            logger.info(
+                f"Retrieved mod path to parse preview image: {workshop_folder_path}"
+            )
             if os.path.exists(workshop_folder_path):
                 about_folder_name = "About"
                 about_folder_target_path = str(
@@ -227,13 +236,4 @@ class ModInfo:
                     self.preview_picture.setPixmap(
                         pixmap.scaled(self.preview_picture.size(), Qt.KeepAspectRatio)
                     )
-
-        else:
-            logger.error(
-                f"[path] tag does not exist in mod_info, is empty, or is not string: {mod_info.get('path')}"
-            )
-            pixmap = QPixmap(self.missing_image_path)
-            self.preview_picture.setPixmap(
-                pixmap.scaled(self.preview_picture.size(), Qt.KeepAspectRatio)
-            )
         logger.debug("Finished displaying mod info")
