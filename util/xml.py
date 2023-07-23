@@ -22,11 +22,12 @@ def xml_path_to_json(path: str) -> Dict[str, Any]:
             xml_data = f.read()
             soup = BeautifulSoup(xml_data, "lxml-xml")
             # Find and remove empty tags
-            empty_tags = soup.find_all(lambda tag: len(tag) == 0)
+            empty_tags = soup.find_all(
+                lambda tag: not tag.text.strip() or len(tag) == 0
+            )
             for empty_tag in empty_tags:
                 empty_tag.extract()
             data = xmltodict.parse(str(soup), dict_constructor=dict)
-            data = data
             logger.debug(f"XML file parsed")
     else:
         logger.error(f"XML file does not exist at: {path}")

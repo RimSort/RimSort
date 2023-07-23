@@ -1253,10 +1253,8 @@ class MainContent:
             ):
                 pfid = v["publishedfileid"]
                 uuid = v["uuid"]
-                name = (
-                    v.get("name")
-                    or self.external_steam_metadata[pfid].get("steamName")
-                    or "UNKNOWN"
+                name = v.get("name") or self.external_steam_metadata[pfid].get(
+                    "steamName"
                 )
                 name = f"############################\n{name}"
                 if (

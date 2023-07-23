@@ -779,8 +779,8 @@ class RuleEditor(QWidget):
                 else:  # Otherwise, add everything else to the mod list
                     self._create_list_item(
                         _list=self.mods_list,
-                        title=metadata.get("name", "UNKNOWN"),
-                        metadata=metadata.get("packageId", "UNKNOWN"),
+                        title=metadata.get("name"),
+                        metadata=metadata.get("packageId"),
                     )
         logger.debug("Parsing Community Rules")
         # Community Rules rulez

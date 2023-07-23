@@ -471,7 +471,7 @@ class ActiveModList(QWidget):
         elif self.active_mods_search_filter.currentText() == "PackageId":
             search_filter = "packageId"
         elif self.active_mods_search_filter.currentText() == "Author(s)":
-            search_filter = "author"
+            search_filter = "authors"
         elif self.active_mods_search_filter.currentText() == "PublishedFileId":
             search_filter = "publishedfileid"
 
@@ -479,7 +479,7 @@ class ActiveModList(QWidget):
             if (
                 pattern
                 and widget.json_data.get(search_filter)
-                and not pattern.lower() in widget.json_data[search_filter].lower()
+                and not pattern.lower() in str(widget.json_data[search_filter]).lower()
             ):
                 if self.active_mods_search_filter_state:
                     item.setHidden(True)

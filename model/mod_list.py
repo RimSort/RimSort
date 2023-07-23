@@ -233,7 +233,7 @@ class ModListWidget(QListWidget):
                         open_mod_steam_action.setText("Open mod in Steam")
                     # Conversion options (SteamCMD <-> local) + re-download (local mods found in SteamDB and SteamCMD)
                     if mod_data_source == "local":
-                        mod_name = widget_json_data.get("name", "UNKNOWN")
+                        mod_name = widget_json_data.get("name")
                         mod_folder_name = widget_json_data["folder"]
                         mod_folder_path = widget_json_data["path"]
                         publishedfileid = widget_json_data.get("publishedfileid")
@@ -270,7 +270,7 @@ class ModListWidget(QListWidget):
                             re_git_action.setText("Update mod with git")
                     # If Workshop, and pfid, allow Steam actions
                     if mod_data_source == "workshop":
-                        mod_name = widget_json_data.get("name", "UNKNOWN")
+                        mod_name = widget_json_data.get("name")
                         mod_folder_path = widget_json_data["path"]
                         publishedfileid = widget_json_data["publishedfileid"]
                         steam_mod_paths.append(mod_folder_path)
@@ -321,7 +321,7 @@ class ModListWidget(QListWidget):
                             open_url_browser_action.setText("Open URL(s) in browser")
                         # Conversion options (local <-> SteamCMD)
                         if mod_data_source == "local":
-                            mod_name = widget_json_data.get("name", "UNKNOWN")
+                            mod_name = widget_json_data.get("name")
                             mod_folder_name = widget_json_data["folder"]
                             mod_folder_path = widget_json_data["path"]
                             publishedfileid = widget_json_data.get("publishedfileid")
@@ -370,7 +370,7 @@ class ModListWidget(QListWidget):
                             toggle_warning_action.setText("Toggle warning(s)")
                         # If Workshop, and pfid, allow Steam actions
                         if mod_data_source == "workshop":
-                            mod_name = widget_json_data.get("name", "UNKNOWN")
+                            mod_name = widget_json_data.get("name")
                             mod_folder_path = widget_json_data["path"]
                             publishedfileid = widget_json_data["publishedfileid"]
                             steam_mod_paths.append(mod_folder_path)

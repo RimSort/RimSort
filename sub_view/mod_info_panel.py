@@ -31,6 +31,7 @@ class ModInfo:
         self.image_layout.setAlignment(Qt.AlignCenter)
         self.mod_info_layout = QVBoxLayout()
         self.mod_info_name = QHBoxLayout()
+        self.scenario_info_summary = QHBoxLayout()
         self.mod_info_package_id = QHBoxLayout()
         self.mod_info_authors = QHBoxLayout()
         self.mod_info_mod_version = QHBoxLayout()
@@ -64,6 +65,13 @@ class ModInfo:
         self.mod_info_name_value.setObjectName("summaryValue")
         self.mod_info_name_value.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.mod_info_name_value.setWordWrap(True)
+        self.scenario_info_summary_label = QLabel("Summary:")
+        self.scenario_info_summary_label.setObjectName("summaryLabel")
+        self.scenario_info_summary_value = QLabel()
+        self.scenario_info_summary_value.setTextInteractionFlags(
+            Qt.TextSelectableByMouse
+        )
+        self.scenario_info_summary_value.setWordWrap(True)
         self.mod_info_package_id_label = QLabel("PackageID:")
         self.mod_info_package_id_label.setObjectName("summaryLabel")
         self.mod_info_package_id_value = QLabel()
@@ -98,6 +106,8 @@ class ModInfo:
         self.mod_info_name.addWidget(self.mod_info_name_value, 80)
         self.mod_info_path.addWidget(self.mod_info_path_label, 20)
         self.mod_info_path.addWidget(self.mod_info_path_value, 80)
+        self.scenario_info_summary.addWidget(self.scenario_info_summary_label, 20)
+        self.scenario_info_summary.addWidget(self.scenario_info_summary_value, 80)
         self.mod_info_package_id.addWidget(self.mod_info_package_id_label, 20)
         self.mod_info_package_id.addWidget(self.mod_info_package_id_value, 80)
         self.mod_info_authors.addWidget(self.mod_info_author_label, 20)
@@ -105,11 +115,26 @@ class ModInfo:
         self.mod_info_mod_version.addWidget(self.mod_info_mod_version_label, 20)
         self.mod_info_mod_version.addWidget(self.mod_info_mod_version_value, 80)
         self.mod_info_layout.addLayout(self.mod_info_name)
+        self.mod_info_layout.addLayout(self.scenario_info_summary)
         self.mod_info_layout.addLayout(self.mod_info_package_id)
         self.mod_info_layout.addLayout(self.mod_info_authors)
         self.mod_info_layout.addLayout(self.mod_info_mod_version)
         self.mod_info_layout.addLayout(self.mod_info_path)
         self.description_layout.addWidget(self.description)
+
+        # Hide label/value by default
+        self.mod_info_name_label.hide()
+        self.mod_info_name_value.hide()
+        self.mod_info_package_id_label.hide()
+        self.mod_info_package_id_value.hide()
+        self.mod_info_author_label.hide()
+        self.mod_info_author_value.hide()
+        self.mod_info_mod_version_label.hide()
+        self.mod_info_mod_version_value.hide()
+        self.mod_info_path_label.hide()
+        self.mod_info_path_value.hide()
+        self.scenario_info_summary_label.hide()
+        self.scenario_info_summary_value.hide()
 
         logger.debug("Finished ModInfo initialization")
 
@@ -122,26 +147,59 @@ class ModInfo:
         :param mod_info: complete json info for the mod
         """
         logger.debug(f"Starting display of mod info: {mod_info}")
-        self.mod_info_name_value.setText(mod_info.get("name"))
-        self.mod_info_package_id_value.setText(mod_info.get("packageId"))
+        self.mod_info_name_value.setText(mod_info.get("name", "Not specified"))
 
-        authors_tag = mod_info.get("author", mod_info.get("authors"))
-        if authors_tag and isinstance(authors_tag, dict) and authors_tag.get("li"):
-            list_of_authors = authors_tag["li"]
-            authors_text = ", ".join(list_of_authors)
-            self.mod_info_author_value.setText(authors_text)
-        else:
-            self.mod_info_author_value.setText(
-                f"{authors_tag if authors_tag else 'UNKNOWN'}"
+        # If it's not invalid, and it's not a scenario, it must be a mod!
+        if not mod_info.get("invalid") and not mod_info.get("scenario"):
+            # Show valid-mod-specific fields, hide scenario summary
+            self.mod_info_package_id_label.show()
+            self.mod_info_package_id_value.show()
+            self.mod_info_author_label.show()
+            self.mod_info_author_value.show()
+            self.mod_info_mod_version_label.show()
+            self.mod_info_mod_version_value.show()
+            self.scenario_info_summary_label.hide()
+            self.scenario_info_summary_value.hide()
+            # Populate values from metadata
+            self.mod_info_package_id_value.setText(
+                mod_info.get("packageId", "Not specified")
             )
-
-        if mod_info.get("modVersion"):
+            authors_tag = mod_info.get("authors", "Not specified")
+            if authors_tag and isinstance(authors_tag, dict) and authors_tag.get("li"):
+                list_of_authors = authors_tag["li"]
+                authors_text = ", ".join(list_of_authors)
+                self.mod_info_author_value.setText(authors_text)
+            else:
+                self.mod_info_author_value.setText(
+                    f"{authors_tag if authors_tag else 'Not specified'}"
+                )
             if isinstance(mod_info.get("modVersion"), str):
                 self.mod_info_mod_version_value.setText(mod_info.get("modVersion"))
             elif isinstance(mod_info.get("modVersion"), dict):
                 self.mod_info_mod_version_value.setText(mod_info["modVersion"]["#text"])
-        else:
-            self.mod_info_mod_version_value.setText("Not specified")
+            else:
+                self.mod_info_mod_version_value.setText("Not specified")
+        elif mod_info.get("scenario"):  # Hide mod-specific widgets, show scenario
+            self.mod_info_package_id_label.hide()
+            self.mod_info_package_id_value.hide()
+            self.mod_info_author_label.hide()
+            self.mod_info_author_value.hide()
+            self.mod_info_mod_version_label.hide()
+            self.mod_info_mod_version_value.hide()
+            self.scenario_info_summary_label.show()
+            self.scenario_info_summary_value.show()
+            self.scenario_info_summary_value.setText(
+                mod_info.get("summary", "Not specified")
+            )
+        elif mod_info.get("invalid"):  # Hide all except bare minimum if invalid
+            self.mod_info_package_id_label.hide()
+            self.mod_info_package_id_value.hide()
+            self.mod_info_author_label.hide()
+            self.mod_info_author_value.hide()
+            self.mod_info_mod_version_label.hide()
+            self.mod_info_mod_version_value.hide()
+            self.scenario_info_summary_label.hide()
+            self.scenario_info_summary_value.hide()
         self.mod_info_path_value.setText(mod_info.get("path"))
 
         # Set the scrolling description for the Mod Info Panel

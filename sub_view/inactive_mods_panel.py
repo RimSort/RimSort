@@ -164,7 +164,7 @@ class InactiveModList:
         elif self.inactive_mods_search_filter.currentText() == "PackageId":
             search_filter = "packageId"
         elif self.inactive_mods_search_filter.currentText() == "Author(s)":
-            search_filter = "author"
+            search_filter = "authors"
         elif self.inactive_mods_search_filter.currentText() == "PublishedFileId":
             search_filter = "publishedfileid"
 

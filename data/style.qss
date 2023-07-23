@@ -458,7 +458,7 @@ QPlainTextEdit#RunnerPaneltext {
 
 /* ===== Settings (window/settings_panel.py) ===== */
 QDialog#settingsPanel {
-    background-color: #22303d;
+    background-color: #19232d;
 }
 QCheckBox#summaryValue {
     color: white;

@@ -174,15 +174,11 @@ class SteamDatabaseBuilder(QThread):
                         "url": f'https://store.steampowered.com/app/{v["appid"]}',
                         "packageId": v.get("packageId"),
                         "name": v.get("name"),
-                        "authors": ", ".join(
-                            v.get("author", v.get("authors")).get("li")
-                        )
-                        if v.get("author", v.get("authors"))
-                        and isinstance(v.get("author", v.get("authors")), dict)
-                        and v.get("author", v.get("authors")).get("li")
-                        else v.get(
-                            "author", v.get("authors", "Missing XML: <author(s)>")
-                        ),
+                        "authors": ", ".join(v.get("authors").get("li"))
+                        if v.get("authors")
+                        and isinstance(v.get("authors"), dict)
+                        and v.get("authors").get("li")
+                        else v.get("authors", "Missing XML: <author(s)>"),
                     }
                     for v in self.mods.values()
                     if v.get("appid")
@@ -191,16 +187,14 @@ class SteamDatabaseBuilder(QThread):
                     v["publishedfileid"]: {
                         "url": f'https://steamcommunity.com/sharedfiles/filedetails/?id={v["publishedfileid"]}',
                         "packageId": v.get("packageId"),
-                        "name": v.get("name"),
-                        "authors": ", ".join(
-                            v.get("author", v.get("authors")).get("li")
-                        )
-                        if v.get("author", v.get("authors"))
-                        and isinstance(v.get("author", v.get("authors")), dict)
-                        and v.get("author", v.get("authors")).get("li")
-                        else v.get(
-                            "author", v.get("authors", "Missing XML: <author(s)>")
-                        ),
+                        "name": v.get("name")
+                        if not v.get("DB_BUILDER_NO_NAME")
+                        else "Missing XML: <name>",
+                        "authors": ", ".join(v.get("authors").get("li"))
+                        if v.get("authors")
+                        and isinstance(v.get("authors"), dict)
+                        and v.get("authors").get("li")
+                        else v.get("authors", "Missing XML: <author(s)>"),
                         "gameVersions": v.get("supportedVersions").get("li")
                         if isinstance(v.get("supportedVersions", {}).get("li"), list)
                         else [v.get("supportedVersions", {}).get("li")],

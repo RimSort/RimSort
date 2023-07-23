@@ -54,7 +54,7 @@ class ModListItemInner(QWidget):
         # in this variable. This is exactly equal to the dict value of a
         # single all_mods key-value
         self.json_data = data
-        self.list_item_name = self.json_data.get("name", "UNKNOWN")
+        self.list_item_name = self.json_data.get("name")
         self.main_label = QLabel()
 
         # Icon paths
@@ -158,20 +158,20 @@ class ModListItemInner(QWidget):
 
         :return: string containing the tool_tip_text
         """
-        name_line = f"Mod: {self.json_data.get('name', 'UNKNOWN')}\n"
+        name_line = f"Mod: {self.json_data.get('name')}\n"
 
-        authors_tag = self.json_data.get("author", self.json_data.get("authors"))
+        authors_tag = self.json_data.get("authors")
 
         if authors_tag and isinstance(authors_tag, dict) and authors_tag.get("li"):
             list_of_authors = authors_tag["li"]
             authors_text = ", ".join(list_of_authors)
             author_line = f"Authors: {authors_text}\n"
         else:
-            author_line = f"Author: {authors_tag if authors_tag else 'UNKNOWN'}\n"
+            author_line = f"Author: {authors_tag if authors_tag else 'Not specified'}\n"
 
-        package_id_line = f"PackageID: {self.json_data.get('packageId', 'UNKNOWN')}\n"
+        package_id_line = f"PackageID: {self.json_data.get('packageId')}\n"
         version_line = f"Version: {self.json_data.get('modVersion', 'Not specified')}\n"
-        path_line = f"Path: {self.json_data.get('path', 'UNKNOWN')}"
+        path_line = f"Path: {self.json_data.get('path')}"
         return name_line + author_line + package_id_line + version_line + path_line
 
     def get_icon(self) -> QIcon:  # type: ignore
