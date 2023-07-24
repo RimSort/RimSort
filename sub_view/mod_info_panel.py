@@ -123,6 +123,12 @@ class ModInfo:
         self.description_layout.addWidget(self.description)
 
         # Hide label/value by default
+        self.essential_info_widgets = [
+            self.mod_info_name_label,
+            self.mod_info_name_value,
+            self.mod_info_path_label,
+            self.mod_info_path_value,
+        ]
         self.mod_info_name_label.hide()
         self.mod_info_name_value.hide()
         self.mod_info_package_id_label.hide()
@@ -148,6 +154,10 @@ class ModInfo:
         """
         logger.debug(f"Starting display of mod info: {mod_info}")
         self.mod_info_name_value.setText(mod_info.get("name", "Not specified"))
+
+        for widget in self.essential_info_widgets:
+            if not widget.isVisible():
+                widget.show()
 
         # If it's not invalid, and it's not a scenario, it must be a mod!
         if not mod_info.get("invalid") and not mod_info.get("scenario"):

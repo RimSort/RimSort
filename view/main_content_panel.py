@@ -271,7 +271,8 @@ class MainContent:
                 self.external_steam_metadata
                 and self.game_configuration.steam_mods_update_check_toggle
             ):  # Check SteamCMD/Steam mods for updates if configured
-                self._do_check_for_workshop_updates()
+                query_workshop_update_data(self.all_mods_compiled)
+                # self._do_check_for_workshop_updates()
                 self._do_generate_mod_update_report()
             else:
                 logger.info(
@@ -1372,7 +1373,8 @@ class MainContent:
                 self.external_steam_metadata
                 and self.game_configuration.steam_mods_update_check_toggle
             ):  # Check SteamCMD/Steam mods for updates if configured
-                self._do_check_for_workshop_updates()
+                query_workshop_update_data(self.all_mods_compiled)
+                # self._do_check_for_workshop_updates()
                 self._do_generate_mod_update_report()
             else:
                 logger.info(
