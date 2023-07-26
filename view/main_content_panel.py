@@ -462,7 +462,7 @@ class MainContent:
                 and len(self.external_steam_metadata.keys()) > 0
             ):  # Do we even have metadata to lookup...?
                 self.missing_mods_prompt = MissingModsPrompt(
-                    packageIds=missing_mods,
+                    packageids=missing_mods,
                     steam_workshop_metadata=self.external_steam_metadata,
                 )
                 self.missing_mods_prompt.steamcmd_downloader_signal.connect(
@@ -964,6 +964,8 @@ class MainContent:
                 self._do_notify_no_git()
         if action == "build_steam_database_thread":
             self._do_build_database_thread()
+        if "download_entire_workshop" in action:
+            self._do_download_entire_workshop(action)
         if action == "merge_databases":
             self._do_merge_databases()
         if action == "set_database_expiry":
@@ -972,102 +974,6 @@ class MainContent:
             self._do_edit_steam_webapi_key()
         if action == "comparison_report":
             self._do_generate_metadata_comparison_report()
-        if "download_entire_workshop" in action:
-            # If settings panel is still open, close it.
-            if self.game_configuration.settings_panel.isVisible():
-                self.game_configuration.settings_panel.close()
-            # DB Builder is used to run DQ and grab entirety of
-            # any available Steam Workshop PublishedFileIDs
-            self.db_builder = SteamDatabaseBuilder(
-                apikey=self.game_configuration.steam_apikey,
-                appid=294100,
-                database_expiry=self.game_configuration.database_expiry,
-                mode="pfids_by_appid",
-            )
-            # Create query runner
-            self.query_runner = RunnerPanel()
-            self.query_runner.closing_signal.connect(self.db_builder.terminate)
-            self.query_runner.setWindowTitle(
-                "RimSort - DB Builder PublishedFileIDs query"
-            )
-            self.query_runner.progress_bar.show()
-            self.query_runner.show()
-            # Connect message signal
-            self.db_builder.db_builder_message_output_signal.connect(
-                self.query_runner.message
-            )
-            # Start DB builder
-            self.db_builder.start()
-            loop = QEventLoop()
-            self.db_builder.finished.connect(loop.quit)
-            loop.exec_()
-            if not len(self.db_builder.publishedfileids) > 0:
-                show_warning(
-                    title="No PublishedFileIDs",
-                    text="DB Builder query did not return any PublishedFileIDs!",
-                    information="This is typically caused by invalid/missing Steam WebAPI key, or a connectivity issue to the Steam WebAPI.\n"
-                    + "PublishedFileIDs are needed to retrieve mods from Steam!",
-                )
-            else:
-                self.query_runner.close()
-                self.query_runner = None
-                # Skip attempt of unpublished mods
-                for publishedfileid in self.db_builder.publishedfileids:
-                    if self.external_steam_metadata.get(publishedfileid, {}).get(
-                        "unpublished"
-                    ):
-                        self.db_builder.publishedfileids.remove(publishedfileid)
-                        logger.warning(
-                            f"Skipping download of unpublished Workshop mod: {publishedfileid}"
-                        )
-                if "steamcmd" in action:
-                    # Filter out existing SteamCMD mods
-                    for metadata in self.all_mods_compiled.values():
-                        mod_pfid = metadata.get("publishedfileid")
-                        if (
-                            metadata.get("steamcmd")
-                            and mod_pfid in self.db_builder.publishedfileids
-                        ):
-                            logger.warning(
-                                f"Skipping download of existing SteamCMD mod: {mod_pfid}"
-                            )
-                            self.db_builder.publishedfileids.remove(mod_pfid)
-                    self._do_download_mods_with_steamcmd(
-                        self.db_builder.publishedfileids
-                    )
-                elif "steamworks" in action:
-                    answer = show_dialogue_conditional(
-                        title="Are you sure?",
-                        text="Here be dragons.",
-                        information="WARNING: It is NOT recommended to subscribe to this many mods at once via Steam. "
-                        + "Steam has limitations in place seemingly intentionally and unintentionally for API subscriptions. "
-                        + "It is highly recommended that you instead download these mods to a SteamCMD prefix by using SteamCMD. "
-                        + "This can take longer due to rate limits, but you can also re-use the script generated by RimSort with "
-                        + "a separate, authenticated instance of SteamCMD, if you do not want to anonymously download via RimSort.",
-                    )
-                    if answer == "&Yes":
-                        for metadata in self.all_mods_compiled.values():
-                            mod_pfid = metadata.get("publishedfileid")
-                            if (
-                                metadata["data_source"] == "workshop"
-                                and mod_pfid in self.db_builder.publishedfileids
-                            ):
-                                logger.warning(
-                                    f"Skipping download of existing Steam mod: {mod_pfid}"
-                                )
-                                self.db_builder.publishedfileids.remove(mod_pfid)
-                        self._do_download_mods_with_steamworks(
-                            self.db_builder.publishedfileids
-                        )
-
-    def _do_notify_no_git(self) -> None:
-        answer = show_dialogue_conditional(  # We import last so we can use gui + utils
-            title="git not found",
-            text="git executable was not found in $PATH!",
-            information="git integration will not work without git installed! Do you want to open download page for git?",
-        )
-        if answer == "&Yes":
-            open_url_browser("https://git-scm.com/downloads")
 
     # GAME CONFIGURATION PANEL
 
@@ -1464,7 +1370,7 @@ class MainContent:
         active_mods = self.active_mods_panel.active_mods_list.get_list_items_by_dict()
         active_mod_ids = list()
         for mod_data in active_mods.values():
-            active_mod_ids.append(mod_data["packageId"])
+            active_mod_ids.append(mod_data["packageid"])
         inactive_mods = (
             self.inactive_mods_panel.inactive_mods_list.get_list_items_by_dict()
         )
@@ -1601,7 +1507,7 @@ class MainContent:
             )
             active_mods = []
             for mod_data in active_mods_json.values():
-                package_id = mod_data["packageId"]
+                package_id = mod_data["packageid"]
                 if package_id in active_mods:  # This should NOT be happening
                     logger.critical(
                         f"Tried to export more than 1 identical package ids to the same mod list. Skipping duplicate {package_id}"
@@ -1655,9 +1561,9 @@ class MainContent:
         active_mods_json = (
             self.active_mods_panel.active_mods_list.get_list_items_by_dict()
         )
-        active_mods_packageId_to_uuid = {}
+        active_mods_packageid_to_uuid = {}
         for uuid, mod_data in active_mods_json.items():
-            package_id = mod_data["packageId"]
+            package_id = mod_data["packageid"]
             if package_id in active_mods:  # This should NOT be happening
                 logger.critical(
                     f"Tried to export more than 1 identical package ids to the same mod list. "
@@ -1666,7 +1572,7 @@ class MainContent:
                 continue
             else:  # Otherwise, proceed with adding the mod package_id
                 active_mods.append(package_id)
-                active_mods_packageId_to_uuid[package_id] = uuid
+                active_mods_packageid_to_uuid[package_id] = uuid
         logger.info(f"Collected {len(active_mods)} active mods for export")
         # Build our report
         active_mods_clipboard_report = (
@@ -1675,7 +1581,7 @@ class MainContent:
             + f"\nTotal # of mods: {len(active_mods)}\n"
         )
         for package_id in active_mods:
-            uuid = active_mods_packageId_to_uuid[package_id]
+            uuid = active_mods_packageid_to_uuid[package_id]
             if active_mods_json[uuid].get("name"):
                 name = active_mods_json[uuid]["name"]
             else:
@@ -1711,13 +1617,13 @@ class MainContent:
         active_mods_json = (
             self.active_mods_panel.active_mods_list.get_list_items_by_dict()
         )
-        active_mods_packageId_to_uuid = {}
-        active_steam_mods_packageId_to_pfid = {}
+        active_mods_packageid_to_uuid = {}
+        active_steam_mods_packageid_to_pfid = {}
         active_steam_mods_pfid_to_preview_url = {}
         pfids = []
         # Build our lists
         for uuid, mod_data in active_mods_json.items():
-            package_id = mod_data["packageId"]
+            package_id = mod_data["packageid"]
             if package_id in active_mods:  # This should NOT be happening
                 logger.critical(
                     f"Tried to export more than 1 identical package ids to the same mod list. "
@@ -1726,12 +1632,12 @@ class MainContent:
                 continue
             else:  # Otherwise, proceed with adding the mod package_id
                 active_mods.append(package_id)
-                active_mods_packageId_to_uuid[package_id] = uuid
+                active_mods_packageid_to_uuid[package_id] = uuid
                 if (
                     mod_data.get("steamcmd") or mod_data["data_source"] == "workshop"
                 ) and mod_data.get("publishedfileid"):
                     publishedfileid = mod_data["publishedfileid"]
-                    active_steam_mods_packageId_to_pfid[package_id] = publishedfileid
+                    active_steam_mods_packageid_to_pfid[package_id] = publishedfileid
                     pfids.append(publishedfileid)
         logger.info(f"Collected {len(active_mods)} active mods for export")
         if len(pfids) > 0:  # No empty queries...
@@ -1755,13 +1661,13 @@ class MainContent:
             f"# RimWorld mod list       ![](https://github.com/RimSort/RimSort/blob/main/rentry_preview.png?raw=true)"
             + f"\nCreated with RimSort {self.rimsort_version}"
             + f"\nMod list was created for game version: `{self.game_version}`"
-            + f"\n!!! info Local mods are marked as yellow labels with packageId in brackets."
+            + f"\n!!! info Local mods are marked as yellow labels with packageid in brackets."
             + f"\n\n\n\n!!! note Mod list length: `{len(active_mods)}`\n"
         )
         # Add a line for each mod
         for package_id in active_mods:
             count = active_mods.index(package_id) + 1
-            uuid = active_mods_packageId_to_uuid[package_id]
+            uuid = active_mods_packageid_to_uuid[package_id]
             if active_mods_json[uuid].get("name"):
                 name = active_mods_json[uuid]["name"]
             else:
@@ -1781,7 +1687,7 @@ class MainContent:
                         active_mods_rentry_report
                         + f"\n!!! warning {str(count) + '.'} {name} "
                         + "{"
-                        + f"packageId: {package_id}"
+                        + f"packageid: {package_id}"
                         + "} "
                     )
                 else:
@@ -1789,14 +1695,14 @@ class MainContent:
                         active_mods_rentry_report
                         + f"\n!!! warning {str(count) + '.'} [{name}]({url}) "
                         + "{"
-                        + f"packageId: {package_id}"
+                        + f"packageid: {package_id}"
                         + "} "
                     )
             elif (
                 active_mods_json[uuid].get("steamcmd")
                 or active_mods_json[uuid]["data_source"] == "workshop"
             ):
-                pfid = active_steam_mods_packageId_to_pfid[package_id]
+                pfid = active_steam_mods_packageid_to_pfid[package_id]
                 if active_steam_mods_pfid_to_preview_url.get(pfid):
                     preview_url = (
                         active_steam_mods_pfid_to_preview_url[pfid]
@@ -1811,16 +1717,16 @@ class MainContent:
                 else:
                     url is None
                 if url is None:
-                    if package_id in active_steam_mods_packageId_to_pfid.keys():
+                    if package_id in active_steam_mods_packageid_to_pfid.keys():
                         active_mods_rentry_report = (
                             active_mods_rentry_report
-                            + f"\n{str(count) + '.'} ![]({preview_url}) {name} packageId: {package_id}"
+                            + f"\n{str(count) + '.'} ![]({preview_url}) {name} packageid: {package_id}"
                         )
                 else:
-                    if package_id in active_steam_mods_packageId_to_pfid.keys():
+                    if package_id in active_steam_mods_packageid_to_pfid.keys():
                         active_mods_rentry_report = (
                             active_mods_rentry_report
-                            + f"\n{str(count) + '.'} ![]({preview_url}) [{name}]({url} packageId: {package_id})"
+                            + f"\n{str(count) + '.'} ![]({preview_url}) [{name}]({url} packageid: {package_id})"
                         )
 
         # Upload the report to Rentry.co
@@ -1883,7 +1789,7 @@ class MainContent:
         )
         active_mods = []
         for mod_data in active_mods_json.values():
-            package_id = mod_data["packageId"]
+            package_id = mod_data["packageid"]
             if package_id in active_mods:  # This should NOT be happening
                 logger.critical(
                     f"Tried to export more than 1 identical package ids to the same mod list. Skipping duplicate {package_id}"
@@ -2075,6 +1981,7 @@ class MainContent:
         )
 
     def _do_download_mods_with_steamcmd(self, publishedfileids: list):
+        logger.debug(publishedfileids)
         # No empty publishedfileids
         if not len(publishedfileids) > 0:
             show_warning(
@@ -2305,7 +2212,7 @@ class MainContent:
         else:
             self._do_notify_no_git()
 
-    # STEAM/COMMUNITY RULES DATABASE CONFIGURATION
+    # EXTERNAL METADATA ACTIONS
 
     def _do_configure_github_identity(self) -> None:
         """
@@ -2720,6 +2627,15 @@ class MainContent:
                 + 'A valid repository is a repository URL which is not empty and is prefixed with "http://" or "https://"',
             )
 
+    def _do_notify_no_git(self) -> None:
+        answer = show_dialogue_conditional(  # We import last so we can use gui + utils
+            title="git not found",
+            text="git executable was not found in $PATH!",
+            information="git integration will not work without git installed! Do you want to open download page for git?",
+        )
+        if answer == "&Yes":
+            open_url_browser("https://git-scm.com/downloads")
+
     def _do_open_rule_editor(
         self, compact: bool, initial_mode=str, packageid=None
     ) -> None:
@@ -2728,13 +2644,13 @@ class MainContent:
         self.rule_editor = RuleEditor(
             # Initialization options
             compact=compact,
-            edit_packageId=packageid,
+            edit_packageid=packageid,
             initial_mode=initial_mode,
             # Required metadata
             local_metadata=self.all_mods_compiled,
             community_rules=self.external_community_rules,
             user_rules=self.external_user_rules,
-            # Optional metadata - used to get names instead of packageId for About.xml rules
+            # Optional metadata - used to get names instead of packageid for About.xml rules
             steam_workshop_metadata=self.external_steam_metadata,
         )
         self.rule_editor.setWindowModality(Qt.ApplicationModal)
@@ -2810,8 +2726,6 @@ class MainContent:
                 }
             )
 
-    # DB BUILDER
-
     def _do_build_database_thread(self) -> None:
         # If settings panel is still open, close it.
         if self.game_configuration.settings_panel.isVisible():
@@ -2832,7 +2746,7 @@ class MainContent:
             logger.info(f"Selected path: {path}")
             # "No local data": Produce accurate, complete DB by QueryFiles via WebAPI
             # Queries ALL available PublishedFileIDs (mods) it can find via Steam WebAPI.
-            # Does not use metadata from locally available mods. This means no packageIds!
+            # Does not use metadata from locally available mods. This means no packageids!
             if self.game_configuration.db_builder_include == "no_local":
                 self.db_builder = SteamDatabaseBuilder(
                     apikey=self.game_configuration.steam_apikey,
@@ -2845,7 +2759,7 @@ class MainContent:
                 )
             # "All Mods": Produce accurate, possibly semi-incomplete DB without QueryFiles via API
             # CAN produce a complete DB! Only includes metadata parsed from mods you have downloaded.
-            # Produces DB which contains metadata from locally available mods. Includes packageIds!
+            # Produces DB which contains metadata from locally available mods. Includes packageids!
             elif self.game_configuration.db_builder_include == "all_mods":
                 self.db_builder = SteamDatabaseBuilder(
                     apikey=self.game_configuration.steam_apikey,
@@ -2873,6 +2787,90 @@ class MainContent:
             self.db_builder.start()
         else:
             logger.debug("USER ACTION: cancelled selection...")
+
+    def _do_download_entire_workshop(self, action: str) -> None:
+        # If settings panel is still open, close it.
+        if self.game_configuration.settings_panel.isVisible():
+            self.game_configuration.settings_panel.close()
+        # DB Builder is used to run DQ and grab entirety of
+        # any available Steam Workshop PublishedFileIDs
+        self.db_builder = SteamDatabaseBuilder(
+            apikey=self.game_configuration.steam_apikey,
+            appid=294100,
+            database_expiry=self.game_configuration.database_expiry,
+            mode="pfids_by_appid",
+        )
+        # Create query runner
+        self.query_runner = RunnerPanel()
+        self.query_runner.closing_signal.connect(self.db_builder.terminate)
+        self.query_runner.setWindowTitle("RimSort - DB Builder PublishedFileIDs query")
+        self.query_runner.progress_bar.show()
+        self.query_runner.show()
+        # Connect message signal
+        self.db_builder.db_builder_message_output_signal.connect(
+            self.query_runner.message
+        )
+        # Start DB builder
+        self.db_builder.start()
+        loop = QEventLoop()
+        self.db_builder.finished.connect(loop.quit)
+        loop.exec_()
+        if not len(self.db_builder.publishedfileids) > 0:
+            show_warning(
+                title="No PublishedFileIDs",
+                text="DB Builder query did not return any PublishedFileIDs!",
+                information="This is typically caused by invalid/missing Steam WebAPI key, or a connectivity issue to the Steam WebAPI.\n"
+                + "PublishedFileIDs are needed to retrieve mods from Steam!",
+            )
+        else:
+            self.query_runner.close()
+            self.query_runner = None
+            # # Skip attempt of unpublished mods
+            # for publishedfileid in self.db_builder.publishedfileids:
+            #     if self.external_steam_metadata.get(publishedfileid, {}).get(
+            #         "unpublished"
+            #     ):
+            #         self.db_builder.publishedfileids.remove(publishedfileid)
+            #         logger.warning(
+            #             f"Skipping download of unpublished Workshop mod: {publishedfileid}"
+            #         )
+            if "steamcmd" in action:
+                # Filter out existing SteamCMD mods
+                mod_pfid = None
+                for metadata in self.all_mods_compiled.values():
+                    if metadata.get("steamcmd"):
+                        mod_pfid = metadata.get("publishedfileid")
+                    if mod_pfid and mod_pfid in self.db_builder.publishedfileids:
+                        logger.warning(
+                            f"Skipping download of existing SteamCMD mod: {mod_pfid}"
+                        )
+                        self.db_builder.publishedfileids.remove(mod_pfid)
+                self._do_download_mods_with_steamcmd(self.db_builder.publishedfileids)
+            elif "steamworks" in action:
+                answer = show_dialogue_conditional(
+                    title="Are you sure?",
+                    text="Here be dragons.",
+                    information="WARNING: It is NOT recommended to subscribe to this many mods at once via Steam. "
+                    + "Steam has limitations in place seemingly intentionally and unintentionally for API subscriptions. "
+                    + "It is highly recommended that you instead download these mods to a SteamCMD prefix by using SteamCMD. "
+                    + "This can take longer due to rate limits, but you can also re-use the script generated by RimSort with "
+                    + "a separate, authenticated instance of SteamCMD, if you do not want to anonymously download via RimSort.",
+                )
+                if answer == "&Yes":
+                    for metadata in self.all_mods_compiled.values():
+                        mod_pfid = metadata.get("publishedfileid")
+                        if (
+                            metadata["data_source"] == "workshop"
+                            and mod_pfid
+                            and mod_pfid in self.db_builder.publishedfileids
+                        ):
+                            logger.warning(
+                                f"Skipping download of existing Steam mod: {mod_pfid}"
+                            )
+                            self.db_builder.publishedfileids.remove(mod_pfid)
+                    self._do_download_mods_with_steamworks(
+                        self.db_builder.publishedfileids
+                    )
 
     def _do_edit_steam_webapi_key(self) -> None:
         """

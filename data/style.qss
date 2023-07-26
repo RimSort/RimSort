@@ -82,10 +82,10 @@ QListWidget::item {
 
 /* Styling for a selected mod item */
 QListWidget::item:selected:!active {
-    background: #272e37;
+    background: #37414f;
 }
 QListWidget::item:selected:active {
-    background: #37414f;
+    background: #54687a;
 }
 QListWidget::item:hover {
     background: #272e37;

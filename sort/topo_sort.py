@@ -15,7 +15,7 @@ def do_topo_sort(
     sorted_dependencies = toposort(dependency_graph)
     alphabetized_dependencies_w_data = {}
     active_mods_packageid_to_uuid = dict(
-        (v["packageId"], v["uuid"]) for v in active_mods_json.values()
+        (v["packageid"], v["uuid"]) for v in active_mods_json.values()
     )
     for level in sorted_dependencies:
         temp_mod_dict = {}

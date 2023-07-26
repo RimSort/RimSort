@@ -201,7 +201,7 @@ class ActiveModList(QWidget):
         # moving a mod from inactive to active.
         logger.info("Recalculating internal list errors")
         active_mods = self.active_mods_list.get_list_items_by_dict()
-        packageId_to_uuid = {}  # uuid <-> the unique mod's packageId
+        packageid_to_uuid = {}  # uuid <-> the unique mod's packageid
         uuid_to_index = {}  # uuid <-> the position it is in
         count = 0
         package_id_to_errors = {}  # package_id <-> live errors it has
@@ -211,9 +211,9 @@ class ActiveModList(QWidget):
             uuid,
             mod_data,
         ) in active_mods.items():  # add package_id from active mod data
-            package_id = mod_data["packageId"]
+            package_id = mod_data["packageid"]
             package_ids_set.add(package_id)
-            packageId_to_uuid[package_id] = uuid
+            packageid_to_uuid[package_id] = uuid
             uuid_to_index[uuid] = count
             count = count + 1
 
@@ -235,46 +235,39 @@ class ActiveModList(QWidget):
                 "version_mismatch": True,
             }
 
-            # Check version
+            # Check version for everything except Core
             if self.game_version:
-                if "supportedVersions" in mod_data:
-                    if "li" in mod_data["supportedVersions"]:
-                        supported_versions = mod_data["supportedVersions"]["li"]
-                        # supported_versions is either a string or list of strings
-                        if isinstance(supported_versions, str):
-                            if self.game_version.startswith(supported_versions):
-                                package_id_to_errors[uuid]["version_mismatch"] = False
-                        elif isinstance(supported_versions, list):
-                            is_supported = False
-                            for supported_version in supported_versions:
-                                if isinstance(supported_version, str):
-                                    if self.game_version.startswith(supported_version):
-                                        is_supported = True
-                                else:
-                                    logger.error(
-                                        f"supportedVersion in list is not str: {supported_versions}"
-                                    )
-                            if (
-                                is_supported
-                                or mod_data["packageId"]
-                                in self.active_mods_list.ignore_warning_list
-                            ):
-                                package_id_to_errors[uuid]["version_mismatch"] = False
-                        else:
-                            logger.error(
-                                f"supportedVersions value not str or list: {supported_versions}"
-                            )
+                if not mod_data.get("packageid") == "ludeon.rimworld" and mod_data.get(
+                    "supportedversions", {}
+                ).get("li"):
+                    supported_versions = mod_data["supportedversions"]["li"]
+                    # supported_versions is either a string or list of strings
+                    if isinstance(supported_versions, str):
+                        if self.game_version.startswith(supported_versions):
+                            package_id_to_errors[uuid]["version_mismatch"] = False
+                    elif isinstance(supported_versions, list):
+                        is_supported = False
+                        for supported_version in supported_versions:
+                            if isinstance(supported_version, str):
+                                if self.game_version.startswith(supported_version):
+                                    is_supported = True
+                            else:
+                                logger.error(
+                                    f"supportedVersion in list is not str: {supported_versions}"
+                                )
+                        if (
+                            is_supported
+                            or mod_data["packageid"]
+                            in self.active_mods_list.ignore_warning_list
+                        ):
+                            package_id_to_errors[uuid]["version_mismatch"] = False
                     else:
                         logger.error(
-                            f"No li tag found in supportedVersions value: {mod_data['supportedVersions']}"
+                            f"supportedversions value not str or list: {supported_versions}"
                         )
-                else:
-                    logger.error(
-                        f"No supportedVersions key found in mod data: {mod_data}"
-                    )
             if (
-                mod_data.get("packageId")
-                and not mod_data["packageId"]
+                mod_data.get("packageid")
+                and not mod_data["packageid"]
                 in self.active_mods_list.ignore_warning_list
             ):
                 # Check dependencies
@@ -312,11 +305,11 @@ class ActiveModList(QWidget):
                         # Only if explict_bool = True then we show error
                         if load_this_before[1]:
                             # Note: we cannot use uuid_to_index.get(load_this_before) as 0 is falsy but valid
-                            if load_this_before[0] in packageId_to_uuid:
+                            if load_this_before[0] in packageid_to_uuid:
                                 if (
                                     current_mod_index
                                     <= uuid_to_index[
-                                        packageId_to_uuid[load_this_before[0]]
+                                        packageid_to_uuid[load_this_before[0]]
                                     ]
                                 ):
                                     package_id_to_errors[uuid][
@@ -333,11 +326,11 @@ class ActiveModList(QWidget):
                             )
                         # Only if explict_bool = True then we show error
                         if load_this_after[1]:
-                            if load_this_after[0] in packageId_to_uuid:
+                            if load_this_after[0] in packageid_to_uuid:
                                 if (
                                     current_mod_index
                                     >= uuid_to_index[
-                                        packageId_to_uuid[load_this_after[0]]
+                                        packageid_to_uuid[load_this_after[0]]
                                     ]
                                 ):
                                     package_id_to_errors[uuid][
@@ -353,7 +346,7 @@ class ActiveModList(QWidget):
                 error_tool_tip_text += "\n\nMissing Dependencies:"
                 for dependency_id in missing_dependencies:
                     # If dependency is installed, we can get its name
-                    if dependency_id in mod_data["packageId"]:
+                    if dependency_id in mod_data["packageid"]:
                         error_tool_tip_text += f"\n  * {self.all_mods[uuid]['name']}"
                     # Otherwise, we might be able to get it from RimPy Steam DB
                     elif dependency_id in self.steam_package_id_to_name:
@@ -370,7 +363,7 @@ class ActiveModList(QWidget):
             if conflicting_incompatibilities:
                 error_tool_tip_text += "\n\nIncompatibilities:"
                 for incompatibility_id in conflicting_incompatibilities:
-                    incompatibility_uuid = packageId_to_uuid[incompatibility_id]
+                    incompatibility_uuid = packageid_to_uuid[incompatibility_id]
                     incompatibility_name = active_mods[incompatibility_uuid]["name"]
                     error_tool_tip_text += f"\n  * {incompatibility_name}"
 
@@ -380,7 +373,7 @@ class ActiveModList(QWidget):
             if load_before_violations:
                 warning_tool_tip_text += "\n\nShould be Loaded After:"
                 for load_before_id in load_before_violations:
-                    load_before_uuid = packageId_to_uuid[load_before_id]
+                    load_before_uuid = packageid_to_uuid[load_before_id]
                     load_before_name = active_mods[load_before_uuid]["name"]
                     warning_tool_tip_text += f"\n  * {load_before_name}"
 
@@ -388,7 +381,7 @@ class ActiveModList(QWidget):
             if load_after_violations:
                 warning_tool_tip_text += "\n\nShould be Loaded Before:"
                 for load_after_id in load_after_violations:
-                    load_after_uuid = packageId_to_uuid[load_after_id]
+                    load_after_uuid = packageid_to_uuid[load_after_id]
                     load_after_name = active_mods[load_after_uuid]["name"]
                     warning_tool_tip_text += f"\n  * {load_after_name}"
 
@@ -469,7 +462,7 @@ class ActiveModList(QWidget):
         if self.active_mods_search_filter.currentText() == "Name":
             search_filter = "name"
         elif self.active_mods_search_filter.currentText() == "PackageId":
-            search_filter = "packageId"
+            search_filter = "packageid"
         elif self.active_mods_search_filter.currentText() == "Author(s)":
             search_filter = "authors"
         elif self.active_mods_search_filter.currentText() == "PublishedFileId":

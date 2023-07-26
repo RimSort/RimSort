@@ -101,7 +101,7 @@ class ModListItemInner(QWidget):
         # Warning icon hidden by default
         self.warning_icon_label = ClickableQLabel()
         self.warning_icon_label.clicked.connect(
-            partial(self.toggle_warning_signal.emit, self.json_data["packageId"])
+            partial(self.toggle_warning_signal.emit, self.json_data["packageid"])
         )
         self.warning_icon_label.setPixmap(
             QIcon(self.warning_icon_path).pixmap(QSize(20, 20))
@@ -169,7 +169,7 @@ class ModListItemInner(QWidget):
         else:
             author_line = f"Author: {authors_tag if authors_tag else 'Not specified'}\n"
 
-        package_id_line = f"PackageID: {self.json_data.get('packageId')}\n"
+        package_id_line = f"PackageID: {self.json_data.get('packageid')}\n"
         version_line = f"Version: {self.json_data.get('modVersion', 'Not specified')}\n"
         path_line = f"Path: {self.json_data.get('path')}"
         return name_line + author_line + package_id_line + version_line + path_line
@@ -189,7 +189,7 @@ class ModListItemInner(QWidget):
             return QIcon(self.steam_icon_path)
         else:
             logger.error(
-                f"No type found for ModListItemInner with package id {self.json_data.get('packageId')}"
+                f"No type found for ModListItemInner with package id {self.json_data.get('packageid')}"
             )
 
     def resizeEvent(self, event: QResizeEvent) -> None:

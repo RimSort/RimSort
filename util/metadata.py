@@ -172,7 +172,7 @@ class SteamDatabaseBuilder(QThread):
                     v["appid"]: {
                         "appid": True,
                         "url": f'https://store.steampowered.com/app/{v["appid"]}',
-                        "packageId": v.get("packageId"),
+                        "packageid": v.get("packageid"),
                         "name": v.get("name"),
                         "authors": ", ".join(v.get("authors").get("li"))
                         if v.get("authors")
@@ -186,7 +186,7 @@ class SteamDatabaseBuilder(QThread):
                 **{
                     v["publishedfileid"]: {
                         "url": f'https://steamcommunity.com/sharedfiles/filedetails/?id={v["publishedfileid"]}',
-                        "packageId": v.get("packageId"),
+                        "packageId": v.get("packageid"),
                         "name": v.get("name")
                         if not v.get("DB_BUILDER_NO_NAME")
                         else "Missing XML: <name>",
@@ -195,12 +195,21 @@ class SteamDatabaseBuilder(QThread):
                         and isinstance(v.get("authors"), dict)
                         and v.get("authors").get("li")
                         else v.get("authors", "Missing XML: <author(s)>"),
-                        "gameVersions": v.get("supportedVersions").get("li")
-                        if isinstance(v.get("supportedVersions", {}).get("li"), list)
-                        else [v.get("supportedVersions", {}).get("li")],
+                        "gameVersions": v.get("supportedversions").get("li")
+                        if isinstance(v.get("supportedversions", {}).get("li"), list)
+                        else [
+                            v.get("supportedversions", {}).get(
+                                "li",
+                            )
+                            if v.get("supportedversions")
+                            else v.get(
+                                "targetversion",
+                                "Missing XML: <supportedversions> or <targetversion>",
+                            )
+                        ],
                     }
                     for v in self.mods.values()
-                    if v.get("publishedfileid") and not v.get("git_repo")
+                    if v.get("publishedfileid")
                 },
             },
         }
@@ -221,7 +230,7 @@ class SteamDatabaseBuilder(QThread):
                     appid: {
                         "appid": True,
                         "url": f"https://store.steampowered.com/app/{appid}",
-                        "packageId": metadata.get("packageId"),
+                        "packageid": metadata.get("packageid"),
                         "name": metadata.get("name"),
                     }
                     for appid, metadata in RIMWORLD_DLC_METADATA.items()
@@ -236,8 +245,7 @@ class SteamDatabaseBuilder(QThread):
         }
         total = len(database["database"].keys())
         self.db_builder_message_output_signal.emit(
-            f"\nPopulated {total} items queried from Steam Workshop into initial database for "
-            + f"{self.appid}..."
+            f"\nPopulated {total} items queried from Steam Workshop into initial database for AppId {self.appid}"
         )
         return database
 
@@ -389,7 +397,7 @@ def get_rpmmdb_steam_metadata(mods: Dict[str, Any]) -> Tuple[Dict[str, Any], Any
     db_json_data = {}
     for uuid in mods:
         if (
-            mods[uuid].get("packageId") == "rupal.rimpymodmanagerdatabase"
+            mods[uuid].get("packageid") == "rupal.rimpymodmanagerdatabase"
             or mods[uuid].get("publishedfileid") == "1847679158"
         ):
             logger.info("Found RimPy Mod Manager Database mod")
@@ -441,7 +449,7 @@ def get_rpmmdb_community_rules_db(mods: Dict[str, Any]) -> Tuple[Dict[str, Any],
     community_rules_json_data = {}
     for uuid in mods:
         if (
-            mods[uuid].get("packageId") == "rupal.rimpymodmanagerdatabase"
+            mods[uuid].get("packageid") == "rupal.rimpymodmanagerdatabase"
             or mods[uuid].get("publishedfileid") == "1847679158"
         ):
             logger.info("Found RimPy Mod Manager Database mod")

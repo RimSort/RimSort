@@ -162,7 +162,7 @@ class InactiveModList:
         if self.inactive_mods_search_filter.currentText() == "Name":
             search_filter = "name"
         elif self.inactive_mods_search_filter.currentText() == "PackageId":
-            search_filter = "packageId"
+            search_filter = "packageid"
         elif self.inactive_mods_search_filter.currentText() == "Author(s)":
             search_filter = "authors"
         elif self.inactive_mods_search_filter.currentText() == "PublishedFileId":

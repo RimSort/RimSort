@@ -40,7 +40,7 @@ class MissingModsPrompt(QWidget):
 
     def __init__(
         self,
-        packageIds: list,
+        packageids: list,
         steam_workshop_metadata: Dict[str, Any],
     ):
         super().__init__()
@@ -50,7 +50,7 @@ class MissingModsPrompt(QWidget):
 
         self.data_by_variants = {}
         self.DEPENDENCY_TAG = "_-_DEPENDENCY_-_"
-        self.packageIds = packageIds
+        self.packageids = packageids
         self.steam_workshop_metadata = steam_workshop_metadata
         self.setObjectName("missingModsPanel")
         # MOD LABEL
@@ -72,7 +72,7 @@ class MissingModsPrompt(QWidget):
         # DETAILS WIDGETS
         self.details_label = QLabel(
             "\nUser-configured SteamDB database was queried. The following table displays mods available for download from Steam. "
-            + '\n\nRimworld mods on Steam Workshop that share a packageId are "variants". Please keep this in mind before downloading. '
+            + '\n\nRimworld mods on Steam Workshop that share a packageid are "variants". Please keep this in mind before downloading. '
             + "\n\nPlease select your preferred mod variant in the table below. You can also open each variant in Steam/Web browser to verify."
         )
         self.details_label.setAlignment(Qt.AlignCenter)
@@ -160,14 +160,14 @@ class MissingModsPrompt(QWidget):
     def _add_row(
         self,
         name: str,
-        packageId: str,
+        packageid: str,
         gameVersions: list,
         mod_variants: str,
         publishedfileid: str,
     ):
-        # Check if a row with the given packageId already exists
+        # Check if a row with the given packageid already exists
         for row in range(self.editor_model.rowCount()):
-            if self.editor_model.item(row, 1).text() == packageId:
+            if self.editor_model.item(row, 1).text() == packageid:
                 # If an existing row is found, add the new publishedfileid
                 existing_item = self.editor_model.item(row, 4)
                 combo_box = self.editor_table_view.indexWidget(existing_item.index())
@@ -176,7 +176,7 @@ class MissingModsPrompt(QWidget):
         # If we're still here, we need to actually create a new row
         items = [
             QStandardItem(name),
-            QStandardItem(packageId),
+            QStandardItem(packageid),
             QStandardItem(str(gameVersions)),
             QStandardItem(mod_variants if publishedfileid != "" else "0"),
             QStandardItem(),
@@ -222,7 +222,7 @@ class MissingModsPrompt(QWidget):
             # in the user-configured Steam metadata.
             for publishedfileid, metadata in self.steam_workshop_metadata.items():
                 name = metadata.get("steamName", metadata.get("name", "Not found"))
-                packageId = metadata.get("packageId", "None").lower()
+                packageid = metadata.get("packageid", "None").lower()
                 gameVersions = metadata.get("gameVersions", ["None listed"])
                 # Remove AppId dependencies from this dict. They cannot be subscribed like mods.
                 dependencies = {
@@ -230,30 +230,30 @@ class MissingModsPrompt(QWidget):
                     for key, value in metadata.get("dependencies", {}).items()
                     if key not in RIMWORLD_DLC_METADATA.keys()
                 }
-                if packageId in self.packageIds:
-                    if packageId not in self.data_by_variants:
-                        self.data_by_variants[packageId] = {}
+                if packageid in self.packageids:
+                    if packageid not in self.data_by_variants:
+                        self.data_by_variants[packageid] = {}
                     variant_data = {
                         "name": name,
                         "gameVersions": gameVersions,
                         "dependencies": dependencies,
                     }
-                    self.data_by_variants[packageId][publishedfileid] = variant_data
+                    self.data_by_variants[packageid][publishedfileid] = variant_data
             # If we couldn't find any from Steam metadata, we still want to populate a blank row for user input
-            for packageId in self.packageIds:
-                if packageId not in self.data_by_variants.keys():
-                    self.data_by_variants[packageId] = {
+            for packageid in self.packageids:
+                if packageid not in self.data_by_variants.keys():
+                    self.data_by_variants[packageid] = {
                         "": {
                             "name": "Not found",
                             "gameVersions": ["None listed"],
                         }
                     }
             # Add a row for each mod variant
-            for packageId, variants in self.data_by_variants.items():
+            for packageid, variants in self.data_by_variants.items():
                 for publishedfileid, variant_data in variants.items():
                     self._add_row(
                         name=variant_data["name"],
-                        packageId=packageId,
+                        packageid=packageid,
                         gameVersions=variant_data["gameVersions"],
                         mod_variants=str(len(variants.keys())),
                         publishedfileid=publishedfileid,
@@ -264,15 +264,15 @@ class MissingModsPrompt(QWidget):
         index = self.editor_table_view.indexAt(combo_box.pos())
         if index.isValid():
             row = index.row()
-            packageId = self.editor_model.item(row, 1).text()
+            packageid = self.editor_model.item(row, 1).text()
             self.editor_model.item(row, 0).setText(
-                self.data_by_variants.get(packageId)
+                self.data_by_variants.get(packageid)
                 .get(publishedfileid, {})
                 .get("name", "No variant found!")
             )
             self.editor_model.item(row, 2).setText(
                 str(
-                    self.data_by_variants.get(packageId)
+                    self.data_by_variants.get(packageid)
                     .get(publishedfileid, {})
                     .get("gameVersions", "No variant found!")
                 )

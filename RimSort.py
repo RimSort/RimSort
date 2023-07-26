@@ -202,7 +202,7 @@ def main_thread():
         # Catch exceptions during initial application instantiation
         # Uncaught exceptions during the application loop are caught with excepthook
         if e is SystemExit:
-            logger.warning("Exiting application...")
+            logger.warning("Exiting application")
         elif (
             e.__class__.__name__ == "HTTPError" or e.__class__.__name__ == "SSLError"
         ):  # requests.exceptions.HTTPError OR urllib3.exceptions.SSLError

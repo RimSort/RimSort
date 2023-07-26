@@ -21,6 +21,7 @@ from model.mod_list_item import ModListItemInner
 from model.dialogue import show_dialogue_conditional, show_warning
 from util.generic import (
     delete_files_except_extension,
+    handle_remove_read_only,
     open_url_browser,
     platform_specific_open,
 )
@@ -208,6 +209,8 @@ class ModListWidget(QListWidget):
             unsubscribe_mod_steam_action = None
             # Delete mod
             delete_mod_action = None
+            # Delete mod (keep .dds)
+            delete_mod_keep_dds_action = None
 
             # Get all selected QListWidgetItems
             selected_items = self.selectedItems()
@@ -294,14 +297,11 @@ class ModListWidget(QListWidget):
                     # Ignore error action
                     toggle_warning_action = QAction()
                     toggle_warning_action.setText("Toggle warning")
-                    # Prohibit deletion of game files
-                    if not (
-                        widget_json_data["data_source"] == "expansion"
-                        or widget_json_data["packageId"].startswith("ludeon.rimworld")
-                    ):
-                        delete_mod_action = QAction()
-                        # Delete mod action text
-                        delete_mod_action.setText("Delete mod")
+                    # Mod deletion actions
+                    delete_mod_action = QAction()
+                    delete_mod_action.setText("Delete mod")
+                    delete_mod_keep_dds_action = QAction()
+                    delete_mod_keep_dds_action.setText("Delete mod (keep .dds)")
             # Multiple items selected
             elif len(selected_items) > 1:  # Multiple items selected
                 for source_item in selected_items:
@@ -394,16 +394,16 @@ class ModListWidget(QListWidget):
                                     "Unsubscribe mod(s) with Steam"
                                 )
                         # Prohibit deletion of game files
-                        if not (
-                            widget_json_data["data_source"] == "expansion"
-                            or widget_json_data["packageId"].startswith(
-                                "ludeon.rimworld"
+                        if not delete_mod_action:
+                            delete_mod_action = QAction()
+                            # Delete mod action text
+                            delete_mod_action.setText("Delete mod(s)")
+                        if not delete_mod_keep_dds_action:
+                            delete_mod_keep_dds_action = QAction()
+                            # Delete mod action text
+                            delete_mod_keep_dds_action.setText(
+                                "Delete mod(s) (keep .dds)"
                             )
-                        ):
-                            if not delete_mod_action:
-                                delete_mod_action = QAction()
-                                # Delete mod action text
-                                delete_mod_action.setText("Delete mod(s)")
             # Put together our contextMenu
             if open_folder_action:
                 contextMenu.addAction(open_folder_action)
@@ -413,8 +413,13 @@ class ModListWidget(QListWidget):
                 contextMenu.addAction(open_mod_steam_action)
             if toggle_warning_action:
                 contextMenu.addAction(toggle_warning_action)
-            if delete_mod_action:
-                contextMenu.addAction(delete_mod_action)
+            if delete_mod_action or delete_mod_keep_dds_action:
+                deletion_options_menu = QMenu(title="Deletion options")
+                if delete_mod_action:
+                    deletion_options_menu.addAction(delete_mod_action)
+                if delete_mod_keep_dds_action:
+                    deletion_options_menu.addAction(delete_mod_keep_dds_action)
+                contextMenu.addMenu(deletion_options_menu)
             contextMenu.addSeparator()
             if edit_mod_rules_action or re_git_action:
                 misc_options_menu = QMenu(title="Miscellaneous options")
@@ -535,11 +540,12 @@ class ModListWidget(QListWidget):
                     action == re_steamcmd_action
                     and len(steamcmd_publishedfileid_to_name.keys()) > 0
                 ):
+                    logger.debug(steamcmd_publishedfileid_to_name)
                     # Prompt user
                     answer = show_dialogue_conditional(
                         title="Are you sure?",
                         text=f"You have selected {len(steamcmd_publishedfileid_to_name.keys())} mods for deletion + re-download.",
-                        information="\nThis operation will recursively delete all files, except for .dds textures found, "
+                        information="\nThis operation will recursively delete all mod files, except for .dds textures found, "
                         + "and attempt to re-download the mods via SteamCMD. Do you want to proceed?",
                     )
                     if answer == "&Yes":
@@ -551,7 +557,7 @@ class ModListWidget(QListWidget):
                                 directory=path, extension=".dds"
                             )
                         self.steamcmd_downloader_signal.emit(
-                            steamcmd_publishedfileid_to_name.keys()
+                            list(steamcmd_publishedfileid_to_name.keys())
                         )
                     return True
                 elif (  # ACTION: Convert Steam mod(s) -> local
@@ -657,6 +663,57 @@ class ModListWidget(QListWidget):
                             ]
                         )
                     return True
+                elif action == delete_mod_action:  # ACTION: Delete mods action
+                    answer = show_dialogue_conditional(
+                        title="Are you sure?",
+                        text=f"You have selected {len(selected_items)} mods for deletion.",
+                        information="\nThis operation delete a mod's directory from the filesystem."
+                        + "\nDo you want to proceed?",
+                    )
+                    if answer == "&Yes":
+                        for source_item in selected_items:
+                            if type(source_item) is QListWidgetItem:
+                                source_widget = self.itemWidget(source_item)
+                                widget_json_data = source_widget.json_data
+                                if not widget_json_data[
+                                    "data_source"  # Disallow Official Expansions
+                                ] == "expansion" or not widget_json_data[
+                                    "packageid"
+                                ].startswith(
+                                    "ludeon.rimworld"
+                                ):
+                                    self.takeItem(self.row(source_item))
+                                    shutil.rmtree(
+                                        widget_json_data["path"],
+                                        ignore_errors=False,
+                                        onerror=handle_remove_read_only,
+                                    )
+                    return True
+                elif action == delete_mod_keep_dds_action:  # ACTION: Delete mods action
+                    answer = show_dialogue_conditional(
+                        title="Are you sure?",
+                        text=f"You have selected {len(selected_items)} mods for deletion.",
+                        information="\nThis operation will recursively delete all mod files, except for .dds textures found."
+                        + "\nDo you want to proceed?",
+                    )
+                    if answer == "&Yes":
+                        for source_item in selected_items:
+                            if type(source_item) is QListWidgetItem:
+                                source_widget = self.itemWidget(source_item)
+                                widget_json_data = source_widget.json_data
+                                if not widget_json_data[
+                                    "data_source"  # Disallow Official Expansions
+                                ] == "expansion" or not widget_json_data[
+                                    "packageid"
+                                ].startswith(
+                                    "ludeon.rimworld"
+                                ):
+                                    self.takeItem(self.row(source_item))
+                                    delete_files_except_extension(
+                                        directory=widget_json_data["path"],
+                                        extension=".dds",
+                                    )
+                    return True
                 # Execute action for each selected mod
                 for source_item in selected_items:
                     if type(source_item) is QListWidgetItem:
@@ -667,7 +724,7 @@ class ModListWidget(QListWidget):
                         mod_path = widget_json_data["path"]
                         # Toggle warning action
                         if action == toggle_warning_action:
-                            self.toggle_warning(widget_json_data["packageId"])
+                            self.toggle_warning(widget_json_data["packageid"])
                         # Open folder action
                         elif action == open_folder_action:  # ACTION: Open folder
                             if os.path.exists(mod_path):  # If the path actually exists
@@ -695,18 +752,7 @@ class ModListWidget(QListWidget):
                         # Edit mod rules action
                         elif action == edit_mod_rules_action:
                             self.edit_rules_signal.emit(
-                                True, "user_rules", widget_json_data["packageId"]
-                            )
-                        # Delete mods action
-                        elif action == delete_mod_action and (
-                            not widget_json_data["data_source"] == "expansion"
-                            or not widget_json_data["packageId"].startswith(
-                                "ludeon.rimworld"
-                            )
-                        ):  # ACTION: Delete mod
-                            logger.info(f"Deleting mod at: {mod_path}")
-                            delete_files_except_extension(
-                                directory=mod_path, extension=".dds"
+                                True, "user_rules", widget_json_data["packageid"]
                             )
             return True
         return super().eventFilter(source_object, event)
@@ -926,9 +972,9 @@ class ModListWidget(QListWidget):
                 list_item.setData(Qt.UserRole, mod_json_data)
                 self.addItem(list_item)
 
-    def toggle_warning(self, packageId: str) -> None:
-        if not (packageId in self.ignore_warning_list):
-            self.ignore_warning_list.append(packageId)
+    def toggle_warning(self, packageid: str) -> None:
+        if not (packageid in self.ignore_warning_list):
+            self.ignore_warning_list.append(packageid)
         else:
-            self.ignore_warning_list.remove(packageId)
+            self.ignore_warning_list.remove(packageid)
         self.recalculate_warnings_signal.emit()

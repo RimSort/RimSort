@@ -172,7 +172,7 @@ class ModInfo:
             self.scenario_info_summary_value.hide()
             # Populate values from metadata
             self.mod_info_package_id_value.setText(
-                mod_info.get("packageId", "Not specified")
+                mod_info.get("packageid", "Not specified")
             )
             authors_tag = mod_info.get("authors", "Not specified")
             if authors_tag and isinstance(authors_tag, dict) and authors_tag.get("li"):

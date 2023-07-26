@@ -33,33 +33,33 @@ def add_dependency_to_mod(
         # Create a new key with empty set as value by default
         mod_data.setdefault("dependencies", set())
 
-        # If the value is a single dict (for modDependencies)
+        # If the value is a single dict (for moddependencies)
         if isinstance(dependency_or_dependency_ids, dict):
-            if dependency_or_dependency_ids.get("packageId") and not isinstance(
-                dependency_or_dependency_ids["packageId"], list
+            if dependency_or_dependency_ids.get("packageid") and not isinstance(
+                dependency_or_dependency_ids["packageid"], list
             ):
                 # if dependency_id in all_mods:
                 # ^ dependencies are required regardless of whether they are in all_mods
                 mod_data["dependencies"].add(
-                    dependency_or_dependency_ids["packageId"].lower()
+                    dependency_or_dependency_ids["packageid"].lower()
                 )
             else:
                 logger.error(
-                    f"Dependency dict does not contain packageId or correct format: [{dependency_or_dependency_ids}]"
+                    f"Dependency dict does not contain packageid or correct format: [{dependency_or_dependency_ids}]"
                 )
         # If the value is a LIST of dicts
         elif isinstance(dependency_or_dependency_ids, list):
             if isinstance(dependency_or_dependency_ids[0], dict):
                 for dependency in dependency_or_dependency_ids:
-                    if dependency.get("packageId"):
+                    if dependency.get("packageid"):
                         # Below works with `MayRequire` dependencies
-                        dependency_id = dependency["packageId"].lower()
+                        dependency_id = dependency["packageid"].lower()
                         # if dependency_id in all_mods:
                         # ^ dependencies are required regardless of whether they are in all_mods
                         mod_data["dependencies"].add(dependency_id)
                     else:
                         logger.error(
-                            f"Dependency dict does not contain packageId: [{dependency_or_dependency_ids}]"
+                            f"Dependency dict does not contain packageid: [{dependency_or_dependency_ids}]"
                         )
             else:
                 logger.error(
@@ -111,7 +111,7 @@ def add_incompatibility_to_mod(
         # Create a new key with empty set as value by default
         mod_data.setdefault("incompatibilities", set())
 
-        all_package_ids = set(all_mods[uuid]["packageId"] for uuid in all_mods)
+        all_package_ids = set(all_mods[uuid]["packageid"] for uuid in all_mods)
 
         # If the value is a single string...
         if isinstance(dependency_or_dependency_ids, str):
@@ -142,7 +142,7 @@ def add_load_rule_to_mod(
     explicit_key: str,
     indirect_key: str,
     all_mods: Dict[str, Any],
-    packageId_to_uuid: Dict[str, Any],
+    packageid_to_uuid: Dict[str, Any],
 ) -> None:
     """
     Load order data is collected only if the mod referenced is in `all_mods`, as
@@ -188,11 +188,11 @@ def add_load_rule_to_mod(
 
     mod_data.setdefault(explicit_key, set())
     for dep in dependencies:
-        if dep in packageId_to_uuid:
-            uuid = packageId_to_uuid[dep]
+        if dep in packageid_to_uuid:
+            uuid = packageid_to_uuid[dep]
             mod_data[explicit_key].add((dep, True))
             all_mods[uuid].setdefault(indirect_key, set()).add(
-                (mod_data["packageId"], False)
+                (mod_data["packageid"], False)
             )
 
 
@@ -212,11 +212,11 @@ def get_active_inactive_mods(
     :return: a Dict for active mods and a Dict for inactive mods
     """
     logger.debug("Started generating active and inactive mods")
-    # Calculate duplicate mods (SCHEMA: {str packageId: {str uuid: list[str data_source, str mod_path]} })
+    # Calculate duplicate mods (SCHEMA: {str packageid: {str uuid: list[str data_source, str mod_path]} })
     duplicate_mods = {}
     for mod_uuid, mod_data in workshop_and_expansions.items():
         data_source = mod_data["data_source"]  # Track data_source
-        package_id = mod_data["packageId"]  # Track packageId to UUIDs
+        package_id = mod_data["packageid"]  # Track packageid to UUIDs
         mod_path = mod_data["path"]  # Track path
 
         if package_id not in duplicate_mods:
@@ -292,8 +292,8 @@ def get_active_mods_from_config(
             to_populate.append(package_id_normalized)
             for (
                 uuid
-            ) in workshop_and_expansions:  # Find this mods' metadata packageId & path
-                metadata_package_id = workshop_and_expansions[uuid]["packageId"]
+            ) in workshop_and_expansions:  # Find this mods' metadata packageid & path
+                metadata_package_id = workshop_and_expansions[uuid]["packageid"]
                 metadata_path = workshop_and_expansions[uuid]["path"]
                 package_id_steam_suffix = "_steam"
                 package_id_normalized_stripped = package_id_normalized.replace(
@@ -423,7 +423,7 @@ def get_active_mods_from_config(
                                 in duplicates_processed
                             ):  # If we haven't already processed this duplicate
                                 logger.info(
-                                    f"Handling special case with `_steam` suffix for packageId: {package_id_normalized}"
+                                    f"Handling special case with `_steam` suffix for packageid: {package_id_normalized}"
                                 )
                                 logger.debug(
                                     f"DUPLICATE FOUND: {package_id_normalized_stripped}"
@@ -504,23 +504,23 @@ def compile_all_mods(
     logger.info("Started compiling all mods from internal/external metadata")
 
     # Create an index for all_mods
-    packageId_to_uuid = {mod.get("packageId"): uuid for uuid, mod in all_mods.items()}
+    packageid_to_uuid = {mod.get("packageid"): uuid for uuid, mod in all_mods.items()}
 
     # Add dependencies to installed mods based on dependencies listed in About.xml TODO manifest.xml
     logger.info("Started compiling metadata from About.xml")
     for uuid in all_mods:
-        logger.debug(f"UUID: {uuid} packageId: " + all_mods[uuid].get("packageId"))
+        logger.debug(f"UUID: {uuid} packageid: " + all_mods[uuid].get("packageid"))
 
-        # modDependencies are not equal to mod load order rules
-        if all_mods[uuid].get("modDependencies"):
-            dependencies = all_mods[uuid]["modDependencies"].get("li")
+        # moddependencies are not equal to mod load order rules
+        if all_mods[uuid].get("moddependencies"):
+            dependencies = all_mods[uuid]["moddependencies"].get("li")
             if dependencies:
                 logger.debug(f"Current mod requires these mods to work: {dependencies}")
                 add_dependency_to_mod(all_mods[uuid], dependencies, all_mods)
 
-        if all_mods[uuid].get("modDependenciesByVersion"):
-            if all_mods[uuid]["modDependenciesByVersion"].get("v1.4"):
-                dependencies_by_ver = all_mods[uuid]["modDependenciesByVersion"][
+        if all_mods[uuid].get("moddependenciesbyversion"):
+            if all_mods[uuid]["moddependenciesbyversion"].get("v1.4"):
+                dependencies_by_ver = all_mods[uuid]["moddependenciesbyversion"][
                     "v1.4"
                 ].get("li")
                 if dependencies_by_ver:
@@ -529,17 +529,17 @@ def compile_all_mods(
                     )
                     add_dependency_to_mod(all_mods[uuid], dependencies_by_ver, all_mods)
 
-        if all_mods[uuid].get("incompatibleWith"):
-            incompatibilities = all_mods[uuid]["incompatibleWith"].get("li")
+        if all_mods[uuid].get("incompatiblewith"):
+            incompatibilities = all_mods[uuid]["incompatiblewith"].get("li")
             if incompatibilities:
                 logger.debug(
                     f"Current mod is incompatible with these mods: {incompatibilities}"
                 )
                 add_incompatibility_to_mod(all_mods[uuid], incompatibilities, all_mods)
 
-        if all_mods[uuid].get("incompatibleWithByVersion"):
-            if all_mods[uuid]["incompatibleWithByVersion"].get("v1.4"):
-                incompatibilities_by_ver = all_mods[uuid]["incompatibleWithByVersion"][
+        if all_mods[uuid].get("incompatiblewithbyversion"):
+            if all_mods[uuid]["incompatiblewithbyversion"].get("v1.4"):
+                incompatibilities_by_ver = all_mods[uuid]["incompatiblewithbyversion"][
                     "v1.4"
                 ].get("li")
                 if incompatibilities_by_ver:
@@ -554,9 +554,9 @@ def compile_all_mods(
         # of as "load these before". These are not necessarily dependencies in the sense
         # that they "depend" on them. But, if they exist in the same mod list, they
         # should be loaded before.
-        if all_mods[uuid].get("loadAfter"):
+        if all_mods[uuid].get("loadafter"):
             try:
-                load_these_before = all_mods[uuid]["loadAfter"].get("li")
+                load_these_before = all_mods[uuid]["loadafter"].get("li")
                 if load_these_before:
                     logger.debug(
                         f"Current mod should load after these mods: {load_these_before}"
@@ -567,17 +567,17 @@ def compile_all_mods(
                         "loadTheseBefore",
                         "loadTheseAfter",
                         all_mods,
-                        packageId_to_uuid,
+                        packageid_to_uuid,
                     )
             except:
                 mod_path = all_mods[uuid]["path"]
                 logger.warning(
-                    f"About.xml syntax error. Unable to read <loadAfter> tag from XML: {mod_path}"
+                    f"About.xml syntax error. Unable to read <loadafter> tag from XML: {mod_path}"
                 )
 
-        if all_mods[uuid].get("forceLoadAfter"):
+        if all_mods[uuid].get("forceloadafter"):
             try:
-                force_load_these_before = all_mods[uuid]["forceLoadAfter"].get("li")
+                force_load_these_before = all_mods[uuid]["forceloadafter"].get("li")
                 if force_load_these_before:
                     logger.debug(
                         f"Current mod should force load after these mods: {force_load_these_before}"
@@ -588,18 +588,18 @@ def compile_all_mods(
                         "loadTheseBefore",
                         "loadTheseAfter",
                         all_mods,
-                        packageId_to_uuid,
+                        packageid_to_uuid,
                     )
             except:
                 mod_path = all_mods[uuid]["path"]
                 logger.warning(
-                    f"About.xml syntax error. Unable to read <forceLoadAFter> tag from XML: {mod_path}"
+                    f"About.xml syntax error. Unable to read <forceloadafter> tag from XML: {mod_path}"
                 )
 
-        if all_mods[uuid].get("loadAfterByVersion"):
-            if all_mods[uuid]["loadAfterByVersion"].get("v1.4"):
+        if all_mods[uuid].get("loadafterbyversion"):
+            if all_mods[uuid]["loadafterbyversion"].get("v1.4"):
                 try:
-                    load_these_before_by_ver = all_mods[uuid]["loadAfterByVersion"][
+                    load_these_before_by_ver = all_mods[uuid]["loadafterbyversion"][
                         "v1.4"
                     ].get("li")
                     if load_these_before_by_ver:
@@ -612,19 +612,19 @@ def compile_all_mods(
                             "loadTheseBefore",
                             "loadTheseAfter",
                             all_mods,
-                            packageId_to_uuid,
+                            packageid_to_uuid,
                         )
                 except:
                     mod_path = all_mods[uuid]["path"]
                     logger.warning(
-                        f"About.xml syntax error. Unable to read <loadAfterByVersion><v1.4> tag from XML: {mod_path}"
+                        f"About.xml syntax error. Unable to read <loadafterbyversion><v1.4> tag from XML: {mod_path}"
                     )
 
         # Current mod should be loaded BEFORE these mods
         # The current mod is a dependency for all these mods
-        if all_mods[uuid].get("loadBefore"):
+        if all_mods[uuid].get("loadbefore"):
             try:
-                load_these_after = all_mods[uuid]["loadBefore"].get("li")
+                load_these_after = all_mods[uuid]["loadbefore"].get("li")
                 if load_these_after:
                     logger.debug(
                         f"Current mod should load before these mods: {load_these_after}"
@@ -635,17 +635,17 @@ def compile_all_mods(
                         "loadTheseAfter",
                         "loadTheseBefore",
                         all_mods,
-                        packageId_to_uuid,
+                        packageid_to_uuid,
                     )
             except:
                 mod_path = all_mods[uuid]["path"]
                 logger.warning(
-                    f"About.xml syntax error. Unable to read <loadBefore> tag from XML: {mod_path}"
+                    f"About.xml syntax error. Unable to read <loadbefore> tag from XML: {mod_path}"
                 )
 
-        if all_mods[uuid].get("forceLoadBefore"):
+        if all_mods[uuid].get("forceloadbefore"):
             try:
-                force_load_these_after = all_mods[uuid]["forceLoadBefore"].get("li")
+                force_load_these_after = all_mods[uuid]["forceloadbefore"].get("li")
                 if force_load_these_after:
                     logger.debug(
                         f"Current mod should force load before these mods: {force_load_these_after}"
@@ -656,18 +656,18 @@ def compile_all_mods(
                         "loadTheseAfter",
                         "loadTheseBefore",
                         all_mods,
-                        packageId_to_uuid,
+                        packageid_to_uuid,
                     )
             except:
                 mod_path = all_mods[uuid]["path"]
                 logger.warning(
-                    f"About.xml syntax error. Unable to read <forceLoadBefore> tag from XML: {mod_path}"
+                    f"About.xml syntax error. Unable to read <forceloadbefore> tag from XML: {mod_path}"
                 )
 
-        if all_mods[uuid].get("loadBeforeByVersion"):
-            if all_mods[uuid]["loadBeforeByVersion"].get("v1.4"):
+        if all_mods[uuid].get("loadbeforebyversion"):
+            if all_mods[uuid]["loadbeforebyversion"].get("v1.4"):
                 try:
-                    load_these_after_by_ver = all_mods[uuid]["loadBeforeByVersion"][
+                    load_these_after_by_ver = all_mods[uuid]["loadbeforebyversion"][
                         "v1.4"
                     ].get("li")
                     if load_these_after_by_ver:
@@ -680,12 +680,12 @@ def compile_all_mods(
                             "loadTheseAfter",
                             "loadTheseBefore",
                             all_mods,
-                            packageId_to_uuid,
+                            packageid_to_uuid,
                         )
                 except:
                     mod_path = all_mods[uuid]["path"]
                     logger.warning(
-                        f"About.xml syntax error. Unable to read <loadBeforeByVersion><v1.4> tag from XML: {mod_path}"
+                        f"About.xml syntax error. Unable to read <loadbeforebyversion><v1.4> tag from XML: {mod_path}"
                     )
 
     logger.info("Finished adding dependencies through About.xml information")
@@ -698,25 +698,25 @@ def compile_all_mods(
         tracking_dict: dict[str, set[str]] = {}
         steam_id_to_package_id: dict[str, str] = {}
         for publishedfileid, mod_data in steam_db.items():
-            db_packageId = mod_data.get("packageId")
-            # If our DB has a packageId for this
-            if db_packageId:
-                db_packageId = db_packageId.lower()  # Normalize packageId
-                steam_id_to_package_id[publishedfileid] = db_packageId
-                info_from_steam_package_id_to_name[db_packageId] = mod_data.get("name")
-                package_uuid = packageId_to_uuid.get(db_packageId)
+            db_packageid = mod_data.get("packageid")
+            # If our DB has a packageid for this
+            if db_packageid:
+                db_packageid = db_packageid.lower()  # Normalize packageid
+                steam_id_to_package_id[publishedfileid] = db_packageid
+                info_from_steam_package_id_to_name[db_packageid] = mod_data.get("name")
+                package_uuid = packageid_to_uuid.get(db_packageid)
                 if (
                     package_uuid
                     and all_mods[package_uuid].get("publishedfileid") == publishedfileid
                 ):
                     dependencies = mod_data.get("dependencies")
                     if dependencies:
-                        tracking_dict.setdefault(db_packageId, set()).update(
+                        tracking_dict.setdefault(db_packageid, set()).update(
                             dependencies.keys()
                         )
 
         logger.debug(
-            f"Tracking {len(steam_id_to_package_id)} SteamDB packageIds for lookup"
+            f"Tracking {len(steam_id_to_package_id)} SteamDB packageids for lookup"
         )
         logger.debug(
             f"Tracking Steam dependency data for {len(tracking_dict)} installed mods"
@@ -734,7 +734,7 @@ def compile_all_mods(
                 # wire to a package_id defined in an installed & valid mod.
                 if dependency_steam_id in steam_id_to_package_id:
                     add_dependency_to_mod_from_steamdb(
-                        all_mods[packageId_to_uuid[installed_mod_package_id]],
+                        all_mods[packageid_to_uuid[installed_mod_package_id]],
                         steam_id_to_package_id[dependency_steam_id],
                         all_mods,
                     )
@@ -757,7 +757,7 @@ def compile_all_mods(
             # Note: requiring the package be in all_mods should be fine, as
             # if the mod doesn't exist all_mods, then either mod_data or dependency_id
             # will be None, and then we don't insert a dependency
-            if package_id.lower() in packageId_to_uuid:
+            if package_id.lower() in packageid_to_uuid:
                 load_these_after = community_rules[package_id].get("loadBefore")
                 if load_these_after:
                     logger.debug(
@@ -769,13 +769,13 @@ def compile_all_mods(
                     for load_this_after in load_these_after:
                         add_load_rule_to_mod(
                             all_mods[
-                                packageId_to_uuid[package_id.lower()]
+                                packageid_to_uuid[package_id.lower()]
                             ],  # Already checked above
                             load_this_after,  # Lower() done in call
                             "loadTheseAfter",
                             "loadTheseBefore",
                             all_mods,
-                            packageId_to_uuid,
+                            packageid_to_uuid,
                         )
 
                 load_these_before = community_rules[package_id].get("loadAfter")
@@ -787,20 +787,20 @@ def compile_all_mods(
                     for load_this_before in load_these_before:
                         add_load_rule_to_mod(
                             all_mods[
-                                packageId_to_uuid[package_id.lower()]
+                                packageid_to_uuid[package_id.lower()]
                             ],  # Already checked above
                             load_this_before,  # lower() done in call
                             "loadTheseBefore",
                             "loadTheseAfter",
                             all_mods,
-                            packageId_to_uuid,
+                            packageid_to_uuid,
                         )
                 load_this_bottom = community_rules[package_id].get("loadBottom")
                 if load_this_bottom:
                     logger.debug(
                         f'Current mod should load at the bottom of a mods list, and will be considered a "tier 3" mod'
                     )
-                    all_mods[packageId_to_uuid[package_id.lower()]]["loadBottom"] = True
+                    all_mods[packageid_to_uuid[package_id.lower()]]["loadBottom"] = True
         logger.info("Finished adding dependencies from Community Rules")
         log_deps_order_info(all_mods)
     else:
@@ -814,7 +814,7 @@ def compile_all_mods(
             # Note: requiring the package be in all_mods should be fine, as
             # if the mod doesn't exist all_mods, then either mod_data or dependency_id
             # will be None, and then we don't insert a dependency
-            if package_id.lower() in packageId_to_uuid:
+            if package_id.lower() in packageid_to_uuid:
                 load_these_after = user_rules[package_id].get("loadBefore")
                 if load_these_after:
                     logger.debug(
@@ -826,13 +826,13 @@ def compile_all_mods(
                     for load_this_after in load_these_after:
                         add_load_rule_to_mod(
                             all_mods[
-                                packageId_to_uuid[package_id.lower()]
+                                packageid_to_uuid[package_id.lower()]
                             ],  # Already checked above
                             load_this_after,  # lower() done in call
                             "loadTheseAfter",
                             "loadTheseBefore",
                             all_mods,
-                            packageId_to_uuid,
+                            packageid_to_uuid,
                         )
 
                 load_these_before = user_rules[package_id].get("loadAfter")
@@ -844,20 +844,20 @@ def compile_all_mods(
                     for load_this_before in load_these_before:
                         add_load_rule_to_mod(
                             all_mods[
-                                packageId_to_uuid[package_id.lower()]
+                                packageid_to_uuid[package_id.lower()]
                             ],  # Already checked above
                             load_this_before,  # lower() done in call
                             "loadTheseBefore",
                             "loadTheseAfter",
                             all_mods,
-                            packageId_to_uuid,
+                            packageid_to_uuid,
                         )
                 load_this_bottom = user_rules[package_id].get("loadBottom")
                 if load_this_bottom:
                     logger.debug(
                         f'Current mod should load at the bottom of a mods list, and will be considered a "tier 3" mod'
                     )
-                    all_mods[packageId_to_uuid[package_id.lower()]]["loadBottom"] = True
+                    all_mods[packageid_to_uuid[package_id.lower()]]["loadBottom"] = True
         logger.info("Finished adding dependencies from User Rules")
         log_deps_order_info(all_mods)
     else:
@@ -921,7 +921,7 @@ def get_inactive_mods(
 
     :param workshop_and_expansions: dict of workshop mods and expansions
     :param active_mods: dict of active mods
-    :param duplicate_mods: dict keyed with packageIds to list of dupe uuids
+    :param duplicate_mods: dict keyed with packageids to list of dupe uuids
     :return: a dict for inactive mods
     """
     logger.info("Generating inactive mod list")
@@ -984,7 +984,7 @@ def get_installed_expansions(game_path: str, game_version: str) -> Dict[str, Any
             },
         }
         for data in mod_data.values():
-            package_id = data["packageId"]
+            package_id = data["packageid"]
             if package_id in dlcs_packageid_to_appid:
                 dlc_data = dlcs_packageid_to_appid[package_id]
                 data.update(
@@ -994,7 +994,6 @@ def get_installed_expansions(game_path: str, game_version: str) -> Dict[str, Any
                         "steam_url": RIMWORLD_DLC_METADATA[dlc_data["appid"]][
                             "steam_url"
                         ],
-                        "supportedVersions": {"li": game_version},
                         "description": RIMWORLD_DLC_METADATA[dlc_data["appid"]][
                             "description"
                         ],
@@ -1225,53 +1224,109 @@ def parse_mod_data(mods_path: str, intent: str, steam_db=None) -> Dict[str, Any]
                         data_malformed = True
                     else:
                         # Case-insensitive `ModMetaData` key.
-                        logger.debug("Normalizing XML content keys")
+                        logger.debug("Normalizing top level XML keys")
                         mod_data = {k.lower(): v for k, v in mod_data.items()}
                         logger.debug("Editing XML content")
                         if mod_data.get("modmetadata"):
                             # Initialize our dict from the formatted About.xml metadata
                             mod_metadata = mod_data["modmetadata"]
-                            if (
+                            # Case-insensitive metadata keys
+                            logger.debug("Normalizing XML metadata keys")
+                            mod_metadata = {
+                                k.lower(): v for k, v in mod_metadata.items()
+                            }
+                            if (  # If we don't have a <name>
                                 not mod_metadata.get("name")
-                                and steam_db
+                                and steam_db  # ... try to find it in Steam DB
                                 and steam_db.get(pfid, {}).get("steamName")
                             ):
                                 mod_metadata.setdefault(
                                     "name", steam_db[pfid]["steamName"]
                                 )
+                                # This is so that DB builder shows we do not have local metadata
                                 mod_metadata.setdefault("DB_BUILDER_NO_NAME", True)
                             else:
                                 mod_metadata.setdefault("name", "Missing XML: <name>")
-                            # Case insensitive name key
-                            mod_metadata = {
-                                ("name" if key.lower() == "name" else key): value
-                                for key, value in mod_metadata.items()
-                            }
                             # Rename author tag appropriately to normalize it in usage and lookups
                             mod_metadata = {
                                 ("authors" if key.lower() == "author" else key): value
                                 for key, value in mod_metadata.items()
                             }
-                            # If we parsed a packageId from modmetadata...
-                            if mod_metadata.get("packageId"):
-                                # ...check type of packageId, use first packageId parsed
-                                if isinstance(mod_metadata["packageId"], list):
-                                    mod_metadata["packageId"] = mod_metadata[
-                                        "packageId"
-                                    ][0]
+                            # Make sure <supportedversions> or <targetversion> is correct format
+                            if mod_metadata.get("supportedversions") and not isinstance(
+                                mod_metadata.get("supportedversions"), dict
+                            ):
+                                logger.error(
+                                    f"About.xml syntax error. Unable to read <supportedversions> tag from XML: {file.path}"
+                                )
+                                mod_metadata.pop("supportedversions", None)
+                            elif mod_data.get("supportedversions", {}).get("li"):
+                                if isinstance(mod_data["supportedversions"]["li"], str):
+                                    mod_data["supportedversions"]["li"] = (
+                                        ".".join(
+                                            mod_data["supportedversions"]["li"].split(
+                                                "."
+                                            )[:2]
+                                        )
+                                        if mod_data["supportedversions"]["li"].count(
+                                            "."
+                                        )
+                                        > 1
+                                        else mod_data["supportedversions"]["li"]
+                                    )
+                                elif isinstance(
+                                    mod_data["supportedversions"]["li"], list
+                                ):
+                                    for mod_data["supportedversions"]["li"] in mod_data[
+                                        "supportedversions"
+                                    ]["li"]:
+                                        mod_data["supportedversions"]["li"] = (
+                                            ".".join(
+                                                mod_data["supportedversions"][
+                                                    "li"
+                                                ].split(".")[:2]
+                                            )
+                                            if mod_data["supportedversions"][
+                                                "li"
+                                            ].count(".")
+                                            > 1
+                                            and isinstance(
+                                                mod_data["supportedversions"]["li"], str
+                                            )
+                                            else mod_data["supportedversions"]["li"]
+                                        )
+                            if mod_metadata.get("targetversion"):
+                                mod_metadata["targetversion"] = mod_metadata[
+                                    "targetversion"
+                                ]
+                                mod_metadata["targetversion"] = (
+                                    ".".join(
+                                        mod_metadata["targetversion"].split(".")[:2]
+                                    )
+                                    if mod_metadata["targetversion"].count(".") > 1
+                                    and isinstance(mod_metadata["targetversion"], str)
+                                    else mod_metadata["targetversion"]
+                                )
+                            # If we parsed a packageid from modmetadata...
+                            if mod_metadata.get("packageid"):
+                                # ...check type of packageid, use first packageid parsed
+                                if isinstance(mod_metadata["packageid"], list):
+                                    mod_metadata["packageid"] = mod_metadata[
+                                        "packageid"
+                                    ][0].lower()
                                 # Normalize package ID in metadata
-                                mod_metadata["packageId"] = mod_metadata[
-                                    "packageId"
+                                mod_metadata["packageid"] = mod_metadata[
+                                    "packageid"
                                 ].lower()
                             else:  # ...otherwise, we don't have one from About.xml, and we can check Steam DB...
-                                # ...this can be needed if a mod depends on a RW generated packageId via built-in hashing mechanism.
+                                # ...this can be needed if a mod depends on a RW generated packageid via built-in hashing mechanism.
                                 if steam_db and steam_db.get(pfid, {}).get("packageId"):
-                                    mod_metadata["packageId"] = steam_db[pfid][
+                                    mod_metadata["packageid"] = steam_db[pfid][
                                         "packageId"
                                     ].lower()
                                 else:
                                     mod_metadata.setdefault(
-                                        "packageId", "rimsort.missing.packageId"
+                                        "packageid", "missing.packageid"
                                     )
                             # Track pfid if we parsed one earlier
                             if pfid:  # Make some assumptions if we have a pfid
@@ -1328,7 +1383,7 @@ def parse_mod_data(mods_path: str, intent: str, steam_db=None) -> Dict[str, Any]
                             mods[uuid] = mod_metadata
                         else:
                             logger.error(
-                                f"Key [modmetadata] does not exist in this data: {mod_data}"
+                                f"Key <modmetadata> does not exist in this data: {mod_data}"
                             )
                             data_malformed = True
                 # ...or, if we didn't find an About.xml, but we have a RimWorld scenario .rsc to parse...
@@ -1349,24 +1404,22 @@ def parse_mod_data(mods_path: str, intent: str, steam_db=None) -> Dict[str, Any]
                         data_malformed = True
                     else:
                         # Case-insensitive `savedscenario` key.
-                        # logger.debug("Normalizing XML content keys")
+                        logger.debug("Normalizing top level XML keys")
                         scenario_data = {k.lower(): v for k, v in scenario_data.items()}
                         logger.debug("Editing XML content")
                         if scenario_data.get("savedscenario", {}).get(
                             "scenario"
-                        ):  # If our .rsc metadata has a packageId key
+                        ):  # If our .rsc metadata has a packageid key
                             # Initialize our dict from the formatted .rsc metadata
                             scenario_metadata = scenario_data["savedscenario"][
                                 "scenario"
                             ]
                             # Case-insensitive keys.
-                            logger.debug("Normalizing XML content keys")
+                            logger.debug("Normalizing XML metadata keys")
                             scenario_metadata = {
                                 k.lower(): v for k, v in scenario_metadata.items()
                             }
-                            scenario_metadata.setdefault(
-                                "packageId", "rimsort.scenario.rsc"
-                            )
+                            scenario_metadata.setdefault("packageid", "scenario.rsc")
                             scenario_metadata["scenario"] = True
                             scenario_metadata.pop("playerfaction", None)
                             scenario_metadata.pop("parts", None)
@@ -1375,7 +1428,7 @@ def parse_mod_data(mods_path: str, intent: str, steam_db=None) -> Dict[str, Any]
                                 .get("meta", {})
                                 .get("gameVersion")
                             ):
-                                scenario_metadata["supportedVersions"] = {
+                                scenario_metadata["supportedversions"] = {
                                     "li": scenario_data["savedscenario"]["meta"][
                                         "gameVersion"
                                     ]
@@ -1408,17 +1461,19 @@ def parse_mod_data(mods_path: str, intent: str, steam_db=None) -> Dict[str, Any]
                             mods[uuid] = scenario_metadata
                         else:
                             logger.error(
-                                f"Key [savedscenario][scenario] does not exist in this data: {scenario_metadata}"
+                                f"Key <savedscenario><scenario> does not exist in this data: {scenario_metadata}"
                             )
                             data_malformed = True
                 if (
                     invalid_about_file_path_found and not scenario_rsc_found
                 ) or data_malformed:  # ...finally, if we don't have any metadata parsed, populate invalid mod entry for visibility
-                    logger.debug(f"Populating invalid mod: {file.path}")
+                    logger.debug(
+                        f"Invalid dir. Populating invalid mod for path: {file.path}"
+                    )
                     mods[uuid] = {
                         "invalid": True,
                         "name": "Invalid item",
-                        "packageId": "rimsort.invalid.item",
+                        "packageid": "invalid.item",
                         "authors": "Not found",
                         "description": (
                             "This mod is considered invalid by RimSort (and the RimWorld game)."

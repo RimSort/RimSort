@@ -8,10 +8,10 @@ def do_rimpy_sort(
     logger.info(f"Starting RimPy sort for {len(dependency_graph)} mods")
     # Get an alphabetized list of dependencies
     active_mods_id_to_name = dict(
-        (v["packageId"], v["name"]) for v in active_mods_json.values()
+        (v["packageid"], v["name"]) for v in active_mods_json.values()
     )
     active_mods_packageid_to_uuid = dict(
-        (v["packageId"], v["uuid"]) for v in active_mods_json.values()
+        (v["packageid"], v["uuid"]) for v in active_mods_json.values()
     )
     active_mods_alphabetized = sorted(
         active_mods_id_to_name.items(), key=lambda x: x[1], reverse=False
@@ -62,7 +62,7 @@ def recursively_force_insert(
     deps_id_to_name = {}
     for dependency_id in deps_of_package:
         for uuid, mod_data in active_mods_json.items():
-            mod_package_id = mod_data["packageId"]
+            mod_package_id = mod_data["packageid"]
             if dependency_id == mod_package_id:
                 deps_id_to_name[dependency_id] = active_mods_json[uuid]["name"]
     deps_of_package_alphabetized = sorted(

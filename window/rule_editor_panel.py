@@ -88,7 +88,7 @@ class RuleEditor(QWidget):
         community_rules: Dict[str, Any],
         user_rules: Dict[str, Any],
         compact=None,
-        edit_packageId=None,
+        edit_packageid=None,
         steam_workshop_metadata=None,
     ):
         super().__init__()
@@ -102,7 +102,7 @@ class RuleEditor(QWidget):
             None  # Used to block comment prompt when metadata is being populated
         )
         self.compact = compact
-        self.edit_packageId = edit_packageId
+        self.edit_packageid = edit_packageid
         self.initial_mode = initial_mode
         # THE METADATA
         self.local_metadata = local_metadata
@@ -113,16 +113,16 @@ class RuleEditor(QWidget):
         self.user_rules_hidden = None
         # Can be used to get proper names for mods found in list
         # items that are not locally available
-        self.steam_workshop_metadata_packageIds_to_name = {}
+        self.steam_workshop_metadata_packageids_to_name = {}
         self.steam_workshop_metadata = steam_workshop_metadata
         if (
             self.steam_workshop_metadata
             and len(self.steam_workshop_metadata.keys()) > 0
         ):
             for metadata in self.steam_workshop_metadata.values():
-                if metadata.get("packageId"):
-                    self.steam_workshop_metadata_packageIds_to_name[
-                        metadata["packageId"]
+                if metadata.get("packageid"):
+                    self.steam_workshop_metadata_packageids_to_name[
+                        metadata["packageid"]
                     ] = metadata["name"]
 
         # MOD LABEL
@@ -421,8 +421,8 @@ class RuleEditor(QWidget):
             self._toggle_details_layout_widgets(
                 layout=self.internal_local_metadata_layout, override=False
             )
-        # If no initial packageId supplied, lock checkboxes
-        if not self.edit_packageId:
+        # If no initial packageid supplied, lock checkboxes
+        if not self.edit_packageid:
             self.external_community_rules_loadBottom_checkbox.setCheckable(False)
             self.external_user_rules_loadBottom_checkbox.setCheckable(False)
         # Initial mode
@@ -457,7 +457,7 @@ class RuleEditor(QWidget):
     def createDropEvent(self, destination_list: QListWidget):
         def dropEvent(event):
             # If the item was sourced from mods list
-            if event.source() == self.mods_list and self.edit_packageId:
+            if event.source() == self.mods_list and self.edit_packageid:
                 logger.debug("DROP")
                 # Accept event
                 event.setDropAction(Qt.CopyAction)
@@ -486,7 +486,7 @@ class RuleEditor(QWidget):
                 # Search for & remove the rule's row entry from the editor table
                 for row in range(self.editor_model.rowCount()):
                     # Define criteria
-                    packageId_value = self.editor_model.item(
+                    packageid_value = self.editor_model.item(
                         row, 1
                     )  # Get the item in column 2 (index 1)
                     rule_source_value = self.editor_model.item(
@@ -497,7 +497,7 @@ class RuleEditor(QWidget):
                     )  # Get the item in column 4 (index 3)
                     # Search table for rows that match.
                     if (
-                        (packageId_value and rule_data in packageId_value.text())
+                        (packageid_value and rule_data in packageid_value.text())
                         and (rule_source_value and mode[0] in rule_source_value.text())
                         and (rule_type_value and mode[1] in rule_type_value.text())
                     ):
@@ -530,16 +530,16 @@ class RuleEditor(QWidget):
                 elif mode[0] == "User Rules":
                     metadata = self.user_rules
                 # Add rule to the database if it doesn't already exist
-                if not metadata.get(self.edit_packageId):
-                    metadata[self.edit_packageId] = {}
-                if not metadata[self.edit_packageId].get(mode[1]):
-                    metadata[self.edit_packageId][mode[1]] = {}
-                if not metadata[self.edit_packageId][mode[1]].get(rule_data):
-                    metadata[self.edit_packageId][mode[1]][rule_data] = {}
-                metadata[self.edit_packageId][mode[1]][rule_data][
+                if not metadata.get(self.edit_packageid):
+                    metadata[self.edit_packageid] = {}
+                if not metadata[self.edit_packageid].get(mode[1]):
+                    metadata[self.edit_packageid][mode[1]] = {}
+                if not metadata[self.edit_packageid][mode[1]].get(rule_data):
+                    metadata[self.edit_packageid][mode[1]][rule_data] = {}
+                metadata[self.edit_packageid][mode[1]][rule_data][
                     "name"
                 ] = item_label_text
-                metadata[self.edit_packageId][mode[1]][rule_data]["comment"] = comment
+                metadata[self.edit_packageid][mode[1]][rule_data]["comment"] = comment
             else:
                 event.ignore()
 
@@ -550,21 +550,21 @@ class RuleEditor(QWidget):
     def _add_rule_to_table(
         self,
         name: str,
-        packageId: str,
+        packageid: str,
         rule_source: str,
         rule_type: str,
         comment: str,
         hidden=None,
     ) -> None:
-        if not self.edit_packageId:
+        if not self.edit_packageid:
             return
         logger.debug(
-            f"Adding {rule_source} {rule_type} rule to mod {self.edit_packageId} with comment: {comment}"
+            f"Adding {rule_source} {rule_type} rule to mod {self.edit_packageid} with comment: {comment}"
         )
         # Create the standard items for each column
         items = [
             QStandardItem(name),
-            QStandardItem(packageId),
+            QStandardItem(packageid),
             QStandardItem(rule_source),
             QStandardItem(rule_type),
             QStandardItem(comment),
@@ -591,7 +591,7 @@ class RuleEditor(QWidget):
         self.editor_model.removeRows(0, self.editor_model.rowCount())
 
     def _comment_edited(self, instruction: list) -> None:
-        if self.edit_packageId:
+        if self.edit_packageid:
             # Select metadata
             if instruction[2] == "Community Rules":
                 metadata = self.community_rules
@@ -599,11 +599,11 @@ class RuleEditor(QWidget):
                 metadata = self.user_rules
             # Edit based on type of rule
             if instruction[3] == "loadAfter" or instruction[3] == "loadBefore":
-                metadata[self.edit_packageId][instruction[3]][instruction[1]][
+                metadata[self.edit_packageid][instruction[3]][instruction[1]][
                     "comment"
                 ] = instruction[4]
             elif instruction[3] == "loadBottom":
-                metadata[self.edit_packageId][instruction[3]]["comment"] = instruction[
+                metadata[self.edit_packageid][instruction[3]]["comment"] = instruction[
                     4
                 ]
 
@@ -626,55 +626,55 @@ class RuleEditor(QWidget):
         _list.setItemWidget(item, label)
 
     def _open_mod_in_editor(self, context_item: QListWidgetItem) -> None:
-        logger.debug(f"Opening mod in editor: {self.edit_packageId}")
-        self.edit_packageId = context_item.data(Qt.UserRole)
-        if self.edit_packageId:
+        logger.debug(f"Opening mod in editor: {self.edit_packageid}")
+        self.edit_packageid = context_item.data(Qt.UserRole)
+        if self.edit_packageid:
             self.external_community_rules_loadBottom_checkbox.setCheckable(True)
             self.external_user_rules_loadBottom_checkbox.setCheckable(True)
         self._clear_widget()
         self._populate_from_metadata()
 
     def _populate_from_metadata(self) -> None:
-        logger.debug(f"Populating editor from metadata with mod: {self.edit_packageId}")
+        logger.debug(f"Populating editor from metadata with mod: {self.edit_packageid}")
         logger.debug("Parsing local metadata")
         if self.local_metadata and len(self.local_metadata.keys()) > 0:
             for metadata in self.local_metadata.values():
                 # Local metadata rulez
-                # Additionally, populate anything that is not exit_packageId into the mods list
+                # Additionally, populate anything that is not exit_packageid into the mods list
                 if (
-                    metadata.get("packageId")
-                    and self.edit_packageId
-                    and metadata["packageId"].lower() == self.edit_packageId.lower()
+                    metadata.get("packageid")
+                    and self.edit_packageid
+                    and metadata["packageid"].lower() == self.edit_packageid.lower()
                 ):
                     self.edit_name = metadata["name"]
                     self.mod_label.setText(f"Editing rules for: {self.edit_name}")
-                    if metadata.get("loadAfter") and metadata["loadAfter"].get("li"):
-                        loadAfters = metadata["loadAfter"]["li"]
+                    if metadata.get("loadafter") and metadata["loadafter"].get("li"):
+                        loadafters = metadata["loadafter"]["li"]
                         if isinstance(loadAfters, str):
                             self._create_list_item(
                                 _list=self.local_metadata_loadAfter_list,
-                                title=self.steam_workshop_metadata_packageIds_to_name[
+                                title=self.steam_workshop_metadata_packageids_to_name[
                                     loadAfters.lower()
                                 ]
                                 if loadAfters.lower()
                                 in [
                                     key.lower()
-                                    for key in self.steam_workshop_metadata_packageIds_to_name.keys()
+                                    for key in self.steam_workshop_metadata_packageids_to_name.keys()
                                 ]
                                 else loadAfters,
                                 metadata=loadAfters,
                             )
                             self._add_rule_to_table(
-                                name=self.steam_workshop_metadata_packageIds_to_name[
+                                name=self.steam_workshop_metadata_packageids_to_name[
                                     loadAfters.lower()
                                 ]
                                 if loadAfters.lower()
                                 in [
                                     key.lower()
-                                    for key in self.steam_workshop_metadata_packageIds_to_name.keys()
+                                    for key in self.steam_workshop_metadata_packageids_to_name.keys()
                                 ]
                                 else loadAfters,
-                                packageId=loadAfters,
+                                packageid=loadAfters,
                                 rule_source="About.xml",
                                 rule_type="loadAfter",
                                 comment="Added from mod metadata",
@@ -684,62 +684,62 @@ class RuleEditor(QWidget):
                             for rule in loadAfters:
                                 self._create_list_item(
                                     _list=self.local_metadata_loadAfter_list,
-                                    title=self.steam_workshop_metadata_packageIds_to_name[
+                                    title=self.steam_workshop_metadata_packageids_to_name[
                                         rule.lower()
                                     ]
                                     if rule.lower()
                                     in [
                                         key.lower()
-                                        for key in self.steam_workshop_metadata_packageIds_to_name.keys()
+                                        for key in self.steam_workshop_metadata_packageids_to_name.keys()
                                     ]
                                     else rule,
                                     metadata=rule,
                                 )
                                 self._add_rule_to_table(
-                                    name=self.steam_workshop_metadata_packageIds_to_name[
+                                    name=self.steam_workshop_metadata_packageids_to_name[
                                         rule.lower()
                                     ]
                                     if rule.lower()
                                     in [
                                         key.lower()
-                                        for key in self.steam_workshop_metadata_packageIds_to_name.keys()
+                                        for key in self.steam_workshop_metadata_packageids_to_name.keys()
                                     ]
                                     else rule,
-                                    packageId=rule,
+                                    packageid=rule,
                                     rule_source="About.xml",
                                     rule_type="loadAfter",
                                     comment="Added from mod metadata",
                                     hidden=self.local_rules_hidden,
                                 )
-                    elif metadata.get("loadBefore") and metadata["loadBefore"].get(
+                    elif metadata.get("loadbefore") and metadata["loadbefore"].get(
                         "li"
                     ):
-                        loadBefores = metadata["loadBefore"]["li"]
+                        loadBefores = metadata["loadbefore"]["li"]
                         if isinstance(loadBefores, str):
                             self._create_list_item(
                                 _list=self.local_metadata_loadBefore_list,
-                                title=self.steam_workshop_metadata_packageIds_to_name[
+                                title=self.steam_workshop_metadata_packageids_to_name[
                                     loadBefores.lower()
                                 ]
                                 if loadBefores.lower()
                                 in [
                                     key.lower()
-                                    for key in self.steam_workshop_metadata_packageIds_to_name.keys()
+                                    for key in self.steam_workshop_metadata_packageids_to_name.keys()
                                 ]
                                 else loadBefores,
                                 metadata=loadBefores,
                             )
                             self._add_rule_to_table(
-                                name=self.steam_workshop_metadata_packageIds_to_name[
+                                name=self.steam_workshop_metadata_packageids_to_name[
                                     loadAfters.lower()
                                 ]
                                 if loadAfters.lower()
                                 in [
                                     key.lower()
-                                    for key in self.steam_workshop_metadata_packageIds_to_name.keys()
+                                    for key in self.steam_workshop_metadata_packageids_to_name.keys()
                                 ]
                                 else loadAfters,
-                                packageId=loadAfters,
+                                packageid=loadAfters,
                                 rule_source="About.xml",
                                 rule_type="loadBefore",
                                 comment="Added from mod metadata",
@@ -749,28 +749,28 @@ class RuleEditor(QWidget):
                             for rule in loadBefores:
                                 self._create_list_item(
                                     _list=self.local_metadata_loadBefore_list,
-                                    title=self.steam_workshop_metadata_packageIds_to_name[
+                                    title=self.steam_workshop_metadata_packageids_to_name[
                                         rule.lower()
                                     ]
                                     if rule.lower()
                                     in [
                                         key.lower()
-                                        for key in self.steam_workshop_metadata_packageIds_to_name.keys()
+                                        for key in self.steam_workshop_metadata_packageids_to_name.keys()
                                     ]
                                     else rule,
                                     metadata=rule,
                                 )
                                 self._add_rule_to_table(
-                                    name=self.steam_workshop_metadata_packageIds_to_name[
+                                    name=self.steam_workshop_metadata_packageids_to_name[
                                         rule.lower()
                                     ]
                                     if rule.lower()
                                     in [
                                         key.lower()
-                                        for key in self.steam_workshop_metadata_packageIds_to_name.keys()
+                                        for key in self.steam_workshop_metadata_packageids_to_name.keys()
                                     ]
                                     else rule,
-                                    packageId=rule,
+                                    packageid=rule,
                                     rule_source="About.xml",
                                     rule_type="loadBefore",
                                     comment="Added from mod metadata",
@@ -780,19 +780,19 @@ class RuleEditor(QWidget):
                     self._create_list_item(
                         _list=self.mods_list,
                         title=metadata.get("name"),
-                        metadata=metadata.get("packageId"),
+                        metadata=metadata.get("packageid"),
                     )
         logger.debug("Parsing Community Rules")
         # Community Rules rulez
         if (
             self.community_rules
             and len(self.community_rules.keys()) > 0
-            and self.edit_packageId
+            and self.edit_packageid
         ):
-            for packageId, metadata in self.community_rules.items():
+            for packageid, metadata in self.community_rules.items():
                 if (
-                    self.edit_packageId
-                    and self.edit_packageId.lower() == packageId.lower()
+                    self.edit_packageid
+                    and self.edit_packageid.lower() == packageid.lower()
                 ):
                     if metadata.get("loadAfter"):
                         for rule_id, rule_data in metadata["loadAfter"].items():
@@ -803,7 +803,7 @@ class RuleEditor(QWidget):
                             )
                             self._add_rule_to_table(
                                 name=rule_data["name"][0],
-                                packageId=rule_id,
+                                packageid=rule_id,
                                 rule_source="Community Rules",
                                 rule_type="loadAfter",
                                 comment=rule_data["comment"][0]
@@ -820,7 +820,7 @@ class RuleEditor(QWidget):
                             )
                             self._add_rule_to_table(
                                 name=rule_data["name"][0],
-                                packageId=rule_id,
+                                packageid=rule_id,
                                 rule_source="Community Rules",
                                 rule_type="loadBefore",
                                 comment=rule_data["comment"][0]
@@ -838,7 +838,7 @@ class RuleEditor(QWidget):
                         self.block_comment_prompt = False
                         self._add_rule_to_table(
                             name=self.edit_name,
-                            packageId=self.edit_packageId,
+                            packageid=self.edit_packageid,
                             rule_source="Community Rules",
                             rule_type="loadBottom",
                             comment=rule_data["comment"][0]
@@ -848,11 +848,11 @@ class RuleEditor(QWidget):
                         )
         logger.debug("Parsing User Rules")
         # User Rules rulez
-        if self.user_rules and len(self.user_rules.keys()) > 0 and self.edit_packageId:
-            for packageId, metadata in self.user_rules.items():
+        if self.user_rules and len(self.user_rules.keys()) > 0 and self.edit_packageid:
+            for packageid, metadata in self.user_rules.items():
                 if (
-                    self.edit_packageId
-                    and self.edit_packageId.lower() == packageId.lower()
+                    self.edit_packageid
+                    and self.edit_packageid.lower() == packageid.lower()
                 ):
                     if metadata.get("loadAfter"):
                         for rule_id, rule_data in metadata["loadAfter"].items():
@@ -863,7 +863,7 @@ class RuleEditor(QWidget):
                             )
                             self._add_rule_to_table(
                                 name=rule_data["name"][0],
-                                packageId=rule_id,
+                                packageid=rule_id,
                                 rule_source="User Rules",
                                 rule_type="loadAfter",
                                 comment=rule_data["comment"][0]
@@ -880,7 +880,7 @@ class RuleEditor(QWidget):
                             )
                             self._add_rule_to_table(
                                 name=rule_data["name"][0],
-                                packageId=rule_id,
+                                packageid=rule_id,
                                 rule_source="User Rules",
                                 rule_type="loadBefore",
                                 comment=rule_data["comment"][0]
@@ -895,7 +895,7 @@ class RuleEditor(QWidget):
                         self.external_user_rules_loadBottom_checkbox.setChecked(True)
                         self._add_rule_to_table(
                             name=self.edit_name,
-                            packageId=self.edit_packageId,
+                            packageid=self.edit_packageid,
                             rule_source="User Rules",
                             rule_type="loadBottom",
                             comment=rule_data["comment"][0]
@@ -906,7 +906,7 @@ class RuleEditor(QWidget):
                         self.block_comment_prompt = False
 
     def _remove_rule(self, context_item: QListWidgetItem, _list: QListWidget) -> None:
-        logger.debug(f"Removing rule from mod: {self.edit_packageId}")
+        logger.debug(f"Removing rule from mod: {self.edit_packageid}")
         _list.takeItem(_list.row(context_item))
         rule_data = context_item.data(Qt.UserRole)
         # Determine action mode
@@ -929,7 +929,7 @@ class RuleEditor(QWidget):
         # Search for & remove the rule's row entry from the editor table
         for row in range(self.editor_model.rowCount()):
             # Define criteria
-            packageId_value = self.editor_model.item(
+            packageid_value = self.editor_model.item(
                 row, 1
             )  # Get the item in column 2 (index 1)
             rule_source_value = self.editor_model.item(
@@ -940,14 +940,14 @@ class RuleEditor(QWidget):
             )  # Get the item in column 4 (index 3)
             # Search table for rows that match
             if (
-                (packageId_value and rule_data in packageId_value.text())
+                (packageid_value and rule_data in packageid_value.text())
                 and (rule_source_value and mode[0] in rule_source_value.text())
                 and (rule_type_value and mode[1] in rule_type_value.text())
             ):  # Remove row if criteria matches search
                 self.editor_model.removeRow(row)
         # Remove rule from the database
-        if metadata.get(self.edit_packageId, {}).get(mode[1], {}).get(rule_data):
-            metadata[self.edit_packageId][mode[1]].pop(rule_data)
+        if metadata.get(self.edit_packageid, {}).get(mode[1], {}).get(rule_data):
+            metadata[self.edit_packageid][mode[1]].pop(rule_data)
 
     def _save_editor_rules(self, rules_source: str) -> None:
         logger.debug(f"Updating rules source: {rules_source}")
@@ -1021,8 +1021,8 @@ class RuleEditor(QWidget):
                 self.editor_table_view.setRowHidden(row, visibility)
 
     def _toggle_loadBottom_rule(self, rule_source: str, state) -> None:
-        if self.edit_packageId:
-            logger.debug(f"Toggle loadBottom for {self.edit_packageId}: {state}")
+        if self.edit_packageid:
+            logger.debug(f"Toggle loadBottom for {self.edit_packageid}: {state}")
             # Select database for editing
             if rule_source == "Community Rules":
                 metadata = self.community_rules
@@ -1040,24 +1040,24 @@ class RuleEditor(QWidget):
                         comment = args
                     self._add_rule_to_table(
                         name=self.edit_name,
-                        packageId=self.edit_packageId,
+                        packageid=self.edit_packageid,
                         rule_source=rule_source,
                         rule_type="loadBottom",
                         comment=comment if comment else "",
                     )
                 # Add rule to the database if it doesn't already exist
-                if not metadata.get(self.edit_packageId):
-                    metadata[self.edit_packageId] = {}
-                if not metadata[self.edit_packageId].get("loadBottom"):
-                    metadata[self.edit_packageId]["loadBottom"] = {}
-                metadata[self.edit_packageId]["loadBottom"]["value"] = True
+                if not metadata.get(self.edit_packageid):
+                    metadata[self.edit_packageid] = {}
+                if not metadata[self.edit_packageid].get("loadBottom"):
+                    metadata[self.edit_packageid]["loadBottom"] = {}
+                metadata[self.edit_packageid]["loadBottom"]["value"] = True
                 if comment:
-                    metadata[self.edit_packageId]["loadBottom"]["comment"] = comment
+                    metadata[self.edit_packageid]["loadBottom"]["comment"] = comment
             else:
                 # Search for & remove the rule's row entry from the editor table
                 for row in range(self.editor_model.rowCount()):
                     # Define criteria
-                    packageId_value = self.editor_model.item(
+                    packageid_value = self.editor_model.item(
                         row, 1
                     )  # Get the item in column 2 (index 1)
                     rule_source_value = self.editor_model.item(
@@ -1069,8 +1069,8 @@ class RuleEditor(QWidget):
                     # Search table for rows that match
                     if (
                         (
-                            packageId_value
-                            and self.edit_packageId in packageId_value.text()
+                            packageid_value
+                            and self.edit_packageid in packageid_value.text()
                         )
                         and (
                             rule_source_value
@@ -1081,11 +1081,11 @@ class RuleEditor(QWidget):
                         self.editor_model.removeRow(row)
                 # Remove rule from the database
                 if (
-                    metadata.get(self.edit_packageId, {})
+                    metadata.get(self.edit_packageid, {})
                     .get("loadBottom", {})
                     .get("value")
                 ):
-                    metadata[self.edit_packageId].pop("loadBottom")
+                    metadata[self.edit_packageid].pop("loadBottom")
 
     def modItemContextMenuEvent(self, point: QPoint) -> None:
         context_menu = QMenu(self)  # Mod item context menu event
