@@ -127,7 +127,7 @@ class DynamicQuery(QObject):
                 # Uncomment to see the contents of missing_children
                 # logger.debug(missing_children)
                 self.dq_messaging_signal.emit(
-                    f"\nRetrieving dependency information for {len(missing_children)} missing children..."
+                    f"\nRetrieving dependency information for {len(missing_children)} missing children"
                 )
                 # Extend publishedfileids with the missing_children PublishedFileIds for final query
                 publishedfileids.extend(missing_children)
@@ -146,7 +146,7 @@ class DynamicQuery(QObject):
                     missing_children,
                 ) = self.IPublishedFileService_GetDetails(query, missing_children)
                 self.dq_messaging_signal.emit(
-                    f"\nLaunching addiitonal full query to complete dependency information for the missing children..."
+                    f"\nLaunching addiitonal full query to complete dependency information for the missing children"
                 )
             else:  # Stop querying once we have 0 missing_children
                 missing_children = []
@@ -154,7 +154,7 @@ class DynamicQuery(QObject):
 
         if self.get_appid_deps:
             self.dq_messaging_signal.emit(
-                "\nAppID dependency retrieval enabled. Starting Steamworks API call(s)..."
+                "\nAppID dependency retrieval enabled. Starting Steamworks API call(s)"
             )
             # ISteamUGC/GetAppDependencies
             self.ISteamUGC_GetAppDependencies(
@@ -168,7 +168,7 @@ class DynamicQuery(QObject):
         # Notify & return
         total = len(query["database"])
         self.dq_messaging_signal.emit(
-            f"\nReturning Steam Workshop metadata for {total} items..."
+            f"\nReturning Steam Workshop metadata for {total} items"
         )
         self.database.update(query)
 
@@ -213,7 +213,7 @@ class DynamicQuery(QObject):
         chunks_processed = 0
         total = len(publishedfileids)
         self.dq_messaging_signal.emit(
-            f"\nSteam WebAPI: IPublishedFileService/GetDetails initializing for {total} mods...\n\n"
+            f"\nSteam WebAPI: IPublishedFileService/GetDetails initializing for {total} mods\n\n"
         )
         self.dq_messaging_signal.emit(
             f"IPublishedFileService/GetDetails chunk [0/{total}]"
@@ -323,7 +323,7 @@ class DynamicQuery(QObject):
                             else:  # Child was not found in database, track it's pfid for later
                                 if child_pfid not in missing_children:
                                     logger.debug(
-                                        f"Could not find pfid {child_pfid} in database. Adding child to missing_children..."
+                                        f"Could not find pfid {child_pfid} in database. Adding child to missing_children"
                                     )
                                     missing_children.append(child_pfid)
             self.dq_messaging_signal.emit(
@@ -435,17 +435,10 @@ class DynamicQuery(QObject):
         :return: Dict containing the updated json data from PublishedFileIds query
         """
         self.dq_messaging_signal.emit(
-            f"\nSteamworks API: ISteamUGC/GetAppDependencies initializing for {len(publishedfileids)} mods...\n"
+            f"\nSteamworks API: ISteamUGC/GetAppDependencies initializing for {len(publishedfileids)} mods\n"
         )
         # Maximum processes
         num_processes = cpu_count()
-        # Chunk the publishedfileids
-        pfids_chunked = list(
-            chunks(
-                _list=publishedfileids,
-                limit=ceil(len(publishedfileids) / num_processes),
-            )
-        )
         # Create a pool of worker processes
         with Pool(processes=num_processes) as pool:
             # Create instances of SteamworksAppDependenciesQuery for each chunk
@@ -453,12 +446,17 @@ class DynamicQuery(QObject):
                 SteamworksAppDependenciesQuery(
                     pfid_or_pfids=[eval(str_pfid) for str_pfid in chunk], interval=1
                 )
-                for chunk in pfids_chunked
+                for chunk in list(
+                    chunks(
+                        _list=publishedfileids,
+                        limit=ceil(len(publishedfileids) / num_processes),
+                    )
+                )
             ]
             # Map the execution of the queries to the pool of processes
             results = pool.map(SteamworksAppDependenciesQuery.run, queries)
         # Merge the results from all processes into a single dictionary
-        self.dq_messaging_signal.emit("Processes completed!\nCollecting results...")
+        self.dq_messaging_signal.emit("Processes completed!\nCollecting results")
         pfids_appid_deps = {}
         for result in results:
             pfids_appid_deps.update(result)
@@ -467,7 +465,7 @@ class DynamicQuery(QObject):
         # logger.debug(pfids_appid_deps)
         # Add our metadata to the query...
         logger.debug(
-            f"Populating AppID dependency information into database from query..."
+            f"Populating AppID dependency information into database from query"
         )
         for pfid in query["database"].keys():
             if int(pfid) in pfids_appid_deps:
@@ -487,7 +485,7 @@ class DynamicQuery(QObject):
 
 def ISteamRemoteStorage_GetCollectionDetails(
     publishedfileids: list,
-) -> Optional[Dict[str, Any]]:
+) -> Optional[list]:
     """
     Given a list of Steam Workshopmod collection PublishedFileIds, return a dict of
     json data queried from Steam WebAPI, containing data to be parsed.
@@ -500,38 +498,41 @@ def ISteamRemoteStorage_GetCollectionDetails(
     # Construct the URL to retrieve information about the collection
     url = f"https://api.steampowered.com/ISteamRemoteStorage/GetCollectionDetails/v1/"
     # Construct arguments to pass to the API call
-    data = {"collectioncount": f"{str(len(publishedfileids))}"}
-    for publishedfileid in publishedfileids:
-        count = publishedfileids.index(publishedfileid)
-        data[f"publishedfileids[{count}]"] = publishedfileid
-    # Make a request to the Steam Web API
-    try:
-        request = requests_post(url, data=data)
-    except ConnectionError:
-        stacktrace = traceback.format_exc()
-        logger.warning(
-            f"Unable to complete request! Are you connected to the internet?\n{stacktrace}"
-        )
-        return None
-    # Check the response status code
-    if request.status_code == 200:
+    metadata = []
+    for chunk in list(chunks(_list=publishedfileids, limit=5000)):
+        # Construct arguments to pass to the API call
+        data = {"collectioncount": f"{str(len(publishedfileids))}"}
+        for publishedfileid in publishedfileids:
+            count = publishedfileids.index(publishedfileid)
+            data[f"publishedfileids[{count}]"] = publishedfileid
+        # Make a request to the Steam Web API
+        try:
+            request = requests_post(url, data=data)
+        except ConnectionError:
+            stacktrace = traceback.format_exc()
+            logger.warning(
+                f"Unable to complete request! Are you connected to the internet?\n{stacktrace}"
+            )
+            return None
         try:
             # Parse the JSON response
             json_response = request.json()
-            logger.debug(f"Received WebAPI response from query: {json_response}")
+            logger.debug(json_response)
+            if json_response.get("response", {}).get("resultcount") > 0:
+                for mod_metadata in json_response["response"]["collectiondetails"]:
+                    metadata.append(mod_metadata)
         except JSONDecodeError as e:
-            logger.warning(f"Invalid JSON response: {e}")
+            logger.debug(f"Invalid JSON response: {e}")
             return None
-    else:
-        logger.error(f"Error {request.status_code} retrieving data from Steam Web API")
-        return None
+        finally:
+            logger.debug(f"Received WebAPI response {request.status_code} from query")
 
-    return json_response
+    return metadata
 
 
 def ISteamRemoteStorage_GetPublishedFileDetails(
     publishedfileids: list,
-) -> Optional[Dict[str, Any]]:
+) -> Optional[list]:
     """
     Given a list of PublishedFileIds, return a dict of json data queried
     from Steam WebAPI, containing data to be parsed.
@@ -545,36 +546,36 @@ def ISteamRemoteStorage_GetPublishedFileDetails(
     url = (
         f"https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/"
     )
+    metadata = []
     # Construct arguments to pass to the API call
-    data = {"itemcount": f"{str(len(publishedfileids))}"}
-    for publishedfileid in publishedfileids:
-        count = publishedfileids.index(publishedfileid)
-        data[f"publishedfileids[{count}]"] = publishedfileid
-    # Make a request to the Steam Web API
-    try:
-        request = requests_post(url, data=data)
-    except ConnectionError:
-        stacktrace = traceback.format_exc()
-        logger.warning(
-            f"Unable to complete request! Are you connected to the internet?\n{stacktrace}"
-        )
-        return None
-    # Check the response status code
-    if request.status_code == 200:
+    for chunk in list(chunks(_list=publishedfileids, limit=5000)):
+        # Construct arguments to pass to the API call
+        data = {"itemcount": f"{str(len(publishedfileids))}"}
+        for publishedfileid in publishedfileids:
+            count = publishedfileids.index(publishedfileid)
+            data[f"publishedfileids[{count}]"] = publishedfileid
+        # Make a request to the Steam Web API
+        try:
+            request = requests_post(url, data=data)
+        except ConnectionError:
+            stacktrace = traceback.format_exc()
+            logger.warning(
+                f"Unable to complete request! Are you connected to the internet?\n{stacktrace}"
+            )
+            return None
         try:
             # Parse the JSON response
-            json_response = (
-                request.json()
-            )  # lib crash when network interface is down, crashing the all prog. lib need to be patchs
-            logger.debug(f"Received WebAPI response from query: {json_response}")
+            json_response = request.json()
+            if json_response.get("response", {}).get("resultcount") > 0:
+                for mod_metadata in json_response["response"]["publishedfiledetails"]:
+                    metadata.append(mod_metadata)
         except JSONDecodeError as e:
-            logger.warning(f"Invalid JSON response: {e}")
+            logger.debug(f"Invalid JSON response: {e}")
             return None
-    else:
-        logger.error(f"Error {request.status_code} retrieving data from Steam Web API")
-        return None
+        finally:
+            logger.debug(f"Received WebAPI response {request.status_code} from query")
 
-    return json_response
+    return metadata
 
 
 if __name__ == "__main__":

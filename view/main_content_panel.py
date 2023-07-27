@@ -2,11 +2,11 @@ from functools import partial
 from gc import collect
 from pathlib import Path
 import platform
+from typing import Callable
 import subprocess
 import sys
 import datetime
 from io import BytesIO
-from logging import WARNING, getLogger
 from math import ceil
 from multiprocessing import cpu_count, current_process, Pool
 from stat import S_IEXEC
@@ -47,26 +47,6 @@ from util.generic import (
 from util.rentry.wrapper import RentryUpload
 from util.steam.browser import SteamBrowser
 from util.steam.webapi.wrapper import ISteamRemoteStorage_GetPublishedFileDetails
-from util.watchdog import RSFileSystemEventHandler
-
-SYSTEM = platform.system()
-# Watchdog conditionals
-if SYSTEM == "Darwin":
-    from watchdog.observers import Observer
-
-    # Comment to see logging for watchdog handler on Darwin
-    getLogger("watchdog.observers.fsevents").setLevel(WARNING)
-elif SYSTEM == "Linux":
-    from watchdog.observers import Observer
-
-    # Comment to see logging for watchdog handler on Linux
-    getLogger("watchdog.observers.inotify_buffer").setLevel(WARNING)
-elif SYSTEM == "Windows":
-    from watchdog.observers.polling import PollingObserver
-
-    # Comment to see logging for watchdog handler on Windows
-    # This is a stub if it's ever even needed... i still can't figure out why it won't log at all on Windows...?
-    # getLogger("").setLevel(WARNING)
 
 from PySide6.QtCore import QEventLoop, QObject, QProcess, Qt, Signal
 from PySide6.QtWidgets import (
@@ -74,8 +54,11 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QFrame,
     QHBoxLayout,
+    QLabel,
     QLineEdit,
     QMainWindow,
+    QPushButton,
+    QToolButton,
 )
 
 from sort.dependencies import *
@@ -117,10 +100,7 @@ class MainContent:
     """
 
     def __init__(
-        self,
-        game_configuration: GameConfiguration,
-        rimsort_version: str,
-        window: QMainWindow,
+        self, game_configuration: GameConfiguration, rimsort_version: str
     ) -> None:
         """
         Initialize the main content panel.
@@ -128,8 +108,6 @@ class MainContent:
         :param game_configuration: game configuration panel to get paths
         """
         logger.debug("Initializing MainContent")
-
-        self.window = window
 
         # VERSION PASSED FROM & CONFIGURED IN MAIN SCRIPT (RimSort.py)
         self.rimsort_version = rimsort_version
@@ -259,36 +237,6 @@ class MainContent:
         # Instantiate todds runner
         self.todds_runner = RunnerPanel = None
 
-        # Check if paths have been set
-        if self.game_configuration.check_if_essential_paths_are_set():
-            self.__refresh_cache_calculations()
-
-            # Insert mod data into list (is_initial = True)
-            self.__repopulate_lists(True)
-
-            # Check Workshop mods for updates if configured
-            if (
-                self.external_steam_metadata
-                and self.game_configuration.steam_mods_update_check_toggle
-            ):  # Check SteamCMD/Steam mods for updates if configured
-                query_workshop_update_data(self.all_mods_compiled)
-                # self._do_check_for_workshop_updates()
-                self._do_generate_mod_update_report()
-            else:
-                logger.info(
-                    "User preference is not configured to check Steam mods for updates. Skipping..."
-                )
-
-        # CHECK USER PREFERENCE FOR WATCHDOG
-        if self.game_configuration.watchdog_toggle:
-            self.__initialize_watchdog()
-
-        # CHECK USER PREFERENCE FOR WATCHDOG
-        if self.game_configuration.watchdog_toggle:
-            # Start watchdog
-            logger.info("Initializing watchdog observer")
-            self.game_configuration_watchdog_observer.start()
-
         logger.info("Finished MainContent initialization")
 
     def ___get_relative_middle(self, some_list):
@@ -401,39 +349,6 @@ class MainContent:
 
                 # If the other list is the active mod list, recalculate errors
                 self.active_mods_panel.recalculate_internal_list_errors()
-
-    def __initialize_watchdog(self) -> None:
-        # INITIALIZE WATCHDOG - WE WAIT TO START UNTIL DONE PARSING MOD LIST
-        game_folder_path = self.game_configuration.game_folder_line.text()
-        local_folder_path = self.game_configuration.local_folder_line.text()
-        workshop_folder_path = self.game_configuration.workshop_folder_line.text()
-        self.game_configuration_watchdog_event_handler = RSFileSystemEventHandler()
-        if SYSTEM == "Windows":
-            self.game_configuration_watchdog_observer = PollingObserver()
-        else:
-            self.game_configuration_watchdog_observer = Observer()
-        if game_folder_path != "":
-            self.game_configuration_watchdog_observer.schedule(
-                self.game_configuration_watchdog_event_handler,
-                game_folder_path,
-                recursive=True,
-            )
-        if local_folder_path != "":
-            self.game_configuration_watchdog_observer.schedule(
-                self.game_configuration_watchdog_event_handler,
-                local_folder_path,
-                recursive=True,
-            )
-        if workshop_folder_path != "":
-            self.game_configuration_watchdog_observer.schedule(
-                self.game_configuration_watchdog_event_handler,
-                workshop_folder_path,
-                recursive=True,
-            )
-        # Connect watchdog to our refresh button animation
-        self.game_configuration_watchdog_event_handler.file_changes_signal.connect(
-            self._do_refresh_animation
-        )
 
     def __insert_data_into_lists(
         self, active_mods: Dict[str, Any], inactive_mods: Dict[str, Any]
@@ -550,6 +465,13 @@ class MainContent:
         self.game_configuration.game_version_line.setText(self.game_version)
         self.active_mods_panel.game_version = self.game_version
 
+        # Populate metadata
+        self._refresh_external_metadata()
+        self.__refresh_internal_metadata()
+
+        logger.info("Finished refreshing cache calculations")
+
+    def _refresh_external_metadata(self) -> None:
         self.external_steam_metadata = {}
         self.external_steam_metadata_path = None
         self.external_community_rules = {}
@@ -589,6 +511,7 @@ class MainContent:
                     ).resolve()
                 ),
             )
+            logger.debug([key for key in self.external_steam_metadata.keys()])
         elif external_steam_metadata_source == "RimPy Mod Manager Database":
             # Get and cache RimPy Steam db.json rules data for ALL mods
             (
@@ -666,23 +589,38 @@ class MainContent:
                 json.dump(initial_rules_db, output, indent=4)
             self.external_user_rules = initial_rules_db["rules"]
 
+    def __refresh_internal_metadata(self) -> None:
         # Get and cache installed base game / DLC data
-        self.expansions = get_installed_expansions(
-            self.game_configuration.game_folder_line.text(), self.game_version
+        expansions_gif_path = str(
+            Path(
+                os.path.join(os.path.dirname(__file__), "../data/rimworld.gif")
+            ).resolve()
         )
-
+        expansions_callable = partial(
+            get_installed_expansions,
+            game_path=self.game_configuration.game_folder_line.text(),
+            game_version=self.game_version,
+        )
+        self.expansions = self._do_threaded_loading_animation(
+            gif_path=expansions_gif_path,
+            target=expansions_callable,
+            text="Retrieving metadata for Official RimWorld Expansions...",
+        )
         # Get and cache installed local/custom mods
-        self.local_mods = get_local_mods(
-            self.game_configuration.local_folder_line.text(),
+        local_gif_path = str(
+            Path(os.path.join(os.path.dirname(__file__), "../data/local.gif")).resolve()
+        )
+        local_mods_callable = partial(
+            get_local_mods,
+            local_path=self.game_configuration.local_folder_line.text(),
+            game_path=self.game_configuration.game_folder_line.text(),
             steam_db=self.external_steam_metadata,
         )
-
-        # Get and cache installed workshop mods
-        self.workshop_mods = get_workshop_mods(
-            self.game_configuration.workshop_folder_line.text(),
-            steam_db=self.external_steam_metadata,
+        self.local_mods = self._do_threaded_loading_animation(
+            gif_path=local_gif_path,
+            target=local_mods_callable,
+            text="Retrieving metadata for local/SteamCMD mods...",
         )
-
         # If we can find the appworkshop_294100.acf files from SteamCMD or Steam client
         # SteamCMD
         if os.path.exists(
@@ -699,6 +637,19 @@ class MainContent:
             logger.debug(
                 f"SteamCMD appworkshop.acf metadata not found. Skipping: {self.steamcmd_wrapper.steamcmd_appworkshop_acf_path}"
             )
+        workshop_gif_path = str(
+            Path(os.path.join(os.path.dirname(__file__), "../data/steam.gif")).resolve()
+        )
+        workshop_mods_callable = partial(
+            get_workshop_mods,
+            workshop_path=self.game_configuration.workshop_folder_line.text(),
+            steam_db=self.external_steam_metadata,
+        )
+        self.workshop_mods = self._do_threaded_loading_animation(
+            gif_path=workshop_gif_path,
+            target=workshop_mods_callable,
+            text="Retrieving metadata for Steam Workshop mods...",
+        )
         # Steam client
         steam_appworkshop_path = os.path.split(
             # This is just getting the path 2 directories up from content/294100,
@@ -724,25 +675,33 @@ class MainContent:
             logger.debug(
                 f"Steam client appworkshop.acf metadata not found. Skipping: {self.steam_appworkshop_acf_path}"
             )
-
         # One working Dictionary for ALL mods
         self.internal_local_metadata = merge_mod_data(
             self.expansions, self.local_mods, self.workshop_mods
         )
-
         logger.info(
             f"Combined {len(self.expansions)} expansions, {len(self.local_mods)} local mods, and {len(self.workshop_mods)}. Total elements to get dependencies for: {len(self.internal_local_metadata)}"
         )
-        logger.info("Parsing dependencies & load order rules from metadata")
         # Calculate and cache dependencies for ALL mods
+        logger.info("Parsing dependencies & load order rules from metadata")
+        rimsort_gif_path = str(
+            Path(
+                os.path.join(os.path.dirname(__file__), "../data/rimsort.gif")
+            ).resolve()
+        )
         (
             self.all_mods_compiled,
             self.info_from_steam_package_id_to_name,
-        ) = compile_all_mods(
-            self.internal_local_metadata,
-            self.external_steam_metadata,
-            self.external_community_rules,
-            self.external_user_rules,
+        ) = self._do_threaded_loading_animation(
+            gif_path=rimsort_gif_path,
+            target=partial(
+                compile_all_mods,
+                self.internal_local_metadata,
+                self.external_steam_metadata,
+                self.external_community_rules,
+                self.external_user_rules,
+            ),
+            text="Compiling internal mod metadata with configured external metadata...",
         )
         # Feed all_mods and Steam DB info to Active Mods list to surface
         # names instead of package_ids when able
@@ -750,23 +709,6 @@ class MainContent:
         self.active_mods_panel.steam_package_id_to_name = (
             self.info_from_steam_package_id_to_name
         )
-
-        logger.info("Finished refreshing cache calculations")
-
-    def __refresh_cache_calculations_animated(self) -> None:
-        # Run expensive calculations to set cache data
-        loading_animation = LoadingAnimation(
-            gif_path=str(
-                Path(
-                    os.path.join(os.path.dirname(__file__), "../data/rimworld.gif")
-                ).resolve()
-            ),
-            target=self.__refresh_cache_calculations,
-        )
-        loading_animation.show()
-        while loading_animation.thread and loading_animation.thread.isRunning():
-            QApplication.instance().processEvents()
-            continue
 
     def __repopulate_lists(self, is_initial: bool = False) -> None:
         """
@@ -800,10 +742,6 @@ class MainContent:
             self.inactive_mods_data_restore_state = inactive_mods_data
 
         self.__insert_data_into_lists(active_mods_data, inactive_mods_data)
-
-        # If we have missing mods, prompt user
-        if self.missing_mods and len(self.missing_mods) >= 1:
-            self.__missing_mods_prompt(self.missing_mods)
 
     @property
     def panel(self):
@@ -1139,18 +1077,15 @@ class MainContent:
         logger.info(
             "User preference is configured to check Steam mods for updates. Displaying potential updates..."
         )
-        loading_animation = LoadingAnimation(
+        self._do_threaded_loading_animation(
             gif_path=str(
                 Path(
                     os.path.join(os.path.dirname(__file__), "../data/query.gif")
                 ).resolve()
             ),
             target=partial(query_workshop_update_data, mods=self.all_mods_compiled),
+            text="Checking Steam Workshop mods for updates...",
         )
-        loading_animation.show()
-        while loading_animation.thread and loading_animation.thread.isRunning():
-            QApplication.instance().processEvents()
-            continue
 
     def _do_generate_mod_update_report(self) -> None:
         self.workshop_mods_potential_updates = {}
@@ -1196,77 +1131,115 @@ class MainContent:
                 details=list_of_potential_updates,
             )
 
+    def _do_threaded_loading_animation(
+        self, gif_path: str, target: Callable, text=None
+    ) -> Any:
+        loading_animation_text_label = None
+        # Hide the info panel widgets
+        self.mod_info_panel.info_panel_frame.hide()
+        # Disable widgets
+        for widget in QApplication.instance().allWidgets():
+            widget.setEnabled(False)
+        # Encapsulate mod parsing inside a nice lil animation
+        loading_animation = LoadingAnimation(
+            gif_path=gif_path,
+            target=target,
+        )
+        self.mod_info_panel.panel.addWidget(loading_animation)
+        # If any text message specified, pass it to the info panel as well
+        if text:
+            loading_animation_text_label = QLabel(text)
+            loading_animation_text_label.setAlignment(Qt.AlignCenter)
+            loading_animation_text_label.setStyleSheet("font-size: 18 px")
+            self.mod_info_panel.panel.addWidget(loading_animation_text_label)
+        loop = QEventLoop()
+        loading_animation.finished.connect(loop.quit)
+        loop.exec_()
+        data = loading_animation.data
+        # Remove text label if it was passed
+        if text:
+            self.mod_info_panel.panel.removeWidget(loading_animation_text_label)
+            loading_animation_text_label.close()
+        # Enable widgets
+        for widget in QApplication.instance().allWidgets():
+            widget.setEnabled(True)
+        # Show the info panel widgets
+        self.mod_info_panel.info_panel_frame.show()
+        return data
+
     # ACTIONS PANEL
 
-    def _do_refresh(self) -> None:
+    def _do_refresh(self, is_initial=None) -> None:
         """
         Refresh expensive calculations & repopulate lists with that refreshed data
         """
-        self.active_mods_panel.list_updated = False
-        # Stop the refresh button from blinking if it is blinking
-        if self.actions_panel.refresh_button_flashing_animation.isActive():
-            self.actions_panel.refresh_button_flashing_animation.stop()
-            self.actions_panel.refresh_button.setStyleSheet(
-                """
-                QPushButton {
-                    color: white;
-                    background-color: #455364;
-                    border-style: solid;
-                    border-width: 0px;
-                    border-radius: 5px;
-                    /* border-color: beige; */
-                    /* font: bold 14px; */
-                    min-width: 6em;
-                    padding: 1px;
-                }
+        if not is_initial:
+            self.active_mods_panel.list_updated = False
+            # Stop the refresh button from blinking if it is blinking
+            if self.actions_panel.refresh_button_flashing_animation.isActive():
+                self.actions_panel.refresh_button_flashing_animation.stop()
+                self.actions_panel.refresh_button.setStyleSheet(
+                    """
+                    QPushButton {
+                        color: white;
+                        background-color: #455364;
+                        border-style: solid;
+                        border-width: 0px;
+                        border-radius: 5px;
+                        /* border-color: beige; */
+                        /* font: bold 14px; */
+                        min-width: 6em;
+                        padding: 1px;
+                    }
 
-                QPushButton:hover {
-                    background-color: #54687a;
-                }
+                    QPushButton:hover {
+                        background-color: #54687a;
+                    }
 
-                QPushButton:pressed {
-                    background-color: #3e4a52;
-                    border-style: inset;
-                }
-                """
+                    QPushButton:pressed {
+                        background-color: #3e4a52;
+                        border-style: inset;
+                    }
+                    """
+                )
+            # Stop the save button from blinking if it is blinking
+            if self.actions_panel.save_button_flashing_animation.isActive():
+                self.actions_panel.save_button_flashing_animation.stop()
+                self.actions_panel.save_button.setStyleSheet(
+                    """
+                    QPushButton {
+                        color: white;
+                        background-color: #455364;
+                        border-style: solid;
+                        border-width: 0px;
+                        border-radius: 5px;
+                        /* border-color: beige; */
+                        /* font: bold 14px; */
+                        min-width: 6em;
+                        padding: 1px;
+                    }
+
+                    QPushButton:hover {
+                        background-color: #54687a;
+                    }
+
+                    QPushButton:pressed {
+                        background-color: #3e4a52;
+                        border-style: inset;
+                    }
+                    """
+                )
+            self.active_mods_panel.clear_active_mods_search()
+            self.active_mods_panel.active_mods_filter_data_source_index = len(
+                self.active_mods_panel.active_mods_filter_data_source_icons
             )
-        # Stop the save button from blinking if it is blinking
-        if self.actions_panel.save_button_flashing_animation.isActive():
-            self.actions_panel.save_button_flashing_animation.stop()
-            self.actions_panel.save_button.setStyleSheet(
-                """
-                QPushButton {
-                    color: white;
-                    background-color: #455364;
-                    border-style: solid;
-                    border-width: 0px;
-                    border-radius: 5px;
-                    /* border-color: beige; */
-                    /* font: bold 14px; */
-                    min-width: 6em;
-                    padding: 1px;
-                }
-
-                QPushButton:hover {
-                    background-color: #54687a;
-                }
-
-                QPushButton:pressed {
-                    background-color: #3e4a52;
-                    border-style: inset;
-                }
-                """
+            self.active_mods_panel.signal_active_mods_data_source_filter()
+            self.inactive_mods_panel.clear_inactive_mods_search()
+            self.inactive_mods_panel.inactive_mods_filter_data_source_index = len(
+                self.inactive_mods_panel.inactive_mods_filter_data_source_icons
             )
-        self.active_mods_panel.clear_active_mods_search()
-        self.active_mods_panel.active_mods_filter_data_source_index = len(
-            self.active_mods_panel.active_mods_filter_data_source_icons
-        )
-        self.active_mods_panel.signal_active_mods_data_source_filter()
-        self.inactive_mods_panel.clear_inactive_mods_search()
-        self.inactive_mods_panel.inactive_mods_filter_data_source_index = len(
-            self.inactive_mods_panel.inactive_mods_filter_data_source_icons
-        )
-        self.inactive_mods_panel.signal_inactive_mods_data_source_filter()
+            self.inactive_mods_panel.signal_inactive_mods_data_source_filter()
+        # Check if paths are set
         if self.game_configuration.check_if_essential_paths_are_set():
             # Run expensive calculations to set cache data
             self.__refresh_cache_calculations()
@@ -1274,13 +1247,16 @@ class MainContent:
             # Insert mod data into list
             self.__repopulate_lists()
 
+            # If we have missing mods, prompt user
+            if self.missing_mods and len(self.missing_mods) >= 1:
+                self.__missing_mods_prompt(self.missing_mods)
+
             # Check Workshop mods for updates if configured
             if (
                 self.external_steam_metadata
                 and self.game_configuration.steam_mods_update_check_toggle
             ):  # Check SteamCMD/Steam mods for updates if configured
-                query_workshop_update_data(self.all_mods_compiled)
-                # self._do_check_for_workshop_updates()
+                self._do_check_for_workshop_updates()
                 self._do_generate_mod_update_report()
             else:
                 logger.info(
@@ -1315,35 +1291,12 @@ class MainContent:
             self.inactive_mods_panel.inactive_mods_filter_data_source_icons
         )
         self.inactive_mods_panel.signal_inactive_mods_data_source_filter()
-        (
-            active_mods_data,
-            inactive_mods_data,
-            self.duplicate_mods,
-            self.missing_mods,
-        ) = get_active_inactive_mods(
-            str(
-                Path(
-                    os.path.join(
-                        self.game_configuration.config_folder_line.text(),
-                        "ModsConfig.xml",
-                    )
-                ).resolve()
-            ),
-            self.all_mods_compiled,
-            self.game_configuration.duplicate_mods_warning_toggle,
-        )
-        expansions_uuids = list(self.expansions.keys())
+
         active_mod_data = {}
         inactive_mod_data = {}
-        logger.info("Moving non-expansion active mods to inactive mods list")
-        for uuid, mod_data in active_mods_data.items():
-            if uuid in expansions_uuids:
-                active_mod_data[uuid] = mod_data
-            else:
-                inactive_mod_data[uuid] = mod_data
-        logger.info("Moving expansion inactive mods to active mods list")
-        for uuid, mod_data in inactive_mods_data.items():
-            if uuid in expansions_uuids:
+        logger.info("Clearing mods from active mod list")
+        for uuid, mod_data in self.all_mods_compiled.items():
+            if mod_data["data_source"] == "expansion":
                 active_mod_data[uuid] = mod_data
             else:
                 inactive_mod_data[uuid] = mod_data
@@ -1644,7 +1597,7 @@ class MainContent:
             # Compile list of Steam Workshop publishing preview images that correspond
             # to a Steam mod in the active mod list
             webapi_response = ISteamRemoteStorage_GetPublishedFileDetails(pfids)
-            for metadata in webapi_response["response"]["publishedfiledetails"]:
+            for metadata in webapi_response["publishedfiledetails"]:
                 pfid = metadata["publishedfileid"]
                 if metadata["result"] != 1:
                     logger.warning("Rentry.co export: Unable to get data for mod!")
@@ -2168,18 +2121,15 @@ class MainContent:
                 information="Please add mods to list before attempting to download.",
             )
             return
-        loading_animation = LoadingAnimation(
+        self._do_threaded_loading_animation(
             gif_path=str(
                 Path(
                     os.path.join(os.path.dirname(__file__), "../data/steam.gif")
                 ).resolve()
             ),
             target=partial(self._do_steamworks_api_call, instruction=instruction),
+            text="Processing Steam subscription action(s) via Steamworks API...",
         )
-        loading_animation.show()
-        while loading_animation.thread and loading_animation.thread.isRunning():
-            QApplication.instance().processEvents()
-            continue
 
     # GIT MOD ACTIONS
 

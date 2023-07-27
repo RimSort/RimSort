@@ -529,7 +529,9 @@ class GameConfiguration(QObject):
                 + f"information in this directory:\n[{self.storage_path}].\n"
                 + "It doesn't look like this directory exists, so we'll make it for you now."
             )
-            show_information(text="Welcome to RimSort!", information=information)
+            show_information(
+                title="Welcome", text="Welcome to RimSort!", information=information
+            )
             logger.info("Making storage directory")
             os.makedirs(self.storage_path)
         # Always check for dbs/userRules.json path, create if it doesn't exist

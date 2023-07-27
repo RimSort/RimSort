@@ -1,3 +1,5 @@
+from logger_tt import logger
+
 from PySide6.QtCore import QEasingCurve, QPropertyAnimation, QTimer, QThread, Qt, Signal
 from PySide6.QtGui import QMovie, QPainter
 from PySide6.QtWidgets import (
@@ -7,7 +9,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from typing import Callable
+from typing import Any, Callable
 
 
 class AnimationLabel(QLabel):
@@ -58,52 +60,63 @@ class AnimationLabel(QLabel):
 
 
 class LoadingAnimation(QWidget):
+    finished = Signal()
+
     def __init__(self, gif_path: str, target: Callable):
         super().__init__()
-
+        logger.debug("Initializing LoadingAnimation")
+        # Store data
+        self.animation_finished = False
+        self.data = {}
         # Setup thread
         self.gif_path = gif_path
-        self.thread = WorkThread(target=target)
-        self.thread.animation_stopped.connect(self.stop_animation)
+        self.thread = WorkThread(parent=self, target=target)
+        self.thread.data_ready.connect(self.handle_data)
+        self.thread.finished.connect(self.prepare_stop_animation)
+        self.thread.start()
         # Window properties
-        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_TranslucentBackground, True)
-        self.setWindowModality(Qt.ApplicationModal)
         # Label and layout
-        layout = QVBoxLayout(self)
+        self.layout = QVBoxLayout(self)
         self.movie = QMovie(self.gif_path)
+        self.movie.frameChanged.connect(self.check_animation_stop)
         self.movie.start()
         self.label = QLabel(alignment=Qt.AlignCenter)
         self.label.setMovie(self.movie)
-        layout.addWidget(self.label)
-        self.setLayout(layout)
+        self.layout.addWidget(self.label)
+        self.setLayout(self.layout)
+        logger.debug("Finished LoadingAnimation initialization")
 
-    def showEvent(self, event):
-        super().showEvent(event)
-        # Start the thread when widget is shown
-        self.thread.start()
+    def check_animation_stop(self, frameNumber: int):
+        if self.animation_finished and frameNumber == self.movie.frameCount() - 1:
+            self.stop_animation()
+
+    def handle_data(self, data):
+        if data:
+            logger.debug(f"Received {type(data)} from thread")
+            self.data = data
+
+    def prepare_stop_animation(self):
+        # Set flag when thread finished
+        self.animation_finished = True
 
     def stop_animation(self):
-        # Stop animation when thread finished
+        # Stop animation
         self.label.clear()
         self.movie.stop()
-        self.thread = None
+        self.finished.emit()
         self.close()
-
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.setRenderHint(QPainter.SmoothPixmapTransform)
-        painter.drawPixmap(self.rect(), self.movie.currentPixmap())
 
 
 class WorkThread(QThread):
-    animation_stopped = Signal()
+    data_ready = Signal(object)
 
-    def __init__(self, target: Callable):
+    def __init__(self, target: Callable, parent=None):
         QThread.__init__(self)
+        self.data = None
         self.target = target
 
     def run(self):
-        self.target()
-        self.animation_stopped.emit()
+        self.data = self.target()
+        logger.debug("WorkThread completed, returning to main thread")
+        self.data_ready.emit(self.data)

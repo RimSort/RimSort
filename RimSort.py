@@ -14,11 +14,34 @@ from tempfile import gettempdir
 import traceback
 
 from logger_tt import handlers, logger, setup_logging
-from PySide6.QtCore import QSize
+from logging import getLogger, WARNING
+from PySide6.QtCore import QSize, QTimer
 from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 
 from model.dialogue import show_fatal_error
+from util.metadata import query_workshop_update_data
 from util.proxy_style import ProxyStyle
+from util.watchdog import RSFileSystemEventHandler
+
+SYSTEM = platform.system()
+# Watchdog conditionals
+if SYSTEM == "Darwin":
+    from watchdog.observers import Observer
+
+    # Comment to see logging for watchdog handler on Darwin
+    getLogger("watchdog.observers.fsevents").setLevel(WARNING)
+elif SYSTEM == "Linux":
+    from watchdog.observers import Observer
+
+    # Comment to see logging for watchdog handler on Linux
+    getLogger("watchdog.observers.inotify_buffer").setLevel(WARNING)
+elif SYSTEM == "Windows":
+    from watchdog.observers.polling import PollingObserver
+
+    # Comment to see logging for watchdog handler on Windows
+    # This is a stub if it's ever even needed... i still can't figure out why it won't log at all on Windows...?
+    # getLogger("").setLevel(WARNING)
+
 from view.game_configuration_panel import GameConfiguration
 from view.main_content_panel import MainContent
 from view.status_panel import Status
@@ -114,7 +137,11 @@ class MainWindow(QMainWindow):
 
         # Create the main application window
         self.debug_mode = debug_mode
+        self.init = None  # Content initialization should only fire on startup. Otherwise, this is handled by Refresh button
         self.version_string = "Alpha-v1.0.6.1"
+        self.game_configuration_watchdog_event_handler = None
+
+        # Setup the window
         self.setWindowTitle(f"RimSort {self.version_string}")
         self.setMinimumSize(QSize(1024, 768))
 
@@ -128,7 +155,6 @@ class MainWindow(QMainWindow):
         self.main_content_panel = MainContent(
             game_configuration=self.game_configuration_panel,
             rimsort_version=self.version_string,
-            window=self,
         )
         self.bottom_panel = Status()
 
@@ -159,27 +185,76 @@ class MainWindow(QMainWindow):
     def showEvent(self, event) -> None:
         # Call the original showEvent handler
         super().showEvent(event)
-        # HIDE/SHOW FOLDER ROWS BASED ON PREFERENCE
-        if self.game_configuration_panel.show_folder_rows:
-            self.game_configuration_panel.hide_show_folder_rows_button.setText(
-                "Hide paths"
+        if not self.init:
+            # HIDE/SHOW FOLDER ROWS BASED ON PREFERENCE
+            if self.game_configuration_panel.show_folder_rows:
+                self.game_configuration_panel.hide_show_folder_rows_button.setText(
+                    "Hide paths"
+                )
+            else:
+                self.game_configuration_panel.hide_show_folder_rows_button.setText(
+                    "Show paths"
+                )
+            # set visibility
+            self.game_configuration_panel.game_folder_frame.setVisible(
+                self.game_configuration_panel.show_folder_rows
             )
+            self.game_configuration_panel.config_folder_frame.setVisible(
+                self.game_configuration_panel.show_folder_rows
+            )
+            self.game_configuration_panel.local_folder_frame.setVisible(
+                self.game_configuration_panel.show_folder_rows
+            )
+            self.game_configuration_panel.workshop_folder_frame.setVisible(
+                self.game_configuration_panel.show_folder_rows
+            )
+            QTimer.singleShot(0, self.__initialize_content)
+
+    def __initialize_content(self) -> None:
+        self.init = True
+        self.main_content_panel._do_refresh(is_initial=True)
+
+        # CHECK USER PREFERENCE FOR WATCHDOG
+        if self.game_configuration_panel.watchdog_toggle:
+            self.__initialize_watchdog()
+
+        # CHECK USER PREFERENCE FOR WATCHDOG
+        if self.game_configuration_panel.watchdog_toggle:
+            # Start watchdog
+            logger.info("Initializing watchdog observer")
+            self.game_configuration_watchdog_observer.start()
+
+    def __initialize_watchdog(self) -> None:
+        # INITIALIZE WATCHDOG - WE WAIT TO START UNTIL DONE PARSING MOD LIST
+        game_folder_path = self.game_configuration_panel.game_folder_line.text()
+        local_folder_path = self.game_configuration_panel.local_folder_line.text()
+        workshop_folder_path = self.game_configuration_panel.workshop_folder_line.text()
+        self.game_configuration_watchdog_event_handler = RSFileSystemEventHandler()
+        if SYSTEM == "Windows":
+            self.game_configuration_watchdog_observer = PollingObserver()
         else:
-            self.game_configuration_panel.hide_show_folder_rows_button.setText(
-                "Show paths"
+            self.game_configuration_watchdog_observer = Observer()
+        if game_folder_path != "":
+            self.game_configuration_watchdog_observer.schedule(
+                self.game_configuration_watchdog_event_handler,
+                game_folder_path,
+                # recursive=True,
             )
-        # set visibility
-        self.game_configuration_panel.game_folder_frame.setVisible(
-            self.game_configuration_panel.show_folder_rows
-        )
-        self.game_configuration_panel.config_folder_frame.setVisible(
-            self.game_configuration_panel.show_folder_rows
-        )
-        self.game_configuration_panel.local_folder_frame.setVisible(
-            self.game_configuration_panel.show_folder_rows
-        )
-        self.game_configuration_panel.workshop_folder_frame.setVisible(
-            self.game_configuration_panel.show_folder_rows
+        if local_folder_path != "":
+            self.game_configuration_watchdog_observer.schedule(
+                self.game_configuration_watchdog_event_handler,
+                local_folder_path,
+                # recursive=True,
+            )
+        if workshop_folder_path != "":
+            self.game_configuration_watchdog_observer.schedule(
+                self.game_configuration_watchdog_event_handler,
+                workshop_folder_path,
+                # recursive=True,
+            )
+        # Connect watchdog to our refresh button animation
+        self.game_configuration_watchdog_event_handler.file_changes_signal.connect(
+            self.main_content_panel._do_refresh_animation
         )
 
 
@@ -220,14 +295,11 @@ def main_thread():
         logger.error(stacktrace)
         show_fatal_error(details=stacktrace)
     finally:
-        if (
-            "window" in locals()
-            and window.main_content_panel.game_configuration.watchdog_toggle
-        ):
+        if "window" in locals() and window.game_configuration_panel.watchdog_toggle:
             try:
                 logger.debug("Stopping watchdog...")
-                window.main_content_panel.game_configuration_watchdog_observer.stop()
-                window.main_content_panel.game_configuration_watchdog_observer.join()
+                window.game_configuration_watchdog_observer.stop()
+                window.game_configuration_watchdog_observer.join()
             except:
                 stacktrace = traceback.format_exc()
                 logger.warning(

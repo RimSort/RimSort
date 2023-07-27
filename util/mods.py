@@ -35,13 +35,13 @@ def add_dependency_to_mod(
 
         # If the value is a single dict (for moddependencies)
         if isinstance(dependency_or_dependency_ids, dict):
-            if dependency_or_dependency_ids.get("packageid") and not isinstance(
-                dependency_or_dependency_ids["packageid"], list
+            if dependency_or_dependency_ids.get("packageId") and not isinstance(
+                dependency_or_dependency_ids["packageId"], list
             ):
                 # if dependency_id in all_mods:
                 # ^ dependencies are required regardless of whether they are in all_mods
                 mod_data["dependencies"].add(
-                    dependency_or_dependency_ids["packageid"].lower()
+                    dependency_or_dependency_ids["packageId"].lower()
                 )
             else:
                 logger.error(
@@ -51,15 +51,15 @@ def add_dependency_to_mod(
         elif isinstance(dependency_or_dependency_ids, list):
             if isinstance(dependency_or_dependency_ids[0], dict):
                 for dependency in dependency_or_dependency_ids:
-                    if dependency.get("packageid"):
+                    if dependency.get("packageId"):
                         # Below works with `MayRequire` dependencies
-                        dependency_id = dependency["packageid"].lower()
+                        dependency_id = dependency["packageId"].lower()
                         # if dependency_id in all_mods:
                         # ^ dependencies are required regardless of whether they are in all_mods
                         mod_data["dependencies"].add(dependency_id)
                     else:
                         logger.error(
-                            f"Dependency dict does not contain packageid: [{dependency_or_dependency_ids}]"
+                            f"Dependency dict does not contain packageId: [{dependency_or_dependency_ids}]"
                         )
             else:
                 logger.error(
@@ -997,6 +997,11 @@ def get_installed_expansions(game_path: str, game_version: str) -> Dict[str, Any
                         "description": RIMWORLD_DLC_METADATA[dlc_data["appid"]][
                             "description"
                         ],
+                        "supportedversions": {
+                            "li": ".".join(game_version.split(".")[:2])
+                        }
+                        if not data.get("supportedversions")
+                        else data.get("supportedversions"),
                     }
                 )
             else:

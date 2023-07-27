@@ -235,14 +235,8 @@ class SteamBrowser(QWidget):
             [publishedfileid]
         )
         collection_pfids = []
-        if (
-            collection_webapi_result["response"]["result"] == 1
-            and collection_webapi_result["response"]["resultcount"] > 0
-            and len(collection_webapi_result["response"]["collectiondetails"]) > 0
-        ):
-            for mod in collection_webapi_result["response"]["collectiondetails"][0][
-                "children"
-            ]:
+        if len(collection_webapi_result) > 0:
+            for mod in collection_webapi_result[0]["children"]:
                 if mod.get("publishedfileid"):
                     collection_pfids.append(mod["publishedfileid"])
             if len(collection_pfids) > 0:
@@ -251,21 +245,10 @@ class SteamBrowser(QWidget):
                 )
             else:
                 return collection_mods_pfid_to_title
-            for metadata in collection_mods_webapi_response["response"][
-                "publishedfiledetails"
-            ]:
-                if metadata["result"] != 1:
-                    logger.warning(
-                        f"Invalid result returned from WebAPI: {collection_mods_webapi_response}"
-                    )
-                else:
-                    # Retrieve the published mod's title from the response
-                    pfid = metadata["publishedfileid"]
-                    collection_mods_pfid_to_title[pfid] = metadata["title"]
-        else:
-            logger.warning(
-                f"Invalid result returned from WebAPI: {collection_webapi_result}"
-            )
+            for metadata in collection_mods_webapi_response:
+                # Retrieve the published mod's title from the response
+                pfid = metadata["publishedfileid"]
+                collection_mods_pfid_to_title[pfid] = metadata["title"]
         return collection_mods_pfid_to_title
 
     def _add_mod_to_list(

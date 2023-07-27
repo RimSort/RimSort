@@ -5,7 +5,7 @@ from typing import Any, Dict
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout
 
 from model.image_label import ImageLabel
 from model.scroll_label import ScrollLabel
@@ -25,8 +25,10 @@ class ModInfo:
 
         # Base layout type
         self.panel = QVBoxLayout()
+        self.info_panel_frame = QFrame()
 
         # Child layouts
+        self.info_layout = QVBoxLayout()
         self.image_layout = QHBoxLayout()
         self.image_layout.setAlignment(Qt.AlignCenter)
         self.mod_info_layout = QVBoxLayout()
@@ -39,13 +41,21 @@ class ModInfo:
         self.description_layout = QHBoxLayout()
 
         # Add child layouts to base
-        self.panel.addLayout(self.image_layout, 50)
-        self.panel.addLayout(self.mod_info_layout, 20)
-        self.panel.addLayout(self.description_layout, 30)
+        self.info_layout.addLayout(self.image_layout, 50)
+        self.info_layout.addLayout(self.mod_info_layout, 20)
+        self.info_layout.addLayout(self.description_layout, 30)
+        self.info_panel_frame.setLayout(self.info_layout)
+        self.panel.addWidget(self.info_panel_frame)
 
         # Create widgets
         self.missing_image_path = str(
             Path(os.path.join(os.getcwd(), "data", "missing.png")).resolve()
+        )
+        self.rimsort_image_a_path = str(
+            Path(os.path.join(os.getcwd(), "data", "AppIcon_a.png")).resolve()
+        )
+        self.rimsort_image_b_path = str(
+            Path(os.path.join(os.getcwd(), "data", "AppIcon_b.png")).resolve()
         )
         self.scenario_image_path = str(
             Path(os.path.join(os.getcwd(), "data", "rimworld.png")).resolve()
@@ -55,7 +65,7 @@ class ModInfo:
         self.preview_picture.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.preview_picture.setMinimumSize(1, 1)
         self.preview_picture.setPixmap(
-            QPixmap(self.missing_image_path).scaled(
+            QPixmap(self.rimsort_image_a_path).scaled(
                 self.preview_picture.size(), Qt.KeepAspectRatio
             )
         )
@@ -99,7 +109,9 @@ class ModInfo:
         self.mod_info_path_value.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.mod_info_path_value.setWordWrap(True)
         self.description = ScrollLabel()
-
+        self.description.setText(
+            "\n\t\t\t  Welcome to RimSort!\n\n\n\t୧༼ಠ益ಠ༽୨\t\t(̿▀̿ ̿Ĺ̯̿̿▀̿ ̿)̄\t\t\tヽ༼ຈل͜ຈ༽ﾉ"
+        )
         # Add widgets to child layouts
         self.image_layout.addWidget(self.preview_picture)
         self.mod_info_name.addWidget(self.mod_info_name_label, 20)

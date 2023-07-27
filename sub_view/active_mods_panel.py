@@ -237,9 +237,7 @@ class ActiveModList(QWidget):
 
             # Check version for everything except Core
             if self.game_version:
-                if not mod_data.get("packageid") == "ludeon.rimworld" and mod_data.get(
-                    "supportedversions", {}
-                ).get("li"):
+                if mod_data.get("supportedversions", {}).get("li"):
                     supported_versions = mod_data["supportedversions"]["li"]
                     # supported_versions is either a string or list of strings
                     if isinstance(supported_versions, str):

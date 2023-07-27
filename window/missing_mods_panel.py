@@ -72,7 +72,7 @@ class MissingModsPrompt(QWidget):
         # DETAILS WIDGETS
         self.details_label = QLabel(
             "\nUser-configured SteamDB database was queried. The following table displays mods available for download from Steam. "
-            + '\n\nRimworld mods on Steam Workshop that share a packageid are "variants". Please keep this in mind before downloading. '
+            + '\n\nRimworld mods on Steam Workshop that share a packageId are "variants". Please keep this in mind before downloading. '
             + "\n\nPlease select your preferred mod variant in the table below. You can also open each variant in Steam/Web browser to verify."
         )
         self.details_label.setAlignment(Qt.AlignCenter)
@@ -222,7 +222,7 @@ class MissingModsPrompt(QWidget):
             # in the user-configured Steam metadata.
             for publishedfileid, metadata in self.steam_workshop_metadata.items():
                 name = metadata.get("steamName", metadata.get("name", "Not found"))
-                packageid = metadata.get("packageid", "None").lower()
+                packageid = metadata.get("packageId", "None").lower()
                 gameVersions = metadata.get("gameVersions", ["None listed"])
                 # Remove AppId dependencies from this dict. They cannot be subscribed like mods.
                 dependencies = {

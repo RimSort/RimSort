@@ -70,14 +70,9 @@ class RunnerPanel(QWidget):
         self.process_last_args = []
         self.todds_dry_run_support = todds_dry_run_support
 
-        # SET STYLESHEET TO CONFORM WITH GLOBAL CFG
+        # SET STYLESHEET
         self.text.setObjectName("RunnerPaneltext")
         self.setObjectName("RunnerPanel")
-        # self.setStyleSheet(  # Add style sheet for styling layouts and widgets
-        #    Path(os.path.join(os.path.dirname(__file__), "../data/style.qss"))
-        #    .resolve()
-        #    .read_text()
-        # ) useless because of super().__init__()
 
         # CREATE WIDGETS
         # Clear btn
@@ -405,8 +400,8 @@ class RunnerPanel(QWidget):
                                 )
                                 if failed_mods_name_lookup != None:
                                     for mod_metadata in failed_mods_name_lookup[
-                                        "response"
-                                    ]["publishedfiledetails"]:
+                                        "publishedfiledetails"
+                                    ]:
                                         if (
                                             mod_metadata["publishedfileid"]
                                             not in pfids_to_name

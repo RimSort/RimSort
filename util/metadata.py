@@ -523,23 +523,21 @@ def get_workshop_acf_data(
     ]
     # Loop through our metadata, append values
     for publishedfileid, mod_uuid in workshop_mods_pfid_to_uuid.items():
-        if publishedfileid in workshop_item_details:
-            if workshop_item_details.get("timetouched"):
-                # The last time SteamCMD/Steam client touched a mod according to its entry
-                workshop_mods[mod_uuid]["internal_time_touched"] = int(
-                    workshop_item_details[publishedfileid]["timetouched"]
-                )
-            if workshop_item_details.get("timeupdated"):
-                # The last time SteamCMD/Steam client updated a mod according to its entry
-                workshop_mods[mod_uuid]["internal_time_updated"] = int(
-                    workshop_item_details[publishedfileid]["timeupdated"]
-                )
-        if publishedfileid in workshop_items_installed:
-            if workshop_items_installed.get("timeupdated"):
-                # The last time SteamCMD/Steam client updated a mod according to its entry
-                workshop_mods[mod_uuid]["internal_time_updated"] = int(
-                    workshop_items_installed[publishedfileid]["timeupdated"]
-                )
+        if workshop_item_details.get(publishedfileid, {}).get("timetouched"):
+            # The last time SteamCMD/Steam client touched a mod according to its entry
+            workshop_mods[mod_uuid]["internal_time_touched"] = int(
+                workshop_item_details[publishedfileid]["timetouched"]
+            )
+        if workshop_item_details.get(publishedfileid, {}).get("timeupdated"):
+            # The last time SteamCMD/Steam client updated a mod according to its entry
+            workshop_mods[mod_uuid]["internal_time_updated"] = int(
+                workshop_item_details[publishedfileid]["timeupdated"]
+            )
+        if workshop_items_installed.get(publishedfileid, {}).get("timeupdated"):
+            # The last time SteamCMD/Steam client updated a mod according to its entry
+            workshop_mods[mod_uuid]["internal_time_updated"] = int(
+                workshop_items_installed[publishedfileid]["timeupdated"]
+            )
 
 
 def import_steamcmd_acf_data(
@@ -618,16 +616,8 @@ def query_workshop_update_data(mods: Dict[str, Any]) -> None:
     workshop_mods_query_updates = ISteamRemoteStorage_GetPublishedFileDetails(
         list(workshop_mods_pfid_to_uuid.keys())
     )
-
-    if (
-        workshop_mods_query_updates
-        and workshop_mods_query_updates.get("response")
-        and workshop_mods_query_updates["response"].get("publishedfiledetails")
-        and len(workshop_mods_query_updates["response"]["publishedfiledetails"]) > 0
-    ):
-        for workshop_mod_metadata in workshop_mods_query_updates["response"][
-            "publishedfiledetails"
-        ]:
+    if workshop_mods_query_updates and len(workshop_mods_query_updates) > 0:
+        for workshop_mod_metadata in workshop_mods_query_updates:
             uuid = workshop_mods_pfid_to_uuid[workshop_mod_metadata["publishedfileid"]]
             if workshop_mod_metadata.get("time_created"):
                 mods[uuid]["external_time_created"] = workshop_mod_metadata[
