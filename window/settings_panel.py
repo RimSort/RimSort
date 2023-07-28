@@ -376,8 +376,9 @@ class SettingsPanel(QDialog):
         self.todds_presets_cb.setObjectName("MainUI")
         self.todds_presets_cb.addItems(
             [
-                "Low quality (for low VRAM/older GPU, optimize for VRAM)",
-                "Very high quality (better textures, longer encode time)",
+                "Optimized for VRAM (lesser graphics cards, faster encoding)",
+                "Default quality (recommended for RimWorld, slower encoding)",
+                "High quality (for texture enthusiasts, slowest encode time)",
             ]
         )
         # QComboBox alignment is hardcoded...? too lazy to override...

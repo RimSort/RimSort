@@ -236,34 +236,34 @@ QStyle::PE_IndicatorItemViewItemDrop {
 }
 /* Style for table view with sortable columns */
 QHeaderView {
-    background-color: #1B2838;
+    background-color: #455364;
     color: white;
 }
 QHeaderView::section {
     background-color: #455364;
     color: white;
     padding: 4px;
+    border-radius: 0px;
 }
-QHeaderView::section:hover {
+QHeaderView::section:horizontal:hover, 
+QHeaderView::section:vertical:hover {
     background-color: #54687a;
 }
+/* QTableView specific styling */
 QTableView {
-    background-color: #22303d;
+    gridline-color: #455364;
+    background-color: #19232d;
     color: white;
-    alternate-background-color: #19232d;
+    alternate-background-color: #22303d;
+    selection-background-color: #54687a;
+    selection-color: white;
 }
-QTableView QTableCornerButton{
-    background-color: #1B2838;
-}
-QTableView::indicator {
-    width: 13px;
-    height: 13px;
-}
+/* Styling for table view cells */
 QTableView::item {
     padding: 4px;
-}
-QTableView::item:selected {
-    background-color: #54687a;
+    color: white;
+    gridline-color: #455364;
+    background-color: #19232d;
 }
 QTableView::item:hover {
     background-color: #37414f;
@@ -271,21 +271,10 @@ QTableView::item:hover {
 QTableView::item:disabled {
     color: #999999;
 }
-QTableView::item:disabled:selected {
-    background-color: transparent;
-}
-QTableView::item:selected:disabled {
-    color: #999999;
-}
-QTableView::item:checked {
+QTableView::item:selected {
     background-color: #54687a;
 }
-QTableView::item:checked:selected {
-    background-color: #54687a;
-}
-QTableView::item:checked:hover {
-    background-color: #37414f;
-}
+/* Styling for table corner button */
 QTableView QTableCornerButton::section {
     background-color: #455364;
     color: white;
@@ -293,42 +282,15 @@ QTableView QTableCornerButton::section {
 QTableView QTableCornerButton::section:hover {
     background-color: #54687a;
 }
-QTableView::corner {
-    background-color: #455364;
-    border: none;
+QTableView::indicator {
+    width: 13px;
+    height: 13px;
 }
-QTableView QHeaderView {
-    background-color: #455364;
-    color: white;
+QTableView::indicator:checked {
+    background: #3688c3;
 }
-QTableView QHeaderView::section {
-    background-color: #455364;
-    color: white;
-    padding: 4px;
-}
-QTableView QHeaderView::section:hover {
-    background-color: #54687a;
-}
-QTableView QHeaderView::section:checked {
-    background-color: #54687a;
-}
-QTableView QHeaderView::section:checked:hover {
-    background-color: #37414f;
-}
-QTableView QHeaderView::section:disabled {
-    color: #999999;
-}
-QTableView QHeaderView::section:disabled:checked {
-    background-color: transparent;
-}
-QTableView QHeaderView::section:disabled:checked:hover {
-    background-color: transparent;
-}
-QTableView QHeaderView::section:checked:disabled {
-    color: #999999;
-}
-QTableView QHeaderView::section:checked:disabled:hover {
-    background-color: transparent;
+QTableView::indicator:unchecked {
+    background: #455364;
 }
 /* Styling for tool buttons */
 QToolButton {

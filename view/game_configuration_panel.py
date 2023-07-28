@@ -120,7 +120,7 @@ class GameConfiguration(QObject):
         self.steamcmd_validate_downloads_toggle = False
 
         # TODDS PRESET
-        self.todds_preset = "high"
+        self.todds_preset = "medium"
 
         # TODDS ACTIVE MODS TARGET TOGGLE
         self.todds_active_mods_target_toggle = False
@@ -727,11 +727,15 @@ class GameConfiguration(QObject):
                 self.todds_preset = settings_data["todds_preset"]
             if self.todds_preset == "low":
                 self.settings_panel.todds_presets_cb.setCurrentText(
-                    "Low quality (for low VRAM/older GPU, optimize for VRAM)"
+                    "Optimized for VRAM (lesser graphics cards, faster encoding)"
+                )
+            if self.todds_preset == "medium":
+                self.settings_panel.todds_presets_cb.setCurrentText(
+                    "Default quality (recommended for RimWorld, slower encoding)"
                 )
             if self.todds_preset == "high":
                 self.settings_panel.todds_presets_cb.setCurrentText(
-                    "Very high quality (better textures, longer encode time)"
+                    "High quality (for texture enthusiasts, slowest encode time)"
                 )
             if settings_data.get("todds_active_mods_target"):
                 self.todds_active_mods_target_toggle = settings_data[

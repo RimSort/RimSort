@@ -489,7 +489,7 @@ class ModListWidget(QListWidget):
                                 try:
                                     os.rename(original_mod_path, renamed_mod_path)
                                     logger.debug(
-                                        f"Successfully converted local mod -> SteamCMD by renaming from {folder_name} -> {publishedfileid}"
+                                        f'Successfully "converted" local mod -> SteamCMD by renaming from {folder_name} -> {publishedfileid}'
                                     )
                                 except:
                                     stacktrace = traceback.format_exc()
@@ -565,7 +565,6 @@ class ModListWidget(QListWidget):
                     and len(steam_mod_paths) > 0
                     and len(steam_publishedfileid_to_name) > 0
                 ):
-                    publishedfileids_to_unsubscribe_from = []
                     for path in steam_mod_paths:
                         publishedfileid_from_folder_name = os.path.split(path)[1]
                         renamed_mod_path = str(
@@ -579,36 +578,32 @@ class ModListWidget(QListWidget):
                             ).resolve()
                         )
                         if os.path.exists(path):
-                            if not os.path.exists(renamed_mod_path):
+                            try:
+                                if os.path.exists(renamed_mod_path):
+                                    logger.warning(
+                                        "Destination exists. Removing all files except for .dds textures first..."
+                                    )
+                                    delete_files_except_extension(
+                                        directory=renamed_mod_path, extension=".dds"
+                                    )
                                 try:
-                                    os.rename(path, renamed_mod_path)
-                                    logger.debug(
-                                        f'Successfully "converted" Steam mod by moving + renaming from {publishedfileid_from_folder_name} -> {mod_name} and migrating mod to local mods directory'
-                                    )
-                                    publishedfileids_to_unsubscribe_from.append(
-                                        publishedfileid_from_folder_name
-                                    )
-                                except:
-                                    stacktrace = traceback.format_exc()
-                                    logger.error(f"Failed to convert mod: {path}")
-                                    logger.error(stacktrace)
-                            else:
-                                logger.warning(
-                                    f"Failed to convert mod! Destination already exists: {renamed_mod_path}"
+                                    shutil.copytree(path, renamed_mod_path)
+                                except FileExistsError:
+                                    for root, dirs, files in os.walk(path):
+                                        dest_dir = root.replace(path, renamed_mod_path)
+                                        if not os.path.isdir(dest_dir):
+                                            os.makedirs(dest_dir)
+                                        for file in files:
+                                            src_file = os.path.join(root, file)
+                                            dst_file = os.path.join(dest_dir, file)
+                                            shutil.copy2(src_file, dst_file)
+                                logger.debug(
+                                    f'Successfully "converted" Steam mod by copying {publishedfileid_from_folder_name} -> {mod_name} and migrating mod to local mods directory'
                                 )
-                        if len(publishedfileids_to_unsubscribe_from) > 0:
-                            logger.debug(
-                                f"Unsubscribing from {len(publishedfileids_to_unsubscribe_from)} converted mods"
-                            )
-                            self.steamworks_subscription_signal.emit(
-                                [
-                                    "unsubscribe",
-                                    [
-                                        eval(str_pfid)
-                                        for str_pfid in publishedfileids_to_unsubscribe_from
-                                    ],
-                                ]
-                            )
+                            except:
+                                stacktrace = traceback.format_exc()
+                                logger.error(f"Failed to convert mod: {path}")
+                                logger.error(stacktrace)
                     return True
                 elif (  # ACTION: Re-subscribe to mod(s) with Steam
                     action == re_steam_action and len(steam_publishedfileid_to_name) > 0

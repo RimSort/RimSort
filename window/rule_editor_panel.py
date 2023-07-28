@@ -196,6 +196,7 @@ class RuleEditor(QWidget):
         self.external_community_rules_loadBottom_checkbox = QCheckBox(
             "Force load at bottom of list"
         )
+        self.external_community_rules_loadBottom_checkbox.setObjectName("summaryValue")
         # user rules
         self.external_user_rules_loadAfter_label = QLabel("User Rules (loadAfter)")
         self.external_user_rules_loadBefore_label = QLabel("User Rules (loadBefore)")
@@ -232,6 +233,7 @@ class RuleEditor(QWidget):
         self.external_user_rules_loadBottom_checkbox = QCheckBox(
             "Force load at bottom of list"
         )
+        self.external_user_rules_loadBottom_checkbox.setObjectName("summaryValue")
         # EDITOR WIDGETS
         # Create the model and set column headers
         self.editor_model = QStandardItemModel(0, 5)
@@ -244,6 +246,7 @@ class RuleEditor(QWidget):
             self._comment_edited
         )  # Connect the signal to the slot
         self.editor_table_view = QTableView()
+        self.editor_table_view.setCornerButtonEnabled(False)
         self.editor_table_view.setModel(self.editor_model)
         self.editor_table_view.setSortingEnabled(True)  # Enable sorting on the columns
         self.editor_table_view.setItemDelegate(
@@ -649,7 +652,7 @@ class RuleEditor(QWidget):
                     self.edit_name = metadata["name"]
                     self.mod_label.setText(f"Editing rules for: {self.edit_name}")
                     if metadata.get("loadafter") and metadata["loadafter"].get("li"):
-                        loadafters = metadata["loadafter"]["li"]
+                        loadAfters = metadata["loadafter"]["li"]
                         if isinstance(loadAfters, str):
                             self._create_list_item(
                                 _list=self.local_metadata_loadAfter_list,
