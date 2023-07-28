@@ -24,7 +24,7 @@ DEFAULT_SETTINGS = {
     "build_steam_database_dlc_data": True,
     "build_steam_database_update_toggle": False,
     "watchdog_toggle": True,
-    "csharp_mods": True,
+    "mod_type_filter_toggle": True,
     "duplicate_mods_warning": False,
     "steam_mods_update_check": False,
     "try_download_missing_mods": False,
@@ -73,4 +73,6 @@ SEARCH_DATA_SOURCE_FILTER_INDEXES = [
     "git_repo",
     "steamcmd",
     "workshop",
+    "csharp",
+    "xml",
 ]

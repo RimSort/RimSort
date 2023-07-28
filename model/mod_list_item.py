@@ -26,8 +26,9 @@ class ModListItemInner(QWidget):
     def __init__(
         self,
         data: Dict[str, Any],
-        csharp_icon_enable: bool,
+        mod_type_filter_enable: bool,
         csharp_icon_path: str,
+        xml_icon_path: str,
         git_icon_path: str,
         local_icon_path: str,
         ludeon_icon_path: str,
@@ -58,8 +59,9 @@ class ModListItemInner(QWidget):
         self.main_label = QLabel()
 
         # Icon paths
-        self.csharp_icon_enable = csharp_icon_enable
+        self.mod_type_filter_enable = mod_type_filter_enable
         self.csharp_icon_path = csharp_icon_path
+        self.xml_icon_path = xml_icon_path
         self.git_icon_path = git_icon_path
         self.local_icon_path = local_icon_path
         self.ludeon_icon_path = ludeon_icon_path
@@ -76,12 +78,20 @@ class ModListItemInner(QWidget):
 
         # Icons that are conditional
         self.csharp_icon = None
-        if self.json_data.get("csharp") and self.csharp_icon_enable:
-            self.csharp_icon = QLabel()
-            self.csharp_icon.setPixmap(
-                QIcon(self.csharp_icon_path).pixmap(QSize(20, 20))
-            )
-            self.csharp_icon.setToolTip("Contains C# assemblies")
+        self.xml_icon = None
+        if self.mod_type_filter_enable:
+            if self.json_data.get("csharp"):
+                self.csharp_icon = QLabel()
+                self.csharp_icon.setPixmap(
+                    QIcon(self.csharp_icon_path).pixmap(QSize(20, 20))
+                )
+                self.csharp_icon.setToolTip(
+                    "Contains custom C# assemblies (custom code)"
+                )
+            else:
+                self.xml_icon = QLabel()
+                self.xml_icon.setPixmap(QIcon(self.xml_icon_path).pixmap(QSize(20, 20)))
+                self.xml_icon.setToolTip("Contains custom content (textures / XML)")
         self.git_icon = None
         if (
             self.json_data["data_source"] == "local"
@@ -134,6 +144,8 @@ class ModListItemInner(QWidget):
             self.main_item_layout.addWidget(self.mod_source_icon, Qt.AlignRight)
         if self.csharp_icon:
             self.main_item_layout.addWidget(self.csharp_icon, Qt.AlignRight)
+        if self.xml_icon:
+            self.main_item_layout.addWidget(self.xml_icon, Qt.AlignRight)
         self.main_item_layout.addWidget(self.main_label, Qt.AlignCenter)
         self.main_item_layout.addWidget(self.warning_icon_label, Qt.AlignRight)
         self.main_item_layout.addStretch()

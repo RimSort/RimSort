@@ -25,7 +25,7 @@ class InactiveModList:
     inactive mods list panel on the GUI.
     """
 
-    def __init__(self, csharp_icon_enable: bool, local_mods_path=None) -> None:
+    def __init__(self, mod_type_filter_enable: bool, local_mods_path=None) -> None:
         """
         Initialize the class.
         Create a ListWidget using the dict of mods. This will
@@ -33,7 +33,7 @@ class InactiveModList:
         """
         logger.debug("Initializing InactiveModList")
 
-        self.csharp_icon_enable = csharp_icon_enable
+        self.mod_type_filter_enable = mod_type_filter_enable
         self.local_mods_path = local_mods_path
 
         # Base layout type
@@ -46,7 +46,7 @@ class InactiveModList:
 
         # Inactive mod list
         self.inactive_mods_list = ModListWidget(
-            csharp_icon_enable=self.csharp_icon_enable,
+            mod_type_filter_enable=self.mod_type_filter_enable,
             local_mods_path=self.local_mods_path,
         )
 

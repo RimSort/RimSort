@@ -44,7 +44,7 @@ class ModListWidget(QListWidget):
     steamcmd_downloader_signal = Signal(list)
     steamworks_subscription_signal = Signal(list)
 
-    def __init__(self, csharp_icon_enable: bool, local_mods_path=None) -> None:
+    def __init__(self, mod_type_filter_enable: bool, local_mods_path=None) -> None:
         """
         Initialize the ListWidget with a dict of mods.
         Keys are the package ids and values are a dict of
@@ -80,11 +80,14 @@ class ModListWidget(QListWidget):
         self.horizontalScrollBar().setVisible(False)
 
         # Store icon paths
-        self.csharp_icon_enable = csharp_icon_enable
+        self.mod_type_filter_enable = mod_type_filter_enable
         self.csharp_icon_path = str(
             Path(
                 os.path.join(os.path.dirname(__file__), "../data/csharp.png")
             ).resolve()
+        )
+        self.xml_icon_path = str(
+            Path(os.path.join(os.path.dirname(__file__), "../data/xml.png")).resolve()
         )
         self.git_icon_path = str(
             Path(os.path.join(os.path.dirname(__file__), "../data/git.png")).resolve()
@@ -821,8 +824,9 @@ class ModListWidget(QListWidget):
                 data = item.data(Qt.UserRole)
                 widget = ModListItemInner(
                     data,
-                    csharp_icon_enable=self.csharp_icon_enable,
+                    mod_type_filter_enable=self.mod_type_filter_enable,
                     csharp_icon_path=self.csharp_icon_path,
+                    xml_icon_path=self.xml_icon_path,
                     git_icon_path=self.git_icon_path,
                     local_icon_path=self.local_icon_path,
                     ludeon_icon_path=self.ludeon_icon_path,

@@ -115,11 +115,11 @@ class SettingsPanel(QDialog):
             + "button animation. This may potentially be used later for other things.\n\n"
             + "This option is applied on RimSort initialization."
         )
-        self.csharp_mods_checkbox = QCheckBox(
-            "Show C# icon when Assemblies found in mod"
+        self.mod_type_filter_checkbox = QCheckBox(
+            "Show mod type filter in the active/inactive mod lists"
         )
-        self.csharp_mods_checkbox.setObjectName("summaryValue")
-        self.csharp_mods_checkbox.setToolTip(
+        self.mod_type_filter_checkbox.setObjectName("summaryValue")
+        self.mod_type_filter_checkbox.setToolTip(
             "Displays icon in mod list widget to signify.\n"
             + "Requires restart for preference to take effect."
         )
@@ -155,7 +155,7 @@ class SettingsPanel(QDialog):
         self.general_preferences_layout.addWidget(self.rimsort_options_label)
         self.general_preferences_layout.addWidget(self.logger_debug_checkbox)
         self.general_preferences_layout.addWidget(self.watchdog_checkbox)
-        self.general_preferences_layout.addWidget(self.csharp_mods_checkbox)
+        self.general_preferences_layout.addWidget(self.mod_type_filter_checkbox)
         self.general_preferences_layout.addWidget(self.duplicate_mods_checkbox)
         self.general_preferences_layout.addWidget(self.steam_mods_update_checkbox)
         self.general_preferences_layout.addWidget(

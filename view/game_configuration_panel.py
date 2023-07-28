@@ -92,8 +92,8 @@ class GameConfiguration(QObject):
         # WATCHDOG TOGGLE
         self.watchdog_toggle = False
 
-        # CSHARP MODS TOGGLE
-        self.csharp_mods_toggle = False
+        # MOD TYPE FILTER MODS TOGGLE
+        self.mod_type_filter_toggle = False
 
         # DUPE MODS WARNING TOGGLE
         self.duplicate_mods_warning_toggle = False
@@ -408,7 +408,9 @@ class GameConfiguration(QObject):
         # General Preferences
         self.settings_panel.logger_debug_checkbox.setChecked(self.debug_mode)
         self.settings_panel.watchdog_checkbox.setChecked(self.watchdog_toggle)
-        self.settings_panel.csharp_mods_checkbox.setChecked(self.csharp_mods_toggle)
+        self.settings_panel.mod_type_filter_checkbox.setChecked(
+            self.mod_type_filter_toggle
+        )
         self.settings_panel.duplicate_mods_checkbox.setChecked(
             self.duplicate_mods_warning_toggle
         )
@@ -630,8 +632,8 @@ class GameConfiguration(QObject):
             # general
             if settings_data.get("watchdog_toggle"):
                 self.watchdog_toggle = settings_data["watchdog_toggle"]
-            if settings_data.get("csharp_mods"):
-                self.csharp_mods_toggle = settings_data["csharp_mods"]
+            if settings_data.get("mod_type_filter_toggle"):
+                self.mod_type_filter_toggle = settings_data["mod_type_filter_toggle"]
             if settings_data.get("duplicate_mods_warning"):
                 self.duplicate_mods_warning_toggle = settings_data[
                     "duplicate_mods_warning"
@@ -762,11 +764,11 @@ class GameConfiguration(QObject):
             self.watchdog_toggle = True
         else:
             self.watchdog_toggle = False
-        # csharp mods toggle
-        if self.settings_panel.csharp_mods_checkbox.isChecked():
-            self.csharp_mods_toggle = True
+        # mod type filter toggle mods toggle
+        if self.settings_panel.mod_type_filter_checkbox.isChecked():
+            self.mod_type_filter_toggle = True
         else:
-            self.csharp_mods_toggle = False
+            self.mod_type_filter_toggle = False
         # duplicate mods check toggle
         if self.settings_panel.duplicate_mods_checkbox.isChecked():
             self.duplicate_mods_warning_toggle = True
@@ -837,7 +839,7 @@ class GameConfiguration(QObject):
             {
                 "build_steam_database_dlc_data": self.build_steam_database_dlc_data_toggle,
                 "build_steam_database_update_toggle": self.build_steam_database_update_toggle,
-                "csharp_mods": self.csharp_mods_toggle,
+                "mod_type_filter_toggle": self.mod_type_filter_toggle,
                 "db_builder_include": self.db_builder_include,
                 "duplicate_mods_warning": self.duplicate_mods_warning_toggle,
                 "external_steam_metadata_source": self.settings_panel.external_steam_metadata_cb.currentText(),
@@ -853,7 +855,8 @@ class GameConfiguration(QObject):
                 "watchdog_toggle": self.watchdog_toggle,
             }
         )
-
+        # Update mod type filter toggle
+        self.configuration_signal.emit("update_mod_type_filter_toggle")
         # Update SteamCMD validate toggle
         self.configuration_signal.emit("update_steamcmd_validate_toggle")
 
