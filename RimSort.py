@@ -335,7 +335,7 @@ if __name__ == "__main__":
     # This check is used whether RimSort is running via Nuitka bundle
     if "__compiled__" in globals():
         logger.debug("Running using Nuitka bundle")
-        if system != "debug":
+        if system != "Linux":
             logger.warning(
                 "Non-Linux platform detected: using multiprocessing.freeze_support() & setting 'spawn' as MP method"
             )
