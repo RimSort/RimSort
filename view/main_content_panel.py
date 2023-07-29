@@ -37,6 +37,7 @@ from requests import get as requests_get
 from model.dialogue import show_dialogue_conditional, show_dialogue_input
 from model.animations import LoadingAnimation
 
+from util.constants import RIMWORLD_DLC_METADATA
 from util.generic import (
     chunks,
     delete_files_except_extension,
@@ -116,10 +117,6 @@ class MainContent:
         # Fetch paths dynamically from game configuration panel
         logger.info("Loading GameConfiguration instance")
         self.game_configuration = game_configuration
-
-        # IF CHECK FOR UPDATE ON STARTUP...
-        if self.game_configuration.check_for_updates_action.isChecked():
-            self.actions_slot("check_for_update")
 
         # BASE LAYOUT
         self.main_layout = QHBoxLayout()
@@ -764,10 +761,10 @@ class MainContent:
         if action == "check_for_update":
             self._do_check_for_update()
         if action == "update_mod_type_filter_toggle":
-            self.active_mods_panel.active_mods_list.mod_type_filter_toggle = (
+            self.active_mods_panel.active_mods_list.mod_type_filter_enable = (
                 self.game_configuration.mod_type_filter_toggle
             )
-            self.inactive_mods_panel.inactive_mods_list.mod_type_filter_toggle = (
+            self.inactive_mods_panel.inactive_mods_list.mod_type_filter_enable = (
                 self.game_configuration.mod_type_filter_toggle
             )
         if action == "update_steamcmd_validate_toggle":
@@ -1013,10 +1010,20 @@ class MainContent:
                     logger.warning(
                         f"Downloading & extracting RimSort release from: {browser_download_url}"
                     )
-                    with ZipFile(
-                        BytesIO(requests_get(browser_download_url).content)
-                    ) as zipobj:
-                        zipobj.extractall(gettempdir())
+                    self._do_threaded_loading_animation(
+                        gif_path=str(
+                            Path(
+                                os.path.join(
+                                    os.path.dirname(__file__), "../data/refresh.gif"
+                                )
+                            ).resolve()
+                        ),
+                        target=partial(
+                            self.__do_download_release_to_tempdir,
+                            url=browser_download_url,
+                        ),
+                        text=f"RimSort update found. Downloading RimSort {tag_name_updated} release...",
+                    )
                 except:
                     stacktrace = traceback.format_exc()
                     show_warning(
@@ -1080,6 +1087,10 @@ class MainContent:
         else:
             logger.warning("Up-to-date!")
 
+    def __do_download_release_to_tempdir(self, url: str) -> None:
+        with ZipFile(BytesIO(requests_get(url).content)) as zipobj:
+            zipobj.extractall(gettempdir())
+
     def _do_check_for_workshop_updates(self) -> None:
         logger.info(
             "User preference is configured to check Steam mods for updates. Displaying potential updates..."
@@ -1087,7 +1098,7 @@ class MainContent:
         self._do_threaded_loading_animation(
             gif_path=str(
                 Path(
-                    os.path.join(os.path.dirname(__file__), "../data/query.gif")
+                    os.path.join(os.path.dirname(__file__), "../data/steam_api.gif")
                 ).resolve()
             ),
             target=partial(query_workshop_update_data, mods=self.all_mods_compiled),
@@ -1236,16 +1247,14 @@ class MainContent:
                     }
                     """
                 )
-            self.active_mods_panel.clear_active_mods_search()
             self.active_mods_panel.active_mods_filter_data_source_index = len(
                 self.active_mods_panel.active_mods_filter_data_source_icons
             )
-            self.active_mods_panel.signal_active_mods_data_source_filter()
-            self.inactive_mods_panel.clear_inactive_mods_search()
+            self.active_mods_panel.clear_active_mods_search()
             self.inactive_mods_panel.inactive_mods_filter_data_source_index = len(
                 self.inactive_mods_panel.inactive_mods_filter_data_source_icons
             )
-            self.inactive_mods_panel.signal_inactive_mods_data_source_filter()
+            self.inactive_mods_panel.clear_inactive_mods_search()
         # Check if paths are set
         if self.game_configuration.check_if_essential_paths_are_set():
             # Run expensive calculations to set cache data
@@ -1255,7 +1264,7 @@ class MainContent:
             self.__repopulate_lists()
 
             # If we have missing mods, prompt user
-            if self.missing_mods and len(self.missing_mods) >= 1:
+            if self.missing_mods and len(self.missing_mods) > 0:
                 self.__missing_mods_prompt(self.missing_mods)
 
             # Check Workshop mods for updates if configured
@@ -1288,25 +1297,56 @@ class MainContent:
         Method to clear all the non-base, non-DLC mods from the active
         list widget and put them all into the inactive list widget.
         """
-        self.active_mods_panel.clear_active_mods_search()
         self.active_mods_panel.active_mods_filter_data_source_index = len(
             self.active_mods_panel.active_mods_filter_data_source_icons
         )
-        self.active_mods_panel.signal_active_mods_data_source_filter()
-        self.inactive_mods_panel.clear_inactive_mods_search()
+        self.active_mods_panel.clear_active_mods_search()
         self.inactive_mods_panel.inactive_mods_filter_data_source_index = len(
             self.inactive_mods_panel.inactive_mods_filter_data_source_icons
         )
-        self.inactive_mods_panel.signal_inactive_mods_data_source_filter()
+        self.inactive_mods_panel.clear_inactive_mods_search()
 
+        # Metadata from official modules, stored so they can be inserted in proper order
+        core_data = None
+        royalty_data = None
+        ideology_data = None
+        biotech_data = None
+        # Metadata to insert
         active_mod_data = {}
         inactive_mod_data = {}
         logger.info("Clearing mods from active mod list")
         for uuid, mod_data in self.all_mods_compiled.items():
             if mod_data["data_source"] == "expansion":
-                active_mod_data[uuid] = mod_data
+                if (
+                    mod_data["packageid"]
+                    == RIMWORLD_DLC_METADATA["294100"]["packageid"]
+                ):
+                    core_data = mod_data
+                elif (
+                    mod_data["packageid"]
+                    == RIMWORLD_DLC_METADATA["1149640"]["packageid"]
+                ):
+                    royalty_data = mod_data
+                elif (
+                    mod_data["packageid"]
+                    == RIMWORLD_DLC_METADATA["1392840"]["packageid"]
+                ):
+                    ideology_data = mod_data
+                elif (
+                    mod_data["packageid"]
+                    == RIMWORLD_DLC_METADATA["1826140"]["packageid"]
+                ):
+                    biotech_data = mod_data
             else:
                 inactive_mod_data[uuid] = mod_data
+        if core_data:
+            active_mod_data[core_data["uuid"]] = core_data
+        if royalty_data:
+            active_mod_data[royalty_data["uuid"]] = royalty_data
+        if ideology_data:
+            active_mod_data[ideology_data["uuid"]] = ideology_data
+        if biotech_data:
+            active_mod_data[biotech_data["uuid"]] = biotech_data
         self.__insert_data_into_lists(active_mod_data, inactive_mod_data)
 
     def _do_sort(self) -> None:

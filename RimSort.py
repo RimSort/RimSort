@@ -208,10 +208,15 @@ class MainWindow(QMainWindow):
             self.game_configuration_panel.workshop_folder_frame.setVisible(
                 self.game_configuration_panel.show_folder_rows
             )
-            QTimer.singleShot(0, self.__initialize_content)
 
     def __initialize_content(self) -> None:
         self.init = True
+
+        # IF CHECK FOR UPDATE ON STARTUP...
+        if self.game_configuration_panel.check_for_updates_action.isChecked():
+            self.main_content_panel.actions_slot("check_for_update")
+
+        # REFRESH CONFIGURED METADATA
         self.main_content_panel._do_refresh(is_initial=True)
 
         # CHECK USER PREFERENCE FOR WATCHDOG
@@ -260,8 +265,10 @@ class MainWindow(QMainWindow):
 
 def main_thread():
     try:
+        # Create the application
         app = QApplication(sys.argv)
         app.setApplicationName("RimSort")
+        # Get styling from game configuration
         logger.debug("Setting application style")
         app.setStyle(
             ProxyStyle()
@@ -269,9 +276,11 @@ def main_thread():
         app.setStyleSheet(  # Add style sheet for styling layouts and widgets
             Path(os.path.join(os.path.dirname(__file__), "data/style.qss")).read_text()
         )
+        # Create the main window
         window = MainWindow(debug_mode=DEBUG_MODE)
         logger.info("Showing MainWindow")
         window.show()
+        window.__initialize_content()
         app.exec()
     except Exception as e:
         # Catch exceptions during initial application instantiation
@@ -334,5 +343,5 @@ if __name__ == "__main__":
             set_start_method("spawn")
     else:
         logger.debug("Running using Python interpreter")
-    logger.info("Initializing RimSort application")
+    logger.debug("Initializing RimSort application")
     main_thread()

@@ -275,7 +275,9 @@ class ModListWidget(QListWidget):
                             re_git_action = QAction()
                             re_git_action.setText("Update mod with git")
                     # If Workshop, and pfid, allow Steam actions
-                    if mod_data_source == "workshop":
+                    if mod_data_source == "workshop" and widget_json_data.get(
+                        "publishedfileid"
+                    ):
                         mod_name = widget_json_data.get("name")
                         mod_folder_path = widget_json_data["path"]
                         publishedfileid = widget_json_data["publishedfileid"]
@@ -338,6 +340,7 @@ class ModListWidget(QListWidget):
                                 ] = publishedfileid
                                 # Convert local mods -> steamcmd
                                 if not convert_local_steamcmd_action:
+                                    convert_local_steamcmd_action = QAction()
                                     convert_local_steamcmd_action.setText(
                                         "Convert local mod(s) to SteamCMD"
                                     )
@@ -372,7 +375,9 @@ class ModListWidget(QListWidget):
                             toggle_warning_action = QAction()
                             toggle_warning_action.setText("Toggle warning(s)")
                         # If Workshop, and pfid, allow Steam actions
-                        if mod_data_source == "workshop":
+                        if mod_data_source == "workshop" and widget_json_data.get(
+                            "publishedfileid"
+                        ):
                             mod_name = widget_json_data.get("name")
                             mod_folder_path = widget_json_data["path"]
                             publishedfileid = widget_json_data["publishedfileid"]

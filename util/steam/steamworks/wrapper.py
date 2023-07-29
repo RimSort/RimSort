@@ -9,7 +9,6 @@ from typing import Union
 import sys
 
 from steamworks import STEAMWORKS
-from steamworks.exceptions import SteamNotRunningException
 import traceback
 from util.generic import launch_game_process
 
@@ -55,13 +54,13 @@ class SteamworksInterface:
         try:
             self.steamworks.initialize()  # Init the Steamworks API
         except Exception as e:
-            if e.__class__ == OSError or e.__class__ == SteamNotRunningException:
-                logger.warning(
-                    "Unable to initiate Steamworks API. If you are a Steam user, please check that Steam running and that you are logged in..."
-                )
-                self.steam_not_running = True
-            else:
-                raise e
+            logger.debug(
+                f"Unable to initialize Steamworks API due to exception: {e.__class__}"
+            )
+            logger.warning(
+                "Unable to initiate Steamworks API. If you are a Steam user, please check that Steam running and that you are logged in..."
+            )
+            self.steam_not_running = True
         if not self.steam_not_running:  # Skip if True
             if self.callbacks:
                 # Start the thread
@@ -234,7 +233,7 @@ class SteamworksGameLaunch(Process):
         logger.info(f"Creating SteamworksInterface and launching game executable")
         # Try to initialize the SteamWorks API, but allow game to launch if Steam not found
         steamworks_interface = SteamworksInterface(callbacks=False)
-        if not steamworks_interface.steam_not_running:  # Delete if true
+        if steamworks_interface.steam_not_running:  # Delete if true
             steamworks_interface = None
         # Launch the game
         launch_game_process(game_install_path=self.game_install_path, args=self.args)
@@ -243,7 +242,6 @@ class SteamworksGameLaunch(Process):
             # Unload Steamworks API
             steamworks_interface.steamworks.unload()
         else:
-            steamworks_interface.steamworks.unload()
             steamworks_interface = None
 
 

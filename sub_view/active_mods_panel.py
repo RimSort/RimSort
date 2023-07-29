@@ -38,10 +38,10 @@ class ActiveModList(QWidget):
         create a row for every key-value pair in the dict.
         """
         logger.debug("Initializing ActiveModList")
-        self.mod_type_filter_enable = mod_type_filter_enable
         self.list_updated = False
         self.local_mods_path = local_mods_path
-
+        self.mod_type_filter_enable = mod_type_filter_enable
+        self.searching = None
         super(ActiveModList, self).__init__()
 
         # Base layout type
@@ -113,6 +113,7 @@ class ActiveModList(QWidget):
         self.active_mods_search.textChanged.connect(
             self.signal_active_mods_search_and_filters
         )
+        self.active_mods_search.inputRejected.connect(self.clear_active_mods_search)
         self.active_mods_search.setPlaceholderText("Search by...")
         self.active_mods_search_clear_button = self.active_mods_search.findChild(
             QToolButton
@@ -453,92 +454,95 @@ class ActiveModList(QWidget):
         self.active_mods_search.clearFocus()
 
     def signal_active_mods_search_and_filters(self, pattern: str) -> None:
-        wni = self.active_mods_list.get_widgets_and_items()
-        filtered_qlabel_stylesheet = "QLabel { color : grey; }"
-        unfiltered_qlabel_stylesheet = "QLabel { color : white; }"
+        if not self.searching:
+            self.searching = True
+            wni = self.active_mods_list.get_widgets_and_items()
+            filtered_qlabel_stylesheet = "QLabel { color : grey; }"
+            unfiltered_qlabel_stylesheet = "QLabel { color : white; }"
 
-        if self.active_mods_search_filter.currentText() == "Name":
-            search_filter = "name"
-        elif self.active_mods_search_filter.currentText() == "PackageId":
-            search_filter = "packageid"
-        elif self.active_mods_search_filter.currentText() == "Author(s)":
-            search_filter = "authors"
-        elif self.active_mods_search_filter.currentText() == "PublishedFileId":
-            search_filter = "publishedfileid"
+            if self.active_mods_search_filter.currentText() == "Name":
+                search_filter = "name"
+            elif self.active_mods_search_filter.currentText() == "PackageId":
+                search_filter = "packageid"
+            elif self.active_mods_search_filter.currentText() == "Author(s)":
+                search_filter = "authors"
+            elif self.active_mods_search_filter.currentText() == "PublishedFileId":
+                search_filter = "publishedfileid"
 
-        for widget, item in wni:
-            if (
-                pattern
-                and widget.json_data.get(search_filter)
-                and not pattern.lower() in str(widget.json_data[search_filter]).lower()
-            ):
-                if self.active_mods_search_filter_state:
-                    item.setHidden(True)
-                else:
-                    widget.findChild(QLabel, "ListItemLabel").setStyleSheet(
-                        filtered_qlabel_stylesheet
-                    )
-            else:
-                if self.active_mods_data_source_filter == "all":
+            for widget, item in wni:
+                if (
+                    pattern
+                    and not pattern.lower()
+                    in str(widget.json_data.get(search_filter)).lower()
+                ):
                     if self.active_mods_search_filter_state:
-                        item.setHidden(False)
+                        item.setHidden(True)
                     else:
                         widget.findChild(QLabel, "ListItemLabel").setStyleSheet(
-                            unfiltered_qlabel_stylesheet
+                            filtered_qlabel_stylesheet
                         )
-                elif self.active_mods_data_source_filter == "git_repo":
-                    if not widget.git_icon:
-                        if self.active_mods_search_filter_state:
-                            item.setHidden(True)
-                        else:
-                            widget.findChild(QLabel, "ListItemLabel").setStyleSheet(
-                                filtered_qlabel_stylesheet
-                            )
-                    else:
-                        if self.active_mods_search_filter_state:
-                            item.setHidden(False)
-                        else:
-                            widget.findChild(QLabel, "ListItemLabel").setStyleSheet(
-                                unfiltered_qlabel_stylesheet
-                            )
-                elif self.active_mods_data_source_filter == "steamcmd":
-                    if not widget.steamcmd_icon:
-                        if self.active_mods_search_filter_state:
-                            item.setHidden(True)
-                        else:
-                            widget.findChild(QLabel, "ListItemLabel").setStyleSheet(
-                                filtered_qlabel_stylesheet
-                            )
-                    else:
-                        if self.active_mods_search_filter_state:
-                            item.setHidden(False)
-                        else:
-                            widget.findChild(QLabel, "ListItemLabel").setStyleSheet(
-                                unfiltered_qlabel_stylesheet
-                            )
                 else:
-                    if not widget.mod_source_icon or (
-                        widget.mod_source_icon
-                        and (
-                            widget.mod_source_icon.objectName()
-                            != self.active_mods_data_source_filter
-                        )
-                    ):
-                        if self.active_mods_search_filter_state:
-                            item.setHidden(True)
-                        else:
-                            widget.findChild(QLabel, "ListItemLabel").setStyleSheet(
-                                filtered_qlabel_stylesheet
-                            )
-                    else:
+                    if self.active_mods_data_source_filter == "all":
                         if self.active_mods_search_filter_state:
                             item.setHidden(False)
                         else:
                             widget.findChild(QLabel, "ListItemLabel").setStyleSheet(
                                 unfiltered_qlabel_stylesheet
                             )
+                    elif self.active_mods_data_source_filter == "git_repo":
+                        if not widget.git_icon:
+                            if self.active_mods_search_filter_state:
+                                item.setHidden(True)
+                            else:
+                                widget.findChild(QLabel, "ListItemLabel").setStyleSheet(
+                                    filtered_qlabel_stylesheet
+                                )
+                        else:
+                            if self.active_mods_search_filter_state:
+                                item.setHidden(False)
+                            else:
+                                widget.findChild(QLabel, "ListItemLabel").setStyleSheet(
+                                    unfiltered_qlabel_stylesheet
+                                )
+                    elif self.active_mods_data_source_filter == "steamcmd":
+                        if not widget.steamcmd_icon:
+                            if self.active_mods_search_filter_state:
+                                item.setHidden(True)
+                            else:
+                                widget.findChild(QLabel, "ListItemLabel").setStyleSheet(
+                                    filtered_qlabel_stylesheet
+                                )
+                        else:
+                            if self.active_mods_search_filter_state:
+                                item.setHidden(False)
+                            else:
+                                widget.findChild(QLabel, "ListItemLabel").setStyleSheet(
+                                    unfiltered_qlabel_stylesheet
+                                )
+                    else:
+                        if not widget.mod_source_icon or (
+                            widget.mod_source_icon
+                            and (
+                                widget.mod_source_icon.objectName()
+                                != self.active_mods_data_source_filter
+                            )
+                        ):
+                            if self.active_mods_search_filter_state:
+                                item.setHidden(True)
+                            else:
+                                widget.findChild(QLabel, "ListItemLabel").setStyleSheet(
+                                    filtered_qlabel_stylesheet
+                                )
+                        else:
+                            if self.active_mods_search_filter_state:
+                                item.setHidden(False)
+                            else:
+                                widget.findChild(QLabel, "ListItemLabel").setStyleSheet(
+                                    unfiltered_qlabel_stylesheet
+                                )
 
-        self.update_count(wni)
+            self.update_count(wni)
+            self.searching = False
 
     def signal_active_mods_data_source_filter(self) -> None:
         # Indexes by the icon

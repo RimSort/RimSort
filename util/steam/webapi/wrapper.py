@@ -508,10 +508,9 @@ def ISteamRemoteStorage_GetCollectionDetails(
         # Make a request to the Steam Web API
         try:
             request = requests_post(url, data=data)
-        except ConnectionError:
-            stacktrace = traceback.format_exc()
+        except Exception as e:
             logger.warning(
-                f"Unable to complete request! Are you connected to the internet?\n{stacktrace}"
+                f"Unable to complete request! Are you connected to the internet? Received exception: {e.__class__}"
             )
             return None
         try:
@@ -557,10 +556,9 @@ def ISteamRemoteStorage_GetPublishedFileDetails(
         # Make a request to the Steam Web API
         try:
             request = requests_post(url, data=data)
-        except ConnectionError:
-            stacktrace = traceback.format_exc()
+        except Exception as e:
             logger.warning(
-                f"Unable to complete request! Are you connected to the internet?\n{stacktrace}"
+                f"Unable to complete request! Are you connected to the internet? Received exception: {e.__class__}"
             )
             return None
         try:

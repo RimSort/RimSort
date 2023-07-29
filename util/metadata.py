@@ -528,6 +528,10 @@ def get_workshop_acf_data(
             workshop_mods[mod_uuid]["internal_time_touched"] = int(
                 workshop_item_details[publishedfileid]["timetouched"]
             )
+        else:  # Otherwise, get the info from the mod's folder info on the filesystem
+            workshop_mods[mod_uuid]["internal_time_touched"] = os.path.getmtime(
+                workshop_mods[mod_uuid]["path"]
+            )
         if workshop_item_details.get(publishedfileid, {}).get("timeupdated"):
             # The last time SteamCMD/Steam client updated a mod according to its entry
             workshop_mods[mod_uuid]["internal_time_updated"] = int(

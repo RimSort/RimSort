@@ -100,14 +100,14 @@ class ModListItemInner(QWidget):
         ):
             self.git_icon = QLabel()
             self.git_icon.setPixmap(QIcon(self.git_icon_path).pixmap(QSize(20, 20)))
-            self.git_icon.setToolTip("Contains a git repository")
+            self.git_icon.setToolTip("Local mod that contains a git repository")
         self.steamcmd_icon = None
         if self.json_data["data_source"] == "local" and self.json_data.get("steamcmd"):
             self.steamcmd_icon = QLabel()
             self.steamcmd_icon.setPixmap(
                 QIcon(self.steamcmd_icon_path).pixmap(QSize(20, 20))
             )
-            self.steamcmd_icon.setToolTip("Downloaded with SteamCMD")
+            self.steamcmd_icon.setToolTip("Local mod that can be used with SteamCMD")
         # Warning icon hidden by default
         self.warning_icon_label = ClickableQLabel()
         self.warning_icon_label.clicked.connect(
@@ -127,7 +127,9 @@ class ModListItemInner(QWidget):
             data_source = self.json_data.get("data_source")
             if data_source == "expansion":
                 self.mod_source_icon.setObjectName("expansion")
-                self.mod_source_icon.setToolTip("Official RimWorld content")
+                self.mod_source_icon.setToolTip(
+                    "Official RimWorld content by Ludeon Studios"
+                )
             elif data_source == "local":
                 self.mod_source_icon.setObjectName("local")
                 self.mod_source_icon.setToolTip("Installed locally")
