@@ -138,7 +138,7 @@ class MainWindow(QMainWindow):
         # Create the main application window
         self.debug_mode = debug_mode
         self.init = None  # Content initialization should only fire on startup. Otherwise, this is handled by Refresh button
-        self.version_string = "Alpha-v1.0.6.1"
+        self.version_string = "Alpha-v1.0.6."
         self.game_configuration_watchdog_event_handler = None
 
         # Setup the window

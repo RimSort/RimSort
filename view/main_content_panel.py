@@ -922,23 +922,24 @@ class MainContent:
     def _do_check_for_update(self) -> None:
         # NOT NUITKA
         if not "__compiled__" in globals():
-            logger.warning(
+            logger.debug(
                 "You are running from Python interpreter. Skipping update check..."
+            )
+            show_warning(
+                title="Update skipped",
+                text="You are running from Python interpreter.",
+                information="Skipping update check...",
             )
             return
         # NUITKA
-        logger.warning("Checking for RimSort update...")
-        # Parse latest release
-        raw = requests_get(
-            "https://api.github.com/repos/RimSort/RimSort/releases/latest"
-        )
-        json_response = raw.json()
+        logger.debug("Checking for RimSort update...")
         current_version = self.rimsort_version.lower()
+        json_response = self.__do_get_github_release_info()
         tag_name = json_response["tag_name"]
         tag_name_updated = tag_name.replace("alpha", "Alpha")
         install_path = os.getcwd()
-        logger.warning(f"Current RimSort release found: {tag_name}")
-        logger.warning(f"Current RimSort version found: {current_version}")
+        logger.debug(f"Current RimSort release found: {tag_name}")
+        logger.debug(f"Current RimSort version found: {current_version}")
         if current_version != tag_name:
             answer = show_dialogue_conditional(
                 title="RimSort update found",
@@ -953,7 +954,13 @@ class MainContent:
                 if PROCESSOR == "":
                     PROCESSOR = platform.machine()
                 SYSTEM = platform.system()
+
+                current_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
+
                 if SYSTEM == "Darwin":
+                    current_dir = os.path.split(
+                        os.path.split(os.path.dirname(os.path.abspath(sys.argv[0])))[0]
+                    )[0]
                     executable_name = "RimSort.app"
                     if PROCESSOR == "i386" or PROCESSOR == "arm":
                         logger.warning(
@@ -984,9 +991,6 @@ class MainContent:
                 else:
                     logger.warning(f"Unsupported system {SYSTEM} {ARCH} {PROCESSOR}")
                     return
-                logger.warning(
-                    f"Attempting to retrieve archive from release: {target_archive}"
-                )
                 # Try to find a valid release from our generated archive name
                 for asset in json_response["assets"]:
                     if asset["name"] == target_archive:
@@ -998,16 +1002,9 @@ class MainContent:
                         text=f"Failed to find valid RimSort release for {SYSTEM} {ARCH} {PROCESSOR}",
                     )
                     return
-                # Try to download & extract todds release from browser_download_url
-                if SYSTEM == "Darwin":
-                    current_dir = os.path.split(
-                        os.path.split(os.path.dirname(os.path.abspath(sys.argv[0])))[0]
-                    )[0]
-                else:
-                    current_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
                 target_archive_extracted = target_archive.replace(".zip", "")
                 try:
-                    logger.warning(
+                    logger.debug(
                         f"Downloading & extracting RimSort release from: {browser_download_url}"
                     )
                     self._do_threaded_loading_animation(
@@ -1035,119 +1032,82 @@ class MainContent:
                         details=stacktrace,
                     )
                     return
-                if SYSTEM == "Windows":
-                    os.system(
-                        f'start /wait cmd /c {str(Path(os.path.join(os.path.dirname(__file__), "../update.bat")))}'
-                    )
-                    sys.exit()
-                else:
-                    # Replace the current program directory with the new version
-                    shutil_rmtree(
-                        current_dir,
-                        ignore_errors=False,
-                        onerror=handle_remove_read_only,
-                    )
-                    copytree(
+                # https://stackoverflow.com/a/21805723
+                if SYSTEM == "Darwin":  # MacOS
+                    popen_args = [
+                        "/bin/bash",
                         str(
                             Path(
                                 os.path.join(
-                                    gettempdir(),
-                                    executable_name
-                                    if SYSTEM == "Darwin"
-                                    else "RimSort",
+                                    current_dir,
+                                    "Contents",
+                                    "MacOS",
+                                    "update.sh",
                                 )
                             ).resolve()
                         ),
-                        current_dir,
-                    )
-                    # Set executable permissions as ZipFile does not preserve this in the zip archive
-                    executable_path = str(
-                        Path(os.path.join(current_dir, executable_name)).resolve()
-                    )
-                    if os.path.exists(executable_path):
-                        original_stat = os.stat(executable_path)
-                        os.chmod(
+                    ]
+                    p = subprocess.Popen(popen_args)
+                else:
+                    try:
+                        subprocess.CREATE_NEW_PROCESS_GROUP
+                    except (
+                        AttributeError
+                    ):  # not Windows, so assume POSIX; if not, we'll get a usable exception
+                        popen_args = [
+                            "/bin/bash",
                             str(
                                 Path(
                                     os.path.join(
-                                        executable_path, "Contents", "MacOS", "RimSort"
+                                        os.path.dirname(__file__),
+                                        f"../update.sh",
                                     )
                                 ).resolve()
-                            )
-                            if SYSTEM == "Darwin"
-                            else executable_path,
-                            original_stat.st_mode | S_IEXEC,
+                            ),
+                        ]
+                        p = subprocess.Popen(
+                            popen_args,
+                            start_new_session=True,
                         )
-                    show_information(
-                        title="Update completed",
-                        text=f"RimSort has applied an update: {current_version} -> {tag_name}",
-                        information="The application needs restarted. RimSort will now exit.",
-                    )
-                    sys.exit()
+                    else:  # Windows
+                        popen_args = [
+                            "start",
+                            "/wait",
+                            "cmd",
+                            "/c",
+                            str(
+                                Path(
+                                    os.path.join(
+                                        os.path.dirname(__file__),
+                                        f"../update.bat",
+                                    )
+                                ).resolve()
+                            ),
+                        ]
+                        p = subprocess.Popen(
+                            popen_args,
+                            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+                            shell=True,
+                        )
+                logger.debug(f"External updater script launched with PID: {p.pid}")
+                logger.debug(f"Arguments used: {popen_args}")
+                sys.exit()
         else:
-            logger.warning("Up-to-date!")
+            logger.debug("Up-to-date!")
 
     def __do_download_release_to_tempdir(self, url: str) -> None:
         with ZipFile(BytesIO(requests_get(url).content)) as zipobj:
             zipobj.extractall(gettempdir())
 
-    def _do_check_for_workshop_updates(self) -> None:
-        logger.info(
-            "User preference is configured to check Steam mods for updates. Displaying potential updates..."
+    def __do_get_github_release_info(self) -> Dict[str, Any]:
+        # Parse latest release
+        raw = requests_get(
+            "https://api.github.com/repos/RimSort/RimSort/releases/latest"
         )
-        self._do_threaded_loading_animation(
-            gif_path=str(
-                Path(
-                    os.path.join(os.path.dirname(__file__), "../data/steam_api.gif")
-                ).resolve()
-            ),
-            target=partial(query_workshop_update_data, mods=self.all_mods_compiled),
-            text="Checking Steam Workshop mods for updates...",
-        )
+        json_response = raw.json()
+        return json_response
 
-    def _do_generate_mod_update_report(self) -> None:
-        self.workshop_mods_potential_updates = {}
-        for v in self.all_mods_compiled.values():
-            if v.get("publishedfileid") and (
-                v.get("steamcmd") or v["data_source"] == "workshop"
-            ):
-                pfid = v["publishedfileid"]
-                uuid = v["uuid"]
-                name = v.get("name") or self.external_steam_metadata[pfid].get(
-                    "steamName"
-                )
-                name = f"############################\n{name}"
-                if (
-                    # If we have data to compare...
-                    (v.get("internal_time_touched") and v.get("external_time_updated"))
-                    # ...and publishing has been updated since the last time it was touched
-                    and v["external_time_updated"] > v["internal_time_touched"]
-                ):
-                    logger.debug(f"Potential update found for Workshop mod: {pfid}")
-                    self.workshop_mods_potential_updates[pfid] = {
-                        "external_time_updated": v["external_time_updated"],
-                        "internal_time_touched": v["internal_time_touched"],
-                        "ui_string": (
-                            f"\n{name}"
-                            + f'\nInstalled Workshop mod last touched: {strftime("%Y-%m-%d %H:%M:%S", localtime(v["internal_time_touched"]))}'
-                            + f'\nWorkshop publishing last updated: {strftime("%Y-%m-%d %H:%M:%S", localtime(v["external_time_updated"]))}\n'
-                        ),
-                    }
-        # If we have updates available...
-        if len(self.workshop_mods_potential_updates) > 0:
-            # ...generate our report
-            list_of_potential_updates = ""
-            for time_data in self.workshop_mods_potential_updates.values():
-                list_of_potential_updates += time_data["ui_string"]
-            show_information(
-                title="Mod update(s) available!",
-                text="The following list of Steam mods may have updates available!",
-                information=(
-                    "This metadata was parsed directly from your Steam client's workshop data, and "
-                    "compared with the 'time updated' metadata returned from Steam Workshop."
-                ),
-                details=list_of_potential_updates,
-            )
+    # INFO PANEL ANIMATIONS
 
     def _do_threaded_loading_animation(
         self, gif_path: str, target: Callable, text=None
@@ -2208,6 +2168,66 @@ class MainContent:
                 self._do_cleanup_gitpython(repo)
         else:
             self._do_notify_no_git()
+
+    # WORKSHOP MOD UPDATE CHECK
+
+    def _do_check_for_workshop_updates(self) -> None:
+        logger.info(
+            "User preference is configured to check Steam mods for updates. Displaying potential updates..."
+        )
+        self._do_threaded_loading_animation(
+            gif_path=str(
+                Path(
+                    os.path.join(os.path.dirname(__file__), "../data/steam_api.gif")
+                ).resolve()
+            ),
+            target=partial(query_workshop_update_data, mods=self.all_mods_compiled),
+            text="Checking Steam Workshop mods for updates...",
+        )
+
+    def _do_generate_mod_update_report(self) -> None:
+        self.workshop_mods_potential_updates = {}
+        for v in self.all_mods_compiled.values():
+            if v.get("publishedfileid") and (
+                v.get("steamcmd") or v["data_source"] == "workshop"
+            ):
+                pfid = v["publishedfileid"]
+                uuid = v["uuid"]
+                name = v.get("name") or self.external_steam_metadata[pfid].get(
+                    "steamName"
+                )
+                name = f"############################\n{name}"
+                if (
+                    # If we have data to compare...
+                    (v.get("internal_time_touched") and v.get("external_time_updated"))
+                    # ...and publishing has been updated since the last time it was touched
+                    and v["external_time_updated"] > v["internal_time_touched"]
+                ):
+                    logger.debug(f"Potential update found for Workshop mod: {pfid}")
+                    self.workshop_mods_potential_updates[pfid] = {
+                        "external_time_updated": v["external_time_updated"],
+                        "internal_time_touched": v["internal_time_touched"],
+                        "ui_string": (
+                            f"\n{name}"
+                            + f'\nInstalled Workshop mod last touched: {strftime("%Y-%m-%d %H:%M:%S", localtime(v["internal_time_touched"]))}'
+                            + f'\nWorkshop publishing last updated: {strftime("%Y-%m-%d %H:%M:%S", localtime(v["external_time_updated"]))}\n'
+                        ),
+                    }
+        # If we have updates available...
+        if len(self.workshop_mods_potential_updates) > 0:
+            # ...generate our report
+            list_of_potential_updates = ""
+            for time_data in self.workshop_mods_potential_updates.values():
+                list_of_potential_updates += time_data["ui_string"]
+            show_information(
+                title="Mod update(s) available!",
+                text="The following list of Steam mods may have updates available!",
+                information=(
+                    "This metadata was parsed directly from your Steam client's workshop data, and "
+                    "compared with the 'time updated' metadata returned from Steam Workshop."
+                ),
+                details=list_of_potential_updates,
+            )
 
     # EXTERNAL METADATA ACTIONS
 
