@@ -1768,7 +1768,7 @@ class MainContent(QObject):
 
     def _upload_previous_rs_log(self):
         ret = upload_data_to_0x0_st(
-            str(Path(os.path.join(gettempdir(), "RimSort_Previous.log")).resolve())
+            str(Path(os.path.join(gettempdir(), "RimSort.old.log")).resolve())
         )
         if ret:
             copy_to_clipboard(ret)
