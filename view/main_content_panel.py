@@ -91,7 +91,7 @@ from window.runner_panel import RunnerPanel
 # print(f"sys.argv: {sys.argv}")
 
 
-class MainContent:
+class MainContent(QObject):
     """
     This class controls the layout and functionality of the main content
     panel of the GUI, containing the mod information display, inactive and
@@ -99,6 +99,8 @@ class MainContent:
     as the main temporary datastore of the app, caching workshop mod information
     and their dependencies.
     """
+
+    stop_watchdog_signal = Signal()
 
     def __init__(
         self, game_configuration: GameConfiguration, rimsort_version: str
@@ -108,6 +110,7 @@ class MainContent:
 
         :param game_configuration: game configuration panel to get paths
         """
+        super(MainContent, self).__init__()
         logger.debug("Initializing MainContent")
 
         # VERSION PASSED FROM & CONFIGURED IN MAIN SCRIPT (RimSort.py)
@@ -588,90 +591,104 @@ class MainContent:
 
     def __refresh_internal_metadata(self) -> None:
         # Get and cache installed base game / DLC data
-        expansions_gif_path = str(
-            Path(
-                os.path.join(os.path.dirname(__file__), "../data/rimworld.gif")
-            ).resolve()
-        )
-        expansions_callable = partial(
-            get_installed_expansions,
-            game_path=self.game_configuration.game_folder_line.text(),
-            game_version=self.game_version,
-        )
-        self.expansions = self._do_threaded_loading_animation(
-            gif_path=expansions_gif_path,
-            target=expansions_callable,
-            text="Retrieving metadata for Official RimWorld Expansions...",
-        )
-        # Get and cache installed local/custom mods
-        local_gif_path = str(
-            Path(os.path.join(os.path.dirname(__file__), "../data/local.gif")).resolve()
-        )
-        local_mods_callable = partial(
-            get_local_mods,
-            local_path=self.game_configuration.local_folder_line.text(),
-            game_path=self.game_configuration.game_folder_line.text(),
-            steam_db=self.external_steam_metadata,
-        )
-        self.local_mods = self._do_threaded_loading_animation(
-            gif_path=local_gif_path,
-            target=local_mods_callable,
-            text="Retrieving metadata for local/SteamCMD mods...",
-        )
-        # If we can find the appworkshop_294100.acf files from SteamCMD or Steam client
-        # SteamCMD
-        if os.path.exists(
-            self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
-        ):  # If the file we want to parse exists
-            get_workshop_acf_data(
-                appworkshop_acf_path=self.steamcmd_wrapper.steamcmd_appworkshop_acf_path,
-                workshop_mods=self.local_mods,
-            )  # ... get data
-            logger.info(
-                f"Successfully parsed SteamCMD appworkshop.acf metadata from: {self.steamcmd_wrapper.steamcmd_appworkshop_acf_path}"
+        game_path = self.game_configuration.game_folder_line.text()
+        self.expansions = {}
+        if game_path and game_path != "":
+            expansions_gif_path = str(
+                Path(
+                    os.path.join(os.path.dirname(__file__), "../data/rimworld.gif")
+                ).resolve()
             )
-        else:
-            logger.debug(
-                f"SteamCMD appworkshop.acf metadata not found. Skipping: {self.steamcmd_wrapper.steamcmd_appworkshop_acf_path}"
+            expansions_callable = partial(
+                get_installed_expansions,
+                game_path=game_path,
+                game_version=self.game_version,
             )
-        workshop_gif_path = str(
-            Path(os.path.join(os.path.dirname(__file__), "../data/steam.gif")).resolve()
-        )
-        workshop_mods_callable = partial(
-            get_workshop_mods,
-            workshop_path=self.game_configuration.workshop_folder_line.text(),
-            steam_db=self.external_steam_metadata,
-        )
-        self.workshop_mods = self._do_threaded_loading_animation(
-            gif_path=workshop_gif_path,
-            target=workshop_mods_callable,
-            text="Retrieving metadata for Steam Workshop mods...",
-        )
-        # Steam client
-        steam_appworkshop_path = os.path.split(
-            # This is just getting the path 2 directories up from content/294100,
-            # so that we can find workshop/appworkshop_294100.acf
-            os.path.split(self.game_configuration.workshop_folder_line.text())[0]
-        )[0]
-        self.steam_appworkshop_acf_path = str(
-            Path(
-                os.path.join(steam_appworkshop_path, "appworkshop_294100.acf")
-            ).resolve()
-        )
-        if os.path.exists(
-            self.steam_appworkshop_acf_path
-        ):  # If the file we want to parse exists
-            get_workshop_acf_data(
-                appworkshop_acf_path=self.steam_appworkshop_acf_path,
-                workshop_mods=self.workshop_mods,
-            )  # ... get data
-            logger.info(
-                f"Successfully parsed Steam client appworkshop.acf metadata from: {self.steam_appworkshop_acf_path}"
+            self.expansions = self._do_threaded_loading_animation(
+                gif_path=expansions_gif_path,
+                target=expansions_callable,
+                text="Retrieving metadata for Official RimWorld Expansions...",
             )
-        else:
-            logger.debug(
-                f"Steam client appworkshop.acf metadata not found. Skipping: {self.steam_appworkshop_acf_path}"
+        # Get and cache installed local/SteamCMD Workshop mods
+        local_path = self.game_configuration.local_folder_line.text()
+        self.local_mods = {}
+        if local_path and local_path != "":
+            local_gif_path = str(
+                Path(
+                    os.path.join(os.path.dirname(__file__), "../data/local.gif")
+                ).resolve()
             )
+            local_mods_callable = partial(
+                get_local_mods,
+                local_path=local_path,
+                game_path=self.game_configuration.game_folder_line.text(),
+                steam_db=self.external_steam_metadata,
+            )
+            self.local_mods = self._do_threaded_loading_animation(
+                gif_path=local_gif_path,
+                target=local_mods_callable,
+                text="Retrieving metadata for local/SteamCMD mods...",
+            )
+            # If we can find the appworkshop_294100.acf files from SteamCMD or Steam client
+            # SteamCMD
+            if os.path.exists(
+                self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
+            ):  # If the file we want to parse exists
+                get_workshop_acf_data(
+                    appworkshop_acf_path=self.steamcmd_wrapper.steamcmd_appworkshop_acf_path,
+                    workshop_mods=self.local_mods,
+                )  # ... get data
+                logger.info(
+                    f"Successfully parsed SteamCMD appworkshop.acf metadata from: {self.steamcmd_wrapper.steamcmd_appworkshop_acf_path}"
+                )
+            else:
+                logger.debug(
+                    f"SteamCMD appworkshop.acf metadata not found. Skipping: {self.steamcmd_wrapper.steamcmd_appworkshop_acf_path}"
+                )
+        # Get and cache installed Steam client Workshop mods
+        workshop_path = self.game_configuration.workshop_folder_line.text()
+        self.workshop_mods = {}
+        if workshop_path and workshop_path != "":
+            workshop_gif_path = str(
+                Path(
+                    os.path.join(os.path.dirname(__file__), "../data/steam.gif")
+                ).resolve()
+            )
+            workshop_mods_callable = partial(
+                get_workshop_mods,
+                workshop_path=workshop_path,
+                steam_db=self.external_steam_metadata,
+            )
+            self.workshop_mods = self._do_threaded_loading_animation(
+                gif_path=workshop_gif_path,
+                target=workshop_mods_callable,
+                text="Retrieving metadata for Steam Workshop mods...",
+            )
+            # Steam client
+            steam_appworkshop_path = os.path.split(
+                # This is just getting the path 2 directories up from content/294100,
+                # so that we can find workshop/appworkshop_294100.acf
+                os.path.split(self.game_configuration.workshop_folder_line.text())[0]
+            )[0]
+            self.steam_appworkshop_acf_path = str(
+                Path(
+                    os.path.join(steam_appworkshop_path, "appworkshop_294100.acf")
+                ).resolve()
+            )
+            if os.path.exists(
+                self.steam_appworkshop_acf_path
+            ):  # If the file we want to parse exists
+                get_workshop_acf_data(
+                    appworkshop_acf_path=self.steam_appworkshop_acf_path,
+                    workshop_mods=self.workshop_mods,
+                )  # ... get data
+                logger.info(
+                    f"Successfully parsed Steam client appworkshop.acf metadata from: {self.steam_appworkshop_acf_path}"
+                )
+            else:
+                logger.debug(
+                    f"Steam client appworkshop.acf metadata not found. Skipping: {self.steam_appworkshop_acf_path}"
+                )
         # One working Dictionary for ALL mods
         self.internal_local_metadata = merge_mod_data(
             self.expansions, self.local_mods, self.workshop_mods
@@ -1032,6 +1049,9 @@ class MainContent:
                         details=stacktrace,
                     )
                     return
+                # Stop watchdog
+                logger.info("Stopping watchdog Observer thread before update...")
+                self.stop_watchdog_signal.emit()
                 # https://stackoverflow.com/a/21805723
                 if SYSTEM == "Darwin":  # MacOS
                     popen_args = [

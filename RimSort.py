@@ -139,7 +139,10 @@ class MainWindow(QMainWindow):
         self.debug_mode = debug_mode
         self.init = None  # Content initialization should only fire on startup. Otherwise, this is handled by Refresh button
         self.version_string = "Alpha-v1.0.6."
-        self.game_configuration_watchdog_event_handler = None
+
+        # Watchdog
+        self.watchdog_event_handler = None
+        self.watchdog_observer = None
 
         # Setup the window
         self.setWindowTitle(f"RimSort {self.version_string}")
@@ -221,46 +224,51 @@ class MainWindow(QMainWindow):
 
         # CHECK USER PREFERENCE FOR WATCHDOG
         if self.game_configuration_panel.watchdog_toggle:
+            # Setup watchdog
             self.__initialize_watchdog()
 
-        # CHECK USER PREFERENCE FOR WATCHDOG
-        if self.game_configuration_panel.watchdog_toggle:
-            # Start watchdog
-            logger.info("Initializing watchdog observer")
-            self.game_configuration_watchdog_observer.start()
+    def cease_watchdog(self) -> None:
+        if self.watchdog_observer and self.watchdog_observer.is_alive():
+            self.watchdog_observer.stop()
+            self.watchdog_observer.join()
 
     def __initialize_watchdog(self) -> None:
+        logger.info("Initializing watchdog FS Observer")
         # INITIALIZE WATCHDOG - WE WAIT TO START UNTIL DONE PARSING MOD LIST
         game_folder_path = self.game_configuration_panel.game_folder_line.text()
         local_folder_path = self.game_configuration_panel.local_folder_line.text()
         workshop_folder_path = self.game_configuration_panel.workshop_folder_line.text()
-        self.game_configuration_watchdog_event_handler = RSFileSystemEventHandler()
+        self.watchdog_event_handler = RSFileSystemEventHandler()
         if SYSTEM == "Windows":
-            self.game_configuration_watchdog_observer = PollingObserver()
+            self.watchdog_observer = PollingObserver()
         else:
-            self.game_configuration_watchdog_observer = Observer()
-        if game_folder_path != "":
-            self.game_configuration_watchdog_observer.schedule(
-                self.game_configuration_watchdog_event_handler,
+            self.watchdog_observer = Observer()
+        if game_folder_path and game_folder_path != "":
+            self.watchdog_observer.schedule(
+                self.watchdog_event_handler,
                 game_folder_path,
                 # recursive=True,
             )
-        if local_folder_path != "":
-            self.game_configuration_watchdog_observer.schedule(
-                self.game_configuration_watchdog_event_handler,
+        if local_folder_path and local_folder_path != "":
+            self.watchdog_observer.schedule(
+                self.watchdog_event_handler,
                 local_folder_path,
                 # recursive=True,
             )
-        if workshop_folder_path != "":
-            self.game_configuration_watchdog_observer.schedule(
-                self.game_configuration_watchdog_event_handler,
+        if workshop_folder_path and workshop_folder_path != "":
+            self.watchdog_observer.schedule(
+                self.watchdog_event_handler,
                 workshop_folder_path,
                 # recursive=True,
             )
         # Connect watchdog to our refresh button animation
-        self.game_configuration_watchdog_event_handler.file_changes_signal.connect(
+        self.watchdog_event_handler.file_changes_signal.connect(
             self.main_content_panel._do_refresh_animation
         )
+        # Connect main content signal so it can stop watchdog
+        self.main_content_panel.stop_watchdog_signal.connect(self.cease_watchdog)
+        # Start watchdog
+        self.watchdog_observer.start()
 
 
 def main_thread():
@@ -304,11 +312,10 @@ def main_thread():
         logger.error(stacktrace)
         show_fatal_error(details=stacktrace)
     finally:
-        if "window" in locals() and window.game_configuration_panel.watchdog_toggle:
+        if "window" in locals():
             try:
                 logger.debug("Stopping watchdog...")
-                window.game_configuration_watchdog_observer.stop()
-                window.game_configuration_watchdog_observer.join()
+                window.cease_watchdog()
             except:
                 stacktrace = traceback.format_exc()
                 logger.warning(
