@@ -84,7 +84,7 @@ class SettingsPanel(QDialog):
                 self.storage_path,
             )
         )
-        self.upload_log_button = QPushButton("Upload current RimSort.log")
+        self.upload_log_button = QPushButton("Upload RimSort.log")
         self.upload_log_button.setToolTip(
             "RimSort.log will be uploaded to http://0x0.st/ and\n"
             + "the URL will be copied to your clipboard."
