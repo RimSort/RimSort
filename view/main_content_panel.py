@@ -1768,13 +1768,13 @@ class MainContent(QObject):
 
     def _upload_rs_old_log(self):
         ret = upload_data_to_0x0_st(
-            str(Path(os.path.join(gettempdir(), "RimSort_Old.log")).resolve())
+            str(Path(os.path.join(gettempdir(), "RimSort.old.log")).resolve())
         )
         if ret:
             copy_to_clipboard(ret)
             show_information(
                 title="Uploaded file",
-                text=f"Uploaded RimSort_Old.log to http://0x0.st/",
+                text=f"Uploaded RimSort.old.log to http://0x0.st/",
                 information=f"The URL has been copied to your clipboard:\n\n{ret}",
             )
 

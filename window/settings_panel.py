@@ -93,9 +93,9 @@ class SettingsPanel(QDialog):
         self.upload_log_button.clicked.connect(
             partial(self.actions_signal.emit, "upload_rs_log")
         )
-        self.upload_log_old_button = QPushButton("Upload RimSort_Old.log")
+        self.upload_log_old_button = QPushButton("Upload RimSort.old.log")
         self.upload_log_old_button.setToolTip(
-            "RimSort_Old.log will be uploaded to http://0x0.st/ and\n"
+            "RimSort.old.log will be uploaded to http://0x0.st/ and\n"
             + "the URL will be copied to your clipboard."
         )
         self.upload_log_old_button.clicked.connect(
