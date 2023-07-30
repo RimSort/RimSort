@@ -11,8 +11,8 @@ from math import ceil
 from multiprocessing import cpu_count, current_process, Pool
 from stat import S_IEXEC
 from shutil import copytree
-from shutil import rmtree as shutil_rmtree
 from tempfile import gettempdir
+from time import time
 from zipfile import ZipFile
 
 from logger_tt import logger
@@ -203,7 +203,12 @@ class MainContent(QObject):
         self.inactive_mods_panel.inactive_mods_list.steamworks_subscription_signal.connect(
             self._do_steamworks_api_call_animated
         )
-
+        self.active_mods_panel.active_mods_list.steamdb_blacklist_signal.connect(
+            self._do_blacklist_action_steamdb
+        )
+        self.inactive_mods_panel.inactive_mods_list.steamdb_blacklist_signal.connect(
+            self._do_blacklist_action_steamdb
+        )
         # Restore cache initially set to empty
         self.active_mods_data_restore_state: Dict[str, Any] = {}
         self.inactive_mods_data_restore_state: Dict[str, Any] = {}
@@ -2838,6 +2843,45 @@ class MainContent(QObject):
             self.db_builder.start()
         else:
             logger.debug("USER ACTION: cancelled selection...")
+
+    def _do_blacklist_action_steamdb(self, instruction: list) -> None:
+        if (
+            self.external_steam_metadata_path
+            and self.external_steam_metadata
+            and len(self.external_steam_metadata.keys()) > 0
+        ):
+            logger.info(f"Updating SteamDB blacklist status for item: {instruction}")
+            # Retrieve instruction passed from signal
+            publishedfileid = instruction[0]
+            blacklist = instruction[1]
+            if blacklist:  # Only deal with comment if we are adding a mod to blacklist
+                comment = instruction[2]
+            else:
+                comment = None
+            # Check if our DB has an entry for the mod we are editing
+            if not self.external_steam_metadata.get(publishedfileid):
+                self.external_steam_metadata.setdefault(publishedfileid, {})
+            # Edit our metadata
+            if blacklist and comment:
+                self.external_steam_metadata[publishedfileid]["blacklist"] = {
+                    "value": blacklist,
+                    "comment": comment,
+                }
+            else:
+                self.external_steam_metadata[publishedfileid].pop("blacklist", None)
+            logger.debug("Updating previous database with new metadata...\n")
+            with open(self.external_steam_metadata_path, "w") as output:
+                json.dump(
+                    {
+                        "version": int(
+                            time() + self.game_configuration.database_expiry
+                        ),
+                        "database": self.external_steam_metadata,
+                    },
+                    output,
+                    indent=4,
+                )
+            self._do_refresh()
 
     def _do_download_entire_workshop(self, action: str) -> None:
         # If settings panel is still open, close it.

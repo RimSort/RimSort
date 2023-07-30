@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
 )
 
 from model.mod_list_item import ModListItemInner
-from model.dialogue import show_dialogue_conditional, show_warning
+from model.dialogue import show_dialogue_conditional, show_dialogue_input, show_warning
 from util.generic import (
     delete_files_except_extension,
     handle_remove_read_only,
@@ -41,6 +41,7 @@ class ModListWidget(QListWidget):
     mod_info_signal = Signal(str)
     recalculate_warnings_signal = Signal()
     re_git_signal = Signal(list)
+    steamdb_blacklist_signal = Signal(list)
     steamcmd_downloader_signal = Signal(list)
     steamworks_subscription_signal = Signal(list)
 
@@ -186,6 +187,11 @@ class ModListWidget(QListWidget):
             # A list to track any workshop mod publishedfileids
             steam_publishedfileid_to_name = {}
 
+            # STEAMDB BLACKLIST
+            # A list to track any publishedfileids we want to blacklist / remove from blacklist
+            steamdb_add_blacklist = None
+            steamdb_remove_blacklist = None
+
             # Define our QMenu & QActions
             contextMenu = QMenu()
             # Open folder action
@@ -198,6 +204,9 @@ class ModListWidget(QListWidget):
             edit_mod_rules_action = None
             # Toggle warning action
             toggle_warning_action = None
+            # Blacklist SteamDB options
+            add_to_steamdb_blacklist_action = None
+            remove_from_steamdb_blacklist_action = None
             # Convert SteamCMD -> local
             convert_steamcmd_local_action = None
             # Convert local -> SteamCMD
@@ -296,6 +305,21 @@ class ModListWidget(QListWidget):
                         unsubscribe_mod_steam_action.setText(
                             "Unsubscribe mod with Steam"
                         )
+                    # SteamDB blacklist options
+                    if self.steam_db and widget_json_data.get("publishedfileid"):
+                        publishedfileid = widget_json_data["publishedfileid"]
+                        if self.steam_db.get(publishedfileid, {}).get("blacklist"):
+                            steamdb_remove_blacklist = publishedfileid
+                            remove_from_steamdb_blacklist_action = QAction()
+                            remove_from_steamdb_blacklist_action.setText(
+                                "Remove mod from SteamDB blacklist"
+                            )
+                        else:
+                            steamdb_add_blacklist = publishedfileid
+                            add_to_steamdb_blacklist_action = QAction()
+                            add_to_steamdb_blacklist_action.setText(
+                                "Add mod to SteamDB blacklist"
+                            )
                     # Edit mod rules with Rule Editor (only for individual mods)
                     edit_mod_rules_action = QAction()
                     edit_mod_rules_action.setText("Edit mod with Rule Editor")
@@ -401,6 +425,7 @@ class ModListWidget(QListWidget):
                                 unsubscribe_mod_steam_action.setText(
                                     "Unsubscribe mod(s) with Steam"
                                 )
+                        # No SteamDB blacklist options when multiple selected
                         # Prohibit deletion of game files
                         if not delete_mod_action:
                             delete_mod_action = QAction()
@@ -443,8 +468,10 @@ class ModListWidget(QListWidget):
                 or re_steamcmd_action
                 or re_steam_action
                 or unsubscribe_mod_steam_action
+                or add_to_steamdb_blacklist_action
+                or remove_from_steamdb_blacklist_action
             ):
-                workshop_actions_menu = QMenu(title="Workshop (SteamCMD/Steam)")
+                workshop_actions_menu = QMenu(title="Workshop mods options")
                 if self.local_mods_path and convert_local_steamcmd_action:
                     workshop_actions_menu.addAction(convert_local_steamcmd_action)
                 if self.local_mods_path and convert_steamcmd_local_action:
@@ -457,6 +484,17 @@ class ModListWidget(QListWidget):
                     workshop_actions_menu.addAction(re_steam_action)
                 if unsubscribe_mod_steam_action:
                     workshop_actions_menu.addAction(unsubscribe_mod_steam_action)
+                if (
+                    add_to_steamdb_blacklist_action
+                    or remove_from_steamdb_blacklist_action
+                ):
+                    workshop_actions_menu.addSeparator()
+                if add_to_steamdb_blacklist_action:
+                    workshop_actions_menu.addAction(add_to_steamdb_blacklist_action)
+                if remove_from_steamdb_blacklist_action:
+                    workshop_actions_menu.addAction(
+                        remove_from_steamdb_blacklist_action
+                    )
                 contextMenu.addMenu(workshop_actions_menu)
             # Execute QMenu and return it's ACTION
             action = contextMenu.exec_(self.mapToGlobal(event.pos()))
@@ -664,6 +702,39 @@ class ModListWidget(QListWidget):
                                 "unsubscribe",
                                 [eval(str_pfid) for str_pfid in publishedfileids],
                             ]
+                        )
+                    return True
+                elif (
+                    action == add_to_steamdb_blacklist_action
+                ):  # ACTION: Blacklist workshop mod in SteamDB
+                    args, ok = show_dialogue_input(
+                        title="Add comment",
+                        text=f"Enter a comment providing your reasoning for wanting to blacklist this mod: "
+                        + f'{self.steam_db.get(steamdb_add_blacklist, {}).get("steamName", steamdb_add_blacklist)}',
+                    )
+                    if ok:
+                        self.steamdb_blacklist_signal.emit(
+                            [steamdb_add_blacklist, True, args]
+                        )
+                    else:
+                        show_warning(
+                            title="Unable to add to blacklist",
+                            text="Comment was not provided or entry was cancelled. Comments are REQUIRED for this action!",
+                        )
+                    return True
+                elif (
+                    action == remove_from_steamdb_blacklist_action
+                ):  # ACTION: Blacklist workshop mod in SteamDB
+                    answer = show_dialogue_conditional(
+                        title="Are you sure?",
+                        text=f"This will remove the selected mod, "
+                        + f'{self.steam_db.get(steamdb_remove_blacklist, {}).get("steamName", steamdb_remove_blacklist)}, '
+                        + "from your configured Steam DB blacklist."
+                        + "\nDo you want to proceed?",
+                    )
+                    if answer == "&Yes":
+                        self.steamdb_blacklist_signal.emit(
+                            [steamdb_remove_blacklist, False]
                         )
                     return True
                 elif action == delete_mod_action:  # ACTION: Delete mods action
