@@ -21,7 +21,6 @@ from PySide6.QtWidgets import (
 )
 
 from model.dialogue import show_information
-from pyperclip import copy as copy_to_clipboard
 from util.generic import platform_specific_open, upload_data_to_0x0_st
 
 

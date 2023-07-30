@@ -209,11 +209,9 @@ class MainContent(QObject):
         self.inactive_mods_panel.inactive_mods_list.steamdb_blacklist_signal.connect(
             self._do_blacklist_action_steamdb
         )
-        self.active_mods_panel.active_mods_list.refresh_signal.connect(
-            self._do_refresh()
-        )
+        self.active_mods_panel.active_mods_list.refresh_signal.connect(self._do_refresh)
         self.inactive_mods_panel.inactive_mods_list.refresh_signal.connect(
-            self._do_refresh()
+            self._do_refresh
         )
         # Restore cache initially set to empty
         self.active_mods_data_restore_state: Dict[str, Any] = {}

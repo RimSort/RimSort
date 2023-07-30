@@ -3,7 +3,6 @@ from errno import EACCES
 import os
 from pathlib import Path
 import platform
-from pyperclip import copy as copy_to_clipboard
 import shutil
 from stat import S_IRWXU, S_IRWXG, S_IRWXO
 import subprocess

@@ -8,6 +8,7 @@ from time import sleep
 import traceback
 from typing import Any, List, Optional
 
+from pyperclip import copy as copy_to_clipboard
 from PySide6.QtCore import Qt, QEvent, QModelIndex, QObject, Signal
 from PySide6.QtGui import QAction, QCursor, QDropEvent, QFocusEvent, QKeySequence
 from PySide6.QtWidgets import (
@@ -201,6 +202,9 @@ class ModListWidget(QListWidget):
             open_url_browser_action = None
             # Open URL in Steam
             open_mod_steam_action = None
+            # Copy to clipboard actions
+            copy_packageId_to_clipboard_action = None
+            copy_url_to_clipboard_action = None
             # Edit mod rules
             edit_mod_rules_action = None
             # Toggle warning action
@@ -243,6 +247,8 @@ class ModListWidget(QListWidget):
                     if widget_json_data.get("url") or widget_json_data.get("steam_url"):
                         open_url_browser_action = QAction()
                         open_url_browser_action.setText("Open URL in browser")
+                        copy_url_to_clipboard_action = QAction()
+                        copy_url_to_clipboard_action.setText("Copy URL to clipboard")
                     # If we have a "steam_uri"
                     if widget_json_data.get("steam_uri"):
                         open_mod_steam_action = QAction()
@@ -321,6 +327,11 @@ class ModListWidget(QListWidget):
                             add_to_steamdb_blacklist_action.setText(
                                 "Add mod to SteamDB blacklist"
                             )
+                    # Copy packageId to clipboard
+                    copy_packageId_to_clipboard_action = QAction()
+                    copy_packageId_to_clipboard_action.setText(
+                        "Copy packageId to clipboard"
+                    )
                     # Edit mod rules with Rule Editor (only for individual mods)
                     edit_mod_rules_action = QAction()
                     edit_mod_rules_action.setText("Edit mod with Rule Editor")
@@ -455,8 +466,19 @@ class ModListWidget(QListWidget):
                     deletion_options_menu.addAction(delete_mod_keep_dds_action)
                 contextMenu.addMenu(deletion_options_menu)
             contextMenu.addSeparator()
-            if edit_mod_rules_action or re_git_action:
+            if (
+                copy_packageId_to_clipboard_action
+                or copy_url_to_clipboard_action
+                or edit_mod_rules_action
+                or re_git_action
+            ):
                 misc_options_menu = QMenu(title="Miscellaneous options")
+                if copy_packageId_to_clipboard_action or copy_url_to_clipboard_action:
+                    clipboard_options_menu = QMenu(title="Clipboard options")
+                    clipboard_options_menu.addAction(copy_packageId_to_clipboard_action)
+                    if copy_url_to_clipboard_action:
+                        clipboard_options_menu.addAction(copy_url_to_clipboard_action)
+                    misc_options_menu.addMenu(clipboard_options_menu)
                 if edit_mod_rules_action:
                     misc_options_menu.addAction(edit_mod_rules_action)
                 if re_git_action:
@@ -815,8 +837,23 @@ class ModListWidget(QListWidget):
                             if widget_json_data.get("url") or widget_json_data.get(
                                 "steam_url"
                             ):  # If we have some form of "url" to work with...
-                                url = self.get_mod_url(widget_json_data)
-                                if url != "":
+                                url = None
+                                if (
+                                    mod_data_source == "expansion"
+                                    or widget_json_data.get("steamcmd")
+                                    or mod_data_source == "workshop"
+                                ):
+                                    url = widget_json_data.get(
+                                        "steam_url", widget_json_data.get("url")
+                                    )
+                                elif (
+                                    mod_data_source == "local"
+                                    and not widget_json_data.get("steamcmd")
+                                ):
+                                    url = widget_json_data.get(
+                                        "url", widget_json_data.get("steam_url")
+                                    )
+                                if url:
                                     logger.info(f"Opening url in browser: {url}")
                                     open_url_browser(url)
                         # Open Steam URI with Steam action
@@ -827,6 +864,35 @@ class ModListWidget(QListWidget):
                                 "steam_uri"
                             ):  # If we have steam_uri
                                 platform_specific_open(widget_json_data["steam_uri"])
+                        # Copy to clipboard actions
+                        elif (
+                            action == copy_packageId_to_clipboard_action
+                        ):  # ACTION: Copy packageId to clipboard
+                            copy_to_clipboard(widget_json_data["packageid"])
+                        elif (
+                            action == copy_url_to_clipboard_action
+                        ):  # ACTION: Copy URL to clipboard
+                            if widget_json_data.get("url") or widget_json_data.get(
+                                "steam_url"
+                            ):  # If we have some form of "url" to work with...
+                                url = None
+                                if (
+                                    mod_data_source == "expansion"
+                                    or widget_json_data.get("steamcmd")
+                                    or mod_data_source == "workshop"
+                                ):
+                                    url = widget_json_data.get(
+                                        "steam_url", widget_json_data.get("url")
+                                    )
+                                elif (
+                                    mod_data_source == "local"
+                                    and not widget_json_data.get("steamcmd")
+                                ):
+                                    url = widget_json_data.get(
+                                        "url", widget_json_data.get("steam_url")
+                                    )
+                                if url:
+                                    copy_to_clipboard(url)
                         # Edit mod rules action
                         elif action == edit_mod_rules_action:
                             self.edit_rules_signal.emit(
@@ -967,57 +1033,6 @@ class ModListWidget(QListWidget):
                 mod_dict[item.json_data["uuid"]] = item.json_data
         logger.info(f"Collected json data for {len(mod_dict)} mods")
         return mod_dict
-
-    def get_mod_url(self, widget_json_data) -> str:
-        url = ""
-        if (  # Workshop mod URL priority: steam_url > url
-            widget_json_data["data_source"] == "workshop"
-        ):  # If the mod was parsed from a Steam mods source
-            if widget_json_data.get("steam_url") and isinstance(
-                widget_json_data["steam_url"], str
-            ):  # If the steam_url exists
-                url = widget_json_data.get("steam_url")  # Use the Steam URL
-            elif widget_json_data.get("url") and isinstance(
-                widget_json_data["url"],
-                str,
-            ):  # Otherwise, check if local metadata url exists
-                url = widget_json_data["url"]  # Use the local metadata url
-            else:  # Otherwise, warn & do nothing
-                logger.debug(
-                    f"Unable to get url for mod {widget_package_id}"
-                )  # TODO: Make warning visible
-        elif (  # Local mod URL priority: url > steam_url
-            widget_json_data["data_source"] == "local"
-        ):  # If the mod was parsed from a local mods source
-            if widget_json_data.get("url") and isinstance(
-                widget_json_data["url"],
-                str,
-            ):  # If the local metadata url exists
-                url = widget_json_data["url"]  # Use the local metadata url
-            elif widget_json_data.get("steam_url") and isinstance(
-                widget_json_data["steam_url"], str
-            ):  # Otherwise, if the mod has steam_url
-                url = widget_json_data.get("steam_url")  # Use the Steam URL
-            else:  # Otherwise, warn & do nothing
-                logger.warning(
-                    f"Unable to get url for mod {widget_package_id}"
-                )  # TODO: Make warning visible
-        elif (  # Expansions don't have url - always use steam_url if available
-            widget_json_data["data_source"] == "expansion"
-        ):  # Otherwise, the mod MUST be an expansion
-            if widget_json_data.get("steam_url") and isinstance(
-                widget_json_data["steam_url"], str
-            ):  # If the steam_url exists
-                url = widget_json_data.get("steam_url")  # Use the Steam URL
-            else:  # Otherwise, warn & do nothing
-                logger.debug(
-                    f"Unable to get url for mod {widget_package_id}"
-                )  # TODO: Make warning visible
-        else:  # ??? Not possible
-            logger.debug(
-                f"Tried to parse URL for a mod that does not have a data_source? Erroneous json data: {widget_json_data}"
-            )
-        return url
 
     def get_widgets_and_items(self) -> list[tuple[ModListItemInner, QListWidgetItem]]:
         return [
