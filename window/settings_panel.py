@@ -85,7 +85,7 @@ class SettingsPanel(QDialog):
                 self.storage_path,
             )
         )
-        self.upload_log_button = QPushButton("Upload Current RimSort.log")
+        self.upload_log_button = QPushButton("Upload current RimSort.log")
         self.upload_log_button.setToolTip(
             "Current RimSort.log will be uploaded to http://0x0.st/ and\n"
             + "the URL will be copied to your clipboard."
@@ -93,7 +93,7 @@ class SettingsPanel(QDialog):
         self.upload_log_button.clicked.connect(
             partial(self.actions_signal.emit, "upload_rs_log")
         )
-        self.upload_previous_log_button = QPushButton("Upload Previous RimSort.log")
+        self.upload_previous_log_button = QPushButton("Upload old RimSort.log")
         self.upload_previous_log_button.setToolTip(
             " Previous RimSort.log will be uploaded to http://0x0.st/ and\n"
             + "the URL will be copied to your clipboard."
