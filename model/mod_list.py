@@ -40,6 +40,7 @@ class ModListWidget(QListWidget):
     list_update_signal = Signal(str)
     mod_info_signal = Signal(str)
     recalculate_warnings_signal = Signal()
+    refresh_signal = Signal()
     re_git_signal = Signal(list)
     steamdb_blacklist_signal = Signal(list)
     steamcmd_downloader_signal = Signal(list)
@@ -547,6 +548,7 @@ class ModListWidget(QListWidget):
                                 logger.warning(
                                     f"Failed to convert mod! Destination already exists: {renamed_mod_path}"
                                 )
+                    self.refresh_signal.emit()
                     return True
                 elif (  # ACTION: Convert SteamCMD mod(s) -> local
                     action == convert_steamcmd_local_action
@@ -581,6 +583,7 @@ class ModListWidget(QListWidget):
                                 logger.warning(
                                     f"Failed to convert mod! Destination already exists: {renamed_mod_path}"
                                 )
+                    self.refresh_signal.emit()
                     return True
                 elif (  # ACTION: Re-download SteamCMD mod(s)
                     action == re_steamcmd_action
@@ -650,6 +653,7 @@ class ModListWidget(QListWidget):
                                 stacktrace = traceback.format_exc()
                                 logger.error(f"Failed to convert mod: {path}")
                                 logger.error(stacktrace)
+                    self.refresh_signal.emit()
                     return True
                 elif (  # ACTION: Re-subscribe to mod(s) with Steam
                     action == re_steam_action and len(steam_publishedfileid_to_name) > 0
