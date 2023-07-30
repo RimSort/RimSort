@@ -55,6 +55,12 @@ system = platform.system()
 # Otherwise, use sys.argv[0] to get the actual relative path to the executable
 data_path = str(Path(os.path.join(os.path.dirname(__file__), "data")).resolve())
 debug_file = str(Path(os.path.join(data_path, "DEBUG")).resolve())
+# Check if 'RimSort.log' exists and rename it to 'RimSort_Previous.log'
+log_file_path = str(Path(os.path.join(gettempdir(), "RimSort.log")).resolve())
+previous_log_file_path = str(Path(os.path.join(gettempdir(), "RimSort_Previous.log")).resolve())
+
+if os.path.exists(log_file_path):
+    os.rename(log_file_path, previous_log_file_path)
 
 if os.path.exists(debug_file):
     logging_config_path = str(

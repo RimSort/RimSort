@@ -859,6 +859,8 @@ class MainContent(QObject):
             self._do_upload_list_rentry()
         if action == "upload_rs_log":
             self._upload_rs_log()
+        if action == "upload_previous_rs_log":
+            self._upload_previous_rs_log()
         if action == "save":
             self._do_save()
         if action == "run":
@@ -1755,7 +1757,19 @@ class MainContent(QObject):
             copy_to_clipboard(ret)
             show_information(
                 title="Uploaded file",
-                text=f"Uploaded RimSort log to http://0x0.st/",
+                text=f"Uploaded Current RimSort log to http://0x0.st/",
+                information=f"The URL has been copied to your clipboard:\n\n{ret}",
+            )
+
+    def _upload_previous_rs_log(self):
+        ret = upload_data_to_0x0_st(
+            str(Path(os.path.join(gettempdir(), "RimSort_Previous.log")).resolve())
+        )
+        if ret:
+            copy_to_clipboard(ret)
+            show_information(
+                title="Uploaded file",
+                text=f"Uploaded Previous RimSort log to http://0x0.st/",
                 information=f"The URL has been copied to your clipboard:\n\n{ret}",
             )
 
