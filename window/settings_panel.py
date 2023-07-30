@@ -87,19 +87,19 @@ class SettingsPanel(QDialog):
         )
         self.upload_log_button = QPushButton("Upload current RimSort.log")
         self.upload_log_button.setToolTip(
-            "Current RimSort.log will be uploaded to http://0x0.st/ and\n"
+            "RimSort.log will be uploaded to http://0x0.st/ and\n"
             + "the URL will be copied to your clipboard."
         )
         self.upload_log_button.clicked.connect(
             partial(self.actions_signal.emit, "upload_rs_log")
         )
-        self.upload_previous_log_button = QPushButton("Upload old RimSort.log")
-        self.upload_previous_log_button.setToolTip(
-            " Previous RimSort.log will be uploaded to http://0x0.st/ and\n"
+        self.upload_log_old_button = QPushButton("Upload RimSort_Old.log")
+        self.upload_log_old_button.setToolTip(
+            "RimSort_Old.log will be uploaded to http://0x0.st/ and\n"
             + "the URL will be copied to your clipboard."
         )
-        self.upload_previous_log_button.clicked.connect(
-            partial(self.actions_signal.emit, "upload_previous_rs_log")
+        self.upload_log_old_button.clicked.connect(
+            partial(self.actions_signal.emit, "upload_rs_old_log")
         )
         self.rimsort_options_label = QLabel("RimSort Options:")
         self.rimsort_options_label.setObjectName("summaryValue")
@@ -160,7 +160,7 @@ class SettingsPanel(QDialog):
         self.general_actions_layout.addWidget(self.open_log_button)
         self.general_actions_layout.addWidget(self.open_storage_button)
         self.general_actions_layout.addWidget(self.upload_log_button)
-        self.general_actions_layout.addWidget(self.upload_previous_log_button)
+        self.general_actions_layout.addWidget(self.upload_log_old_button)
         self.general_preferences_layout.addWidget(self.rimsort_options_label)
         self.general_preferences_layout.addWidget(self.logger_debug_checkbox)
         self.general_preferences_layout.addWidget(self.watchdog_checkbox)
