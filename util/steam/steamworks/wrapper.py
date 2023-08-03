@@ -54,11 +54,11 @@ class SteamworksInterface:
         try:
             self.steamworks.initialize()  # Init the Steamworks API
         except Exception as e:
-            logger.debug(
-                f"Unable to initialize Steamworks API due to exception: {e.__class__}"
+            logger.warning(
+                f"Unable to initialize Steamworks API due to exception: {e.__class__.__name__}"
             )
             logger.warning(
-                "Unable to initiate Steamworks API. If you are a Steam user, please check that Steam running and that you are logged in..."
+                "If you are a Steam user, please check that Steam running and that you are logged in..."
             )
             self.steam_not_running = True
         if not self.steam_not_running:  # Skip if True

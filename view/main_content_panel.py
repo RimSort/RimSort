@@ -962,7 +962,12 @@ class MainContent(QObject):
         # NUITKA
         logger.debug("Checking for RimSort update...")
         current_version = self.rimsort_version.lower()
-        json_response = self.__do_get_github_release_info()
+        try:
+            json_response = self.__do_get_github_release_info()
+        except Exception as e:
+            logger.warning(
+                f"Unable to retrieve latest release information due to exception: {e.__class__}"
+            )
         tag_name = json_response["tag_name"]
         tag_name_updated = tag_name.replace("alpha", "Alpha")
         install_path = os.getcwd()
@@ -1044,11 +1049,19 @@ class MainContent(QObject):
                             ).resolve()
                         ),
                         target=partial(
-                            self.__do_download_release_to_tempdir,
+                            self.__do_download_extract_release_to_tempdir,
                             url=browser_download_url,
                         ),
                         text=f"RimSort update found. Downloading RimSort {tag_name_updated} release...",
                     )
+                    temp_dir = "RimSort" if not SYSTEM == "Darwin" else "RimSort.app"
+                    answer = show_dialogue_conditional(
+                        title="Update downloaded",
+                        text="Do you want to proceed with the update?",
+                        information=f"\nSuccessfully retrieved latest release. The update will be installed from: {os.path.join(gettempdir(), temp_dir)}",
+                    )
+                    if not answer == "&Yes":
+                        return
                 except:
                     stacktrace = traceback.format_exc()
                     show_warning(
@@ -1126,7 +1139,7 @@ class MainContent(QObject):
         else:
             logger.debug("Up-to-date!")
 
-    def __do_download_release_to_tempdir(self, url: str) -> None:
+    def __do_download_extract_release_to_tempdir(self, url: str) -> None:
         with ZipFile(BytesIO(requests_get(url).content)) as zipobj:
             zipobj.extractall(gettempdir())
 
@@ -1136,7 +1149,6 @@ class MainContent(QObject):
             "https://api.github.com/repos/RimSort/RimSort/releases/latest"
         )
         json_response = raw.json()
-        return json_response
 
     # INFO PANEL ANIMATIONS
 
@@ -1252,7 +1264,7 @@ class MainContent(QObject):
             self.__refresh_cache_calculations()
 
             # Insert mod data into list
-            self.__repopulate_lists()
+            self.__repopulate_lists(is_initial=is_initial)
 
             # If we have missing mods, prompt user
             if self.missing_mods and len(self.missing_mods) > 0:

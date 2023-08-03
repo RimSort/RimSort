@@ -85,7 +85,6 @@ class DynamicQuery(QObject):
         except Exception as e:
             self.api = None
             # Catch exceptions that can potentially leak Steam API key
-            e_name = e.__class__.__name__
             stacktrace = traceback.format_exc()
             pattern = "&key="
             if pattern in stacktrace:
@@ -94,7 +93,7 @@ class DynamicQuery(QObject):
                     - (len(stacktrace) - (stacktrace.find(pattern) + len(pattern)))
                 ]  # If an HTTPError/SSLError from steam/urllib3 module(s) somehow is uncaught, try to remove the Steam API key from the stacktrace
             logger.warning(
-                f"Dynamic Query received an uncaught exception: {e_name}\nPlease reach out to us on Discord/Github!"
+                f"Dynamic Query received an uncaught exception: {e.__class__.__name__}"
             )
             self.dq_messaging_signal.emit(
                 "\nDynamicQuery failed to initialize WebAPI query!"
@@ -510,7 +509,7 @@ def ISteamRemoteStorage_GetCollectionDetails(
             request = requests_post(url, data=data)
         except Exception as e:
             logger.warning(
-                f"Unable to complete request! Are you connected to the internet? Received exception: {e.__class__}"
+                f"Unable to complete request! Are you connected to the internet? Received exception: {e.__class__.__name__}"
             )
             return None
         try:
@@ -558,7 +557,7 @@ def ISteamRemoteStorage_GetPublishedFileDetails(
             request = requests_post(url, data=data)
         except Exception as e:
             logger.warning(
-                f"Unable to complete request! Are you connected to the internet? Received exception: {e.__class__}"
+                f"Unable to complete request! Are you connected to the internet? Received exception: {e.__class__.__name__}"
             )
             return None
         try:

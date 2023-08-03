@@ -276,7 +276,12 @@ class MainWindow(QMainWindow):
         # Connect main content signal so it can stop watchdog
         self.main_content_panel.stop_watchdog_signal.connect(self.cease_watchdog)
         # Start watchdog
-        self.watchdog_observer.start()
+        try:
+            self.watchdog_observer.start()
+        except Exception as e:
+            logger.warning(
+                f"Unable to initialize watchdog Observer due to exception: {e.__class__.__name__}"
+            )
 
 
 def main_thread():
