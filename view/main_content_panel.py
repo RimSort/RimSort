@@ -1647,7 +1647,7 @@ class MainContent(QObject):
             # Compile list of Steam Workshop publishing preview images that correspond
             # to a Steam mod in the active mod list
             webapi_response = ISteamRemoteStorage_GetPublishedFileDetails(pfids)
-            for metadata in webapi_response["publishedfiledetails"]:
+            for metadata in webapi_response:
                 pfid = metadata["publishedfileid"]
                 if metadata["result"] != 1:
                     logger.warning("Rentry.co export: Unable to get data for mod!")
@@ -1675,36 +1675,10 @@ class MainContent(QObject):
                 name = active_mods_json[uuid]["name"]
             else:
                 name = "No name specified"
-            if active_mods_json[uuid]["data_source"] == "expansion" or (
-                active_mods_json[uuid]["data_source"] == "local"
-                and not active_mods_json[uuid].get("steamcmd")
-            ):
-                if active_mods_json[uuid].get("url"):
-                    url = active_mods_json[uuid]["url"]
-                elif active_mods_json[uuid].get("steam_url"):
-                    url = active_mods_json[uuid]["steam_url"]
-                else:
-                    url = None
-                if url is None:
-                    active_mods_rentry_report = (
-                        active_mods_rentry_report
-                        + f"\n!!! warning {str(count) + '.'} {name} "
-                        + "{"
-                        + f"packageid: {package_id}"
-                        + "} "
-                    )
-                else:
-                    active_mods_rentry_report = (
-                        active_mods_rentry_report
-                        + f"\n!!! warning {str(count) + '.'} [{name}]({url}) "
-                        + "{"
-                        + f"packageid: {package_id}"
-                        + "} "
-                    )
-            elif (
+            if (
                 active_mods_json[uuid].get("steamcmd")
                 or active_mods_json[uuid]["data_source"] == "workshop"
-            ):
+            ) and active_steam_mods_packageid_to_pfid.get(package_id):
                 pfid = active_steam_mods_packageid_to_pfid[package_id]
                 if active_steam_mods_pfid_to_preview_url.get(pfid):
                     preview_url = (
@@ -1731,7 +1705,33 @@ class MainContent(QObject):
                             active_mods_rentry_report
                             + f"\n{str(count) + '.'} ![]({preview_url}) [{name}]({url} packageid: {package_id})"
                         )
-
+            # if active_mods_json[uuid]["data_source"] == "expansion" or (
+            #     active_mods_json[uuid]["data_source"] == "local"
+            #     and not active_mods_json[uuid].get("steamcmd")
+            # ):
+            else:
+                if active_mods_json[uuid].get("url"):
+                    url = active_mods_json[uuid]["url"]
+                elif active_mods_json[uuid].get("steam_url"):
+                    url = active_mods_json[uuid]["steam_url"]
+                else:
+                    url = None
+                if url is None:
+                    active_mods_rentry_report = (
+                        active_mods_rentry_report
+                        + f"\n!!! warning {str(count) + '.'} {name} "
+                        + "{"
+                        + f"packageid: {package_id}"
+                        + "} "
+                    )
+                else:
+                    active_mods_rentry_report = (
+                        active_mods_rentry_report
+                        + f"\n!!! warning {str(count) + '.'} [{name}]({url}) "
+                        + "{"
+                        + f"packageid: {package_id}"
+                        + "} "
+                    )
         # Upload the report to Rentry.co
         rentry_uploader = RentryUpload(active_mods_rentry_report)
         if (
