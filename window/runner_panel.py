@@ -399,9 +399,7 @@ class RunnerPanel(QWidget):
                                     )
                                 )
                                 if failed_mods_name_lookup != None:
-                                    for mod_metadata in failed_mods_name_lookup[
-                                        "publishedfiledetails"
-                                    ]:
+                                    for mod_metadata in failed_mods_name_lookup:
                                         if (
                                             mod_metadata["publishedfileid"]
                                             not in pfids_to_name

@@ -2216,8 +2216,14 @@ class MainContent(QObject):
     def _do_re_git(self, repo_paths: list) -> None:
         if GIT_EXISTS:
             for path in repo_paths:
-                repo = Repo(path)
-                origin_url = repo.remote("origin").url
+                try:
+                    repo = Repo(path)
+                    origin_url = repo.remote("origin").url
+                except Exception as e:
+                    show_warning(
+                        title="Unable to open repository",
+                        text="RimSort failed to open the git repository inside this mod. Please re-download the mod.",
+                    )
                 self._do_clone_repo_to_path(
                     base_path=os.path.split(path)[0], repo_url=origin_url
                 )
