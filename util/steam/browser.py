@@ -306,10 +306,20 @@ class SteamBrowser(QWidget):
         action = context_menu.exec_(self.downloader_list.mapToGlobal(point))
 
     def _remove_mod_from_list(self, context_item: QListWidgetItem) -> None:
+        if context_item is None:
+            print("Error: No context item provided.")
+            return
+
         publishedfileid = context_item.data(Qt.UserRole)
+        if publishedfileid is None:
+            print("Error: No User Role data found.")
+            return
+
         if publishedfileid in self.downloader_list_mods_tracking:
             self.downloader_list.takeItem(self.downloader_list.row(context_item))
             self.downloader_list_mods_tracking.remove(publishedfileid)
+        else:
+            print("Error: Item not found in tracking list.")
 
     def _web_view_load_started(self):
         # Progress bar start, placeholder start
