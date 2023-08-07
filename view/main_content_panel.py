@@ -989,6 +989,7 @@ class MainContent(QObject):
             logger.warning(
                 f"Unable to retrieve latest release information due to exception: {e.__class__}"
             )
+            return
         tag_name = json_response["tag_name"]
         tag_name_updated = tag_name.replace("alpha", "Alpha")
         install_path = os.getcwd()
@@ -1158,7 +1159,11 @@ class MainContent(QObject):
                 logger.debug(f"Arguments used: {popen_args}")
                 sys.exit()
         else:
-            logger.debug("Up-to-date!")
+            logger.debug("Up to date!")
+            show_information(
+                title="RimSort is up to date!",
+                text=f"You are already running the latest release: {tag_name}",
+            )
 
     def __do_download_extract_release_to_tempdir(self, url: str) -> None:
         with ZipFile(BytesIO(requests_get(url).content)) as zipobj:
@@ -1169,7 +1174,7 @@ class MainContent(QObject):
         raw = requests_get(
             "https://api.github.com/repos/RimSort/RimSort/releases/latest"
         )
-        json_response = raw.json()
+        return raw.json()
 
     # INFO PANEL ANIMATIONS
 
