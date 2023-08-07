@@ -106,7 +106,6 @@ def launch_game_process(game_install_path: str, args: list) -> None:
             if system_name == "Darwin":  # MacOS
                 popen_args = ["open", executable_path, "--args"]
                 popen_args.extend(args)
-                args = darwin_args
                 p = subprocess.Popen(popen_args)
             else:
                 popen_args = [executable_path]
