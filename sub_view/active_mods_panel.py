@@ -195,11 +195,8 @@ class ActiveModList(QWidget):
         """
         Whenever the active mod list has items added to it,
         or has items removed from it, or has items rearranged around within it,
-        calculate, for every mod contained within the list, their
+        calculate the internal list errors for the active mod list
         """
-        # TODO: optimization needed. This function is called n times for
-        # inserting n mods (e.g. refresh action). It's also called twice when
-        # moving a mod from inactive to active.
         logger.info("Recalculating internal list errors")
         active_mods = self.active_mods_list.get_list_items_by_dict()
         packageid_to_uuid = {}  # uuid <-> the unique mod's packageid
@@ -444,7 +441,6 @@ class ActiveModList(QWidget):
         # within the list.
         if count != "drop":
             logger.info(f"Active mod count changed to: {count}")
-            # self.num_mods.setText(f"Active [{count}]")
             self.update_count(self.active_mods_list.get_widgets_and_items())
 
         self.recalculate_internal_list_errors()

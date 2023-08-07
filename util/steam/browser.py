@@ -39,7 +39,7 @@ class SteamBrowser(QWidget):
     """
 
     steamcmd_downloader_signal = Signal(list)
-    steamworks_downloader_signal = Signal(list)
+    steamworks_subscription_signal = Signal(list)
 
     def __init__(self, startpage: str):
         super().__init__()
@@ -95,10 +95,7 @@ class SteamBrowser(QWidget):
         )
         self.download_steamworks_button = QPushButton("Download mod(s) (Steam app)")
         self.download_steamworks_button.clicked.connect(
-            partial(
-                self.steamworks_downloader_signal.emit,
-                self.downloader_list_mods_tracking,
-            )
+            self._subscribe_to_mods_from_list
         )
 
         # BROWSER WIDGETS
@@ -260,9 +257,7 @@ class SteamBrowser(QWidget):
         page_title = self.current_title.split("Steam Workshop::", 1)[1]
         if publishedfileid not in self.downloader_list_mods_tracking:
             # Add pfid to tracking list
-            logger.debug(
-                f"Downloader list tracking: {self.downloader_list_mods_tracking}"
-            )
+            logger.debug(f"Tracking PublishedFileId for download: {publishedfileid}")
             self.downloader_list_mods_tracking.append(publishedfileid)
             # Create our list item
             item = QListWidgetItem()
@@ -314,6 +309,17 @@ class SteamBrowser(QWidget):
             self.downloader_list_mods_tracking.remove(publishedfileid)
         else:
             logger.error("Steam Browser Error: Item not found in tracking list.")
+
+    def _subscribe_to_mods_from_list(self) -> None:
+        logger.debug(
+            f"Signaling Steamworks subscription handler with {len(self.downloader_list_mods_tracking)} mods"
+        )
+        self.steamworks_subscription_signal.emit(
+            [
+                "subscribe",
+                [eval(str_pfid) for str_pfid in self.downloader_list_mods_tracking],
+            ]
+        )
 
     def _web_view_load_started(self):
         # Progress bar start, placeholder start

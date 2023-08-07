@@ -443,8 +443,6 @@ class RuleEditor(QWidget):
             self._toggle_details_layout_widgets(
                 layout=self.external_user_rules_layout, override=False
             )
-        # Put it all together
-        self._populate_from_metadata()
         # Connect these after metadata population
         self.external_community_rules_loadBottom_checkbox.stateChanged.connect(
             partial(self._toggle_loadBottom_rule, "Community Rules")

@@ -523,7 +523,10 @@ def get_workshop_acf_data(
     ]
     # Loop through our metadata, append values
     for publishedfileid, mod_uuid in workshop_mods_pfid_to_uuid.items():
-        if workshop_item_details.get(publishedfileid, {}).get("timetouched"):
+        if (
+            workshop_item_details.get(publishedfileid, {}).get("timetouched")
+            and workshop_item_details.get(publishedfileid, {}).get("timetouched") != 0
+        ):
             # The last time SteamCMD/Steam client touched a mod according to its entry
             workshop_mods[mod_uuid]["internal_time_touched"] = int(
                 workshop_item_details[publishedfileid]["timetouched"]
@@ -610,6 +613,7 @@ def query_workshop_update_data(mods: Dict[str, Any]) -> None:
     which contains possible Steam mods to lookup metadata for
     """
     logger.info("Querying Steam WebAPI for SteamCMD/Steam mod update metadata")
+
     workshop_mods_pfid_to_uuid = {
         metadata["publishedfileid"]: uuid
         for uuid, metadata in mods.items()

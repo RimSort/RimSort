@@ -89,6 +89,7 @@ class LoadingAnimation(QWidget):
 
     def check_animation_stop(self, frameNumber: int):
         if self.animation_finished and frameNumber == self.movie.frameCount() - 1:
+            logger.debug("Animation is finished")
             self.stop_animation()
 
     def handle_data(self, data):
@@ -98,9 +99,11 @@ class LoadingAnimation(QWidget):
 
     def prepare_stop_animation(self):
         # Set flag when thread finished
+        logger.debug("Flagging animation to complete")
         self.animation_finished = True
 
     def stop_animation(self):
+        logger.debug("Stopping animation")
         # Stop animation
         self.label.clear()
         self.movie.stop()

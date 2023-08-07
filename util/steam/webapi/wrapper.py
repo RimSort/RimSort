@@ -499,29 +499,29 @@ def ISteamRemoteStorage_GetCollectionDetails(
     # Construct arguments to pass to the API call
     metadata = []
     for chunk in list(chunks(_list=publishedfileids, limit=5000)):
+        logger.debug(
+            f"Querying details for {len(chunk)} collection(s) via Steam WebAPI"
+        )
         # Construct arguments to pass to the API call
-        data = {"collectioncount": f"{str(len(publishedfileids))}"}
-        for publishedfileid in publishedfileids:
-            count = publishedfileids.index(publishedfileid)
+        data = {"collectioncount": f"{str(len(chunk))}"}
+        for publishedfileid in chunk:
+            count = chunk.index(publishedfileid)
             data[f"publishedfileids[{count}]"] = publishedfileid
-        # Make a request to the Steam Web API
-        try:
+        try:  # Make a request to the Steam Web API
             request = requests_post(url, data=data)
         except Exception as e:
             logger.warning(
                 f"Unable to complete request! Are you connected to the internet? Received exception: {e.__class__.__name__}"
             )
             return None
-        try:
-            # Parse the JSON response
+        try:  # Parse the JSON response
             json_response = request.json()
             logger.debug(json_response)
             if json_response.get("response", {}).get("resultcount") > 0:
                 for mod_metadata in json_response["response"]["collectiondetails"]:
                     metadata.append(mod_metadata)
         except JSONDecodeError as e:
-            logger.debug(f"Invalid JSON response: {e}")
-            return None
+            logger.error(f"Invalid JSON response: {e}")
         finally:
             logger.debug(f"Received WebAPI response {request.status_code} from query")
 
@@ -547,28 +547,26 @@ def ISteamRemoteStorage_GetPublishedFileDetails(
     metadata = []
     # Construct arguments to pass to the API call
     for chunk in list(chunks(_list=publishedfileids, limit=5000)):
+        logger.debug(f"Querying details for {len(chunk)} mod(s) via Steam WebAPI")
         # Construct arguments to pass to the API call
-        data = {"itemcount": f"{str(len(publishedfileids))}"}
-        for publishedfileid in publishedfileids:
-            count = publishedfileids.index(publishedfileid)
+        data = {"itemcount": f"{str(len(chunk))}"}
+        for publishedfileid in chunk:
+            count = chunk.index(publishedfileid)
             data[f"publishedfileids[{count}]"] = publishedfileid
-        # Make a request to the Steam Web API
-        try:
+        try:  # Make a request to the Steam Web API
             request = requests_post(url, data=data)
         except Exception as e:
-            logger.warning(
+            logger.debug(
                 f"Unable to complete request! Are you connected to the internet? Received exception: {e.__class__.__name__}"
             )
             return None
-        try:
-            # Parse the JSON response
+        try:  # Parse the JSON response
             json_response = request.json()
             if json_response.get("response", {}).get("resultcount") > 0:
                 for mod_metadata in json_response["response"]["publishedfiledetails"]:
                     metadata.append(mod_metadata)
         except JSONDecodeError as e:
-            logger.debug(f"Invalid JSON response: {e}")
-            return None
+            logger.error(f"Invalid JSON response: {e}")
         finally:
             logger.debug(f"Received WebAPI response {request.status_code} from query")
 

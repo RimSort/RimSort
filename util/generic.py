@@ -183,6 +183,17 @@ def platform_specific_open(path: str) -> None:
         logger.error("Attempting to open directory on an unknown system")
 
 
+def set_to_list(obj):
+    if isinstance(obj, set):
+        return list(obj)
+    elif isinstance(obj, list):
+        return [set_to_list(e) for e in obj]
+    elif isinstance(obj, dict):
+        return {k: set_to_list(v) for k, v in obj.items()}
+    else:
+        return obj
+
+
 def upload_data_to_0x0_st(path: str) -> str:
     """
     Function to upload data to http://0x0.st/

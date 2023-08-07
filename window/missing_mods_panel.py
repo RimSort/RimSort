@@ -36,7 +36,7 @@ class MissingModsPrompt(QWidget):
     """
 
     steamcmd_downloader_signal = Signal(list)
-    steamworks_downloader_signal = Signal(list)
+    steamworks_subscription_signal = Signal(list)
 
     def __init__(
         self,
@@ -145,7 +145,6 @@ class MissingModsPrompt(QWidget):
         self.layout.addLayout(self.lower_layout)
 
         # Put it all together
-        self._populate_from_metadata()
         self.setWindowTitle("RimSort - Missing mods found")
         self.setLayout(self.layout)
         self.setMinimumSize(QSize(900, 600))
@@ -210,7 +209,12 @@ class MissingModsPrompt(QWidget):
         if mode == "steamcmd":
             self.steamcmd_downloader_signal.emit(publishedfileids)
         elif mode == "steamworks":
-            self.steamworks_downloader_signal.emit(publishedfileids)
+            self.steamworks_subscription_signal.emit(
+                [
+                    "subscribe",
+                    [eval(str_pfid) for str_pfid in publishedfileids],
+                ]
+            )
 
     def _populate_from_metadata(self) -> None:
         # Build a dict of missing mod variant(s)
@@ -224,21 +228,23 @@ class MissingModsPrompt(QWidget):
                 name = metadata.get("steamName", metadata.get("name", "Not found"))
                 packageid = metadata.get("packageId", "None").lower()
                 gameVersions = metadata.get("gameVersions", ["None listed"])
+
                 # Remove AppId dependencies from this dict. They cannot be subscribed like mods.
                 dependencies = {
                     key: value
                     for key, value in metadata.get("dependencies", {}).items()
                     if key not in RIMWORLD_DLC_METADATA.keys()
                 }
+
+                # Populate data_by_variants dict
                 if packageid in self.packageids:
-                    if packageid not in self.data_by_variants:
-                        self.data_by_variants[packageid] = {}
-                    variant_data = {
+                    variants = self.data_by_variants.setdefault(packageid, {})
+                    variants[publishedfileid] = {
                         "name": name,
                         "gameVersions": gameVersions,
                         "dependencies": dependencies,
                     }
-                    self.data_by_variants[packageid][publishedfileid] = variant_data
+
             # If we couldn't find any from Steam metadata, we still want to populate a blank row for user input
             for packageid in self.packageids:
                 if packageid not in self.data_by_variants.keys():
@@ -248,6 +254,7 @@ class MissingModsPrompt(QWidget):
                             "gameVersions": ["None listed"],
                         }
                     }
+
             # Add a row for each mod variant
             for packageid, variants in self.data_by_variants.items():
                 for publishedfileid, variant_data in variants.items():

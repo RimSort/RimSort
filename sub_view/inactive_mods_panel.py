@@ -149,7 +149,6 @@ class InactiveModList:
     def change_mod_num_display(self, count: str) -> None:
         if count != "drop":
             logger.info(f"Inactive mod count changed to: {count}")
-            # self.num_mods.setText(f"Inactive [{count}]")
             self.update_count(self.inactive_mods_list.get_widgets_and_items())
 
     def clear_inactive_mods_search(self) -> None:

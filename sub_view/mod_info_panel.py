@@ -1,3 +1,4 @@
+import json
 from logger_tt import logger
 import os
 from pathlib import Path
@@ -9,6 +10,7 @@ from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QSizePolicy, QVBoxLay
 
 from model.image_label import ImageLabel
 from model.scroll_label import ScrollLabel
+from util.generic import set_to_list
 
 
 class ModInfo:
@@ -164,7 +166,10 @@ class ModInfo:
 
         :param mod_info: complete json info for the mod
         """
-        logger.debug(f"Starting display of mod info: {mod_info}")
+
+        mod_info = set_to_list(mod_info)
+        mod_info_pretty = json.dumps(mod_info, indent=4)
+        logger.debug(f"Starting display of mod info: {mod_info_pretty}")
         self.mod_info_name_value.setText(mod_info.get("name", "Not specified"))
 
         for widget in self.essential_info_widgets:

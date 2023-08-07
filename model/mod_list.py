@@ -697,13 +697,7 @@ class ModListWidget(QListWidget):
                             )
                         self.steamworks_subscription_signal.emit(
                             [
-                                "unsubscribe",
-                                [eval(str_pfid) for str_pfid in publishedfileids],
-                            ]
-                        )
-                        self.steamworks_subscription_signal.emit(
-                            [
-                                "subscribe",
+                                "resubscribe",
                                 [eval(str_pfid) for str_pfid in publishedfileids],
                             ]
                         )
@@ -1051,20 +1045,29 @@ class ModListWidget(QListWidget):
         widget = ModListItemInner = self.itemWidget(item)
         self.key_press_signal.emit("DoubleClick")
 
-    def recreate_mod_list(self, mods: dict[str, Any]) -> None:
+    def recreate_mod_list(self, list_type: str, mods: dict[str, Any]) -> None:
         """
         Clear all mod items and add new ones from a dict.
 
         :param mods: dict of mod data
         """
-        logger.info("Internally recreating mod list")
+        logger.info(f"Internally recreating {list_type} mod list")
+        # Disable updates
+        self.setUpdatesEnabled(False)
+        # Clear list
         self.clear()
         self.uuids = set()
-        if mods:
+        if mods:  # Insert data...
             for mod_json_data in mods.values():
                 list_item = QListWidgetItem(self)
                 list_item.setData(Qt.UserRole, mod_json_data)
                 self.addItem(list_item)
+        else:  # ...unless we don't have mods, at which point reenable updates and exit
+            self.setUpdatesEnabled(True)
+            return
+        # Enable updates and repaint
+        self.setUpdatesEnabled(True)
+        self.repaint()
 
     def toggle_warning(self, packageid: str) -> None:
         if not (packageid in self.ignore_warning_list):

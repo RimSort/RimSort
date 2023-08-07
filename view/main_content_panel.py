@@ -43,6 +43,7 @@ from util.generic import (
     delete_files_except_extension,
     handle_remove_read_only,
     open_url_browser,
+    platform_specific_open,
     upload_data_to_0x0_st,
 )
 from util.rentry.wrapper import RentryUpload
@@ -85,6 +86,7 @@ from view.game_configuration_panel import GameConfiguration
 from window.missing_mods_panel import MissingModsPrompt
 from window.rule_editor_panel import RuleEditor
 from window.runner_panel import RunnerPanel
+from window.workshop_mod_updater_panel import ModUpdaterPrompt
 
 # print(f"main_content_panel.py: {current_process()}")
 # print(f"__name__: {__name__}")
@@ -371,45 +373,63 @@ class MainContent(QObject):
         logger.info(
             f"Inserting mod data into active [{len(active_mods)}] and inactive [{len(inactive_mods)}] mod lists"
         )
-        self.active_mods_panel.active_mods_list.recreate_mod_list(active_mods)
-        self.inactive_mods_panel.inactive_mods_list.recreate_mod_list(inactive_mods)
+        self.active_mods_panel.active_mods_list.recreate_mod_list(
+            list_type="active", mods=active_mods
+        )
+        self.inactive_mods_panel.inactive_mods_list.recreate_mod_list(
+            list_type="inactive", mods=inactive_mods
+        )
 
         logger.info(
             f"Finished inserting mod data into active [{len(active_mods)}] and inactive [{len(inactive_mods)}] mod lists"
         )
 
-    def __missing_mods_prompt(self, missing_mods: list) -> None:
-        if missing_mods:
-            logger.debug(f"Could not find data for {len(missing_mods)} active mods")
-            if (  # User configuration
-                self.game_configuration.try_download_missing_mods_toggle
-                and len(self.external_steam_metadata.keys()) > 0
-            ):  # Do we even have metadata to lookup...?
-                self.missing_mods_prompt = MissingModsPrompt(
-                    packageids=missing_mods,
-                    steam_workshop_metadata=self.external_steam_metadata,
-                )
-                self.missing_mods_prompt.steamcmd_downloader_signal.connect(
-                    self._do_download_mods_with_steamcmd
-                )
-                self.missing_mods_prompt.steamworks_downloader_signal.connect(
-                    self._do_download_mods_with_steamworks
-                )
-                self.missing_mods_prompt.setWindowModality(Qt.ApplicationModal)
-                self.missing_mods_prompt.show()
-            else:
-                list_of_missing_mods = ""
-                for missing_mod in missing_mods:
-                    list_of_missing_mods += f"* {missing_mod}\n"
-                show_information(
-                    text="Could not find data for some mods!",
-                    information=(
-                        "The following list of mods were set active in your mods list but "
-                        + "no data could be found for these mods in local/workshop mod paths. "
-                        + "\n\nAre your game configuration paths correctly?"
-                    ),
-                    details=list_of_missing_mods,
-                )
+    def __duplicate_mods_prompt(self) -> None:
+        list_of_duplicate_mods = "\n".join(
+            [f"* {mod}" for mod in self.duplicate_mods.keys()]
+        )
+        show_warning(
+            title="Duplicate mod(s) found",
+            text="Duplicate mods(s) found for package ID(s) in your ModsConfig.xml (active mods list)",
+            information=(
+                "The following list of mods were set active in your ModsConfig.xml and "
+                "duplicate instances were found of these mods in your mod data sources. "
+                "The vanilla game will use the first 'local mod' of a particular package ID "
+                "that is found - so RimSort will also adhere to this logic."
+            ),
+            details=list_of_duplicate_mods,
+        )
+
+    def __missing_mods_prompt(self) -> None:
+        logger.debug(f"Could not find data for {len(self.missing_mods)} active mods")
+        if (  # User configuration
+            self.game_configuration.try_download_missing_mods_toggle
+            and self.external_steam_metadata
+        ):  # Do we even have metadata to lookup...?
+            self.missing_mods_prompt = MissingModsPrompt(
+                packageids=self.missing_mods,
+                steam_workshop_metadata=self.external_steam_metadata,
+            )
+            self.missing_mods_prompt._populate_from_metadata()
+            self.missing_mods_prompt.steamcmd_downloader_signal.connect(
+                self._do_download_mods_with_steamcmd
+            )
+            self.missing_mods_prompt.steamworks_subscription_signal.connect(
+                self._do_steamworks_api_call_animated
+            )
+            self.missing_mods_prompt.setWindowModality(Qt.ApplicationModal)
+            self.missing_mods_prompt.show()
+        else:
+            list_of_missing_mods = "\n".join([f"* {mod}" for mod in self.missing_mods])
+            show_information(
+                text="Could not find data for some mods!",
+                information=(
+                    "The following list of mods were set active in your mods list but "
+                    "no data could be found for these mods in local/workshop mod paths. "
+                    "\n\nAre your game configuration paths correct?"
+                ),
+                details=list_of_missing_mods,
+            )
 
     def __mod_list_slot(self, uuid: str) -> None:
         """
@@ -757,7 +777,6 @@ class MainContent(QObject):
                 ).resolve()
             ),
             self.all_mods_compiled,
-            self.game_configuration.duplicate_mods_warning_toggle,
         )
         if is_initial:
             logger.info("Caching initial active/inactive mod lists")
@@ -858,6 +877,8 @@ class MainContent(QObject):
                 logger.debug("SteamCMD ACF data does not exist. Skipping action.")
         if action == "set_steamcmd_path":
             self._do_set_steamcmd_path()
+        if action == "update_workshop_mods":
+            self._do_check_for_workshop_updates()
         if action == "import_list_file_xml":
             self._do_import_list_file_xml()
         if action == "export_list_file_xml":
@@ -1186,6 +1207,7 @@ class MainContent(QObject):
             widget.setEnabled(True)
         # Show the info panel widgets
         self.mod_info_panel.info_panel_frame.show()
+        logger.debug(f"Returning {type(data)}")
         return data
 
     # ACTIONS PANEL
@@ -1266,17 +1288,30 @@ class MainContent(QObject):
             # Insert mod data into list
             self.__repopulate_lists(is_initial=is_initial)
 
+            # If we have duplicate mods, prompt user
+            if (
+                self.game_configuration.duplicate_mods_warning_toggle
+                and self.duplicate_mods
+                and len(self.duplicate_mods) > 0
+            ):
+                self.__duplicate_mods_prompt()
+            elif not self.game_configuration.duplicate_mods_warning_toggle:
+                logger.debug(
+                    "User preference is not configured to display duplicate mods. Skipping..."
+                )
+
             # If we have missing mods, prompt user
             if self.missing_mods and len(self.missing_mods) > 0:
-                self.__missing_mods_prompt(self.missing_mods)
+                self.__missing_mods_prompt()
 
             # Check Workshop mods for updates if configured
             if (
-                self.external_steam_metadata
-                and self.game_configuration.steam_mods_update_check_toggle
+                self.game_configuration.steam_mods_update_check_toggle
             ):  # Check SteamCMD/Steam mods for updates if configured
+                logger.info(
+                    "User preference is configured to check Workshop mod for updates. Checking for Workshop mod updates..."
+                )
                 self._do_check_for_workshop_updates()
-                self._do_generate_mod_update_report()
             else:
                 logger.info(
                     "User preference is not configured to check Steam mods for updates. Skipping..."
@@ -1481,13 +1516,23 @@ class MainContent(QObject):
             ) = get_active_inactive_mods(
                 file_path[0],
                 self.all_mods_compiled,
-                self.game_configuration.duplicate_mods_warning_toggle,
             )
             logger.info("Got new mods according to imported XML")
             self.__insert_data_into_lists(active_mods_data, inactive_mods_data)
+            # If we have duplicate mods, prompt user
+            if (
+                self.game_configuration.duplicate_mods_warning_toggle
+                and self.duplicate_mods
+                and len(self.duplicate_mods) > 0
+            ):
+                self.__duplicate_mods_prompt()
+            elif not self.game_configuration.duplicate_mods_warning_toggle:
+                logger.debug(
+                    "User preference is not configured to display duplicate mods. Skipping..."
+                )
             # If we have missing mods, prompt user
             if self.missing_mods and len(self.missing_mods) >= 1:
-                self.__missing_mods_prompt(self.missing_mods)
+                self.__missing_mods_prompt()
         else:
             logger.debug("USER ACTION: pressed cancel, passing")
 
@@ -1966,10 +2011,42 @@ class MainContent(QObject):
         self.steam_browser.steamcmd_downloader_signal.connect(
             self._do_download_mods_with_steamcmd
         )
-        self.steam_browser.steamworks_downloader_signal.connect(
-            self._do_download_mods_with_steamworks
+        self.steam_browser.steamworks_subscription_signal.connect(
+            self._do_steamworks_api_call_animated
         )
         self.steam_browser.show()
+
+    def _do_check_for_workshop_updates(self) -> None:
+        # Query Workshop for update data
+        self._do_threaded_loading_animation(
+            gif_path=str(
+                Path(
+                    os.path.join(os.path.dirname(__file__), "../data/steam_api.gif")
+                ).resolve()
+            ),
+            target=partial(query_workshop_update_data, mods=self.all_mods_compiled),
+            text="Checking Steam Workshop mods for updates",
+        )
+        self.workshop_mod_updater = ModUpdaterPrompt(
+            internal_mod_metadata=self.all_mods_compiled
+        )
+        self.workshop_mod_updater._populate_from_metadata()
+        if self.workshop_mod_updater.updates_found:
+            logger.debug("Displaying potential Workshop mod updates")
+            self.workshop_mod_updater.steamcmd_downloader_signal.connect(
+                self._do_download_mods_with_steamcmd
+            )
+            self.workshop_mod_updater.steamworks_subscription_signal.connect(
+                self._do_steamworks_api_call_animated
+            )
+            self.workshop_mod_updater.show()
+        else:
+            logger.debug("All Workshop mods appear to be up-to-date!")
+            show_information(
+                title="No updates found",
+                text="All Workshop mods appear to be up-to-date!",
+            )
+            self.workshop_mod_updater = None
 
     def _do_setup_steamcmd(self):
         if (
@@ -1996,7 +2073,9 @@ class MainContent(QObject):
         )
 
     def _do_download_mods_with_steamcmd(self, publishedfileids: list):
-        logger.debug(publishedfileids)
+        logger.debug(
+            f"Attempting to download {len(publishedfileids)} mods with SteamCMD"
+        )
         # No empty publishedfileids
         if not len(publishedfileids) > 0:
             show_warning(
@@ -2037,10 +2116,6 @@ class MainContent(QObject):
             self.steamcmd_runner.message(
                 f"Downloading {len(publishedfileids)} mods with SteamCMD..."
             )
-            # Uncomment to print the pfids in the runner as well
-            # self.steamcmd_runner.message(
-            #     f"List of mods:\n{publishedfileids}"
-            # )
             self.steamcmd_wrapper.download_mods(
                 publishedfileids=publishedfileids, runner=self.steamcmd_runner
             )
@@ -2081,21 +2156,6 @@ class MainContent(QObject):
         else:
             logger.debug("USER ACTION: pressed cancel, passing")
 
-    def _do_download_mods_with_steamworks(self, publishedfileids: list):
-        # No empty publishedfileids
-        if not len(publishedfileids) > 0:
-            show_warning(
-                title="RimSort",
-                text="No PublishedFileIds were supplied in operation.",
-                information="Please add mods to list before attempting to download.",
-            )
-            return
-        if self.steam_browser:
-            self.steam_browser.close()
-        self._do_steamworks_api_call_animated(
-            ["subscribe", [eval(str_pfid) for str_pfid in publishedfileids]]
-        )
-
     def _do_steamworks_api_call(self, instruction: list):
         """
         Create & launch Steamworks API process to handle instructions received from connected signals
@@ -2112,7 +2172,7 @@ class MainContent(QObject):
         """
         logger.info(f"Received Steamworks API instruction: {instruction}")
         if not self.steamworks_in_use:
-            subscription_actions = ["subscribe", "unsubscribe"]
+            subscription_actions = ["resubscribe", "subscribe", "unsubscribe"]
             supported_actions = ["launch_game_process"]
             supported_actions.extend(subscription_actions)
             if (
@@ -2161,6 +2221,7 @@ class MainContent(QObject):
                         ]
                         # Map the execution of the subscription actions to the pool of processes
                         pool.map(SteamworksSubscriptionHandler.run, actions)
+                    platform_specific_open("steam://validate/294100")
                     self.steamworks_in_use = False
                 else:
                     logger.warning(
@@ -2175,14 +2236,18 @@ class MainContent(QObject):
             )
 
     def _do_steamworks_api_call_animated(self, instruction: list):
+        publishedfileids = instruction[1]
+        logger.debug(f"Attempting to download {len(publishedfileids)} mods with Steam")
         # No empty publishedfileids
-        if not len(instruction[1]) > 0:
+        if not len(publishedfileids) > 0:
             show_warning(
                 title="RimSort",
                 text="No PublishedFileIds were supplied in operation.",
                 information="Please add mods to list before attempting to download.",
             )
             return
+        if self.steam_browser:
+            self.steam_browser.close()
         self._do_threaded_loading_animation(
             gif_path=str(
                 Path(
@@ -2192,7 +2257,7 @@ class MainContent(QObject):
             target=partial(self._do_steamworks_api_call, instruction=instruction),
             text="Processing Steam subscription action(s) via Steamworks API...",
         )
-        self._do_refresh()
+        # self._do_refresh()
 
     # GIT MOD ACTIONS
 
@@ -2230,66 +2295,6 @@ class MainContent(QObject):
                 self._do_cleanup_gitpython(repo)
         else:
             self._do_notify_no_git()
-
-    # WORKSHOP MOD UPDATE CHECK
-
-    def _do_check_for_workshop_updates(self) -> None:
-        logger.info(
-            "User preference is configured to check Steam mods for updates. Displaying potential updates..."
-        )
-        self._do_threaded_loading_animation(
-            gif_path=str(
-                Path(
-                    os.path.join(os.path.dirname(__file__), "../data/steam_api.gif")
-                ).resolve()
-            ),
-            target=partial(query_workshop_update_data, mods=self.all_mods_compiled),
-            text="Checking Steam Workshop mods for updates...",
-        )
-
-    def _do_generate_mod_update_report(self) -> None:
-        self.workshop_mods_potential_updates = {}
-        for v in self.all_mods_compiled.values():
-            if v.get("publishedfileid") and (
-                v.get("steamcmd") or v["data_source"] == "workshop"
-            ):
-                pfid = v["publishedfileid"]
-                uuid = v["uuid"]
-                name = v.get("name") or self.external_steam_metadata[pfid].get(
-                    "steamName"
-                )
-                name = f"############################\n{name}"
-                if (
-                    # If we have data to compare...
-                    (v.get("internal_time_touched") and v.get("external_time_updated"))
-                    # ...and publishing has been updated since the last time it was touched
-                    and v["external_time_updated"] > v["internal_time_touched"]
-                ):
-                    logger.debug(f"Potential update found for Workshop mod: {pfid}")
-                    self.workshop_mods_potential_updates[pfid] = {
-                        "external_time_updated": v["external_time_updated"],
-                        "internal_time_touched": v["internal_time_touched"],
-                        "ui_string": (
-                            f"\n{name}"
-                            + f'\nInstalled Workshop mod last touched: {strftime("%Y-%m-%d %H:%M:%S", localtime(v["internal_time_touched"]))}'
-                            + f'\nWorkshop publishing last updated: {strftime("%Y-%m-%d %H:%M:%S", localtime(v["external_time_updated"]))}\n'
-                        ),
-                    }
-        # If we have updates available...
-        if len(self.workshop_mods_potential_updates) > 0:
-            # ...generate our report
-            list_of_potential_updates = ""
-            for time_data in self.workshop_mods_potential_updates.values():
-                list_of_potential_updates += time_data["ui_string"]
-            show_information(
-                title="Mod update(s) available!",
-                text="The following list of Steam mods may have updates available!",
-                information=(
-                    "This metadata was parsed directly from your Steam client's workshop data, and "
-                    "compared with the 'time updated' metadata returned from Steam Workshop."
-                ),
-                details=list_of_potential_updates,
-            )
 
     # EXTERNAL METADATA ACTIONS
 
@@ -2732,6 +2737,7 @@ class MainContent(QObject):
             # Optional metadata - used to get names instead of packageid for About.xml rules
             steam_workshop_metadata=self.external_steam_metadata,
         )
+        self.rule_editor._populate_from_metadata()
         self.rule_editor.setWindowModality(Qt.ApplicationModal)
         self.rule_editor.update_database_signal.connect(self._do_update_rules_database)
         self.rule_editor.show()
@@ -2986,8 +2992,14 @@ class MainContent(QObject):
                                 f"Skipping download of existing Steam mod: {mod_pfid}"
                             )
                             self.db_builder.publishedfileids.remove(mod_pfid)
-                    self._do_download_mods_with_steamworks(
-                        self.db_builder.publishedfileids
+                    self._do_steamworks_api_call_animated(
+                        [
+                            "subscribe",
+                            [
+                                eval(str_pfid)
+                                for str_pfid in self.db_builder.publishedfileids
+                            ],
+                        ]
                     )
 
     def _do_edit_steam_webapi_key(self) -> None:

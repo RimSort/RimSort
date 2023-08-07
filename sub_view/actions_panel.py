@@ -173,7 +173,15 @@ class Actions(QWidget):
         self.setup_steamcmd_button.customContextMenuRequested.connect(
             self.setupSteamcmdContextMenuEvent
         )
-
+        # UPDATE WORKSHOP MODS BUTTON
+        self.update_workshop_mods_button = QPushButton("Update Workshop mods")
+        self.update_workshop_mods_button.setToolTip(
+            "Query Steam WebAPI for mod update data and check against installed Workshop mods\n"
+            + "Supports mods sourced via SteamCMD or Steam client"
+        )
+        self.update_workshop_mods_button.clicked.connect(
+            partial(self.actions_signal.emit, "update_workshop_mods")
+        )
         # RIMWORLD LABEL
         self.rimworld_label = QLabel("RimWorld options")
         self.rimworld_label.setObjectName("summaryValue")
@@ -222,6 +230,7 @@ class Actions(QWidget):
         self.middle_panel.addWidget(self.add_git_mod_button)
         self.middle_panel.addWidget(self.browse_workshop_button)
         self.middle_panel.addWidget(self.setup_steamcmd_button)
+        self.middle_panel.addWidget(self.update_workshop_mods_button)
         self.bottom_panel.addWidget(self.rimworld_label)
         self.bottom_panel.addWidget(self.import_button)
         self.bottom_panel.addWidget(self.export_button)
