@@ -21,5 +21,11 @@ class ImageLabel(QLabel):
         :param event: the resize event
         """
         if self.pixmap() is not None:
-            self.setPixmap(self.pixmap().scaled(self.size(), Qt.KeepAspectRatio))
+            self.setPixmap(
+                self.pixmap().scaled(
+                    self.size(),
+                    Qt.KeepAspectRatio,  # SmoothTransformation is heftier, but we can afford it.
+                    Qt.SmoothTransformation,  # FastTransformation or something just as crappy is the default
+                )
+            )
         return super().resizeEvent(event)

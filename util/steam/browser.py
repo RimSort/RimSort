@@ -1,5 +1,6 @@
 from functools import partial
 from logger_tt import logger
+from pathlib import Path
 import os
 import platform
 from typing import Any, Dict, List, Optional, Tuple
@@ -38,11 +39,11 @@ class SteamBrowser(QWidget):
     """
 
     steamcmd_downloader_signal = Signal(list)
-    steamworks_downloader_signal = Signal(list)
+    steamworks_subscription_signal = Signal(list)
 
     def __init__(self, startpage: str):
         super().__init__()
-        logger.info("Initializing SteamBrowser")
+        logger.debug("Initializing SteamBrowser")
 
         # This is used to fix issue described here on non-Windows platform:
         # https://doc.qt.io/qt-6/qtwebengine-platform-notes.html#sandboxing-support
@@ -94,10 +95,7 @@ class SteamBrowser(QWidget):
         )
         self.download_steamworks_button = QPushButton("Download mod(s) (Steam app)")
         self.download_steamworks_button.clicked.connect(
-            partial(
-                self.steamworks_downloader_signal.emit,
-                self.downloader_list_mods_tracking,
-            )
+            self._subscribe_to_mods_from_list
         )
 
         # BROWSER WIDGETS
@@ -109,12 +107,18 @@ class SteamBrowser(QWidget):
         )
         self.web_view_loading_placeholder.setPixmap(
             QPixmap(
-                os.path.join(
-                    os.path.split(
-                        os.path.split(os.path.split(os.path.dirname(__file__))[0])[0]
-                    )[0],
-                    "data",
-                    "AppIcon_b.png",
+                str(
+                    Path(
+                        os.path.join(
+                            os.path.split(
+                                os.path.split(
+                                    os.path.split(os.path.dirname(__file__))[0]
+                                )[0]
+                            )[0],
+                            "data",
+                            "AppIcon_b.png",
+                        )
+                    ).resolve()
                 )
             )
         )
@@ -228,14 +232,8 @@ class SteamBrowser(QWidget):
             [publishedfileid]
         )
         collection_pfids = []
-        if (
-            collection_webapi_result["response"]["result"] == 1
-            and collection_webapi_result["response"]["resultcount"] > 0
-            and len(collection_webapi_result["response"]["collectiondetails"]) > 0
-        ):
-            for mod in collection_webapi_result["response"]["collectiondetails"][0][
-                "children"
-            ]:
+        if len(collection_webapi_result) > 0:
+            for mod in collection_webapi_result[0]["children"]:
                 if mod.get("publishedfileid"):
                     collection_pfids.append(mod["publishedfileid"])
             if len(collection_pfids) > 0:
@@ -244,21 +242,10 @@ class SteamBrowser(QWidget):
                 )
             else:
                 return collection_mods_pfid_to_title
-            for metadata in collection_mods_webapi_response["response"][
-                "publishedfiledetails"
-            ]:
-                if metadata["result"] != 1:
-                    logger.warning(
-                        f"Invalid result returned from WebAPI: {collection_mods_webapi_response}"
-                    )
-                else:
-                    # Retrieve the published mod's title from the response
-                    pfid = metadata["publishedfileid"]
-                    collection_mods_pfid_to_title[pfid] = metadata["title"]
-        else:
-            logger.warning(
-                f"Invalid result returned from WebAPI: {collection_webapi_result}"
-            )
+            for metadata in collection_mods_webapi_response:
+                # Retrieve the published mod's title from the response
+                pfid = metadata["publishedfileid"]
+                collection_mods_pfid_to_title[pfid] = metadata["title"]
         return collection_mods_pfid_to_title
 
     def _add_mod_to_list(
@@ -270,9 +257,7 @@ class SteamBrowser(QWidget):
         page_title = self.current_title.split("Steam Workshop::", 1)[1]
         if publishedfileid not in self.downloader_list_mods_tracking:
             # Add pfid to tracking list
-            logger.debug(
-                f"Downloader list tracking: {self.downloader_list_mods_tracking}"
-            )
+            logger.debug(f"Tracking PublishedFileId for download: {publishedfileid}")
             self.downloader_list_mods_tracking.append(publishedfileid)
             # Create our list item
             item = QListWidgetItem()
@@ -307,19 +292,34 @@ class SteamBrowser(QWidget):
         self.downloader_list_dupe_tracking = {}
 
     def _downloader_item_ContextMenuEvent(self, point: QPoint) -> None:
-        context_menu = QMenu(self)  # Downloader item context menu event
         context_item = self.downloader_list.itemAt(point)
-        remove_item = context_menu.addAction(
-            "Remove mod from list"
-        )  # Remove mod from list
-        remove_item.triggered.connect(partial(self._remove_mod_from_list, context_item))
-        action = context_menu.exec_(self.downloader_list.mapToGlobal(point))
+
+        if context_item:  # Check if the right-clicked point corresponds to an item
+            context_menu = QMenu(self)  # Downloader item context menu event
+            remove_item = context_menu.addAction("Remove mod from list")
+            remove_item.triggered.connect(
+                partial(self._remove_mod_from_list, context_item)
+            )
+            context_menu.exec_(self.downloader_list.mapToGlobal(point))
 
     def _remove_mod_from_list(self, context_item: QListWidgetItem) -> None:
         publishedfileid = context_item.data(Qt.UserRole)
         if publishedfileid in self.downloader_list_mods_tracking:
             self.downloader_list.takeItem(self.downloader_list.row(context_item))
             self.downloader_list_mods_tracking.remove(publishedfileid)
+        else:
+            logger.error("Steam Browser Error: Item not found in tracking list.")
+
+    def _subscribe_to_mods_from_list(self) -> None:
+        logger.debug(
+            f"Signaling Steamworks subscription handler with {len(self.downloader_list_mods_tracking)} mods"
+        )
+        self.steamworks_subscription_signal.emit(
+            [
+                "subscribe",
+                [eval(str_pfid) for str_pfid in self.downloader_list_mods_tracking],
+            ]
+        )
 
     def _web_view_load_started(self):
         # Progress bar start, placeholder start

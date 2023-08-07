@@ -27,9 +27,9 @@ class SteamcmdInterface:
     """
 
     def __init__(self, steamcmd_prefix: str, validate: bool) -> None:
-        logger.info("SteamcmdInterface initilizing...")
-        self.steamcmd_install_path = Path(steamcmd_prefix, "steamcmd").resolve()
-        self.steamcmd_steam_path = Path(steamcmd_prefix, "steam").resolve()
+        logger.debug("Initializing SteamcmdInterface")
+        self.steamcmd_install_path = str(Path(steamcmd_prefix, "steamcmd").resolve())
+        self.steamcmd_steam_path = str(Path(steamcmd_prefix, "steam").resolve())
         self.system = platform.system()
         self.validate_downloads = validate
 
@@ -37,17 +37,23 @@ class SteamcmdInterface:
             self.steamcmd_url = (
                 "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_osx.tar.gz"
             )
-            self.steamcmd = os.path.join(self.steamcmd_install_path, "steamcmd.sh")
+            self.steamcmd = str(
+                Path(os.path.join(self.steamcmd_install_path, "steamcmd.sh")).resolve()
+            )
         elif self.system == "Linux":
             self.steamcmd_url = (
                 "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz"
             )
-            self.steamcmd = os.path.join(self.steamcmd_install_path, "steamcmd.sh")
+            self.steamcmd = str(
+                Path(os.path.join(self.steamcmd_install_path, "steamcmd.sh")).resolve()
+            )
         elif self.system == "Windows":
             self.steamcmd_url = (
                 "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip"
             )
-            self.steamcmd = os.path.join(self.steamcmd_install_path, "steamcmd.exe")
+            self.steamcmd = str(
+                Path(os.path.join(self.steamcmd_install_path, "steamcmd.exe")).resolve()
+            )
         else:
             show_fatal_error(
                 "SteamcmdInterface",
@@ -57,18 +63,30 @@ class SteamcmdInterface:
 
         if not os.path.exists(self.steamcmd_install_path):
             os.makedirs(self.steamcmd_install_path)
+            logger.debug(
+                f"SteamCMD does not exist. Creating path for installation: {self.steamcmd_install_path}"
+            )
 
         if not os.path.exists(self.steamcmd_steam_path):
             os.makedirs(self.steamcmd_steam_path)
-        self.steamcmd_appworkshop_acf_path = os.path.join(
-            self.steamcmd_steam_path,
-            "steamapps",
-            "workshop",
-            "appworkshop_294100.acf",
+        self.steamcmd_appworkshop_acf_path = str(
+            Path(
+                os.path.join(
+                    self.steamcmd_steam_path,
+                    "steamapps",
+                    "workshop",
+                    "appworkshop_294100.acf",
+                )
+            ).resolve()
         )
-        self.steamcmd_content_path = os.path.join(
-            self.steamcmd_steam_path, "steamapps", "workshop", "content"
+        self.steamcmd_content_path = str(
+            Path(
+                os.path.join(
+                    self.steamcmd_steam_path, "steamapps", "workshop", "content"
+                )
+            ).resolve()
         )
+        logger.debug("Finished SteamcmdInterface initialization")
 
     def download_mods(self, publishedfileids: list, runner: RunnerPanel):
         """
@@ -98,7 +116,9 @@ class SteamcmdInterface:
                 else:
                     script.append(f"{download_cmd} {publishedfileid}")
             script.extend(["quit\n"])
-            script_path = os.path.join(gettempdir(), "steamcmd_script.txt")
+            script_path = str(
+                Path(os.path.join(gettempdir(), "steamcmd_script.txt")).resolve()
+            )
             with open(script_path, "w") as script_output:
                 script_output.write("\n".join(script))
             runner.message(f"Compiled & using script: {script_path}")
@@ -121,8 +141,8 @@ class SteamcmdInterface:
             )
             shutil.rmtree(self.steamcmd_install_path)
             os.makedirs(self.steamcmd_install_path)
-            shutil.rmtree(self.steamcmd_steam_path)
-            os.makedirs(self.steamcmd_steam_path)
+            # shutil.rmtree(self.steamcmd_steam_path)
+            # os.makedirs(self.steamcmd_steam_path)
         if not os.path.exists(self.steamcmd):
             try:
                 runner.message(
@@ -150,14 +170,14 @@ class SteamcmdInterface:
                     f"Did the file/url change?\nDoes your environment have access to the internet?",
                 )
         else:
-            runner.message("Steamcmd already installed...")
+            runner.message("SteamCMD already installed...")
             show_warning(
                 "SteamcmdInterface",
                 f"A steamcmd runner already exists at: {self.steamcmd}",
             )
             answer = show_dialogue_conditional(
                 "Reinstall?",
-                "Would you like to reinstall steamcmd?",
+                "Would you like to reinstall SteamCMD?",
                 f"Existing install: {self.steamcmd_install_path}",
             )
             if answer == "&Yes":
@@ -169,8 +189,8 @@ class SteamcmdInterface:
                 runner.message(
                     f"Workshop content path does not exist. Creating for symlinking:\n\n{self.steamcmd_content_path}\n"
                 )
-            symlink_destination_path = os.path.join(
-                self.steamcmd_content_path, "294100"
+            symlink_destination_path = str(
+                Path(os.path.join(self.steamcmd_content_path, "294100"))
             )
             runner.message(f"Symlink source : {symlink_source_path}")
             runner.message(f"Symlink destination: {symlink_destination_path}")

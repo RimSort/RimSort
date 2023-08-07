@@ -1,13 +1,16 @@
+import json
 from logger_tt import logger
 import os
+from pathlib import Path
 from typing import Any, Dict
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout
 
 from model.image_label import ImageLabel
 from model.scroll_label import ScrollLabel
+from util.generic import set_to_list
 
 
 class ModInfo:
@@ -20,16 +23,19 @@ class ModInfo:
         """
         Initialize the class.
         """
-        logger.info("Starting ModInfo initialization")
+        logger.debug("Initializing ModInfo")
 
         # Base layout type
         self.panel = QVBoxLayout()
+        self.info_panel_frame = QFrame()
 
         # Child layouts
+        self.info_layout = QVBoxLayout()
         self.image_layout = QHBoxLayout()
         self.image_layout.setAlignment(Qt.AlignCenter)
         self.mod_info_layout = QVBoxLayout()
         self.mod_info_name = QHBoxLayout()
+        self.scenario_info_summary = QHBoxLayout()
         self.mod_info_package_id = QHBoxLayout()
         self.mod_info_authors = QHBoxLayout()
         self.mod_info_mod_version = QHBoxLayout()
@@ -37,18 +43,31 @@ class ModInfo:
         self.description_layout = QHBoxLayout()
 
         # Add child layouts to base
-        self.panel.addLayout(self.image_layout, 50)
-        self.panel.addLayout(self.mod_info_layout, 20)
-        self.panel.addLayout(self.description_layout, 30)
+        self.info_layout.addLayout(self.image_layout, 50)
+        self.info_layout.addLayout(self.mod_info_layout, 20)
+        self.info_layout.addLayout(self.description_layout, 30)
+        self.info_panel_frame.setLayout(self.info_layout)
+        self.panel.addWidget(self.info_panel_frame)
 
         # Create widgets
-        self.missing_image_path = os.path.join(os.getcwd(), "data", "missing.png")
+        self.missing_image_path = str(
+            Path(os.path.join(os.getcwd(), "data", "missing.png")).resolve()
+        )
+        self.rimsort_image_a_path = str(
+            Path(os.path.join(os.getcwd(), "data", "AppIcon_a.png")).resolve()
+        )
+        self.rimsort_image_b_path = str(
+            Path(os.path.join(os.getcwd(), "data", "AppIcon_b.png")).resolve()
+        )
+        self.scenario_image_path = str(
+            Path(os.path.join(os.getcwd(), "data", "rimworld.png")).resolve()
+        )
         self.preview_picture = ImageLabel()
         self.preview_picture.setAlignment(Qt.AlignCenter)
         self.preview_picture.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.preview_picture.setMinimumSize(1, 1)
         self.preview_picture.setPixmap(
-            QPixmap(self.missing_image_path).scaled(
+            QPixmap(self.rimsort_image_a_path).scaled(
                 self.preview_picture.size(), Qt.KeepAspectRatio
             )
         )
@@ -58,6 +77,13 @@ class ModInfo:
         self.mod_info_name_value.setObjectName("summaryValue")
         self.mod_info_name_value.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.mod_info_name_value.setWordWrap(True)
+        self.scenario_info_summary_label = QLabel("Summary:")
+        self.scenario_info_summary_label.setObjectName("summaryLabel")
+        self.scenario_info_summary_value = QLabel()
+        self.scenario_info_summary_value.setTextInteractionFlags(
+            Qt.TextSelectableByMouse
+        )
+        self.scenario_info_summary_value.setWordWrap(True)
         self.mod_info_package_id_label = QLabel("PackageID:")
         self.mod_info_package_id_label.setObjectName("summaryLabel")
         self.mod_info_package_id_value = QLabel()
@@ -85,13 +111,17 @@ class ModInfo:
         self.mod_info_path_value.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.mod_info_path_value.setWordWrap(True)
         self.description = ScrollLabel()
-
+        self.description.setText(
+            "\n\t\t\t  Welcome to RimSort!\n\n\n\t୧༼ಠ益ಠ༽୨\t\t(̿▀̿ ̿Ĺ̯̿̿▀̿ ̿)̄\t\t\tヽ༼ຈل͜ຈ༽ﾉ"
+        )
         # Add widgets to child layouts
         self.image_layout.addWidget(self.preview_picture)
         self.mod_info_name.addWidget(self.mod_info_name_label, 20)
         self.mod_info_name.addWidget(self.mod_info_name_value, 80)
         self.mod_info_path.addWidget(self.mod_info_path_label, 20)
         self.mod_info_path.addWidget(self.mod_info_path_value, 80)
+        self.scenario_info_summary.addWidget(self.scenario_info_summary_label, 20)
+        self.scenario_info_summary.addWidget(self.scenario_info_summary_value, 80)
         self.mod_info_package_id.addWidget(self.mod_info_package_id_label, 20)
         self.mod_info_package_id.addWidget(self.mod_info_package_id_value, 80)
         self.mod_info_authors.addWidget(self.mod_info_author_label, 20)
@@ -99,13 +129,34 @@ class ModInfo:
         self.mod_info_mod_version.addWidget(self.mod_info_mod_version_label, 20)
         self.mod_info_mod_version.addWidget(self.mod_info_mod_version_value, 80)
         self.mod_info_layout.addLayout(self.mod_info_name)
+        self.mod_info_layout.addLayout(self.scenario_info_summary)
         self.mod_info_layout.addLayout(self.mod_info_package_id)
         self.mod_info_layout.addLayout(self.mod_info_authors)
         self.mod_info_layout.addLayout(self.mod_info_mod_version)
         self.mod_info_layout.addLayout(self.mod_info_path)
         self.description_layout.addWidget(self.description)
 
-        logger.info("Finished ModInfo initialization")
+        # Hide label/value by default
+        self.essential_info_widgets = [
+            self.mod_info_name_label,
+            self.mod_info_name_value,
+            self.mod_info_path_label,
+            self.mod_info_path_value,
+        ]
+        self.mod_info_name_label.hide()
+        self.mod_info_name_value.hide()
+        self.mod_info_package_id_label.hide()
+        self.mod_info_package_id_value.hide()
+        self.mod_info_author_label.hide()
+        self.mod_info_author_value.hide()
+        self.mod_info_mod_version_label.hide()
+        self.mod_info_mod_version_value.hide()
+        self.mod_info_path_label.hide()
+        self.mod_info_path_value.hide()
+        self.scenario_info_summary_label.hide()
+        self.scenario_info_summary_value.hide()
+
+        logger.debug("Finished ModInfo initialization")
 
     def display_mod_info(self, mod_info: Dict[str, Any]) -> None:
         """
@@ -115,28 +166,67 @@ class ModInfo:
 
         :param mod_info: complete json info for the mod
         """
-        logger.info(f"Starting display mod info for info: {mod_info}")
-        self.mod_info_name_value.setText(mod_info.get("name"))
-        self.mod_info_package_id_value.setText(mod_info.get("packageId"))
-        if "authors" in mod_info:
-            if "li" in mod_info["authors"]:
-                list_of_authors = mod_info["authors"]["li"]
+
+        mod_info = set_to_list(mod_info)
+        mod_info_pretty = json.dumps(mod_info, indent=4)
+        logger.debug(f"Starting display of mod info: {mod_info_pretty}")
+        self.mod_info_name_value.setText(mod_info.get("name", "Not specified"))
+
+        for widget in self.essential_info_widgets:
+            if not widget.isVisible():
+                widget.show()
+
+        # If it's not invalid, and it's not a scenario, it must be a mod!
+        if not mod_info.get("invalid") and not mod_info.get("scenario"):
+            # Show valid-mod-specific fields, hide scenario summary
+            self.mod_info_package_id_label.show()
+            self.mod_info_package_id_value.show()
+            self.mod_info_author_label.show()
+            self.mod_info_author_value.show()
+            self.mod_info_mod_version_label.show()
+            self.mod_info_mod_version_value.show()
+            self.scenario_info_summary_label.hide()
+            self.scenario_info_summary_value.hide()
+            # Populate values from metadata
+            self.mod_info_package_id_value.setText(
+                mod_info.get("packageid", "Not specified")
+            )
+            authors_tag = mod_info.get("authors", "Not specified")
+            if authors_tag and isinstance(authors_tag, dict) and authors_tag.get("li"):
+                list_of_authors = authors_tag["li"]
                 authors_text = ", ".join(list_of_authors)
                 self.mod_info_author_value.setText(authors_text)
             else:
-                self.mod_info_author_value.setText("UNKNOWN")
-                logger.error(
-                    f"[authors] tag does not contain [li] tag: {mod_info['authors']}"
+                self.mod_info_author_value.setText(
+                    f"{authors_tag if authors_tag else 'Not specified'}"
                 )
-        else:
-            self.mod_info_author_value.setText(mod_info.get("author"))
-        if "modVersion" in mod_info:
             if isinstance(mod_info.get("modVersion"), str):
                 self.mod_info_mod_version_value.setText(mod_info.get("modVersion"))
             elif isinstance(mod_info.get("modVersion"), dict):
                 self.mod_info_mod_version_value.setText(mod_info["modVersion"]["#text"])
-        else:
-            self.mod_info_mod_version_value.setText("Not specified")
+            else:
+                self.mod_info_mod_version_value.setText("Not specified")
+        elif mod_info.get("scenario"):  # Hide mod-specific widgets, show scenario
+            self.mod_info_package_id_label.hide()
+            self.mod_info_package_id_value.hide()
+            self.mod_info_author_label.hide()
+            self.mod_info_author_value.hide()
+            self.mod_info_mod_version_label.hide()
+            self.mod_info_mod_version_value.hide()
+            self.scenario_info_summary_label.show()
+            self.scenario_info_summary_value.show()
+            self.scenario_info_summary_value.setText(
+                mod_info.get("summary", "Not specified")
+            )
+        elif mod_info.get("invalid"):  # Hide all except bare minimum if invalid
+            self.mod_info_package_id_label.hide()
+            self.mod_info_package_id_value.hide()
+            self.mod_info_author_label.hide()
+            self.mod_info_author_value.hide()
+            self.mod_info_mod_version_label.hide()
+            self.mod_info_mod_version_value.hide()
+            self.scenario_info_summary_label.hide()
+            self.scenario_info_summary_value.hide()
         self.mod_info_path_value.setText(mod_info.get("path"))
 
         # Set the scrolling description for the Mod Info Panel
@@ -151,15 +241,23 @@ class ModInfo:
                     )
         # It is OK for the description value to be None (was not provided)
         # It is OK for the description key to not be in mod_info
-
-        # Get Preview.png
-        if mod_info.get("path") and isinstance(mod_info["path"], str):
+        if mod_info.get("scenario"):
+            pixmap = QPixmap(self.scenario_image_path)
+            self.preview_picture.setPixmap(
+                pixmap.scaled(self.preview_picture.size(), Qt.KeepAspectRatio)
+            )
+        else:
+            # Get Preview.png
             workshop_folder_path = mod_info["path"]
-            logger.info(f"Got mod path for preview image: {workshop_folder_path}")
+            logger.info(
+                f"Retrieved mod path to parse preview image: {workshop_folder_path}"
+            )
             if os.path.exists(workshop_folder_path):
                 about_folder_name = "About"
-                about_folder_target_path = os.path.join(
-                    workshop_folder_path, about_folder_name
+                about_folder_target_path = str(
+                    Path(
+                        os.path.join(workshop_folder_path, about_folder_name)
+                    ).resolve()
                 )
                 if os.path.exists(about_folder_target_path):
                     # Look for a case-insensitive About folder
@@ -176,7 +274,11 @@ class ModInfo:
                     invalid_file_path_found = True
                     preview_file_name = "Preview.png"
                     for temp_file in os.scandir(
-                        os.path.join(workshop_folder_path, about_folder_name)
+                        str(
+                            Path(
+                                os.path.join(workshop_folder_path, about_folder_name)
+                            ).resolve()
+                        )
                     ):
                         if (
                             temp_file.name.lower() == preview_file_name.lower()
@@ -196,8 +298,14 @@ class ModInfo:
                         )
                     else:
                         logger.info("Preview image found")
-                        image_path = os.path.join(
-                            workshop_folder_path, about_folder_name, preview_file_name
+                        image_path = str(
+                            Path(
+                                os.path.join(
+                                    workshop_folder_path,
+                                    about_folder_name,
+                                    preview_file_name,
+                                )
+                            ).resolve()
                         )
                         pixmap = QPixmap(image_path)
                         self.preview_picture.setPixmap(
@@ -213,13 +321,4 @@ class ModInfo:
                     self.preview_picture.setPixmap(
                         pixmap.scaled(self.preview_picture.size(), Qt.KeepAspectRatio)
                     )
-
-        else:
-            logger.error(
-                f"[path] tag does not exist in mod_info, is empty, or is not string: {mod_info.get('path')}"
-            )
-            pixmap = QPixmap(self.missing_image_path)
-            self.preview_picture.setPixmap(
-                pixmap.scaled(self.preview_picture.size(), Qt.KeepAspectRatio)
-            )
-        logger.info("Finished displaying mod info")
+        logger.debug("Finished displaying mod info")

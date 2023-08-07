@@ -24,7 +24,7 @@ DEFAULT_SETTINGS = {
     "build_steam_database_dlc_data": True,
     "build_steam_database_update_toggle": False,
     "watchdog_toggle": True,
-    "csharp_mods": True,
+    "mod_type_filter_toggle": True,
     "duplicate_mods_warning": False,
     "steam_mods_update_check": False,
     "try_download_missing_mods": False,
@@ -34,29 +34,33 @@ DEFAULT_SETTINGS = {
     "todds_active_mods_target": True,
     "todds_dry_run": False,
     "todds_overwrite": False,
+    "game_folder": "",
+    "config_folder": "",
+    "local_folder": "",
+    "workshop_folder": "",
 }
 DEFAULT_USER_RULES = {"timestamp": 0, "rules": {}}
 RIMWORLD_DLC_METADATA = {
     "294100": {
-        "packageId": "ludeon.rimworld",
+        "packageid": "ludeon.rimworld",
         "name": "RimWorld",
         "steam_url": "https://store.steampowered.com/app/294100/RimWorld",
         "description": "Base game",
     },
     "1149640": {
-        "packageId": "ludeon.rimworld.royalty",
+        "packageid": "ludeon.rimworld.royalty",
         "name": "RimWorld - Royalty",
         "steam_url": "https://store.steampowered.com/app/1149640/RimWorld__Royalty",
         "description": "DLC #1",
     },
     "1392840": {
-        "packageId": "ludeon.rimworld.ideology",
+        "packageid": "ludeon.rimworld.ideology",
         "name": "RimWorld - Ideology",
         "steam_url": "https://store.steampowered.com/app/1392840/RimWorld__Ideology",
         "description": "DLC #2",
     },
     "1826140": {
-        "packageId": "ludeon.rimworld.biotech",
+        "packageid": "ludeon.rimworld.biotech",
         "name": "RimWorld - Biotech",
         "steam_url": "https://store.steampowered.com/app/1826140/RimWorld__Biotech",
         "description": "DLC #3",
@@ -69,4 +73,6 @@ SEARCH_DATA_SOURCE_FILTER_INDEXES = [
     "git_repo",
     "steamcmd",
     "workshop",
+    "csharp",
+    "xml",
 ]

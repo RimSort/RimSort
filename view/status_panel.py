@@ -16,7 +16,7 @@ class Status:
         Initialize the Status view. Construct the layout
         add the single fading text widget.
         """
-        logger.info("Starting Status view initialization")
+        logger.info("Initializing Status")
 
         # This view is contained within a QFrame to allow for styling
         self.frame = QFrame()
@@ -36,7 +36,7 @@ class Status:
         # Add the widget to the base layout
         self.layout.addWidget(self.status_text)
 
-        logger.info("Finished Status view initialization")
+        logger.debug("Finished Status initialization")
 
     def actions_slot(self, action: str) -> None:
         """
@@ -94,7 +94,7 @@ class Status:
         if action == "save":
             self.status_text.start_pause_fade("Active mods saved into ModsConfig.xml")
         if action == "run":
-            self.status_text.start_pause_fade("Starting RimWorld...")
+            self.status_text.start_pause_fade("Starting RimWorld")
         if action == "edit_run_args":
             self.status_text.start_pause_fade("Editing configured run arguments...")
 

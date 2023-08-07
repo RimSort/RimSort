@@ -37,6 +37,7 @@ if _SYSTEM == "Darwin":
         "--enable-plugin=pyside6",
         "--include-data-dir=./data/=data",
         "--include-data-dir=./todds/=todds",
+        "--include-data-file=./update.sh=update.sh",
         f"--include-data-file=./SteamworksPy_{_PROCESSOR}.dylib=SteamworksPy.dylib",
         "--include-data-file=./libsteam_api.dylib=libsteam_api.dylib",
         "--include-data-file=./steam_appid.txt=steam_appid.txt",
@@ -54,6 +55,7 @@ elif _SYSTEM == "Linux":
         "--enable-plugin=pyside6",
         "--include-data-dir=./data/=data",
         "--include-data-dir=./todds/=todds",
+        "--include-data-file=./update.sh=update.sh",
         f"--include-data-file=./SteamworksPy_{_PROCESSOR}.so=SteamworksPy.so",
         "--include-data-file=./libsteam_api.so=libsteam_api.so",
         "--include-data-file=./steam_appid.txt=steam_appid.txt",
@@ -471,9 +473,9 @@ print("Copying SteamworksPy libs for release...")
 copy_swp_libs()
 
 # Grab latest todds release
-print("Grabbing latest todds release...")
-get_latest_todds_release()
+# print("Grabbing latest todds release...")
+# get_latest_todds_release()
 
 # Build Nuitka distributable binary
-# print("Building RimSort application with Nuitka...")
-# _execute(_NUITKA_CMD)
+print("Building RimSort application with Nuitka...")
+_execute(_NUITKA_CMD)

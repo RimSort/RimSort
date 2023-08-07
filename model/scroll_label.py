@@ -15,7 +15,7 @@ class ScrollLabel(QScrollArea):
         """
         Initialize the class.
         """
-        logger.info("Starting ScrollLabel initialization")
+        logger.debug("Initializing ScrollLabel")
         super(ScrollLabel, self).__init__()
 
         # Enable styling
@@ -46,7 +46,7 @@ class ScrollLabel(QScrollArea):
         # Adding label to the layout
         self.main_layout.addWidget(self.label)
 
-        logger.info("Finished ScrollLabel initialization")
+        logger.debug("Finished ScrollLabel initialization")
 
     def setText(self, text: str) -> None:
         self.label.setText(text)

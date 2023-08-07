@@ -14,11 +14,34 @@ from tempfile import gettempdir
 import traceback
 
 from logger_tt import handlers, logger, setup_logging
-from PySide6.QtCore import QSize
+from logging import getLogger, WARNING
+from PySide6.QtCore import QSize, QTimer
 from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 
 from model.dialogue import show_fatal_error
+from util.metadata import query_workshop_update_data
 from util.proxy_style import ProxyStyle
+from util.watchdog import RSFileSystemEventHandler
+
+SYSTEM = platform.system()
+# Watchdog conditionals
+if SYSTEM == "Darwin":
+    from watchdog.observers import Observer
+
+    # Comment to see logging for watchdog handler on Darwin
+    getLogger("watchdog.observers.fsevents").setLevel(WARNING)
+elif SYSTEM == "Linux":
+    from watchdog.observers import Observer
+
+    # Comment to see logging for watchdog handler on Linux
+    getLogger("watchdog.observers.inotify_buffer").setLevel(WARNING)
+elif SYSTEM == "Windows":
+    from watchdog.observers.polling import PollingObserver
+
+    # Comment to see logging for watchdog handler on Windows
+    # This is a stub if it's ever even needed... i still can't figure out why it won't log at all on Windows...?
+    # getLogger("").setLevel(WARNING)
+
 from view.game_configuration_panel import GameConfiguration
 from view.main_content_panel import MainContent
 from view.status_panel import Status
@@ -30,23 +53,35 @@ system = platform.system()
 # You can override by passing --onefile-tempdir-spec to `nuitka`
 # See also: https://nuitka.net/doc/user-manual.html#use-case-4-program-distribution
 # Otherwise, use sys.argv[0] to get the actual relative path to the executable
-data_path = os.path.join(os.path.dirname(__file__), "data")
-debug_file = os.path.join(data_path, "DEBUG")
+data_path = str(Path(os.path.join(os.path.dirname(__file__), "data")).resolve())
+debug_file = str(Path(os.path.join(data_path, "DEBUG")).resolve())
+# Check if 'RimSort.log' exists and rename it to 'RimSort.old.log'
+log_file_path = str(Path(os.path.join(gettempdir(), "RimSort.log")).resolve())
+log_old_file_path = str(Path(os.path.join(gettempdir(), "RimSort.old.log")).resolve())
+
+if os.path.exists(log_file_path):
+    os.replace(log_file_path, log_old_file_path)
+if os.path.exists(log_file_path):
+    os.rename(log_file_path, log_old_file_path)
 
 if os.path.exists(debug_file):
-    logging_config_path = os.path.join(data_path, "logger_tt-DEBUG.json")
+    logging_config_path = str(
+        Path(os.path.join(data_path, "logger_tt-DEBUG.json")).resolve()
+    )
     DEBUG_MODE = True
 else:
-    logging_config_path = os.path.join(data_path, "logger_tt-INFO.json")
+    logging_config_path = str(
+        Path(os.path.join(data_path, "logger_tt-INFO.json")).resolve()
+    )
     DEBUG_MODE = False
 
-logging_file_path = os.path.join(gettempdir(), "RimSort.log")
+logging_file_path = str(Path(os.path.join(gettempdir(), "RimSort.log")).resolve())
 
 # Setup Environment
 if "__compiled__" in globals():
     os.environ[
         "QTWEBENGINE_LOCALES_PATH"
-    ] = f'{Path(os.path.join(os.path.dirname(__file__), "qtwebengine_locales")).resolve()}'
+    ] = f'{str(Path(os.path.join(os.path.dirname(__file__), "qtwebengine_locales")).resolve())}'
 if system == "Linux":
     # logger_tt
     setup_logging(
@@ -105,12 +140,19 @@ class MainWindow(QMainWindow):
         Initialize the main application window. Construct the layout,
         add the three main views, and set up relevant signals and slots.
         """
-        logger.info("Starting MainWindow initialization")
+        logger.info("Initializing MainWindow")
         super(MainWindow, self).__init__()
 
         # Create the main application window
         self.debug_mode = debug_mode
+        self.init = None  # Content initialization should only fire on startup. Otherwise, this is handled by Refresh button
         self.version_string = "Alpha-v1.0.6.1"
+
+        # Watchdog
+        self.watchdog_event_handler = None
+        self.watchdog_observer = None
+
+        # Setup the window
         self.setWindowTitle(f"RimSort {self.version_string}")
         self.setMinimumSize(QSize(1024, 768))
 
@@ -120,17 +162,13 @@ class MainWindow(QMainWindow):
         app_layout.setSpacing(0)  # Space between widgets
 
         # Create various panels on the application GUI
-        logger.info("Start creating main panels")
         self.game_configuration_panel = GameConfiguration(debug_mode=self.debug_mode)
         self.main_content_panel = MainContent(
             game_configuration=self.game_configuration_panel,
             rimsort_version=self.version_string,
-            window=self,
         )
         self.bottom_panel = Status()
-        logger.info("Finished creating main panels")
 
-        logger.info("Connecting MainWindow signals and slots")
         # Connect the game configuration actions signals to Status panel to display fading action text
         self.game_configuration_panel.configuration_signal.connect(
             self.bottom_panel.actions_slot
@@ -153,55 +191,123 @@ class MainWindow(QMainWindow):
         widget.setLayout(app_layout)
         self.setCentralWidget(widget)
 
-        logger.info("Finished MainWindow initialization")
+        logger.debug("Finished MainWindow initialization")
 
     def showEvent(self, event) -> None:
         # Call the original showEvent handler
         super().showEvent(event)
-        # HIDE/SHOW FOLDER ROWS BASED ON PREFERENCE
-        if self.game_configuration_panel.show_folder_rows:
-            self.game_configuration_panel.hide_show_folder_rows_button.setText(
-                "Hide paths"
+        if not self.init:
+            # HIDE/SHOW FOLDER ROWS BASED ON PREFERENCE
+            if self.game_configuration_panel.show_folder_rows:
+                self.game_configuration_panel.hide_show_folder_rows_button.setText(
+                    "Hide paths"
+                )
+            else:
+                self.game_configuration_panel.hide_show_folder_rows_button.setText(
+                    "Show paths"
+                )
+            # set visibility
+            self.game_configuration_panel.game_folder_frame.setVisible(
+                self.game_configuration_panel.show_folder_rows
             )
+            self.game_configuration_panel.config_folder_frame.setVisible(
+                self.game_configuration_panel.show_folder_rows
+            )
+            self.game_configuration_panel.local_folder_frame.setVisible(
+                self.game_configuration_panel.show_folder_rows
+            )
+            self.game_configuration_panel.workshop_folder_frame.setVisible(
+                self.game_configuration_panel.show_folder_rows
+            )
+
+    def __initialize_content(self) -> None:
+        self.init = True
+
+        # IF CHECK FOR UPDATE ON STARTUP...
+        if self.game_configuration_panel.check_for_updates_action.isChecked():
+            self.main_content_panel.actions_slot("check_for_update")
+
+        # REFRESH CONFIGURED METADATA
+        self.main_content_panel._do_refresh(is_initial=True)
+
+        # CHECK USER PREFERENCE FOR WATCHDOG
+        if self.game_configuration_panel.watchdog_toggle:
+            # Setup watchdog
+            self.__initialize_watchdog()
+
+    def cease_watchdog(self) -> None:
+        if self.watchdog_observer and self.watchdog_observer.is_alive():
+            self.watchdog_observer.stop()
+            self.watchdog_observer.join()
+
+    def __initialize_watchdog(self) -> None:
+        logger.info("Initializing watchdog FS Observer")
+        # INITIALIZE WATCHDOG - WE WAIT TO START UNTIL DONE PARSING MOD LIST
+        game_folder_path = self.game_configuration_panel.game_folder_line.text()
+        local_folder_path = self.game_configuration_panel.local_folder_line.text()
+        workshop_folder_path = self.game_configuration_panel.workshop_folder_line.text()
+        self.watchdog_event_handler = RSFileSystemEventHandler()
+        if SYSTEM == "Windows":
+            self.watchdog_observer = PollingObserver()
         else:
-            self.game_configuration_panel.hide_show_folder_rows_button.setText(
-                "Show paths"
+            self.watchdog_observer = Observer()
+        if game_folder_path and game_folder_path != "":
+            self.watchdog_observer.schedule(
+                self.watchdog_event_handler,
+                game_folder_path,
+                # recursive=True,
             )
-        # set visibility
-        self.game_configuration_panel.game_folder_frame.setVisible(
-            self.game_configuration_panel.show_folder_rows
+        if local_folder_path and local_folder_path != "":
+            self.watchdog_observer.schedule(
+                self.watchdog_event_handler,
+                local_folder_path,
+                # recursive=True,
+            )
+        if workshop_folder_path and workshop_folder_path != "":
+            self.watchdog_observer.schedule(
+                self.watchdog_event_handler,
+                workshop_folder_path,
+                # recursive=True,
+            )
+        # Connect watchdog to our refresh button animation
+        self.watchdog_event_handler.file_changes_signal.connect(
+            self.main_content_panel._do_refresh_animation
         )
-        self.game_configuration_panel.config_folder_frame.setVisible(
-            self.game_configuration_panel.show_folder_rows
-        )
-        self.game_configuration_panel.local_folder_frame.setVisible(
-            self.game_configuration_panel.show_folder_rows
-        )
-        self.game_configuration_panel.workshop_folder_frame.setVisible(
-            self.game_configuration_panel.show_folder_rows
-        )
+        # Connect main content signal so it can stop watchdog
+        self.main_content_panel.stop_watchdog_signal.connect(self.cease_watchdog)
+        # Start watchdog
+        try:
+            self.watchdog_observer.start()
+        except Exception as e:
+            logger.warning(
+                f"Unable to initialize watchdog Observer due to exception: {e.__class__.__name__}"
+            )
 
 
 def main_thread():
     try:
+        # Create the application
         app = QApplication(sys.argv)
         app.setApplicationName("RimSort")
-        logger.info("Setting application styles")
+        # Get styling from game configuration
+        logger.debug("Setting application style")
         app.setStyle(
             ProxyStyle()
         )  # Add proxy style for overriding some styling elements
         app.setStyleSheet(  # Add style sheet for styling layouts and widgets
             Path(os.path.join(os.path.dirname(__file__), "data/style.qss")).read_text()
         )
+        # Create the main window
         window = MainWindow(debug_mode=DEBUG_MODE)
         logger.info("Showing MainWindow")
         window.show()
+        window.__initialize_content()
         app.exec()
     except Exception as e:
         # Catch exceptions during initial application instantiation
         # Uncaught exceptions during the application loop are caught with excepthook
         if e is SystemExit:
-            logger.warning("Exiting application...")
+            logger.warning("Exiting application")
         elif (
             e.__class__.__name__ == "HTTPError" or e.__class__.__name__ == "SSLError"
         ):  # requests.exceptions.HTTPError OR urllib3.exceptions.SSLError
@@ -219,14 +325,10 @@ def main_thread():
         logger.error(stacktrace)
         show_fatal_error(details=stacktrace)
     finally:
-        if (
-            "window" in locals()
-            and window.main_content_panel.game_configuration.watchdog_toggle
-        ):
+        if "window" in locals():
             try:
                 logger.debug("Stopping watchdog...")
-                window.main_content_panel.game_configuration_watchdog_observer.stop()
-                window.main_content_panel.game_configuration_watchdog_observer.join()
+                window.cease_watchdog()
             except:
                 stacktrace = traceback.format_exc()
                 logger.warning(
@@ -252,7 +354,7 @@ if __name__ == "__main__":
 
     # This check is used whether RimSort is running via Nuitka bundle
     if "__compiled__" in globals():
-        logger.warning("Running using Nuitka bundle")
+        logger.debug("Running using Nuitka bundle")
         if system != "Linux":
             logger.warning(
                 "Non-Linux platform detected: using multiprocessing.freeze_support() & setting 'spawn' as MP method"
@@ -260,6 +362,6 @@ if __name__ == "__main__":
             freeze_support()
             set_start_method("spawn")
     else:
-        logger.warning("Running using Python interpreter")
-    logger.info("Starting RimSort application")
+        logger.debug("Running using Python interpreter")
+    logger.debug("Initializing RimSort application")
     main_thread()

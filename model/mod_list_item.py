@@ -26,8 +26,9 @@ class ModListItemInner(QWidget):
     def __init__(
         self,
         data: Dict[str, Any],
-        csharp_icon_enable: bool,
+        mod_type_filter_enable: bool,
         csharp_icon_path: str,
+        xml_icon_path: str,
         git_icon_path: str,
         local_icon_path: str,
         ludeon_icon_path: str,
@@ -54,12 +55,13 @@ class ModListItemInner(QWidget):
         # in this variable. This is exactly equal to the dict value of a
         # single all_mods key-value
         self.json_data = data
-        self.list_item_name = self.json_data.get("name", "UNKNOWN")
+        self.list_item_name = self.json_data.get("name")
         self.main_label = QLabel()
 
         # Icon paths
-        self.csharp_icon_enable = csharp_icon_enable
+        self.mod_type_filter_enable = mod_type_filter_enable
         self.csharp_icon_path = csharp_icon_path
+        self.xml_icon_path = xml_icon_path
         self.git_icon_path = git_icon_path
         self.local_icon_path = local_icon_path
         self.ludeon_icon_path = ludeon_icon_path
@@ -76,12 +78,20 @@ class ModListItemInner(QWidget):
 
         # Icons that are conditional
         self.csharp_icon = None
-        if self.json_data.get("csharp") and self.csharp_icon_enable:
-            self.csharp_icon = QLabel()
-            self.csharp_icon.setPixmap(
-                QIcon(self.csharp_icon_path).pixmap(QSize(20, 20))
-            )
-            self.csharp_icon.setToolTip("Contains C# assemblies")
+        self.xml_icon = None
+        if self.mod_type_filter_enable:
+            if self.json_data.get("csharp"):
+                self.csharp_icon = QLabel()
+                self.csharp_icon.setPixmap(
+                    QIcon(self.csharp_icon_path).pixmap(QSize(20, 20))
+                )
+                self.csharp_icon.setToolTip(
+                    "Contains custom C# assemblies (custom code)"
+                )
+            else:
+                self.xml_icon = QLabel()
+                self.xml_icon.setPixmap(QIcon(self.xml_icon_path).pixmap(QSize(20, 20)))
+                self.xml_icon.setToolTip("Contains custom content (textures / XML)")
         self.git_icon = None
         if (
             self.json_data["data_source"] == "local"
@@ -90,18 +100,18 @@ class ModListItemInner(QWidget):
         ):
             self.git_icon = QLabel()
             self.git_icon.setPixmap(QIcon(self.git_icon_path).pixmap(QSize(20, 20)))
-            self.git_icon.setToolTip("Contains a git repository")
+            self.git_icon.setToolTip("Local mod that contains a git repository")
         self.steamcmd_icon = None
         if self.json_data["data_source"] == "local" and self.json_data.get("steamcmd"):
             self.steamcmd_icon = QLabel()
             self.steamcmd_icon.setPixmap(
                 QIcon(self.steamcmd_icon_path).pixmap(QSize(20, 20))
             )
-            self.steamcmd_icon.setToolTip("Downloaded with SteamCMD")
+            self.steamcmd_icon.setToolTip("Local mod that can be used with SteamCMD")
         # Warning icon hidden by default
         self.warning_icon_label = ClickableQLabel()
         self.warning_icon_label.clicked.connect(
-            partial(self.toggle_warning_signal.emit, self.json_data["packageId"])
+            partial(self.toggle_warning_signal.emit, self.json_data["packageid"])
         )
         self.warning_icon_label.setPixmap(
             QIcon(self.warning_icon_path).pixmap(QSize(20, 20))
@@ -117,7 +127,9 @@ class ModListItemInner(QWidget):
             data_source = self.json_data.get("data_source")
             if data_source == "expansion":
                 self.mod_source_icon.setObjectName("expansion")
-                self.mod_source_icon.setToolTip("Official RimWorld content")
+                self.mod_source_icon.setToolTip(
+                    "Official RimWorld content by Ludeon Studios"
+                )
             elif data_source == "local":
                 self.mod_source_icon.setObjectName("local")
                 self.mod_source_icon.setToolTip("Installed locally")
@@ -134,6 +146,8 @@ class ModListItemInner(QWidget):
             self.main_item_layout.addWidget(self.mod_source_icon, Qt.AlignRight)
         if self.csharp_icon:
             self.main_item_layout.addWidget(self.csharp_icon, Qt.AlignRight)
+        if self.xml_icon:
+            self.main_item_layout.addWidget(self.xml_icon, Qt.AlignRight)
         self.main_item_layout.addWidget(self.main_label, Qt.AlignCenter)
         self.main_item_layout.addWidget(self.warning_icon_label, Qt.AlignRight)
         self.main_item_layout.addStretch()
@@ -158,24 +172,20 @@ class ModListItemInner(QWidget):
 
         :return: string containing the tool_tip_text
         """
-        name_line = f"Mod: {self.json_data.get('name', 'UNKNOWN')}\n"
+        name_line = f"Mod: {self.json_data.get('name')}\n"
 
-        author_line = "Author: UNKNOWN\n"
-        if "authors" in self.json_data:
-            if "li" in self.json_data["authors"]:
-                list_of_authors = self.json_data["authors"]["li"]
-                authors_text = ", ".join(list_of_authors)
-                author_line = f"Authors: {authors_text}\n"
-            else:
-                logger.error(
-                    f"[authors] tag does not contain [li] tag: {self.json_data['authors']}"
-                )
+        authors_tag = self.json_data.get("authors")
+
+        if authors_tag and isinstance(authors_tag, dict) and authors_tag.get("li"):
+            list_of_authors = authors_tag["li"]
+            authors_text = ", ".join(list_of_authors)
+            author_line = f"Authors: {authors_text}\n"
         else:
-            author_line = f"Author: {self.json_data.get('author', 'UNKNOWN')}\n"
+            author_line = f"Author: {authors_tag if authors_tag else 'Not specified'}\n"
 
-        package_id_line = f"PackageID: {self.json_data.get('packageId', 'UNKNOWN')}\n"
+        package_id_line = f"PackageID: {self.json_data.get('packageid')}\n"
         version_line = f"Version: {self.json_data.get('modVersion', 'Not specified')}\n"
-        path_line = f"Path: {self.json_data.get('path', 'UNKNOWN')}"
+        path_line = f"Path: {self.json_data.get('path')}"
         return name_line + author_line + package_id_line + version_line + path_line
 
     def get_icon(self) -> QIcon:  # type: ignore
@@ -193,7 +203,7 @@ class ModListItemInner(QWidget):
             return QIcon(self.steam_icon_path)
         else:
             logger.error(
-                f"No type found for ModListItemInner with package id {self.json_data.get('packageId')}"
+                f"No type found for ModListItemInner with package id {self.json_data.get('packageid')}"
             )
 
     def resizeEvent(self, event: QResizeEvent) -> None:

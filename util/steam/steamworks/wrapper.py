@@ -9,7 +9,6 @@ from typing import Union
 import sys
 
 from steamworks import STEAMWORKS
-from steamworks.exceptions import SteamNotRunningException
 import traceback
 from util.generic import launch_game_process
 
@@ -54,18 +53,23 @@ class SteamworksInterface:
         self.steamworks = STEAMWORKS()
         try:
             self.steamworks.initialize()  # Init the Steamworks API
-        except SteamNotRunningException:
-            logger.warning("Unable to initiate Steamworks API. Steam was not found!")
+        except Exception as e:
+            logger.warning(
+                f"Unable to initialize Steamworks API due to exception: {e.__class__.__name__}"
+            )
+            logger.warning(
+                "If you are a Steam user, please check that Steam running and that you are logged in..."
+            )
             self.steam_not_running = True
         if not self.steam_not_running:  # Skip if True
             if self.callbacks:
                 # Start the thread
-                logger.info("Starting thread...")
+                logger.debug("Starting thread")
                 self.steamworks_thread = self._daemon()
                 self.steamworks_thread.start()
 
     def _callbacks(self):
-        logger.info("Starting _callbacks")
+        logger.debug("Starting _callbacks")
         while (
             not self.steamworks.loaded()
         ):  # This should not execute as long as Steamworks API init went OK
@@ -164,39 +168,27 @@ class SteamworksAppDependenciesQuery:
         logger.info(
             f"Creating SteamworksInterface and passing PublishedFileID(s) {self.pfid_or_pfids}"
         )
+        # If the chunk passed is a single int, convert it into a list in an effort to simplify procedure
         if isinstance(self.pfid_or_pfids, int):
-            steamworks_interface = SteamworksInterface(callbacks=True)
-            multiple_queries = False
-        elif isinstance(self.pfid_or_pfids, list):
-            steamworks_interface = SteamworksInterface(
-                callbacks=True, callbacks_total=len(self.pfid_or_pfids)
-            )
-            multiple_queries = True
+            self.pfid_or_pfids = [self.pfid_or_pfids]
+        # Create our Steamworks interface and initialize Steamworks API
+        steamworks_interface = SteamworksInterface(
+            callbacks=True, callbacks_total=len(self.pfid_or_pfids)
+        )
         if not steamworks_interface.steam_not_running:  # Skip if True
             while (
                 not steamworks_interface.steamworks.loaded()
             ):  # Ensure that Steamworks API is initialized before attempting any instruction
                 break
             else:
-                if not multiple_queries:
-                    logger.debug(
-                        f"ISteamUGC/GetAppDependencies Query: {self.pfid_or_pfids}"
-                    )
+                for pfid in self.pfid_or_pfids:
+                    logger.debug(f"ISteamUGC/GetAppDependencies Query: {pfid}")
                     steamworks_interface.steamworks.Workshop.SetGetAppDependenciesResultCallback(
                         steamworks_interface._cb_app_dependencies_result_callback
                     )
-                    steamworks_interface.steamworks.Workshop.GetAppDependencies(
-                        self.pfid_or_pfids
-                    )
-                else:
-                    for pfid in self.pfid_or_pfids:
-                        logger.debug(f"ISteamUGC/GetAppDependencies Query: {pfid}")
-                        steamworks_interface.steamworks.Workshop.SetGetAppDependenciesResultCallback(
-                            steamworks_interface._cb_app_dependencies_result_callback
-                        )
-                        steamworks_interface.steamworks.Workshop.GetAppDependencies(
-                            pfid
-                        )
+                    steamworks_interface.steamworks.Workshop.GetAppDependencies(pfid)
+                    # Sleep for the interval if we have more than one pfid to action on
+                    if len(self.pfid_or_pfids) > 1:
                         sleep(self.interval)
                 # Patience, but don't wait forever
                 steamworks_interface._wait_for_callbacks(timeout=60)
@@ -208,6 +200,9 @@ class SteamworksAppDependenciesQuery:
                     f"Returning {len(steamworks_interface.get_app_deps_query_result.keys())} results..."
                 )
                 return steamworks_interface.get_app_deps_query_result
+        else:
+            steamworks_interface.steamworks.unload()
+            steamworks_interface = None
 
 
 class SteamworksGameLaunch(Process):
@@ -226,7 +221,7 @@ class SteamworksGameLaunch(Process):
         logger.info(f"Creating SteamworksInterface and launching game executable")
         # Try to initialize the SteamWorks API, but allow game to launch if Steam not found
         steamworks_interface = SteamworksInterface(callbacks=False)
-        if not steamworks_interface.steam_not_running:  # Delete if true
+        if steamworks_interface.steam_not_running:  # Delete if true
             steamworks_interface = None
         # Launch the game
         launch_game_process(game_install_path=self.game_install_path, args=self.args)
@@ -234,6 +229,8 @@ class SteamworksGameLaunch(Process):
         if steamworks_interface and steamworks_interface.steamworks:
             # Unload Steamworks API
             steamworks_interface.steamworks.unload()
+        else:
+            steamworks_interface = None
 
 
 class SteamworksSubscriptionHandler:
@@ -254,67 +251,77 @@ class SteamworksSubscriptionHandler:
         logger.info(
             f"Creating SteamworksInterface and passing instruction {self.action}"
         )
+        # If the chunk passed is a single int, convert it into a list in an effort to simplify procedure
         if isinstance(self.pfid_or_pfids, int):
-            steamworks_interface = SteamworksInterface(callbacks=True)
-            multiple_actions = False
-        elif isinstance(self.pfid_or_pfids, list):
-            steamworks_interface = SteamworksInterface(
-                callbacks=True, callbacks_total=len(self.pfid_or_pfids)
-            )
-            multiple_actions = True
+            self.pfid_or_pfids = [self.pfid_or_pfids]
+        # Create our Steamworks interface and initialize Steamworks API
+        # If we are resubscribing, it's actually 3 callbacks to expect per pfid
+        if self.action == "resubscribe":
+            callbacks_total = len(self.pfid_or_pfids) * 3  # per API call
+        elif (
+            self.action == "unsubscribe"
+        ):  # If we are unsubscribing, it's actually 2 callbacks to expect per pfid
+            callbacks_total = len(self.pfid_or_pfids) * 2  # per API call
+        # Otherwise we only expect a single callback for each mod
+        else:
+            callbacks_total = len(self.pfid_or_pfids)
+        steamworks_interface = SteamworksInterface(
+            callbacks=True, callbacks_total=callbacks_total
+        )
         if not steamworks_interface.steam_not_running:  # Skip if True
             while (
                 not steamworks_interface.steamworks.loaded()
             ):  # Ensure that Steamworks API is initialized before attempting any instruction
                 break
             else:
-                if self.action == "subscribe":
-                    if not multiple_actions:
+                if self.action == "resubscribe":
+                    for pfid in self.pfid_or_pfids:
                         logger.debug(
-                            f"ISteamUGC/SubscribeItem Action : {self.pfid_or_pfids}"
-                        )
-                        # Point Steamworks API callback response to our functions
-                        steamworks_interface.steamworks.Workshop.SetItemSubscribedCallback(
-                            steamworks_interface._cb_subscription_action
-                        )
-                        # Create API call
-                        steamworks_interface.steamworks.Workshop.SubscribeItem(
-                            self.pfid_or_pfids
-                        )
-                    else:
-                        for pfid in self.pfid_or_pfids:
-                            logger.debug(f"ISteamUGC/SubscribeItem Action : {pfid}")
-                            # Point Steamworks API callback response to our functions
-                            steamworks_interface.steamworks.Workshop.SetItemSubscribedCallback(
-                                steamworks_interface._cb_subscription_action
-                            )
-                            # Create API call
-                            steamworks_interface.steamworks.Workshop.SubscribeItem(pfid)
-                            sleep(self.interval)
-                elif self.action == "unsubscribe":
-                    if not multiple_actions:
-                        logger.debug(
-                            f"ISteamUGC/UnsubscribeItem Action : {self.pfid_or_pfids}"
+                            f"ISteamUGC/UnsubscribeItem x2 + SubscribeItem Action : {pfid}"
                         )
                         # Point Steamworks API callback response to our functions
                         steamworks_interface.steamworks.Workshop.SetItemUnsubscribedCallback(
                             steamworks_interface._cb_subscription_action
                         )
-                        # Create API calls
-                        steamworks_interface.steamworks.Workshop.UnsubscribeItem(
-                            self.pfid_or_pfids
+                        steamworks_interface.steamworks.Workshop.SetItemSubscribedCallback(
+                            steamworks_interface._cb_subscription_action
                         )
-                    else:
-                        for pfid in self.pfid_or_pfids:
-                            logger.debug(f"ISteamUGC/UnsubscribeItem Action : {pfid}")
-                            # Point Steamworks API callback response to our functions
-                            steamworks_interface.steamworks.Workshop.SetItemUnsubscribedCallback(
-                                steamworks_interface._cb_subscription_action
-                            )
-                            # Create API calls
-                            steamworks_interface.steamworks.Workshop.UnsubscribeItem(
-                                pfid
-                            )
+                        # Create API calls
+                        steamworks_interface.steamworks.Workshop.UnsubscribeItem(pfid)
+                        sleep(self.interval)
+                        steamworks_interface.steamworks.Workshop.UnsubscribeItem(pfid)
+                        sleep(
+                            5
+                        )  # Wait for a few seconds while Steam does its thing, then subscribe again
+                        steamworks_interface.steamworks.Workshop.SubscribeItem(pfid)
+                        # Sleep for the interval if we have more than one pfid to action on
+                        if len(self.pfid_or_pfids) > 1:
+                            sleep(self.interval)
+                elif self.action == "subscribe":
+                    for pfid in self.pfid_or_pfids:
+                        logger.debug(f"ISteamUGC/SubscribeItem Action : {pfid}")
+                        # Point Steamworks API callback response to our functions
+                        steamworks_interface.steamworks.Workshop.SetItemSubscribedCallback(
+                            steamworks_interface._cb_subscription_action
+                        )
+                        # Create API calls
+                        steamworks_interface.steamworks.Workshop.SubscribeItem(pfid)
+                        # Sleep for the interval if we have more than one pfid to action on
+                        if len(self.pfid_or_pfids) > 1:
+                            sleep(self.interval)
+                elif self.action == "unsubscribe":
+                    for pfid in self.pfid_or_pfids:
+                        logger.debug(f"ISteamUGC/UnsubscribeItem Action : {pfid}")
+                        # Point Steamworks API callback response to our functions
+                        steamworks_interface.steamworks.Workshop.SetItemUnsubscribedCallback(
+                            steamworks_interface._cb_subscription_action
+                        )
+                        # Create API calls
+                        steamworks_interface.steamworks.Workshop.UnsubscribeItem(pfid)
+                        sleep(self.interval)
+                        steamworks_interface.steamworks.Workshop.UnsubscribeItem(pfid)
+                        # Sleep for the interval if we have more than one pfid to action on
+                        if len(self.pfid_or_pfids) > 1:
                             sleep(self.interval)
                 # Patience, but don't wait forever
                 steamworks_interface._wait_for_callbacks(timeout=60)
@@ -323,6 +330,9 @@ class SteamworksSubscriptionHandler:
                 steamworks_interface.steamworks_thread.join()
                 # Unload Steamworks API
                 steamworks_interface.steamworks.unload()
+        else:
+            steamworks_interface.steamworks.unload()
+            steamworks_interface = None
 
 
 if __name__ == "__main__":

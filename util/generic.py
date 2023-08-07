@@ -1,12 +1,13 @@
 from logger_tt import logger
 from errno import EACCES
 import os
+from pathlib import Path
 import platform
-from pyperclip import copy as copy_to_clipboard
 import shutil
 from stat import S_IRWXU, S_IRWXG, S_IRWXO
 import subprocess
 from requests import post as requests_post
+import sys
 import webbrowser
 
 from model.dialogue import show_information, show_warning
@@ -27,16 +28,31 @@ def delete_files_except_extension(directory, extension):
     for root, dirs, files in os.walk(directory):
         for file in files:
             if not file.endswith(extension):
-                file_path = os.path.join(root, file)
-                os.remove(file_path)
-                logger.debug(f"Deleted: {file_path}")
+                file_path = str(Path(os.path.join(root, file)).resolve())
+                try:
+                    os.remove(file_path)
+                except OSError as e:
+                    handle_remove_read_only(os.remove, file_path, sys.exc_info())
+                finally:
+                    logger.debug(f"Deleted: {file_path}")
 
     for root, dirs, _ in os.walk(directory, topdown=False):
         for dir in dirs:
-            dir_path = os.path.join(root, dir)
+            dir_path = str(Path(os.path.join(root, dir)).resolve())
             if not os.listdir(dir_path):
-                os.rmdir(dir_path)
+                shutil.rmtree(
+                    dir_path,
+                    ignore_errors=False,
+                    onerror=handle_remove_read_only,
+                )
                 logger.debug(f"Deleted: {dir_path}")
+    if not os.listdir(directory):
+        shutil.rmtree(
+            directory,
+            ignore_errors=False,
+            onerror=handle_remove_read_only,
+        )
+        logger.debug(f"Deleted: {directory}")
 
 
 def handle_remove_read_only(func, path: str, exc):
@@ -62,13 +78,19 @@ def launch_game_process(game_install_path: str, args: list) -> None:
     if game_install_path:
         system_name = platform.system()
         if system_name == "Darwin":
-            executable_path = os.path.join(game_install_path, "RimWorldMac.app")
+            executable_path = str(
+                Path(os.path.join(game_install_path, "RimWorldMac.app")).resolve()
+            )
         elif system_name == "Linux":
             # Linux
-            executable_path = os.path.join(game_install_path, "RimWorldLinux")
+            executable_path = str(
+                Path(os.path.join(game_install_path, "RimWorldLinux")).resolve()
+            )
         elif "Windows":
             # Windows
-            executable_path = os.path.join(game_install_path, "RimWorldWin64.exe")
+            executable_path = str(
+                Path(os.path.join(game_install_path, "RimWorldWin64.exe")).resolve()
+            )
         else:
             logger.error("Unable to launch the game on an unknown system")
         logger.info(f"Path to game executable generated: {executable_path}")
@@ -159,6 +181,17 @@ def platform_specific_open(path: str) -> None:
         subprocess.Popen(["xdg-open", path])
     else:
         logger.error("Attempting to open directory on an unknown system")
+
+
+def set_to_list(obj):
+    if isinstance(obj, set):
+        return list(obj)
+    elif isinstance(obj, list):
+        return [set_to_list(e) for e in obj]
+    elif isinstance(obj, dict):
+        return {k: set_to_list(v) for k, v in obj.items()}
+    else:
+        return obj
 
 
 def upload_data_to_0x0_st(path: str) -> str:

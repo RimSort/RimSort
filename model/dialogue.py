@@ -1,7 +1,13 @@
-from typing import Optional
+from typing import Optional, Tuple
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QMessageBox, QPushButton, QHBoxLayout, QVBoxLayout
+from PySide6.QtWidgets import (
+    QInputDialog,
+    QMessageBox,
+    QPushButton,
+    QHBoxLayout,
+    QVBoxLayout,
+)
 
 from logger_tt import logger
 
@@ -71,6 +77,33 @@ def show_dialogue_conditional(
     return response.text()
 
 
+def show_dialogue_input(
+    title: Optional[str] = None,
+    text: Optional[str] = None,
+    value: Optional[str] = None,
+) -> Tuple[str, bool]:
+    # Set up the message box
+    dialogue = QInputDialog()
+    dialogue.setObjectName("dialogue")
+    if title:
+        dialogue.setWindowTitle(title)
+    else:
+        dialogue.setWindowTitle(DEFAULT_TITLE)
+    # Add data
+    if text:
+        dialogue.setLabelText(text)
+    if value:
+        dialogue.setTextValue(value)
+
+    # Show the message box & return response
+    if dialogue.exec() == QInputDialog.Accepted:
+        result = True
+    else:
+        result = False
+    response = dialogue.textValue()
+    return response, result
+
+
 def show_information(
     title: Optional[str] = None,
     text: Optional[str] = None,
@@ -106,7 +139,7 @@ def show_information(
         info_message_box.setDetailedText(details)
 
     # Show the message box
-    logger.info("Finished showing information box")
+    logger.debug("Finished showing information box")
     info_message_box.exec_()
 
 
@@ -145,7 +178,7 @@ def show_warning(
         warning_message_box.setDetailedText(details)
 
     # Show the message box
-    logger.info("Finished showing warning box")
+    logger.debug("Finished showing warning box")
     warning_message_box.exec_()
 
 
@@ -187,5 +220,5 @@ def show_fatal_error(
         fatal_message_box.setDetailedText(details)
 
     # Show the message box
-    logger.info("Finished showing fatal error box")
+    logger.debug("Finished showing fatal error box")
     fatal_message_box.exec_()

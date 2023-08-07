@@ -21,7 +21,6 @@ from PySide6.QtWidgets import (
 )
 
 from model.dialogue import show_information
-from pyperclip import copy as copy_to_clipboard
 from util.generic import platform_specific_open, upload_data_to_0x0_st
 
 
@@ -36,7 +35,7 @@ class SettingsPanel(QDialog):
     actions_signal = Signal(str)
 
     def __init__(self, storage_path: str) -> None:
-        logger.info("Starting SettingsPanel initialization")
+        logger.debug("Initializing SettingsPanel")
         super(SettingsPanel, self).__init__()
 
         self.storage_path = storage_path
@@ -75,7 +74,7 @@ class SettingsPanel(QDialog):
         self.open_log_button.clicked.connect(
             partial(
                 platform_specific_open,
-                os.path.join(gettempdir(), "RimSort.log"),
+                str(Path(os.path.join(gettempdir(), "RimSort.log")).resolve()),
             )
         )
         self.open_storage_button = QPushButton("Open RimSort storage")
@@ -87,11 +86,19 @@ class SettingsPanel(QDialog):
         )
         self.upload_log_button = QPushButton("Upload RimSort.log")
         self.upload_log_button.setToolTip(
-            "Log will be uploaded to http://0x0.st/ and\n"
+            "RimSort.log will be uploaded to http://0x0.st/ and\n"
             + "the URL will be copied to your clipboard."
         )
         self.upload_log_button.clicked.connect(
             partial(self.actions_signal.emit, "upload_rs_log")
+        )
+        self.upload_log_old_button = QPushButton("Upload RimSort.old.log")
+        self.upload_log_old_button.setToolTip(
+            "RimSort.old.log will be uploaded to http://0x0.st/ and\n"
+            + "the URL will be copied to your clipboard."
+        )
+        self.upload_log_old_button.clicked.connect(
+            partial(self.actions_signal.emit, "upload_rs_old_log")
         )
         self.rimsort_options_label = QLabel("RimSort Options:")
         self.rimsort_options_label.setObjectName("summaryValue")
@@ -115,11 +122,11 @@ class SettingsPanel(QDialog):
             + "button animation. This may potentially be used later for other things.\n\n"
             + "This option is applied on RimSort initialization."
         )
-        self.csharp_mods_checkbox = QCheckBox(
-            "Show C# icon when Assemblies found in mod"
+        self.mod_type_filter_checkbox = QCheckBox(
+            "Show mod type filter in the active/inactive mod lists"
         )
-        self.csharp_mods_checkbox.setObjectName("summaryValue")
-        self.csharp_mods_checkbox.setToolTip(
+        self.mod_type_filter_checkbox.setObjectName("summaryValue")
+        self.mod_type_filter_checkbox.setToolTip(
             "Displays icon in mod list widget to signify.\n"
             + "Requires restart for preference to take effect."
         )
@@ -152,10 +159,11 @@ class SettingsPanel(QDialog):
         self.general_actions_layout.addWidget(self.open_log_button)
         self.general_actions_layout.addWidget(self.open_storage_button)
         self.general_actions_layout.addWidget(self.upload_log_button)
+        self.general_actions_layout.addWidget(self.upload_log_old_button)
         self.general_preferences_layout.addWidget(self.rimsort_options_label)
         self.general_preferences_layout.addWidget(self.logger_debug_checkbox)
         self.general_preferences_layout.addWidget(self.watchdog_checkbox)
-        self.general_preferences_layout.addWidget(self.csharp_mods_checkbox)
+        self.general_preferences_layout.addWidget(self.mod_type_filter_checkbox)
         self.general_preferences_layout.addWidget(self.duplicate_mods_checkbox)
         self.general_preferences_layout.addWidget(self.steam_mods_update_checkbox)
         self.general_preferences_layout.addWidget(
@@ -183,7 +191,11 @@ class SettingsPanel(QDialog):
         self.database_tools_actions_layout = QHBoxLayout()
         # metadata widgets
         self.external_metadata_icon = QIcon(
-            os.path.join(os.path.dirname(__file__), "../data/database.png")
+            str(
+                Path(
+                    os.path.join(os.path.dirname(__file__), "../data/database.png")
+                ).resolve()
+            )
         )
         self.external_metadata_label = QLabel("External Metadata")
         self.external_metadata_label.setObjectName("summaryValue")
@@ -372,9 +384,9 @@ class SettingsPanel(QDialog):
         self.todds_presets_cb.setObjectName("MainUI")
         self.todds_presets_cb.addItems(
             [
-                "Low quality (for low VRAM/older GPU, optimize for VRAM)",
-                "High quality (default, good textures, long encode time)",
-                "Very high quality (better textures, longer encode time)",
+                "Optimized for VRAM (lesser graphics cards, faster encoding)",
+                "Default quality (recommended for RimWorld, slower encoding)",
+                "High quality (for texture enthusiasts, slowest encode time)",
             ]
         )
         # QComboBox alignment is hardcoded...? too lazy to override...
@@ -433,7 +445,7 @@ class SettingsPanel(QDialog):
         # Display items
         self.setLayout(self.layout)
 
-        logger.info("Finished SettingsPanel initialization")
+        logger.debug("Finished SettingsPanel initialization")
 
     def buildDatabaseBtnContextMenuEvent(self, point: QPoint) -> None:
         contextMenu = QMenu(self)  # Build Database btn context menu event
@@ -563,8 +575,12 @@ class SettingsPanel(QDialog):
         )
 
     def loggerDebugCheckboxEvent(self) -> None:
-        data_path = os.path.join(os.path.split(os.path.dirname(__file__))[0], "data")
-        debug_file = os.path.join(data_path, "DEBUG")
+        data_path = str(
+            Path(
+                os.path.join(os.path.split(os.path.dirname(__file__))[0], "data")
+            ).resolve()
+        )
+        debug_file = str(Path(os.path.join(data_path, "DEBUG")).resolve())
         if self.logger_debug_checkbox.isChecked():
             if not os.path.exists(debug_file):
                 # Create an empty file

@@ -41,7 +41,7 @@ class RunnerPanel(QWidget):
     ):
         super().__init__()
 
-        logger.info("Initializing RunnerPanel")
+        logger.debug("Initializing RunnerPanel")
         self.ansi_escape = compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
         self.system = system()
         self.installEventFilter(self)
@@ -70,19 +70,18 @@ class RunnerPanel(QWidget):
         self.process_last_args = []
         self.todds_dry_run_support = todds_dry_run_support
 
-        # SET STYLESHEET TO CONFORM WITH GLOBAL CFG
+        # SET STYLESHEET
         self.text.setObjectName("RunnerPaneltext")
         self.setObjectName("RunnerPanel")
-        # self.setStyleSheet(  # Add style sheet for styling layouts and widgets
-        #    Path(os.path.join(os.path.dirname(__file__), "../data/style.qss"))
-        #    .resolve()
-        #    .read_text()
-        # ) useless because of super().__init__()
 
         # CREATE WIDGETS
         # Clear btn
         self.clear_runner_icon = QIcon(
-            os.path.join(os.path.dirname(__file__), "../data/clear.png")
+            str(
+                Path(
+                    os.path.join(os.path.dirname(__file__), "../data/clear.png")
+                ).resolve()
+            )
         )
         self.clear_runner_button = QToolButton()
         self.clear_runner_button.setIcon(self.clear_runner_icon)
@@ -92,7 +91,13 @@ class RunnerPanel(QWidget):
         )
         # Restart btn
         self.restart_process_icon = QIcon(
-            os.path.join(os.path.dirname(__file__), "../data/restart_process.png")
+            str(
+                Path(
+                    os.path.join(
+                        os.path.dirname(__file__), "../data/restart_process.png"
+                    )
+                ).resolve()
+            )
         )
         self.restart_process_button = QToolButton()
         self.restart_process_button.setIcon(self.restart_process_icon)
@@ -103,7 +108,11 @@ class RunnerPanel(QWidget):
         self.restart_process_button.hide()  # Hide this by default - it will be enabled if self.execute()
         # Kill btn
         self.kill_process_icon = QIcon(
-            os.path.join(os.path.dirname(__file__), "../data/kill_process.png")
+            str(
+                Path(
+                    os.path.join(os.path.dirname(__file__), "../data/kill_process.png")
+                ).resolve()
+            )
         )
         self.kill_process_button = QToolButton()
         self.kill_process_button.setIcon(self.kill_process_icon)
@@ -114,7 +123,11 @@ class RunnerPanel(QWidget):
         self.kill_process_button.hide()  # Hide this by default - it will be enabled if self.execute()
         # Save process output btn
         self.save_runner_icon = QIcon(
-            os.path.join(os.path.dirname(__file__), "../data/save_output.png")
+            str(
+                Path(
+                    os.path.join(os.path.dirname(__file__), "../data/save_output.png")
+                ).resolve()
+            )
         )
         self.save_runner_output_button = QToolButton()
         self.save_runner_output_button.setIcon(self.save_runner_icon)
@@ -313,13 +326,6 @@ class RunnerPanel(QWidget):
                 self.progress_bar.setRange(0, int(line.split("Progress: 1/")[1]))
             if "Progress: " in line:
                 overwrite = True
-            elif (
-                self.todds_dry_run_support  # TODO: REMOVE THIS
-                # Hardcoded todds --dry-run support - we don't want the total time output until jose fixes
-                and ("Total time: " in line)
-            ):
-                self.previous_line = line
-                return
             # -------TODDS-------
 
         # Hardcoded query progress output support
@@ -393,9 +399,7 @@ class RunnerPanel(QWidget):
                                     )
                                 )
                                 if failed_mods_name_lookup != None:
-                                    for mod_metadata in failed_mods_name_lookup[
-                                        "response"
-                                    ]["publishedfiledetails"]:
+                                    for mod_metadata in failed_mods_name_lookup:
                                         if (
                                             mod_metadata["publishedfileid"]
                                             not in pfids_to_name

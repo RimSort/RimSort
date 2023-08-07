@@ -32,7 +32,7 @@ class Actions(QWidget):
         Initialize the actions panel. Construct the layout,
         add widgets, and emit signals where applicable.
         """
-        logger.info("Starting Actions initialization")
+        logger.debug("Initializing Actions")
         super(Actions, self).__init__()
 
         # Create the main layout.
@@ -173,7 +173,15 @@ class Actions(QWidget):
         self.setup_steamcmd_button.customContextMenuRequested.connect(
             self.setupSteamcmdContextMenuEvent
         )
-
+        # UPDATE WORKSHOP MODS BUTTON
+        self.update_workshop_mods_button = QPushButton("Update Workshop mods")
+        self.update_workshop_mods_button.setToolTip(
+            "Query Steam WebAPI for mod update data and check against installed Workshop mods\n"
+            + "Supports mods sourced via SteamCMD or Steam client"
+        )
+        self.update_workshop_mods_button.clicked.connect(
+            partial(self.actions_signal.emit, "update_workshop_mods")
+        )
         # RIMWORLD LABEL
         self.rimworld_label = QLabel("RimWorld options")
         self.rimworld_label.setObjectName("summaryValue")
@@ -222,6 +230,7 @@ class Actions(QWidget):
         self.middle_panel.addWidget(self.add_git_mod_button)
         self.middle_panel.addWidget(self.browse_workshop_button)
         self.middle_panel.addWidget(self.setup_steamcmd_button)
+        self.middle_panel.addWidget(self.update_workshop_mods_button)
         self.bottom_panel.addWidget(self.rimworld_label)
         self.bottom_panel.addWidget(self.import_button)
         self.bottom_panel.addWidget(self.export_button)
@@ -229,7 +238,7 @@ class Actions(QWidget):
         self.bottom_panel.addWidget(self.save_button)
         self.bottom_panel.addWidget(self.upload_rwlog_button)
 
-        logger.info("Finished Actions initialization")
+        logger.debug("Finished Actions initialization")
 
     @property
     def panel(self) -> QVBoxLayout:
@@ -271,20 +280,22 @@ class Actions(QWidget):
 
     def setupSteamcmdContextMenuEvent(self, point: QPoint) -> None:
         contextMenu = QMenu(self)  # Actions Panel context menu event
+        delete_steamcmd_acf_data = contextMenu.addAction(
+            "Delete SteamCMD acf data"
+        )  # delete acf
         set_steamcmd_path = contextMenu.addAction(
             "Configure SteamCMD prefix"
         )  # steamcmd path
         import_acf_data = contextMenu.addAction(
             "Import SteamCMD acf data"
         )  # import acf
-        reset_steamcmd_acf_data = contextMenu.addAction("Reset SteamCMD acf data")
+        delete_steamcmd_acf_data.triggered.connect(
+            partial(self.actions_signal.emit, "reset_steamcmd_acf_data")
+        )
         set_steamcmd_path.triggered.connect(
             partial(self.actions_signal.emit, "set_steamcmd_path")
         )
         import_acf_data.triggered.connect(
             partial(self.actions_signal.emit, "import_steamcmd_acf_data")
-        )
-        reset_steamcmd_acf_data.triggered.connect(
-            partial(self.actions_signal.emit, "reset_steamcmd_acf_data")
         )
         action = contextMenu.exec_(self.setup_steamcmd_button.mapToGlobal(point))

@@ -22,11 +22,12 @@ def xml_path_to_json(path: str) -> Dict[str, Any]:
             xml_data = f.read()
             soup = BeautifulSoup(xml_data, "lxml-xml")
             # Find and remove empty tags
-            empty_tags = soup.find_all(lambda tag: len(tag) == 0)
+            empty_tags = soup.find_all(
+                lambda tag: not tag.text.strip() or len(tag) == 0
+            )
             for empty_tag in empty_tags:
                 empty_tag.extract()
             data = xmltodict.parse(str(soup), dict_constructor=dict)
-            data = data
             logger.debug(f"XML file parsed")
     else:
         logger.error(f"XML file does not exist at: {path}")
@@ -40,7 +41,7 @@ def json_to_xml_write(data: Dict[str, Any], path: str) -> None:
     :param data: json data to write
     :param path: path to write the xml file to
     """
-    logger.debug("Starting writing JSON to XML")
+    logger.debug("Started writing JSON to XML")
     new_xml_data = xmltodict.unparse(data, pretty=True, newl="\n", indent="  ")
     with open(path, "w") as f:
         f.write(new_xml_data)

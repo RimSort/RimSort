@@ -2,6 +2,7 @@ import json
 from logger_tt import logger
 from model.dialogue import show_warning
 import os
+from pathlib import Path
 
 from time import localtime, strftime, time
 import traceback
@@ -171,12 +172,13 @@ class SteamDatabaseBuilder(QThread):
                     v["appid"]: {
                         "appid": True,
                         "url": f'https://store.steampowered.com/app/{v["appid"]}',
-                        "packageId": v.get("packageId"),
+                        "packageid": v.get("packageid"),
                         "name": v.get("name"),
-                        "authors": v.get("author"),
-                        "gameVersions": v.get("supportedVersions").get("li")
-                        if isinstance(v.get("supportedVersions").get("li", {}), list)
-                        else [v.get("supportedVersions", {}).get("li")],
+                        "authors": ", ".join(v.get("authors").get("li"))
+                        if v.get("authors")
+                        and isinstance(v.get("authors"), dict)
+                        and v.get("authors").get("li")
+                        else v.get("authors", "Missing XML: <author(s)>"),
                     }
                     for v in self.mods.values()
                     if v.get("appid")
@@ -184,12 +186,27 @@ class SteamDatabaseBuilder(QThread):
                 **{
                     v["publishedfileid"]: {
                         "url": f'https://steamcommunity.com/sharedfiles/filedetails/?id={v["publishedfileid"]}',
-                        "packageId": v.get("packageId"),
-                        "name": v.get("name"),
-                        "authors": v.get("author"),
-                        "gameVersions": v.get("supportedVersions").get("li")
-                        if isinstance(v.get("supportedVersions", {}).get("li"), list)
-                        else [v.get("supportedVersions", {}).get("li")],
+                        "packageId": v.get("packageid"),
+                        "name": v.get("name")
+                        if not v.get("DB_BUILDER_NO_NAME")
+                        else "Missing XML: <name>",
+                        "authors": ", ".join(v.get("authors").get("li"))
+                        if v.get("authors")
+                        and isinstance(v.get("authors"), dict)
+                        and v.get("authors").get("li")
+                        else v.get("authors", "Missing XML: <author(s)>"),
+                        "gameVersions": v.get("supportedversions").get("li")
+                        if isinstance(v.get("supportedversions", {}).get("li"), list)
+                        else [
+                            v.get("supportedversions", {}).get(
+                                "li",
+                            )
+                            if v.get("supportedversions")
+                            else v.get(
+                                "targetversion",
+                                "Missing XML: <supportedversions> or <targetversion>",
+                            )
+                        ],
                     }
                     for v in self.mods.values()
                     if v.get("publishedfileid")
@@ -213,7 +230,7 @@ class SteamDatabaseBuilder(QThread):
                     appid: {
                         "appid": True,
                         "url": f"https://store.steampowered.com/app/{appid}",
-                        "packageId": metadata.get("packageId"),
+                        "packageid": metadata.get("packageid"),
                         "name": metadata.get("name"),
                     }
                     for appid, metadata in RIMWORLD_DLC_METADATA.items()
@@ -228,8 +245,7 @@ class SteamDatabaseBuilder(QThread):
         }
         total = len(database["database"].keys())
         self.db_builder_message_output_signal.emit(
-            f"\nPopulated {total} items queried from Steam Workshop into initial database for "
-            + f"{self.appid}..."
+            f"\nPopulated {total} items queried from Steam Workshop into initial database for AppId {self.appid}"
         )
         return database
 
@@ -256,7 +272,6 @@ class SteamDatabaseBuilder(QThread):
                     db_to_update,
                     database,
                     prune_exceptions=DB_BUILDER_PRUNE_EXCEPTIONS,
-                    purge_keys=DB_BUILDER_PURGE_KEYS,
                     recurse_exceptions=DB_BUILDER_RECURSE_EXCEPTIONS,
                 )
                 with open(self.output_database_path, "w") as output:
@@ -265,9 +280,13 @@ class SteamDatabaseBuilder(QThread):
                 self.db_builder_message_output_signal.emit(
                     "Unable to load database from specified path! Does the file exist...?"
                 )
-                appended_path = os.path.join(
-                    os.path.split(self.output_database_path)[0],
-                    "NEW_" + str(os.path.split(self.output_database_path[1])),
+                appended_path = str(
+                    Path(
+                        os.path.join(
+                            os.path.split(self.output_database_path)[0],
+                            "NEW_" + str(os.path.split(self.output_database_path[1])),
+                        )
+                    ).resolve()
                 )
                 self.db_builder_message_output_signal.emit(
                     f"\nCaching DynamicQuery result:\n\n{appended_path}"
@@ -306,17 +325,25 @@ def get_configured_steam_db(life: int, path: str) -> Tuple[Dict[str, Any], Any]:
                     "database"
                 ]  # TODO: additional check to verify integrity of this data's schema
                 logger.info("Cached Steam DB is valid! Returning data to RimSort...")
+                total_entries = len(db_json_data)
+                logger.info(
+                    f"Loaded metadata for {total_entries} Steam Workshop mods from Steam DB"
+                )
             else:  # If the cached db data is expired but NOT missing
                 # Fallback to the expired metadata
                 show_warning(
                     title="Steam DB metadata expired",
                     text="Steam DB is expired! Consider updating!\n",
-                    information="Unable to initialize Dynamic Query for live metadata!\n"
-                    + "Falling back to cached, but EXPIRED Steam Database...\n",
+                    information=f'Steam DB last updated: {strftime("%Y-%m-%d %H:%M:%S", localtime(db_data["version"] - life))}\n\n'
+                    + "Falling back to cached, but EXPIRED Steam Database...",
                 )
                 db_json_data = db_data[
                     "database"
                 ]  # TODO: additional check to verify integrity of this data's schema
+                total_entries = len(db_json_data)
+                logger.info(
+                    f"Loaded metadata for {total_entries} Steam Workshop mods from Steam DB"
+                )
             return db_json_data, path
 
     else:  # Assume db_data_missing
@@ -342,14 +369,11 @@ def get_configured_community_rules_db(path: str) -> Tuple[Dict[str, Any], Any]:
             json_string = f.read()
             logger.info("Reading info from communityRules.json")
             rule_data = json.loads(json_string)
-            logger.debug(
-                "Returning communityRules.json, this data is long so we forego logging it here"
-            )
-            total_entries = len(rule_data["rules"])
+            community_rules_json_data = rule_data["rules"]
+            total_entries = len(community_rules_json_data)
             logger.info(
                 f"Loaded {total_entries} additional sorting rules from Community Rules"
             )
-            community_rules_json_data = rule_data["rules"]
             return community_rules_json_data, path
 
     else:  # Assume db_data_missing
@@ -373,11 +397,13 @@ def get_rpmmdb_steam_metadata(mods: Dict[str, Any]) -> Tuple[Dict[str, Any], Any
     db_json_data = {}
     for uuid in mods:
         if (
-            mods[uuid].get("packageId") == "rupal.rimpymodmanagerdatabase"
+            mods[uuid].get("packageid") == "rupal.rimpymodmanagerdatabase"
             or mods[uuid].get("publishedfileid") == "1847679158"
         ):
             logger.info("Found RimPy Mod Manager Database mod")
-            steam_db_path = os.path.join(mods[uuid]["path"], "db", "db.json")
+            steam_db_path = str(
+                Path(os.path.join(mods[uuid]["path"], "db", "db.json")).resolve()
+            )
             logger.info(f"Generated path to db.json: {steam_db_path}")
             if os.path.exists(steam_db_path):
                 with open(steam_db_path, encoding="utf-8") as f:
@@ -392,6 +418,10 @@ def get_rpmmdb_steam_metadata(mods: Dict[str, Any]) -> Tuple[Dict[str, Any], Any
                         f"Loaded {total_entries} additional sorting rules from RPMMDB Steam DB"
                     )
                     db_json_data = db_data["database"]
+                    total_entries = len(db_json_data)
+                    logger.info(
+                        f"Loaded metadata for {total_entries} Steam Workshop mods from Steam DB"
+                    )
                     return db_json_data, steam_db_path
             else:
                 logger.error("The db.json path does not exist!")
@@ -419,12 +449,14 @@ def get_rpmmdb_community_rules_db(mods: Dict[str, Any]) -> Tuple[Dict[str, Any],
     community_rules_json_data = {}
     for uuid in mods:
         if (
-            mods[uuid].get("packageId") == "rupal.rimpymodmanagerdatabase"
+            mods[uuid].get("packageid") == "rupal.rimpymodmanagerdatabase"
             or mods[uuid].get("publishedfileid") == "1847679158"
         ):
             logger.info("Found RimPy Mod Manager Database mod")
-            community_rules_path = os.path.join(
-                mods[uuid]["path"], "db", "communityRules.json"
+            community_rules_path = str(
+                Path(
+                    os.path.join(mods[uuid]["path"], "db", "communityRules.json")
+                ).resolve()
             )
             logger.info(
                 f"Generated path to communityRules.json: {community_rules_path}"
@@ -442,6 +474,10 @@ def get_rpmmdb_community_rules_db(mods: Dict[str, Any]) -> Tuple[Dict[str, Any],
                         f"Loaded {total_entries} additional sorting rules from RPMMDB Community Rules"
                     )
                     community_rules_json_data = rule_data["rules"]
+                    total_entries = len(community_rules_json_data)
+                    logger.info(
+                        f"Loaded {total_entries} additional sorting rules from Community Rules"
+                    )
                     return community_rules_json_data, community_rules_path
             else:
                 logger.error("The communityRules.json path does not exist")
@@ -461,61 +497,8 @@ def get_rpmmdb_community_rules_db(mods: Dict[str, Any]) -> Tuple[Dict[str, Any],
 # Steam client / SteamCMD metadata
 
 
-def edit_workshop_acf_data(
-    appworkshop_acf_path: str, operation: str, publishedfileids: list
-) -> None:
-    logger.info(f"SteamCMD acf data path to update: {appworkshop_acf_path}")
-    if os.path.exists(appworkshop_acf_path):
-        logger.debug(f"Reading info...")
-        steamcmd_appworkshop_acf = acf_to_dict(appworkshop_acf_path)
-        logger.debug("Retrieved SteamCMD data to update...")
-    else:
-        logger.warning("SteamCMD acf file not found! Nothing was done...")
-        return
-    # Output
-    items_installed_before = len(
-        steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemsInstalled"].keys()
-    )
-    logger.debug(f"WorkshopItemsInstalled beforehand: {items_installed_before}")
-    item_details_before = len(
-        steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemDetails"].keys()
-    )
-    logger.debug(f"WorkshopItemDetails beforehand: {item_details_before}")
-    for publishedfileid in publishedfileids:
-        if operation == "add":
-            steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemDetails"][
-                publishedfileid
-            ] = {
-                "timeupdated": "0",
-                "timetouched": "0",
-            }
-            steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemsInstalled"][
-                publishedfileid
-            ] = {
-                "timeupdated": "0",
-            }
-        elif operation == "delete":
-            steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemDetails"].pop(
-                publishedfileid
-            )
-            steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemsInstalled"].pop(
-                publishedfileid
-            )
-        items_installed_after = len(
-            steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemsInstalled"].keys()
-        )
-    logger.warning(f"WorkshopItemsInstalled after: {items_installed_after}")
-    item_details_after = len(
-        steamcmd_appworkshop_acf["AppWorkshop"]["WorkshopItemDetails"].keys()
-    )
-    logger.warning(f"WorkshopItemDetails after: {item_details_after}")
-    logger.info("Successfully edited data!")
-    logger.info(f"Writing updated data back to path: {appworkshop_acf_path}")
-    dict_to_acf(data=steamcmd_appworkshop_acf, path=appworkshop_acf_path)
-
-
 def get_workshop_acf_data(
-    appworkshop_acf_path: str, workshop_mods: Dict[str, Any], steamcmd_mode=None
+    appworkshop_acf_path: str, workshop_mods: Dict[str, Any]
 ) -> None:
     """
     Given a path to the Rimworld Steam Workshop appworkshop_294100.acf file, and parse it into a dict.
@@ -528,31 +511,39 @@ def get_workshop_acf_data(
     :param steamcmd_mode: set to True for mode which forces match of folder name + publishedfileid for parsing
     """
     workshop_acf_data = acf_to_dict(appworkshop_acf_path)
-    if steamcmd_mode:
-        workshop_mods_pfid_to_uuid = {
-            v["publishedfileid"]: v["uuid"]
-            for v in workshop_mods.values()
-            if v.get("folder") == v.get("publishedfileid")
-        }
-    else:
-        workshop_mods_pfid_to_uuid = {
-            v["publishedfileid"]: v["uuid"]
-            for v in workshop_mods.values()
-            if v.get("publishedfileid")
-        }
+    workshop_mods_pfid_to_uuid = {
+        v["publishedfileid"]: v["uuid"]
+        for v in workshop_mods.values()
+        if v.get("publishedfileid")
+    }
     # Reference needed information from appworkshop_294100.acf
     workshop_item_details = workshop_acf_data["AppWorkshop"]["WorkshopItemDetails"]
+    workshop_items_installed = workshop_acf_data["AppWorkshop"][
+        "WorkshopItemsInstalled"
+    ]
     # Loop through our metadata, append values
     for publishedfileid, mod_uuid in workshop_mods_pfid_to_uuid.items():
-        if steamcmd_mode:  # If we are here, then we have found a steamcmd mod!
-            workshop_mods[mod_uuid]["steamcmd"] = True
-        if publishedfileid in workshop_item_details:
-            # The last time SteamCMD/Steam client touched a mod according to its entry in appworkshop_294100.acf
+        if (
+            workshop_item_details.get(publishedfileid, {}).get("timetouched")
+            and workshop_item_details.get(publishedfileid, {}).get("timetouched") != 0
+        ):
+            # The last time SteamCMD/Steam client touched a mod according to its entry
             workshop_mods[mod_uuid]["internal_time_touched"] = int(
                 workshop_item_details[publishedfileid]["timetouched"]
             )
+        else:  # Otherwise, get the info from the mod's folder info on the filesystem
+            workshop_mods[mod_uuid]["internal_time_touched"] = int(
+                os.path.getmtime(workshop_mods[mod_uuid]["path"])
+            )
+        if workshop_item_details.get(publishedfileid, {}).get("timeupdated"):
+            # The last time SteamCMD/Steam client updated a mod according to its entry
             workshop_mods[mod_uuid]["internal_time_updated"] = int(
                 workshop_item_details[publishedfileid]["timeupdated"]
+            )
+        if workshop_items_installed.get(publishedfileid, {}).get("timeupdated"):
+            # The last time SteamCMD/Steam client updated a mod according to its entry
+            workshop_mods[mod_uuid]["internal_time_updated"] = int(
+                workshop_items_installed[publishedfileid]["timeupdated"]
             )
 
 
@@ -565,7 +556,7 @@ def import_steamcmd_acf_data(
         steamcmd_appworkshop_acf = acf_to_dict(steamcmd_appworkshop_acf_path)
         logger.debug("Retrieved SteamCMD data to update...")
     else:
-        logger.warning("SteamCMD acf file not found! Nothing was done...")
+        logger.warning("Specified SteamCMD acf file not found! Nothing was done...")
         return
     logger.info("Opening file dialog to specify acf file to import")
     acf_to_import_path = QFileDialog.getSaveFileName(
@@ -622,6 +613,7 @@ def query_workshop_update_data(mods: Dict[str, Any]) -> None:
     which contains possible Steam mods to lookup metadata for
     """
     logger.info("Querying Steam WebAPI for SteamCMD/Steam mod update metadata")
+
     workshop_mods_pfid_to_uuid = {
         metadata["publishedfileid"]: uuid
         for uuid, metadata in mods.items()
@@ -632,16 +624,8 @@ def query_workshop_update_data(mods: Dict[str, Any]) -> None:
     workshop_mods_query_updates = ISteamRemoteStorage_GetPublishedFileDetails(
         list(workshop_mods_pfid_to_uuid.keys())
     )
-
-    if (
-        workshop_mods_query_updates
-        and workshop_mods_query_updates.get("response")
-        and workshop_mods_query_updates["response"].get("publishedfiledetails")
-        and len(workshop_mods_query_updates["response"]["publishedfiledetails"]) > 0
-    ):
-        for workshop_mod_metadata in workshop_mods_query_updates["response"][
-            "publishedfiledetails"
-        ]:
+    if workshop_mods_query_updates and len(workshop_mods_query_updates) > 0:
+        for workshop_mod_metadata in workshop_mods_query_updates:
             uuid = workshop_mods_pfid_to_uuid[workshop_mod_metadata["publishedfileid"]]
             if workshop_mod_metadata.get("time_created"):
                 mods[uuid]["external_time_created"] = workshop_mod_metadata[

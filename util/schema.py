@@ -10,12 +10,12 @@ def validate_mods_config_format(mods_config_data: Dict[str, Any]) -> bool:
 
     :return: True if the ModsConfig is in the expected format, otherwise False.
     """
-    logger.debug(f"Validating mods config: {mods_config_data}")
+    logger.debug(f"Validating ModsConfig.xml")
     if mods_config_data:
         if mods_config_data.get("ModsConfigData"):
             if mods_config_data["ModsConfigData"].get("activeMods"):
                 if mods_config_data["ModsConfigData"]["activeMods"].get("li"):
-                    logger.info("ModsConfig.xml is properly formatted")
+                    logger.info("Validated ModsConfig.xml")
                     return True
         logger.error(f"Invalid ModsConfig.xml format: {mods_config_data}")
         show_warning(
