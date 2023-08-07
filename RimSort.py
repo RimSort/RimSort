@@ -48,57 +48,6 @@ from view.status_panel import Status
 
 system = platform.system()
 
-# If RimSort is running from a --onefile Nuitka build, there are some nuances to consider:
-# https://nuitka.net/doc/user-manual.html#onefile-finding-files
-# You can override by passing --onefile-tempdir-spec to `nuitka`
-# See also: https://nuitka.net/doc/user-manual.html#use-case-4-program-distribution
-# Otherwise, use sys.argv[0] to get the actual relative path to the executable
-data_path = str(Path(os.path.join(os.path.dirname(__file__), "data")).resolve())
-debug_file = str(Path(os.path.join(data_path, "DEBUG")).resolve())
-# Check if 'RimSort.log' exists and rename it to 'RimSort.old.log'
-log_file_path = str(Path(os.path.join(gettempdir(), "RimSort.log")).resolve())
-log_old_file_path = str(Path(os.path.join(gettempdir(), "RimSort.old.log")).resolve())
-
-if os.path.exists(log_file_path):
-    os.replace(log_file_path, log_old_file_path)
-if os.path.exists(log_file_path):
-    os.rename(log_file_path, log_old_file_path)
-
-if os.path.exists(debug_file):
-    logging_config_path = str(
-        Path(os.path.join(data_path, "logger_tt-DEBUG.json")).resolve()
-    )
-    DEBUG_MODE = True
-else:
-    logging_config_path = str(
-        Path(os.path.join(data_path, "logger_tt-INFO.json")).resolve()
-    )
-    DEBUG_MODE = False
-
-logging_file_path = str(Path(os.path.join(gettempdir(), "RimSort.log")).resolve())
-
-# Setup Environment
-if "__compiled__" in globals():
-    os.environ[
-        "QTWEBENGINE_LOCALES_PATH"
-    ] = f'{str(Path(os.path.join(os.path.dirname(__file__), "qtwebengine_locales")).resolve())}'
-if system == "Linux":
-    # logger_tt
-    setup_logging(
-        config_path=logging_config_path,
-        log_path=logging_file_path,
-        use_multiprocessing="fork",
-    )
-    # Disable IBus integration on Linux
-    os.environ["QT_IM_MODULE"] = ""
-else:
-    # logger_tt
-    setup_logging(
-        config_path=logging_config_path,
-        log_path=logging_file_path,
-        use_multiprocessing="spawn",
-    )
-
 
 def handle_exception(exc_type, exc_value, exc_traceback):
     """
@@ -351,6 +300,59 @@ if __name__ == "__main__":
     #         set_start_method('spawn')
     # else:
     #     logger.warning("Running using Python interpreter")
+
+    # If RimSort is running from a --onefile Nuitka build, there are some nuances to consider:
+    # https://nuitka.net/doc/user-manual.html#onefile-finding-files
+    # You can override by passing --onefile-tempdir-spec to `nuitka`
+    # See also: https://nuitka.net/doc/user-manual.html#use-case-4-program-distribution
+    # Otherwise, use sys.argv[0] to get the actual relative path to the executable
+    data_path = str(Path(os.path.join(os.path.dirname(__file__), "data")).resolve())
+    debug_file = str(Path(os.path.join(data_path, "DEBUG")).resolve())
+    # Check if 'RimSort.log' exists and rename it to 'RimSort.old.log'
+    log_file_path = str(Path(os.path.join(gettempdir(), "RimSort.log")).resolve())
+    log_old_file_path = str(
+        Path(os.path.join(gettempdir(), "RimSort.old.log")).resolve()
+    )
+
+    if os.path.exists(log_file_path):
+        os.replace(log_file_path, log_old_file_path)
+    if os.path.exists(log_file_path):
+        os.rename(log_file_path, log_old_file_path)
+
+    if os.path.exists(debug_file):
+        logging_config_path = str(
+            Path(os.path.join(data_path, "logger_tt-DEBUG.json")).resolve()
+        )
+        DEBUG_MODE = True
+    else:
+        logging_config_path = str(
+            Path(os.path.join(data_path, "logger_tt-INFO.json")).resolve()
+        )
+        DEBUG_MODE = False
+
+    logging_file_path = str(Path(os.path.join(gettempdir(), "RimSort.log")).resolve())
+
+    # Setup Environment
+    if "__compiled__" in globals():
+        os.environ[
+            "QTWEBENGINE_LOCALES_PATH"
+        ] = f'{str(Path(os.path.join(os.path.dirname(__file__), "qtwebengine_locales")).resolve())}'
+    if system == "Linux":
+        # logger_tt
+        setup_logging(
+            config_path=logging_config_path,
+            log_path=logging_file_path,
+            use_multiprocessing="fork",
+        )
+        # Disable IBus integration on Linux
+        os.environ["QT_IM_MODULE"] = ""
+    else:
+        # logger_tt
+        setup_logging(
+            config_path=logging_config_path,
+            log_path=logging_file_path,
+            use_multiprocessing="spawn",
+        )
 
     # This check is used whether RimSort is running via Nuitka bundle
     if "__compiled__" in globals():
