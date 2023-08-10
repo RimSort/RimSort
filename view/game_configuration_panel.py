@@ -814,9 +814,11 @@ class GameConfiguration(QObject):
             self.steamcmd_validate_downloads_toggle = False
 
         # todds preset
-        if "Low quality" in self.settings_panel.todds_presets_cb.currentText():
+        if "Optimized for VRAM" in self.settings_panel.todds_presets_cb.currentText():
             self.todds_preset = "low"
-        if "Very high quality" in self.settings_panel.todds_presets_cb.currentText():
+        elif "Default quality" in self.settings_panel.todds_presets_cb.currentText():
+            self.todds_preset = "medium"
+        elif "High quality" in self.settings_panel.todds_presets_cb.currentText():
             self.todds_preset = "high"
         # todds active mods target
         if self.settings_panel.todds_active_mods_target_checkbox.isChecked():
