@@ -1217,6 +1217,10 @@ def parse_mod_data(mods_path: str, intent: str, steam_db=None) -> Dict[str, Any]
                             # data_source will be used with setIcon later
                             mod_metadata["data_source"] = intent
                             mod_metadata["folder"] = file.name
+                            # This is overwritten if acf data is parsed for Steam/SteamCMD mods
+                            mod_metadata["internal_time_touched"] = int(
+                                os.path.getmtime(file.path)
+                            )
                             mod_metadata["path"] = file.path
                             # Track source & uuid in case metadata becomes detached
                             mod_metadata["uuid"] = uuid

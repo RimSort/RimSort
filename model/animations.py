@@ -50,6 +50,7 @@ class AnimationLabel(QLabel):
 
         :param text: the string to display and fade
         """
+        self.clear()
         if self.timer.isActive:
             self.timer.stop()
             self.animation.stop()

@@ -530,10 +530,6 @@ def get_workshop_acf_data(
             workshop_mods[mod_uuid]["internal_time_touched"] = int(
                 workshop_item_details[publishedfileid]["timetouched"]
             )
-        else:  # Otherwise, get the info from the mod's folder info on the filesystem
-            workshop_mods[mod_uuid]["internal_time_touched"] = int(
-                os.path.getmtime(workshop_mods[mod_uuid]["path"])
-            )
         if workshop_item_details.get(publishedfileid, {}).get("timeupdated"):
             # The last time SteamCMD/Steam client updated a mod according to its entry
             workshop_mods[mod_uuid]["internal_time_updated"] = int(
@@ -602,7 +598,7 @@ def import_steamcmd_acf_data(
     dict_to_acf(data=steamcmd_appworkshop_acf, path=steamcmd_appworkshop_acf_path)
 
 
-def query_workshop_update_data(mods: Dict[str, Any]) -> None:
+def query_workshop_update_data(mods: Dict[str, Any]) -> Optional[str]:
     """
     Query Steam WebAPI for update data, for any workshop mods that have a 'publishedfileid'
     attribute contained in their mod_data, and from there, populate mod_json_data with it.
@@ -635,6 +631,8 @@ def query_workshop_update_data(mods: Dict[str, Any]) -> None:
                 mods[uuid]["external_time_updated"] = workshop_mod_metadata[
                     "time_updated"
                 ]
+    else:
+        return "failed"
 
 
 def recursively_update_dict(

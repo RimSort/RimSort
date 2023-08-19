@@ -129,6 +129,7 @@ class MainWindow(QMainWindow):
         self.main_content_panel.actions_panel.actions_signal.connect(
             self.bottom_panel.actions_slot
         )
+        self.main_content_panel.status_signal.connect(self.bottom_panel.actions_slot)
 
         # Arrange all panels vertically on the main window layout
         app_layout.addLayout(self.game_configuration_panel.panel)

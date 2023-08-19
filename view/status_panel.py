@@ -51,99 +51,99 @@ class Status:
         if action == "check_for_rs_update":
             self.status_text.start_pause_fade("Checking for RimSort updates")
         # actions panel actions
-        if action == "refresh":
+        elif action == "refresh":
             self.status_text.start_pause_fade(
                 "Refreshed local metadata and repopulating info from external metadata"
             )
-        if action == "clear":
+        elif action == "clear":
             self.status_text.start_pause_fade("Cleared active mods")
-        if action == "restore":
+        elif action == "restore":
             self.status_text.start_pause_fade(
                 "Restored mod list to last saved ModsConfig.xml state"
             )
-        if action == "sort":
+        elif action == "sort":
             self.status_text.start_pause_fade("Sorted active mods list")
-        if action == "optimize_textures":
+        elif action == "optimize_textures":
             self.status_text.start_pause_fade("Optimizing textures with todds")
-        if action == "delete_textures":
+        elif action == "delete_textures":
             self.status_text.start_pause_fade("Deleting .dds textures using todds")
-        if action == "add_git_mod":
+        elif action == "add_git_mod":
             self.status_text.start_pause_fade("Added git mod repository to local mods")
-        if action == "browse_workshop":
+        elif action == "browse_workshop":
             self.status_text.start_pause_fade("Launched Steam Workshop browser")
-        if action == "setup_steamcmd":
+        elif action == "setup_steamcmd":
             self.status_text.start_pause_fade("SteamCMD setup completed")
-        if action == "import_steamcmd_acf_data":
+        elif action == "import_steamcmd_acf_data":
             self.status_text.start_pause_fade(
                 "Imported data from another SteamCMD instance"
             )
-        if action == "reset_steamcmd_acf_data":
+        elif action == "reset_steamcmd_acf_data":
             self.status_text.start_pause_fade("Deleted SteamCMD ACF data")
-        if action == "set_steamcmd_path":
+        elif action == "set_steamcmd_path":
             self.status_text.start_pause_fade("Configured SteamCMD prefix path")
-        if "import_list" in action:
+        elif "import_list" in action:
             self.status_text.start_pause_fade("Imported active mods list")
-        if "export_list" in action:
+        elif "export_list" in action:
             self.status_text.start_pause_fade("Exported active mods list")
-        if action == "upload_list_rentry":
+        elif action == "upload_list_rentry":
             self.status_text.start_pause_fade(
                 "Copied mod report to clipboard; uploaded to http://rentry.co"
             )
-        if action == "upload_rw_log":
+        elif action == "upload_rw_log":
             self.status_text.start_pause_fade("Uploaded RimWorld log to http://0x0.st")
-        if action == "save":
+        elif action == "save":
             self.status_text.start_pause_fade("Active mods saved into ModsConfig.xml")
-        if action == "run":
+        elif action == "run":
             self.status_text.start_pause_fade("Starting RimWorld")
-        if action == "edit_run_args":
+        elif action == "edit_run_args":
             self.status_text.start_pause_fade("Editing configured run arguments...")
 
         # settings panel actions
-        if action == "upload_rs_log":
+        elif action == "upload_rs_log":
             self.status_text.start_pause_fade("Uploaded RimSort log to http://0x0.st")
-        if action == "configure_github_identity":
+        elif action == "configure_github_identity":
             self.status_text.start_pause_fade("Configured Github identity")
-        if action == "configure_steam_database_path":
+        elif action == "configure_steam_database_path":
             self.status_text.start_pause_fade("Configured SteamDB file path")
-        if action == "configure_steam_database_repo":
+        elif action == "configure_steam_database_repo":
             self.status_text.start_pause_fade("Configured SteamDB repository")
-        if action == "download_steam_database":
+        elif action == "download_steam_database":
             self.status_text.start_pause_fade(
                 "Downloaded SteamDB from configured repository"
             )
-        if action == "upload_steam_database":
+        elif action == "upload_steam_database":
             self.status_text.start_pause_fade(
                 "Uploaded SteamDB to configured repository"
             )
-        if action == "configure_community_rules_db_path":
+        elif action == "configure_community_rules_db_path":
             self.status_text.start_pause_fade("Configured Community Rules DB file path")
-        if action == "configure_community_rules_db_repo":
+        elif action == "configure_community_rules_db_repo":
             self.status_text.start_pause_fade(
                 "Configured Community Rules DB repository"
             )
-        if action == "download_community_rules_database":
+        elif action == "download_community_rules_database":
             self.status_text.start_pause_fade(
                 "Downloaded Community Rules DB from configured repository"
             )
-        if action == "open_community_rules_with_rule_editor":
+        elif action == "open_community_rules_with_rule_editor":
             self.status_text.start_pause_fade(
                 "Opening Rule Editor with Community Rules DB context"
             )
-        if action == "upload_community_rules_database":
+        elif action == "upload_community_rules_database":
             self.status_text.start_pause_fade(
                 "Uploaded Community Rules DB to configured repository"
             )
-        if action == "build_steam_database_thread":
+        elif action == "build_steam_database_thread":
             self.status_text.start_pause_fade("Building SteamDB with DB Builder")
-        if action == "merge_databases":
+        elif action == "merge_databases":
             self.status_text.start_pause_fade("Successfully merged supplied SteamDBs")
-        if action == "set_database_expiry":
+        elif action == "set_database_expiry":
             self.status_text.start_pause_fade("Edited configured SteamDB expiry...")
-        if action == "edit_steam_webapi_key":
+        elif action == "edit_steam_webapi_key":
             self.status_text.start_pause_fade("Edited configured Steam WebAPI key...")
-        if action == "comparison_report":
+        elif action == "comparison_report":
             self.status_text.start_pause_fade("Created SteamDB comparison report")
-        if "download_entire_workshop" in action:
+        elif "download_entire_workshop" in action:
             if "steamcmd" in action:
                 self.status_text.start_pause_fade(
                     "Attempting to download all Workshop mods with SteamCMD"
@@ -152,3 +152,5 @@ class Status:
                 self.status_text.start_pause_fade(
                     "Attempting to subscribe to all Workshop mods with Steam"
                 )
+        else:  # Otherwise, just display whatever text is passed
+            self.status_text.start_pause_fade(action)

@@ -105,6 +105,7 @@ class MainContent(QObject):
     and their dependencies.
     """
 
+    status_signal = Signal(str)
     stop_watchdog_signal = Signal()
 
     def __init__(
@@ -676,6 +677,9 @@ class MainContent(QObject):
             else:
                 logger.debug(
                     f"SteamCMD appworkshop.acf metadata not found. Skipping: {self.steamcmd_wrapper.steamcmd_appworkshop_acf_path}"
+                )
+                logger.debug(
+                    "Parsing timetouched from the Workshop mod folders on the filesystem"
                 )
         # Get and cache installed Steam client Workshop mods
         workshop_path = self.game_configuration.workshop_folder_line.text()
@@ -2030,15 +2034,23 @@ class MainContent(QObject):
 
     def _do_check_for_workshop_updates(self) -> None:
         # Query Workshop for update data
-        self._do_threaded_loading_animation(
+        updates_checked = self._do_threaded_loading_animation(
             gif_path=str(
                 Path(
                     os.path.join(os.path.dirname(__file__), "../data/steam_api.gif")
                 ).resolve()
             ),
             target=partial(query_workshop_update_data, mods=self.all_mods_compiled),
-            text="Checking Steam Workshop mods for updates",
+            text="Checking Steam Workshop mods for updates...",
         )
+        # If we failed to check for updates, skip the comparison(s) & UI prompt
+        if updates_checked == "failed":
+            show_warning(
+                title="Unable to check for updates",
+                text="RimSort was unable to query Steam WebAPI for update information!\n",
+                information="Are you connected to the Internet?",
+            )
+            return
         self.workshop_mod_updater = ModUpdaterPrompt(
             internal_mod_metadata=self.all_mods_compiled
         )
@@ -2053,11 +2065,7 @@ class MainContent(QObject):
             )
             self.workshop_mod_updater.show()
         else:
-            logger.debug("All Workshop mods appear to be up-to-date!")
-            show_information(
-                title="No updates found",
-                text="All Workshop mods appear to be up-to-date!",
-            )
+            self.status_signal.emit("All Workshop mods appear to be up to date!")
             self.workshop_mod_updater = None
 
     def _do_setup_steamcmd(self):
