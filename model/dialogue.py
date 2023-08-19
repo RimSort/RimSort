@@ -1,7 +1,9 @@
+import os
 from typing import Optional, Tuple
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
+    QFileDialog,
     QInputDialog,
     QMessageBox,
     QPushButton,
@@ -102,6 +104,37 @@ def show_dialogue_input(
         result = False
     response = dialogue.textValue()
     return response, result
+
+
+def show_dialogue_file(mode: str, caption=None, _dir=None, _filter=None):
+    path = None
+    if mode == "open":
+        path = QFileDialog.getOpenFileName(
+            caption=caption,
+            dir=_dir,
+            filter=_filter,
+        )
+        is_dir = False
+    elif mode == "open_dir":
+        path = os.path.normpath(
+            QFileDialog.getExistingDirectory(caption="Select Game Folder", dir=_dir)
+        )
+        is_dir = True
+    elif mode == "save":
+        path = QFileDialog.getSaveFileName(
+            caption=caption,
+            dir=_dir,
+            filter=_filter,
+        )
+        is_dir = False
+    else:
+        logger.error("File dialogue mode not implemented.")
+    # Check if we received a path from the input
+    if path and path[0]:
+        return str(path[0]) if not is_dir else path
+    else:
+        logger.debug("No path returned from user input.")
+        return path
 
 
 def show_information(

@@ -34,7 +34,11 @@ from github import Github
 from pyperclip import copy as copy_to_clipboard
 from requests import get as requests_get
 
-from model.dialogue import show_dialogue_conditional, show_dialogue_input
+from model.dialogue import (
+    show_dialogue_conditional,
+    show_dialogue_file,
+    show_dialogue_input,
+)
 from model.animations import LoadingAnimation
 
 from util.constants import RIMWORLD_DLC_METADATA
@@ -53,7 +57,6 @@ from util.steam.webapi.wrapper import ISteamRemoteStorage_GetPublishedFileDetail
 from PySide6.QtCore import QEventLoop, QObject, QProcess, Qt, Signal
 from PySide6.QtWidgets import (
     QApplication,
-    QFileDialog,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -1495,13 +1498,16 @@ class MainContent(QObject):
         and display active and inactive lists based on this file.
         """
         logger.info("Opening file dialog to select input file")
-        file_path = QFileDialog.getOpenFileName(
+        file_path = show_dialogue_file(
+            mode="open",
             caption="Open mod list",
-            dir=str(Path(os.path.join(self.game_configuration.storage_path)).resolve()),
-            filter="XML (*.xml)",
+            _dir=str(
+                Path(os.path.join(self.game_configuration.storage_path)).resolve()
+            ),
+            _filter="XML (*.xml)",
         )
-        logger.info(f"Selected path: {file_path[0]}")
-        if file_path[0]:
+        logger.info(f"Selected path: {file_path}")
+        if file_path:
             self.active_mods_panel.clear_active_mods_search()
             self.active_mods_panel.active_mods_filter_data_source_index = len(
                 self.active_mods_panel.active_mods_filter_data_source_icons
@@ -1519,7 +1525,7 @@ class MainContent(QObject):
                 self.duplicate_mods,
                 self.missing_mods,
             ) = get_active_inactive_mods(
-                file_path[0],
+                file_path,
                 self.all_mods_compiled,
             )
             logger.info("Got new mods according to imported XML")
@@ -1547,13 +1553,14 @@ class MainContent(QObject):
         file. The current list does not need to have been saved.
         """
         logger.info("Opening file dialog to specify output file")
-        file_path = QFileDialog.getSaveFileName(
+        file_path = show_dialogue_file(
+            mode="save",
             caption="Save mod list",
             dir=str(Path(os.path.join(self.game_configuration.storage_path)).resolve()),
             filter="XML (*.xml)",
         )
-        logger.info(f"Selected path: {file_path[0]}")
-        if file_path[0]:
+        logger.info(f"Selected path: {file_path}")
+        if file_path:
             logger.info("Exporting current active mods to ModsConfig.xml format")
             active_mods_json = (
                 self.active_mods_panel.active_mods_list.get_list_items_by_dict()
@@ -1592,12 +1599,12 @@ class MainContent(QObject):
                 )
                 mods_config_data["ModsConfigData"]["activeMods"]["li"] = active_mods
                 logger.info(
-                    f"Saving generated ModsConfig.xml to selected path: {file_path[0]}"
+                    f"Saving generated ModsConfig.xml to selected path: {file_path}"
                 )
-                if not file_path[0].endswith(".xml"):
-                    json_to_xml_write(mods_config_data, file_path[0] + ".xml")
+                if not file_path.endswith(".xml"):
+                    json_to_xml_write(mods_config_data, file_path + ".xml")
                 else:
-                    json_to_xml_write(mods_config_data, file_path[0])
+                    json_to_xml_write(mods_config_data, file_path)
             else:
                 logger.error("Could not export active mods")
         else:
@@ -2136,8 +2143,10 @@ class MainContent(QObject):
         Open a file dialog to allow the user to select the game executable.
         """
         logger.info("USER ACTION: set the steamcmd folder")
-        steamcmd_folder = QFileDialog.getExistingDirectory(
-            caption="Select steamcmd folder", dir=os.path.expanduser("~")
+        steamcmd_folder = show_dialogue_file(
+            mode="open_dir",
+            caption="Select steamcmd folder",
+            _dir=os.path.expanduser("~"),
         )
         if steamcmd_folder:
             logger.info(f"Selected path: {steamcmd_folder}")
@@ -2750,17 +2759,20 @@ class MainContent(QObject):
     def _do_configure_steam_db_file_path(self) -> None:
         # Input file
         logger.info("Opening file dialog to specify Steam DB")
-        input_path = QFileDialog.getSaveFileName(
-            caption="Choose Steam DB:",
-            dir=str(Path(os.path.join(self.game_configuration.storage_path)).resolve()),
-            filter="JSON (*.json)",
+        input_path = show_dialogue_file(
+            mode="open",
+            caption="Choose Steam Workshop Database",
+            _dir=str(
+                Path(os.path.join(self.game_configuration.storage_path)).resolve()
+            ),
+            _filter="JSON (*.json)",
         )
-        logger.info(f"Selected path: {input_path[0]}")
-        if input_path[0] and os.path.exists(input_path[0]):
+        logger.info(f"Selected path: {input_path}")
+        if input_path and os.path.exists(input_path):
             self.game_configuration._update_persistent_storage(
-                {"external_steam_metadata_file_path": input_path[0]}
+                {"external_steam_metadata_file_path": input_path}
             )
-            self.game_configuration.steam_db_file_path = input_path[0]
+            self.game_configuration.steam_db_file_path = input_path
         else:
             logger.debug("USER ACTION: cancelled selection!")
             return
@@ -2768,15 +2780,18 @@ class MainContent(QObject):
     def _do_configure_community_rules_db_file_path(self) -> None:
         # Input file
         logger.info("Opening file dialog to specify Community Rules DB")
-        input_path = QFileDialog.getSaveFileName(
-            caption="Choose Community Rules DB:",
-            dir=str(Path(os.path.join(self.game_configuration.storage_path)).resolve()),
-            filter="JSON (*.json)",
+        input_path = show_dialogue_file(
+            mode="open",
+            caption="Choose Community Rules DB",
+            _dir=str(
+                Path(os.path.join(self.game_configuration.storage_path)).resolve()
+            ),
+            _filter="JSON (*.json)",
         )
-        logger.info(f"Selected path: {input_path[0]}")
-        if input_path[0] and os.path.exists(input_path[0]):
+        logger.info(f"Selected path: {input_path}")
+        if input_path and os.path.exists(input_path):
             self.game_configuration._update_persistent_storage(
-                {"external_community_rules_file_path": input_path[0]}
+                {"external_community_rules_file_path": input_path}
             )
         else:
             logger.debug("USER ACTION: cancelled selection!")
@@ -2822,14 +2837,17 @@ class MainContent(QObject):
             self.game_configuration.settings_panel.close()
         # Prompt user file dialog to choose/create new DB
         logger.info("Opening file dialog to specify output file")
-        output_path = QFileDialog.getSaveFileName(
+        output_path = show_dialogue_file(
+            mode="save",
             caption="Designate output path",
-            dir=str(Path(os.path.join(self.game_configuration.storage_path)).resolve()),
-            filter="JSON (*.json)",
+            _dir=str(
+                Path(os.path.join(self.game_configuration.storage_path)).resolve()
+            ),
+            _filter="JSON (*.json)",
         )
         # Check file path and launch DB Builder with user configured mode
-        if output_path[0]:  # If output path was returned
-            path = output_path[0]
+        if output_path:  # If output path was returned
+            path = output_path
             if not path.endswith(".json"):
                 path += ".json"  # Handle file extension if needed
             # RimWorld Workshop contains 30,000+ PublishedFileIDs (mods) as of 2023!
@@ -3045,14 +3063,17 @@ class MainContent(QObject):
         )
         # Input A
         logger.info("Opening file dialog to specify input file A")
-        input_path_a = QFileDialog.getSaveFileName(
+        input_path_a = show_dialogue_file(
+            mode="open",
             caption='Input "to-be-updated" database, input A',
-            dir=str(Path(os.path.join(self.game_configuration.storage_path)).resolve()),
-            filter="JSON (*.json)",
+            _dir=str(
+                Path(os.path.join(self.game_configuration.storage_path)).resolve()
+            ),
+            _filter="JSON (*.json)",
         )
-        logger.info(f"Selected path: {input_path_a[0]}")
-        if input_path_a[0] and os.path.exists(input_path_a[0]):
-            with open(input_path_a[0], encoding="utf-8") as f:
+        logger.info(f"Selected path: {input_path_a}")
+        if input_path_a and os.path.exists(input_path_a):
+            with open(input_path_a, encoding="utf-8") as f:
                 json_string = f.read()
                 logger.debug(f"Reading info...")
                 db_input_a = json.loads(json_string)
@@ -3062,14 +3083,17 @@ class MainContent(QObject):
             return
         # Input B
         logger.info("Opening file dialog to specify input file B")
-        input_path_b = QFileDialog.getSaveFileName(
+        input_path_b = show_dialogue_file(
+            mode="open",
             caption='Input "to-be-updated" database, input A',
-            dir=str(Path(os.path.join(self.game_configuration.storage_path)).resolve()),
-            filter="JSON (*.json)",
+            _dir=str(
+                Path(os.path.join(self.game_configuration.storage_path)).resolve()
+            ),
+            _filter="JSON (*.json)",
         )
-        logger.info(f"Selected path: {input_path_b[0]}")
-        if input_path_b[0] and os.path.exists(input_path_b[0]):
-            with open(input_path_b[0], encoding="utf-8") as f:
+        logger.info(f"Selected path: {input_path_b}")
+        if input_path_b and os.path.exists(input_path_b):
+            with open(input_path_b, encoding="utf-8") as f:
                 json_string = f.read()
                 logger.debug(f"Reading info...")
                 db_input_b = json.loads(json_string)
@@ -3156,14 +3180,17 @@ class MainContent(QObject):
         )
         # Input A
         logger.info("Opening file dialog to specify input file A")
-        input_path_a = QFileDialog.getSaveFileName(
+        input_path_a = show_dialogue_file(
+            mode="open",
             caption='Input "to-be-updated" database, input A',
-            dir=str(Path(os.path.join(self.game_configuration.storage_path)).resolve()),
-            filter="JSON (*.json)",
+            _dir=str(
+                Path(os.path.join(self.game_configuration.storage_path)).resolve()
+            ),
+            _filter="JSON (*.json)",
         )
-        logger.info(f"Selected path: {input_path_a[0]}")
-        if input_path_a[0] and os.path.exists(input_path_a[0]):
-            with open(input_path_a[0], encoding="utf-8") as f:
+        logger.info(f"Selected path: {input_path_a}")
+        if input_path_a and os.path.exists(input_path_a):
+            with open(input_path_a, encoding="utf-8") as f:
                 json_string = f.read()
                 logger.debug(f"Reading info...")
                 db_input_a = json.loads(json_string)
@@ -3173,14 +3200,17 @@ class MainContent(QObject):
             return
         # Input B
         logger.info("Opening file dialog to specify input file B")
-        input_path_b = QFileDialog.getSaveFileName(
+        input_path_b = show_dialogue_file(
+            mode="open",
             caption='Input "to-be-updated" database, input A',
-            dir=str(Path(os.path.join(self.game_configuration.storage_path)).resolve()),
-            filter="JSON (*.json)",
+            _dir=str(
+                Path(os.path.join(self.game_configuration.storage_path)).resolve()
+            ),
+            _filter="JSON (*.json)",
         )
-        logger.info(f"Selected path: {input_path_b[0]}")
-        if input_path_b[0] and os.path.exists(input_path_b[0]):
-            with open(input_path_b[0], encoding="utf-8") as f:
+        logger.info(f"Selected path: {input_path_b}")
+        if input_path_b and os.path.exists(input_path_b):
+            with open(input_path_b, encoding="utf-8") as f:
                 json_string = f.read()
                 logger.debug(f"Reading info...")
                 db_input_b = json.loads(json_string)
@@ -3199,14 +3229,17 @@ class MainContent(QObject):
         logger.info("Updated DB A with DB B!")
         logger.debug(db_output_c)
         logger.info("Opening file dialog to specify output file")
-        output_path = QFileDialog.getSaveFileName(
+        output_path = show_dialogue_file(
+            mode="save",
             caption="Designate output path for resultant database:",
-            dir=str(Path(os.path.join(self.game_configuration.storage_path)).resolve()),
-            filter="JSON (*.json)",
+            _dir=str(
+                Path(os.path.join(self.game_configuration.storage_path)).resolve()
+            ),
+            _filter="JSON (*.json)",
         )
-        logger.info(f"Selected path: {output_path[0]}")
-        if output_path[0]:
-            path = output_path[0]
+        logger.info(f"Selected path: {output_path}")
+        if output_path:
+            path = output_path
             if not path.endswith(".json"):
                 path += ".json"  # Handle file extension if needed
             with open(path, "w") as output:

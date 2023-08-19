@@ -13,7 +13,6 @@ from typing import Any, Dict
 from PySide6.QtCore import QObject, QPoint, QSize, QStandardPaths, Qt, Signal
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import (
-    QFileDialog,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -1164,14 +1163,12 @@ class GameConfiguration(QObject):
             if os.path.exists(possible_dir):
                 start_dir = possible_dir
         game_exe_folder_path = os.path.normpath(
-            str(
-                QFileDialog.getExistingDirectory(
-                    caption="Select Game Folder", dir=start_dir
-                )
+            show_dialogue_file(
+                mode="open_dir", caption="Select Game Folder", _dir=start_dir
             )
         )
         logger.info(f"Selected path: {game_exe_folder_path}")
-        if game_exe_folder_path:
+        if game_exe_folder_path and game_exe_folder_path != ".":
             logger.info(
                 f"Game install folder chosen. Setting UI and updating storage: {game_exe_folder_path}"
             )
@@ -1190,14 +1187,12 @@ class GameConfiguration(QObject):
             if os.path.exists(possible_dir):
                 start_dir = possible_dir
         config_folder_path = os.path.normpath(
-            str(
-                QFileDialog.getExistingDirectory(
-                    caption="Select Mods Config Folder", dir=start_dir
-                )
+            show_dialogue_file(
+                mode="open_dir", caption="Select Mods Config Folder", _dir=start_dir
             )
         )
         logger.info(f"Selected path: {config_folder_path}")
-        if config_folder_path:
+        if config_folder_path and config_folder_path != ".":
             logger.info(
                 f"ModsConfig.xml folder chosen. Setting UI and updating storage: {config_folder_path}"
             )
@@ -1217,14 +1212,12 @@ class GameConfiguration(QObject):
             if os.path.exists(possible_dir):
                 start_dir = possible_dir
         local_path = os.path.normpath(
-            str(
-                QFileDialog.getExistingDirectory(
-                    caption="Select Local Mods Folder", dir=start_dir
-                )
+            show_dialogue_file(
+                mode="open_dir", caption="Select Local Mods Folder", _dir=start_dir
             )
         )
         logger.info(f"Selected path: {local_path}")
-        if local_path:
+        if local_path and local_path != ".":
             logger.info(
                 f"Local mods folder chosen. Setting UI and updating storage: {local_path}"
             )
@@ -1243,15 +1236,11 @@ class GameConfiguration(QObject):
             possible_dir = self.workshop_folder_line.text()
             if os.path.exists(possible_dir):
                 start_dir = possible_dir
-        workshop_path = os.path.normpath(
-            str(
-                QFileDialog.getExistingDirectory(
-                    caption="Select Workshop Folder", dir=start_dir
-                )
-            )
+        workshop_path = show_dialogue_file(
+            mode="open_dir", caption="Select Workshop Folder", _dir=start_dir
         )
         logger.info(f"Selected path: {workshop_path}")
-        if workshop_path:
+        if workshop_path and workshop_path != ".":
             logger.info(
                 f"Workshop folder chosen. Setting UI and updating storage: {workshop_path}"
             )

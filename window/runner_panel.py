@@ -11,7 +11,6 @@ import psutil
 from PySide6.QtCore import Qt, QEvent, QProcess, Signal
 from PySide6.QtGui import QFont, QIcon, QTextCursor
 from PySide6.QtWidgets import (
-    QFileDialog,
     QHBoxLayout,
     QPlainTextEdit,
     QToolButton,
@@ -20,7 +19,7 @@ from PySide6.QtWidgets import (
     QProgressBar,
 )
 
-from model.dialogue import show_warning, show_dialogue_conditional
+from model.dialogue import show_dialogue_file, show_dialogue_conditional, show_warning
 from util.steam.webapi.wrapper import ISteamRemoteStorage_GetPublishedFileDetails
 
 
@@ -201,10 +200,11 @@ class RunnerPanel(QWidget):
         """
         if self.text != "":
             logger.info("Opening file dialog to specify output file")
-            file_path = QFileDialog.getSaveFileName(
+            file_path = show_dialogue_file(
+                mode="save",
                 caption="Save runner output",
-                dir=os.path.expanduser("~"),
-                filter="text files (*.txt)",
+                _dir=os.path.expanduser("~"),
+                _filter="text files (*.txt)",
             )
             logger.info(f"Selected path: {file_path[0]}")
             if file_path[0]:

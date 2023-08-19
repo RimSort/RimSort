@@ -9,9 +9,8 @@ import traceback
 from typing import Any, Dict, List, Optional, Tuple
 
 from PySide6.QtCore import Qt, QThread, Signal
-from PySide6.QtWidgets import QFileDialog
 
-from model.dialogue import show_information, show_warning
+from model.dialogue import show_dialogue_file, show_information, show_warning
 from util.constants import (
     DB_BUILDER_PRUNE_EXCEPTIONS,
     DB_BUILDER_PURGE_KEYS,
@@ -559,15 +558,16 @@ def import_steamcmd_acf_data(
         logger.warning("Specified SteamCMD acf file not found! Nothing was done...")
         return
     logger.info("Opening file dialog to specify acf file to import")
-    acf_to_import_path = QFileDialog.getSaveFileName(
+    acf_to_import_path = show_dialogue_file(
+        mode="open",
         caption="Input appworkshop_294100.acf from another SteamCMD prefix",
-        dir=rimsort_storage_path,
-        filter="ACF (*.acf)",
+        _dir=rimsort_storage_path,
+        _filter="ACF (*.acf)",
     )
-    logger.info(f"SteamCMD acf data path to import: {acf_to_import_path[0]}")
-    if acf_to_import_path[0] and os.path.exists(acf_to_import_path[0]):
+    logger.info(f"SteamCMD acf data path to import: {acf_to_import_path}")
+    if acf_to_import_path and os.path.exists(acf_to_import_path):
         logger.debug(f"Reading info...")
-        acf_to_import = acf_to_dict(acf_to_import_path[0])
+        acf_to_import = acf_to_dict(acf_to_import_path)
         logger.debug("Retrieved SteamCMD data to import...")
     else:
         logger.warning("Specified SteamCMD acf file not found! Nothing was done...")
