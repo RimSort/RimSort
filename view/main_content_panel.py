@@ -2096,6 +2096,10 @@ class MainContent(QObject):
         logger.debug(
             f"Attempting to download {len(publishedfileids)} mods with SteamCMD"
         )
+        # Check for blacklisted mods
+        publishedfileids = check_if_pfids_blacklisted(
+            publishedfileids=publishedfileids, steamdb=self.external_steam_metadata
+        )
         # No empty publishedfileids
         if not len(publishedfileids) > 0:
             show_warning(
@@ -2260,6 +2264,11 @@ class MainContent(QObject):
     def _do_steamworks_api_call_animated(self, instruction: list):
         publishedfileids = instruction[1]
         logger.debug(f"Attempting to download {len(publishedfileids)} mods with Steam")
+        # Check for blacklisted mods for subscription actions
+        if instruction[0] == "subscribe":
+            publishedfileids = check_if_pfids_blacklisted(
+                publishedfileids=publishedfileids, steamdb=self.external_steam_metadata
+            )
         # No empty publishedfileids
         if not len(publishedfileids) > 0:
             show_warning(
@@ -2268,8 +2277,10 @@ class MainContent(QObject):
                 information="Please add mods to list before attempting to download.",
             )
             return
+        # Close browser if open
         if self.steam_browser:
             self.steam_browser.close()
+        # Process API call
         self._do_threaded_loading_animation(
             gif_path=str(
                 Path(
@@ -2980,15 +2991,6 @@ class MainContent(QObject):
         else:
             self.query_runner.close()
             self.query_runner = None
-            # # Skip attempt of unpublished mods
-            # for publishedfileid in self.db_builder.publishedfileids:
-            #     if self.external_steam_metadata.get(publishedfileid, {}).get(
-            #         "unpublished"
-            #     ):
-            #         self.db_builder.publishedfileids.remove(publishedfileid)
-            #         logger.warning(
-            #             f"Skipping download of unpublished Workshop mod: {publishedfileid}"
-            #         )
             if "steamcmd" in action:
                 # Filter out existing SteamCMD mods
                 mod_pfid = None

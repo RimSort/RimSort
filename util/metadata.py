@@ -10,7 +10,12 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from PySide6.QtCore import Qt, QThread, Signal
 
-from model.dialogue import show_dialogue_file, show_information, show_warning
+from model.dialogue import (
+    show_dialogue_conditional,
+    show_dialogue_file,
+    show_information,
+    show_warning,
+)
 from util.constants import (
     DB_BUILDER_PRUNE_EXCEPTIONS,
     DB_BUILDER_PURGE_KEYS,
@@ -298,6 +303,42 @@ class SteamDatabaseBuilder(QThread):
             )
             with open(self.output_database_path, "w") as output:
                 json.dump(database, output, indent=4)
+
+
+def check_if_pfids_blacklisted(publishedfileids: list, steamdb: Dict[str, Any]) -> list:
+    # Warn attempt of blacklisted mods
+    blacklisted_mods = {}
+    for publishedfileid in publishedfileids:
+        if steamdb.get(publishedfileid, {}).get("blacklist"):
+            blacklisted_mods[publishedfileid] = {
+                "name": steamdb[publishedfileid]["steamName"],
+                "comment": steamdb[publishedfileid]["blacklist"]["comment"],
+            }
+        elif steamdb.get(str(publishedfileid), {}).get("blacklist"):
+            blacklisted_mods[publishedfileid] = {
+                "name": steamdb[str(publishedfileid)]["steamName"],
+                "comment": steamdb[str(publishedfileid)]["blacklist"]["comment"],
+            }
+    # Generate report if we have blacklisted mods found
+    if blacklisted_mods:
+        blacklisted_mods_report = ""
+        for publishedfileid in blacklisted_mods:
+            blacklisted_mods_report += (
+                f'{blacklisted_mods[publishedfileid]["name"]} ({publishedfileid})\n'
+            )
+            blacklisted_mods_report += f'Reason for blacklisting: {blacklisted_mods[publishedfileid]["comment"]}'
+        answer = show_dialogue_conditional(
+            title="Blacklisted mods found",
+            text="Some mods are blacklisted in your SteamDB",
+            information="Are you sure you want to download these mods? These mods are known mods that are recommended to be avoided.",
+            details=blacklisted_mods_report,
+        )
+        if answer != "&Yes":
+            publishedfileids.remove(publishedfileid)
+            logger.debug(
+                f"Skipping download of unpublished Workshop mod: {publishedfileid}"
+            )
+    return publishedfileids
 
 
 def get_configured_steam_db(life: int, path: str) -> Tuple[Dict[str, Any], Any]:
