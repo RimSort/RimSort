@@ -601,7 +601,7 @@ def compile_all_mods(
                     logger.debug(
                         f"Current mod should load before these mods: {load_these_after}"
                     )
-                    # In Rimpy, load_these_after is at least an empty dict
+                    # In Alphabetical, load_these_after is at least an empty dict
                     # Cannot call add_load_rule_to_mod outside of this for loop,
                     # as that expects a list
                     for load_this_after in load_these_after:
@@ -621,7 +621,7 @@ def compile_all_mods(
                     logger.debug(
                         f"Current mod should load after these mods: {load_these_before}"
                     )
-                    # In RimPy, load_these_before is at least an empty dict
+                    # In Alphabetical, load_these_before is at least an empty dict
                     for load_this_before in load_these_before:
                         add_load_rule_to_mod(
                             all_mods[
@@ -658,7 +658,7 @@ def compile_all_mods(
                     logger.debug(
                         f"Current mod should load before these mods: {load_these_after}"
                     )
-                    # In RimPy, load_these_after is at least an empty dict
+                    # In Alphabetical, load_these_after is at least an empty dict
                     # Cannot call add_load_rule_to_mod outside of this for loop,
                     # as that expects a list
                     for load_this_after in load_these_after:
@@ -678,7 +678,7 @@ def compile_all_mods(
                     logger.debug(
                         f"Current mod should load after these mods: {load_these_before}"
                     )
-                    # In RimPy, load_these_before is at least an empty dict
+                    # In Alphabetical, load_these_before is at least an empty dict
                     for load_this_before in load_these_before:
                         add_load_rule_to_mod(
                             all_mods[
