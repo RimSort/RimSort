@@ -344,7 +344,7 @@ class ActiveModList(QWidget):
                     # If dependency is installed, we can get its name
                     if dependency_id in mod_data["packageid"]:
                         error_tool_tip_text += f"\n  * {self.all_mods[uuid]['name']}"
-                    # Otherwise, we might be able to get it from RimPy Steam DB
+                    # Otherwise, we might be able to get it from Steam DB
                     elif dependency_id in self.steam_package_id_to_name:
                         error_tool_tip_text += (
                             f"\n  * {self.steam_package_id_to_name[dependency_id]}"

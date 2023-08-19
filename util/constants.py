@@ -12,7 +12,7 @@ DB_BUILDER_RECURSE_EXCEPTIONS = [
 DEFAULT_SETTINGS = {
     "check_for_update_startup": True,
     "show_folder_rows": True,
-    "sorting_algorithm": "RimPy",
+    "sorting_algorithm": "Alphabetical",
     "external_steam_metadata_file_path": "steamDB.json",
     "external_steam_metadata_repo": "https://github.com/RimSort/Steam-Workshop-Database",
     "external_steam_metadata_source": "None",

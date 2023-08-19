@@ -178,7 +178,7 @@ class SettingsPanel(QDialog):
         self.sorting_algorithm_label.setAlignment(Qt.AlignCenter)
         self.sorting_algorithm_cb = QComboBox()
         self.sorting_algorithm_cb.setObjectName("MainUI")
-        self.sorting_algorithm_cb.addItems(["RimPy", "Topological"])
+        self.sorting_algorithm_cb.addItems(["Alphabetical", "Topological"])
         self.sorting_algorithm_cb.setItemDelegate(self.centered_item_delegate)
 
         # metadata layouts
@@ -219,10 +219,9 @@ class SettingsPanel(QDialog):
         self.external_steam_metadata_cb.setObjectName("MainUI")
         self.external_steam_metadata_cb.addItems(
             [
-                "Configured file path",
-                "Configured git repository",
-                "RimPy Mod Manager Database",
                 "None",
+                "Configured file path",
+                "Configured git repository",                
             ]
         )
         self.external_steam_metadata_cb.setItemDelegate(self.centered_item_delegate)
@@ -249,10 +248,9 @@ class SettingsPanel(QDialog):
         self.external_community_rules_metadata_cb.setObjectName("MainUI")
         self.external_community_rules_metadata_cb.addItems(
             [
-                "Configured file path",
-                "Configured git repository",
-                "RimPy Mod Manager Database",
                 "None",
+                "Configured file path",
+                "Configured git repository",                
             ]
         )
         self.external_community_rules_metadata_cb.setItemDelegate(

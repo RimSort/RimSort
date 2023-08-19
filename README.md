@@ -28,7 +28,7 @@ RimSort is an **open source** [RimWorld](https://store.steampowered.com/app/2941
     * Fully compatible with Paladin's RimPy Community Mod Manager Database communityRules.json schema
     * Tools to compare, merge, and publish databases using this tool
 * Support for creating additional sorting modes (in code)
-    * "RimPy"-style sorting algorithm
+    * "Alphabetical" sorting algorithm
     * "Topological" sorting algorithm
 
 To run RimSort, visit the [Releases](https://github.com/oceancabbage/RimSort/releases) page and download the latest zipped release for your operating system. For Windows and Linux, unzip the download and run the `RimSort` executable inside the unzipped folder. For MacOS, unzip the download and run the `.app` directly. For more information on how to run and use RimSort, visit the [User Guide](https://github.com/oceancabbage/RimSort/wiki/User-Guide).

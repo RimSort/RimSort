@@ -67,7 +67,7 @@ from PySide6.QtWidgets import (
 )
 
 from sort.dependencies import *
-from sort.rimpy_sort import *
+from sort.alphabetical_sort import *
 from sort.topo_sort import *
 from sub_view.actions_panel import Actions
 from sub_view.active_mods_panel import ActiveModList
@@ -545,12 +545,6 @@ class MainContent(QObject):
                 ),
             )
             logger.debug([key for key in self.external_steam_metadata.keys()])
-        elif external_steam_metadata_source == "RimPy Mod Manager Database":
-            # Get and cache RimPy Steam db.json rules data for ALL mods
-            (
-                self.external_steam_metadata,
-                self.external_steam_metadata_path,
-            ) = get_rpmmdb_steam_metadata(self.internal_local_metadata)
         else:
             logger.info(
                 "External Steam metadata disabled by user. Please choose a metadata source in settings."
@@ -592,12 +586,6 @@ class MainContent(QObject):
                     ).resolve()
                 )
             )
-        elif external_community_rules_metadata_source == "RimPy Mod Manager Database":
-            # Get and cache RimPy Community Rules communityRules.json for ALL mods
-            (
-                self.external_community_rules,
-                self.external_community_rules_path,
-            ) = get_rpmmdb_community_rules_db(self.internal_local_metadata)
         else:
             logger.info(
                 "External Community Rules metadata disabled by user. Please choose a metadata source in settings."
@@ -1445,22 +1433,22 @@ class MainContent(QObject):
         tier_two_dependency_graph = gen_tier_two_deps_graph(
             active_mods, active_mod_ids, tier_one_mods, tier_three_mods
         )
-
-        # Depending on the selected algorithm, sort all tiers with RimPy
+        
+        # Depending on the selected algorithm, sort all tiers with Alphabetical
         # mimic algorithm or toposort
         sorting_algorithm = (
             self.game_configuration.settings_panel.sorting_algorithm_cb.currentText()
         )
 
-        if sorting_algorithm == "RimPy":
-            logger.info("RimPy sorting algorithm is selected")
-            reordered_tier_one_sorted_with_data = do_rimpy_sort(
+        if sorting_algorithm == "Alphabetical":
+            logger.info("Alphabetical sorting algorithm is selected")
+            reordered_tier_one_sorted_with_data = do_alphabetical_sort(
                 tier_one_dependency_graph, active_mods
             )
-            reordered_tier_three_sorted_with_data = do_rimpy_sort(
+            reordered_tier_three_sorted_with_data = do_alphabetical_sort(
                 tier_three_dependency_graph, active_mods
             )
-            reordered_tier_two_sorted_with_data = do_rimpy_sort(
+            reordered_tier_two_sorted_with_data = do_alphabetical_sort(
                 tier_two_dependency_graph, active_mods
             )
         else:
@@ -3055,7 +3043,7 @@ class MainContent(QObject):
     def _do_generate_metadata_comparison_report(self) -> None:
         """
         Open a user-selected JSON file. Calculate and display discrepencies
-        found between RimPy Mod Manager database and this file.
+        found between database and this file.
         """
         # TODO: Refactor this...
         discrepancies = []

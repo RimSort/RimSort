@@ -2,10 +2,10 @@ from logger_tt import logger
 from typing import Any
 
 
-def do_rimpy_sort(
+def do_alphabetical_sort(
     dependency_graph: dict[str, set[str]], active_mods_json: dict[str, Any]
 ) -> dict[str, Any]:
-    logger.info(f"Starting RimPy sort for {len(dependency_graph)} mods")
+    logger.info(f"Starting Alphabetical sort for {len(dependency_graph)} mods")
     # Get an alphabetized list of dependencies
     active_mods_id_to_name = dict(
         (v["packageid"], v["name"]) for v in active_mods_json.values()
@@ -46,7 +46,7 @@ def do_rimpy_sort(
         if package_id in active_mods_packageid_to_uuid:
             mod_uuid = active_mods_packageid_to_uuid[package_id]
             reordered[mod_uuid] = active_mods_json[mod_uuid]
-    logger.info(f"Finished RimPy sort with {len(reordered)} mods")
+    logger.info(f"Finished Alphabetical sort with {len(reordered)} mods")
     return reordered
 
 
