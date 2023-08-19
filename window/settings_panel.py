@@ -178,7 +178,7 @@ class SettingsPanel(QDialog):
         self.sorting_algorithm_label.setAlignment(Qt.AlignCenter)
         self.sorting_algorithm_cb = QComboBox()
         self.sorting_algorithm_cb.setObjectName("MainUI")
-        self.sorting_algorithm_cb.addItems(["RimPy", "Topological"])
+        self.sorting_algorithm_cb.addItems(["Alphabetical", "Topological"])
         self.sorting_algorithm_cb.setItemDelegate(self.centered_item_delegate)
 
         # metadata layouts

@@ -67,7 +67,7 @@ from PySide6.QtWidgets import (
 )
 
 from sort.dependencies import *
-from sort.rimpy_sort import *
+from sort.alphabetical_sort import *
 from sort.topo_sort import *
 from sub_view.actions_panel import Actions
 from sub_view.active_mods_panel import ActiveModList
@@ -1452,15 +1452,15 @@ class MainContent(QObject):
             self.game_configuration.settings_panel.sorting_algorithm_cb.currentText()
         )
 
-        if sorting_algorithm == "RimPy":
-            logger.info("RimPy sorting algorithm is selected")
-            reordered_tier_one_sorted_with_data = do_rimpy_sort(
+        if sorting_algorithm == "Alphabetical":
+            logger.info("Alphabetical sorting algorithm is selected")
+            reordered_tier_one_sorted_with_data = do_alphabetical_sort(
                 tier_one_dependency_graph, active_mods
             )
-            reordered_tier_three_sorted_with_data = do_rimpy_sort(
+            reordered_tier_three_sorted_with_data = do_alphabetical_sort(
                 tier_three_dependency_graph, active_mods
             )
-            reordered_tier_two_sorted_with_data = do_rimpy_sort(
+            reordered_tier_two_sorted_with_data = do_alphabetical_sort(
                 tier_two_dependency_graph, active_mods
             )
         else:
