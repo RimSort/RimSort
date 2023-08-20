@@ -1548,8 +1548,8 @@ class MainContent(QObject):
         file_path = show_dialogue_file(
             mode="save",
             caption="Save mod list",
-            dir=str(Path(os.path.join(self.game_configuration.storage_path)).resolve()),
-            filter="XML (*.xml)",
+            _dir=str(Path(os.path.join(self.game_configuration.storage_path)).resolve()),
+            _filter="XML (*.xml)",
         )
         logger.info(f"Selected path: {file_path}")
         if file_path:
