@@ -461,8 +461,8 @@ Do stuff!
 """
 
 # RimSort dependencies
-print("Getting RimSort dependencies...")
-get_rimsort_deps()
+# print("Getting RimSort dependencies...")
+# get_rimsort_deps()
 
 # Build SteamworksPy
 # print("Building SteamworksPy library...")
@@ -473,9 +473,9 @@ print("Copying SteamworksPy libs for release...")
 copy_swp_libs()
 
 # Grab latest todds release
-# print("Grabbing latest todds release...")
-# get_latest_todds_release()
+print("Grabbing latest todds release...")
+get_latest_todds_release()
 
 # Build Nuitka distributable binary
-print("Building RimSort application with Nuitka...")
-_execute(_NUITKA_CMD)
+# print("Building RimSort application with Nuitka...")
+# _execute(_NUITKA_CMD)
