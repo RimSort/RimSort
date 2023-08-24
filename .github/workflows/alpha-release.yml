@@ -160,7 +160,7 @@ jobs:
       - name: Handle the Alpha Release
         run: |
           # Check if the "Alpha" release exists
-          gh release view "${{ needs.build.outputs.raw_tag_name }}" > /dev/null 2>&1
+          gh release view "${{ needs.build.outputs.raw_tag_name }}" > /dev/null 2>&1 || true
           # Store the exit code
           STATUS=$?
           # If it exists (exit code is 0), delete it

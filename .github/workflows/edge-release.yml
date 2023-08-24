@@ -151,7 +151,7 @@ jobs:
       - name: Handle the Edge Release
         run: |
           # Check if the "Edge" release exists
-          gh release view Edge > /dev/null 2>&1
+          gh release view Edge > /dev/null 2>&1 || true
           # Store the exit code
           STATUS=$?
           # If it exists (exit code is 0), delete it
