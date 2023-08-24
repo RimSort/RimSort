@@ -1,0 +1,190 @@
+name: Alpha release (build for all platforms)
+on:
+  push:
+    tags:
+      - 'alpha-v*'
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-20.04
+            platform: "Linux"
+            arch: "x86_64"
+          - os: windows-2019
+            platform: "Windows"
+            arch: "x86_64"
+          - os: macos-11
+            platform: "Darwin"
+            arch: "i386"
+    steps:
+      # Check-out repository with history
+      - name: Checkout code and fetch all tags
+        uses: actions/checkout@v3
+      # Setup Python
+      - name: Setup py39 with dependencies
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+          architecture: 'x64'
+          cache: 'pip'
+      - run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      # Setup submodules
+      - name: Update submodules
+        run: git submodule update --init --recursive
+      # Execute distribute.py (copy libs, grab latest todds release)
+      - name: Execute distribute.py
+        run: python distribute.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Build python script into a stand-alone executable
+      # MacOS i386
+      - name: Nuitka Compilation for MacOS i386
+        if: matrix.platform == 'Darwin' && matrix.arch == 'i386'
+        uses: Nuitka/Nuitka-Action@main
+        with:
+          disable-console: true
+          enable-plugins: pyside6
+          include-data-dir: data=data,todds=todds
+          include-data-files: steam_appid.txt=steam_appid.txt,SteamworksPy_i386.dylib=SteamworksPy.dylib,libsteam_api.dylib=libsteam_api.dylib,update.sh=update.sh
+          macos-app-icon: data/AppIcon_a.icns
+          macos-create-app-bundle: true
+          nuitka-version: 1.5.6
+          onefile: false
+          output-dir: dist
+          standalone: true
+          script-name: RimSort.py
+      # Linux x86_64
+      - name: Nuitka Compilation for Linux x86_64
+        if: matrix.platform == 'Linux'
+        uses: Nuitka/Nuitka-Action@main
+        with:
+          disable-console: true
+          enable-plugins: pyside6
+          include-data-dir: data=data,todds=todds
+          include-data-files: steam_appid.txt=steam_appid.txt,SteamworksPy_x86_64.so=SteamworksPy.so,libsteam_api.so=libsteam_api.so,update.sh=update.sh
+          nuitka-version: 1.5.6
+          onefile: false
+          output-dir: dist
+          standalone: true
+          script-name: RimSort.py
+      # Windows
+      - name: Nuitka Compilation for Windows
+        if: matrix.platform == 'Windows'
+        uses: Nuitka/Nuitka-Action@main
+        with:
+          disable-console: true
+          enable-plugins: pyside6
+          include-data-dir: data=data,todds=todds
+          include-data-files: steam_appid.txt=steam_appid.txt,SteamworksPy64.dll=SteamworksPy64.dll,steam_api64.dll=steam_api64.dll,update.bat=update.bat
+          nuitka-version: 1.5.6
+          onefile: false
+          output-dir: dist
+          standalone: true
+          script-name: RimSort.py
+          windows-icon-from-ico: data/AppIcon_a.png
+      # Format tag name
+      - name: Format Tag Name
+        id: format_tag
+        run: |
+          # Extract the tag name
+          RAW_TAG_NAME=$(echo "${{ github.ref }}" | sed 's#refs/tags/##')
+          # Set the tag name from the GitHub ref as outputs and environment variables
+          echo "RAW_TAG_NAME=$RAW_TAG_NAME" >> $GITHUB_ENV
+          echo "::set-output name=raw_tag_name::$RAW_TAG_NAME"
+          # Format the tag name
+          FORMATTED_TAG_NAME=$(echo $RAW_TAG_NAME | sed 's/alpha/Alpha/')
+          # Set the formatted tag name and filename as outputs and environment variables
+          echo "FORMATTED_TAG_NAME=$FORMATTED_TAG_NAME" >> $GITHUB_ENV
+          echo "::set-output name=formatted_tag_name::$FORMATTED_TAG_NAME"
+          # Format the filename name
+          FILENAME="RimSort-${FORMATTED_TAG_NAME}_${{ matrix.platform }}_${{ matrix.arch }}.zip"
+          # Set the filename as outputs and environment variables
+          echo "FILENAME=$FILENAME" >> $GITHUB_ENV
+          echo "::set-output name=filename::$FILENAME"
+        shell: bash
+      # Create ZIP archive of release
+      - name: Create ZIP (Darwin)
+        if: matrix.platform == 'Darwin'
+        run: |
+          cd ./dist/
+          zip -r ${{ env.FILENAME }} RimSort.app
+      - name: Create ZIP (Linux)
+        if: matrix.platform == 'Linux'
+        run: |
+          cd ./dist/
+          cp -r RimSort.dist RimSort
+          zip -r ${{ env.FILENAME }} RimSort
+      - name: Create ZIP (Windows)
+        if: matrix.platform == 'Windows'
+        run: |
+          cd ./dist/
+          Rename-Item -Path RimSort.dist -NewName RimSort
+          Compress-Archive -Path RimSort -DestinationPath ${{ env.FILENAME }}
+        shell: powershell
+      # Upload ZIP as artifact
+      - name: Upload ZIP as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.FILENAME }}
+          path: ./dist/${{ env.FILENAME }}
+    outputs:
+      formatted_tag_name: ${{ steps.format_tag.formatted_tag_name }}
+      raw_tag_name: ${{ steps.format_tag.raw_tag_name }}
+  create_release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      # Check-out repository with history
+      - name: Checkout code and fetch all tags
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Fetch all history
+          persist-credentials: false
+      # Generate body text from commits
+      - name: Fetch latest tag and commits since then
+        id: get_commits
+        run: |
+          LATEST_TAG=$(git describe --tags --abbrev=0)
+          COMMIT_MESSAGES=$(git log $LATEST_TAG..HEAD --oneline)
+          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
+          echo "COMMIT_MESSAGES=$COMMIT_MESSAGES" >> $GITHUB_ENV
+          echo "::set-output name=commit_messages::$COMMIT_MESSAGES"
+      # Authenticate gh
+      - name: Authenticate gh
+        run: gh auth login --with-token <<< "${{ secrets.GITHUB_TOKEN }}"
+      # Create Alpha release
+      - name: Handle the Alpha Release
+        run: |
+          # Check if the "Alpha" release exists
+          gh release view "${{ needs.build.outputs.raw_tag_name }}" > /dev/null 2>&1 || true
+          # Store the exit code
+          STATUS=$?
+          # If it exists (exit code is 0), delete it
+          if [[ $STATUS -eq 0 ]]; then
+            gh release delete "${{ needs.build.outputs.raw_tag_name }}" --yes
+          fi
+          # Create a new "Alpha" release
+          gh release create "${{ needs.build.outputs.raw_tag_name }}"  --title "RimSort ${{ needs.build.outputs.formatted_tag_name }}" --notes "${{ steps.get_commits.outputs.commit_messages }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.TWSTA_MANAGE_EDGE_TAG }}
+      # Download artifacts
+      - name: Download all workflow run artifacts
+        uses: actions/download-artifact@v2
+      # Upload files
+      - name: Upload artifacts to Alpha release
+        run: |
+          for artifact_dir in RimSort-Alpha-*; do
+            artifact="$artifact_dir/$artifact_dir"
+            if [[ -f "$artifact" ]]; then
+              echo "Uploading artifact $artifact..."
+              gh release upload "${{ needs.build.outputs.raw_tag_name }}" "$artifact"
+            else
+              echo "Warning: Expected artifact file not found: $artifact"
+            fi
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.TWSTA_MANAGE_EDGE_TAG }}

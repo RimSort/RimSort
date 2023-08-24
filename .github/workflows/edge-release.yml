@@ -1,0 +1,181 @@
+name: Edge release (build for all platforms)
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-20.04
+            platform: "Linux"
+            arch: "x86_64"
+          - os: windows-2019
+            platform: "Windows"
+            arch: "x86_64"
+          - os: macos-11
+            platform: "Darwin"
+            arch: "i386"
+    steps:
+      # Check-out repository with history
+      - name: Checkout code and fetch all tags
+        uses: actions/checkout@v3
+        with:
+          ref: main
+      # Setup Python
+      - name: Setup py39 with dependencies
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+          architecture: 'x64'
+          cache: 'pip'
+      - run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      # Setup submodules
+      - name: Update submodules
+        run: git submodule update --init --recursive
+      # Execute distribute.py (copy libs, grab latest todds release)
+      - name: Execute distribute.py
+        run: python distribute.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Build python script into a stand-alone executable
+      # MacOS i386
+      - name: Nuitka Compilation for MacOS i386
+        if: matrix.platform == 'Darwin' && matrix.arch == 'i386'
+        uses: Nuitka/Nuitka-Action@main
+        with:
+          disable-console: true
+          enable-plugins: pyside6
+          include-data-dir: data=data,todds=todds
+          include-data-files: steam_appid.txt=steam_appid.txt,SteamworksPy_i386.dylib=SteamworksPy.dylib,libsteam_api.dylib=libsteam_api.dylib,update.sh=update.sh
+          macos-app-icon: data/AppIcon_a.icns
+          macos-create-app-bundle: true
+          nuitka-version: 1.5.6
+          onefile: false
+          output-dir: dist
+          standalone: true
+          script-name: RimSort.py
+      # Linux x86_64
+      - name: Nuitka Compilation for Linux x86_64
+        if: matrix.platform == 'Linux'
+        uses: Nuitka/Nuitka-Action@main
+        with:
+          disable-console: true
+          enable-plugins: pyside6
+          include-data-dir: data=data,todds=todds
+          include-data-files: steam_appid.txt=steam_appid.txt,SteamworksPy_x86_64.so=SteamworksPy.so,libsteam_api.so=libsteam_api.so,update.sh=update.sh
+          nuitka-version: 1.5.6
+          onefile: false
+          output-dir: dist
+          standalone: true
+          script-name: RimSort.py
+      # Windows
+      - name: Nuitka Compilation for Windows
+        if: matrix.platform == 'Windows'
+        uses: Nuitka/Nuitka-Action@main
+        with:
+          disable-console: true
+          enable-plugins: pyside6
+          include-data-dir: data=data,todds=todds
+          include-data-files: steam_appid.txt=steam_appid.txt,SteamworksPy64.dll=SteamworksPy64.dll,steam_api64.dll=steam_api64.dll,update.bat=update.bat
+          nuitka-version: 1.5.6
+          onefile: false
+          output-dir: dist
+          standalone: true
+          script-name: RimSort.py
+          windows-icon-from-ico: data/AppIcon_a.png
+      # Get the short SHA of the commit
+      - name: Get Short SHA
+        id: sha
+        run: echo "::set-output name=short::$(git rev-parse --short HEAD)"
+      # Env variable for zip name
+      - name: Set up filename
+        shell: bash
+        run: |
+          FILENAME="RimSort-Edge_${{ steps.sha.outputs.short }}_${{ matrix.platform }}_${{ matrix.arch }}.zip"
+          echo "FILENAME=$FILENAME" >> $GITHUB_ENV
+          echo "::set-output name=sha_short::${{ steps.sha.outputs.short }}"
+      # Create ZIP archive of release
+      - name: Create ZIP (Darwin)
+        if: matrix.platform == 'Darwin'
+        run: |
+          cd ./dist/
+          zip -r ${{ env.FILENAME }} RimSort.app
+      - name: Create ZIP (Linux)
+        if: matrix.platform == 'Linux'
+        run: |
+          cd ./dist/
+          cp -r RimSort.dist RimSort
+          zip -r ${{ env.FILENAME }} RimSort
+      - name: Create ZIP (Windows)
+        if: matrix.platform == 'Windows'
+        run: |
+          cd ./dist/
+          Rename-Item -Path RimSort.dist -NewName RimSort
+          Compress-Archive -Path RimSort -DestinationPath ${{ env.FILENAME }}
+        shell: powershell
+      # Upload ZIP as artifact
+      - name: Upload ZIP as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.FILENAME }}
+          path: ./dist/${{ env.FILENAME }}
+    outputs:
+      sha_short: ${{ steps.sha.outputs.short }}
+  update_release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      # Check-out repository with history
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+          ref: main
+      # Update Edge tag to point to main
+      - name: Update the Edge tag
+        shell: bash
+        run: |
+          export GITHUB_TOKEN=${{ secrets.TWSTA_MANAGE_EDGE_TAG }}
+          git tag -d Edge || echo "Edge tag doesn't exist. Creating one now..."
+          git tag Edge
+          git push -f --tags https://x-access-token:$GITHUB_TOKEN@github.com/RimSort/RimSort.git
+      # Authenticate gh
+      - name: Authenticate gh
+        run: gh auth login --with-token <<< "${{ secrets.GITHUB_TOKEN }}"
+      # Edge release
+      - name: Handle the Edge Release
+        run: |
+          # Check if the "Edge" release exists
+          gh release view Edge > /dev/null 2>&1 || true
+          # Store the exit code
+          STATUS=$?
+          # If it exists (exit code is 0), delete it
+          if [[ $STATUS -eq 0 ]]; then
+            gh release delete Edge --yes
+          fi
+          # Create a new "Edge" release
+          gh release create Edge --title "RimSort Edge ${{ needs.build.outputs.sha_short }}" --notes "This is a bleeding Edge release, built off of main branch. Refer to SHA ${{ needs.build.outputs.sha_short }} commit reference." --prerelease
+        env:
+          GITHUB_TOKEN: ${{ secrets.TWSTA_MANAGE_EDGE_TAG }}
+      # Download artifacts
+      - name: Download all workflow run artifacts
+        uses: actions/download-artifact@v2
+      # Upload files
+      - name: Upload assets to the Edge release
+        run: |
+          for artifact_dir in RimSort-Edge*; do
+            artifact="$artifact_dir/$artifact_dir"
+            if [[ -f "$artifact" ]]; then
+              echo "Uploading artifact $artifact..."
+              gh release upload Edge "$artifact"
+            else
+              echo "Warning: Expected artifact file not found: $artifact"
+            fi
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.TWSTA_MANAGE_EDGE_TAG }}
