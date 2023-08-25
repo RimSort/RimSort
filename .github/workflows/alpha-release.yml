@@ -19,6 +19,30 @@ jobs:
             platform: "Darwin"
             arch: "i386"
     steps:
+      # Ubuntu dependencies
+      - name: Install Ubuntu system dependencies
+        if: matrix.platform == 'Linux'
+        run: |
+          # Update apt
+          sudo apt update
+          # Install PySide6 system dependencies
+          # https://doc.qt.io/qt-6/linux-requirements.html
+          sudo apt install -y \
+            gvfs-libs \
+            libfontconfig1-dev \
+            libfreetype6-dev \
+            libx11-dev \
+            libx11-xcb-dev \
+            libxext-dev \
+            libxfixes-dev \
+            libxi-dev \
+            libxrender-dev \
+            libxkbcommon-dev \
+            libxkbcommon-x11-dev \
+            libatspi2.0-dev \
+            '^libxcb.*-dev'
+          # Install Nuitka dependencies
+          sudo apt install -y ccache clang patchelf
       # Check-out repository with history
       - name: Checkout code and fetch all tags
         uses: actions/checkout@v3
@@ -105,6 +129,18 @@ jobs:
           # Set the filename as outputs and environment variables
           echo "FILENAME=$FILENAME" >> $GITHUB_ENV
           echo "::set-output name=filename::$FILENAME"
+      # Format tag name, filename
+      - name: Format filename
+        run: |
+          # Extract the tag name, set in env for output
+          RAW_TAG_NAME=$(echo "${{ github.ref }}" | sed 's#refs/tags/##')
+          echo "RAW_TAG_NAME=$RAW_TAG_NAME" >> $GITHUB_ENV
+          # Format the tag name, set in env for output
+          FORMATTED_TAG_NAME=$(echo $RAW_TAG_NAME | sed 's/alpha/Alpha/')
+          echo "FORMATTED_TAG_NAME=$FORMATTED_TAG_NAME" >> $GITHUB_ENV
+          # Format the filename, set in env for output
+          FILENAME="RimSort-${FORMATTED_TAG_NAME}_${{ matrix.platform }}_${{ matrix.arch }}.zip"
+          echo "FILENAME=$FILENAME" >> $GITHUB_ENV
         shell: bash
       # Create ZIP archive of release
       - name: Create ZIP (Darwin)
@@ -178,6 +214,58 @@ jobs:
       - name: Upload artifacts to Alpha release
         run: |
           for artifact_dir in RimSort-Alpha-*; do
+      formatted_tag_name: ${{ env.FORMATTED_TAG_NAME }}
+      raw_tag_name: ${{ env.RAW_TAG_NAME }}
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      # Check-out repository
+      - name: Checkout tag and fetch history
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+      # Authenticate gh
+      - name: Authenticate gh
+        run: gh auth login --with-token <<< "${{ secrets.TWSTA_ACTIONS }}"
+      # Get second to latest tag (excluding Edge)
+      - name: Get second-to-latest tag
+        run: |
+          LAST_TAG=$(git tag --sort=-creatordate | grep -v '^Edge$' | tail -n 2 | head -n 1)
+          echo "LAST_TAG=$LAST_TAG" >> $GITHUB_ENV
+      # Generate Changelog
+      - name: Generate Changelog
+        id: changelog
+        uses: mikepenz/release-changelog-builder-action@v2
+        with:
+          commitMode: "true"
+          fromTag: ${{ env.LAST_TAG }}
+          ignorePreReleases: "true"
+          toTag: ${{ needs.build.outputs.raw_tag_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+      # Create Alpha release
+      - name: Handle the Alpha Release
+        run: |
+            # Check if the tag has already been released
+            OUTPUT=$(gh release view "${{ needs.build.outputs.raw_tag_name }}" 2>&1) || true
+            if [[ $OUTPUT != *"release not found"* ]]; then
+              echo "Release already exists. Replacing it."
+              gh release delete "${{ needs.build.outputs.raw_tag_name }}" --yes
+            fi
+            FORMATTED_TITLE_TAG_NAME=$(echo $FORMATTED_TAG_NAME | sed 's/Alpha-v/Alpha /')
+            gh release create \
+            "${{ needs.build.outputs.raw_tag_name }}" \
+            --title "RimSort ${{ needs.build.outputs.formatted_tag_name }}" \
+            --notes "${{ steps.changelog.outputs.changelog }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.TWSTA_ACTIONS }}
+      # Download artifacts
+      - name: Download all workflow artifacts
+        uses: actions/download-artifact@v2
+      # Upload each artifact
+      - name: Upload artifacts to release
+        run: |
+          for artifact_dir in RimSort-Alpha*; do
             artifact="$artifact_dir/$artifact_dir"
             if [[ -f "$artifact" ]]; then
               echo "Uploading artifact $artifact..."
@@ -188,3 +276,4 @@ jobs:
           done
         env:
           GITHUB_TOKEN: ${{ secrets.TWSTA_MANAGE_EDGE_TAG }}
+
