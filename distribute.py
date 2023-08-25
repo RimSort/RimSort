@@ -385,7 +385,12 @@ def copy_swp_libs() -> None:
 
 def get_latest_todds_release() -> None:
     # Parse latest release
-    raw = requests.get("https://api.github.com/repos/joseasoler/todds/releases/latest")
+    headers = None
+    if "GITHUB_TOKEN" in os.environ:
+        headers = {"Authorization": f"token {os.environ['GITHUB_TOKEN']}"}
+    raw = requests.get(
+        "https://api.github.com/repos/joseasoler/todds/releases/latest", headers=headers
+    )
     json_response = raw.json()
     tag_name = json_response["tag_name"]
     todds_path = os.path.join(_CWD, "todds")
@@ -393,7 +398,7 @@ def get_latest_todds_release() -> None:
     print(f"Latest release: {tag_name}\n")
     # Setup environment
     if _SYSTEM == "Darwin":
-        if _PROCESSOR == "i386" or _PROCESSOR == "arm":
+        if _PROCESSOR == "i386":  # or _PROCESSOR == "arm":
             print(f"Darwin/MacOS system detected with a {_ARCH} {_PROCESSOR} CPU...")
             target_archive = f"todds_{_SYSTEM}_{_PROCESSOR}_{tag_name}.zip"
         else:
