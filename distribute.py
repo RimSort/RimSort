@@ -68,7 +68,7 @@ elif _SYSTEM == "Windows" and _ARCH == "64bit":
         "-m",
         "nuitka",
         "--standalone",
-        # "--disable-console",
+        "--disable-console",
         # "--onefile",
         "--windows-icon-from-ico=./data/AppIcon_a.png",
         "--enable-plugin=pyside6",
@@ -385,7 +385,12 @@ def copy_swp_libs() -> None:
 
 def get_latest_todds_release() -> None:
     # Parse latest release
-    raw = requests.get("https://api.github.com/repos/joseasoler/todds/releases/latest")
+    headers = None
+    if "GITHUB_TOKEN" in os.environ:
+        headers = {"Authorization": f"token {os.environ['GITHUB_TOKEN']}"}
+    raw = requests.get(
+        "https://api.github.com/repos/joseasoler/todds/releases/latest", headers=headers
+    )
     json_response = raw.json()
     tag_name = json_response["tag_name"]
     todds_path = os.path.join(_CWD, "todds")
@@ -393,7 +398,7 @@ def get_latest_todds_release() -> None:
     print(f"Latest release: {tag_name}\n")
     # Setup environment
     if _SYSTEM == "Darwin":
-        if _PROCESSOR == "i386" or _PROCESSOR == "arm":
+        if _PROCESSOR == "i386":  # or _PROCESSOR == "arm":
             print(f"Darwin/MacOS system detected with a {_ARCH} {_PROCESSOR} CPU...")
             target_archive = f"todds_{_SYSTEM}_{_PROCESSOR}_{tag_name}.zip"
         else:
@@ -461,8 +466,8 @@ Do stuff!
 """
 
 # RimSort dependencies
-# print("Getting RimSort dependencies...")
-# get_rimsort_deps()
+print("Getting RimSort dependencies...")
+get_rimsort_deps()
 
 # Build SteamworksPy
 # print("Building SteamworksPy library...")
@@ -477,5 +482,5 @@ print("Grabbing latest todds release...")
 get_latest_todds_release()
 
 # Build Nuitka distributable binary
-# print("Building RimSort application with Nuitka...")
-# _execute(_NUITKA_CMD)
+print("Building RimSort application with Nuitka...")
+_execute(_NUITKA_CMD)
