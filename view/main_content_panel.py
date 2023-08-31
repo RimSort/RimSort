@@ -91,10 +91,6 @@ from window.rule_editor_panel import RuleEditor
 from window.runner_panel import RunnerPanel
 from window.workshop_mod_updater_panel import ModUpdaterPrompt
 
-# print(f"main_content_panel.py: {current_process()}")
-# print(f"__name__: {__name__}")
-# print(f"sys.argv: {sys.argv}")
-
 
 class MainContent(QObject):
     """

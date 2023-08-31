@@ -1,0 +1,231 @@
+name: Edge release (build for all platforms)
+on:
+  push:
+    tags:
+      - 'Edge'
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-10.14.6-i386 
+            platform: "Darwin"
+            arch: "i386"
+          - os: macos-13.5.1-arm64
+            platform: "Darwin"
+            arch: "arm"
+          - os: debian-11
+            platform: "Linux"
+            arch: "x86_64"
+          - os: windows-10-21h2
+            platform: "Windows"
+            arch: "x86_64"
+    steps:
+      # Debian/Ubuntu dependencies
+      - name: Install Debian/Ubuntu system dependencies
+        if: matrix.platform == 'Linux'
+        run: |
+          # Update apt
+          sudo apt update
+          # Install PySide6 system dependencies
+          # https://doc.qt.io/qt-6/linux-requirements.html
+          sudo apt install -y \
+            gvfs-libs \
+            libfontconfig1-dev \
+            libfreetype6-dev \
+            libx11-dev \
+            libx11-xcb-dev \
+            libxext-dev \
+            libxfixes-dev \
+            libxi-dev \
+            libxrender-dev \
+            libxkbcommon-dev \
+            libxkbcommon-x11-dev \
+            libatspi2.0-dev \
+            '^libxcb.*-dev'
+          # Install Nuitka dependencies
+          sudo apt install -y build-essential ccache clang patchelf
+      # Check-out repository (Unix)
+      - name: Checkout code at triggered tag (Unix)
+        if: matrix.platform != 'Windows'
+        run: |
+          if git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+            git checkout main
+            git pull --rebase
+            git fetch --force --tags
+            git checkout Edge
+          else
+            rm -rf *
+            git clone https://github.com/RimSort/RimSort.git .
+            git checkout Edge
+          fi
+        shell: bash
+
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Check-out repository (Windows)
+      - name: Checkout code at triggered tag (Windows)
+        if: matrix.platform == 'Windows'
+        run: |
+          $ErrorActionPreference = "Continue"
+          if ((git rev-parse --is-inside-work-tree) -eq "true") {
+            git checkout main
+            git pull --rebase
+            git fetch --force --tags
+            git checkout Edge
+          }
+          else {
+            Remove-Item * -Recurse -Force
+            git clone https://github.com/RimSort/RimSort.git .
+            git checkout Edge
+          }
+        shell: powershell
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Execute distribute.py on Unix
+      - name: Init venv & execute distribute.py (Unix)
+        if: matrix.platform != 'Windows'
+        run: |
+          python3.9 -m pip install --upgrade pip
+          python3.9 -m pip install requests virtualenv
+          if [ -f "bin/activate" ]; then
+            source bin/activate
+          else
+            python3.9 -m venv .
+            source bin/activate
+          fi
+          python -m pip install requests
+          python distribute.py
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Execute distribute.py on Windows
+      - name: Init venv & execute distribute.py (Windows)
+        if: matrix.platform == 'Windows'
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install requests virtualenv
+          if (Test-Path "Scripts\Activate.ps1") {
+            .\Scripts\Activate.ps1
+          } else {
+            python -m venv .
+            .\Scripts\Activate.ps1
+          }
+          python -m pip install requests
+          python distribute.py
+        shell: powershell
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Get the short SHA of the commit + filename (Unix)
+      - name: Get Short SHA and Set up filename (Unix)
+        if: matrix.platform != 'Windows'
+        id: sha_unix
+        run: |
+          # Get the short SHA of the commit
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          echo "::set-output name=short::$SHORT_SHA"
+          # Format the filename, set in env for output
+          FILENAME="RimSort-Edge_${SHORT_SHA}_${{ matrix.platform }}_${{ matrix.arch }}.zip"
+          echo "FILENAME=$FILENAME" >> $GITHUB_ENV
+        shell: bash
+      # Get the short SHA of the commit + filename (Windows)
+      - name: Get Short SHA and Set up filename (Windows)
+        if: matrix.platform == 'Windows'
+        id: sha_win
+        run: |
+          # Get the short SHA of the commit
+          $SHORT_SHA = git rev-parse --short HEAD
+          echo "::set-output name=short::$SHORT_SHA"
+          # Format the filename, set in env for output
+          $FILENAME = "RimSort-Edge_${SHORT_SHA}_${{ matrix.platform }}_${{ matrix.arch }}.zip"
+          Add-Content -Path $env:GITHUB_ENV -Value "FILENAME=$FILENAME"
+        shell: powershell
+      # Create ZIP archive of release
+      - name: Create ZIP (Unix)
+        if: matrix.platform != 'Windows'
+        run: |
+          if [[ "$(uname)" == "Darwin" ]]; then
+            DIST="RimSort.app"
+            echo ${{ steps.sha_unix.outputs.short }} > ./dist/$DIST/Contents/MacOS/data/SHA
+          else    
+            DIST="RimSort"
+            if [ -d "dist/$DIST" ]; then
+                echo "Existing build found. Deleting old build and replacing with a new build."
+                rm -rf "./dist/$DIST"
+            fi
+            mv dist/RimSort.dist ."/dist/$DIST"
+            echo ${{ steps.sha_unix.outputs.short }} > ./dist/$DIST/data/SHA
+          fi
+          cd ./dist/
+          zip -r ${{ env.FILENAME }} $DIST
+      - name: Create ZIP (Windows)
+        if: matrix.platform == 'Windows'
+        run: |
+          if (Test-Path -Path .\dist\RimSort -PathType Container) {
+              Write-Host "Existing build found. Deleting old build and replacing with new build."
+              Remove-Item -Path .\dist\RimSort -Force -Recurse
+          }
+          cd ./dist/
+          Rename-Item -Path RimSort.dist -NewName RimSort
+          Set-Content -Path .\RimSort\data\SHA -Value "${{ steps.sha_win.outputs.short }}"
+          Compress-Archive -Force -Path RimSort -DestinationPath ${{ env.FILENAME }}
+        shell: powershell
+      # Upload ZIP as artifact
+      - name: Upload ZIP as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.FILENAME }}
+          path: ./dist/${{ env.FILENAME }}
+    outputs:
+      sha_short: ${{ steps.sha_unix.outputs.short }}${{ steps.sha_windows.outputs.short }}
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      # Check-out repository
+      - name: Checkout tag
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+          ref: Edge
+      # Authenticate gh
+      - name: Authenticate gh
+        run: gh auth login --with-token <<< "${{ secrets.TWSTA_ACTIONS }}"
+      # Create Edge release
+      - name: Handle the Edge Release
+        run: |
+          # Obtain the GitHub Action run URL
+          ACTION_RUN_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          # Check if the "Edge" release exists
+          OUTPUT=$(gh release view Edge 2>&1) || true
+          if [[ $OUTPUT != *"release not found"* ]]; then
+            echo "Release already exists. Replacing it."
+            gh release delete Edge --yes
+          fi
+          gh release create \
+          Edge \
+          --title "Edge ${{ needs.build.outputs.sha_short }}" \
+          --notes "This is a bleeding Edge release, built off of main branch. Refer to SHA ${{ needs.build.outputs.sha_short }} commit reference.
+          
+          [Click here to see the action that created this release.]($ACTION_RUN_URL)" \
+          --prerelease
+        env:
+          GITHUB_TOKEN: ${{ secrets.TWSTA_ACTIONS }}
+      # Download artifacts
+      - name: Download all workflow run artifacts
+        uses: actions/download-artifact@v2
+      # Upload artifacts to release
+      - name: Upload assets to the Edge release
+        run: |
+          for artifact_dir in RimSort-Edge*; do
+            artifact="$artifact_dir/$artifact_dir"
+            if [[ -f "$artifact" ]]; then
+              echo "Uploading artifact $artifact..."
+              gh release upload Edge "$artifact"
+            else
+              echo "Warning: Expected artifact file not found: $artifact"
+            fi
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.TWSTA_ACTIONS }}
