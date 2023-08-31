@@ -8,4 +8,4 @@ To run RimSort, visit the [Releases](https://github.com/oceancabbage/RimSort/rel
 
 Bugs and feature requests are tracked in the [Issues](https://github.com/oceancabbage/RimSort/issues) section of this repo. If you run into a bug or have a feature suggestion, feel free to create an Issue here yourself!
 
-[![Join us on Discord](https://github.com/RimSort/RimSort/assets/2766946/486f4f8c-fed5-4fe1-832f-6461b7ce3a55)](https://discord.gg/aV7g69JmR2)
+[![Join us on Discord](https://github-production-user-asset-6210df.s3.amazonaws.com/2766946/248529301-486f4f8c-fed5-4fe1-832f-6461b7ce3a55.png)](https://discord.gg/aV7g69JmR2)
