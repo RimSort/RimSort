@@ -2,10 +2,6 @@ import sys
 
 from multiprocessing import current_process, freeze_support, set_start_method
 
-# print(f"RimSort.py: {current_process()}")
-# print(f"__name__: {__name__}")
-# print(f"sys.argv: {sys.argv}")
-
 import os
 from pathlib import Path
 import platform
@@ -39,14 +35,13 @@ elif SYSTEM == "Windows":
     from watchdog.observers.polling import PollingObserver
 
     # Comment to see logging for watchdog handler on Windows
-    # This is a stub if it's ever even needed... i still can't figure out why it won't log at all on Windows...?
+    # This is a stub if it's ever even needed...
+    # I still can't figure out why it won't log at all on Windows...?
     # getLogger("").setLevel(WARNING)
 
 from view.game_configuration_panel import GameConfiguration
 from view.main_content_panel import MainContent
 from view.status_panel import Status
-
-system = platform.system()
 
 
 def handle_exception(exc_type, exc_value, exc_traceback):
@@ -96,6 +91,13 @@ class MainWindow(QMainWindow):
         self.debug_mode = debug_mode
         self.init = None  # Content initialization should only fire on startup. Otherwise, this is handled by Refresh button
         self.version_string = "Alpha-v1.0.6.2-hf"
+
+        # Check for SHA and append to version string if found
+        sha_file = str(Path(os.path.join(data_path, "SHA")).resolve())
+        if os.path.exists(sha_file):
+            with open(sha_file) as f:
+                sha = f.read().strip()
+            self.version_string += f" [Edge {sha}]"
 
         # Watchdog
         self.watchdog_event_handler = None
@@ -289,24 +291,15 @@ def main_thread():
 
 
 if __name__ == "__main__":
-    # This check was PREVIOUSLY used to check whether RimSort was running via PyInstaller
-    # TODO: Remove this.
-    # if getattr(sys, "frozen", False):
-    #     logger.warning("Running using PyInstaller bundle")
-    #     if system != "Linux":
-    #         logger.warning(
-    #             "Non-Linux platform detected: using multiprocessing.freeze_support() & setting 'spawn' as MP method"
-    #         )
-    #         freeze_support()
-    #         set_start_method('spawn')
-    # else:
-    #     logger.warning("Running using Python interpreter")
-
     # If RimSort is running from a --onefile Nuitka build, there are some nuances to consider:
     # https://nuitka.net/doc/user-manual.html#onefile-finding-files
     # You can override by passing --onefile-tempdir-spec to `nuitka`
     # See also: https://nuitka.net/doc/user-manual.html#use-case-4-program-distribution
     # Otherwise, use sys.argv[0] to get the actual relative path to the executable
+    #########################################################################################
+    #
+    # Setup logging
+    #
     data_path = str(Path(os.path.join(os.path.dirname(__file__), "data")).resolve())
     debug_file = str(Path(os.path.join(data_path, "DEBUG")).resolve())
     # Check if 'RimSort.log' exists and rename it to 'RimSort.old.log'
@@ -314,12 +307,12 @@ if __name__ == "__main__":
     log_old_file_path = str(
         Path(os.path.join(gettempdir(), "RimSort.old.log")).resolve()
     )
-
+    # Rename old log if found
     if os.path.exists(log_file_path):
         os.replace(log_file_path, log_old_file_path)
     if os.path.exists(log_file_path):
         os.rename(log_file_path, log_old_file_path)
-
+    # Enable logging options based on presence of DEBUG file
     if os.path.exists(debug_file):
         logging_config_path = str(
             Path(os.path.join(data_path, "logger_tt-DEBUG.json")).resolve()
@@ -330,15 +323,14 @@ if __name__ == "__main__":
             Path(os.path.join(data_path, "logger_tt-INFO.json")).resolve()
         )
         DEBUG_MODE = False
-
+    # Setup log file
     logging_file_path = str(Path(os.path.join(gettempdir(), "RimSort.log")).resolve())
-
     # Setup Environment
     if "__compiled__" in globals():
         os.environ[
             "QTWEBENGINE_LOCALES_PATH"
         ] = f'{str(Path(os.path.join(os.path.dirname(__file__), "qtwebengine_locales")).resolve())}'
-    if system == "Linux":
+    if SYSTEM == "Linux":
         # logger_tt
         setup_logging(
             config_path=logging_config_path,
@@ -354,12 +346,11 @@ if __name__ == "__main__":
             log_path=logging_file_path,
             use_multiprocessing="spawn",
         )
-
     # This check is used whether RimSort is running via Nuitka bundle
     if "__compiled__" in globals():
         logger.debug("Running using Nuitka bundle")
-        if system != "Linux":
-            logger.warning(
+        if SYSTEM != "Linux":
+            logger.warning(  # MacOS and Windows do not support fork, and can only use spawn
                 "Non-Linux platform detected: using multiprocessing.freeze_support() & setting 'spawn' as MP method"
             )
             freeze_support()

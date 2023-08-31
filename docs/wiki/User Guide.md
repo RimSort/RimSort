@@ -16,8 +16,9 @@ This is an open-source project so feel free to build it yourself! Check out the 
             * `xattr -d com.apple.quarantine RimSort.app`
             * `xattr -d com.apple.quarantine libsteam_api.dylib`
 * If your Mac has M1/M2 Apple Silicon arm64 CPU...
-    * Don't enable watchdog. I think that's what messes it up when being run through Rosetta 2
-    * todds texture tool also does not currently (as of May 2023) support Mac M1/M2 arm64 CPU
+    * Don't enable watchdog when running the `i386` build through Rosetta 2.
+        * You should honestly just use the provided `arm` build as of August 2023 - courtesy of @jefferyharrell
+    * todds texture tool also does not currently (as of May 2023) support Mac M1/M2 arm64 CPU. It is not included in RimSort.
 
 #### Linux
 * Run the executable: `./RimSort`
@@ -70,7 +71,7 @@ For the most part, RimSort will adhere to this functionality.
 ### DB Builder
 
 #### Getting started
-_**NOTE:**__ DB Builder has some "soft requirements". If you are not a RimWorld Steam user, sadly, you will likely be limited in your DB building capabilities.
+_**NOTE:**_ DB Builder has some "soft requirements". If you are not a RimWorld Steam user, sadly, you will likely be limited in your DB building capabilities.
 * I believe you need to have spent at least $5 USD on your Steam account to have general access to Steam WebAPI. This is a big part of how RimSort builds the full picture of mod dependency metadata, as well as some other things.
 * In order to utilize SteamWorks, you also need to own RimWorld on Steam. This is required as far as I can tell for Steam to allow access to certain mechanisms over the SteamWorks API
 
@@ -138,7 +139,7 @@ Please review the following sections describing each mode, and why it is useful:
 
 [build database](https://github.com/RimSort/RimSort/assets/2766946/bfdc5115-e349-4c92-86bc-96a6fcd1e9c6)
 
-#### Working with RimSort git integration
+#### Working with databases via RimSort git integration
 
 _**Prerequisite:**_ Install [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) for your respective platform.
 
@@ -163,3 +164,55 @@ This is used to download/upload a Steam Workshop Database (steamDB.json) or a Co
 
 [upload database](https://github.com/RimSort/RimSort/assets/2766946/60ced0ef-adba-436f-8fbc-e593a236e389)
 
+
+### Sorting Algorithms
+RimSort exposes two sorting algorithms by default for sorting the active mod list.
+
+#### Alphabetical Sorting Algorithm
+
+The first algorithm, `Alphabetical`, which is a more simplistic approach to properly sorting. This method alphabetizes your mods after splitting it into tiers.
+
+The RimPy sorting algorithm follows, roughly, the steps described in [RimPy's Autosorting Wiki](https://github.com/rimpy-custom/RimPy/wiki/Autosorting).
+
+1. The mod list is sorted alphabetically (by mod name).
+2. Rules provided froma mod's `About.xml` files are compiled with externally provided metadata regarding that mod, are *forcefully* applied (details on what this means below).
+
+The result is a mod list that is, for the most part, sorted alphabetically, aside from the shuffling that provided load order rules impose. Mods that need to be loaded before other mods are already loaded before (due to alphabetized sorting), or are forcefully inserted before the dependent mod.
+
+> What does *forcefully* applied mean?a
+
+This can be illustrated with an example: let's say this is the list of mods: `[A, B, C, D, E]`. These are already alphabetically sorted so RimPy starts inserting them into the final load order one by one, starting with `A`. Mod `A` has no dependencies, so on iteration 1 it is inserted into the final load order, which is now `[A]`.
+
+On the next iteration, `B` is inserted. However, `B` has dependencies `loadAfter: [D, E]` (maybe this was specified in its `About.xml`). What RimPy does here is forcefully inserts `D` and `E` before `B`, but after `A`. If `D` and `E` have no dependencies of their own, then the load order looks like this after inserting `B` and its dependencies: `[A, D, E, B]`.
+
+However, there is a case where `B`'s dependencies have rules for each other, e.g. `D` should load after `E`. To cover these cases, if we inserted `D` and `E` in order, then we would violate this rule. Therefore, when inserting each dependency, we need to iterate through the sublist of already-inserted dependencies and find the latest occurrence of a dependency that is a dependency of the current dependency that we're trying to insert. The iterations for the final mod load order look like this:
+
+```
+[A]
+[A, B]
+[A, E, B]
+[A, E, D, B]
+...
+```
+
+Essentially *forcefully applied* refers to how the sorting algorithm recursively injects dependencies right before the mod that depends on them.
+
+> What does this algorithm guarantee?
+
+Assuming there are no conflicting load order rules, this algorithm guarantees that all load order rules are respected. This is because, as the algorithm iterates through the alphabetized list of mods and inserts them one by one, the current mod will either have dependencies that need to be forcefully injected befor it (in which case, the algorithm will do), or the mod has dependencies that already exist further up the list.
+
+#### Topological sorting
+
+The second algorithm, "Topological", sorts mods with [Topological sorting](https://en.wikipedia.org/wiki/Topological_sorting).
+
+The Toposort algorithm uses the [Toposort](https://pypi.org/project/toposort/) module to mathematically sort the mod list into "topological levels": mods in the first "topolevel" contains no dependencies to any other mod; once mods in the first topolevel are removed from consideration, mods in the second topolevel now contain no dependencies to other mods; once mods in the second topolevel are removed from consideration, mods in the third topolevel now contain no dependencies to other mods, and so on. This is a mathematical solution to a linear ordering of a directed graph (a directed graph is essentially what mods and their `loadAfter`s and `loadBefore`s entail).
+
+The order of mods within topolevels does not matter at all. However, RimSort's implementation of Toposort will sort the mods alphabetically within their topolevels before appending the topolevel to the final mod load order.
+
+> What does this algorithm guarantee?
+
+Assuming there are no conflicting load order rules, this algorithm guarantees a mathematically optimal ordering of the mods. Note that the resulting load order will often be significantly different from one produced by the RimPy algorithm; this is expected behavior, as the RimPy algorithm sorts mods in a completely different manner.
+
+#### Writing Your Own Algorithm
+
+This project is open source, so you can easily write and use your own sorting algorithm in the application. Sorting algorithms are contained in the [sort](./../sort/) folder. The existing algorithms are modularized to only need the dependency graph and the list of active mods as an input. Switching between different sorting algorithms is done programmatically in [main_content_panel](./../view/main_content_panel.py). On the UI, it is done by selecting the algorithm through the settings drop-down menu, configured in the [settings panel](./../panel/settings_panel.py).

@@ -24,12 +24,31 @@ if _PROCESSOR == "":
 _SYSTEM = platform.system()
 
 PY_CMD = sys.executable
-_PYINSTALLER_SPEC_PATH = f"pyinstaller_{_SYSTEM}.spec"
-if _SYSTEM == "Darwin":
+if _SYSTEM == "Darwin" and _PROCESSOR == "arm":
     _NUITKA_CMD = [
         PY_CMD,
         "-m",
         "nuitka",
+        "--assume-yes-for-downloads",
+        "--standalone",
+        # "--onefile",
+        "--macos-create-app-bundle",
+        "--macos-app-icon=./data/AppIcon_a.icns",
+        "--enable-plugin=pyside6",
+        "--include-data-dir=./data/=data",
+        "--include-data-file=./update.sh=update.sh",
+        f"--include-data-file=./SteamworksPy_{_PROCESSOR}.dylib=SteamworksPy.dylib",
+        "--include-data-file=./libsteam_api.dylib=libsteam_api.dylib",
+        "--include-data-file=./steam_appid.txt=steam_appid.txt",
+        "RimSort.py",
+        "--output-dir=./dist/",
+    ]
+elif _SYSTEM == "Darwin" and _PROCESSOR == "i386":
+    _NUITKA_CMD = [
+        PY_CMD,
+        "-m",
+        "nuitka",
+        "--assume-yes-for-downloads",
         "--standalone",
         # "--onefile",
         "--macos-create-app-bundle",
@@ -49,6 +68,7 @@ elif _SYSTEM == "Linux":
         PY_CMD,
         "-m",
         "nuitka",
+        "--assume-yes-for-downloads",
         "--standalone",
         # "--onefile",
         "--linux-icon=./data/AppIcon_a.png",
@@ -67,6 +87,7 @@ elif _SYSTEM == "Windows" and _ARCH == "64bit":
         PY_CMD,
         "-m",
         "nuitka",
+        "--assume-yes-for-downloads",
         "--standalone",
         "--disable-console",
         # "--onefile",
@@ -81,7 +102,6 @@ elif _SYSTEM == "Windows" and _ARCH == "64bit":
         "RimSort.py",
         "--output-dir=./dist",
     ]
-    _PYINSTALLER_SPEC_PATH = f"pyinstaller_{_SYSTEM}_{_ARCH}.spec"
 else:
     print(f"Unsupported SYSTEM: {_SYSTEM} {_ARCH} with {_PROCESSOR}")
     print("Exiting...")
@@ -398,11 +418,15 @@ def get_latest_todds_release() -> None:
     print(f"Latest release: {tag_name}\n")
     # Setup environment
     if _SYSTEM == "Darwin":
-        if _PROCESSOR == "i386":  # or _PROCESSOR == "arm":
+        if _PROCESSOR == "i386":
             print(f"Darwin/MacOS system detected with a {_ARCH} {_PROCESSOR} CPU...")
             target_archive = f"todds_{_SYSTEM}_{_PROCESSOR}_{tag_name}.zip"
-        else:
-            print(f"Unsupported processor {_SYSTEM} {_ARCH} {_PROCESSOR}")
+        if _PROCESSOR == "arm":
+            print(f"Darwin/MacOS system currently unsupported by todds.")
+            print(
+                "Skipping todds download. The resultant RimSort build will not include todds!"
+            )
+            return
     elif _SYSTEM == "Linux":
         print(f"Linux system detected with a {_ARCH} {_PROCESSOR} CPU...")
         target_archive = f"todds_{_SYSTEM}_{_PROCESSOR}_{tag_name}.zip"
@@ -412,7 +436,10 @@ def get_latest_todds_release() -> None:
         todds_executable_name = "todds.exe"
     else:
         print(f"Unsupported system {_SYSTEM} {_ARCH} {_PROCESSOR}")
-        exit()
+        print(
+            "Skipping todds download. The resultant RimSort build will not include todds!"
+        )
+        return
     # Try to find a valid release
     for asset in json_response["assets"]:
         if asset["name"] == target_archive:
@@ -421,7 +448,7 @@ def get_latest_todds_release() -> None:
         print(
             f"Failed to find valid joseasoler/todds release for {_SYSTEM} {_ARCH} {_PROCESSOR}"
         )
-        exit()
+        return
     # Try to download & extract todds release from browser_download_url
     target_archive_extracted = target_archive.replace(".zip", "")
     try:
@@ -445,15 +472,6 @@ def freeze_application() -> None:
     print(f"Running on {_SYSTEM} {_ARCH} {_PROCESSOR}...")
     _execute(_NUITKA_CMD)
 
-    # PyInstaller
-    # if _SYSTEM != "Linux":
-    #     _PYINSTALLER_CMD = [PY_CMD, "-m", "PyInstaller", _PYINSTALLER_SPEC_PATH]
-    # else:
-    #     _PYINSTALLER_CMD = ["pyinstaller", _PYINSTALLER_SPEC_PATH]
-
-    # print(f"Creating binary for {_ARCH} {_SYSTEM} {_PROCESSOR} in dist/")
-    # _execute(_PYINSTALLER_CMD)
-
 
 def _execute(cmd: list[str]) -> None:
     print(f"\nExecuting command: {cmd}\n")
@@ -461,26 +479,27 @@ def _execute(cmd: list[str]) -> None:
     p.wait()
 
 
-"""
-Do stuff!
-"""
+if __name__ == "__main__":
+    """
+    Do stuff!
+    """
 
-# RimSort dependencies
-print("Getting RimSort dependencies...")
-get_rimsort_deps()
+    # RimSort dependencies
+    print("Getting RimSort dependencies...")
+    get_rimsort_deps()
 
-# Build SteamworksPy
-# print("Building SteamworksPy library...")
-# build_steamworkspy()
+    # Build SteamworksPy
+    # print("Building SteamworksPy library...")
+    # build_steamworkspy()
 
-# Copy SteamworksPy prebuilt libs
-print("Copying SteamworksPy libs for release...")
-copy_swp_libs()
+    # Copy SteamworksPy prebuilt libs
+    print("Copying SteamworksPy libs for release...")
+    copy_swp_libs()
+    
+    # Grab latest todds release
+    print("Grabbing latest todds release...")
+    get_latest_todds_release()
 
-# Grab latest todds release
-print("Grabbing latest todds release...")
-get_latest_todds_release()
-
-# Build Nuitka distributable binary
-print("Building RimSort application with Nuitka...")
-_execute(_NUITKA_CMD)
+    # Build Nuitka distributable binary
+    print("Building RimSort application with Nuitka...")
+    _execute(_NUITKA_CMD)

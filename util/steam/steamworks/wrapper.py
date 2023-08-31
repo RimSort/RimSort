@@ -14,10 +14,6 @@ from util.generic import launch_game_process
 
 from model.dialogue import show_warning
 
-# print(f"steamworks.wrapper: {current_process()}")
-# print(f"__name__: {__name__}\n")
-# print(f"sys.argv: {sys.argv}")
-
 
 class SteamworksInterface:
     """

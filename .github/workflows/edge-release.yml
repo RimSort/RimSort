@@ -9,16 +9,16 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-11
+          - os: macos-10.14.6-i386 
             platform: "Darwin"
             arch: "i386"
+          - os: macos-13.5.1-arm64
+            platform: "Darwin"
+            arch: "arm"
           - os: debian-11
             platform: "Linux"
             arch: "x86_64"
-          # - os: ubuntu-20.04
-          #   platform: "Linux"
-          #   arch: "x86_64"
-          - os: windows-2019
+          - os: windows-10-21h2
             platform: "Windows"
             arch: "x86_64"
     steps:
@@ -45,13 +45,15 @@ jobs:
             libatspi2.0-dev \
             '^libxcb.*-dev'
           # Install Nuitka dependencies
-          sudo apt install -y ccache clang patchelf
-      # Check-out repository
-      - name: Checkout code at triggered tag
+          sudo apt install -y build-essential ccache clang patchelf
+      # Check-out repository (Unix)
+      - name: Checkout code at triggered tag (Unix)
+        if: matrix.platform != 'Windows'
         run: |
           if git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
             git checkout main
             git pull --rebase
+            git fetch --force --tags
             git checkout Edge
           else
             rm -rf *
@@ -59,25 +61,34 @@ jobs:
             git checkout Edge
           fi
         shell: bash
+
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # Setup Python
-      - name: Setup py39
-        if: matrix.arch != 'arm' && matrix.platform != 'Linux'
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-          architecture: 'x64'
-          cache: 'pip'
+      # Check-out repository (Windows)
+      - name: Checkout code at triggered tag (Windows)
+        if: matrix.platform == 'Windows'
+        run: |
+          $ErrorActionPreference = "Continue"
+          if ((git rev-parse --is-inside-work-tree) -eq "true") {
+            git checkout main
+            git pull --rebase
+            git fetch --force --tags
+            git checkout Edge
+          }
+          else {
+            Remove-Item * -Recurse -Force
+            git clone https://github.com/RimSort/RimSort.git .
+            git checkout Edge
+          }
+        shell: powershell
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       # Execute distribute.py on Unix
       - name: Init venv & execute distribute.py (Unix)
         if: matrix.platform != 'Windows'
         run: |
           python3.9 -m pip install --upgrade pip
           python3.9 -m pip install requests virtualenv
-          if [[ "$(uname)" == "Darwin" && "$(uname -m)" == "arm64" ]]; then
-            eval "$(pyenv init --path)"
-          fi
           if [ -f "bin/activate" ]; then
             source bin/activate
           else
@@ -94,38 +105,71 @@ jobs:
         if: matrix.platform == 'Windows'
         run: |
           python -m pip install --upgrade pip
+          python -m pip install requests virtualenv
+          if (Test-Path "Scripts\Activate.ps1") {
+            .\Scripts\Activate.ps1
+          } else {
+            python -m venv .
+            .\Scripts\Activate.ps1
+          }
           python -m pip install requests
           python distribute.py
         shell: powershell
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # Get the short SHA of the commit
-      - name: Get Short SHA
-        id: sha
-        run: echo "::set-output name=short::$(git rev-parse --short HEAD)"
-      # Env variable for zip name (Unix)
-      - name: Set up filename
+      # Get the short SHA of the commit + filename (Unix)
+      - name: Get Short SHA and Set up filename (Unix)
+        if: matrix.platform != 'Windows'
+        id: sha_unix
         run: |
+          # Get the short SHA of the commit
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          echo "::set-output name=short::$SHORT_SHA"
           # Format the filename, set in env for output
-          FILENAME="RimSort-Edge_${{ steps.sha.outputs.short }}_${{ matrix.platform }}_${{ matrix.arch }}.zip"
+          FILENAME="RimSort-Edge_${SHORT_SHA}_${{ matrix.platform }}_${{ matrix.arch }}.zip"
           echo "FILENAME=$FILENAME" >> $GITHUB_ENV
         shell: bash
+      # Get the short SHA of the commit + filename (Windows)
+      - name: Get Short SHA and Set up filename (Windows)
+        if: matrix.platform == 'Windows'
+        id: sha_win
+        run: |
+          # Get the short SHA of the commit
+          $SHORT_SHA = git rev-parse --short HEAD
+          echo "::set-output name=short::$SHORT_SHA"
+          # Format the filename, set in env for output
+          $FILENAME = "RimSort-Edge_${SHORT_SHA}_${{ matrix.platform }}_${{ matrix.arch }}.zip"
+          Add-Content -Path $env:GITHUB_ENV -Value "FILENAME=$FILENAME"
+        shell: powershell
       # Create ZIP archive of release
       - name: Create ZIP (Unix)
         if: matrix.platform != 'Windows'
         run: |
-          DIST="RimSort.dist"
           if [[ "$(uname)" == "Darwin" ]]; then
             DIST="RimSort.app"
+            echo ${{ steps.sha_unix.outputs.short }} > ./dist/$DIST/Contents/MacOS/data/SHA
+          else    
+            DIST="RimSort"
+            if [ -d "dist/$DIST" ]; then
+                echo "Existing build found. Deleting old build and replacing with a new build."
+                rm -rf "./dist/$DIST"
+            fi
+            mv dist/RimSort.dist ."/dist/$DIST"
+            echo ${{ steps.sha_unix.outputs.short }} > ./dist/$DIST/data/SHA
           fi
           cd ./dist/
           zip -r ${{ env.FILENAME }} $DIST
       - name: Create ZIP (Windows)
         if: matrix.platform == 'Windows'
         run: |
+          if (Test-Path -Path .\dist\RimSort -PathType Container) {
+              Write-Host "Existing build found. Deleting old build and replacing with new build."
+              Remove-Item -Path .\dist\RimSort -Force -Recurse
+          }
           cd ./dist/
           Rename-Item -Path RimSort.dist -NewName RimSort
-          Compress-Archive -Path RimSort -DestinationPath ${{ env.FILENAME }}
+          Set-Content -Path .\RimSort\data\SHA -Value "${{ steps.sha_win.outputs.short }}"
+          Compress-Archive -Force -Path RimSort -DestinationPath ${{ env.FILENAME }}
         shell: powershell
       # Upload ZIP as artifact
       - name: Upload ZIP as artifact
@@ -134,7 +178,7 @@ jobs:
           name: ${{ env.FILENAME }}
           path: ./dist/${{ env.FILENAME }}
     outputs:
-      sha_short: ${{ steps.sha.outputs.short }}
+      sha_short: ${{ steps.sha_unix.outputs.short }}${{ steps.sha_windows.outputs.short }}
   release:
     needs: build
     runs-on: ubuntu-latest
@@ -151,6 +195,8 @@ jobs:
       # Create Edge release
       - name: Handle the Edge Release
         run: |
+          # Obtain the GitHub Action run URL
+          ACTION_RUN_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           # Check if the "Edge" release exists
           OUTPUT=$(gh release view Edge 2>&1) || true
           if [[ $OUTPUT != *"release not found"* ]]; then
@@ -160,7 +206,9 @@ jobs:
           gh release create \
           Edge \
           --title "Edge ${{ needs.build.outputs.sha_short }}" \
-          --notes "This is a bleeding Edge release, built off of main branch. Refer to SHA ${{ needs.build.outputs.sha_short }} commit reference." \
+          --notes "This is a bleeding Edge release, built off of main branch. Refer to SHA ${{ needs.build.outputs.sha_short }} commit reference.
+          
+          [Click here to see the action that created this release.]($ACTION_RUN_URL)" \
           --prerelease
         env:
           GITHUB_TOKEN: ${{ secrets.TWSTA_ACTIONS }}
