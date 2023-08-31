@@ -6,17 +6,30 @@
 
 * RimSort is built in Python using the [PySide6](https://pypi.org/project/PySide6/) module, as well as several others. RimSort packaged for Mac, Linux, and Windows.
 
-* For a (mostly automated) experience building RimSort, please execute the provided script:
-    * Prerequisites:
-        * Linux users need `g++` compiler (just get your distro's build tools - i.e. `build-essential`, etc)
-        * MacOS users need Xcode command line tools
-        * Windows users need to install VS build tools
-        * See [Building SteamworksPy from Source](https://github.com/oceancabbage/RimSort/wiki/Development-Guide#building-steamworkspy-from-source) for supplemental information regarding this.
-    * Run `python3 distribute.py`
-        * This will build RimSort for your platform and output a build for your platform (Including all requirements and submodules)
+### Automated build process
 
+* Prerequisites:
+    * Run an OS that PySide6 supports
+        * Example "minimmum requirements":
+            * For our Linux builds, we target Debian 11.
+            * For our MacOS builds:
+                * i386 utilizes a self-hosted MacOS Mojave 10.14.6 Github Actions runner
+                * arm utilizes a self-hosted MacOS Ventura 13.5.1 Github Actions runner
+            * For Windows, we utilize a self-hosted Windows 10 LTSC IoT 21h2 Github Actions runner
+    * Install the latest version Python 3.9 for your platform from https://python.org/
+* For a (mostly automated) experience building RimSort, please execute the provided script:
+    * Run `python distribute.py`
+        * This will build RimSort for your platform and output a build for your platform (Including all requirements and submodules)
+        * If you open this file in a text editor, you can easily disable different stages of the build process by commenting out the function calls at the very bottom of the script.
 ### Manually building
 
+* It is recommended that you build inside a Python virtualenv:
+    * From inside the RimSort project root, execute:
+        * `python -m pip install virtualenv`
+        * `python -m venv .`
+        * To activate this:
+            * Unix (`*sh`): `source bin/activate`
+            * Windows (`powershell`): `.\Scripts\Activate.ps1`
 * RimSort also depends on the following submodules (run `git submodule update --init --recursive` to initiate/update):
     * [steamfiles](https://github.com/twstagg/steamfiles): used to parse Steam client acf/appinfo/manifest information
     * [SteamworksPy](https://github.com/philippj/SteamworksPy): used for interactions with the local Steam client
@@ -25,23 +38,12 @@
 
 #### Setting up Python & dependencies
 
-* RimSort uses Python, and depends on several Python modules:
-    * [Python](https://www.python.org/): programming language used to develop RimSort. Install version `3.9.6` if possible. You can do this by first installing [HomeBrew](https://docs.brew.sh/Installation) and then running `brew install python@3.9`.
-    * [natsort](https://pypi.org/project/natsort/): used for "naturally sorting" lists of folders
-    * [Nuitka](https://nuitka.net/): packages application for distribution. Install version >= `1.6-4c6` if possible. You can do this by running `pip3 install nuitka`.
-        * [This issue](https://github.com/Nuitka/Nuitka/issues/2154) was fixed in Nuitka 1.6
-            * At this time (04/09/2023) you can install with nuitka factory using `pip install -U --force-reinstall "https://github.com/Nuitka/Nuitka/archive/factory.zip"`
-    * [PySide6](https://pypi.org/project/PySide6/): GUI toolkit for building the application. Install version `5.15.2.1` if possible. You can do this by running `pip3 install PySide6==6.4.3`.
-    * [steam](https://pypi.org/project/steam/): Steam module included to be used for the WebAPI calls in the "Dynamic Query" feature. You can do this by running `pip3 install steam`.
-    * [toposort](https://pypi.org/project/toposort/): sort mods! Install version `1.9` if possible. You can do this by running `pip3 install toposort==1.9`.
-    * [xmltodict](https://pypi.org/project/xmltodict/): parse RimWorld `xml` files. Install version `0.13.0` if possible. You can do this by running `pip3 install xmltodict==0.13.0`.
-
-* You can install all of the above dependencies by executing the command at the project root: 
+* RimSort uses Python, and depends on several Python modules. You can install/view all of the above dependencies via `requirements.txt`. You can install them all at once by executing the command at the project root: 
     * `pip install -r requirements.txt`
 
 * If you are using a Mac with an Apple M1/M2 CPU, the following instructions also work for i386, if you would rather use MacPorts over Homebrew or another method. Consider the following:
     * `sudo port select --set pip3 pip39`
-    * `sudo port select --set python3 python39`
+    * `sudo port select --set python python9`
 
 * Mac users should also keep in mind that Apple has it's own Runtime Protection called [Gatekeeper](https://support.apple.com/guide/security/gatekeeper-and-runtime-protection-sec5599b66df/web)
     * This can cause issues when trying to run RimSort (or execute dependent libs)!
@@ -72,29 +74,20 @@ This is an _**OPTIONAL**_ step. You do not _**NEED**_ to do this - there are alr
 
 Reference: https://philippj.github.io/SteamworksPy/
 
-* On Linux, you need `g++'. It worked right out of the box for me on Ubuntu.
-    * Just run the included script: `python3 distribute.py`
-        * OR see the commands I use to compile it automatically using the script
-
+* On Linux, you need `g++`. It worked right out of the box for me on Ubuntu.
 * On MacOS, you need Xcode command line tools. Then, you can compile directly with the script (without a full Xcode install):
-    * Just run the included script: `python3 distribute.py`
-        * OR see the commands I use to compile it automatically using the script
-
 * On Windows, you need to get Visual Studio & Build Tools for Visual Studio:
     * https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022
         * When you run the downloaded executable, it updates and runs the Visual Studio Installer. To install only the tools you need for C++ development, select the "Desktop development with C++" workload. Alternatively, just install VS Community 2022 with the standard loadset.
-        * Just run the included script: `python3 distribute.py`
-            * OR see the commands I use to compile it automatically using the script
 
+Execute: `python -c "from distribute import build_steamworkspy; build_steamworkspy()"`
 #### Texture optimization (todds)
 * RimSort uses [todds](https://github.com/joseasoler/todds) as a dependency for texture optimization. It is shipped with RimSort, archived into the binary releases. If you are building/running from source, you will want to place a todds binary at `./todds/todds` (for Linux/Mac) OR `.\todds\todds.exe` (for Windows)
-* You can run `distribute.py` and this is automatically taken care of if you are building on a supported platform
-    * You need to enable this first. Edit the script and remove the comment for string `build_steamworkspy()`
 
 #### Running RimSort from source
 1. Clone this repository to a local directory.
 2. Ensure you have completed the prerequisite steps above.
-3. From the project root, execute `python3 RimSort.py`
+3. From the project root, execute `python RimSort.py`
 
 #### Packaging RimSort
 1. First, clone this repository to a local directory.
@@ -129,6 +122,3 @@ Please make sure if you have any feature request to check if there is already so
     * Set it up like such: https://stackoverflow.com/a/67941822
 * For quick setup, you can install some of the dependencies described above to automate your development:
     * `pip install -r requirements_develop.txt`
-
-#### Misc information
-* On MacOS, to see open sockets, use: `netstat -anvp tcp | awk 'NR<3 || /LISTEN/'`
