@@ -184,9 +184,9 @@ class ModListItemInner(QWidget):
             author_line = f"Author: {authors_tag if authors_tag else 'Not specified'}\n"
 
         package_id_line = f"PackageID: {self.json_data.get('packageid')}\n"
-        version_line = f"Version: {self.json_data.get('modVersion', 'Not specified')}\n"
+        modversion_line = f"Mod Version: {self.json_data.get('modversion', 'Not specified')}\n"
         path_line = f"Path: {self.json_data.get('path')}"
-        return name_line + author_line + package_id_line + version_line + path_line
+        return name_line + author_line + package_id_line + modversion_line + path_line
 
     def get_icon(self) -> QIcon:  # type: ignore
         """

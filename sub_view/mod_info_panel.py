@@ -96,7 +96,7 @@ class ModInfo:
         self.mod_info_author_value.setObjectName("summaryValue")
         self.mod_info_author_value.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.mod_info_author_value.setWordWrap(True)
-        self.mod_info_mod_version_label = QLabel("Mod version:")
+        self.mod_info_mod_version_label = QLabel("Mod Version:")
         self.mod_info_mod_version_label.setObjectName("summaryLabel")
         self.mod_info_mod_version_value = QLabel()
         self.mod_info_mod_version_value.setObjectName("summaryValue")
@@ -200,10 +200,10 @@ class ModInfo:
                 self.mod_info_author_value.setText(
                     f"{authors_tag if authors_tag else 'Not specified'}"
                 )
-            if isinstance(mod_info.get("modVersion"), str):
-                self.mod_info_mod_version_value.setText(mod_info.get("modVersion"))
-            elif isinstance(mod_info.get("modVersion"), dict):
-                self.mod_info_mod_version_value.setText(mod_info["modVersion"]["#text"])
+            if isinstance(mod_info.get("modversion"), str):
+                self.mod_info_mod_version_value.setText(mod_info.get("modversion"))
+            elif isinstance(mod_info.get("modversion"), dict):
+                self.mod_info_mod_version_value.setText(mod_info["modversion"]["#text"])
             else:
                 self.mod_info_mod_version_value.setText("Not specified")
         elif mod_info.get("scenario"):  # Hide mod-specific widgets, show scenario
