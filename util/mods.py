@@ -714,9 +714,6 @@ def get_game_version(game_path: str) -> str:
     """
     logger.info(f"Getting game version from Game Folder: {game_path}")
     version = ""
-    if platform.system() == "Darwin" and game_path:
-        game_path = str(Path(os.path.join(game_path, "RimWorldMac.app")).resolve())
-        logger.debug(f"Running on MacOS, generating new game path: {game_path}")
     version_file_path = str(Path(os.path.join(game_path, "Version.txt")).resolve())
     logger.debug(f"Generated Version.txt path: {version_file_path}")
     if os.path.exists(version_file_path):
@@ -790,11 +787,6 @@ def get_installed_expansions(game_path: str, game_version: str) -> Dict[str, Any
     mod_data = {}
     if game_path != "":
         logger.info(f"Getting installed expansions with game folder path: {game_path}")
-        # RimWorld folder on mac contains RimWorldMac.app which
-        # is actually a folder itself
-        if platform.system() == "Darwin" and game_path:
-            game_path = str(Path(os.path.join(game_path, "RimWorldMac.app")).resolve())
-            logger.info(f"Running on MacOS, generating new game path: {game_path}")
 
         # Get mod data
         data_path = str(Path(os.path.join(game_path, "Data")).resolve())
@@ -883,7 +875,7 @@ def get_local_mods(
             and local_path == game_path
         ):
             local_path = str(
-                Path(os.path.join(local_path, "RimWorldMac.app", "Mods")).resolve()
+                Path(os.path.join(local_path, "Mods")).resolve()
             )
             logger.info(
                 f"Running on MacOS, generating new local mods path: {local_path}"

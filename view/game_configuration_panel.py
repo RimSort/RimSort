@@ -1032,7 +1032,7 @@ class GameConfiguration(QObject):
         rimworld_mods_path = ""
         if system_name == "Darwin":
             rimworld_mods_path = str(
-                Path(os.path.join(os_paths[0], "RimWorldMac.app", "Mods")).resolve()
+                Path(os.path.join(os_paths[0], "Mods")).resolve()
             )
         else:
             rimworld_mods_path = str(Path(os.path.join(os_paths[0], "Mods")).resolve())
@@ -1162,11 +1162,19 @@ class GameConfiguration(QObject):
             possible_dir = self.game_folder_line.text()
             if os.path.exists(possible_dir):
                 start_dir = possible_dir
-        game_exe_folder_path = os.path.normpath(
-            show_dialogue_file(
-                mode="open_dir", caption="Select Game Folder", _dir=start_dir
+        system_name = platform.system()
+        if (system_name == "Darwin"):
+                game_exe_folder_path = os.path.normpath(
+                show_dialogue_file(
+                    mode="open", caption="Select Game App", _dir=start_dir
+                )
             )
-        )
+        else:
+            game_exe_folder_path = os.path.normpath(
+                show_dialogue_file(
+                    mode="open_dir", caption="Select Game Folder", _dir=start_dir
+                )
+            )
         logger.info(f"Selected path: {game_exe_folder_path}")
         if game_exe_folder_path and game_exe_folder_path != ".":
             logger.info(
@@ -1211,11 +1219,22 @@ class GameConfiguration(QObject):
             possible_dir = self.local_folder_line.text()
             if os.path.exists(possible_dir):
                 start_dir = possible_dir
-        local_path = os.path.normpath(
-            show_dialogue_file(
-                mode="open_dir", caption="Select Local Mods Folder", _dir=start_dir
+        
+        system_name = platform.system()
+        if (system_name == "Darwin"):
+            # On Mac it need too many hoops to jump through to select the mods dir
+            # Instead we ask the user to select the app and we append the mods dir to the path if needed
+            local_path = os.path.normpath(
+                show_dialogue_file(
+                    mode="open", caption="Select Game App", _dir=start_dir
+                )
             )
-        )
+        else:
+            local_path = os.path.normpath(
+                show_dialogue_file(
+                    mode="open_dir", caption="Select Local Mods Folder", _dir=start_dir
+                )
+            )
         logger.info(f"Selected path: {local_path}")
         if local_path and local_path != ".":
             logger.info(
