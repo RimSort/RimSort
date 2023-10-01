@@ -1183,7 +1183,7 @@ class GameConfiguration(QObject):
             if os.path.exists(possible_dir):
                 start_dir = possible_dir
         if (self.system_name == "Darwin"):
-                game_exe_folder_path = os.path.normpath(
+            game_exe_folder_path = os.path.normpath(
                 show_dialogue_file(
                     mode="open", caption="Select Game App", _dir=start_dir
                 )
