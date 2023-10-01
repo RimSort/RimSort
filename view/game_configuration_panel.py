@@ -52,6 +52,7 @@ class GameConfiguration(QObject):
         super(GameConfiguration, self).__init__()
 
         self.debug_mode = debug_mode
+        self.system_name = platform.system()
 
         self.storage_path = QStandardPaths.writableLocation(
             QStandardPaths.AppLocalDataLocation
@@ -187,9 +188,14 @@ class GameConfiguration(QObject):
         )
         self.wiki_button.setObjectName("RightButton")
 
-        self.game_folder_open_button = QPushButton("Game folder")
+
+        if(self.system_name=="Darwin"):
+            self.game_folder_open_button = QPushButton("Game App")
+            self.game_folder_open_button.setToolTip("Launch the game")
+        else:
+            self.game_folder_open_button = QPushButton("Game folder")
+            self.game_folder_open_button.setToolTip("Open the game installation directory")
         self.game_folder_open_button.setObjectName("LeftButton")
-        self.game_folder_open_button.setToolTip("Open the game installation directory")
         self.game_folder_line = QLineEdit()
         self.game_folder_open_button.clicked.connect(
             partial(self.open_directory, self.game_folder_line.text)
@@ -216,9 +222,15 @@ class GameConfiguration(QObject):
         self.game_folder_select_button = QPushButton("...")
         self.game_folder_select_button.clicked.connect(self.set_game_exe_folder)
         self.game_folder_select_button.setObjectName("RightButton")
-        self.game_folder_select_button.setToolTip(
-            "Set the RimWorld game installation directory"
-        )
+
+        if(self.system_name=="Darwin"):
+            self.game_folder_select_button.setToolTip(
+                "Select the RimWorld game app location"
+            )
+        else:
+            self.game_folder_select_button.setToolTip(
+                "Set the RimWorld game installation directory"
+            )
 
         self.config_folder_open_button = QPushButton("Config folder")
         self.config_folder_open_button.setObjectName("LeftButton")
@@ -254,9 +266,15 @@ class GameConfiguration(QObject):
         self.config_folder_select_button = QPushButton("...")
         self.config_folder_select_button.clicked.connect(self.set_config_folder)
         self.config_folder_select_button.setObjectName("RightButton")
-        self.config_folder_select_button.setToolTip(
-            "Set the RimWorld game configuration directory"
-        )
+        if(self.system_name=="Darwin"):
+            self.config_folder_select_button.setToolTip(
+                "Select the RimWorld game app location"
+            )
+        else:
+            self.config_folder_select_button.setToolTip(
+                "Set the RimWorld game configuration directory"
+            )
+
 
         self.local_folder_open_button = QPushButton("Local mods")
         self.local_folder_open_button.setObjectName("LeftButton")
@@ -909,10 +927,13 @@ class GameConfiguration(QObject):
         logger.info("USER ACTION: starting autodetect paths")
         os_paths = []
         darwin_paths = [
-            f"/Users/{getpass.getuser()}/Library/Application Support/Steam/steamapps/common/Rimworld/",
+            f"/Users/{getpass.getuser()}/Library/Application Support/Steam/steamapps/common/Rimworld/RimworldMac.app/",
             f"/Users/{getpass.getuser()}/Library/Application Support/Rimworld/Config/",
             f"/Users/{getpass.getuser()}/Library/Application Support/Steam/steamapps/workshop/content/294100/",
         ]
+        #If on mac and the steam path doesn't exist, try the default path
+        if not(os.path.exists(darwin_paths[0])):
+            darwin_paths[0] = f"/Applications/RimWorld.app/"
         if os.path.exists("{expanduser('~')}/.steam/debian-installation"):
             linux_paths = [
                 f"{expanduser('~')}/.steam/debian-installation/steamapps/common/RimWorld",
@@ -966,15 +987,14 @@ class GameConfiguration(QObject):
                 ).resolve()
             ),
         ]
-        system_name = platform.system()
 
-        if system_name == "Darwin":
+        if self.system_name == "Darwin":
             os_paths = darwin_paths
             logger.info(f"Running on MacOS with the following paths: {os_paths}")
-        elif system_name == "Linux":
+        elif self.system_name == "Linux":
             os_paths = linux_paths
             logger.info(f"Running on Linux with the following paths: {os_paths}")
-        elif system_name == "Windows":
+        elif self.system_name == "Windows":
             os_paths = windows_paths
             logger.info(f"Running on Windows with the following paths: {os_paths}")
         else:
@@ -1030,7 +1050,7 @@ class GameConfiguration(QObject):
 
         # Checking for an existing Rimworld/Mods folder
         rimworld_mods_path = ""
-        if system_name == "Darwin":
+        if self.system_name == "Darwin":
             rimworld_mods_path = str(
                 Path(os.path.join(os_paths[0], "Mods")).resolve()
             )
@@ -1162,8 +1182,7 @@ class GameConfiguration(QObject):
             possible_dir = self.game_folder_line.text()
             if os.path.exists(possible_dir):
                 start_dir = possible_dir
-        system_name = platform.system()
-        if (system_name == "Darwin"):
+        if (self.system_name == "Darwin"):
                 game_exe_folder_path = os.path.normpath(
                 show_dialogue_file(
                     mode="open", caption="Select Game App", _dir=start_dir
@@ -1220,15 +1239,14 @@ class GameConfiguration(QObject):
             if os.path.exists(possible_dir):
                 start_dir = possible_dir
         
-        system_name = platform.system()
-        if (system_name == "Darwin"):
+        if (self.system_name == "Darwin"):
             # On Mac it need too many hoops to jump through to select the mods dir
-            # Instead we ask the user to select the app and we append the mods dir to the path if needed
-            local_path = os.path.normpath(
+            # Instead we ask the user to select the app and we append the mods dir to the path as needed
+            local_path = os.path.join(
                 show_dialogue_file(
                     mode="open", caption="Select Game App", _dir=start_dir
-                )
-            )
+                ),"Mods")
+            
         else:
             local_path = os.path.normpath(
                 show_dialogue_file(

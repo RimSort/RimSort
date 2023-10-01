@@ -864,23 +864,6 @@ def get_local_mods(
         if game_path:
             logger.info(f"Supplementing call with game folder path: {game_path}")
 
-        # If local mods path is same as game path and we're running on a Mac,
-        # that means use the default local mods folder
-
-        system_name = platform.system()
-        if (
-            system_name == "Darwin"
-            and local_path
-            and game_path
-            and local_path == game_path
-        ):
-            local_path = str(
-                Path(os.path.join(local_path, "Mods")).resolve()
-            )
-            logger.info(
-                f"Running on MacOS, generating new local mods path: {local_path}"
-            )
-
         # Get mod data
         logger.info(f"Getting local mods from path: {local_path}")
         mod_data = parse_mod_data(local_path, "local", steam_db)
