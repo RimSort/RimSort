@@ -106,35 +106,27 @@ def show_dialogue_input(
     return response, result
 
 
-def show_dialogue_file(mode: str, caption=None, _dir=None, _filter=None):
+def show_dialogue_file(mode: str, caption=None, _dir=None, _filter=None) -> Optional[str]:
     path = None
     if mode == "open":
-        path = QFileDialog.getOpenFileName(
+        path, _ = QFileDialog.getOpenFileName(
             caption=caption,
             dir=_dir,
-            filter=_filter,
+            filter=_filter
         )
-        is_dir = False
     elif mode == "open_dir":
-        path = os.path.normpath(
-            QFileDialog.getExistingDirectory(caption="Select Game Folder", dir=_dir)
-        )
-        is_dir = True
+        path, _ = QFileDialog.getExistingDirectory(caption=caption, dir=_dir)
     elif mode == "save":
-        path = QFileDialog.getSaveFileName(
+        path, _ = QFileDialog.getSaveFileName(
             caption=caption,
             dir=_dir,
-            filter=_filter,
+            filter=_filter
         )
-        is_dir = False
     else:
+        # Handle error or unknown mode
         logger.error("File dialogue mode not implemented.")
-    # Check if we received a path from the input
-    if path and path[0]:
-        return str(path[0]) if not is_dir else path
-    else:
-        logger.debug("No path returned from user input.")
-        return path
+        return None
+    return path if path != '' else None
 
 
 def show_information(

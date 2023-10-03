@@ -2850,11 +2850,10 @@ class MainContent(QObject):
         )
         # Check file path and launch DB Builder with user configured mode
         if output_path:  # If output path was returned
-            path = output_path
-            if not path.endswith(".json"):
-                path += ".json"  # Handle file extension if needed
+            logger.info(f"Selected path: {output_path}")
+            if not output_path.endswith(".json"):
+                output_path += ".json"  # Handle file extension if needed
             # RimWorld Workshop contains 30,000+ PublishedFileIDs (mods) as of 2023!
-            logger.info(f"Selected path: {path}")
             # "No local data": Produce accurate, complete DB by QueryFiles via WebAPI
             # Queries ALL available PublishedFileIDs (mods) it can find via Steam WebAPI.
             # Does not use metadata from locally available mods. This means no packageids!
@@ -2864,7 +2863,7 @@ class MainContent(QObject):
                     appid=294100,
                     database_expiry=self.game_configuration.database_expiry,
                     mode=self.game_configuration.db_builder_include,
-                    output_database_path=path,
+                    output_database_path=output_path,
                     get_appid_deps=self.game_configuration.build_steam_database_dlc_data_toggle,
                     update=self.game_configuration.build_steam_database_update_toggle,
                 )
@@ -2877,7 +2876,7 @@ class MainContent(QObject):
                     appid=294100,
                     database_expiry=self.game_configuration.database_expiry,
                     mode=self.game_configuration.db_builder_include,
-                    output_database_path=path,
+                    output_database_path=output_path,
                     get_appid_deps=self.game_configuration.build_steam_database_dlc_data_toggle,
                     mods=self.all_mods_compiled,
                     update=self.game_configuration.build_steam_database_update_toggle,
@@ -3233,10 +3232,9 @@ class MainContent(QObject):
         )
         logger.info(f"Selected path: {output_path}")
         if output_path:
-            path = output_path
-            if not path.endswith(".json"):
+            if not output_path.endswith(".json"):
                 path += ".json"  # Handle file extension if needed
-            with open(path, "w") as output:
+            with open(output_path, "w") as output:
                 json.dump(db_output_c, output, indent=4)
         else:
             logger.warning("Steam DB Builder: User cancelled selection...")
