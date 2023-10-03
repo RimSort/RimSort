@@ -206,12 +206,12 @@ class RunnerPanel(QWidget):
                 _dir=os.path.expanduser("~"),
                 _filter="text files (*.txt)",
             )
-            logger.info(f"Selected path: {file_path[0]}")
-            if file_path[0]:
+            logger.info(f"Selected path: {file_path}")
+            if file_path:
                 logger.info(
                     "Exporting current runner output to the designated txt file"
                 )
-                with open(file_path[0], "w") as outfile:
+                with open(file_path, "w") as outfile:
                     logger.info("Writing to file")
                     outfile.write(self.text.toPlainText())
 
