@@ -51,6 +51,7 @@ from window.runner_panel import RunnerPanel
 
 
 class MetadataManager(QObject):
+    show_warning_signal = Signal(str, str, str)
     update_game_configuration_signal = Signal()
 
     def __init__(
@@ -73,6 +74,9 @@ class MetadataManager(QObject):
 
         # Initialize our threadpool for multithreaded parsing
         self.parser_threadpool = QThreadPool.globalInstance()
+
+        # Connect a warning signal for thread-safe prompts
+        self.show_warning_signal.connect(show_warning)
 
         # Store configured user preferences
         self.community_rules_repo = community_rules_repo
@@ -384,13 +388,10 @@ class MetadataManager(QObject):
                 logger.error(
                     f"The provided Version.txt path does not exist: {version_file_path}"
                 )
-                show_warning(
-                    text="Issue Getting Game Version",
-                    information=(
-                        f"RimSort is unable to get the game version at the expected path: [{version_file_path}]. "
-                        f"Is your game path [{game_path}] set correctly? There should be a Version.txt "
-                        "file in the game install directory."
-                    ),
+                self.show_warning_signal.emit(
+                    "Missing Version.txt",
+                    f"RimSort is unable to get the game version at the expected path: [{version_file_path}].",
+                    f"\nIs your game path [{game_path}] set correctly? There should be a Version.txt file in the game install directory.",
                 )
             return version.strip()
 
