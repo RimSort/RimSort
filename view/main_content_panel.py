@@ -1023,16 +1023,17 @@ class MainContent(QObject):
         # Check if paths are set
         if self.game_configuration.check_if_essential_paths_are_set():
             # Run expensive calculations to set cache data
-            local_gif_path = str(
+            loading_gif_path = str(
                 Path(
-                    os.path.join(os.path.dirname(__file__), "../data/local.gif")
+                    os.path.join(os.path.dirname(__file__), "../data/rimsort.gif")
                 ).resolve()
             )
             self._do_threaded_loading_animation(
-                gif_path=local_gif_path,
+                gif_path=loading_gif_path,
                 target=self.metadata_manager.refresh_cache,
-                text="Refreshing metadata...",
+                text="Scanning mod sources and populating metadata...",
             )
+            # self.metadata_manager.refresh_cache()
 
             # Insert mod data into list
             self.__repopulate_lists(is_initial=is_initial)

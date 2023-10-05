@@ -121,6 +121,10 @@ class WorkThread(QThread):
         self.target = target
 
     def run(self):
-        self.data = self.target()
+        try:
+            self.data = self.target()
+        except Exception as e:
+            error_message = f"{type(e).__name__}: {str(e)}\n{traceback.format_exc()}"
+            logger.error(error_message)
         logger.debug("WorkThread completed, returning to main thread")
         self.data_ready.emit(self.data)
