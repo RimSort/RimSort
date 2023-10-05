@@ -51,6 +51,7 @@ from window.runner_panel import RunnerPanel
 
 
 class MetadataManager(QObject):
+
     def __init__(
         self,
         community_rules_repo: str,
@@ -69,6 +70,10 @@ class MetadataManager(QObject):
     ) -> None:
         super(MetadataManager, self).__init__()
 
+        # Initialize our threadpool for multithreaded parsing
+        self.parser_threadpool = QThreadPool.globalInstance()
+
+        # Store configured user preferences
         self.community_rules_repo = community_rules_repo
         self.database_expiry = database_expiry
         self.dbs_path = dbs_path
@@ -81,6 +86,7 @@ class MetadataManager(QObject):
         self.steam_db_repo = steam_db_repo
         self.user_rules_file_path = user_rules_file_path
 
+        # Store parsed metadata & paths
         self.all_mods_compiled = {}
         self.info_from_steam_package_id_to_name = {}
         self.external_steam_metadata = {}
@@ -88,7 +94,9 @@ class MetadataManager(QObject):
         self.external_community_rules = {}
         self.external_community_rules_path = None
         self.external_user_rules = {}
+        self.internal_local_metadata = {}
 
+        # Store paramerters for local metadata
         self.game_path = game_path
         self.expansion_subdirectories = []
         # Empty game version string unless the data is populated
@@ -98,6 +106,7 @@ class MetadataManager(QObject):
         self.workshop_path = workshop_path
         self.workshop_subdirectories = []
 
+        # Steam(CMD) .acf file paths
         self.steamcmd_acf_path = steamcmd_acf_path
         self.steam_acf_path = str(
             Path(
@@ -109,8 +118,6 @@ class MetadataManager(QObject):
                 )
             ).resolve()
         )
-
-        self.internal_local_metadata = {}
 
     def __refresh_external_metadata(self) -> None:
         def get_configured_steam_db(
@@ -633,14 +640,9 @@ class MetadataManager(QObject):
         )
 
     def process_mods(self, directories_to_process: list, intent: str) -> Dict[str, Any]:
-        def logger_error_thread_safe(message: str):
-            logger.error(message)
-
         logger.info(
             f"Processing updates for {len(directories_to_process)} mod directories"
         )
-        # Initialize our threadpool for multithreaded parsing
-        parser_threadpool = QThreadPool.globalInstance()
         # Create a shared results dict for our metadata
         results = {}
         # Process our parsers
@@ -652,9 +654,9 @@ class MetadataManager(QObject):
                 steam_db=self.external_steam_metadata,
             )
             # Start each parser in the pool
-            parser_threadpool.start(parser)
+            self.parser_threadpool.start(parser)
         # Wait for pool to complete
-        parser_threadpool.waitForDone()
+        self.parser_threadpool.waitForDone()
         # Collect our results
         logger.info(f"Finished processing directories for {intent}")
         return results

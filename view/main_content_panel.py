@@ -1033,6 +1033,7 @@ class MainContent(QObject):
                 target=self.metadata_manager.refresh_cache,
                 text="Scanning mod sources and populating metadata...",
             )
+
             # self.metadata_manager.refresh_cache()
 
             # Insert mod data into list
