@@ -119,7 +119,7 @@ class SteamcmdInterface:
             script_path = str(
                 Path(os.path.join(gettempdir(), "steamcmd_script.txt")).resolve()
             )
-            with open(script_path, "w") as script_output:
+            with open(script_path, "w", encoding="utf-8") as script_output:
                 script_output.write("\n".join(script))
             runner.message(f"Compiled & using script: {script_path}")
             runner.execute(

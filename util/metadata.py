@@ -51,6 +51,7 @@ from window.runner_panel import RunnerPanel
 
 
 class MetadataManager(QObject):
+    update_game_configuration_signal = Signal()
 
     def __init__(
         self,
@@ -294,7 +295,7 @@ class MetadataManager(QObject):
             logger.info(
                 "Unable to find userRules.json in storage. Creating new user rules db!"
             )
-            with open(self.user_rules_file_path, "w") as output:
+            with open(self.user_rules_file_path, "w", encoding="utf-8") as output:
                 json.dump(DEFAULT_USER_RULES, output, indent=4)
             self.external_user_rules = DEFAULT_USER_RULES["rules"]
 
@@ -575,6 +576,8 @@ class MetadataManager(QObject):
         # Get and cache installed base game / DLC data
         if self.game_path and self.game_path != "":
             expansions = get_installed_expansions(self)
+        else:
+            expansions = {}
 
         # Get and cache installed local/SteamCMD Workshop mods
         if self.local_path and self.local_path != "":
@@ -600,6 +603,8 @@ class MetadataManager(QObject):
                 logger.debug(
                     "Parsing timetouched from the Workshop mod folders on the filesystem"
                 )
+        else:
+            local_mods = {}
         # Get and cache installed Steam client Workshop mods
         if self.workshop_path and self.workshop_path != "":
             workshop_mods = get_workshop_mods(self)
@@ -619,6 +624,8 @@ class MetadataManager(QObject):
                 logger.debug(
                     f"Steam client appworkshop.acf metadata not found. Skipping: {self.steam_acf_path}"
                 )
+        else:
+            workshop_mods = {}
         # One working Dictionary for ALL mods
         self.internal_local_metadata = merge_mod_data(
             self, expansions, local_mods, workshop_mods
@@ -661,7 +668,7 @@ class MetadataManager(QObject):
         logger.info(f"Finished processing directories for {intent}")
         return results
 
-    def refresh_cache(self) -> None:
+    def refresh_cache(self, is_initial=None) -> None:
         """
         This function contains expensive calculations for getting workshop
         mods, known expansions, community rules, and most importantly, calculating
@@ -673,6 +680,12 @@ class MetadataManager(QObject):
         but also after ModsConfig.xml path has been changed).
         """
         logger.info("Refreshing cache calculations")
+
+        # If we are refreshing cache from user action, update user paths as well in case of change
+        if not is_initial:
+            self.update_game_configuration_signal.emit()
+
+        # Update paths from game configuration
 
         # Populate metadata
         self.__refresh_external_metadata()
@@ -2064,7 +2077,7 @@ class SteamDatabaseBuilder(QThread):
                     prune_exceptions=DB_BUILDER_PRUNE_EXCEPTIONS,
                     recurse_exceptions=DB_BUILDER_RECURSE_EXCEPTIONS,
                 )
-                with open(self.output_database_path, "w") as output:
+                with open(self.output_database_path, "w", encoding="utf-8") as output:
                     json.dump(db_to_update, output, indent=4)
             else:
                 self.db_builder_message_output_signal.emit(
@@ -2081,13 +2094,13 @@ class SteamDatabaseBuilder(QThread):
                 self.db_builder_message_output_signal.emit(
                     f"\nCaching DynamicQuery result:\n\n{appended_path}"
                 )
-                with open(appended_path, "w") as output:
+                with open(appended_path, "w", encoding="utf-8") as output:
                     json.dump(database, output, indent=4)
         else:  # Dump new db to specified path, effectively "overwriting" the db with fresh data
             self.db_builder_message_output_signal.emit(
                 f"\nCaching DynamicQuery result:\n{self.output_database_path}"
             )
-            with open(self.output_database_path, "w") as output:
+            with open(self.output_database_path, "w", encoding="utf-8") as output:
                 json.dump(database, output, indent=4)
 
 

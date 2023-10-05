@@ -259,6 +259,9 @@ class MainContent(QObject):
             user_rules_file_path=self.game_configuration.user_rules_file_path,
             workshop_path=self.game_configuration.workshop_folder_line.text(),
         )
+        self.metadata_manager.update_game_configuration_signal.connect(
+            self.__update_game_configuration
+        )
 
         logger.info("Finished MainContent initialization")
 
@@ -487,6 +490,41 @@ class MainContent(QObject):
                 self.mod_info_panel.mod_info_package_id_value.setStyleSheet(
                     invalid_qlabel_stylesheet
                 )
+
+    def __update_game_configuration(self) -> None:
+        self.metadata_manager.community_rules_repo = (
+            self.game_configuration.community_rules_repo
+        )
+        self.metadata_manager.database_expiry = self.game_configuration.database_expiry
+        self.metadata_manager.dbs_path = self.game_configuration.dbs_path
+        self.metadata_manager.external_community_rules_metadata_source = (
+            self.game_configuration.settings_panel.external_community_rules_metadata_cb.currentText()
+        )
+        self.metadata_manager.external_community_rules_file_path = (
+            self.game_configuration.community_rules_file_path
+        )
+        self.metadata_manager.external_steam_metadata_file_path = (
+            self.game_configuration.steam_db_file_path
+        )
+        self.metadata_manager.external_steam_metadata_source = (
+            self.game_configuration.settings_panel.external_steam_metadata_cb.currentText()
+        )
+        self.metadata_manager.game_path = (
+            self.game_configuration.game_folder_line.text()
+        )
+        self.metadata_manager.local_path = (
+            self.game_configuration.local_folder_line.text()
+        )
+        self.metadata_manager.steamcmd_acf_path = (
+            self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
+        )
+        self.metadata_manager.steam_db_repo = self.game_configuration.steam_db_repo
+        self.metadata_manager.user_rules_file_path = (
+            self.game_configuration.user_rules_file_path
+        )
+        self.metadata_manager.workshop_path = (
+            self.game_configuration.workshop_folder_line.text()
+        )
 
     def __repopulate_lists(self, is_initial: bool = False) -> None:
         """
@@ -956,6 +994,7 @@ class MainContent(QObject):
         """
         Refresh expensive calculations & repopulate lists with that refreshed data
         """
+        # If we are refreshing cache from user action
         if not is_initial:
             self.active_mods_panel.list_updated = False
             # Stop the refresh button from blinking if it is blinking
@@ -1030,7 +1069,9 @@ class MainContent(QObject):
             )
             self._do_threaded_loading_animation(
                 gif_path=loading_gif_path,
-                target=self.metadata_manager.refresh_cache,
+                target=partial(
+                    self.metadata_manager.refresh_cache, is_initial=is_initial
+                ),
                 text="Scanning mod sources and populating metadata...",
             )
 
@@ -3014,7 +3055,7 @@ class MainContent(QObject):
         if output_path:
             if not output_path.endswith(".json"):
                 path += ".json"  # Handle file extension if needed
-            with open(output_path, "w") as output:
+            with open(output_path, "w", encoding="utf-8") as output:
                 json.dump(db_output_c, output, indent=4)
         else:
             logger.warning("Steam DB Builder: User cancelled selection...")
@@ -3066,7 +3107,7 @@ class MainContent(QObject):
             information=f"This operation will overwrite the {rules_source} database located at the following path:\n\n{path}",
         )
         if answer == "&Yes":
-            with open(path, "w") as output:
+            with open(path, "w", encoding="utf-8") as output:
                 json.dump(db_output_c, output, indent=4)
             self._do_refresh()
         else:
