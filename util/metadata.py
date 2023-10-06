@@ -364,7 +364,9 @@ class MetadataManager(QObject):
             """
             logger.info(f"Getting game version from Game Folder: {game_path}")
             version = ""
-            version_file_path = str(Path(os.path.join(game_path, "Version.txt")).resolve())
+            version_file_path = str(
+                Path(os.path.join(game_path, "Version.txt")).resolve()
+            )
             logger.debug(f"Generated Version.txt path: {version_file_path}")
             if os.path.exists(version_file_path):
                 try:
@@ -1067,7 +1069,8 @@ class ModParser(QRunnable):
         steam_db: Dict[str, Any],
     ):
         super(ModParser, self).__init__()
-        logger.debug("Initializing ModParser")
+        # This is very spammy - only enable if you are really wanting to debug this class.
+        # logger.debug("Initializing ModParser")
         self.directory = directory
         self.intent = intent
         self.results = results

@@ -1075,8 +1075,17 @@ class MainContent(QObject):
                 text="Scanning mod sources and populating metadata...",
             )
 
-            # self.metadata_manager.refresh_cache()
-
+            # Set the game version string in the UI and pass it to the active_mods_panel
+            self.game_configuration.game_version_line.setText(
+                self.metadata_manager.game_version
+            )
+            self.active_mods_panel.game_version = self.metadata_manager.game_version
+            # Feed all_mods and Steam DB info to Active Mods list to surface
+            # names instead of package_ids when able
+            self.active_mods_panel.all_mods = self.metadata_manager.all_mods_compiled
+            self.active_mods_panel.steam_package_id_to_name = (
+                self.metadata_manager.info_from_steam_package_id_to_name
+            )
             # Insert mod data into list
             self.__repopulate_lists(is_initial=is_initial)
 
