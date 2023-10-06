@@ -86,14 +86,14 @@ class ModListItemInner(QWidget):
             if self.json_data.get("csharp"):
                 self.csharp_icon = QLabel()
                 self.csharp_icon.setPixmap(
-                    QIcon(self.csharp_icon_path).pixmap(QSize(20, 20))
+                    ModListIcons.csharp_icon().pixmap(QSize(20, 20))
                 )
                 self.csharp_icon.setToolTip(
                     "Contains custom C# assemblies (custom code)"
                 )
             else:
                 self.xml_icon = QLabel()
-                self.xml_icon.setPixmap(QIcon(self.xml_icon_path).pixmap(QSize(20, 20)))
+                self.xml_icon.setPixmap(ModListIcons.xml_icon().pixmap(QSize(20, 20)))
                 self.xml_icon.setToolTip("Contains custom content (textures / XML)")
         self.git_icon = None
         if (
@@ -102,13 +102,13 @@ class ModListItemInner(QWidget):
             and not self.json_data.get("steamcmd")
         ):
             self.git_icon = QLabel()
-            self.git_icon.setPixmap(QIcon(self.git_icon_path).pixmap(QSize(20, 20)))
+            self.git_icon.setPixmap(ModListIcons.git_icon().pixmap(QSize(20, 20)))
             self.git_icon.setToolTip("Local mod that contains a git repository")
         self.steamcmd_icon = None
         if self.json_data["data_source"] == "local" and self.json_data.get("steamcmd"):
             self.steamcmd_icon = QLabel()
             self.steamcmd_icon.setPixmap(
-                QIcon(self.steamcmd_icon_path).pixmap(QSize(20, 20))
+                ModListIcons.steamcmd_icon().pixmap(QSize(20, 20))
             )
             self.steamcmd_icon.setToolTip("Local mod that can be used with SteamCMD")
         # Warning icon hidden by default
@@ -117,7 +117,7 @@ class ModListItemInner(QWidget):
             partial(self.toggle_warning_signal.emit, self.json_data["packageid"])
         )
         self.warning_icon_label.setPixmap(
-            QIcon(self.warning_icon_path).pixmap(QSize(20, 20))
+            ModListIcons.warning_icon().pixmap(QSize(20, 20))
         )
         self.warning_icon_label.setHidden(True)
 
