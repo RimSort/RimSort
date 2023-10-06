@@ -51,6 +51,8 @@ from window.runner_panel import RunnerPanel
 
 
 class MetadataManager(QObject):
+    _instance: Optional["MetadataManager"] = None
+
     show_warning_signal = Signal(str, str, str)
     update_game_configuration_signal = Signal()
 
@@ -70,59 +72,70 @@ class MetadataManager(QObject):
         user_rules_file_path: str,
         workshop_path: str,
     ) -> None:
-        super(MetadataManager, self).__init__()
+        if not hasattr(self, "initialized"):
+            self.initialized = True
 
-        # Initialize our threadpool for multithreaded parsing
-        self.parser_threadpool = QThreadPool.globalInstance()
+            super(MetadataManager, self).__init__()
 
-        # Connect a warning signal for thread-safe prompts
-        self.show_warning_signal.connect(show_warning)
+            # Initialize our threadpool for multithreaded parsing
+            self.parser_threadpool = QThreadPool.globalInstance()
 
-        # Store configured user preferences
-        self.community_rules_repo = community_rules_repo
-        self.database_expiry = database_expiry
-        self.dbs_path = dbs_path
-        self.external_community_rules_metadata_source = (
-            external_community_rules_metadata_source
-        )
-        self.external_community_rules_file_path = external_community_rules_file_path
-        self.external_steam_metadata_source = external_steam_metadata_source
-        self.external_steam_metadata_file_path = external_steam_metadata_file_path
-        self.steam_db_repo = steam_db_repo
-        self.user_rules_file_path = user_rules_file_path
+            # Connect a warning signal for thread-safe prompts
+            self.show_warning_signal.connect(show_warning)
 
-        # Store parsed metadata & paths
-        self.all_mods_compiled = {}
-        self.info_from_steam_package_id_to_name = {}
-        self.external_steam_metadata = {}
-        self.external_steam_metadata_path = None
-        self.external_community_rules = {}
-        self.external_community_rules_path = None
-        self.external_user_rules = {}
-        self.internal_local_metadata = {}
+            # Store configured user preferences
+            self.community_rules_repo = community_rules_repo
+            self.database_expiry = database_expiry
+            self.dbs_path = dbs_path
+            self.external_community_rules_metadata_source = (
+                external_community_rules_metadata_source
+            )
+            self.external_community_rules_file_path = external_community_rules_file_path
+            self.external_steam_metadata_source = external_steam_metadata_source
+            self.external_steam_metadata_file_path = external_steam_metadata_file_path
+            self.steam_db_repo = steam_db_repo
+            self.user_rules_file_path = user_rules_file_path
 
-        # Store paramerters for local metadata
-        self.game_path = game_path
-        self.expansion_subdirectories = []
-        # Empty game version string unless the data is populated
-        self.game_version = ""
-        self.local_path = local_path
-        self.local_subdirectories = []
-        self.workshop_path = workshop_path
-        self.workshop_subdirectories = []
+            # Store parsed metadata & paths
+            self.all_mods_compiled = {}
+            self.info_from_steam_package_id_to_name = {}
+            self.external_steam_metadata = {}
+            self.external_steam_metadata_path = None
+            self.external_community_rules = {}
+            self.external_community_rules_path = None
+            self.external_user_rules = {}
+            self.internal_local_metadata = {}
 
-        # Steam(CMD) .acf file paths
-        self.steamcmd_acf_path = steamcmd_acf_path
-        self.steam_acf_path = str(
-            Path(
-                # This is just getting the path 2 directories up from content/294100,
-                # so that we can find workshop/appworkshop_294100.acf
-                os.path.join(
-                    os.path.split(os.path.split(self.workshop_path)[0])[0],
-                    "appworkshop_294100.acf",
-                )
-            ).resolve()
-        )
+            # Store paramerters for local metadata
+            self.game_path = game_path
+            self.expansion_subdirectories = []
+            # Empty game version string unless the data is populated
+            self.game_version = ""
+            self.local_path = local_path
+            self.local_subdirectories = []
+            self.workshop_path = workshop_path
+            self.workshop_subdirectories = []
+
+            # Steam(CMD) .acf file paths
+            self.steamcmd_acf_path = steamcmd_acf_path
+            self.steam_acf_path = str(
+                Path(
+                    # This is just getting the path 2 directories up from content/294100,
+                    # so that we can find workshop/appworkshop_294100.acf
+                    os.path.join(
+                        os.path.split(os.path.split(self.workshop_path)[0])[0],
+                        "appworkshop_294100.acf",
+                    )
+                ).resolve()
+            )
+
+    @classmethod
+    def instance(cls, *args: Any, **kwargs: Any) -> "MetadataManager":
+        if cls._instance is None:
+            cls._instance = cls(*args, **kwargs)
+        elif args or kwargs:
+            raise ValueError("MetadataManager instance has already been initialized.")
+        return cls._instance
 
     def __refresh_external_metadata(self) -> None:
         def get_configured_steam_db(

@@ -122,6 +122,34 @@ class MainContent(QObject):
         logger.info("Loading GameConfiguration instance")
         self.game_configuration = game_configuration
 
+        # Initialize Steam(CMD) integraations
+        self.steam_browser = SteamcmdDownloader = None
+        self.steamcmd_runner = RunnerPanel = None
+        self.steamcmd_wrapper = SteamcmdInterface.instance(
+            self.game_configuration.steamcmd_install_path,
+            self.game_configuration.steamcmd_validate_downloads_toggle,
+        )
+
+        # Initialize MetadataManager
+        self.metadata_manager = MetadataManager.instance(
+            community_rules_repo=self.game_configuration.community_rules_repo,
+            database_expiry=self.game_configuration.database_expiry,
+            dbs_path=self.game_configuration.dbs_path,
+            external_community_rules_metadata_source=self.game_configuration.settings_panel.external_community_rules_metadata_cb.currentText(),
+            external_community_rules_file_path=self.game_configuration.community_rules_file_path,
+            external_steam_metadata_file_path=self.game_configuration.steam_db_file_path,
+            external_steam_metadata_source=self.game_configuration.settings_panel.external_steam_metadata_cb.currentText(),
+            game_path=self.game_configuration.game_folder_line.text(),
+            local_path=self.game_configuration.local_folder_line.text(),
+            steamcmd_acf_path=self.steamcmd_wrapper.steamcmd_appworkshop_acf_path,
+            steam_db_repo=self.game_configuration.steam_db_repo,
+            user_rules_file_path=self.game_configuration.user_rules_file_path,
+            workshop_path=self.game_configuration.workshop_folder_line.text(),
+        )
+        self.metadata_manager.update_game_configuration_signal.connect(
+            self.__update_game_configuration
+        )
+
         # BASE LAYOUT
         self.main_layout = QHBoxLayout()
         self.main_layout.setContentsMargins(
@@ -137,12 +165,10 @@ class MainContent(QObject):
         # INSTANTIATE WIDGETS
         self.mod_info_panel = ModInfo()
         self.active_mods_panel = ActiveModList(
-            mod_type_filter_enable=self.game_configuration.mod_type_filter_toggle,
-            local_mods_path=self.game_configuration.local_folder_line.text(),
+            mod_type_filter_enable=self.game_configuration.mod_type_filter_toggle
         )
         self.inactive_mods_panel = InactiveModList(
-            mod_type_filter_enable=self.game_configuration.mod_type_filter_toggle,
-            local_mods_path=self.game_configuration.local_folder_line.text(),
+            mod_type_filter_enable=self.game_configuration.mod_type_filter_toggle
         )
         self.actions_panel = Actions()
 
@@ -224,44 +250,11 @@ class MainContent(QObject):
         # Instantiate query runner
         self.query_runner = RunnerPanel = None
 
-        # Instantiate steamcmd utils
-        self.steam_browser = SteamcmdDownloader = None
-        self.steamcmd_runner = RunnerPanel = None
-        self.steamcmd_wrapper = SteamcmdInterface(
-            self.game_configuration.steamcmd_install_path,
-            self.game_configuration.steamcmd_validate_downloads_toggle,
-        )
-        self.active_mods_panel.active_mods_list.steamcmd_appworkshop_acf_path = (
-            self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
-        )
-        self.inactive_mods_panel.inactive_mods_list.steamcmd_appworkshop_acf_path = (
-            self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
-        )
-
         # Steamworks bool - use this to check any Steamworks processes you try to initialize
         self.steamworks_in_use = False
 
         # Instantiate todds runner
         self.todds_runner = RunnerPanel = None
-
-        self.metadata_manager = MetadataManager(
-            community_rules_repo=self.game_configuration.community_rules_repo,
-            database_expiry=self.game_configuration.database_expiry,
-            dbs_path=self.game_configuration.dbs_path,
-            external_community_rules_metadata_source=self.game_configuration.settings_panel.external_community_rules_metadata_cb.currentText(),
-            external_community_rules_file_path=self.game_configuration.community_rules_file_path,
-            external_steam_metadata_file_path=self.game_configuration.steam_db_file_path,
-            external_steam_metadata_source=self.game_configuration.settings_panel.external_steam_metadata_cb.currentText(),
-            game_path=self.game_configuration.game_folder_line.text(),
-            local_path=self.game_configuration.local_folder_line.text(),
-            steamcmd_acf_path=self.steamcmd_wrapper.steamcmd_appworkshop_acf_path,
-            steam_db_repo=self.game_configuration.steam_db_repo,
-            user_rules_file_path=self.game_configuration.user_rules_file_path,
-            workshop_path=self.game_configuration.workshop_folder_line.text(),
-        )
-        self.metadata_manager.update_game_configuration_signal.connect(
-            self.__update_game_configuration
-        )
 
         logger.info("Finished MainContent initialization")
 
@@ -1078,13 +1071,6 @@ class MainContent(QObject):
             # Set the game version string in the UI and pass it to the active_mods_panel
             self.game_configuration.game_version_line.setText(
                 self.metadata_manager.game_version
-            )
-            self.active_mods_panel.game_version = self.metadata_manager.game_version
-            # Feed all_mods and Steam DB info to Active Mods list to surface
-            # names instead of package_ids when able
-            self.active_mods_panel.all_mods = self.metadata_manager.all_mods_compiled
-            self.active_mods_panel.steam_package_id_to_name = (
-                self.metadata_manager.info_from_steam_package_id_to_name
             )
             # Insert mod data into list
             self.__repopulate_lists(is_initial=is_initial)
@@ -1974,7 +1960,7 @@ class MainContent(QObject):
             self.game_configuration._update_persistent_storage(
                 {"steamcmd_install_path": steamcmd_folder}
             )
-            self.steamcmd_wrapper = SteamcmdInterface(
+            self.steamcmd_wrapper = SteamcmdInterface.instance(
                 self.game_configuration.steamcmd_install_path,
                 self.game_configuration.steamcmd_validate_downloads_toggle,
             )
