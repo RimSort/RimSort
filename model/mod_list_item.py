@@ -242,12 +242,12 @@ class ModListIcons:
     _ludeon_icon_path: str = str(Path(os.path.join(_data_path, "ludeon_icon.png")).resolve())
     _local_icon_path: str = str(Path(os.path.join(_data_path, "local_icon.png")).resolve())
     _steam_icon_path: str = str(Path(os.path.join(_data_path, "steam_icon.png")).resolve())
-    _csharp_icon_path = str(Path(os.path.join(_data_path, "csharp.png")).resolve())
-    _xml_icon_path = str(Path(os.path.join(_data_path, "xml.png")).resolve())
-    _git_icon_path = str(Path(os.path.join(_data_path, "git.png")).resolve())
-    _steamcmd_icon_path = str(Path(os.path.join(_data_path, "steamcmd_icon.png")).resolve())
-    _warning_icon_path = str(Path(os.path.join(_data_path, "warning.png")).resolve())
-    _error_icon_path = str(Path(os.path.join(_data_path, "error.png")).resolve())
+    _csharp_icon_path: str = str(Path(os.path.join(_data_path, "csharp.png")).resolve())
+    _xml_icon_path: str = str(Path(os.path.join(_data_path, "xml.png")).resolve())
+    _git_icon_path: str = str(Path(os.path.join(_data_path, "git.png")).resolve())
+    _steamcmd_icon_path: str = str(Path(os.path.join(_data_path, "steamcmd_icon.png")).resolve())
+    _warning_icon_path: str = str(Path(os.path.join(_data_path, "warning.png")).resolve())
+    _error_icon_path: str = str(Path(os.path.join(_data_path, "error.png")).resolve())
 
     _ludeon_icon: Optional[QIcon] = None
     _local_icon: Optional[QIcon] = None
