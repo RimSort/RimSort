@@ -6,6 +6,8 @@ from PySide6.QtCore import QRectF, QSize, Qt, Signal
 from PySide6.QtGui import QFontMetrics, QIcon, QResizeEvent
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QStyle, QWidget
 
+from util.ModListIcons import ModListIcons
+
 
 class ClickableQLabel(QLabel):
     clicked = Signal()
@@ -196,11 +198,11 @@ class ModListItemInner(QWidget):
         :return: QIcon object set to the path of the corresponding icon image
         """
         if self.json_data.get("data_source") == "expansion":
-            return QIcon(self.ludeon_icon_path)
+            return ModListIcons.ludeon_icon()
         elif self.json_data.get("data_source") == "local":
-            return QIcon(self.local_icon_path)
+            return ModListIcons.local_icon()
         elif self.json_data.get("data_source") == "workshop":
-            return QIcon(self.steam_icon_path)
+            return ModListIcons.steam_icon()
         else:
             logger.error(
                 f"No type found for ModListItemInner with package id {self.json_data.get('packageid')}"
