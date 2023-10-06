@@ -55,6 +55,15 @@ def delete_files_except_extension(directory, extension):
         logger.debug(f"Deleted: {directory}")
 
 
+def directories(mods_path):
+    try:
+        with os.scandir(mods_path) as directories:
+            return [directory.path for directory in directories if directory.is_dir()]
+    except OSError as e:
+        logger.error(f"Error reading directory {mods_path}: {e}")
+        return []
+
+
 def handle_remove_read_only(func, path: str, exc):
     excvalue = exc[1]
     if func in (os.rmdir, os.remove, os.unlink) and excvalue.errno == EACCES:

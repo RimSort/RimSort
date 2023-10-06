@@ -563,7 +563,7 @@ class GameConfiguration(QObject):
             os.makedirs(self.dbs_path)
         if not os.path.exists(self.user_rules_file_path):
             initial_rules_db = DEFAULT_USER_RULES
-            with open(self.user_rules_file_path, "w") as output:
+            with open(self.user_rules_file_path, "w", encoding="utf-8") as output:
                 json.dump(initial_rules_db, output, indent=4)
         # Always check for settings path, create with defaults if it doesn't exist
         settings_path = str(
@@ -593,7 +593,7 @@ class GameConfiguration(QObject):
             default_settings["steamcmd_install_path"] = self.storage_path
             json_object = json.dumps(default_settings, indent=4)
             logger.info(f"Writing default settings to: {settings_path}")
-            with open(settings_path, "w") as outfile:
+            with open(settings_path, "w", encoding="utf-8") as outfile:
                 outfile.write(json_object)
         # RimSort depends on this settings.json file existing.
         # This should automatically be prepopulated with defaults above, or from user configuration.
@@ -909,7 +909,7 @@ class GameConfiguration(QObject):
                 settings_data = json.load(infile)
                 settings_data.update(settings)
                 json_object = json.dumps(settings_data, indent=4)
-                with open(settings_path, "w") as outfile:
+                with open(settings_path, "w", encoding="utf-8") as outfile:
                     outfile.write(json_object)
                     logger.info("JSON data written")
         else:
