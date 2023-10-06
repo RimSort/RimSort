@@ -87,9 +87,8 @@ def launch_game_process(game_install_path: str, args: list) -> None:
     if game_install_path:
         system_name = platform.system()
         if system_name == "Darwin":
-            executable_path = str(
-                Path(os.path.join(game_install_path, "RimWorldMac.app")).resolve()
-            )
+            # MacOS
+            executable_path = str(game_install_path)
         elif system_name == "Linux":
             # Linux
             executable_path = str(

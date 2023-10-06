@@ -364,11 +364,6 @@ class MetadataManager(QObject):
             """
             logger.info(f"Getting game version from Game Folder: {game_path}")
             version = ""
-            if platform.system() == "Darwin" and game_path:
-                game_path = str(
-                    Path(os.path.join(game_path, "RimWorldMac.app")).resolve()
-                )
-                logger.debug(f"Running on MacOS, generating new game path: {game_path}")
             version_file_path = str(
                 Path(os.path.join(game_path, "Version.txt")).resolve()
             )
@@ -411,15 +406,6 @@ class MetadataManager(QObject):
                 logger.info(
                     f"Getting installed expansions with game folder path: {self.game_path}"
                 )
-                # RimWorld folder on MacOS contains RimWorldMac.app which
-                # is actually a folder itself
-                if platform.system() == "Darwin" and self.game_path:
-                    self.game_path = str(
-                        Path(os.path.join(self.game_path, "RimWorldMac.app")).resolve()
-                    )
-                    logger.info(
-                        f"Running on MacOS, generating new game path: {self.game_path}"
-                    )
 
                 # Get mod data
                 data_path = str(Path(os.path.join(self.game_path, "Data")).resolve())
@@ -500,25 +486,6 @@ class MetadataManager(QObject):
                 if self.game_path:
                     logger.info(
                         f"Supplementing call with game folder path: {self.game_path}"
-                    )
-
-                # If local mods path is same as game path and we're running on a Mac,
-                # that means use the default local mods folder
-
-                system_name = platform.system()
-                if (
-                    system_name == "Darwin"
-                    and self.local_path
-                    and self.game_path
-                    and self.local_path == self.game_path
-                ):
-                    local_path = str(
-                        Path(
-                            os.path.join(self.local_path, "RimWorldMac.app", "Mods")
-                        ).resolve()
-                    )
-                    logger.info(
-                        f"Running on MacOS, generating new local mods path: {local_path}"
                     )
 
                 # Get mod data
