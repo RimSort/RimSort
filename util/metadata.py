@@ -1102,7 +1102,8 @@ class ModParser(QRunnable):
         steam_db: Dict[str, Any],
     ):
         super(ModParser, self).__init__()
-        logger.debug("Initializing ModParser")
+        # This is very spammy - only enable if you are really wanting to debug this class.
+        # logger.debug("Initializing ModParser")
         self.directory = directory
         self.intent = intent
         self.results = results
