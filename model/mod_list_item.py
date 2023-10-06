@@ -240,10 +240,22 @@ class ModListIcons:
     _ludeon_icon_path: str = str(Path(os.path.join(os.path.dirname(__file__), "../data/ludeon_icon.png")).resolve())
     _local_icon_path: str = str(Path(os.path.join(os.path.dirname(__file__), "../data/local_icon.png")).resolve())
     _steam_icon_path: str = str(Path(os.path.join(os.path.dirname(__file__), "../data/steam_icon.png")).resolve())
+    _csharp_icon_path = str(Path(os.path.join(os.path.dirname(__file__), "../data/csharp.png")).resolve())
+    _xml_icon_path = str(Path(os.path.join(os.path.dirname(__file__), "../data/xml.png")).resolve())
+    _git_icon_path = str(Path(os.path.join(os.path.dirname(__file__), "../data/git.png")).resolve())
+    _steamcmd_icon_path = str(Path(os.path.join(os.path.dirname(__file__), "../data/steamcmd_icon.png")).resolve())
+    _warning_icon_path = str(Path(os.path.join(os.path.dirname(__file__), "../data/warning.png")).resolve())
+    _error_icon_path = str(Path(os.path.join(os.path.dirname(__file__), "../data/error.png")).resolve())
 
     _ludeon_icon: QIcon = None
     _local_icon: QIcon = None
     _steam_icon: QIcon = None
+    _csharp_icon: QIcon = None
+    _xml_icon: QIcon = None
+    _git_icon: QIcon = None
+    _steamcmd_icon: QIcon = None
+    _warning_icon: QIcon = None
+    _error_icon: QIcon = None
 
     @classmethod
     def ludeon_icon(cls) -> QIcon:
@@ -262,3 +274,39 @@ class ModListIcons:
         if cls._steam_icon is None:
             cls._steam_icon = QIcon(cls._steam_icon_path)
         return cls._steam_icon
+
+    @classmethod
+    def csharp_icon(cls) -> QIcon:
+        if cls._csharp_icon is None:
+            cls._csharp_icon = QIcon(cls._csharp_icon_path)
+        return cls._csharp_icon
+
+    @classmethod
+    def xml_icon(cls) -> QIcon:
+        if cls._xml_icon is None:
+            cls._xml_icon = QIcon(cls._xml_icon_path)
+        return cls._xml_icon
+
+    @classmethod
+    def git_icon(cls) -> QIcon:
+        if cls._git_icon is None:
+            cls._git_icon = QIcon(cls._git_icon_path)
+        return cls._git_icon
+
+    @classmethod
+    def steamcmd_icon(cls) -> QIcon:
+        if cls._steamcmd_icon is None:
+            cls._steamcmd_icon = QIcon(cls._steamcmd_icon_path)
+        return cls._steamcmd_icon
+
+    @classmethod
+    def warning_icon(cls) -> QIcon:
+        if cls._warning_icon is None:
+            cls._warning_icon = QIcon(cls._warning_icon_path)
+        return cls._warning_icon
+
+    @classmethod
+    def error_icon(cls) -> QIcon:
+        if cls._error_icon is None:
+            cls._error_icon = QIcon(cls._error_icon_path)
+        return cls._error_icon
