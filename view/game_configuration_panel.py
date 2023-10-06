@@ -189,7 +189,7 @@ class GameConfiguration(QObject):
         self.wiki_button.setObjectName("RightButton")
 
 
-        if(self.system_name=="Darwin"):
+        if(self.system_name == "Darwin"):
             self.game_folder_open_button = QPushButton("Game App")
             self.game_folder_open_button.setToolTip("Launch the game")
         else:
@@ -223,7 +223,7 @@ class GameConfiguration(QObject):
         self.game_folder_select_button.clicked.connect(self.set_game_exe_folder)
         self.game_folder_select_button.setObjectName("RightButton")
 
-        if(self.system_name=="Darwin"):
+        if(self.system_name == "Darwin"):
             self.game_folder_select_button.setToolTip(
                 "Select the RimWorld game app location"
             )
@@ -266,7 +266,7 @@ class GameConfiguration(QObject):
         self.config_folder_select_button = QPushButton("...")
         self.config_folder_select_button.clicked.connect(self.set_config_folder)
         self.config_folder_select_button.setObjectName("RightButton")
-        if(self.system_name=="Darwin"):
+        if(self.system_name == "Darwin"):
             self.config_folder_select_button.setToolTip(
                 "Select the RimWorld game app location"
             )
@@ -1237,16 +1237,16 @@ class GameConfiguration(QObject):
         if self.local_folder_line.text():
             possible_dir = self.local_folder_line.text()
             if os.path.exists(possible_dir):
-                start_dir = possible_dir
-        
+                start_dir = possible_dir       
         if (self.system_name == "Darwin"):
             # On Mac it need too many hoops to jump through to select the mods dir
             # Instead we ask the user to select the app and we append the mods dir to the path as needed
             local_path = os.path.join(
+                os.path.normpath(
                 show_dialogue_file(
                     mode="open", caption="Select Game App", _dir=start_dir
-                ),"Mods")
-            
+                )), "Mods"
+            )      
         else:
             local_path = os.path.normpath(
                 show_dialogue_file(
