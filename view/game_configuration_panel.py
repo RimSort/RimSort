@@ -191,7 +191,7 @@ class GameConfiguration(QObject):
 
         if(self.system_name == "Darwin"):
             self.game_folder_open_button = QPushButton("Game App")
-            self.game_folder_open_button.setToolTip("Launch the game")
+            self.game_folder_open_button.setToolTip("Open Game Folder")
         else:
             self.game_folder_open_button = QPushButton("Game folder")
             self.game_folder_open_button.setToolTip("Open the game installation directory")

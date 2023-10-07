@@ -179,7 +179,10 @@ def platform_specific_open(path: str) -> None:
     system_name = platform.system()
     if system_name == "Darwin":
         logger.info(f"Opening {path} with subprocess open on MacOS")
-        subprocess.Popen(["open", path])
+        if(path.endswith(".app") or path.endswith(".app/")):
+            subprocess.Popen(["open", path, "-R"])
+        else:
+            subprocess.Popen(["open", path])
     elif system_name == "Windows":
         logger.info(f"Opening {path} with startfile on Windows")
         os.startfile(path)  # type: ignore
