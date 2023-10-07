@@ -28,6 +28,7 @@ from util.generic import (
 )
 from util.metadata import MetadataManager
 from util.steam.steamcmd.wrapper import SteamcmdInterface
+from view.game_configuration_panel import GameConfiguration
 
 
 class ModListWidget(QListWidget):
@@ -503,17 +504,17 @@ class ModListWidget(QListWidget):
             ):
                 workshop_actions_menu = QMenu(title="Workshop mods options")
                 if (
-                    MetadataManager.instance().local_path
+                    GameConfiguration.instance().local_folder_line.text()
                     and convert_local_steamcmd_action
                 ):
                     workshop_actions_menu.addAction(convert_local_steamcmd_action)
                 if (
-                    MetadataManager.instance().local_path
+                    GameConfiguration.instance().local_folder_line.text()
                     and convert_steamcmd_local_action
                 ):
                     workshop_actions_menu.addAction(convert_steamcmd_local_action)
                 if (
-                    MetadataManager.instance().local_path
+                    GameConfiguration.instance().local_folder_line.text()
                     and convert_workshop_local_action
                 ):
                     workshop_actions_menu.addAction(convert_workshop_local_action)
@@ -562,14 +563,15 @@ class ModListWidget(QListWidget):
                         original_mod_path = str(
                             Path(
                                 os.path.join(
-                                    MetadataManager.instance().local_path, folder_name
+                                    GameConfiguration.instance().local_folder_line.text(),
+                                    folder_name,
                                 )
                             ).resolve()
                         )
                         renamed_mod_path = str(
                             Path(
                                 os.path.join(
-                                    MetadataManager.instance().local_path,
+                                    GameConfiguration.instance().local_folder_line.text(),
                                     publishedfileid,
                                 )
                             ).resolve()
@@ -604,7 +606,7 @@ class ModListWidget(QListWidget):
                         original_mod_path = str(
                             Path(
                                 os.path.join(
-                                    MetadataManager.instance().local_path,
+                                    GameConfiguration.instance().local_folder_line.text(),
                                     publishedfileid,
                                 )
                             ).resolve()
@@ -612,7 +614,8 @@ class ModListWidget(QListWidget):
                         renamed_mod_path = str(
                             Path(
                                 os.path.join(
-                                    MetadataManager.instance().local_path, mod_name
+                                    GameConfiguration.instance().local_folder_line.text(),
+                                    mod_name,
                                 )
                             ).resolve()
                         )
@@ -669,7 +672,7 @@ class ModListWidget(QListWidget):
                         renamed_mod_path = str(
                             Path(
                                 os.path.join(
-                                    MetadataManager.instance().local_path,
+                                    GameConfiguration.instance().local_folder_line.text(),
                                     steam_publishedfileid_to_name[
                                         publishedfileid_from_folder_name
                                     ],

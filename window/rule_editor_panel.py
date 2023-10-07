@@ -100,24 +100,29 @@ class RuleEditor(QWidget):
         self.local_rules_hidden = None
         self.community_rules = (
             MetadataManager.instance().external_community_rules.copy()
+            if MetadataManager.instance().external_community_rules
+            else {}
         )
         self.community_rules_hidden = None
-        self.user_rules = MetadataManager.instance().user_rules.copy()
+        self.user_rules = (
+            MetadataManager.instance().external_user_rules.copy()
+            if MetadataManager.instance().external_user_rules
+            else {}
+        )
+        print(self.user_rules)
         self.user_rules_hidden = None
         # Can be used to get proper names for mods found in list
         # items that are not locally available
-        MetadataManager.instance().external_steam_metadata_packageids_to_name = {}
+        self.steam_workshop_metadata_packageids_to_name = {}
         if (
             MetadataManager.instance().external_steam_metadata
             and len(MetadataManager.instance().external_steam_metadata.keys()) > 0
         ):
             for metadata in MetadataManager.instance().external_steam_metadata.values():
                 if metadata.get("packageid"):
-                    MetadataManager.instance().external_steam_metadata_packageids_to_name[
+                    self.steam_workshop_metadata_packageids_to_name[
                         metadata["packageid"]
-                    ] = metadata[
-                        "name"
-                    ]
+                    ] = metadata["name"]
 
         # MOD LABEL
         self.mod_label = QLabel("No mod currently being edited")
@@ -661,25 +666,25 @@ class RuleEditor(QWidget):
                         if isinstance(loadAfters, str):
                             self._create_list_item(
                                 _list=MetadataManager.instance().internal_local_metadata_loadAfter_list,
-                                title=MetadataManager.instance().external_steam_metadata_packageids_to_name[
+                                title=self.steam_workshop_metadata_packageids_to_name[
                                     loadAfters.lower()
                                 ]
                                 if loadAfters.lower()
                                 in [
                                     key.lower()
-                                    for key in MetadataManager.instance().external_steam_metadata_packageids_to_name.keys()
+                                    for key in self.steam_workshop_metadata_packageids_to_name.keys()
                                 ]
                                 else loadAfters,
                                 metadata=loadAfters,
                             )
                             self._add_rule_to_table(
-                                name=MetadataManager.instance().external_steam_metadata_packageids_to_name[
+                                name=self.steam_workshop_metadata_packageids_to_name[
                                     loadAfters.lower()
                                 ]
                                 if loadAfters.lower()
                                 in [
                                     key.lower()
-                                    for key in MetadataManager.instance().external_steam_metadata_packageids_to_name.keys()
+                                    for key in self.steam_workshop_metadata_packageids_to_name.keys()
                                 ]
                                 else loadAfters,
                                 packageid=loadAfters,
@@ -692,25 +697,25 @@ class RuleEditor(QWidget):
                             for rule in loadAfters:
                                 self._create_list_item(
                                     _list=MetadataManager.instance().internal_local_metadata_loadAfter_list,
-                                    title=MetadataManager.instance().external_steam_metadata_packageids_to_name[
+                                    title=self.steam_workshop_metadata_packageids_to_name[
                                         rule.lower()
                                     ]
                                     if rule.lower()
                                     in [
                                         key.lower()
-                                        for key in MetadataManager.instance().external_steam_metadata_packageids_to_name.keys()
+                                        for key in self.steam_workshop_metadata_packageids_to_name.keys()
                                     ]
                                     else rule,
                                     metadata=rule,
                                 )
                                 self._add_rule_to_table(
-                                    name=MetadataManager.instance().external_steam_metadata_packageids_to_name[
+                                    name=self.steam_workshop_metadata_packageids_to_name[
                                         rule.lower()
                                     ]
                                     if rule.lower()
                                     in [
                                         key.lower()
-                                        for key in MetadataManager.instance().external_steam_metadata_packageids_to_name.keys()
+                                        for key in self.steam_workshop_metadata_packageids_to_name.keys()
                                     ]
                                     else rule,
                                     packageid=rule,
@@ -726,25 +731,25 @@ class RuleEditor(QWidget):
                         if isinstance(loadBefores, str):
                             self._create_list_item(
                                 _list=MetadataManager.instance().internal_local_metadata_loadBefore_list,
-                                title=MetadataManager.instance().external_steam_metadata_packageids_to_name[
+                                title=self.steam_workshop_metadata_packageids_to_name[
                                     loadBefores.lower()
                                 ]
                                 if loadBefores.lower()
                                 in [
                                     key.lower()
-                                    for key in MetadataManager.instance().external_steam_metadata_packageids_to_name.keys()
+                                    for key in self.steam_workshop_metadata_packageids_to_name.keys()
                                 ]
                                 else loadBefores,
                                 metadata=loadBefores,
                             )
                             self._add_rule_to_table(
-                                name=MetadataManager.instance().external_steam_metadata_packageids_to_name[
+                                name=self.steam_workshop_metadata_packageids_to_name[
                                     loadAfters.lower()
                                 ]
                                 if loadAfters.lower()
                                 in [
                                     key.lower()
-                                    for key in MetadataManager.instance().external_steam_metadata_packageids_to_name.keys()
+                                    for key in self.steam_workshop_metadata_packageids_to_name.keys()
                                 ]
                                 else loadAfters,
                                 packageid=loadAfters,
@@ -757,25 +762,25 @@ class RuleEditor(QWidget):
                             for rule in loadBefores:
                                 self._create_list_item(
                                     _list=MetadataManager.instance().internal_local_metadata_loadBefore_list,
-                                    title=MetadataManager.instance().external_steam_metadata_packageids_to_name[
+                                    title=self.steam_workshop_metadata_packageids_to_name[
                                         rule.lower()
                                     ]
                                     if rule.lower()
                                     in [
                                         key.lower()
-                                        for key in MetadataManager.instance().external_steam_metadata_packageids_to_name.keys()
+                                        for key in self.steam_workshop_metadata_packageids_to_name.keys()
                                     ]
                                     else rule,
                                     metadata=rule,
                                 )
                                 self._add_rule_to_table(
-                                    name=MetadataManager.instance().external_steam_metadata_packageids_to_name[
+                                    name=self.steam_workshop_metadata_packageids_to_name[
                                         rule.lower()
                                     ]
                                     if rule.lower()
                                     in [
                                         key.lower()
-                                        for key in MetadataManager.instance().external_steam_metadata_packageids_to_name.keys()
+                                        for key in self.steam_workshop_metadata_packageids_to_name.keys()
                                     ]
                                     else rule,
                                     packageid=rule,

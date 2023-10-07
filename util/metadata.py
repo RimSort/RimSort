@@ -80,7 +80,7 @@ class MetadataManager(QObject):
             self.external_steam_metadata_path = None
             self.external_community_rules = None
             self.external_community_rules_path = None
-            self.external_user_rules = {}
+            self.external_user_rules = None
             self.internal_local_metadata = {}
             self.expansion_subdirectories = []
             self.local_subdirectories = []
@@ -117,9 +117,8 @@ class MetadataManager(QObject):
     def __refresh_external_metadata(self) -> None:
         def get_configured_steam_db(
             self, life: int, path: str
-        ) -> Tuple[Dict[str, Any], Any]:
+        ) -> Tuple[Optional[Dict], Optional[str]]:
             logger.info(f"Checking for Steam DB at: {path}")
-            db_json_data = {}
             if os.path.exists(
                 path
             ):  # Look for cached data & load it if available & not expired
@@ -171,13 +170,12 @@ class MetadataManager(QObject):
                     information="Unable to initialize external metadata. There is no external Steam metadata being factored!\n"
                     + "\nPlease use DB Builder to create a database, or update to the latest RimSort Steam Workshop Database.",
                 )
-                return db_json_data, None
+                return None, None
 
         def get_configured_community_rules_db(
             self, path: str
-        ) -> Tuple[Dict[str, Any], Any]:
+        ) -> Tuple[Optional[Dict], Optional[str]]:
             logger.info(f"Checking for Community Rules DB at: {path}")
-            community_rules_json_data = {}
             if os.path.exists(
                 path
             ):  # Look for cached data & load it if available & not expired
@@ -202,7 +200,7 @@ class MetadataManager(QObject):
                     information="Unable to initialize external metadata. There is no external Community Rules metadata being factored!\n"
                     + "\nPlease use Rule Editor to create a database, or update to the latest RimSort Community Rules database.",
                 )
-                return community_rules_json_data, None
+                return None, None
 
         # Load external metadata
         # External Steam metadata
@@ -295,6 +293,7 @@ class MetadataManager(QObject):
             logger.info(
                 "External Community Rules metadata disabled by user. Please choose a metadata source in settings."
             )
+        # External User Rules metadata
         if os.path.exists(GameConfiguration.instance().user_rules_file_path):
             logger.info("Loading userRules.json")
             with open(
@@ -304,7 +303,7 @@ class MetadataManager(QObject):
                 self.external_user_rules = json.loads(json_string)["rules"]
             total_entries = len(self.external_user_rules)
             logger.info(
-                f"Loaded {total_entries} additional sorting rules from Community Rules"
+                f"Loaded {total_entries} additional sorting rules from User Rules"
             )
         else:
             logger.info(
