@@ -36,6 +36,7 @@ from PySide6.QtWidgets import (
 )
 
 from model.dialogue import show_dialogue_input, show_warning
+from util.metadata import MetadataManager
 
 
 class EditableDelegate(QItemDelegate):
@@ -81,16 +82,7 @@ class RuleEditor(QWidget):
 
     update_database_signal = Signal(list)
 
-    def __init__(
-        self,
-        initial_mode: str,
-        local_metadata: Dict[str, Any],
-        community_rules: Dict[str, Any],
-        user_rules: Dict[str, Any],
-        compact=None,
-        edit_packageid=None,
-        steam_workshop_metadata=None,
-    ):
+    def __init__(self, initial_mode: str, compact=None, edit_packageid=None):
         super().__init__()
         logger.debug("Initializing RuleEditor")
 
@@ -105,25 +97,27 @@ class RuleEditor(QWidget):
         self.edit_packageid = edit_packageid
         self.initial_mode = initial_mode
         # THE METADATA
-        self.local_metadata = local_metadata
         self.local_rules_hidden = None
-        self.community_rules = community_rules.copy()
+        self.community_rules = (
+            MetadataManager.instance().external_community_rules.copy()
+        )
         self.community_rules_hidden = None
-        self.user_rules = user_rules.copy()
+        self.user_rules = MetadataManager.instance().user_rules.copy()
         self.user_rules_hidden = None
         # Can be used to get proper names for mods found in list
         # items that are not locally available
-        self.steam_workshop_metadata_packageids_to_name = {}
-        self.steam_workshop_metadata = steam_workshop_metadata
+        MetadataManager.instance().external_steam_metadata_packageids_to_name = {}
         if (
-            self.steam_workshop_metadata
-            and len(self.steam_workshop_metadata.keys()) > 0
+            MetadataManager.instance().external_steam_metadata
+            and len(MetadataManager.instance().external_steam_metadata.keys()) > 0
         ):
-            for metadata in self.steam_workshop_metadata.values():
+            for metadata in MetadataManager.instance().external_steam_metadata.values():
                 if metadata.get("packageid"):
-                    self.steam_workshop_metadata_packageids_to_name[
+                    MetadataManager.instance().external_steam_metadata_packageids_to_name[
                         metadata["packageid"]
-                    ] = metadata["name"]
+                    ] = metadata[
+                        "name"
+                    ]
 
         # MOD LABEL
         self.mod_label = QLabel("No mod currently being edited")
@@ -148,10 +142,18 @@ class RuleEditor(QWidget):
 
         # DETAILS WIDGETS
         # local metadata
-        self.local_metadata_loadAfter_label = QLabel("About.xml (loadAfter)")
-        self.local_metadata_loadBefore_label = QLabel("About.xml (loadBefore)")
-        self.local_metadata_loadAfter_list = QListWidget()
-        self.local_metadata_loadBefore_list = QListWidget()
+        MetadataManager.instance().internal_local_metadata_loadAfter_label = QLabel(
+            "About.xml (loadAfter)"
+        )
+        MetadataManager.instance().internal_local_metadata_loadBefore_label = QLabel(
+            "About.xml (loadBefore)"
+        )
+        MetadataManager.instance().internal_local_metadata_loadAfter_list = (
+            QListWidget()
+        )
+        MetadataManager.instance().internal_local_metadata_loadBefore_list = (
+            QListWidget()
+        )
         # community rules
         self.external_community_rules_loadAfter_label = QLabel(
             "Community Rules (loadAfter)"
@@ -324,8 +326,8 @@ class RuleEditor(QWidget):
         self.mods_list.setDragEnabled(True)
 
         # Actions
-        self.local_metadata_button = QPushButton()
-        self.local_metadata_button.clicked.connect(
+        MetadataManager.instance().internal_local_metadata_button = QPushButton()
+        MetadataManager.instance().internal_local_metadata_button.clicked.connect(
             partial(
                 self._toggle_details_layout_widgets, self.internal_local_metadata_layout
             )
@@ -346,16 +348,16 @@ class RuleEditor(QWidget):
         )
         # Build the details layout
         self.internal_local_metadata_layout.addWidget(
-            self.local_metadata_loadAfter_label
+            MetadataManager.instance().internal_local_metadata_loadAfter_label
         )
         self.internal_local_metadata_layout.addWidget(
-            self.local_metadata_loadAfter_list
+            MetadataManager.instance().internal_local_metadata_loadAfter_list
         )
         self.internal_local_metadata_layout.addWidget(
-            self.local_metadata_loadBefore_label
+            MetadataManager.instance().internal_local_metadata_loadBefore_label
         )
         self.internal_local_metadata_layout.addWidget(
-            self.local_metadata_loadBefore_list
+            MetadataManager.instance().internal_local_metadata_loadBefore_list
         )
         self.external_community_rules_layout.addWidget(
             self.external_community_rules_loadAfter_label
@@ -399,7 +401,9 @@ class RuleEditor(QWidget):
 
         # Build the mods layouts
         self.mods_layout.addWidget(self.mods_search)
-        self.mods_actions_layout.addWidget(self.local_metadata_button)
+        self.mods_actions_layout.addWidget(
+            MetadataManager.instance().internal_local_metadata_button
+        )
         self.mods_actions_layout.addWidget(self.community_rules_button)
         self.mods_actions_layout.addWidget(self.user_rules_button)
         self.mods_layout.addWidget(self.mods_list)
@@ -583,8 +587,8 @@ class RuleEditor(QWidget):
         logger.debug("Clearing editor")
         self.clear_mods_search()
         self.mods_list.clear()
-        self.local_metadata_loadAfter_list.clear()
-        self.local_metadata_loadBefore_list.clear()
+        MetadataManager.instance().internal_local_metadata_loadAfter_list.clear()
+        MetadataManager.instance().internal_local_metadata_loadBefore_list.clear()
         self.external_community_rules_loadAfter_list.clear()
         self.external_community_rules_loadBefore_list.clear()
         self.external_user_rules_loadAfter_list.clear()
@@ -638,8 +642,11 @@ class RuleEditor(QWidget):
     def _populate_from_metadata(self) -> None:
         logger.debug(f"Populating editor from metadata with mod: {self.edit_packageid}")
         logger.debug("Parsing local metadata")
-        if self.local_metadata and len(self.local_metadata.keys()) > 0:
-            for metadata in self.local_metadata.values():
+        if (
+            MetadataManager.instance().internal_local_metadata
+            and len(MetadataManager.instance().internal_local_metadata.keys()) > 0
+        ):
+            for metadata in MetadataManager.instance().internal_local_metadata.values():
                 # Local metadata rulez
                 # Additionally, populate anything that is not exit_packageid into the mods list
                 if (
@@ -653,26 +660,26 @@ class RuleEditor(QWidget):
                         loadAfters = metadata["loadafter"]["li"]
                         if isinstance(loadAfters, str):
                             self._create_list_item(
-                                _list=self.local_metadata_loadAfter_list,
-                                title=self.steam_workshop_metadata_packageids_to_name[
+                                _list=MetadataManager.instance().internal_local_metadata_loadAfter_list,
+                                title=MetadataManager.instance().external_steam_metadata_packageids_to_name[
                                     loadAfters.lower()
                                 ]
                                 if loadAfters.lower()
                                 in [
                                     key.lower()
-                                    for key in self.steam_workshop_metadata_packageids_to_name.keys()
+                                    for key in MetadataManager.instance().external_steam_metadata_packageids_to_name.keys()
                                 ]
                                 else loadAfters,
                                 metadata=loadAfters,
                             )
                             self._add_rule_to_table(
-                                name=self.steam_workshop_metadata_packageids_to_name[
+                                name=MetadataManager.instance().external_steam_metadata_packageids_to_name[
                                     loadAfters.lower()
                                 ]
                                 if loadAfters.lower()
                                 in [
                                     key.lower()
-                                    for key in self.steam_workshop_metadata_packageids_to_name.keys()
+                                    for key in MetadataManager.instance().external_steam_metadata_packageids_to_name.keys()
                                 ]
                                 else loadAfters,
                                 packageid=loadAfters,
@@ -684,26 +691,26 @@ class RuleEditor(QWidget):
                         elif isinstance(loadAfters, list):
                             for rule in loadAfters:
                                 self._create_list_item(
-                                    _list=self.local_metadata_loadAfter_list,
-                                    title=self.steam_workshop_metadata_packageids_to_name[
+                                    _list=MetadataManager.instance().internal_local_metadata_loadAfter_list,
+                                    title=MetadataManager.instance().external_steam_metadata_packageids_to_name[
                                         rule.lower()
                                     ]
                                     if rule.lower()
                                     in [
                                         key.lower()
-                                        for key in self.steam_workshop_metadata_packageids_to_name.keys()
+                                        for key in MetadataManager.instance().external_steam_metadata_packageids_to_name.keys()
                                     ]
                                     else rule,
                                     metadata=rule,
                                 )
                                 self._add_rule_to_table(
-                                    name=self.steam_workshop_metadata_packageids_to_name[
+                                    name=MetadataManager.instance().external_steam_metadata_packageids_to_name[
                                         rule.lower()
                                     ]
                                     if rule.lower()
                                     in [
                                         key.lower()
-                                        for key in self.steam_workshop_metadata_packageids_to_name.keys()
+                                        for key in MetadataManager.instance().external_steam_metadata_packageids_to_name.keys()
                                     ]
                                     else rule,
                                     packageid=rule,
@@ -718,26 +725,26 @@ class RuleEditor(QWidget):
                         loadBefores = metadata["loadbefore"]["li"]
                         if isinstance(loadBefores, str):
                             self._create_list_item(
-                                _list=self.local_metadata_loadBefore_list,
-                                title=self.steam_workshop_metadata_packageids_to_name[
+                                _list=MetadataManager.instance().internal_local_metadata_loadBefore_list,
+                                title=MetadataManager.instance().external_steam_metadata_packageids_to_name[
                                     loadBefores.lower()
                                 ]
                                 if loadBefores.lower()
                                 in [
                                     key.lower()
-                                    for key in self.steam_workshop_metadata_packageids_to_name.keys()
+                                    for key in MetadataManager.instance().external_steam_metadata_packageids_to_name.keys()
                                 ]
                                 else loadBefores,
                                 metadata=loadBefores,
                             )
                             self._add_rule_to_table(
-                                name=self.steam_workshop_metadata_packageids_to_name[
+                                name=MetadataManager.instance().external_steam_metadata_packageids_to_name[
                                     loadAfters.lower()
                                 ]
                                 if loadAfters.lower()
                                 in [
                                     key.lower()
-                                    for key in self.steam_workshop_metadata_packageids_to_name.keys()
+                                    for key in MetadataManager.instance().external_steam_metadata_packageids_to_name.keys()
                                 ]
                                 else loadAfters,
                                 packageid=loadAfters,
@@ -749,26 +756,26 @@ class RuleEditor(QWidget):
                         elif isinstance(loadBefores, list):
                             for rule in loadBefores:
                                 self._create_list_item(
-                                    _list=self.local_metadata_loadBefore_list,
-                                    title=self.steam_workshop_metadata_packageids_to_name[
+                                    _list=MetadataManager.instance().internal_local_metadata_loadBefore_list,
+                                    title=MetadataManager.instance().external_steam_metadata_packageids_to_name[
                                         rule.lower()
                                     ]
                                     if rule.lower()
                                     in [
                                         key.lower()
-                                        for key in self.steam_workshop_metadata_packageids_to_name.keys()
+                                        for key in MetadataManager.instance().external_steam_metadata_packageids_to_name.keys()
                                     ]
                                     else rule,
                                     metadata=rule,
                                 )
                                 self._add_rule_to_table(
-                                    name=self.steam_workshop_metadata_packageids_to_name[
+                                    name=MetadataManager.instance().external_steam_metadata_packageids_to_name[
                                         rule.lower()
                                     ]
                                     if rule.lower()
                                     in [
                                         key.lower()
-                                        for key in self.steam_workshop_metadata_packageids_to_name.keys()
+                                        for key in MetadataManager.instance().external_steam_metadata_packageids_to_name.keys()
                                     ]
                                     else rule,
                                     packageid=rule,
@@ -977,7 +984,9 @@ class RuleEditor(QWidget):
         if visibility:
             if layout is self.internal_local_metadata_layout:
                 self.local_rules_hidden = True
-                self.local_metadata_button.setText("Show About.xml rules")
+                MetadataManager.instance().internal_local_metadata_button.setText(
+                    "Show About.xml rules"
+                )
                 self._toggle_editor_table_rows(
                     rule_type="About.xml", visibility=visibility
                 )
@@ -996,7 +1005,9 @@ class RuleEditor(QWidget):
         else:
             if layout is self.internal_local_metadata_layout:
                 self.local_rules_hidden = False
-                self.local_metadata_button.setText("Hide About.xml rules")
+                MetadataManager.instance().internal_local_metadata_button.setText(
+                    "Hide About.xml rules"
+                )
                 self._toggle_editor_table_rows(
                     rule_type="About.xml", visibility=visibility
                 )

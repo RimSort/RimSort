@@ -8,6 +8,7 @@ import platform
 from requests.exceptions import HTTPError
 from tempfile import gettempdir
 import traceback
+from typing import Any, Optional
 
 from logger_tt import handlers, logger, setup_logging
 from logging import getLogger, WARNING
@@ -15,7 +16,6 @@ from PySide6.QtCore import QSize, QTimer
 from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 
 from model.dialogue import show_fatal_error
-from util.metadata import query_workshop_update_data
 from util.proxy_style import ProxyStyle
 from util.watchdog import RSFileSystemEventHandler
 
@@ -39,9 +39,12 @@ elif SYSTEM == "Windows":
     # I still can't figure out why it won't log at all on Windows...?
     # getLogger("").setLevel(WARNING)
 
-from view.game_configuration_panel import GameConfiguration
-from view.main_content_panel import MainContent
-from view.status_panel import Status
+# Prevent circular import if anything is imported from somewhere else
+if __name__ == "__main__":
+    # Prevent circular import because of Singletons
+    from view.game_configuration_panel import GameConfiguration
+    from view.main_content_panel import MainContent
+    from view.status_panel import Status
 
 
 def handle_exception(exc_type, exc_value, exc_traceback):
@@ -79,111 +82,129 @@ class MainWindow(QMainWindow):
     Subclass QMainWindow to customize the main application window.
     """
 
-    def __init__(self, debug_mode=None) -> None:
+    _instance: Optional["MainWindow"] = None
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super(MainWindow, cls).__new__(cls)
+        return cls._instance
+
+    def __init__(self, DEBUG_MODE=None) -> None:
         """
         Initialize the main application window. Construct the layout,
         add the three main views, and set up relevant signals and slots.
         """
-        logger.info("Initializing MainWindow")
-        super(MainWindow, self).__init__()
+        if not hasattr(self, "initialized"):
+            logger.info("Initializing MainWindow")
+            super(MainWindow, self).__init__()
 
-        # Create the main application window
-        self.debug_mode = debug_mode
-        self.init = None  # Content initialization should only fire on startup. Otherwise, this is handled by Refresh button
-        self.version_string = "Alpha-v1.0.6.2-hf"
+            # Create the main application window
+            self.DEBUG_MODE = DEBUG_MODE
+            self.init = None  # Content initialization should only fire on startup. Otherwise, this is handled by Refresh button
+            self.version_string = "Alpha-v1.0.6.2-hf"
 
-        # Check for SHA and append to version string if found
-        sha_file = str(Path(os.path.join(data_path, "SHA")).resolve())
-        if os.path.exists(sha_file):
-            with open(sha_file) as f:
-                sha = f.read().strip()
-            self.version_string += f" [Edge {sha}]"
+            # Check for SHA and append to version string if found
+            sha_file = str(Path(os.path.join(data_path, "SHA")).resolve())
+            if os.path.exists(sha_file):
+                with open(sha_file) as f:
+                    sha = f.read().strip()
+                self.version_string += f" [Edge {sha}]"
 
-        # Watchdog
-        self.watchdog_event_handler = None
-        self.watchdog_observer = None
+            # Watchdog
+            self.watchdog_event_handler = None
+            self.watchdog_observer = None
 
-        # Setup the window
-        self.setWindowTitle(f"RimSort {self.version_string}")
-        self.setMinimumSize(QSize(1024, 768))
+            # Setup the window
+            self.setWindowTitle(f"RimSort {self.version_string}")
+            self.setMinimumSize(QSize(1024, 768))
 
-        # Create the window layout
-        app_layout = QVBoxLayout()
-        app_layout.setContentsMargins(0, 0, 0, 0)  # Space from main layout to border
-        app_layout.setSpacing(0)  # Space between widgets
+            # Create the window layout
+            app_layout = QVBoxLayout()
+            app_layout.setContentsMargins(
+                0, 0, 0, 0
+            )  # Space from main layout to border
+            app_layout.setSpacing(0)  # Space between widgets
 
-        # Create various panels on the application GUI
-        self.game_configuration_panel = GameConfiguration(debug_mode=self.debug_mode)
-        self.main_content_panel = MainContent(
-            game_configuration=self.game_configuration_panel,
-            rimsort_version=self.version_string,
-        )
-        self.bottom_panel = Status()
+            # Create various panels on the application GUI
+            self.game_configuration = GameConfiguration.instance(DEBUG_MODE=DEBUG_MODE)
+            self.main_content_panel = MainContent()
+            self.bottom_panel = Status()
 
-        # Connect the game configuration actions signals to Status panel to display fading action text
-        self.game_configuration_panel.configuration_signal.connect(
-            self.bottom_panel.actions_slot
-        )
-        self.game_configuration_panel.settings_panel.actions_signal.connect(
-            self.bottom_panel.actions_slot
-        )
-        # Connect the actions_signal to Status panel to display fading action text
-        self.main_content_panel.actions_panel.actions_signal.connect(
-            self.bottom_panel.actions_slot
-        )
-        self.main_content_panel.status_signal.connect(self.bottom_panel.actions_slot)
+            # Connect the game configuration actions signals to Status panel to display fading action text
+            self.game_configuration.configuration_signal.connect(
+                self.bottom_panel.actions_slot
+            )
+            self.game_configuration.settings_panel.actions_signal.connect(
+                self.bottom_panel.actions_slot
+            )
+            # Connect the actions_signal to Status panel to display fading action text
+            self.main_content_panel.actions_panel.actions_signal.connect(
+                self.bottom_panel.actions_slot
+            )
+            self.main_content_panel.status_signal.connect(
+                self.bottom_panel.actions_slot
+            )
 
-        # Arrange all panels vertically on the main window layout
-        app_layout.addLayout(self.game_configuration_panel.panel)
-        app_layout.addWidget(self.main_content_panel.main_layout_frame)
-        app_layout.addWidget(self.bottom_panel.frame)
+            # Arrange all panels vertically on the main window layout
+            app_layout.addLayout(self.game_configuration.panel)
+            app_layout.addWidget(self.main_content_panel.main_layout_frame)
+            app_layout.addWidget(self.bottom_panel.frame)
 
-        # Display all items
-        widget = QWidget()
-        widget.setLayout(app_layout)
-        self.setCentralWidget(widget)
+            # Display all items
+            widget = QWidget()
+            widget.setLayout(app_layout)
+            self.setCentralWidget(widget)
 
-        logger.debug("Finished MainWindow initialization")
+            logger.debug("Finished MainWindow initialization")
+            self.initialized = True
+
+    @classmethod
+    def instance(cls, *args: Any, **kwargs: Any) -> "MainWindow":
+        if cls._instance is None:
+            cls._instance = cls(*args, **kwargs)
+        elif args or kwargs:
+            raise ValueError("MainWindow instance has already been initialized.")
+        return cls._instance
 
     def showEvent(self, event) -> None:
         # Call the original showEvent handler
         super().showEvent(event)
         if not self.init:
             # HIDE/SHOW FOLDER ROWS BASED ON PREFERENCE
-            if self.game_configuration_panel.show_folder_rows:
-                self.game_configuration_panel.hide_show_folder_rows_button.setText(
+            if self.game_configuration.show_folder_rows:
+                self.game_configuration.hide_show_folder_rows_button.setText(
                     "Hide paths"
                 )
             else:
-                self.game_configuration_panel.hide_show_folder_rows_button.setText(
+                self.game_configuration.hide_show_folder_rows_button.setText(
                     "Show paths"
                 )
             # set visibility
-            self.game_configuration_panel.game_folder_frame.setVisible(
-                self.game_configuration_panel.show_folder_rows
+            self.game_configuration.game_folder_frame.setVisible(
+                self.game_configuration.show_folder_rows
             )
-            self.game_configuration_panel.config_folder_frame.setVisible(
-                self.game_configuration_panel.show_folder_rows
+            self.game_configuration.config_folder_frame.setVisible(
+                self.game_configuration.show_folder_rows
             )
-            self.game_configuration_panel.local_folder_frame.setVisible(
-                self.game_configuration_panel.show_folder_rows
+            self.game_configuration.local_folder_frame.setVisible(
+                self.game_configuration.show_folder_rows
             )
-            self.game_configuration_panel.workshop_folder_frame.setVisible(
-                self.game_configuration_panel.show_folder_rows
+            self.game_configuration.workshop_folder_frame.setVisible(
+                self.game_configuration.show_folder_rows
             )
 
     def __initialize_content(self) -> None:
         self.init = True
 
         # IF CHECK FOR UPDATE ON STARTUP...
-        if self.game_configuration_panel.check_for_updates_action.isChecked():
+        if self.game_configuration.check_for_updates_action.isChecked():
             self.main_content_panel.actions_slot("check_for_update")
 
         # REFRESH CONFIGURED METADATA
         self.main_content_panel._do_refresh(is_initial=True)
 
         # CHECK USER PREFERENCE FOR WATCHDOG
-        if self.game_configuration_panel.watchdog_toggle:
+        if self.game_configuration.watchdog_toggle:
             # Setup watchdog
             self.__initialize_watchdog()
 
@@ -195,9 +216,9 @@ class MainWindow(QMainWindow):
     def __initialize_watchdog(self) -> None:
         logger.info("Initializing watchdog FS Observer")
         # INITIALIZE WATCHDOG - WE WAIT TO START UNTIL DONE PARSING MOD LIST
-        game_folder_path = self.game_configuration_panel.game_folder_line.text()
-        local_folder_path = self.game_configuration_panel.local_folder_line.text()
-        workshop_folder_path = self.game_configuration_panel.workshop_folder_line.text()
+        game_folder_path = self.game_configuration.game_folder_line.text()
+        local_folder_path = self.game_configuration.local_folder_line.text()
+        workshop_folder_path = self.game_configuration.workshop_folder_line.text()
         self.watchdog_event_handler = RSFileSystemEventHandler()
         if SYSTEM == "Windows":
             self.watchdog_observer = PollingObserver()
@@ -250,7 +271,7 @@ def main_thread():
             Path(os.path.join(os.path.dirname(__file__), "data/style.qss")).read_text()
         )
         # Create the main window
-        window = MainWindow(debug_mode=DEBUG_MODE)
+        window = MainWindow.instance(DEBUG_MODE=DEBUG_MODE)
         logger.info("Showing MainWindow")
         window.show()
         window.__initialize_content()
