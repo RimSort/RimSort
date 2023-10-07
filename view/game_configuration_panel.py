@@ -23,7 +23,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from RimSort import MainWindow
 from model.dialogue import *
 from util.constants import DEFAULT_SETTINGS, DEFAULT_USER_RULES
 from util.generic import *
@@ -52,7 +51,7 @@ class GameConfiguration(QObject):
             cls._instance = super(GameConfiguration, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self, DEBUG_MODE=None) -> None:
+    def __init__(self, RIMSORT_VERSION: str, DEBUG_MODE=None) -> None:
         """
         Initialize the game configuration.
         """
@@ -62,6 +61,7 @@ class GameConfiguration(QObject):
             logger.debug("Initializing GameConfiguration")
 
             self.debug_mode = DEBUG_MODE
+            self.rimsort_version = RIMSORT_VERSION
             self.system_name = platform.system()
 
             self.storage_path = QStandardPaths.writableLocation(
@@ -196,6 +196,7 @@ class GameConfiguration(QObject):
             self.game_version_line = QLineEdit()
             self.game_version_line.setDisabled(True)
             self.game_version_line.setPlaceholderText("Unknown")
+            self.game_version_line.setReadOnly(True)
             self.wiki_button = QPushButton("Wiki")
             self.wiki_button.clicked.connect(
                 partial(open_url_browser, "https://github.com/RimSort/RimSort/wiki")

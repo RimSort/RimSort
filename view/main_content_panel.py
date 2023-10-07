@@ -66,8 +66,6 @@ from PySide6.QtWidgets import (
     QToolButton,
 )
 
-from RimSort import MainWindow
-
 from sort.dependencies import *
 from sort.alphabetical_sort import *
 from sort.topo_sort import *
@@ -752,7 +750,7 @@ class MainContent(QObject):
             return
         # NUITKA
         logger.debug("Checking for RimSort update...")
-        current_version = MainWindow.instance().rimsort_version.lower()
+        current_version = GameConfiguration.instance().rimsort_version.lower()
         try:
             json_response = self.__do_get_github_release_info()
         except Exception as e:
@@ -1432,7 +1430,7 @@ class MainContent(QObject):
         logger.info(f"Collected {len(active_mods)} active mods for export")
         # Build our report
         active_mods_clipboard_report = (
-            f"Created with RimSort {MainWindow.instance().rimsort_version}"
+            f"Created with RimSort {GameConfiguration.instance().rimsort_version}"
             + f"\nRimWorld game version this list was created for: {self.metadata_manager.game_version}"
             + f"\nTotal # of mods: {len(active_mods)}\n"
         )
@@ -1515,7 +1513,7 @@ class MainContent(QObject):
         # Build our report
         active_mods_rentry_report = (
             f"# RimWorld mod list       ![](https://github.com/RimSort/RimSort/blob/main/rentry_preview.png?raw=true)"
-            + f"\nCreated with RimSort {MainWindow.instance().rimsort_version}"
+            + f"\nCreated with RimSort {GameConfiguration.instance().rimsort_version}"
             + f"\nMod list was created for game version: `{self.metadata_manager.game_version}`"
             + f"\n!!! info Local mods are marked as yellow labels with packageid in brackets."
             + f"\n\n\n\n!!! note Mod list length: `{len(active_mods)}`\n"

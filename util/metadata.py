@@ -66,6 +66,7 @@ class MetadataManager(QObject):
     def __init__(self) -> None:
         if not hasattr(self, "initialized"):
             super(MetadataManager, self).__init__()
+            logger.info("Initializing MetadataManager")
 
             # Initialize our threadpool for multithreaded parsing
             self.parser_threadpool = QThreadPool.globalInstance()
@@ -104,6 +105,7 @@ class MetadataManager(QObject):
                     )
                 ).resolve()
             )
+            logger.info("Finished MetadataManager initialization")
             self.initialized = True
 
     @classmethod
