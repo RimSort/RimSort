@@ -57,7 +57,6 @@ class GameConfiguration(QObject):
         """
         if not hasattr(self, "initialized"):
             super(GameConfiguration, self).__init__()
-
             logger.debug("Initializing GameConfiguration")
 
             self.debug_mode = DEBUG_MODE
@@ -205,7 +204,7 @@ class GameConfiguration(QObject):
 
             if self.system_name == "Darwin":
                 self.game_folder_open_button = QPushButton("Game App")
-                self.game_folder_open_button.setToolTip("Launch the game")
+                self.game_folder_open_button.setToolTip("Open Game Folder")
             else:
                 self.game_folder_open_button = QPushButton("Game folder")
                 self.game_folder_open_button.setToolTip(
