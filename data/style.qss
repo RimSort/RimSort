@@ -425,6 +425,26 @@ QDialog#settingsPanel {
 QCheckBox#summaryValue {
     color: white;
 }
+QCheckBox {
+    padding: 2px;
+    color: white;
+}
+QCheckBox::indicator {
+    width: 13px;
+    height: 13px;
+    border: 1px solid #455364;
+    border-radius: 3px;
+    background-color: #19232d;
+}
+QCheckBox::indicator:checked {
+    background-color: #3688c3;
+}
+QCheckBox::indicator:unchecked {
+    background-color: #455364;
+}
+QCheckBox::indicator:hover {
+    border: 1px solid #54687a;
+}
 
 /* ===== Status panel (bottom message bar) */
 QWidget#StatusPanel {

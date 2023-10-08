@@ -21,6 +21,8 @@ from PySide6.QtWidgets import (
 from model.mod_list import ModListWidget
 from model.mod_list_item import ModListItemInner
 from util.constants import SEARCH_DATA_SOURCE_FILTER_INDEXES
+from util.metadata import MetadataManager
+from util.steam.steamcmd.wrapper import SteamcmdInterface
 
 
 class ActiveModList(QWidget):
@@ -31,18 +33,19 @@ class ActiveModList(QWidget):
 
     list_updated_signal = Signal()
 
-    def __init__(self, mod_type_filter_enable: bool, local_mods_path=None) -> None:
+    def __init__(self, mod_type_filter_enable: bool) -> None:
         """
         Initialize the class.
         Create a ListWidget using the dict of mods. This will
         create a row for every key-value pair in the dict.
         """
+        super(ActiveModList, self).__init__()
+
         logger.debug("Initializing ActiveModList")
+
         self.list_updated = False
-        self.local_mods_path = local_mods_path
         self.mod_type_filter_enable = mod_type_filter_enable
         self.searching = None
-        super(ActiveModList, self).__init__()
 
         # Base layout type
         self.panel = QVBoxLayout()
@@ -53,8 +56,7 @@ class ActiveModList(QWidget):
         self.num_mods.setObjectName("summaryValue")
         # Active mod list
         self.active_mods_list = ModListWidget(
-            mod_type_filter_enable=self.mod_type_filter_enable,
-            local_mods_path=self.local_mods_path,
+            mod_type_filter_enable=self.mod_type_filter_enable
         )
 
         # Search widgets
@@ -181,10 +183,6 @@ class ActiveModList(QWidget):
         # self.completer.setCaseSensitivity(Qt.CaseInsensitive)
         # self.active_mods_search.setCompleter(self.completer)
 
-        self.game_version = ""
-        self.all_mods: dict[str, Any] = {}
-        self.steam_package_id_to_name: dict[str, Any] = {}
-
         # Connect signals and slots
         self.active_mods_list.list_update_signal.connect(
             self.handle_internal_mod_list_updated
@@ -234,18 +232,22 @@ class ActiveModList(QWidget):
             }
 
             # Check version for everything except Core
-            if self.game_version:
+            if MetadataManager.instance().game_version:
                 if mod_data.get("supportedversions", {}).get("li"):
                     supported_versions = mod_data["supportedversions"]["li"]
                     # supported_versions is either a string or list of strings
                     if isinstance(supported_versions, str):
-                        if self.game_version.startswith(supported_versions):
+                        if MetadataManager.instance().game_version.startswith(
+                            supported_versions
+                        ):
                             package_id_to_errors[uuid]["version_mismatch"] = False
                     elif isinstance(supported_versions, list):
                         is_supported = False
                         for supported_version in supported_versions:
                             if isinstance(supported_version, str):
-                                if self.game_version.startswith(supported_version):
+                                if MetadataManager.instance().game_version.startswith(
+                                    supported_version
+                                ):
                                     is_supported = True
                             else:
                                 logger.error(
@@ -343,12 +345,15 @@ class ActiveModList(QWidget):
                 for dependency_id in missing_dependencies:
                     # If dependency is installed, we can get its name
                     if dependency_id in mod_data["packageid"]:
-                        error_tool_tip_text += f"\n  * {self.all_mods[uuid]['name']}"
-                    # Otherwise, we might be able to get it from Steam DB
-                    elif dependency_id in self.steam_package_id_to_name:
                         error_tool_tip_text += (
-                            f"\n  * {self.steam_package_id_to_name[dependency_id]}"
+                            f"\n  * {self.all_mods_compiled[uuid]['name']}"
                         )
+                    # Otherwise, we might be able to get it from Steam DB
+                    elif (
+                        dependency_id
+                        in MetadataManager.instance().info_from_steam_package_id_to_name
+                    ):
+                        error_tool_tip_text += f"\n  * {MetadataManager.instance().info_from_steam_package_id_to_name[dependency_id]}"
                     # Other-otherwise, just use the id
                     else:
                         error_tool_tip_text += f"\n  * {dependency_id}"
