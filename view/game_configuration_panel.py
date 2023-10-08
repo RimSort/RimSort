@@ -1076,11 +1076,7 @@ class GameConfiguration(QObject):
             )
 
         # Checking for an existing Rimworld/Mods folder
-        rimworld_mods_path = ""
-        if self.system_name == "Darwin":
-            rimworld_mods_path = str(Path(os.path.join(os_paths[0], "Mods")).resolve())
-        else:
-            rimworld_mods_path = str(Path(os.path.join(os_paths[0], "Mods")).resolve())
+        rimworld_mods_path = str(Path(os.path.join(os_paths[0], "Mods")).resolve())
         if os.path.exists(rimworld_mods_path):
             logger.info(
                 f"Autodetected local mods folder path exists: {rimworld_mods_path}"
