@@ -1253,10 +1253,16 @@ class GameConfiguration(QObject):
         """
         logger.info("USER ACTION: set the local mods folder")
         start_dir = None
-        if self.local_folder_line.text():
-            possible_dir = self.local_folder_line.text()
-            if os.path.exists(possible_dir):
-                start_dir = possible_dir
+        if self.system_name == "Darwin":
+            if self.game_folder_line.text():
+                possible_dir = self.game_folder_line.text()
+                if os.path.exists(possible_dir):
+                    start_dir = os.path.split(possible_dir)[0]
+        else:
+            if self.local_folder_line.text():
+                possible_dir = self.local_folder_line.text()
+                if os.path.exists(possible_dir):
+                    start_dir = possible_dir
         if self.system_name == "Darwin":
             # On Mac it need too many hoops to jump through to select the mods dir
             # Instead we ask the user to select the app and we append the mods dir to the path as needed
