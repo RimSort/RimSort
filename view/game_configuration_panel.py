@@ -1198,22 +1198,20 @@ class GameConfiguration(QObject):
         Open a file dialog to allow the user to select the game executable.
         """
         logger.info("USER ACTION: set the game install folder")
-        start_dir = ""
+        start_dir = None
         if self.game_folder_line.text():
             possible_dir = self.game_folder_line.text()
             if os.path.exists(possible_dir):
                 start_dir = possible_dir
         if self.system_name == "Darwin":
-            game_exe_folder_path = os.path.normpath(
-                show_dialogue_file(
-                    mode="open", caption="Select Game App", _dir=start_dir
-                )
+            game_exe_folder_path = show_dialogue_file(
+                mode="open", caption="Select RimWorld app", _dir=start_dir
             )
         else:
-            game_exe_folder_path = os.path.normpath(
-                show_dialogue_file(
-                    mode="open_dir", caption="Select Game Folder", _dir=start_dir
-                )
+            game_exe_folder_path = show_dialogue_file(
+                mode="open_dir",
+                caption="Select RimWorld game folder",
+                _dir=start_dir if start_dir else None,
             )
         logger.info(f"Selected path: {game_exe_folder_path}")
         if game_exe_folder_path and game_exe_folder_path != ".":
@@ -1229,15 +1227,15 @@ class GameConfiguration(QObject):
         Open a file dialog to allow the user to select the ModsConfig.xml directory.
         """
         logger.info("USER ACTION: set the ModsConfig.xml folder")
-        start_dir = ""
+        start_dir = None
         if self.config_folder_line.text():
             possible_dir = self.config_folder_line.text()
             if os.path.exists(possible_dir):
                 start_dir = possible_dir
-        config_folder_path = os.path.normpath(
-            show_dialogue_file(
-                mode="open_dir", caption="Select Mods Config Folder", _dir=start_dir
-            )
+        config_folder_path = show_dialogue_file(
+            mode="open_dir",
+            caption="Select RimWorld config folder",
+            _dir=start_dir if start_dir else None,
         )
         logger.info(f"Selected path: {config_folder_path}")
         if config_folder_path and config_folder_path != ".":
@@ -1254,7 +1252,7 @@ class GameConfiguration(QObject):
         to set as the local mods folder.
         """
         logger.info("USER ACTION: set the local mods folder")
-        start_dir = ""
+        start_dir = None
         if self.local_folder_line.text():
             possible_dir = self.local_folder_line.text()
             if os.path.exists(possible_dir):
@@ -1262,22 +1260,26 @@ class GameConfiguration(QObject):
         if self.system_name == "Darwin":
             # On Mac it need too many hoops to jump through to select the mods dir
             # Instead we ask the user to select the app and we append the mods dir to the path as needed
-            local_path = os.path.join(
-                os.path.normpath(
-                    show_dialogue_file(
-                        mode="open", caption="Select Game App", _dir=start_dir
-                    )
-                ),
-                "Mods",
+            game_app_path = show_dialogue_file(
+                mode="open",
+                caption="Select game app",
+                _dir=start_dir if start_dir else None,
             )
-        else:
-            local_path = os.path.normpath(
-                show_dialogue_file(
-                    mode="open_dir", caption="Select Local Mods Folder", _dir=start_dir
+            if game_app_path:
+                local_path = os.path.join(
+                    game_app_path,
+                    "Mods",
                 )
+            else:
+                local_path = None
+        else:
+            local_path = show_dialogue_file(
+                mode="open_dir",
+                caption="Select local mods folder",
+                _dir=start_dir if start_dir else None,
             )
         logger.info(f"Selected path: {local_path}")
-        if local_path and local_path != ".":
+        if local_path:
             logger.info(
                 f"Local mods folder chosen. Setting UI and updating storage: {local_path}"
             )
@@ -1291,16 +1293,18 @@ class GameConfiguration(QObject):
         to set as the workshop folder.
         """
         logger.info("USER ACTION: set the workshop folder")
-        start_dir = ""
+        start_dir = None
         if self.workshop_folder_line.text():
             possible_dir = self.workshop_folder_line.text()
             if os.path.exists(possible_dir):
                 start_dir = possible_dir
         workshop_path = show_dialogue_file(
-            mode="open_dir", caption="Select Workshop Folder", _dir=start_dir
+            mode="open_dir",
+            caption="Select workshop mods folder",
+            _dir=start_dir if start_dir else None,
         )
         logger.info(f"Selected path: {workshop_path}")
-        if workshop_path and workshop_path != ".":
+        if workshop_path:
             logger.info(
                 f"Workshop folder chosen. Setting UI and updating storage: {workshop_path}"
             )
