@@ -30,7 +30,7 @@ DEFAULT_SETTINGS = {
     "try_download_missing_mods": False,
     "steamcmd_install_path": ".",
     "steamcmd_validate_downloads": True,
-    "todds_preset": "medium",
+    "todds_preset": "optimized",
     "todds_active_mods_target": True,
     "todds_dry_run": False,
     "todds_overwrite": False,

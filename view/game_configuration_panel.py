@@ -131,7 +131,7 @@ class GameConfiguration(QObject):
             self.steamcmd_validate_downloads_toggle = False
 
             # TODDS PRESET
-            self.todds_preset = "medium"
+            self.todds_preset = "optimized"
 
             # TODDS ACTIVE MODS TARGET TOGGLE
             self.todds_active_mods_target_toggle = False
@@ -771,17 +771,9 @@ class GameConfiguration(QObject):
             # todds
             if settings_data.get("todds_preset"):
                 self.todds_preset = settings_data["todds_preset"]
-            if self.todds_preset == "low":
+            if self.todds_preset == "optimized":
                 self.settings_panel.todds_presets_cb.setCurrentText(
-                    "Optimized for VRAM (lesser graphics cards, faster encoding)"
-                )
-            if self.todds_preset == "medium":
-                self.settings_panel.todds_presets_cb.setCurrentText(
-                    "Default quality (recommended for RimWorld, slower encoding)"
-                )
-            if self.todds_preset == "high":
-                self.settings_panel.todds_presets_cb.setCurrentText(
-                    "High quality (for texture enthusiasts, slowest encode time)"
+                    "Optimized - Recommended for RimWorld"
                 )
             if settings_data.get("todds_active_mods_target"):
                 self.todds_active_mods_target_toggle = settings_data[
@@ -858,12 +850,8 @@ class GameConfiguration(QObject):
             self.steamcmd_validate_downloads_toggle = False
 
         # todds preset
-        if "Optimized for VRAM" in self.settings_panel.todds_presets_cb.currentText():
-            self.todds_preset = "low"
-        elif "Default quality" in self.settings_panel.todds_presets_cb.currentText():
-            self.todds_preset = "medium"
-        elif "High quality" in self.settings_panel.todds_presets_cb.currentText():
-            self.todds_preset = "high"
+        if "Optimized - Recommended for RimWorld" in self.settings_panel.todds_presets_cb.currentText():
+            self.todds_preset = "optimized"
         # todds active mods target
         if self.settings_panel.todds_active_mods_target_checkbox.isChecked():
             self.todds_active_mods_target_toggle = True
