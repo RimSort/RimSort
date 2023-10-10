@@ -10,7 +10,7 @@ DB_BUILDER_RECURSE_EXCEPTIONS = [
     "loadBottom",
 ]
 DEFAULT_SETTINGS = {
-    "check_for_update_startup": True,
+    "check_for_update_startup": False,
     "show_folder_rows": True,
     "sorting_algorithm": "Alphabetical",
     "external_steam_metadata_file_path": "steamDB.json",
