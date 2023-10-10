@@ -31,6 +31,9 @@ class ToddsInterface:
             overwrite_flag = "-on"
         self.cwd = os.getcwd()
         self.system = platform.system()
+        # Check if the preset is one of the old presets and change it to "optimized" if necessary
+        if preset in ["low", "medium", "high"]:
+            preset = "optimized"
         self.preset = preset
         self.todds_presets = {
             "clean": [
