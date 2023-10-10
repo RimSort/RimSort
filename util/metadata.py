@@ -216,14 +216,7 @@ class MetadataManager(QObject):
             ) = get_configured_steam_db(
                 self,
                 life=GameConfiguration.instance().database_expiry,
-                path=str(
-                    Path(
-                        self,
-                        os.path.join(
-                            self.GameConfiguration.instance().external_steam_metadata_file_path
-                        ),
-                    ).resolve()
-                ),
+                path=GameConfiguration.instance().steam_db_file_path,
             )
         elif (
             GameConfiguration.instance().settings_panel.external_steam_metadata_cb.currentText()
@@ -262,13 +255,7 @@ class MetadataManager(QObject):
                 self.external_community_rules_path,
             ) = get_configured_community_rules_db(
                 self,
-                path=str(
-                    Path(
-                        os.path.join(
-                            GameConfiguration.instance().external_community_rules_file_path
-                        )
-                    ).resolve()
-                ),
+                path=GameConfiguration.instance().community_rules_file_path,
             )
         elif (
             GameConfiguration.instance().settings_panel.external_community_rules_metadata_cb.currentText()
