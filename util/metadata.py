@@ -55,7 +55,7 @@ from window.runner_panel import RunnerPanel
 class MetadataManager(QObject):
     _instance: Optional["MetadataManager"] = None
 
-    show_warning_signal = Signal(str, str, str)
+    show_warning_signal = Signal(str, str, str, str)
     update_game_configuration_signal = Signal()
 
     def __new__(cls, *args, **kwargs):
@@ -150,11 +150,12 @@ class MetadataManager(QObject):
                         )
                     else:  # If the cached db data is expired but NOT missing
                         # Fallback to the expired metadata
-                        show_warning(
-                            title="Steam DB metadata expired",
-                            text="Steam DB is expired! Consider updating!\n",
-                            information=f'Steam DB last updated: {strftime("%Y-%m-%d %H:%M:%S", localtime(db_data["version"] - life))}\n\n'
+                        self.show_warning_signal.emit(
+                            "Steam DB metadata expired",
+                            "Steam DB is expired! Consider updating!\n",
+                            f'Steam DB last updated: {strftime("%Y-%m-%d %H:%M:%S", localtime(db_data["version"] - life))}\n\n'
                             + "Falling back to cached, but EXPIRED Steam Database...",
+                            "",
                         )
                         db_json_data = db_data[
                             "database"
@@ -166,11 +167,12 @@ class MetadataManager(QObject):
                     return db_json_data, path
 
             else:  # Assume db_data_missing
-                show_warning(
-                    title="Steam DB is missing",
-                    text="Configured Steam DB not found!",
-                    information="Unable to initialize external metadata. There is no external Steam metadata being factored!\n"
+                self.show_warning_signal.emit(
+                    "Steam DB is missing",
+                    "Configured Steam DB not found!",
+                    "Unable to initialize external metadata. There is no external Steam metadata being factored!\n"
                     + "\nPlease use DB Builder to create a database, or update to the latest RimSort Steam Workshop Database.",
+                    "",
                 )
                 return None, None
 
@@ -196,11 +198,12 @@ class MetadataManager(QObject):
                     return community_rules_json_data, path
 
             else:  # Assume db_data_missing
-                show_warning(
-                    title="Community Rules DB is missing",
-                    text="Configured Community Rules DB not found!",
-                    information="Unable to initialize external metadata. There is no external Community Rules metadata being factored!\n"
+                self.show_warning_signal.emit(
+                    "Community Rules DB is missing",
+                    "Configured Community Rules DB not found!",
+                    "Unable to initialize external metadata. There is no external Community Rules metadata being factored!\n"
                     + "\nPlease use Rule Editor to create a database, or update to the latest RimSort Community Rules database.",
+                    "",
                 )
                 return None, None
 
@@ -388,6 +391,7 @@ class MetadataManager(QObject):
                     "Missing Version.txt",
                     f"RimSort is unable to get the game version at the expected path: [{version_file_path}].",
                     f"\nIs your game path [{game_path}] set correctly? There should be a Version.txt file in the game install directory.",
+                    "",
                 )
             return version.strip()
 
@@ -2125,10 +2129,10 @@ def check_if_pfids_blacklisted(publishedfileids: list, steamdb: Dict[str, Any]) 
             )
             blacklisted_mods_report += f'Reason for blacklisting: {blacklisted_mods[publishedfileid]["comment"]}'
         answer = show_dialogue_conditional(
-            title="Blacklisted mods found",
-            text="Some mods are blacklisted in your SteamDB",
-            information="Are you sure you want to download these mods? These mods are known mods that are recommended to be avoided.",
-            details=blacklisted_mods_report,
+            "Blacklisted mods found",
+            "Some mods are blacklisted in your SteamDB",
+            "Are you sure you want to download these mods? These mods are known mods that are recommended to be avoided.",
+            blacklisted_mods_report,
         )
         if answer != "&Yes":
             publishedfileids.remove(publishedfileid)
