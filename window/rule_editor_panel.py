@@ -109,7 +109,6 @@ class RuleEditor(QWidget):
             if MetadataManager.instance().external_user_rules
             else {}
         )
-        print(self.user_rules)
         self.user_rules_hidden = None
         # Can be used to get proper names for mods found in list
         # items that are not locally available
@@ -147,18 +146,11 @@ class RuleEditor(QWidget):
 
         # DETAILS WIDGETS
         # local metadata
-        MetadataManager.instance().internal_local_metadata_loadAfter_label = QLabel(
-            "About.xml (loadAfter)"
-        )
-        MetadataManager.instance().internal_local_metadata_loadBefore_label = QLabel(
-            "About.xml (loadBefore)"
-        )
-        MetadataManager.instance().internal_local_metadata_loadAfter_list = (
-            QListWidget()
-        )
-        MetadataManager.instance().internal_local_metadata_loadBefore_list = (
-            QListWidget()
-        )
+        self.local_metadata_loadAfter_label = QLabel("About.xml (loadAfter)")
+        self.local_metadata_loadBefore_label = QLabel("About.xml (loadBefore)")
+        self.local_metadata_loadAfter_list = QListWidget()
+        self.local_metadata_loadBefore_list = QListWidget()
+
         # community rules
         self.external_community_rules_loadAfter_label = QLabel(
             "Community Rules (loadAfter)"
@@ -331,8 +323,8 @@ class RuleEditor(QWidget):
         self.mods_list.setDragEnabled(True)
 
         # Actions
-        MetadataManager.instance().internal_local_metadata_button = QPushButton()
-        MetadataManager.instance().internal_local_metadata_button.clicked.connect(
+        self.local_metadata_button = QPushButton()
+        self.local_metadata_button.clicked.connect(
             partial(
                 self._toggle_details_layout_widgets, self.internal_local_metadata_layout
             )
@@ -353,16 +345,16 @@ class RuleEditor(QWidget):
         )
         # Build the details layout
         self.internal_local_metadata_layout.addWidget(
-            MetadataManager.instance().internal_local_metadata_loadAfter_label
+            self.local_metadata_loadAfter_label
         )
         self.internal_local_metadata_layout.addWidget(
-            MetadataManager.instance().internal_local_metadata_loadAfter_list
+            self.local_metadata_loadAfter_list
         )
         self.internal_local_metadata_layout.addWidget(
-            MetadataManager.instance().internal_local_metadata_loadBefore_label
+            self.local_metadata_loadBefore_label
         )
         self.internal_local_metadata_layout.addWidget(
-            MetadataManager.instance().internal_local_metadata_loadBefore_list
+            self.local_metadata_loadBefore_list
         )
         self.external_community_rules_layout.addWidget(
             self.external_community_rules_loadAfter_label
@@ -406,9 +398,7 @@ class RuleEditor(QWidget):
 
         # Build the mods layouts
         self.mods_layout.addWidget(self.mods_search)
-        self.mods_actions_layout.addWidget(
-            MetadataManager.instance().internal_local_metadata_button
-        )
+        self.mods_actions_layout.addWidget(self.local_metadata_button)
         self.mods_actions_layout.addWidget(self.community_rules_button)
         self.mods_actions_layout.addWidget(self.user_rules_button)
         self.mods_layout.addWidget(self.mods_list)
@@ -592,8 +582,8 @@ class RuleEditor(QWidget):
         logger.debug("Clearing editor")
         self.clear_mods_search()
         self.mods_list.clear()
-        MetadataManager.instance().internal_local_metadata_loadAfter_list.clear()
-        MetadataManager.instance().internal_local_metadata_loadBefore_list.clear()
+        self.local_metadata_loadAfter_list.clear()
+        self.local_metadata_loadBefore_list.clear()
         self.external_community_rules_loadAfter_list.clear()
         self.external_community_rules_loadBefore_list.clear()
         self.external_user_rules_loadAfter_list.clear()
@@ -665,7 +655,7 @@ class RuleEditor(QWidget):
                         loadAfters = metadata["loadafter"]["li"]
                         if isinstance(loadAfters, str):
                             self._create_list_item(
-                                _list=MetadataManager.instance().internal_local_metadata_loadAfter_list,
+                                _list=self.local_metadata_loadAfter_list,
                                 title=self.steam_workshop_metadata_packageids_to_name[
                                     loadAfters.lower()
                                 ]
@@ -696,7 +686,7 @@ class RuleEditor(QWidget):
                         elif isinstance(loadAfters, list):
                             for rule in loadAfters:
                                 self._create_list_item(
-                                    _list=MetadataManager.instance().internal_local_metadata_loadAfter_list,
+                                    _list=self.local_metadata_loadAfter_list,
                                     title=self.steam_workshop_metadata_packageids_to_name[
                                         rule.lower()
                                     ]
@@ -730,7 +720,7 @@ class RuleEditor(QWidget):
                         loadBefores = metadata["loadbefore"]["li"]
                         if isinstance(loadBefores, str):
                             self._create_list_item(
-                                _list=MetadataManager.instance().internal_local_metadata_loadBefore_list,
+                                _list=self.local_metadata_loadBefore_list,
                                 title=self.steam_workshop_metadata_packageids_to_name[
                                     loadBefores.lower()
                                 ]
@@ -744,15 +734,15 @@ class RuleEditor(QWidget):
                             )
                             self._add_rule_to_table(
                                 name=self.steam_workshop_metadata_packageids_to_name[
-                                    loadAfters.lower()
+                                    loadBefores.lower()
                                 ]
-                                if loadAfters.lower()
+                                if loadBefores.lower()
                                 in [
                                     key.lower()
                                     for key in self.steam_workshop_metadata_packageids_to_name.keys()
                                 ]
-                                else loadAfters,
-                                packageid=loadAfters,
+                                else loadBefores,
+                                packageid=loadBefores,
                                 rule_source="About.xml",
                                 rule_type="loadBefore",
                                 comment="Added from mod metadata",
@@ -761,7 +751,7 @@ class RuleEditor(QWidget):
                         elif isinstance(loadBefores, list):
                             for rule in loadBefores:
                                 self._create_list_item(
-                                    _list=MetadataManager.instance().internal_local_metadata_loadBefore_list,
+                                    _list=self.local_metadata_loadBefore_list,
                                     title=self.steam_workshop_metadata_packageids_to_name[
                                         rule.lower()
                                     ]
@@ -989,9 +979,7 @@ class RuleEditor(QWidget):
         if visibility:
             if layout is self.internal_local_metadata_layout:
                 self.local_rules_hidden = True
-                MetadataManager.instance().internal_local_metadata_button.setText(
-                    "Show About.xml rules"
-                )
+                self.local_metadata_button.setText("Show About.xml rules")
                 self._toggle_editor_table_rows(
                     rule_type="About.xml", visibility=visibility
                 )
@@ -1010,9 +998,7 @@ class RuleEditor(QWidget):
         else:
             if layout is self.internal_local_metadata_layout:
                 self.local_rules_hidden = False
-                MetadataManager.instance().internal_local_metadata_button.setText(
-                    "Hide About.xml rules"
-                )
+                self.local_metadata_button.setText("Hide About.xml rules")
                 self._toggle_editor_table_rows(
                     rule_type="About.xml", visibility=visibility
                 )
