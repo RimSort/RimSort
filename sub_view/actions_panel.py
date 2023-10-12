@@ -16,6 +16,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from model.dialogue import show_dialogue_confirmation
+
 
 class Actions(QWidget):
     """
@@ -124,18 +126,14 @@ class Actions(QWidget):
         self.todds_label.setAlignment(Qt.AlignCenter)
 
         # OPTIMIZE TEXTURES BUTTON
-        self.optimize_textures_button = QPushButton("Optimize textures")
-        self.optimize_textures_button.setToolTip(
-            "Quality presets configurable in settings!\nRight-click to delete .dds textures"
-        )
+        self.optimize_textures_button = QPushButton("Optimize Textures")
         self.optimize_textures_button.clicked.connect(
             partial(self.actions_signal.emit, "optimize_textures")
         )
-        # Set context menu policy and connect custom context menu event
-        self.optimize_textures_button.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.optimize_textures_button.customContextMenuRequested.connect(
-            self.optimizeTexContextMenuEvent
-        )
+
+        # Delete .dds TEXTURES BUTTON
+        self.delete_dds_button = QPushButton("Delete .dds Textures")
+        self.delete_dds_button.clicked.connect(self.confirm_delete_dds)
 
         # STEAM LABEL
         self.add_mods_label = QLabel("Download mods")
@@ -226,6 +224,7 @@ class Actions(QWidget):
         self.top_panel.addWidget(self.sort_button)
         self.top_panel.addWidget(self.todds_label)
         self.top_panel.addWidget(self.optimize_textures_button)
+        self.top_panel.addWidget(self.delete_dds_button)
         self.middle_panel.addWidget(self.add_mods_label)
         self.middle_panel.addWidget(self.add_git_mod_button)
         self.middle_panel.addWidget(self.browse_workshop_button)
@@ -260,15 +259,16 @@ class Actions(QWidget):
         )
         action = contextMenu.exec_(self.export_button.mapToGlobal(point))
 
-    def optimizeTexContextMenuEvent(self, point: QPoint) -> None:
-        contextMenu = QMenu(self)  # Actions Panel context menu event
-        delete_dds_tex_action = contextMenu.addAction(
-            "Delete optimized textures"
-        )  # delete .dds
-        delete_dds_tex_action.triggered.connect(
-            partial(self.actions_signal.emit, "delete_textures")
+    def confirm_delete_dds(self):
+        reply = show_dialogue_confirmation(
+            "Confirmation",
+            "Are you sure you want to delete DDS textures?",
         )
-        action = contextMenu.exec_(self.optimize_textures_button.mapToGlobal(point))
+
+        if reply == "&Yes":
+            self.actions_signal.emit("delete_textures")
+        else:
+            return None
 
     def runArgsContextMenuEvent(self, point: QPoint) -> None:
         contextMenu = QMenu(self)  # Actions Panel context menu event

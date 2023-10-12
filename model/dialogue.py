@@ -17,6 +17,54 @@ from logger_tt import logger
 DEFAULT_TITLE = "RimSort"
 
 
+def show_dialogue_confirmation(
+    title: Optional[str] = None,
+    text: Optional[str] = None,
+    information: Optional[str] = None,
+    details: Optional[str] = None,
+    button_text: Optional[str] = "Yes",
+) -> str:
+    """
+    Displays a dialogue with a single custom button (defaulting to "Yes").
+    :param title: text to pass to setWindowTitle
+    :param text: text to pass to setText
+    :param information: text to pass to setInformativeText
+    :param details: text to pass to setDetailedText
+    """
+    logger.info(
+        f"Showing dialogue box with input: [{title}], [{text}], [{information}] [{details}]"
+    )
+
+    # Set up the message box
+    dialogue = QMessageBox()
+    dialogue.setTextFormat(Qt.RichText)
+    dialogue.setIcon(QMessageBox.Question)
+    dialogue.setObjectName("dialogue")
+    if title:
+        dialogue.setWindowTitle(title)
+    else:
+        dialogue.setWindowTitle(DEFAULT_TITLE)
+
+    # Remove standard buttons
+    dialogue.setStandardButtons(
+        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel
+    )
+    dialogue.setDefaultButton(QMessageBox.StandardButton.Cancel)
+
+    # Add data
+    if text:
+        dialogue.setText(text)
+    if information:
+        dialogue.setInformativeText(information)
+    if details:
+        dialogue.setDetailedText(details)
+
+    # Show the message box & return response
+    dialogue.exec_()
+    response = dialogue.clickedButton()
+    return response.text()
+
+
 def show_dialogue_conditional(
     title: Optional[str] = None,
     text: Optional[str] = None,
