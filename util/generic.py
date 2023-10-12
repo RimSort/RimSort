@@ -3,6 +3,7 @@ from errno import EACCES
 import os
 from pathlib import Path
 import platform
+from re import sub
 import shutil
 from stat import S_IRWXU, S_IRWXG, S_IRWXO
 import subprocess
@@ -179,7 +180,7 @@ def platform_specific_open(path: str) -> None:
     system_name = platform.system()
     if system_name == "Darwin":
         logger.info(f"Opening {path} with subprocess open on MacOS")
-        if(path.endswith(".app") or path.endswith(".app/")):
+        if path.endswith(".app") or path.endswith(".app/"):
             subprocess.Popen(["open", path, "-R"])
         else:
             subprocess.Popen(["open", path])
@@ -191,6 +192,17 @@ def platform_specific_open(path: str) -> None:
         subprocess.Popen(["xdg-open", path])
     else:
         logger.error("Attempting to open directory on an unknown system")
+
+
+def sanitize_filename(filename: str) -> str:
+    # Remove forbidden characters for all platforms
+    forbidden_chars = r'[<>:"/\|?*\0]'
+    sanitized_filename = sub(forbidden_chars, "", filename)
+
+    # Windows filenames shouldn't end with a space or period
+    sanitized_filename = sanitized_filename.rstrip(". ")
+
+    return sanitized_filename
 
 
 def set_to_list(obj):

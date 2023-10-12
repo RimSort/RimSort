@@ -25,6 +25,7 @@ from util.generic import (
     handle_remove_read_only,
     open_url_browser,
     platform_specific_open,
+    sanitize_filename,
 )
 from util.metadata import MetadataManager
 from util.steam.steamcmd.wrapper import SteamcmdInterface
@@ -603,6 +604,11 @@ class ModListWidget(QListWidget):
                         publishedfileid,
                         mod_name,
                     ) in steamcmd_publishedfileid_to_name.items():
+                        mod_name = (
+                            sanitize_filename(mod_name)
+                            if mod_name
+                            else f"{publishedfileid}_local"
+                        )
                         original_mod_path = str(
                             Path(
                                 os.path.join(
@@ -669,13 +675,18 @@ class ModListWidget(QListWidget):
                 ):
                     for path in steam_mod_paths:
                         publishedfileid_from_folder_name = os.path.split(path)[1]
+                        mod_name = steam_publishedfileid_to_name.get(
+                            publishedfileid_from_folder_name
+                        )
+                        if mod_name:
+                            mod_name = sanitize_filename(mod_name)
                         renamed_mod_path = str(
                             Path(
                                 os.path.join(
                                     GameConfiguration.instance().local_folder_line.text(),
-                                    steam_publishedfileid_to_name[
-                                        publishedfileid_from_folder_name
-                                    ],
+                                    mod_name
+                                    if mod_name
+                                    else publishedfileid_from_folder_name,
                                 )
                             ).resolve()
                         )
