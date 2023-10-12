@@ -2601,6 +2601,7 @@ class MainContent(QObject):
             GameConfiguration.instance()._update_persistent_storage(
                 {"external_community_rules_file_path": input_path}
             )
+            GameConfiguration.instance().community_rules_file_path = input_path
         else:
             logger.debug("USER ACTION: cancelled selection!")
             return
