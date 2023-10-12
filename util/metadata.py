@@ -700,7 +700,7 @@ class MetadataManager(QObject):
     ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         """
         Iterate through each expansion or mod and add new key-values describing
-        its dependencies, incompatibilities, and load order rules from metadata.
+        its dependencies, incompatibilities, and load order rules from external metadata.
 
         :param all_mods: dict of all mods from local mod (and expansion) metadata
         :param steam_db: a dict containing the ["database"] rules from external metadata

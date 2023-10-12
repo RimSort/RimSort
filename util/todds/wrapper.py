@@ -39,7 +39,7 @@ class ToddsInterface:
             "clean": [
                 "-cl",
                 "-o",
-                "-r",
+                "-ss",
                 "Textures",
                 "-p",
                 "-t",
@@ -52,7 +52,7 @@ class ToddsInterface:
                 overwrite_flag,
                 "-vf",
                 "-fs",
-                "-r",
+                "-ss",
                 "Textures",
                 "-t",
                 "-p",
