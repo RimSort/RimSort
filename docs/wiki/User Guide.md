@@ -9,12 +9,12 @@ This is an open-source project so feel free to build it yourself! Check out the 
 * Run the executable: `RimSort.exe`
 
 RimSort preview for Windows users
-<img width="1264" alt="WindowsRSpreview" src="https://github.com/RimSort/RimSort/assets/102756485/393ec2fc-9fd4-48a1-b594-489d6fe34044">
+<img alt="WindowsRSpreview" src="https://github.com/RimSort/RimSort/assets/102756485/393ec2fc-9fd4-48a1-b594-489d6fe34044">
 
 #### MacOS
 
 RimSort preview for Mac users
-<img width="1264" alt="previewRSmac" src="https://github.com/RimSort/RimSort/assets/102756485/29cee99f-d483-44e0-a82f-bee0331fbc05">
+<img alt="previewRSmac" src="https://github.com/RimSort/RimSort/assets/102756485/29cee99f-d483-44e0-a82f-bee0331fbc05">
 
 * Open the app bundle: `RimSort.app`
     * Mac users should keep in mind that Apple has it's own Runtime Protection called [Gatekeeper](https://support.apple.com/guide/security/gatekeeper-and-runtime-protection-sec5599b66df/web)
