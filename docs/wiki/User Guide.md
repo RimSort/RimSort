@@ -9,12 +9,12 @@ This is an open-source project so feel free to build it yourself! Check out the 
 * Run the executable: `RimSort.exe`
 
 RimSort preview for Windows users
-<img alt="WindowsRSpreview" src="https://github.com/RimSort/RimSort/assets/102756485/393ec2fc-9fd4-48a1-b594-489d6fe34044">
+<img alt="Windowspreview" src="https://github.com/RimSort/RimSort/assets/102756485/393ec2fc-9fd4-48a1-b594-489d6fe34044">
 
 #### MacOS
 
 RimSort preview for Mac users
-<img alt="previewRSmac" src="https://github.com/RimSort/RimSort/assets/102756485/29cee99f-d483-44e0-a82f-bee0331fbc05">
+<img alt="Macpreview" src="https://github.com/RimSort/RimSort/assets/102756485/e8a68314-c0f9-41f8-858b-743a8f396139">
 
 * Open the app bundle: `RimSort.app`
     * Mac users should keep in mind that Apple has it's own Runtime Protection called [Gatekeeper](https://support.apple.com/guide/security/gatekeeper-and-runtime-protection-sec5599b66df/web)
@@ -30,7 +30,7 @@ RimSort preview for Mac users
 #### Linux
 
 RimSort preview for Linux users
-(insert here next release)
+<img alt="Linuxpreview" src="https://github.com/RimSort/RimSort/ 
 
 * Run the executable: `./RimSort`
 
@@ -174,7 +174,6 @@ This is used to download/upload a Steam Workshop Database (steamDB.json) or a Co
 * Uploading a database (Write access to a repository is required for you to be able to upload):
 
 [upload database](https://github.com/RimSort/RimSort/assets/2766946/60ced0ef-adba-436f-8fbc-e593a236e389)
-
 
 ### Sorting Algorithms
 RimSort exposes two sorting algorithms by default for sorting the active mod list.
