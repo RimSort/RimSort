@@ -156,10 +156,8 @@ def open_url_browser(url: str) -> None:
     """
     Open the url of a mod of a url in a user's default web browser
     """
-    browser = webbrowser.get().name
-    logger.info(f"USER ACTION: Opening mod url {url} in " + f"{browser}")
-    webbrowser.open_new_tab(url)
-
+    logger.info(f"USER ACTION: Opening mod url {url}")
+    webbrowser.open(url)
 
 def platform_specific_open(path: str) -> None:
     """
