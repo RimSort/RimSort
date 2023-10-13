@@ -1890,10 +1890,11 @@ class MainContent(QObject):
             f"Attempting to download {len(publishedfileids)} mods with SteamCMD"
         )
         # Check for blacklisted mods
-        publishedfileids = check_if_pfids_blacklisted(
-            publishedfileids=publishedfileids,
-            steamdb=self.metadata_manager.external_steam_metadata,
-        )
+        if self.metadata_manager.external_steam_metadata is not None:
+            publishedfileids = check_if_pfids_blacklisted(
+                publishedfileids=publishedfileids,
+                steamdb=self.metadata_manager.external_steam_metadata,
+            )
         # No empty publishedfileids
         if not len(publishedfileids) > 0:
             show_warning(
