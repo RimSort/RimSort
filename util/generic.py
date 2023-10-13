@@ -154,9 +154,9 @@ def launch_game_process(game_install_path: str, args: list) -> None:
 
 def open_url_browser(url: str) -> None:
     """
-    Open the url of a mod of a url in a user's default web browser
+    Open a url in a user's default web browser
     """
-    logger.info(f"USER ACTION: Opening mod url {url}")
+    logger.info(f"USER ACTION: Opening url {url}")
     webbrowser.open(url)
 
 def platform_specific_open(path: str) -> None:
