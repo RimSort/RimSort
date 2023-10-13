@@ -9,7 +9,7 @@ This is an open-source project so feel free to build it yourself! Check out the 
 * Run the executable: `RimSort.exe`
 
 RimSort preview for Windows users
-<img alt="Windowspreview" src="https://github.com/RimSort/RimSort/assets/102756485/393ec2fc-9fd4-48a1-b594-489d6fe34044">
+<img alt="Windowspreview" src="https://github.com/RimSort/RimSort/assets/102756485/70760cb8-3916-46bf-9f2a-7165c993d59d">
 
 #### MacOS
 
@@ -29,8 +29,9 @@ RimSort preview for Mac users
 
 #### Linux
 
-RimSort preview for Linux users
-<img alt="Linuxpreview" src="https://github.com/RimSort/RimSort/ 
+RimSort preview for Linux users 
+
+<img alt="Linuxpreview" src="https://github.com/RimSort/RimSort/assets/102756485/d26577e4-d488-406b-b9a2-dc2eeea8de25">
 
 * Run the executable: `./RimSort`
 
