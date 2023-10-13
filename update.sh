@@ -39,16 +39,16 @@ read -r -t 5 -p "Updating RimSort in 5 seconds. Press Enter to continue."
 # Execute RimSort from the current directory
 if [[ "$os" = "Darwin" ]]; then # macOS detected
     # Remove old installation
-    rm -rf -- "${grandparent_dir}"
+    echo rm -rf -- "${grandparent_dir}"
     # Move files from the update source folder to the current directory
-    chmod +x -- "${update_source_folder}/${executable_name}/Contents/MacOS/RimSort" "${update_source_folder}/${executable_name}/Contents/MacOS/todds/todds"
-    mv -- "${update_source_folder}/${executable_name}" "${grandparent_dir}"
-    open -- "${grandparent_dir}"
+    echo chmod +x -- "${update_source_folder}/${executable_name}/Contents/MacOS/RimSort" "${update_source_folder}/${executable_name}/Contents/MacOS/todds/todds"
+    echo mv -- "${update_source_folder}/${executable_name}" "${grandparent_dir}"
+    echo open -- "${grandparent_dir}"
 elif [[ "$os" = "Linux" ]]; then
     # Remove old installation
-    rm -rf -- "${parent_dir}"
+    echo rm -rf -- "${parent_dir}"
     # Move files from the update source folder to the current directory
-    chmod +x -- "${update_source_folder}/${executable_name}" "${update_source_folder}/todds/todds"
-    mv "${update_source_folder}" "${parent_dir}"
+    echo chmod +x -- "${update_source_folder}/${executable_name}" "${update_source_folder}/todds/todds"
+    echo mv "${update_source_folder}" "${parent_dir}"
     "${parent_dir}/$executable_name"
 fi
