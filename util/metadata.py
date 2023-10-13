@@ -2109,8 +2109,6 @@ class SteamDatabaseBuilder(QThread):
 def check_if_pfids_blacklisted(publishedfileids: list, steamdb: Dict[str, Any]) -> list:
     # Warn attempt of blacklisted mods
     blacklisted_mods = {}
-    if steamdb is None:
-        return publishedfileids
     for publishedfileid in publishedfileids:
         if steamdb.get(publishedfileid, {}).get("blacklist"):
             blacklisted_mods[publishedfileid] = {
