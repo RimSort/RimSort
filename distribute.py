@@ -8,7 +8,6 @@ import shutil
 from stat import S_IEXEC
 import subprocess
 import sys
-import time
 from zipfile import ZipFile
 
 """
@@ -24,83 +23,48 @@ if _PROCESSOR == "":
 _SYSTEM = platform.system()
 
 PY_CMD = sys.executable
+# _ICON_EXT = "icns" if _SYSTEM == "Darwin" else "png"
+_UPDATE_SCRIPT_EXT = "bat" if _SYSTEM == "Windows" else "sh"
+_LIB_EXT = "dylib" if _SYSTEM == "Darwin" else "so" if _SYSTEM == "Linux" else "dll"
+_STEAMWORKSPY_MAPPING = "SteamworksPy64.dll=SteamworksPy64.dll" if _SYSTEM == "Windows" else f"SteamworksPy_{_PROCESSOR}.{_LIB_EXT}=SteamworksPy.{_LIB_EXT}"
+_LIBSTEAM_API_FILENAME = "steam_api64.dll" if _SYSTEM == "Windows" else f"libsteam_api.{_LIB_EXT}"
+_COMMON_NUITKA_CMD = [
+    PY_CMD,
+    "-m",
+    "nuitka",
+    "--assume-yes-for-downloads",
+    "--standalone",
+    # "--onefile",
+    "--enable-plugin=pyside6",
+    "--include-data-dir=./data/=data",
+    "--include-data-file=./steam_appid.txt=steam_appid.txt",
+    "RimSort.py",
+    "--output-dir=./dist/",
+    f"--include-data-file=./update.{_UPDATE_SCRIPT_EXT}=update.{_UPDATE_SCRIPT_EXT}",
+    f"--include-data-file=./{_STEAMWORKSPY_MAPPING}",
+    f"--include-data-file=./{_LIBSTEAM_API_FILENAME}={_LIBSTEAM_API_FILENAME}",
+]
 if _SYSTEM == "Darwin" and _PROCESSOR == "arm":
-    _NUITKA_CMD = [
-        PY_CMD,
-        "-m",
-        "nuitka",
-        "--assume-yes-for-downloads",
-        "--standalone",
-        # "--onefile",
+    _NUITKA_CMD = _COMMON_NUITKA_CMD + [
         "--macos-create-app-bundle",
         "--macos-app-icon=./data/AppIcon_a.icns",
-        "--enable-plugin=pyside6",
-        "--include-data-dir=./data/=data",
-        "--include-data-file=./update.sh=update.sh",
-        f"--include-data-file=./SteamworksPy_{_PROCESSOR}.dylib=SteamworksPy.dylib",
-        "--include-data-file=./libsteam_api.dylib=libsteam_api.dylib",
-        "--include-data-file=./steam_appid.txt=steam_appid.txt",
-        "RimSort.py",
-        "--output-dir=./dist/",
     ]
 elif _SYSTEM == "Darwin" and _PROCESSOR == "i386":
-    _NUITKA_CMD = [
-        PY_CMD,
-        "-m",
-        "nuitka",
-        "--assume-yes-for-downloads",
-        "--standalone",
-        # "--onefile",
+    _NUITKA_CMD = _COMMON_NUITKA_CMD + [
         "--macos-create-app-bundle",
         "--macos-app-icon=./data/AppIcon_a.icns",
-        "--enable-plugin=pyside6",
-        "--include-data-dir=./data/=data",
         "--include-data-dir=./todds/=todds",
-        "--include-data-file=./update.sh=update.sh",
-        f"--include-data-file=./SteamworksPy_{_PROCESSOR}.dylib=SteamworksPy.dylib",
-        "--include-data-file=./libsteam_api.dylib=libsteam_api.dylib",
-        "--include-data-file=./steam_appid.txt=steam_appid.txt",
-        "RimSort.py",
-        "--output-dir=./dist/",
     ]
 elif _SYSTEM == "Linux":
-    _NUITKA_CMD = [
-        PY_CMD,
-        "-m",
-        "nuitka",
-        "--assume-yes-for-downloads",
-        "--standalone",
-        # "--onefile",
+    _NUITKA_CMD = _COMMON_NUITKA_CMD + [
         "--linux-icon=./data/AppIcon_a.png",
-        "--enable-plugin=pyside6",
-        "--include-data-dir=./data/=data",
         "--include-data-dir=./todds/=todds",
-        "--include-data-file=./update.sh=update.sh",
-        f"--include-data-file=./SteamworksPy_{_PROCESSOR}.so=SteamworksPy.so",
-        "--include-data-file=./libsteam_api.so=libsteam_api.so",
-        "--include-data-file=./steam_appid.txt=steam_appid.txt",
-        "RimSort.py",
-        "--output-dir=./dist/",
     ]
 elif _SYSTEM == "Windows" and _ARCH == "64bit":
-    _NUITKA_CMD = [
-        PY_CMD,
-        "-m",
-        "nuitka",
-        "--assume-yes-for-downloads",
-        "--standalone",
+    _NUITKA_CMD = _COMMON_NUITKA_CMD + [
         "--disable-console",
-        # "--onefile",
         "--windows-icon-from-ico=./data/AppIcon_a.png",
-        "--enable-plugin=pyside6",
-        "--include-data-dir=./data/=data",
         "--include-data-dir=./todds/=todds",
-        "--include-data-file=./update.bat=update.bat",
-        "--include-data-file=./SteamworksPy64.dll=SteamworksPy64.dll",
-        "--include-data-file=./steam_api64.dll=steam_api64.dll",
-        "--include-data-file=./steam_appid.txt=steam_appid.txt",
-        "RimSort.py",
-        "--output-dir=./dist",
     ]
 else:
     print(f"Unsupported SYSTEM: {_SYSTEM} {_ARCH} with {_PROCESSOR}")
@@ -129,8 +93,6 @@ def get_rimsort_deps() -> None:
 def build_steamworkspy() -> None:
     # Setup environment
     print("Setting up environment...")
-    MODULE_SRC_PATH = os.path.join(_CWD, "SteamworksPy", "steamworks")
-    MODULE_DEST_PATH = os.path.join(_CWD, "steamworks")
     STEAMWORKSPY_BIN_DARWIN = f"SteamworksPy_{_PROCESSOR}.dylib"
     STEAMWORKSPY_BIN_DARWIN_LINK_PATH = os.path.join(_CWD, "SteamworksPy.dylib")
     DARWIN_COMPILE_CMD = [
@@ -195,10 +157,7 @@ def build_steamworkspy() -> None:
     ]
     # SOURCE: "https://partner.steamgames.com/downloads/steamworks_sdk_*.zip"
     STEAMWORKS_SDK_URL = "https://github.com/oceancabbage/RimSort/raw/steamworks-sdk/steamworks_sdk_155.zip"
-    SUBMODULE_UPDATE_INIT_CMD = ["git", "submodule", "update", "--init", "--recursive"]
     STEAMWORKS_PY_PATH = os.path.join(_CWD, "SteamworksPy", "library")
-    STEAMWORKS_MODULE_PATH = os.path.join(_CWD, "SteamworksPy", "steamworks")
-    STEAMWORKS_MODULE_FIN = os.path.join(_CWD, "steamworks")
     STEAMWORKS_SDK_PATH = os.path.join(STEAMWORKS_PY_PATH, "sdk")
     STEAMWORKS_SDK_HEADER_PATH = os.path.join(STEAMWORKS_SDK_PATH, "public", "steam")
     STEAMWORKS_SDK_HEADER_DEST_PATH = os.path.join(STEAMWORKS_PY_PATH, "sdk", "steam")
