@@ -10,11 +10,11 @@
 
 * Prerequisites:
     * Run an OS that PySide6 supports
-        * Example "minimmum requirements":
+        * Example "minimum requirements":
             * For our Linux builds, we target Debian 11.
             * For our MacOS builds:
-                * i386 utilizes a self-hosted MacOS Mojave 10.14.6 Github Actions runner
-                * arm utilizes a self-hosted MacOS Ventura 13.5.1 Github Actions runner
+                * i386 utilizes a self-hosted macOS Mojave 10.14.6 Github Actions runner
+                * Arm utilizes a self-hosted macOS Ventura 13.5.1 Github Actions runner
             * For Windows, we utilize a self-hosted Windows 10 LTSC IoT 21h2 Github Actions runner
     * Install the latest version Python 3.9 for your platform from https://python.org/
 * For a (mostly automated) experience building RimSort, please execute the provided script:
