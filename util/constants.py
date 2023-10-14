@@ -10,7 +10,7 @@ DB_BUILDER_RECURSE_EXCEPTIONS = [
     "loadBottom",
 ]
 DEFAULT_SETTINGS = {
-    "check_for_update_startup": True,
+    "check_for_update_startup": False,
     "show_folder_rows": True,
     "sorting_algorithm": "Alphabetical",
     "external_steam_metadata_file_path": "steamDB.json",
@@ -30,7 +30,7 @@ DEFAULT_SETTINGS = {
     "try_download_missing_mods": False,
     "steamcmd_install_path": ".",
     "steamcmd_validate_downloads": True,
-    "todds_preset": "medium",
+    "todds_preset": "optimized",
     "todds_active_mods_target": True,
     "todds_dry_run": False,
     "todds_overwrite": False,
