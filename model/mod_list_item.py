@@ -187,7 +187,9 @@ class ModListItemInner(QWidget):
             author_line = f"Author: {authors_tag if authors_tag else 'Not specified'}\n"
 
         package_id_line = f"PackageID: {self.json_data.get('packageid')}\n"
-        modversion_line = f"Mod Version: {self.json_data.get('modversion', 'Not specified')}\n"
+        modversion_line = (
+            f"Mod Version: {self.json_data.get('modversion', 'Not specified')}\n"
+        )
         path_line = f"Path: {self.json_data.get('path')}"
         return name_line + author_line + package_id_line + modversion_line + path_line
 
@@ -236,17 +238,26 @@ class ModListItemInner(QWidget):
 
 
 class ModListIcons:
-
     _data_path: str = os.path.join(os.path.dirname(__file__), "../data")
 
-    _ludeon_icon_path: str = str(Path(os.path.join(_data_path, "ludeon_icon.png")).resolve())
-    _local_icon_path: str = str(Path(os.path.join(_data_path, "local_icon.png")).resolve())
-    _steam_icon_path: str = str(Path(os.path.join(_data_path, "steam_icon.png")).resolve())
+    _ludeon_icon_path: str = str(
+        Path(os.path.join(_data_path, "ludeon_icon.png")).resolve()
+    )
+    _local_icon_path: str = str(
+        Path(os.path.join(_data_path, "local_icon.png")).resolve()
+    )
+    _steam_icon_path: str = str(
+        Path(os.path.join(_data_path, "steam_icon.png")).resolve()
+    )
     _csharp_icon_path: str = str(Path(os.path.join(_data_path, "csharp.png")).resolve())
     _xml_icon_path: str = str(Path(os.path.join(_data_path, "xml.png")).resolve())
     _git_icon_path: str = str(Path(os.path.join(_data_path, "git.png")).resolve())
-    _steamcmd_icon_path: str = str(Path(os.path.join(_data_path, "steamcmd_icon.png")).resolve())
-    _warning_icon_path: str = str(Path(os.path.join(_data_path, "warning.png")).resolve())
+    _steamcmd_icon_path: str = str(
+        Path(os.path.join(_data_path, "steamcmd_icon.png")).resolve()
+    )
+    _warning_icon_path: str = str(
+        Path(os.path.join(_data_path, "warning.png")).resolve()
+    )
     _error_icon_path: str = str(Path(os.path.join(_data_path, "error.png")).resolve())
 
     _ludeon_icon: Optional[QIcon] = None

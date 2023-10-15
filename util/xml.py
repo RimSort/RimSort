@@ -43,6 +43,6 @@ def json_to_xml_write(data: Dict[str, Any], path: str) -> None:
     """
     logger.debug("Started writing JSON to XML")
     new_xml_data = xmltodict.unparse(data, pretty=True, newl="\n", indent="  ")
-    with open(path, "w") as f:
+    with open(path, "w", encoding="utf-8") as f:
         f.write(new_xml_data)
     logger.debug("Finished writing JSON to XML")

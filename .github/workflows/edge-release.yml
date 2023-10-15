@@ -12,7 +12,7 @@ jobs:
           - os: macos-10.14.6-i386 
             platform: "Darwin"
             arch: "i386"
-          - os: macos-13.5.1-arm64
+          - os: macos-14-arm64
             platform: "Darwin"
             arch: "arm"
           - os: debian-11

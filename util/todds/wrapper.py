@@ -23,7 +23,7 @@ class ToddsInterface:
     Create ToddsInterface object to provide an interface for todds functionality
     """
 
-    def __init__(self, preset="medium", dry_run=False, overwrite=False) -> None:
+    def __init__(self, preset="optimized", dry_run=False, overwrite=False) -> None:
         logger.info("ToddsInterface initilizing...")
         if overwrite:
             overwrite_flag = "-o"
@@ -31,50 +31,31 @@ class ToddsInterface:
             overwrite_flag = "-on"
         self.cwd = os.getcwd()
         self.system = platform.system()
+        # Check if the preset is one of the old presets and change it to "optimized" if necessary
+        if preset in ["low", "medium", "high"]:
+            preset = "optimized"
         self.preset = preset
         self.todds_presets = {
             "clean": [
                 "-cl",
                 "-o",
-                "-r",
+                "-ss",
                 "Textures",
                 "-p",
                 "-t",
             ],
-            "low": [
+            "optimized": [
                 "-f",
-                "BC1_ALPHA_BC7",
-                overwrite_flag,
-                "-vf",
-                "-fs",
-                "-r",
-                "Textures",
-                "-p",
-                "-t",
-            ],
-            "medium": [
-                "-f",
+                "BC1",
+                "-af",
                 "BC7",
                 overwrite_flag,
                 "-vf",
                 "-fs",
-                "-r",
+                "-ss",
                 "Textures",
-                "-p",
                 "-t",
-            ],
-            "high": [
-                "-f",
-                "BC7",
-                "-q",
-                "7",
-                overwrite_flag,
-                "-vf",
-                "-fs",
-                "-r",
-                "Textures",
                 "-p",
-                "-t",
             ],
         }
         if dry_run:
