@@ -129,7 +129,7 @@ class SteamcmdInterface:
                 + f"publishedfileids to: {self.steamcmd_steam_path}"
             )
             script = [
-                f"force_install_dir {self.steamcmd_steam_path}",
+                f"force_install_dir \"{self.steamcmd_steam_path}\"",
                 "login anonymous",
             ]
             download_cmd = "workshop_download_item 294100"
@@ -147,7 +147,7 @@ class SteamcmdInterface:
             runner.message(f"Compiled & using script: {script_path}")
             runner.execute(
                 self.steamcmd,
-                [f"+runscript {script_path}"],
+                [f"+runscript \"{script_path}\""],
                 len(publishedfileids),
             )
         else:
