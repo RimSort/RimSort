@@ -1,20 +1,64 @@
 from logger_tt import logger
 from functools import partial
-
 from PySide6.QtCore import (
+    Qt,
     QPoint,
     QTimer,
-    Qt,
     Signal,
 )
-from PySide6.QtGui import QColor
+from PySide6.QtGui import QColor, QIcon
 from PySide6.QtWidgets import (
+    QHBoxLayout,
     QLabel,
     QMenu,
     QPushButton,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
+
+
+class MultiButton(QWidget):
+    clicked = Signal()  # Define a custom signal
+
+    def __init__(self, main_action_name: str, tooltip: str, context_menu_content: list):
+        super().__init__()
+
+        # Create a horizontal layout
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        # Create a QPushButton for the main action
+        self.main_action = QPushButton(main_action_name, self)
+        self.main_action.clicked.connect(self.emitClicked)
+        self.main_action.setToolTip(tooltip)
+        layout.addWidget(self.main_action)
+
+        # Create a QToolButton with a menu for the secondary action
+        self.secondary_action = QToolButton(self)
+        self.secondary_action.setIcon(QIcon(""))
+        self.secondary_action.setPopupMode(QToolButton.InstantPopup)
+        layout.addWidget(self.secondary_action)
+
+        # Create the context menu
+        self.createContextMenu(context_menu_content, self.secondary_action)
+
+        self.setLayout(layout)
+
+    def emitClicked(self):
+        # Emit the custom signal when the main action button is clicked
+        self.clicked.emit()
+
+    def createContextMenu(self, context_menu_content, widget):
+        context_menu = QMenu(self)
+        for item in context_menu_content:
+            action = context_menu.addAction(item["text"])
+            action.triggered.connect(
+                lambda triggered_action=item[
+                    "triggered_argument"
+                ]: self.actions_signal.emit(triggered_action)
+            )
+        widget.setMenu(context_menu)
 
 
 class Actions(QWidget):
@@ -65,9 +109,7 @@ class Actions(QWidget):
         self.refresh_button.setToolTip(
             "Recalculate the heavy stuff and refresh RimSort"
         )
-        self.refresh_button.clicked.connect(
-            partial(self.actions_signal.emit, "refresh")
-        )
+        self.connectButtonToSignal(self.refresh_button, "refresh")
         # Refresh button flashing animation
         self.refresh_button_flashing_animation = QTimer()
         self.refresh_button_flashing_animation.timeout.connect(
@@ -84,13 +126,11 @@ class Actions(QWidget):
 
         # CLEAR BUTTON
         self.clear_button = QPushButton("Clear active mods")
-        self.clear_button.clicked.connect(partial(self.actions_signal.emit, "clear"))
+        self.connectButtonToSignal(self.clear_button, "clear")
 
         # RESTORE BUTTON
         self.restore_button = QPushButton("Restore active state")
-        self.restore_button.clicked.connect(
-            partial(self.actions_signal.emit, "restore")
-        )
+        self.connectButtonToSignal(self.restore_button, "restore")
         self.restore_button.setToolTip(
             "Attempts to restore an active mods list state that was\n"
             + "cached on RimSort startup."
@@ -98,25 +138,7 @@ class Actions(QWidget):
 
         # SORT BUTTON
         self.sort_button = QPushButton("Sort active mods")
-        self.sort_button.clicked.connect(partial(self.actions_signal.emit, "sort"))
-
-        # IMPORT BUTTON
-        self.import_button = QPushButton("Import mod list")
-        self.import_button.clicked.connect(
-            partial(self.actions_signal.emit, "import_list_file_xml")
-        )
-
-        # EXPORT BUTTON
-        self.export_button = QPushButton("Export mod list")
-        self.export_button.clicked.connect(
-            partial(self.actions_signal.emit, "export_list_file_xml")
-        )
-        self.export_button.setToolTip("Right-click for additional sharing options")
-        # Set context menu policy and connect custom context menu event
-        self.export_button.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.export_button.customContextMenuRequested.connect(
-            self.exportButtonAddionalOptions
-        )
+        self.connectButtonToSignal(self.sort_button, "sort")
 
         # TODDS LABEL
         self.todds_label = QLabel("DDS encoder (todds)")
@@ -124,18 +146,18 @@ class Actions(QWidget):
         self.todds_label.setAlignment(Qt.AlignCenter)
 
         # OPTIMIZE TEXTURES BUTTON
-        self.optimize_textures_button = QPushButton("Optimize textures")
-        self.optimize_textures_button.setToolTip(
-            "Quality presets configurable in settings!\nRight-click to delete .dds textures"
+        self.optimize_textures_button = self.createMultiButton(
+            "Optimize textures",
+            "Use Menu to delete .dds textures",
+            context_menu_content=[
+                {
+                    "text": "Delete .dds Textures",
+                    "triggered_argument": "delete_textures",
+                },
+            ],
         )
-        self.optimize_textures_button.clicked.connect(
-            partial(self.actions_signal.emit, "optimize_textures")
-        )
-        # Set context menu policy and connect custom context menu event
-        self.optimize_textures_button.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.optimize_textures_button.customContextMenuRequested.connect(
-            self.optimizeTexContextMenuEvent
-        )
+
+        self.connectButtonToSignal(self.optimize_textures_button, "optimize_textures")
 
         # STEAM LABEL
         self.add_mods_label = QLabel("Download mods")
@@ -145,8 +167,31 @@ class Actions(QWidget):
         # ADD GIT MOD BUTTON
         self.add_git_mod_button = QPushButton("Add git mods")
         self.add_git_mod_button.setToolTip("Clone a mod git repo to your local mods")
-        self.add_git_mod_button.clicked.connect(
-            partial(self.actions_signal.emit, "add_git_mod")
+        self.connectButtonToSignal(self.add_git_mod_button, "add_git_mod")
+
+        # setup_steamcmd button
+        self.setup_steamcmd_button = self.createMultiButton(
+            "Setup SteamCMD",
+            "Setup SteamCMD change/configure the installed SteamCMD prefix\n"
+            'Set to the folder you would like to contain the "SteamCMD" folder',
+            context_menu_content=[
+                {
+                    "text": "Configure SteamCMD prefix",
+                    "triggered_argument": "set_steamcmd_path",
+                },
+                {
+                    "text": "Import SteamCMD acf data",
+                    "triggered_argument": "import_steamcmd_acf_data",
+                },
+                {
+                    "text": "Delete SteamCMD acf data",
+                    "triggered_argument": "reset_steamcmd_acf_data",
+                },
+            ],
+        )
+
+        self.connectButtonToSignal(
+            self.setup_steamcmd_button.main_action, "setup_steamcmd"
         )
 
         # BROWSE WORKSHOP BUTTON
@@ -155,49 +200,63 @@ class Actions(QWidget):
             "Download mods anonymously with SteamCMD, or subscribe with Steam!\n"
             + "No Steam account required to use SteamCMD!"
         )
-        self.browse_workshop_button.clicked.connect(
-            partial(self.actions_signal.emit, "browse_workshop")
-        )
+        self.connectButtonToSignal(self.browse_workshop_button, "browse_workshop")
 
-        # SETUP STEAMCMD BUTTON
-        self.setup_steamcmd_button = QPushButton("Setup SteamCMD")
-        self.setup_steamcmd_button.setToolTip(
-            "Right-click to change/configure the installed SteamCMD prefix\n"
-            + 'Set to the folder you would like to contain the "SteamCMD" folder'
-        )
-        self.setup_steamcmd_button.clicked.connect(
-            partial(self.actions_signal.emit, "setup_steamcmd")
-        )
-        # Set context menu policy and connect custom context menu event
-        self.setup_steamcmd_button.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.setup_steamcmd_button.customContextMenuRequested.connect(
-            self.setupSteamcmdContextMenuEvent
-        )
         # UPDATE WORKSHOP MODS BUTTON
         self.update_workshop_mods_button = QPushButton("Update Workshop mods")
         self.update_workshop_mods_button.setToolTip(
             "Query Steam WebAPI for mod update data and check against installed Workshop mods\n"
             + "Supports mods sourced via SteamCMD or Steam client"
         )
-        self.update_workshop_mods_button.clicked.connect(
-            partial(self.actions_signal.emit, "update_workshop_mods")
+        self.connectButtonToSignal(
+            self.update_workshop_mods_button, "update_workshop_mods"
         )
+
         # RIMWORLD LABEL
         self.rimworld_label = QLabel("RimWorld options")
         self.rimworld_label.setObjectName("summaryValue")
         self.rimworld_label.setAlignment(Qt.AlignCenter)
 
+        # IMPORT BUTTON
+        self.import_button = QPushButton("Import mod list")
+        self.connectButtonToSignal(self.import_button, "import_list_file_xml")
+
+        # EXPORT BUTTON
+        self.export_button = self.createMultiButton(
+            "Export mod list",
+            "Export mod list to xml file",
+            context_menu_content=[
+                {
+                    "text": "Export mod list to clipboard",
+                    "triggered_argument": "export_list_clipboard",
+                },
+                {
+                    "text": "Upload mod list with Rentry.co",
+                    "triggered_argument": "upload_list_rentry",
+                },
+            ],
+        )
+        self.connectButtonToSignal(
+            self.export_button.main_action, "export_list_file_xml"
+        )
+
         # RUN BUTTON
-        self.run_button = QPushButton("Run game")
-        self.run_button.setToolTip("Right-click to set RimWorld game arguments!")
-        self.run_button.clicked.connect(partial(self.actions_signal.emit, "run"))
-        # Set context menu policy and connect custom context menu event
-        self.run_button.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.run_button.customContextMenuRequested.connect(self.runArgsContextMenuEvent)
+        self.run_button = self.createMultiButton(
+            "Run game",
+            "Use Menu to 'Edit run arguments' to sets RimWorld game arguments!",
+            context_menu_content=[
+                {
+                    "text": "Edit run arguments",
+                    "triggered_argument": "edit_run_args",
+                },
+            ],
+        )
+
+        self.connectButtonToSignal(self.run_button.main_action, "run")
 
         # SAVE BUTTON
         self.save_button = QPushButton("Save mod list")
-        self.save_button.clicked.connect(partial(self.actions_signal.emit, "save"))
+        self.connectButtonToSignal(self.save_button, "save")
         # Save button flashing animation
         self.save_button_flashing_animation = QTimer()
         self.save_button_flashing_animation.timeout.connect(
@@ -211,12 +270,11 @@ class Actions(QWidget):
                 )
             )
         )
+
         # UPLOAD LOG BUTTON
         self.upload_rwlog_button = QPushButton("Upload logfile")
         self.upload_rwlog_button.setToolTip("Upload RimWorld log to 0x0.st")
-        self.upload_rwlog_button.clicked.connect(
-            partial(self.actions_signal.emit, "upload_rw_log")
-        )
+        self.connectButtonToSignal(self.upload_rwlog_button, "upload_rw_log")
 
         # Add buttons to sub-layouts and sub-layouts to the main layout
         self.top_panel.addWidget(self.list_options_label)
@@ -244,58 +302,22 @@ class Actions(QWidget):
     def panel(self) -> QVBoxLayout:
         return self._panel
 
-    def exportButtonAddionalOptions(self, point: QPoint) -> None:
-        contextMenu = QMenu(self)  # Actions Panel context menu event
-        export_list_clipboard_action = contextMenu.addAction(
-            "Export list to clipboard"
-        )  # rentry
-        export_list_clipboard_action.triggered.connect(
-            partial(self.actions_signal.emit, "export_list_clipboard")
+    def createMultiButton(self, main_action_name, tooltip, context_menu_content):
+        multi_button = MultiButton(main_action_name, tooltip, context_menu_content)
+        self.connectButtonToSignal(multi_button.main_action, main_action_name)
+        self.createContextMenu(
+            context_menu_content, multi_button.secondary_action, self.actions_signal
         )
-        export_list_rentry_action = contextMenu.addAction(
-            "Upload list with Rentry.co"
-        )  # rentry
-        export_list_rentry_action.triggered.connect(
-            partial(self.actions_signal.emit, "upload_list_rentry")
-        )
-        action = contextMenu.exec_(self.export_button.mapToGlobal(point))
+        return multi_button
 
-    def optimizeTexContextMenuEvent(self, point: QPoint) -> None:
-        contextMenu = QMenu(self)  # Actions Panel context menu event
-        delete_dds_tex_action = contextMenu.addAction(
-            "Delete optimized textures"
-        )  # delete .dds
-        delete_dds_tex_action.triggered.connect(
-            partial(self.actions_signal.emit, "delete_textures")
-        )
-        action = contextMenu.exec_(self.optimize_textures_button.mapToGlobal(point))
+    def createContextMenu(self, context_menu_content, widget, signal_handler):
+        context_menu = QMenu(self)
+        for item in context_menu_content:
+            action = context_menu.addAction(item["text"])
+            action.triggered.connect(
+                partial(signal_handler.emit, item["triggered_argument"])
+            )
+        widget.setMenu(context_menu)
 
-    def runArgsContextMenuEvent(self, point: QPoint) -> None:
-        contextMenu = QMenu(self)  # Actions Panel context menu event
-        set_run_args = contextMenu.addAction("Edit run args")  # runArgs
-        set_run_args.triggered.connect(
-            partial(self.actions_signal.emit, "edit_run_args")
-        )
-        action = contextMenu.exec_(self.run_button.mapToGlobal(point))
-
-    def setupSteamcmdContextMenuEvent(self, point: QPoint) -> None:
-        contextMenu = QMenu(self)  # Actions Panel context menu event
-        delete_steamcmd_acf_data = contextMenu.addAction(
-            "Delete SteamCMD acf data"
-        )  # delete acf
-        set_steamcmd_path = contextMenu.addAction(
-            "Configure SteamCMD prefix"
-        )  # steamcmd path
-        import_acf_data = contextMenu.addAction(
-            "Import SteamCMD acf data"
-        )  # import acf
-        delete_steamcmd_acf_data.triggered.connect(
-            partial(self.actions_signal.emit, "reset_steamcmd_acf_data")
-        )
-        set_steamcmd_path.triggered.connect(
-            partial(self.actions_signal.emit, "set_steamcmd_path")
-        )
-        import_acf_data.triggered.connect(
-            partial(self.actions_signal.emit, "import_steamcmd_acf_data")
-        )
-        action = contextMenu.exec_(self.setup_steamcmd_button.mapToGlobal(point))
+    def connectButtonToSignal(self, button, signal_name):
+        button.clicked.connect(partial(self.actions_signal.emit, signal_name))
