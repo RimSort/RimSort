@@ -3,6 +3,7 @@ from errno import EACCES
 import os
 from pathlib import Path
 import platform
+from re import sub
 import shutil
 from stat import S_IRWXU, S_IRWXG, S_IRWXO
 import subprocess
@@ -55,6 +56,15 @@ def delete_files_except_extension(directory, extension):
         logger.debug(f"Deleted: {directory}")
 
 
+def directories(mods_path):
+    try:
+        with os.scandir(mods_path) as directories:
+            return [directory.path for directory in directories if directory.is_dir()]
+    except OSError as e:
+        logger.error(f"Error reading directory {mods_path}: {e}")
+        return []
+
+
 def handle_remove_read_only(func, path: str, exc):
     excvalue = exc[1]
     if func in (os.rmdir, os.remove, os.unlink) and excvalue.errno == EACCES:
@@ -78,9 +88,8 @@ def launch_game_process(game_install_path: str, args: list) -> None:
     if game_install_path:
         system_name = platform.system()
         if system_name == "Darwin":
-            executable_path = str(
-                Path(os.path.join(game_install_path, "RimWorldMac.app")).resolve()
-            )
+            # MacOS
+            executable_path = str(game_install_path)
         elif system_name == "Linux":
             # Linux
             executable_path = str(
@@ -169,7 +178,10 @@ def platform_specific_open(path: str) -> None:
     system_name = platform.system()
     if system_name == "Darwin":
         logger.info(f"Opening {path} with subprocess open on MacOS")
-        subprocess.Popen(["open", path])
+        if path.endswith(".app") or path.endswith(".app/"):
+            subprocess.Popen(["open", path, "-R"])
+        else:
+            subprocess.Popen(["open", path])
     elif system_name == "Windows":
         logger.info(f"Opening {path} with startfile on Windows")
         os.startfile(path)  # type: ignore
@@ -178,6 +190,17 @@ def platform_specific_open(path: str) -> None:
         subprocess.Popen(["xdg-open", path])
     else:
         logger.error("Attempting to open directory on an unknown system")
+
+
+def sanitize_filename(filename: str) -> str:
+    # Remove forbidden characters for all platforms
+    forbidden_chars = r'[<>:"/\|?*\0]'
+    sanitized_filename = sub(forbidden_chars, "", filename)
+
+    # Windows filenames shouldn't end with a space or period
+    sanitized_filename = sanitized_filename.rstrip(". ")
+
+    return sanitized_filename
 
 
 def set_to_list(obj):

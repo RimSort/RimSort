@@ -1,3 +1,6 @@
+import traceback
+from typing import Any, Callable
+
 from logger_tt import logger
 
 from PySide6.QtCore import QEasingCurve, QPropertyAnimation, QTimer, QThread, Qt, Signal
@@ -9,7 +12,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from typing import Any, Callable
 
 
 class AnimationLabel(QLabel):
@@ -121,6 +123,10 @@ class WorkThread(QThread):
         self.target = target
 
     def run(self):
-        self.data = self.target()
+        try:
+            self.data = self.target()
+        except Exception as e:
+            error_message = f"{type(e).__name__}: {str(e)}\n{traceback.format_exc()}"
+            logger.error(error_message)
         logger.debug("WorkThread completed, returning to main thread")
         self.data_ready.emit(self.data)

@@ -8,7 +8,14 @@ This is an open-source project so feel free to build it yourself! Check out the 
 #### Windows
 * Run the executable: `RimSort.exe`
 
+RimSort preview for Windows users
+<img alt="Windowspreview" src="https://github.com/RimSort/RimSort/assets/102756485/70760cb8-3916-46bf-9f2a-7165c993d59d">
+
 #### MacOS
+
+RimSort preview for Mac users
+<img alt="Macpreview" src="https://github.com/RimSort/RimSort/assets/102756485/e8a68314-c0f9-41f8-858b-743a8f396139">
+
 * Open the app bundle: `RimSort.app`
     * Mac users should keep in mind that Apple has it's own Runtime Protection called [Gatekeeper](https://support.apple.com/guide/security/gatekeeper-and-runtime-protection-sec5599b66df/web)
         * This can cause issues when trying to run RimSort (or execute dependent libs)!
@@ -21,10 +28,15 @@ This is an open-source project so feel free to build it yourself! Check out the 
     * todds texture tool also does not currently (as of May 2023) support Mac M1/M2 arm64 CPU. It is not included in RimSort.
 
 #### Linux
+
+RimSort preview for Linux users 
+
+<img alt="Linuxpreview" src="https://github.com/RimSort/RimSort/assets/102756485/d26577e4-d488-406b-b9a2-dc2eeea8de25">
+
 * Run the executable: `./RimSort`
 
 ### Using RimSort
-RimSort by default will prompt you to configure game configuration paths. Outside of that, there is a default settings applied and you are free to configure as you like from the Settings Panel
+RimSort by default will prompt you to configure game configuration paths. Outside of that, there is a default settings applied and you are free to configure as you like from the Settings Panel.
 
 #### Actions panel
 Here you can find general purpose options to interact with RimWorld game, its mod lists, as well as accessing things like Steam Workshop or todds texture optimizer from within RimSort.
@@ -164,7 +176,6 @@ This is used to download/upload a Steam Workshop Database (steamDB.json) or a Co
 
 [upload database](https://github.com/RimSort/RimSort/assets/2766946/60ced0ef-adba-436f-8fbc-e593a236e389)
 
-
 ### Sorting Algorithms
 RimSort exposes two sorting algorithms by default for sorting the active mod list.
 
@@ -179,7 +190,7 @@ The RimPy sorting algorithm follows, roughly, the steps described in [RimPy's Au
 
 The result is a mod list that is, for the most part, sorted alphabetically, aside from the shuffling that provided load order rules impose. Mods that need to be loaded before other mods are already loaded before (due to alphabetized sorting), or are forcefully inserted before the dependent mod.
 
-> What does *forcefully* applied mean?a
+> What does *forcefully* applied mean?
 
 This can be illustrated with an example: let's say this is the list of mods: `[A, B, C, D, E]`. These are already alphabetically sorted so RimPy starts inserting them into the final load order one by one, starting with `A`. Mod `A` has no dependencies, so on iteration 1 it is inserted into the final load order, which is now `[A]`.
 

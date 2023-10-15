@@ -211,7 +211,7 @@ class RunnerPanel(QWidget):
                 logger.info(
                     "Exporting current runner output to the designated txt file"
                 )
-                with open(file_path, "w") as outfile:
+                with open(file_path, "w", encoding="utf-8") as outfile:
                     logger.info("Writing to file")
                     outfile.write(self.text.toPlainText())
 

@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from typing import Optional, Tuple
 
 from PySide6.QtCore import Qt
@@ -106,27 +107,21 @@ def show_dialogue_input(
     return response, result
 
 
-def show_dialogue_file(mode: str, caption=None, _dir=None, _filter=None) -> Optional[str]:
+def show_dialogue_file(
+    mode: str, caption=None, _dir=None, _filter=None
+) -> Optional[str]:
     path = None
     if mode == "open":
-        path, _ = QFileDialog.getOpenFileName(
-            caption=caption,
-            dir=_dir,
-            filter=_filter
-        )
+        path, _ = QFileDialog.getOpenFileName(caption=caption, dir=_dir, filter=_filter)
     elif mode == "open_dir":
-        path, _ = QFileDialog.getExistingDirectory(caption=caption, dir=_dir)
+        path = QFileDialog.getExistingDirectory(caption=caption, dir=_dir)
     elif mode == "save":
-        path, _ = QFileDialog.getSaveFileName(
-            caption=caption,
-            dir=_dir,
-            filter=_filter
-        )
+        path, _ = QFileDialog.getSaveFileName(caption=caption, dir=_dir, filter=_filter)
     else:
         # Handle error or unknown mode
         logger.error("File dialogue mode not implemented.")
         return None
-    return path if path != '' else None
+    return str(Path(os.path.normpath(path)).resolve()) if path != "" else None
 
 
 def show_information(

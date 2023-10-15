@@ -25,7 +25,11 @@ from util.generic import (
     handle_remove_read_only,
     open_url_browser,
     platform_specific_open,
+    sanitize_filename,
 )
+from util.metadata import MetadataManager
+from util.steam.steamcmd.wrapper import SteamcmdInterface
+from view.game_configuration_panel import GameConfiguration
 
 
 class ModListWidget(QListWidget):
@@ -47,7 +51,7 @@ class ModListWidget(QListWidget):
     steamcmd_downloader_signal = Signal(list)
     steamworks_subscription_signal = Signal(list)
 
-    def __init__(self, mod_type_filter_enable: bool, local_mods_path=None) -> None:
+    def __init__(self, mod_type_filter_enable: bool) -> None:
         """
         Initialize the ListWidget with a dict of mods.
         Keys are the package ids and values are a dict of
@@ -57,10 +61,6 @@ class ModListWidget(QListWidget):
         logger.debug("Initializing ModListWidget")
 
         super(ModListWidget, self).__init__()
-
-        self.local_mods_path = local_mods_path
-        self.steam_db = None
-        self.steamcmd_appworkshop_acf_path = None
 
         # Allow for dragging and dropping between lists
         self.setDefaultDropAction(Qt.MoveAction)
@@ -260,9 +260,10 @@ class ModListWidget(QListWidget):
                         mod_folder_path = widget_json_data["path"]
                         publishedfileid = widget_json_data.get("publishedfileid")
                         if not widget_json_data.get("steamcmd") and (
-                            self.steam_db
+                            MetadataManager.instance().external_steam_metadata
                             and publishedfileid
-                            and publishedfileid in self.steam_db.keys()
+                            and publishedfileid
+                            in MetadataManager.instance().external_steam_metadata.keys()
                         ):
                             local_steamcmd_name_to_publishedfileid[
                                 mod_folder_name
@@ -313,9 +314,16 @@ class ModListWidget(QListWidget):
                             "Unsubscribe mod with Steam"
                         )
                     # SteamDB blacklist options
-                    if self.steam_db and widget_json_data.get("publishedfileid"):
+                    if (
+                        MetadataManager.instance().external_steam_metadata
+                        and widget_json_data.get("publishedfileid")
+                    ):
                         publishedfileid = widget_json_data["publishedfileid"]
-                        if self.steam_db.get(publishedfileid, {}).get("blacklist"):
+                        if (
+                            MetadataManager.instance()
+                            .external_steam_metadata.get(publishedfileid, {})
+                            .get("blacklist")
+                        ):
                             steamdb_remove_blacklist = publishedfileid
                             remove_from_steamdb_blacklist_action = QAction()
                             remove_from_steamdb_blacklist_action.setText(
@@ -367,9 +375,10 @@ class ModListWidget(QListWidget):
                             mod_folder_path = widget_json_data["path"]
                             publishedfileid = widget_json_data.get("publishedfileid")
                             if not widget_json_data.get("steamcmd") and (
-                                self.steam_db
+                                MetadataManager.instance().external_steam_metadata
                                 and publishedfileid
-                                and publishedfileid in self.steam_db.keys()
+                                and publishedfileid
+                                in MetadataManager.instance().external_steam_metadata.keys()
                             ):
                                 local_steamcmd_name_to_publishedfileid[
                                     mod_folder_name
@@ -495,11 +504,20 @@ class ModListWidget(QListWidget):
                 or remove_from_steamdb_blacklist_action
             ):
                 workshop_actions_menu = QMenu(title="Workshop mods options")
-                if self.local_mods_path and convert_local_steamcmd_action:
+                if (
+                    GameConfiguration.instance().local_folder_line.text()
+                    and convert_local_steamcmd_action
+                ):
                     workshop_actions_menu.addAction(convert_local_steamcmd_action)
-                if self.local_mods_path and convert_steamcmd_local_action:
+                if (
+                    GameConfiguration.instance().local_folder_line.text()
+                    and convert_steamcmd_local_action
+                ):
                     workshop_actions_menu.addAction(convert_steamcmd_local_action)
-                if self.local_mods_path and convert_workshop_local_action:
+                if (
+                    GameConfiguration.instance().local_folder_line.text()
+                    and convert_workshop_local_action
+                ):
                     workshop_actions_menu.addAction(convert_workshop_local_action)
                 if re_steamcmd_action:
                     workshop_actions_menu.addAction(re_steamcmd_action)
@@ -545,12 +563,18 @@ class ModListWidget(QListWidget):
                     ) in local_steamcmd_name_to_publishedfileid.items():
                         original_mod_path = str(
                             Path(
-                                os.path.join(self.local_mods_path, folder_name)
+                                os.path.join(
+                                    GameConfiguration.instance().local_folder_line.text(),
+                                    folder_name,
+                                )
                             ).resolve()
                         )
                         renamed_mod_path = str(
                             Path(
-                                os.path.join(self.local_mods_path, publishedfileid)
+                                os.path.join(
+                                    GameConfiguration.instance().local_folder_line.text(),
+                                    publishedfileid,
+                                )
                             ).resolve()
                         )
                         if os.path.exists(original_mod_path):
@@ -580,13 +604,26 @@ class ModListWidget(QListWidget):
                         publishedfileid,
                         mod_name,
                     ) in steamcmd_publishedfileid_to_name.items():
+                        mod_name = (
+                            sanitize_filename(mod_name)
+                            if mod_name
+                            else f"{publishedfileid}_local"
+                        )
                         original_mod_path = str(
                             Path(
-                                os.path.join(self.local_mods_path, publishedfileid)
+                                os.path.join(
+                                    GameConfiguration.instance().local_folder_line.text(),
+                                    publishedfileid,
+                                )
                             ).resolve()
                         )
                         renamed_mod_path = str(
-                            Path(os.path.join(self.local_mods_path, mod_name)).resolve()
+                            Path(
+                                os.path.join(
+                                    GameConfiguration.instance().local_folder_line.text(),
+                                    mod_name,
+                                )
+                            ).resolve()
                         )
                         if os.path.exists(original_mod_path):
                             if not os.path.exists(renamed_mod_path):
@@ -638,13 +675,18 @@ class ModListWidget(QListWidget):
                 ):
                     for path in steam_mod_paths:
                         publishedfileid_from_folder_name = os.path.split(path)[1]
+                        mod_name = steam_publishedfileid_to_name.get(
+                            publishedfileid_from_folder_name
+                        )
+                        if mod_name:
+                            mod_name = sanitize_filename(mod_name)
                         renamed_mod_path = str(
                             Path(
                                 os.path.join(
-                                    self.local_mods_path,
-                                    steam_publishedfileid_to_name[
-                                        publishedfileid_from_folder_name
-                                    ],
+                                    GameConfiguration.instance().local_folder_line.text(),
+                                    mod_name
+                                    if mod_name
+                                    else publishedfileid_from_folder_name,
                                 )
                             ).resolve()
                         )
@@ -730,7 +772,7 @@ class ModListWidget(QListWidget):
                     args, ok = show_dialogue_input(
                         title="Add comment",
                         text=f"Enter a comment providing your reasoning for wanting to blacklist this mod: "
-                        + f'{self.steam_db.get(steamdb_add_blacklist, {}).get("steamName", steamdb_add_blacklist)}',
+                        + f'{MetadataManager.instance().external_steam_metadata.get(steamdb_add_blacklist, {}).get("steamName", steamdb_add_blacklist)}',
                     )
                     if ok:
                         self.steamdb_blacklist_signal.emit(
@@ -748,7 +790,7 @@ class ModListWidget(QListWidget):
                     answer = show_dialogue_conditional(
                         title="Are you sure?",
                         text=f"This will remove the selected mod, "
-                        + f'{self.steam_db.get(steamdb_remove_blacklist, {}).get("steamName", steamdb_remove_blacklist)}, '
+                        + f'{MetadataManager.instance().external_steam_metadata.get(steamdb_remove_blacklist, {}).get("steamName", steamdb_remove_blacklist)}, '
                         + "from your configured Steam DB blacklist."
                         + "\nDo you want to proceed?",
                     )
