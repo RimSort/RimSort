@@ -1,6 +1,5 @@
 from logger_tt import logger
 from functools import partial
-
 from PySide6.QtCore import (
     QPoint,
     QTimer,
@@ -17,7 +16,7 @@ from PySide6.QtWidgets import (
 )
 
 from model.dialogue import show_dialogue_confirmation
-
+from model.multibutton import MultiButton
 
 class Actions(QWidget):
     """
@@ -25,7 +24,6 @@ class Actions(QWidget):
     the panel on the right side of the GUI (strip with the main
     functionality buttons). Subclasses QObject to allow emitting signals.
     """
-
     # Signal emitter for this class
     actions_signal = Signal(str)
 
@@ -54,6 +52,46 @@ class Actions(QWidget):
         self._panel.addLayout(self.top_panel, 33)
         self._panel.addLayout(self.middle_panel, 33)
         self._panel.addLayout(self.bottom_panel, 33)
+
+        # EXPORT BUTTON
+        self.export_button = self.createMultiButton(
+            "Export mod list",
+            "Export mod list to xml file",
+            context_menu_content=[
+                {
+                    'text': 'Export mod list to clipboard',
+                    'triggered_argument': 'export_list_clipboard',
+                },
+                {
+                    'text': 'Upload mod list with Rentry.co',
+                    'triggered_argument': 'upload_list_rentry',
+                }
+            ]
+        )
+        self.export_button.main_action.clicked.connect(partial(self.actions_signal.emit, "export_list_file_xml"))
+
+        # setup_steamcmd button
+        self.setup_steamcmd_button = self.createMultiButton(
+            "Setup SteamCMD",
+            "Setup SteamCMD change/configure the installed SteamCMD prefix\n"
+            'Set to the folder you would like to contain the "SteamCMD" folder',
+            context_menu_content=[
+                {
+                    'text': 'Configure SteamCMD prefix',
+                    'triggered_argument': 'set_steamcmd_path',
+                },
+                {
+                    'text': 'Import SteamCMD acf data',
+                    'triggered_argument': 'import_steamcmd_acf_data',
+                },
+                {
+                    'text': 'Delete SteamCMD acf data',
+                    'triggered_argument': 'delete_steamcmd_acf_data',
+                }
+            ]
+        )
+
+        self.setup_steamcmd_button.main_action.clicked.connect(partial(self.actions_signal.emit, "setup_steamcmd"))
 
         # LIST OPTIONS LABEL
         self.list_options_label = QLabel("List Options")
@@ -108,18 +146,6 @@ class Actions(QWidget):
             partial(self.actions_signal.emit, "import_list_file_xml")
         )
 
-        # EXPORT BUTTON
-        self.export_button = QPushButton("Export mod list")
-        self.export_button.clicked.connect(
-            partial(self.actions_signal.emit, "export_list_file_xml")
-        )
-        self.export_button.setToolTip("Right-click for additional sharing options")
-        # Set context menu policy and connect custom context menu event
-        self.export_button.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.export_button.customContextMenuRequested.connect(
-            self.exportButtonAddionalOptions
-        )
-
         # TODDS LABEL
         self.todds_label = QLabel("DDS encoder (todds)")
         self.todds_label.setObjectName("summaryValue")
@@ -157,20 +183,6 @@ class Actions(QWidget):
             partial(self.actions_signal.emit, "browse_workshop")
         )
 
-        # SETUP STEAMCMD BUTTON
-        self.setup_steamcmd_button = QPushButton("Setup SteamCMD")
-        self.setup_steamcmd_button.setToolTip(
-            "Right-click to change/configure the installed SteamCMD prefix\n"
-            + 'Set to the folder you would like to contain the "SteamCMD" folder'
-        )
-        self.setup_steamcmd_button.clicked.connect(
-            partial(self.actions_signal.emit, "setup_steamcmd")
-        )
-        # Set context menu policy and connect custom context menu event
-        self.setup_steamcmd_button.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.setup_steamcmd_button.customContextMenuRequested.connect(
-            self.setupSteamcmdContextMenuEvent
-        )
         # UPDATE WORKSHOP MODS BUTTON
         self.update_workshop_mods_button = QPushButton("Update Workshop mods")
         self.update_workshop_mods_button.setToolTip(
@@ -180,15 +192,25 @@ class Actions(QWidget):
         self.update_workshop_mods_button.clicked.connect(
             partial(self.actions_signal.emit, "update_workshop_mods")
         )
+
         # RIMWORLD LABEL
         self.rimworld_label = QLabel("RimWorld options")
         self.rimworld_label.setObjectName("summaryValue")
         self.rimworld_label.setAlignment(Qt.AlignCenter)
 
         # RUN BUTTON
-        self.run_button = QPushButton("Run game")
-        self.run_button.setToolTip("Right-click to set RimWorld game arguments!")
-        self.run_button.clicked.connect(partial(self.actions_signal.emit, "run"))
+        self.run_button = self.createMultiButton(
+            "Run game",
+            "Right-click to set RimWorld game arguments!",
+            context_menu_content=[
+                {
+                    'text': 'Edit run arguments',
+                    'triggered_argument': 'edit_run_args',
+                },
+            ]
+        )
+
+        self.run_button.main_action.clicked.connect(partial(self.actions_signal.emit, "run"))
         # Set context menu policy and connect custom context menu event
         self.run_button.setContextMenuPolicy(Qt.CustomContextMenu)
         self.run_button.customContextMenuRequested.connect(self.runArgsContextMenuEvent)
@@ -209,6 +231,7 @@ class Actions(QWidget):
                 )
             )
         )
+
         # UPLOAD LOG BUTTON
         self.upload_rwlog_button = QPushButton("Upload logfile")
         self.upload_rwlog_button.setToolTip("Upload RimWorld log to 0x0.st")
@@ -243,11 +266,28 @@ class Actions(QWidget):
     def panel(self) -> QVBoxLayout:
         return self._panel
 
+    # MultiButton function
+    def createMultiButton(self, main_action_name, tooltip, context_menu_content):
+        multi_button = MultiButton(main_action_name, "")  # Pass the icon path
+        multi_button.main_action.clicked.connect(partial(self.actions_signal.emit, main_action_name))
+        multi_button.main_action.setToolTip(tooltip)
+        self.createContextMenu(context_menu_content, multi_button.secondary_action)
+        return multi_button
+
+    # ContextMenu function
+    def createContextMenu(self, context_menu_content, widget):
+        context_menu = QMenu(self)
+        for item in context_menu_content:
+            context_menu.addAction(item['text']).triggered.connect(
+                partial(self.actions_signal.emit, item['triggered_argument'])
+            )
+        widget.setMenu(context_menu)
+
     def exportButtonAddionalOptions(self, point: QPoint) -> None:
         contextMenu = QMenu(self)  # Actions Panel context menu event
         export_list_clipboard_action = contextMenu.addAction(
             "Export list to clipboard"
-        )  # rentry
+        )  # clipboard
         export_list_clipboard_action.triggered.connect(
             partial(self.actions_signal.emit, "export_list_clipboard")
         )
@@ -264,11 +304,20 @@ class Actions(QWidget):
             "Confirmation",
             "Are you sure you want to delete DDS textures?",
         )
-
         if reply == "&Yes":
             self.actions_signal.emit("delete_textures")
         else:
-            return None
+            pass
+
+    def confirm_delete_steamcmd_acf_data(self):
+        reply = show_dialogue_confirmation(
+            "Confirmation",
+            "Are you sure you want to delete SteamCMD ACF data?",
+        )
+        if reply == "&Yes":
+            self.actions_signal.emit("reset_steamcmd_acf_data")
+        else:
+            pass
 
     def runArgsContextMenuEvent(self, point: QPoint) -> None:
         contextMenu = QMenu(self)  # Actions Panel context menu event
@@ -280,22 +329,22 @@ class Actions(QWidget):
 
     def setupSteamcmdContextMenuEvent(self, point: QPoint) -> None:
         contextMenu = QMenu(self)  # Actions Panel context menu event
-        delete_steamcmd_acf_data = contextMenu.addAction(
-            "Delete SteamCMD acf data"
-        )  # delete acf
         set_steamcmd_path = contextMenu.addAction(
             "Configure SteamCMD prefix"
         )  # steamcmd path
         import_acf_data = contextMenu.addAction(
             "Import SteamCMD acf data"
         )  # import acf
-        delete_steamcmd_acf_data.triggered.connect(
-            partial(self.actions_signal.emit, "reset_steamcmd_acf_data")
-        )
+        delete_steamcmd_acf_data = contextMenu.addAction(
+            "Delete SteamCMD acf data"
+        )  # delete acf
         set_steamcmd_path.triggered.connect(
             partial(self.actions_signal.emit, "set_steamcmd_path")
         )
         import_acf_data.triggered.connect(
             partial(self.actions_signal.emit, "import_steamcmd_acf_data")
+        )
+        delete_steamcmd_acf_data.triggered.connect(
+            partial(self.actions_signal.emit, "confirm_delete_steamcmd_acf_data")
         )
         action = contextMenu.exec_(self.setup_steamcmd_button.mapToGlobal(point))
