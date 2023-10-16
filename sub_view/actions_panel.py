@@ -17,48 +17,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-
-class MultiButton(QWidget):
-    clicked = Signal()  # Define a custom signal
-
-    def __init__(self, main_action_name: str, tooltip: str, context_menu_content: list):
-        super().__init__()
-
-        # Create a horizontal layout
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-
-        # Create a QPushButton for the main action
-        self.main_action = QPushButton(main_action_name, self)
-        self.main_action.clicked.connect(self.emitClicked)
-        self.main_action.setToolTip(tooltip)
-        layout.addWidget(self.main_action)
-
-        # Create a QToolButton with a menu for the secondary action
-        self.secondary_action = QToolButton(self)
-        self.secondary_action.setIcon(QIcon(""))
-        self.secondary_action.setPopupMode(QToolButton.InstantPopup)
-        layout.addWidget(self.secondary_action)
-
-        # Create the context menu
-        self.createContextMenu(context_menu_content, self.secondary_action)
-
-        self.setLayout(layout)
-
-    def emitClicked(self):
-        # Emit the custom signal when the main action button is clicked
-        self.clicked.emit()
-
-    def createContextMenu(self, context_menu_content, widget):
-        context_menu = QMenu(self)
-        for item in context_menu_content:
-            action = context_menu.addAction(item["text"])
-            action.triggered.connect(
-                lambda triggered_action=item[
-                    "triggered_argument"
-                ]: self.actions_signal.emit(triggered_action)
-            )
-        widget.setMenu(context_menu)
+from model.multibutton import MultiButton
 
 
 class Actions(QWidget):
@@ -109,7 +68,9 @@ class Actions(QWidget):
         self.refresh_button.setToolTip(
             "Recalculate the heavy stuff and refresh RimSort"
         )
-        self.connectButtonToSignal(self.refresh_button, "refresh")
+        self.refresh_button.clicked.connect(
+            partial(self.actions_signal.emit, "refresh")
+        )
         # Refresh button flashing animation
         self.refresh_button_flashing_animation = QTimer()
         self.refresh_button_flashing_animation.timeout.connect(
@@ -126,11 +87,13 @@ class Actions(QWidget):
 
         # CLEAR BUTTON
         self.clear_button = QPushButton("Clear active mods")
-        self.connectButtonToSignal(self.clear_button, "clear")
+        self.clear_button.clicked.connect(partial(self.actions_signal.emit, "clear"))
 
         # RESTORE BUTTON
         self.restore_button = QPushButton("Restore active state")
-        self.connectButtonToSignal(self.restore_button, "restore")
+        self.restore_button.clicked.connect(
+            partial(self.actions_signal.emit, "restore")
+        )
         self.restore_button.setToolTip(
             "Attempts to restore an active mods list state that was\n"
             + "cached on RimSort startup."
@@ -138,7 +101,7 @@ class Actions(QWidget):
 
         # SORT BUTTON
         self.sort_button = QPushButton("Sort active mods")
-        self.connectButtonToSignal(self.sort_button, "sort")
+        self.sort_button.clicked.connect(partial(self.actions_signal.emit, "sort"))
 
         # TODDS LABEL
         self.todds_label = QLabel("DDS encoder (todds)")
@@ -146,18 +109,18 @@ class Actions(QWidget):
         self.todds_label.setAlignment(Qt.AlignCenter)
 
         # OPTIMIZE TEXTURES BUTTON
-        self.optimize_textures_button = self.createMultiButton(
-            "Optimize textures",
-            "Use Menu to delete .dds textures",
-            context_menu_content=[
-                {
-                    "text": "Delete .dds Textures",
-                    "triggered_argument": "delete_textures",
-                },
-            ],
+        self.optimize_textures_button = MultiButton(
+            actions_signal=self.actions_signal,
+            main_action_name="Optimize textures",
+            main_action_tooltip="Quality presets configurable in settings!\nUse menu to delete .dds textures --->",
+            context_menu_content={
+                "delete_textures": "Delete .dds Textures",
+            },
         )
 
-        self.connectButtonToSignal(self.optimize_textures_button, "optimize_textures")
+        self.optimize_textures_button.main_action.clicked.connect(
+            partial(self.actions_signal.emit, "optimize_textures")
+        )
 
         # STEAM LABEL
         self.add_mods_label = QLabel("Download mods")
@@ -167,31 +130,24 @@ class Actions(QWidget):
         # ADD GIT MOD BUTTON
         self.add_git_mod_button = QPushButton("Add git mods")
         self.add_git_mod_button.setToolTip("Clone a mod git repo to your local mods")
-        self.connectButtonToSignal(self.add_git_mod_button, "add_git_mod")
-
-        # setup_steamcmd button
-        self.setup_steamcmd_button = self.createMultiButton(
-            "Setup SteamCMD",
-            "Setup SteamCMD change/configure the installed SteamCMD prefix\n"
-            'Set to the folder you would like to contain the "SteamCMD" folder',
-            context_menu_content=[
-                {
-                    "text": "Configure SteamCMD prefix",
-                    "triggered_argument": "set_steamcmd_path",
-                },
-                {
-                    "text": "Import SteamCMD acf data",
-                    "triggered_argument": "import_steamcmd_acf_data",
-                },
-                {
-                    "text": "Delete SteamCMD acf data",
-                    "triggered_argument": "reset_steamcmd_acf_data",
-                },
-            ],
+        self.add_git_mod_button.clicked.connect(
+            partial(self.actions_signal.emit, "add_git_mod")
         )
 
-        self.connectButtonToSignal(
-            self.setup_steamcmd_button.main_action, "setup_steamcmd"
+        # setup_steamcmd button
+        self.setup_steamcmd_button = MultiButton(
+            actions_signal=self.actions_signal,
+            main_action_name="Setup SteamCMD",
+            main_action_tooltip="Install & setup SteamCMD for use with RimSort at the configured prefix.\n"
+            "This defaults to RimSort storage dir. Use menu to configure the installed SteamCMD prefix --->\n",
+            context_menu_content={
+                "set_steamcmd_path": "Configure SteamCMD prefix",
+                "import_steamcmd_acf_data": "Import SteamCMD acf data",
+                "reset_steamcmd_acf_data": "Delete SteamCMD acf data",
+            },
+        )
+        self.setup_steamcmd_button.main_action.clicked.connect(
+            partial(self.actions_signal.emit, "setup_steamcmd")
         )
 
         # BROWSE WORKSHOP BUTTON
@@ -200,7 +156,9 @@ class Actions(QWidget):
             "Download mods anonymously with SteamCMD, or subscribe with Steam!\n"
             + "No Steam account required to use SteamCMD!"
         )
-        self.connectButtonToSignal(self.browse_workshop_button, "browse_workshop")
+        self.browse_workshop_button.clicked.connect(
+            partial(self.actions_signal.emit, "browse_workshop")
+        )
 
         # UPDATE WORKSHOP MODS BUTTON
         self.update_workshop_mods_button = QPushButton("Update Workshop mods")
@@ -208,8 +166,8 @@ class Actions(QWidget):
             "Query Steam WebAPI for mod update data and check against installed Workshop mods\n"
             + "Supports mods sourced via SteamCMD or Steam client"
         )
-        self.connectButtonToSignal(
-            self.update_workshop_mods_button, "update_workshop_mods"
+        self.update_workshop_mods_button.clicked.connect(
+            partial(self.actions_signal.emit, "update_workshop_mods")
         )
 
         # RIMWORLD LABEL
@@ -219,44 +177,41 @@ class Actions(QWidget):
 
         # IMPORT BUTTON
         self.import_button = QPushButton("Import mod list")
-        self.connectButtonToSignal(self.import_button, "import_list_file_xml")
+        self.import_button.clicked.connect(
+            partial(self.actions_signal.emit, "import_list_file_xml")
+        )
 
         # EXPORT BUTTON
-        self.export_button = self.createMultiButton(
-            "Export mod list",
-            "Export mod list to xml file",
-            context_menu_content=[
-                {
-                    "text": "Export mod list to clipboard",
-                    "triggered_argument": "export_list_clipboard",
-                },
-                {
-                    "text": "Upload mod list with Rentry.co",
-                    "triggered_argument": "upload_list_rentry",
-                },
-            ],
+        self.export_button = MultiButton(
+            actions_signal=self.actions_signal,
+            main_action_name="Export mod list",
+            main_action_tooltip="Export mod list to xml file\n"
+            "Use menu to see additional sharing options --->",
+            context_menu_content={
+                "export_list_clipboard": "Export mod list to clipboard",
+                "upload_list_rentry": "Upload mod list with Rentry.co",
+            },
         )
-        self.connectButtonToSignal(
-            self.export_button.main_action, "export_list_file_xml"
+        self.export_button.main_action.clicked.connect(
+            partial(self.actions_signal.emit, "export_list_file_xml")
         )
 
         # RUN BUTTON
-        self.run_button = self.createMultiButton(
-            "Run game",
-            "Use Menu to 'Edit run arguments' to sets RimWorld game arguments!",
-            context_menu_content=[
-                {
-                    "text": "Edit run arguments",
-                    "triggered_argument": "edit_run_args",
-                },
-            ],
+        self.run_button = MultiButton(
+            actions_signal=self.actions_signal,
+            main_action_name="Run game",
+            main_action_tooltip="Use menu to edit game arguments that RimSort will pass to RimWorld --->",
+            context_menu_content={
+                "edit_run_args": "Edit run arguments",
+            },
         )
-
-        self.connectButtonToSignal(self.run_button.main_action, "run")
+        self.run_button.main_action.clicked.connect(
+            partial(self.actions_signal.emit, "run")
+        )
 
         # SAVE BUTTON
         self.save_button = QPushButton("Save mod list")
-        self.connectButtonToSignal(self.save_button, "save")
+        self.save_button.clicked.connect(partial(self.actions_signal.emit, "save"))
         # Save button flashing animation
         self.save_button_flashing_animation = QTimer()
         self.save_button_flashing_animation.timeout.connect(
@@ -274,7 +229,9 @@ class Actions(QWidget):
         # UPLOAD LOG BUTTON
         self.upload_rwlog_button = QPushButton("Upload logfile")
         self.upload_rwlog_button.setToolTip("Upload RimWorld log to 0x0.st")
-        self.connectButtonToSignal(self.upload_rwlog_button, "upload_rw_log")
+        self.upload_rwlog_button.clicked.connect(
+            partial(self.actions_signal.emit, "upload_rw_log")
+        )
 
         # Add buttons to sub-layouts and sub-layouts to the main layout
         self.top_panel.addWidget(self.list_options_label)
@@ -301,23 +258,3 @@ class Actions(QWidget):
     @property
     def panel(self) -> QVBoxLayout:
         return self._panel
-
-    def createMultiButton(self, main_action_name, tooltip, context_menu_content):
-        multi_button = MultiButton(main_action_name, tooltip, context_menu_content)
-        self.connectButtonToSignal(multi_button.main_action, main_action_name)
-        self.createContextMenu(
-            context_menu_content, multi_button.secondary_action, self.actions_signal
-        )
-        return multi_button
-
-    def createContextMenu(self, context_menu_content, widget, signal_handler):
-        context_menu = QMenu(self)
-        for item in context_menu_content:
-            action = context_menu.addAction(item["text"])
-            action.triggered.connect(
-                partial(signal_handler.emit, item["triggered_argument"])
-            )
-        widget.setMenu(context_menu)
-
-    def connectButtonToSignal(self, button, signal_name):
-        button.clicked.connect(partial(self.actions_signal.emit, signal_name))
