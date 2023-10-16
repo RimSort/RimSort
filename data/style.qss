@@ -23,6 +23,15 @@ Accent alert button: a3c1da
 } */
 
 /* ======== General styling ======= */
+/* Styling for MultiButton */
+MultiButton QPushButton {
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 0px;
+}
+MultiButton QToolButton {
+    border-top-left-radius: 0px;
+    border-bottom-left-radius: 0px;
+}
 /* Styling for combo boxes */
 QComboBox {
     color: white;
