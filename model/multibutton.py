@@ -1,20 +1,26 @@
 from functools import partial
 import os
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List, Union
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QPushButton, QToolButton, QMenu
+from PySide6.QtGui import QAction, QIcon
+from PySide6.QtWidgets import (
+    QHBoxLayout,
+    QMenu,
+    QPushButton,
+    QToolButton,
+    QWidget,
+)
 
 
 class MultiButton(QWidget):
     def __init__(
         self,
-        actions_signal: Signal,
         main_action_name: str,
         main_action_tooltip: str,
-        context_menu_content: Dict[str, str],
+        context_menu_content: Union[Dict[str, str], List[QAction]],
+        actions_signal=None,
         secondary_action_icon_path=None,
     ):
         super().__init__()
@@ -61,10 +67,14 @@ class MultiButton(QWidget):
         self.setLayout(layout)
 
     def createContextMenu(
-        self, actions_signal: Signal, menu_content: Dict[str, str]
+        self, actions_signal: Signal, menu_content: Union[Dict[str, str], List[QAction]]
     ) -> None:
         context_menu = QMenu(self)
-        for action_key, option_text in menu_content.items():
-            action = context_menu.addAction(option_text)
-            action.triggered.connect(partial(actions_signal.emit, action_key))
+        if isinstance(menu_content, dict):
+            for action_key, option_text in menu_content.items():
+                action = context_menu.addAction(option_text)
+                action.triggered.connect(partial(actions_signal.emit, action_key))
+        elif isinstance(menu_content, list):
+            for action_obj in menu_content:
+                context_menu.addAction(action_obj)
         self.secondary_action.setMenu(context_menu)

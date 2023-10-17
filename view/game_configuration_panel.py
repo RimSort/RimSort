@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
 )
 
 from model.dialogue import *
+from model.multibutton import MultiButton
 from util.constants import DEFAULT_SETTINGS, DEFAULT_USER_RULES
 from util.generic import *
 from window.settings_panel import SettingsPanel
@@ -176,13 +177,15 @@ class GameConfiguration(QObject):
             self.client_settings_button.setObjectName("LeftButton")
             self.hide_show_folder_rows_button = QPushButton()
             self.hide_show_folder_rows_button.clicked.connect(self.__toggle_folder_rows)
+            # check for update btn
             self.check_for_updates_action = QAction("Check for update on startup")
             self.check_for_updates_action.setCheckable(True)
-            self.check_for_updates_button = QPushButton("Check for update")
-            self.check_for_updates_button.setToolTip(
-                "Right-click to configure automatic update check"
+            self.check_for_updates_button = MultiButton(
+                main_action_name="Check for update",
+                main_action_tooltip="Use menu to enable this check on startup --->",
+                context_menu_content=[self.check_for_updates_action],
             )
-            self.check_for_updates_button.clicked.connect(
+            self.check_for_updates_button.main_action.clicked.connect(
                 partial(self.configuration_signal.emit, "check_for_update")
             )
             self.check_for_updates_button.setObjectName("RightButton")
@@ -190,18 +193,21 @@ class GameConfiguration(QObject):
             self.check_for_updates_button.customContextMenuRequested.connect(
                 self.checkForUpdateBtnContextMenuEvent
             )
+            # game version
             self.game_version_label = QLabel("Game version:")
             self.game_version_label.setObjectName("gameVersion")
             self.game_version_line = QLineEdit()
             self.game_version_line.setDisabled(True)
             self.game_version_line.setPlaceholderText("Unknown")
             self.game_version_line.setReadOnly(True)
+            # wiki btn
             self.wiki_button = QPushButton("Wiki")
             self.wiki_button.clicked.connect(
                 partial(open_url_browser, "https://github.com/RimSort/RimSort/wiki")
             )
             self.wiki_button.setObjectName("RightButton")
-
+            # folder paths
+            # game folder
             if self.system_name == "Darwin":
                 self.game_folder_open_button = QPushButton("Game App")
                 self.game_folder_open_button.setToolTip("Open Game Folder")
@@ -248,7 +254,7 @@ class GameConfiguration(QObject):
                 self.game_folder_select_button.setToolTip(
                     "Set the RimWorld game installation directory"
                 )
-
+            # config folder
             self.config_folder_open_button = QPushButton("Config folder")
             self.config_folder_open_button.setObjectName("LeftButton")
             self.config_folder_open_button.setToolTip(
@@ -291,7 +297,7 @@ class GameConfiguration(QObject):
                 self.config_folder_select_button.setToolTip(
                     "Set the RimWorld game configuration directory"
                 )
-
+            # local folder
             self.local_folder_open_button = QPushButton("Local mods")
             self.local_folder_open_button.setObjectName("LeftButton")
             self.local_folder_open_button.setToolTip("Open the local mods directory")
@@ -326,7 +332,7 @@ class GameConfiguration(QObject):
             self.local_folder_select_button.clicked.connect(self.set_local_folder)
             self.local_folder_select_button.setObjectName("RightButton")
             self.local_folder_select_button.setToolTip("Set the local mods directory.")
-
+            # workshop folder
             self.workshop_folder_open_button = QPushButton("Steam mods")
             self.workshop_folder_open_button.setObjectName("LeftButton")
             self.workshop_folder_open_button.setToolTip(
@@ -850,7 +856,10 @@ class GameConfiguration(QObject):
             self.steamcmd_validate_downloads_toggle = False
 
         # todds preset
-        if "Optimized - Recommended for RimWorld" in self.settings_panel.todds_presets_cb.currentText():
+        if (
+            "Optimized - Recommended for RimWorld"
+            in self.settings_panel.todds_presets_cb.currentText()
+        ):
             self.todds_preset = "optimized"
         # todds active mods target
         if self.settings_panel.todds_active_mods_target_checkbox.isChecked():
