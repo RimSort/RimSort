@@ -190,9 +190,6 @@ class GameConfiguration(QObject):
             )
             self.check_for_updates_button.setObjectName("RightButton")
             self.check_for_updates_button.setContextMenuPolicy(Qt.CustomContextMenu)
-            self.check_for_updates_button.customContextMenuRequested.connect(
-                self.checkForUpdateBtnContextMenuEvent
-            )
             # game version
             self.game_version_label = QLabel("Game version:")
             self.game_version_label.setObjectName("gameVersion")
@@ -1314,10 +1311,3 @@ class GameConfiguration(QObject):
             self.workshop_folder_line.setText(workshop_path)
         else:
             logger.debug("USER ACTION: pressed cancel, passing")
-
-    def checkForUpdateBtnContextMenuEvent(self, point: QPoint) -> None:
-        contextMenu = QMenu()  # Check for update context menu event
-        contextMenu.addAction(
-            self.check_for_updates_action
-        )  # check for update on startup
-        action = contextMenu.exec_(self.check_for_updates_button.mapToGlobal(point))
