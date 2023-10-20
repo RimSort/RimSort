@@ -31,6 +31,7 @@ MultiButton QPushButton {
 MultiButton QToolButton {
     border-top-left-radius: 0px;
     border-bottom-left-radius: 0px;
+    max-height: 1em;
 }
 /* Styling for combo boxes */
 QComboBox {
