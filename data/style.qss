@@ -211,6 +211,53 @@ QPushButton#LeftButton {
 QPushButton#RightButton {
     margin-left: 4px;
 }
+/* Default style for QTabWidget */
+QTabWidget {
+    background-color: #19232d; /* Primary background */
+    border: 1px solid #455364; /* Panel borders */
+}
+
+QTabWidget::pane {
+    border: 1px solid #455364; /* Panel borders */
+    border-radius: 3px; /* Consistent with your other styles */
+    padding: 4px; /* Content padding inside the tabs */
+}
+
+QTabWidget::tab-bar {
+    alignment: center; /* Center-align the tabs */
+    background-color: #19232d; /* Optional: Tab bar background color */
+}
+
+/* Styling for individual tab buttons */
+QTabBar::tab {
+    background-color: #455364; /* Normal button color */
+    color: white; /* Text color */
+    border: 1px solid #455364; /* Normal border color */
+    border-bottom-color: #19232d; /* Border color for active tab */
+    border-top-left-radius: 3px; /* Consistent with your button styles */
+    border-top-right-radius: 3px; /* Consistent with your button styles */
+    min-width: 6em; /* Minimum width for tabs */
+    padding: 4px; /* Padding inside tabs */
+}
+
+QTabBar::tab:selected {
+    background-color: #54687a; /* Button hover color for selected tab */
+    color: white;
+    border-bottom: 1px solid #19232d; /* Hide bottom border for selected tab */
+}
+
+QTabBar::tab:!selected {
+    background-color: #37414f; /* Different style for unselected tabs */
+    margin-top: 2px; /* Unselected tabs are slight lower than the selected one */
+}
+
+QTabBar::tab:!selected:hover {
+    background-color: #54687a; /* Button hover color */
+}
+
+QTabBar::tab:disabled {
+    color: #999999; /* Text color for disabled tabs */
+}
 /* Default style for tooltips */
 QToolTip {
     border-style: none;

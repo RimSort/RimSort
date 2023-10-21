@@ -167,16 +167,23 @@ class GameConfiguration(QObject):
             self.local_folder_row.setSpacing(0)
 
             # INSTANTIATE WIDGETS
+            # paths buttons
             self.auto_detect_paths_button = QPushButton("Autodetect paths")
             self.auto_detect_paths_button.clicked.connect(
                 self.autodetect_paths_by_platform
             )
             self.auto_detect_paths_button.setObjectName("LeftButton")
-            self.client_settings_button = QPushButton("Settings")
-            self.client_settings_button.clicked.connect(self._open_settings_panel)
-            self.client_settings_button.setObjectName("LeftButton")
+            self.clear_paths_button = QPushButton("Clear paths")
+            self.clear_paths_button.clicked.connect(self.clear_all_paths_data)
             self.hide_show_folder_rows_button = QPushButton()
             self.hide_show_folder_rows_button.clicked.connect(self.__toggle_folder_rows)
+            # game version
+            self.game_version_label = QLabel("Game version:")
+            self.game_version_label.setObjectName("gameVersion")
+            self.game_version_line = QLineEdit()
+            self.game_version_line.setDisabled(True)
+            self.game_version_line.setPlaceholderText("Unknown")
+            self.game_version_line.setReadOnly(True)
             # check for update btn
             self.check_for_updates_action = QAction("Check for update on startup")
             self.check_for_updates_action.setCheckable(True)
@@ -190,13 +197,9 @@ class GameConfiguration(QObject):
             )
             self.check_for_updates_button.setObjectName("RightButton")
             self.check_for_updates_button.setContextMenuPolicy(Qt.CustomContextMenu)
-            # game version
-            self.game_version_label = QLabel("Game version:")
-            self.game_version_label.setObjectName("gameVersion")
-            self.game_version_line = QLineEdit()
-            self.game_version_line.setDisabled(True)
-            self.game_version_line.setPlaceholderText("Unknown")
-            self.game_version_line.setReadOnly(True)
+            self.client_settings_button = QPushButton("Settings")
+            self.client_settings_button.clicked.connect(self._open_settings_panel)
+            self.client_settings_button.setObjectName("LeftButton")
             # wiki btn
             self.wiki_button = QPushButton("Wiki")
             self.wiki_button.clicked.connect(
@@ -369,11 +372,12 @@ class GameConfiguration(QObject):
 
             # WIDGETS INTO CONTAINER LAYOUTS
             self.client_settings_row.addWidget(self.auto_detect_paths_button)
-            self.client_settings_row.addWidget(self.client_settings_button)
+            self.client_settings_row.addWidget(self.clear_paths_button)
             self.client_settings_row.addWidget(self.hide_show_folder_rows_button)
             self.client_settings_row.addWidget(self.game_version_label)
             self.client_settings_row.addWidget(self.game_version_line)
             self.client_settings_row.addWidget(self.check_for_updates_button)
+            self.client_settings_row.addWidget(self.client_settings_button)
             self.client_settings_row.addWidget(self.wiki_button)
 
             self.game_folder_row.addWidget(self.game_folder_open_button)
@@ -437,9 +441,6 @@ class GameConfiguration(QObject):
             self.workshop_folder_line.textChanged.connect(
                 partial(self.__handle_line_edit, line="workshop")
             )
-            self.settings_panel.clear_paths_signal.connect(
-                self.delete_all_paths_data
-            )  # Actions delete_all_paths_data
 
             # General Preferences
             self.settings_panel.logger_debug_checkbox.setChecked(self.debug_mode)
@@ -1138,7 +1139,7 @@ class GameConfiguration(QObject):
         self._update_persistent_storage({"local_folder": ""})
         self.local_folder_line.setText("")
 
-    def delete_all_paths_data(self) -> None:
+    def clear_all_paths_data(self) -> None:
         logger.info("USER ACTION: clear all paths")
         folders = ["workshop_folder", "game_folder", "config_folder", "local_folder"]
         # Update storage to remove all paths data

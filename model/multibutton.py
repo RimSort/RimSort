@@ -79,13 +79,21 @@ class MultiButton(QWidget):
         self.setLayout(layout)
 
     def createContextMenu(
-        self, actions_signal: Signal, menu_content: Union[Dict[str, str], List[QAction]]
+        self,
+        actions_signal: Signal,
+        menu_content: Union[
+            Dict[str, Union[str, QAction]], List[QAction]
+        ],  # TODO 2: remove the encapsulating Union once the 1st change is complete elsewhere
     ) -> None:
         context_menu = QMenu(self)
         if isinstance(menu_content, dict):
-            for action_key, option_text in menu_content.items():
-                action = context_menu.addAction(option_text)
-                action.triggered.connect(partial(actions_signal.emit, action_key))
+            for action_key, option_value in menu_content.items():
+                if isinstance(option_value, str):
+                    action = context_menu.addAction(option_value)
+                    action.triggered.connect(partial(actions_signal.emit, action_key))
+                elif isinstance(option_value, QAction):
+                    context_menu.addAction(option_value)
+        # TODO 1: refactor items that rely on the following elif. They can use the dict now that the above elif allows adding QAction as well
         elif isinstance(menu_content, list):
             for action_obj in menu_content:
                 context_menu.addAction(action_obj)

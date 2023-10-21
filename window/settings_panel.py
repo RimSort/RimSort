@@ -6,19 +6,20 @@ import sys
 from tempfile import gettempdir
 
 from PySide6.QtCore import QPoint, QSize, QStandardPaths, Qt, Signal
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QDialog,
-    QFrame,
     QHBoxLayout,
     QLabel,
     QMenu,
     QPushButton,
     QStyledItemDelegate,
+    QTabWidget,
     QToolButton,
     QVBoxLayout,
+    QWidget,
 )
 
 from model.dialogue import show_information
@@ -33,7 +34,6 @@ class CenteredItemDelegate(QStyledItemDelegate):
 
 
 class SettingsPanel(QDialog):
-    clear_paths_signal = Signal(str)
     actions_signal = Signal(str)
 
     def __init__(self, storage_path: str) -> None:
@@ -53,63 +53,57 @@ class SettingsPanel(QDialog):
         # Create main layout
         self.layout = QVBoxLayout()
 
+        # Create tabs
+        self.tabs = QTabWidget()
+        self.layout.addWidget(self.tabs)
+        self.__create_general_tab()
+        self.__create_db_builder_tab()
+        self.__create_steamcmd_tab()
+        self.__create_todds_tab()
+        # Display items
+        self.setLayout(self.layout)
+
+        logger.debug("Finished SettingsPanel initialization")
+
+    def __create_general_tab(self) -> None:
+        # General tab
+        self.general_tab = QWidget()
         # General layouts
-        self.general_options_layout = QHBoxLayout()
-        self.general_actions_layout = QVBoxLayout()
+        self.general_options_layout = QVBoxLayout(self.general_tab)
+        self.general_options_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.general_actions_layout = QHBoxLayout()
         self.general_preferences_layout = QVBoxLayout()
         # General widgets
-        self.general_label = QLabel("General options")
-        self.general_label.setObjectName("summaryHeader")
-        # Create a QFrame, styled to look like a horizontal line
-        self.general_line = QFrame()
-        self.general_line.setFixedHeight(1)
-        self.general_line.setFrameShape(QFrame.HLine)
-        self.general_line.setFrameShadow(QFrame.Sunken)
-        self.general_line.setObjectName("horizontalLine")
-        self.rimsort_actions_label = QLabel("RimSort actions:")
-        self.rimsort_actions_label.setObjectName("summaryValue")
-        self.rimsort_actions_label.setAlignment(Qt.AlignCenter)
-        self.clear_paths_button = QPushButton("Clear game cfg paths")
-        self.clear_paths_button.clicked.connect(
-            partial(self.clear_paths_signal.emit, "clear_paths")
-        )
         self.set_github_identity_button = QPushButton("Github identity")
         self.set_github_identity_button.clicked.connect(
             partial(self.actions_signal.emit, "configure_github_identity")
         )
-        self.open_log_button = QPushButton("Open RimSort.log")
-        self.open_log_button.clicked.connect(
-            partial(
-                platform_specific_open,
-                str(Path(os.path.join(gettempdir(), "RimSort.log")).resolve()),
-            )
-        )
-        self.open_storage_button = QPushButton("Open RimSort storage")
-        self.open_storage_button.clicked.connect(
+        self.open_storage_action = QAction("Open RimSort storage")
+        self.open_storage_action.triggered.connect(
             partial(
                 platform_specific_open,
                 self.storage_path,
             )
         )
-        self.upload_log_button = QPushButton("Upload RimSort.log")
-        self.upload_log_button.setToolTip(
-            "RimSort.log will be uploaded to http://0x0.st/ and\n"
-            + "the URL will be copied to your clipboard."
+        self.rimworld_woodlog_icon_path = str(
+            Path(
+                os.path.join(os.path.dirname(__file__), "../data/WoodLog_a.png")
+            ).resolve()
         )
-        self.upload_log_button.clicked.connect(
+        self.upload_log_multibutton = MultiButton(
+            main_action="Upload RimSort.log",
+            main_action_tooltip="Log will be uploaded to http://0x0.st/ and\n"
+            + "the URL will be copied to your clipboard.",
+            context_menu_content={
+                "open_rs_log": self.open_storage_action,
+                "upload_rs_old_log": "Upload RimSort.old.log",
+            },
+            actions_signal=self.actions_signal,
+            secondary_action_icon_path=self.rimworld_woodlog_icon_path,
+        )
+        self.upload_log_multibutton.main_action.clicked.connect(
             partial(self.actions_signal.emit, "upload_rs_log")
         )
-        self.upload_log_old_button = QPushButton("Upload RimSort.old.log")
-        self.upload_log_old_button.setToolTip(
-            "RimSort.old.log will be uploaded to http://0x0.st/ and\n"
-            + "the URL will be copied to your clipboard."
-        )
-        self.upload_log_old_button.clicked.connect(
-            partial(self.actions_signal.emit, "upload_rs_old_log")
-        )
-        self.rimsort_options_label = QLabel("RimSort Options:")
-        self.rimsort_options_label.setObjectName("summaryValue")
-        self.rimsort_options_label.setAlignment(Qt.AlignCenter)
         self.logger_debug_checkbox = QCheckBox(
             "Enable RimSort logger verbose DEBUG mode"
         )
@@ -119,7 +113,7 @@ class SettingsPanel(QDialog):
             + "supply a multitude of information relevant to debugging if needed.\n\n"
             + "This option is applied on RimSort initialization."
         )
-        self.logger_debug_checkbox.clicked.connect(self.loggerDebugCheckboxEvent)
+        self.logger_debug_checkbox.clicked.connect(self.__loggerDebugCheckboxEvent)
         self.watchdog_checkbox = QCheckBox(
             "Enable RimSort to use watchdog file monitor daemon"
         )
@@ -160,14 +154,8 @@ class SettingsPanel(QDialog):
             + "Prompts a choice between SteamCMD and Steam client to retrieve the missing mods."
         )
         # Build the general options layout
-        self.general_actions_layout.addWidget(self.rimsort_actions_label)
-        self.general_actions_layout.addWidget(self.clear_paths_button)
         self.general_actions_layout.addWidget(self.set_github_identity_button)
-        self.general_actions_layout.addWidget(self.open_log_button)
-        self.general_actions_layout.addWidget(self.open_storage_button)
-        self.general_actions_layout.addWidget(self.upload_log_button)
-        self.general_actions_layout.addWidget(self.upload_log_old_button)
-        self.general_preferences_layout.addWidget(self.rimsort_options_label)
+        self.general_actions_layout.addWidget(self.upload_log_multibutton)
         self.general_preferences_layout.addWidget(self.logger_debug_checkbox)
         self.general_preferences_layout.addWidget(self.watchdog_checkbox)
         self.general_preferences_layout.addWidget(self.mod_type_filter_checkbox)
@@ -176,8 +164,8 @@ class SettingsPanel(QDialog):
         self.general_preferences_layout.addWidget(
             self.try_download_missing_mods_checkbox
         )
-        self.general_options_layout.addLayout(self.general_actions_layout, 5)
-        self.general_options_layout.addLayout(self.general_preferences_layout, 10)
+        self.general_options_layout.addLayout(self.general_actions_layout)
+        self.general_options_layout.addLayout(self.general_preferences_layout)
 
         # metadata layouts
         self.metadata_sorting_options_layout = QHBoxLayout()
@@ -185,16 +173,6 @@ class SettingsPanel(QDialog):
         self.community_rules_metadata_configuration_layout = QVBoxLayout()
         self.sorting_algorithm_configuration_layout = QVBoxLayout()
         # metadata / sorting widgets
-        self.external_metadata_sorting_label = QLabel(
-            "External metadata / sorting algorithm preferences"
-        )
-        self.external_metadata_sorting_label.setObjectName("summaryHeader")
-        # Create a QFrame, styled to look like a horizontal line
-        self.external_metadata_sorting_line = QFrame()
-        self.external_metadata_sorting_line.setFixedHeight(1)
-        self.external_metadata_sorting_line.setFrameShape(QFrame.HLine)
-        self.external_metadata_sorting_line.setFrameShadow(QFrame.Sunken)
-        self.external_metadata_sorting_line.setObjectName("horizontalLine")
         self.external_metadata_icon_path = QIcon(
             str(
                 Path(
@@ -285,20 +263,19 @@ class SettingsPanel(QDialog):
         self.metadata_sorting_options_layout.addLayout(
             self.sorting_algorithm_configuration_layout
         )
+        self.general_options_layout.addLayout(self.metadata_sorting_options_layout)
+        # Add General tab
+        self.tabs.addTab(self.general_tab, "General")
 
-        # db builder layouts
-        self.database_tools_layout = QVBoxLayout()
+    def __create_db_builder_tab(self) -> None:
+        # DB Builder tab
+        self.db_builder_tab = QWidget()
+        # DB Builder layouts
+        self.database_tools_layout = QVBoxLayout(self.db_builder_tab)
+        self.database_tools_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.database_tools_builder_layout = QHBoxLayout()
         self.database_tools_actions_layout = QHBoxLayout()
-        # db builder widgets
-        self.build_steam_database_label = QLabel("Steam DB Builder options:")
-        self.build_steam_database_label.setObjectName("summaryHeader")
-        # Create a QFrame, styled to look like a horizontal line
-        self.build_steam_database_line = QFrame()
-        self.build_steam_database_line.setFixedHeight(1)
-        self.build_steam_database_line.setFrameShape(QFrame.HLine)
-        self.build_steam_database_line.setFrameShadow(QFrame.Sunken)
-        self.build_steam_database_line.setObjectName("horizontalLine")
+        # DB Builder widgets
         self.build_steam_database_include_label = QLabel("Include local metadata:")
         self.build_steam_database_include_label.setObjectName("summaryValue")
         self.build_steam_database_include_label.setAlignment(Qt.AlignCenter)
@@ -352,7 +329,9 @@ class SettingsPanel(QDialog):
         )
         self.build_steam_database_download_label.setObjectName("summaryValue")
         self.build_steam_database_download_label.setAlignment(Qt.AlignCenter)
-        self.build_steam_database_download_src_label = QLabel("Download all mods via:")
+        self.build_steam_database_download_src_label = QLabel(
+            "Download all published Workshop mods via:"
+        )
         self.build_steam_database_download_src_label.setObjectName("summaryValue")
         self.build_steam_database_download_src_label.setAlignment(Qt.AlignCenter)
         self.build_steam_database_download_all_steamcmd = QPushButton("SteamCMD")
@@ -369,7 +348,7 @@ class SettingsPanel(QDialog):
         self.build_steam_database_download_all_steam.clicked.connect(
             partial(self.actions_signal.emit, "download_entire_workshop_steamworks")
         )
-        # build the DB Builder layouts
+        # Compose layout(s)
         self.database_tools_builder_layout.addWidget(
             self.build_steam_database_include_label
         )
@@ -395,31 +374,35 @@ class SettingsPanel(QDialog):
             self.build_steam_database_download_all_steam
         )
         self.database_tools_layout.addLayout(self.database_tools_actions_layout)
+        self.database_tools_layout.addLayout(self.database_tools_layout)
+        # Add DB Builder tab
+        self.tabs.addTab(self.db_builder_tab, "DB Builder")
 
-        # steamcmd
-        self.steamcmd_label = QLabel("SteamCMD options")
-        self.steamcmd_label.setObjectName("summaryHeader")
-        # Create a QFrame, styled to look like a horizontal line
-        self.steamcmd_line = QFrame()
-        self.steamcmd_line.setFixedHeight(1)
-        self.steamcmd_line.setFrameShape(QFrame.HLine)
-        self.steamcmd_line.setFrameShadow(QFrame.Sunken)
-        self.steamcmd_line.setObjectName("horizontalLine")
+    def __create_steamcmd_tab(self) -> None:
+        # SteamCMD tab
+        self.steamcmd_tab = QWidget()
+        # SteamCMD tab layout
+        self.steamcmd_tab_layout = QVBoxLayout(self.steamcmd_tab)
+        self.steamcmd_tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        # SteamCMD tab widgets
         self.steamcmd_validate_downloads_checkbox = QCheckBox(
             "Force SteamCMD to validate downloaded workshop mods"
         )
         self.steamcmd_validate_downloads_checkbox.setObjectName("summaryValue")
-        # todds
-        self.todds_label = QLabel("todds Options")
-        self.todds_label.setObjectName("summaryHeader")
-        # Create a QFrame, styled to look like a horizontal line
-        self.todds_line = QFrame()
-        self.todds_line.setFixedHeight(1)
-        self.todds_line.setFrameShape(QFrame.HLine)
-        self.todds_line.setFrameShadow(QFrame.Sunken)
-        self.todds_line.setObjectName("horizontalLine")
+        # Compose layout(s)
+        self.steamcmd_tab_layout.addWidget(self.steamcmd_validate_downloads_checkbox)
+        # Add SteamCMD tab
+        self.tabs.addTab(self.steamcmd_tab, "SteamCMD")
+
+    def __create_todds_tab(self) -> None:
+        # todds tab
+        self.todds_tab = QWidget()
+        # todds tab layout
+        self.todds_tab_layout = QVBoxLayout(self.todds_tab)
+        self.todds_tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         # layout for Quality preset
         self.todds_preset_layout = QHBoxLayout()
+        # todds widget(s)
         self.todds_preset_label = QLabel("Quality preset:")
         self.todds_preset_label.setObjectName("summaryValue")
         self.todds_presets_cb = QComboBox()
@@ -460,35 +443,17 @@ class SettingsPanel(QDialog):
             + "This option will force all textures to be converted again."
         )
         self.todds_overwrite_checkbox.setObjectName("summaryValue")
-
-        # Add layouts/widgets to layout
-        self.layout.addWidget(self.general_label)
-        self.layout.addWidget(self.general_line)
-        self.layout.addLayout(self.general_options_layout)
-        # self.layout.addWidget(self.external_metadata_sorting_label)
-        # self.layout.addWidget(self.external_metadata_sorting_line)
-        self.layout.addLayout(self.metadata_sorting_options_layout)
-        self.layout.addWidget(self.steamcmd_label)
-        self.layout.addWidget(self.steamcmd_line)
-        self.layout.addWidget(self.steamcmd_validate_downloads_checkbox)
-        self.layout.addWidget(self.build_steam_database_label)
-        self.layout.addWidget(self.build_steam_database_line)
-        self.layout.addLayout(self.database_tools_layout)
-        self.layout.addWidget(self.todds_label)
-        self.layout.addWidget(self.todds_line)
+        # Compose layout(s)
         self.todds_preset_layout.addWidget(self.todds_preset_label, 0)
         self.todds_preset_layout.addWidget(self.todds_presets_cb, 10)
-        self.layout.addLayout(self.todds_preset_layout)
-        self.layout.addWidget(self.todds_active_mods_target_checkbox)
-        self.layout.addWidget(self.todds_dry_run_checkbox)
-        self.layout.addWidget(self.todds_overwrite_checkbox)
+        self.todds_tab_layout.addLayout(self.todds_preset_layout)
+        self.todds_tab_layout.addWidget(self.todds_active_mods_target_checkbox)
+        self.todds_tab_layout.addWidget(self.todds_dry_run_checkbox)
+        self.todds_tab_layout.addWidget(self.todds_overwrite_checkbox)
+        # Add todds tab
+        self.tabs.addTab(self.todds_tab, "todds")
 
-        # Display items
-        self.setLayout(self.layout)
-
-        logger.debug("Finished SettingsPanel initialization")
-
-    def loggerDebugCheckboxEvent(self) -> None:
+    def __loggerDebugCheckboxEvent(self) -> None:
         data_path = str(
             Path(
                 os.path.join(os.path.split(os.path.dirname(__file__))[0], "data")
