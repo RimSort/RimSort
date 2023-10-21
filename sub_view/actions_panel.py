@@ -111,8 +111,8 @@ class Actions(QWidget):
         # OPTIMIZE TEXTURES BUTTON
         self.optimize_textures_button = MultiButton(
             actions_signal=self.actions_signal,
-            main_action_name="Optimize textures",
-            main_action_tooltip="Quality presets configurable in settings!\nUse menu to delete .dds textures --->",
+            main_action="Optimize textures",
+            main_action_tooltip="Quality presets configurable in settings!\nUse menu to delete .dds textures",
             context_menu_content={
                 "delete_textures": "Delete .dds Textures",
             },
@@ -137,9 +137,9 @@ class Actions(QWidget):
         # setup_steamcmd button
         self.setup_steamcmd_button = MultiButton(
             actions_signal=self.actions_signal,
-            main_action_name="Setup SteamCMD",
+            main_action="Setup SteamCMD",
             main_action_tooltip="Install & setup SteamCMD for use with RimSort at the configured prefix.\n"
-            "This defaults to RimSort storage dir. Use menu to configure the installed SteamCMD prefix --->\n",
+            "This defaults to RimSort storage dir. Use menu to configure the installed SteamCMD prefix\n",
             context_menu_content={
                 "set_steamcmd_path": "Configure SteamCMD prefix",
                 "import_steamcmd_acf_data": "Import SteamCMD acf data",
@@ -184,9 +184,9 @@ class Actions(QWidget):
         # EXPORT BUTTON
         self.export_button = MultiButton(
             actions_signal=self.actions_signal,
-            main_action_name="Export mod list",
+            main_action="Export mod list",
             main_action_tooltip="Export mod list to xml file\n"
-            "Use menu to see additional sharing options --->",
+            "Use menu to see additional sharing options",
             context_menu_content={
                 "export_list_clipboard": "Export mod list to clipboard",
                 "upload_list_rentry": "Upload mod list with Rentry.co",
@@ -199,8 +199,8 @@ class Actions(QWidget):
         # RUN BUTTON
         self.run_button = MultiButton(
             actions_signal=self.actions_signal,
-            main_action_name="Run game",
-            main_action_tooltip="Use menu to edit game arguments that RimSort will pass to RimWorld --->",
+            main_action="Run game",
+            main_action_tooltip="Use menu to edit game arguments that RimSort will pass to RimWorld",
             context_menu_content={
                 "edit_run_args": "Edit run arguments",
             },

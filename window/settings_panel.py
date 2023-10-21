@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QDialog,
+    QFrame,
     QHBoxLayout,
     QLabel,
     QMenu,
@@ -21,6 +22,7 @@ from PySide6.QtWidgets import (
 )
 
 from model.dialogue import show_information
+from model.multibutton import MultiButton
 from util.generic import platform_specific_open, upload_data_to_0x0_st
 
 
@@ -56,9 +58,14 @@ class SettingsPanel(QDialog):
         self.general_actions_layout = QVBoxLayout()
         self.general_preferences_layout = QVBoxLayout()
         # General widgets
-        self.general_label = QLabel("General")
-        self.general_label.setObjectName("summaryValue")
-        self.general_label.setAlignment(Qt.AlignCenter)
+        self.general_label = QLabel("General options")
+        self.general_label.setObjectName("summaryHeader")
+        # Create a QFrame, styled to look like a horizontal line
+        self.general_line = QFrame()
+        self.general_line.setFixedHeight(1)
+        self.general_line.setFrameShape(QFrame.HLine)
+        self.general_line.setFrameShadow(QFrame.Sunken)
+        self.general_line.setObjectName("horizontalLine")
         self.rimsort_actions_label = QLabel("RimSort actions:")
         self.rimsort_actions_label.setObjectName("summaryValue")
         self.rimsort_actions_label.setAlignment(Qt.AlignCenter)
@@ -172,6 +179,78 @@ class SettingsPanel(QDialog):
         self.general_options_layout.addLayout(self.general_actions_layout, 5)
         self.general_options_layout.addLayout(self.general_preferences_layout, 10)
 
+        # metadata layouts
+        self.metadata_sorting_options_layout = QHBoxLayout()
+        self.steam_metadata_configuration_layout = QVBoxLayout()
+        self.community_rules_metadata_configuration_layout = QVBoxLayout()
+        self.sorting_algorithm_configuration_layout = QVBoxLayout()
+        # metadata / sorting widgets
+        self.external_metadata_sorting_label = QLabel(
+            "External metadata / sorting algorithm preferences"
+        )
+        self.external_metadata_sorting_label.setObjectName("summaryHeader")
+        # Create a QFrame, styled to look like a horizontal line
+        self.external_metadata_sorting_line = QFrame()
+        self.external_metadata_sorting_line.setFixedHeight(1)
+        self.external_metadata_sorting_line.setFrameShape(QFrame.HLine)
+        self.external_metadata_sorting_line.setFrameShadow(QFrame.Sunken)
+        self.external_metadata_sorting_line.setObjectName("horizontalLine")
+        self.external_metadata_icon_path = QIcon(
+            str(
+                Path(
+                    os.path.join(os.path.dirname(__file__), "../data/database.png")
+                ).resolve()
+            )
+        )
+        # external steam metadata
+        self.external_steam_metadata_label = QLabel("Steam Workshop DB")
+        self.external_steam_metadata_label.setObjectName("summaryValue")
+        self.external_steam_metadata_label.setAlignment(Qt.AlignCenter)
+        # external steam metadata multibutton
+        self.external_steam_metadata_multibutton = MultiButton(
+            main_action=[
+                "None",
+                "Configured file path",
+                "Configured git repository",
+            ],
+            main_action_tooltip="Use menu to access Steam Workshop Database options",
+            context_menu_content={
+                "configure_steam_database_path": "Configure Steam Database file path",
+                "configure_steam_database_repo": "Configure Steam Database repository",
+                "download_steam_database": "Download Steam Database from repository",
+                "upload_steam_database": "Upload Steam Database changes to repository",
+            },
+            actions_signal=self.actions_signal,
+            secondary_action_icon_path=self.external_metadata_icon_path,
+        )
+        self.external_steam_metadata_multibutton.main_action.setItemDelegate(
+            self.centered_item_delegate
+        )
+        # external community rules metadata
+        self.external_community_rules_metadata_label = QLabel("Community Rules DB")
+        self.external_community_rules_metadata_label.setObjectName("summaryValue")
+        self.external_community_rules_metadata_label.setAlignment(Qt.AlignCenter)
+        # external community rules metadata multibutton
+        self.external_community_rules_metadata_multibutton = MultiButton(
+            main_action=[
+                "None",
+                "Configured file path",
+                "Configured git repository",
+            ],
+            main_action_tooltip="Use menu to access Community Rules Database options",
+            context_menu_content={
+                "configure_community_rules_db_path": "Configure Community Rules Database file path",
+                "configure_community_rules_db_repo": "Configure Community Rules Database repository",
+                "download_community_rules_database": "Download/Update Community Rules Database from repository",
+                "open_community_rules_with_rule_editor": "Open Community Rules Database with Rule Editor",
+                "upload_community_rules_database": "Upload Community Rules Database changes to repository",
+            },
+            actions_signal=self.actions_signal,
+            secondary_action_icon_path=self.external_metadata_icon_path,
+        )
+        self.external_community_rules_metadata_multibutton.main_action.setItemDelegate(
+            self.centered_item_delegate
+        )
         # sorting algorithm
         self.sorting_algorithm_label = QLabel("Sorting Algorithm")
         self.sorting_algorithm_label.setObjectName("summaryValue")
@@ -180,115 +259,79 @@ class SettingsPanel(QDialog):
         self.sorting_algorithm_cb.setObjectName("MainUI")
         self.sorting_algorithm_cb.addItems(["Alphabetical", "Topological"])
         self.sorting_algorithm_cb.setItemDelegate(self.centered_item_delegate)
+        # Build the metadata / sorting options layout
+        self.steam_metadata_configuration_layout.addWidget(
+            self.external_steam_metadata_label
+        )
+        self.steam_metadata_configuration_layout.addWidget(
+            self.external_steam_metadata_multibutton
+        )
+        self.community_rules_metadata_configuration_layout.addWidget(
+            self.external_community_rules_metadata_label
+        )
+        self.community_rules_metadata_configuration_layout.addWidget(
+            self.external_community_rules_metadata_multibutton
+        )
+        self.sorting_algorithm_configuration_layout.addWidget(
+            self.sorting_algorithm_label
+        )
+        self.sorting_algorithm_configuration_layout.addWidget(self.sorting_algorithm_cb)
+        self.metadata_sorting_options_layout.addLayout(
+            self.steam_metadata_configuration_layout
+        )
+        self.metadata_sorting_options_layout.addLayout(
+            self.community_rules_metadata_configuration_layout
+        )
+        self.metadata_sorting_options_layout.addLayout(
+            self.sorting_algorithm_configuration_layout
+        )
 
-        # metadata layouts
-        self.metadata_options_layout = QHBoxLayout()
-        self.metadata_configuration_layout = QVBoxLayout()
-        self.metadata_steam_configuration_layout = QHBoxLayout()
-        self.metadata_community_rules_configuration_layout = QHBoxLayout()
+        # db builder layouts
         self.database_tools_layout = QVBoxLayout()
         self.database_tools_builder_layout = QHBoxLayout()
         self.database_tools_actions_layout = QHBoxLayout()
-        # metadata widgets
-        self.external_metadata_icon = QIcon(
-            str(
-                Path(
-                    os.path.join(os.path.dirname(__file__), "../data/database.png")
-                ).resolve()
-            )
-        )
-        self.external_metadata_label = QLabel("External Metadata")
-        self.external_metadata_label.setObjectName("summaryValue")
-        self.external_metadata_label.setAlignment(Qt.AlignCenter)
-        # external steam metadata
-        self.external_steam_metadata_label = QLabel("Steam Workshop DB")
-        self.external_steam_metadata_label.setObjectName("summaryValue")
-        self.external_steam_metadata_label.setAlignment(Qt.AlignCenter)
-        self.external_steam_metadata_button = QToolButton()
-        self.external_steam_metadata_button.setIcon(self.external_metadata_icon)
-        self.external_steam_metadata_button.setToolTip(
-            "Right-click to access Steam Workshop Database options"
-        )
-        # Set context menu policy and connect custom context menu event
-        self.external_steam_metadata_button.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.external_steam_metadata_button.customContextMenuRequested.connect(
-            self.externalSteamDbBtnContextMenuEvent
-        )
-        # external steam metadata combobox
-        self.external_steam_metadata_cb = QComboBox()
-        self.external_steam_metadata_cb.setObjectName("MainUI")
-        self.external_steam_metadata_cb.addItems(
-            [
-                "None",
-                "Configured file path",
-                "Configured git repository",                
-            ]
-        )
-        self.external_steam_metadata_cb.setItemDelegate(self.centered_item_delegate)
-        # external community rules metadata
-        self.external_community_rules_metadata_label = QLabel("Community Rules DB")
-        self.external_community_rules_metadata_label.setObjectName("summaryValue")
-        self.external_community_rules_metadata_label.setAlignment(Qt.AlignCenter)
-        self.external_community_rules_metadata_button = QToolButton()
-        self.external_community_rules_metadata_button.setIcon(
-            self.external_metadata_icon
-        )
-        self.external_community_rules_metadata_button.setToolTip(
-            "Right-click to access Community Rules Database options"
-        )
-        # Set context menu policy and connect custom context menu event
-        self.external_community_rules_metadata_button.setContextMenuPolicy(
-            Qt.CustomContextMenu
-        )
-        self.external_community_rules_metadata_button.customContextMenuRequested.connect(
-            self.externalCommunityRulesDbBtnContextMenuEvent
-        )
-        # external community rules metadata combobox
-        self.external_community_rules_metadata_cb = QComboBox()
-        self.external_community_rules_metadata_cb.setObjectName("MainUI")
-        self.external_community_rules_metadata_cb.addItems(
-            [
-                "None",
-                "Configured file path",
-                "Configured git repository",                
-            ]
-        )
-        self.external_community_rules_metadata_cb.setItemDelegate(
-            self.centered_item_delegate
-        )
-        self.build_steam_database_label = QLabel("Steam DB Builder Options:")
-        self.build_steam_database_label.setObjectName("summaryValue")
-        self.build_steam_database_label.setAlignment(Qt.AlignCenter)
-        self.build_steam_database_include_label = QLabel("Include:")
+        # db builder widgets
+        self.build_steam_database_label = QLabel("Steam DB Builder options:")
+        self.build_steam_database_label.setObjectName("summaryHeader")
+        # Create a QFrame, styled to look like a horizontal line
+        self.build_steam_database_line = QFrame()
+        self.build_steam_database_line.setFixedHeight(1)
+        self.build_steam_database_line.setFrameShape(QFrame.HLine)
+        self.build_steam_database_line.setFrameShadow(QFrame.Sunken)
+        self.build_steam_database_line.setObjectName("horizontalLine")
+        self.build_steam_database_include_label = QLabel("Include local metadata:")
         self.build_steam_database_include_label.setObjectName("summaryValue")
         self.build_steam_database_include_label.setAlignment(Qt.AlignCenter)
         self.build_steam_database_include_cb = QComboBox()
         self.build_steam_database_include_cb.setObjectName("MainUI")
-        self.build_steam_database_include_cb.addItems(["No local data", "All Mods"])
+        self.build_steam_database_include_cb.addItems(["No", "Yes"])
         self.build_steam_database_include_cb.setItemDelegate(
             self.centered_item_delegate
         )
-        self.build_steam_database_button = QPushButton("Build database")
-        self.build_steam_database_button.setToolTip(
-            "Right-click to:"
-            + "\n\n- Merge 2 databases"
-            + "\n- Set Database expiry"
+        self.build_steam_database_multibutton = MultiButton(
+            main_action="Build database",
+            main_action_tooltip="Use menu to access additional options:"
+            + "\n\n- Compare dependencies found in 2 provided SteamDB"
+            + "\n- Merge 2 SteamDBs recursively"
+            + "\n- Set SteamDB expiry"
             + "\n- Set Steam WebAPI key"
             + '\n\nPlease consult the "User Guide" on the RimSort wiki'
-            + "\n\nRequires:"
+            + "\n\nDB Builder at a minimum requires:"
             + "\n- A live Internet connection"
-            + "\n- A Steam WebAPI key configured"
+            + "\n- A Steam WebAPI key configured",
+            context_menu_content={
+                "comparison_report": "Compare dependencies found in 2 provided SteamDB",
+                "merge_databases": "Merge 2 SteamDBs recursively",
+                "set_database_expiry": "Set SteamDB expiry",
+                "edit_steam_webapi_key": "Set Steam WebAPI key",
+            },
+            actions_signal=self.actions_signal,
         )
-        # Set context menu policy and connect custom context menu event
-        self.build_steam_database_button.clicked.connect(
+        self.build_steam_database_multibutton.main_action.clicked.connect(
             partial(self.actions_signal.emit, "build_steam_database_thread")
         )
-        self.build_steam_database_button.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.build_steam_database_button.customContextMenuRequested.connect(
-            self.buildDatabaseBtnContextMenuEvent
-        )
         self.build_steam_database_dlc_data_checkbox = QCheckBox(
-            "Include DLC dependency data in database"
+            "Query DLC dependency data with Steamworks API"
         )
         self.build_steam_database_dlc_data_checkbox.setToolTip(
             "Requires:\n"
@@ -297,83 +340,84 @@ class SettingsPanel(QDialog):
         )
         self.build_steam_database_dlc_data_checkbox.setObjectName("summaryValue")
         self.build_steam_database_update_checkbox = QCheckBox(
-            "Update database instead of overwriting"
+            "Update database instead of overwriting if it exists"
         )
         self.build_steam_database_update_checkbox.setToolTip(
             "If the designated database exists, update it instead of overwriting it."
         )
         self.build_steam_database_update_checkbox.setObjectName("summaryValue")
-        self.comparison_report_button = QPushButton("Comparison report")
-        self.comparison_report_button.setToolTip(
-            "Generate dependency comparison report between 2 Steam DBs"
+        # scraping options
+        self.build_steam_database_download_label = QLabel(
+            "Steam Workshop mod scraping options:"
         )
-        self.comparison_report_button.clicked.connect(
-            partial(self.actions_signal.emit, "comparison_report")
+        self.build_steam_database_download_label.setObjectName("summaryValue")
+        self.build_steam_database_download_label.setAlignment(Qt.AlignCenter)
+        self.build_steam_database_download_src_label = QLabel("Download all mods via:")
+        self.build_steam_database_download_src_label.setObjectName("summaryValue")
+        self.build_steam_database_download_src_label.setAlignment(Qt.AlignCenter)
+        self.build_steam_database_download_all_steamcmd = QPushButton("SteamCMD")
+        self.build_steam_database_download_all_steamcmd.setToolTip(
+            "Scrape Steam Workshop and download all published mods with SteamCMD"
         )
-        self.download_all_mods_btn = QPushButton("Download all mods")
-        self.download_all_mods_btn.setToolTip(
-            "Right-click me to access my options...\n"
-            + "Use this to attempt to download every mod that is available on Steam Workshop"
+        self.build_steam_database_download_all_steamcmd.clicked.connect(
+            partial(self.actions_signal.emit, "download_entire_workshop_steamcmd")
         )
-        self.download_all_mods_btn.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.download_all_mods_btn.customContextMenuRequested.connect(
-            self.downloadAllModsContextMenuEvent
+        self.build_steam_database_download_all_steam = QPushButton("Steam")
+        self.build_steam_database_download_all_steam.setToolTip(
+            "Scrape Steam Workshop and download all published mods with Steam client"
         )
-        # Build the metadata options layout
-        self.metadata_steam_configuration_layout.addWidget(
-            self.external_steam_metadata_label
+        self.build_steam_database_download_all_steam.clicked.connect(
+            partial(self.actions_signal.emit, "download_entire_workshop_steamworks")
         )
-        self.metadata_steam_configuration_layout.addWidget(
-            self.external_steam_metadata_button
-        )
-        self.metadata_configuration_layout.addLayout(
-            self.metadata_steam_configuration_layout
-        )
-        self.metadata_configuration_layout.addWidget(self.external_steam_metadata_cb)
-        self.metadata_community_rules_configuration_layout.addWidget(
-            self.external_community_rules_metadata_label
-        )
-        self.metadata_community_rules_configuration_layout.addWidget(
-            self.external_community_rules_metadata_button
-        )
-        self.metadata_configuration_layout.addLayout(
-            self.metadata_community_rules_configuration_layout
-        )
-        self.metadata_configuration_layout.addWidget(
-            self.external_community_rules_metadata_cb
-        )
-        self.database_tools_layout.addWidget(self.build_steam_database_label)
+        # build the DB Builder layouts
         self.database_tools_builder_layout.addWidget(
             self.build_steam_database_include_label
         )
         self.database_tools_builder_layout.addWidget(
             self.build_steam_database_include_cb
         )
-        self.database_tools_builder_layout.addWidget(self.build_steam_database_button)
+        self.database_tools_builder_layout.addWidget(
+            self.build_steam_database_multibutton
+        )
         self.database_tools_layout.addLayout(self.database_tools_builder_layout)
         self.database_tools_layout.addWidget(
             self.build_steam_database_dlc_data_checkbox
         )
         self.database_tools_layout.addWidget(self.build_steam_database_update_checkbox)
-        self.database_tools_actions_layout.addWidget(self.comparison_report_button)
-        self.database_tools_actions_layout.addWidget(self.download_all_mods_btn)
-
-        self.metadata_options_layout.addLayout(self.metadata_configuration_layout)
-        self.metadata_options_layout.addLayout(self.database_tools_layout)
+        self.database_tools_layout.addWidget(self.build_steam_database_download_label)
+        self.database_tools_actions_layout.addWidget(
+            self.build_steam_database_download_src_label
+        )
+        self.database_tools_actions_layout.addWidget(
+            self.build_steam_database_download_all_steamcmd
+        )
+        self.database_tools_actions_layout.addWidget(
+            self.build_steam_database_download_all_steam
+        )
         self.database_tools_layout.addLayout(self.database_tools_actions_layout)
 
         # steamcmd
-        self.steamcmd_label = QLabel("SteamCMD")
-        self.steamcmd_label.setObjectName("summaryValue")
-        self.steamcmd_label.setAlignment(Qt.AlignCenter)
+        self.steamcmd_label = QLabel("SteamCMD options")
+        self.steamcmd_label.setObjectName("summaryHeader")
+        # Create a QFrame, styled to look like a horizontal line
+        self.steamcmd_line = QFrame()
+        self.steamcmd_line.setFixedHeight(1)
+        self.steamcmd_line.setFrameShape(QFrame.HLine)
+        self.steamcmd_line.setFrameShadow(QFrame.Sunken)
+        self.steamcmd_line.setObjectName("horizontalLine")
         self.steamcmd_validate_downloads_checkbox = QCheckBox(
             "Force SteamCMD to validate downloaded workshop mods"
         )
         self.steamcmd_validate_downloads_checkbox.setObjectName("summaryValue")
         # todds
         self.todds_label = QLabel("todds Options")
-        self.todds_label.setObjectName("summaryValue")
-        self.todds_label.setAlignment(Qt.AlignCenter)
+        self.todds_label.setObjectName("summaryHeader")
+        # Create a QFrame, styled to look like a horizontal line
+        self.todds_line = QFrame()
+        self.todds_line.setFixedHeight(1)
+        self.todds_line.setFrameShape(QFrame.HLine)
+        self.todds_line.setFrameShadow(QFrame.Sunken)
+        self.todds_line.setObjectName("horizontalLine")
         # layout for Quality preset
         self.todds_preset_layout = QHBoxLayout()
         self.todds_preset_label = QLabel("Quality preset:")
@@ -419,18 +463,19 @@ class SettingsPanel(QDialog):
 
         # Add layouts/widgets to layout
         self.layout.addWidget(self.general_label)
+        self.layout.addWidget(self.general_line)
         self.layout.addLayout(self.general_options_layout)
-
-        self.layout.addWidget(self.external_metadata_label)
-        self.layout.addLayout(self.metadata_options_layout)
-
-        self.layout.addWidget(self.sorting_algorithm_label)
-        self.layout.addWidget(self.sorting_algorithm_cb)
-
+        # self.layout.addWidget(self.external_metadata_sorting_label)
+        # self.layout.addWidget(self.external_metadata_sorting_line)
+        self.layout.addLayout(self.metadata_sorting_options_layout)
         self.layout.addWidget(self.steamcmd_label)
+        self.layout.addWidget(self.steamcmd_line)
         self.layout.addWidget(self.steamcmd_validate_downloads_checkbox)
-
+        self.layout.addWidget(self.build_steam_database_label)
+        self.layout.addWidget(self.build_steam_database_line)
+        self.layout.addLayout(self.database_tools_layout)
         self.layout.addWidget(self.todds_label)
+        self.layout.addWidget(self.todds_line)
         self.todds_preset_layout.addWidget(self.todds_preset_label, 0)
         self.todds_preset_layout.addWidget(self.todds_presets_cb, 10)
         self.layout.addLayout(self.todds_preset_layout)
@@ -442,133 +487,6 @@ class SettingsPanel(QDialog):
         self.setLayout(self.layout)
 
         logger.debug("Finished SettingsPanel initialization")
-
-    def buildDatabaseBtnContextMenuEvent(self, point: QPoint) -> None:
-        contextMenu = QMenu(self)  # Build Database btn context menu event
-        merge_databases = contextMenu.addAction(
-            "Merge Steam databases"
-        )  # merge databases
-        set_database_expiry = contextMenu.addAction(
-            "Set database expiry"
-        )  # db builder expiry
-        set_steam_apikey = contextMenu.addAction(
-            "Set Steam WebAPI key"
-        )  # steam API-key
-        merge_databases.triggered.connect(
-            partial(self.actions_signal.emit, "merge_databases")
-        )
-        set_database_expiry.triggered.connect(
-            partial(self.actions_signal.emit, "set_database_expiry")
-        )
-        set_steam_apikey.triggered.connect(
-            partial(self.actions_signal.emit, "edit_steam_webapi_key")
-        )
-        action = contextMenu.exec_(self.build_steam_database_button.mapToGlobal(point))
-
-    def downloadAllModsContextMenuEvent(self, point: QPoint) -> None:
-        contextMenu = QMenu(self)  # Download all mods btn context menu event
-        download_with_steamcmd = contextMenu.addAction(
-            "Download with SteamCMD"
-        )  # steamcmd
-        download_with_steamworks = contextMenu.addAction(
-            "Download with Steam client"
-        )  # steamworks
-        download_with_steamcmd.triggered.connect(
-            partial(
-                self.actions_signal.emit,
-                "download_entire_workshop_steamcmd",
-            )
-        )
-        download_with_steamworks.triggered.connect(
-            partial(
-                self.actions_signal.emit,
-                "download_entire_workshop_steamworks",
-            )
-        )
-        action = contextMenu.exec_(self.download_all_mods_btn.mapToGlobal(point))
-
-    def externalSteamDbBtnContextMenuEvent(self, point: QPoint) -> None:
-        contextMenu = QMenu(self)  # Build Database btn context menu event
-        config_steam_db_path = contextMenu.addAction(
-            "Configure Steam Database file path"
-        )  # configure file path
-        config_steam_db_repo = contextMenu.addAction(
-            "Configure Steam Database repository"
-        )  # configure repo URL
-        download_steam_db = contextMenu.addAction(
-            "Download Steam Database from repository"
-        )  # download db from repo
-        upload_steam_db_changes = contextMenu.addAction(
-            "Upload Steam Database changes to repository"
-        )  # make pull request with changes
-        # ACTIONS
-        config_steam_db_path.triggered.connect(
-            partial(self.actions_signal.emit, "configure_steam_database_path")
-        )
-        config_steam_db_repo.triggered.connect(
-            partial(self.actions_signal.emit, "configure_steam_database_repo")
-        )
-        download_steam_db.triggered.connect(
-            partial(self.actions_signal.emit, "download_steam_database")
-        )
-        upload_steam_db_changes.triggered.connect(
-            partial(self.actions_signal.emit, "upload_steam_database")
-        )
-        action = contextMenu.exec_(
-            self.external_steam_metadata_button.mapToGlobal(point)
-        )
-
-    def externalCommunityRulesDbBtnContextMenuEvent(self, point: QPoint) -> None:
-        contextMenu = QMenu(self)  # Build Database btn context menu event
-        config_community_rules_db_path = contextMenu.addAction(
-            "Configure Community Rules Database file path"
-        )  # configure file path
-        config_community_rules_db_repo = contextMenu.addAction(
-            "Configure Community Rules Database repository"
-        )  # configure repo URL
-        download_community_rules_db = contextMenu.addAction(
-            "Download/Update Community Rules Database from repository"
-        )  # download db from repo
-        open_rule_editor = contextMenu.addAction(
-            "Open Community Rules Database with Rule Editor"
-        )
-        upload_community_rules_changes = contextMenu.addAction(
-            "Upload Community Rules Database changes to repository"
-        )  # make pull request with changes
-        # ACTIONS
-        config_community_rules_db_path.triggered.connect(
-            partial(
-                self.actions_signal.emit,
-                "configure_community_rules_db_path",
-            )
-        )
-        config_community_rules_db_repo.triggered.connect(
-            partial(
-                self.actions_signal.emit,
-                "configure_community_rules_db_repo",
-            )
-        )
-        download_community_rules_db.triggered.connect(
-            partial(
-                self.actions_signal.emit,
-                "download_community_rules_database",
-            )
-        )
-        open_rule_editor.triggered.connect(
-            partial(
-                self.actions_signal.emit,
-                "open_community_rules_with_rule_editor",
-            )
-        )
-        upload_community_rules_changes.triggered.connect(
-            partial(
-                self.actions_signal.emit,
-                "upload_community_rules_database",
-            )
-        )
-        action = contextMenu.exec_(
-            self.external_community_rules_metadata_button.mapToGlobal(point)
-        )
 
     def loggerDebugCheckboxEvent(self) -> None:
         data_path = str(

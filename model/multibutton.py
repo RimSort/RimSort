@@ -6,6 +6,7 @@ from typing import Dict, List, Union
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import (
+    QComboBox,
     QHBoxLayout,
     QMenu,
     QPushButton,
@@ -17,13 +18,15 @@ from PySide6.QtWidgets import (
 class MultiButton(QWidget):
     def __init__(
         self,
-        main_action_name: str,
+        main_action: Union[str, List[str]],
         main_action_tooltip: str,
         context_menu_content: Union[Dict[str, str], List[QAction]],
         actions_signal=None,
         secondary_action_icon_path=None,
     ):
         super().__init__()
+
+        self.main_action: Union[QPushButton, QComboBox]
 
         # Set the object name for styling
         self.setObjectName("MultiButton")
@@ -44,10 +47,19 @@ class MultiButton(QWidget):
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
 
-        # Create a QPushButton for the main action
-        self.main_action = QPushButton(main_action_name, self)
-        self.main_action.setToolTip(main_action_tooltip)
-        layout.addWidget(self.main_action)
+        # If it's a string, make a button using the text provided
+        if isinstance(main_action, str):
+            # Create a QPushButton for the main action
+            self.main_action = QPushButton(main_action, self)
+            self.main_action.setToolTip(main_action_tooltip)
+            layout.addWidget(self.main_action)
+        # Otherwise, it can be a list so that the action can be a QComboBox
+        elif isinstance(main_action, list):
+            self.main_action = QComboBox(self)
+            self.main_action.addItems(main_action)
+            self.main_action.setObjectName("MainUI")
+            self.main_action.setToolTip(main_action_tooltip)
+            layout.addWidget(self.main_action)
 
         # Create a QToolButton with a menu for the secondary action
         self.secondary_action = QToolButton(self)

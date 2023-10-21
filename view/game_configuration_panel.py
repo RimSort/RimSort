@@ -181,8 +181,8 @@ class GameConfiguration(QObject):
             self.check_for_updates_action = QAction("Check for update on startup")
             self.check_for_updates_action.setCheckable(True)
             self.check_for_updates_button = MultiButton(
-                main_action_name="Check for update",
-                main_action_tooltip="Use menu to enable this check on startup --->",
+                main_action="Check for update",
+                main_action_tooltip="Use menu to enable this check on startup",
                 context_menu_content=[self.check_for_updates_action],
             )
             self.check_for_updates_button.main_action.clicked.connect(
@@ -708,7 +708,7 @@ class GameConfiguration(QObject):
             if settings_data.get("external_steam_metadata_repo"):
                 self.steam_db_repo = settings_data["external_steam_metadata_repo"]
             if settings_data.get("external_steam_metadata_source"):
-                self.settings_panel.external_steam_metadata_cb.setCurrentText(
+                self.settings_panel.external_steam_metadata_multibutton.main_action.setCurrentText(
                     settings_data["external_steam_metadata_source"]
                 )
             if settings_data.get("external_community_rules_file_path"):
@@ -720,7 +720,7 @@ class GameConfiguration(QObject):
                     "external_community_rules_repo"
                 ]
             if settings_data.get("external_community_rules_metadata_source"):
-                self.settings_panel.external_community_rules_metadata_cb.setCurrentText(
+                self.settings_panel.external_community_rules_metadata_multibutton.main_action.setCurrentText(
                     settings_data["external_community_rules_metadata_source"]
                 )
 
@@ -732,12 +732,10 @@ class GameConfiguration(QObject):
             if settings_data.get("db_builder_include"):
                 self.db_builder_include = settings_data["db_builder_include"]
             if self.db_builder_include == "no_local":
-                self.settings_panel.build_steam_database_include_cb.setCurrentText(
-                    "No local data"
-                )
+                self.settings_panel.build_steam_database_include_cb.setCurrentText("No")
             if self.db_builder_include == "all_mods":
                 self.settings_panel.build_steam_database_include_cb.setCurrentText(
-                    "All Mods"
+                    "Yes"
                 )
             if settings_data.get("build_steam_database_dlc_data"):
                 self.build_steam_database_dlc_data_toggle = settings_data[
@@ -825,15 +823,9 @@ class GameConfiguration(QObject):
             self.try_download_missing_mods_toggle = False
 
         # db builder mode
-        if (
-            "No local data"
-            in self.settings_panel.build_steam_database_include_cb.currentText()
-        ):
+        if "No" in self.settings_panel.build_steam_database_include_cb.currentText():
             self.db_builder_include = "no_local"
-        elif (
-            "All Mods"
-            in self.settings_panel.build_steam_database_include_cb.currentText()
-        ):
+        elif "Yes" in self.settings_panel.build_steam_database_include_cb.currentText():
             self.db_builder_include = "all_mods"
         # dq getappdependencies toggle
         if self.settings_panel.build_steam_database_dlc_data_checkbox.isChecked():
@@ -882,8 +874,8 @@ class GameConfiguration(QObject):
                 "mod_type_filter_toggle": self.mod_type_filter_toggle,
                 "db_builder_include": self.db_builder_include,
                 "duplicate_mods_warning": self.duplicate_mods_warning_toggle,
-                "external_steam_metadata_source": self.settings_panel.external_steam_metadata_cb.currentText(),
-                "external_community_rules_metadata_source": self.settings_panel.external_community_rules_metadata_cb.currentText(),
+                "external_steam_metadata_source": self.settings_panel.external_steam_metadata_multibutton.main_action.currentText(),
+                "external_community_rules_metadata_source": self.settings_panel.external_community_rules_metadata_multibutton.main_action.currentText(),
                 "sorting_algorithm": self.settings_panel.sorting_algorithm_cb.currentText(),
                 "steam_mods_update_check": self.steam_mods_update_check_toggle,
                 "steamcmd_validate_downloads": self.steamcmd_validate_downloads_toggle,

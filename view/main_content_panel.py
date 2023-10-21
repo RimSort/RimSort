@@ -491,7 +491,7 @@ class MainContent(QObject):
         )
         self.metadata_manager.dbs_path = GameConfiguration.instance().dbs_path
         self.metadata_manager.external_community_rules_metadata_source = (
-            GameConfiguration.instance().settings_panel.external_community_rules_metadata_cb.currentText()
+            GameConfiguration.instance().settings_panel.external_community_rules_metadata_multibutton.main_action.currentText()
         )
         self.metadata_manager.external_community_rules_file_path = (
             GameConfiguration.instance().community_rules_file_path
@@ -500,7 +500,7 @@ class MainContent(QObject):
             GameConfiguration.instance().steam_db_file_path
         )
         self.metadata_manager.external_steam_metadata_source = (
-            GameConfiguration.instance().settings_panel.external_steam_metadata_cb.currentText()
+            GameConfiguration.instance().settings_panel.external_steam_metadata_multibutton.main_action.currentText()
         )
         self.metadata_manager.game_path = (
             GameConfiguration.instance().game_folder_line.text()
@@ -2663,7 +2663,7 @@ class MainContent(QObject):
             if not output_path.endswith(".json"):
                 output_path += ".json"  # Handle file extension if needed
             # RimWorld Workshop contains 30,000+ PublishedFileIDs (mods) as of 2023!
-            # "No local data": Produce accurate, complete DB by QueryFiles via WebAPI
+            # "No": Produce accurate, complete DB by QueryFiles via WebAPI
             # Queries ALL available PublishedFileIDs (mods) it can find via Steam WebAPI.
             # Does not use metadata from locally available mods. This means no packageids!
             if GameConfiguration.instance().db_builder_include == "no_local":
@@ -2676,7 +2676,7 @@ class MainContent(QObject):
                     get_appid_deps=GameConfiguration.instance().build_steam_database_dlc_data_toggle,
                     update=GameConfiguration.instance().build_steam_database_update_toggle,
                 )
-            # "All Mods": Produce accurate, possibly semi-incomplete DB without QueryFiles via API
+            # "Yes": Produce accurate, possibly semi-incomplete DB without QueryFiles via API
             # CAN produce a complete DB! Only includes metadata parsed from mods you have downloaded.
             # Produces DB which contains metadata from locally available mods. Includes packageids!
             elif GameConfiguration.instance().db_builder_include == "all_mods":

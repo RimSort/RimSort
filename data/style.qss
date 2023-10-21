@@ -28,6 +28,11 @@ MultiButton QPushButton {
     border-top-right-radius: 0px;
     border-bottom-right-radius: 0px;
 }
+MultiButton QComboBox {
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 0px;
+    padding: 0px;
+}
 MultiButton QToolButton {
     border-top-left-radius: 0px;
     border-bottom-left-radius: 0px;
@@ -40,6 +45,8 @@ QComboBox {
     border-style: solid;
     border-width: 0px;
     border-radius: 5px;
+    min-height: 1em;
+    min-width: 6em;
     padding: 1px;
 }
 QComboBox:hover {
@@ -58,12 +65,28 @@ QComboBox QAbstractItemView {
     selection-background-color: #455364;
     selection-color: white;
 }
+/* Horizontal line for use as a spacer */
+QFrame#horizontalLine {
+    background-color: white;
+}
 /* Default input box style */
 QInputDialog#dialogue{
     background: #1B2838;
 }
 /* Styling for labels */
 QLabel {
+    color: white;
+}
+/* Metadata value labels + text */
+QLabel#summaryHeader {
+    color: white;
+    font-weight: bold;
+}
+QLabel#summaryLabel {
+    color: white;
+    font-weight: 500;
+}
+QLabel#summaryValue {
     color: white;
 }
 /* Styling for line edit widgets */
@@ -358,14 +381,6 @@ QLabel#gameVersion {
 }
 
 /* ===== Mod info panel (sub_view/mod_info_panel.py) ===== */
-/* Metadata value labels + text */
-QLabel#summaryLabel {
-    color: white;
-    font-weight: 500;
-}
-QLabel#summaryValue {
-    color: white;
-}
 /* Outer-most encapsulator */
 /* Contains QScrollArea for mod description */
 QWidget#descriptionWidget {
