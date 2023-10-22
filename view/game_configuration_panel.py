@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
 )
 
 from model.dialogue import *
+from model.multibutton import MultiButton
 from util.constants import DEFAULT_SETTINGS, DEFAULT_USER_RULES
 from util.generic import *
 from window.settings_panel import SettingsPanel
@@ -166,42 +167,47 @@ class GameConfiguration(QObject):
             self.local_folder_row.setSpacing(0)
 
             # INSTANTIATE WIDGETS
+            # paths buttons
             self.auto_detect_paths_button = QPushButton("Autodetect paths")
             self.auto_detect_paths_button.clicked.connect(
                 self.autodetect_paths_by_platform
             )
             self.auto_detect_paths_button.setObjectName("LeftButton")
-            self.client_settings_button = QPushButton("Settings")
-            self.client_settings_button.clicked.connect(self._open_settings_panel)
-            self.client_settings_button.setObjectName("LeftButton")
+            self.clear_paths_button = QPushButton("Clear paths")
+            self.clear_paths_button.clicked.connect(self.clear_all_paths_data)
             self.hide_show_folder_rows_button = QPushButton()
             self.hide_show_folder_rows_button.clicked.connect(self.__toggle_folder_rows)
-            self.check_for_updates_action = QAction("Check for update on startup")
-            self.check_for_updates_action.setCheckable(True)
-            self.check_for_updates_button = QPushButton("Check for update")
-            self.check_for_updates_button.setToolTip(
-                "Right-click to configure automatic update check"
-            )
-            self.check_for_updates_button.clicked.connect(
-                partial(self.configuration_signal.emit, "check_for_update")
-            )
-            self.check_for_updates_button.setObjectName("RightButton")
-            self.check_for_updates_button.setContextMenuPolicy(Qt.CustomContextMenu)
-            self.check_for_updates_button.customContextMenuRequested.connect(
-                self.checkForUpdateBtnContextMenuEvent
-            )
+            # game version
             self.game_version_label = QLabel("Game version:")
             self.game_version_label.setObjectName("gameVersion")
             self.game_version_line = QLineEdit()
             self.game_version_line.setDisabled(True)
             self.game_version_line.setPlaceholderText("Unknown")
             self.game_version_line.setReadOnly(True)
+            # check for update btn
+            self.check_for_updates_action = QAction("Check for update on startup")
+            self.check_for_updates_action.setCheckable(True)
+            self.check_for_updates_button = MultiButton(
+                main_action="Check for update",
+                main_action_tooltip="Use menu to enable this check on startup",
+                context_menu_content=[self.check_for_updates_action],
+            )
+            self.check_for_updates_button.main_action.clicked.connect(
+                partial(self.configuration_signal.emit, "check_for_update")
+            )
+            self.check_for_updates_button.setObjectName("RightButton")
+            self.check_for_updates_button.setContextMenuPolicy(Qt.CustomContextMenu)
+            self.client_settings_button = QPushButton("Settings")
+            self.client_settings_button.clicked.connect(self._open_settings_panel)
+            self.client_settings_button.setObjectName("LeftButton")
+            # wiki btn
             self.wiki_button = QPushButton("Wiki")
             self.wiki_button.clicked.connect(
                 partial(open_url_browser, "https://github.com/RimSort/RimSort/wiki")
             )
             self.wiki_button.setObjectName("RightButton")
-
+            # folder paths
+            # game folder
             if self.system_name == "Darwin":
                 self.game_folder_open_button = QPushButton("Game App")
                 self.game_folder_open_button.setToolTip("Open Game Folder")
@@ -248,7 +254,7 @@ class GameConfiguration(QObject):
                 self.game_folder_select_button.setToolTip(
                     "Set the RimWorld game installation directory"
                 )
-
+            # config folder
             self.config_folder_open_button = QPushButton("Config folder")
             self.config_folder_open_button.setObjectName("LeftButton")
             self.config_folder_open_button.setToolTip(
@@ -291,7 +297,7 @@ class GameConfiguration(QObject):
                 self.config_folder_select_button.setToolTip(
                     "Set the RimWorld game configuration directory"
                 )
-
+            # local folder
             self.local_folder_open_button = QPushButton("Local mods")
             self.local_folder_open_button.setObjectName("LeftButton")
             self.local_folder_open_button.setToolTip("Open the local mods directory")
@@ -326,7 +332,7 @@ class GameConfiguration(QObject):
             self.local_folder_select_button.clicked.connect(self.set_local_folder)
             self.local_folder_select_button.setObjectName("RightButton")
             self.local_folder_select_button.setToolTip("Set the local mods directory.")
-
+            # workshop folder
             self.workshop_folder_open_button = QPushButton("Steam mods")
             self.workshop_folder_open_button.setObjectName("LeftButton")
             self.workshop_folder_open_button.setToolTip(
@@ -366,11 +372,12 @@ class GameConfiguration(QObject):
 
             # WIDGETS INTO CONTAINER LAYOUTS
             self.client_settings_row.addWidget(self.auto_detect_paths_button)
-            self.client_settings_row.addWidget(self.client_settings_button)
+            self.client_settings_row.addWidget(self.clear_paths_button)
             self.client_settings_row.addWidget(self.hide_show_folder_rows_button)
             self.client_settings_row.addWidget(self.game_version_label)
             self.client_settings_row.addWidget(self.game_version_line)
             self.client_settings_row.addWidget(self.check_for_updates_button)
+            self.client_settings_row.addWidget(self.client_settings_button)
             self.client_settings_row.addWidget(self.wiki_button)
 
             self.game_folder_row.addWidget(self.game_folder_open_button)
@@ -434,9 +441,6 @@ class GameConfiguration(QObject):
             self.workshop_folder_line.textChanged.connect(
                 partial(self.__handle_line_edit, line="workshop")
             )
-            self.settings_panel.clear_paths_signal.connect(
-                self.delete_all_paths_data
-            )  # Actions delete_all_paths_data
 
             # General Preferences
             self.settings_panel.logger_debug_checkbox.setChecked(self.debug_mode)
@@ -705,7 +709,7 @@ class GameConfiguration(QObject):
             if settings_data.get("external_steam_metadata_repo"):
                 self.steam_db_repo = settings_data["external_steam_metadata_repo"]
             if settings_data.get("external_steam_metadata_source"):
-                self.settings_panel.external_steam_metadata_cb.setCurrentText(
+                self.settings_panel.external_steam_metadata_multibutton.main_action.setCurrentText(
                     settings_data["external_steam_metadata_source"]
                 )
             if settings_data.get("external_community_rules_file_path"):
@@ -717,7 +721,7 @@ class GameConfiguration(QObject):
                     "external_community_rules_repo"
                 ]
             if settings_data.get("external_community_rules_metadata_source"):
-                self.settings_panel.external_community_rules_metadata_cb.setCurrentText(
+                self.settings_panel.external_community_rules_metadata_multibutton.main_action.setCurrentText(
                     settings_data["external_community_rules_metadata_source"]
                 )
 
@@ -729,12 +733,10 @@ class GameConfiguration(QObject):
             if settings_data.get("db_builder_include"):
                 self.db_builder_include = settings_data["db_builder_include"]
             if self.db_builder_include == "no_local":
-                self.settings_panel.build_steam_database_include_cb.setCurrentText(
-                    "No local data"
-                )
+                self.settings_panel.build_steam_database_include_cb.setCurrentText("No")
             if self.db_builder_include == "all_mods":
                 self.settings_panel.build_steam_database_include_cb.setCurrentText(
-                    "All Mods"
+                    "Yes"
                 )
             if settings_data.get("build_steam_database_dlc_data"):
                 self.build_steam_database_dlc_data_toggle = settings_data[
@@ -822,15 +824,9 @@ class GameConfiguration(QObject):
             self.try_download_missing_mods_toggle = False
 
         # db builder mode
-        if (
-            "No local data"
-            in self.settings_panel.build_steam_database_include_cb.currentText()
-        ):
+        if "No" in self.settings_panel.build_steam_database_include_cb.currentText():
             self.db_builder_include = "no_local"
-        elif (
-            "All Mods"
-            in self.settings_panel.build_steam_database_include_cb.currentText()
-        ):
+        elif "Yes" in self.settings_panel.build_steam_database_include_cb.currentText():
             self.db_builder_include = "all_mods"
         # dq getappdependencies toggle
         if self.settings_panel.build_steam_database_dlc_data_checkbox.isChecked():
@@ -850,7 +846,10 @@ class GameConfiguration(QObject):
             self.steamcmd_validate_downloads_toggle = False
 
         # todds preset
-        if "Optimized - Recommended for RimWorld" in self.settings_panel.todds_presets_cb.currentText():
+        if (
+            "Optimized - Recommended for RimWorld"
+            in self.settings_panel.todds_presets_cb.currentText()
+        ):
             self.todds_preset = "optimized"
         # todds active mods target
         if self.settings_panel.todds_active_mods_target_checkbox.isChecked():
@@ -876,8 +875,8 @@ class GameConfiguration(QObject):
                 "mod_type_filter_toggle": self.mod_type_filter_toggle,
                 "db_builder_include": self.db_builder_include,
                 "duplicate_mods_warning": self.duplicate_mods_warning_toggle,
-                "external_steam_metadata_source": self.settings_panel.external_steam_metadata_cb.currentText(),
-                "external_community_rules_metadata_source": self.settings_panel.external_community_rules_metadata_cb.currentText(),
+                "external_steam_metadata_source": self.settings_panel.external_steam_metadata_multibutton.main_action.currentText(),
+                "external_community_rules_metadata_source": self.settings_panel.external_community_rules_metadata_multibutton.main_action.currentText(),
                 "sorting_algorithm": self.settings_panel.sorting_algorithm_cb.currentText(),
                 "steam_mods_update_check": self.steam_mods_update_check_toggle,
                 "steamcmd_validate_downloads": self.steamcmd_validate_downloads_toggle,
@@ -1140,7 +1139,7 @@ class GameConfiguration(QObject):
         self._update_persistent_storage({"local_folder": ""})
         self.local_folder_line.setText("")
 
-    def delete_all_paths_data(self) -> None:
+    def clear_all_paths_data(self) -> None:
         logger.info("USER ACTION: clear all paths")
         folders = ["workshop_folder", "game_folder", "config_folder", "local_folder"]
         # Update storage to remove all paths data
@@ -1305,10 +1304,3 @@ class GameConfiguration(QObject):
             self.workshop_folder_line.setText(workshop_path)
         else:
             logger.debug("USER ACTION: pressed cancel, passing")
-
-    def checkForUpdateBtnContextMenuEvent(self, point: QPoint) -> None:
-        contextMenu = QMenu()  # Check for update context menu event
-        contextMenu.addAction(
-            self.check_for_updates_action
-        )  # check for update on startup
-        action = contextMenu.exec_(self.check_for_updates_button.mapToGlobal(point))

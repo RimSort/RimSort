@@ -210,7 +210,7 @@ class MetadataManager(QObject):
         # Load external metadata
         # External Steam metadata
         if (
-            GameConfiguration.instance().settings_panel.external_steam_metadata_cb.currentText()
+            GameConfiguration.instance().settings_panel.external_steam_metadata_multibutton.main_action.currentText()
             == "Configured file path"
         ):
             (
@@ -222,7 +222,7 @@ class MetadataManager(QObject):
                 path=GameConfiguration.instance().steam_db_file_path,
             )
         elif (
-            GameConfiguration.instance().settings_panel.external_steam_metadata_cb.currentText()
+            GameConfiguration.instance().settings_panel.external_steam_metadata_multibutton.main_action.currentText()
             == "Configured git repository"
         ):
             (
@@ -250,7 +250,7 @@ class MetadataManager(QObject):
 
         # External Community Rules metadata
         if (
-            GameConfiguration.instance().settings_panel.external_community_rules_metadata_cb.currentText()
+            GameConfiguration.instance().settings_panel.external_community_rules_metadata_multibutton.main_action.currentText()
             == "Configured file path"
         ):
             (
@@ -261,7 +261,7 @@ class MetadataManager(QObject):
                 path=GameConfiguration.instance().community_rules_file_path,
             )
         elif (
-            GameConfiguration.instance().settings_panel.external_community_rules_metadata_cb.currentText()
+            GameConfiguration.instance().settings_panel.external_community_rules_metadata_multibutton.main_action.currentText()
             == "Configured git repository"
         ):
             (
