@@ -15,6 +15,9 @@ from logging import getLogger, WARNING
 from PySide6.QtCore import QSize, QTimer
 from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 
+from controller.menu_bar_controller import MenuBarController
+from view.menu_bar import MenuBar
+
 SYSTEM = platform.system()
 # Watchdog conditionals
 if SYSTEM == "Darwin":
@@ -110,6 +113,9 @@ class MainWindow(QMainWindow):
         widget = QWidget()
         widget.setLayout(app_layout)
         self.setCentralWidget(widget)
+
+        self.menu_bar = MenuBar(menu_bar=self.menuBar())
+        self.menu_bar_controller = MenuBarController(view=self.menu_bar)
 
         logger.debug("Finished MainWindow initialization")
 
