@@ -18,24 +18,35 @@ class MenuBar(QObject):
             self._do_menu_bar_non_macos()
 
     def _do_menu_bar_macos(self) -> None:
-        app_menu = self.menu_bar.addMenu("AppName")  # This title is ignored on macOS
+        self.app_menu = self.menu_bar.addMenu(
+            "AppName"
+        )  # This title is ignored on macOS
 
         self.check_for_updates_action = QAction("Check for Updates…", self)
         self.check_for_updates_action.setMenuRole(
             QAction.MenuRole.ApplicationSpecificRole
         )
-        app_menu.addAction(self.check_for_updates_action)
+        self.app_menu.addAction(self.check_for_updates_action)
 
-        app_menu.addSeparator()
+        self.check_for_updates_on_startup_action = QAction(
+            "Check for Updates on Startup", self
+        )
+        self.check_for_updates_on_startup_action.setCheckable(True)
+        self.check_for_updates_on_startup_action.setMenuRole(
+            QAction.MenuRole.ApplicationSpecificRole
+        )
+        self.app_menu.addAction(self.check_for_updates_on_startup_action)
+
+        self.app_menu.addSeparator()
 
         self.settings_action = QAction("Settings…", self)
         self.settings_action.setMenuRole(QAction.MenuRole.ApplicationSpecificRole)
-        app_menu.addAction(self.settings_action)
+        self.app_menu.addAction(self.settings_action)
 
-        app_menu.addSeparator()
+        self.app_menu.addSeparator()
 
         self.quit_action = QAction("Quit", self)
-        app_menu.addAction(self.quit_action)
+        self.app_menu.addAction(self.quit_action)
 
         self.file_menu = self.menu_bar.addMenu("File")
 
@@ -137,3 +148,12 @@ class MenuBar(QObject):
 
         self.check_for_updates_action = QAction("Check for Updates…", self)
         self.help_menu.addAction(self.check_for_updates_action)
+
+        self.check_for_updates_on_startup_action = QAction(
+            "Check for Updates on Startup", self
+        )
+        self.check_for_updates_on_startup_action.setCheckable(True)
+        self.check_for_updates_on_startup_action.setMenuRole(
+            QAction.MenuRole.ApplicationSpecificRole
+        )
+        self.help_menu.addAction(self.check_for_updates_on_startup_action)

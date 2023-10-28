@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from controller.settings_controller import SettingsController
 from model.dialogue import *
 from model.multibutton import MultiButton
 from util.constants import DEFAULT_SETTINGS, DEFAULT_USER_RULES
@@ -52,13 +53,20 @@ class GameConfiguration(QObject):
             cls._instance = super(GameConfiguration, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self, RIMSORT_VERSION: str, DEBUG_MODE=None) -> None:
+    def __init__(
+        self,
+        RIMSORT_VERSION: str,
+        settings_controller: SettingsController = None,
+        DEBUG_MODE=None,
+    ) -> None:
         """
         Initialize the game configuration.
         """
         if not hasattr(self, "initialized"):
             super(GameConfiguration, self).__init__()
             logger.debug("Initializing GameConfiguration")
+
+            self.settings_controller = settings_controller
 
             self.debug_mode = DEBUG_MODE
             self.rimsort_version = RIMSORT_VERSION
@@ -639,7 +647,7 @@ class GameConfiguration(QObject):
 
             # Update check
             if settings_data.get("check_for_update_startup"):
-                self.check_for_updates_action.setChecked(
+                self.settings_controller.settings.check_for_updates_on_startup = (
                     settings_data["check_for_update_startup"]
                 )
 

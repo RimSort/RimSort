@@ -1,6 +1,7 @@
 from PySide6.QtCore import QObject, Slot
 from PySide6.QtWidgets import QApplication, QLineEdit, QTextEdit, QPlainTextEdit
 
+from controller.settings_controller import SettingsController
 from util.generic import open_url_browser
 from view.game_configuration_panel import GameConfiguration
 from view.main_content_panel import MainContent
@@ -8,13 +9,11 @@ from view.menu_bar import MenuBar
 
 
 class MenuBarController(QObject):
-    def __init__(
-        self,
-        view: MenuBar,
-    ) -> None:
+    def __init__(self, view: MenuBar, settings_controller: SettingsController) -> None:
         super().__init__()
 
         self.menu_bar = view
+        self.settings_controller = settings_controller
 
         # Application menu
 
@@ -22,6 +21,14 @@ class MenuBarController(QObject):
 
         self.menu_bar.check_for_updates_action.triggered.connect(
             self._on_menu_bar_check_for_updates_triggered
+        )
+
+        self.menu_bar.check_for_updates_on_startup_action.toggled.connect(
+            self._on_menu_bar_check_for_updates_on_startup_triggered
+        )
+
+        self.menu_bar.check_for_updates_on_startup_action.setChecked(
+            self.settings_controller.settings.check_for_updates_on_startup
         )
 
         self.menu_bar.settings_action.triggered.connect(
@@ -61,6 +68,14 @@ class MenuBarController(QObject):
     @Slot()
     def _on_menu_bar_check_for_updates_triggered(self) -> None:
         GameConfiguration.instance().configuration_signal.emit("check_for_update")
+
+    @Slot()
+    def _on_menu_bar_check_for_updates_on_startup_triggered(self) -> None:
+        is_checked = self.menu_bar.check_for_updates_on_startup_action.isChecked()
+        self.settings_controller.settings.check_for_updates_on_startup = is_checked
+        GameConfiguration.instance()._update_persistent_storage(
+            settings={"check_for_update_startup": is_checked}
+        )
 
     @Slot()
     def _on_menu_bar_open_mod_list_triggered(self) -> None:

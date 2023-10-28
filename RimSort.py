@@ -16,6 +16,8 @@ from PySide6.QtCore import QSize, QTimer
 from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 
 from controller.menu_bar_controller import MenuBarController
+from controller.settings_controller import SettingsController
+from model.settings import Settings
 from view.menu_bar import MenuBar
 
 SYSTEM = platform.system()
@@ -59,6 +61,10 @@ class MainWindow(QMainWindow):
         logger.info("Initializing MainWindow")
         super(MainWindow, self).__init__()
 
+        # Instantiate the settings model and controller
+        self.settings = Settings()
+        self.settings_controller = SettingsController(model=self.settings)
+
         # Create the main application window
         self.DEBUG_MODE = DEBUG_MODE
         self.init = None  # Content initialization should only fire on startup. Otherwise, this is handled by Refresh button
@@ -86,7 +92,9 @@ class MainWindow(QMainWindow):
 
         # Create various panels on the application GUI
         self.game_configuration = GameConfiguration.instance(
-            DEBUG_MODE=DEBUG_MODE, RIMSORT_VERSION=self.version_string
+            DEBUG_MODE=DEBUG_MODE,
+            settings_controller=self.settings_controller,
+            RIMSORT_VERSION=self.version_string,
         )
         self.main_content_panel = MainContent()
         self.bottom_panel = Status()
@@ -115,7 +123,9 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(widget)
 
         self.menu_bar = MenuBar(menu_bar=self.menuBar())
-        self.menu_bar_controller = MenuBarController(view=self.menu_bar)
+        self.menu_bar_controller = MenuBarController(
+            view=self.menu_bar, settings_controller=self.settings_controller
+        )
 
         logger.debug("Finished MainWindow initialization")
 
@@ -150,7 +160,7 @@ class MainWindow(QMainWindow):
         self.init = True
 
         # IF CHECK FOR UPDATE ON STARTUP...
-        if self.game_configuration.check_for_updates_action.isChecked():
+        if self.settings_controller.settings.check_for_updates_on_startup:
             self.main_content_panel.actions_slot("check_for_update")
 
         # REFRESH CONFIGURED METADATA
