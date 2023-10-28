@@ -192,28 +192,6 @@ class GameConfiguration(QObject):
             self.game_version_line.setDisabled(True)
             self.game_version_line.setPlaceholderText("Unknown")
             self.game_version_line.setReadOnly(True)
-            # check for update btn
-            self.check_for_updates_action = QAction("Check for update on startup")
-            self.check_for_updates_action.setCheckable(True)
-            self.check_for_updates_button = MultiButton(
-                main_action="Check for update",
-                main_action_tooltip="Use menu to enable this check on startup",
-                context_menu_content=[self.check_for_updates_action],
-            )
-            self.check_for_updates_button.main_action.clicked.connect(
-                partial(self.configuration_signal.emit, "check_for_update")
-            )
-            self.check_for_updates_button.setObjectName("RightButton")
-            self.check_for_updates_button.setContextMenuPolicy(Qt.CustomContextMenu)
-            self.client_settings_button = QPushButton("Settings")
-            self.client_settings_button.clicked.connect(self._open_settings_panel)
-            self.client_settings_button.setObjectName("LeftButton")
-            # wiki btn
-            self.wiki_button = QPushButton("Wiki")
-            self.wiki_button.clicked.connect(
-                partial(open_url_browser, "https://github.com/RimSort/RimSort/wiki")
-            )
-            self.wiki_button.setObjectName("RightButton")
             # folder paths
             # game folder
             if self.system_name == "Darwin":
@@ -384,9 +362,6 @@ class GameConfiguration(QObject):
             self.client_settings_row.addWidget(self.hide_show_folder_rows_button)
             self.client_settings_row.addWidget(self.game_version_label)
             self.client_settings_row.addWidget(self.game_version_line)
-            self.client_settings_row.addWidget(self.check_for_updates_button)
-            self.client_settings_row.addWidget(self.client_settings_button)
-            self.client_settings_row.addWidget(self.wiki_button)
 
             self.game_folder_row.addWidget(self.game_folder_open_button)
             self.game_folder_row.addWidget(self.game_folder_line)
@@ -436,7 +411,6 @@ class GameConfiguration(QObject):
             self._initialize_storage()
 
             # SIGNALS AND SLOTS
-            self.check_for_updates_action.toggled.connect(self._check_updates_toggle)
             self.game_folder_line.textChanged.connect(
                 partial(self.__handle_line_edit, line="game")
             )
