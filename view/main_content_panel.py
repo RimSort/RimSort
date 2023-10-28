@@ -170,7 +170,7 @@ class MainContent(QObject):
                 self.actions_slot
             )  # Settings
             self.active_mods_panel.list_updated_signal.connect(
-                self._do_save_animation
+                self.__do_save_animation
             )  # Save btn animation
             self.active_mods_panel.active_mods_list.key_press_signal.connect(
                 self.__handle_active_mod_key_press
@@ -604,16 +604,16 @@ class MainContent(QObject):
                     GameConfiguration.instance().local_folder_line.text()
                 )
                 if local_mods_target and local_mods_target != "":
-                    with open(todds_txt_path, "a") as todds_txt_file:
+                    with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
                         todds_txt_file.write(local_mods_target + "\n")
                 workshop_mods_target = (
                     GameConfiguration.instance().workshop_folder_line.text()
                 )
                 if workshop_mods_target and workshop_mods_target != "":
-                    with open(todds_txt_path, "a") as todds_txt_file:
+                    with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
                         todds_txt_file.write(workshop_mods_target + "\n")
             else:
-                with open(todds_txt_path, "a") as todds_txt_file:
+                with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
                     for (
                         json_data
                     ) in (
@@ -1717,7 +1717,7 @@ class MainContent(QObject):
             )
         logger.info("Finished saving active mods")
 
-    def _do_save_animation(self) -> None:
+    def __do_save_animation(self) -> None:
         logger.debug("Active mods list updated")
         if (
             self.active_mods_panel.list_updated  # This will only evaluate True if this is initialization, or _do_refresh()
@@ -2740,7 +2740,9 @@ class MainContent(QObject):
                 )
             logger.debug("Updating previous database with new metadata...\n")
             with open(
-                self.metadata_manager.external_steam_metadata_path, "w"
+                self.metadata_manager.external_steam_metadata_path,
+                "w",
+                encoding="utf-8",
             ) as output:
                 json.dump(
                     {

@@ -463,7 +463,7 @@ class SettingsPanel(QDialog):
         if self.logger_debug_checkbox.isChecked():
             if not os.path.exists(debug_file):
                 # Create an empty file
-                with open(debug_file, "w"):
+                with open(debug_file, "w", encoding="utf-8"):
                     pass
         else:
             if os.path.exists(debug_file):

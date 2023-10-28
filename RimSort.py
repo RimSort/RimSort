@@ -73,7 +73,7 @@ class MainWindow(QMainWindow):
         # Check for SHA and append to version string if found
         sha_file = str(Path(os.path.join(data_path, "SHA")).resolve())
         if os.path.exists(sha_file):
-            with open(sha_file) as f:
+            with open(sha_file, encoding="utf-8") as f:
                 sha = f.read().strip()
             self.version_string += f" [Edge {sha}]"
 

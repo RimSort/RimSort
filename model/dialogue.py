@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -70,7 +70,7 @@ def show_dialogue_conditional(
     text: Optional[str] = None,
     information: Optional[str] = None,
     details: Optional[str] = None,
-    button_text_override: Optional[list] = None,
+    button_text_override: Optional[List[str]] = None,
 ) -> str:
     """
     Displays a dialogue, prompting the user for input

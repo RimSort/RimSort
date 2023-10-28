@@ -374,7 +374,7 @@ class MetadataManager(QObject):
             logger.debug(f"Generated Version.txt path: {version_file_path}")
             if os.path.exists(version_file_path):
                 try:
-                    with open(version_file_path) as f:
+                    with open(version_file_path, encoding="utf-8") as f:
                         version = f.read()
                         logger.info(
                             f"Retrieved game version from Version.txt: {version.strip()}"

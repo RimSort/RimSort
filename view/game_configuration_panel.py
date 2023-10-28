@@ -611,7 +611,7 @@ class GameConfiguration(QObject):
         # RimSort depends on this settings.json file existing.
         # This should automatically be prepopulated with defaults above, or from user configuration.
         logger.info(f"Settings file exists!")
-        with open(settings_path) as infile:
+        with open(settings_path, encoding="utf-8") as infile:
             settings_data = json.load(infile)
             logger.debug("Loaded JSON from file!")
 
@@ -901,7 +901,7 @@ class GameConfiguration(QObject):
         logger.info(f"Generated settings.json path: {settings_path}")
         if os.path.exists(settings_path):
             logger.info("settings.json exists, opening to write")
-            with open(settings_path) as infile:
+            with open(settings_path, encoding="utf-8") as infile:
                 settings_data = json.load(infile)
                 settings_data.update(settings)
                 json_object = json.dumps(settings_data, indent=4)
