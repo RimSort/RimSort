@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from controller.settings_controller import SettingsController
 from model.dialogue import *
 from model.multibutton import MultiButton
 from util.constants import DEFAULT_SETTINGS, DEFAULT_USER_RULES
@@ -52,13 +53,20 @@ class GameConfiguration(QObject):
             cls._instance = super(GameConfiguration, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self, RIMSORT_VERSION: str, DEBUG_MODE=None) -> None:
+    def __init__(
+        self,
+        RIMSORT_VERSION: str,
+        settings_controller: SettingsController = None,
+        DEBUG_MODE=None,
+    ) -> None:
         """
         Initialize the game configuration.
         """
         if not hasattr(self, "initialized"):
             super(GameConfiguration, self).__init__()
             logger.debug("Initializing GameConfiguration")
+
+            self.settings_controller = settings_controller
 
             self.debug_mode = DEBUG_MODE
             self.rimsort_version = RIMSORT_VERSION
@@ -184,28 +192,6 @@ class GameConfiguration(QObject):
             self.game_version_line.setDisabled(True)
             self.game_version_line.setPlaceholderText("Unknown")
             self.game_version_line.setReadOnly(True)
-            # check for update btn
-            self.check_for_updates_action = QAction("Check for update on startup")
-            self.check_for_updates_action.setCheckable(True)
-            self.check_for_updates_button = MultiButton(
-                main_action="Check for update",
-                main_action_tooltip="Use menu to enable this check on startup",
-                context_menu_content=[self.check_for_updates_action],
-            )
-            self.check_for_updates_button.main_action.clicked.connect(
-                partial(self.configuration_signal.emit, "check_for_update")
-            )
-            self.check_for_updates_button.setObjectName("RightButton")
-            self.check_for_updates_button.setContextMenuPolicy(Qt.CustomContextMenu)
-            self.client_settings_button = QPushButton("Settings")
-            self.client_settings_button.clicked.connect(self._open_settings_panel)
-            self.client_settings_button.setObjectName("LeftButton")
-            # wiki btn
-            self.wiki_button = QPushButton("Wiki")
-            self.wiki_button.clicked.connect(
-                partial(open_url_browser, "https://github.com/RimSort/RimSort/wiki")
-            )
-            self.wiki_button.setObjectName("RightButton")
             # folder paths
             # game folder
             if self.system_name == "Darwin":
@@ -376,9 +362,6 @@ class GameConfiguration(QObject):
             self.client_settings_row.addWidget(self.hide_show_folder_rows_button)
             self.client_settings_row.addWidget(self.game_version_label)
             self.client_settings_row.addWidget(self.game_version_line)
-            self.client_settings_row.addWidget(self.check_for_updates_button)
-            self.client_settings_row.addWidget(self.client_settings_button)
-            self.client_settings_row.addWidget(self.wiki_button)
 
             self.game_folder_row.addWidget(self.game_folder_open_button)
             self.game_folder_row.addWidget(self.game_folder_line)
@@ -428,7 +411,6 @@ class GameConfiguration(QObject):
             self._initialize_storage()
 
             # SIGNALS AND SLOTS
-            self.check_for_updates_action.toggled.connect(self._check_updates_toggle)
             self.game_folder_line.textChanged.connect(
                 partial(self.__handle_line_edit, line="game")
             )
@@ -639,7 +621,7 @@ class GameConfiguration(QObject):
 
             # Update check
             if settings_data.get("check_for_update_startup"):
-                self.check_for_updates_action.setChecked(
+                self.settings_controller.settings.check_for_updates_on_startup = (
                     settings_data["check_for_update_startup"]
                 )
 
