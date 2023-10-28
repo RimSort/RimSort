@@ -18,6 +18,7 @@ from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 from controller.menu_bar_controller import MenuBarController
 from controller.settings_controller import SettingsController
 from model.settings import Settings
+from util.app_info import AppInfo
 from view.menu_bar import MenuBar
 
 SYSTEM = platform.system()
@@ -308,6 +309,9 @@ def main_thread() -> None:
 
 
 if __name__ == "__main__":
+    # One-time initialization of AppInfo class (this must be done in __main__ so we can use __file__)
+    AppInfo(main_file=__file__)
+
     # If RimSort is running from a --onefile Nuitka build, there are some nuances to consider:
     # https://nuitka.net/doc/user-manual.html#onefile-finding-files
     # You can override by passing --onefile-tempdir-spec to `nuitka`

@@ -8,4 +8,4 @@ class SettingsController(QObject):
         super().__init__()
 
         self.settings = model
-
+        self.settings.load()
