@@ -175,27 +175,6 @@ class Actions(QWidget):
         self.rimworld_label.setObjectName("summaryValue")
         self.rimworld_label.setAlignment(Qt.AlignCenter)
 
-        # IMPORT BUTTON
-        self.import_button = QPushButton("Import mod list")
-        self.import_button.clicked.connect(
-            partial(self.actions_signal.emit, "import_list_file_xml")
-        )
-
-        # EXPORT BUTTON
-        self.export_button = MultiButton(
-            actions_signal=self.actions_signal,
-            main_action="Export mod list",
-            main_action_tooltip="Export mod list to xml file\n"
-            "Use menu to see additional sharing options",
-            context_menu_content={
-                "export_list_clipboard": "Export mod list to clipboard",
-                "upload_list_rentry": "Upload mod list with Rentry.co",
-            },
-        )
-        self.export_button.main_action.clicked.connect(
-            partial(self.actions_signal.emit, "export_list_file_xml")
-        )
-
         # RUN BUTTON
         self.run_button = MultiButton(
             actions_signal=self.actions_signal,
@@ -247,8 +226,6 @@ class Actions(QWidget):
         self.middle_panel.addWidget(self.setup_steamcmd_button)
         self.middle_panel.addWidget(self.update_workshop_mods_button)
         self.bottom_panel.addWidget(self.rimworld_label)
-        self.bottom_panel.addWidget(self.import_button)
-        self.bottom_panel.addWidget(self.export_button)
         self.bottom_panel.addWidget(self.run_button)
         self.bottom_panel.addWidget(self.save_button)
         self.bottom_panel.addWidget(self.upload_rwlog_button)
