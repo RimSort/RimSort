@@ -5,6 +5,7 @@ from typing import Dict, Any
 from PySide6.QtCore import QObject
 
 from util.app_info import AppInfo
+from util.event_bus import EventBus
 
 
 class Settings(QObject):
@@ -58,7 +59,7 @@ class Settings(QObject):
     @check_for_updates_on_startup.setter
     def check_for_updates_on_startup(self, value: bool) -> None:
         self._check_for_updates_on_startup = value
-        # TODO: Send changed signal through the event bus
+        EventBus().settings_have_changed.emit()
 
     @property
     def show_folder_rows(self) -> bool:
@@ -67,7 +68,7 @@ class Settings(QObject):
     @show_folder_rows.setter
     def show_folder_rows(self, value: bool) -> None:
         self._show_folder_rows = value
-        # TODO: Send changed signal through the event bus
+        EventBus().settings_have_changed.emit()
 
     @property
     def sorting_algorithm(self) -> str:
@@ -76,7 +77,7 @@ class Settings(QObject):
     @sorting_algorithm.setter
     def sorting_algorithm(self, value: str) -> None:
         self._sorting_algorithm = value
-        # TODO: Send changed signal through the event bus
+        EventBus().settings_have_changed.emit()
 
     @property
     def external_steam_metadata_file_path(self) -> str:
@@ -85,7 +86,7 @@ class Settings(QObject):
     @external_steam_metadata_file_path.setter
     def external_steam_metadata_file_path(self, value: str) -> None:
         self._external_steam_metadata_file_path = value
-        # TODO: Send changed signal through the event bus
+        EventBus().settings_have_changed.emit()
 
     @property
     def external_steam_metadata_repo(self) -> str:
@@ -94,7 +95,7 @@ class Settings(QObject):
     @external_steam_metadata_repo.setter
     def external_steam_metadata_repo(self, value: str) -> None:
         self._external_steam_metadata_repo = value
-        # TODO: Send changed signal through the event bus
+        EventBus().settings_have_changed.emit()
 
     @property
     def external_steam_metadata_source(self) -> str:
@@ -103,7 +104,7 @@ class Settings(QObject):
     @external_steam_metadata_source.setter
     def external_steam_metadata_source(self, value: str) -> None:
         self._external_steam_metadata_source = value
-        # TODO: Send changed signal through the event bus
+        EventBus().settings_have_changed.emit()
 
     @property
     def external_community_rules_file_path(self) -> str:
@@ -112,7 +113,7 @@ class Settings(QObject):
     @external_community_rules_file_path.setter
     def external_community_rules_file_path(self, value: str) -> None:
         self._external_community_rules_file_path = value
-        # TODO: Send changed signal through the event bus
+        EventBus().settings_have_changed.emit()
 
     @property
     def external_community_rules_repo(self) -> str:
@@ -121,7 +122,7 @@ class Settings(QObject):
     @external_community_rules_repo.setter
     def external_community_rules_repo(self, value: str) -> None:
         self._external_community_rules_repo = value
-        # TODO: Send changed signal through the event bus
+        EventBus().settings_have_changed.emit()
 
     @property
     def external_community_rules_metadata_source(self) -> str:
@@ -130,7 +131,7 @@ class Settings(QObject):
     @external_community_rules_metadata_source.setter
     def external_community_rules_metadata_source(self, value: str) -> None:
         self._external_community_rules_metadata_source = value
-        # TODO: Send changed signal through the event bus
+        EventBus().settings_have_changed.emit()
 
     @property
     def db_builder_include(self) -> str:
@@ -139,7 +140,7 @@ class Settings(QObject):
     @db_builder_include.setter
     def db_builder_include(self, value: str) -> None:
         self._db_builder_include = value
-        # TODO: Send changed signal through the event bus
+        EventBus().settings_have_changed.emit()
 
     @property
     def database_expiry(self) -> int:
@@ -148,7 +149,7 @@ class Settings(QObject):
     @database_expiry.setter
     def database_expiry(self, value: int) -> None:
         self._database_expiry = value
-        # TODO: Send changed signal through the event bus
+        EventBus().settings_have_changed.emit()
 
     @property
     def build_steam_database_dlc_data(self) -> bool:
@@ -157,7 +158,7 @@ class Settings(QObject):
     @build_steam_database_dlc_data.setter
     def build_steam_database_dlc_data(self, value: bool) -> None:
         self._build_steam_database_dlc_data = value
-        # TODO: Send changed signal through the event bus
+        EventBus().settings_have_changed.emit()
 
     @property
     def build_steam_database_update_toggle(self) -> bool:
@@ -166,7 +167,7 @@ class Settings(QObject):
     @build_steam_database_update_toggle.setter
     def build_steam_database_update_toggle(self, value: bool) -> None:
         self._build_steam_database_update_toggle = value
-        # TODO: Send changed signal through the event bus
+        EventBus().settings_have_changed.emit()
 
     @property
     def watchdog_toggle(self) -> bool:
@@ -175,7 +176,7 @@ class Settings(QObject):
     @watchdog_toggle.setter
     def watchdog_toggle(self, value: bool) -> None:
         self._watchdog_toggle = value
-        # TODO: Send changed signal through the event bus
+        EventBus().settings_have_changed.emit()
 
     @property
     def mod_type_filter_toggle(self) -> bool:
@@ -184,7 +185,7 @@ class Settings(QObject):
     @mod_type_filter_toggle.setter
     def mod_type_filter_toggle(self, value: bool) -> None:
         self._mod_type_filter_toggle = value
-        # TODO: Send changed signal through the event bus
+        EventBus().settings_have_changed.emit()
 
     @property
     def duplicate_mods_warning(self) -> bool:
@@ -193,7 +194,7 @@ class Settings(QObject):
     @duplicate_mods_warning.setter
     def duplicate_mods_warning(self, value: bool) -> None:
         self._duplicate_mods_warning = value
-        # TODO: Send changed signal through the event bus
+        EventBus().settings_have_changed.emit()
 
     @property
     def steam_mods_update_check(self) -> bool:
@@ -202,7 +203,7 @@ class Settings(QObject):
     @steam_mods_update_check.setter
     def steam_mods_update_check(self, value: bool) -> None:
         self._steam_mods_update_check = value
-        # TODO: Send changed signal through the event bus
+        EventBus().settings_have_changed.emit()
 
     @property
     def try_download_missing_mods(self) -> bool:
@@ -211,7 +212,7 @@ class Settings(QObject):
     @try_download_missing_mods.setter
     def try_download_missing_mods(self, value: bool) -> None:
         self._try_download_missing_mods = value
-        # TODO: Send changed signal through the event bus
+        EventBus().settings_have_changed.emit()
 
     @property
     def steamcmd_install_path(self) -> str:
@@ -220,7 +221,7 @@ class Settings(QObject):
     @steamcmd_install_path.setter
     def steamcmd_install_path(self, value: str) -> None:
         self._steamcmd_install_path = value
-        # TODO: Send changed signal through the event bus
+        EventBus().settings_have_changed.emit()
 
     @property
     def steamcmd_validate_downloads(self) -> bool:
@@ -229,7 +230,7 @@ class Settings(QObject):
     @steamcmd_validate_downloads.setter
     def steamcmd_validate_downloads(self, value: bool) -> None:
         self._steamcmd_validate_downloads = value
-        # TODO: Send changed signal through the event bus
+        EventBus().settings_have_changed.emit()
 
     @property
     def todds_preset(self) -> str:
@@ -238,7 +239,7 @@ class Settings(QObject):
     @todds_preset.setter
     def todds_preset(self, value: str) -> None:
         self._todds_preset = value
-        # TODO: Send changed signal through the event bus
+        EventBus().settings_have_changed.emit()
 
     @property
     def todds_active_mods_target(self) -> bool:
@@ -247,7 +248,7 @@ class Settings(QObject):
     @todds_active_mods_target.setter
     def todds_active_mods_target(self, value: bool) -> None:
         self._todds_active_mods_target = value
-        # TODO: Send changed signal through the event bus
+        EventBus().settings_have_changed.emit()
 
     @property
     def todds_dry_run(self) -> bool:
@@ -256,7 +257,7 @@ class Settings(QObject):
     @todds_dry_run.setter
     def todds_dry_run(self, value: bool) -> None:
         self._todds_dry_run = value
-        # TODO: Send changed signal through the event bus
+        EventBus().settings_have_changed.emit()
 
     @property
     def todds_overwrite(self) -> bool:
@@ -265,7 +266,7 @@ class Settings(QObject):
     @todds_overwrite.setter
     def todds_overwrite(self, value: bool) -> None:
         self._todds_overwrite = value
-        # TODO: Send changed signal through the event bus
+        EventBus().settings_have_changed.emit()
 
     @property
     def game_folder(self) -> str:
@@ -274,7 +275,7 @@ class Settings(QObject):
     @game_folder.setter
     def game_folder(self, value: str) -> None:
         self._game_folder = value
-        # TODO: Send changed signal through the event bus
+        EventBus().settings_have_changed.emit()
 
     @property
     def config_folder(self) -> str:
@@ -283,7 +284,7 @@ class Settings(QObject):
     @config_folder.setter
     def config_folder(self, value: str) -> None:
         self._config_folder = value
-        # TODO: Send changed signal through the event bus
+        EventBus().settings_have_changed.emit()
 
     @property
     def local_folder(self) -> str:
@@ -292,7 +293,7 @@ class Settings(QObject):
     @local_folder.setter
     def local_folder(self, value: str) -> None:
         self._local_folder = value
-        # TODO: Send changed signal through the event bus
+        EventBus().settings_have_changed.emit()
 
     @property
     def workshop_folder(self) -> str:
@@ -301,7 +302,7 @@ class Settings(QObject):
     @workshop_folder.setter
     def workshop_folder(self, value: str) -> None:
         self._workshop_folder = value
-        # TODO: Send changed signal through the event bus
+        EventBus().settings_have_changed.emit()
 
     def load(self) -> None:
         try:
