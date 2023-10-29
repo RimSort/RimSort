@@ -1,8 +1,10 @@
 import json
 from json import JSONDecodeError
-from typing import Dict, Any
+from pathlib import Path
+from typing import Dict, Any, Optional
 
 from PySide6.QtCore import QObject
+from logger_tt import logger
 
 from util.app_info import AppInfo
 from util.event_bus import EventBus
@@ -47,10 +49,10 @@ class Settings(QObject):
         self._todds_active_mods_target: bool = True
         self._todds_dry_run: bool = False
         self._todds_overwrite: bool = False
-        self._game_folder: str = ""
-        self._config_folder: str = ""
-        self._local_folder: str = ""
-        self._workshop_folder: str = ""
+        self._game_folder: Optional[Path] = None
+        self._config_folder: Optional[Path] = None
+        self._local_folder: Optional[Path] = None
+        self._workshop_folder: Optional[Path] = None
 
     @property
     def check_for_updates_on_startup(self) -> bool:
@@ -270,38 +272,90 @@ class Settings(QObject):
 
     @property
     def game_folder(self) -> str:
-        return self._game_folder
+        if self._game_folder is None:
+            return ""
+        else:
+            return str(self._game_folder)
 
     @game_folder.setter
     def game_folder(self, value: str) -> None:
-        self._game_folder = value
+        if value == "":
+            self._game_folder = None
+            EventBus().settings_have_changed.emit()
+            return
+        p = Path(value).resolve()
+        if not p.exists() or not p.is_dir():
+            logger.warning(f"Invalid game folder: {p}")
+            self._game_folder = None
+            EventBus().settings_have_changed.emit()
+            return
+        self._game_folder = p
         EventBus().settings_have_changed.emit()
 
     @property
     def config_folder(self) -> str:
-        return self._config_folder
+        if self._config_folder is None:
+            return ""
+        else:
+            return str(self._config_folder)
 
     @config_folder.setter
     def config_folder(self, value: str) -> None:
-        self._config_folder = value
+        if value == "":
+            self._config_folder = None
+            EventBus().settings_have_changed.emit()
+            return
+        p = Path(value).resolve()
+        if not p.exists() or not p.is_dir():
+            logger.warning(f"Invalid config folder: {p}")
+            self._config_folder = None
+            EventBus().settings_have_changed.emit()
+            return
+        self._config_folder = p
         EventBus().settings_have_changed.emit()
 
     @property
     def local_folder(self) -> str:
-        return self._local_folder
+        if self._local_folder is None:
+            return ""
+        else:
+            return str(self._local_folder)
 
     @local_folder.setter
     def local_folder(self, value: str) -> None:
-        self._local_folder = value
+        if value == "":
+            self._local_folder = None
+            EventBus().settings_have_changed.emit()
+            return
+        p = Path(value).resolve()
+        if not p.exists() or not p.is_dir():
+            logger.warning(f"Invalid local folder: {p}")
+            self._local_folder = None
+            EventBus().settings_have_changed.emit()
+            return
+        self._local_folder = p
         EventBus().settings_have_changed.emit()
 
     @property
     def workshop_folder(self) -> str:
-        return self._workshop_folder
+        if self._workshop_folder is None:
+            return ""
+        else:
+            return str(self._workshop_folder)
 
     @workshop_folder.setter
     def workshop_folder(self, value: str) -> None:
-        self._workshop_folder = value
+        if value == "":
+            self._workshop_folder = None
+            EventBus().settings_have_changed.emit()
+            return
+        p = Path(value).resolve()
+        if not p.exists() or not p.is_dir():
+            logger.warning(f"Invalid workshop folder: {p}")
+            self._workshop_folder = None
+            EventBus().settings_have_changed.emit()
+            return
+        self._workshop_folder = p
         EventBus().settings_have_changed.emit()
 
     def load(self) -> None:
