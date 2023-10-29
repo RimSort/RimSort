@@ -135,7 +135,7 @@ class MainWindow(QMainWindow):
         super().showEvent(event)
         if not self.init:
             # HIDE/SHOW FOLDER ROWS BASED ON PREFERENCE
-            if self.game_configuration.show_folder_rows:
+            if self.settings_controller.settings.show_folder_rows:
                 self.game_configuration.hide_show_folder_rows_button.setText(
                     "Hide paths"
                 )
@@ -145,16 +145,16 @@ class MainWindow(QMainWindow):
                 )
             # set visibility
             self.game_configuration.game_folder_frame.setVisible(
-                self.game_configuration.show_folder_rows
+                self.settings_controller.settings.show_folder_rows
             )
             self.game_configuration.config_folder_frame.setVisible(
-                self.game_configuration.show_folder_rows
+                self.settings_controller.settings.show_folder_rows
             )
             self.game_configuration.local_folder_frame.setVisible(
-                self.game_configuration.show_folder_rows
+                self.settings_controller.settings.show_folder_rows
             )
             self.game_configuration.workshop_folder_frame.setVisible(
-                self.game_configuration.show_folder_rows
+                self.settings_controller.settings.show_folder_rows
             )
 
     def __initialize_content(self) -> None:

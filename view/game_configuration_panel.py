@@ -88,7 +88,6 @@ class GameConfiguration(QObject):
                     os.path.join(os.path.dirname(__file__), "../data/unlock.png")
                 ).resolve()
             )
-            self.show_folder_rows = False
 
             # RUN ARGUMENTS
             self.run_arguments = []
@@ -480,18 +479,26 @@ class GameConfiguration(QObject):
         return cls._instance
 
     def __toggle_folder_rows(self) -> None:
-        self.show_folder_rows = not self.show_folder_rows
-        self.game_folder_frame.setVisible(self.show_folder_rows)
-        self.config_folder_frame.setVisible(self.show_folder_rows)
-        self.local_folder_frame.setVisible(self.show_folder_rows)
-        self.workshop_folder_frame.setVisible(self.show_folder_rows)
-        if self.show_folder_rows:
+        self.settings_controller.settings.show_folder_rows = (
+            not self.settings_controller.settings.show_folder_rows
+        )
+        self.game_folder_frame.setVisible(
+            self.settings_controller.settings.show_folder_rows
+        )
+        self.config_folder_frame.setVisible(
+            self.settings_controller.settings.show_folder_rows
+        )
+        self.local_folder_frame.setVisible(
+            self.settings_controller.settings.show_folder_rows
+        )
+        self.workshop_folder_frame.setVisible(
+            self.settings_controller.settings.show_folder_rows
+        )
+        if self.settings_controller.settings.show_folder_rows:
             self.hide_show_folder_rows_button.setText("Hide paths")
         else:
             self.hide_show_folder_rows_button.setText("Show paths")
-        self._update_persistent_storage(
-            settings={"show_folder_rows": self.show_folder_rows}
-        )
+        self.settings_controller.settings.save()
 
     def __toggle_line_editable(self, folder_line: str):
         # Determine which line to toggle
@@ -606,10 +613,6 @@ class GameConfiguration(QObject):
         with open(settings_path, encoding="utf-8") as infile:
             settings_data = json.load(infile)
             logger.debug("Loaded JSON from file!")
-
-            # Hide/show folder rows
-            if settings_data.get("show_folder_rows"):
-                self.show_folder_rows = settings_data["show_folder_rows"]
 
             # Game configuration paths
 
