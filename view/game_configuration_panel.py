@@ -110,9 +110,6 @@ class GameConfiguration(QObject):
             # DATABASE EXPIRY
             self.database_expiry = 604800
 
-            # STEAM MODS UPDATE CHECK TOGGLE
-            self.steam_mods_update_check_toggle = False
-
             # TRY TO DOWNLOAD MISSING MODS TOGGLE
             self.try_download_missing_mods_toggle = False
 
@@ -428,7 +425,7 @@ class GameConfiguration(QObject):
                 self.settings_controller.settings.duplicate_mods_warning
             )
             self.settings_panel.steam_mods_update_checkbox.setChecked(
-                self.steam_mods_update_check_toggle
+                self.settings_controller.settings.steam_mods_update_check
             )
             self.settings_panel.try_download_missing_mods_checkbox.setChecked(
                 self.try_download_missing_mods_toggle
@@ -624,10 +621,6 @@ class GameConfiguration(QObject):
             )
 
             # general
-            if settings_data.get("steam_mods_update_check"):
-                self.steam_mods_update_check_toggle = settings_data[
-                    "steam_mods_update_check"
-                ]
             if settings_data.get("try_download_missing_mods"):
                 self.try_download_missing_mods_toggle = settings_data[
                     "try_download_missing_mods"
@@ -751,10 +744,10 @@ class GameConfiguration(QObject):
         )
 
         # steam mods update check toggle
-        if self.settings_panel.steam_mods_update_checkbox.isChecked():
-            self.steam_mods_update_check_toggle = True
-        else:
-            self.steam_mods_update_check_toggle = False
+        self.settings_controller.settings.steam_mods_update_check = (
+            self.settings_panel.steam_mods_update_checkbox.isChecked()
+        )
+
         # missing mods download toggle
         if self.settings_panel.try_download_missing_mods_checkbox.isChecked():
             self.try_download_missing_mods_toggle = True

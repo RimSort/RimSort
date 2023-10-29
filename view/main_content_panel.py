@@ -1099,7 +1099,7 @@ class MainContent(QObject):
 
             # Check Workshop mods for updates if configured
             if (
-                GameConfiguration.instance().steam_mods_update_check_toggle
+                self.settings_controller.settings.steam_mods_update_check
             ):  # Check SteamCMD/Steam mods for updates if configured
                 logger.info(
                     "User preference is configured to check Workshop mod for updates. Checking for Workshop mod updates..."
