@@ -17,7 +17,7 @@ class Settings(QObject):
         self._settings_file = AppInfo().user_data_folder / "settings.json"
 
         # Application-wide settings: default values go here
-        self._check_for_updates_on_startup: bool = False
+        self._check_for_update_startup: bool = False
         self._show_folder_rows: bool = True
         self._sorting_algorithm: str = "Alphabetical"
         self._external_steam_metadata_file_path: str = str(
@@ -55,12 +55,12 @@ class Settings(QObject):
         self._workshop_folder: Optional[Path] = None
 
     @property
-    def check_for_updates_on_startup(self) -> bool:
-        return self._check_for_updates_on_startup
+    def check_for_update_startup(self) -> bool:
+        return self._check_for_update_startup
 
-    @check_for_updates_on_startup.setter
-    def check_for_updates_on_startup(self, value: bool) -> None:
-        self._check_for_updates_on_startup = value
+    @check_for_update_startup.setter
+    def check_for_update_startup(self, value: bool) -> None:
+        self._check_for_update_startup = value
         EventBus().settings_have_changed.emit()
 
     @property
@@ -368,6 +368,7 @@ class Settings(QObject):
             pass
 
     def save(self) -> None:
+        logger.info("Saving settings")
         with open(str(self._settings_file), "w") as file:
             json.dump(self._to_dict(), file, indent=4)
 
@@ -377,7 +378,7 @@ class Settings(QObject):
             del data["show_folder_rows"]
 
         if "check_for_update_startup" in data:
-            self.check_for_updates_on_startup = data["check_for_update_startup"]
+            self.check_for_update_startup = data["check_for_update_startup"]
             del data["check_for_update_startup"]
 
         if "sorting_algorithm" in data:
@@ -494,7 +495,7 @@ class Settings(QObject):
 
     def _to_dict(self) -> Dict[str, Any]:
         data = {
-            "check_for_update_startup": self.check_for_updates_on_startup,
+            "check_for_update_startup": self.check_for_update_startup,
             "show_folder_rows": self.show_folder_rows,
             "sorting_algorithm": self.sorting_algorithm,
             "external_steam_metadata_file_path": self.external_steam_metadata_file_path,

@@ -523,13 +523,6 @@ class GameConfiguration(QObject):
     def panel(self) -> QVBoxLayout:
         return self._panel
 
-    def _check_updates_toggle(self) -> None:
-        self._update_persistent_storage(
-            settings={
-                "check_for_update_startup": self.check_for_updates_action.isChecked()
-            }
-        )
-
     def _initialize_settings_panel(self) -> None:
         """
         Initializes the app's settings pop up dialog, but does
@@ -617,12 +610,6 @@ class GameConfiguration(QObject):
             # Hide/show folder rows
             if settings_data.get("show_folder_rows"):
                 self.show_folder_rows = settings_data["show_folder_rows"]
-
-            # Update check
-            if settings_data.get("check_for_update_startup"):
-                self.settings_controller.settings.check_for_updates_on_startup = (
-                    settings_data["check_for_update_startup"]
-                )
 
             # Game configuration paths
 

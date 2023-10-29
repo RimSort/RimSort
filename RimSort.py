@@ -161,7 +161,7 @@ class MainWindow(QMainWindow):
         self.init = True
 
         # IF CHECK FOR UPDATE ON STARTUP...
-        if self.settings_controller.settings.check_for_updates_on_startup:
+        if self.settings_controller.settings.check_for_update_startup:
             self.main_content_panel.actions_slot("check_for_update")
 
         # REFRESH CONFIGURED METADATA
