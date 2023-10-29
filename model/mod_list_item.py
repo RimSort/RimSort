@@ -134,8 +134,13 @@ class ModListItemInner(QWidget):
                     "Official RimWorld content by Ludeon Studios"
                 )
             elif data_source == "local":
-                self.mod_source_icon.setObjectName("local")
-                self.mod_source_icon.setToolTip("Installed locally")
+                if self.json_data.get("git_repo"):
+                    self.mod_source_icon.setObjectName("git_repo")
+                elif self.json_data.get("steamcmd"):
+                    self.mod_source_icon.setObjectName("steamcmd")
+                else:
+                    self.mod_source_icon.setObjectName("local")
+                    self.mod_source_icon.setToolTip("Installed locally")
             elif data_source == "workshop":
                 self.mod_source_icon.setObjectName("workshop")
                 self.mod_source_icon.setToolTip("Subscribed via Steam")

@@ -452,35 +452,52 @@ class MainContent(QObject):
                 self.metadata_manager.all_mods_compiled[uuid]
             )
             if self.metadata_manager.all_mods_compiled[uuid].get("invalid"):
-                # Set label color to red if mod is invalid
-                invalid_qlabel_stylesheet = "QLabel { color : red; }"
-                self.mod_info_panel.mod_info_name_value.setStyleSheet(
-                    invalid_qlabel_stylesheet
+                # Set invalid value style
+                self.mod_info_panel.mod_info_name_value.setObjectName(
+                    "summaryValueInvalid"
                 )
-                self.mod_info_panel.mod_info_path_value.setStyleSheet(
-                    invalid_qlabel_stylesheet
+                self.mod_info_panel.mod_info_path_value.setObjectName(
+                    "summaryValueInvalid"
                 )
-                self.mod_info_panel.mod_info_author_value.setStyleSheet(
-                    invalid_qlabel_stylesheet
+                self.mod_info_panel.mod_info_author_value.setObjectName(
+                    "summaryValueInvalid"
                 )
-                self.mod_info_panel.mod_info_package_id_value.setStyleSheet(
-                    invalid_qlabel_stylesheet
+                self.mod_info_panel.mod_info_package_id_value.setObjectName(
+                    "summaryValueInvalid"
                 )
             else:
-                # Set label color to white if mod is valid
-                invalid_qlabel_stylesheet = "QLabel { color : white; }"
-                self.mod_info_panel.mod_info_name_value.setStyleSheet(
-                    invalid_qlabel_stylesheet
+                # Set valid value style
+                self.mod_info_panel.mod_info_name_value.setObjectName("summaryValue")
+                self.mod_info_panel.mod_info_path_value.setObjectName("summaryValue")
+                self.mod_info_panel.mod_info_author_value.setObjectName("summaryValue")
+                self.mod_info_panel.mod_info_package_id_value.setObjectName(
+                    "summaryValue"
                 )
-                self.mod_info_panel.mod_info_path_value.setStyleSheet(
-                    invalid_qlabel_stylesheet
-                )
-                self.mod_info_panel.mod_info_author_value.setStyleSheet(
-                    invalid_qlabel_stylesheet
-                )
-                self.mod_info_panel.mod_info_package_id_value.setStyleSheet(
-                    invalid_qlabel_stylesheet
-                )
+            # Polish and unpolish to reload styling from the .qss file
+            self.mod_info_panel.mod_info_name_value.style().unpolish(
+                self.mod_info_panel.mod_info_name_value
+            )
+            self.mod_info_panel.mod_info_name_value.style().polish(
+                self.mod_info_panel.mod_info_name_value
+            )
+            self.mod_info_panel.mod_info_name_value.style().unpolish(
+                self.mod_info_panel.mod_info_path_value
+            )
+            self.mod_info_panel.mod_info_name_value.style().polish(
+                self.mod_info_panel.mod_info_path_value
+            )
+            self.mod_info_panel.mod_info_name_value.style().unpolish(
+                self.mod_info_panel.mod_info_author_value
+            )
+            self.mod_info_panel.mod_info_name_value.style().polish(
+                self.mod_info_panel.mod_info_author_value
+            )
+            self.mod_info_panel.mod_info_name_value.style().unpolish(
+                self.mod_info_panel.mod_info_package_id_value
+            )
+            self.mod_info_panel.mod_info_name_value.style().polish(
+                self.mod_info_panel.mod_info_package_id_value
+            )
 
     def __update_game_configuration(self) -> None:
         self.metadata_manager.community_rules_repo = (
@@ -965,7 +982,7 @@ class MainContent(QObject):
         if text:
             loading_animation_text_label = QLabel(text)
             loading_animation_text_label.setAlignment(Qt.AlignCenter)
-            loading_animation_text_label.setStyleSheet("font-size: 18 px")
+            loading_animation_text_label.setObjectName("loadingAnimationString")
             self.mod_info_panel.panel.addWidget(loading_animation_text_label)
         loop = QEventLoop()
         loading_animation.finished.connect(loop.quit)
@@ -995,56 +1012,22 @@ class MainContent(QObject):
             # Stop the refresh button from blinking if it is blinking
             if self.actions_panel.refresh_button_flashing_animation.isActive():
                 self.actions_panel.refresh_button_flashing_animation.stop()
-                self.actions_panel.refresh_button.setStyleSheet(
-                    """
-                    QPushButton {
-                        color: white;
-                        background-color: #455364;
-                        border-style: solid;
-                        border-width: 0px;
-                        border-radius: 5px;
-                        /* border-color: beige; */
-                        /* font: bold 14px; */
-                        min-width: 6em;
-                        padding: 1px;
-                    }
-
-                    QPushButton:hover {
-                        background-color: #54687a;
-                    }
-
-                    QPushButton:pressed {
-                        background-color: #3e4a52;
-                        border-style: inset;
-                    }
-                    """
+                self.actions_panel.refresh_button.setObjectName("")
+                self.actions_panel.refresh_button.style().unpolish(
+                    self.actions_panel.refresh_button
+                )
+                self.actions_panel.refresh_button.style().polish(
+                    self.actions_panel.refresh_button
                 )
             # Stop the save button from blinking if it is blinking
             if self.actions_panel.save_button_flashing_animation.isActive():
                 self.actions_panel.save_button_flashing_animation.stop()
-                self.actions_panel.save_button.setStyleSheet(
-                    """
-                    QPushButton {
-                        color: white;
-                        background-color: #455364;
-                        border-style: solid;
-                        border-width: 0px;
-                        border-radius: 5px;
-                        /* border-color: beige; */
-                        /* font: bold 14px; */
-                        min-width: 6em;
-                        padding: 1px;
-                    }
-
-                    QPushButton:hover {
-                        background-color: #54687a;
-                    }
-
-                    QPushButton:pressed {
-                        background-color: #3e4a52;
-                        border-style: inset;
-                    }
-                    """
+                self.actions_panel.save_button.setObjectName("")
+                self.actions_panel.save_button.style().unpolish(
+                    self.actions_panel.save_button
+                )
+                self.actions_panel.save_button.style().polish(
+                    self.actions_panel.save_button
                 )
             self.active_mods_panel.active_mods_filter_data_source_index = len(
                 self.active_mods_panel.active_mods_filter_data_source_icons
@@ -1691,29 +1674,12 @@ class MainContent(QObject):
         # Stop the save button from blinking if it is blinking
         if self.actions_panel.save_button_flashing_animation.isActive():
             self.actions_panel.save_button_flashing_animation.stop()
-            self.actions_panel.save_button.setStyleSheet(
-                """
-                QPushButton {
-                    color: white;
-                    background-color: #455364;
-                    border-style: solid;
-                    border-width: 0px;
-                    border-radius: 5px;
-                    /* border-color: beige; */
-                    /* font: bold 14px; */
-                    min-width: 6em;
-                    padding: 1px;
-                }
-
-                QPushButton:hover {
-                    background-color: #54687a;
-                }
-
-                QPushButton:pressed {
-                    background-color: #3e4a52;
-                    border-style: inset;
-                }
-                """
+            self.actions_panel.save_button.setObjectName("")
+            self.actions_panel.save_button.style().unpolish(
+                self.actions_panel.save_button
+            )
+            self.actions_panel.save_button.style().polish(
+                self.actions_panel.save_button
             )
         logger.info("Finished saving active mods")
 

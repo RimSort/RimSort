@@ -65,10 +65,6 @@ class MultiButton(QWidget):
         self.secondary_action = QToolButton(self)
         self.secondary_action.setIcon(QIcon(self.secondary_action_icon_path))
         self.secondary_action.setPopupMode(QToolButton.InstantPopup)
-        # Set the style to show the icon only - we don't need the icon applied from the InstantPopup attribute
-        self.secondary_action.setStyleSheet(
-            "QToolButton::menu-indicator { image: none; }"
-        )
         layout.addWidget(self.secondary_action)
 
         # Create the context menu

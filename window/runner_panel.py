@@ -135,6 +135,7 @@ class RunnerPanel(QWidget):
         self.progress_bar = QProgressBar()
         self.progress_bar.setValue(0)
         self.progress_bar.hide()
+        self.progress_bar.setObjectName("default")
         # CREATE LAYOUTS
         self.main_layout = QHBoxLayout()
         self.runner_layout = QVBoxLayout()
@@ -215,23 +216,10 @@ class RunnerPanel(QWidget):
                     logger.info("Writing to file")
                     outfile.write(self.text.toPlainText())
 
-    def change_progress_bar_color(self, color: str):
-        default = """
-                    QProgressBar {
-                        text-align: center;
-                    }
-                """
-        color = "background: {};".format(color)
-        self.progress_bar.setStyleSheet(
-            default
-            + """
-                    QProgressBar::chunk {
-                        0000_TOREPLACE
-                    }
-                    """.replace(
-                "0000_TOREPLACE", color
-            )
-        )
+    def change_progress_bar_color(self, state: str):
+        self.progress_bar.setObjectName(state)
+        self.progress_bar.style().unpolish(self.progress_bar)
+        self.progress_bar.style().polish(self.progress_bar)
 
     def execute(self, command: str, args: list, progress_bar=None, additional=None):
         """ "
@@ -305,10 +293,10 @@ class RunnerPanel(QWidget):
                 self.steamcmd_download_tracking.remove(pfid)
                 self.progress_bar.setValue(self.progress_bar.value() + 1)
             elif "ERROR! Download item " in line:
-                self.change_progress_bar_color("yellow")
+                self.change_progress_bar_color("warn")
                 self.progress_bar.setValue(self.progress_bar.value() + 1)
             elif "ERROR! Not logged on." in line:
-                self.change_progress_bar_color("orange")
+                self.change_progress_bar_color("critical")
                 self.progress_bar.setValue(self.progress_bar.value() + 1)
             # -------STEAM-------
 
@@ -369,7 +357,7 @@ class RunnerPanel(QWidget):
                     # If we have mods that did not successfully download
                     if self.steamcmd_download_tracking is not None:
                         if len(self.steamcmd_download_tracking) > 0:
-                            self.change_progress_bar_color("red")
+                            self.change_progress_bar_color("emergency")
                             # Try to get the names of our mods
                             pfids_to_name = {}
                             failed_mods_no_names = []
@@ -438,11 +426,11 @@ class RunnerPanel(QWidget):
                                     "User declined re-download of failed mods."
                                 )
                         else:
-                            self.change_progress_bar_color("green")
+                            self.change_progress_bar_color("success")
                 # -------STEAM-------
                 # -------TODDS-------
                 if "todds" in self.process.program():
-                    self.change_progress_bar_color("green")
+                    self.change_progress_bar_color("success")
                 # -------TODDS-------
         # Cleanup process
         self.process = None
