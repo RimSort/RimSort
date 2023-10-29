@@ -238,9 +238,9 @@ class MetadataManager(QObject):
                     Path(
                         os.path.join(
                             GameConfiguration.instance().dbs_path,
-                            os.path.split(GameConfiguration.instance().steam_db_repo)[
-                                1
-                            ],
+                            os.path.split(
+                                self.settings_controller.settings.external_steam_metadata_repo
+                            )[1],
                             "steamDB.json",
                         )
                     ).resolve()

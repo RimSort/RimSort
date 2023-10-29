@@ -100,7 +100,6 @@ class GameConfiguration(QObject):
             self.community_rules_file_path = ""
 
             # DB REPOS
-            self.steam_db_repo = ""
             self.community_rules_repo = ""
 
             # STEAM APIKEY
@@ -628,8 +627,6 @@ class GameConfiguration(QObject):
             )
 
             # metadata
-            if settings_data.get("external_steam_metadata_repo"):
-                self.steam_db_repo = settings_data["external_steam_metadata_repo"]
             if settings_data.get("external_steam_metadata_source"):
                 self.settings_panel.external_steam_metadata_multibutton.main_action.setCurrentText(
                     settings_data["external_steam_metadata_source"]

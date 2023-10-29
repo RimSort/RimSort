@@ -514,7 +514,6 @@ class MainContent(QObject):
         self.metadata_manager.steamcmd_acf_path = (
             self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
         )
-        self.metadata_manager.steam_db_repo = GameConfiguration.instance().steam_db_repo
         self.metadata_manager.user_rules_file_path = (
             GameConfiguration.instance().user_rules_file_path
         )
@@ -690,14 +689,14 @@ class MainContent(QObject):
             if GIT_EXISTS:
                 self._do_clone_repo_to_path(
                     base_path=GameConfiguration.instance().dbs_path,
-                    repo_url=GameConfiguration.instance().steam_db_repo,
+                    repo_url=self.settings_controller.settings.external_steam_metadata_repo,
                 )
             else:
                 self._do_notify_no_git()
         if action == "upload_steam_database":
             if GIT_EXISTS:
                 self._do_upload_db_to_repo(
-                    repo_url=GameConfiguration.instance().steam_db_repo,
+                    repo_url=self.settings_controller.settings.external_steam_metadata_repo,
                     file_name="steamDB.json",
                 )
             else:
@@ -2616,15 +2615,11 @@ class MainContent(QObject):
         args, ok = show_dialogue_input(
             title="Edit Steam DB repo",
             text="Enter URL (https://github.com/AccountName/RepositoryName):",
-            value=GameConfiguration.instance().steam_db_repo,
+            value=self.settings_controller.settings.external_steam_metadata_repo,
         )
         if ok:
-            GameConfiguration.instance().steam_db_repo = args
-            GameConfiguration.instance()._update_persistent_storage(
-                {
-                    "external_steam_metadata_repo": GameConfiguration.instance().steam_db_repo
-                }
-            )
+            self.settings_controller.settings.external_steam_metadata_repo = args
+            self.settings_controller.settings.save()
 
     def _do_configure_community_rules_db_repo(self) -> None:
         """
