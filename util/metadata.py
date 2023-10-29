@@ -222,7 +222,7 @@ class MetadataManager(QObject):
             ) = get_configured_steam_db(
                 self,
                 life=self.settings_controller.settings.database_expiry,
-                path=GameConfiguration.instance().steam_db_file_path,
+                path=self.settings_controller.settings.external_steam_metadata_file_path,
             )
         elif (
             GameConfiguration.instance().settings_panel.external_steam_metadata_multibutton.main_action.currentText()

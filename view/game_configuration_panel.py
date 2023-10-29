@@ -97,7 +97,6 @@ class GameConfiguration(QObject):
             self.github_token = ""
 
             # DB FILE PATHS
-            self.steam_db_file_path = ""
             self.community_rules_file_path = ""
 
             # DB REPOS
@@ -629,10 +628,6 @@ class GameConfiguration(QObject):
             )
 
             # metadata
-            if settings_data.get("external_steam_metadata_file_path"):
-                self.steam_db_file_path = settings_data[
-                    "external_steam_metadata_file_path"
-                ]
             if settings_data.get("external_steam_metadata_repo"):
                 self.steam_db_repo = settings_data["external_steam_metadata_repo"]
             if settings_data.get("external_steam_metadata_source"):

@@ -500,7 +500,7 @@ class MainContent(QObject):
             GameConfiguration.instance().community_rules_file_path
         )
         self.metadata_manager.external_steam_metadata_file_path = (
-            GameConfiguration.instance().steam_db_file_path
+            self.settings_controller.settings.external_steam_metadata_file_path
         )
         self.metadata_manager.external_steam_metadata_source = (
             GameConfiguration.instance().settings_panel.external_steam_metadata_multibutton.main_action.currentText()
@@ -2579,10 +2579,10 @@ class MainContent(QObject):
         )
         logger.info(f"Selected path: {input_path}")
         if input_path and os.path.exists(input_path):
-            GameConfiguration.instance()._update_persistent_storage(
-                {"external_steam_metadata_file_path": input_path}
+            self.settings_controller.settings.external_steam_metadata_file_path = (
+                input_path
             )
-            GameConfiguration.instance().steam_db_file_path = input_path
+            self.settings_controller.settings.save()
         else:
             logger.debug("USER ACTION: cancelled selection!")
             return
