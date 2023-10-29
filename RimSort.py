@@ -97,7 +97,9 @@ class MainWindow(QMainWindow):
             settings_controller=self.settings_controller,
             RIMSORT_VERSION=self.version_string,
         )
-        self.main_content_panel = MainContent()
+        self.main_content_panel = MainContent(
+            settings_controller=self.settings_controller
+        )
         self.bottom_panel = Status()
 
         # Connect the game configuration actions signals to Status panel to display fading action text

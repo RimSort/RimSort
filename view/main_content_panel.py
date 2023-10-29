@@ -17,6 +17,8 @@ from zipfile import ZipFile
 
 from logger_tt import logger
 
+from controller.settings_controller import SettingsController
+
 # GitPython depends on git executable being available in PATH
 try:
     from git import Repo
@@ -110,7 +112,7 @@ class MainContent(QObject):
             cls._instance = super(MainContent, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self) -> None:
+    def __init__(self, settings_controller: SettingsController) -> None:
         """
         Initialize the main content panel.
 
@@ -119,6 +121,8 @@ class MainContent(QObject):
         if not hasattr(self, "initialized"):
             super(MainContent, self).__init__()
             logger.debug("Initializing MainContent")
+
+            self.settings_controller = settings_controller
 
             # INITIALIZE WIDGETS
             # Initialize Steam(CMD) integraations
@@ -150,10 +154,10 @@ class MainContent(QObject):
             # INSTANTIATE WIDGETS
             self.mod_info_panel = ModInfo()
             self.active_mods_panel = ActiveModList(
-                mod_type_filter_enable=GameConfiguration.instance().mod_type_filter_toggle
+                mod_type_filter_enable=self.settings_controller.settings.mod_type_filter_toggle
             )
             self.inactive_mods_panel = InactiveModList(
-                mod_type_filter_enable=GameConfiguration.instance().mod_type_filter_toggle
+                mod_type_filter_enable=self.settings_controller.settings.mod_type_filter_toggle
             )
             self.actions_panel = Actions()
 
@@ -573,10 +577,10 @@ class MainContent(QObject):
             self._do_check_for_update()
         if action == "update_mod_type_filter_toggle":
             self.active_mods_panel.active_mods_list.mod_type_filter_enable = (
-                GameConfiguration.instance().mod_type_filter_toggle
+                self.settings_controller.settings.mod_type_filter_toggle
             )
             self.inactive_mods_panel.inactive_mods_list.mod_type_filter_enable = (
-                GameConfiguration.instance().mod_type_filter_toggle
+                self.settings_controller.settings.mod_type_filter_toggle
             )
         if action == "update_steamcmd_validate_toggle":
             self.steamcmd_wrapper.validate_downloads = (

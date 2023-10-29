@@ -110,9 +110,6 @@ class GameConfiguration(QObject):
             # DATABASE EXPIRY
             self.database_expiry = 604800
 
-            # MOD TYPE FILTER MODS TOGGLE
-            self.mod_type_filter_toggle = False
-
             # DUPE MODS WARNING TOGGLE
             self.duplicate_mods_warning_toggle = False
 
@@ -428,7 +425,7 @@ class GameConfiguration(QObject):
                 self.settings_controller.settings.watchdog_toggle
             )
             self.settings_panel.mod_type_filter_checkbox.setChecked(
-                self.mod_type_filter_toggle
+                self.settings_controller.settings.mod_type_filter_toggle
             )
             self.settings_panel.duplicate_mods_checkbox.setChecked(
                 self.duplicate_mods_warning_toggle
@@ -630,8 +627,6 @@ class GameConfiguration(QObject):
             )
 
             # general
-            if settings_data.get("mod_type_filter_toggle"):
-                self.mod_type_filter_toggle = settings_data["mod_type_filter_toggle"]
             if settings_data.get("duplicate_mods_warning"):
                 self.duplicate_mods_warning_toggle = settings_data[
                     "duplicate_mods_warning"
@@ -753,10 +748,10 @@ class GameConfiguration(QObject):
         )
 
         # mod type filter toggle mods toggle
-        if self.settings_panel.mod_type_filter_checkbox.isChecked():
-            self.mod_type_filter_toggle = True
-        else:
-            self.mod_type_filter_toggle = False
+        self.settings_controller.settings.mod_type_filter_toggle = (
+            self.settings_panel.mod_type_filter_checkbox.isChecked()
+        )
+
         # duplicate mods check toggle
         if self.settings_panel.duplicate_mods_checkbox.isChecked():
             self.duplicate_mods_warning_toggle = True
