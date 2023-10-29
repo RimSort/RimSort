@@ -110,9 +110,6 @@ class GameConfiguration(QObject):
             # DATABASE EXPIRY
             self.database_expiry = 604800
 
-            # DUPE MODS WARNING TOGGLE
-            self.duplicate_mods_warning_toggle = False
-
             # STEAM MODS UPDATE CHECK TOGGLE
             self.steam_mods_update_check_toggle = False
 
@@ -428,7 +425,7 @@ class GameConfiguration(QObject):
                 self.settings_controller.settings.mod_type_filter_toggle
             )
             self.settings_panel.duplicate_mods_checkbox.setChecked(
-                self.duplicate_mods_warning_toggle
+                self.settings_controller.settings.duplicate_mods_warning
             )
             self.settings_panel.steam_mods_update_checkbox.setChecked(
                 self.steam_mods_update_check_toggle
@@ -627,10 +624,6 @@ class GameConfiguration(QObject):
             )
 
             # general
-            if settings_data.get("duplicate_mods_warning"):
-                self.duplicate_mods_warning_toggle = settings_data[
-                    "duplicate_mods_warning"
-                ]
             if settings_data.get("steam_mods_update_check"):
                 self.steam_mods_update_check_toggle = settings_data[
                     "steam_mods_update_check"
@@ -753,10 +746,10 @@ class GameConfiguration(QObject):
         )
 
         # duplicate mods check toggle
-        if self.settings_panel.duplicate_mods_checkbox.isChecked():
-            self.duplicate_mods_warning_toggle = True
-        else:
-            self.duplicate_mods_warning_toggle = False
+        self.settings_controller.settings.duplicate_mods_warning = (
+            self.settings_panel.duplicate_mods_checkbox.isChecked()
+        )
+
         # steam mods update check toggle
         if self.settings_panel.steam_mods_update_checkbox.isChecked():
             self.steam_mods_update_check_toggle = True

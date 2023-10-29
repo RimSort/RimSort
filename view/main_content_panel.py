@@ -1083,12 +1083,12 @@ class MainContent(QObject):
 
             # If we have duplicate mods, prompt user
             if (
-                GameConfiguration.instance().duplicate_mods_warning_toggle
+                self.settings_controller.settings.duplicate_mods_warning
                 and self.duplicate_mods
                 and len(self.duplicate_mods) > 0
             ):
                 self.__duplicate_mods_prompt()
-            elif not GameConfiguration.instance().duplicate_mods_warning_toggle:
+            elif not self.settings_controller.settings.duplicate_mods_warning:
                 logger.debug(
                     "User preference is not configured to display duplicate mods. Skipping..."
                 )
@@ -1328,12 +1328,12 @@ class MainContent(QObject):
             self.__insert_data_into_lists(active_mods_data, inactive_mods_data)
             # If we have duplicate mods, prompt user
             if (
-                GameConfiguration.instance().duplicate_mods_warning_toggle
+                self.settings_controller.settings.duplicate_mods_warning
                 and self.duplicate_mods
                 and len(self.duplicate_mods) > 0
             ):
                 self.__duplicate_mods_prompt()
-            elif not GameConfiguration.instance().duplicate_mods_warning_toggle:
+            elif not self.settings_controller.settings.duplicate_mods_warning:
                 logger.debug(
                     "User preference is not configured to display duplicate mods. Skipping..."
                 )
