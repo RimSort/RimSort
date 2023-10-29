@@ -10,7 +10,7 @@ from functools import partial
 from os.path import expanduser
 from typing import Any, Dict
 
-from PySide6.QtCore import QObject, QPoint, QSize, QStandardPaths, Qt, Signal
+from PySide6.QtCore import QObject, QPoint, QSize, QStandardPaths, Qt, Signal, Slot
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import (
     QFrame,
@@ -27,6 +27,7 @@ from controller.settings_controller import SettingsController
 from model.dialogue import *
 from model.multibutton import MultiButton
 from util.constants import DEFAULT_SETTINGS, DEFAULT_USER_RULES
+from util.event_bus import EventBus
 from util.generic import *
 from window.settings_panel import SettingsPanel
 
@@ -67,6 +68,7 @@ class GameConfiguration(QObject):
             logger.debug("Initializing GameConfiguration")
 
             self.settings_controller = settings_controller
+            EventBus().settings_have_changed.connect(self._on_settings_have_changed)
 
             self.debug_mode = DEBUG_MODE
             self.rimsort_version = RIMSORT_VERSION
@@ -411,17 +413,17 @@ class GameConfiguration(QObject):
             self._initialize_storage()
 
             # SIGNALS AND SLOTS
-            self.game_folder_line.textChanged.connect(
-                partial(self.__handle_line_edit, line="game")
+            self.game_folder_line.editingFinished.connect(
+                self._on_game_folder_line_editing_finished
             )
-            self.config_folder_line.textChanged.connect(
-                partial(self.__handle_line_edit, line="config")
+            self.config_folder_line.editingFinished.connect(
+                self._on_config_folder_line_editing_finished
             )
-            self.local_folder_line.textChanged.connect(
-                partial(self.__handle_line_edit, line="local")
+            self.local_folder_line.editingFinished.connect(
+                self._on_local_folder_line_editing_finished
             )
-            self.workshop_folder_line.textChanged.connect(
-                partial(self.__handle_line_edit, line="workshop")
+            self.workshop_folder_line.editingFinished.connect(
+                self._on_workshop_folder_line_editing_finished
             )
 
             # General Preferences
@@ -476,9 +478,6 @@ class GameConfiguration(QObject):
         elif args or kwargs:
             raise ValueError("GameConfiguration instance has already been initialized.")
         return cls._instance
-
-    def __handle_line_edit(self, path: str, line: str) -> None:
-        self._update_persistent_storage({f"{line}_folder": path})
 
     def __toggle_folder_rows(self) -> None:
         self.show_folder_rows = not self.show_folder_rows
@@ -626,38 +625,20 @@ class GameConfiguration(QObject):
                 )
 
             # Game configuration paths
-            if settings_data.get("game_folder"):
-                game_folder_path = settings_data["game_folder"]
-                if os.path.exists(game_folder_path):
-                    self.game_folder_line.setText(game_folder_path)
-                else:
-                    logger.warning(
-                        f"The game folder that was loaded does not exist: {game_folder_path}"
-                    )
-            if settings_data.get("config_folder"):
-                config_folder_path = settings_data["config_folder"]
-                if os.path.exists(config_folder_path):
-                    self.config_folder_line.setText(config_folder_path)
-                else:
-                    logger.warning(
-                        f"The config folder that was loaded does not exist: {config_folder_path}"
-                    )
-            if settings_data.get("workshop_folder"):
-                workshop_folder_path = settings_data["workshop_folder"]
-                if os.path.exists(workshop_folder_path):
-                    self.workshop_folder_line.setText(workshop_folder_path)
-                else:
-                    logger.warning(
-                        f"The workshop folder that was loaded does not exist: {workshop_folder_path}"
-                    )
-            if settings_data.get("local_folder"):
-                local_folder_path = settings_data["local_folder"]
-                if os.path.exists(local_folder_path):
-                    self.local_folder_line.setText(local_folder_path)
-                else:
-                    logger.warning(
-                        f"The local folder that was loaded does not exist: {local_folder_path}"
-                    )
+
+            self.game_folder_line.setText(self.settings_controller.settings.game_folder)
+
+            self.config_folder_line.setText(
+                self.settings_controller.settings.config_folder
+            )
+
+            self.workshop_folder_line.setText(
+                self.settings_controller.settings.workshop_folder
+            )
+
+            self.local_folder_line.setText(
+                self.settings_controller.settings.local_folder
+            )
 
             # general
             if settings_data.get("watchdog_toggle"):
@@ -1003,8 +984,7 @@ class GameConfiguration(QObject):
                 logger.info(
                     "No value set currently for game folder. Overwriting with autodetected path"
                 )
-                self.game_folder_line.setText(os_paths[0])
-                self._update_persistent_storage({"game_folder": os_paths[0]})
+                self.settings_controller.settings.game_folder = os_paths[0]
             else:
                 logger.info("Value already set for game folder. Passing")
         else:
@@ -1019,8 +999,7 @@ class GameConfiguration(QObject):
                 logger.info(
                     "No value set currently for config folder. Overwriting with autodetected path"
                 )
-                self.config_folder_line.setText(os_paths[1])
-                self._update_persistent_storage({"config_folder": os_paths[1]})
+                self.settings_controller.settings.config_folder = os_paths[1]
             else:
                 logger.info("Value already set for config folder. Passing")
         else:
@@ -1035,8 +1014,7 @@ class GameConfiguration(QObject):
                 logger.info(
                     "No value set currently for workshop folder. Overwriting with autodetected path"
                 )
-                self.workshop_folder_line.setText(os_paths[2])
-                self._update_persistent_storage({"workshop_folder": os_paths[2]})
+                self.settings_controller.settings.workshop_folder = os_paths[2]
             else:
                 logger.info("Value already set for workshop folder. Passing")
         else:
@@ -1054,14 +1032,15 @@ class GameConfiguration(QObject):
                 logger.info(
                     "No value set currently for local mods folder. Overwriting with autodetected path"
                 )
-                self.local_folder_line.setText(rimworld_mods_path)
-                self._update_persistent_storage({"local_folder": rimworld_mods_path})
+                self.settings_controller.settings.local_folder = rimworld_mods_path
             else:
                 logger.info("Value already set for local mods folder. Passing")
         else:
             logger.warning(
                 f"Autodetected game folder path does not exist: {rimworld_mods_path}"
             )
+
+        self.settings_controller.settings.save()
 
     def check_if_essential_paths_are_set(self) -> bool:
         """
@@ -1103,36 +1082,31 @@ class GameConfiguration(QObject):
 
     def clear_game_folder_line(self) -> None:
         logger.info("USER ACTION: clear game folder line")
-        self._update_persistent_storage({"game_folder": ""})
-        self.game_folder_line.setText("")
+        self.settings_controller.settings.game_folder = ""
+        self.settings_controller.settings.save()
 
     def clear_config_folder_line(self) -> None:
         logger.info("USER ACTION: clear config folder line")
-        self._update_persistent_storage({"config_folder": ""})
-        self.config_folder_line.setText("")
+        self.settings_controller.settings.config_folder = ""
+        self.settings_controller.settings.save()
 
     def clear_workshop_folder_line(self) -> None:
         logger.info("USER ACTION: clear workshop folder line")
-        self._update_persistent_storage({"workshop_folder": ""})
-        self.workshop_folder_line.setText("")
+        self.settings_controller.settings.workshop_folder = ""
+        self.settings_controller.settings.save()
 
     def clear_local_folder_line(self) -> None:
         logger.info("USER ACTION: clear local folder line")
-        self._update_persistent_storage({"local_folder": ""})
-        self.local_folder_line.setText("")
+        self.settings_controller.settings.local_folder = ""
+        self.settings_controller.settings.save()
 
     def clear_all_paths_data(self) -> None:
         logger.info("USER ACTION: clear all paths")
-        folders = ["workshop_folder", "game_folder", "config_folder", "local_folder"]
-        # Update storage to remove all paths data
-        self._update_persistent_storage({folder: "" for folder in folders})
-
-        # Visually delete paths data
-        self.game_folder_line.setText("")
-        self.config_folder_line.setText("")
-        self.workshop_folder_line.setText("")
-        self.local_folder_line.setText("")
-        self.game_version_line.setText("")
+        self.settings_controller.settings.game_folder = ""
+        self.settings_controller.settings.config_folder = ""
+        self.settings_controller.settings.workshop_folder = ""
+        self.settings_controller.settings.local_folder = ""
+        self.settings_controller.settings.save()
 
     def open_directory(self, callable: Any) -> None:
         """
@@ -1168,8 +1142,8 @@ class GameConfiguration(QObject):
         """
         logger.info("USER ACTION: set the game install folder")
         start_dir = None
-        if self.game_folder_line.text():
-            possible_dir = self.game_folder_line.text()
+        if self.settings_controller.settings.game_folder:
+            possible_dir = self.settings_controller.settings.game_folder
             if os.path.exists(possible_dir):
                 start_dir = possible_dir
         if self.system_name == "Darwin":
@@ -1187,7 +1161,8 @@ class GameConfiguration(QObject):
             logger.info(
                 f"Game install folder chosen. Setting UI and updating storage: {game_exe_folder_path}"
             )
-            self.game_folder_line.setText(game_exe_folder_path)
+            self.settings_controller.settings.game_folder = game_exe_folder_path
+            self.settings_controller.settings.save()
         else:
             logger.info("USER ACTION: pressed cancel, passing")
 
@@ -1197,8 +1172,8 @@ class GameConfiguration(QObject):
         """
         logger.info("USER ACTION: set the ModsConfig.xml folder")
         start_dir = None
-        if self.config_folder_line.text():
-            possible_dir = self.config_folder_line.text()
+        if self.settings_controller.settings.config_folder:
+            possible_dir = self.settings_controller.settings.config_folder
             if os.path.exists(possible_dir):
                 start_dir = possible_dir
         config_folder_path = show_dialogue_file(
@@ -1211,7 +1186,8 @@ class GameConfiguration(QObject):
             logger.info(
                 f"ModsConfig.xml folder chosen. Setting UI and updating storage: {config_folder_path}"
             )
-            self.config_folder_line.setText(config_folder_path)
+            self.settings_controller.settings.config_folder = config_folder_path
+            self.settings_controller.settings.save()
         else:
             logger.debug("USER ACTION: pressed cancel, passing")
 
@@ -1223,13 +1199,13 @@ class GameConfiguration(QObject):
         logger.info("USER ACTION: set the local mods folder")
         start_dir = None
         if self.system_name == "Darwin":
-            if self.game_folder_line.text():
-                possible_dir = self.game_folder_line.text()
+            if self.settings_controller.settings.local_folder:
+                possible_dir = self.settings_controller.settings.local_folder
                 if os.path.exists(possible_dir):
                     start_dir = os.path.split(possible_dir)[0]
         else:
             if self.local_folder_line.text():
-                possible_dir = self.local_folder_line.text()
+                possible_dir = self.settings_controller.settings.local_folder
                 if os.path.exists(possible_dir):
                     start_dir = possible_dir
         if self.system_name == "Darwin":
@@ -1258,7 +1234,8 @@ class GameConfiguration(QObject):
             logger.info(
                 f"Local mods folder chosen. Setting UI and updating storage: {local_path}"
             )
-            self.local_folder_line.setText(local_path)
+            self.settings_controller.settings.local_folder = local_path
+            self.settings_controller.settings.save()
         else:
             logger.debug("USER ACTION: pressed cancel, passing")
 
@@ -1269,8 +1246,8 @@ class GameConfiguration(QObject):
         """
         logger.info("USER ACTION: set the workshop folder")
         start_dir = None
-        if self.workshop_folder_line.text():
-            possible_dir = self.workshop_folder_line.text()
+        if self.settings_controller.settings.workshop_folder:
+            possible_dir = self.settings_controller.settings.workshop_folder
             if os.path.exists(possible_dir):
                 start_dir = possible_dir
         workshop_path = show_dialogue_file(
@@ -1283,6 +1260,43 @@ class GameConfiguration(QObject):
             logger.info(
                 f"Workshop folder chosen. Setting UI and updating storage: {workshop_path}"
             )
-            self.workshop_folder_line.setText(workshop_path)
+            self.settings_controller.settings.workshop_folder = workshop_path
+            self.settings_controller.settings.save()
         else:
             logger.debug("USER ACTION: pressed cancel, passing")
+
+    @Slot()
+    def _on_settings_have_changed(self) -> None:
+        logger.info(f"GameConfiguration: _on_settings_have_changed")
+        self.game_folder_line.setText(self.settings_controller.settings.game_folder)
+        self.config_folder_line.setText(self.settings_controller.settings.config_folder)
+        self.local_folder_line.setText(self.settings_controller.settings.local_folder)
+        self.workshop_folder_line.setText(
+            self.settings_controller.settings.workshop_folder
+        )
+
+    @Slot()
+    def _on_game_folder_line_editing_finished(self) -> None:
+        logger.info(f"GameConfiguration: _on_game_folder_line_editing_finished")
+        self.settings_controller.settings.game_folder = self.game_folder_line.text()
+        self.settings_controller.settings.save()
+
+    @Slot()
+    def _on_config_folder_line_editing_finished(self) -> None:
+        logger.info(f"GameConfiguration: _on_config_folder_line_editing_finished")
+        self.settings_controller.settings.config_folder = self.config_folder_line.text()
+        self.settings_controller.settings.save()
+
+    @Slot()
+    def _on_local_folder_line_editing_finished(self) -> None:
+        logger.info(f"GameConfiguration: _on_local_folder_line_editing_finished")
+        self.settings_controller.settings.local_folder = self.local_folder_line.text()
+        self.settings_controller.settings.save()
+
+    @Slot()
+    def _on_workshop_folder_line_editing_finished(self) -> None:
+        logger.info(f"GameConfiguration: _on_workshop_folder_line_editing_finished")
+        self.settings_controller.settings.workshop_folder = (
+            self.workshop_folder_line.text()
+        )
+        self.settings_controller.settings.save()
