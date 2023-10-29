@@ -168,7 +168,7 @@ class MainWindow(QMainWindow):
         self.main_content_panel._do_refresh(is_initial=True)
 
         # CHECK USER PREFERENCE FOR WATCHDOG
-        if self.game_configuration.watchdog_toggle:
+        if self.settings_controller.settings.watchdog_toggle:
             # Setup watchdog
             self.__initialize_watchdog()
 
