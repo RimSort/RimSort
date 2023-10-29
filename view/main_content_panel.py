@@ -1239,9 +1239,7 @@ class MainContent(QObject):
 
         # Depending on the selected algorithm, sort all tiers with Alphabetical
         # mimic algorithm or toposort
-        sorting_algorithm = (
-            GameConfiguration.instance().settings_panel.sorting_algorithm_cb.currentText()
-        )
+        sorting_algorithm = self.settings_controller.settings.sorting_algorithm
 
         if sorting_algorithm == "Alphabetical":
             logger.info("Alphabetical sorting algorithm is selected")

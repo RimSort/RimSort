@@ -624,10 +624,9 @@ class GameConfiguration(QObject):
                 ]
 
             # sorting algorithm
-            if settings_data.get("sorting_algorithm"):
-                self.settings_panel.sorting_algorithm_cb.setCurrentText(
-                    settings_data["sorting_algorithm"]
-                )
+            self.settings_panel.sorting_algorithm_cb.setCurrentText(
+                self.settings_controller.settings.sorting_algorithm
+            )
 
             # metadata
             if settings_data.get("external_steam_metadata_file_path"):
@@ -792,6 +791,10 @@ class GameConfiguration(QObject):
             self.todds_overwrite_toggle = True
         else:
             self.todds_overwrite_toggle = False
+
+        self.settings_controller.settings.sorting_algorithm = (
+            self.settings_panel.sorting_algorithm_cb.currentText()
+        )
 
         self.settings_controller.settings.save()
 
