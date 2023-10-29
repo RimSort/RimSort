@@ -107,9 +107,6 @@ class GameConfiguration(QObject):
             # STEAM APIKEY
             self.steam_apikey = ""
 
-            # DATABASE EXPIRY
-            self.database_expiry = 604800
-
             # TRY TO DOWNLOAD MISSING MODS TOGGLE
             self.try_download_missing_mods_toggle = False
 
@@ -677,8 +674,6 @@ class GameConfiguration(QObject):
                 self.build_steam_database_update_toggle = settings_data[
                     "build_steam_database_update_toggle"
                 ]
-            if settings_data.get("database_expiry"):
-                self.database_expiry = settings_data["database_expiry"]
             if settings_data.get("steam_apikey"):
                 self.steam_apikey = settings_data["steam_apikey"]
 

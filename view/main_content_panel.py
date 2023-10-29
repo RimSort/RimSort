@@ -134,7 +134,9 @@ class MainContent(QObject):
             )
 
             # Initialize MetadataManager
-            self.metadata_manager = MetadataManager.instance()
+            self.metadata_manager = MetadataManager.instance(
+                settings_controller=self.settings_controller
+            )
             self.metadata_manager.update_game_configuration_signal.connect(
                 self.__update_game_configuration
             )
@@ -489,9 +491,6 @@ class MainContent(QObject):
     def __update_game_configuration(self) -> None:
         self.metadata_manager.community_rules_repo = (
             GameConfiguration.instance().community_rules_repo
-        )
-        self.metadata_manager.database_expiry = (
-            GameConfiguration.instance().database_expiry
         )
         self.metadata_manager.dbs_path = GameConfiguration.instance().dbs_path
         self.metadata_manager.external_community_rules_metadata_source = (
@@ -2411,7 +2410,7 @@ class MainContent(QObject):
                         if database.get("version"):
                             database_version = (
                                 database["version"]
-                                - GameConfiguration.instance().database_expiry
+                                - self.settings_controller.settings.database_expiry
                             )
                         elif database.get("timestamp"):
                             database_version = database["timestamp"]
@@ -2674,7 +2673,7 @@ class MainContent(QObject):
                 self.db_builder = SteamDatabaseBuilder(
                     apikey=GameConfiguration.instance().steam_apikey,
                     appid=294100,
-                    database_expiry=GameConfiguration.instance().database_expiry,
+                    database_expiry=self.settings_controller.settings.database_expiry,
                     mode=GameConfiguration.instance().db_builder_include,
                     output_database_path=output_path,
                     get_appid_deps=GameConfiguration.instance().build_steam_database_dlc_data_toggle,
@@ -2687,7 +2686,7 @@ class MainContent(QObject):
                 self.db_builder = SteamDatabaseBuilder(
                     apikey=GameConfiguration.instance().steam_apikey,
                     appid=294100,
-                    database_expiry=GameConfiguration.instance().database_expiry,
+                    database_expiry=self.settings_controller.settings.database_expiry,
                     mode=GameConfiguration.instance().db_builder_include,
                     output_database_path=output_path,
                     get_appid_deps=GameConfiguration.instance().build_steam_database_dlc_data_toggle,
@@ -2751,7 +2750,7 @@ class MainContent(QObject):
                 json.dump(
                     {
                         "version": int(
-                            time() + GameConfiguration.instance().database_expiry
+                            time() + self.settings_controller.settings.database_expiry
                         ),
                         "database": self.metadata_manager.external_steam_metadata,
                     },
@@ -2769,7 +2768,7 @@ class MainContent(QObject):
         self.db_builder = SteamDatabaseBuilder(
             apikey=GameConfiguration.instance().steam_apikey,
             appid=294100,
-            database_expiry=GameConfiguration.instance().database_expiry,
+            database_expiry=self.settings_controller.settings.database_expiry,
             mode="pfids_by_appid",
         )
         # Create query runner
@@ -3123,14 +3122,12 @@ class MainContent(QObject):
         args, ok = show_dialogue_input(
             title="Edit SteamDB expiry:",
             text="Enter your preferred expiry duration in seconds (default 1 week/604800 sec):",
-            value=str(GameConfiguration.instance().database_expiry),
+            value=str(self.settings_controller.settings.database_expiry),
         )
         if ok:
             try:
-                GameConfiguration.instance().database_expiry = int(args)
-                GameConfiguration.instance()._update_persistent_storage(
-                    {"database_expiry": GameConfiguration.instance().database_expiry}
-                )
+                self.settings_controller.settings.database_expiry = int(args)
+                self.settings_controller.settings.save()
             except ValueError:
                 show_warning(
                     "Tried configuring Dynamic Query with a value that is not an integer.",

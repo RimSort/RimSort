@@ -24,6 +24,7 @@ from PySide6.QtCore import (
     Signal,
 )
 
+from controller.settings_controller import SettingsController
 from model.dialogue import (
     show_dialogue_conditional,
     show_dialogue_file,
@@ -63,10 +64,12 @@ class MetadataManager(QObject):
             cls._instance = super(MetadataManager, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self) -> None:
+    def __init__(self, settings_controller: SettingsController) -> None:
         if not hasattr(self, "initialized"):
             super(MetadataManager, self).__init__()
             logger.info("Initializing MetadataManager")
+
+            self.settings_controller = settings_controller
 
             # Initialize our threadpool for multithreaded parsing
             self.parser_threadpool = QThreadPool.globalInstance()
@@ -218,7 +221,7 @@ class MetadataManager(QObject):
                 self.external_steam_metadata_path,
             ) = get_configured_steam_db(
                 self,
-                life=GameConfiguration.instance().database_expiry,
+                life=self.settings_controller.settings.database_expiry,
                 path=GameConfiguration.instance().steam_db_file_path,
             )
         elif (
@@ -230,7 +233,7 @@ class MetadataManager(QObject):
                 self.external_steam_metadata_path,
             ) = get_configured_steam_db(
                 self,
-                life=GameConfiguration.instance().database_expiry,
+                life=self.settings_controller.settings.database_expiry,
                 path=str(
                     Path(
                         os.path.join(
@@ -1847,7 +1850,7 @@ class SteamDatabaseBuilder(QThread):
         QThread.__init__(self)
         self.apikey = apikey
         self.appid = appid
-        GameConfiguration.instance().database_expiry = database_expiry
+        self.database_expiry = database_expiry
         self.get_appid_deps = get_appid_deps
         self.mode = mode
         self.mods = mods
@@ -1872,7 +1875,7 @@ class SteamDatabaseBuilder(QThread):
                 dynamic_query = DynamicQuery(
                     apikey=self.apikey,
                     appid=self.appid,
-                    life=GameConfiguration.instance().database_expiry,
+                    life=self.database_expiry,
                     get_appid_deps=self.get_appid_deps,
                 )
                 # Connect messaging signal
@@ -1922,7 +1925,7 @@ class SteamDatabaseBuilder(QThread):
                         dynamic_query = DynamicQuery(
                             apikey=self.apikey,
                             appid=self.appid,
-                            life=GameConfiguration.instance().database_expiry,
+                            life=self.database_expiry,
                             get_appid_deps=self.get_appid_deps,
                         )
                         dynamic_query.dq_messaging_signal.connect(
