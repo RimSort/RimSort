@@ -99,9 +99,6 @@ class GameConfiguration(QObject):
             # STEAM APIKEY
             self.steam_apikey = ""
 
-            # DB BUILDER UPDATE TOGGLE
-            self.build_steam_database_update_toggle = False
-
             # STEAMCMD INSTALL PATH
             self.steamcmd_install_path = ""
 
@@ -418,7 +415,7 @@ class GameConfiguration(QObject):
 
             # DB Builder update toggle
             self.settings_panel.build_steam_database_update_checkbox.setChecked(
-                self.build_steam_database_update_toggle
+                self.settings_controller.settings.build_steam_database_update_toggle
             )
 
             # SteamCMD
@@ -624,10 +621,6 @@ class GameConfiguration(QObject):
                 self.settings_panel.build_steam_database_include_cb.setCurrentText(
                     "Yes"
                 )
-            if settings_data.get("build_steam_database_update_toggle"):
-                self.build_steam_database_update_toggle = settings_data[
-                    "build_steam_database_update_toggle"
-                ]
             if settings_data.get("steam_apikey"):
                 self.steam_apikey = settings_data["steam_apikey"]
 
@@ -709,10 +702,9 @@ class GameConfiguration(QObject):
         )
 
         # db builder update toggle
-        if self.settings_panel.build_steam_database_update_checkbox.isChecked():
-            self.build_steam_database_update_toggle = True
-        else:
-            self.build_steam_database_update_toggle = False
+        self.settings_controller.settings.build_steam_database_update_toggle = (
+            self.settings_panel.build_steam_database_update_checkbox.isChecked()
+        )
 
         # steamcmd validate downloads toggle
         if self.settings_panel.steamcmd_validate_downloads_checkbox.isChecked():

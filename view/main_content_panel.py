@@ -2666,7 +2666,7 @@ class MainContent(QObject):
                     mode=self.settings_controller.settings.db_builder_include,
                     output_database_path=output_path,
                     get_appid_deps=self.settings_controller.settings.build_steam_database_dlc_data,
-                    update=GameConfiguration.instance().build_steam_database_update_toggle,
+                    update=self.settings_controller.settings.build_steam_database_update_toggle,
                 )
             # "Yes": Produce accurate, possibly semi-incomplete DB without QueryFiles via API
             # CAN produce a complete DB! Only includes metadata parsed from mods you have downloaded.
@@ -2680,7 +2680,7 @@ class MainContent(QObject):
                     output_database_path=output_path,
                     get_appid_deps=self.settings_controller.settings.build_steam_database_dlc_data,
                     mods=self.metadata_manager.all_mods_compiled,
-                    update=GameConfiguration.instance().build_steam_database_update_toggle,
+                    update=self.settings_controller.settings.build_steam_database_update_toggle,
                 )
             # Create query runner
             self.query_runner = RunnerPanel()
