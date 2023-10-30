@@ -490,7 +490,7 @@ class MainContent(QObject):
 
     def __update_game_configuration(self) -> None:
         self.metadata_manager.community_rules_repo = (
-            GameConfiguration.instance().community_rules_repo
+            self.settings_controller.settings.external_community_rules_repo
         )
         self.metadata_manager.dbs_path = GameConfiguration.instance().dbs_path
         self.metadata_manager.external_community_rules_metadata_source = (
@@ -709,7 +709,7 @@ class MainContent(QObject):
             if GIT_EXISTS:
                 self._do_clone_repo_to_path(
                     base_path=GameConfiguration.instance().dbs_path,
-                    repo_url=GameConfiguration.instance().community_rules_repo,
+                    repo_url=self.settings_controller.settings.external_community_rules_repo,
                 )
             else:
                 self._do_notify_no_git()
@@ -718,7 +718,7 @@ class MainContent(QObject):
         if action == "upload_community_rules_database":
             if GIT_EXISTS:
                 self._do_upload_db_to_repo(
-                    repo_url=GameConfiguration.instance().community_rules_repo,
+                    repo_url=self.settings_controller.settings.external_community_rules_repo,
                     file_name="communityRules.json",
                 )
             else:
@@ -2629,15 +2629,11 @@ class MainContent(QObject):
         args, ok = show_dialogue_input(
             title="Edit Community Rules DB repo",
             text="Enter URL (https://github.com/AccountName/RepositoryName):",
-            value=GameConfiguration.instance().community_rules_repo,
+            value=self.settings_controller.settings.external_community_rules_repo,
         )
         if ok:
-            GameConfiguration.instance().community_rules_repo = args
-            GameConfiguration.instance()._update_persistent_storage(
-                {
-                    "external_community_rules_repo": GameConfiguration.instance().community_rules_repo
-                }
-            )
+            self.settings_controller.settings.external_community_rules_repo = args
+            self.settings_controller.settings.save()
 
     def _do_build_database_thread(self) -> None:
         # If settings panel is still open, close it.

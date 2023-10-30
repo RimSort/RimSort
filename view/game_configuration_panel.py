@@ -96,9 +96,6 @@ class GameConfiguration(QObject):
             self.github_username = ""
             self.github_token = ""
 
-            # DB REPOS
-            self.community_rules_repo = ""
-
             # STEAM APIKEY
             self.steam_apikey = ""
 
@@ -624,10 +621,6 @@ class GameConfiguration(QObject):
             )
 
             # metadata
-            if settings_data.get("external_community_rules_repo"):
-                self.community_rules_repo = settings_data[
-                    "external_community_rules_repo"
-                ]
             self.settings_panel.external_steam_metadata_multibutton.main_action.setCurrentText(
                 self.settings_controller.settings.external_steam_metadata_source
             )

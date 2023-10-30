@@ -277,7 +277,7 @@ class MetadataManager(QObject):
                         os.path.join(
                             GameConfiguration.instance().dbs_path,
                             os.path.split(
-                                GameConfiguration.instance().community_rules_repo
+                                self.settings_controller.settings.external_community_rules_repo
                             )[1],
                             "communityRules.json",
                         )
