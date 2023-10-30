@@ -1780,13 +1780,13 @@ class MainContent(QObject):
         # Setup environment
         todds_interface = ToddsInterface(
             preset=self.settings_controller.settings.todds_preset,
-            dry_run=GameConfiguration.instance().todds_dry_run_toggle,
+            dry_run=self.settings_controller.settings.todds_dry_run,
             overwrite=GameConfiguration.instance().todds_overwrite_toggle,
         )
 
         # UI
         self.todds_runner = RunnerPanel(
-            todds_dry_run_support=GameConfiguration.instance().todds_dry_run_toggle
+            todds_dry_run_support=self.settings_controller.settings.todds_dry_run
         )
         self.todds_runner.setWindowTitle("RimSort - todds texture encoder")
         self.todds_runner.show()
@@ -1796,12 +1796,12 @@ class MainContent(QObject):
     def _do_delete_dds_textures(self, todds_txt_path: str) -> None:
         todds_interface = ToddsInterface(
             preset="clean",
-            dry_run=GameConfiguration.instance().todds_dry_run_toggle,
+            dry_run=self.settings_controller.settings.todds_dry_run,
         )
 
         # UI
         self.todds_runner = RunnerPanel(
-            todds_dry_run_support=GameConfiguration.instance().todds_dry_run_toggle
+            todds_dry_run_support=self.settings_controller.settings.todds_dry_run
         )
         self.todds_runner.setWindowTitle("RimSort - todds texture encoder")
         self.todds_runner.show()

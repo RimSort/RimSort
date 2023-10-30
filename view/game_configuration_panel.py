@@ -99,9 +99,6 @@ class GameConfiguration(QObject):
             # STEAM APIKEY
             self.steam_apikey = ""
 
-            # TODDS DRY RUN TOGGLE
-            self.todds_dry_run_toggle = False
-
             # TODDS OVERWRITE TOGGLE
             self.todds_overwrite_toggle = False
 
@@ -417,8 +414,9 @@ class GameConfiguration(QObject):
             )
 
             self.settings_panel.todds_dry_run_checkbox.setChecked(
-                self.todds_dry_run_toggle
+                self.settings_controller.settings.todds_dry_run
             )
+
             self.settings_panel.todds_overwrite_checkbox.setChecked(
                 self.todds_overwrite_toggle
             )
@@ -638,8 +636,6 @@ class GameConfiguration(QObject):
                     "Optimized - Recommended for RimWorld"
                 )
 
-            if settings_data.get("todds_dry_run"):
-                self.todds_dry_run_toggle = settings_data["todds_dry_run"]
             if settings_data.get("todds_overwrite"):
                 self.todds_overwrite_toggle = settings_data["todds_overwrite"]
 
@@ -708,10 +704,10 @@ class GameConfiguration(QObject):
         )
 
         # todds dry run
-        if self.settings_panel.todds_dry_run_checkbox.isChecked():
-            self.todds_dry_run_toggle = True
-        else:
-            self.todds_dry_run_toggle = False
+        self.settings_controller.settings.todds_dry_run = (
+            self.settings_panel.todds_dry_run_checkbox.isChecked()
+        )
+
         # todds overwrite textures
         if self.settings_panel.todds_overwrite_checkbox.isChecked():
             self.todds_overwrite_toggle = True
