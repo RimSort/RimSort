@@ -9,7 +9,7 @@ import traceback
 from typing import Any, List, Optional
 
 from pyperclip import copy as copy_to_clipboard
-from PySide6.QtCore import Qt, QEvent, QModelIndex, QObject, Signal
+from PySide6.QtCore import Qt, QEvent, QModelIndex, QObject, Signal, Slot
 from PySide6.QtGui import QAction, QCursor, QDropEvent, QFocusEvent, QKeySequence
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
 from controller.settings_controller import SettingsController
 from model.mod_list_item import ModListItemInner
 from model.dialogue import show_dialogue_conditional, show_dialogue_input, show_warning
+from util.event_bus import EventBus
 from util.generic import (
     delete_files_except_extension,
     handle_remove_read_only,
@@ -89,6 +90,7 @@ class ModListWidget(QListWidget):
 
         # Store icon paths
         self.mod_type_filter_enable = mod_type_filter_enable
+        EventBus().settings_have_changed.connect(self._on_settings_have_changed)
         self.csharp_icon_path = str(
             Path(
                 os.path.join(os.path.dirname(__file__), "../data/csharp.png")
@@ -1122,3 +1124,9 @@ class ModListWidget(QListWidget):
         else:
             self.ignore_warning_list.remove(packageid)
         self.recalculate_warnings_signal.emit()
+
+    @Slot()
+    def _on_settings_have_changed(self) -> None:
+        self.mod_type_filter_enable = (
+            self.settings_controller.settings.mod_type_filter_toggle
+        )

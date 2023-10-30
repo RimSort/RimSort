@@ -573,13 +573,6 @@ class MainContent(QObject):
         # game configuration panel actions
         if action == "check_for_update":
             self._do_check_for_update()
-        if action == "update_mod_type_filter_toggle":
-            self.active_mods_panel.active_mods_list.mod_type_filter_enable = (
-                self.settings_controller.settings.mod_type_filter_toggle
-            )
-            self.inactive_mods_panel.inactive_mods_list.mod_type_filter_enable = (
-                self.settings_controller.settings.mod_type_filter_toggle
-            )
         if action == "update_steamcmd_validate_toggle":
             self.steamcmd_wrapper.validate_downloads = (
                 self.settings_controller.settings.steamcmd_validate_downloads

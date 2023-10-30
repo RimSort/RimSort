@@ -688,8 +688,6 @@ class GameConfiguration(QObject):
 
         self.settings_controller.settings.save()
 
-        # Update mod type filter toggle
-        self.configuration_signal.emit("update_mod_type_filter_toggle")
         # Update SteamCMD validate toggle
         self.configuration_signal.emit("update_steamcmd_validate_toggle")
 
