@@ -261,7 +261,7 @@ class MetadataManager(QObject):
                 self.external_community_rules_path,
             ) = get_configured_community_rules_db(
                 self,
-                path=GameConfiguration.instance().community_rules_file_path,
+                path=self.settings_controller.settings.external_community_rules_file_path,
             )
         elif (
             GameConfiguration.instance().settings_panel.external_community_rules_metadata_multibutton.main_action.currentText()

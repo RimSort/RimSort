@@ -96,9 +96,6 @@ class GameConfiguration(QObject):
             self.github_username = ""
             self.github_token = ""
 
-            # DB FILE PATHS
-            self.community_rules_file_path = ""
-
             # DB REPOS
             self.community_rules_repo = ""
 
@@ -627,10 +624,6 @@ class GameConfiguration(QObject):
             )
 
             # metadata
-            if settings_data.get("external_community_rules_file_path"):
-                self.community_rules_file_path = settings_data[
-                    "external_community_rules_file_path"
-                ]
             if settings_data.get("external_community_rules_repo"):
                 self.community_rules_repo = settings_data[
                     "external_community_rules_repo"
