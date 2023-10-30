@@ -1077,7 +1077,6 @@ class GameConfiguration(QObject):
 
     @Slot()
     def _on_settings_have_changed(self) -> None:
-        logger.info(f"GameConfiguration: _on_settings_have_changed")
         self.game_folder_line.setText(self.settings_controller.settings.game_folder)
         self.config_folder_line.setText(self.settings_controller.settings.config_folder)
         self.local_folder_line.setText(self.settings_controller.settings.local_folder)
@@ -1087,25 +1086,21 @@ class GameConfiguration(QObject):
 
     @Slot()
     def _on_game_folder_line_editing_finished(self) -> None:
-        logger.info(f"GameConfiguration: _on_game_folder_line_editing_finished")
         self.settings_controller.settings.game_folder = self.game_folder_line.text()
         self.settings_controller.settings.save()
 
     @Slot()
     def _on_config_folder_line_editing_finished(self) -> None:
-        logger.info(f"GameConfiguration: _on_config_folder_line_editing_finished")
         self.settings_controller.settings.config_folder = self.config_folder_line.text()
         self.settings_controller.settings.save()
 
     @Slot()
     def _on_local_folder_line_editing_finished(self) -> None:
-        logger.info(f"GameConfiguration: _on_local_folder_line_editing_finished")
         self.settings_controller.settings.local_folder = self.local_folder_line.text()
         self.settings_controller.settings.save()
 
     @Slot()
     def _on_workshop_folder_line_editing_finished(self) -> None:
-        logger.info(f"GameConfiguration: _on_workshop_folder_line_editing_finished")
         self.settings_controller.settings.workshop_folder = (
             self.workshop_folder_line.text()
         )

@@ -408,7 +408,6 @@ class Settings(QObject):
             pass
 
     def save(self) -> None:
-        logger.info("Saving settings")
         with open(str(self._settings_file), "w") as file:
             json.dump(self._to_dict(), file, indent=4)
 
