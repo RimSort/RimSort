@@ -99,9 +99,6 @@ class GameConfiguration(QObject):
             # STEAM APIKEY
             self.steam_apikey = ""
 
-            # TODDS PRESET
-            self.todds_preset = "optimized"
-
             # TODDS ACTIVE MODS TARGET TOGGLE
             self.todds_active_mods_target_toggle = False
 
@@ -638,12 +635,11 @@ class GameConfiguration(QObject):
                 steamcmd_install_path.mkdir(parents=True)
 
             # todds
-            if settings_data.get("todds_preset"):
-                self.todds_preset = settings_data["todds_preset"]
-            if self.todds_preset == "optimized":
+            if self.settings_controller.settings.todds_preset == "optimized":
                 self.settings_panel.todds_presets_cb.setCurrentText(
                     "Optimized - Recommended for RimWorld"
                 )
+
             if settings_data.get("todds_active_mods_target"):
                 self.todds_active_mods_target_toggle = settings_data[
                     "todds_active_mods_target"
@@ -710,7 +706,8 @@ class GameConfiguration(QObject):
             "Optimized - Recommended for RimWorld"
             in self.settings_panel.todds_presets_cb.currentText()
         ):
-            self.todds_preset = "optimized"
+            self.settings_controller.settings.todds_preset = "optimized"
+
         # todds active mods target
         if self.settings_panel.todds_active_mods_target_checkbox.isChecked():
             self.todds_active_mods_target_toggle = True

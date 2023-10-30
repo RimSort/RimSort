@@ -1779,7 +1779,7 @@ class MainContent(QObject):
     def _do_optimize_textures(self, todds_txt_path: str) -> None:
         # Setup environment
         todds_interface = ToddsInterface(
-            preset=GameConfiguration.instance().todds_preset,
+            preset=self.settings_controller.settings.todds_preset,
             dry_run=GameConfiguration.instance().todds_dry_run_toggle,
             overwrite=GameConfiguration.instance().todds_overwrite_toggle,
         )
