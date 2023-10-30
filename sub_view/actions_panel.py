@@ -74,15 +74,7 @@ class Actions(QWidget):
         # Refresh button flashing animation
         self.refresh_button_flashing_animation = QTimer()
         self.refresh_button_flashing_animation.timeout.connect(
-            lambda: self.refresh_button.setStyleSheet(
-                "QPushButton { background-color: %s; }"
-                % (
-                    "#455364"
-                    if self.refresh_button.styleSheet()
-                    == "QPushButton { background-color: #54687a; }"
-                    else "#54687a"
-                )
-            )
+            partial(self.__flash_button, button=self.refresh_button)
         )
 
         # CLEAR BUTTON
@@ -194,15 +186,7 @@ class Actions(QWidget):
         # Save button flashing animation
         self.save_button_flashing_animation = QTimer()
         self.save_button_flashing_animation.timeout.connect(
-            lambda: self.save_button.setStyleSheet(
-                "QPushButton { background-color: %s; }"
-                % (
-                    "#455364"
-                    if self.save_button.styleSheet()
-                    == "QPushButton { background-color: #54687a; }"
-                    else "#54687a"
-                )
-            )
+            partial(self.__flash_button, button=self.save_button)
         )
 
         # UPLOAD LOG BUTTON
@@ -231,6 +215,11 @@ class Actions(QWidget):
         self.bottom_panel.addWidget(self.upload_rwlog_button)
 
         logger.debug("Finished Actions initialization")
+
+    def __flash_button(self, button: QPushButton) -> None:
+        button.setObjectName("%s" % ("" if button.objectName() == "flash" else "flash"))
+        button.style().unpolish(button)
+        button.style().polish(button)
 
     @property
     def panel(self) -> QVBoxLayout:

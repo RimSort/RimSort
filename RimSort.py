@@ -267,7 +267,9 @@ def main_thread() -> None:
             ProxyStyle()
         )  # Add proxy style for overriding some styling elements
         app.setStyleSheet(  # Add style sheet for styling layouts and widgets
-            Path(os.path.join(os.path.dirname(__file__), "data/style.qss")).read_text()
+            Path(
+                os.path.join(os.path.dirname(__file__), "themes/RimPy/style.qss")
+            ).read_text()
         )
         # Create the main window
         window = MainWindow(DEBUG_MODE=DEBUG_MODE)

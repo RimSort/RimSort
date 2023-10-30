@@ -412,9 +412,7 @@ class SettingsPanel(QDialog):
                 "Optimized - Recommended for RimWorld",
             ]
         )
-        # QComboBox alignment is hardcoded...? too lazy to override...
-        # https://stackoverflow.com/questions/41497773/align-text-in-a-qcombobox-without-making-it-editable
-        self.todds_presets_cb.setStyleSheet("QComboBox {" "   padding-left: 25px;" "}")
+        self.todds_presets_cb.setObjectName("padInternal")
         self.todds_presets_cb.setItemDelegate(self.centered_item_delegate)
         self.todds_active_mods_target_checkbox = QCheckBox(
             "Force todds to only target mods in the active mods list"

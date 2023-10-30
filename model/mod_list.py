@@ -1025,7 +1025,11 @@ class ModListWidget(QListWidget):
                 )
                 widget.toggle_warning_signal.connect(self.toggle_warning)
                 if data.get("invalid"):
-                    widget.main_label.setStyleSheet("QLabel { color : red; }")
+                    widget.main_label.setObjectName("summaryValueInvalid")
+                else:
+                    widget.main_label.setObjectName("summaryValue")
+                widget.main_label.style().unpolish(widget.main_label)
+                widget.main_label.style().polish(widget.main_label)
                 item.setSizeHint(widget.sizeHint())
                 self.setItemWidget(item, widget)
                 self.uuids.add(data["uuid"])
