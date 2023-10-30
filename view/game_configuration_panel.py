@@ -99,9 +99,6 @@ class GameConfiguration(QObject):
             # STEAM APIKEY
             self.steam_apikey = ""
 
-            # DB BUILDER MODE
-            self.db_builder_include = "all_mods"
-
             # DQ GETAPPDEPENDENCIES TOGGLE
             self.build_steam_database_dlc_data_toggle = False
 
@@ -624,11 +621,9 @@ class GameConfiguration(QObject):
                 self.run_arguments = settings_data["runArgs"]
 
             # db builder
-            if settings_data.get("db_builder_include"):
-                self.db_builder_include = settings_data["db_builder_include"]
-            if self.db_builder_include == "no_local":
+            if self.settings_controller.settings.db_builder_include == "no_local":
                 self.settings_panel.build_steam_database_include_cb.setCurrentText("No")
-            if self.db_builder_include == "all_mods":
+            if self.settings_controller.settings.db_builder_include == "all_mods":
                 self.settings_panel.build_steam_database_include_cb.setCurrentText(
                     "Yes"
                 )
@@ -711,9 +706,9 @@ class GameConfiguration(QObject):
 
         # db builder mode
         if "No" in self.settings_panel.build_steam_database_include_cb.currentText():
-            self.db_builder_include = "no_local"
+            self.settings_controller.settings.db_builder_include = "no_local"
         elif "Yes" in self.settings_panel.build_steam_database_include_cb.currentText():
-            self.db_builder_include = "all_mods"
+            self.settings_controller.settings.db_builder_include = "all_mods"
         # dq getappdependencies toggle
         if self.settings_panel.build_steam_database_dlc_data_checkbox.isChecked():
             self.build_steam_database_dlc_data_toggle = True

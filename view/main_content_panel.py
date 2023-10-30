@@ -2658,12 +2658,12 @@ class MainContent(QObject):
             # "No": Produce accurate, complete DB by QueryFiles via WebAPI
             # Queries ALL available PublishedFileIDs (mods) it can find via Steam WebAPI.
             # Does not use metadata from locally available mods. This means no packageids!
-            if GameConfiguration.instance().db_builder_include == "no_local":
+            if self.settings_controller.settings.db_builder_include == "no_local":
                 self.db_builder = SteamDatabaseBuilder(
                     apikey=GameConfiguration.instance().steam_apikey,
                     appid=294100,
                     database_expiry=self.settings_controller.settings.database_expiry,
-                    mode=GameConfiguration.instance().db_builder_include,
+                    mode=self.settings_controller.settings.db_builder_include,
                     output_database_path=output_path,
                     get_appid_deps=GameConfiguration.instance().build_steam_database_dlc_data_toggle,
                     update=GameConfiguration.instance().build_steam_database_update_toggle,
@@ -2671,12 +2671,12 @@ class MainContent(QObject):
             # "Yes": Produce accurate, possibly semi-incomplete DB without QueryFiles via API
             # CAN produce a complete DB! Only includes metadata parsed from mods you have downloaded.
             # Produces DB which contains metadata from locally available mods. Includes packageids!
-            elif GameConfiguration.instance().db_builder_include == "all_mods":
+            elif self.settings_controller.settings.db_builder_include == "all_mods":
                 self.db_builder = SteamDatabaseBuilder(
                     apikey=GameConfiguration.instance().steam_apikey,
                     appid=294100,
                     database_expiry=self.settings_controller.settings.database_expiry,
-                    mode=GameConfiguration.instance().db_builder_include,
+                    mode=self.settings_controller.settings.db_builder_include,
                     output_database_path=output_path,
                     get_appid_deps=GameConfiguration.instance().build_steam_database_dlc_data_toggle,
                     mods=self.metadata_manager.all_mods_compiled,
@@ -2686,7 +2686,7 @@ class MainContent(QObject):
             self.query_runner = RunnerPanel()
             self.query_runner.closing_signal.connect(self.db_builder.terminate)
             self.query_runner.setWindowTitle(
-                f"RimSort - DB Builder ({GameConfiguration.instance().db_builder_include})"
+                f"RimSort - DB Builder ({self.settings_controller.settings.db_builder_include})"
             )
             self.query_runner.progress_bar.show()
             self.query_runner.show()
