@@ -688,9 +688,6 @@ class GameConfiguration(QObject):
 
         self.settings_controller.settings.save()
 
-        # Update SteamCMD validate toggle
-        self.configuration_signal.emit("update_steamcmd_validate_toggle")
-
     def _open_settings_panel(self) -> None:
         """
         Opens the settings panel (as a modal window), blocking

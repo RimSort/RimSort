@@ -18,6 +18,7 @@ from zipfile import ZipFile
 from logger_tt import logger
 
 from controller.settings_controller import SettingsController
+from util.event_bus import EventBus
 
 # GitPython depends on git executable being available in PATH
 try:
@@ -56,7 +57,7 @@ from util.rentry.wrapper import RentryUpload
 from util.steam.browser import SteamBrowser
 from util.steam.webapi.wrapper import ISteamRemoteStorage_GetPublishedFileDetails
 
-from PySide6.QtCore import QEventLoop, QObject, QProcess, Qt, Signal
+from PySide6.QtCore import QEventLoop, QObject, QProcess, Qt, Signal, Slot
 from PySide6.QtWidgets import (
     QApplication,
     QFrame,
@@ -123,6 +124,7 @@ class MainContent(QObject):
             logger.debug("Initializing MainContent")
 
             self.settings_controller = settings_controller
+            EventBus().settings_have_changed.connect(self._on_settings_have_changed)
 
             # INITIALIZE WIDGETS
             # Initialize Steam(CMD) integraations
@@ -573,10 +575,6 @@ class MainContent(QObject):
         # game configuration panel actions
         if action == "check_for_update":
             self._do_check_for_update()
-        if action == "update_steamcmd_validate_toggle":
-            self.steamcmd_wrapper.validate_downloads = (
-                self.settings_controller.settings.steamcmd_validate_downloads
-            )
         # actions panel actions
         if action == "refresh":
             self._do_refresh()
@@ -3102,3 +3100,9 @@ class MainContent(QObject):
                     "Tried configuring Dynamic Query with a value that is not an integer.",
                     "Please reconfigure the expiry value with an integer in terms of the seconds from epoch you would like your query to expire.",
                 )
+
+    @Slot()
+    def _on_settings_have_changed(self) -> None:
+        self.steamcmd_wrapper.validate_downloads = (
+            self.settings_controller.settings.steamcmd_validate_downloads
+        )
