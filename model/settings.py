@@ -53,6 +53,8 @@ class Settings(QObject):
         self._config_folder: Optional[Path] = None
         self._local_folder: Optional[Path] = None
         self._workshop_folder: Optional[Path] = None
+        self._github_username: str = ""
+        self._github_token: str = ""
 
     @property
     def check_for_update_startup(self) -> bool:
@@ -358,6 +360,24 @@ class Settings(QObject):
         self._workshop_folder = p
         EventBus().settings_have_changed.emit()
 
+    @property
+    def github_username(self) -> str:
+        return self._github_username
+
+    @github_username.setter
+    def github_username(self, value: str) -> None:
+        self._github_username = value
+        EventBus().settings_have_changed.emit()
+
+    @property
+    def github_token(self) -> str:
+        return self._github_token
+
+    @github_token.setter
+    def github_token(self, value: str) -> None:
+        self._github_token = value
+        EventBus().settings_have_changed.emit()
+
     def load(self) -> None:
         try:
             with open(str(self._settings_file), "r") as file:
@@ -493,6 +513,14 @@ class Settings(QObject):
             self.workshop_folder = data["workshop_folder"]
             del data["workshop_folder"]
 
+        if "github_username" in data:
+            self.github_username = data["github_username"]
+            del data["github_username"]
+
+        if "github_token" in data:
+            self.github_token = data["github_token"]
+            del data["github_token"]
+
     def _to_dict(self) -> Dict[str, Any]:
         data = {
             "check_for_update_startup": self.check_for_update_startup,
@@ -523,5 +551,7 @@ class Settings(QObject):
             "config_folder": self.config_folder,
             "local_folder": self.local_folder,
             "workshop_folder": self.workshop_folder,
+            "github_username": self.github_username,
+            "github_token": self.github_token,
         }
         return data

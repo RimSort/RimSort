@@ -2129,26 +2129,22 @@ class MainContent(QObject):
         args, ok = show_dialogue_input(
             title="Edit username",
             text="Enter your Github username:",
-            value=GameConfiguration.instance().github_username,
+            value=self.settings_controller.settings.github_username,
         )
         if ok:
-            GameConfiguration.instance().github_username = args
-            GameConfiguration.instance()._update_persistent_storage(
-                {"github_username": GameConfiguration.instance().github_username}
-            )
+            self.settings_controller.settings.github_username = args
+            self.settings_controller.settings.save()
         else:
             logger.debug("USER ACTION: cancelled input!")
             return
         args, ok = show_dialogue_input(
             title="Edit token",
             text="Enter your Github personal access token here (ghp_*):",
-            value=GameConfiguration.instance().github_token,
+            value=self.settings_controller.settings.github_token,
         )
         if ok:
-            GameConfiguration.instance().github_token = args
-            GameConfiguration.instance()._update_persistent_storage(
-                {"github_token": GameConfiguration.instance().github_token}
-            )
+            self.settings_controller.settings.github_token = args
+            self.settings_controller.settings.save()
         else:
             logger.debug("USER ACTION: cancelled input!")
             return
@@ -2428,8 +2424,8 @@ class MainContent(QObject):
 
                     # Create a GitHub instance
                     g = Github(
-                        GameConfiguration.instance().github_username,
-                        GameConfiguration.instance().github_token,
+                        self.settings_controller.settings.github_username,
+                        self.settings_controller.settings.github_token,
                     )
 
                     # Specify the repository

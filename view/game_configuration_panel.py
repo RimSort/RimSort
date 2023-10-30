@@ -92,10 +92,6 @@ class GameConfiguration(QObject):
             # RUN ARGUMENTS
             self.run_arguments = []
 
-            # GITHUB IDENTITY
-            self.github_username = ""
-            self.github_token = ""
-
             # STEAM APIKEY
             self.steam_apikey = ""
 
@@ -609,12 +605,6 @@ class GameConfiguration(QObject):
                 )
             if settings_data.get("steam_apikey"):
                 self.steam_apikey = settings_data["steam_apikey"]
-
-            # github
-            if settings_data.get("github_username"):
-                self.github_username = settings_data["github_username"]
-            if settings_data.get("github_token"):
-                self.github_token = settings_data["github_token"]
 
             # steamcmd
             steamcmd_install_path = Path(
