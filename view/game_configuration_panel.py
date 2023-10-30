@@ -99,9 +99,6 @@ class GameConfiguration(QObject):
             # STEAM APIKEY
             self.steam_apikey = ""
 
-            # TODDS ACTIVE MODS TARGET TOGGLE
-            self.todds_active_mods_target_toggle = False
-
             # TODDS DRY RUN TOGGLE
             self.todds_dry_run_toggle = False
 
@@ -416,8 +413,9 @@ class GameConfiguration(QObject):
 
             # todds
             self.settings_panel.todds_active_mods_target_checkbox.setChecked(
-                self.todds_active_mods_target_toggle
+                self.settings_controller.settings.todds_active_mods_target
             )
+
             self.settings_panel.todds_dry_run_checkbox.setChecked(
                 self.todds_dry_run_toggle
             )
@@ -640,10 +638,6 @@ class GameConfiguration(QObject):
                     "Optimized - Recommended for RimWorld"
                 )
 
-            if settings_data.get("todds_active_mods_target"):
-                self.todds_active_mods_target_toggle = settings_data[
-                    "todds_active_mods_target"
-                ]
             if settings_data.get("todds_dry_run"):
                 self.todds_dry_run_toggle = settings_data["todds_dry_run"]
             if settings_data.get("todds_overwrite"):
@@ -709,10 +703,10 @@ class GameConfiguration(QObject):
             self.settings_controller.settings.todds_preset = "optimized"
 
         # todds active mods target
-        if self.settings_panel.todds_active_mods_target_checkbox.isChecked():
-            self.todds_active_mods_target_toggle = True
-        else:
-            self.todds_active_mods_target_toggle = False
+        self.settings_controller.settings.todds_active_mods_target = (
+            self.settings_panel.todds_active_mods_target_checkbox.isChecked()
+        )
+
         # todds dry run
         if self.settings_panel.todds_dry_run_checkbox.isChecked():
             self.todds_dry_run_toggle = True

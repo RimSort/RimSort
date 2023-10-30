@@ -601,7 +601,7 @@ class MainContent(QObject):
             )
             if os.path.exists(todds_txt_path):
                 os.remove(todds_txt_path)
-            if not GameConfiguration.instance().todds_active_mods_target_toggle:
+            if not self.settings_controller.settings.todds_active_mods_target:
                 local_mods_target = (
                     GameConfiguration.instance().local_folder_line.text()
                 )
