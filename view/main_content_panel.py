@@ -494,7 +494,7 @@ class MainContent(QObject):
         )
         self.metadata_manager.dbs_path = GameConfiguration.instance().dbs_path
         self.metadata_manager.external_community_rules_metadata_source = (
-            GameConfiguration.instance().settings_panel.external_community_rules_metadata_multibutton.main_action.currentText()
+            self.settings_controller.settings.external_community_rules_metadata_source
         )
         self.metadata_manager.external_community_rules_file_path = (
             self.settings_controller.settings.external_community_rules_file_path

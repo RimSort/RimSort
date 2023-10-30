@@ -253,7 +253,7 @@ class MetadataManager(QObject):
 
         # External Community Rules metadata
         if (
-            GameConfiguration.instance().settings_panel.external_community_rules_metadata_multibutton.main_action.currentText()
+            self.settings_controller.settings.external_community_rules_metadata_source
             == "Configured file path"
         ):
             (
@@ -264,7 +264,7 @@ class MetadataManager(QObject):
                 path=self.settings_controller.settings.external_community_rules_file_path,
             )
         elif (
-            GameConfiguration.instance().settings_panel.external_community_rules_metadata_multibutton.main_action.currentText()
+            self.settings_controller.settings.external_community_rules_metadata_source
             == "Configured git repository"
         ):
             (
