@@ -99,9 +99,6 @@ class GameConfiguration(QObject):
             # STEAM APIKEY
             self.steam_apikey = ""
 
-            # STEAMCMD INSTALL PATH
-            self.steamcmd_install_path = ""
-
             # STEAMCMD VALIDATE DOWNLOADS TOGGLE
             self.steamcmd_validate_downloads_toggle = False
 
@@ -551,29 +548,31 @@ class GameConfiguration(QObject):
         logger.info(f"Determined settings file path: {settings_path}")
         if not os.path.exists(settings_path):
             logger.info(f"Settings file does not exist!")
-            # Create a new empty settings.json file
-            default_settings: dict[str, Any] = DEFAULT_SETTINGS
-            default_settings["external_steam_metadata_file_path"] = str(
+
+            self.settings_controller.settings.external_steam_metadata_file_path = str(
                 Path(
                     os.path.join(
                         self.storage_path,
-                        default_settings["external_steam_metadata_file_path"],
+                        self.settings_controller.settings.external_steam_metadata_file_path,
                     )
                 ).resolve()
             )
-            default_settings["external_community_rules_file_path"] = str(
+
+            self.settings_controller.settings.external_community_rules_file_path = str(
                 Path(
                     os.path.join(
                         self.storage_path,
-                        default_settings["external_community_rules_file_path"],
+                        self.settings_controller.settings.external_community_rules_file_path,
                     )
                 ).resolve()
             )
-            default_settings["steamcmd_install_path"] = self.storage_path
-            json_object = json.dumps(default_settings, indent=4)
+            
+            self.settings_controller.settings.steamcmd_install_path = self.storage_path
+
             logger.info(f"Writing default settings to: {settings_path}")
-            with open(settings_path, "w", encoding="utf-8") as outfile:
-                outfile.write(json_object)
+
+            self.settings_controller.settings.save()
+
         # RimSort depends on this settings.json file existing.
         # This should automatically be prepopulated with defaults above, or from user configuration.
         logger.info(f"Settings file exists!")
@@ -635,13 +634,16 @@ class GameConfiguration(QObject):
                 self.steamcmd_validate_downloads_toggle = settings_data[
                     "steamcmd_validate_downloads"
                 ]
-            if settings_data.get("steamcmd_install_path"):
-                self.steamcmd_install_path = settings_data["steamcmd_install_path"]
-            if not os.path.exists(self.steamcmd_install_path):
+
+            steamcmd_install_path = Path(
+                self.settings_controller.settings.steamcmd_install_path
+            )
+            if not steamcmd_install_path.exists():
                 logger.warning(
-                    f"Configured steamcmd prefix does not exist. Creating new steamcmd prefix at: {self.steamcmd_install_path}"
+                    f"Configured steamcmd prefix does not exist. Creating new steamcmd prefix at: "
+                    f"{steamcmd_install_path}"
                 )  # This shouldn't be happening, but we check it anyways.
-                os.makedirs(self.steamcmd_install_path)
+                steamcmd_install_path.mkdir(parents=True)
 
             # todds
             if settings_data.get("todds_preset"):

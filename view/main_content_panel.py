@@ -129,7 +129,7 @@ class MainContent(QObject):
             self.steam_browser = SteamcmdDownloader = None
             self.steamcmd_runner = RunnerPanel = None
             self.steamcmd_wrapper = SteamcmdInterface.instance(
-                GameConfiguration.instance().steamcmd_install_path,
+                self.settings_controller.settings.steamcmd_install_path,
                 GameConfiguration.instance().steamcmd_validate_downloads_toggle,
             )
 
@@ -1960,12 +1960,12 @@ class MainContent(QObject):
             logger.info(
                 f"steamcmd install folder chosen. Updating storage with new path: {steamcmd_folder}"
             )
-            GameConfiguration.instance().steamcmd_install_path = steamcmd_folder
-            GameConfiguration.instance()._update_persistent_storage(
-                {"steamcmd_install_path": steamcmd_folder}
-            )
+
+            self.settings_controller.settings.steamcmd_install_path = steamcmd_folder
+            self.settings_controller.settings.save()
+
             self.steamcmd_wrapper = SteamcmdInterface.instance(
-                GameConfiguration.instance().steamcmd_install_path,
+                self.settings_controller.settings.steamcmd_install_path,
                 GameConfiguration.instance().steamcmd_validate_downloads_toggle,
             )
             self.active_mods_panel.active_mods_list.steamcmd_appworkshop_acf_path = (
