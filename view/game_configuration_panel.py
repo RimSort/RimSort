@@ -704,33 +704,6 @@ class GameConfiguration(QObject):
         logger.info("USER ACTION: opening settings panel")
         self.settings_panel.show()
 
-    def _update_persistent_storage(self, settings: Dict[str, Any]) -> None:
-        """
-        Given a key and value, write this key and value to the
-        persistent settings.json.
-
-        :param key: key to use
-        :param value: value to replace
-        """
-        logger.info("Updating persistent storage")
-        settings_path = str(
-            Path(os.path.join(self.storage_path, "settings.json")).resolve()
-        )
-        logger.info(f"Generated settings.json path: {settings_path}")
-        if os.path.exists(settings_path):
-            logger.info("settings.json exists, opening to write")
-            with open(settings_path, encoding="utf-8") as infile:
-                settings_data = json.load(infile)
-                settings_data.update(settings)
-                json_object = json.dumps(settings_data, indent=4)
-                with open(settings_path, "w", encoding="utf-8") as outfile:
-                    outfile.write(json_object)
-                    logger.info("JSON data written")
-        else:
-            logger.error(
-                "settings.json does not exist despite already running _initialize_storage...?!"
-            )
-
     # PATHS
 
     def autodetect_paths_by_platform(self) -> None:
