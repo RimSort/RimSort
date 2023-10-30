@@ -550,66 +550,53 @@ class GameConfiguration(QObject):
 
             self.settings_controller.settings.save()
 
-        # RimSort depends on this settings.json file existing.
-        # This should automatically be prepopulated with defaults above, or from user configuration.
-        logger.info(f"Settings file exists!")
-        with open(settings_path, encoding="utf-8") as infile:
-            settings_data = json.load(infile)
-            logger.debug("Loaded JSON from file!")
+        # Game configuration paths
 
-            # Game configuration paths
+        self.game_folder_line.setText(self.settings_controller.settings.game_folder)
 
-            self.game_folder_line.setText(self.settings_controller.settings.game_folder)
+        self.config_folder_line.setText(self.settings_controller.settings.config_folder)
 
-            self.config_folder_line.setText(
-                self.settings_controller.settings.config_folder
+        self.workshop_folder_line.setText(
+            self.settings_controller.settings.workshop_folder
+        )
+
+        self.local_folder_line.setText(self.settings_controller.settings.local_folder)
+
+        # sorting algorithm
+        self.settings_panel.sorting_algorithm_cb.setCurrentText(
+            self.settings_controller.settings.sorting_algorithm
+        )
+
+        # metadata
+        self.settings_panel.external_steam_metadata_multibutton.main_action.setCurrentText(
+            self.settings_controller.settings.external_steam_metadata_source
+        )
+        self.settings_panel.external_community_rules_metadata_multibutton.main_action.setCurrentText(
+            self.settings_controller.settings.external_community_rules_metadata_source
+        )
+
+        # db builder
+        if self.settings_controller.settings.db_builder_include == "no_local":
+            self.settings_panel.build_steam_database_include_cb.setCurrentText("No")
+        if self.settings_controller.settings.db_builder_include == "all_mods":
+            self.settings_panel.build_steam_database_include_cb.setCurrentText("Yes")
+
+        # steamcmd
+        steamcmd_install_path = Path(
+            self.settings_controller.settings.steamcmd_install_path
+        )
+        if not steamcmd_install_path.exists():
+            logger.warning(
+                f"Configured steamcmd prefix does not exist. Creating new steamcmd prefix at: "
+                f"{steamcmd_install_path}"
+            )  # This shouldn't be happening, but we check it anyways.
+            steamcmd_install_path.mkdir(parents=True)
+
+        # todds
+        if self.settings_controller.settings.todds_preset == "optimized":
+            self.settings_panel.todds_presets_cb.setCurrentText(
+                "Optimized - Recommended for RimWorld"
             )
-
-            self.workshop_folder_line.setText(
-                self.settings_controller.settings.workshop_folder
-            )
-
-            self.local_folder_line.setText(
-                self.settings_controller.settings.local_folder
-            )
-
-            # sorting algorithm
-            self.settings_panel.sorting_algorithm_cb.setCurrentText(
-                self.settings_controller.settings.sorting_algorithm
-            )
-
-            # metadata
-            self.settings_panel.external_steam_metadata_multibutton.main_action.setCurrentText(
-                self.settings_controller.settings.external_steam_metadata_source
-            )
-            self.settings_panel.external_community_rules_metadata_multibutton.main_action.setCurrentText(
-                self.settings_controller.settings.external_community_rules_metadata_source
-            )
-
-            # db builder
-            if self.settings_controller.settings.db_builder_include == "no_local":
-                self.settings_panel.build_steam_database_include_cb.setCurrentText("No")
-            if self.settings_controller.settings.db_builder_include == "all_mods":
-                self.settings_panel.build_steam_database_include_cb.setCurrentText(
-                    "Yes"
-                )
-
-            # steamcmd
-            steamcmd_install_path = Path(
-                self.settings_controller.settings.steamcmd_install_path
-            )
-            if not steamcmd_install_path.exists():
-                logger.warning(
-                    f"Configured steamcmd prefix does not exist. Creating new steamcmd prefix at: "
-                    f"{steamcmd_install_path}"
-                )  # This shouldn't be happening, but we check it anyways.
-                steamcmd_install_path.mkdir(parents=True)
-
-            # todds
-            if self.settings_controller.settings.todds_preset == "optimized":
-                self.settings_panel.todds_presets_cb.setCurrentText(
-                    "Optimized - Recommended for RimWorld"
-                )
 
         logger.info("Finished storage initialization")
 
