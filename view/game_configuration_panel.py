@@ -99,9 +99,6 @@ class GameConfiguration(QObject):
             # STEAM APIKEY
             self.steam_apikey = ""
 
-            # TRY TO DOWNLOAD MISSING MODS TOGGLE
-            self.try_download_missing_mods_toggle = False
-
             # DB BUILDER MODE
             self.db_builder_include = "all_mods"
 
@@ -417,7 +414,7 @@ class GameConfiguration(QObject):
                 self.settings_controller.settings.steam_mods_update_check
             )
             self.settings_panel.try_download_missing_mods_checkbox.setChecked(
-                self.try_download_missing_mods_toggle
+                self.settings_controller.settings.try_download_missing_mods
             )
 
             # DQ GetAppDependencies
@@ -609,12 +606,6 @@ class GameConfiguration(QObject):
                 self.settings_controller.settings.local_folder
             )
 
-            # general
-            if settings_data.get("try_download_missing_mods"):
-                self.try_download_missing_mods_toggle = settings_data[
-                    "try_download_missing_mods"
-                ]
-
             # sorting algorithm
             self.settings_panel.sorting_algorithm_cb.setCurrentText(
                 self.settings_controller.settings.sorting_algorithm
@@ -718,12 +709,6 @@ class GameConfiguration(QObject):
             self.settings_panel.steam_mods_update_checkbox.isChecked()
         )
 
-        # missing mods download toggle
-        if self.settings_panel.try_download_missing_mods_checkbox.isChecked():
-            self.try_download_missing_mods_toggle = True
-        else:
-            self.try_download_missing_mods_toggle = False
-
         # db builder mode
         if "No" in self.settings_panel.build_steam_database_include_cb.currentText():
             self.db_builder_include = "no_local"
@@ -767,6 +752,10 @@ class GameConfiguration(QObject):
             self.todds_overwrite_toggle = True
         else:
             self.todds_overwrite_toggle = False
+
+        self.settings_controller.settings.try_download_missing_mods = (
+            self.settings_panel.try_download_missing_mods_checkbox.isChecked()
+        )
 
         self.settings_controller.settings.sorting_algorithm = (
             self.settings_panel.sorting_algorithm_cb.currentText()

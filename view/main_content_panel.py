@@ -415,7 +415,7 @@ class MainContent(QObject):
     def __missing_mods_prompt(self) -> None:
         logger.debug(f"Could not find data for {len(self.missing_mods)} active mods")
         if (  # User configuration
-            GameConfiguration.instance().try_download_missing_mods_toggle
+            self.settings_controller.settings.try_download_missing_mods
             and self.metadata_manager.external_steam_metadata
         ):  # Do we even have metadata to lookup...?
             self.missing_mods_prompt = MissingModsPrompt(
