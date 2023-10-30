@@ -99,9 +99,6 @@ class GameConfiguration(QObject):
             # STEAM APIKEY
             self.steam_apikey = ""
 
-            # DQ GETAPPDEPENDENCIES TOGGLE
-            self.build_steam_database_dlc_data_toggle = False
-
             # DB BUILDER UPDATE TOGGLE
             self.build_steam_database_update_toggle = False
 
@@ -416,7 +413,7 @@ class GameConfiguration(QObject):
 
             # DQ GetAppDependencies
             self.settings_panel.build_steam_database_dlc_data_checkbox.setChecked(
-                self.build_steam_database_dlc_data_toggle
+                self.settings_controller.settings.build_steam_database_dlc_data
             )
 
             # DB Builder update toggle
@@ -627,10 +624,6 @@ class GameConfiguration(QObject):
                 self.settings_panel.build_steam_database_include_cb.setCurrentText(
                     "Yes"
                 )
-            if settings_data.get("build_steam_database_dlc_data"):
-                self.build_steam_database_dlc_data_toggle = settings_data[
-                    "build_steam_database_dlc_data"
-                ]
             if settings_data.get("build_steam_database_update_toggle"):
                 self.build_steam_database_update_toggle = settings_data[
                     "build_steam_database_update_toggle"
@@ -709,11 +702,12 @@ class GameConfiguration(QObject):
             self.settings_controller.settings.db_builder_include = "no_local"
         elif "Yes" in self.settings_panel.build_steam_database_include_cb.currentText():
             self.settings_controller.settings.db_builder_include = "all_mods"
+
         # dq getappdependencies toggle
-        if self.settings_panel.build_steam_database_dlc_data_checkbox.isChecked():
-            self.build_steam_database_dlc_data_toggle = True
-        else:
-            self.build_steam_database_dlc_data_toggle = False
+        self.settings_controller.settings.build_steam_database_dlc_data = (
+            self.settings_panel.build_steam_database_dlc_data_checkbox.isChecked()
+        )
+
         # db builder update toggle
         if self.settings_panel.build_steam_database_update_checkbox.isChecked():
             self.build_steam_database_update_toggle = True
