@@ -24,6 +24,7 @@ from PySide6.QtCore import (
     Signal,
 )
 
+from controller.settings_controller import SettingsController
 from model.dialogue import (
     show_dialogue_conditional,
     show_dialogue_file,
@@ -63,10 +64,12 @@ class MetadataManager(QObject):
             cls._instance = super(MetadataManager, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self) -> None:
+    def __init__(self, settings_controller: SettingsController) -> None:
         if not hasattr(self, "initialized"):
             super(MetadataManager, self).__init__()
             logger.info("Initializing MetadataManager")
+
+            self.settings_controller = settings_controller
 
             # Initialize our threadpool for multithreaded parsing
             self.parser_threadpool = QThreadPool.globalInstance()
@@ -98,7 +101,7 @@ class MetadataManager(QObject):
                     os.path.join(
                         os.path.split(
                             os.path.split(
-                                GameConfiguration.instance().workshop_folder_line.text()
+                                self.settings_controller.settings.workshop_folder
                             )[0]
                         )[0],
                         "appworkshop_294100.acf",
@@ -210,7 +213,7 @@ class MetadataManager(QObject):
         # Load external metadata
         # External Steam metadata
         if (
-            GameConfiguration.instance().settings_panel.external_steam_metadata_multibutton.main_action.currentText()
+            self.settings_controller.settings.external_steam_metadata_source
             == "Configured file path"
         ):
             (
@@ -218,11 +221,11 @@ class MetadataManager(QObject):
                 self.external_steam_metadata_path,
             ) = get_configured_steam_db(
                 self,
-                life=GameConfiguration.instance().database_expiry,
-                path=GameConfiguration.instance().steam_db_file_path,
+                life=self.settings_controller.settings.database_expiry,
+                path=self.settings_controller.settings.external_steam_metadata_file_path,
             )
         elif (
-            GameConfiguration.instance().settings_panel.external_steam_metadata_multibutton.main_action.currentText()
+            self.settings_controller.settings.external_steam_metadata_source
             == "Configured git repository"
         ):
             (
@@ -230,14 +233,14 @@ class MetadataManager(QObject):
                 self.external_steam_metadata_path,
             ) = get_configured_steam_db(
                 self,
-                life=GameConfiguration.instance().database_expiry,
+                life=self.settings_controller.settings.database_expiry,
                 path=str(
                     Path(
                         os.path.join(
                             GameConfiguration.instance().dbs_path,
-                            os.path.split(GameConfiguration.instance().steam_db_repo)[
-                                1
-                            ],
+                            os.path.split(
+                                self.settings_controller.settings.external_steam_metadata_repo
+                            )[1],
                             "steamDB.json",
                         )
                     ).resolve()
@@ -250,7 +253,7 @@ class MetadataManager(QObject):
 
         # External Community Rules metadata
         if (
-            GameConfiguration.instance().settings_panel.external_community_rules_metadata_multibutton.main_action.currentText()
+            self.settings_controller.settings.external_community_rules_metadata_source
             == "Configured file path"
         ):
             (
@@ -258,10 +261,10 @@ class MetadataManager(QObject):
                 self.external_community_rules_path,
             ) = get_configured_community_rules_db(
                 self,
-                path=GameConfiguration.instance().community_rules_file_path,
+                path=self.settings_controller.settings.external_community_rules_file_path,
             )
         elif (
-            GameConfiguration.instance().settings_panel.external_community_rules_metadata_multibutton.main_action.currentText()
+            self.settings_controller.settings.external_community_rules_metadata_source
             == "Configured git repository"
         ):
             (
@@ -274,7 +277,7 @@ class MetadataManager(QObject):
                         os.path.join(
                             GameConfiguration.instance().dbs_path,
                             os.path.split(
-                                GameConfiguration.instance().community_rules_repo
+                                self.settings_controller.settings.external_community_rules_repo
                             )[1],
                             "communityRules.json",
                         )
@@ -407,16 +410,17 @@ class MetadataManager(QObject):
             :return: a Dict of expansions by package id
             """
             expansion_data = {}
-            if GameConfiguration.instance().game_folder_line.text() != "":
+            if self.settings_controller.settings.game_folder != "":
                 logger.info(
-                    f"Getting installed expansions with game folder path: {GameConfiguration.instance().game_folder_line.text()}"
+                    f"Getting installed expansions with game folder path: "
+                    f"{self.settings_controller.settings.game_folder}"
                 )
 
                 # Get mod data
                 data_path = str(
                     Path(
                         os.path.join(
-                            GameConfiguration.instance().game_folder_line.text(), "Data"
+                            self.settings_controller.settings.game_folder, "Data"
                         )
                     ).resolve()
                 )
@@ -493,18 +497,18 @@ class MetadataManager(QObject):
             :return: a Dict of workshop mods by package id, and dict of community rules
             """
             mod_data = {}
-            if GameConfiguration.instance().local_folder_line.text() != "":
-                if GameConfiguration.instance().game_folder_line.text():
+            if self.settings_controller.settings.local_folder != "":
+                if self.settings_controller.settings.game_folder:
                     logger.info(
-                        f"Supplementing call with game folder path: {GameConfiguration.instance().game_folder_line.text()}"
+                        f"Supplementing call with game folder path: {self.settings_controller.settings.game_folder}"
                     )
 
                 # Get mod data
                 logger.info(
-                    f"Getting local mods from path: {GameConfiguration.instance().local_folder_line.text()}"
+                    f"Getting local mods from path: {self.settings_controller.settings.local_folder}"
                 )
                 self.local_subdirectories = directories(
-                    GameConfiguration.instance().local_folder_line.text()
+                    self.settings_controller.settings.local_folder
                 )
                 mod_data = self.process_mods(
                     directories_to_process=self.local_subdirectories, intent="local"
@@ -528,12 +532,12 @@ class MetadataManager(QObject):
             :return: a Dict of workshop mods by package id, and dict of community rules
             """
             mod_data = {}
-            if GameConfiguration.instance().workshop_folder_line.text() != "":
+            if self.settings_controller.settings.workshop_folder != "":
                 logger.info(
-                    f"Getting workshop mods from path: {GameConfiguration.instance().workshop_folder_line.text()}"
+                    f"Getting workshop mods from path: {self.settings_controller.settings.workshop_folder}"
                 )
                 self.workshop_subdirectories = directories(
-                    GameConfiguration.instance().workshop_folder_line.text()
+                    self.settings_controller.settings.workshop_folder
                 )
                 mod_data = self.process_mods(
                     directories_to_process=self.workshop_subdirectories,
@@ -559,13 +563,13 @@ class MetadataManager(QObject):
 
         # Get & set Rimworld version string
         self.game_version = get_game_version(
-            self, game_path=GameConfiguration.instance().game_folder_line.text()
+            self, game_path=self.settings_controller.settings.game_folder
         )
 
         # Get and cache installed base game / DLC data
         if (
-            GameConfiguration.instance().game_folder_line.text()
-            and GameConfiguration.instance().game_folder_line.text() != ""
+            self.settings_controller.settings.game_folder
+            and self.settings_controller.settings.game_folder != ""
         ):
             expansions = get_installed_expansions(self)
         else:
@@ -573,8 +577,8 @@ class MetadataManager(QObject):
 
         # Get and cache installed local/SteamCMD Workshop mods
         if (
-            GameConfiguration.instance().local_folder_line.text()
-            and GameConfiguration.instance().local_folder_line.text() != ""
+            self.settings_controller.settings.local_folder
+            and self.settings_controller.settings.local_folder != ""
         ):
             local_mods = get_local_mods(self)
 
@@ -602,8 +606,8 @@ class MetadataManager(QObject):
             local_mods = {}
         # Get and cache installed Steam client Workshop mods
         if (
-            GameConfiguration.instance().workshop_folder_line.text()
-            and GameConfiguration.instance().workshop_folder_line.text() != ""
+            self.settings_controller.settings.workshop_folder
+            and self.settings_controller.settings.workshop_folder != ""
         ):
             workshop_mods = get_workshop_mods(self)
             # Steam client
@@ -1847,7 +1851,7 @@ class SteamDatabaseBuilder(QThread):
         QThread.__init__(self)
         self.apikey = apikey
         self.appid = appid
-        GameConfiguration.instance().database_expiry = database_expiry
+        self.database_expiry = database_expiry
         self.get_appid_deps = get_appid_deps
         self.mode = mode
         self.mods = mods
@@ -1872,7 +1876,7 @@ class SteamDatabaseBuilder(QThread):
                 dynamic_query = DynamicQuery(
                     apikey=self.apikey,
                     appid=self.appid,
-                    life=GameConfiguration.instance().database_expiry,
+                    life=self.database_expiry,
                     get_appid_deps=self.get_appid_deps,
                 )
                 # Connect messaging signal
@@ -1922,7 +1926,7 @@ class SteamDatabaseBuilder(QThread):
                         dynamic_query = DynamicQuery(
                             apikey=self.apikey,
                             appid=self.appid,
-                            life=GameConfiguration.instance().database_expiry,
+                            life=self.database_expiry,
                             get_appid_deps=self.get_appid_deps,
                         )
                         dynamic_query.dq_messaging_signal.connect(

@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from controller.settings_controller import SettingsController
 from model.mod_list import ModListWidget
 from model.mod_list_item import ModListItemInner
 from util.constants import SEARCH_DATA_SOURCE_FILTER_INDEXES
@@ -25,13 +26,17 @@ class InactiveModList:
     inactive mods list panel on the GUI.
     """
 
-    def __init__(self, mod_type_filter_enable: bool) -> None:
+    def __init__(
+        self, mod_type_filter_enable: bool, settings_controller: SettingsController
+    ) -> None:
         """
         Initialize the class.
         Create a ListWidget using the dict of mods. This will
         create a row for every key-value pair in the dict.
         """
         logger.debug("Initializing InactiveModList")
+
+        self.settings_controller = settings_controller
 
         self.mod_type_filter_enable = mod_type_filter_enable
         self.searching = None
@@ -46,7 +51,8 @@ class InactiveModList:
 
         # Inactive mod list
         self.inactive_mods_list = ModListWidget(
-            mod_type_filter_enable=self.mod_type_filter_enable
+            mod_type_filter_enable=self.mod_type_filter_enable,
+            settings_controller=self.settings_controller,
         )
 
         # Search widgets

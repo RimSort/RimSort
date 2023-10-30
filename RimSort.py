@@ -97,7 +97,9 @@ class MainWindow(QMainWindow):
             settings_controller=self.settings_controller,
             RIMSORT_VERSION=self.version_string,
         )
-        self.main_content_panel = MainContent()
+        self.main_content_panel = MainContent(
+            settings_controller=self.settings_controller
+        )
         self.bottom_panel = Status()
 
         # Connect the game configuration actions signals to Status panel to display fading action text
@@ -135,7 +137,7 @@ class MainWindow(QMainWindow):
         super().showEvent(event)
         if not self.init:
             # HIDE/SHOW FOLDER ROWS BASED ON PREFERENCE
-            if self.game_configuration.show_folder_rows:
+            if self.settings_controller.settings.show_folder_rows:
                 self.game_configuration.hide_show_folder_rows_button.setText(
                     "Hide paths"
                 )
@@ -145,30 +147,30 @@ class MainWindow(QMainWindow):
                 )
             # set visibility
             self.game_configuration.game_folder_frame.setVisible(
-                self.game_configuration.show_folder_rows
+                self.settings_controller.settings.show_folder_rows
             )
             self.game_configuration.config_folder_frame.setVisible(
-                self.game_configuration.show_folder_rows
+                self.settings_controller.settings.show_folder_rows
             )
             self.game_configuration.local_folder_frame.setVisible(
-                self.game_configuration.show_folder_rows
+                self.settings_controller.settings.show_folder_rows
             )
             self.game_configuration.workshop_folder_frame.setVisible(
-                self.game_configuration.show_folder_rows
+                self.settings_controller.settings.show_folder_rows
             )
 
     def __initialize_content(self) -> None:
         self.init = True
 
         # IF CHECK FOR UPDATE ON STARTUP...
-        if self.settings_controller.settings.check_for_updates_on_startup:
+        if self.settings_controller.settings.check_for_update_startup:
             self.main_content_panel.actions_slot("check_for_update")
 
         # REFRESH CONFIGURED METADATA
         self.main_content_panel._do_refresh(is_initial=True)
 
         # CHECK USER PREFERENCE FOR WATCHDOG
-        if self.game_configuration.watchdog_toggle:
+        if self.settings_controller.settings.watchdog_toggle:
             # Setup watchdog
             self.__initialize_watchdog()
 

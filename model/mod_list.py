@@ -9,7 +9,7 @@ import traceback
 from typing import Any, List, Optional
 
 from pyperclip import copy as copy_to_clipboard
-from PySide6.QtCore import Qt, QEvent, QModelIndex, QObject, Signal
+from PySide6.QtCore import Qt, QEvent, QModelIndex, QObject, Signal, Slot
 from PySide6.QtGui import QAction, QCursor, QDropEvent, QFocusEvent, QKeySequence
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -18,8 +18,10 @@ from PySide6.QtWidgets import (
     QMenu,
 )
 
+from controller.settings_controller import SettingsController
 from model.mod_list_item import ModListItemInner
 from model.dialogue import show_dialogue_conditional, show_dialogue_input, show_warning
+from util.event_bus import EventBus
 from util.generic import (
     delete_files_except_extension,
     handle_remove_read_only,
@@ -51,7 +53,9 @@ class ModListWidget(QListWidget):
     steamcmd_downloader_signal = Signal(list)
     steamworks_subscription_signal = Signal(list)
 
-    def __init__(self, mod_type_filter_enable: bool) -> None:
+    def __init__(
+        self, mod_type_filter_enable: bool, settings_controller: SettingsController
+    ) -> None:
         """
         Initialize the ListWidget with a dict of mods.
         Keys are the package ids and values are a dict of
@@ -59,6 +63,8 @@ class ModListWidget(QListWidget):
         https://rimworldwiki.com/wiki/About.xml
         """
         logger.debug("Initializing ModListWidget")
+
+        self.settings_controller = settings_controller
 
         super(ModListWidget, self).__init__()
 
@@ -84,6 +90,7 @@ class ModListWidget(QListWidget):
 
         # Store icon paths
         self.mod_type_filter_enable = mod_type_filter_enable
+        EventBus().settings_have_changed.connect(self._on_settings_have_changed)
         self.csharp_icon_path = str(
             Path(
                 os.path.join(os.path.dirname(__file__), "../data/csharp.png")
@@ -505,17 +512,17 @@ class ModListWidget(QListWidget):
             ):
                 workshop_actions_menu = QMenu(title="Workshop mods options")
                 if (
-                    GameConfiguration.instance().local_folder_line.text()
+                    self.settings_controller.settings.local_folder
                     and convert_local_steamcmd_action
                 ):
                     workshop_actions_menu.addAction(convert_local_steamcmd_action)
                 if (
-                    GameConfiguration.instance().local_folder_line.text()
+                    self.settings_controller.settings.local_folder
                     and convert_steamcmd_local_action
                 ):
                     workshop_actions_menu.addAction(convert_steamcmd_local_action)
                 if (
-                    GameConfiguration.instance().local_folder_line.text()
+                    self.settings_controller.settings.local_folder
                     and convert_workshop_local_action
                 ):
                     workshop_actions_menu.addAction(convert_workshop_local_action)
@@ -564,7 +571,7 @@ class ModListWidget(QListWidget):
                         original_mod_path = str(
                             Path(
                                 os.path.join(
-                                    GameConfiguration.instance().local_folder_line.text(),
+                                    self.settings_controller.settings.local_folder,
                                     folder_name,
                                 )
                             ).resolve()
@@ -572,7 +579,7 @@ class ModListWidget(QListWidget):
                         renamed_mod_path = str(
                             Path(
                                 os.path.join(
-                                    GameConfiguration.instance().local_folder_line.text(),
+                                    self.settings_controller.settings.local_folder,
                                     publishedfileid,
                                 )
                             ).resolve()
@@ -612,7 +619,7 @@ class ModListWidget(QListWidget):
                         original_mod_path = str(
                             Path(
                                 os.path.join(
-                                    GameConfiguration.instance().local_folder_line.text(),
+                                    self.settings_controller.settings.local_folder,
                                     publishedfileid,
                                 )
                             ).resolve()
@@ -620,7 +627,7 @@ class ModListWidget(QListWidget):
                         renamed_mod_path = str(
                             Path(
                                 os.path.join(
-                                    GameConfiguration.instance().local_folder_line.text(),
+                                    self.settings_controller.settings.local_folder,
                                     mod_name,
                                 )
                             ).resolve()
@@ -683,7 +690,7 @@ class ModListWidget(QListWidget):
                         renamed_mod_path = str(
                             Path(
                                 os.path.join(
-                                    GameConfiguration.instance().local_folder_line.text(),
+                                    self.settings_controller.settings.local_folder,
                                     mod_name
                                     if mod_name
                                     else publishedfileid_from_folder_name,
@@ -1117,3 +1124,9 @@ class ModListWidget(QListWidget):
         else:
             self.ignore_warning_list.remove(packageid)
         self.recalculate_warnings_signal.emit()
+
+    @Slot()
+    def _on_settings_have_changed(self) -> None:
+        self.mod_type_filter_enable = (
+            self.settings_controller.settings.mod_type_filter_toggle
+        )
