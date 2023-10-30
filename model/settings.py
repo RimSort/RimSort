@@ -1,7 +1,7 @@
 import json
 from json import JSONDecodeError
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 from PySide6.QtCore import QObject
 from logger_tt import logger
@@ -56,6 +56,7 @@ class Settings(QObject):
         self._github_username: str = ""
         self._github_token: str = ""
         self._steam_apikey: str = ""
+        self._run_args: List[str] = []
 
     @property
     def check_for_update_startup(self) -> bool:
@@ -388,6 +389,15 @@ class Settings(QObject):
         self._steam_apikey = value
         EventBus().settings_have_changed.emit()
 
+    @property
+    def run_args(self) -> List[str]:
+        return self._run_args
+
+    @run_args.setter
+    def run_args(self, value: List[str]) -> None:
+        self._run_args = value
+        EventBus().settings_have_changed.emit()
+
     def load(self) -> None:
         try:
             with open(str(self._settings_file), "r") as file:
@@ -535,6 +545,10 @@ class Settings(QObject):
             self.steam_apikey = data["steam_apikey"]
             del data["steam_apikey"]
 
+        if "run_args" in data:
+            self.run_args = data["run_args"]
+            del data["run_args"]
+
     def _to_dict(self) -> Dict[str, Any]:
         data = {
             "check_for_update_startup": self.check_for_update_startup,
@@ -568,5 +582,6 @@ class Settings(QObject):
             "github_username": self.github_username,
             "github_token": self.github_token,
             "steam_apikey": self.steam_apikey,
+            "run_args": self.run_args,
         }
         return data

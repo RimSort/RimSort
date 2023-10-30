@@ -665,7 +665,7 @@ class MainContent(QObject):
                     "launch_game_process",
                     [
                         self.settings_controller.settings.game_folder,
-                        GameConfiguration.instance().run_arguments,
+                        self.settings_controller.settings.run_args,
                     ],
                 ]
             )
@@ -1761,13 +1761,11 @@ class MainContent(QObject):
             title="Edit run arguments",
             text="Enter a comma separated list of arguments to pass to the Rimworld executable\n\n"
             + "Example: \n-popupwindow,-logfile,/path/to/file.log",
-            value=",".join(GameConfiguration.instance().run_arguments),
+            value=",".join(self.settings_controller.settings.run_args),
         )
         if ok:
-            GameConfiguration.instance().run_arguments = args.split(",")
-            GameConfiguration.instance()._update_persistent_storage(
-                {"runArgs": GameConfiguration.instance().run_arguments}
-            )
+            self.settings_controller.settings.run_args = args.split(",")
+            self.settings_controller.settings.save()
 
     # TODDS ACTIONS
 

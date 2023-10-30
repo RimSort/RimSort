@@ -89,9 +89,6 @@ class GameConfiguration(QObject):
                 ).resolve()
             )
 
-            # RUN ARGUMENTS
-            self.run_arguments = []
-
             # BASE LAYOUT
             self._panel = QVBoxLayout()
             # Represents spacing between edge and layout
@@ -588,10 +585,6 @@ class GameConfiguration(QObject):
             self.settings_panel.external_community_rules_metadata_multibutton.main_action.setCurrentText(
                 self.settings_controller.settings.external_community_rules_metadata_source
             )
-
-            # game args
-            if settings_data.get("runArgs"):
-                self.run_arguments = settings_data["runArgs"]
 
             # db builder
             if self.settings_controller.settings.db_builder_include == "no_local":
