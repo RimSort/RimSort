@@ -130,7 +130,7 @@ class MainContent(QObject):
             self.steamcmd_runner = RunnerPanel = None
             self.steamcmd_wrapper = SteamcmdInterface.instance(
                 self.settings_controller.settings.steamcmd_install_path,
-                GameConfiguration.instance().steamcmd_validate_downloads_toggle,
+                self.settings_controller.settings.steamcmd_validate_downloads,
             )
 
             # Initialize MetadataManager
@@ -582,7 +582,7 @@ class MainContent(QObject):
             )
         if action == "update_steamcmd_validate_toggle":
             self.steamcmd_wrapper.validate_downloads = (
-                GameConfiguration.instance().steamcmd_validate_downloads_toggle
+                self.settings_controller.settings.steamcmd_validate_downloads
             )
         # actions panel actions
         if action == "refresh":
@@ -1966,7 +1966,7 @@ class MainContent(QObject):
 
             self.steamcmd_wrapper = SteamcmdInterface.instance(
                 self.settings_controller.settings.steamcmd_install_path,
-                GameConfiguration.instance().steamcmd_validate_downloads_toggle,
+                self.settings_controller.settings.steamcmd_validate_downloads,
             )
             self.active_mods_panel.active_mods_list.steamcmd_appworkshop_acf_path = (
                 self.steamcmd_wrapper.steamcmd_appworkshop_acf_path

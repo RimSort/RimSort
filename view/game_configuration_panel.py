@@ -99,9 +99,6 @@ class GameConfiguration(QObject):
             # STEAM APIKEY
             self.steam_apikey = ""
 
-            # STEAMCMD VALIDATE DOWNLOADS TOGGLE
-            self.steamcmd_validate_downloads_toggle = False
-
             # TODDS PRESET
             self.todds_preset = "optimized"
 
@@ -417,7 +414,7 @@ class GameConfiguration(QObject):
 
             # SteamCMD
             self.settings_panel.steamcmd_validate_downloads_checkbox.setChecked(
-                self.steamcmd_validate_downloads_toggle
+                self.settings_controller.settings.steamcmd_validate_downloads
             )
 
             # todds
@@ -566,7 +563,7 @@ class GameConfiguration(QObject):
                     )
                 ).resolve()
             )
-            
+
             self.settings_controller.settings.steamcmd_install_path = self.storage_path
 
             logger.info(f"Writing default settings to: {settings_path}")
@@ -630,11 +627,6 @@ class GameConfiguration(QObject):
                 self.github_token = settings_data["github_token"]
 
             # steamcmd
-            if settings_data.get("steamcmd_validate_downloads"):
-                self.steamcmd_validate_downloads_toggle = settings_data[
-                    "steamcmd_validate_downloads"
-                ]
-
             steamcmd_install_path = Path(
                 self.settings_controller.settings.steamcmd_install_path
             )
@@ -709,10 +701,9 @@ class GameConfiguration(QObject):
         )
 
         # steamcmd validate downloads toggle
-        if self.settings_panel.steamcmd_validate_downloads_checkbox.isChecked():
-            self.steamcmd_validate_downloads_toggle = True
-        else:
-            self.steamcmd_validate_downloads_toggle = False
+        self.settings_controller.settings.steamcmd_validate_downloads = (
+            self.settings_panel.steamcmd_validate_downloads_checkbox.isChecked()
+        )
 
         # todds preset
         if (
