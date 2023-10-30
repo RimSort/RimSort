@@ -503,7 +503,7 @@ class MainContent(QObject):
             self.settings_controller.settings.external_steam_metadata_file_path
         )
         self.metadata_manager.external_steam_metadata_source = (
-            GameConfiguration.instance().settings_panel.external_steam_metadata_multibutton.main_action.currentText()
+            self.settings_controller.settings.external_steam_metadata_source
         )
         self.metadata_manager.game_path = (
             GameConfiguration.instance().game_folder_line.text()

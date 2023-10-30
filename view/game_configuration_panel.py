@@ -627,10 +627,6 @@ class GameConfiguration(QObject):
             )
 
             # metadata
-            if settings_data.get("external_steam_metadata_source"):
-                self.settings_panel.external_steam_metadata_multibutton.main_action.setCurrentText(
-                    settings_data["external_steam_metadata_source"]
-                )
             if settings_data.get("external_community_rules_file_path"):
                 self.community_rules_file_path = settings_data[
                     "external_community_rules_file_path"
@@ -786,6 +782,9 @@ class GameConfiguration(QObject):
 
         self.settings_controller.settings.sorting_algorithm = (
             self.settings_panel.sorting_algorithm_cb.currentText()
+        )
+        self.settings_controller.settings.external_steam_metadata_source = (
+            self.settings_panel.external_steam_metadata_multibutton.main_action.currentText()
         )
 
         self.settings_controller.settings.save()

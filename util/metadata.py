@@ -213,7 +213,7 @@ class MetadataManager(QObject):
         # Load external metadata
         # External Steam metadata
         if (
-            GameConfiguration.instance().settings_panel.external_steam_metadata_multibutton.main_action.currentText()
+            self.settings_controller.settings.external_steam_metadata_source
             == "Configured file path"
         ):
             (
@@ -225,7 +225,7 @@ class MetadataManager(QObject):
                 path=self.settings_controller.settings.external_steam_metadata_file_path,
             )
         elif (
-            GameConfiguration.instance().settings_panel.external_steam_metadata_multibutton.main_action.currentText()
+            self.settings_controller.settings.external_steam_metadata_source
             == "Configured git repository"
         ):
             (
