@@ -55,6 +55,7 @@ class Settings(QObject):
         self._workshop_folder: Optional[Path] = None
         self._github_username: str = ""
         self._github_token: str = ""
+        self._steam_apikey: str = ""
 
     @property
     def check_for_update_startup(self) -> bool:
@@ -378,6 +379,15 @@ class Settings(QObject):
         self._github_token = value
         EventBus().settings_have_changed.emit()
 
+    @property
+    def steam_apikey(self) -> str:
+        return self._steam_apikey
+
+    @steam_apikey.setter
+    def steam_apikey(self, value: str) -> None:
+        self._steam_apikey = value
+        EventBus().settings_have_changed.emit()
+
     def load(self) -> None:
         try:
             with open(str(self._settings_file), "r") as file:
@@ -521,6 +531,10 @@ class Settings(QObject):
             self.github_token = data["github_token"]
             del data["github_token"]
 
+        if "steam_apikey" in data:
+            self.steam_apikey = data["steam_apikey"]
+            del data["steam_apikey"]
+
     def _to_dict(self) -> Dict[str, Any]:
         data = {
             "check_for_update_startup": self.check_for_update_startup,
@@ -553,5 +567,6 @@ class Settings(QObject):
             "workshop_folder": self.workshop_folder,
             "github_username": self.github_username,
             "github_token": self.github_token,
+            "steam_apikey": self.steam_apikey,
         }
         return data

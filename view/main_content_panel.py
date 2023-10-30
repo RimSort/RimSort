@@ -2649,7 +2649,7 @@ class MainContent(QObject):
             # Does not use metadata from locally available mods. This means no packageids!
             if self.settings_controller.settings.db_builder_include == "no_local":
                 self.db_builder = SteamDatabaseBuilder(
-                    apikey=GameConfiguration.instance().steam_apikey,
+                    apikey=self.settings_controller.settings.steam_apikey,
                     appid=294100,
                     database_expiry=self.settings_controller.settings.database_expiry,
                     mode=self.settings_controller.settings.db_builder_include,
@@ -2662,7 +2662,7 @@ class MainContent(QObject):
             # Produces DB which contains metadata from locally available mods. Includes packageids!
             elif self.settings_controller.settings.db_builder_include == "all_mods":
                 self.db_builder = SteamDatabaseBuilder(
-                    apikey=GameConfiguration.instance().steam_apikey,
+                    apikey=self.settings_controller.settings.steam_apikey,
                     appid=294100,
                     database_expiry=self.settings_controller.settings.database_expiry,
                     mode=self.settings_controller.settings.db_builder_include,
@@ -2744,7 +2744,7 @@ class MainContent(QObject):
         # DB Builder is used to run DQ and grab entirety of
         # any available Steam Workshop PublishedFileIDs
         self.db_builder = SteamDatabaseBuilder(
-            apikey=GameConfiguration.instance().steam_apikey,
+            apikey=self.settings_controller.settings.steam_apikey,
             appid=294100,
             database_expiry=self.settings_controller.settings.database_expiry,
             mode="pfids_by_appid",
@@ -2827,13 +2827,11 @@ class MainContent(QObject):
         args, ok = show_dialogue_input(
             title="Edit Steam WebAPI key",
             text="Enter your personal 32 character Steam WebAPI key here:",
-            value=GameConfiguration.instance().steam_apikey,
+            value=self.settings_controller.settings.steam_apikey,
         )
         if ok:
-            GameConfiguration.instance().steam_apikey = args
-            GameConfiguration.instance()._update_persistent_storage(
-                {"steam_apikey": GameConfiguration.instance().steam_apikey}
-            )
+            self.settings_controller.settings.steam_apikey = args
+            self.settings_controller.settings.save()
 
     def _do_generate_metadata_comparison_report(self) -> None:
         """

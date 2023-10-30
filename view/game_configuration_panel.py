@@ -92,9 +92,6 @@ class GameConfiguration(QObject):
             # RUN ARGUMENTS
             self.run_arguments = []
 
-            # STEAM APIKEY
-            self.steam_apikey = ""
-
             # BASE LAYOUT
             self._panel = QVBoxLayout()
             # Represents spacing between edge and layout
@@ -603,8 +600,6 @@ class GameConfiguration(QObject):
                 self.settings_panel.build_steam_database_include_cb.setCurrentText(
                     "Yes"
                 )
-            if settings_data.get("steam_apikey"):
-                self.steam_apikey = settings_data["steam_apikey"]
 
             # steamcmd
             steamcmd_install_path = Path(
