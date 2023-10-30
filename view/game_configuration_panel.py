@@ -99,9 +99,6 @@ class GameConfiguration(QObject):
             # STEAM APIKEY
             self.steam_apikey = ""
 
-            # TODDS OVERWRITE TOGGLE
-            self.todds_overwrite_toggle = False
-
             # BASE LAYOUT
             self._panel = QVBoxLayout()
             # Represents spacing between edge and layout
@@ -418,7 +415,7 @@ class GameConfiguration(QObject):
             )
 
             self.settings_panel.todds_overwrite_checkbox.setChecked(
-                self.todds_overwrite_toggle
+                self.settings_controller.settings.todds_overwrite
             )
 
             logger.debug("Finished GameConfiguration initialization")
@@ -636,9 +633,6 @@ class GameConfiguration(QObject):
                     "Optimized - Recommended for RimWorld"
                 )
 
-            if settings_data.get("todds_overwrite"):
-                self.todds_overwrite_toggle = settings_data["todds_overwrite"]
-
         logger.info("Finished storage initialization")
 
     def _on_settings_close(self) -> None:
@@ -709,10 +703,9 @@ class GameConfiguration(QObject):
         )
 
         # todds overwrite textures
-        if self.settings_panel.todds_overwrite_checkbox.isChecked():
-            self.todds_overwrite_toggle = True
-        else:
-            self.todds_overwrite_toggle = False
+        self.settings_controller.settings.todds_overwrite = (
+            self.settings_panel.todds_overwrite_checkbox.isChecked()
+        )
 
         self.settings_controller.settings.try_download_missing_mods = (
             self.settings_panel.try_download_missing_mods_checkbox.isChecked()

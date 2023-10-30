@@ -1781,7 +1781,7 @@ class MainContent(QObject):
         todds_interface = ToddsInterface(
             preset=self.settings_controller.settings.todds_preset,
             dry_run=self.settings_controller.settings.todds_dry_run,
-            overwrite=GameConfiguration.instance().todds_overwrite_toggle,
+            overwrite=self.settings_controller.settings.todds_overwrite,
         )
 
         # UI
