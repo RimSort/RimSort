@@ -1,8 +1,10 @@
 import json
 from json import JSONDecodeError
-from typing import Dict, Any
+from pathlib import Path
+from typing import Dict, Any, Optional, List
 
 from PySide6.QtCore import QObject
+from logger_tt import logger
 
 from util.app_info import AppInfo
 from util.event_bus import EventBus
@@ -15,7 +17,7 @@ class Settings(QObject):
         self._settings_file = AppInfo().user_data_folder / "settings.json"
 
         # Application-wide settings: default values go here
-        self._check_for_updates_on_startup: bool = False
+        self._check_for_update_startup: bool = False
         self._show_folder_rows: bool = True
         self._sorting_algorithm: str = "Alphabetical"
         self._external_steam_metadata_file_path: str = str(
@@ -47,18 +49,24 @@ class Settings(QObject):
         self._todds_active_mods_target: bool = True
         self._todds_dry_run: bool = False
         self._todds_overwrite: bool = False
-        self._game_folder: str = ""
-        self._config_folder: str = ""
-        self._local_folder: str = ""
-        self._workshop_folder: str = ""
+        self._game_folder: Optional[Path] = None
+        self._config_folder: Optional[Path] = None
+        self._local_folder: Optional[Path] = None
+        self._workshop_folder: Optional[Path] = None
+        self._github_username: str = ""
+        self._github_token: str = ""
+        self._steam_apikey: str = ""
+        self._run_args: List[str] = []
 
     @property
-    def check_for_updates_on_startup(self) -> bool:
-        return self._check_for_updates_on_startup
+    def check_for_update_startup(self) -> bool:
+        return self._check_for_update_startup
 
-    @check_for_updates_on_startup.setter
-    def check_for_updates_on_startup(self, value: bool) -> None:
-        self._check_for_updates_on_startup = value
+    @check_for_update_startup.setter
+    def check_for_update_startup(self, value: bool) -> None:
+        if value == self._check_for_update_startup:
+            return
+        self._check_for_update_startup = value
         EventBus().settings_have_changed.emit()
 
     @property
@@ -67,6 +75,8 @@ class Settings(QObject):
 
     @show_folder_rows.setter
     def show_folder_rows(self, value: bool) -> None:
+        if value == self._show_folder_rows:
+            return
         self._show_folder_rows = value
         EventBus().settings_have_changed.emit()
 
@@ -76,6 +86,8 @@ class Settings(QObject):
 
     @sorting_algorithm.setter
     def sorting_algorithm(self, value: str) -> None:
+        if value == self._sorting_algorithm:
+            return
         self._sorting_algorithm = value
         EventBus().settings_have_changed.emit()
 
@@ -85,6 +97,8 @@ class Settings(QObject):
 
     @external_steam_metadata_file_path.setter
     def external_steam_metadata_file_path(self, value: str) -> None:
+        if value == self._external_steam_metadata_file_path:
+            return
         self._external_steam_metadata_file_path = value
         EventBus().settings_have_changed.emit()
 
@@ -94,6 +108,8 @@ class Settings(QObject):
 
     @external_steam_metadata_repo.setter
     def external_steam_metadata_repo(self, value: str) -> None:
+        if value == self._external_steam_metadata_repo:
+            return
         self._external_steam_metadata_repo = value
         EventBus().settings_have_changed.emit()
 
@@ -103,6 +119,8 @@ class Settings(QObject):
 
     @external_steam_metadata_source.setter
     def external_steam_metadata_source(self, value: str) -> None:
+        if value == self._external_steam_metadata_source:
+            return
         self._external_steam_metadata_source = value
         EventBus().settings_have_changed.emit()
 
@@ -112,6 +130,8 @@ class Settings(QObject):
 
     @external_community_rules_file_path.setter
     def external_community_rules_file_path(self, value: str) -> None:
+        if value == self._external_community_rules_file_path:
+            return
         self._external_community_rules_file_path = value
         EventBus().settings_have_changed.emit()
 
@@ -121,6 +141,8 @@ class Settings(QObject):
 
     @external_community_rules_repo.setter
     def external_community_rules_repo(self, value: str) -> None:
+        if value == self._external_community_rules_repo:
+            return
         self._external_community_rules_repo = value
         EventBus().settings_have_changed.emit()
 
@@ -130,6 +152,8 @@ class Settings(QObject):
 
     @external_community_rules_metadata_source.setter
     def external_community_rules_metadata_source(self, value: str) -> None:
+        if value == self._external_community_rules_metadata_source:
+            return
         self._external_community_rules_metadata_source = value
         EventBus().settings_have_changed.emit()
 
@@ -139,6 +163,8 @@ class Settings(QObject):
 
     @db_builder_include.setter
     def db_builder_include(self, value: str) -> None:
+        if value == self._db_builder_include:
+            return
         self._db_builder_include = value
         EventBus().settings_have_changed.emit()
 
@@ -148,6 +174,8 @@ class Settings(QObject):
 
     @database_expiry.setter
     def database_expiry(self, value: int) -> None:
+        if value == self._database_expiry:
+            return
         self._database_expiry = value
         EventBus().settings_have_changed.emit()
 
@@ -157,6 +185,8 @@ class Settings(QObject):
 
     @build_steam_database_dlc_data.setter
     def build_steam_database_dlc_data(self, value: bool) -> None:
+        if value == self._build_steam_database_dlc_data:
+            return
         self._build_steam_database_dlc_data = value
         EventBus().settings_have_changed.emit()
 
@@ -166,6 +196,8 @@ class Settings(QObject):
 
     @build_steam_database_update_toggle.setter
     def build_steam_database_update_toggle(self, value: bool) -> None:
+        if value == self._build_steam_database_update_toggle:
+            return
         self._build_steam_database_update_toggle = value
         EventBus().settings_have_changed.emit()
 
@@ -175,6 +207,8 @@ class Settings(QObject):
 
     @watchdog_toggle.setter
     def watchdog_toggle(self, value: bool) -> None:
+        if value == self._watchdog_toggle:
+            return
         self._watchdog_toggle = value
         EventBus().settings_have_changed.emit()
 
@@ -184,6 +218,8 @@ class Settings(QObject):
 
     @mod_type_filter_toggle.setter
     def mod_type_filter_toggle(self, value: bool) -> None:
+        if value == self._mod_type_filter_toggle:
+            return
         self._mod_type_filter_toggle = value
         EventBus().settings_have_changed.emit()
 
@@ -193,6 +229,8 @@ class Settings(QObject):
 
     @duplicate_mods_warning.setter
     def duplicate_mods_warning(self, value: bool) -> None:
+        if value == self._duplicate_mods_warning:
+            return
         self._duplicate_mods_warning = value
         EventBus().settings_have_changed.emit()
 
@@ -202,6 +240,8 @@ class Settings(QObject):
 
     @steam_mods_update_check.setter
     def steam_mods_update_check(self, value: bool) -> None:
+        if value == self._steam_mods_update_check:
+            return
         self._steam_mods_update_check = value
         EventBus().settings_have_changed.emit()
 
@@ -211,6 +251,8 @@ class Settings(QObject):
 
     @try_download_missing_mods.setter
     def try_download_missing_mods(self, value: bool) -> None:
+        if value == self._try_download_missing_mods:
+            return
         self._try_download_missing_mods = value
         EventBus().settings_have_changed.emit()
 
@@ -220,6 +262,8 @@ class Settings(QObject):
 
     @steamcmd_install_path.setter
     def steamcmd_install_path(self, value: str) -> None:
+        if value == self._steamcmd_install_path:
+            return
         self._steamcmd_install_path = value
         EventBus().settings_have_changed.emit()
 
@@ -229,6 +273,8 @@ class Settings(QObject):
 
     @steamcmd_validate_downloads.setter
     def steamcmd_validate_downloads(self, value: bool) -> None:
+        if value == self._steamcmd_validate_downloads:
+            return
         self._steamcmd_validate_downloads = value
         EventBus().settings_have_changed.emit()
 
@@ -238,6 +284,8 @@ class Settings(QObject):
 
     @todds_preset.setter
     def todds_preset(self, value: str) -> None:
+        if value == self._todds_preset:
+            return
         self._todds_preset = value
         EventBus().settings_have_changed.emit()
 
@@ -247,6 +295,8 @@ class Settings(QObject):
 
     @todds_active_mods_target.setter
     def todds_active_mods_target(self, value: bool) -> None:
+        if value == self._todds_active_mods_target:
+            return
         self._todds_active_mods_target = value
         EventBus().settings_have_changed.emit()
 
@@ -256,6 +306,8 @@ class Settings(QObject):
 
     @todds_dry_run.setter
     def todds_dry_run(self, value: bool) -> None:
+        if value == self._todds_dry_run:
+            return
         self._todds_dry_run = value
         EventBus().settings_have_changed.emit()
 
@@ -265,43 +317,149 @@ class Settings(QObject):
 
     @todds_overwrite.setter
     def todds_overwrite(self, value: bool) -> None:
+        if value == self._todds_overwrite:
+            return
         self._todds_overwrite = value
         EventBus().settings_have_changed.emit()
 
     @property
     def game_folder(self) -> str:
-        return self._game_folder
+        if self._game_folder is None:
+            return ""
+        else:
+            return str(self._game_folder)
 
     @game_folder.setter
     def game_folder(self, value: str) -> None:
-        self._game_folder = value
+        if value == str(self._game_folder):
+            return
+        if value == "":
+            self._game_folder = None
+            EventBus().settings_have_changed.emit()
+            return
+        p = Path(value).resolve()
+        if not p.exists() or not p.is_dir():
+            logger.warning(f"Invalid game folder: {p}")
+            self._game_folder = None
+            EventBus().settings_have_changed.emit()
+            return
+        self._game_folder = p
         EventBus().settings_have_changed.emit()
 
     @property
     def config_folder(self) -> str:
-        return self._config_folder
+        if self._config_folder is None:
+            return ""
+        else:
+            return str(self._config_folder)
 
     @config_folder.setter
     def config_folder(self, value: str) -> None:
-        self._config_folder = value
+        if value == str(self._config_folder):
+            return
+        if value == "":
+            self._config_folder = None
+            EventBus().settings_have_changed.emit()
+            return
+        p = Path(value).resolve()
+        if not p.exists() or not p.is_dir():
+            logger.warning(f"Invalid config folder: {p}")
+            self._config_folder = None
+            EventBus().settings_have_changed.emit()
+            return
+        self._config_folder = p
         EventBus().settings_have_changed.emit()
 
     @property
     def local_folder(self) -> str:
-        return self._local_folder
+        if self._local_folder is None:
+            return ""
+        else:
+            return str(self._local_folder)
 
     @local_folder.setter
     def local_folder(self, value: str) -> None:
-        self._local_folder = value
+        if value == str(self._local_folder):
+            return
+        if value == "":
+            self._local_folder = None
+            EventBus().settings_have_changed.emit()
+            return
+        p = Path(value).resolve()
+        if not p.exists() or not p.is_dir():
+            logger.warning(f"Invalid local folder: {p}")
+            self._local_folder = None
+            EventBus().settings_have_changed.emit()
+            return
+        self._local_folder = p
         EventBus().settings_have_changed.emit()
 
     @property
     def workshop_folder(self) -> str:
-        return self._workshop_folder
+        if self._workshop_folder is None:
+            return ""
+        else:
+            return str(self._workshop_folder)
 
     @workshop_folder.setter
     def workshop_folder(self, value: str) -> None:
-        self._workshop_folder = value
+        if value == str(self._workshop_folder):
+            return
+        if value == "":
+            self._workshop_folder = None
+            EventBus().settings_have_changed.emit()
+            return
+        p = Path(value).resolve()
+        if not p.exists() or not p.is_dir():
+            logger.warning(f"Invalid workshop folder: {p}")
+            self._workshop_folder = None
+            EventBus().settings_have_changed.emit()
+            return
+        self._workshop_folder = p
+        EventBus().settings_have_changed.emit()
+
+    @property
+    def github_username(self) -> str:
+        return self._github_username
+
+    @github_username.setter
+    def github_username(self, value: str) -> None:
+        if value == self._github_username:
+            return
+        self._github_username = value
+        EventBus().settings_have_changed.emit()
+
+    @property
+    def github_token(self) -> str:
+        return self._github_token
+
+    @github_token.setter
+    def github_token(self, value: str) -> None:
+        if value == self._github_token:
+            return
+        self._github_token = value
+        EventBus().settings_have_changed.emit()
+
+    @property
+    def steam_apikey(self) -> str:
+        return self._steam_apikey
+
+    @steam_apikey.setter
+    def steam_apikey(self, value: str) -> None:
+        if value == self._steam_apikey:
+            return
+        self._steam_apikey = value
+        EventBus().settings_have_changed.emit()
+
+    @property
+    def run_args(self) -> List[str]:
+        return self._run_args
+
+    @run_args.setter
+    def run_args(self, value: List[str]) -> None:
+        if value == self._run_args:
+            return
+        self._run_args = value
         EventBus().settings_have_changed.emit()
 
     def load(self) -> None:
@@ -323,7 +481,7 @@ class Settings(QObject):
             del data["show_folder_rows"]
 
         if "check_for_update_startup" in data:
-            self.check_for_updates_on_startup = data["check_for_update_startup"]
+            self.check_for_update_startup = data["check_for_update_startup"]
             del data["check_for_update_startup"]
 
         if "sorting_algorithm" in data:
@@ -438,9 +596,25 @@ class Settings(QObject):
             self.workshop_folder = data["workshop_folder"]
             del data["workshop_folder"]
 
+        if "github_username" in data:
+            self.github_username = data["github_username"]
+            del data["github_username"]
+
+        if "github_token" in data:
+            self.github_token = data["github_token"]
+            del data["github_token"]
+
+        if "steam_apikey" in data:
+            self.steam_apikey = data["steam_apikey"]
+            del data["steam_apikey"]
+
+        if "run_args" in data:
+            self.run_args = data["run_args"]
+            del data["run_args"]
+
     def _to_dict(self) -> Dict[str, Any]:
         data = {
-            "check_for_update_startup": self.check_for_updates_on_startup,
+            "check_for_update_startup": self.check_for_update_startup,
             "show_folder_rows": self.show_folder_rows,
             "sorting_algorithm": self.sorting_algorithm,
             "external_steam_metadata_file_path": self.external_steam_metadata_file_path,
@@ -468,5 +642,9 @@ class Settings(QObject):
             "config_folder": self.config_folder,
             "local_folder": self.local_folder,
             "workshop_folder": self.workshop_folder,
+            "github_username": self.github_username,
+            "github_token": self.github_token,
+            "steam_apikey": self.steam_apikey,
+            "run_args": self.run_args,
         }
         return data

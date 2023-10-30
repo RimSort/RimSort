@@ -28,7 +28,7 @@ class MenuBarController(QObject):
         )
 
         self.menu_bar.check_for_updates_on_startup_action.setChecked(
-            self.settings_controller.settings.check_for_updates_on_startup
+            self.settings_controller.settings.check_for_update_startup
         )
 
         self.menu_bar.settings_action.triggered.connect(
@@ -72,10 +72,8 @@ class MenuBarController(QObject):
     @Slot()
     def _on_menu_bar_check_for_updates_on_startup_triggered(self) -> None:
         is_checked = self.menu_bar.check_for_updates_on_startup_action.isChecked()
-        self.settings_controller.settings.check_for_updates_on_startup = is_checked
-        GameConfiguration.instance()._update_persistent_storage(
-            settings={"check_for_update_startup": is_checked}
-        )
+        self.settings_controller.settings.check_for_update_startup = is_checked
+        self.settings_controller.settings.save()
 
     @Slot()
     def _on_menu_bar_open_mod_list_triggered(self) -> None:

@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from controller.settings_controller import SettingsController
 from model.mod_list import ModListWidget
 from model.mod_list_item import ModListItemInner
 from util.constants import SEARCH_DATA_SOURCE_FILTER_INDEXES
@@ -33,7 +34,9 @@ class ActiveModList(QWidget):
 
     list_updated_signal = Signal()
 
-    def __init__(self, mod_type_filter_enable: bool) -> None:
+    def __init__(
+        self, mod_type_filter_enable: bool, settings_controller: SettingsController
+    ) -> None:
         """
         Initialize the class.
         Create a ListWidget using the dict of mods. This will
@@ -42,6 +45,8 @@ class ActiveModList(QWidget):
         super(ActiveModList, self).__init__()
 
         logger.debug("Initializing ActiveModList")
+
+        self.settings_controller = settings_controller
 
         self.list_updated = False
         self.mod_type_filter_enable = mod_type_filter_enable
@@ -55,7 +60,8 @@ class ActiveModList(QWidget):
         self.num_mods.setObjectName("summaryValue")
         # Active mod list
         self.active_mods_list = ModListWidget(
-            mod_type_filter_enable=self.mod_type_filter_enable
+            mod_type_filter_enable=self.mod_type_filter_enable,
+            settings_controller=self.settings_controller,
         )
 
         # Search widgets

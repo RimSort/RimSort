@@ -17,6 +17,9 @@ from zipfile import ZipFile
 
 from logger_tt import logger
 
+from controller.settings_controller import SettingsController
+from util.event_bus import EventBus
+
 # GitPython depends on git executable being available in PATH
 try:
     from git import Repo
@@ -54,7 +57,7 @@ from util.rentry.wrapper import RentryUpload
 from util.steam.browser import SteamBrowser
 from util.steam.webapi.wrapper import ISteamRemoteStorage_GetPublishedFileDetails
 
-from PySide6.QtCore import QEventLoop, QObject, QProcess, Qt, Signal
+from PySide6.QtCore import QEventLoop, QObject, QProcess, Qt, Signal, Slot
 from PySide6.QtWidgets import (
     QApplication,
     QFrame,
@@ -110,7 +113,7 @@ class MainContent(QObject):
             cls._instance = super(MainContent, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self) -> None:
+    def __init__(self, settings_controller: SettingsController) -> None:
         """
         Initialize the main content panel.
 
@@ -120,17 +123,22 @@ class MainContent(QObject):
             super(MainContent, self).__init__()
             logger.debug("Initializing MainContent")
 
+            self.settings_controller = settings_controller
+            EventBus().settings_have_changed.connect(self._on_settings_have_changed)
+
             # INITIALIZE WIDGETS
             # Initialize Steam(CMD) integraations
             self.steam_browser = SteamcmdDownloader = None
             self.steamcmd_runner = RunnerPanel = None
             self.steamcmd_wrapper = SteamcmdInterface.instance(
-                GameConfiguration.instance().steamcmd_install_path,
-                GameConfiguration.instance().steamcmd_validate_downloads_toggle,
+                self.settings_controller.settings.steamcmd_install_path,
+                self.settings_controller.settings.steamcmd_validate_downloads,
             )
 
             # Initialize MetadataManager
-            self.metadata_manager = MetadataManager.instance()
+            self.metadata_manager = MetadataManager.instance(
+                settings_controller=self.settings_controller
+            )
             self.metadata_manager.update_game_configuration_signal.connect(
                 self.__update_game_configuration
             )
@@ -150,10 +158,12 @@ class MainContent(QObject):
             # INSTANTIATE WIDGETS
             self.mod_info_panel = ModInfo()
             self.active_mods_panel = ActiveModList(
-                mod_type_filter_enable=GameConfiguration.instance().mod_type_filter_toggle
+                mod_type_filter_enable=self.settings_controller.settings.mod_type_filter_toggle,
+                settings_controller=self.settings_controller,
             )
             self.inactive_mods_panel = InactiveModList(
-                mod_type_filter_enable=GameConfiguration.instance().mod_type_filter_toggle
+                mod_type_filter_enable=self.settings_controller.settings.mod_type_filter_toggle,
+                settings_controller=self.settings_controller,
             )
             self.actions_panel = Actions()
 
@@ -409,7 +419,7 @@ class MainContent(QObject):
     def __missing_mods_prompt(self) -> None:
         logger.debug(f"Could not find data for {len(self.missing_mods)} active mods")
         if (  # User configuration
-            GameConfiguration.instance().try_download_missing_mods_toggle
+            self.settings_controller.settings.try_download_missing_mods
             and self.metadata_manager.external_steam_metadata
         ):  # Do we even have metadata to lookup...?
             self.missing_mods_prompt = MissingModsPrompt(
@@ -501,39 +511,33 @@ class MainContent(QObject):
 
     def __update_game_configuration(self) -> None:
         self.metadata_manager.community_rules_repo = (
-            GameConfiguration.instance().community_rules_repo
-        )
-        self.metadata_manager.database_expiry = (
-            GameConfiguration.instance().database_expiry
+            self.settings_controller.settings.external_community_rules_repo
         )
         self.metadata_manager.dbs_path = GameConfiguration.instance().dbs_path
         self.metadata_manager.external_community_rules_metadata_source = (
-            GameConfiguration.instance().settings_panel.external_community_rules_metadata_multibutton.main_action.currentText()
+            self.settings_controller.settings.external_community_rules_metadata_source
         )
         self.metadata_manager.external_community_rules_file_path = (
-            GameConfiguration.instance().community_rules_file_path
+            self.settings_controller.settings.external_community_rules_file_path
         )
         self.metadata_manager.external_steam_metadata_file_path = (
-            GameConfiguration.instance().steam_db_file_path
+            self.settings_controller.settings.external_steam_metadata_file_path
         )
         self.metadata_manager.external_steam_metadata_source = (
-            GameConfiguration.instance().settings_panel.external_steam_metadata_multibutton.main_action.currentText()
+            self.settings_controller.settings.external_steam_metadata_source
         )
-        self.metadata_manager.game_path = (
-            GameConfiguration.instance().game_folder_line.text()
-        )
+        self.metadata_manager.game_path = self.settings_controller.settings.game_folder
         self.metadata_manager.local_path = (
-            GameConfiguration.instance().local_folder_line.text()
+            self.settings_controller.settings.local_folder
         )
         self.metadata_manager.steamcmd_acf_path = (
             self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
         )
-        self.metadata_manager.steam_db_repo = GameConfiguration.instance().steam_db_repo
         self.metadata_manager.user_rules_file_path = (
             GameConfiguration.instance().user_rules_file_path
         )
         self.metadata_manager.workshop_path = (
-            GameConfiguration.instance().workshop_folder_line.text()
+            self.settings_controller.settings.workshop_folder
         )
 
     def __repopulate_lists(self, is_initial: bool = False) -> None:
@@ -554,7 +558,7 @@ class MainContent(QObject):
             str(
                 Path(
                     os.path.join(
-                        GameConfiguration.instance().config_folder_line.text(),
+                        self.settings_controller.settings.config_folder,
                         "ModsConfig.xml",
                     )
                 ).resolve()
@@ -588,17 +592,6 @@ class MainContent(QObject):
         # game configuration panel actions
         if action == "check_for_update":
             self._do_check_for_update()
-        if action == "update_mod_type_filter_toggle":
-            self.active_mods_panel.active_mods_list.mod_type_filter_enable = (
-                GameConfiguration.instance().mod_type_filter_toggle
-            )
-            self.inactive_mods_panel.inactive_mods_list.mod_type_filter_enable = (
-                GameConfiguration.instance().mod_type_filter_toggle
-            )
-        if action == "update_steamcmd_validate_toggle":
-            self.steamcmd_wrapper.validate_downloads = (
-                GameConfiguration.instance().steamcmd_validate_downloads_toggle
-            )
         # actions panel actions
         if action == "refresh":
             self._do_refresh()
@@ -616,16 +609,12 @@ class MainContent(QObject):
             )
             if os.path.exists(todds_txt_path):
                 os.remove(todds_txt_path)
-            if not GameConfiguration.instance().todds_active_mods_target_toggle:
-                local_mods_target = (
-                    GameConfiguration.instance().local_folder_line.text()
-                )
+            if not self.settings_controller.settings.todds_active_mods_target:
+                local_mods_target = self.settings_controller.settings.local_folder
                 if local_mods_target and local_mods_target != "":
                     with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
                         todds_txt_file.write(local_mods_target + "\n")
-                workshop_mods_target = (
-                    GameConfiguration.instance().workshop_folder_line.text()
-                )
+                workshop_mods_target = self.settings_controller.settings.workshop_folder
                 if workshop_mods_target and workshop_mods_target != "":
                     with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
                         todds_txt_file.write(workshop_mods_target + "\n")
@@ -683,8 +672,8 @@ class MainContent(QObject):
                 [
                     "launch_game_process",
                     [
-                        GameConfiguration.instance().game_folder_line.text(),
-                        GameConfiguration.instance().run_arguments,
+                        self.settings_controller.settings.game_folder,
+                        self.settings_controller.settings.run_args,
                     ],
                 ]
             )
@@ -704,14 +693,14 @@ class MainContent(QObject):
             if GIT_EXISTS:
                 self._do_clone_repo_to_path(
                     base_path=GameConfiguration.instance().dbs_path,
-                    repo_url=GameConfiguration.instance().steam_db_repo,
+                    repo_url=self.settings_controller.settings.external_steam_metadata_repo,
                 )
             else:
                 self._do_notify_no_git()
         if action == "upload_steam_database":
             if GIT_EXISTS:
                 self._do_upload_db_to_repo(
-                    repo_url=GameConfiguration.instance().steam_db_repo,
+                    repo_url=self.settings_controller.settings.external_steam_metadata_repo,
                     file_name="steamDB.json",
                 )
             else:
@@ -724,7 +713,7 @@ class MainContent(QObject):
             if GIT_EXISTS:
                 self._do_clone_repo_to_path(
                     base_path=GameConfiguration.instance().dbs_path,
-                    repo_url=GameConfiguration.instance().community_rules_repo,
+                    repo_url=self.settings_controller.settings.external_community_rules_repo,
                 )
             else:
                 self._do_notify_no_git()
@@ -733,7 +722,7 @@ class MainContent(QObject):
         if action == "upload_community_rules_database":
             if GIT_EXISTS:
                 self._do_upload_db_to_repo(
-                    repo_url=GameConfiguration.instance().community_rules_repo,
+                    repo_url=self.settings_controller.settings.external_community_rules_repo,
                     file_name="communityRules.json",
                 )
             else:
@@ -1062,12 +1051,12 @@ class MainContent(QObject):
 
             # If we have duplicate mods, prompt user
             if (
-                GameConfiguration.instance().duplicate_mods_warning_toggle
+                self.settings_controller.settings.duplicate_mods_warning
                 and self.duplicate_mods
                 and len(self.duplicate_mods) > 0
             ):
                 self.__duplicate_mods_prompt()
-            elif not GameConfiguration.instance().duplicate_mods_warning_toggle:
+            elif not self.settings_controller.settings.duplicate_mods_warning:
                 logger.debug(
                     "User preference is not configured to display duplicate mods. Skipping..."
                 )
@@ -1078,7 +1067,7 @@ class MainContent(QObject):
 
             # Check Workshop mods for updates if configured
             if (
-                GameConfiguration.instance().steam_mods_update_check_toggle
+                self.settings_controller.settings.steam_mods_update_check
             ):  # Check SteamCMD/Steam mods for updates if configured
                 logger.info(
                     "User preference is configured to check Workshop mod for updates. Checking for Workshop mod updates..."
@@ -1219,9 +1208,7 @@ class MainContent(QObject):
 
         # Depending on the selected algorithm, sort all tiers with Alphabetical
         # mimic algorithm or toposort
-        sorting_algorithm = (
-            GameConfiguration.instance().settings_panel.sorting_algorithm_cb.currentText()
-        )
+        sorting_algorithm = self.settings_controller.settings.sorting_algorithm
 
         if sorting_algorithm == "Alphabetical":
             logger.info("Alphabetical sorting algorithm is selected")
@@ -1307,12 +1294,12 @@ class MainContent(QObject):
             self.__insert_data_into_lists(active_mods_data, inactive_mods_data)
             # If we have duplicate mods, prompt user
             if (
-                GameConfiguration.instance().duplicate_mods_warning_toggle
+                self.settings_controller.settings.duplicate_mods_warning
                 and self.duplicate_mods
                 and len(self.duplicate_mods) > 0
             ):
                 self.__duplicate_mods_prompt()
-            elif not GameConfiguration.instance().duplicate_mods_warning_toggle:
+            elif not self.settings_controller.settings.duplicate_mods_warning:
                 logger.debug(
                     "User preference is not configured to display duplicate mods. Skipping..."
                 )
@@ -1364,7 +1351,7 @@ class MainContent(QObject):
                 str(
                     Path(
                         os.path.join(
-                            GameConfiguration.instance().config_folder_line.text(),
+                            self.settings_controller.settings.config_folder,
                             "ModsConfig.xml",
                         )
                     ).resolve()
@@ -1590,8 +1577,7 @@ class MainContent(QObject):
         player_log_path = str(
             Path(
                 os.path.join(
-                    GameConfiguration.instance().config_folder_line.text()
-                    + "/../Player.log"
+                    self.settings_controller.settings.config_folder + "/../Player.log"
                 )
             ).resolve()
         )
@@ -1657,7 +1643,7 @@ class MainContent(QObject):
         mods_config_path = str(
             Path(
                 os.path.join(
-                    GameConfiguration.instance().config_folder_line.text(),
+                    self.settings_controller.settings.config_folder,
                     "ModsConfig.xml",
                 )
             ).resolve()
@@ -1732,27 +1718,25 @@ class MainContent(QObject):
             title="Edit run arguments",
             text="Enter a comma separated list of arguments to pass to the Rimworld executable\n\n"
             + "Example: \n-popupwindow,-logfile,/path/to/file.log",
-            value=",".join(GameConfiguration.instance().run_arguments),
+            value=",".join(self.settings_controller.settings.run_args),
         )
         if ok:
-            GameConfiguration.instance().run_arguments = args.split(",")
-            GameConfiguration.instance()._update_persistent_storage(
-                {"runArgs": GameConfiguration.instance().run_arguments}
-            )
+            self.settings_controller.settings.run_args = args.split(",")
+            self.settings_controller.settings.save()
 
     # TODDS ACTIONS
 
     def _do_optimize_textures(self, todds_txt_path: str) -> None:
         # Setup environment
         todds_interface = ToddsInterface(
-            preset=GameConfiguration.instance().todds_preset,
-            dry_run=GameConfiguration.instance().todds_dry_run_toggle,
-            overwrite=GameConfiguration.instance().todds_overwrite_toggle,
+            preset=self.settings_controller.settings.todds_preset,
+            dry_run=self.settings_controller.settings.todds_dry_run,
+            overwrite=self.settings_controller.settings.todds_overwrite,
         )
 
         # UI
         self.todds_runner = RunnerPanel(
-            todds_dry_run_support=GameConfiguration.instance().todds_dry_run_toggle
+            todds_dry_run_support=self.settings_controller.settings.todds_dry_run
         )
         self.todds_runner.setWindowTitle("RimSort - todds texture encoder")
         self.todds_runner.show()
@@ -1762,12 +1746,12 @@ class MainContent(QObject):
     def _do_delete_dds_textures(self, todds_txt_path: str) -> None:
         todds_interface = ToddsInterface(
             preset="clean",
-            dry_run=GameConfiguration.instance().todds_dry_run_toggle,
+            dry_run=self.settings_controller.settings.todds_dry_run,
         )
 
         # UI
         self.todds_runner = RunnerPanel(
-            todds_dry_run_support=GameConfiguration.instance().todds_dry_run_toggle
+            todds_dry_run_support=self.settings_controller.settings.todds_dry_run
         )
         self.todds_runner.setWindowTitle("RimSort - todds texture encoder")
         self.todds_runner.show()
@@ -1846,7 +1830,7 @@ class MainContent(QObject):
         self.steamcmd_runner.show()
         self.steamcmd_runner.message("Setting up steamcmd...")
         self.steamcmd_wrapper.setup_steamcmd(
-            GameConfiguration.instance().local_folder_line.text(),
+            self.settings_controller.settings.local_folder,
             False,
             self.steamcmd_runner,
         )
@@ -1926,13 +1910,13 @@ class MainContent(QObject):
             logger.info(
                 f"steamcmd install folder chosen. Updating storage with new path: {steamcmd_folder}"
             )
-            GameConfiguration.instance().steamcmd_install_path = steamcmd_folder
-            GameConfiguration.instance()._update_persistent_storage(
-                {"steamcmd_install_path": steamcmd_folder}
-            )
+
+            self.settings_controller.settings.steamcmd_install_path = steamcmd_folder
+            self.settings_controller.settings.save()
+
             self.steamcmd_wrapper = SteamcmdInterface.instance(
-                GameConfiguration.instance().steamcmd_install_path,
-                GameConfiguration.instance().steamcmd_validate_downloads_toggle,
+                self.settings_controller.settings.steamcmd_install_path,
+                self.settings_controller.settings.steamcmd_validate_downloads,
             )
             self.active_mods_panel.active_mods_list.steamcmd_appworkshop_acf_path = (
                 self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
@@ -2067,7 +2051,7 @@ class MainContent(QObject):
         )
         if ok:
             self._do_clone_repo_to_path(
-                base_path=GameConfiguration.instance().local_folder_line.text(),
+                base_path=self.settings_controller.settings.local_folder,
                 repo_url=args,
             )
         else:
@@ -2102,26 +2086,22 @@ class MainContent(QObject):
         args, ok = show_dialogue_input(
             title="Edit username",
             text="Enter your Github username:",
-            value=GameConfiguration.instance().github_username,
+            value=self.settings_controller.settings.github_username,
         )
         if ok:
-            GameConfiguration.instance().github_username = args
-            GameConfiguration.instance()._update_persistent_storage(
-                {"github_username": GameConfiguration.instance().github_username}
-            )
+            self.settings_controller.settings.github_username = args
+            self.settings_controller.settings.save()
         else:
             logger.debug("USER ACTION: cancelled input!")
             return
         args, ok = show_dialogue_input(
             title="Edit token",
             text="Enter your Github personal access token here (ghp_*):",
-            value=GameConfiguration.instance().github_token,
+            value=self.settings_controller.settings.github_token,
         )
         if ok:
-            GameConfiguration.instance().github_token = args
-            GameConfiguration.instance()._update_persistent_storage(
-                {"github_token": GameConfiguration.instance().github_token}
-            )
+            self.settings_controller.settings.github_token = args
+            self.settings_controller.settings.save()
         else:
             logger.debug("USER ACTION: cancelled input!")
             return
@@ -2373,7 +2353,7 @@ class MainContent(QObject):
                         if database.get("version"):
                             database_version = (
                                 database["version"]
-                                - GameConfiguration.instance().database_expiry
+                                - self.settings_controller.settings.database_expiry
                             )
                         elif database.get("timestamp"):
                             database_version = database["timestamp"]
@@ -2401,8 +2381,8 @@ class MainContent(QObject):
 
                     # Create a GitHub instance
                     g = Github(
-                        GameConfiguration.instance().github_username,
-                        GameConfiguration.instance().github_token,
+                        self.settings_controller.settings.github_username,
+                        self.settings_controller.settings.github_token,
                     )
 
                     # Specify the repository
@@ -2544,10 +2524,10 @@ class MainContent(QObject):
         )
         logger.info(f"Selected path: {input_path}")
         if input_path and os.path.exists(input_path):
-            GameConfiguration.instance()._update_persistent_storage(
-                {"external_steam_metadata_file_path": input_path}
+            self.settings_controller.settings.external_steam_metadata_file_path = (
+                input_path
             )
-            GameConfiguration.instance().steam_db_file_path = input_path
+            self.settings_controller.settings.save()
         else:
             logger.debug("USER ACTION: cancelled selection!")
             return
@@ -2565,10 +2545,10 @@ class MainContent(QObject):
         )
         logger.info(f"Selected path: {input_path}")
         if input_path and os.path.exists(input_path):
-            GameConfiguration.instance()._update_persistent_storage(
-                {"external_community_rules_file_path": input_path}
+            self.settings_controller.settings.external_community_rules_file_path = (
+                input_path
             )
-            GameConfiguration.instance().community_rules_file_path = input_path
+            self.settings_controller.settings.save()
         else:
             logger.debug("USER ACTION: cancelled selection!")
             return
@@ -2581,15 +2561,11 @@ class MainContent(QObject):
         args, ok = show_dialogue_input(
             title="Edit Steam DB repo",
             text="Enter URL (https://github.com/AccountName/RepositoryName):",
-            value=GameConfiguration.instance().steam_db_repo,
+            value=self.settings_controller.settings.external_steam_metadata_repo,
         )
         if ok:
-            GameConfiguration.instance().steam_db_repo = args
-            GameConfiguration.instance()._update_persistent_storage(
-                {
-                    "external_steam_metadata_repo": GameConfiguration.instance().steam_db_repo
-                }
-            )
+            self.settings_controller.settings.external_steam_metadata_repo = args
+            self.settings_controller.settings.save()
 
     def _do_configure_community_rules_db_repo(self) -> None:
         """
@@ -2599,15 +2575,11 @@ class MainContent(QObject):
         args, ok = show_dialogue_input(
             title="Edit Community Rules DB repo",
             text="Enter URL (https://github.com/AccountName/RepositoryName):",
-            value=GameConfiguration.instance().community_rules_repo,
+            value=self.settings_controller.settings.external_community_rules_repo,
         )
         if ok:
-            GameConfiguration.instance().community_rules_repo = args
-            GameConfiguration.instance()._update_persistent_storage(
-                {
-                    "external_community_rules_repo": GameConfiguration.instance().community_rules_repo
-                }
-            )
+            self.settings_controller.settings.external_community_rules_repo = args
+            self.settings_controller.settings.save()
 
     def _do_build_database_thread(self) -> None:
         # If settings panel is still open, close it.
@@ -2632,35 +2604,35 @@ class MainContent(QObject):
             # "No": Produce accurate, complete DB by QueryFiles via WebAPI
             # Queries ALL available PublishedFileIDs (mods) it can find via Steam WebAPI.
             # Does not use metadata from locally available mods. This means no packageids!
-            if GameConfiguration.instance().db_builder_include == "no_local":
+            if self.settings_controller.settings.db_builder_include == "no_local":
                 self.db_builder = SteamDatabaseBuilder(
-                    apikey=GameConfiguration.instance().steam_apikey,
+                    apikey=self.settings_controller.settings.steam_apikey,
                     appid=294100,
-                    database_expiry=GameConfiguration.instance().database_expiry,
-                    mode=GameConfiguration.instance().db_builder_include,
+                    database_expiry=self.settings_controller.settings.database_expiry,
+                    mode=self.settings_controller.settings.db_builder_include,
                     output_database_path=output_path,
-                    get_appid_deps=GameConfiguration.instance().build_steam_database_dlc_data_toggle,
-                    update=GameConfiguration.instance().build_steam_database_update_toggle,
+                    get_appid_deps=self.settings_controller.settings.build_steam_database_dlc_data,
+                    update=self.settings_controller.settings.build_steam_database_update_toggle,
                 )
             # "Yes": Produce accurate, possibly semi-incomplete DB without QueryFiles via API
             # CAN produce a complete DB! Only includes metadata parsed from mods you have downloaded.
             # Produces DB which contains metadata from locally available mods. Includes packageids!
-            elif GameConfiguration.instance().db_builder_include == "all_mods":
+            elif self.settings_controller.settings.db_builder_include == "all_mods":
                 self.db_builder = SteamDatabaseBuilder(
-                    apikey=GameConfiguration.instance().steam_apikey,
+                    apikey=self.settings_controller.settings.steam_apikey,
                     appid=294100,
-                    database_expiry=GameConfiguration.instance().database_expiry,
-                    mode=GameConfiguration.instance().db_builder_include,
+                    database_expiry=self.settings_controller.settings.database_expiry,
+                    mode=self.settings_controller.settings.db_builder_include,
                     output_database_path=output_path,
-                    get_appid_deps=GameConfiguration.instance().build_steam_database_dlc_data_toggle,
+                    get_appid_deps=self.settings_controller.settings.build_steam_database_dlc_data,
                     mods=self.metadata_manager.all_mods_compiled,
-                    update=GameConfiguration.instance().build_steam_database_update_toggle,
+                    update=self.settings_controller.settings.build_steam_database_update_toggle,
                 )
             # Create query runner
             self.query_runner = RunnerPanel()
             self.query_runner.closing_signal.connect(self.db_builder.terminate)
             self.query_runner.setWindowTitle(
-                f"RimSort - DB Builder ({GameConfiguration.instance().db_builder_include})"
+                f"RimSort - DB Builder ({self.settings_controller.settings.db_builder_include})"
             )
             self.query_runner.progress_bar.show()
             self.query_runner.show()
@@ -2713,7 +2685,7 @@ class MainContent(QObject):
                 json.dump(
                     {
                         "version": int(
-                            time() + GameConfiguration.instance().database_expiry
+                            time() + self.settings_controller.settings.database_expiry
                         ),
                         "database": self.metadata_manager.external_steam_metadata,
                     },
@@ -2729,9 +2701,9 @@ class MainContent(QObject):
         # DB Builder is used to run DQ and grab entirety of
         # any available Steam Workshop PublishedFileIDs
         self.db_builder = SteamDatabaseBuilder(
-            apikey=GameConfiguration.instance().steam_apikey,
+            apikey=self.settings_controller.settings.steam_apikey,
             appid=294100,
-            database_expiry=GameConfiguration.instance().database_expiry,
+            database_expiry=self.settings_controller.settings.database_expiry,
             mode="pfids_by_appid",
         )
         # Create query runner
@@ -2812,13 +2784,11 @@ class MainContent(QObject):
         args, ok = show_dialogue_input(
             title="Edit Steam WebAPI key",
             text="Enter your personal 32 character Steam WebAPI key here:",
-            value=GameConfiguration.instance().steam_apikey,
+            value=self.settings_controller.settings.steam_apikey,
         )
         if ok:
-            GameConfiguration.instance().steam_apikey = args
-            GameConfiguration.instance()._update_persistent_storage(
-                {"steam_apikey": GameConfiguration.instance().steam_apikey}
-            )
+            self.settings_controller.settings.steam_apikey = args
+            self.settings_controller.settings.save()
 
     def _do_generate_metadata_comparison_report(self) -> None:
         """
@@ -3085,16 +3055,20 @@ class MainContent(QObject):
         args, ok = show_dialogue_input(
             title="Edit SteamDB expiry:",
             text="Enter your preferred expiry duration in seconds (default 1 week/604800 sec):",
-            value=str(GameConfiguration.instance().database_expiry),
+            value=str(self.settings_controller.settings.database_expiry),
         )
         if ok:
             try:
-                GameConfiguration.instance().database_expiry = int(args)
-                GameConfiguration.instance()._update_persistent_storage(
-                    {"database_expiry": GameConfiguration.instance().database_expiry}
-                )
+                self.settings_controller.settings.database_expiry = int(args)
+                self.settings_controller.settings.save()
             except ValueError:
                 show_warning(
                     "Tried configuring Dynamic Query with a value that is not an integer.",
                     "Please reconfigure the expiry value with an integer in terms of the seconds from epoch you would like your query to expire.",
                 )
+
+    @Slot()
+    def _on_settings_have_changed(self) -> None:
+        self.steamcmd_wrapper.validate_downloads = (
+            self.settings_controller.settings.steamcmd_validate_downloads
+        )
