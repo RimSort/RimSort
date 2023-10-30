@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
     QMenu,
 )
 
+from controller.settings_controller import SettingsController
 from model.mod_list_item import ModListItemInner
 from model.dialogue import show_dialogue_conditional, show_dialogue_input, show_warning
 from util.generic import (
@@ -51,7 +52,9 @@ class ModListWidget(QListWidget):
     steamcmd_downloader_signal = Signal(list)
     steamworks_subscription_signal = Signal(list)
 
-    def __init__(self, mod_type_filter_enable: bool) -> None:
+    def __init__(
+        self, mod_type_filter_enable: bool, settings_controller: SettingsController
+    ) -> None:
         """
         Initialize the ListWidget with a dict of mods.
         Keys are the package ids and values are a dict of
@@ -59,6 +62,8 @@ class ModListWidget(QListWidget):
         https://rimworldwiki.com/wiki/About.xml
         """
         logger.debug("Initializing ModListWidget")
+
+        self.settings_controller = settings_controller
 
         super(ModListWidget, self).__init__()
 
@@ -505,17 +510,17 @@ class ModListWidget(QListWidget):
             ):
                 workshop_actions_menu = QMenu(title="Workshop mods options")
                 if (
-                    GameConfiguration.instance().local_folder_line.text()
+                    self.settings_controller.settings.local_folder
                     and convert_local_steamcmd_action
                 ):
                     workshop_actions_menu.addAction(convert_local_steamcmd_action)
                 if (
-                    GameConfiguration.instance().local_folder_line.text()
+                    self.settings_controller.settings.local_folder
                     and convert_steamcmd_local_action
                 ):
                     workshop_actions_menu.addAction(convert_steamcmd_local_action)
                 if (
-                    GameConfiguration.instance().local_folder_line.text()
+                    self.settings_controller.settings.local_folder
                     and convert_workshop_local_action
                 ):
                     workshop_actions_menu.addAction(convert_workshop_local_action)
@@ -564,7 +569,7 @@ class ModListWidget(QListWidget):
                         original_mod_path = str(
                             Path(
                                 os.path.join(
-                                    GameConfiguration.instance().local_folder_line.text(),
+                                    self.settings_controller.settings.local_folder,
                                     folder_name,
                                 )
                             ).resolve()
@@ -572,7 +577,7 @@ class ModListWidget(QListWidget):
                         renamed_mod_path = str(
                             Path(
                                 os.path.join(
-                                    GameConfiguration.instance().local_folder_line.text(),
+                                    self.settings_controller.settings.local_folder,
                                     publishedfileid,
                                 )
                             ).resolve()
@@ -612,7 +617,7 @@ class ModListWidget(QListWidget):
                         original_mod_path = str(
                             Path(
                                 os.path.join(
-                                    GameConfiguration.instance().local_folder_line.text(),
+                                    self.settings_controller.settings.local_folder,
                                     publishedfileid,
                                 )
                             ).resolve()
@@ -620,7 +625,7 @@ class ModListWidget(QListWidget):
                         renamed_mod_path = str(
                             Path(
                                 os.path.join(
-                                    GameConfiguration.instance().local_folder_line.text(),
+                                    self.settings_controller.settings.local_folder,
                                     mod_name,
                                 )
                             ).resolve()
@@ -683,7 +688,7 @@ class ModListWidget(QListWidget):
                         renamed_mod_path = str(
                             Path(
                                 os.path.join(
-                                    GameConfiguration.instance().local_folder_line.text(),
+                                    self.settings_controller.settings.local_folder,
                                     mod_name
                                     if mod_name
                                     else publishedfileid_from_folder_name,

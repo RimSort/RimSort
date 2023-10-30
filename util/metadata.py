@@ -101,7 +101,7 @@ class MetadataManager(QObject):
                     os.path.join(
                         os.path.split(
                             os.path.split(
-                                GameConfiguration.instance().workshop_folder_line.text()
+                                self.settings_controller.settings.workshop_folder
                             )[0]
                         )[0],
                         "appworkshop_294100.acf",
@@ -410,16 +410,17 @@ class MetadataManager(QObject):
             :return: a Dict of expansions by package id
             """
             expansion_data = {}
-            if GameConfiguration.instance().game_folder_line.text() != "":
+            if self.settings_controller.settings.game_folder != "":
                 logger.info(
-                    f"Getting installed expansions with game folder path: {GameConfiguration.instance().game_folder_line.text()}"
+                    f"Getting installed expansions with game folder path: "
+                    f"{self.settings_controller.settings.game_folder}"
                 )
 
                 # Get mod data
                 data_path = str(
                     Path(
                         os.path.join(
-                            GameConfiguration.instance().game_folder_line.text(), "Data"
+                            self.settings_controller.settings.game_folder, "Data"
                         )
                     ).resolve()
                 )
@@ -496,18 +497,18 @@ class MetadataManager(QObject):
             :return: a Dict of workshop mods by package id, and dict of community rules
             """
             mod_data = {}
-            if GameConfiguration.instance().local_folder_line.text() != "":
-                if GameConfiguration.instance().game_folder_line.text():
+            if self.settings_controller.settings.local_folder != "":
+                if self.settings_controller.settings.game_folder:
                     logger.info(
-                        f"Supplementing call with game folder path: {GameConfiguration.instance().game_folder_line.text()}"
+                        f"Supplementing call with game folder path: {self.settings_controller.settings.game_folder}"
                     )
 
                 # Get mod data
                 logger.info(
-                    f"Getting local mods from path: {GameConfiguration.instance().local_folder_line.text()}"
+                    f"Getting local mods from path: {self.settings_controller.settings.local_folder}"
                 )
                 self.local_subdirectories = directories(
-                    GameConfiguration.instance().local_folder_line.text()
+                    self.settings_controller.settings.local_folder
                 )
                 mod_data = self.process_mods(
                     directories_to_process=self.local_subdirectories, intent="local"
@@ -531,12 +532,12 @@ class MetadataManager(QObject):
             :return: a Dict of workshop mods by package id, and dict of community rules
             """
             mod_data = {}
-            if GameConfiguration.instance().workshop_folder_line.text() != "":
+            if self.settings_controller.settings.workshop_folder != "":
                 logger.info(
-                    f"Getting workshop mods from path: {GameConfiguration.instance().workshop_folder_line.text()}"
+                    f"Getting workshop mods from path: {self.settings_controller.settings.workshop_folder}"
                 )
                 self.workshop_subdirectories = directories(
-                    GameConfiguration.instance().workshop_folder_line.text()
+                    self.settings_controller.settings.workshop_folder
                 )
                 mod_data = self.process_mods(
                     directories_to_process=self.workshop_subdirectories,
@@ -562,13 +563,13 @@ class MetadataManager(QObject):
 
         # Get & set Rimworld version string
         self.game_version = get_game_version(
-            self, game_path=GameConfiguration.instance().game_folder_line.text()
+            self, game_path=self.settings_controller.settings.game_folder
         )
 
         # Get and cache installed base game / DLC data
         if (
-            GameConfiguration.instance().game_folder_line.text()
-            and GameConfiguration.instance().game_folder_line.text() != ""
+            self.settings_controller.settings.game_folder
+            and self.settings_controller.settings.game_folder != ""
         ):
             expansions = get_installed_expansions(self)
         else:
@@ -576,8 +577,8 @@ class MetadataManager(QObject):
 
         # Get and cache installed local/SteamCMD Workshop mods
         if (
-            GameConfiguration.instance().local_folder_line.text()
-            and GameConfiguration.instance().local_folder_line.text() != ""
+            self.settings_controller.settings.local_folder
+            and self.settings_controller.settings.local_folder != ""
         ):
             local_mods = get_local_mods(self)
 
@@ -605,8 +606,8 @@ class MetadataManager(QObject):
             local_mods = {}
         # Get and cache installed Steam client Workshop mods
         if (
-            GameConfiguration.instance().workshop_folder_line.text()
-            and GameConfiguration.instance().workshop_folder_line.text() != ""
+            self.settings_controller.settings.workshop_folder
+            and self.settings_controller.settings.workshop_folder != ""
         ):
             workshop_mods = get_workshop_mods(self)
             # Steam client

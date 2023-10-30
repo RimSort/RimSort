@@ -156,10 +156,12 @@ class MainContent(QObject):
             # INSTANTIATE WIDGETS
             self.mod_info_panel = ModInfo()
             self.active_mods_panel = ActiveModList(
-                mod_type_filter_enable=self.settings_controller.settings.mod_type_filter_toggle
+                mod_type_filter_enable=self.settings_controller.settings.mod_type_filter_toggle,
+                settings_controller=self.settings_controller,
             )
             self.inactive_mods_panel = InactiveModList(
-                mod_type_filter_enable=self.settings_controller.settings.mod_type_filter_toggle
+                mod_type_filter_enable=self.settings_controller.settings.mod_type_filter_toggle,
+                settings_controller=self.settings_controller,
             )
             self.actions_panel = Actions()
 
