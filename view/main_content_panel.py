@@ -307,7 +307,7 @@ class MainContent(QObject):
                 # Remove items from current list
                 for item in items_to_move:
                     aml.takeItem(aml.row(item))
-                    aml.uuids.discard(item.data(Qt.UserRole))
+                    aml.uuids.remove(item.data(Qt.UserRole))
                 if aml.count():
                     if aml.count() == first_selected:
                         aml.setCurrentRow(aml.count() - 1)
@@ -358,7 +358,7 @@ class MainContent(QObject):
                 # Remove items from current list
                 for item in items_to_move:
                     iml.takeItem(iml.row(item))
-                    iml.uuids.discard(item.data(Qt.UserRole))
+                    iml.uuids.remove(item.data(Qt.UserRole))
                 if iml.count():
                     if iml.count() == first_selected:
                         iml.setCurrentRow(iml.count() - 1)
