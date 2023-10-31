@@ -181,7 +181,7 @@ class MainWindow(QMainWindow):
             self.main_content_panel._do_refresh_animation
         )
         # Connect main content signal so it can stop watchdog
-        self.main_content_panel.stop_watchdog_signal.connect(self.__shutdown_watchdog)
+        self.main_content_panel.stop_watchdog_signal.connect(self.shutdown_watchdog)
         # Start watchdog
         try:
             self.watchdog_observer.start()
@@ -190,7 +190,7 @@ class MainWindow(QMainWindow):
                 f"Unable to initialize watchdog Observer due to exception: {e.__class__.__name__}"
             )
 
-    def __shutdown_watchdog(self) -> None:
+    def shutdown_watchdog(self) -> None:
         if self.watchdog_observer and self.watchdog_observer.is_alive():
             self.watchdog_observer.stop()
             self.watchdog_observer.join()

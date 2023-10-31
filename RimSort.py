@@ -120,7 +120,7 @@ def main_thread() -> None:
         if "window" in locals():
             try:
                 logger.debug("Stopping watchdog...")
-                window.__shutdown_watchdog()
+                window.shutdown_watchdog()
             except:
                 stacktrace = traceback.format_exc()
                 logger.warning(
