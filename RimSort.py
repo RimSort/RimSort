@@ -97,6 +97,7 @@ def main_thread() -> None:
     except Exception as e:
         # Catch exceptions during initial application instantiation
         # Uncaught exceptions during the application loop are caught with excepthook
+        stacktrace: str = ""
         if isinstance(e, SystemExit):
             logger.warning("Exiting application")
         elif (
