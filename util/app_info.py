@@ -58,6 +58,10 @@ class AppInfo:
         self._user_data_folder = Path(platform_dirs.user_data_dir)
         self._user_log_folder = Path(platform_dirs.user_log_dir)
 
+        # Derive some secondary directory paths
+
+        self._app_data_folder = self._application_folder / "data"
+
         # Make sure important directories exist
 
         self._user_data_folder.mkdir(parents=True, exist_ok=True)
@@ -128,3 +132,10 @@ class AppInfo:
             Path: The path to the user-specific log folder.
         """
         return self._user_log_folder
+
+    @property
+    def app_data_folder(self) -> Path:
+        """
+        Get the path to the folder where application-specific data is stored.
+        """
+        return self._app_data_folder
