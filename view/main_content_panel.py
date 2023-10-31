@@ -240,8 +240,8 @@ class MainContent(QObject):
                 self._do_refresh
             )
             # Restore cache initially set to empty
-            self.active_mods_data_restore_state: Dict[str, Any] = {}
-            self.inactive_mods_data_restore_state: Dict[str, Any] = {}
+            self.active_mods_uuids_restore_state: list[str] = []
+            self.inactive_mods_uuids_restore_state: list[str] = []
 
             # Store duplicate_mods for global access
             self.duplicate_mods = {}
@@ -378,26 +378,26 @@ class MainContent(QObject):
                 self.active_mods_panel.recalculate_internal_list_errors()
 
     def __insert_data_into_lists(
-        self, active_mods: Dict[str, Any], inactive_mods: Dict[str, Any]
+        self, active_mods_uuids: List[str], inactive_mods_uuids: List[str]
     ) -> None:
         """
         Insert active mods and inactive mods into respective mod list widgets.
 
-        :param active_mods: dict of active mods
-        :param inactive_mods: dict of inactive mods
+        :param active_mods_uuids: list of active mod uuids
+        :param inactive_mods_uuids: list of inactive mod uuids
         """
         logger.info(
-            f"Inserting mod data into active [{len(active_mods)}] and inactive [{len(inactive_mods)}] mod lists"
+            f"Inserting mod data into active [{len(active_mods_uuids)}] and inactive [{len(inactive_mods_uuids)}] mod lists"
         )
         self.active_mods_panel.active_mods_list.recreate_mod_list(
-            list_type="active", uuids=[key for key in active_mods.keys()]
+            list_type="active", uuids=active_mods_uuids
         )
         self.inactive_mods_panel.inactive_mods_list.recreate_mod_list(
-            list_type="inactive", uuids=[key for key in inactive_mods.keys()]
+            list_type="inactive", uuids=inactive_mods_uuids
         )
 
         logger.info(
-            f"Finished inserting mod data into active [{len(active_mods)}] and inactive [{len(inactive_mods)}] mod lists"
+            f"Finished inserting mod data into active [{len(active_mods_uuids)}] and inactive [{len(inactive_mods_uuids)}] mod lists"
         )
 
     def __duplicate_mods_prompt(self) -> None:
@@ -550,8 +550,8 @@ class MainContent(QObject):
         """
         logger.info("Repopulating mod lists")
         (
-            active_mods_data,
-            inactive_mods_data,
+            active_mods_uuids,
+            inactive_mods_uuids,
             self.duplicate_mods,
             self.missing_mods,
         ) = get_active_inactive_mods(
@@ -563,14 +563,13 @@ class MainContent(QObject):
                     )
                 ).resolve()
             ),
-            self.metadata_manager.all_mods_compiled,
         )
         if is_initial:
             logger.info("Caching initial active/inactive mod lists")
-            self.active_mods_data_restore_state = active_mods_data
-            self.inactive_mods_data_restore_state = inactive_mods_data
+            self.active_mods_uuids_restore_state = active_mods_uuids
+            self.inactive_mods_uuids_restore_state = inactive_mods_uuids
 
-        self.__insert_data_into_lists(active_mods_data, inactive_mods_data)
+        self.__insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
 
     @property
     def panel(self):
@@ -1114,48 +1113,36 @@ class MainContent(QObject):
         )
         self.inactive_mods_panel.clear_inactive_mods_search()
 
-        # Metadata from official modules, stored so they can be inserted in proper order
-        core_data = None
-        royalty_data = None
-        ideology_data = None
-        biotech_data = None
         # Metadata to insert
-        active_mod_data = {}
-        inactive_mod_data = {}
+        active_mods_uuids = []
+        inactive_mods_uuids = []
         logger.info("Clearing mods from active mod list")
+        # Metadata from official modules, stored so they can be inserted in proper order
         for uuid, mod_data in self.metadata_manager.all_mods_compiled.items():
             if mod_data["data_source"] == "expansion":
                 if (
                     mod_data["packageid"]
                     == RIMWORLD_DLC_METADATA["294100"]["packageid"]
                 ):
-                    core_data = mod_data
+                    active_mods_uuids.append(uuid)
                 elif (
                     mod_data["packageid"]
                     == RIMWORLD_DLC_METADATA["1149640"]["packageid"]
                 ):
-                    royalty_data = mod_data
+                    active_mods_uuids.append(uuid)
                 elif (
                     mod_data["packageid"]
                     == RIMWORLD_DLC_METADATA["1392840"]["packageid"]
                 ):
-                    ideology_data = mod_data
+                    active_mods_uuids.append(uuid)
                 elif (
                     mod_data["packageid"]
                     == RIMWORLD_DLC_METADATA["1826140"]["packageid"]
                 ):
-                    biotech_data = mod_data
+                    active_mods_uuids.append(uuid)
             else:
-                inactive_mod_data[uuid] = mod_data
-        if core_data:
-            active_mod_data[core_data["uuid"]] = core_data
-        if royalty_data:
-            active_mod_data[royalty_data["uuid"]] = royalty_data
-        if ideology_data:
-            active_mod_data[ideology_data["uuid"]] = ideology_data
-        if biotech_data:
-            active_mod_data[biotech_data["uuid"]] = biotech_data
-        self.__insert_data_into_lists(active_mod_data, inactive_mod_data)
+                inactive_mods_uuids.append(uuid)
+        self.__insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
 
     def _do_sort(self) -> None:
         """
@@ -1299,16 +1286,13 @@ class MainContent(QObject):
             self.inactive_mods_panel.signal_inactive_mods_data_source_filter()
             logger.info(f"Trying to import mods list from XML: {file_path}")
             (
-                active_mods_data,
-                inactive_mods_data,
+                active_mods_uuids,
+                inactive_mods_uuids,
                 self.duplicate_mods,
                 self.missing_mods,
-            ) = get_active_inactive_mods(
-                file_path,
-                self.metadata_manager.all_mods_compiled,
-            )
+            ) = get_active_inactive_mods(file_path)
             logger.info("Got new mods according to imported XML")
-            self.__insert_data_into_lists(active_mods_data, inactive_mods_data)
+            self.__insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
             # If we have duplicate mods, prompt user
             if (
                 self.settings_controller.settings.duplicate_mods_warning
@@ -1704,7 +1688,10 @@ class MainContent(QObject):
         TODO: restoring after clearing will cause a few harmless lines of
         'Inactive mod count changed to: 0' to appear.
         """
-        if self.active_mods_data_restore_state and self.active_mods_data_restore_state:
+        if (
+            self.active_mods_uuids_restore_state
+            and self.active_mods_uuids_restore_state
+        ):
             self.active_mods_panel.clear_active_mods_search()
             self.active_mods_panel.active_mods_filter_data_source_index = len(
                 self.active_mods_panel.active_mods_filter_data_source_icons
@@ -1716,11 +1703,11 @@ class MainContent(QObject):
             )
             self.inactive_mods_panel.signal_inactive_mods_data_source_filter()
             logger.info(
-                f"Restoring cached mod lists with active list [{len(self.active_mods_data_restore_state)}] and inactive list [{len(self.inactive_mods_data_restore_state)}]"
+                f"Restoring cached mod lists with active list [{len(self.active_mods_uuids_restore_state)}] and inactive list [{len(self.inactive_mods_uuids_restore_state)}]"
             )
             self.__insert_data_into_lists(
-                self.active_mods_data_restore_state,
-                self.inactive_mods_data_restore_state,
+                self.active_mods_uuids_restore_state,
+                self.inactive_mods_uuids_restore_state,
             )
         else:
             logger.warning(
