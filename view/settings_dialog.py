@@ -25,6 +25,8 @@ class SettingsDialog(QDialog):
     ) -> None:
         super().__init__()
 
+        self.setWindowModality(Qt.WindowModality.ApplicationModal)
+
         self.setWindowTitle("Settings")
         self.resize(800, 600)
 

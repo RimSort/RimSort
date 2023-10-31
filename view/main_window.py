@@ -16,6 +16,7 @@ from util.watchdog import RSFileSystemEventHandler
 from view.game_configuration_panel import GameConfiguration
 from view.main_content_panel import MainContent
 from view.menu_bar import MenuBar
+from view.settings_dialog import SettingsDialog
 from view.status_panel import Status
 
 if SystemInfo().operating_system == SystemInfo.OperatingSystem.WINDOWS:
@@ -39,7 +40,10 @@ class MainWindow(QMainWindow):
 
         # Instantiate the settings model and controller
         self.settings = Settings()
-        self.settings_controller = SettingsController(model=self.settings)
+        self.settings_dialog = SettingsDialog()
+        self.settings_controller = SettingsController(
+            model=self.settings, view=self.settings_dialog
+        )
 
         # Create the main application window
         self.DEBUG_MODE = debug_mode

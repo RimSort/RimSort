@@ -32,6 +32,10 @@ class MenuBarController(QObject):
         )
 
         self.menu_bar.settings_action.triggered.connect(
+            self.settings_controller.show_settings_dialog
+        )
+
+        self.menu_bar.settings_action_2.triggered.connect(
             GameConfiguration.instance()._open_settings_panel
         )
 
