@@ -143,7 +143,7 @@ class ModListWidget(QListWidget):
 
         # This set is used to keep track of mods that have been loaded
         # into widgets. Used for an optimization strategy for `handle_rows_inserted`
-        self.uuids = set()
+        self.uuids = list()
         self.ignore_warning_list = []
         logger.debug("Finished ModListWidget initialization")
 
@@ -973,7 +973,8 @@ class ModListWidget(QListWidget):
             return super().keyPressEvent(e)
 
     def handle_other_list_row_added(self, uuid: str) -> None:
-        self.uuids.discard(uuid)
+        if uuid in self.uuids:
+            self.uuids.remove(uuid)
 
     def handle_rows_inserted(self, parent: QModelIndex, first: int, last: int) -> None:
         """
@@ -1036,7 +1037,7 @@ class ModListWidget(QListWidget):
                 widget.main_label.style().polish(widget.main_label)
                 item.setSizeHint(widget.sizeHint())
                 self.setItemWidget(item, widget)
-                self.uuids.add(uuid)
+                self.uuids.insert(idx, uuid)
                 self.item_added_signal.emit(uuid)
 
         if len(self.uuids) == self.count():
@@ -1096,7 +1097,7 @@ class ModListWidget(QListWidget):
         self.setUpdatesEnabled(False)
         # Clear list
         self.clear()
-        self.uuids = set()
+        self.uuids = list()
         if uuids:  # Insert data...
             for uuid_key in uuids:
                 list_item = QListWidgetItem(self)

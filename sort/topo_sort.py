@@ -1,5 +1,5 @@
 from logger_tt import logger
-from typing import Any
+from typing import Any, List
 
 from toposort import toposort
 
@@ -8,14 +8,14 @@ from util.metadata import MetadataManager
 
 def do_topo_sort(
     dependency_graph: dict[str, set[str]], active_mods_uuids: set[str]
-) -> set[str]:
+) -> List[str]:
     """
     Sort mods using the topological sort algorithm. For each
     topological level, sort the mods alphabetically.
     """
     logger.info(f"Initializing toposort for {len(dependency_graph)} mods")
     sorted_dependencies = toposort(dependency_graph)
-    reordered = set()
+    reordered = list()
     active_mods_packageid_to_uuid = dict(
         (MetadataManager.instance().all_mods_compiled[uuid]["packageid"], uuid)
         for uuid in active_mods_uuids
@@ -34,6 +34,6 @@ def do_topo_sort(
         )
         # Add into reordered set
         for sorted_mod_uuid in sorted_temp_mod_set:
-            reordered.add(sorted_mod_uuid)
+            reordered.append(sorted_mod_uuid)
     logger.info(f"Finished Toposort sort with {len(reordered)} mods")
     return reordered

@@ -1251,8 +1251,8 @@ class MainContent(QObject):
         combined_mods = {}
         for uuid in (
             reordered_tier_one_sorted
-            | reordered_tier_two_sorted
-            | reordered_tier_three_sorted
+            + reordered_tier_two_sorted
+            + reordered_tier_three_sorted
         ):
             combined_mods[uuid] = self.metadata_manager.all_mods_compiled[uuid]
 
@@ -1265,8 +1265,8 @@ class MainContent(QObject):
                 if uuid
                 not in set(
                     reordered_tier_one_sorted
-                    | reordered_tier_two_sorted
-                    | reordered_tier_three_sorted
+                    + reordered_tier_two_sorted
+                    + reordered_tier_three_sorted
                 )
             },
         )

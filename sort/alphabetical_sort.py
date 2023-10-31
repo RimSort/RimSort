@@ -1,12 +1,12 @@
 from logger_tt import logger
-from typing import Any
+from typing import Any, List
 
 from util.metadata import MetadataManager
 
 
 def do_alphabetical_sort(
     dependency_graph: dict[str, set[str]], active_mods_uuids: set[str]
-) -> set[str]:
+) -> List[str]:
     logger.info(f"Starting Alphabetical sort for {len(dependency_graph)} mods")
     # Get an alphabetized list of dependencies
     active_mods_id_to_name = dict(
@@ -51,11 +51,11 @@ def do_alphabetical_sort(
                 index_just_appended,
             )
 
-    reordered = set()
+    reordered = list()
     for package_id in mods_load_order:
         if package_id in active_mods_packageid_to_uuid:
             mod_uuid = active_mods_packageid_to_uuid[package_id]
-            reordered.add(mod_uuid)
+            reordered.append(mod_uuid)
     logger.info(f"Finished Alphabetical sort with {len(reordered)} mods")
     return reordered
 
