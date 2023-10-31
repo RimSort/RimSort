@@ -1,18 +1,16 @@
-import sys
-
-from multiprocessing import freeze_support, set_start_method
-
 import os
-from pathlib import Path
 import platform
-from tempfile import gettempdir
+import sys
 import traceback
+from logging import getLogger, WARNING
+from multiprocessing import freeze_support, set_start_method
+from pathlib import Path
+from tempfile import gettempdir
 from types import TracebackType
 from typing import Type, Optional
 
-from logger_tt import handlers, logger, setup_logging
-from logging import getLogger, WARNING
 from PySide6.QtWidgets import QApplication
+from logger_tt import handlers, logger, setup_logging
 
 from util.app_info import AppInfo
 from view.main_window import MainWindow
