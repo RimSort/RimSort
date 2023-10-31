@@ -104,11 +104,13 @@ def main_thread() -> None:
             e.__class__.__name__ == "HTTPError" or e.__class__.__name__ == "SSLError"
         ):  # requests.exceptions.HTTPError OR urllib3.exceptions.SSLError
             stacktrace = traceback.format_exc()
+            # If an HTTPError from steam/urllib3 module(s) somehow is uncaught,
+            # try to remove the Steam API key from the stacktrace
             pattern = "&key="
             stacktrace = stacktrace[
                 : len(stacktrace)
                 - (len(stacktrace) - (stacktrace.find(pattern) + len(pattern)))
-            ]  # If an HTTPError from steam/urllib3 module(s) somehow is uncaught, try to remove the Steam API key from the stacktrace
+            ]
         else:
             stacktrace = traceback.format_exc()
         logger.error(
