@@ -54,7 +54,7 @@ class AppInfo:
 
         # Define important directories using platformdirs
 
-        platform_dirs = PlatformDirs(appname=self._app_name)
+        platform_dirs = PlatformDirs(appname=self._app_name, appauthor=False)
         self._user_data_folder = Path(platform_dirs.user_data_dir)
         self._user_log_folder = Path(platform_dirs.user_log_dir)
 
