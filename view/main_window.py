@@ -1,10 +1,12 @@
 import os
-from pathlib import Path
+from typing import Optional
 
 from PySide6.QtCore import QSize
+from PySide6.QtGui import QShowEvent
 from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QWidget
 from logger_tt import logger
 from watchdog.observers import Observer
+from watchdog.observers.api import BaseObserver
 from watchdog.observers.polling import PollingObserver
 
 from controller.menu_bar_controller import MenuBarController
@@ -24,7 +26,7 @@ class MainWindow(QMainWindow):
     Subclass QMainWindow to customize the main application window.
     """
 
-    def __init__(self, DEBUG_MODE=None) -> None:
+    def __init__(self, debug_mode: bool = False) -> None:
         """
         Initialize the main application window. Construct the layout,
         add the three main views, and set up relevant signals and slots.
@@ -37,8 +39,9 @@ class MainWindow(QMainWindow):
         self.settings_controller = SettingsController(model=self.settings)
 
         # Create the main application window
-        self.DEBUG_MODE = DEBUG_MODE
-        self.init = None  # Content initialization should only fire on startup. Otherwise, this is handled by Refresh button
+        self.DEBUG_MODE = debug_mode
+        # Content initialization should only fire on startup. Otherwise, this is handled by Refresh button
+        self.init: bool = False
         self.version_string = "Alpha-v1.0.6.2-hf"
 
         # Check for SHA and append to version string if found
@@ -49,10 +52,10 @@ class MainWindow(QMainWindow):
             self.version_string += f" [Edge {sha}]"
 
         # Watchdog
-        self.watchdog_event_handler = None
-        self.watchdog_observer = None
+        self.watchdog_event_handler: Optional[RSFileSystemEventHandler] = None
+        self.watchdog_observer: Optional[BaseObserver] = None
 
-        # Setup the window
+        # Set up the window
         self.setWindowTitle(f"RimSort {self.version_string}")
         self.setMinimumSize(QSize(1024, 768))
 
@@ -63,7 +66,7 @@ class MainWindow(QMainWindow):
 
         # Create various panels on the application GUI
         self.game_configuration = GameConfiguration.instance(
-            DEBUG_MODE=DEBUG_MODE,
+            DEBUG_MODE=debug_mode,
             settings_controller=self.settings_controller,
             RIMSORT_VERSION=self.version_string,
         )
@@ -102,7 +105,7 @@ class MainWindow(QMainWindow):
 
         logger.debug("Finished MainWindow initialization")
 
-    def showEvent(self, event) -> None:
+    def showEvent(self, event: QShowEvent) -> None:
         # Call the original showEvent handler
         super().showEvent(event)
         if not self.init:

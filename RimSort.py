@@ -85,7 +85,7 @@ def main_thread() -> None:
             ).read_text()
         )
         # Create the main window
-        window = MainWindow(DEBUG_MODE=DEBUG_MODE)
+        window = MainWindow(debug_mode=DEBUG_MODE)
         logger.info("Showing MainWindow")
         window.show()
         window.__initialize_content()
