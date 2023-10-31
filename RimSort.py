@@ -92,7 +92,7 @@ def main_thread() -> None:
         window = MainWindow(debug_mode=DEBUG_MODE)
         logger.info("Showing MainWindow")
         window.show()
-        window.__initialize_content()
+        window.initialize_content()
         app.exec()
     except Exception as e:
         # Catch exceptions during initial application instantiation

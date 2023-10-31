@@ -132,7 +132,7 @@ class MainWindow(QMainWindow):
                 self.settings_controller.settings.show_folder_rows
             )
 
-    def __initialize_content(self) -> None:
+    def initialize_content(self) -> None:
         self.init = True
 
         # IF CHECK FOR UPDATE ON STARTUP...
