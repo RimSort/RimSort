@@ -7,6 +7,8 @@ from pathlib import Path
 import platform
 from tempfile import gettempdir
 import traceback
+from types import TracebackType
+from typing import Type, Optional
 
 from logger_tt import logger, setup_logging
 from logging import getLogger, WARNING
@@ -18,11 +20,9 @@ from view.main_window import MainWindow
 SYSTEM = platform.system()
 # Watchdog conditionals
 if SYSTEM == "Darwin":
-
     # Comment to see logging for watchdog handler on Darwin
     getLogger("watchdog.observers.fsevents").setLevel(WARNING)
 elif SYSTEM == "Linux":
-
     # Comment to see logging for watchdog handler on Linux
     getLogger("watchdog.observers.inotify_buffer").setLevel(WARNING)
 elif SYSTEM == "Windows":
@@ -37,7 +37,11 @@ from model.dialogue import show_fatal_error
 from util.proxy_style import ProxyStyle
 
 
-def handle_exception(exc_type, exc_value, exc_traceback):
+def handle_exception(
+    exc_type: Type[BaseException],
+    exc_value: BaseException,
+    exc_traceback: Optional[TracebackType],
+) -> None:
     """
     This function is called (through excepthook) when the main application
     loop encounters an uncaught exception. When this happens, the error is
@@ -93,7 +97,7 @@ def main_thread() -> None:
     except Exception as e:
         # Catch exceptions during initial application instantiation
         # Uncaught exceptions during the application loop are caught with excepthook
-        if e is SystemExit:
+        if isinstance(e, SystemExit):
             logger.warning("Exiting application")
         elif (
             e.__class__.__name__ == "HTTPError" or e.__class__.__name__ == "SSLError"
