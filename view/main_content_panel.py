@@ -294,7 +294,7 @@ class MainContent(QObject):
             iml.setFocus()
             if not iml.selectedIndexes():
                 iml.setCurrentRow(self.___get_relative_middle(iml))
-            self.__mod_list_slot(iml.selectedItems()[0].data(Qt.UserRole)["uuid"])
+            self.__mod_list_slot(iml.selectedItems()[0].data(Qt.UserRole))
 
         elif key == "Return" or key == "Space" or key == "DoubleClick":
             # TODO: graphical bug where if you hold down the key, items are
@@ -307,7 +307,7 @@ class MainContent(QObject):
                 # Remove items from current list
                 for item in items_to_move:
                     aml.takeItem(aml.row(item))
-                    aml.uuids.discard(item.data(Qt.UserRole)["uuid"])
+                    aml.uuids.discard(item.data(Qt.UserRole))
                 if aml.count():
                     if aml.count() == first_selected:
                         aml.setCurrentRow(aml.count() - 1)
@@ -345,7 +345,7 @@ class MainContent(QObject):
             aml.setFocus()
             if not aml.selectedIndexes():
                 aml.setCurrentRow(self.___get_relative_middle(aml))
-            self.__mod_list_slot(aml.selectedItems()[0].data(Qt.UserRole)["uuid"])
+            self.__mod_list_slot(aml.selectedItems()[0].data(Qt.UserRole))
 
         elif key == "Return" or key == "Space" or key == "DoubleClick":
             # TODO: graphical bug where if you hold down the key, items are
@@ -358,7 +358,7 @@ class MainContent(QObject):
                 # Remove items from current list
                 for item in items_to_move:
                     iml.takeItem(iml.row(item))
-                    iml.uuids.discard(item.data(Qt.UserRole)["uuid"])
+                    iml.uuids.discard(item.data(Qt.UserRole))
                 if iml.count():
                     if iml.count() == first_selected:
                         iml.setCurrentRow(iml.count() - 1)
@@ -390,10 +390,10 @@ class MainContent(QObject):
             f"Inserting mod data into active [{len(active_mods)}] and inactive [{len(inactive_mods)}] mod lists"
         )
         self.active_mods_panel.active_mods_list.recreate_mod_list(
-            list_type="active", mods=active_mods
+            list_type="active", uuids=[key for key in active_mods.keys()]
         )
         self.inactive_mods_panel.inactive_mods_list.recreate_mod_list(
-            list_type="inactive", mods=inactive_mods
+            list_type="inactive", uuids=[key for key in inactive_mods.keys()]
         )
 
         logger.info(
@@ -457,7 +457,7 @@ class MainContent(QObject):
         :param uuid: uuid of mod
         """
         logger.info(f"USER ACTION: clicked on a mod list item: {uuid}")
-        if uuid in self.metadata_manager.all_mods_compiled:
+        if uuid in self.metadata_manager.all_mods_compiled.keys():
             self.mod_info_panel.display_mod_info(
                 self.metadata_manager.all_mods_compiled[uuid]
             )
@@ -620,12 +620,10 @@ class MainContent(QObject):
                         todds_txt_file.write(workshop_mods_target + "\n")
             else:
                 with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
-                    for (
-                        json_data
-                    ) in (
-                        self.active_mods_panel.active_mods_list.get_list_items_by_dict().values()
-                    ):
-                        todds_txt_file.write(json_data["path"] + "\n")
+                    for uuid in self.active_mods_panel.active_mods_list.uuids:
+                        todds_txt_file.write(
+                            self.metadata_manager.all_mods_compiled[uuid]["path"] + "\n"
+                        )
             if action == "optimize_textures":
                 self._do_optimize_textures(todds_txt_path)
             if action == "delete_textures":
@@ -1177,19 +1175,21 @@ class MainContent(QObject):
             self.inactive_mods_panel.inactive_mods_filter_data_source_icons
         )
         self.inactive_mods_panel.signal_inactive_mods_data_source_filter()
-        active_mods = self.active_mods_panel.active_mods_list.get_list_items_by_dict()
         active_mod_ids = list()
-        for mod_data in active_mods.values():
-            active_mod_ids.append(mod_data["packageid"])
-        inactive_mods = (
-            self.inactive_mods_panel.inactive_mods_list.get_list_items_by_dict()
-        )
+        for uuid in self.active_mods_panel.active_mods_list.uuids:
+            active_mod_ids.append(
+                self.metadata_manager.all_mods_compiled[uuid]["packageid"]
+            )
 
         # Get all active mods and their dependencies (if also active mod)
-        dependencies_graph = gen_deps_graph(active_mods, active_mod_ids)
+        dependencies_graph = gen_deps_graph(
+            self.active_mods_panel.active_mods_list.uuids, active_mod_ids
+        )
 
         # Get all active mods and their reverse dependencies
-        reverse_dependencies_graph = gen_rev_deps_graph(active_mods, active_mod_ids)
+        reverse_dependencies_graph = gen_rev_deps_graph(
+            self.active_mods_panel.active_mods_list.uuids, active_mod_ids
+        )
 
         # Get dependencies graph for tier one mods (load at top mods)
         tier_one_dependency_graph, tier_one_mods = gen_tier_one_deps_graph(
@@ -1198,12 +1198,17 @@ class MainContent(QObject):
 
         # Get dependencies graph for tier three mods (load at bottom mods)
         tier_three_dependency_graph, tier_three_mods = gen_tier_three_deps_graph(
-            dependencies_graph, reverse_dependencies_graph, active_mods
+            dependencies_graph,
+            reverse_dependencies_graph,
+            self.active_mods_panel.active_mods_list.uuids,
         )
 
         # Get dependencies graph for tier two mods (load in middle)
         tier_two_dependency_graph = gen_tier_two_deps_graph(
-            active_mods, active_mod_ids, tier_one_mods, tier_three_mods
+            self.active_mods_panel.active_mods_list.uuids,
+            active_mod_ids,
+            tier_one_mods,
+            tier_three_mods,
         )
 
         # Depending on the selected algorithm, sort all tiers with Alphabetical
@@ -1212,47 +1217,59 @@ class MainContent(QObject):
 
         if sorting_algorithm == "Alphabetical":
             logger.info("Alphabetical sorting algorithm is selected")
-            reordered_tier_one_sorted_with_data = do_alphabetical_sort(
-                tier_one_dependency_graph, active_mods
+            reordered_tier_one_sorted = do_alphabetical_sort(
+                tier_one_dependency_graph, self.active_mods_panel.active_mods_list.uuids
             )
-            reordered_tier_three_sorted_with_data = do_alphabetical_sort(
-                tier_three_dependency_graph, active_mods
+            reordered_tier_three_sorted = do_alphabetical_sort(
+                tier_three_dependency_graph,
+                self.active_mods_panel.active_mods_list.uuids,
             )
-            reordered_tier_two_sorted_with_data = do_alphabetical_sort(
-                tier_two_dependency_graph, active_mods
+            reordered_tier_two_sorted = do_alphabetical_sort(
+                tier_two_dependency_graph, self.active_mods_panel.active_mods_list.uuids
             )
         else:
             logger.info("Topological sorting algorithm is selected")
             # Sort tier one mods
-            reordered_tier_one_sorted_with_data = do_topo_sort(
-                tier_one_dependency_graph, active_mods
+            reordered_tier_one_sorted = do_topo_sort(
+                tier_one_dependency_graph, self.active_mods_panel.active_mods_list.uuids
             )
             # Sort tier three mods
-            reordered_tier_three_sorted_with_data = do_topo_sort(
-                tier_three_dependency_graph, active_mods
+            reordered_tier_three_sorted = do_topo_sort(
+                tier_three_dependency_graph,
+                self.active_mods_panel.active_mods_list.uuids,
             )
             # Sort tier two mods
-            reordered_tier_two_sorted_with_data = do_topo_sort(
-                tier_two_dependency_graph, active_mods
+            reordered_tier_two_sorted = do_topo_sort(
+                tier_two_dependency_graph, self.active_mods_panel.active_mods_list.uuids
             )
 
-        logger.info(f"Sorted tier one mods: {len(reordered_tier_one_sorted_with_data)}")
-        logger.info(f"Sorted tier two mods: {len(reordered_tier_two_sorted_with_data)}")
-        logger.info(
-            f"Sorted tier three mods: {len(reordered_tier_three_sorted_with_data)}"
-        )
+        logger.info(f"Sorted tier one mods: {len(reordered_tier_one_sorted)}")
+        logger.info(f"Sorted tier two mods: {len(reordered_tier_two_sorted)}")
+        logger.info(f"Sorted tier three mods: {len(reordered_tier_three_sorted)}")
 
         # Add Tier 1, 2, 3 in order
         combined_mods = {}
-        for uuid, mod_data in reordered_tier_one_sorted_with_data.items():
-            combined_mods[uuid] = mod_data
-        for uuid, mod_data in reordered_tier_two_sorted_with_data.items():
-            combined_mods[uuid] = mod_data
-        for uuid, mod_data in reordered_tier_three_sorted_with_data.items():
-            combined_mods[uuid] = mod_data
+        for uuid in (
+            reordered_tier_one_sorted
+            | reordered_tier_two_sorted
+            | reordered_tier_three_sorted
+        ):
+            combined_mods[uuid] = self.metadata_manager.all_mods_compiled[uuid]
 
         logger.info("Finished combining all tiers of mods. Inserting into mod lists!")
-        self.__insert_data_into_lists(combined_mods, inactive_mods)
+        self.__insert_data_into_lists(
+            combined_mods,
+            {
+                uuid: self.metadata_manager.all_mods_compiled[uuid]
+                for uuid in self.metadata_manager.all_mods_compiled
+                if uuid
+                not in set(
+                    reordered_tier_one_sorted
+                    | reordered_tier_two_sorted
+                    | reordered_tier_three_sorted
+                )
+            },
+        )
 
     def _do_import_list_file_xml(self) -> None:
         """
@@ -1326,12 +1343,9 @@ class MainContent(QObject):
         logger.info(f"Selected path: {file_path}")
         if file_path:
             logger.info("Exporting current active mods to ModsConfig.xml format")
-            active_mods_json = (
-                self.active_mods_panel.active_mods_list.get_list_items_by_dict()
-            )
             active_mods = []
-            for mod_data in active_mods_json.values():
-                package_id = mod_data["packageid"]
+            for uuid in self.active_mods_panel.active_mods_list.uuids:
+                package_id = self.metadata_manager.all_mods_compiled[uuid]["packageid"]
                 if package_id in active_mods:  # This should NOT be happening
                     logger.critical(
                         f"Tried to export more than 1 identical package ids to the same mod list. Skipping duplicate {package_id}"
@@ -1341,7 +1355,10 @@ class MainContent(QObject):
                     if (
                         package_id in self.duplicate_mods.keys()
                     ):  # Check if mod has duplicates
-                        if mod_data["data_source"] == "workshop":
+                        if (
+                            self.metadata_manager.all_mods_compiled[uuid]["data_source"]
+                            == "workshop"
+                        ):
                             active_mods.append(package_id + "_steam")
                             continue  # Append `_steam` suffix if Steam mod, continue to next mod
                     active_mods.append(package_id)
@@ -1382,12 +1399,9 @@ class MainContent(QObject):
         logger.info("Generating report to export mod list to clipboard")
         # Build our lists
         active_mods = []
-        active_mods_json = (
-            self.active_mods_panel.active_mods_list.get_list_items_by_dict()
-        )
         active_mods_packageid_to_uuid = {}
-        for uuid, mod_data in active_mods_json.items():
-            package_id = mod_data["packageid"]
+        for uuid in self.active_mods_panel.active_mods_list.uuids:
+            package_id = self.metadata_manager.all_mods_compiled[uuid]["packageid"]
             if package_id in active_mods:  # This should NOT be happening
                 logger.critical(
                     f"Tried to export more than 1 identical package ids to the same mod list. "
@@ -1406,14 +1420,14 @@ class MainContent(QObject):
         )
         for package_id in active_mods:
             uuid = active_mods_packageid_to_uuid[package_id]
-            if active_mods_json[uuid].get("name"):
-                name = active_mods_json[uuid]["name"]
+            if self.metadata_manager.all_mods_compiled[uuid].get("name"):
+                name = self.metadata_manager.all_mods_compiled[uuid]["name"]
             else:
                 name = "No name specified"
-            if active_mods_json[uuid].get("url"):
-                url = active_mods_json[uuid]["url"]
-            elif active_mods_json[uuid].get("steam_url"):
-                url = active_mods_json[uuid]["steam_url"]
+            if self.metadata_manager.all_mods_compiled[uuid].get("url"):
+                url = self.metadata_manager.all_mods_compiled[uuid]["url"]
+            elif self.metadata_manager.all_mods_compiled[uuid].get("steam_url"):
+                url = self.metadata_manager.all_mods_compiled[uuid]["steam_url"]
             else:
                 url = "No url specified"
             active_mods_clipboard_report = (
@@ -1438,16 +1452,13 @@ class MainContent(QObject):
         """
         # Define our lists
         active_mods = []
-        active_mods_json = (
-            self.active_mods_panel.active_mods_list.get_list_items_by_dict()
-        )
         active_mods_packageid_to_uuid = {}
         active_steam_mods_packageid_to_pfid = {}
         active_steam_mods_pfid_to_preview_url = {}
         pfids = []
         # Build our lists
-        for uuid, mod_data in active_mods_json.items():
-            package_id = mod_data["packageid"]
+        for uuid in self.active_mods_panel.active_mods_list.uuids:
+            package_id = MetadataManager.instance().all_mods_compiled[uuid]["packageid"]
             if package_id in active_mods:  # This should NOT be happening
                 logger.critical(
                     f"Tried to export more than 1 identical package ids to the same mod list. "
@@ -1458,9 +1469,15 @@ class MainContent(QObject):
                 active_mods.append(package_id)
                 active_mods_packageid_to_uuid[package_id] = uuid
                 if (
-                    mod_data.get("steamcmd") or mod_data["data_source"] == "workshop"
-                ) and mod_data.get("publishedfileid"):
-                    publishedfileid = mod_data["publishedfileid"]
+                    self.metadata_manager.all_mods_compiled[uuid].get("steamcmd")
+                    or self.metadata_manager.all_mods_compiled[uuid]["data_source"]
+                    == "workshop"
+                ) and self.metadata_manager.all_mods_compiled[uuid].get(
+                    "publishedfileid"
+                ):
+                    publishedfileid = self.metadata_manager.all_mods_compiled[uuid][
+                        "publishedfileid"
+                    ]
                     active_steam_mods_packageid_to_pfid[package_id] = publishedfileid
                     pfids.append(publishedfileid)
         logger.info(f"Collected {len(active_mods)} active mods for export")
@@ -1492,13 +1509,14 @@ class MainContent(QObject):
         for package_id in active_mods:
             count = active_mods.index(package_id) + 1
             uuid = active_mods_packageid_to_uuid[package_id]
-            if active_mods_json[uuid].get("name"):
-                name = active_mods_json[uuid]["name"]
+            if self.metadata_manager.all_mods_compiled[uuid].get("name"):
+                name = self.metadata_manager.all_mods_compiled[uuid]["name"]
             else:
                 name = "No name specified"
             if (
-                active_mods_json[uuid].get("steamcmd")
-                or active_mods_json[uuid]["data_source"] == "workshop"
+                self.metadata_manager.all_mods_compiled[uuid].get("steamcmd")
+                or self.metadata_manager.all_mods_compiled[uuid]["data_source"]
+                == "workshop"
             ) and active_steam_mods_packageid_to_pfid.get(package_id):
                 pfid = active_steam_mods_packageid_to_pfid[package_id]
                 if active_steam_mods_pfid_to_preview_url.get(pfid):
@@ -1508,10 +1526,10 @@ class MainContent(QObject):
                     )
                 else:
                     preview_url = "https://github.com/RimSort/RimSort/blob/main/rentry_steam_icon.png?raw=true"
-                if active_mods_json[uuid].get("steam_url"):
-                    url = active_mods_json[uuid]["steam_url"]
-                elif active_mods_json[uuid].get("url"):
-                    url = active_mods_json[uuid]["url"]
+                if self.metadata_manager.all_mods_compiled[uuid].get("steam_url"):
+                    url = self.metadata_manager.all_mods_compiled[uuid]["steam_url"]
+                elif self.metadata_manager.all_mods_compiled[uuid].get("url"):
+                    url = self.metadata_manager.all_mods_compiled[uuid]["url"]
                 else:
                     url is None
                 if url is None:
@@ -1531,10 +1549,10 @@ class MainContent(QObject):
             #     and not active_mods_json[uuid].get("steamcmd")
             # ):
             else:
-                if active_mods_json[uuid].get("url"):
-                    url = active_mods_json[uuid]["url"]
-                elif active_mods_json[uuid].get("steam_url"):
-                    url = active_mods_json[uuid]["steam_url"]
+                if self.metadata_manager.all_mods_compiled[uuid].get("url"):
+                    url = self.metadata_manager.all_mods_compiled[uuid]["url"]
+                elif self.metadata_manager.all_mods_compiled[uuid].get("steam_url"):
+                    url = self.metadata_manager.all_mods_compiled[uuid]["steam_url"]
                 else:
                     url = None
                 if url is None:
@@ -1620,12 +1638,9 @@ class MainContent(QObject):
         Method save the current list of active mods to the selected ModsConfig.xml
         """
         logger.info("Saving current active mods to ModsConfig.xml")
-        active_mods_json = (
-            self.active_mods_panel.active_mods_list.get_list_items_by_dict()
-        )
         active_mods = []
-        for mod_data in active_mods_json.values():
-            package_id = mod_data["packageid"]
+        for uuid in self.active_mods_panel.active_mods_list.uuids:
+            package_id = self.metadata_manager.all_mods_compiled[uuid]["packageid"]
             if package_id in active_mods:  # This should NOT be happening
                 logger.critical(
                     f"Tried to export more than 1 identical package ids to the same mod list. Skipping duplicate {package_id}"
@@ -1635,7 +1650,10 @@ class MainContent(QObject):
                 if (
                     package_id in self.duplicate_mods.keys()
                 ):  # Check if mod has duplicates
-                    if mod_data["data_source"] == "workshop":
+                    if (
+                        self.metadata_manager.all_mods_compiled[uuid]["data_source"]
+                        == "workshop"
+                    ):
                         active_mods.append(package_id + "_steam")
                         continue  # Append `_steam` suffix if Steam mod, continue to next mod
                 active_mods.append(package_id)

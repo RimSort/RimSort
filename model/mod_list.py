@@ -245,7 +245,9 @@ class ModListWidget(QListWidget):
                 if type(source_item) is QListWidgetItem:
                     source_widget = self.itemWidget(source_item)
                     # Retrieve metadata
-                    widget_json_data = source_widget.json_data
+                    widget_json_data = MetadataManager.instance().all_mods_compiled[
+                        source_widget.uuid
+                    ]
                     mod_data_source = widget_json_data.get("data_source")
                     # Open folder action text
                     open_folder_action = QAction()
@@ -364,7 +366,9 @@ class ModListWidget(QListWidget):
                     if type(source_item) is QListWidgetItem:
                         source_widget = self.itemWidget(source_item)
                         # Retrieve metadata
-                        widget_json_data = source_widget.json_data
+                        widget_json_data = MetadataManager.instance().all_mods_compiled[
+                            source_widget.uuid
+                        ]
                         mod_data_source = widget_json_data.get("data_source")
                         # Open folder action text
                         open_folder_action = QAction()
@@ -1010,9 +1014,8 @@ class ModListWidget(QListWidget):
         for idx in range(first, last + 1):
             item = self.item(idx)
             if item is not None and self.itemWidget(item) is None:
-                data = item.data(Qt.UserRole)
+                uuid = item.data(Qt.UserRole)
                 widget = ModListItemInner(
-                    data,
                     mod_type_filter_enable=self.mod_type_filter_enable,
                     csharp_icon_path=self.csharp_icon_path,
                     xml_icon_path=self.xml_icon_path,
@@ -1022,9 +1025,10 @@ class ModListWidget(QListWidget):
                     steamcmd_icon_path=self.steamcmd_icon_path,
                     steam_icon_path=self.steam_icon_path,
                     warning_icon_path=self.warning_icon_path,
+                    uuid=uuid,
                 )
                 widget.toggle_warning_signal.connect(self.toggle_warning)
-                if data.get("invalid"):
+                if MetadataManager.instance().all_mods_compiled[uuid].get("invalid"):
                     widget.main_label.setObjectName("summaryValueInvalid")
                 else:
                     widget.main_label.setObjectName("summaryValue")
@@ -1032,8 +1036,8 @@ class ModListWidget(QListWidget):
                 widget.main_label.style().polish(widget.main_label)
                 item.setSizeHint(widget.sizeHint())
                 self.setItemWidget(item, widget)
-                self.uuids.add(data["uuid"])
-                self.item_added_signal.emit(data["uuid"])
+                self.uuids.add(uuid)
+                self.item_added_signal.emit(uuid)
 
         if len(self.uuids) == self.count():
             self.list_update_signal.emit(str(self.count()))
@@ -1064,23 +1068,6 @@ class ModListWidget(QListWidget):
             return self.itemWidget(item)
         return None
 
-    def get_list_items_by_dict(self) -> dict[str, Any]:
-        """
-        Get a dict of all row item's widgets data. Equal to `mods` in
-        recreate mod list.
-
-        :return: a dict of mod data
-        """
-        logger.info("Returning a list of all mod items by json data")
-        mod_dict = {}
-        for i in range(self.count()):
-            item = self.itemWidget(self.item(i))
-            if item:
-                # Assume uuid always there, as this should be added when the list item's json data is populated
-                mod_dict[item.json_data["uuid"]] = item.json_data
-        logger.info(f"Collected json data for {len(mod_dict)} mods")
-        return mod_dict
-
     def get_widgets_and_items(self) -> list[tuple[ModListItemInner, QListWidgetItem]]:
         return [
             (self.itemWidget(self.item(i)), self.item(i)) for i in range(self.count())
@@ -1092,13 +1079,13 @@ class ModListWidget(QListWidget):
         the keyboard. Look up the mod's data by uuid
         """
         if current is not None:
-            self.mod_info_signal.emit(current.data(Qt.UserRole)["uuid"])
+            self.mod_info_signal.emit(current.data(Qt.UserRole))
 
     def mod_double_clicked(self, item: QListWidgetItem):
         widget = ModListItemInner = self.itemWidget(item)
         self.key_press_signal.emit("DoubleClick")
 
-    def recreate_mod_list(self, list_type: str, mods: dict[str, Any]) -> None:
+    def recreate_mod_list(self, list_type: str, uuids: List[str]) -> None:
         """
         Clear all mod items and add new ones from a dict.
 
@@ -1110,10 +1097,10 @@ class ModListWidget(QListWidget):
         # Clear list
         self.clear()
         self.uuids = set()
-        if mods:  # Insert data...
-            for mod_json_data in mods.values():
+        if uuids:  # Insert data...
+            for uuid_key in uuids:
                 list_item = QListWidgetItem(self)
-                list_item.setData(Qt.UserRole, mod_json_data)
+                list_item.setData(Qt.UserRole, uuid_key)
                 self.addItem(list_item)
         else:  # ...unless we don't have mods, at which point reenable updates and exit
             self.setUpdatesEnabled(True)

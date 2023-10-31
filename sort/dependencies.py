@@ -1,9 +1,11 @@
 from logger_tt import logger
 from typing import Any
 
+from util.metadata import MetadataManager
+
 
 def gen_deps_graph(
-    active_mods_json: dict[str, Any], active_mod_ids: list[str]
+    active_mods_uuids: set[str], active_mod_ids: list[str]
 ) -> dict[str, set[str]]:
     """
     Get dependencies
@@ -11,11 +13,15 @@ def gen_deps_graph(
     # Schema: {item: {dependency1, dependency2, ...}}
     logger.info("Generating dependencies graph")
     dependencies_graph: dict[str, set[str]] = {}
-    for mod_data in active_mods_json.values():
-        package_id = mod_data["packageid"]
+    for uuid in active_mods_uuids:
+        package_id = MetadataManager.instance().all_mods_compiled[uuid]["packageid"]
         dependencies_graph[package_id] = set()
-        if mod_data.get("loadTheseBefore"):  # Will either be None, or a set
-            for dependency in mod_data["loadTheseBefore"]:
+        if (
+            MetadataManager.instance().all_mods_compiled[uuid].get("loadTheseBefore")
+        ):  # Will either be None, or a set
+            for dependency in MetadataManager.instance().all_mods_compiled[uuid][
+                "loadTheseBefore"
+            ]:
                 # Only add a dependency if dependency exists in active_mods. Recall
                 # that dependencies exist for all_mods, but not all of these will be
                 # in active mods. Also note that dependencies here refers to load order
@@ -34,16 +40,20 @@ def gen_deps_graph(
 
 
 def gen_rev_deps_graph(
-    active_mods_json: dict[str, Any], active_mod_ids: list[str]
+    active_mods_uuids: set[str], active_mod_ids: list[str]
 ) -> dict[str, set[str]]:
     # Schema: {item: {isDependentOn1, isDependentOn2, ...}}
     logger.debug("Generating reverse dependencies graph")
     reverse_dependencies_graph: dict[str, set[str]] = {}
-    for mod_data in active_mods_json.values():
-        package_id = mod_data["packageid"]
+    for uuid in active_mods_uuids:
+        package_id = MetadataManager.instance().all_mods_compiled[uuid]["packageid"]
         reverse_dependencies_graph[package_id] = set()
-        if mod_data.get("loadTheseAfter"):  # Will either be None, or a set
-            for dependent in mod_data["loadTheseAfter"]:
+        if (
+            MetadataManager.instance().all_mods_compiled[uuid].get("loadTheseAfter")
+        ):  # Will either be None, or a set
+            for dependent in MetadataManager.instance().all_mods_compiled[uuid][
+                "loadTheseAfter"
+            ]:
                 # Dependent[0] is required here as as dependency is a tuple of package_id, explicit_bool
                 if not isinstance(dependent, tuple):
                     logger.error(
@@ -113,7 +123,7 @@ def get_dependencies_recursive(
 def gen_tier_three_deps_graph(
     dependencies_graph: dict[str, set[str]],
     reverse_dependencies_graph: dict[str, set[str]],
-    active_mods: dict[str, Any],
+    active_mods_uuids: set[str],
 ) -> tuple[dict[str, set[str]], set[str]]:
     # Below is a list of mods determined to be "tier three", in the sense that they
     # should be loaded after any other regular mod, potentially at the very end of the load order.
@@ -123,9 +133,9 @@ def gen_tier_three_deps_graph(
     # TODO: pull from a config
     logger.info("Generating dependencies graph for tier three mods")
     known_tier_three_mods = {
-        metadata.get("packageid")
-        for metadata in active_mods.values()
-        if metadata.get("loadBottom")
+        MetadataManager.instance().all_mods_compiled[uuid].get("packageid")
+        for uuid in active_mods_uuids
+        if MetadataManager.instance().all_mods_compiled[uuid].get("loadBottom")
     }
     known_tier_three_mods.update({"krkr.rocketman"})
     tier_three_mods = set()
@@ -173,7 +183,7 @@ def get_reverse_dependencies_recursive(
 
 
 def gen_tier_two_deps_graph(
-    active_mods: dict[str, Any],
+    active_mods_uuids: set[str],
     active_mod_ids: list[str],
     tier_one_mods: set[str],
     tier_three_mods: set[str],
@@ -186,10 +196,14 @@ def gen_tier_two_deps_graph(
         "Stripping all references to tier one and tier three mods and their dependencies"
     )
     tier_two_dependency_graph = {}
-    for mod_data in active_mods.values():
-        package_id = mod_data["packageid"]
+    for uuid in active_mods_uuids:
+        package_id = MetadataManager.instance().all_mods_compiled[uuid]["packageid"]
         if package_id not in tier_one_mods and package_id not in tier_three_mods:
-            dependencies = mod_data.get("loadTheseBefore")
+            dependencies = (
+                MetadataManager.instance()
+                .all_mods_compiled[uuid]
+                .get("loadTheseBefore")
+            )
             stripped_dependencies = set()
             if dependencies:
                 for dependency_id in dependencies:

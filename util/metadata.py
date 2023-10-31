@@ -326,9 +326,9 @@ class MetadataManager(QObject):
             """
             workshop_acf_data = acf_to_dict(appworkshop_acf_path)
             workshop_mods_pfid_to_uuid = {
-                v["publishedfileid"]: v["uuid"]
-                for v in workshop_mods.values()
-                if v.get("publishedfileid")
+                metadata["publishedfileid"]: uuid
+                for uuid, metadata in workshop_mods.items()
+                if metadata.get("publishedfileid")
             }
             # Reference needed information from appworkshop_294100.acf
             workshop_item_details = workshop_acf_data["AppWorkshop"][
@@ -1347,8 +1347,6 @@ class ModParser(QRunnable):
                         os.path.getmtime(directory)
                     )
                     mod_metadata["path"] = directory
-                    # Track source & uuid in case metadata becomes detached
-                    mod_metadata["uuid"] = uuid
                     logger.debug(
                         f"Finished editing XML mod content, adding final content to larger list: {mod_metadata}"
                     )
