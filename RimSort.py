@@ -10,7 +10,7 @@ import traceback
 from types import TracebackType
 from typing import Type, Optional
 
-from logger_tt import logger, setup_logging
+from logger_tt import handlers, logger, setup_logging
 from logging import getLogger, WARNING
 from PySide6.QtWidgets import QApplication
 
