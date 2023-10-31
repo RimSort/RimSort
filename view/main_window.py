@@ -5,9 +5,7 @@ from PySide6.QtCore import QSize
 from PySide6.QtGui import QShowEvent
 from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QWidget
 from logger_tt import logger
-from watchdog.observers import Observer
 from watchdog.observers.api import BaseObserver
-from watchdog.observers.polling import PollingObserver
 
 from controller.menu_bar_controller import MenuBarController
 from controller.settings_controller import SettingsController
@@ -19,6 +17,11 @@ from view.game_configuration_panel import GameConfiguration
 from view.main_content_panel import MainContent
 from view.menu_bar import MenuBar
 from view.status_panel import Status
+
+if SystemInfo().operating_system == SystemInfo.OperatingSystem.WINDOWS:
+    from watchdog.observers.polling import PollingObserver
+else:
+    from watchdog.observers import Observer
 
 
 class MainWindow(QMainWindow):
