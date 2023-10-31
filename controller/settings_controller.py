@@ -1,6 +1,13 @@
+import getpass
+import os
+from os.path import expanduser
+from pathlib import Path
+
 from PySide6.QtCore import QObject, Slot
+from logger_tt import logger
 
 from model.settings import Settings
+from util.system_info import SystemInfo
 from view.settings_dialog import SettingsDialog
 
 
@@ -44,9 +51,25 @@ class SettingsController(QObject):
 
         self._update_view_from_model()
 
-        # Wire up the settings dialog's signals
+        # Wire up the settings dialog's global buttons
 
-        self.settings_dialog.finished.connect(self._on_settings_dialog_finished)
+        self.settings_dialog.global_cancel_button.clicked.connect(
+            self._on_global_cancel_button_clicked
+        )
+
+        self.settings_dialog.global_ok_button.clicked.connect(
+            self._on_global_ok_button_clicked
+        )
+
+        # Wire up the settings dialog's location tab buttons
+
+        self.settings_dialog.locations_clear_button.clicked.connect(
+            self._on_locations_clear_button_clicked
+        )
+
+        self.settings_dialog.locations_autodetect_button.clicked.connect(
+            self._on_locations_autodetect_button_clicked
+        )
 
     def show_settings_dialog(self) -> None:
         """
@@ -59,14 +82,197 @@ class SettingsController(QObject):
         Update the view from the settings model.
         """
         self.settings_dialog.game_location.setText(self.settings.game_folder)
+        self.settings_dialog.config_folder_location.setText(self.settings.config_folder)
+        self.settings_dialog.steam_mods_folder_location.setText(
+            self.settings.workshop_folder
+        )
+        self.settings_dialog.local_mods_folder_location.setText(
+            self.settings.local_folder
+        )
 
-    @Slot()
-    def _on_settings_dialog_finished(self) -> None:
+    def _update_model_from_view(self) -> None:
         """
-        Close the settings dialog.
+        Update the settings model from the view.
         """
         self.settings.game_folder = self.settings_dialog.game_location.text()
+        self.settings.config_folder = self.settings_dialog.config_folder_location.text()
+        self.settings.workshop_folder = (
+            self.settings_dialog.steam_mods_folder_location.text()
+        )
+        self.settings.local_folder = (
+            self.settings_dialog.local_mods_folder_location.text()
+        )
 
+    @Slot()
+    def _on_global_cancel_button_clicked(self) -> None:
+        """
+        Close the settings dialog without saving the settings.
+        """
+        self.settings_dialog.close()
+        self._update_view_from_model()
+
+    @Slot()
+    def _on_global_ok_button_clicked(self) -> None:
+        """
+        Close the settings dialog, update the model from the view, and save the settings..
+        """
+        self.settings_dialog.close()
+        self._update_model_from_view()
         self.settings.save()
 
-        self.settings_dialog.close()
+    @Slot()
+    def _on_locations_clear_button_clicked(self) -> None:
+        """
+        Clear the settings dialog's location fields.
+        """
+        self.settings_dialog.game_location.setText("")
+        self.settings_dialog.config_folder_location.setText("")
+        self.settings_dialog.steam_mods_folder_location.setText("")
+        self.settings_dialog.local_mods_folder_location.setText("")
+
+    @Slot()
+    def _on_locations_autodetect_button_clicked(self) -> None:
+        """
+        This function tries to autodetect Rimworld paths based on the
+        defaults typically found per-platform, and set them in the client.
+        """
+        logger.info("USER ACTION: starting autodetect paths")
+        os_paths = []
+        darwin_paths = [
+            f"/Users/{getpass.getuser()}/Library/Application Support/Steam/steamapps/common/Rimworld/RimworldMac.app/",
+            f"/Users/{getpass.getuser()}/Library/Application Support/Rimworld/Config/",
+            f"/Users/{getpass.getuser()}/Library/Application Support/Steam/steamapps/workshop/content/294100/",
+        ]
+        # If on mac and the steam path doesn't exist, try the default path
+        if not (os.path.exists(darwin_paths[0])):
+            darwin_paths[0] = f"/Applications/RimWorld.app/"
+        if os.path.exists("{expanduser('~')}/.steam/debian-installation"):
+            linux_paths = [
+                f"{expanduser('~')}/.steam/debian-installation/steamapps/common/RimWorld",
+                f"{expanduser('~')}/.config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios/Config",
+                f"{expanduser('~')}/.steam/debian-installation/steamapps/workshop/content/294100",
+            ]
+        else:
+            linux_paths = [  # TODO detect the path and not having hardcoded thing
+                f"{expanduser('~')}/.steam/steam/steamapps/common/RimWorld",
+                f"{expanduser('~')}/.config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios/Config",
+                f"{expanduser('~')}/.steam/steam/steamapps/workshop/content/294100",
+            ]
+        windows_paths = [
+            str(
+                Path(
+                    os.path.join(
+                        "C:" + os.sep,
+                        "Program Files (x86)",
+                        "Steam",
+                        "steamapps",
+                        "common",
+                        "Rimworld",
+                    )
+                ).resolve()
+            ),
+            str(
+                Path(
+                    os.path.join(
+                        "C:" + os.sep,
+                        "Users",
+                        getpass.getuser(),
+                        "AppData",
+                        "LocalLow",
+                        "Ludeon Studios",
+                        "RimWorld by Ludeon Studios",
+                        "Config",
+                    )
+                ).resolve()
+            ),
+            str(
+                Path(
+                    os.path.join(
+                        "C:" + os.sep,
+                        "Program Files (x86)",
+                        "Steam",
+                        "steamapps",
+                        "workshop",
+                        "content",
+                        "294100",
+                    )
+                ).resolve()
+            ),
+        ]
+
+        if SystemInfo().operating_system == SystemInfo.OperatingSystem.MACOS:
+            os_paths = darwin_paths
+            logger.info(f"Running on MacOS with the following paths: {os_paths}")
+        elif SystemInfo().operating_system == SystemInfo.OperatingSystem.LINUX:
+            os_paths = linux_paths
+            logger.info(f"Running on Linux with the following paths: {os_paths}")
+        elif SystemInfo().operating_system == SystemInfo.OperatingSystem.WINDOWS:
+            os_paths = windows_paths
+            logger.info(f"Running on Windows with the following paths: {os_paths}")
+        else:
+            logger.error("Attempting to autodetect paths on an unknown system.")
+
+        # If the game folder exists...
+        if os.path.exists(os_paths[0]):
+            logger.info(f"Autodetected game folder path exists: {os_paths[0]}")
+            if not self.settings_dialog.game_location.text():
+                logger.info(
+                    "No value set currently for game folder. Overwriting with autodetected path"
+                )
+                self.settings_dialog.game_location.setText(os_paths[0])
+            else:
+                logger.info("Value already set for game folder. Passing")
+        else:
+            logger.warning(
+                f"Autodetected game folder path does not exist: {os_paths[0]}"
+            )
+
+        # If the config folder exists...
+        if os.path.exists(os_paths[1]):
+            logger.info(f"Autodetected config folder path exists: {os_paths[1]}")
+            if not self.settings_dialog.config_folder_location.text():
+                logger.info(
+                    "No value set currently for config folder. Overwriting with autodetected path"
+                )
+                self.settings_dialog.config_folder_location.setText(os_paths[1])
+            else:
+                logger.info("Value already set for config folder. Passing")
+        else:
+            logger.warning(
+                f"Autodetected config folder path does not exist: {os_paths[1]}"
+            )
+
+        # If the workshop folder exists
+        if os.path.exists(os_paths[2]):
+            logger.info(f"Autodetected workshop folder path exists: {os_paths[2]}")
+            if not self.settings_dialog.steam_mods_folder_location.text():
+                logger.info(
+                    "No value set currently for workshop folder. Overwriting with autodetected path"
+                )
+                self.settings_dialog.steam_mods_folder_location.setText(os_paths[2])
+            else:
+                logger.info("Value already set for workshop folder. Passing")
+        else:
+            logger.warning(
+                f"Autodetected workshop folder path does not exist: {os_paths[2]}"
+            )
+
+        # Checking for an existing Rimworld/Mods folder
+        rimworld_mods_path = str(Path(os.path.join(os_paths[0], "Mods")).resolve())
+        if os.path.exists(rimworld_mods_path):
+            logger.info(
+                f"Autodetected local mods folder path exists: {rimworld_mods_path}"
+            )
+            if not self.settings_dialog.local_mods_folder_location.text():
+                logger.info(
+                    "No value set currently for local mods folder. Overwriting with autodetected path"
+                )
+                self.settings_dialog.local_mods_folder_location.setText(
+                    rimworld_mods_path
+                )
+            else:
+                logger.info("Value already set for local mods folder. Passing")
+        else:
+            logger.warning(
+                f"Autodetected game folder path does not exist: {rimworld_mods_path}"
+            )
