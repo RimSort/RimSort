@@ -254,6 +254,7 @@ class SettingsController(QObject):
         self.settings_dialog.debug_logging_checkbox.setChecked(
             self.settings.debug_logging_enabled
         )
+        self.settings_dialog.watchdog_checkbox.setChecked(self.settings.watchdog_toggle)
 
     def _update_model_from_view(self) -> None:
         """
@@ -309,6 +310,9 @@ class SettingsController(QObject):
         # Advanced tab
         self.settings.debug_logging_enabled = (
             self.settings_dialog.debug_logging_checkbox.isChecked()
+        )
+        self.settings.watchdog_toggle = (
+            self.settings_dialog.watchdog_checkbox.isChecked()
         )
 
     @Slot()

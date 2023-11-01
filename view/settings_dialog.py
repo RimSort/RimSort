@@ -428,5 +428,8 @@ class SettingsDialog(QDialog):
         tab_layout = QVBoxLayout(tab)
         tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        self.debug_logging_checkbox = QCheckBox("Enable debug logging", tab)
+        self.debug_logging_checkbox = QCheckBox("Enable debug logging")
         tab_layout.addWidget(self.debug_logging_checkbox)
+
+        self.watchdog_checkbox = QCheckBox("Enable watchdog file monitor daemon")
+        tab_layout.addWidget(self.watchdog_checkbox)
