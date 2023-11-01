@@ -438,12 +438,14 @@ class SettingsDialog(QDialog):
         tab_layout.addLayout(quality_preset_layout)
 
         quality_preset_label = QLabel("Quality preset:")
-        quality_preset_label.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Preferred)
+        quality_preset_label.setSizePolicy(
+            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred
+        )
         quality_preset_layout.addWidget(quality_preset_label)
 
         self.todds_preset_combobox = QComboBox()
         self.todds_preset_combobox.setSizePolicy(
-            QSizePolicy.Maximum, QSizePolicy.Preferred
+            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred
         )
         self.todds_preset_combobox.addItem("Optimized - Recommended for RimWorld")
         quality_preset_layout.addWidget(self.todds_preset_combobox)
