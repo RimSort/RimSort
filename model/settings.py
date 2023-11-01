@@ -16,40 +16,28 @@ class Settings(QObject):
 
         self._settings_file = AppInfo().user_data_folder / "settings.json"
 
-        self.apply_default_settings()
-
-    def apply_default_settings(self):
-        # Application-wide settings: default values go here
         self._check_for_update_startup: bool = False
-        self._show_folder_rows: bool = True
-        self._sorting_algorithm: str = "Alphabetical"
-        self._external_steam_metadata_file_path: str = str(
-            AppInfo().user_data_folder / "steamDB.json"
-        )
-        self._external_steam_metadata_repo: str = (
-            "https://github.com/RimSort/Steam-Workshop-Database"
-        )
-        self._external_steam_metadata_source: str = "None"
-        self._external_community_rules_file_path: str = str(
-            AppInfo().user_data_folder / "communityRules.json"
-        )
-        self._external_community_rules_repo: str = (
-            "https://github.com/RimSort/Community-Rules-Database"
-        )
-        self._external_community_rules_metadata_source: str = "None"
-        self._db_builder_include: str = "all_mods"
-        self._database_expiry: int = 604800
-        self._build_steam_database_dlc_data: bool = True
+        self._show_folder_rows: bool = False
+        self._sorting_algorithm: str = ""
+        self._external_steam_metadata_file_path: str = ""
+        self._external_steam_metadata_repo: str = ""
+        self._external_steam_metadata_source: str = ""
+        self._external_community_rules_file_path: str = ""
+        self._external_community_rules_repo: str = ""
+        self._external_community_rules_metadata_source: str = ""
+        self._db_builder_include: str = ""
+        self._database_expiry: int = 0
+        self._build_steam_database_dlc_data: bool = False
         self._build_steam_database_update_toggle: bool = False
-        self._watchdog_toggle: bool = True
-        self._mod_type_filter_toggle: bool = True
+        self._watchdog_toggle: bool = False
+        self._mod_type_filter_toggle: bool = False
         self._duplicate_mods_warning: bool = False
         self._steam_mods_update_check: bool = False
         self._try_download_missing_mods: bool = False
-        self._steamcmd_install_path: str = "."
-        self._steamcmd_validate_downloads: bool = True
-        self._todds_preset: str = "optimized"
-        self._todds_active_mods_target: bool = True
+        self._steamcmd_install_path: str = ""
+        self._steamcmd_validate_downloads: bool = False
+        self._todds_preset: str = ""
+        self._todds_active_mods_target: bool = False
         self._todds_dry_run: bool = False
         self._todds_overwrite: bool = False
         self._game_folder: Optional[Path] = None
@@ -60,6 +48,50 @@ class Settings(QObject):
         self._github_token: str = ""
         self._steam_apikey: str = ""
         self._run_args: List[str] = []
+
+        self.apply_default_settings()
+
+    def apply_default_settings(self) -> None:
+        self._check_for_update_startup = False
+        self._show_folder_rows = True
+        self._sorting_algorithm = "Alphabetical"
+        self._external_steam_metadata_file_path = str(
+            AppInfo().user_data_folder / "steamDB.json"
+        )
+        self._external_steam_metadata_repo = (
+            "https://github.com/RimSort/Steam-Workshop-Database"
+        )
+        self._external_steam_metadata_source = "None"
+        self._external_community_rules_file_path = str(
+            AppInfo().user_data_folder / "communityRules.json"
+        )
+        self._external_community_rules_repo = (
+            "https://github.com/RimSort/Community-Rules-Database"
+        )
+        self._external_community_rules_metadata_source = "None"
+        self._db_builder_include = "all_mods"
+        self._database_expiry = 604800
+        self._build_steam_database_dlc_data = True
+        self._build_steam_database_update_toggle = False
+        self._watchdog_toggle = True
+        self._mod_type_filter_toggle = True
+        self._duplicate_mods_warning = False
+        self._steam_mods_update_check = False
+        self._try_download_missing_mods = False
+        self._steamcmd_install_path = "."
+        self._steamcmd_validate_downloads = True
+        self._todds_preset = "optimized"
+        self._todds_active_mods_target = True
+        self._todds_dry_run = False
+        self._todds_overwrite = False
+        self._game_folder = None
+        self._config_folder = None
+        self._local_folder = None
+        self._workshop_folder = None
+        self._github_username = ""
+        self._github_token = ""
+        self._steam_apikey = ""
+        self._run_args = []
 
     @property
     def check_for_update_startup(self) -> bool:
