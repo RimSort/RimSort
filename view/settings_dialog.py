@@ -441,3 +441,6 @@ class SettingsDialog(QDialog):
             "Show duplicate mods warning"
         )
         tab_layout.addWidget(self.show_duplicate_mods_warning_checkbox)
+
+        self.show_mod_updates_checkbox = QCheckBox("Check for mod updates on refresh")
+        tab_layout.addWidget(self.show_mod_updates_checkbox)

@@ -261,6 +261,9 @@ class SettingsController(QObject):
         self.settings_dialog.show_duplicate_mods_warning_checkbox.setChecked(
             self.settings.duplicate_mods_warning
         )
+        self.settings_dialog.show_mod_updates_checkbox.setChecked(
+            self.settings.steam_mods_update_check
+        )
 
     def _update_model_from_view(self) -> None:
         """
@@ -325,6 +328,9 @@ class SettingsController(QObject):
         )
         self.settings.duplicate_mods_warning = (
             self.settings_dialog.show_duplicate_mods_warning_checkbox.isChecked()
+        )
+        self.settings.steam_mods_update_check = (
+            self.settings_dialog.show_mod_updates_checkbox.isChecked()
         )
 
     @Slot()
