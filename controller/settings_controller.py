@@ -258,6 +258,9 @@ class SettingsController(QObject):
         self.settings_dialog.mod_type_filter_checkbox.setChecked(
             self.settings.mod_type_filter_toggle
         )
+        self.settings_dialog.show_duplicate_mods_warning_checkbox.setChecked(
+            self.settings.duplicate_mods_warning
+        )
 
     def _update_model_from_view(self) -> None:
         """
@@ -319,6 +322,9 @@ class SettingsController(QObject):
         )
         self.settings.mod_type_filter_toggle = (
             self.settings_dialog.mod_type_filter_checkbox.isChecked()
+        )
+        self.settings.duplicate_mods_warning = (
+            self.settings_dialog.show_duplicate_mods_warning_checkbox.isChecked()
         )
 
     @Slot()
