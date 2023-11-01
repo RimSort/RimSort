@@ -4,7 +4,7 @@ from os.path import expanduser
 from pathlib import Path
 
 from PySide6.QtCore import QObject, Slot, Qt
-from PySide6.QtWidgets import QFileDialog, QMessageBox
+from PySide6.QtWidgets import QFileDialog, QMessageBox, QApplication
 from logger_tt import logger
 
 from model.settings import Settings
@@ -94,6 +94,18 @@ class SettingsController(QObject):
             self._on_locations_autodetect_button_clicked
         )
 
+        # Wire up the Databases tab buttons
+
+        self.settings_dialog.community_rules_db_none_radio.clicked.connect(
+            self._on_community_rules_db_radio_clicked
+        )
+        self.settings_dialog.community_rules_db_github_radio.clicked.connect(
+            self._on_community_rules_db_radio_clicked
+        )
+        self.settings_dialog.community_rules_db_local_file_radio.clicked.connect(
+            self._on_community_rules_db_radio_clicked
+        )
+
     def show_settings_dialog(self) -> None:
         """
         Show the settings dialog.
@@ -105,6 +117,9 @@ class SettingsController(QObject):
         """
         Update the view from the settings model.
         """
+
+        # Locations tab
+
         self.settings_dialog.game_location.setText(self.settings.game_folder)
         self.settings_dialog.config_folder_location.setText(self.settings.config_folder)
         self.settings_dialog.steam_mods_folder_location.setText(
@@ -114,10 +129,60 @@ class SettingsController(QObject):
             self.settings.local_folder
         )
 
+        # Databases tab
+
+        if self.settings.external_community_rules_metadata_source == "None":
+            self.settings_dialog.community_rules_db_none_radio.setChecked(True)
+            self.settings_dialog.community_rules_db_github_url.setEnabled(False)
+            self.settings_dialog.community_rules_db_github_url_download_button.setEnabled(
+                False
+            )
+            self.settings_dialog.community_rules_db_local_file.setEnabled(False)
+            self.settings_dialog.community_rules_db_local_file_choose_button.setEnabled(
+                False
+            )
+        elif (
+            self.settings.external_community_rules_metadata_source
+            == "Configured git repository"
+        ):
+            self.settings_dialog.community_rules_db_github_radio.setChecked(True)
+            self.settings_dialog.community_rules_db_github_url.setEnabled(True)
+            self.settings_dialog.community_rules_db_github_url_download_button.setEnabled(
+                True
+            )
+            self.settings_dialog.community_rules_db_local_file.setEnabled(False)
+            self.settings_dialog.community_rules_db_local_file_choose_button.setEnabled(
+                False
+            )
+        elif (
+            self.settings.external_community_rules_metadata_source
+            == "Configured file path"
+        ):
+            self.settings_dialog.community_rules_db_local_file_radio.setChecked(True)
+            self.settings_dialog.community_rules_db_github_url.setEnabled(False)
+            self.settings_dialog.community_rules_db_github_url_download_button.setEnabled(
+                False
+            )
+            self.settings_dialog.community_rules_db_local_file.setEnabled(True)
+            self.settings_dialog.community_rules_db_local_file_choose_button.setEnabled(
+                True
+            )
+
+        self.settings_dialog.community_rules_db_local_file.setText(
+            self.settings.external_community_rules_file_path
+        )
+
+        self.settings_dialog.community_rules_db_github_url.setText(
+            self.settings.external_community_rules_repo
+        )
+
     def _update_model_from_view(self) -> None:
         """
         Update the settings model from the view.
         """
+
+        # Locations tab
+
         self.settings.game_folder = self.settings_dialog.game_location.text()
         self.settings.config_folder = self.settings_dialog.config_folder_location.text()
         self.settings.workshop_folder = (
@@ -125,6 +190,27 @@ class SettingsController(QObject):
         )
         self.settings.local_folder = (
             self.settings_dialog.local_mods_folder_location.text()
+        )
+
+        # Databases tab
+
+        if self.settings_dialog.community_rules_db_none_radio.isChecked():
+            self.settings.external_community_rules_metadata_source = "None"
+        elif self.settings_dialog.community_rules_db_local_file_radio.isChecked():
+            self.settings.external_community_rules_metadata_source = (
+                "Configured file path"
+            )
+        elif self.settings_dialog.community_rules_db_github_radio.isChecked():
+            self.settings.external_community_rules_metadata_source = (
+                "Configured git repository"
+            )
+
+        self.settings.external_community_rules_file_path = (
+            self.settings_dialog.community_rules_db_local_file.text()
+        )
+
+        self.settings.external_community_rules_repo = (
+            self.settings_dialog.community_rules_db_github_url.text()
         )
 
     @Slot()
@@ -389,3 +475,54 @@ class SettingsController(QObject):
             logger.warning(
                 f"Autodetected game folder path does not exist: {rimworld_mods_path}"
             )
+
+    @Slot()
+    def _on_community_rules_db_radio_clicked(self, checked: bool) -> None:
+        if (
+            self.sender() == self.settings_dialog.community_rules_db_none_radio
+            and checked
+        ):
+            self.settings_dialog.community_rules_db_github_url.setEnabled(False)
+            self.settings_dialog.community_rules_db_github_url_download_button.setEnabled(
+                False
+            )
+            self.settings_dialog.community_rules_db_local_file.setEnabled(False)
+            self.settings_dialog.community_rules_db_local_file_choose_button.setEnabled(
+                False
+            )
+            app_instance = QApplication.instance()
+            if isinstance(app_instance, QApplication):
+                focused_widget = app_instance.focusWidget()
+                if focused_widget:
+                    focused_widget.clearFocus()
+            return
+
+        if (
+            self.sender() == self.settings_dialog.community_rules_db_github_radio
+            and checked
+        ):
+            self.settings_dialog.community_rules_db_github_url.setEnabled(True)
+            self.settings_dialog.community_rules_db_github_url_download_button.setEnabled(
+                True
+            )
+            self.settings_dialog.community_rules_db_local_file.setEnabled(False)
+            self.settings_dialog.community_rules_db_local_file_choose_button.setEnabled(
+                False
+            )
+            self.settings_dialog.community_rules_db_github_url.setFocus()
+            return
+
+        if (
+            self.sender() == self.settings_dialog.community_rules_db_local_file_radio
+            and checked
+        ):
+            self.settings_dialog.community_rules_db_github_url.setEnabled(False)
+            self.settings_dialog.community_rules_db_github_url_download_button.setEnabled(
+                False
+            )
+            self.settings_dialog.community_rules_db_local_file.setEnabled(True)
+            self.settings_dialog.community_rules_db_local_file_choose_button.setEnabled(
+                True
+            )
+            self.settings_dialog.community_rules_db_local_file.setFocus()
+            return

@@ -226,14 +226,24 @@ class SettingsDialog(QDialog):
             0, GUIInfo().default_font_line_height * 2
         )
         item_layout.addWidget(self.community_rules_db_github_radio, stretch=2)
+
+        row_layout = QHBoxLayout()
+        row_layout.setSpacing(8)
+        item_layout.addLayout(row_layout, stretch=8)
+
         self.community_rules_db_github_url = QLineEdit()
-        self.community_rules_db_github_url.setTextMargins(GUIInfo().text_field_margins)
-        self.community_rules_db_github_url.setPlaceholderText(
-            "https://github.com/RimSort/Community-Rules-Database or whatever"
+        self.community_rules_db_github_url.setFixedHeight(
+            GUIInfo().default_font_line_height * 2
         )
+        self.community_rules_db_github_url.setTextMargins(GUIInfo().text_field_margins)
         self.community_rules_db_github_url.setClearButtonEnabled(True)
         self.community_rules_db_github_url.setEnabled(False)
-        item_layout.addWidget(self.community_rules_db_github_url, stretch=8)
+        row_layout.addWidget(self.community_rules_db_github_url)
+
+        self.community_rules_db_github_url_download_button = QToolButton()
+        self.community_rules_db_github_url_download_button.setText("Download…")
+        self.community_rules_db_github_url_download_button.setEnabled(False)
+        row_layout.addWidget(self.community_rules_db_github_url_download_button)
 
         item_layout = QHBoxLayout()
         section_layout.addLayout(item_layout, stretch=1)
@@ -248,6 +258,9 @@ class SettingsDialog(QDialog):
         item_layout.addLayout(row_layout, stretch=8)
 
         self.community_rules_db_local_file = QLineEdit()
+        self.community_rules_db_local_file.setFixedHeight(
+            GUIInfo().default_font_line_height * 2
+        )
         self.community_rules_db_local_file.setTextMargins(GUIInfo().text_field_margins)
         self.community_rules_db_local_file.setClearButtonEnabled(True)
         self.community_rules_db_local_file.setEnabled(False)
@@ -256,6 +269,9 @@ class SettingsDialog(QDialog):
         self.community_rules_db_local_file_choose_button = QToolButton()
         self.community_rules_db_local_file_choose_button.setText("Choose…")
         self.community_rules_db_local_file_choose_button.setEnabled(False)
+        self.community_rules_db_local_file_choose_button.setFixedWidth(
+            self.community_rules_db_github_url_download_button.sizeHint().width()
+        )
         row_layout.addWidget(self.community_rules_db_local_file_choose_button)
 
         section_layout.addStretch(1)
@@ -263,12 +279,7 @@ class SettingsDialog(QDialog):
         item_layout = QHBoxLayout()
         section_layout.addLayout(item_layout, stretch=1)
 
-        info_label = QLabel(
-            "Some explanatory information should go here. For instance we could explain what a community rules "
-            "database is and what it does. There's room for about two or three lines of text, so we should be concise. "
-            "But I think we need to explain these options in a clear and understandable way (because I don't fully "
-            "understand them myself)."
-        )
+        info_label = QLabel("")
         info_label.setWordWrap(True)
         item_layout.addWidget(info_label)
 
@@ -315,14 +326,24 @@ class SettingsDialog(QDialog):
             0, GUIInfo().default_font_line_height * 2
         )
         item_layout.addWidget(self.steam_workshop_db_github_radio, stretch=2)
+
+        row_layout = QHBoxLayout()
+        row_layout.setSpacing(8)
+        item_layout.addLayout(row_layout, stretch=8)
+
         self.steam_workshop_db_github_url = QLineEdit()
-        self.steam_workshop_db_github_url.setTextMargins(GUIInfo().text_field_margins)
-        self.steam_workshop_db_github_url.setPlaceholderText(
-            "https://github.com/RimSort/Steam-Workshop-Database or what have you"
+        self.steam_workshop_db_github_url.setFixedHeight(
+            GUIInfo().default_font_line_height * 2
         )
+        self.steam_workshop_db_github_url.setTextMargins(GUIInfo().text_field_margins)
         self.steam_workshop_db_github_url.setClearButtonEnabled(True)
         self.steam_workshop_db_github_url.setEnabled(False)
-        item_layout.addWidget(self.steam_workshop_db_github_url, stretch=8)
+        row_layout.addWidget(self.steam_workshop_db_github_url)
+
+        self.steam_workshop_db_github_download_button = QToolButton()
+        self.steam_workshop_db_github_download_button.setText("Download…")
+        self.steam_workshop_db_github_download_button.setEnabled(False)
+        row_layout.addWidget(self.steam_workshop_db_github_download_button)
 
         item_layout = QHBoxLayout()
         section_layout.addLayout(item_layout, stretch=1)
@@ -337,6 +358,9 @@ class SettingsDialog(QDialog):
         item_layout.addLayout(row_layout, stretch=8)
 
         self.steam_workshop_db_local_file = QLineEdit()
+        self.steam_workshop_db_local_file.setFixedHeight(
+            GUIInfo().default_font_line_height * 2
+        )
         self.steam_workshop_db_local_file.setTextMargins(GUIInfo().text_field_margins)
         self.steam_workshop_db_local_file.setClearButtonEnabled(True)
         self.steam_workshop_db_local_file.setEnabled(False)
@@ -345,6 +369,9 @@ class SettingsDialog(QDialog):
         self.steam_workshop_db_local_file_choose_button = QToolButton()
         self.steam_workshop_db_local_file_choose_button.setText("Choose…")
         self.steam_workshop_db_local_file_choose_button.setEnabled(False)
+        self.steam_workshop_db_local_file_choose_button.setFixedWidth(
+            self.steam_workshop_db_github_download_button.sizeHint().width()
+        )
         row_layout.addWidget(self.steam_workshop_db_local_file_choose_button)
 
         section_layout.addStretch(1)
@@ -352,11 +379,7 @@ class SettingsDialog(QDialog):
         item_layout = QHBoxLayout()
         section_layout.addLayout(item_layout, stretch=1)
 
-        info_label = QLabel(
-            "This is where we should explain what a Steam workshop database is and what it does. While we're on the "
-            'topic, is there any reason why "None" should be the default instead of "GitHub"? It seems like that\'s '
-            "what's intended, but I'm not sure."
-        )
+        info_label = QLabel("")
         info_label.setWordWrap(True)
         item_layout.addWidget(info_label)
 
