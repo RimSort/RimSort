@@ -3,8 +3,8 @@ import os
 from os.path import expanduser
 from pathlib import Path
 
-from PySide6.QtCore import QObject, Slot
-from PySide6.QtWidgets import QFileDialog
+from PySide6.QtCore import QObject, Slot, Qt
+from PySide6.QtWidgets import QFileDialog, QMessageBox
 from logger_tt import logger
 
 from model.settings import Settings
@@ -55,6 +55,10 @@ class SettingsController(QObject):
         self._update_view_from_model()
 
         # Wire up the settings dialog's global buttons
+
+        self.settings_dialog.global_reset_to_defaults_button.clicked.connect(
+            self._on_global_reset_to_defaults_button_clicked
+        )
 
         self.settings_dialog.global_cancel_button.clicked.connect(
             self._on_global_cancel_button_clicked
@@ -122,6 +126,29 @@ class SettingsController(QObject):
         self.settings.local_folder = (
             self.settings_dialog.local_mods_folder_location.text()
         )
+
+    @Slot()
+    def _on_global_reset_to_defaults_button_clicked(self) -> None:
+        """
+        Reset the settings to their default values.
+        """
+        message_box = QMessageBox(self.settings_dialog)
+        message_box.setWindowTitle("Reset to defaults")
+        message_box.setText(
+            "Are you sure you want to reset all settings to their default values?"
+        )
+        message_box.setStandardButtons(
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        message_box.setDefaultButton(QMessageBox.StandardButton.No)
+        message_box.setWindowModality(Qt.WindowModality.WindowModal)
+
+        pressed_button = message_box.exec()
+        if pressed_button == QMessageBox.StandardButton.No:
+            return
+
+        self.settings.apply_default_settings()
+        self._update_view_from_model()
 
     @Slot()
     def _on_global_cancel_button_clicked(self) -> None:

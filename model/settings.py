@@ -16,6 +16,9 @@ class Settings(QObject):
 
         self._settings_file = AppInfo().user_data_folder / "settings.json"
 
+        self.apply_default_settings()
+
+    def apply_default_settings(self):
         # Application-wide settings: default values go here
         self._check_for_update_startup: bool = False
         self._show_folder_rows: bool = True
