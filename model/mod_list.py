@@ -148,9 +148,23 @@ class ModListWidget(QListWidget):
         logger.debug("Finished ModListWidget initialization")
 
     def dropEvent(self, event: QDropEvent) -> None:
-        ret = super().dropEvent(event)
+        super().dropEvent(event)
+        # Get the drop action
+        drop_action = event.dropAction()
+        # Check if the drop action is MoveAction
+        if drop_action == Qt.MoveAction:
+            # Get the new indexes of the dropped items
+            new_indexes = [index.row() for index in self.selectedIndexes()]
+            # Get the UUIDs of the dropped items
+            uuids = [item.data(Qt.UserRole) for item in self.selectedItems()]
+            # Insert the UUIDs at the respective new indexes
+            for idx, uuid in zip(new_indexes, uuids):
+                if uuid in self.uuids:  # Remove the uuid if it exists in the list
+                    self.uuids.remove(uuid)
+                # Reinsert uuid at it's new index
+                self.uuids.insert(idx, uuid)
+        # Update list signal
         self.list_update_signal.emit("drop")
-        return ret
 
     def eventFilter(self, source_object: QObject, event: QEvent) -> None:
         """

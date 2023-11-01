@@ -201,256 +201,132 @@ class ActiveModList(QWidget):
         calculate the internal list errors for the active mod list
         """
         logger.info("Recalculating internal list errors")
-        packageid_to_uuid = {}  # uuid <-> the unique mod's packageid
-        uuid_to_index = {}  # uuid <-> the position it is in
-        count = 0
-        package_id_to_errors = {}  # package_id <-> live errors it has
-        package_ids_set = set()  # empty set for package_ids to use for calculations
 
-        for uuid in self.active_mods_list.uuids:  # add package_id from active mod data
-            package_id = MetadataManager.instance().all_mods_compiled[uuid]["packageid"]
-            package_ids_set.add(package_id)
-            packageid_to_uuid[package_id] = uuid
-            uuid_to_index[uuid] = count
-            count = count + 1
+        metadata_manager = MetadataManager.instance()
+        all_mods_compiled = metadata_manager.all_mods_compiled
+        game_version = metadata_manager.game_version
+        info_from_steam = metadata_manager.info_from_steam_package_id_to_name
 
-        # For every active mod, find its various errors
-        # At the end of every loop, also determine whether the mod
-        # has issues, and if so, set the appropriate icon. Keep track
-        # of how many mods have issues for the summary widget.
-        num_warnings = 0
-        total_warning_text = ""
-        num_errors = 0
-        total_error_text = ""
-        for uuid in self.active_mods_list.uuids:
-            # Instantiate empty key value
-            package_id_to_errors[uuid] = {
+        packageid_to_uuid = {
+            all_mods_compiled[uuid]["packageid"]: uuid
+            for uuid in self.active_mods_list.uuids
+        }
+        package_ids_set = set(packageid_to_uuid.keys())
+
+        package_id_to_errors = {
+            uuid: {
                 "missing_dependencies": set(),
                 "conflicting_incompatibilities": set(),
                 "load_before_violations": set(),
                 "load_after_violations": set(),
                 "version_mismatch": True,
             }
+            for uuid in self.active_mods_list.uuids
+        }
+
+        num_warnings = 0
+        total_warning_text = ""
+        num_errors = 0
+        total_error_text = ""
+
+        for uuid, mod_errors in package_id_to_errors.items():
+            current_mod_index = self.active_mods_list.uuids.index(uuid)
+            mod_data = all_mods_compiled[uuid]
 
             # Check version for everything except Core
-            if MetadataManager.instance().game_version:
-                if (
-                    MetadataManager.instance()
-                    .all_mods_compiled[uuid]
-                    .get("supportedversions", {})
-                    .get("li")
-                ):
-                    supported_versions = MetadataManager.instance().all_mods_compiled[
-                        uuid
-                    ]["supportedversions"]["li"]
-                    # supported_versions is either a string or list of strings
-                    if isinstance(supported_versions, str):
-                        if MetadataManager.instance().game_version.startswith(
-                            supported_versions
-                        ):
-                            package_id_to_errors[uuid]["version_mismatch"] = False
-                    elif isinstance(supported_versions, list):
-                        is_supported = False
-                        for supported_version in supported_versions:
-                            if isinstance(supported_version, str):
-                                if MetadataManager.instance().game_version.startswith(
-                                    supported_version
-                                ):
-                                    is_supported = True
-                            else:
-                                logger.error(
-                                    f"supportedVersion in list is not str: {supported_versions}"
-                                )
-                        if (
-                            is_supported
-                            or MetadataManager.instance().all_mods_compiled[uuid][
-                                "packageid"
+            if game_version and mod_data.get("supportedversions", {}).get("li"):
+                supported_versions = mod_data["supportedversions"]["li"]
+                if isinstance(supported_versions, str):
+                    if game_version.startswith(supported_versions):
+                        mod_errors["version_mismatch"] = False
+                elif isinstance(supported_versions, list):
+                    mod_errors["version_mismatch"] = (
+                        not any(
+                            [
+                                ver
+                                for ver in supported_versions
+                                if game_version.startswith(ver)
                             ]
-                            in self.active_mods_list.ignore_warning_list
-                        ):
-                            package_id_to_errors[uuid]["version_mismatch"] = False
-                    else:
-                        logger.error(
-                            f"supportedversions value not str or list: {supported_versions}"
                         )
+                        and mod_data["packageid"]
+                        not in self.active_mods_list.ignore_warning_list
+                    )
+                else:
+                    logger.error(
+                        f"supportedversions value not str or list: {supported_versions}"
+                    )
+
             if (
-                MetadataManager.instance().all_mods_compiled[uuid].get("packageid")
-                and not MetadataManager.instance().all_mods_compiled[uuid]["packageid"]
-                in self.active_mods_list.ignore_warning_list
+                mod_data.get("packageid")
+                and mod_data["packageid"]
+                not in self.active_mods_list.ignore_warning_list
             ):
                 # Check dependencies
-                if (
-                    MetadataManager.instance()
-                    .all_mods_compiled[uuid]
-                    .get("dependencies")
-                ):
-                    for dependency in MetadataManager.instance().all_mods_compiled[
-                        uuid
-                    ]["dependencies"]:
-                        if dependency not in package_ids_set:
-                            package_id_to_errors[uuid]["missing_dependencies"].add(
-                                dependency
-                            )
-
-                # Check dependencies
-                if (
-                    MetadataManager.instance()
-                    .all_mods_compiled[uuid]
-                    .get("dependencies")
-                ):
-                    for dependency in MetadataManager.instance().all_mods_compiled[
-                        uuid
-                    ]["dependencies"]:
-                        if dependency not in package_ids_set:
-                            package_id_to_errors[uuid]["missing_dependencies"].add(
-                                dependency
-                            )
+                mod_errors["missing_dependencies"] = {
+                    dep
+                    for dep in mod_data.get("dependencies", [])
+                    if dep not in package_ids_set
+                }
 
                 # Check incompatibilities
-                if (
-                    MetadataManager.instance()
-                    .all_mods_compiled[uuid]
-                    .get("incompatibilities")
-                ):
-                    for incompatibility in MetadataManager.instance().all_mods_compiled[
-                        uuid
-                    ]["incompatibilities"]:
-                        if incompatibility in package_ids_set:
-                            package_id_to_errors[uuid][
-                                "conflicting_incompatibilities"
-                            ].add(incompatibility)
+                mod_errors["conflicting_incompatibilities"] = {
+                    incomp
+                    for incomp in mod_data.get("incompatibilities", [])
+                    if incomp in package_ids_set
+                }
 
                 # Check loadTheseBefore
-                if (
-                    MetadataManager.instance()
-                    .all_mods_compiled[uuid]
-                    .get("loadTheseBefore")
-                ):
-                    current_mod_index = uuid_to_index[uuid]
-                    for (
-                        load_this_before
-                    ) in MetadataManager.instance().all_mods_compiled[uuid][
-                        "loadTheseBefore"
-                    ]:
-                        if not isinstance(load_this_before, tuple):
-                            logger.error(
-                                f"Expected load order rule to be a tuple: [{load_this_before}]"
-                            )
-                        # Only if explict_bool = True then we show error
-                        if load_this_before[1]:
-                            # Note: we cannot use uuid_to_index.get(load_this_before) as 0 is falsy but valid
-                            if load_this_before[0] in packageid_to_uuid:
-                                if (
-                                    current_mod_index
-                                    <= uuid_to_index[
-                                        packageid_to_uuid[load_this_before[0]]
-                                    ]
-                                ):
-                                    package_id_to_errors[uuid][
-                                        "load_before_violations"
-                                    ].add(load_this_before[0])
+                for load_this_before in mod_data.get("loadTheseBefore", []):
+                    if (
+                        load_this_before[1]
+                        and load_this_before[0] in packageid_to_uuid
+                        and current_mod_index
+                        <= self.active_mods_list.uuids.index(
+                            packageid_to_uuid[load_this_before[0]]
+                        )
+                    ):
+                        mod_errors["load_before_violations"].add(load_this_before[0])
 
                 # Check loadTheseAfter
-                if (
-                    MetadataManager.instance()
-                    .all_mods_compiled[uuid]
-                    .get("loadTheseAfter")
-                ):
-                    current_mod_index = uuid_to_index[uuid]
-                    for load_this_after in MetadataManager.instance().all_mods_compiled[
-                        uuid
-                    ]["loadTheseAfter"]:
-                        if not isinstance(load_this_after, tuple):
-                            logger.error(
-                                f"Expected load order rule to be a tuple: [{load_this_after}]"
-                            )
-                        # Only if explict_bool = True then we show error
-                        if load_this_after[1]:
-                            if load_this_after[0] in packageid_to_uuid:
-                                if (
-                                    current_mod_index
-                                    >= uuid_to_index[
-                                        packageid_to_uuid[load_this_after[0]]
-                                    ]
-                                ):
-                                    package_id_to_errors[uuid][
-                                        "load_after_violations"
-                                    ].add(load_this_after[0])
+                for load_this_after in mod_data.get("loadTheseAfter", []):
+                    if (
+                        load_this_after[1]
+                        and load_this_after[0] in packageid_to_uuid
+                        and current_mod_index
+                        >= self.active_mods_list.uuids.index(
+                            packageid_to_uuid[load_this_after[0]]
+                        )
+                    ):
+                        mod_errors["load_after_violations"].add(load_this_after[0])
 
             # Consolidate results
             self.ignore_error = self.active_mods_list.ignore_warning_list
-            error_tool_tip_text = ""
-            warning_tool_tip_text = ""
-            missing_dependencies = package_id_to_errors[uuid]["missing_dependencies"]
-            if missing_dependencies:
-                error_tool_tip_text += "\n\nMissing Dependencies:"
-                for dependency_id in missing_dependencies:
-                    # If dependency is installed, we can get its name
-                    if (
-                        dependency_id
-                        in MetadataManager.instance().all_mods_compiled[uuid][
-                            "packageid"
-                        ]
-                    ):
-                        error_tool_tip_text += f"\n  * {MetadataManager.instance().all_mods_compiled[uuid]['name']}"
-                    # Otherwise, we might be able to get it from Steam DB
-                    elif (
-                        dependency_id
-                        in MetadataManager.instance().info_from_steam_package_id_to_name
-                    ):
-                        error_tool_tip_text += f"\n  * {MetadataManager.instance().info_from_steam_package_id_to_name[dependency_id]}"
-                    # Other-otherwise, just use the id
-                    else:
-                        error_tool_tip_text += f"\n  * {dependency_id}"
-
-            conflicting_incompatibilities = package_id_to_errors[uuid][
-                "conflicting_incompatibilities"
-            ]
-            if conflicting_incompatibilities:
-                error_tool_tip_text += "\n\nIncompatibilities:"
-                for incompatibility_id in conflicting_incompatibilities:
-                    incompatibility_uuid = packageid_to_uuid[incompatibility_id]
-                    incompatibility_name = MetadataManager.instance().all_mods_compiled[
-                        incompatibility_uuid
-                    ]["name"]
-                    error_tool_tip_text += f"\n  * {incompatibility_name}"
-
-            load_before_violations = package_id_to_errors[uuid][
-                "load_before_violations"
-            ]
-            if load_before_violations:
-                warning_tool_tip_text += "\n\nShould be Loaded After:"
-                for load_before_id in load_before_violations:
-                    load_before_uuid = packageid_to_uuid[load_before_id]
-                    load_before_name = MetadataManager.instance().all_mods_compiled[
-                        load_before_uuid
-                    ]["name"]
-                    warning_tool_tip_text += f"\n  * {load_before_name}"
-
-            load_after_violations = package_id_to_errors[uuid]["load_after_violations"]
-            if load_after_violations:
-                warning_tool_tip_text += "\n\nShould be Loaded Before:"
-                for load_after_id in load_after_violations:
-                    load_after_uuid = packageid_to_uuid[load_after_id]
-                    load_after_name = MetadataManager.instance().all_mods_compiled[
-                        load_after_uuid
-                    ]["name"]
-                    warning_tool_tip_text += f"\n  * {load_after_name}"
-
-            version_mismatch = package_id_to_errors[uuid]["version_mismatch"]
-            if version_mismatch and not self.ignore_error:
-                warning_tool_tip_text += "\n\nMod and Game Version Mismatch"
 
             # Set icon if necessary
-            current_package_index = uuid_to_index[uuid]
             item_widget_at_index = self.active_mods_list.get_item_widget_at_index(
-                current_package_index
+                current_mod_index
             )
-            # Set icon tooltip
-            if item_widget_at_index is not None:
-                if warning_tool_tip_text or error_tool_tip_text:
+            if item_widget_at_index:
+                tool_tip_text = ""
+                for error_type, tooltip_header in [
+                    ("missing_dependencies", "\n\nMissing Dependencies:"),
+                    ("conflicting_incompatibilities", "\n\nIncompatibilities:"),
+                    ("load_before_violations", "\n\nShould be Loaded After:"),
+                    ("load_after_violations", "\n\nShould be Loaded Before:"),
+                ]:
+                    if mod_errors[error_type]:
+                        tool_tip_text += tooltip_header
+                        for id in mod_errors[error_type]:
+                            name = all_mods_compiled.get(
+                                packageid_to_uuid.get(id), {}
+                            ).get("name", info_from_steam.get(id, id))
+                            tool_tip_text += f"\n  * {name}"
+
+                if mod_errors["version_mismatch"] and not self.ignore_error:
+                    tool_tip_text += "\n\nMod and Game Version Mismatch"
+
+                if tool_tip_text:
                     item_widget_at_index.warning_icon_label.setHidden(False)
-                    tool_tip_text = error_tool_tip_text + warning_tool_tip_text
                     item_widget_at_index.warning_icon_label.setToolTip(
                         tool_tip_text.lstrip()
                     )
@@ -458,21 +334,35 @@ class ActiveModList(QWidget):
                     item_widget_at_index.warning_icon_label.setHidden(True)
                     item_widget_at_index.warning_icon_label.setToolTip("")
 
-            # Add to error/warnings summary if necessary
-            if missing_dependencies or conflicting_incompatibilities:
-                num_errors += 1
-                total_error_text += (
-                    f"\n\n{MetadataManager.instance().all_mods_compiled[uuid]['name']}"
-                )
-                total_error_text += "\n============================="
-                total_error_text += error_tool_tip_text.replace("\n\n", "\n")
-            if load_before_violations or load_after_violations or version_mismatch:
-                num_warnings += 1
-                total_warning_text += (
-                    f"\n\n{MetadataManager.instance().all_mods_compiled[uuid]['name']}"
-                )
-                total_warning_text += "\n============================="
-                total_warning_text += warning_tool_tip_text.replace("\n\n", "\n")
+                # Add to error/warnings summary if necessary
+                if any(
+                    [
+                        mod_errors[key]
+                        for key in [
+                            "missing_dependencies",
+                            "conflicting_incompatibilities",
+                        ]
+                    ]
+                ):
+                    num_errors += 1
+                    total_error_text += f"\n\n{mod_data['name']}"
+                    total_error_text += "\n============================="
+                    total_error_text += tool_tip_text.split("\n\n")[0]
+
+                if any(
+                    [
+                        mod_errors[key]
+                        for key in [
+                            "load_before_violations",
+                            "load_after_violations",
+                            "version_mismatch",
+                        ]
+                    ]
+                ):
+                    num_warnings += 1
+                    total_warning_text += f"\n\n{mod_data['name']}"
+                    total_warning_text += "\n============================="
+                    total_warning_text += "\n".join(tool_tip_text.split("\n\n")[1:])
 
         if total_error_text or total_warning_text or num_errors or num_warnings:
             self.errors_summary_frame.setHidden(False)
@@ -486,10 +376,9 @@ class ActiveModList(QWidget):
             self.errors_summary_frame.setHidden(True)
             self.warnings_text.setText("0 warnings(s)")
             self.errors_text.setText("0 errors(s)")
-            if total_error_text:
-                self.errors_icon.setToolTip("")
-            if total_warning_text:
-                self.warnings_icon.setToolTip("")
+            self.errors_icon.setToolTip("")
+            self.warnings_icon.setToolTip("")
+
         logger.info("Finished recalculating internal list errors")
 
     def handle_internal_mod_list_updated(self, count: str) -> None:
