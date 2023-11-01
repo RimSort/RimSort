@@ -145,13 +145,17 @@ class SettingsController(QObject):
 
         # Locations tab
         self.settings_dialog.game_location.setText(self.settings.game_folder)
+        self.settings_dialog.game_location.setCursorPosition(0)
         self.settings_dialog.config_folder_location.setText(self.settings.config_folder)
+        self.settings_dialog.config_folder_location.setCursorPosition(0)
         self.settings_dialog.steam_mods_folder_location.setText(
             self.settings.workshop_folder
         )
+        self.settings_dialog.steam_mods_folder_location.setCursorPosition(0)
         self.settings_dialog.local_mods_folder_location.setText(
             self.settings.local_folder
         )
+        self.settings_dialog.local_mods_folder_location.setCursorPosition(0)
 
         # Databases tab
         if self.settings.external_community_rules_metadata_source == "None":
@@ -193,9 +197,11 @@ class SettingsController(QObject):
         self.settings_dialog.community_rules_db_local_file.setText(
             self.settings.external_community_rules_file_path
         )
+        self.settings_dialog.community_rules_db_local_file.setCursorPosition(0)
         self.settings_dialog.community_rules_db_github_url.setText(
             self.settings.external_community_rules_repo
         )
+        self.settings_dialog.community_rules_db_github_url.setCursorPosition(0)
         if self.settings.external_steam_metadata_source == "None":
             self.settings_dialog.steam_workshop_db_none_radio.setChecked(True)
             self.settings_dialog.steam_workshop_db_github_url.setEnabled(False)
@@ -231,9 +237,11 @@ class SettingsController(QObject):
         self.settings_dialog.steam_workshop_db_local_file.setText(
             self.settings.external_steam_metadata_file_path
         )
+        self.settings_dialog.steam_workshop_db_local_file.setCursorPosition(0)
         self.settings_dialog.steam_workshop_db_github_url.setText(
             self.settings.external_steam_metadata_repo
         )
+        self.settings_dialog.steam_workshop_db_github_url.setCursorPosition(0)
 
     def _update_model_from_view(self) -> None:
         """
