@@ -264,6 +264,9 @@ class SettingsController(QObject):
         self.settings_dialog.show_mod_updates_checkbox.setChecked(
             self.settings.steam_mods_update_check
         )
+        self.settings_dialog.download_missing_mods_checkbox.setChecked(
+            self.settings.try_download_missing_mods
+        )
 
     def _update_model_from_view(self) -> None:
         """
@@ -331,6 +334,9 @@ class SettingsController(QObject):
         )
         self.settings.steam_mods_update_check = (
             self.settings_dialog.show_mod_updates_checkbox.isChecked()
+        )
+        self.settings.try_download_missing_mods = (
+            self.settings_dialog.download_missing_mods_checkbox.isChecked()
         )
 
     @Slot()

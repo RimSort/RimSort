@@ -444,3 +444,8 @@ class SettingsDialog(QDialog):
 
         self.show_mod_updates_checkbox = QCheckBox("Check for mod updates on refresh")
         tab_layout.addWidget(self.show_mod_updates_checkbox)
+
+        self.download_missing_mods_checkbox = QCheckBox(
+            "Download missing mods automatically"
+        )
+        tab_layout.addWidget(self.download_missing_mods_checkbox)
