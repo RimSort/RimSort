@@ -240,10 +240,10 @@ class SettingsDialog(QDialog):
         self.community_rules_db_github_url.setEnabled(False)
         row_layout.addWidget(self.community_rules_db_github_url)
 
-        self.community_rules_db_github_url_download_button = QToolButton()
-        self.community_rules_db_github_url_download_button.setText("Download…")
-        self.community_rules_db_github_url_download_button.setEnabled(False)
-        row_layout.addWidget(self.community_rules_db_github_url_download_button)
+        self.community_rules_db_github_download_button = QToolButton()
+        self.community_rules_db_github_download_button.setText("Download…")
+        self.community_rules_db_github_download_button.setEnabled(False)
+        row_layout.addWidget(self.community_rules_db_github_download_button)
 
         item_layout = QHBoxLayout()
         section_layout.addLayout(item_layout, stretch=1)
@@ -270,7 +270,7 @@ class SettingsDialog(QDialog):
         self.community_rules_db_local_file_choose_button.setText("Choose…")
         self.community_rules_db_local_file_choose_button.setEnabled(False)
         self.community_rules_db_local_file_choose_button.setFixedWidth(
-            self.community_rules_db_github_url_download_button.sizeHint().width()
+            self.community_rules_db_github_download_button.sizeHint().width()
         )
         row_layout.addWidget(self.community_rules_db_local_file_choose_button)
 

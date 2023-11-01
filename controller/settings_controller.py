@@ -106,6 +106,9 @@ class SettingsController(QObject):
             self._on_community_rules_db_radio_clicked
         )
 
+        self.settings_dialog.community_rules_db_github_download_button.clicked.connect(
+            self._on_community_rules_db_github_download_button_clicked
+        )
         self.settings_dialog.community_rules_db_local_file_choose_button.clicked.connect(
             self._on_community_rules_db_local_file_choose_button_clicked
         )
@@ -152,7 +155,7 @@ class SettingsController(QObject):
         if self.settings.external_community_rules_metadata_source == "None":
             self.settings_dialog.community_rules_db_none_radio.setChecked(True)
             self.settings_dialog.community_rules_db_github_url.setEnabled(False)
-            self.settings_dialog.community_rules_db_github_url_download_button.setEnabled(
+            self.settings_dialog.community_rules_db_github_download_button.setEnabled(
                 False
             )
             self.settings_dialog.community_rules_db_local_file.setEnabled(False)
@@ -165,7 +168,7 @@ class SettingsController(QObject):
         ):
             self.settings_dialog.community_rules_db_github_radio.setChecked(True)
             self.settings_dialog.community_rules_db_github_url.setEnabled(True)
-            self.settings_dialog.community_rules_db_github_url_download_button.setEnabled(
+            self.settings_dialog.community_rules_db_github_download_button.setEnabled(
                 True
             )
             self.settings_dialog.community_rules_db_local_file.setEnabled(False)
@@ -178,7 +181,7 @@ class SettingsController(QObject):
         ):
             self.settings_dialog.community_rules_db_local_file_radio.setChecked(True)
             self.settings_dialog.community_rules_db_github_url.setEnabled(False)
-            self.settings_dialog.community_rules_db_github_url_download_button.setEnabled(
+            self.settings_dialog.community_rules_db_github_download_button.setEnabled(
                 False
             )
             self.settings_dialog.community_rules_db_local_file.setEnabled(True)
@@ -557,7 +560,7 @@ class SettingsController(QObject):
             and checked
         ):
             self.settings_dialog.community_rules_db_github_url.setEnabled(False)
-            self.settings_dialog.community_rules_db_github_url_download_button.setEnabled(
+            self.settings_dialog.community_rules_db_github_download_button.setEnabled(
                 False
             )
             self.settings_dialog.community_rules_db_local_file.setEnabled(False)
@@ -576,7 +579,7 @@ class SettingsController(QObject):
             and checked
         ):
             self.settings_dialog.community_rules_db_github_url.setEnabled(True)
-            self.settings_dialog.community_rules_db_github_url_download_button.setEnabled(
+            self.settings_dialog.community_rules_db_github_download_button.setEnabled(
                 True
             )
             self.settings_dialog.community_rules_db_local_file.setEnabled(False)
@@ -591,7 +594,7 @@ class SettingsController(QObject):
             and checked
         ):
             self.settings_dialog.community_rules_db_github_url.setEnabled(False)
-            self.settings_dialog.community_rules_db_github_url_download_button.setEnabled(
+            self.settings_dialog.community_rules_db_github_download_button.setEnabled(
                 False
             )
             self.settings_dialog.community_rules_db_local_file.setEnabled(True)
