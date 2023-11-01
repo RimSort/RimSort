@@ -120,6 +120,10 @@ class SettingsController(QObject):
             self._on_steam_workshop_db_radio_clicked
         )
 
+        self.settings_dialog.steam_workshop_db_local_file_choose_button.clicked.connect(
+            self._on_steam_workshop_db_local_file_choose_button_clicked
+        )
+
     def show_settings_dialog(self) -> None:
         """
         Show the settings dialog.
@@ -597,6 +601,7 @@ class SettingsController(QObject):
             self.settings_dialog.community_rules_db_local_file.setFocus()
             return
 
+    @Slot()
     def _on_community_rules_db_local_file_choose_button_clicked(self) -> None:
         community_rules_db_location, _ = QFileDialog.getOpenFileName(
             parent=self.settings_dialog,
@@ -659,3 +664,16 @@ class SettingsController(QObject):
             )
             self.settings_dialog.steam_workshop_db_local_file.setFocus()
             return
+
+    @Slot()
+    def _on_steam_workshop_db_local_file_choose_button_clicked(self) -> None:
+        steam_workshop_db_location, _ = QFileDialog.getOpenFileName(
+            parent=self.settings_dialog,
+            dir=str(self._last_file_dialog_path),
+        )
+        if steam_workshop_db_location == "":
+            return
+        self.settings_dialog.steam_workshop_db_local_file.setText(
+            steam_workshop_db_location
+        )
+        self._last_file_dialog_path = str(Path(steam_workshop_db_location).parent)
