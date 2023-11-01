@@ -225,6 +225,19 @@ class SettingsController(QObject):
         """
         Clear the settings dialog's location fields.
         """
+        message_box = QMessageBox(self.settings_dialog)
+        message_box.setWindowTitle("Clear all locations")
+        message_box.setText("Are you sure you want to clear all locations?")
+        message_box.setStandardButtons(
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        message_box.setDefaultButton(QMessageBox.StandardButton.No)
+        message_box.setWindowModality(Qt.WindowModality.WindowModal)
+
+        pressed_button = message_box.exec()
+        if pressed_button == QMessageBox.StandardButton.No:
+            return
+
         self.settings_dialog.game_location.setText("")
         self.settings_dialog.config_folder_location.setText("")
         self.settings_dialog.steam_mods_folder_location.setText("")
