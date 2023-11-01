@@ -23,6 +23,9 @@ class EventBus(QObject):
     # Application-scope signals
     settings_have_changed = Signal()
 
+    download_community_rules_db_from_github = Signal()
+    download_steam_workshop_db_from_github = Signal()
+
     def __new__(cls) -> "EventBus":
         """
         Create a new instance or return the existing singleton instance of the `EventBus` class.

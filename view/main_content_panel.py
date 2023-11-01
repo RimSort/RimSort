@@ -125,6 +125,12 @@ class MainContent(QObject):
 
             self.settings_controller = settings_controller
             EventBus().settings_have_changed.connect(self._on_settings_have_changed)
+            EventBus().download_community_rules_db_from_github.connect(
+                self._on_download_community_db_from_github
+            )
+            EventBus().download_steam_workshop_db_from_github.connect(
+                self._on_download_steam_workshop_db_from_github
+            )
 
             # INITIALIZE WIDGETS
             # Initialize Steam(CMD) integraations
@@ -3079,3 +3085,23 @@ class MainContent(QObject):
         self.steamcmd_wrapper.validate_downloads = (
             self.settings_controller.settings.steamcmd_validate_downloads
         )
+
+    @Slot()
+    def _on_download_community_db_from_github(self) -> None:
+        if GIT_EXISTS:
+            self._do_clone_repo_to_path(
+                base_path=GameConfiguration.instance().dbs_path,
+                repo_url=self.settings_controller.settings.external_community_rules_repo,
+            )
+        else:
+            self._do_notify_no_git()
+
+    @Slot()
+    def _on_download_steam_workshop_db_from_github(self) -> None:
+        if GIT_EXISTS:
+            self._do_clone_repo_to_path(
+                base_path=GameConfiguration.instance().dbs_path,
+                repo_url=self.settings_controller.settings.external_steam_metadata_repo,
+            )
+        else:
+            self._do_notify_no_git()

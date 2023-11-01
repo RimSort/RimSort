@@ -8,6 +8,7 @@ from PySide6.QtWidgets import QFileDialog, QMessageBox, QApplication
 from logger_tt import logger
 
 from model.settings import Settings
+from util.event_bus import EventBus
 from util.system_info import SystemInfo
 from view.settings_dialog import SettingsDialog
 
@@ -125,6 +126,9 @@ class SettingsController(QObject):
 
         self.settings_dialog.steam_workshop_db_local_file_choose_button.clicked.connect(
             self._on_steam_workshop_db_local_file_choose_button_clicked
+        )
+        self.settings_dialog.steam_workshop_db_github_download_button.clicked.connect(
+            self._on_steam_workshop_db_github_download_button_clicked
         )
 
     def show_settings_dialog(self) -> None:
@@ -605,6 +609,10 @@ class SettingsController(QObject):
             return
 
     @Slot()
+    def _on_community_rules_db_github_download_button_clicked(self) -> None:
+        EventBus().download_community_rules_db_from_github.emit()
+
+    @Slot()
     def _on_community_rules_db_local_file_choose_button_clicked(self) -> None:
         community_rules_db_location, _ = QFileDialog.getOpenFileName(
             parent=self.settings_dialog,
@@ -667,6 +675,10 @@ class SettingsController(QObject):
             )
             self.settings_dialog.steam_workshop_db_local_file.setFocus()
             return
+
+    @Slot()
+    def _on_steam_workshop_db_github_download_button_clicked(self) -> None:
+        EventBus().download_steam_workshop_db_from_github.emit()
 
     @Slot()
     def _on_steam_workshop_db_local_file_choose_button_clicked(self) -> None:
