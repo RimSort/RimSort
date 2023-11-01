@@ -411,6 +411,14 @@ class SettingsDialog(QDialog):
         tab = QWidget()
         self._tab_widget.addTab(tab, "SteamCMD")
 
+        tab_layout = QVBoxLayout(tab)
+        tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        self.steamcmd_validate_downloads_checkbox = QCheckBox(
+            "Validate downloaded mods"
+        )
+        tab_layout.addWidget(self.steamcmd_validate_downloads_checkbox)
+
         tab_layout = QVBoxLayout()
         tab.setLayout(tab_layout)
 

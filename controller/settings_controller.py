@@ -249,8 +249,12 @@ class SettingsController(QObject):
         elif self.settings.sorting_algorithm == "Topological":
             self.settings_dialog.sorting_topological_radio.setChecked(True)
 
-        # Advanced tab
+        # SteamCMD tab
+        self.settings_dialog.steamcmd_validate_downloads_checkbox.setChecked(
+            self.settings.steamcmd_validate_downloads
+        )
 
+        # Advanced tab
         self.settings_dialog.debug_logging_checkbox.setChecked(
             self.settings.debug_logging_enabled
         )
@@ -318,6 +322,11 @@ class SettingsController(QObject):
             self.settings.sorting_algorithm = "Alphabetical"
         elif self.settings_dialog.sorting_topological_radio.isChecked():
             self.settings.sorting_algorithm = "Topological"
+
+        # SteamCMD tab
+        self.settings.steamcmd_validate_downloads = (
+            self.settings_dialog.steamcmd_validate_downloads_checkbox.isChecked()
+        )
 
         # Advanced tab
         self.settings.debug_logging_enabled = (
