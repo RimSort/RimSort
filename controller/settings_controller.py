@@ -108,7 +108,7 @@ class SettingsController(QObject):
         )
 
         self.settings_dialog.community_rules_db_github_download_button.clicked.connect(
-            self._on_community_rules_db_github_download_button_clicked
+            EventBus().download_community_rules_db_from_github
         )
         self.settings_dialog.community_rules_db_local_file_choose_button.clicked.connect(
             self._on_community_rules_db_local_file_choose_button_clicked
@@ -128,7 +128,7 @@ class SettingsController(QObject):
             self._on_steam_workshop_db_local_file_choose_button_clicked
         )
         self.settings_dialog.steam_workshop_db_github_download_button.clicked.connect(
-            self._on_steam_workshop_db_github_download_button_clicked
+            EventBus().download_steam_workshop_db_from_github
         )
 
         # Advanced tab
@@ -712,14 +712,6 @@ class SettingsController(QObject):
             return
 
     @Slot()
-    def _on_community_rules_db_github_download_button_clicked(self) -> None:
-        """
-        Handle the community rules database download button click event by posting an
-        EventBus event that can be handled elsewhere in the app.
-        """
-        EventBus().download_community_rules_db_from_github.emit()
-
-    @Slot()
     def _on_community_rules_db_local_file_choose_button_clicked(self) -> None:
         """
         Open a file dialog to select the community rules database and handle the result.
@@ -789,14 +781,6 @@ class SettingsController(QObject):
             )
             self.settings_dialog.steam_workshop_db_local_file.setFocus()
             return
-
-    @Slot()
-    def _on_steam_workshop_db_github_download_button_clicked(self) -> None:
-        """
-        Handle the Steam workshop database download button click event by posting an
-        EventBus event that can be handled elsewhere in the app.
-        """
-        EventBus().download_steam_workshop_db_from_github.emit()
 
     @Slot()
     def _on_steam_workshop_db_local_file_choose_button_clicked(self) -> None:
