@@ -124,7 +124,7 @@ class MenuBar(QObject):
         self.file_menu.addAction(self.settings_action)
 
         self.settings_action_2 = QAction("Settings (Old)…", self)
-        self.app_menu.addAction(self.settings_action_2)
+        self.file_menu.addAction(self.settings_action_2)
 
         self.file_menu.addSeparator()
 
