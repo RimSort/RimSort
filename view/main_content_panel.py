@@ -1,3 +1,4 @@
+import webbrowser
 from functools import partial
 from gc import collect
 from pathlib import Path
@@ -131,6 +132,7 @@ class MainContent(QObject):
             EventBus().download_steam_workshop_db_from_github.connect(
                 self._on_download_steam_workshop_db_from_github
             )
+            EventBus().upload_log.connect(self._on_upload_log)
 
             # INITIALIZE WIDGETS
             # Initialize Steam(CMD) integraations
@@ -3105,3 +3107,11 @@ class MainContent(QObject):
             )
         else:
             self._do_notify_no_git()
+
+    @Slot()
+    def _on_upload_log(self) -> None:
+        ret = upload_data_to_0x0_st(
+            str(Path(os.path.join(gettempdir(), "RimSort.log")).resolve())
+        )
+        if ret:
+            webbrowser.open(ret)

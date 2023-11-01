@@ -25,6 +25,7 @@ class EventBus(QObject):
 
     download_community_rules_db_from_github = Signal()
     download_steam_workshop_db_from_github = Signal()
+    upload_log = Signal()
 
     def __new__(cls) -> "EventBus":
         """

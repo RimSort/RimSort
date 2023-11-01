@@ -508,3 +508,13 @@ class SettingsDialog(QDialog):
             "Download missing mods automatically"
         )
         tab_layout.addWidget(self.download_missing_mods_checkbox)
+
+        tab_layout.addSpacing(GUIInfo().default_font_line_height)
+
+        upload_buttons_layout = QHBoxLayout()
+        tab_layout.addLayout(upload_buttons_layout)
+
+        self.upload_log_button = QPushButton("Upload Log")
+        upload_buttons_layout.addWidget(self.upload_log_button)
+
+        upload_buttons_layout.addStretch()

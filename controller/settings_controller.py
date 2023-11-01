@@ -131,6 +131,11 @@ class SettingsController(QObject):
             self._on_steam_workshop_db_github_download_button_clicked
         )
 
+        # Advanced tab
+        self.settings_dialog.upload_log_button.clicked.connect(
+            EventBus().upload_log.emit
+        )
+
     def show_settings_dialog(self) -> None:
         """
         Update the view from the model and show the settings dialog.
