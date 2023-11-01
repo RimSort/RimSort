@@ -394,11 +394,11 @@ class SettingsDialog(QDialog):
         sorting_label.setFont(GUIInfo().emphasis_font)
         tab_layout.addWidget(sorting_label)
 
-        self.alphabetical_button = QRadioButton("Alphabetically")
-        tab_layout.addWidget(self.alphabetical_button)
+        self.sorting_alphabetical_radio = QRadioButton("Alphabetically")
+        tab_layout.addWidget(self.sorting_alphabetical_radio)
 
-        self.topological_button = QRadioButton("Topologically")
-        tab_layout.addWidget(self.topological_button)
+        self.sorting_topological_radio = QRadioButton("Topologically")
+        tab_layout.addWidget(self.sorting_topological_radio)
 
         tab_layout.addStretch(1)
 

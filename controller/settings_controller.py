@@ -243,6 +243,12 @@ class SettingsController(QObject):
         )
         self.settings_dialog.steam_workshop_db_github_url.setCursorPosition(0)
 
+        # Sorting tab
+        if self.settings.sorting_algorithm == "Alphabetical":
+            self.settings_dialog.sorting_alphabetical_radio.setChecked(True)
+        elif self.settings.sorting_algorithm == "Topological":
+            self.settings_dialog.sorting_topological_radio.setChecked(True)
+
     def _update_model_from_view(self) -> None:
         """
         Update the settings model from the view.
@@ -287,6 +293,12 @@ class SettingsController(QObject):
         self.settings.external_steam_metadata_file_path = (
             self.settings_dialog.steam_workshop_db_local_file.text()
         )
+
+        # Sorting tab
+        if self.settings_dialog.sorting_alphabetical_radio.isChecked():
+            self.settings.sorting_algorithm = "Alphabetical"
+        elif self.settings_dialog.sorting_topological_radio.isChecked():
+            self.settings.sorting_algorithm = "Topological"
 
     @Slot()
     def _on_global_reset_to_defaults_button_clicked(self) -> None:
