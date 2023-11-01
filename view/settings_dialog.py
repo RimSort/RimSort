@@ -433,3 +433,6 @@ class SettingsDialog(QDialog):
 
         self.watchdog_checkbox = QCheckBox("Enable watchdog file monitor daemon")
         tab_layout.addWidget(self.watchdog_checkbox)
+
+        self.mod_type_filter_checkbox = QCheckBox("Enable mod type filter")
+        tab_layout.addWidget(self.mod_type_filter_checkbox)

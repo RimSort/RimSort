@@ -255,6 +255,9 @@ class SettingsController(QObject):
             self.settings.debug_logging_enabled
         )
         self.settings_dialog.watchdog_checkbox.setChecked(self.settings.watchdog_toggle)
+        self.settings_dialog.mod_type_filter_checkbox.setChecked(
+            self.settings.mod_type_filter_toggle
+        )
 
     def _update_model_from_view(self) -> None:
         """
@@ -313,6 +316,9 @@ class SettingsController(QObject):
         )
         self.settings.watchdog_toggle = (
             self.settings_dialog.watchdog_checkbox.isChecked()
+        )
+        self.settings.mod_type_filter_toggle = (
+            self.settings_dialog.mod_type_filter_checkbox.isChecked()
         )
 
     @Slot()
