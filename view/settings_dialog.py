@@ -391,15 +391,22 @@ class SettingsDialog(QDialog):
         tab_layout = QVBoxLayout(tab)
         tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        sorting_label = QLabel("Sort Mods")
-        sorting_label.setFont(GUIInfo().emphasis_font)
-        tab_layout.addWidget(sorting_label)
+        sorting_layout = QHBoxLayout()
+        tab_layout.addLayout(sorting_layout)
+
+        sorting_label = QLabel("Sort Mods:")
+        sorting_layout.addWidget(sorting_label, alignment=Qt.AlignmentFlag.AlignTop)
+
+        radios_layout = QVBoxLayout()
+        sorting_layout.addLayout(radios_layout)
 
         self.sorting_alphabetical_radio = QRadioButton("Alphabetically")
-        tab_layout.addWidget(self.sorting_alphabetical_radio)
+        radios_layout.addWidget(self.sorting_alphabetical_radio)
 
         self.sorting_topological_radio = QRadioButton("Topologically")
-        tab_layout.addWidget(self.sorting_topological_radio)
+        radios_layout.addWidget(self.sorting_topological_radio)
+
+        sorting_layout.addStretch()
 
         tab_layout.addStretch(1)
 
@@ -453,7 +460,9 @@ class SettingsDialog(QDialog):
 
         radios_layout = QVBoxLayout()
         radios_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        when_optimizing_layout.addLayout(radios_layout, stretch=1)
+        when_optimizing_layout.addLayout(radios_layout)
+
+        when_optimizing_layout.addStretch()
 
         self.todds_active_mods_only_radio = QRadioButton("Optimize active mods only")
         radios_layout.addWidget(self.todds_active_mods_only_radio)
