@@ -4,6 +4,7 @@ from os.path import expanduser
 from pathlib import Path
 
 from PySide6.QtCore import QObject, Slot
+from PySide6.QtWidgets import QFileDialog
 from logger_tt import logger
 
 from model.settings import Settings
@@ -47,6 +48,8 @@ class SettingsController(QObject):
 
         self.settings_dialog = view
 
+        self._last_file_dialog_path = str(Path.home())
+
         # Initialize the settings dialog from the settings model
 
         self._update_view_from_model()
@@ -63,6 +66,22 @@ class SettingsController(QObject):
 
         # Wire up the settings dialog's location tab buttons
 
+        self.settings_dialog.game_location_choose_button.clicked.connect(
+            self._on_game_location_choose_button_clicked
+        )
+
+        self.settings_dialog.config_folder_location_choose_button.clicked.connect(
+            self._on_config_folder_location_choose_button_clicked
+        )
+
+        self.settings_dialog.steam_mods_folder_location_choose_button.clicked.connect(
+            self._on_steam_mods_folder_location_choose_button_clicked
+        )
+
+        self.settings_dialog.local_mods_folder_location_choose_button.clicked.connect(
+            self._on_local_mods_folder_location_choose_button_clicked
+        )
+
         self.settings_dialog.locations_clear_button.clicked.connect(
             self._on_locations_clear_button_clicked
         )
@@ -75,6 +94,7 @@ class SettingsController(QObject):
         """
         Show the settings dialog.
         """
+        self._update_view_from_model()
         self.settings_dialog.show()
 
     def _update_view_from_model(self) -> None:
@@ -119,6 +139,59 @@ class SettingsController(QObject):
         self.settings_dialog.close()
         self._update_model_from_view()
         self.settings.save()
+
+    @Slot()
+    def _on_game_location_choose_button_clicked(self) -> None:
+        game_location, _ = QFileDialog.getOpenFileName(
+            parent=self.settings_dialog,
+            dir=str(self._last_file_dialog_path),
+        )
+        if game_location == "":
+            return
+        game_location_path = Path(game_location).resolve()
+        self.settings.game_location = game_location
+        self.settings_dialog.game_location.setText(self.settings.game_location)
+        self._last_file_dialog_path = str(game_location_path.parent)
+
+    @Slot()
+    def _on_config_folder_location_choose_button_clicked(self) -> None:
+        config_folder_location = QFileDialog.getExistingDirectory(
+            parent=self.settings_dialog,
+            dir=str(self._last_file_dialog_path),
+        )
+        if config_folder_location == "":
+            return
+        self.settings.config_folder = config_folder_location
+        self.settings_dialog.config_folder_location.setText(self.settings.config_folder)
+        self._last_file_dialog_path = config_folder_location
+
+    @Slot()
+    def _on_steam_mods_folder_location_choose_button_clicked(self) -> None:
+        steam_mods_folder_location = QFileDialog.getExistingDirectory(
+            parent=self.settings_dialog,
+            dir=str(self._last_file_dialog_path),
+        )
+        if steam_mods_folder_location == "":
+            return
+        self.settings.workshop_folder = steam_mods_folder_location
+        self.settings_dialog.steam_mods_folder_location.setText(
+            self.settings.workshop_folder
+        )
+        self._last_file_dialog_path = steam_mods_folder_location
+
+    @Slot()
+    def _on_local_mods_folder_location_choose_button_clicked(self) -> None:
+        local_mods_folder_location = QFileDialog.getExistingDirectory(
+            parent=self.settings_dialog,
+            dir=str(self._last_file_dialog_path),
+        )
+        if local_mods_folder_location == "":
+            return
+        self.settings.local_folder = local_mods_folder_location
+        self.settings_dialog.local_mods_folder_location.setText(
+            self.settings.local_folder
+        )
+        self._last_file_dialog_path = local_mods_folder_location
 
     @Slot()
     def _on_locations_clear_button_clicked(self) -> None:
