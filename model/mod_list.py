@@ -835,7 +835,11 @@ class ModListWidget(QListWidget):
                         for source_item in selected_items:
                             if type(source_item) is QListWidgetItem:
                                 source_widget = self.itemWidget(source_item)
-                                widget_json_data = source_widget.json_data
+                                widget_json_data = (
+                                    MetadataManager.instance().all_mods_compiled[
+                                        source_widget.uuid
+                                    ]
+                                )
                                 if not widget_json_data[
                                     "data_source"  # Disallow Official Expansions
                                 ] == "expansion" or not widget_json_data[
@@ -861,7 +865,11 @@ class ModListWidget(QListWidget):
                         for source_item in selected_items:
                             if type(source_item) is QListWidgetItem:
                                 source_widget = self.itemWidget(source_item)
-                                widget_json_data = source_widget.json_data
+                                widget_json_data = (
+                                    MetadataManager.instance().all_mods_compiled[
+                                        source_widget.uuid
+                                    ]
+                                )
                                 if not widget_json_data[
                                     "data_source"  # Disallow Official Expansions
                                 ] == "expansion" or not widget_json_data[
@@ -880,7 +888,9 @@ class ModListWidget(QListWidget):
                     if type(source_item) is QListWidgetItem:
                         source_widget = self.itemWidget(source_item)
                         # Retrieve metadata
-                        widget_json_data = source_widget.json_data
+                        widget_json_data = MetadataManager.instance().all_mods_compiled[
+                            source_widget.uuid
+                        ]
                         mod_data_source = widget_json_data.get("data_source")
                         mod_path = widget_json_data["path"]
                         # Toggle warning action
