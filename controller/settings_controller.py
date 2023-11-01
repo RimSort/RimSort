@@ -133,7 +133,7 @@ class SettingsController(QObject):
 
     def show_settings_dialog(self) -> None:
         """
-        Show the settings dialog.
+        Update the view from the model and show the settings dialog.
         """
         self._update_view_from_model()
         self.settings_dialog.show()
@@ -144,7 +144,6 @@ class SettingsController(QObject):
         """
 
         # Locations tab
-
         self.settings_dialog.game_location.setText(self.settings.game_folder)
         self.settings_dialog.config_folder_location.setText(self.settings.config_folder)
         self.settings_dialog.steam_mods_folder_location.setText(
@@ -155,7 +154,6 @@ class SettingsController(QObject):
         )
 
         # Databases tab
-
         if self.settings.external_community_rules_metadata_source == "None":
             self.settings_dialog.community_rules_db_none_radio.setChecked(True)
             self.settings_dialog.community_rules_db_github_url.setEnabled(False)
@@ -192,15 +190,12 @@ class SettingsController(QObject):
             self.settings_dialog.community_rules_db_local_file_choose_button.setEnabled(
                 True
             )
-
         self.settings_dialog.community_rules_db_local_file.setText(
             self.settings.external_community_rules_file_path
         )
-
         self.settings_dialog.community_rules_db_github_url.setText(
             self.settings.external_community_rules_repo
         )
-
         if self.settings.external_steam_metadata_source == "None":
             self.settings_dialog.steam_workshop_db_none_radio.setChecked(True)
             self.settings_dialog.steam_workshop_db_github_url.setEnabled(False)
@@ -233,11 +228,9 @@ class SettingsController(QObject):
             self.settings_dialog.steam_workshop_db_local_file_choose_button.setEnabled(
                 True
             )
-
         self.settings_dialog.steam_workshop_db_local_file.setText(
             self.settings.external_steam_metadata_file_path
         )
-
         self.settings_dialog.steam_workshop_db_github_url.setText(
             self.settings.external_steam_metadata_repo
         )
@@ -248,7 +241,6 @@ class SettingsController(QObject):
         """
 
         # Locations tab
-
         self.settings.game_folder = self.settings_dialog.game_location.text()
         self.settings.config_folder = self.settings_dialog.config_folder_location.text()
         self.settings.workshop_folder = (
@@ -259,7 +251,6 @@ class SettingsController(QObject):
         )
 
         # Databases tab
-
         if self.settings_dialog.community_rules_db_none_radio.isChecked():
             self.settings.external_community_rules_metadata_source = "None"
         elif self.settings_dialog.community_rules_db_local_file_radio.isChecked():
@@ -270,26 +261,21 @@ class SettingsController(QObject):
             self.settings.external_community_rules_metadata_source = (
                 "Configured git repository"
             )
-
         self.settings.external_community_rules_file_path = (
             self.settings_dialog.community_rules_db_local_file.text()
         )
-
         self.settings.external_community_rules_repo = (
             self.settings_dialog.community_rules_db_github_url.text()
         )
-
         if self.settings_dialog.steam_workshop_db_none_radio.isChecked():
             self.settings.external_steam_metadata_source = "None"
         elif self.settings_dialog.steam_workshop_db_local_file_radio.isChecked():
             self.settings.external_steam_metadata_source = "Configured file path"
         elif self.settings_dialog.steam_workshop_db_github_radio.isChecked():
             self.settings.external_steam_metadata_source = "Configured git repository"
-
         self.settings.external_steam_metadata_repo = (
             self.settings_dialog.steam_workshop_db_github_url.text()
         )
-
         self.settings.external_steam_metadata_file_path = (
             self.settings_dialog.steam_workshop_db_local_file.text()
         )
@@ -328,7 +314,7 @@ class SettingsController(QObject):
     @Slot()
     def _on_global_ok_button_clicked(self) -> None:
         """
-        Close the settings dialog, update the model from the view, and save the settings..
+        Close the settings dialog, update the model from the view, and save the settings.
         """
         self.settings_dialog.close()
         self._update_model_from_view()
@@ -336,6 +322,9 @@ class SettingsController(QObject):
 
     @Slot()
     def _on_game_location_choose_button_clicked(self) -> None:
+        """
+        Open a file dialog to select the game location and handle the result.
+        """
         game_location, _ = QFileDialog.getOpenFileName(
             parent=self.settings_dialog,
             dir=str(self._last_file_dialog_path),
@@ -343,47 +332,52 @@ class SettingsController(QObject):
         if game_location == "":
             return
         game_location_path = Path(game_location).resolve()
-        self.settings.game_location = game_location
-        self.settings_dialog.game_location.setText(self.settings.game_location)
+        self.settings_dialog.game_location.setText(game_location)
         self._last_file_dialog_path = str(game_location_path.parent)
 
     @Slot()
     def _on_config_folder_location_choose_button_clicked(self) -> None:
+        """
+        Open a directory dialog to select the config folder and handle the result.
+        """
         config_folder_location = QFileDialog.getExistingDirectory(
             parent=self.settings_dialog,
             dir=str(self._last_file_dialog_path),
         )
         if config_folder_location == "":
             return
-        self.settings.config_folder = config_folder_location
-        self.settings_dialog.config_folder_location.setText(self.settings.config_folder)
+        self.settings_dialog.config_folder_location.setText(config_folder_location)
         self._last_file_dialog_path = config_folder_location
 
     @Slot()
     def _on_steam_mods_folder_location_choose_button_clicked(self) -> None:
+        """
+        Open a directory dialog to select the Steam mods folder and handle the result.
+        """
         steam_mods_folder_location = QFileDialog.getExistingDirectory(
             parent=self.settings_dialog,
             dir=str(self._last_file_dialog_path),
         )
         if steam_mods_folder_location == "":
             return
-        self.settings.workshop_folder = steam_mods_folder_location
         self.settings_dialog.steam_mods_folder_location.setText(
-            self.settings.workshop_folder
+            steam_mods_folder_location
         )
         self._last_file_dialog_path = steam_mods_folder_location
 
     @Slot()
     def _on_local_mods_folder_location_choose_button_clicked(self) -> None:
+        """
+        Open a directory dialog to select the local mods folder and handle the result.
+        """
         local_mods_folder_location = QFileDialog.getExistingDirectory(
             parent=self.settings_dialog,
             dir=str(self._last_file_dialog_path),
         )
         if local_mods_folder_location == "":
             return
-        self.settings.local_folder = local_mods_folder_location
         self.settings_dialog.local_mods_folder_location.setText(
-            self.settings.local_folder
+            local_mods_folder_location
         )
         self._last_file_dialog_path = local_mods_folder_location
 
@@ -559,6 +553,10 @@ class SettingsController(QObject):
 
     @Slot()
     def _on_community_rules_db_radio_clicked(self, checked: bool) -> None:
+        """
+        This function handles the community rules db radio buttons. Clicking one button
+        enables the associated widgets and disables the other widgets.
+        """
         if (
             self.sender() == self.settings_dialog.community_rules_db_none_radio
             and checked
@@ -574,7 +572,7 @@ class SettingsController(QObject):
             app_instance = QApplication.instance()
             if isinstance(app_instance, QApplication):
                 focused_widget = app_instance.focusWidget()
-                if focused_widget:
+                if focused_widget is not None:
                     focused_widget.clearFocus()
             return
 
@@ -610,10 +608,17 @@ class SettingsController(QObject):
 
     @Slot()
     def _on_community_rules_db_github_download_button_clicked(self) -> None:
+        """
+        Handle the community rules database download button click event by posting an
+        EventBus event that can be handled elsewhere in the app.
+        """
         EventBus().download_community_rules_db_from_github.emit()
 
     @Slot()
     def _on_community_rules_db_local_file_choose_button_clicked(self) -> None:
+        """
+        Open a file dialog to select the community rules database and handle the result.
+        """
         community_rules_db_location, _ = QFileDialog.getOpenFileName(
             parent=self.settings_dialog,
             dir=str(self._last_file_dialog_path),
@@ -627,6 +632,10 @@ class SettingsController(QObject):
 
     @Slot()
     def _on_steam_workshop_db_radio_clicked(self, checked: bool) -> None:
+        """
+        This function handles the Steam workshop db radio buttons. Clicking one button
+        enables the associated widgets and disables the other widgets.
+        """
         if (
             self.sender() == self.settings_dialog.steam_workshop_db_none_radio
             and checked
@@ -642,7 +651,7 @@ class SettingsController(QObject):
             app_instance = QApplication.instance()
             if isinstance(app_instance, QApplication):
                 focused_widget = app_instance.focusWidget()
-                if focused_widget:
+                if focused_widget is not None:
                     focused_widget.clearFocus()
             return
 
@@ -678,10 +687,17 @@ class SettingsController(QObject):
 
     @Slot()
     def _on_steam_workshop_db_github_download_button_clicked(self) -> None:
+        """
+        Handle the Steam workshop database download button click event by posting an
+        EventBus event that can be handled elsewhere in the app.
+        """
         EventBus().download_steam_workshop_db_from_github.emit()
 
     @Slot()
     def _on_steam_workshop_db_local_file_choose_button_clicked(self) -> None:
+        """
+        Open a file dialog to select the Steam workshop database and handle the result.
+        """
         steam_workshop_db_location, _ = QFileDialog.getOpenFileName(
             parent=self.settings_dialog,
             dir=str(self._last_file_dialog_path),
