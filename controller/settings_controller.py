@@ -249,6 +249,12 @@ class SettingsController(QObject):
         elif self.settings.sorting_algorithm == "Topological":
             self.settings_dialog.sorting_topological_radio.setChecked(True)
 
+        # Advanced tab
+
+        self.settings_dialog.debug_logging_checkbox.setChecked(
+            self.settings.debug_logging_enabled
+        )
+
     def _update_model_from_view(self) -> None:
         """
         Update the settings model from the view.
@@ -299,6 +305,11 @@ class SettingsController(QObject):
             self.settings.sorting_algorithm = "Alphabetical"
         elif self.settings_dialog.sorting_topological_radio.isChecked():
             self.settings.sorting_algorithm = "Topological"
+
+        # Advanced tab
+        self.settings.debug_logging_enabled = (
+            self.settings_dialog.debug_logging_checkbox.isChecked()
+        )
 
     @Slot()
     def _on_global_reset_to_defaults_button_clicked(self) -> None:

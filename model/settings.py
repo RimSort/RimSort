@@ -1,4 +1,5 @@
 import json
+import os
 from json import JSONDecodeError
 from pathlib import Path
 from typing import Dict, Any, Optional, List
@@ -15,7 +16,9 @@ class Settings(QObject):
         super().__init__()
 
         self._settings_file = AppInfo().user_data_folder / "settings.json"
+        self._debug_file = AppInfo().app_data_folder / "DEBUG"
 
+        self._debug_logging_enabled: bool = False
         self._check_for_update_startup: bool = False
         self._show_folder_rows: bool = False
         self._sorting_algorithm: str = ""
@@ -52,6 +55,7 @@ class Settings(QObject):
         self.apply_default_settings()
 
     def apply_default_settings(self) -> None:
+        self._debug_logging_enabled = False
         self._check_for_update_startup = False
         self._show_folder_rows = True
         self._sorting_algorithm = "Alphabetical"
@@ -92,6 +96,17 @@ class Settings(QObject):
         self._github_token = ""
         self._steam_apikey = ""
         self._run_args = []
+
+    @property
+    def debug_logging_enabled(self) -> bool:
+        return self._debug_logging_enabled
+
+    @debug_logging_enabled.setter
+    def debug_logging_enabled(self, value: bool) -> None:
+        if value == self._debug_logging_enabled:
+            return
+        self._debug_logging_enabled = value
+        EventBus().settings_have_changed.emit()
 
     @property
     def check_for_update_startup(self) -> bool:
@@ -498,6 +513,11 @@ class Settings(QObject):
         EventBus().settings_have_changed.emit()
 
     def load(self) -> None:
+        if self._debug_file.exists() and self._debug_file.is_file():
+            self._debug_logging_enabled = True
+        else:
+            self._debug_logging_enabled = False
+
         try:
             with open(str(self._settings_file), "r") as file:
                 data = json.load(file)
@@ -507,6 +527,11 @@ class Settings(QObject):
             pass
 
     def save(self) -> None:
+        if self._debug_logging_enabled:
+            self._debug_file.touch(exist_ok=True)
+        else:
+            self._debug_file.unlink(missing_ok=True)
+
         with open(str(self._settings_file), "w") as file:
             json.dump(self._to_dict(), file, indent=4)
 
