@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QGroupBox,
     QToolButton,
     QBoxLayout,
+    QComboBox,
 )
 
 from util.gui_info import GUIInfo
@@ -419,15 +420,56 @@ class SettingsDialog(QDialog):
         )
         tab_layout.addWidget(self.steamcmd_validate_downloads_checkbox)
 
-        tab_layout = QVBoxLayout()
-        tab.setLayout(tab_layout)
-
     def _do_todds_tab(self) -> None:
         tab = QWidget()
         self._tab_widget.addTab(tab, "todds")
 
-        tab_layout = QVBoxLayout()
-        tab.setLayout(tab_layout)
+        tab_layout = QVBoxLayout(tab)
+        tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        quality_preset_layout = QHBoxLayout()
+        tab_layout.addLayout(quality_preset_layout)
+
+        quality_preset_label = QLabel("Quality preset:")
+        quality_preset_label.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Preferred)
+        quality_preset_layout.addWidget(quality_preset_label)
+
+        self.todds_preset_combobox = QComboBox()
+        self.todds_preset_combobox.setSizePolicy(
+            QSizePolicy.Maximum, QSizePolicy.Preferred
+        )
+        self.todds_preset_combobox.addItem("Optimized - Recommended for RimWorld")
+        quality_preset_layout.addWidget(self.todds_preset_combobox)
+
+        quality_preset_layout.addStretch()
+
+        when_optimizing_layout = QHBoxLayout()
+        tab_layout.addLayout(when_optimizing_layout)
+
+        when_optimizing_label = QLabel("When optimizing textures:")
+        when_optimizing_layout.addWidget(
+            when_optimizing_label, alignment=Qt.AlignmentFlag.AlignTop
+        )
+
+        radios_layout = QVBoxLayout()
+        radios_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        when_optimizing_layout.addLayout(radios_layout, stretch=1)
+
+        self.todds_active_mods_only_radio = QRadioButton("Optimize active mods only")
+        radios_layout.addWidget(self.todds_active_mods_only_radio)
+
+        self.todds_all_mods_radio = QRadioButton("Optimize all mods")
+        radios_layout.addWidget(self.todds_all_mods_radio)
+
+        tab_layout.addSpacing(GUIInfo().default_font_line_height)
+
+        self.todds_dry_run_checkbox = QCheckBox("Enable dry-run mode")
+        tab_layout.addWidget(self.todds_dry_run_checkbox)
+
+        self.todds_overwrite_checkbox = QCheckBox(
+            "Overwrite existing optimized textures"
+        )
+        tab_layout.addWidget(self.todds_overwrite_checkbox)
 
     def _do_advanced_tab(self) -> None:
         tab = QWidget()

@@ -254,6 +254,22 @@ class SettingsController(QObject):
             self.settings.steamcmd_validate_downloads
         )
 
+        # todds tab
+        if self.settings.todds_preset == "optimized":
+            self.settings_dialog.todds_preset_combobox.setCurrentIndex(0)
+        else:
+            self.settings_dialog.todds_preset_combobox.setCurrentIndex(0)
+        if self.settings.todds_active_mods_target:
+            self.settings_dialog.todds_active_mods_only_radio.setChecked(True)
+        else:
+            self.settings_dialog.todds_all_mods_radio.setChecked(True)
+        self.settings_dialog.todds_dry_run_checkbox.setChecked(
+            self.settings.todds_dry_run
+        )
+        self.settings_dialog.todds_overwrite_checkbox.setChecked(
+            self.settings.todds_overwrite
+        )
+
         # Advanced tab
         self.settings_dialog.debug_logging_checkbox.setChecked(
             self.settings.debug_logging_enabled
@@ -326,6 +342,22 @@ class SettingsController(QObject):
         # SteamCMD tab
         self.settings.steamcmd_validate_downloads = (
             self.settings_dialog.steamcmd_validate_downloads_checkbox.isChecked()
+        )
+
+        # todds tab
+        if self.settings_dialog.todds_preset_combobox.currentIndex() == 0:
+            self.settings.todds_preset = "optimized"
+        else:
+            self.settings.todds_preset = "optimized"
+        if self.settings_dialog.todds_active_mods_only_radio.isChecked():
+            self.settings.todds_active_mods_target = True
+        elif self.settings_dialog.todds_all_mods_radio.isChecked():
+            self.settings.todds_active_mods_target = False
+        self.settings.todds_dry_run = (
+            self.settings_dialog.todds_dry_run_checkbox.isChecked()
+        )
+        self.settings.todds_overwrite = (
+            self.settings_dialog.todds_overwrite_checkbox.isChecked()
         )
 
         # Advanced tab
