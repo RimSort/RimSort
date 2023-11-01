@@ -1112,36 +1112,38 @@ class MainContent(QObject):
             self.inactive_mods_panel.inactive_mods_filter_data_source_icons
         )
         self.inactive_mods_panel.clear_inactive_mods_search()
-
         # Metadata to insert
         active_mods_uuids = []
         inactive_mods_uuids = []
         logger.info("Clearing mods from active mod list")
-        # Metadata from official modules, stored so they can be inserted in proper order
-        for uuid, mod_data in self.metadata_manager.all_mods_compiled.items():
-            if mod_data["data_source"] == "expansion":
-                if (
-                    mod_data["packageid"]
-                    == RIMWORLD_DLC_METADATA["294100"]["packageid"]
-                ):
-                    active_mods_uuids.append(uuid)
-                elif (
-                    mod_data["packageid"]
-                    == RIMWORLD_DLC_METADATA["1149640"]["packageid"]
-                ):
-                    active_mods_uuids.append(uuid)
-                elif (
-                    mod_data["packageid"]
-                    == RIMWORLD_DLC_METADATA["1392840"]["packageid"]
-                ):
-                    active_mods_uuids.append(uuid)
-                elif (
-                    mod_data["packageid"]
-                    == RIMWORLD_DLC_METADATA["1826140"]["packageid"]
-                ):
-                    active_mods_uuids.append(uuid)
-            else:
-                inactive_mods_uuids.append(uuid)
+        # Define the order of the DLC package IDs
+        package_id_order = [
+            RIMWORLD_DLC_METADATA["294100"]["packageid"],
+            RIMWORLD_DLC_METADATA["1149640"]["packageid"],
+            RIMWORLD_DLC_METADATA["1392840"]["packageid"],
+            RIMWORLD_DLC_METADATA["1826140"]["packageid"],
+        ]
+        # Create a set of all package IDs from mod_data
+        package_ids_set = set(
+            mod_data["packageid"]
+            for mod_data in self.metadata_manager.all_mods_compiled.values()
+        )
+        # Iterate over the DLC package IDs in the correct order
+        for package_id in package_id_order:
+            if package_id in package_ids_set:
+                # Append the UUIDs to active_mods_uuids if the package ID exists in mod_data
+                active_mods_uuids.extend(
+                    uuid
+                    for uuid, mod_data in self.metadata_manager.all_mods_compiled.items()
+                    if mod_data["data_source"] == "expansion"
+                    and mod_data["packageid"] == package_id
+                )
+        # Append the remaining UUIDs to inactive_mods_uuids
+        inactive_mods_uuids.extend(
+            uuid
+            for uuid in self.metadata_manager.all_mods_compiled.keys()
+            if uuid not in active_mods_uuids
+        )
         self.__insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
 
     def _do_sort(self) -> None:
