@@ -374,7 +374,6 @@ class SettingsPanel(QDialog):
             self.build_steam_database_download_all_steam
         )
         self.database_tools_layout.addLayout(self.database_tools_actions_layout)
-        self.database_tools_layout.addLayout(self.database_tools_layout)
         # Add DB Builder tab
         self.tabs.addTab(self.db_builder_tab, "DB Builder")
 
