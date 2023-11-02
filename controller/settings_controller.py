@@ -131,6 +131,11 @@ class SettingsController(QObject):
             EventBus().do_download_steam_workshop_db_from_github
         )
 
+        # Build DB tab
+        self.settings_dialog.db_builder_build_database_button.clicked.connect(
+            EventBus().do_build_steam_workshop_database
+        )
+
         # Advanced tab
         self.settings_dialog.upload_log_button.clicked.connect(
             EventBus().do_upload_log.emit

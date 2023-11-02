@@ -455,6 +455,16 @@ class SettingsDialog(QDialog):
 
         item_layout.addStretch()
 
+        tab_layout.addStretch()
+
+        item_layout = QHBoxLayout()
+        tab_layout.addLayout(item_layout)
+
+        item_layout.addStretch()
+
+        self.db_builder_build_database_button = QPushButton("Build Database")
+        item_layout.addWidget(self.db_builder_build_database_button)
+
     def _do_steamcmd_tab(self) -> None:
         tab = QWidget()
         self._tab_widget.addTab(tab, "SteamCMD")

@@ -133,6 +133,9 @@ class MainContent(QObject):
                 self._on_do_download_steam_workshop_db_from_github
             )
             EventBus().do_upload_log.connect(self._on_do_upload_log)
+            EventBus().do_build_steam_workshop_database.connect(
+                self._on_do_build_steam_workshop_database
+            )
 
             # INITIALIZE WIDGETS
             # Initialize Steam(CMD) integraations
@@ -3115,3 +3118,8 @@ class MainContent(QObject):
         )
         if ret:
             webbrowser.open(ret)
+
+    @Slot()
+    def _on_do_build_steam_workshop_database(self) -> None:
+        self.settings_controller.settings_dialog.global_ok_button.click()
+        self._do_build_database_thread()
