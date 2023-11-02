@@ -426,6 +426,11 @@ class SettingsDialog(QDialog):
         self.db_builder_include_local_checkbox = QCheckBox("Include local mod metadata")
         tab_layout.addWidget(self.db_builder_include_local_checkbox)
 
+        self.db_builder_query_dlc_checkbox = QCheckBox(
+            "Query DLC dependency data with Steamworks API"
+        )
+        tab_layout.addWidget(self.db_builder_query_dlc_checkbox)
+
     def _do_steamcmd_tab(self) -> None:
         tab = QWidget()
         self._tab_widget.addTab(tab, "SteamCMD")

@@ -255,11 +255,13 @@ class SettingsController(QObject):
             self.settings_dialog.sorting_topological_radio.setChecked(True)
 
         # Database Builder tab
-
         if self.settings.db_builder_include == "all_mods":
             self.settings_dialog.db_builder_include_local_checkbox.setChecked(True)
         elif self.settings.db_builder_include == "no_local":
             self.settings_dialog.db_builder_include_local_checkbox.setChecked(False)
+        self.settings_dialog.db_builder_query_dlc_checkbox.setChecked(
+            self.settings.build_steam_database_dlc_data
+        )
 
         # SteamCMD tab
         self.settings_dialog.steamcmd_validate_downloads_checkbox.setChecked(
@@ -356,6 +358,9 @@ class SettingsController(QObject):
             self.settings.db_builder_include = "all_mods"
         else:
             self.settings.db_builder_include = "no_local"
+        self.settings.build_steam_database_dlc_data = (
+            self.settings_dialog.db_builder_query_dlc_checkbox.isChecked()
+        )
 
         # SteamCMD tab
         self.settings.steamcmd_validate_downloads = (
