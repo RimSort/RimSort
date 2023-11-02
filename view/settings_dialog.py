@@ -42,6 +42,7 @@ class SettingsDialog(QDialog):
         self._do_locations_tab()
         self._do_databases_tab()
         self._do_sorting_tab()
+        self._do_db_builder_tab()
         self._do_steamcmd_tab()
         self._do_todds_tab()
         self._do_advanced_tab()
@@ -414,6 +415,13 @@ class SettingsDialog(QDialog):
         explanatory_label = QLabel(explanatory_text)
         explanatory_label.setWordWrap(True)
         tab_layout.addWidget(explanatory_label)
+
+    def _do_db_builder_tab(self) -> None:
+        tab = QWidget()
+        self._tab_widget.addTab(tab, "Database Builder")
+
+        tab_layout = QVBoxLayout(tab)
+        tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
     def _do_steamcmd_tab(self) -> None:
         tab = QWidget()
