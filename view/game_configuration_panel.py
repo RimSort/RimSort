@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
 from controller.settings_controller import SettingsController
 from model.dialogue import *
 from model.multibutton import MultiButton
+from util.app_info import AppInfo
 from util.constants import DEFAULT_SETTINGS, DEFAULT_USER_RULES
 from util.event_bus import EventBus
 from util.generic import *
@@ -76,7 +77,6 @@ class GameConfiguration(QObject):
             self.storage_path = QStandardPaths.writableLocation(
                 QStandardPaths.AppLocalDataLocation
             )
-            self.dbs_path = "."
             self.lock_icon_path = str(
                 Path(
                     os.path.join(os.path.dirname(__file__), "../data/lock.png")
@@ -187,13 +187,9 @@ class GameConfiguration(QObject):
             logger.info("Making storage directory")
             os.makedirs(self.storage_path)
         # Always check for dbs/userRules.json path, create if it doesn't exist
-        self.dbs_path = str(Path(os.path.join(self.storage_path, "dbs")).resolve())
         self.user_rules_file_path = str(
-            Path(os.path.join(self.dbs_path, "userRules.json")).resolve()
+            Path(os.path.join(AppInfo().databases_folder, "userRules.json")).resolve()
         )
-        logger.info(f"Determined dbs path: {self.dbs_path}")
-        if not os.path.exists(self.dbs_path):
-            os.makedirs(self.dbs_path)
         if not os.path.exists(self.user_rules_file_path):
             initial_rules_db = DEFAULT_USER_RULES
             with open(self.user_rules_file_path, "w", encoding="utf-8") as output:

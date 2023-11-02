@@ -61,11 +61,14 @@ class AppInfo:
         # Derive some secondary directory paths
 
         self._app_data_folder = self._application_folder / "data"
+        self._databases_folder = self._user_data_folder / "dbs"
 
         # Make sure important directories exist
 
         self._user_data_folder.mkdir(parents=True, exist_ok=True)
         self._user_log_folder.mkdir(parents=True, exist_ok=True)
+
+        self._databases_folder.mkdir(parents=True, exist_ok=True)
 
         self._is_initialized: bool = True
 
@@ -139,3 +142,10 @@ class AppInfo:
         Get the path to the folder where application-specific data is stored.
         """
         return self._app_data_folder
+
+    @property
+    def databases_folder(self) -> Path:
+        """
+        Get the path to the folder where application databases are stored.
+        """
+        return self._databases_folder
