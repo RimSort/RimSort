@@ -321,6 +321,10 @@ class SettingsController(QObject):
         self.settings_dialog.download_missing_mods_checkbox.setChecked(
             self.settings.try_download_missing_mods
         )
+        self.settings_dialog.github_username.setText(self.settings.github_username)
+        self.settings_dialog.github_username.setCursorPosition(0)
+        self.settings_dialog.github_token.setText(self.settings.github_token)
+        self.settings_dialog.github_token.setCursorPosition(0)
 
     def _update_model_from_view(self) -> None:
         """
@@ -431,6 +435,8 @@ class SettingsController(QObject):
         self.settings.try_download_missing_mods = (
             self.settings_dialog.download_missing_mods_checkbox.isChecked()
         )
+        self.settings.github_username = self.settings_dialog.github_username.text()
+        self.settings.github_token = self.settings_dialog.github_token.text()
 
     @Slot()
     def _on_global_reset_to_defaults_button_clicked(self) -> None:

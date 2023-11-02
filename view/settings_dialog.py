@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QToolButton,
     QBoxLayout,
     QComboBox,
+    QGridLayout,
 )
 
 from util.gui_info import GUIInfo
@@ -603,3 +604,31 @@ class SettingsDialog(QDialog):
         upload_buttons_layout.addWidget(self.upload_log_button)
 
         upload_buttons_layout.addStretch()
+
+        github_identity_group = QGroupBox()
+        tab_layout.addWidget(github_identity_group)
+
+        github_identity_layout = QGridLayout()
+        github_identity_group.setLayout(github_identity_layout)
+
+        github_username_label = QLabel("GitHub username:")
+        github_identity_layout.addWidget(
+            github_username_label, 0, 0, alignment=Qt.AlignmentFlag.AlignRight
+        )
+
+        self.github_username = QLineEdit()
+        self.github_username.setTextMargins(GUIInfo().text_field_margins)
+        self.github_username.setFixedHeight(GUIInfo().default_font_line_height * 2)
+        self.github_username.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
+        github_identity_layout.addWidget(self.github_username, 0, 1)
+
+        github_token_label = QLabel("GitHub personal access token:")
+        github_identity_layout.addWidget(
+            github_token_label, 1, 0, alignment=Qt.AlignmentFlag.AlignRight
+        )
+
+        self.github_token = QLineEdit()
+        self.github_token.setTextMargins(GUIInfo().text_field_margins)
+        self.github_token.setFixedHeight(GUIInfo().default_font_line_height * 2)
+        self.github_token.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
+        github_identity_layout.addWidget(self.github_token, 1, 1)
