@@ -224,8 +224,6 @@ class GameConfiguration(QObject):
                 ).resolve()
             )
 
-            self.settings_controller.settings.steamcmd_install_path = self.storage_path
-
             logger.info(f"Writing default settings to: {settings_path}")
 
             self.settings_controller.settings.save()

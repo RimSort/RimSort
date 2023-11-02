@@ -82,7 +82,7 @@ class Settings(QObject):
         self._duplicate_mods_warning = False
         self._steam_mods_update_check = False
         self._try_download_missing_mods = False
-        self._steamcmd_install_path = "."
+        self._steamcmd_install_path = str(AppInfo().user_data_folder)
         self._steamcmd_validate_downloads = True
         self._todds_preset = "optimized"
         self._todds_active_mods_target = True
