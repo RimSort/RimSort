@@ -126,13 +126,13 @@ class MainContent(QObject):
 
             self.settings_controller = settings_controller
             EventBus().settings_have_changed.connect(self._on_settings_have_changed)
-            EventBus().download_community_rules_db_from_github.connect(
-                self._on_download_community_db_from_github
+            EventBus().do_download_community_rules_db_from_github.connect(
+                self._on_do_download_community_db_from_github
             )
-            EventBus().download_steam_workshop_db_from_github.connect(
-                self._on_download_steam_workshop_db_from_github
+            EventBus().do_download_steam_workshop_db_from_github.connect(
+                self._on_do_download_steam_workshop_db_from_github
             )
-            EventBus().upload_log.connect(self._on_upload_log)
+            EventBus().do_upload_log.connect(self._on_do_upload_log)
 
             # INITIALIZE WIDGETS
             # Initialize Steam(CMD) integraations
@@ -3089,7 +3089,7 @@ class MainContent(QObject):
         )
 
     @Slot()
-    def _on_download_community_db_from_github(self) -> None:
+    def _on_do_download_community_db_from_github(self) -> None:
         if GIT_EXISTS:
             self._do_clone_repo_to_path(
                 base_path=GameConfiguration.instance().dbs_path,
@@ -3099,7 +3099,7 @@ class MainContent(QObject):
             self._do_notify_no_git()
 
     @Slot()
-    def _on_download_steam_workshop_db_from_github(self) -> None:
+    def _on_do_download_steam_workshop_db_from_github(self) -> None:
         if GIT_EXISTS:
             self._do_clone_repo_to_path(
                 base_path=GameConfiguration.instance().dbs_path,
@@ -3109,7 +3109,7 @@ class MainContent(QObject):
             self._do_notify_no_git()
 
     @Slot()
-    def _on_upload_log(self) -> None:
+    def _on_do_upload_log(self) -> None:
         ret = upload_data_to_0x0_st(
             str(Path(os.path.join(gettempdir(), "RimSort.log")).resolve())
         )

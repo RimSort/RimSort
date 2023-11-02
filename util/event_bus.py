@@ -23,9 +23,9 @@ class EventBus(QObject):
     # Application-scope signals
     settings_have_changed = Signal()
 
-    download_community_rules_db_from_github = Signal()
-    download_steam_workshop_db_from_github = Signal()
-    upload_log = Signal()
+    do_download_community_rules_db_from_github = Signal()
+    do_download_steam_workshop_db_from_github = Signal()
+    do_upload_log = Signal()
 
     def __new__(cls) -> "EventBus":
         """

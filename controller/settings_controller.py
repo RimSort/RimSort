@@ -108,7 +108,7 @@ class SettingsController(QObject):
         )
 
         self.settings_dialog.community_rules_db_github_download_button.clicked.connect(
-            EventBus().download_community_rules_db_from_github
+            EventBus().do_download_community_rules_db_from_github
         )
         self.settings_dialog.community_rules_db_local_file_choose_button.clicked.connect(
             self._on_community_rules_db_local_file_choose_button_clicked
@@ -128,12 +128,12 @@ class SettingsController(QObject):
             self._on_steam_workshop_db_local_file_choose_button_clicked
         )
         self.settings_dialog.steam_workshop_db_github_download_button.clicked.connect(
-            EventBus().download_steam_workshop_db_from_github
+            EventBus().do_download_steam_workshop_db_from_github
         )
 
         # Advanced tab
         self.settings_dialog.upload_log_button.clicked.connect(
-            EventBus().upload_log.emit
+            EventBus().do_upload_log.emit
         )
 
     def show_settings_dialog(self) -> None:
