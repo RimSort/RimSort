@@ -523,8 +523,7 @@ class Settings(QObject):
                 data = json.load(file)
                 self._from_dict(data)
         except (FileNotFoundError, JSONDecodeError):
-            # TODO: Handle these exceptions in a sane and reasonable way.
-            pass
+            self.save()
 
     def save(self) -> None:
         if self._debug_logging_enabled:

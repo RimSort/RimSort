@@ -198,35 +198,6 @@ class GameConfiguration(QObject):
             initial_rules_db = DEFAULT_USER_RULES
             with open(self.user_rules_file_path, "w", encoding="utf-8") as output:
                 json.dump(initial_rules_db, output, indent=4)
-        # Always check for settings path, create with defaults if it doesn't exist
-        settings_path = str(
-            Path(os.path.join(self.storage_path, "settings.json")).resolve()
-        )
-        logger.info(f"Determined settings file path: {settings_path}")
-        if not os.path.exists(settings_path):
-            logger.info(f"Settings file does not exist!")
-
-            self.settings_controller.settings.external_steam_metadata_file_path = str(
-                Path(
-                    os.path.join(
-                        self.storage_path,
-                        self.settings_controller.settings.external_steam_metadata_file_path,
-                    )
-                ).resolve()
-            )
-
-            self.settings_controller.settings.external_community_rules_file_path = str(
-                Path(
-                    os.path.join(
-                        self.storage_path,
-                        self.settings_controller.settings.external_community_rules_file_path,
-                    )
-                ).resolve()
-            )
-
-            logger.info(f"Writing default settings to: {settings_path}")
-
-            self.settings_controller.settings.save()
 
         # sorting algorithm
         self.settings_panel.sorting_algorithm_cb.setCurrentText(
