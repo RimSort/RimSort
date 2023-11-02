@@ -597,14 +597,6 @@ class SettingsDialog(QDialog):
 
         tab_layout.addSpacing(GUIInfo().default_font_line_height)
 
-        upload_buttons_layout = QHBoxLayout()
-        tab_layout.addLayout(upload_buttons_layout)
-
-        self.upload_log_button = QPushButton("Upload Log")
-        upload_buttons_layout.addWidget(self.upload_log_button)
-
-        upload_buttons_layout.addStretch()
-
         github_identity_group = QGroupBox()
         tab_layout.addWidget(github_identity_group)
 
@@ -632,3 +624,13 @@ class SettingsDialog(QDialog):
         self.github_token.setFixedHeight(GUIInfo().default_font_line_height * 2)
         self.github_token.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         github_identity_layout.addWidget(self.github_token, 1, 1)
+
+        tab_layout.addStretch(1)
+
+        buttons_layout = QHBoxLayout()
+        tab_layout.addLayout(buttons_layout)
+
+        buttons_layout.addStretch()
+
+        self.upload_log_button = QPushButton("Upload Log")
+        buttons_layout.addWidget(self.upload_log_button)
