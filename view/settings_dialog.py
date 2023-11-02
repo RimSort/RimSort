@@ -101,7 +101,7 @@ class SettingsDialog(QDialog):
         header_layout = QHBoxLayout()
         tab_layout.addLayout(header_layout)
 
-        section_label = QLabel("Game Location")
+        section_label = QLabel("Game location")
         section_label.setFont(GUIInfo().emphasis_font)
         header_layout.addWidget(section_label)
 
@@ -119,7 +119,7 @@ class SettingsDialog(QDialog):
         header_layout = QHBoxLayout()
         tab_layout.addLayout(header_layout)
 
-        section_label = QLabel("Config Folder Location")
+        section_label = QLabel("Config location")
         section_label.setFont(GUIInfo().emphasis_font)
         header_layout.addWidget(section_label)
 
@@ -139,7 +139,7 @@ class SettingsDialog(QDialog):
         header_layout = QHBoxLayout()
         tab_layout.addLayout(header_layout)
 
-        section_label = QLabel("Steam Mods Folder Location")
+        section_label = QLabel("Steam mods location")
         section_label.setFont(GUIInfo().emphasis_font)
         header_layout.addWidget(section_label)
 
@@ -159,7 +159,7 @@ class SettingsDialog(QDialog):
         header_layout = QHBoxLayout()
         tab_layout.addLayout(header_layout)
 
-        section_label = QLabel("Local Mods Folder Location")
+        section_label = QLabel("Local mods location")
         section_label.setFont(GUIInfo().emphasis_font)
         header_layout.addWidget(section_label)
 
@@ -193,7 +193,7 @@ class SettingsDialog(QDialog):
         group_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         group.setLayout(group_layout)
 
-        section_label = QLabel("Community Rules Database")
+        section_label = QLabel("Community rules database")
         section_label.setFont(GUIInfo().emphasis_font)
         section_label.setSizePolicy(
             QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed
@@ -293,7 +293,7 @@ class SettingsDialog(QDialog):
         group_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         group.setLayout(group_layout)
 
-        section_label = QLabel("Steam Workshop Database")
+        section_label = QLabel("Steam Workshop database")
         section_label.setFont(GUIInfo().emphasis_font)
         section_label.setSizePolicy(
             QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed
@@ -314,7 +314,7 @@ class SettingsDialog(QDialog):
         self.steam_workshop_db_none_radio.setChecked(True)
         item_layout.addWidget(self.steam_workshop_db_none_radio, stretch=2)
 
-        label = QLabel("No Steam workshop database will be used.")
+        label = QLabel("No Steam Workshop database will be used.")
         label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         label.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         label.setEnabled(False)
