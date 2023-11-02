@@ -12,6 +12,7 @@ from typing import Type, Optional
 from PySide6.QtWidgets import QApplication
 from logger_tt import handlers, logger, setup_logging
 
+from controller.app_controller import AppController
 from util.app_info import AppInfo
 from view.main_window import MainWindow
 
@@ -73,25 +74,8 @@ sys.excepthook = handle_exception
 
 def main_thread() -> None:
     try:
-        # Create the application
-        app = QApplication(sys.argv)
-        app.setApplicationName("RimSort")
-        # Get styling from game configuration
-        logger.debug("Setting application style")
-        app.setStyle(
-            ProxyStyle()
-        )  # Add proxy style for overriding some styling elements
-        app.setStyleSheet(  # Add style sheet for styling layouts and widgets
-            Path(
-                os.path.join(os.path.dirname(__file__), "themes/RimPy/style.qss")
-            ).read_text()
-        )
-        # Create the main window
-        window = MainWindow(debug_mode=DEBUG_MODE)
-        logger.info("Showing MainWindow")
-        window.show()
-        window.initialize_content()
-        app.exec()
+        app_controller = AppController()
+        sys.exit(app_controller.run())
     except Exception as e:
         # Catch exceptions during initial application instantiation
         # Uncaught exceptions during the application loop are caught with excepthook
@@ -117,10 +101,10 @@ def main_thread() -> None:
         logger.error(stacktrace)
         show_fatal_error(details=stacktrace)
     finally:
-        if "window" in locals():
+        if "app_controller" in locals():
             try:
                 logger.debug("Stopping watchdog...")
-                window.shutdown_watchdog()
+                app_controller.shutdown_watchdog()
             except:
                 stacktrace = traceback.format_exc()
                 logger.warning(
