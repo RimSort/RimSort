@@ -652,7 +652,7 @@ class MainContent(QObject):
             self._do_setup_steamcmd()
         if action == "import_steamcmd_acf_data":
             import_steamcmd_acf_data(
-                rimsort_storage_path=str(AppInfo().user_data_folder),
+                rimsort_storage_path=str(AppInfo().app_storage_folder),
                 steamcmd_appworkshop_acf_path=self.steamcmd_wrapper.steamcmd_appworkshop_acf_path,
             )
         if action == "reset_steamcmd_acf_data":
@@ -1278,7 +1278,7 @@ class MainContent(QObject):
         file_path = show_dialogue_file(
             mode="open",
             caption="Open mod list",
-            _dir=str(AppInfo().user_data_folder),
+            _dir=str(AppInfo().app_storage_folder),
             _filter="XML (*.xml)",
         )
         logger.info(f"Selected path: {file_path}")
@@ -1328,7 +1328,7 @@ class MainContent(QObject):
         file_path = show_dialogue_file(
             mode="save",
             caption="Save mod list",
-            _dir=str(AppInfo().user_data_folder),
+            _dir=str(AppInfo().app_storage_folder),
             _filter="XML (*.xml)",
         )
         logger.info(f"Selected path: {file_path}")
@@ -2339,7 +2339,7 @@ class MainContent(QObject):
             repo_path = str(
                 Path(
                     os.path.join(
-                        str(AppInfo().user_data_folder),
+                        str(AppInfo().app_storage_folder),
                         str(AppInfo().databases_folder),
                         repo_folder_name,
                     )
@@ -2529,7 +2529,7 @@ class MainContent(QObject):
         input_path = show_dialogue_file(
             mode="open",
             caption="Choose Steam Workshop Database",
-            _dir=str(AppInfo().user_data_folder),
+            _dir=str(AppInfo().app_storage_folder),
             _filter="JSON (*.json)",
         )
         logger.info(f"Selected path: {input_path}")
@@ -2548,7 +2548,7 @@ class MainContent(QObject):
         input_path = show_dialogue_file(
             mode="open",
             caption="Choose Community Rules DB",
-            _dir=str(AppInfo().user_data_folder),
+            _dir=str(AppInfo().app_storage_folder),
             _filter="JSON (*.json)",
         )
         logger.info(f"Selected path: {input_path}")
@@ -2598,7 +2598,7 @@ class MainContent(QObject):
         output_path = show_dialogue_file(
             mode="save",
             caption="Designate output path",
-            _dir=str(AppInfo().user_data_folder),
+            _dir=str(AppInfo().app_storage_folder),
             _filter="JSON (*.json)",
         )
         # Check file path and launch DB Builder with user configured mode
@@ -2820,7 +2820,7 @@ class MainContent(QObject):
         input_path_a = show_dialogue_file(
             mode="open",
             caption='Input "to-be-updated" database, input A',
-            _dir=str(AppInfo().user_data_folder),
+            _dir=str(AppInfo().app_storage_folder),
             _filter="JSON (*.json)",
         )
         logger.info(f"Selected path: {input_path_a}")
@@ -2838,7 +2838,7 @@ class MainContent(QObject):
         input_path_b = show_dialogue_file(
             mode="open",
             caption='Input "to-be-updated" database, input A',
-            _dir=str(AppInfo().user_data_folder),
+            _dir=str(AppInfo().app_storage_folder),
             _filter="JSON (*.json)",
         )
         logger.info(f"Selected path: {input_path_b}")
@@ -2933,7 +2933,7 @@ class MainContent(QObject):
         input_path_a = show_dialogue_file(
             mode="open",
             caption='Input "to-be-updated" database, input A',
-            _dir=str(AppInfo().user_data_folder),
+            _dir=str(AppInfo().app_storage_folder),
             _filter="JSON (*.json)",
         )
         logger.info(f"Selected path: {input_path_a}")
@@ -2951,7 +2951,7 @@ class MainContent(QObject):
         input_path_b = show_dialogue_file(
             mode="open",
             caption='Input "to-be-updated" database, input A',
-            _dir=str(AppInfo().user_data_folder),
+            _dir=str(AppInfo().app_storage_folder),
             _filter="JSON (*.json)",
         )
         logger.info(f"Selected path: {input_path_b}")
@@ -2978,7 +2978,7 @@ class MainContent(QObject):
         output_path = show_dialogue_file(
             mode="save",
             caption="Designate output path for resultant database:",
-            _dir=str(AppInfo().user_data_folder),
+            _dir=str(AppInfo().app_storage_folder),
             _filter="JSON (*.json)",
         )
         logger.info(f"Selected path: {output_path}")

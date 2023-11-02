@@ -290,10 +290,10 @@ class MetadataManager(QObject):
                 "External Community Rules metadata disabled by user. Please choose a metadata source in settings."
             )
         # External User Rules metadata
-        if os.path.exists(str(AppInfo().user_data_folder / "userRules.json")):
+        if os.path.exists(str(AppInfo().app_storage_folder / "userRules.json")):
             logger.info("Loading userRules.json")
             with open(
-                str(AppInfo().user_data_folder / "userRules.json"), encoding="utf-8"
+                str(AppInfo().app_storage_folder / "userRules.json"), encoding="utf-8"
             ) as f:
                 json_string = f.read()
                 self.external_user_rules = json.loads(json_string)["rules"]
@@ -306,7 +306,7 @@ class MetadataManager(QObject):
                 "Unable to find userRules.json in storage. Creating new user rules db!"
             )
             with open(
-                str(AppInfo().user_data_folder / "userRules.json"),
+                str(AppInfo().app_storage_folder / "userRules.json"),
                 "w",
                 encoding="utf-8",
             ) as output:

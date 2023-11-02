@@ -15,7 +15,7 @@ class Settings(QObject):
     def __init__(self) -> None:
         super().__init__()
 
-        self._settings_file = AppInfo().user_data_folder / "settings.json"
+        self._settings_file = AppInfo().app_storage_folder / "settings.json"
         self._debug_file = AppInfo().app_data_folder / "DEBUG"
 
         self._debug_logging_enabled: bool = False
@@ -60,14 +60,14 @@ class Settings(QObject):
         self._show_folder_rows = True
         self._sorting_algorithm = "Alphabetical"
         self._external_steam_metadata_file_path = str(
-            AppInfo().user_data_folder / "steamDB.json"
+            AppInfo().app_storage_folder / "steamDB.json"
         )
         self._external_steam_metadata_repo = (
             "https://github.com/RimSort/Steam-Workshop-Database"
         )
         self._external_steam_metadata_source = "None"
         self._external_community_rules_file_path = str(
-            AppInfo().user_data_folder / "communityRules.json"
+            AppInfo().app_storage_folder / "communityRules.json"
         )
         self._external_community_rules_repo = (
             "https://github.com/RimSort/Community-Rules-Database"
@@ -82,7 +82,7 @@ class Settings(QObject):
         self._duplicate_mods_warning = False
         self._steam_mods_update_check = False
         self._try_download_missing_mods = False
-        self._steamcmd_install_path = str(AppInfo().user_data_folder)
+        self._steamcmd_install_path = str(AppInfo().app_storage_folder)
         self._steamcmd_validate_downloads = True
         self._todds_preset = "optimized"
         self._todds_active_mods_target = True

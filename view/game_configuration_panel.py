@@ -157,7 +157,7 @@ class GameConfiguration(QObject):
         Window modality is set so the user cannot interact with
         the rest of the application while the settings panel is open.
         """
-        self.settings_panel = SettingsPanel(str(AppInfo().user_data_folder))
+        self.settings_panel = SettingsPanel(str(AppInfo().app_storage_folder))
         self.settings_panel.setWindowModality(Qt.ApplicationModal)
         self.settings_panel.finished.connect(self._on_settings_close)
 
