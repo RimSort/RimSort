@@ -133,7 +133,7 @@ class SettingsController(QObject):
 
         # Build DB tab
         self.settings_dialog.db_builder_build_database_button.clicked.connect(
-            EventBus().do_build_steam_workshop_database
+            EventBus().do_build_steam_workshop_database.emit
         )
 
         # Advanced tab
