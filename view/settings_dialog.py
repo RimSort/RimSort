@@ -418,7 +418,7 @@ class SettingsDialog(QDialog):
 
     def _do_db_builder_tab(self) -> None:
         tab = QWidget()
-        self._tab_widget.addTab(tab, "Database Builder")
+        self._tab_widget.addTab(tab, "DB Builder")
 
         tab_layout = QVBoxLayout(tab)
         tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
