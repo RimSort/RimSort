@@ -35,10 +35,6 @@ class MenuBarController(QObject):
             self.settings_controller.show_settings_dialog
         )
 
-        self.menu_bar.settings_action_2.triggered.connect(
-            GameConfiguration.instance()._open_settings_panel
-        )
-
         # File menu
 
         self.menu_bar.open_mod_list_action.triggered.connect(

@@ -43,10 +43,6 @@ class MenuBar(QObject):
         self.settings_action.setMenuRole(QAction.MenuRole.ApplicationSpecificRole)
         self.app_menu.addAction(self.settings_action)
 
-        self.settings_action_2 = QAction("Settings (Old)…", self)
-        self.settings_action_2.setMenuRole(QAction.MenuRole.ApplicationSpecificRole)
-        self.app_menu.addAction(self.settings_action_2)
-
         self.app_menu.addSeparator()
 
         self.quit_action = QAction("Quit", self)
@@ -122,9 +118,6 @@ class MenuBar(QObject):
 
         self.settings_action = QAction("Settings…", self)
         self.file_menu.addAction(self.settings_action)
-
-        self.settings_action_2 = QAction("Settings (Old)…", self)
-        self.file_menu.addAction(self.settings_action_2)
 
         self.file_menu.addSeparator()
 
