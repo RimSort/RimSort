@@ -49,6 +49,9 @@ class GUIInfo:
         self._default_font_line_height: int = QFontMetrics(
             self._default_font
         ).lineSpacing()
+        self._default_font_average_char_width: int = QFontMetrics(
+            self._default_font
+        ).averageCharWidth()
 
         self._text_field_margins: QMargins = QMargins(4, 4, 4, 4)
 
@@ -93,6 +96,16 @@ class GUIInfo:
             int: The line height of the default font.
         """
         return self._default_font_line_height
+
+    @property
+    def default_font_average_char_width(self) -> int:
+        """
+        Get the average character width of the default font.
+
+        Returns:
+            int: The average character width of the default font.
+        """
+        return self._default_font_average_char_width
 
     @property
     def text_field_margins(self) -> QMargins:

@@ -265,6 +265,9 @@ class SettingsController(QObject):
         self.settings_dialog.db_builder_update_instead_of_overwriting_checkbox.setChecked(
             self.settings.build_steam_database_update_toggle
         )
+        self.settings_dialog.db_builder_database_expiry.setText(
+            str(self.settings.database_expiry)
+        )
 
         # SteamCMD tab
         self.settings_dialog.steamcmd_validate_downloads_checkbox.setChecked(
@@ -366,6 +369,9 @@ class SettingsController(QObject):
         )
         self.settings.build_steam_database_update_toggle = (
             self.settings_dialog.db_builder_update_instead_of_overwriting_checkbox.isChecked()
+        )
+        self.settings.database_expiry = int(
+            self.settings_dialog.db_builder_database_expiry.text()
         )
 
         # SteamCMD tab

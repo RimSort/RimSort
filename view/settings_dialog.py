@@ -436,6 +436,25 @@ class SettingsDialog(QDialog):
         )
         tab_layout.addWidget(self.db_builder_update_instead_of_overwriting_checkbox)
 
+        item_layout = QHBoxLayout()
+        tab_layout.addLayout(item_layout)
+
+        database_expiry_label = QLabel("Database expiry:")
+        item_layout.addWidget(database_expiry_label)
+
+        self.db_builder_database_expiry = QLineEdit()
+        self.db_builder_database_expiry.setTextMargins(GUIInfo().text_field_margins)
+        self.db_builder_database_expiry.setFixedHeight(
+            GUIInfo().default_font_line_height * 2
+        )
+        self.db_builder_database_expiry.setFixedWidth(
+            GUIInfo().default_font_average_char_width * 10
+        )
+        self.db_builder_database_expiry.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
+        item_layout.addWidget(self.db_builder_database_expiry)
+
+        item_layout.addStretch()
+
     def _do_steamcmd_tab(self) -> None:
         tab = QWidget()
         self._tab_widget.addTab(tab, "SteamCMD")
