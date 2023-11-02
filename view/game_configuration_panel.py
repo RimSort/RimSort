@@ -162,22 +162,6 @@ class GameConfiguration(QObject):
         self.settings_panel.finished.connect(self._on_settings_close)
 
     def _initialize_storage(self) -> None:
-        """
-        Initialize the app's storage feature.
-        If the storage path or settings.json file do not exist,
-        create them. If they do exist, set the path widgets
-        to have paths written on the settings.json.
-        """
-        logger.info("Initializing storage")
-        # Always check for dbs/userRules.json path, create if it doesn't exist
-        self.user_rules_file_path = str(
-            Path(os.path.join(AppInfo().databases_folder, "userRules.json")).resolve()
-        )
-        if not os.path.exists(self.user_rules_file_path):
-            initial_rules_db = DEFAULT_USER_RULES
-            with open(self.user_rules_file_path, "w", encoding="utf-8") as output:
-                json.dump(initial_rules_db, output, indent=4)
-
         # sorting algorithm
         self.settings_panel.sorting_algorithm_cb.setCurrentText(
             self.settings_controller.settings.sorting_algorithm
