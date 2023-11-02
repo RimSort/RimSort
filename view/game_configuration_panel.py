@@ -74,9 +74,6 @@ class GameConfiguration(QObject):
             self.rimsort_version = RIMSORT_VERSION
             self.system_name = platform.system()
 
-            self.storage_path = QStandardPaths.writableLocation(
-                QStandardPaths.AppLocalDataLocation
-            )
             self.lock_icon_path = str(
                 Path(
                     os.path.join(os.path.dirname(__file__), "../data/lock.png")
@@ -160,7 +157,7 @@ class GameConfiguration(QObject):
         Window modality is set so the user cannot interact with
         the rest of the application while the settings panel is open.
         """
-        self.settings_panel = SettingsPanel(self.storage_path)
+        self.settings_panel = SettingsPanel(str(AppInfo().user_data_folder))
         self.settings_panel.setWindowModality(Qt.ApplicationModal)
         self.settings_panel.finished.connect(self._on_settings_close)
 
@@ -172,20 +169,6 @@ class GameConfiguration(QObject):
         to have paths written on the settings.json.
         """
         logger.info("Initializing storage")
-        logger.info(f"Determined storage path: {self.storage_path}")
-        # Always check for storage path, create in OS-specific "app data" if it doesn't exist
-        if not os.path.exists(self.storage_path):
-            logger.info(f"Storage path [{self.storage_path}] does not exist")
-            information = (
-                "It looks like you may be running RimSort for the first time! RimSort stores some client "
-                + f"information in this directory:\n[{self.storage_path}].\n"
-                + "It doesn't look like this directory exists, so we'll make it for you now."
-            )
-            show_information(
-                title="Welcome", text="Welcome to RimSort!", information=information
-            )
-            logger.info("Making storage directory")
-            os.makedirs(self.storage_path)
         # Always check for dbs/userRules.json path, create if it doesn't exist
         self.user_rules_file_path = str(
             Path(os.path.join(AppInfo().databases_folder, "userRules.json")).resolve()
