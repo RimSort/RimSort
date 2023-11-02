@@ -3121,5 +3121,4 @@ class MainContent(QObject):
 
     @Slot()
     def _on_do_build_steam_workshop_database(self) -> None:
-        self.settings_controller.settings_dialog.global_ok_button.click()
         self._do_build_database_thread()

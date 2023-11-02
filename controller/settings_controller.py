@@ -133,7 +133,7 @@ class SettingsController(QObject):
 
         # Build DB tab
         self.settings_dialog.db_builder_build_database_button.clicked.connect(
-            EventBus().do_build_steam_workshop_database.emit
+            self._on_db_builder_build_database_button_clicked
         )
 
         # Advanced tab
@@ -832,3 +832,11 @@ class SettingsController(QObject):
             steam_workshop_db_location
         )
         self._last_file_dialog_path = str(Path(steam_workshop_db_location).parent)
+
+    @Slot()
+    def _on_db_builder_build_database_button_clicked(self) -> None:
+        """
+        Build the Steam Workshop database.
+        """
+        self.settings_dialog.global_ok_button.click()
+        EventBus().do_build_steam_workshop_database.emit()
