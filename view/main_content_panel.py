@@ -133,6 +133,12 @@ class MainContent(QObject):
                 self._on_do_download_steam_workshop_db_from_github
             )
             EventBus().do_upload_log.connect(self._on_do_upload_log)
+            EventBus().do_download_all_mods_via_steamcmd.connect(
+                self._on_do_download_all_mods_via_steamcmd
+            )
+            EventBus().do_download_all_mods_via_steam.connect(
+                self._on_do_download_all_mods_via_steam
+            )
             EventBus().do_build_steam_workshop_database.connect(
                 self._on_do_build_steam_workshop_database
             )
@@ -3118,6 +3124,14 @@ class MainContent(QObject):
         )
         if ret:
             webbrowser.open(ret)
+
+    @Slot()
+    def _on_do_download_all_mods_via_steamcmd(self) -> None:
+        pass
+
+    @Slot()
+    def _on_do_download_all_mods_via_steam(self) -> None:
+        pass
 
     @Slot()
     def _on_do_build_steam_workshop_database(self) -> None:

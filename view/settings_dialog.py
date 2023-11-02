@@ -462,6 +462,20 @@ class SettingsDialog(QDialog):
 
         item_layout.addStretch()
 
+        item_label = QLabel("Download all published Workshop mods via:")
+        item_layout.addWidget(item_label)
+
+        self.db_builder_download_all_mods_via_steamcmd_button = QPushButton("SteamCMD")
+        item_layout.addWidget(self.db_builder_download_all_mods_via_steamcmd_button)
+
+        self.db_builder_download_all_mods_via_steam_button = QPushButton("Steam")
+        item_layout.addWidget(self.db_builder_download_all_mods_via_steam_button)
+
+        item_layout = QHBoxLayout()
+        tab_layout.addLayout(item_layout)
+
+        item_layout.addStretch()
+
         self.db_builder_build_database_button = QPushButton("Build Database")
         item_layout.addWidget(self.db_builder_build_database_button)
 

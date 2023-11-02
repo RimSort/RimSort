@@ -132,6 +132,12 @@ class SettingsController(QObject):
         )
 
         # Build DB tab
+        self.settings_dialog.db_builder_download_all_mods_via_steamcmd_button.clicked.connect(
+            EventBus().do_download_all_mods_via_steamcmd.emit
+        )
+        self.settings_dialog.db_builder_download_all_mods_via_steam_button.clicked.connect(
+            EventBus().do_download_all_mods_via_steam.emit
+        )
         self.settings_dialog.db_builder_build_database_button.clicked.connect(
             self._on_db_builder_build_database_button_clicked
         )
