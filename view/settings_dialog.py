@@ -455,6 +455,25 @@ class SettingsDialog(QDialog):
 
         item_layout.addStretch()
 
+        item_layout = QHBoxLayout()
+        tab_layout.addLayout(item_layout)
+
+        steam_api_key_label = QLabel("Steam API key:")
+        item_layout.addWidget(steam_api_key_label)
+
+        self.db_builder_steam_api_key = QLineEdit()
+        self.db_builder_steam_api_key.setTextMargins(GUIInfo().text_field_margins)
+        self.db_builder_steam_api_key.setFixedHeight(
+            GUIInfo().default_font_line_height * 2
+        )
+        self.db_builder_steam_api_key.setFixedWidth(
+            GUIInfo().default_font_average_char_width * 36
+        )
+        self.db_builder_steam_api_key.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
+        item_layout.addWidget(self.db_builder_steam_api_key)
+
+        item_layout.addStretch()
+
         tab_layout.addStretch()
 
         item_layout = QHBoxLayout()

@@ -279,6 +279,9 @@ class SettingsController(QObject):
         self.settings_dialog.db_builder_database_expiry.setText(
             str(self.settings.database_expiry)
         )
+        self.settings_dialog.db_builder_steam_api_key.setText(
+            self.settings.steam_apikey
+        )
 
         # SteamCMD tab
         self.settings_dialog.steamcmd_validate_downloads_checkbox.setChecked(
@@ -383,6 +386,9 @@ class SettingsController(QObject):
         )
         self.settings.database_expiry = int(
             self.settings_dialog.db_builder_database_expiry.text()
+        )
+        self.settings.steam_apikey = (
+            self.settings_dialog.db_builder_steam_api_key.text()
         )
 
         # SteamCMD tab
