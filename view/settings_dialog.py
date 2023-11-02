@@ -423,6 +423,9 @@ class SettingsDialog(QDialog):
         tab_layout = QVBoxLayout(tab)
         tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
+        self.db_builder_include_local_checkbox = QCheckBox("Include local mod metadata")
+        tab_layout.addWidget(self.db_builder_include_local_checkbox)
+
     def _do_steamcmd_tab(self) -> None:
         tab = QWidget()
         self._tab_widget.addTab(tab, "SteamCMD")

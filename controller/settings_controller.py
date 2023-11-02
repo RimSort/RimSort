@@ -254,6 +254,13 @@ class SettingsController(QObject):
         elif self.settings.sorting_algorithm == "Topological":
             self.settings_dialog.sorting_topological_radio.setChecked(True)
 
+        # Database Builder tab
+
+        if self.settings.db_builder_include == "all_mods":
+            self.settings_dialog.db_builder_include_local_checkbox.setChecked(True)
+        elif self.settings.db_builder_include == "no_local":
+            self.settings_dialog.db_builder_include_local_checkbox.setChecked(False)
+
         # SteamCMD tab
         self.settings_dialog.steamcmd_validate_downloads_checkbox.setChecked(
             self.settings.steamcmd_validate_downloads
@@ -343,6 +350,12 @@ class SettingsController(QObject):
             self.settings.sorting_algorithm = "Alphabetical"
         elif self.settings_dialog.sorting_topological_radio.isChecked():
             self.settings.sorting_algorithm = "Topological"
+
+        # Database Builder tab
+        if self.settings_dialog.db_builder_include_local_checkbox.isChecked():
+            self.settings.db_builder_include = "all_mods"
+        else:
+            self.settings.db_builder_include = "no_local"
 
         # SteamCMD tab
         self.settings.steamcmd_validate_downloads = (
