@@ -1056,10 +1056,6 @@ class MainContent(QObject):
                 text="Scanning mod sources and populating metadata...",
             )
 
-            # Set the game version string in the UI and pass it to the active_mods_panel
-            GameConfiguration.instance().game_version_line.setText(
-                self.metadata_manager.game_version
-            )
             # Insert mod data into list
             self.__repopulate_lists(is_initial=is_initial)
 
@@ -1096,10 +1092,6 @@ class MainContent(QObject):
             logger.debug(
                 "Essential paths have not been set. Passing refresh and resetting mod lists"
             )
-        # Set the game version string in the UI and pass it to the active_mods_panel
-        GameConfiguration.instance().game_version_line.setText(
-            self.metadata_manager.game_version
-        )
         self.active_mods_panel.game_version = self.metadata_manager.game_version
         # Feed all_mods and Steam DB info to Active Mods list to surface
         # names instead of package_ids when able
