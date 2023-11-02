@@ -522,8 +522,10 @@ class Settings(QObject):
             with open(str(self._settings_file), "r") as file:
                 data = json.load(file)
                 self._from_dict(data)
-        except (FileNotFoundError, JSONDecodeError):
+        except FileNotFoundError:
             self.save()
+        except JSONDecodeError:
+            raise
 
     def save(self) -> None:
         if self._debug_logging_enabled:
