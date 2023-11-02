@@ -431,6 +431,11 @@ class SettingsDialog(QDialog):
         )
         tab_layout.addWidget(self.db_builder_query_dlc_checkbox)
 
+        self.db_builder_update_instead_of_overwriting_checkbox = QCheckBox(
+            "Update database instead of overwriting"
+        )
+        tab_layout.addWidget(self.db_builder_update_instead_of_overwriting_checkbox)
+
     def _do_steamcmd_tab(self) -> None:
         tab = QWidget()
         self._tab_widget.addTab(tab, "SteamCMD")
