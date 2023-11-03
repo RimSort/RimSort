@@ -635,7 +635,6 @@ class SettingsDialog(QDialog):
         self.github_username = QLineEdit()
         self.github_username.setTextMargins(GUIInfo().text_field_margins)
         self.github_username.setFixedHeight(GUIInfo().default_font_line_height * 2)
-        self.github_username.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         github_identity_layout.addWidget(self.github_username, 0, 1)
 
         github_token_label = QLabel("GitHub personal access token:")
@@ -647,8 +646,9 @@ class SettingsDialog(QDialog):
         self.github_token.setEchoMode(QLineEdit.EchoMode.Password)
         self.github_token.setTextMargins(GUIInfo().text_field_margins)
         self.github_token.setFixedHeight(GUIInfo().default_font_line_height * 2)
-        self.github_token.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         github_identity_layout.addWidget(self.github_token, 1, 1)
+
+        self.setTabOrder(self.github_username, self.github_token)
 
         tab_layout.addStretch(1)
 
