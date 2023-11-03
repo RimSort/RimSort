@@ -441,16 +441,38 @@ class SettingsDialog(QDialog):
         when_building_database_layout.addLayout(when_building_database_radio_layout)
 
         self.db_builder_include_all_radio = QRadioButton(
-            "Include downloaded mod metadata"
+            "Get published file IDs from locally installed mods"
         )
         when_building_database_radio_layout.addWidget(self.db_builder_include_all_radio)
 
+        explanatory_label_layout = QHBoxLayout()
+        when_building_database_radio_layout.addLayout(explanatory_label_layout)
+
+        explanatory_label_layout.addSpacing(
+            GUIInfo().default_font_average_char_width * 2.5
+        )
+
+        explanatory_label = QLabel("Mods you wish to update must be installed.")
+        explanatory_label.setFont(GUIInfo().smaller_font)
+        explanatory_label_layout.addWidget(explanatory_label)
+
         self.db_builder_include_no_local_radio = QRadioButton(
-            "Include Steam Workshop metadata only"
+            "Get published file IDs from the Steam Workshop"
         )
         when_building_database_radio_layout.addWidget(
             self.db_builder_include_no_local_radio
         )
+
+        explanatory_label_layout = QHBoxLayout()
+        when_building_database_radio_layout.addLayout(explanatory_label_layout)
+
+        explanatory_label_layout.addSpacing(
+            GUIInfo().default_font_average_char_width * 2.5
+        )
+
+        explanatory_label = QLabel("Mods to be updated don't have to be installed.")
+        explanatory_label.setFont(GUIInfo().smaller_font)
+        explanatory_label_layout.addWidget(explanatory_label)
 
         when_building_database_layout.addStretch()
 
