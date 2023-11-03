@@ -425,8 +425,30 @@ class SettingsDialog(QDialog):
         tab_layout = QVBoxLayout(tab)
         tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        self.db_builder_include_local_checkbox = QCheckBox("Include local mod metadata")
-        tab_layout.addWidget(self.db_builder_include_local_checkbox)
+        when_building_database_layout = QHBoxLayout()
+        tab_layout.addLayout(when_building_database_layout)
+
+        when_building_database_label = QLabel("When building the database:")
+        when_building_database_layout.addWidget(
+            when_building_database_label, alignment=Qt.AlignmentFlag.AlignTop
+        )
+
+        when_building_database_radio_layout = QVBoxLayout()
+        when_building_database_layout.addLayout(when_building_database_radio_layout)
+
+        self.db_builder_include_all_radio = QRadioButton(
+            "Include downloaded mod metadata"
+        )
+        when_building_database_radio_layout.addWidget(self.db_builder_include_all_radio)
+
+        self.db_builder_include_no_local_radio = QRadioButton(
+            "Include Steam Workshop metadata only"
+        )
+        when_building_database_radio_layout.addWidget(
+            self.db_builder_include_no_local_radio
+        )
+
+        when_building_database_layout.addStretch()
 
         self.db_builder_query_dlc_checkbox = QCheckBox(
             "Query DLC dependency data with Steamworks API"

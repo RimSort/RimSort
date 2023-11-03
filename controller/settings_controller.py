@@ -267,9 +267,9 @@ class SettingsController(QObject):
 
         # Database Builder tab
         if self.settings.db_builder_include == "all_mods":
-            self.settings_dialog.db_builder_include_local_checkbox.setChecked(True)
+            self.settings_dialog.db_builder_include_all_radio.setChecked(True)
         elif self.settings.db_builder_include == "no_local":
-            self.settings_dialog.db_builder_include_local_checkbox.setChecked(False)
+            self.settings_dialog.db_builder_include_no_local_radio.setChecked(True)
         self.settings_dialog.db_builder_query_dlc_checkbox.setChecked(
             self.settings.build_steam_database_dlc_data
         )
