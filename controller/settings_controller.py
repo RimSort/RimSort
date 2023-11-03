@@ -138,6 +138,12 @@ class SettingsController(QObject):
         self.settings_dialog.db_builder_download_all_mods_via_steam_button.clicked.connect(
             EventBus().do_download_all_mods_via_steam.emit
         )
+        self.settings_dialog.db_builder_compare_databases_button.clicked.connect(
+            EventBus().do_compare_steam_workshop_databases.emit
+        )
+        self.settings_dialog.db_builder_merge_databases_button.clicked.connect(
+            EventBus().do_merge_steam_workshop_databases.emit
+        )
         self.settings_dialog.db_builder_build_database_button.clicked.connect(
             self._on_db_builder_build_database_button_clicked
         )

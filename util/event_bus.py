@@ -28,6 +28,8 @@ class EventBus(QObject):
     do_upload_log = Signal()
     do_download_all_mods_via_steamcmd = Signal()
     do_download_all_mods_via_steam = Signal()
+    do_compare_steam_workshop_databases = Signal()
+    do_merge_steam_workshop_databases = Signal()
     do_build_steam_workshop_database = Signal()
 
     def __new__(cls) -> "EventBus":

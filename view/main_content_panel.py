@@ -139,6 +139,12 @@ class MainContent(QObject):
             EventBus().do_download_all_mods_via_steam.connect(
                 self._on_do_download_all_mods_via_steam
             )
+            EventBus().do_compare_steam_workshop_databases.connect(
+                self._do_generate_metadata_comparison_report
+            )
+            EventBus().do_merge_steam_workshop_databases.connect(
+                self._do_merge_databases
+            )
             EventBus().do_build_steam_workshop_database.connect(
                 self._on_do_build_steam_workshop_database
             )
