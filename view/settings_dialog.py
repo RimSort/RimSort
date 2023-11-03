@@ -621,6 +621,7 @@ class SettingsDialog(QDialog):
         )
 
         self.github_token = QLineEdit()
+        self.github_token.setEchoMode(QLineEdit.EchoMode.Password)
         self.github_token.setTextMargins(GUIInfo().text_field_margins)
         self.github_token.setFixedHeight(GUIInfo().default_font_line_height * 2)
         self.github_token.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
