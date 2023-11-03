@@ -18,6 +18,7 @@ from controller.settings_controller import SettingsController
 from model.mod_list import ModListWidget
 from model.mod_list_item import ModListItemInner
 from util.constants import SEARCH_DATA_SOURCE_FILTER_INDEXES
+from util.metadata import MetadataManager
 
 
 class InactiveModList:
@@ -177,8 +178,15 @@ class InactiveModList:
         for widget, item in wni:
             if (
                 pattern
-                and widget.json_data.get(search_filter)
-                and not pattern.lower() in str(widget.json_data[search_filter]).lower()
+                and MetadataManager.instance()
+                .all_mods_compiled[widget.uuid]
+                .get(search_filter)
+                and not pattern.lower()
+                in str(
+                    MetadataManager.instance()
+                    .all_mods_compiled[widget.uuid]
+                    .get(search_filter)
+                ).lower()
             ):
                 if self.inactive_mods_search_filter_state:
                     item.setHidden(True)

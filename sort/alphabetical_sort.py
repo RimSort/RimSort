@@ -1,17 +1,27 @@
 from logger_tt import logger
-from typing import Any
+from typing import Any, List
+
+from util.metadata import MetadataManager
 
 
 def do_alphabetical_sort(
-    dependency_graph: dict[str, set[str]], active_mods_json: dict[str, Any]
-) -> dict[str, Any]:
+    dependency_graph: dict[str, set[str]], active_mods_uuids: set[str]
+) -> List[str]:
     logger.info(f"Starting Alphabetical sort for {len(dependency_graph)} mods")
     # Get an alphabetized list of dependencies
     active_mods_id_to_name = dict(
-        (v["packageid"], v["name"]) for v in active_mods_json.values()
+        (
+            MetadataManager.instance().all_mods_compiled[uuid]["packageid"],
+            MetadataManager.instance().all_mods_compiled[uuid]["name"],
+        )
+        for uuid in active_mods_uuids
     )
     active_mods_packageid_to_uuid = dict(
-        (v["packageid"], v["uuid"]) for v in active_mods_json.values()
+        (
+            MetadataManager.instance().all_mods_compiled[uuid]["packageid"],
+            uuid,
+        )
+        for uuid in active_mods_uuids
     )
     active_mods_alphabetized = sorted(
         active_mods_id_to_name.items(), key=lambda x: x[1], reverse=False
@@ -37,15 +47,15 @@ def do_alphabetical_sort(
                 mods_load_order,
                 dependency_graph,
                 package_id,
-                active_mods_json,
+                active_mods_uuids,
                 index_just_appended,
             )
 
-    reordered = {}
+    reordered = list()
     for package_id in mods_load_order:
         if package_id in active_mods_packageid_to_uuid:
             mod_uuid = active_mods_packageid_to_uuid[package_id]
-            reordered[mod_uuid] = active_mods_json[mod_uuid]
+            reordered.append(mod_uuid)
     logger.info(f"Finished Alphabetical sort with {len(reordered)} mods")
     return reordered
 
@@ -54,17 +64,21 @@ def recursively_force_insert(
     mods_load_order: list[str],
     dependency_graph: dict[str, set[str]],
     package_id: str,
-    active_mods_json: dict[str, Any],
+    active_mods_uuids: set[str],
     index_just_appended: int,
 ) -> None:
     # Get the reverse alphabetized list (by name) of the current mod's dependencies
     deps_of_package = dependency_graph[package_id]
     deps_id_to_name = {}
     for dependency_id in deps_of_package:
-        for uuid, mod_data in active_mods_json.items():
-            mod_package_id = mod_data["packageid"]
+        for uuid in active_mods_uuids:
+            mod_package_id = MetadataManager.instance().all_mods_compiled[uuid][
+                "packageid"
+            ]
             if dependency_id == mod_package_id:
-                deps_id_to_name[dependency_id] = active_mods_json[uuid]["name"]
+                deps_id_to_name[
+                    dependency_id
+                ] = MetadataManager.instance().all_mods_compiled[uuid]["name"]
     deps_of_package_alphabetized = sorted(
         deps_id_to_name.items(), key=lambda x: x[1], reverse=True
     )
@@ -100,6 +114,6 @@ def recursively_force_insert(
                 mods_load_order,
                 dependency_graph,
                 dep_id,
-                active_mods_json,
+                active_mods_uuids,
                 new_idx,
             )

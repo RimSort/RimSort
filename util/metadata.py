@@ -326,9 +326,9 @@ class MetadataManager(QObject):
             """
             workshop_acf_data = acf_to_dict(appworkshop_acf_path)
             workshop_mods_pfid_to_uuid = {
-                v["publishedfileid"]: v["uuid"]
-                for v in workshop_mods.values()
-                if v.get("publishedfileid")
+                metadata["publishedfileid"]: uuid
+                for uuid, metadata in workshop_mods.items()
+                if metadata.get("publishedfileid")
             }
             # Reference needed information from appworkshop_294100.acf
             workshop_item_details = workshop_acf_data["AppWorkshop"][
@@ -1347,8 +1347,6 @@ class ModParser(QRunnable):
                         os.path.getmtime(directory)
                     )
                     mod_metadata["path"] = directory
-                    # Track source & uuid in case metadata becomes detached
-                    mod_metadata["uuid"] = uuid
                     logger.debug(
                         f"Finished editing XML mod content, adding final content to larger list: {mod_metadata}"
                     )
@@ -1659,8 +1657,8 @@ def add_load_rule_to_mod(
 
 
 def get_active_inactive_mods(
-    config_path: str, all_mods: Dict[str, Any]
-) -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any], list]:
+    config_path: str,
+) -> Tuple[list[str], list[str], Dict[str, Any], list]:
     """
     Given a path to the ModsConfig.xml folder and a complete list of
     mods (including base game and DLC) and their dependencies,
@@ -1672,8 +1670,10 @@ def get_active_inactive_mods(
     :return: a Tuple which contains the active mods dict, inactive mods dict,
     duplicate mods dict, and missing mods list
     """
-    active_mods: dict[str, Any] = {}
-    inactive_mods: dict[str, Any] = {}
+    all_mods = MetadataManager.instance().all_mods_compiled
+
+    active_mods_uuids: list[str] = []
+    inactive_mods_uuids: list[str] = []
     duplicate_mods = {}
     duplicates_processed = []
     missing_mods = []
@@ -1693,7 +1693,7 @@ def get_active_inactive_mods(
         logger.error(
             f"Unable to get active mods from config with read data: {mod_data}"
         )
-        return active_mods, inactive_mods, duplicate_mods, missing_mods
+        return active_mods_uuids, inactive_mods, duplicate_mods, missing_mods
     # Parse the ModsConfig.xml data
     for package_id in mod_data["ModsConfigData"]["activeMods"][
         "li"
@@ -1721,6 +1721,7 @@ def get_active_inactive_mods(
             else ["expansion", "local", "workshop"]
         )
         # Loop through all mods
+        logger.info("Generating active mod list")
         for uuid, metadata in all_mods.items():
             metadata_package_id = metadata["packageid"]
             metadata_path = metadata["path"]
@@ -1734,7 +1735,7 @@ def get_active_inactive_mods(
                 # Add non-duplicates to active mods
                 if target_id not in duplicate_mods.keys():
                     populated_mods.append(target_id)
-                    active_mods[uuid] = metadata
+                    active_mods_uuids.append(uuid)
                 else:  # Otherwise, duplicate needs calculated
                     if (
                         target_id in duplicates_processed
@@ -1757,62 +1758,31 @@ def get_active_inactive_mods(
                         source_paths_sorted = natsorted(paths_to_uuid.keys())
                         if source_paths_sorted:  # If we have paths returned
                             # If we are here, we've found our calculated duplicate, log and use this mod
-                            duplicate_mod_metadata = all_mods[
-                                paths_to_uuid[source_paths_sorted[0]]
-                            ]
                             logger.debug(
-                                f"Using duplicate {source} mod for {target_id}: {duplicate_mod_metadata['path']}"
+                                f"Using duplicate {source} mod for {target_id}: {all_mods[paths_to_uuid[source_paths_sorted[0]]]['path']}"
                             )
                             populated_mods.append(target_id)
                             duplicates_processed.append(target_id)
-                            active_mods[
-                                duplicate_mod_metadata["uuid"]
-                            ] = duplicate_mod_metadata
+                            active_mods_uuids.append(duplicate_uuid)
                             break
                         else:  # Skip this source priority if no paths
                             logger.debug(f"No paths returned for {source}")
                             continue
     # Calculate missing mods from the difference
     missing_mods = list(set(to_populate) - set(populated_mods))
-    logger.debug(f"Generated active mods dict with {len(active_mods)} mods")
+    logger.debug(f"Generated active mods dict with {len(active_mods_uuids)} mods")
     # Get the inactive mods by subtracting active mods from workshop + expansions
-    inactive_mods = get_inactive_mods(all_mods, active_mods)
-    logger.info(f"# active mods: {len(active_mods)}")
-    logger.info(f"# inactive mods: {len(inactive_mods)}")
+    logger.info("Generating inactive mod list")
+    inactive_mods_uuids = [
+        uuid
+        for uuid in MetadataManager.instance().all_mods_compiled.keys()
+        if uuid not in active_mods_uuids
+    ]
+    logger.info(f"# active mods: {len(active_mods_uuids)}")
+    logger.info(f"# inactive mods: {len(inactive_mods_uuids)}")
     logger.info(f"# duplicate mods: {len(duplicate_mods)}")
     logger.info(f"# missing mods: {len(missing_mods)}")
-    return active_mods, inactive_mods, duplicate_mods, missing_mods
-
-
-def get_inactive_mods(
-    all_mods: Dict[str, Any],
-    active_mods: Dict[str, Any],
-) -> Dict[str, Any]:
-    """
-    Generate a list of inactive mods by cross-referencing the list of
-    installed workshop mods with the active mods and known expansions.
-
-    Move the first local instance of any duplicate found alphabetically
-    ascending by filename to the active mods list; and the rest of the dupes
-    to the inactive mods list. TODO this is not accurate
-
-    :param all_mods: dict of workshop mods and expansions
-    :param active_mods: dict of active mods
-    :param duplicate_mods: dict keyed with packageids to list of dupe uuids
-    :return: a dict for inactive mods
-    """
-    logger.info("Generating inactive mod list")
-    inactive_mods = all_mods.copy()
-
-    # Remove active_mods uuids from inactive_mods in a more efficient way using dict comprehension
-    inactive_mods = {
-        mod_uuid: mod_data
-        for mod_uuid, mod_data in inactive_mods.items()
-        if mod_uuid not in active_mods
-    }
-
-    logger.info("Finished generating inactive mods list")
-    return inactive_mods
+    return active_mods_uuids, inactive_mods_uuids, duplicate_mods, missing_mods
 
 
 def log_deps_order_info(all_mods) -> None:
