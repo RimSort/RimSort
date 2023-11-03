@@ -1,4 +1,5 @@
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QShowEvent
 from PySide6.QtWidgets import (
     QDialog,
     QHBoxLayout,
@@ -49,13 +50,15 @@ class SettingsDialog(QDialog):
         self._do_todds_tab()
         self._do_advanced_tab()
 
-        # "Cancel" and "Apply" buttons layout
+        # Bottom buttons layout
         button_layout = QHBoxLayout()
+        main_layout.addLayout(button_layout)
 
+        # Reset to defaults button
         self.global_reset_to_defaults_button = QPushButton("Reset to Defaults", self)
         button_layout.addWidget(self.global_reset_to_defaults_button)
 
-        button_layout.addStretch(1)  # Push buttons to the right
+        button_layout.addStretch()
 
         # Cancel button
         self.global_cancel_button = QPushButton("Cancel", self)
@@ -65,9 +68,6 @@ class SettingsDialog(QDialog):
         self.global_ok_button = QPushButton("OK", self)
         self.global_ok_button.setDefault(True)
         button_layout.addWidget(self.global_ok_button)
-
-        # Add button layout to the main layout
-        main_layout.addLayout(button_layout)
 
     def _do_locations_tab(self) -> None:
         tab = QWidget()
@@ -81,23 +81,31 @@ class SettingsDialog(QDialog):
         self._do_steam_mods_folder_location_area(tab_layout)
         self._do_local_mods_folder_location_area(tab_layout)
 
+        # Set the tab order:
+        # "Game location" → "Config location" → "Steam mods location" → "Local mods location"
+        self.setTabOrder(self.game_location, self.config_folder_location)
+        self.setTabOrder(self.config_folder_location, self.steam_mods_folder_location)
+        self.setTabOrder(
+            self.steam_mods_folder_location, self.local_mods_folder_location
+        )
+
         # Push the buttons to the bottom
-        tab_layout.addStretch(1)
+        tab_layout.addStretch()
 
         # Create a QHBoxLayout for the buttons
         buttons_layout = QHBoxLayout()
-        buttons_layout.addStretch(1)
+        tab_layout.addLayout(buttons_layout)
 
-        # Create the "Clear" button and connect its signal
+        # Push the buttons as far as possible to the right
+        buttons_layout.addStretch()
+
+        # "Clear" button"
         self.locations_clear_button = QPushButton("Clear", tab)
         buttons_layout.addWidget(self.locations_clear_button)
 
-        # Create the "Autodetect" button and connect its signal
+        # "Autodetect" button
         self.locations_autodetect_button = QPushButton("Autodetect", tab)
         buttons_layout.addWidget(self.locations_autodetect_button)
-
-        # Add the buttons layout to the main QVBoxLayout
-        tab_layout.addLayout(buttons_layout)
 
     def _do_game_location_area(self, tab_layout: QVBoxLayout) -> None:
         header_layout = QHBoxLayout()
@@ -114,7 +122,6 @@ class SettingsDialog(QDialog):
         self.game_location = QLineEdit()
         self.game_location.setTextMargins(GUIInfo().text_field_margins)
         self.game_location.setFixedHeight(GUIInfo().default_font_line_height * 2)
-        self.game_location.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         tab_layout.addWidget(self.game_location)
 
     def _do_config_folder_location_area(self, tab_layout: QVBoxLayout) -> None:
@@ -134,7 +141,6 @@ class SettingsDialog(QDialog):
         self.config_folder_location.setFixedHeight(
             GUIInfo().default_font_line_height * 2
         )
-        self.config_folder_location.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         tab_layout.addWidget(self.config_folder_location)
 
     def _do_steam_mods_folder_location_area(self, tab_layout: QVBoxLayout) -> None:
@@ -154,7 +160,6 @@ class SettingsDialog(QDialog):
         self.steam_mods_folder_location.setFixedHeight(
             GUIInfo().default_font_line_height * 2
         )
-        self.steam_mods_folder_location.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         tab_layout.addWidget(self.steam_mods_folder_location)
 
     def _do_local_mods_folder_location_area(self, tab_layout: QVBoxLayout) -> None:
@@ -174,7 +179,6 @@ class SettingsDialog(QDialog):
         self.local_mods_folder_location.setFixedHeight(
             GUIInfo().default_font_line_height * 2
         )
-        self.local_mods_folder_location.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         tab_layout.addWidget(self.local_mods_folder_location)
 
     def _do_databases_tab(self) -> None:
@@ -659,3 +663,7 @@ class SettingsDialog(QDialog):
 
         self.upload_log_button = QPushButton("Upload Log")
         buttons_layout.addWidget(self.upload_log_button)
+
+    def showEvent(self, event: QShowEvent) -> None:
+        super().showEvent(event)
+        self.global_ok_button.setFocus()
