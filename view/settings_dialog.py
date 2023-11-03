@@ -429,68 +429,46 @@ class SettingsDialog(QDialog):
         tab_layout = QVBoxLayout(tab)
         tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        when_building_database_layout = QHBoxLayout()
-        tab_layout.addLayout(when_building_database_layout)
+        group_box = QGroupBox()
+        tab_layout.addWidget(group_box)
+
+        group_layout = QVBoxLayout()
+        group_box.setLayout(group_layout)
 
         when_building_database_label = QLabel("When building the database:")
-        when_building_database_layout.addWidget(
-            when_building_database_label, alignment=Qt.AlignmentFlag.AlignTop
-        )
-
-        when_building_database_radio_layout = QVBoxLayout()
-        when_building_database_layout.addLayout(when_building_database_radio_layout)
+        when_building_database_label.setFont(GUIInfo().emphasis_font)
+        group_layout.addWidget(when_building_database_label)
 
         self.db_builder_include_all_radio = QRadioButton(
-            "Get published file IDs from locally installed mods"
+            "Get published file IDs from locally installed mods. Mods you wish to update must be installed."
         )
-        when_building_database_radio_layout.addWidget(self.db_builder_include_all_radio)
-
-        explanatory_label_layout = QHBoxLayout()
-        when_building_database_radio_layout.addLayout(explanatory_label_layout)
-
-        explanatory_label_layout.addSpacing(
-            GUIInfo().default_font_average_char_width * 2.5
-        )
-
-        explanatory_label = QLabel("Mods you wish to update must be installed.")
-        explanatory_label.setFont(GUIInfo().smaller_font)
-        explanatory_label_layout.addWidget(explanatory_label)
+        group_layout.addWidget(self.db_builder_include_all_radio)
 
         self.db_builder_include_no_local_radio = QRadioButton(
-            "Get published file IDs from the Steam Workshop"
+            "Get published file IDs from the Steam Workshop. Mods to be updated don't have to be installed."
         )
-        when_building_database_radio_layout.addWidget(
-            self.db_builder_include_no_local_radio
-        )
+        group_layout.addWidget(self.db_builder_include_no_local_radio)
 
-        explanatory_label_layout = QHBoxLayout()
-        when_building_database_radio_layout.addLayout(explanatory_label_layout)
-
-        explanatory_label_layout.addSpacing(
-            GUIInfo().default_font_average_char_width * 2.5
-        )
-
-        explanatory_label = QLabel("Mods to be updated don't have to be installed.")
-        explanatory_label.setFont(GUIInfo().smaller_font)
-        explanatory_label_layout.addWidget(explanatory_label)
-
-        when_building_database_layout.addStretch()
+        group_layout.addSpacing(GUIInfo().default_font_line_height)
 
         self.db_builder_query_dlc_checkbox = QCheckBox(
             "Query DLC dependency data with Steamworks API"
         )
-        tab_layout.addWidget(self.db_builder_query_dlc_checkbox)
+        group_layout.addWidget(self.db_builder_query_dlc_checkbox)
 
         self.db_builder_update_instead_of_overwriting_checkbox = QCheckBox(
             "Update database instead of overwriting"
         )
-        tab_layout.addWidget(self.db_builder_update_instead_of_overwriting_checkbox)
+        group_layout.addWidget(self.db_builder_update_instead_of_overwriting_checkbox)
 
-        item_layout = QHBoxLayout()
-        tab_layout.addLayout(item_layout)
+        group_box = QGroupBox()
+        tab_layout.addWidget(group_box)
+
+        group_layout = QGridLayout()
+        group_box.setLayout(group_layout)
 
         database_expiry_label = QLabel("Database expiry:")
-        item_layout.addWidget(database_expiry_label)
+        group_layout.addWidget(database_expiry_label, 0, 0)
 
         self.db_builder_database_expiry = QLineEdit()
         self.db_builder_database_expiry.setTextMargins(GUIInfo().text_field_margins)
@@ -500,16 +478,10 @@ class SettingsDialog(QDialog):
         self.db_builder_database_expiry.setFixedWidth(
             GUIInfo().default_font_average_char_width * 10
         )
-        self.db_builder_database_expiry.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
-        item_layout.addWidget(self.db_builder_database_expiry)
-
-        item_layout.addStretch()
-
-        item_layout = QHBoxLayout()
-        tab_layout.addLayout(item_layout)
+        group_layout.addWidget(self.db_builder_database_expiry, 0, 1)
 
         steam_api_key_label = QLabel("Steam API key:")
-        item_layout.addWidget(steam_api_key_label)
+        group_layout.addWidget(steam_api_key_label, 1, 0)
 
         self.db_builder_steam_api_key = QLineEdit()
         self.db_builder_steam_api_key.setEchoMode(QLineEdit.EchoMode.Password)
@@ -517,13 +489,10 @@ class SettingsDialog(QDialog):
         self.db_builder_steam_api_key.setFixedHeight(
             GUIInfo().default_font_line_height * 2
         )
-        self.db_builder_steam_api_key.setFixedWidth(
-            GUIInfo().default_font_average_char_width * 36
-        )
-        self.db_builder_steam_api_key.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
-        item_layout.addWidget(self.db_builder_steam_api_key)
+        group_layout.addWidget(self.db_builder_steam_api_key, 1, 1)
 
-        item_layout.addStretch()
+        group_layout.setColumnStretch(0, 0)
+        group_layout.setColumnStretch(1, 1)
 
         tab_layout.addStretch()
 
