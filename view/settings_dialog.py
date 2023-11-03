@@ -429,6 +429,7 @@ class SettingsDialog(QDialog):
         tab_layout = QVBoxLayout(tab)
         tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
+        # "When building the database:" radio buttons
         group_box = QGroupBox()
         tab_layout.addWidget(group_box)
 
@@ -440,16 +441,33 @@ class SettingsDialog(QDialog):
         group_layout.addWidget(when_building_database_label)
 
         self.db_builder_include_all_radio = QRadioButton(
-            "Get published file IDs from locally installed mods. Mods you wish to update must be installed."
+            "Get PublishedFileIDs from locally installed mods."
         )
         group_layout.addWidget(self.db_builder_include_all_radio)
 
+        explanatory_label = QLabel(
+            "Mods you wish to update must be installed, "
+            "as the initial DB is built including data from mods' About.xml files."
+        )
+        group_layout.addWidget(explanatory_label)
+
         self.db_builder_include_no_local_radio = QRadioButton(
-            "Get published file IDs from the Steam Workshop. Mods to be updated don't have to be installed."
+            "Get published file IDs from the Steam Workshop."
         )
         group_layout.addWidget(self.db_builder_include_no_local_radio)
 
-        group_layout.addSpacing(GUIInfo().default_font_line_height)
+        explanatory_label = QLabel(
+            "Mods to be updated don't have to be installed, "
+            "as the initial DB is built by scraping the Steam Workshop."
+        )
+        group_layout.addWidget(explanatory_label)
+
+        # Checkboxes
+        group_box = QGroupBox()
+        tab_layout.addWidget(group_box)
+
+        group_layout = QVBoxLayout()
+        group_box.setLayout(group_layout)
 
         self.db_builder_query_dlc_checkbox = QCheckBox(
             "Query DLC dependency data with Steamworks API"
@@ -461,6 +479,7 @@ class SettingsDialog(QDialog):
         )
         group_layout.addWidget(self.db_builder_update_instead_of_overwriting_checkbox)
 
+        # Text fields
         group_box = QGroupBox()
         tab_layout.addWidget(group_box)
 
@@ -496,6 +515,7 @@ class SettingsDialog(QDialog):
 
         tab_layout.addStretch()
 
+        # "Download all workshop mods via" buttons
         item_layout = QHBoxLayout()
         tab_layout.addLayout(item_layout)
 
@@ -508,14 +528,30 @@ class SettingsDialog(QDialog):
         item_layout.addWidget(self.db_builder_download_all_mods_via_steamcmd_button)
 
         self.db_builder_download_all_mods_via_steam_button = QPushButton("Steam")
+        self.db_builder_download_all_mods_via_steam_button.setFixedWidth(
+            self.db_builder_download_all_mods_via_steamcmd_button.sizeHint().width()
+        )
         item_layout.addWidget(self.db_builder_download_all_mods_via_steam_button)
 
+        # Compare/Merge/Build database buttons
         item_layout = QHBoxLayout()
         tab_layout.addLayout(item_layout)
 
         item_layout.addStretch()
 
+        self.db_builder_compare_databases_button = QPushButton("Compare Databases")
+        item_layout.addWidget(self.db_builder_compare_databases_button)
+
+        self.db_builder_merge_databases_button = QPushButton("Merge Databases")
+        self.db_builder_merge_databases_button.setFixedWidth(
+            self.db_builder_compare_databases_button.sizeHint().width()
+        )
+        item_layout.addWidget(self.db_builder_merge_databases_button)
+
         self.db_builder_build_database_button = QPushButton("Build Database")
+        self.db_builder_build_database_button.setFixedWidth(
+            self.db_builder_compare_databases_button.sizeHint().width()
+        )
         item_layout.addWidget(self.db_builder_build_database_button)
 
     def _do_steamcmd_tab(self) -> None:
