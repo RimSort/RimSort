@@ -378,9 +378,9 @@ class SettingsController(QObject):
             self.settings.sorting_algorithm = "Topological"
 
         # Database Builder tab
-        if self.settings_dialog.db_builder_include_local_checkbox.isChecked():
+        if self.settings_dialog.db_builder_include_all_radio.isChecked():
             self.settings.db_builder_include = "all_mods"
-        else:
+        elif self.settings_dialog.db_builder_include_no_local_radio.isChecked():
             self.settings.db_builder_include = "no_local"
         self.settings.build_steam_database_dlc_data = (
             self.settings_dialog.db_builder_query_dlc_checkbox.isChecked()
