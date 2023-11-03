@@ -464,6 +464,7 @@ class SettingsDialog(QDialog):
         item_layout.addWidget(steam_api_key_label)
 
         self.db_builder_steam_api_key = QLineEdit()
+        self.db_builder_steam_api_key.setEchoMode(QLineEdit.EchoMode.Password)
         self.db_builder_steam_api_key.setTextMargins(GUIInfo().text_field_margins)
         self.db_builder_steam_api_key.setFixedHeight(
             GUIInfo().default_font_line_height * 2
