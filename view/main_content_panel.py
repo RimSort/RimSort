@@ -132,6 +132,9 @@ class MainContent(QObject):
             )
             EventBus().do_open_mod_list.connect(self._do_import_list_file_xml)
             EventBus().do_save_mod_list_as.connect(self._do_export_list_file_xml)
+            EventBus().do_export_mod_list_to_clipboard.connect(
+                self._do_export_list_clipboard
+            )
 
             EventBus().do_download_community_rules_db_from_github.connect(
                 self._on_do_download_community_db_from_github

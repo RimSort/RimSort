@@ -47,7 +47,7 @@ class MenuBarController(QObject):
         )
 
         self.menu_bar.export_to_clipboard_action.triggered.connect(
-            self._on_menu_bar_export_to_clipboard_triggered
+            EventBus().do_export_mod_list_to_clipboard
         )
 
         self.menu_bar.export_to_rentry_action.triggered.connect(
@@ -71,12 +71,6 @@ class MenuBarController(QObject):
         is_checked = self.menu_bar.check_for_updates_on_startup_action.isChecked()
         self.settings_controller.settings.check_for_update_startup = is_checked
         self.settings_controller.settings.save()
-
-    @Slot()
-    def _on_menu_bar_export_to_clipboard_triggered(self) -> None:
-        MainContent.instance().actions_panel.actions_signal.emit(
-            "export_list_clipboard"
-        )
 
     @Slot()
     def _on_menu_bar_export_to_rentry_triggered(self) -> None:
