@@ -147,10 +147,11 @@ if __name__ == "__main__":
         "[{level}]"
         "[{time:YYYY-MM-DD HH:mm:ss}]"
         "[{process.id}]"
+        "[{thread.name}]"
         "[{module}]"
         "[{function}][{line}]"
         " : "
-        "{thread.name} {message}"
+        "{message}"
     )
 
     # Remove the default stderr logger
