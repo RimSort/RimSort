@@ -150,7 +150,7 @@ class SettingsController(QObject):
 
         # SteamCMD tab
         self.settings_dialog.steamcmd_install_button.clicked.connect(
-            EventBus().do_install_steamcmd.emit
+            self._on_steamcmd_install_button_clicked
         )
 
         # Advanced tab
@@ -861,6 +861,14 @@ class SettingsController(QObject):
             steam_workshop_db_location
         )
         self._last_file_dialog_path = str(Path(steam_workshop_db_location).parent)
+
+    @Slot()
+    def _on_steamcmd_install_button_clicked(self) -> None:
+        """
+        Handle the Steamcmd install button click.
+        """
+        self.settings_dialog.global_ok_button.click()
+        EventBus().do_install_steamcmd.emit()
 
     @Slot()
     def _on_db_builder_build_database_button_clicked(self) -> None:
