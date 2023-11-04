@@ -59,8 +59,8 @@ class MenuBar(QObject):
 
         self.file_menu.addSeparator()
 
-        self.save_mod_list_action = QAction("Save Mod List…", self)
-        self.save_mod_list_action.setShortcut(QKeySequence("Ctrl+S"))
+        self.save_mod_list_action = QAction("Save Mod List As…", self)
+        self.save_mod_list_action.setShortcut(QKeySequence("Ctrl+Shift+S"))
         self.file_menu.addAction(self.save_mod_list_action)
 
         self.file_menu.addSeparator()
@@ -102,8 +102,8 @@ class MenuBar(QObject):
 
         self.file_menu.addSeparator()
 
-        self.save_mod_list_action = QAction("Save Mod List…", self)
-        self.save_mod_list_action.setShortcut(QKeySequence("Ctrl+S"))
+        self.save_mod_list_action = QAction("Save Mod List As…", self)
+        self.save_mod_list_action.setShortcut(QKeySequence("Ctrl+Shift+S"))
         self.file_menu.addAction(self.save_mod_list_action)
 
         self.file_menu.addSeparator()
