@@ -1,4 +1,4 @@
-from logger_tt import logger
+from loguru import logger
 from errno import EACCES
 import os
 from pathlib import Path
@@ -167,6 +167,7 @@ def open_url_browser(url: str) -> None:
     """
     logger.info(f"USER ACTION: Opening url {url}")
     webbrowser.open(url)
+
 
 def platform_specific_open(path: str) -> None:
     """

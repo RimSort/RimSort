@@ -4,7 +4,7 @@ from typing import Any, Dict
 from bs4 import BeautifulSoup
 import xmltodict
 
-from logger_tt import logger
+from loguru import logger
 
 
 def xml_path_to_json(path: str) -> Dict[str, Any]:

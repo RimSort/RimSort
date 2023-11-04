@@ -16,7 +16,7 @@ from tempfile import gettempdir
 from time import time
 from zipfile import ZipFile
 
-from logger_tt import logger
+from loguru import logger
 
 from controller.settings_controller import SettingsController
 from util.event_bus import EventBus

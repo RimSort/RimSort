@@ -4,7 +4,7 @@ from typing import Optional
 from PySide6.QtCore import QSize
 from PySide6.QtGui import QShowEvent
 from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QWidget
-from logger_tt import logger
+from loguru import logger
 from watchdog.observers.api import BaseObserver
 
 from controller.menu_bar_controller import MenuBarController

@@ -5,7 +5,7 @@ from pathlib import Path
 
 from PySide6.QtCore import QObject, Slot, Qt
 from PySide6.QtWidgets import QFileDialog, QMessageBox, QApplication
-from logger_tt import logger
+from loguru import logger
 
 from model.settings import Settings
 from util.event_bus import EventBus

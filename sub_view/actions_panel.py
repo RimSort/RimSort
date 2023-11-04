@@ -1,4 +1,4 @@
-from logger_tt import logger
+from loguru import logger
 from functools import partial
 from PySide6.QtCore import (
     Qt,

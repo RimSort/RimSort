@@ -2,7 +2,7 @@ import os
 from functools import partial
 from pathlib import Path
 
-from logger_tt import logger
+from loguru import logger
 from typing import Any, Dict, Optional
 
 from PySide6.QtCore import QRectF, QSize, Qt, Signal

@@ -1,7 +1,7 @@
 import getpass
 import json
 from logging import INFO
-from logger_tt import logger
+from loguru import logger
 import os
 from pathlib import Path
 import platform
