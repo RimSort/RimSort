@@ -37,7 +37,10 @@ class MenuBar(QObject):
         )
         self.app_menu.addAction(self.check_for_updates_on_startup_action)
 
-        self.app_menu.addSeparator()
+        separator = QAction(self)
+        separator.setSeparator(True)
+        separator.setMenuRole(QAction.MenuRole.ApplicationSpecificRole)
+        self.app_menu.addAction(separator)
 
         self.settings_action = QAction("Settings…", self)
         self.settings_action.setMenuRole(QAction.MenuRole.ApplicationSpecificRole)

@@ -16,6 +16,7 @@ from util.watchdog import RSFileSystemEventHandler
 from view.game_configuration_panel import GameConfiguration
 from view.main_content_panel import MainContent
 from view.menu_bar import MenuBar
+from view.settings_dialog import SettingsDialog
 from view.status_panel import Status
 
 if SystemInfo().operating_system == SystemInfo.OperatingSystem.WINDOWS:
@@ -39,7 +40,10 @@ class MainWindow(QMainWindow):
 
         # Instantiate the settings model and controller
         self.settings = Settings()
-        self.settings_controller = SettingsController(model=self.settings)
+        self.settings_dialog = SettingsDialog()
+        self.settings_controller = SettingsController(
+            model=self.settings, view=self.settings_dialog
+        )
 
         # Create the main application window
         self.DEBUG_MODE = debug_mode
@@ -92,7 +96,6 @@ class MainWindow(QMainWindow):
         self.main_content_panel.status_signal.connect(self.bottom_panel.actions_slot)
 
         # Arrange all panels vertically on the main window layout
-        app_layout.addLayout(self.game_configuration.panel)
         app_layout.addWidget(self.main_content_panel.main_layout_frame)
         app_layout.addWidget(self.bottom_panel.frame)
 
@@ -111,29 +114,6 @@ class MainWindow(QMainWindow):
     def showEvent(self, event: QShowEvent) -> None:
         # Call the original showEvent handler
         super().showEvent(event)
-        if not self.init:
-            # HIDE/SHOW FOLDER ROWS BASED ON PREFERENCE
-            if self.settings_controller.settings.show_folder_rows:
-                self.game_configuration.hide_show_folder_rows_button.setText(
-                    "Hide paths"
-                )
-            else:
-                self.game_configuration.hide_show_folder_rows_button.setText(
-                    "Show paths"
-                )
-            # set visibility
-            self.game_configuration.game_folder_frame.setVisible(
-                self.settings_controller.settings.show_folder_rows
-            )
-            self.game_configuration.config_folder_frame.setVisible(
-                self.settings_controller.settings.show_folder_rows
-            )
-            self.game_configuration.local_folder_frame.setVisible(
-                self.settings_controller.settings.show_folder_rows
-            )
-            self.game_configuration.workshop_folder_frame.setVisible(
-                self.settings_controller.settings.show_folder_rows
-            )
 
     def initialize_content(self) -> None:
         self.init = True
@@ -153,9 +133,9 @@ class MainWindow(QMainWindow):
     def __initialize_watchdog(self) -> None:
         logger.info("Initializing watchdog FS Observer")
         # INITIALIZE WATCHDOG - WE WAIT TO START UNTIL DONE PARSING MOD LIST
-        game_folder_path = self.game_configuration.game_folder_line.text()
-        local_folder_path = self.game_configuration.local_folder_line.text()
-        workshop_folder_path = self.game_configuration.workshop_folder_line.text()
+        game_folder_path = self.settings_controller.settings.game_folder
+        local_folder_path = self.settings_controller.settings.local_folder
+        workshop_folder_path = self.settings_controller.settings.workshop_folder
         self.watchdog_event_handler = RSFileSystemEventHandler()
         if SystemInfo().operating_system == SystemInfo.OperatingSystem.WINDOWS:
             self.watchdog_observer = PollingObserver()

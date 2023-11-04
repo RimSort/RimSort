@@ -31,6 +31,7 @@ from model.dialogue import (
     show_information,
     show_warning,
 )
+from util.app_info import AppInfo
 from util.constants import (
     DB_BUILDER_PRUNE_EXCEPTIONS,
     DB_BUILDER_PURGE_KEYS,
@@ -237,7 +238,7 @@ class MetadataManager(QObject):
                 path=str(
                     Path(
                         os.path.join(
-                            GameConfiguration.instance().dbs_path,
+                            str(AppInfo().databases_folder),
                             os.path.split(
                                 self.settings_controller.settings.external_steam_metadata_repo
                             )[1],
@@ -275,7 +276,7 @@ class MetadataManager(QObject):
                 path=str(
                     Path(
                         os.path.join(
-                            GameConfiguration.instance().dbs_path,
+                            str(AppInfo().databases_folder),
                             os.path.split(
                                 self.settings_controller.settings.external_community_rules_repo
                             )[1],
@@ -289,10 +290,10 @@ class MetadataManager(QObject):
                 "External Community Rules metadata disabled by user. Please choose a metadata source in settings."
             )
         # External User Rules metadata
-        if os.path.exists(GameConfiguration.instance().user_rules_file_path):
+        if os.path.exists(str(AppInfo().app_storage_folder / "userRules.json")):
             logger.info("Loading userRules.json")
             with open(
-                GameConfiguration.instance().user_rules_file_path, encoding="utf-8"
+                str(AppInfo().app_storage_folder / "userRules.json"), encoding="utf-8"
             ) as f:
                 json_string = f.read()
                 self.external_user_rules = json.loads(json_string)["rules"]
@@ -305,7 +306,9 @@ class MetadataManager(QObject):
                 "Unable to find userRules.json in storage. Creating new user rules db!"
             )
             with open(
-                GameConfiguration.instance().user_rules_file_path, "w", encoding="utf-8"
+                str(AppInfo().app_storage_folder / "userRules.json"),
+                "w",
+                encoding="utf-8",
             ) as output:
                 json.dump(DEFAULT_USER_RULES, output, indent=4)
             self.external_user_rules = DEFAULT_USER_RULES["rules"]

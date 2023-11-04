@@ -15,7 +15,7 @@ class AppInfo:
     Examples:
         >>> app_info = AppInfo(__file__)
         >>> print(app_info.app_name)
-        >>> print(app_info.user_data_folder)
+        >>> print(app_info.app_storage_folder)
     """
 
     _instance: Optional["AppInfo"] = None
@@ -55,17 +55,20 @@ class AppInfo:
         # Define important directories using platformdirs
 
         platform_dirs = PlatformDirs(appname=self._app_name, appauthor=False)
-        self._user_data_folder = Path(platform_dirs.user_data_dir)
+        self._app_storage_folder = Path(platform_dirs.user_data_dir)
         self._user_log_folder = Path(platform_dirs.user_log_dir)
 
         # Derive some secondary directory paths
 
         self._app_data_folder = self._application_folder / "data"
+        self._databases_folder = self._app_storage_folder / "dbs"
 
         # Make sure important directories exist
 
-        self._user_data_folder.mkdir(parents=True, exist_ok=True)
+        self._app_storage_folder.mkdir(parents=True, exist_ok=True)
         self._user_log_folder.mkdir(parents=True, exist_ok=True)
+
+        self._databases_folder.mkdir(parents=True, exist_ok=True)
 
         self._is_initialized: bool = True
 
@@ -110,7 +113,7 @@ class AppInfo:
         return self._application_folder
 
     @property
-    def user_data_folder(self) -> Path:
+    def app_storage_folder(self) -> Path:
         """
         Get the path to the folder where user-specific data for the application is stored.
 
@@ -119,7 +122,7 @@ class AppInfo:
         Returns:
             Path: The path to the user-specific data folder.
         """
-        return self._user_data_folder
+        return self._app_storage_folder
 
     @property
     def user_log_folder(self) -> Path:
@@ -139,3 +142,10 @@ class AppInfo:
         Get the path to the folder where application-specific data is stored.
         """
         return self._app_data_folder
+
+    @property
+    def databases_folder(self) -> Path:
+        """
+        Get the path to the folder where application databases are stored.
+        """
+        return self._databases_folder
