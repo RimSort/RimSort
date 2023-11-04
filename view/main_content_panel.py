@@ -148,6 +148,7 @@ class MainContent(QObject):
             EventBus().do_build_steam_workshop_database.connect(
                 self._on_do_build_steam_workshop_database
             )
+            EventBus().do_install_steamcmd.connect(self._do_setup_steamcmd)
 
             # INITIALIZE WIDGETS
             # Initialize Steam(CMD) integraations

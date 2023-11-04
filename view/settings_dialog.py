@@ -595,6 +595,16 @@ class SettingsDialog(QDialog):
         )
         group_layout.addWidget(self.steamcmd_validate_downloads_checkbox)
 
+        tab_layout.addStretch()
+
+        button_layout = QHBoxLayout()
+        tab_layout.addLayout(button_layout)
+
+        button_layout.addStretch()
+
+        self.steamcmd_install_button = QPushButton("Install SteamCMD")
+        button_layout.addWidget(self.steamcmd_install_button)
+
     def _do_todds_tab(self) -> None:
         tab = QWidget()
         self._tab_widget.addTab(tab, "todds")

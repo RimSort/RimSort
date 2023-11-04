@@ -148,6 +148,11 @@ class SettingsController(QObject):
             self._on_db_builder_build_database_button_clicked
         )
 
+        # SteamCMD tab
+        self.settings_dialog.steamcmd_install_button.clicked.connect(
+            EventBus().do_install_steamcmd.emit
+        )
+
         # Advanced tab
         self.settings_dialog.upload_log_button.clicked.connect(
             EventBus().do_upload_log.emit
