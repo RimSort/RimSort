@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Dict, Any, Optional, List
 
 from PySide6.QtCore import QObject
-from logger_tt import logger
+from loguru import logger
 
 from util.app_info import AppInfo
 from util.event_bus import EventBus

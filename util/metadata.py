@@ -1,7 +1,7 @@
 from concurrent.futures import Future
 from functools import partial
 import json
-from logger_tt import logger
+from loguru import logger
 from natsort import natsorted
 import os
 from pathlib import Path

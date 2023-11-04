@@ -1,5 +1,5 @@
 import json
-from logger_tt import logger
+from loguru import logger
 import os
 from pathlib import Path
 from typing import Any, Dict

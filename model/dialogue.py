@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from logger_tt import logger
+from loguru import logger
 
 DEFAULT_TITLE = "RimSort"
 

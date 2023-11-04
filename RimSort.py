@@ -10,7 +10,7 @@ from types import TracebackType
 from typing import Type, Optional
 
 from PySide6.QtWidgets import QApplication
-from logger_tt import handlers, logger, setup_logging
+from loguru import logger
 
 from controller.app_controller import AppController
 from util.app_info import AppInfo
@@ -124,55 +124,52 @@ if __name__ == "__main__":
     # See also: https://nuitka.net/doc/user-manual.html#use-case-4-program-distribution
     # Otherwise, use sys.argv[0] to get the actual relative path to the executable
     #########################################################################################
-    #
-    # Setup logging
-    #
-    data_path = str(Path(os.path.join(os.path.dirname(__file__), "data")).resolve())
-    debug_file = str(Path(os.path.join(data_path, "DEBUG")).resolve())
-    # Check if 'RimSort.log' exists and rename it to 'RimSort.old.log'
-    log_file_path = str(Path(os.path.join(gettempdir(), "RimSort.log")).resolve())
-    log_old_file_path = str(
-        Path(os.path.join(gettempdir(), "RimSort.old.log")).resolve()
-    )
-    # Rename old log if found
-    if os.path.exists(log_file_path):
-        os.replace(log_file_path, log_old_file_path)
-    if os.path.exists(log_file_path):
-        os.rename(log_file_path, log_old_file_path)
-    # Enable logging options based on presence of DEBUG file
-    if os.path.exists(debug_file):
-        logging_config_path = str(
-            Path(os.path.join(data_path, "logger_tt-DEBUG.json")).resolve()
-        )
+
+    # Set the log level from the presence (or absence) of a "DEBUG" file in the app_data_folder
+    debug_file_path = AppInfo().app_data_folder / "DEBUG"
+    if debug_file_path.exists() and debug_file_path.is_file():
         DEBUG_MODE = True
+        log_level = "DEBUG"
     else:
-        logging_config_path = str(
-            Path(os.path.join(data_path, "logger_tt-INFO.json")).resolve()
-        )
         DEBUG_MODE = False
-    # Setup log file
-    logging_file_path = str(Path(os.path.join(gettempdir(), "RimSort.log")).resolve())
+        log_level = "INFO"
+
+    # We have log_file (foo.log) and old_log_file (foo.old.log). If old_log_file exists,
+    # remove it. If log_file exists, rename it to old_log_file. When we pass log_file to
+    # the logger as an argument, it will automatically be created.
+    log_file = AppInfo().user_log_folder / (AppInfo().app_name + ".log")
+    old_log_file = AppInfo().user_log_folder / (AppInfo().app_name + ".old.log")
+    if old_log_file.exists() and old_log_file.is_file():
+        old_log_file.unlink()
+    if log_file.exists() and log_file.is_file():
+        log_file.rename(old_log_file)
+
+    # Define the log format string
+    format_string = (
+        "{time} {level:<8} {thread.name:<10} {file}:{function}:{line} {message}"
+    )
+
+    # Remove the default stderr logger
+    logger.remove()
+
+    # Create the file logger
+    logger.add(log_file, level="DEBUG" if DEBUG_MODE else "INFO", format=format_string)
+
+    # Add as stdout logger if we're running from the Python interpreter
+    if not "__compiled__" in globals():
+        logger.add(
+            sys.stdout,
+            level="DEBUG" if DEBUG_MODE else "INFO",
+            format=format_string,
+            colorize=False,
+        )
+
     # Setup Environment
     if "__compiled__" in globals():
         os.environ[
             "QTWEBENGINE_LOCALES_PATH"
         ] = f'{str(Path(os.path.join(os.path.dirname(__file__), "qtwebengine_locales")).resolve())}'
-    if SYSTEM == "Linux":
-        # logger_tt
-        setup_logging(
-            config_path=logging_config_path,
-            log_path=logging_file_path,
-            use_multiprocessing="fork",
-        )
-        # Disable IBus integration on Linux
-        os.environ["QT_IM_MODULE"] = ""
-    else:
-        # logger_tt
-        setup_logging(
-            config_path=logging_config_path,
-            log_path=logging_file_path,
-            use_multiprocessing="spawn",
-        )
+
     # This check is used whether RimSort is running via Nuitka bundle
     if "__compiled__" in globals():
         logger.debug("Running using Nuitka bundle")
