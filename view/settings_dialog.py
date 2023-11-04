@@ -584,10 +584,16 @@ class SettingsDialog(QDialog):
         tab_layout = QVBoxLayout(tab)
         tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
+        group_box = QGroupBox()
+        tab_layout.addWidget(group_box)
+
+        group_layout = QVBoxLayout()
+        group_box.setLayout(group_layout)
+
         self.steamcmd_validate_downloads_checkbox = QCheckBox(
             "Validate downloaded mods"
         )
-        tab_layout.addWidget(self.steamcmd_validate_downloads_checkbox)
+        group_layout.addWidget(self.steamcmd_validate_downloads_checkbox)
 
     def _do_todds_tab(self) -> None:
         tab = QWidget()
