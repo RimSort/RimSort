@@ -398,24 +398,23 @@ class SettingsDialog(QDialog):
         tab_layout = QVBoxLayout(tab)
         tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        sorting_layout = QHBoxLayout()
-        tab_layout.addLayout(sorting_layout)
+        group_box = QGroupBox()
+        tab_layout.addWidget(group_box)
 
-        sorting_label = QLabel("Sort Mods:")
-        sorting_layout.addWidget(sorting_label, alignment=Qt.AlignmentFlag.AlignTop)
+        group_box_layout = QVBoxLayout()
+        group_box.setLayout(group_box_layout)
 
-        radios_layout = QVBoxLayout()
-        sorting_layout.addLayout(radios_layout)
+        sorting_label = QLabel("Sort mods")
+        sorting_label.setFont(GUIInfo().emphasis_font)
+        group_box_layout.addWidget(sorting_label)
 
         self.sorting_alphabetical_radio = QRadioButton("Alphabetically")
-        radios_layout.addWidget(self.sorting_alphabetical_radio)
+        group_box_layout.addWidget(self.sorting_alphabetical_radio)
 
         self.sorting_topological_radio = QRadioButton("Topologically")
-        radios_layout.addWidget(self.sorting_topological_radio)
+        group_box_layout.addWidget(self.sorting_topological_radio)
 
-        sorting_layout.addStretch()
-
-        tab_layout.addStretch(1)
+        tab_layout.addStretch()
 
         explanatory_text = ""
         explanatory_label = QLabel(explanatory_text)
