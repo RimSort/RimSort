@@ -572,53 +572,52 @@ class SettingsDialog(QDialog):
         tab_layout = QVBoxLayout(tab)
         tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        quality_preset_layout = QHBoxLayout()
-        tab_layout.addLayout(quality_preset_layout)
+        group_box = QGroupBox()
+        tab_layout.addWidget(group_box)
 
-        quality_preset_label = QLabel("Quality preset:")
-        quality_preset_label.setSizePolicy(
-            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred
-        )
-        quality_preset_layout.addWidget(quality_preset_label)
+        group_layout = QVBoxLayout()
+        group_box.setLayout(group_layout)
+
+        quality_preset_label = QLabel("Quality preset")
+        quality_preset_label.setFont(GUIInfo().emphasis_font)
+        group_layout.addWidget(quality_preset_label)
 
         self.todds_preset_combobox = QComboBox()
         self.todds_preset_combobox.setSizePolicy(
             QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred
         )
         self.todds_preset_combobox.addItem("Optimized - Recommended for RimWorld")
-        quality_preset_layout.addWidget(self.todds_preset_combobox)
+        group_layout.addWidget(self.todds_preset_combobox)
 
-        quality_preset_layout.addStretch()
+        group_box = QGroupBox()
+        tab_layout.addWidget(group_box)
 
-        when_optimizing_layout = QHBoxLayout()
-        tab_layout.addLayout(when_optimizing_layout)
+        group_layout = QVBoxLayout()
+        group_box.setLayout(group_layout)
 
-        when_optimizing_label = QLabel("When optimizing textures:")
-        when_optimizing_layout.addWidget(
-            when_optimizing_label, alignment=Qt.AlignmentFlag.AlignTop
-        )
-
-        radios_layout = QVBoxLayout()
-        radios_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        when_optimizing_layout.addLayout(radios_layout)
-
-        when_optimizing_layout.addStretch()
+        when_optimizing_label = QLabel("When optimizing textures")
+        when_optimizing_label.setFont(GUIInfo().emphasis_font)
+        group_layout.addWidget(when_optimizing_label)
 
         self.todds_active_mods_only_radio = QRadioButton("Optimize active mods only")
-        radios_layout.addWidget(self.todds_active_mods_only_radio)
+        group_layout.addWidget(self.todds_active_mods_only_radio)
 
         self.todds_all_mods_radio = QRadioButton("Optimize all mods")
-        radios_layout.addWidget(self.todds_all_mods_radio)
+        group_layout.addWidget(self.todds_all_mods_radio)
 
-        tab_layout.addSpacing(GUIInfo().default_font_line_height)
+        group_box = QGroupBox()
+        tab_layout.addWidget(group_box)
+
+        group_layout = QVBoxLayout()
+        group_box.setLayout(group_layout)
 
         self.todds_dry_run_checkbox = QCheckBox("Enable dry-run mode")
-        tab_layout.addWidget(self.todds_dry_run_checkbox)
+        group_layout.addWidget(self.todds_dry_run_checkbox)
 
         self.todds_overwrite_checkbox = QCheckBox(
             "Overwrite existing optimized textures"
         )
-        tab_layout.addWidget(self.todds_overwrite_checkbox)
+        group_layout.addWidget(self.todds_overwrite_checkbox)
 
     def _do_advanced_tab(self) -> None:
         tab = QWidget()
