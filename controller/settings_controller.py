@@ -149,6 +149,9 @@ class SettingsController(QObject):
         )
 
         # SteamCMD tab
+        self.settings_dialog.steamcmd_install_location_choose_button.clicked.connect(
+            self._on_steamcmd_install_location_choose_button_clicked
+        )
         self.settings_dialog.steamcmd_install_button.clicked.connect(
             self._on_steamcmd_install_button_clicked
         )
@@ -298,6 +301,9 @@ class SettingsController(QObject):
         self.settings_dialog.steamcmd_validate_downloads_checkbox.setChecked(
             self.settings.steamcmd_validate_downloads
         )
+        self.settings_dialog.steamcmd_install_location.setText(
+            self.settings.steamcmd_install_path
+        )
 
         # todds tab
         if self.settings.todds_preset == "optimized":
@@ -409,6 +415,9 @@ class SettingsController(QObject):
         # SteamCMD tab
         self.settings.steamcmd_validate_downloads = (
             self.settings_dialog.steamcmd_validate_downloads_checkbox.isChecked()
+        )
+        self.settings.steamcmd_install_path = (
+            self.settings_dialog.steamcmd_install_location.text()
         )
 
         # todds tab
@@ -861,6 +870,22 @@ class SettingsController(QObject):
             steam_workshop_db_location
         )
         self._last_file_dialog_path = str(Path(steam_workshop_db_location).parent)
+
+    @Slot()
+    def _on_steamcmd_install_location_choose_button_clicked(self) -> None:
+        """
+        Open a file dialog to select the Steamcmd install location and handle the result.
+        """
+        steamcmd_install_location = QFileDialog.getExistingDirectory(
+            parent=self.settings_dialog,
+            dir=str(self._last_file_dialog_path),
+        )
+        if steamcmd_install_location == "":
+            return
+        self.settings_dialog.steamcmd_install_location.setText(
+            steamcmd_install_location
+        )
+        self._last_file_dialog_path = str(Path(steamcmd_install_location).parent)
 
     @Slot()
     def _on_steamcmd_install_button_clicked(self) -> None:

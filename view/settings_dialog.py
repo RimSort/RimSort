@@ -595,6 +595,30 @@ class SettingsDialog(QDialog):
         )
         group_layout.addWidget(self.steamcmd_validate_downloads_checkbox)
 
+        group_box = QGroupBox()
+        tab_layout.addWidget(group_box)
+
+        group_layout = QVBoxLayout()
+        group_box.setLayout(group_layout)
+
+        header_layout = QHBoxLayout()
+        group_layout.addLayout(header_layout)
+
+        section_label = QLabel("SteamCMD installation location")
+        section_label.setFont(GUIInfo().emphasis_font)
+        header_layout.addWidget(section_label)
+
+        self.steamcmd_install_location_choose_button = QToolButton()
+        self.steamcmd_install_location_choose_button.setText("Choose…")
+        header_layout.addWidget(self.steamcmd_install_location_choose_button)
+
+        self.steamcmd_install_location = QLineEdit()
+        self.steamcmd_install_location.setTextMargins(GUIInfo().text_field_margins)
+        self.steamcmd_install_location.setFixedHeight(
+            GUIInfo().default_font_line_height * 2
+        )
+        group_layout.addWidget(self.steamcmd_install_location)
+
         tab_layout.addStretch()
 
         button_layout = QHBoxLayout()
