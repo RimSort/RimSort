@@ -656,29 +656,33 @@ class SettingsDialog(QDialog):
         tab_layout = QVBoxLayout(tab)
         tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
+        group_box = QGroupBox()
+        tab_layout.addWidget(group_box)
+
+        group_layout = QVBoxLayout()
+        group_box.setLayout(group_layout)
+
         self.debug_logging_checkbox = QCheckBox("Enable debug logging")
-        tab_layout.addWidget(self.debug_logging_checkbox)
+        group_layout.addWidget(self.debug_logging_checkbox)
 
         self.watchdog_checkbox = QCheckBox("Enable watchdog file monitor daemon")
-        tab_layout.addWidget(self.watchdog_checkbox)
+        group_layout.addWidget(self.watchdog_checkbox)
 
         self.mod_type_filter_checkbox = QCheckBox("Enable mod type filter")
-        tab_layout.addWidget(self.mod_type_filter_checkbox)
+        group_layout.addWidget(self.mod_type_filter_checkbox)
 
         self.show_duplicate_mods_warning_checkbox = QCheckBox(
             "Show duplicate mods warning"
         )
-        tab_layout.addWidget(self.show_duplicate_mods_warning_checkbox)
+        group_layout.addWidget(self.show_duplicate_mods_warning_checkbox)
 
         self.show_mod_updates_checkbox = QCheckBox("Check for mod updates on refresh")
-        tab_layout.addWidget(self.show_mod_updates_checkbox)
+        group_layout.addWidget(self.show_mod_updates_checkbox)
 
         self.download_missing_mods_checkbox = QCheckBox(
             "Download missing mods automatically"
         )
-        tab_layout.addWidget(self.download_missing_mods_checkbox)
-
-        tab_layout.addSpacing(GUIInfo().default_font_line_height)
+        group_layout.addWidget(self.download_missing_mods_checkbox)
 
         github_identity_group = QGroupBox()
         tab_layout.addWidget(github_identity_group)
@@ -716,7 +720,7 @@ class SettingsDialog(QDialog):
 
         buttons_layout.addStretch()
 
-        self.upload_log_button = QPushButton("Upload Log")
+        self.upload_log_button = QPushButton("Upload RimSort Log")
         buttons_layout.addWidget(self.upload_log_button)
 
     def showEvent(self, event: QShowEvent) -> None:
