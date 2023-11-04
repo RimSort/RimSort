@@ -144,7 +144,13 @@ if __name__ == "__main__":
 
     # Define the log format string
     format_string = (
-        "{time} {level:<8} {thread.name:<10} {file}:{function}:{line} {message}"
+        "[{level}]"
+        "[{time:YYYY-MM-DD HH:mm:ss}]"
+        "[{process.id}]"
+        "[{module}]"
+        "[{function}][{line}]"
+        " : "
+        "{thread.name} {message}"
     )
 
     # Remove the default stderr logger
@@ -159,7 +165,6 @@ if __name__ == "__main__":
             sys.stdout,
             level="DEBUG" if DEBUG_MODE else "INFO",
             format=format_string,
-            colorize=False,
         )
         logger.debug("Running using Python interpreter")
     else:
