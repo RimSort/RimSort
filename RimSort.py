@@ -129,10 +129,8 @@ if __name__ == "__main__":
     debug_file_path = AppInfo().app_data_folder / "DEBUG"
     if debug_file_path.exists() and debug_file_path.is_file():
         DEBUG_MODE = True
-        log_level = "DEBUG"
     else:
         DEBUG_MODE = False
-        log_level = "INFO"
 
     # We have log_file (foo.log) and old_log_file (foo.old.log). If old_log_file exists,
     # remove it. If log_file exists, rename it to old_log_file. When we pass log_file to
@@ -155,31 +153,38 @@ if __name__ == "__main__":
     # Create the file logger
     logger.add(log_file, level="DEBUG" if DEBUG_MODE else "INFO", format=format_string)
 
-    # Add as stdout logger if we're running from the Python interpreter
     if not "__compiled__" in globals():
+        # Add as stdout logger if we're running from the Python interpreter
         logger.add(
             sys.stdout,
             level="DEBUG" if DEBUG_MODE else "INFO",
             format=format_string,
             colorize=False,
         )
-
-    # Setup Environment
-    if "__compiled__" in globals():
+        logger.debug("Running using Python interpreter")
+    else:
+        # Configure QtWebEngine locales path
         os.environ[
             "QTWEBENGINE_LOCALES_PATH"
         ] = f'{str(Path(os.path.join(os.path.dirname(__file__), "qtwebengine_locales")).resolve())}'
 
-    # This check is used whether RimSort is running via Nuitka bundle
-    if "__compiled__" in globals():
-        logger.debug("Running using Nuitka bundle")
+        # MacOS and Windows do not support fork, and can only use spawn
         if SYSTEM != "Linux":
-            logger.warning(  # MacOS and Windows do not support fork, and can only use spawn
+            logger.warning(
                 "Non-Linux platform detected: using multiprocessing.freeze_support() & setting 'spawn' as MP method"
             )
             freeze_support()
             set_start_method("spawn")
-    else:
-        logger.debug("Running using Python interpreter")
+
+        # Add a "WARNING" or higher stderr sink if we've been compiled
+        logger.add(
+            sys.stderr,
+            level="WARNING",
+            format=format_string,
+            colorize=False,
+        )
+
+        logger.debug("Running using Nuitka bundle")
+
     logger.debug("Initializing RimSort application")
     main_thread()
