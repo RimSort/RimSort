@@ -108,8 +108,14 @@ class SettingsDialog(QDialog):
         buttons_layout.addWidget(self.locations_autodetect_button)
 
     def _do_game_location_area(self, tab_layout: QVBoxLayout) -> None:
+        group_box = QGroupBox()
+        tab_layout.addWidget(group_box)
+
+        group_layout = QVBoxLayout()
+        group_box.setLayout(group_layout)
+
         header_layout = QHBoxLayout()
-        tab_layout.addLayout(header_layout)
+        group_layout.addLayout(header_layout)
 
         section_label = QLabel("Game location")
         section_label.setFont(GUIInfo().emphasis_font)
@@ -122,11 +128,17 @@ class SettingsDialog(QDialog):
         self.game_location = QLineEdit()
         self.game_location.setTextMargins(GUIInfo().text_field_margins)
         self.game_location.setFixedHeight(GUIInfo().default_font_line_height * 2)
-        tab_layout.addWidget(self.game_location)
+        group_layout.addWidget(self.game_location)
 
     def _do_config_folder_location_area(self, tab_layout: QVBoxLayout) -> None:
+        group_box = QGroupBox()
+        tab_layout.addWidget(group_box)
+
+        group_layout = QVBoxLayout()
+        group_box.setLayout(group_layout)
+
         header_layout = QHBoxLayout()
-        tab_layout.addLayout(header_layout)
+        group_layout.addLayout(header_layout)
 
         section_label = QLabel("Config location")
         section_label.setFont(GUIInfo().emphasis_font)
@@ -141,11 +153,17 @@ class SettingsDialog(QDialog):
         self.config_folder_location.setFixedHeight(
             GUIInfo().default_font_line_height * 2
         )
-        tab_layout.addWidget(self.config_folder_location)
+        group_layout.addWidget(self.config_folder_location)
 
     def _do_steam_mods_folder_location_area(self, tab_layout: QVBoxLayout) -> None:
+        group_box = QGroupBox()
+        tab_layout.addWidget(group_box)
+
+        group_layout = QVBoxLayout()
+        group_box.setLayout(group_layout)
+
         header_layout = QHBoxLayout()
-        tab_layout.addLayout(header_layout)
+        group_layout.addLayout(header_layout)
 
         section_label = QLabel("Steam mods location")
         section_label.setFont(GUIInfo().emphasis_font)
@@ -160,11 +178,17 @@ class SettingsDialog(QDialog):
         self.steam_mods_folder_location.setFixedHeight(
             GUIInfo().default_font_line_height * 2
         )
-        tab_layout.addWidget(self.steam_mods_folder_location)
+        group_layout.addWidget(self.steam_mods_folder_location)
 
     def _do_local_mods_folder_location_area(self, tab_layout: QVBoxLayout) -> None:
+        group_box = QGroupBox()
+        tab_layout.addWidget(group_box)
+
+        group_layout = QVBoxLayout()
+        group_box.setLayout(group_layout)
+
         header_layout = QHBoxLayout()
-        tab_layout.addLayout(header_layout)
+        group_layout.addLayout(header_layout)
 
         section_label = QLabel("Local mods location")
         section_label.setFont(GUIInfo().emphasis_font)
@@ -179,7 +203,7 @@ class SettingsDialog(QDialog):
         self.local_mods_folder_location.setFixedHeight(
             GUIInfo().default_font_line_height * 2
         )
-        tab_layout.addWidget(self.local_mods_folder_location)
+        group_layout.addWidget(self.local_mods_folder_location)
 
     def _do_databases_tab(self) -> None:
         tab = QWidget()
