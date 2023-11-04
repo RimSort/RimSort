@@ -2,6 +2,7 @@ from PySide6.QtCore import QObject, Slot
 from PySide6.QtWidgets import QApplication, QLineEdit, QTextEdit, QPlainTextEdit
 
 from controller.settings_controller import SettingsController
+from util.event_bus import EventBus
 from util.generic import open_url_browser
 from view.game_configuration_panel import GameConfiguration
 from view.main_content_panel import MainContent
@@ -20,7 +21,7 @@ class MenuBarController(QObject):
         self.menu_bar.quit_action.triggered.connect(QApplication.instance().quit)
 
         self.menu_bar.check_for_updates_action.triggered.connect(
-            self._on_menu_bar_check_for_updates_triggered
+            EventBus().do_check_for_application_update.emit
         )
 
         self.menu_bar.check_for_updates_on_startup_action.toggled.connect(
@@ -64,10 +65,6 @@ class MenuBarController(QObject):
         # Help menu
 
         self.menu_bar.wiki_action.triggered.connect(self._on_menu_bar_wiki_triggered)
-
-    @Slot()
-    def _on_menu_bar_check_for_updates_triggered(self) -> None:
-        GameConfiguration.instance().configuration_signal.emit("check_for_update")
 
     @Slot()
     def _on_menu_bar_check_for_updates_on_startup_triggered(self) -> None:

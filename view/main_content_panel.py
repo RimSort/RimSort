@@ -126,6 +126,9 @@ class MainContent(QObject):
 
             self.settings_controller = settings_controller
             EventBus().settings_have_changed.connect(self._on_settings_have_changed)
+            EventBus().do_check_for_application_update.connect(
+                self._do_check_for_update
+            )
             EventBus().do_download_community_rules_db_from_github.connect(
                 self._on_do_download_community_db_from_github
             )

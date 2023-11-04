@@ -23,6 +23,8 @@ class EventBus(QObject):
     # Application-scope signals
     settings_have_changed = Signal()
 
+    do_check_for_application_update = Signal()
+
     do_download_community_rules_db_from_github = Signal()
     do_download_steam_workshop_db_from_github = Signal()
     do_upload_log = Signal()
