@@ -131,6 +131,7 @@ class MainContent(QObject):
                 self._do_check_for_update
             )
             EventBus().do_open_mod_list.connect(self._do_import_list_file_xml)
+            EventBus().do_save_mod_list_as.connect(self._do_export_list_file_xml)
 
             EventBus().do_download_community_rules_db_from_github.connect(
                 self._on_do_download_community_db_from_github

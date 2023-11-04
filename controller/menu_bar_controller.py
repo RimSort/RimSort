@@ -43,7 +43,7 @@ class MenuBarController(QObject):
         )
 
         self.menu_bar.save_mod_list_action.triggered.connect(
-            self._on_menu_bar_save_mod_list_triggered
+            EventBus().do_save_mod_list_as.emit
         )
 
         self.menu_bar.export_to_clipboard_action.triggered.connect(
@@ -71,10 +71,6 @@ class MenuBarController(QObject):
         is_checked = self.menu_bar.check_for_updates_on_startup_action.isChecked()
         self.settings_controller.settings.check_for_update_startup = is_checked
         self.settings_controller.settings.save()
-
-    @Slot()
-    def _on_menu_bar_save_mod_list_triggered(self) -> None:
-        MainContent.instance().actions_panel.actions_signal.emit("export_list_file_xml")
 
     @Slot()
     def _on_menu_bar_export_to_clipboard_triggered(self) -> None:
