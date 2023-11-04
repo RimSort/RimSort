@@ -135,6 +135,7 @@ class MainContent(QObject):
             EventBus().do_export_mod_list_to_clipboard.connect(
                 self._do_export_list_clipboard
             )
+            EventBus().do_export_mod_list_to_rentry.connect(self._do_upload_list_rentry)
 
             EventBus().do_download_community_rules_db_from_github.connect(
                 self._on_do_download_community_db_from_github
