@@ -31,6 +31,8 @@ class EventBus(QObject):
     do_compare_steam_workshop_databases = Signal()
     do_merge_steam_workshop_databases = Signal()
     do_build_steam_workshop_database = Signal()
+    do_import_acf = Signal()
+    do_delete_acf = Signal()
     do_install_steamcmd = Signal()
 
     def __new__(cls) -> "EventBus":

@@ -148,6 +148,12 @@ class MainContent(QObject):
             EventBus().do_build_steam_workshop_database.connect(
                 self._on_do_build_steam_workshop_database
             )
+            EventBus().do_import_acf.connect(
+                lambda: self.actions_slot("import_steamcmd_acf_data")
+            )
+            EventBus().do_delete_acf.connect(
+                lambda: self.actions_slot("reset_steamcmd_acf_data")
+            )
             EventBus().do_install_steamcmd.connect(self._do_setup_steamcmd)
 
             # INITIALIZE WIDGETS

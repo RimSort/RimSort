@@ -152,6 +152,12 @@ class SettingsController(QObject):
         self.settings_dialog.steamcmd_install_location_choose_button.clicked.connect(
             self._on_steamcmd_install_location_choose_button_clicked
         )
+        self.settings_dialog.steamcmd_import_acf_button.clicked.connect(
+            self._on_steamcmd_import_acf_button_clicked
+        )
+        self.settings_dialog.steamcmd_delete_acf_button.clicked.connect(
+            self._on_steamcmd_delete_acf_button_clicked
+        )
         self.settings_dialog.steamcmd_install_button.clicked.connect(
             self._on_steamcmd_install_button_clicked
         )
@@ -886,6 +892,22 @@ class SettingsController(QObject):
             steamcmd_install_location
         )
         self._last_file_dialog_path = str(Path(steamcmd_install_location).parent)
+
+    @Slot()
+    def _on_steamcmd_import_acf_button_clicked(self) -> None:
+        """
+        Handle the Steamcmd import ACF button click.
+        """
+        self.settings_dialog.global_ok_button.click()
+        EventBus().do_import_acf.emit()
+
+    @Slot()
+    def _on_steamcmd_delete_acf_button_clicked(self) -> None:
+        """
+        Handle the Steamcmd delete ACF button click.
+        """
+        self.settings_dialog.global_ok_button.click()
+        EventBus().do_delete_acf.emit()
 
     @Slot()
     def _on_steamcmd_install_button_clicked(self) -> None:

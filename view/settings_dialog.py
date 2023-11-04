@@ -626,6 +626,12 @@ class SettingsDialog(QDialog):
 
         button_layout.addStretch()
 
+        self.steamcmd_import_acf_button = QPushButton("Import .acf")
+        button_layout.addWidget(self.steamcmd_import_acf_button)
+
+        self.steamcmd_delete_acf_button = QPushButton("Delete .acf")
+        button_layout.addWidget(self.steamcmd_delete_acf_button)
+
         self.steamcmd_install_button = QPushButton("Install SteamCMD")
         button_layout.addWidget(self.steamcmd_install_button)
 
