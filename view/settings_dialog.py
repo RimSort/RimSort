@@ -475,7 +475,7 @@ class SettingsDialog(QDialog):
         group_layout.addWidget(explanatory_label)
 
         self.db_builder_include_no_local_radio = QRadioButton(
-            "Get published file IDs from the Steam Workshop."
+            "Get PublishedFileIDs from the Steam Workshop."
         )
         group_layout.addWidget(self.db_builder_include_no_local_radio)
 
