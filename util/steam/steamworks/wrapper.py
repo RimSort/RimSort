@@ -1,4 +1,4 @@
-from logger_tt import logger
+from loguru import logger
 from multiprocessing import current_process, Process, Queue
 import os
 import platform

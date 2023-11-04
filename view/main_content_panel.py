@@ -16,7 +16,7 @@ from tempfile import gettempdir
 from time import time
 from zipfile import ZipFile
 
-from logger_tt import logger
+from loguru import logger
 
 from controller.settings_controller import SettingsController
 from util.event_bus import EventBus
@@ -3115,7 +3115,7 @@ class MainContent(QObject):
     @Slot()
     def _on_do_upload_log(self) -> None:
         ret = upload_data_to_0x0_st(
-            str(Path(os.path.join(gettempdir(), "RimSort.log")).resolve())
+            str(AppInfo().user_log_folder / (AppInfo().app_name + ".log"))
         )
         if ret:
             webbrowser.open(ret)
