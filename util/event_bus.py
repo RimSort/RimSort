@@ -20,15 +20,17 @@ class EventBus(QObject):
 
     _instance = None
 
-    # Application-scope signals
-    settings_have_changed = Signal()
-
+    # Menu bar signals
     do_check_for_application_update = Signal()
     do_open_mod_list = Signal()
     do_save_mod_list_as = Signal()
     do_export_mod_list_to_clipboard = Signal()
     do_export_mod_list_to_rentry = Signal()
 
+    # Settings signals
+    settings_have_changed = Signal()
+
+    # SettingsDialog signals
     do_download_community_rules_db_from_github = Signal()
     do_download_steam_workshop_db_from_github = Signal()
     do_upload_log = Signal()
@@ -40,6 +42,9 @@ class EventBus(QObject):
     do_import_acf = Signal()
     do_delete_acf = Signal()
     do_install_steamcmd = Signal()
+
+    # MainWindow signals
+    do_set_main_window_widgets_enabled = Signal(bool)
 
     def __new__(cls) -> "EventBus":
         """

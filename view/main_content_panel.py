@@ -996,9 +996,10 @@ class MainContent(QObject):
         loading_animation_text_label = None
         # Hide the info panel widgets
         self.mod_info_panel.info_panel_frame.hide()
-        # Disable widgets
-        for widget in QApplication.instance().allWidgets():
-            widget.setEnabled(False)
+
+        # Disable MainWindow widgets
+        EventBus().do_set_main_window_widgets_enabled.emit(False)
+
         # Encapsulate mod parsing inside a nice lil animation
         loading_animation = LoadingAnimation(
             gif_path=gif_path,
@@ -1019,9 +1020,10 @@ class MainContent(QObject):
         if text:
             self.mod_info_panel.panel.removeWidget(loading_animation_text_label)
             loading_animation_text_label.close()
-        # Enable widgets
-        for widget in QApplication.instance().allWidgets():
-            widget.setEnabled(True)
+
+        # Re-enable MainWindow widgets
+        EventBus().do_set_main_window_widgets_enabled.emit(True)
+
         # Show the info panel widgets
         self.mod_info_panel.info_panel_frame.show()
         logger.debug(f"Returning {type(data)}")
