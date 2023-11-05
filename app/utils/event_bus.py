@@ -47,8 +47,8 @@ class EventBus(QObject):
     do_delete_acf = Signal()
     do_install_steamcmd = Signal()
 
-    # MainWindow signals
-    do_set_main_window_widgets_enabled = Signal(bool)
+    refresh_started = Signal()
+    refresh_finished = Signal()
 
     def __new__(cls) -> "EventBus":
         """

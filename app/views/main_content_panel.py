@@ -973,6 +973,7 @@ class MainContent(QObject):
         """
         Refresh expensive calculations & repopulate lists with that refreshed data
         """
+        EventBus().refresh_started.emit()
         # If we are refreshing cache from user action
         if not is_initial:
             self.mods_panel.list_updated = False
@@ -1053,6 +1054,15 @@ class MainContent(QObject):
             logger.debug(
                 "Essential paths have not been set. Passing refresh and resetting mod lists"
             )
+
+            self.active_mods_panel.game_version = self.metadata_manager.game_version
+            # Feed all_mods and Steam DB info to Active Mods list to surface
+            # names instead of package_ids when able
+            self.active_mods_panel.all_mods = self.metadata_manager.all_mods_compiled
+            self.active_mods_panel.steam_package_id_to_name = (
+                self.metadata_manager.info_from_steam_package_id_to_name
+            )
+            EventBus().refresh_finished.emit()
 
     def _do_refresh_animation(self, path: str) -> None:
         logger.debug(f"File change detected: {path}")
