@@ -20,6 +20,9 @@ class MainWindowController(QObject):
         self.main_window.sort_button.clicked.connect(
             EventBus().do_sort_active_mods_list.emit
         )
+        self.main_window.save_button.clicked.connect(
+            EventBus().do_save_active_mods_list.emit
+        )
 
         EventBus().refresh_started.connect(self._on_refresh_started)
         EventBus().refresh_finished.connect(self._on_refresh_finished)
