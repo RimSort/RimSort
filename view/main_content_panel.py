@@ -177,9 +177,7 @@ class MainContent(QObject):
             )
 
             # Initialize MetadataManager
-            self.metadata_manager = MetadataManager.instance(
-                settings_controller=self.settings_controller
-            )
+            self.metadata_manager = MetadataManager.instance()
             self.metadata_manager.update_game_configuration_signal.connect(
                 self.__update_game_configuration
             )

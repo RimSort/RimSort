@@ -38,7 +38,9 @@ class MainWindow(QMainWindow):
     Subclass QMainWindow to customize the main application window.
     """
 
-    def __init__(self, debug_mode: bool = False) -> None:
+    def __init__(
+        self, settings_controller: SettingsController, debug_mode: bool = False
+    ) -> None:
         """
         Initialize the main application window. Construct the layout,
         add the three main views, and set up relevant signals and slots.
@@ -46,12 +48,7 @@ class MainWindow(QMainWindow):
         logger.info("Initializing MainWindow")
         super(MainWindow, self).__init__()
 
-        # Instantiate the settings model and controller
-        self.settings = Settings()
-        self.settings_dialog = SettingsDialog()
-        self.settings_controller = SettingsController(
-            model=self.settings, view=self.settings_dialog
-        )
+        self.settings_controller = settings_controller
 
         # Create the main application window
         self.DEBUG_MODE = debug_mode
