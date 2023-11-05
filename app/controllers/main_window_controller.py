@@ -11,6 +11,10 @@ class MainWindowController(QObject):
 
         self.main_window = view
 
+        self.main_window.refresh_button.clicked.connect(
+            EventBus().do_refresh_mods_lists.emit
+        )
+
         EventBus().refresh_started.connect(self._on_refresh_started)
         EventBus().refresh_finished.connect(self._on_refresh_finished)
 

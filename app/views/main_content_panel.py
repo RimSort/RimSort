@@ -167,6 +167,8 @@ class MainContent(QObject):
             )
             EventBus().do_install_steamcmd.connect(self._do_setup_steamcmd)
 
+            EventBus().do_refresh_mods_lists.connect(self._do_refresh)
+
             # INITIALIZE WIDGETS
             # Initialize Steam(CMD) integraations
             self.steam_browser = SteamcmdDownloader = None
