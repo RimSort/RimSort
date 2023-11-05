@@ -30,11 +30,11 @@ class AppController(QObject):
         elif SystemInfo().operating_system == SystemInfo.OperatingSystem.MACOS:
             self.app.setStyle("macOS")
 
-        # self.app.setStyleSheet(  # Add style sheet for styling layouts and widgets
-        #     Path(
-        #         os.path.join(AppInfo().application_folder, "themes/RimPy/style.qss")
-        #     ).read_text()
-        # )
+        self.app.setStyleSheet(  # Add style sheet for styling layouts and widgets
+            Path(
+                os.path.join(AppInfo().application_folder, "themes/RimPy/style.qss")
+            ).read_text()
+        )
 
         # One-time initialization of userRules.json
         user_rules_path = AppInfo().databases_folder / "userRules.json"

@@ -16,7 +16,6 @@ from watchdog.observers.api import BaseObserver
 
 from controller.menu_bar_controller import MenuBarController
 from controller.settings_controller import SettingsController
-from model.settings import Settings
 from util.app_info import AppInfo
 from util.gui_info import GUIInfo
 from util.system_info import SystemInfo
@@ -24,7 +23,6 @@ from util.watchdog import RSFileSystemEventHandler
 from view.game_configuration_panel import GameConfiguration
 from view.main_content_panel import MainContent
 from view.menu_bar import MenuBar
-from view.settings_dialog import SettingsDialog
 from view.status_panel import Status
 
 if SystemInfo().operating_system == SystemInfo.OperatingSystem.WINDOWS:
@@ -108,10 +106,10 @@ class MainWindow(QMainWindow):
         button_layout.setSpacing(12)
         app_layout.addLayout(button_layout)
 
-        version_string = QLabel("RimWorld version " + "TBD")
-        version_string.setFont(GUIInfo().smaller_font)
-        version_string.setEnabled(False)
-        button_layout.addWidget(version_string)
+        self.game_version_label = QLabel()
+        self.game_version_label.setFont(GUIInfo().smaller_font)
+        self.game_version_label.setEnabled(False)
+        button_layout.addWidget(self.game_version_label)
 
         button_layout.addStretch()
 

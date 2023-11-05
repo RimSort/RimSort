@@ -1,6 +1,7 @@
 from PySide6.QtCore import QObject, Slot
 
 from util.event_bus import EventBus
+from util.metadata import MetadataManager
 from view.main_window import MainWindow
 
 
@@ -10,14 +11,25 @@ class MainWindowController(QObject):
 
         self.main_window = view
 
-        EventBus().do_set_main_window_widgets_enabled.connect(
-            self._on_do_set_main_window_widgets_enabled
-        )
+        EventBus().refresh_started.connect(self._on_refresh_started)
+        EventBus().refresh_finished.connect(self._on_refresh_finished)
 
-    @Slot(bool)
-    def _on_do_set_main_window_widgets_enabled(self, enabled: bool) -> None:
-        self.main_window.refresh_button.setEnabled(enabled)
-        self.main_window.clear_button.setEnabled(enabled)
-        self.main_window.sort_button.setEnabled(enabled)
-        self.main_window.save_button.setEnabled(enabled)
-        self.main_window.run_button.setEnabled(enabled)
+    @Slot()
+    def _on_refresh_started(self) -> None:
+        self.main_window.refresh_button.setEnabled(False)
+        self.main_window.clear_button.setEnabled(False)
+        self.main_window.sort_button.setEnabled(False)
+        self.main_window.save_button.setEnabled(False)
+        self.main_window.run_button.setEnabled(False)
+
+    @Slot()
+    def _on_refresh_finished(self) -> None:
+        self.main_window.refresh_button.setEnabled(True)
+        self.main_window.clear_button.setEnabled(True)
+        self.main_window.sort_button.setEnabled(True)
+        self.main_window.save_button.setEnabled(True)
+        self.main_window.run_button.setEnabled(True)
+
+        self.main_window.game_version_label.setText(
+            "RimWorld version " + MetadataManager.instance().game_version
+        )

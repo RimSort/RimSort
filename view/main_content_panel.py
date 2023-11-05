@@ -994,10 +994,6 @@ class MainContent(QObject):
         loading_animation_text_label = None
         # Hide the info panel widgets
         self.mod_info_panel.info_panel_frame.hide()
-
-        # Disable MainWindow widgets
-        EventBus().do_set_main_window_widgets_enabled.emit(False)
-
         # Encapsulate mod parsing inside a nice lil animation
         loading_animation = LoadingAnimation(
             gif_path=gif_path,
@@ -1018,10 +1014,6 @@ class MainContent(QObject):
         if text:
             self.mod_info_panel.panel.removeWidget(loading_animation_text_label)
             loading_animation_text_label.close()
-
-        # Re-enable MainWindow widgets
-        EventBus().do_set_main_window_widgets_enabled.emit(True)
-
         # Show the info panel widgets
         self.mod_info_panel.info_panel_frame.show()
         logger.debug(f"Returning {type(data)}")
@@ -1033,6 +1025,7 @@ class MainContent(QObject):
         """
         Refresh expensive calculations & repopulate lists with that refreshed data
         """
+        EventBus().refresh_started.emit()
         # If we are refreshing cache from user action
         if not is_initial:
             self.active_mods_panel.list_updated = False
@@ -1123,6 +1116,7 @@ class MainContent(QObject):
         self.active_mods_panel.steam_package_id_to_name = (
             self.metadata_manager.info_from_steam_package_id_to_name
         )
+        EventBus().refresh_finished.emit()
 
     def _do_refresh_animation(self, path: str) -> None:
         logger.debug(f"File change detected: {path}")
