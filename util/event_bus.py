@@ -43,6 +43,9 @@ class EventBus(QObject):
     do_delete_acf = Signal()
     do_install_steamcmd = Signal()
 
+    # MainWindow signals
+    do_refresh_mods_lists = Signal()
+
     refresh_started = Signal()
     refresh_finished = Signal()
 
