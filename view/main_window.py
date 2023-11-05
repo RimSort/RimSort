@@ -3,7 +3,14 @@ from typing import Optional
 
 from PySide6.QtCore import QSize
 from PySide6.QtGui import QShowEvent
-from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (
+    QMainWindow,
+    QVBoxLayout,
+    QWidget,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+)
 from loguru import logger
 from watchdog.observers.api import BaseObserver
 
@@ -11,6 +18,7 @@ from controller.menu_bar_controller import MenuBarController
 from controller.settings_controller import SettingsController
 from model.settings import Settings
 from util.app_info import AppInfo
+from util.gui_info import GUIInfo
 from util.system_info import SystemInfo
 from util.watchdog import RSFileSystemEventHandler
 from view.game_configuration_panel import GameConfiguration
@@ -97,6 +105,39 @@ class MainWindow(QMainWindow):
 
         # Arrange all panels vertically on the main window layout
         app_layout.addWidget(self.main_content_panel.main_layout_frame)
+
+        button_layout = QHBoxLayout()
+        button_layout.setContentsMargins(12, 12, 12, 12)
+        button_layout.setSpacing(12)
+        app_layout.addLayout(button_layout)
+
+        version_string = QLabel("RimWorld version " + "TBD")
+        version_string.setFont(GUIInfo().smaller_font)
+        version_string.setEnabled(False)
+        button_layout.addWidget(version_string)
+
+        button_layout.addStretch()
+
+        self.refresh_button = QPushButton("Refresh")
+        self.refresh_button.setMinimumWidth(100)
+        button_layout.addWidget(self.refresh_button)
+
+        self.clear_button = QPushButton("Clear")
+        self.clear_button.setMinimumWidth(100)
+        button_layout.addWidget(self.clear_button)
+
+        self.sort_button = QPushButton("Sort")
+        self.sort_button.setMinimumWidth(100)
+        button_layout.addWidget(self.sort_button)
+
+        self.save_button = QPushButton("Save")
+        self.save_button.setMinimumWidth(100)
+        button_layout.addWidget(self.save_button)
+
+        self.run_button = QPushButton("Run Game")
+        self.run_button.setMinimumWidth(100)
+        button_layout.addWidget(self.run_button)
+
         app_layout.addWidget(self.bottom_panel.frame)
 
         # Display all items
