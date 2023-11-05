@@ -1698,6 +1698,7 @@ def get_active_inactive_mods(
         )
         return active_mods_uuids, inactive_mods, duplicate_mods, missing_mods
     # Parse the ModsConfig.xml data
+    logger.info("Generating active mod list")
     for package_id in mod_data["ModsConfigData"]["activeMods"][
         "li"
     ]:  # Go through active mods, handle packageids
@@ -1724,7 +1725,6 @@ def get_active_inactive_mods(
             else ["expansion", "local", "workshop"]
         )
         # Loop through all mods
-        logger.info("Generating active mod list")
         for uuid, metadata in all_mods.items():
             metadata_package_id = metadata["packageid"]
             metadata_path = metadata["path"]
