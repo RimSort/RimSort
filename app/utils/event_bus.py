@@ -51,6 +51,7 @@ class EventBus(QObject):
     do_refresh_mods_lists = Signal()
     do_clear_active_mods_list = Signal()
     do_sort_active_mods_list = Signal()
+    do_save_active_mods_list = Signal()
 
     refresh_started = Signal()
     refresh_finished = Signal()

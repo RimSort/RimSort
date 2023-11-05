@@ -170,6 +170,7 @@ class MainContent(QObject):
             EventBus().do_refresh_mods_lists.connect(self._do_refresh)
             EventBus().do_clear_active_mods_list.connect(self._do_clear)
             EventBus().do_sort_active_mods_list.connect(self._do_sort)
+            EventBus().do_save_active_mods_list.connect(self._do_save)
 
             # INITIALIZE WIDGETS
             # Initialize Steam(CMD) integraations
@@ -3195,3 +3196,15 @@ class MainContent(QObject):
     @Slot()
     def _on_do_build_steam_workshop_database(self) -> None:
         self._do_build_database_thread()
+
+    @Slot()
+    def _do_run_game(self) -> None:
+        self._do_steamworks_api_call(
+            [
+                "launch_game_process",
+                [
+                    self.settings_controller.settings.game_folder,
+                    self.settings_controller.settings.run_args,
+                ],
+            ]
+        )
