@@ -23,6 +23,7 @@ class MainWindowController(QObject):
         self.main_window.save_button.clicked.connect(
             EventBus().do_save_active_mods_list.emit
         )
+        self.main_window.run_button.clicked.connect(EventBus().do_run_game.emit)
 
         EventBus().refresh_started.connect(self._on_refresh_started)
         EventBus().refresh_finished.connect(self._on_refresh_finished)

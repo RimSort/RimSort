@@ -171,6 +171,7 @@ class MainContent(QObject):
             EventBus().do_clear_active_mods_list.connect(self._do_clear)
             EventBus().do_sort_active_mods_list.connect(self._do_sort)
             EventBus().do_save_active_mods_list.connect(self._do_save)
+            EventBus().do_run_game.connect(self._do_run_game)
 
             # INITIALIZE WIDGETS
             # Initialize Steam(CMD) integraations
