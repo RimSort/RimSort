@@ -4,9 +4,10 @@ import sys
 from PySide6.QtCore import QObject
 from PySide6.QtWidgets import QApplication
 
-from app.utils.app_info import AppInfo
-from app.utils.constants import DEFAULT_USER_RULES
-from app.views.main_window import MainWindow
+from controller.main_window_controller import MainWindowController
+from util.app_info import AppInfo
+from util.constants import DEFAULT_USER_RULES
+from view.main_window import MainWindow
 
 
 class AppController(QObject):
@@ -30,13 +31,13 @@ class AppController(QObject):
             with open(user_rules_path, "w", encoding="utf-8") as output:
                 json.dump(initial_rules_db, output, indent=4)
 
-        # Instantiate and show the main window
+        # Instantiate the main window and its controller
         self.main_window = MainWindow()
-        self.main_window.show()
-        self.main_window.initialize_content()
+        self.main_window_controller = MainWindowController(self.main_window)
 
     def run(self) -> int:
         self.main_window.show()
+        self.main_window.initialize_content()
         return self.app.exec()
 
     def shutdown_watchdog(self) -> None:
