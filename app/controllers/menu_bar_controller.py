@@ -83,6 +83,11 @@ class MenuBarController(QObject):
 
         self.menu_bar.wiki_action.triggered.connect(self._on_menu_bar_wiki_triggered)
 
+        # External signals
+
+        EventBus().refresh_started.connect(self._on_refresh_started)
+        EventBus().refresh_finished.connect(self._on_refresh_finished)
+
     @Slot()
     def _on_menu_bar_check_for_updates_on_startup_triggered(self) -> None:
         is_checked = self.menu_bar.check_for_updates_on_startup_action.isChecked()
@@ -116,3 +121,19 @@ class MenuBarController(QObject):
     @Slot()
     def _on_menu_bar_wiki_triggered(self) -> None:
         open_url_browser("https://github.com/RimSort/RimSort/wiki")
+
+    @Slot()
+    def _on_refresh_started(self) -> None:
+        """
+        Disable all menus in the menu bar.
+        """
+        for action in self.menu_bar.menu_bar.actions():
+            action.setEnabled(False)
+
+    @Slot()
+    def _on_refresh_finished(self) -> None:
+        """
+        Enable all menus in the menu bar.
+        """
+        for action in self.menu_bar.menu_bar.actions():
+            action.setEnabled(True)
