@@ -8,17 +8,19 @@ def do_alphabetical_sort(
     dependency_graph: dict[str, set[str]], active_mods_uuids: set[str]
 ) -> List[str]:
     logger.info(f"Starting Alphabetical sort for {len(dependency_graph)} mods")
+    # Cache MetadataManager instance
+    metadata_manager = MetadataManager.instance()
     # Get an alphabetized list of dependencies
     active_mods_id_to_name = dict(
         (
-            MetadataManager.instance().all_mods_compiled[uuid]["packageid"],
-            MetadataManager.instance().all_mods_compiled[uuid]["name"],
+            metadata_manager.internal_local_metadata[uuid]["packageid"],
+            metadata_manager.internal_local_metadata[uuid]["name"],
         )
         for uuid in active_mods_uuids
     )
     active_mods_packageid_to_uuid = dict(
         (
-            MetadataManager.instance().all_mods_compiled[uuid]["packageid"],
+            metadata_manager.internal_local_metadata[uuid]["packageid"],
             uuid,
         )
         for uuid in active_mods_uuids
@@ -26,14 +28,12 @@ def do_alphabetical_sort(
     active_mods_alphabetized = sorted(
         active_mods_id_to_name.items(), key=lambda x: x[1], reverse=False
     )
-
     dependencies_alphabetized = {}
     for tuple_id_name in active_mods_alphabetized:
         if tuple_id_name[0] in dependency_graph:
             dependencies_alphabetized[tuple_id_name[0]] = dependency_graph[
                 tuple_id_name[0]
             ]
-
     mods_load_order = []
     for package_id in dependencies_alphabetized:
         # Avoid repeating adding packages that have already been added
@@ -67,18 +67,18 @@ def recursively_force_insert(
     active_mods_uuids: set[str],
     index_just_appended: int,
 ) -> None:
+    # Cache MetadataManager instance
+    metadata_manager = MetadataManager.instance()
     # Get the reverse alphabetized list (by name) of the current mod's dependencies
     deps_of_package = dependency_graph[package_id]
     deps_id_to_name = {}
     for dependency_id in deps_of_package:
         for uuid in active_mods_uuids:
-            mod_package_id = MetadataManager.instance().all_mods_compiled[uuid][
-                "packageid"
-            ]
+            mod_package_id = metadata_manager.internal_local_metadata[uuid]["packageid"]
             if dependency_id == mod_package_id:
                 deps_id_to_name[
                     dependency_id
-                ] = MetadataManager.instance().all_mods_compiled[uuid]["name"]
+                ] = metadata_manager.internal_local_metadata[uuid]["name"]
     deps_of_package_alphabetized = sorted(
         deps_id_to_name.items(), key=lambda x: x[1], reverse=True
     )

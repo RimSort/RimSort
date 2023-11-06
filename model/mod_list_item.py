@@ -62,14 +62,17 @@ class ModListItemInner(QWidget):
 
         super(ModListItemInner, self).__init__()
 
+        # Cache MetadataManager instance
+        self.metadata_manager = MetadataManager.instance()
+
         # All data, including name, author, package id, dependencies,
         # whether the mod is a workshop mod or expansion, etc is encapsulated
         # in this variable. This is exactly equal to the dict value of a
         # single all_mods key-value
         self.uuid = uuid
-        self.list_item_name = (
-            MetadataManager.instance().all_mods_compiled[self.uuid].get("name")
-        )
+        self.list_item_name = self.metadata_manager.internal_local_metadata[
+            self.uuid
+        ].get("name")
         self.main_label = QLabel()
 
         # Icon paths
@@ -94,7 +97,7 @@ class ModListItemInner(QWidget):
         self.csharp_icon = None
         self.xml_icon = None
         if self.mod_type_filter_enable:
-            if MetadataManager.instance().all_mods_compiled[self.uuid].get("csharp"):
+            if self.metadata_manager.internal_local_metadata[self.uuid].get("csharp"):
                 self.csharp_icon = QLabel()
                 self.csharp_icon.setPixmap(
                     ModListIcons.csharp_icon().pixmap(QSize(20, 20))
@@ -108,20 +111,20 @@ class ModListItemInner(QWidget):
                 self.xml_icon.setToolTip("Contains custom content (textures / XML)")
         self.git_icon = None
         if (
-            MetadataManager.instance().all_mods_compiled[self.uuid]["data_source"]
+            self.metadata_manager.internal_local_metadata[self.uuid]["data_source"]
             == "local"
-            and MetadataManager.instance().all_mods_compiled[self.uuid].get("git_repo")
-            and not MetadataManager.instance()
-            .all_mods_compiled[self.uuid]
-            .get("steamcmd")
+            and self.metadata_manager.internal_local_metadata[self.uuid].get("git_repo")
+            and not self.metadata_manager.internal_local_metadata[self.uuid].get(
+                "steamcmd"
+            )
         ):
             self.git_icon = QLabel()
             self.git_icon.setPixmap(ModListIcons.git_icon().pixmap(QSize(20, 20)))
             self.git_icon.setToolTip("Local mod that contains a git repository")
         self.steamcmd_icon = None
-        if MetadataManager.instance().all_mods_compiled[self.uuid][
+        if self.metadata_manager.internal_local_metadata[self.uuid][
             "data_source"
-        ] == "local" and MetadataManager.instance().all_mods_compiled[self.uuid].get(
+        ] == "local" and self.metadata_manager.internal_local_metadata[self.uuid].get(
             "steamcmd"
         ):
             self.steamcmd_icon = QLabel()
@@ -134,7 +137,7 @@ class ModListItemInner(QWidget):
         self.warning_icon_label.clicked.connect(
             partial(
                 self.toggle_warning_signal.emit,
-                MetadataManager.instance().all_mods_compiled[self.uuid]["packageid"],
+                self.metadata_manager.internal_local_metadata[self.uuid]["packageid"],
             )
         )
         self.warning_icon_label.setPixmap(
@@ -148,10 +151,8 @@ class ModListItemInner(QWidget):
             self.mod_source_icon = QLabel()
             self.mod_source_icon.setPixmap(self.get_icon().pixmap(QSize(20, 20)))
             # Set tooltip based on mod source
-            data_source = (
-                MetadataManager.instance()
-                .all_mods_compiled[self.uuid]
-                .get("data_source")
+            data_source = self.metadata_manager.internal_local_metadata[self.uuid].get(
+                "data_source"
             )
             if data_source == "expansion":
                 self.mod_source_icon.setObjectName("expansion")
@@ -159,16 +160,12 @@ class ModListItemInner(QWidget):
                     "Official RimWorld content by Ludeon Studios"
                 )
             elif data_source == "local":
-                if (
-                    MetadataManager.instance()
-                    .all_mods_compiled[self.uuid]
-                    .get("git_repo")
+                if self.metadata_manager.internal_local_metadata[self.uuid].get(
+                    "git_repo"
                 ):
                     self.mod_source_icon.setObjectName("git_repo")
-                elif (
-                    MetadataManager.instance()
-                    .all_mods_compiled[self.uuid]
-                    .get("steamcmd")
+                elif self.metadata_manager.internal_local_metadata[self.uuid].get(
+                    "steamcmd"
                 ):
                     self.mod_source_icon.setObjectName("steamcmd")
                 else:
@@ -213,10 +210,10 @@ class ModListItemInner(QWidget):
 
         :return: string containing the tool_tip_text
         """
-        name_line = f"Mod: {MetadataManager.instance().all_mods_compiled[self.uuid].get('name')}\n"
+        name_line = f"Mod: {self.metadata_manager.internal_local_metadata[self.uuid].get('name')}\n"
 
-        authors_tag = (
-            MetadataManager.instance().all_mods_compiled[self.uuid].get("authors")
+        authors_tag = self.metadata_manager.internal_local_metadata[self.uuid].get(
+            "authors"
         )
 
         if authors_tag and isinstance(authors_tag, dict) and authors_tag.get("li"):
@@ -226,9 +223,9 @@ class ModListItemInner(QWidget):
         else:
             author_line = f"Author: {authors_tag if authors_tag else 'Not specified'}\n"
 
-        package_id_line = f"PackageID: {MetadataManager.instance().all_mods_compiled[self.uuid].get('packageid')}\n"
-        modversion_line = f"Mod Version: {MetadataManager.instance().all_mods_compiled[self.uuid].get('modversion', 'Not specified')}\n"
-        path_line = f"Path: {MetadataManager.instance().all_mods_compiled[self.uuid].get('path')}"
+        package_id_line = f"PackageID: {self.metadata_manager.internal_local_metadata[self.uuid].get('packageid')}\n"
+        modversion_line = f"Mod Version: {self.metadata_manager.internal_local_metadata[self.uuid].get('modversion', 'Not specified')}\n"
+        path_line = f"Path: {self.metadata_manager.internal_local_metadata[self.uuid].get('path')}"
         return name_line + author_line + package_id_line + modversion_line + path_line
 
     def get_icon(self) -> QIcon:  # type: ignore
@@ -239,23 +236,23 @@ class ModListItemInner(QWidget):
         :return: QIcon object set to the path of the corresponding icon image
         """
         if (
-            MetadataManager.instance().all_mods_compiled[self.uuid].get("data_source")
+            self.metadata_manager.internal_local_metadata[self.uuid].get("data_source")
             == "expansion"
         ):
             return ModListIcons.ludeon_icon()
         elif (
-            MetadataManager.instance().all_mods_compiled[self.uuid].get("data_source")
+            self.metadata_manager.internal_local_metadata[self.uuid].get("data_source")
             == "local"
         ):
             return ModListIcons.local_icon()
         elif (
-            MetadataManager.instance().all_mods_compiled[self.uuid].get("data_source")
+            self.metadata_manager.internal_local_metadata[self.uuid].get("data_source")
             == "workshop"
         ):
             return ModListIcons.steam_icon()
         else:
             logger.error(
-                f"No type found for ModListItemInner with package id {MetadataManager.instance().all_mods_compiled[self.uuid].get('packageid')}"
+                f"No type found for ModListItemInner with package id {self.metadata_manager.internal_local_metadata[self.uuid].get('packageid')}"
             )
 
     def resizeEvent(self, event: QResizeEvent) -> None:

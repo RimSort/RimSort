@@ -10,16 +10,18 @@ def gen_deps_graph(
     """
     Get dependencies
     """
+    # Cache MetadataManager instance
+    metadata_manager = MetadataManager.instance()
     # Schema: {item: {dependency1, dependency2, ...}}
     logger.info("Generating dependencies graph")
     dependencies_graph: dict[str, set[str]] = {}
     for uuid in active_mods_uuids:
-        package_id = MetadataManager.instance().all_mods_compiled[uuid]["packageid"]
+        package_id = metadata_manager.internal_local_metadata[uuid]["packageid"]
         dependencies_graph[package_id] = set()
-        if (
-            MetadataManager.instance().all_mods_compiled[uuid].get("loadTheseBefore")
+        if metadata_manager.internal_local_metadata[uuid].get(
+            "loadTheseBefore"
         ):  # Will either be None, or a set
-            for dependency in MetadataManager.instance().all_mods_compiled[uuid][
+            for dependency in metadata_manager.internal_local_metadata[uuid][
                 "loadTheseBefore"
             ]:
                 # Only add a dependency if dependency exists in active_mods. Recall
@@ -42,16 +44,18 @@ def gen_deps_graph(
 def gen_rev_deps_graph(
     active_mods_uuids: set[str], active_mod_ids: list[str]
 ) -> dict[str, set[str]]:
+    # Cache MetadataManager instance
+    metadata_manager = MetadataManager.instance()
     # Schema: {item: {isDependentOn1, isDependentOn2, ...}}
     logger.debug("Generating reverse dependencies graph")
     reverse_dependencies_graph: dict[str, set[str]] = {}
     for uuid in active_mods_uuids:
-        package_id = MetadataManager.instance().all_mods_compiled[uuid]["packageid"]
+        package_id = metadata_manager.internal_local_metadata[uuid]["packageid"]
         reverse_dependencies_graph[package_id] = set()
-        if (
-            MetadataManager.instance().all_mods_compiled[uuid].get("loadTheseAfter")
+        if metadata_manager.internal_local_metadata[uuid].get(
+            "loadTheseAfter"
         ):  # Will either be None, or a set
-            for dependent in MetadataManager.instance().all_mods_compiled[uuid][
+            for dependent in metadata_manager.internal_local_metadata[uuid][
                 "loadTheseAfter"
             ]:
                 # Dependent[0] is required here as as dependency is a tuple of package_id, explicit_bool
@@ -76,6 +80,7 @@ def gen_tier_one_deps_graph(
     # this list of mods is exhaustive, so we need to add any other mod that these mods depend on
     # into this list as well.
     # TODO: pull from a config
+
     logger.info("Generating dependencies graph for tier one mods")
     known_tier_one_mods = {
         "zetrith.prepatcher",
@@ -131,11 +136,13 @@ def gen_tier_three_deps_graph(
     # this list of mods is exhaustive, so we need to add any other mod that these mods depend on
     # into this list as well.
     # TODO: pull from a config
+    # Cache MetadataManager instance
+    metadata_manager = MetadataManager.instance()
     logger.info("Generating dependencies graph for tier three mods")
     known_tier_three_mods = {
-        MetadataManager.instance().all_mods_compiled[uuid].get("packageid")
+        metadata_manager.internal_local_metadata[uuid].get("packageid")
         for uuid in active_mods_uuids
-        if MetadataManager.instance().all_mods_compiled[uuid].get("loadBottom")
+        if metadata_manager.internal_local_metadata[uuid].get("loadBottom")
     }
     known_tier_three_mods.update({"krkr.rocketman"})
     tier_three_mods = set()
@@ -191,18 +198,18 @@ def gen_tier_two_deps_graph(
     # Now, sort the rest of the mods while removing references to mods in tier one and tier three
     # First, get the dependency graph for tier two mods, minus all references to tier one
     # and tier three mods
+    # Cache MetadataManager instance
+    metadata_manager = MetadataManager.instance()
     logger.info("Generating dependencies graph for tier two mods")
     logger.info(
         "Stripping all references to tier one and tier three mods and their dependencies"
     )
     tier_two_dependency_graph = {}
     for uuid in active_mods_uuids:
-        package_id = MetadataManager.instance().all_mods_compiled[uuid]["packageid"]
+        package_id = metadata_manager.internal_local_metadata[uuid]["packageid"]
         if package_id not in tier_one_mods and package_id not in tier_three_mods:
-            dependencies = (
-                MetadataManager.instance()
-                .all_mods_compiled[uuid]
-                .get("loadTheseBefore")
+            dependencies = metadata_manager.internal_local_metadata[uuid].get(
+                "loadTheseBefore"
             )
             stripped_dependencies = set()
             if dependencies:

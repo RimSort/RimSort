@@ -64,6 +64,9 @@ class ModListWidget(QListWidget):
         """
         logger.debug("Initializing ModListWidget")
 
+        # Cache MetadataManager instance
+        self.metadata_manager = MetadataManager.instance()
+
         self.settings_controller = settings_controller
 
         super(ModListWidget, self).__init__()
@@ -259,7 +262,7 @@ class ModListWidget(QListWidget):
                 if type(source_item) is QListWidgetItem:
                     source_widget = self.itemWidget(source_item)
                     # Retrieve metadata
-                    widget_json_data = MetadataManager.instance().all_mods_compiled[
+                    widget_json_data = self.metadata_manager.internal_local_metadata[
                         source_widget.uuid
                     ]
                     mod_data_source = widget_json_data.get("data_source")
@@ -283,10 +286,10 @@ class ModListWidget(QListWidget):
                         mod_folder_path = widget_json_data["path"]
                         publishedfileid = widget_json_data.get("publishedfileid")
                         if not widget_json_data.get("steamcmd") and (
-                            MetadataManager.instance().external_steam_metadata
+                            self.metadata_manager.external_steam_metadata
                             and publishedfileid
                             and publishedfileid
-                            in MetadataManager.instance().external_steam_metadata.keys()
+                            in self.metadata_manager.external_steam_metadata.keys()
                         ):
                             local_steamcmd_name_to_publishedfileid[
                                 mod_folder_name
@@ -338,15 +341,13 @@ class ModListWidget(QListWidget):
                         )
                     # SteamDB blacklist options
                     if (
-                        MetadataManager.instance().external_steam_metadata
+                        self.metadata_manager.external_steam_metadata
                         and widget_json_data.get("publishedfileid")
                     ):
                         publishedfileid = widget_json_data["publishedfileid"]
-                        if (
-                            MetadataManager.instance()
-                            .external_steam_metadata.get(publishedfileid, {})
-                            .get("blacklist")
-                        ):
+                        if self.metadata_manager.external_steam_metadata.get(
+                            publishedfileid, {}
+                        ).get("blacklist"):
                             steamdb_remove_blacklist = publishedfileid
                             remove_from_steamdb_blacklist_action = QAction()
                             remove_from_steamdb_blacklist_action.setText(
@@ -380,9 +381,11 @@ class ModListWidget(QListWidget):
                     if type(source_item) is QListWidgetItem:
                         source_widget = self.itemWidget(source_item)
                         # Retrieve metadata
-                        widget_json_data = MetadataManager.instance().all_mods_compiled[
-                            source_widget.uuid
-                        ]
+                        widget_json_data = (
+                            self.metadata_manager.internal_local_metadata[
+                                source_widget.uuid
+                            ]
+                        )
                         mod_data_source = widget_json_data.get("data_source")
                         # Open folder action text
                         open_folder_action = QAction()
@@ -400,10 +403,10 @@ class ModListWidget(QListWidget):
                             mod_folder_path = widget_json_data["path"]
                             publishedfileid = widget_json_data.get("publishedfileid")
                             if not widget_json_data.get("steamcmd") and (
-                                MetadataManager.instance().external_steam_metadata
+                                self.metadata_manager.external_steam_metadata
                                 and publishedfileid
                                 and publishedfileid
-                                in MetadataManager.instance().external_steam_metadata.keys()
+                                in self.metadata_manager.external_steam_metadata.keys()
                             ):
                                 local_steamcmd_name_to_publishedfileid[
                                     mod_folder_name
@@ -797,7 +800,7 @@ class ModListWidget(QListWidget):
                     args, ok = show_dialogue_input(
                         title="Add comment",
                         text=f"Enter a comment providing your reasoning for wanting to blacklist this mod: "
-                        + f'{MetadataManager.instance().external_steam_metadata.get(steamdb_add_blacklist, {}).get("steamName", steamdb_add_blacklist)}',
+                        + f'{self.metadata_manager.external_steam_metadata.get(steamdb_add_blacklist, {}).get("steamName", steamdb_add_blacklist)}',
                     )
                     if ok:
                         self.steamdb_blacklist_signal.emit(
@@ -815,7 +818,7 @@ class ModListWidget(QListWidget):
                     answer = show_dialogue_conditional(
                         title="Are you sure?",
                         text=f"This will remove the selected mod, "
-                        + f'{MetadataManager.instance().external_steam_metadata.get(steamdb_remove_blacklist, {}).get("steamName", steamdb_remove_blacklist)}, '
+                        + f'{self.metadata_manager.external_steam_metadata.get(steamdb_remove_blacklist, {}).get("steamName", steamdb_remove_blacklist)}, '
                         + "from your configured Steam DB blacklist."
                         + "\nDo you want to proceed?",
                     )
@@ -836,7 +839,7 @@ class ModListWidget(QListWidget):
                             if type(source_item) is QListWidgetItem:
                                 source_widget = self.itemWidget(source_item)
                                 widget_json_data = (
-                                    MetadataManager.instance().all_mods_compiled[
+                                    self.metadata_manager.internal_local_metadata[
                                         source_widget.uuid
                                     ]
                                 )
@@ -866,7 +869,7 @@ class ModListWidget(QListWidget):
                             if type(source_item) is QListWidgetItem:
                                 source_widget = self.itemWidget(source_item)
                                 widget_json_data = (
-                                    MetadataManager.instance().all_mods_compiled[
+                                    self.metadata_manager.internal_local_metadata[
                                         source_widget.uuid
                                     ]
                                 )
@@ -888,9 +891,11 @@ class ModListWidget(QListWidget):
                     if type(source_item) is QListWidgetItem:
                         source_widget = self.itemWidget(source_item)
                         # Retrieve metadata
-                        widget_json_data = MetadataManager.instance().all_mods_compiled[
-                            source_widget.uuid
-                        ]
+                        widget_json_data = (
+                            self.metadata_manager.internal_local_metadata[
+                                source_widget.uuid
+                            ]
+                        )
                         mod_data_source = widget_json_data.get("data_source")
                         mod_path = widget_json_data["path"]
                         # Toggle warning action
@@ -1053,7 +1058,7 @@ class ModListWidget(QListWidget):
                     uuid=uuid,
                 )
                 widget.toggle_warning_signal.connect(self.toggle_warning)
-                if MetadataManager.instance().all_mods_compiled[uuid].get("invalid"):
+                if self.metadata_manager.internal_local_metadata[uuid].get("invalid"):
                     widget.main_label.setObjectName("summaryValueInvalid")
                 else:
                     widget.main_label.setObjectName("summaryValue")

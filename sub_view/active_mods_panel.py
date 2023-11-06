@@ -44,6 +44,9 @@ class ActiveModList(QWidget):
         """
         super(ActiveModList, self).__init__()
 
+        # Cache MetadataManager instance
+        self.metadata_manager = MetadataManager.instance()
+
         logger.debug("Initializing ActiveModList")
 
         self.settings_controller = settings_controller
@@ -202,13 +205,12 @@ class ActiveModList(QWidget):
         """
         logger.info("Recalculating internal list errors")
 
-        metadata_manager = MetadataManager.instance()
-        all_mods_compiled = metadata_manager.all_mods_compiled
-        game_version = metadata_manager.game_version
-        info_from_steam = metadata_manager.info_from_steam_package_id_to_name
+        internal_local_metadata = self.metadata_manager.internal_local_metadata
+        game_version = self.metadata_manager.game_version
+        info_from_steam = self.metadata_manager.info_from_steam_package_id_to_name
 
         packageid_to_uuid = {
-            all_mods_compiled[uuid]["packageid"]: uuid
+            internal_local_metadata[uuid]["packageid"]: uuid
             for uuid in self.active_mods_list.uuids
         }
         package_ids_set = set(packageid_to_uuid.keys())
@@ -231,7 +233,7 @@ class ActiveModList(QWidget):
 
         for uuid, mod_errors in package_id_to_errors.items():
             current_mod_index = self.active_mods_list.uuids.index(uuid)
-            mod_data = all_mods_compiled[uuid]
+            mod_data = internal_local_metadata[uuid]
 
             # Check version for everything except Core
             if game_version and mod_data.get("supportedversions", {}).get("li"):
@@ -317,7 +319,7 @@ class ActiveModList(QWidget):
                     if mod_errors[error_type]:
                         tool_tip_text += tooltip_header
                         for id in mod_errors[error_type]:
-                            name = all_mods_compiled.get(
+                            name = internal_local_metadata.get(
                                 packageid_to_uuid.get(id), {}
                             ).get("name", info_from_steam.get(id, id))
                             tool_tip_text += f"\n  * {name}"
@@ -417,14 +419,14 @@ class ActiveModList(QWidget):
         for widget, item in wni:
             if (
                 pattern
-                and MetadataManager.instance()
-                .all_mods_compiled[widget.uuid]
-                .get(search_filter)
+                and self.metadata_manager.internal_local_metadata[widget.uuid].get(
+                    search_filter
+                )
                 and not pattern.lower()
                 in str(
-                    MetadataManager.instance()
-                    .all_mods_compiled[widget.uuid]
-                    .get(search_filter)
+                    self.metadata_manager.internal_local_metadata[widget.uuid].get(
+                        search_filter
+                    )
                 ).lower()
             ):
                 if self.active_mods_search_filter_state:

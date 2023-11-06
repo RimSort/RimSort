@@ -86,6 +86,9 @@ class RuleEditor(QWidget):
         super().__init__()
         logger.debug("Initializing RuleEditor")
 
+        # Cache MetadataManager instance
+        self.metadata_manager = MetadataManager.instance()
+
         # STYLESHEET
         self.setObjectName("RuleEditor")
 
@@ -99,14 +102,14 @@ class RuleEditor(QWidget):
         # THE METADATA
         self.local_rules_hidden = None
         self.community_rules = (
-            MetadataManager.instance().external_community_rules.copy()
-            if MetadataManager.instance().external_community_rules
+            self.metadata_manager.external_community_rules.copy()
+            if self.metadata_manager.external_community_rules
             else {}
         )
         self.community_rules_hidden = None
         self.user_rules = (
-            MetadataManager.instance().external_user_rules.copy()
-            if MetadataManager.instance().external_user_rules
+            self.metadata_manager.external_user_rules.copy()
+            if self.metadata_manager.external_user_rules
             else {}
         )
         self.user_rules_hidden = None
@@ -114,10 +117,10 @@ class RuleEditor(QWidget):
         # items that are not locally available
         self.steam_workshop_metadata_packageids_to_name = {}
         if (
-            MetadataManager.instance().external_steam_metadata
-            and len(MetadataManager.instance().external_steam_metadata.keys()) > 0
+            self.metadata_manager.external_steam_metadata
+            and len(self.metadata_manager.external_steam_metadata.keys()) > 0
         ):
-            for metadata in MetadataManager.instance().external_steam_metadata.values():
+            for metadata in self.metadata_manager.external_steam_metadata.values():
                 if metadata.get("packageid"):
                     self.steam_workshop_metadata_packageids_to_name[
                         metadata["packageid"]
@@ -638,10 +641,10 @@ class RuleEditor(QWidget):
         logger.debug(f"Populating editor from metadata with mod: {self.edit_packageid}")
         logger.debug("Parsing local metadata")
         if (
-            MetadataManager.instance().internal_local_metadata
-            and len(MetadataManager.instance().internal_local_metadata.keys()) > 0
+            self.metadata_manager.internal_local_metadata
+            and len(self.metadata_manager.internal_local_metadata.keys()) > 0
         ):
-            for metadata in MetadataManager.instance().internal_local_metadata.values():
+            for metadata in self.metadata_manager.internal_local_metadata.values():
                 # Local metadata rulez
                 # Additionally, populate anything that is not exit_packageid into the mods list
                 if (

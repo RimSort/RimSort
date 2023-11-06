@@ -35,6 +35,10 @@ class InactiveModList:
         Create a ListWidget using the dict of mods. This will
         create a row for every key-value pair in the dict.
         """
+
+        # Cache MetadataManager instance
+        self.metadata_manager = MetadataManager.instance()
+
         logger.debug("Initializing InactiveModList")
 
         self.settings_controller = settings_controller
@@ -178,14 +182,14 @@ class InactiveModList:
         for widget, item in wni:
             if (
                 pattern
-                and MetadataManager.instance()
-                .all_mods_compiled[widget.uuid]
-                .get(search_filter)
+                and self.metadata_manager.internal_local_metadata[widget.uuid].get(
+                    search_filter
+                )
                 and not pattern.lower()
                 in str(
-                    MetadataManager.instance()
-                    .all_mods_compiled[widget.uuid]
-                    .get(search_filter)
+                    self.metadata_manager.internal_local_metadata[widget.uuid].get(
+                        search_filter
+                    )
                 ).lower()
             ):
                 if self.inactive_mods_search_filter_state:
