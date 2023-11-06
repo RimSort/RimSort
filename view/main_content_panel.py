@@ -54,7 +54,7 @@ from util.generic import (
     platform_specific_open,
     upload_data_to_0x0_st,
 )
-from util.rentry.wrapper import RentryUpload
+from util.rentry.wrapper import RentryUpload, RentryImport
 from util.steam.browser import SteamBrowser
 from util.steam.webapi.wrapper import ISteamRemoteStorage_GetPublishedFileDetails
 
@@ -131,6 +131,9 @@ class MainContent(QObject):
                 self._do_check_for_update
             )
             EventBus().do_open_mod_list.connect(self._do_import_list_file_xml)
+            EventBus().do_import_mod_list_from_rentry.connect(
+                self._do_import_list_rentry
+            )
             EventBus().do_save_mod_list_as.connect(self._do_export_list_file_xml)
             EventBus().do_export_mod_list_to_clipboard.connect(
                 self._do_export_list_clipboard
@@ -694,6 +697,8 @@ class MainContent(QObject):
             self._do_check_for_workshop_updates()
         if action == "import_list_file_xml":
             self._do_import_list_file_xml()
+        if action == "import_list_rentry":
+            self._do_import_list_rentry()
         if action == "export_list_file_xml":
             self._do_export_list_file_xml()
         if action == "export_list_clipboard":
@@ -1410,6 +1415,55 @@ class MainContent(QObject):
                 logger.error("Could not export active mods")
         else:
             logger.debug("USER ACTION: pressed cancel, passing")
+
+    def _do_import_list_rentry(self) -> None:
+        rentry_import = RentryImport()
+        if rentry_import.exec() == 1:
+            rentry_package_ids = rentry_import.package_ids
+
+            if rentry_package_ids:
+                # Clear active mods and inactive mods lists
+                self.active_mods_panel.clear_active_mods_search()
+                # Update active mods and inactive mods filter data source indices
+                self.active_mods_panel.active_mods_filter_data_source_index = len(
+                    self.active_mods_panel.active_mods_filter_data_source_icons
+                )
+                self.active_mods_panel.signal_active_mods_data_source_filter()
+                self.inactive_mods_panel.clear_inactive_mods_search()
+                self.inactive_mods_panel.inactive_mods_filter_data_source_index = len(
+                    self.inactive_mods_panel.inactive_mods_filter_data_source_icons
+                )
+                self.inactive_mods_panel.signal_inactive_mods_data_source_filter()
+
+                # Log the attempt to import mods list from Rentry.co
+                logger.info(f"Trying to import mods list from Rentry.co: {rentry_package_ids}")
+
+                # Create active and inactive mod lists
+                active_mods_uuids = rentry_package_ids
+                inactive_mods_uuids = []
+
+                # Insert data into lists
+                self.__insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
+
+                logger.info("Got new mods according to imported Rentry.co")
+
+                # If we have duplicate mods, prompt user
+                if (
+                    self.settings_controller.settings.duplicate_mods_warning
+                    and self.duplicate_mods
+                    and len(self.duplicate_mods) > 0
+                ):
+                    self.__duplicate_mods_prompt()
+                elif not self.settings_controller.settings.duplicate_mods_warning:
+                    logger.debug(
+                        "User preference is not configured to display duplicate mods. Skipping..."
+                    )
+
+                # If we have missing mods, prompt the user
+                if self.missing_mods and len(self.missing_mods) >= 1:
+                    self.__missing_mods_prompt()
+            else:
+                logger.debug("USER ACTION: pressed cancel, passing")
 
     def _do_export_list_clipboard(self) -> None:
         """
