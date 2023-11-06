@@ -567,7 +567,6 @@ class SettingsController(QObject):
             return
         self.settings_dialog.game_location.setText(str(game_location))
         self._last_file_dialog_path = str(game_location)
-        print(f"self._last_file_dialog_path = {self._last_file_dialog_path}")
 
     def _on_game_location_choose_button_clicked_macos(self) -> Optional[Path]:
         game_location, _ = QFileDialog.getOpenFileName(
