@@ -1,4 +1,4 @@
-from logger_tt import logger
+from loguru import logger
 from errno import EACCES
 import os
 from pathlib import Path
@@ -168,6 +168,7 @@ def open_url_browser(url: str) -> None:
     logger.info(f"USER ACTION: Opening url {url}")
     webbrowser.open(url)
 
+
 def platform_specific_open(path: str) -> None:
     """
     Function to open a file/folder in the platform-specific file-explorer app.
@@ -175,10 +176,11 @@ def platform_specific_open(path: str) -> None:
     :param path: path to open
     """
     logger.info(f"USER ACTION: opening {path}")
+    p = Path(path)
     system_name = platform.system()
     if system_name == "Darwin":
         logger.info(f"Opening {path} with subprocess open on MacOS")
-        if path.endswith(".app") or path.endswith(".app/"):
+        if p.is_file() or (p.is_dir() and p.suffix == ".app"):
             subprocess.Popen(["open", path, "-R"])
         else:
             subprocess.Popen(["open", path])

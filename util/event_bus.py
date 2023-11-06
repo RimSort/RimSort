@@ -23,6 +23,24 @@ class EventBus(QObject):
     # Application-scope signals
     settings_have_changed = Signal()
 
+    do_check_for_application_update = Signal()
+    do_open_mod_list = Signal()
+    do_save_mod_list_as = Signal()
+    do_export_mod_list_to_clipboard = Signal()
+    do_export_mod_list_to_rentry = Signal()
+
+    do_download_community_rules_db_from_github = Signal()
+    do_download_steam_workshop_db_from_github = Signal()
+    do_upload_log = Signal()
+    do_download_all_mods_via_steamcmd = Signal()
+    do_download_all_mods_via_steam = Signal()
+    do_compare_steam_workshop_databases = Signal()
+    do_merge_steam_workshop_databases = Signal()
+    do_build_steam_workshop_database = Signal()
+    do_import_acf = Signal()
+    do_delete_acf = Signal()
+    do_install_steamcmd = Signal()
+
     def __new__(cls) -> "EventBus":
         """
         Create a new instance or return the existing singleton instance of the `EventBus` class.

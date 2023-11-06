@@ -1,7 +1,7 @@
 import traceback
 from typing import Any, Callable
 
-from logger_tt import logger
+from loguru import logger
 
 from PySide6.QtCore import QEasingCurve, QPropertyAnimation, QTimer, QThread, Qt, Signal
 from PySide6.QtGui import QMovie, QPainter

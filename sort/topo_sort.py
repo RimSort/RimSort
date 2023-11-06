@@ -1,4 +1,4 @@
-from logger_tt import logger
+from loguru import logger
 from typing import Any, List
 
 from toposort import toposort

@@ -5,7 +5,7 @@ import sys
 import urllib.parse
 import urllib.request
 
-from logger_tt import logger
+from loguru import logger
 
 _headers = {"Referer": "https://rentry.co"}
 

@@ -1,5 +1,5 @@
 from functools import partial
-from logger_tt import logger
+from loguru import logger
 import os
 import platform
 from typing import Any, Dict, List, Optional, Tuple

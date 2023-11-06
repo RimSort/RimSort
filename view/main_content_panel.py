@@ -1,3 +1,4 @@
+import webbrowser
 from functools import partial
 from gc import collect
 from pathlib import Path
@@ -15,7 +16,7 @@ from tempfile import gettempdir
 from time import time
 from zipfile import ZipFile
 
-from logger_tt import logger
+from loguru import logger
 
 from controller.settings_controller import SettingsController
 from util.event_bus import EventBus
@@ -125,6 +126,46 @@ class MainContent(QObject):
 
             self.settings_controller = settings_controller
             EventBus().settings_have_changed.connect(self._on_settings_have_changed)
+
+            EventBus().do_check_for_application_update.connect(
+                self._do_check_for_update
+            )
+            EventBus().do_open_mod_list.connect(self._do_import_list_file_xml)
+            EventBus().do_save_mod_list_as.connect(self._do_export_list_file_xml)
+            EventBus().do_export_mod_list_to_clipboard.connect(
+                self._do_export_list_clipboard
+            )
+            EventBus().do_export_mod_list_to_rentry.connect(self._do_upload_list_rentry)
+
+            EventBus().do_download_community_rules_db_from_github.connect(
+                self._on_do_download_community_db_from_github
+            )
+            EventBus().do_download_steam_workshop_db_from_github.connect(
+                self._on_do_download_steam_workshop_db_from_github
+            )
+            EventBus().do_upload_log.connect(self._on_do_upload_log)
+            EventBus().do_download_all_mods_via_steamcmd.connect(
+                self._on_do_download_all_mods_via_steamcmd
+            )
+            EventBus().do_download_all_mods_via_steam.connect(
+                self._on_do_download_all_mods_via_steam
+            )
+            EventBus().do_compare_steam_workshop_databases.connect(
+                self._do_generate_metadata_comparison_report
+            )
+            EventBus().do_merge_steam_workshop_databases.connect(
+                self._do_merge_databases
+            )
+            EventBus().do_build_steam_workshop_database.connect(
+                self._on_do_build_steam_workshop_database
+            )
+            EventBus().do_import_acf.connect(
+                lambda: self.actions_slot("import_steamcmd_acf_data")
+            )
+            EventBus().do_delete_acf.connect(
+                lambda: self.actions_slot("reset_steamcmd_acf_data")
+            )
+            EventBus().do_install_steamcmd.connect(self._do_setup_steamcmd)
 
             # INITIALIZE WIDGETS
             # Initialize Steam(CMD) integraations
@@ -513,7 +554,7 @@ class MainContent(QObject):
         self.metadata_manager.community_rules_repo = (
             self.settings_controller.settings.external_community_rules_repo
         )
-        self.metadata_manager.dbs_path = GameConfiguration.instance().dbs_path
+        self.metadata_manager.dbs_path = AppInfo().databases_folder
         self.metadata_manager.external_community_rules_metadata_source = (
             self.settings_controller.settings.external_community_rules_metadata_source
         )
@@ -533,8 +574,8 @@ class MainContent(QObject):
         self.metadata_manager.steamcmd_acf_path = (
             self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
         )
-        self.metadata_manager.user_rules_file_path = (
-            GameConfiguration.instance().user_rules_file_path
+        self.metadata_manager.user_rules_file_path = str(
+            AppInfo().databases_folder / "userRules.json"
         )
         self.metadata_manager.workshop_path = (
             self.settings_controller.settings.workshop_folder
@@ -636,7 +677,7 @@ class MainContent(QObject):
             self._do_setup_steamcmd()
         if action == "import_steamcmd_acf_data":
             import_steamcmd_acf_data(
-                rimsort_storage_path=GameConfiguration.instance().storage_path,
+                rimsort_storage_path=str(AppInfo().app_storage_folder),
                 steamcmd_appworkshop_acf_path=self.steamcmd_wrapper.steamcmd_appworkshop_acf_path,
             )
         if action == "reset_steamcmd_acf_data":
@@ -690,7 +731,7 @@ class MainContent(QObject):
         if action == "download_steam_database":
             if GIT_EXISTS:
                 self._do_clone_repo_to_path(
-                    base_path=GameConfiguration.instance().dbs_path,
+                    base_path=str(AppInfo().databases_folder),
                     repo_url=self.settings_controller.settings.external_steam_metadata_repo,
                 )
             else:
@@ -710,7 +751,7 @@ class MainContent(QObject):
         if action == "download_community_rules_database":
             if GIT_EXISTS:
                 self._do_clone_repo_to_path(
-                    base_path=GameConfiguration.instance().dbs_path,
+                    base_path=str(AppInfo().databases_folder),
                     repo_url=self.settings_controller.settings.external_community_rules_repo,
                 )
             else:
@@ -1040,10 +1081,6 @@ class MainContent(QObject):
                 text="Scanning mod sources and populating metadata...",
             )
 
-            # Set the game version string in the UI and pass it to the active_mods_panel
-            GameConfiguration.instance().game_version_line.setText(
-                self.metadata_manager.game_version
-            )
             # Insert mod data into list
             self.__repopulate_lists(is_initial=is_initial)
 
@@ -1080,10 +1117,6 @@ class MainContent(QObject):
             logger.debug(
                 "Essential paths have not been set. Passing refresh and resetting mod lists"
             )
-        # Set the game version string in the UI and pass it to the active_mods_panel
-        GameConfiguration.instance().game_version_line.setText(
-            self.metadata_manager.game_version
-        )
         self.active_mods_panel.game_version = self.metadata_manager.game_version
         # Feed all_mods and Steam DB info to Active Mods list to surface
         # names instead of package_ids when able
@@ -1270,9 +1303,7 @@ class MainContent(QObject):
         file_path = show_dialogue_file(
             mode="open",
             caption="Open mod list",
-            _dir=str(
-                Path(os.path.join(GameConfiguration.instance().storage_path)).resolve()
-            ),
+            _dir=str(AppInfo().app_storage_folder),
             _filter="XML (*.xml)",
         )
         logger.info(f"Selected path: {file_path}")
@@ -1322,9 +1353,7 @@ class MainContent(QObject):
         file_path = show_dialogue_file(
             mode="save",
             caption="Save mod list",
-            _dir=str(
-                Path(os.path.join(GameConfiguration.instance().storage_path)).resolve()
-            ),
+            _dir=str(AppInfo().app_storage_folder),
             _filter="XML (*.xml)",
         )
         logger.info(f"Selected path: {file_path}")
@@ -2356,8 +2385,8 @@ class MainContent(QObject):
             repo_path = str(
                 Path(
                     os.path.join(
-                        GameConfiguration.instance().storage_path,
-                        GameConfiguration.instance().dbs_path,
+                        str(AppInfo().app_storage_folder),
+                        str(AppInfo().databases_folder),
                         repo_folder_name,
                     )
                 ).resolve()
@@ -2501,7 +2530,7 @@ class MainContent(QObject):
                 if answer == "&Yes":
                     if GIT_EXISTS:
                         self._do_clone_repo_to_path(
-                            base_path=GameConfiguration.instance().dbs_path,
+                            base_path=str(AppInfo().databases_folder),
                             repo_url=repo_url,
                         )
                     else:
@@ -2546,9 +2575,7 @@ class MainContent(QObject):
         input_path = show_dialogue_file(
             mode="open",
             caption="Choose Steam Workshop Database",
-            _dir=str(
-                Path(os.path.join(GameConfiguration.instance().storage_path)).resolve()
-            ),
+            _dir=str(AppInfo().app_storage_folder),
             _filter="JSON (*.json)",
         )
         logger.info(f"Selected path: {input_path}")
@@ -2567,9 +2594,7 @@ class MainContent(QObject):
         input_path = show_dialogue_file(
             mode="open",
             caption="Choose Community Rules DB",
-            _dir=str(
-                Path(os.path.join(GameConfiguration.instance().storage_path)).resolve()
-            ),
+            _dir=str(AppInfo().app_storage_folder),
             _filter="JSON (*.json)",
         )
         logger.info(f"Selected path: {input_path}")
@@ -2619,9 +2644,7 @@ class MainContent(QObject):
         output_path = show_dialogue_file(
             mode="save",
             caption="Designate output path",
-            _dir=str(
-                Path(os.path.join(GameConfiguration.instance().storage_path)).resolve()
-            ),
+            _dir=str(AppInfo().app_storage_folder),
             _filter="JSON (*.json)",
         )
         # Check file path and launch DB Builder with user configured mode
@@ -2845,9 +2868,7 @@ class MainContent(QObject):
         input_path_a = show_dialogue_file(
             mode="open",
             caption='Input "to-be-updated" database, input A',
-            _dir=str(
-                Path(os.path.join(GameConfiguration.instance().storage_path)).resolve()
-            ),
+            _dir=str(AppInfo().app_storage_folder),
             _filter="JSON (*.json)",
         )
         logger.info(f"Selected path: {input_path_a}")
@@ -2865,9 +2886,7 @@ class MainContent(QObject):
         input_path_b = show_dialogue_file(
             mode="open",
             caption='Input "to-be-updated" database, input A',
-            _dir=str(
-                Path(os.path.join(GameConfiguration.instance().storage_path)).resolve()
-            ),
+            _dir=str(AppInfo().app_storage_folder),
             _filter="JSON (*.json)",
         )
         logger.info(f"Selected path: {input_path_b}")
@@ -2962,9 +2981,7 @@ class MainContent(QObject):
         input_path_a = show_dialogue_file(
             mode="open",
             caption='Input "to-be-updated" database, input A',
-            _dir=str(
-                Path(os.path.join(GameConfiguration.instance().storage_path)).resolve()
-            ),
+            _dir=str(AppInfo().app_storage_folder),
             _filter="JSON (*.json)",
         )
         logger.info(f"Selected path: {input_path_a}")
@@ -2982,9 +2999,7 @@ class MainContent(QObject):
         input_path_b = show_dialogue_file(
             mode="open",
             caption='Input "to-be-updated" database, input A',
-            _dir=str(
-                Path(os.path.join(GameConfiguration.instance().storage_path)).resolve()
-            ),
+            _dir=str(AppInfo().app_storage_folder),
             _filter="JSON (*.json)",
         )
         logger.info(f"Selected path: {input_path_b}")
@@ -3011,9 +3026,7 @@ class MainContent(QObject):
         output_path = show_dialogue_file(
             mode="save",
             caption="Designate output path for resultant database:",
-            _dir=str(
-                Path(os.path.join(GameConfiguration.instance().storage_path)).resolve()
-            ),
+            _dir=str(AppInfo().app_storage_folder),
             _filter="JSON (*.json)",
         )
         logger.info(f"Selected path: {output_path}")
@@ -3035,11 +3048,10 @@ class MainContent(QObject):
             and self.metadata_manager.external_community_rules_path
         ):
             path = self.metadata_manager.external_community_rules_path
-        elif (
-            rules_source == "User Rules"
-            and GameConfiguration.instance().user_rules_file_path
+        elif rules_source == "User Rules" and str(
+            AppInfo().databases_folder / "userRules.json"
         ):
-            path = GameConfiguration.instance().user_rules_file_path
+            path = str(AppInfo().databases_folder / "userRules.json")
         else:
             logger.warning(
                 f"No {rules_source} file path is set. There is no configured database to update!"
@@ -3103,3 +3115,43 @@ class MainContent(QObject):
         self.steamcmd_wrapper.validate_downloads = (
             self.settings_controller.settings.steamcmd_validate_downloads
         )
+
+    @Slot()
+    def _on_do_download_community_db_from_github(self) -> None:
+        if GIT_EXISTS:
+            self._do_clone_repo_to_path(
+                base_path=str(AppInfo().databases_folder),
+                repo_url=self.settings_controller.settings.external_community_rules_repo,
+            )
+        else:
+            self._do_notify_no_git()
+
+    @Slot()
+    def _on_do_download_steam_workshop_db_from_github(self) -> None:
+        if GIT_EXISTS:
+            self._do_clone_repo_to_path(
+                base_path=str(AppInfo().databases_folder),
+                repo_url=self.settings_controller.settings.external_steam_metadata_repo,
+            )
+        else:
+            self._do_notify_no_git()
+
+    @Slot()
+    def _on_do_upload_log(self) -> None:
+        ret = upload_data_to_0x0_st(
+            str(AppInfo().user_log_folder / (AppInfo().app_name + ".log"))
+        )
+        if ret:
+            webbrowser.open(ret)
+
+    @Slot()
+    def _on_do_download_all_mods_via_steamcmd(self) -> None:
+        pass
+
+    @Slot()
+    def _on_do_download_all_mods_via_steam(self) -> None:
+        pass
+
+    @Slot()
+    def _on_do_build_steam_workshop_database(self) -> None:
+        self._do_build_database_thread()

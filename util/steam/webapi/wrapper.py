@@ -1,7 +1,7 @@
 from functools import partial
 import json
 from logging import getLogger, WARNING
-from logger_tt import logger
+from loguru import logger
 from math import ceil
 from multiprocessing import cpu_count, Pool
 import os

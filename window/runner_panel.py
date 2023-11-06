@@ -1,7 +1,7 @@
 from functools import partial
 from tempfile import gettempdir
 
-from logger_tt import logger
+from loguru import logger
 import os
 from pathlib import Path
 from platform import system

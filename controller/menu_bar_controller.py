@@ -2,6 +2,7 @@ from PySide6.QtCore import QObject, Slot
 from PySide6.QtWidgets import QApplication, QLineEdit, QTextEdit, QPlainTextEdit
 
 from controller.settings_controller import SettingsController
+from util.event_bus import EventBus
 from util.generic import open_url_browser
 from view.game_configuration_panel import GameConfiguration
 from view.main_content_panel import MainContent
@@ -20,7 +21,7 @@ class MenuBarController(QObject):
         self.menu_bar.quit_action.triggered.connect(QApplication.instance().quit)
 
         self.menu_bar.check_for_updates_action.triggered.connect(
-            self._on_menu_bar_check_for_updates_triggered
+            EventBus().do_check_for_application_update.emit
         )
 
         self.menu_bar.check_for_updates_on_startup_action.toggled.connect(
@@ -32,25 +33,25 @@ class MenuBarController(QObject):
         )
 
         self.menu_bar.settings_action.triggered.connect(
-            GameConfiguration.instance()._open_settings_panel
+            self.settings_controller.show_settings_dialog
         )
 
         # File menu
 
         self.menu_bar.open_mod_list_action.triggered.connect(
-            self._on_menu_bar_open_mod_list_triggered
+            EventBus().do_open_mod_list.emit
         )
 
         self.menu_bar.save_mod_list_action.triggered.connect(
-            self._on_menu_bar_save_mod_list_triggered
+            EventBus().do_save_mod_list_as.emit
         )
 
         self.menu_bar.export_to_clipboard_action.triggered.connect(
-            self._on_menu_bar_export_to_clipboard_triggered
+            EventBus().do_export_mod_list_to_clipboard
         )
 
         self.menu_bar.export_to_rentry_action.triggered.connect(
-            self._on_menu_bar_export_to_rentry_triggered
+            EventBus().do_export_mod_list_to_rentry
         )
 
         # Edit menu
@@ -66,32 +67,10 @@ class MenuBarController(QObject):
         self.menu_bar.wiki_action.triggered.connect(self._on_menu_bar_wiki_triggered)
 
     @Slot()
-    def _on_menu_bar_check_for_updates_triggered(self) -> None:
-        GameConfiguration.instance().configuration_signal.emit("check_for_update")
-
-    @Slot()
     def _on_menu_bar_check_for_updates_on_startup_triggered(self) -> None:
         is_checked = self.menu_bar.check_for_updates_on_startup_action.isChecked()
         self.settings_controller.settings.check_for_update_startup = is_checked
         self.settings_controller.settings.save()
-
-    @Slot()
-    def _on_menu_bar_open_mod_list_triggered(self) -> None:
-        MainContent.instance().actions_panel.actions_signal.emit("import_list_file_xml")
-
-    @Slot()
-    def _on_menu_bar_save_mod_list_triggered(self) -> None:
-        MainContent.instance().actions_panel.actions_signal.emit("export_list_file_xml")
-
-    @Slot()
-    def _on_menu_bar_export_to_clipboard_triggered(self) -> None:
-        MainContent.instance().actions_panel.actions_signal.emit(
-            "export_list_clipboard"
-        )
-
-    @Slot()
-    def _on_menu_bar_export_to_rentry_triggered(self) -> None:
-        MainContent.instance().actions_panel.actions_signal.emit("upload_list_rentry")
 
     @Slot()
     def _on_menu_bar_cut_triggered(self) -> None:

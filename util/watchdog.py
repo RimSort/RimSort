@@ -1,4 +1,4 @@
-from logger_tt import logger
+from loguru import logger
 from PySide6.QtCore import QObject, Signal
 from watchdog.events import FileSystemEventHandler
 

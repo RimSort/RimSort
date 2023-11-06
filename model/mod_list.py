@@ -1,6 +1,6 @@
 # Need rework
 
-from logger_tt import logger
+from loguru import logger
 import os
 import shutil
 from pathlib import Path
