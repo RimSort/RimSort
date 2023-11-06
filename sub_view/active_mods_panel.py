@@ -311,17 +311,17 @@ class ActiveModList(QWidget):
             if item_widget_at_index:
                 tool_tip_text = ""
                 for error_type, tooltip_header in [
-                    ("missing_dependencies", "\n\nMissing Dependencies:"),
-                    ("conflicting_incompatibilities", "\n\nIncompatibilities:"),
-                    ("load_before_violations", "\n\nShould be Loaded After:"),
-                    ("load_after_violations", "\n\nShould be Loaded Before:"),
+                    ("missing_dependencies", "\nMissing Dependencies:"),
+                    ("conflicting_incompatibilities", "\nIncompatibilities:"),
+                    ("load_before_violations", "\nShould be Loaded After:"),
+                    ("load_after_violations", "\nShould be Loaded Before:"),
                 ]:
                     if mod_errors[error_type]:
                         tool_tip_text += tooltip_header
-                        for id in mod_errors[error_type]:
+                        for key in mod_errors[error_type]:
                             name = internal_local_metadata.get(
-                                packageid_to_uuid.get(id), {}
-                            ).get("name", info_from_steam.get(id, id))
+                                packageid_to_uuid.get(key), {}
+                            ).get("name", info_from_steam.get(key, key))
                             tool_tip_text += f"\n  * {name}"
 
                 if mod_errors["version_mismatch"] and not self.ignore_error:
@@ -348,8 +348,8 @@ class ActiveModList(QWidget):
                 ):
                     num_errors += 1
                     total_error_text += f"\n\n{mod_data['name']}"
-                    total_error_text += "\n============================="
-                    total_error_text += tool_tip_text.split("\n\n")[0]
+                    total_error_text += "\n" + "=" * len(mod_data["name"])
+                    total_error_text += tool_tip_text
 
                 if any(
                     [
@@ -364,7 +364,7 @@ class ActiveModList(QWidget):
                     num_warnings += 1
                     total_warning_text += f"\n\n{mod_data['name']}"
                     total_warning_text += "\n============================="
-                    total_warning_text += "\n".join(tool_tip_text.split("\n\n")[1:])
+                    total_warning_text += tool_tip_text
 
         if total_error_text or total_warning_text or num_errors or num_warnings:
             self.errors_summary_frame.setHidden(False)
