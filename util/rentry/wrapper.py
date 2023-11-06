@@ -1,10 +1,17 @@
 import http.cookiejar
-from http.cookies import SimpleCookie
-from json import loads as json_loads
+import re
 import sys
 import urllib.parse
 import urllib.request
-
+from http.cookies import SimpleCookie
+from json import loads as json_loads
+from PySide6.QtWidgets import (
+    QDialog,
+    QVBoxLayout,
+    QLineEdit,
+    QPushButton,
+    QMessageBox,
+)
 from loguru import logger
 
 _headers = {"Referer": "https://rentry.co"}
@@ -72,6 +79,66 @@ class RentryUpload:
         return json_loads(
             client.post("https://rentry.co/api/new", payload, headers=_headers).data
         )
+
+
+class RentryImport(QDialog):
+    def __init__(self):
+        super().__init__()
+        self.package_ids: list[str] = []  # Initialize an empty list to store package_ids
+        self.input_dialog()  # Call the input_dialog method to set up the UI
+
+    def input_dialog(self):
+        logger.info("Rentry.co link Input UI initializing")
+        self.setWindowTitle("Add Rentry.co link")
+
+        layout = QVBoxLayout(self)
+
+        self.link_input = QLineEdit(self)
+        layout.addWidget(self.link_input)
+
+        self.import_rentry_link_button = QPushButton("Import Rentry Link", self)
+        self.import_rentry_link_button.clicked.connect(self.import_rentry_link)
+        layout.addWidget(self.import_rentry_link_button)
+        logger.info("Rentry.co link Input UI initialized successfully!")
+
+    # Define the is_valid_rentry_link function within the class
+    def is_valid_rentry_link(self, link):
+        return link.startswith("https://rentry.co/")
+
+    def import_rentry_link(self):
+        logger.info("Import Rentry Link clicked")
+        rentry_link = self.link_input.text()
+
+        # Check if the input link is a valid Rentry link
+        if not self.is_valid_rentry_link(rentry_link):
+            logger.error("Invalid Rentry link. Please enter a valid Rentry link.")
+            # Show an error message box
+            error_message = "Invalid Rentry link. Please enter a valid Rentry link."
+            QMessageBox.critical(self, "Invalid Link", error_message)
+            return
+
+        try:
+            raw_url = rentry_link + "/raw"
+            response = urllib.request.urlopen(raw_url)
+
+            if response.getcode() == 200:
+                page_content = response.read().decode("utf-8")
+                pattern = r"\{packageid:\s*([\w.]+)\}|packageid:\s*([\w.]+)"
+                matches = re.findall(pattern, page_content)
+                self.package_ids = [
+                    match[0] if match[0] else match[1]
+                    for match in matches
+                    if match[0] or match[1]
+                ]
+                logger.info("Parsed package_ids successfully.")
+
+        except Exception as e:
+            logger.error(
+                f"An error occurred while fetching rentry.co content: {str(e)}"
+            )
+
+        # Close the dialog after processing
+        self.accept()
 
 
 if __name__ == "__main__":
