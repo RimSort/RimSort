@@ -717,9 +717,7 @@ class RuleEditor(QWidget):
                                     comment="Added from mod metadata",
                                     hidden=self.local_rules_hidden,
                                 )
-                    elif metadata.get("loadbefore") and metadata["loadbefore"].get(
-                        "li"
-                    ):
+                    if metadata.get("loadbefore") and metadata["loadbefore"].get("li"):
                         loadBefores = metadata["loadbefore"]["li"]
                         if isinstance(loadBefores, str):
                             self._create_list_item(
