@@ -225,8 +225,8 @@ class MainContent(QObject):
                 self.actions_slot
             )  # Settings
             self.active_mods_panel.list_updated_signal.connect(
-                self.__do_save_animation
-            )  # Save btn animation
+                EventBus().do_save_button_set_default.emit
+            )
             self.active_mods_panel.active_mods_list.key_press_signal.connect(
                 self.__handle_active_mod_key_press
             )
@@ -1691,15 +1691,7 @@ class MainContent(QObject):
         else:
             logger.error("Could not save active mods")
         # Stop the save button from blinking if it is blinking
-        if self.actions_panel.save_button_flashing_animation.isActive():
-            self.actions_panel.save_button_flashing_animation.stop()
-            self.actions_panel.save_button.setObjectName("")
-            self.actions_panel.save_button.style().unpolish(
-                self.actions_panel.save_button
-            )
-            self.actions_panel.save_button.style().polish(
-                self.actions_panel.save_button
-            )
+        EventBus().do_save_button_unset_default.emit()
         logger.info("Finished saving active mods")
 
     def __do_save_animation(self) -> None:

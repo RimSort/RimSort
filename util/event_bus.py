@@ -44,6 +44,9 @@ class EventBus(QObject):
     do_install_steamcmd = Signal()
 
     # MainWindow signals
+    do_save_button_set_default = Signal()
+    do_save_button_unset_default = Signal()
+
     do_refresh_mods_lists = Signal()
     do_clear_active_mods_list = Signal()
     do_sort_active_mods_list = Signal()
