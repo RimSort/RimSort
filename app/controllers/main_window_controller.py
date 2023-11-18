@@ -11,6 +11,13 @@ class MainWindowController(QObject):
 
         self.main_window = view
 
+        EventBus().do_refresh_button_set_default.connect(
+            self._on_do_refresh_button_set_default
+        )
+        EventBus().do_refresh_button_unset_default.connect(
+            self._on_do_refresh_button_unset_default
+        )
+
         EventBus().do_save_button_set_default.connect(
             self._on_do_save_button_set_default
         )
@@ -36,12 +43,36 @@ class MainWindowController(QObject):
         EventBus().refresh_finished.connect(self._on_refresh_finished)
 
     @Slot()
+    def _on_do_refresh_button_set_default(self) -> None:
+        self.main_window.refresh_button.setDefault(True)
+        self.main_window.clear_button.setDefault(False)
+        self.main_window.sort_button.setDefault(False)
+        self.main_window.save_button.setDefault(False)
+        self.main_window.run_button.setDefault(False)
+
+    @Slot()
+    def _on_do_refresh_button_unset_default(self) -> None:
+        self.main_window.refresh_button.setDefault(False)
+        self.main_window.clear_button.setDefault(False)
+        self.main_window.sort_button.setDefault(False)
+        self.main_window.save_button.setDefault(False)
+        self.main_window.run_button.setDefault(False)
+
+    @Slot()
     def _on_do_save_button_set_default(self) -> None:
+        self.main_window.refresh_button.setDefault(False)
+        self.main_window.clear_button.setDefault(False)
+        self.main_window.sort_button.setDefault(False)
         self.main_window.save_button.setDefault(True)
+        self.main_window.run_button.setDefault(False)
 
     @Slot()
     def _on_do_save_button_unset_default(self) -> None:
+        self.main_window.refresh_button.setDefault(False)
+        self.main_window.clear_button.setDefault(False)
+        self.main_window.sort_button.setDefault(False)
         self.main_window.save_button.setDefault(False)
+        self.main_window.run_button.setDefault(False)
 
     @Slot()
     def _on_refresh_started(self) -> None:

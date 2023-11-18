@@ -222,8 +222,8 @@ class MainContent(QObject):
                 self.__do_save_animation
             )  # Save btn animation
             self.active_mods_panel.list_updated_signal.connect(
-                EventBus().do_save_button_set_default.emit
-            )
+                self.__do_save_button_set_default
+            )  # Save btn animation
             self.active_mods_panel.active_mods_list.key_press_signal.connect(
                 self.__handle_active_mod_key_press
             )
@@ -1009,6 +1009,11 @@ class MainContent(QObject):
             self.mods_panel.active_mods_filter_data_source_index = len(
                 self.mods_panel.data_source_filter_icons
             )
+            self.active_mods_panel.list_updated = False
+            EventBus().do_refresh_button_unset_default.emit()
+            self.active_mods_panel.active_mods_filter_data_source_index = len(
+                self.active_mods_panel.active_mods_filter_data_source_icons
+            )
             self.mods_panel.signal_clear_search(list_type="Active")
             self.mods_panel.inactive_mods_filter_data_source_index = len(
                 self.mods_panel.data_source_filter_icons
@@ -1073,13 +1078,9 @@ class MainContent(QObject):
             )
             EventBus().refresh_finished.emit()
 
-    def _do_refresh_animation(self, path: str) -> None:
+    def _do_refresh_button_set_default(self, path: str) -> None:
         logger.debug(f"File change detected: {path}")
-        if not self.actions_panel.refresh_button_flashing_animation.isActive():
-            logger.debug("Starting refresh button animation")
-            self.actions_panel.refresh_button_flashing_animation.start(
-                500
-            )  # blink every 500 milliseconds
+        EventBus().do_refresh_button_set_default.emit()
 
     def _do_clear(self) -> None:
         """
@@ -1783,16 +1784,13 @@ class MainContent(QObject):
         EventBus().do_save_button_unset_default.emit()
         logger.info("Finished saving active mods")
 
-    def __do_save_animation(self) -> None:
+    def __do_save_button_set_default(self) -> None:
         logger.debug("Active mods list updated")
         if (
             self.mods_panel.list_updated  # This will only evaluate True if this is initialization, or _do_refresh()
             and not self.actions_panel.save_button_flashing_animation.isActive()  # No need to re-enable if it's already blinking
         ):
-            logger.debug("Starting save button animation")
-            self.actions_panel.save_button_flashing_animation.start(
-                500
-            )  # Blink every 500 milliseconds
+            EventBus().do_save_button_set_default.emit()
 
     def _do_restore(self) -> None:
         """

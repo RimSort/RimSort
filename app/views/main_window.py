@@ -209,7 +209,7 @@ class MainWindow(QMainWindow):
             )
         # Connect watchdog to our refresh button animation
         self.watchdog_event_handler.file_changes_signal.connect(
-            self.main_content_panel._do_refresh_animation
+            self.main_content_panel._do_refresh_button_set_default
         )
         # Connect main content signal so it can stop watchdog
         self.main_content_panel.stop_watchdog_signal.connect(self.shutdown_watchdog)
