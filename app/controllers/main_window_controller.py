@@ -11,6 +11,13 @@ class MainWindowController(QObject):
 
         self.main_window = view
 
+        EventBus().do_save_button_set_default.connect(
+            self._on_do_save_button_set_default
+        )
+        EventBus().do_save_button_unset_default.connect(
+            self._on_do_save_button_unset_default
+        )
+
         self.main_window.refresh_button.clicked.connect(
             EventBus().do_refresh_mods_lists.emit
         )
@@ -27,6 +34,14 @@ class MainWindowController(QObject):
 
         EventBus().refresh_started.connect(self._on_refresh_started)
         EventBus().refresh_finished.connect(self._on_refresh_finished)
+
+    @Slot()
+    def _on_do_save_button_set_default(self) -> None:
+        self.main_window.save_button.setDefault(True)
+
+    @Slot()
+    def _on_do_save_button_unset_default(self) -> None:
+        self.main_window.save_button.setDefault(False)
 
     @Slot()
     def _on_refresh_started(self) -> None:
