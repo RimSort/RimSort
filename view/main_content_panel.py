@@ -502,11 +502,11 @@ class MainContent(QObject):
         :param uuid: uuid of mod
         """
         logger.info(f"USER ACTION: clicked on a mod list item: {uuid}")
-        if uuid in self.metadata_manager.all_mods_compiled.keys():
+        if uuid in self.metadata_manager.internal_local_metadata.keys():
             self.mod_info_panel.display_mod_info(
-                self.metadata_manager.all_mods_compiled[uuid]
+                self.metadata_manager.internal_local_metadata[uuid]
             )
-            if self.metadata_manager.all_mods_compiled[uuid].get("invalid"):
+            if self.metadata_manager.internal_local_metadata[uuid].get("invalid"):
                 # Set invalid value style
                 self.mod_info_panel.mod_info_name_value.setObjectName(
                     "summaryValueInvalid"
@@ -666,7 +666,8 @@ class MainContent(QObject):
                 with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
                     for uuid in self.active_mods_panel.active_mods_list.uuids:
                         todds_txt_file.write(
-                            self.metadata_manager.all_mods_compiled[uuid]["path"] + "\n"
+                            self.metadata_manager.internal_local_metadata[uuid]["path"]
+                            + "\n"
                         )
             if action == "optimize_textures":
                 self._do_optimize_textures(todds_txt_path)
@@ -1118,7 +1119,7 @@ class MainContent(QObject):
         self.active_mods_panel.game_version = self.metadata_manager.game_version
         # Feed all_mods and Steam DB info to Active Mods list to surface
         # names instead of package_ids when able
-        self.active_mods_panel.all_mods = self.metadata_manager.all_mods_compiled
+        self.active_mods_panel.all_mods = self.metadata_manager.internal_local_metadata
         self.active_mods_panel.steam_package_id_to_name = (
             self.metadata_manager.info_from_steam_package_id_to_name
         )
@@ -1159,7 +1160,7 @@ class MainContent(QObject):
         # Create a set of all package IDs from mod_data
         package_ids_set = set(
             mod_data["packageid"]
-            for mod_data in self.metadata_manager.all_mods_compiled.values()
+            for mod_data in self.metadata_manager.internal_local_metadata.values()
         )
         # Iterate over the DLC package IDs in the correct order
         for package_id in package_id_order:
@@ -1167,14 +1168,14 @@ class MainContent(QObject):
                 # Append the UUIDs to active_mods_uuids if the package ID exists in mod_data
                 active_mods_uuids.extend(
                     uuid
-                    for uuid, mod_data in self.metadata_manager.all_mods_compiled.items()
+                    for uuid, mod_data in self.metadata_manager.internal_local_metadata.items()
                     if mod_data["data_source"] == "expansion"
                     and mod_data["packageid"] == package_id
                 )
         # Append the remaining UUIDs to inactive_mods_uuids
         inactive_mods_uuids.extend(
             uuid
-            for uuid in self.metadata_manager.all_mods_compiled.keys()
+            for uuid in self.metadata_manager.internal_local_metadata.keys()
             if uuid not in active_mods_uuids
         )
         self.__insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
@@ -1200,7 +1201,7 @@ class MainContent(QObject):
         active_mod_ids = list()
         for uuid in self.active_mods_panel.active_mods_list.uuids:
             active_mod_ids.append(
-                self.metadata_manager.all_mods_compiled[uuid]["packageid"]
+                self.metadata_manager.internal_local_metadata[uuid]["packageid"]
             )
 
         # Get all active mods and their dependencies (if also active mod)
@@ -1276,14 +1277,14 @@ class MainContent(QObject):
             + reordered_tier_two_sorted
             + reordered_tier_three_sorted
         ):
-            combined_mods[uuid] = self.metadata_manager.all_mods_compiled[uuid]
+            combined_mods[uuid] = self.metadata_manager.internal_local_metadata[uuid]
 
         logger.info("Finished combining all tiers of mods. Inserting into mod lists!")
         self.__insert_data_into_lists(
             combined_mods,
             {
-                uuid: self.metadata_manager.all_mods_compiled[uuid]
-                for uuid in self.metadata_manager.all_mods_compiled
+                uuid: self.metadata_manager.internal_local_metadata[uuid]
+                for uuid in self.metadata_manager.internal_local_metadata
                 if uuid
                 not in set(
                     reordered_tier_one_sorted
@@ -1360,7 +1361,9 @@ class MainContent(QObject):
             logger.info("Exporting current active mods to ModsConfig.xml format")
             active_mods = []
             for uuid in self.active_mods_panel.active_mods_list.uuids:
-                package_id = self.metadata_manager.all_mods_compiled[uuid]["packageid"]
+                package_id = self.metadata_manager.internal_local_metadata[uuid][
+                    "packageid"
+                ]
                 if package_id in active_mods:  # This should NOT be happening
                     logger.critical(
                         f"Tried to export more than 1 identical package ids to the same mod list. Skipping duplicate {package_id}"
@@ -1371,7 +1374,9 @@ class MainContent(QObject):
                         package_id in self.duplicate_mods.keys()
                     ):  # Check if mod has duplicates
                         if (
-                            self.metadata_manager.all_mods_compiled[uuid]["data_source"]
+                            self.metadata_manager.internal_local_metadata[uuid][
+                                "data_source"
+                            ]
                             == "workshop"
                         ):
                             active_mods.append(package_id + "_steam")
@@ -1416,7 +1421,9 @@ class MainContent(QObject):
         active_mods = []
         active_mods_packageid_to_uuid = {}
         for uuid in self.active_mods_panel.active_mods_list.uuids:
-            package_id = self.metadata_manager.all_mods_compiled[uuid]["packageid"]
+            package_id = self.metadata_manager.internal_local_metadata[uuid][
+                "packageid"
+            ]
             if package_id in active_mods:  # This should NOT be happening
                 logger.critical(
                     f"Tried to export more than 1 identical package ids to the same mod list. "
@@ -1435,14 +1442,14 @@ class MainContent(QObject):
         )
         for package_id in active_mods:
             uuid = active_mods_packageid_to_uuid[package_id]
-            if self.metadata_manager.all_mods_compiled[uuid].get("name"):
-                name = self.metadata_manager.all_mods_compiled[uuid]["name"]
+            if self.metadata_manager.internal_local_metadata[uuid].get("name"):
+                name = self.metadata_manager.internal_local_metadata[uuid]["name"]
             else:
                 name = "No name specified"
-            if self.metadata_manager.all_mods_compiled[uuid].get("url"):
-                url = self.metadata_manager.all_mods_compiled[uuid]["url"]
-            elif self.metadata_manager.all_mods_compiled[uuid].get("steam_url"):
-                url = self.metadata_manager.all_mods_compiled[uuid]["steam_url"]
+            if self.metadata_manager.internal_local_metadata[uuid].get("url"):
+                url = self.metadata_manager.internal_local_metadata[uuid]["url"]
+            elif self.metadata_manager.internal_local_metadata[uuid].get("steam_url"):
+                url = self.metadata_manager.internal_local_metadata[uuid]["steam_url"]
             else:
                 url = "No url specified"
             active_mods_clipboard_report = (
@@ -1473,7 +1480,9 @@ class MainContent(QObject):
         pfids = []
         # Build our lists
         for uuid in self.active_mods_panel.active_mods_list.uuids:
-            package_id = MetadataManager.instance().all_mods_compiled[uuid]["packageid"]
+            package_id = MetadataManager.instance().internal_local_metadata[uuid][
+                "packageid"
+            ]
             if package_id in active_mods:  # This should NOT be happening
                 logger.critical(
                     f"Tried to export more than 1 identical package ids to the same mod list. "
@@ -1484,15 +1493,17 @@ class MainContent(QObject):
                 active_mods.append(package_id)
                 active_mods_packageid_to_uuid[package_id] = uuid
                 if (
-                    self.metadata_manager.all_mods_compiled[uuid].get("steamcmd")
-                    or self.metadata_manager.all_mods_compiled[uuid]["data_source"]
+                    self.metadata_manager.internal_local_metadata[uuid].get("steamcmd")
+                    or self.metadata_manager.internal_local_metadata[uuid][
+                        "data_source"
+                    ]
                     == "workshop"
-                ) and self.metadata_manager.all_mods_compiled[uuid].get(
+                ) and self.metadata_manager.internal_local_metadata[uuid].get(
                     "publishedfileid"
                 ):
-                    publishedfileid = self.metadata_manager.all_mods_compiled[uuid][
-                        "publishedfileid"
-                    ]
+                    publishedfileid = self.metadata_manager.internal_local_metadata[
+                        uuid
+                    ]["publishedfileid"]
                     active_steam_mods_packageid_to_pfid[package_id] = publishedfileid
                     pfids.append(publishedfileid)
         logger.info(f"Collected {len(active_mods)} active mods for export")
@@ -1524,13 +1535,13 @@ class MainContent(QObject):
         for package_id in active_mods:
             count = active_mods.index(package_id) + 1
             uuid = active_mods_packageid_to_uuid[package_id]
-            if self.metadata_manager.all_mods_compiled[uuid].get("name"):
-                name = self.metadata_manager.all_mods_compiled[uuid]["name"]
+            if self.metadata_manager.internal_local_metadata[uuid].get("name"):
+                name = self.metadata_manager.internal_local_metadata[uuid]["name"]
             else:
                 name = "No name specified"
             if (
-                self.metadata_manager.all_mods_compiled[uuid].get("steamcmd")
-                or self.metadata_manager.all_mods_compiled[uuid]["data_source"]
+                self.metadata_manager.internal_local_metadata[uuid].get("steamcmd")
+                or self.metadata_manager.internal_local_metadata[uuid]["data_source"]
                 == "workshop"
             ) and active_steam_mods_packageid_to_pfid.get(package_id):
                 pfid = active_steam_mods_packageid_to_pfid[package_id]
@@ -1541,10 +1552,12 @@ class MainContent(QObject):
                     )
                 else:
                     preview_url = "https://github.com/RimSort/RimSort/blob/main/rentry_steam_icon.png?raw=true"
-                if self.metadata_manager.all_mods_compiled[uuid].get("steam_url"):
-                    url = self.metadata_manager.all_mods_compiled[uuid]["steam_url"]
-                elif self.metadata_manager.all_mods_compiled[uuid].get("url"):
-                    url = self.metadata_manager.all_mods_compiled[uuid]["url"]
+                if self.metadata_manager.internal_local_metadata[uuid].get("steam_url"):
+                    url = self.metadata_manager.internal_local_metadata[uuid][
+                        "steam_url"
+                    ]
+                elif self.metadata_manager.internal_local_metadata[uuid].get("url"):
+                    url = self.metadata_manager.internal_local_metadata[uuid]["url"]
                 else:
                     url is None
                 if url is None:
@@ -1564,10 +1577,14 @@ class MainContent(QObject):
             #     and not active_mods_json[uuid].get("steamcmd")
             # ):
             else:
-                if self.metadata_manager.all_mods_compiled[uuid].get("url"):
-                    url = self.metadata_manager.all_mods_compiled[uuid]["url"]
-                elif self.metadata_manager.all_mods_compiled[uuid].get("steam_url"):
-                    url = self.metadata_manager.all_mods_compiled[uuid]["steam_url"]
+                if self.metadata_manager.internal_local_metadata[uuid].get("url"):
+                    url = self.metadata_manager.internal_local_metadata[uuid]["url"]
+                elif self.metadata_manager.internal_local_metadata[uuid].get(
+                    "steam_url"
+                ):
+                    url = self.metadata_manager.internal_local_metadata[uuid][
+                        "steam_url"
+                    ]
                 else:
                     url = None
                 if url is None:
@@ -1655,7 +1672,9 @@ class MainContent(QObject):
         logger.info("Saving current active mods to ModsConfig.xml")
         active_mods = []
         for uuid in self.active_mods_panel.active_mods_list.uuids:
-            package_id = self.metadata_manager.all_mods_compiled[uuid]["packageid"]
+            package_id = self.metadata_manager.internal_local_metadata[uuid][
+                "packageid"
+            ]
             if package_id in active_mods:  # This should NOT be happening
                 logger.critical(
                     f"Tried to export more than 1 identical package ids to the same mod list. Skipping duplicate {package_id}"
@@ -1666,7 +1685,9 @@ class MainContent(QObject):
                     package_id in self.duplicate_mods.keys()
                 ):  # Check if mod has duplicates
                     if (
-                        self.metadata_manager.all_mods_compiled[uuid]["data_source"]
+                        self.metadata_manager.internal_local_metadata[uuid][
+                            "data_source"
+                        ]
                         == "workshop"
                     ):
                         active_mods.append(package_id + "_steam")
@@ -1810,7 +1831,8 @@ class MainContent(QObject):
                 ).resolve()
             ),
             target=partial(
-                query_workshop_update_data, mods=self.metadata_manager.all_mods_compiled
+                query_workshop_update_data,
+                mods=self.metadata_manager.internal_local_metadata,
             ),
             text="Checking Steam Workshop mods for updates...",
         )
@@ -1823,7 +1845,7 @@ class MainContent(QObject):
             )
             return
         self.workshop_mod_updater = ModUpdaterPrompt(
-            internal_mod_metadata=self.metadata_manager.all_mods_compiled
+            internal_mod_metadata=self.metadata_manager.internal_local_metadata
         )
         self.workshop_mod_updater._populate_from_metadata()
         if self.workshop_mod_updater.updates_found:
@@ -2647,7 +2669,7 @@ class MainContent(QObject):
                     mode=self.settings_controller.settings.db_builder_include,
                     output_database_path=output_path,
                     get_appid_deps=self.settings_controller.settings.build_steam_database_dlc_data,
-                    mods=self.metadata_manager.all_mods_compiled,
+                    mods=self.metadata_manager.internal_local_metadata,
                     update=self.settings_controller.settings.build_steam_database_update_toggle,
                 )
             # Create query runner
@@ -2756,7 +2778,7 @@ class MainContent(QObject):
             if "steamcmd" in action:
                 # Filter out existing SteamCMD mods
                 mod_pfid = None
-                for metadata in self.metadata_manager.all_mods_compiled.values():
+                for metadata in self.metadata_manager.internal_local_metadata.values():
                     if metadata.get("steamcmd"):
                         mod_pfid = metadata.get("publishedfileid")
                     if mod_pfid and mod_pfid in self.db_builder.publishedfileids:
@@ -2776,7 +2798,9 @@ class MainContent(QObject):
                     + "a separate, authenticated instance of SteamCMD, if you do not want to anonymously download via RimSort.",
                 )
                 if answer == "&Yes":
-                    for metadata in self.metadata_manager.all_mods_compiled.values():
+                    for (
+                        metadata
+                    ) in self.metadata_manager.internal_local_metadata.values():
                         mod_pfid = metadata.get("publishedfileid")
                         if (
                             metadata["data_source"] == "workshop"
@@ -2819,7 +2843,7 @@ class MainContent(QObject):
         """
         # TODO: Refactor this...
         discrepancies = []
-        mods = self.metadata_manager.all_mods_compiled
+        mods = self.metadata_manager.internal_local_metadata
         database_a_deps = {}
         database_b_deps = {}
         # Notify user

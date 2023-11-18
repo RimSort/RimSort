@@ -14,10 +14,12 @@ def do_topo_sort(
     topological level, sort the mods alphabetically.
     """
     logger.info(f"Initializing toposort for {len(dependency_graph)} mods")
+    # Cache MetadataManager instance
+    metadata_manager = MetadataManager.instance()
     sorted_dependencies = toposort(dependency_graph)
     reordered = list()
     active_mods_packageid_to_uuid = dict(
-        (MetadataManager.instance().all_mods_compiled[uuid]["packageid"], uuid)
+        (metadata_manager.internal_local_metadata[uuid]["packageid"], uuid)
         for uuid in active_mods_uuids
     )
     for level in sorted_dependencies:
@@ -29,7 +31,7 @@ def do_topo_sort(
         # Sort packages in this topological level by name
         sorted_temp_mod_set = sorted(
             temp_mod_set,
-            key=lambda uuid: MetadataManager.instance().all_mods_compiled[uuid]["name"],
+            key=lambda uuid: metadata_manager.internal_local_metadata[uuid]["name"],
             reverse=False,
         )
         # Add into reordered set

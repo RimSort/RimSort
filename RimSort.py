@@ -160,13 +160,15 @@ if __name__ == "__main__":
     # Create the file logger
     logger.add(log_file, level="DEBUG" if DEBUG_MODE else "INFO", format=format_string)
 
+    # Add a "WARNING" or higher stderr logger
+    logger.add(
+        sys.stderr,
+        level="WARNING",
+        format=format_string,
+        colorize=False,
+    )
+
     if not "__compiled__" in globals():
-        # Add as stdout logger if we're running from the Python interpreter
-        logger.add(
-            sys.stdout,
-            level="DEBUG" if DEBUG_MODE else "INFO",
-            format=format_string,
-        )
         logger.debug("Running using Python interpreter")
     else:
         # Configure QtWebEngine locales path
@@ -181,14 +183,6 @@ if __name__ == "__main__":
             )
             freeze_support()
             set_start_method("spawn")
-
-        # Add a "WARNING" or higher stderr sink if we've been compiled
-        logger.add(
-            sys.stderr,
-            level="WARNING",
-            format=format_string,
-            colorize=False,
-        )
 
         logger.debug("Running using Nuitka bundle")
 

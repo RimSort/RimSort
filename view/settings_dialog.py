@@ -121,6 +121,10 @@ class SettingsDialog(QDialog):
         section_label.setFont(GUIInfo().emphasis_font)
         header_layout.addWidget(section_label)
 
+        self.game_location_open_button = QToolButton()
+        self.game_location_open_button.setText("Open…")
+        header_layout.addWidget(self.game_location_open_button)
+
         self.game_location_choose_button = QToolButton()
         self.game_location_choose_button.setText("Choose…")
         header_layout.addWidget(self.game_location_choose_button)
@@ -143,6 +147,10 @@ class SettingsDialog(QDialog):
         section_label = QLabel("Config location")
         section_label.setFont(GUIInfo().emphasis_font)
         header_layout.addWidget(section_label)
+
+        self.config_folder_location_open_button = QToolButton()
+        self.config_folder_location_open_button.setText("Open…")
+        header_layout.addWidget(self.config_folder_location_open_button)
 
         self.config_folder_location_choose_button = QToolButton()
         self.config_folder_location_choose_button.setText("Choose…")
@@ -169,6 +177,10 @@ class SettingsDialog(QDialog):
         section_label.setFont(GUIInfo().emphasis_font)
         header_layout.addWidget(section_label)
 
+        self.steam_mods_folder_location_open_button = QToolButton()
+        self.steam_mods_folder_location_open_button.setText("Open…")
+        header_layout.addWidget(self.steam_mods_folder_location_open_button)
+
         self.steam_mods_folder_location_choose_button = QToolButton()
         self.steam_mods_folder_location_choose_button.setText("Choose…")
         header_layout.addWidget(self.steam_mods_folder_location_choose_button)
@@ -193,6 +205,10 @@ class SettingsDialog(QDialog):
         section_label = QLabel("Local mods location")
         section_label.setFont(GUIInfo().emphasis_font)
         header_layout.addWidget(section_label)
+
+        self.local_mods_folder_location_open_button = QToolButton()
+        self.local_mods_folder_location_open_button.setText("Open…")
+        header_layout.addWidget(self.local_mods_folder_location_open_button)
 
         self.local_mods_folder_location_choose_button = QToolButton()
         self.local_mods_folder_location_choose_button.setText("Choose…")
