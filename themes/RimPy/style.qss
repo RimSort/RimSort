@@ -218,10 +218,8 @@ QPushButton {
     min-width: 6em;
     padding: 1px;
 }
-QPushButton#noFlash {
-    background-color: #455364;
-}
-QPushButton#flash {
+
+QPushButton#indicator {
     background-color: #54687a;
 }
 QPushButton:hover {

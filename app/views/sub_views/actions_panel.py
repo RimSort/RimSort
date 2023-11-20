@@ -212,7 +212,9 @@ class Actions(QWidget):
         logger.debug("Finished Actions initialization")
 
     def __flash_button(self, button: QPushButton) -> None:
-        button.setObjectName("%s" % ("" if button.objectName() == "flash" else "flash"))
+        button.setObjectName(
+            "%s" % ("" if button.objectName() == "indicator" else "indicator")
+        )
         button.style().unpolish(button)
         button.style().polish(button)
 
