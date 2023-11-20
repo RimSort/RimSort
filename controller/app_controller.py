@@ -1,14 +1,11 @@
 import json
-import os
 import sys
-from pathlib import Path
 
 from PySide6.QtCore import QObject
 from PySide6.QtWidgets import QApplication
 
 from util.app_info import AppInfo
 from util.constants import DEFAULT_USER_RULES
-from util.system_info import SystemInfo
 from view.main_window import MainWindow
 
 
@@ -18,16 +15,11 @@ class AppController(QObject):
 
         self.app = QApplication(sys.argv)
 
-        if SystemInfo().operating_system == SystemInfo.OperatingSystem.WINDOWS:
-            self.app.setStyle("Fusion")
-        elif SystemInfo().operating_system == SystemInfo.OperatingSystem.LINUX:
-            self.app.setStyle("Fusion")
-        elif SystemInfo().operating_system == SystemInfo.OperatingSystem.MACOS:
-            self.app.setStyle("macOS")
+        self.app.setStyle("Fusion")
 
-        self.app.setStyleSheet(  # Add style sheet for styling layouts and widgets
-            Path(
-                os.path.join(AppInfo().application_folder, "themes/RimPy/style.qss")
+        self.app.setStyleSheet(
+            (
+                AppInfo().application_folder / "themes" / "Default" / "style.qss"
             ).read_text()
         )
 
