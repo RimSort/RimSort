@@ -599,7 +599,7 @@ class MainContent(QObject):
             self.duplicate_mods,
             self.missing_mods,
         ) = get_active_inactive_mods(
-            str(
+            mod_list=str(
                 Path(
                     os.path.join(
                         self.settings_controller.settings.config_folder,
@@ -1329,7 +1329,7 @@ class MainContent(QObject):
                 inactive_mods_uuids,
                 self.duplicate_mods,
                 self.missing_mods,
-            ) = get_active_inactive_mods(file_path)
+            ) = get_active_inactive_mods(mod_list=file_path)
             logger.info("Got new mods according to imported XML")
             self.__insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
             # If we have duplicate mods, prompt user
@@ -1419,9 +1419,7 @@ class MainContent(QObject):
     def _do_import_list_rentry(self) -> None:
         rentry_import = RentryImport()
         if rentry_import.exec() == 1:
-            rentry_package_ids = rentry_import.package_ids
-
-            if rentry_package_ids:
+            if rentry_import.package_ids:
                 # Clear active mods and inactive mods lists
                 self.active_mods_panel.clear_active_mods_search()
                 # Update active mods and inactive mods filter data source indices
@@ -1436,11 +1434,17 @@ class MainContent(QObject):
                 self.inactive_mods_panel.signal_inactive_mods_data_source_filter()
 
                 # Log the attempt to import mods list from Rentry.co
-                logger.info(f"Trying to import mods list from Rentry.co: {rentry_package_ids}")
+                logger.info(
+                    f"Trying to import {len(rentry_import.package_ids)} mods from Rentry.co list"
+                )
 
-                # Create active and inactive mod lists
-                active_mods_uuids = rentry_package_ids
-                inactive_mods_uuids = []
+                # Generate uuids based on existing mods, as well as calculate duplicates and missing mods
+                (
+                    active_mods_uuids,
+                    inactive_mods_uuids,
+                    self.duplicate_mods,
+                    self.missing_mods,
+                ) = get_active_inactive_mods(mod_list=rentry_import.package_ids)
 
                 # Insert data into lists
                 self.__insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)

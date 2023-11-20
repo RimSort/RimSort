@@ -9,7 +9,7 @@ import platform
 from requests.exceptions import HTTPError
 from time import localtime, strftime, time
 import traceback
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 from uuid import uuid4
 
 from PySide6.QtCore import (
@@ -1686,7 +1686,7 @@ def add_load_rule_to_mod(
 
 
 def get_active_inactive_mods(
-    config_path: str,
+    mod_list: Union[str, list[str]],
 ) -> Tuple[list[str], list[str], Dict[str, Any], list]:
     """
     Given a path to the ModsConfig.xml folder and a complete list of
@@ -1694,7 +1694,7 @@ def get_active_inactive_mods(
     return a list of mods for the active list widget and a list of
     mods for the inactive list widget.
 
-    :param config_path: path to ModsConfig.xml folder
+    :param mod_list: path to ModsConfig.xml style list, or a list of package ids
     :param all_mods: dict of all mods
     :return: a Tuple which contains the active mods dict, inactive mods dict,
     duplicate mods dict, and missing mods list
@@ -1706,6 +1706,8 @@ def get_active_inactive_mods(
     duplicate_mods = {}
     duplicates_processed = []
     missing_mods = []
+    populated_mods = []
+    to_populate = []
     logger.debug("Started generating active and inactive mods")
     # Calculate duplicate mods (SCHEMA: {str packageid: list[str duplicate uuids]})
     for mod_uuid, mod_data in all_mods.items():
@@ -1714,20 +1716,28 @@ def get_active_inactive_mods(
     # Filter out non-duplicate mods
     duplicate_mods = {k: v for k, v in duplicate_mods.items() if len(v) > 1}
     # Calculate mod lists
-    logger.info(f"Retrieving active mods from RimWorld ModsConfig.xml")
-    mod_data = xml_path_to_json(config_path)
-    populated_mods = []
-    to_populate = []
-    if not validate_mods_config_format(mod_data):
+    if isinstance(mod_list, str):
+        logger.info(f"Retrieving active mods from RimWorld ModsConfig.xml")
+        mod_data = xml_path_to_json(mod_list)
+        if not validate_mods_config_format(mod_data):
+            logger.error(
+                f"Unable to get active mods from config with read data: {mod_data}"
+            )
+            return active_mods_uuids, inactive_mods, duplicate_mods, missing_mods
+        package_ids_to_import = mod_data["ModsConfigData"]["activeMods"]["li"]
+    elif isinstance(mod_list, list):
+        logger.info("Retrieving active mods from the provided list of package ids")
+        package_ids_to_import = mod_list
+    else:
         logger.error(
-            f"Unable to get active mods from config with read data: {mod_data}"
+            "This should only be a path to XML mod list, or a list of package ids!"
         )
         return active_mods_uuids, inactive_mods, duplicate_mods, missing_mods
     # Parse the ModsConfig.xml data
     logger.info("Generating active mod list")
-    for package_id in mod_data["ModsConfigData"]["activeMods"][
-        "li"
-    ]:  # Go through active mods, handle packageids
+    for (
+        package_id
+    ) in package_ids_to_import:  # Go through active mods, handle packageids
         package_id_normalized = package_id.lower()
         package_id_steam_suffix = "_steam"
         package_id_normalized_stripped = package_id_normalized.replace(
@@ -1803,9 +1813,7 @@ def get_active_inactive_mods(
     # Get the inactive mods by subtracting active mods from workshop + expansions
     logger.info("Generating inactive mod list")
     inactive_mods_uuids = [
-        uuid
-        for uuid in all_mods.keys()
-        if uuid not in active_mods_uuids
+        uuid for uuid in all_mods.keys() if uuid not in active_mods_uuids
     ]
     logger.info(f"# active mods: {len(active_mods_uuids)}")
     logger.info(f"# inactive mods: {len(inactive_mods_uuids)}")
