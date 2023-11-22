@@ -3,20 +3,26 @@ from typing import Optional
 
 from PySide6.QtCore import QSize
 from PySide6.QtGui import QShowEvent
-from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (
+    QMainWindow,
+    QVBoxLayout,
+    QWidget,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+)
 from loguru import logger
 from watchdog.observers.api import BaseObserver
 
 from controller.menu_bar_controller import MenuBarController
 from controller.settings_controller import SettingsController
-from model.settings import Settings
 from util.app_info import AppInfo
+from util.gui_info import GUIInfo
 from util.system_info import SystemInfo
 from util.watchdog import RSFileSystemEventHandler
 from view.game_configuration_panel import GameConfiguration
 from view.main_content_panel import MainContent
 from view.menu_bar import MenuBar
-from view.settings_dialog import SettingsDialog
 from view.status_panel import Status
 
 if SystemInfo().operating_system == SystemInfo.OperatingSystem.WINDOWS:
@@ -30,7 +36,9 @@ class MainWindow(QMainWindow):
     Subclass QMainWindow to customize the main application window.
     """
 
-    def __init__(self, debug_mode: bool = False) -> None:
+    def __init__(
+        self, settings_controller: SettingsController, debug_mode: bool = False
+    ) -> None:
         """
         Initialize the main application window. Construct the layout,
         add the three main views, and set up relevant signals and slots.
@@ -38,12 +46,7 @@ class MainWindow(QMainWindow):
         logger.info("Initializing MainWindow")
         super(MainWindow, self).__init__()
 
-        # Instantiate the settings model and controller
-        self.settings = Settings()
-        self.settings_dialog = SettingsDialog()
-        self.settings_controller = SettingsController(
-            model=self.settings, view=self.settings_dialog
-        )
+        self.settings_controller = settings_controller
 
         # Create the main application window
         self.DEBUG_MODE = debug_mode
@@ -97,6 +100,39 @@ class MainWindow(QMainWindow):
 
         # Arrange all panels vertically on the main window layout
         app_layout.addWidget(self.main_content_panel.main_layout_frame)
+
+        button_layout = QHBoxLayout()
+        button_layout.setContentsMargins(12, 12, 12, 12)
+        button_layout.setSpacing(12)
+        app_layout.addLayout(button_layout)
+
+        self.game_version_label = QLabel()
+        self.game_version_label.setFont(GUIInfo().smaller_font)
+        self.game_version_label.setEnabled(False)
+        button_layout.addWidget(self.game_version_label)
+
+        button_layout.addStretch()
+
+        self.refresh_button = QPushButton("Refresh")
+        self.refresh_button.setMinimumWidth(100)
+        button_layout.addWidget(self.refresh_button)
+
+        self.clear_button = QPushButton("Clear")
+        self.clear_button.setMinimumWidth(100)
+        button_layout.addWidget(self.clear_button)
+
+        self.sort_button = QPushButton("Sort")
+        self.sort_button.setMinimumWidth(100)
+        button_layout.addWidget(self.sort_button)
+
+        self.save_button = QPushButton("Save")
+        self.save_button.setMinimumWidth(100)
+        button_layout.addWidget(self.save_button)
+
+        self.run_button = QPushButton("Run Game")
+        self.run_button.setMinimumWidth(100)
+        button_layout.addWidget(self.run_button)
+
         app_layout.addWidget(self.bottom_panel.frame)
 
         # Display all items
@@ -161,7 +197,7 @@ class MainWindow(QMainWindow):
             )
         # Connect watchdog to our refresh button animation
         self.watchdog_event_handler.file_changes_signal.connect(
-            self.main_content_panel._do_refresh_animation
+            self.main_content_panel._do_refresh_button_set_default
         )
         # Connect main content signal so it can stop watchdog
         self.main_content_panel.stop_watchdog_signal.connect(self.shutdown_watchdog)

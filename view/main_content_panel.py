@@ -170,6 +170,12 @@ class MainContent(QObject):
             )
             EventBus().do_install_steamcmd.connect(self._do_setup_steamcmd)
 
+            EventBus().do_refresh_mods_lists.connect(self._do_refresh)
+            EventBus().do_clear_active_mods_list.connect(self._do_clear)
+            EventBus().do_sort_active_mods_list.connect(self._do_sort)
+            EventBus().do_save_active_mods_list.connect(self._do_save)
+            EventBus().do_run_game.connect(self._do_run_game)
+
             # INITIALIZE WIDGETS
             # Initialize Steam(CMD) integraations
             self.steam_browser = SteamcmdDownloader = None
@@ -180,9 +186,7 @@ class MainContent(QObject):
             )
 
             # Initialize MetadataManager
-            self.metadata_manager = MetadataManager.instance(
-                settings_controller=self.settings_controller
-            )
+            self.metadata_manager = MetadataManager.instance()
             self.metadata_manager.update_game_configuration_signal.connect(
                 self.__update_game_configuration
             )
@@ -224,7 +228,7 @@ class MainContent(QObject):
                 self.actions_slot
             )  # Settings
             self.active_mods_panel.list_updated_signal.connect(
-                self.__do_save_animation
+                self.__do_save_button_set_default
             )  # Save btn animation
             self.active_mods_panel.active_mods_list.key_press_signal.connect(
                 self.__handle_active_mod_key_press
@@ -1002,9 +1006,6 @@ class MainContent(QObject):
         loading_animation_text_label = None
         # Hide the info panel widgets
         self.mod_info_panel.info_panel_frame.hide()
-        # Disable widgets
-        for widget in QApplication.instance().allWidgets():
-            widget.setEnabled(False)
         # Encapsulate mod parsing inside a nice lil animation
         loading_animation = LoadingAnimation(
             gif_path=gif_path,
@@ -1025,9 +1026,6 @@ class MainContent(QObject):
         if text:
             self.mod_info_panel.panel.removeWidget(loading_animation_text_label)
             loading_animation_text_label.close()
-        # Enable widgets
-        for widget in QApplication.instance().allWidgets():
-            widget.setEnabled(True)
         # Show the info panel widgets
         self.mod_info_panel.info_panel_frame.show()
         logger.debug(f"Returning {type(data)}")
@@ -1039,29 +1037,11 @@ class MainContent(QObject):
         """
         Refresh expensive calculations & repopulate lists with that refreshed data
         """
+        EventBus().refresh_started.emit()
         # If we are refreshing cache from user action
         if not is_initial:
             self.active_mods_panel.list_updated = False
-            # Stop the refresh button from blinking if it is blinking
-            if self.actions_panel.refresh_button_flashing_animation.isActive():
-                self.actions_panel.refresh_button_flashing_animation.stop()
-                self.actions_panel.refresh_button.setObjectName("")
-                self.actions_panel.refresh_button.style().unpolish(
-                    self.actions_panel.refresh_button
-                )
-                self.actions_panel.refresh_button.style().polish(
-                    self.actions_panel.refresh_button
-                )
-            # Stop the save button from blinking if it is blinking
-            if self.actions_panel.save_button_flashing_animation.isActive():
-                self.actions_panel.save_button_flashing_animation.stop()
-                self.actions_panel.save_button.setObjectName("")
-                self.actions_panel.save_button.style().unpolish(
-                    self.actions_panel.save_button
-                )
-                self.actions_panel.save_button.style().polish(
-                    self.actions_panel.save_button
-                )
+            EventBus().do_refresh_button_unset_default.emit()
             self.active_mods_panel.active_mods_filter_data_source_index = len(
                 self.active_mods_panel.active_mods_filter_data_source_icons
             )
@@ -1129,14 +1109,11 @@ class MainContent(QObject):
         self.active_mods_panel.steam_package_id_to_name = (
             self.metadata_manager.info_from_steam_package_id_to_name
         )
+        EventBus().refresh_finished.emit()
 
-    def _do_refresh_animation(self, path: str) -> None:
+    def _do_refresh_button_set_default(self, path: str) -> None:
         logger.debug(f"File change detected: {path}")
-        if not self.actions_panel.refresh_button_flashing_animation.isActive():
-            logger.debug("Starting refresh button animation")
-            self.actions_panel.refresh_button_flashing_animation.start(
-                500
-            )  # blink every 500 milliseconds
+        EventBus().do_refresh_button_set_default.emit()
 
     def _do_clear(self) -> None:
         """
@@ -1770,27 +1747,16 @@ class MainContent(QObject):
         else:
             logger.error("Could not save active mods")
         # Stop the save button from blinking if it is blinking
-        if self.actions_panel.save_button_flashing_animation.isActive():
-            self.actions_panel.save_button_flashing_animation.stop()
-            self.actions_panel.save_button.setObjectName("")
-            self.actions_panel.save_button.style().unpolish(
-                self.actions_panel.save_button
-            )
-            self.actions_panel.save_button.style().polish(
-                self.actions_panel.save_button
-            )
+        EventBus().do_save_button_unset_default.emit()
         logger.info("Finished saving active mods")
 
-    def __do_save_animation(self) -> None:
+    def __do_save_button_set_default(self) -> None:
         logger.debug("Active mods list updated")
         if (
             self.active_mods_panel.list_updated  # This will only evaluate True if this is initialization, or _do_refresh()
             and not self.actions_panel.save_button_flashing_animation.isActive()  # No need to re-enable if it's already blinking
         ):
-            logger.debug("Starting save button animation")
-            self.actions_panel.save_button_flashing_animation.start(
-                500
-            )  # Blink every 500 milliseconds
+            EventBus().do_save_button_set_default.emit()
 
     def _do_restore(self) -> None:
         """
@@ -3213,3 +3179,15 @@ class MainContent(QObject):
     @Slot()
     def _on_do_build_steam_workshop_database(self) -> None:
         self._do_build_database_thread()
+
+    @Slot()
+    def _do_run_game(self) -> None:
+        self._do_steamworks_api_call(
+            [
+                "launch_game_process",
+                [
+                    self.settings_controller.settings.game_folder,
+                    self.settings_controller.settings.run_args,
+                ],
+            ]
+        )

@@ -6,10 +6,15 @@ from pathlib import Path
 from PySide6.QtCore import QObject
 from PySide6.QtWidgets import QApplication
 
+from controller.main_window_controller import MainWindowController
+from controller.settings_controller import SettingsController
+from model.settings import Settings
 from util.app_info import AppInfo
 from util.constants import DEFAULT_USER_RULES
+from util.metadata import MetadataManager
 from util.system_info import SystemInfo
 from view.main_window import MainWindow
+from view.settings_dialog import SettingsDialog
 
 
 class AppController(QObject):
@@ -38,13 +43,25 @@ class AppController(QObject):
             with open(user_rules_path, "w", encoding="utf-8") as output:
                 json.dump(initial_rules_db, output, indent=4)
 
-        # Instantiate and show the main window
-        self.main_window = MainWindow()
-        self.main_window.show()
-        self.main_window.initialize_content()
+        # Instantiate the settings model, view and controller
+        self.settings = Settings()
+        self.settings_dialog = SettingsDialog()
+        self.settings_controller = SettingsController(
+            model=self.settings, view=self.settings_dialog
+        )
+
+        # Initialize the MetadataManager
+        self.metadata_manager = MetadataManager.instance(
+            settings_controller=self.settings_controller
+        )
+
+        # Instantiate the main window and its controller
+        self.main_window = MainWindow(settings_controller=self.settings_controller)
+        self.main_window_controller = MainWindowController(self.main_window)
 
     def run(self) -> int:
         self.main_window.show()
+        self.main_window.initialize_content()
         return self.app.exec()
 
     def shutdown_watchdog(self) -> None:
