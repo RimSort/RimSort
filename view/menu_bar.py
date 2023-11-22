@@ -44,6 +44,7 @@ class MenuBar(QObject):
 
         self.settings_action = QAction("Settings…", self)
         self.settings_action.setMenuRole(QAction.MenuRole.ApplicationSpecificRole)
+        self.settings_action.setShortcut(QKeySequence("Ctrl+,"))
         self.app_menu.addAction(self.settings_action)
 
         self.app_menu.addSeparator()
@@ -136,6 +137,7 @@ class MenuBar(QObject):
         self.file_menu.addSeparator()
 
         self.settings_action = QAction("Settings…", self)
+        self.settings_action.setShortcut(QKeySequence("Ctrl+,"))
         self.file_menu.addAction(self.settings_action)
 
         self.file_menu.addSeparator()
