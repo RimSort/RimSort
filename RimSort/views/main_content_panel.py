@@ -77,7 +77,7 @@ from RimSort.views.game_configuration_panel import GameConfiguration
 from RimSort.windows.missing_mods_panel import MissingModsPrompt
 from RimSort.windows.rule_editor_panel import RuleEditor
 from RimSort.windows.runner_panel import RunnerPanel
-from window.workshop_mod_updater_panel import ModUpdaterPrompt
+from RimSort.windows.workshop_mod_updater_panel import ModUpdaterPrompt
 
 
 class MainContent(QObject):
