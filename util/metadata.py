@@ -37,7 +37,7 @@ from util.steam.webapi.wrapper import (
     DynamicQuery,
     ISteamRemoteStorage_GetPublishedFileDetails,
 )
-from util.xml import xml_path_to_json
+from RimSort.utils.xml import xml_path_to_json
 
 
 # Locally installed mod metadata
