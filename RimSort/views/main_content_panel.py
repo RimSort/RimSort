@@ -62,7 +62,7 @@ from sort.alphabetical_sort import *
 from sort.topo_sort import *
 from RimSort.views.sub_views.actions_panel import Actions
 from sub_view.active_mods_panel import ActiveModList
-from sub_view.inactive_mods_panel import InactiveModList
+from RimSort.views.sub_views.inactive_mods_panel import InactiveModList
 from RimSort.views.sub_views.mod_info_panel import ModInfo
 from util.metadata import *
 from util.schema import validate_mods_config_format

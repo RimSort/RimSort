@@ -69,7 +69,9 @@ class InactiveModList:
             QIcon(
                 str(
                     Path(
-                        os.path.join(os.path.dirname(__file__), "../data/AppIcon_b.png")
+                        os.path.join(
+                            os.path.dirname(__file__), "../../../data/AppIcon_b.png"
+                        )
                     ).resolve()
                 )
             ),
@@ -92,14 +94,16 @@ class InactiveModList:
         self.inactive_mods_search_mode_filter_icon = QIcon(
             str(
                 Path(
-                    os.path.join(os.path.dirname(__file__), "../data/filter.png")
+                    os.path.join(os.path.dirname(__file__), "../../../data/filter.png")
                 ).resolve()
             )
         )
         self.inactive_mods_search_mode_nofilter_icon = QIcon(
             str(
                 Path(
-                    os.path.join(os.path.dirname(__file__), "../data/nofilter.png")
+                    os.path.join(
+                        os.path.dirname(__file__), "../../../data/nofilter.png"
+                    )
                 ).resolve()
             )
         )
