@@ -12,7 +12,7 @@ from RimSort.controllers.settings_controller import SettingsController
 from RimSort.models.settings import Settings
 from RimSort.utils.app_info import AppInfo
 from RimSort.utils.system_info import SystemInfo
-from util.watchdog import RSFileSystemEventHandler
+from RimSort.utils.watchdog import RSFileSystemEventHandler
 from RimSort.views.game_configuration_panel import GameConfiguration
 from RimSort.views.main_content_panel import MainContent
 from RimSort.views.menu_bar import MenuBar
