@@ -1,4 +1,3 @@
-from functools import partial
 from io import BytesIO
 from loguru import logger
 import os
@@ -16,10 +15,9 @@ import shutil
 from model.dialogue import (
     show_dialogue_conditional,
     show_fatal_error,
-    show_information,
     show_warning,
 )
-from window.runner_panel import RunnerPanel
+from RimSort.windows.runner_panel import RunnerPanel
 
 
 class SteamcmdInterface:

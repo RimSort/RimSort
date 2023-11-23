@@ -78,7 +78,7 @@ class RunnerPanel(QWidget):
         self.clear_runner_icon = QIcon(
             str(
                 Path(
-                    os.path.join(os.path.dirname(__file__), "../data/clear.png")
+                    os.path.join(os.path.dirname(__file__), "../../data/clear.png")
                 ).resolve()
             )
         )
@@ -93,7 +93,7 @@ class RunnerPanel(QWidget):
             str(
                 Path(
                     os.path.join(
-                        os.path.dirname(__file__), "../data/restart_process.png"
+                        os.path.dirname(__file__), "../../data/restart_process.png"
                     )
                 ).resolve()
             )
@@ -109,7 +109,9 @@ class RunnerPanel(QWidget):
         self.kill_process_icon = QIcon(
             str(
                 Path(
-                    os.path.join(os.path.dirname(__file__), "../data/kill_process.png")
+                    os.path.join(
+                        os.path.dirname(__file__), "../../data/kill_process.png"
+                    )
                 ).resolve()
             )
         )
@@ -124,7 +126,9 @@ class RunnerPanel(QWidget):
         self.save_runner_icon = QIcon(
             str(
                 Path(
-                    os.path.join(os.path.dirname(__file__), "../data/save_output.png")
+                    os.path.join(
+                        os.path.dirname(__file__), "../../data/save_output.png"
+                    )
                 ).resolve()
             )
         )

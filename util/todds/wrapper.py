@@ -2,20 +2,9 @@ from loguru import logger
 import os
 from pathlib import Path
 import platform
-import requests
 import sys
-from typing import Any, Dict, List, Optional, Tuple
 
-from model.dialogue import (
-    show_fatal_error,
-    show_information,
-    show_warning,
-)
-from window.runner_panel import RunnerPanel
-
-from PySide6.QtWidgets import QMessageBox
-
-import shutil
+from RimSort.windows.runner_panel import RunnerPanel
 
 
 class ToddsInterface:
