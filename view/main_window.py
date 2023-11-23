@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QWidget
 from loguru import logger
 from watchdog.observers.api import BaseObserver
 
-from controller.menu_bar_controller import MenuBarController
+from RimSort.controllers.menu_bar_controller import MenuBarController
 from controller.settings_controller import SettingsController
 from model.settings import Settings
 from util.app_info import AppInfo
