@@ -67,7 +67,7 @@ from RimSort.views.sub_views.mod_info_panel import ModInfo
 from RimSort.utils.metadata import *
 from RimSort.utils.schema import validate_mods_config_format
 from RimSort.utils.steam.steamcmd.wrapper import SteamcmdInterface
-from util.steam.steamworks.wrapper import (
+from RimSort.utils.steam.steamworks.wrapper import (
     SteamworksGameLaunch,
     SteamworksSubscriptionHandler,
 )

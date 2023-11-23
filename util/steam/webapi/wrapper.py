@@ -14,7 +14,7 @@ from PySide6.QtCore import QObject, Signal
 from steam.webapi import WebAPI
 from RimSort.utils.constants import RIMWORLD_DLC_METADATA
 from RimSort.utils.generic import chunks
-from util.steam.steamworks.wrapper import SteamworksAppDependenciesQuery
+from RimSort.utils.steam.steamworks.wrapper import SteamworksAppDependenciesQuery
 
 
 # This is redundant since it is also done in `logger-tt` config,
