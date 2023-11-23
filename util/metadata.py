@@ -1,22 +1,14 @@
-from concurrent.futures import Future
-from functools import partial
 import json
 from loguru import logger
 from natsort import natsorted
 import os
 from pathlib import Path
-import platform
-from requests.exceptions import HTTPError
 from time import localtime, strftime, time
 import traceback
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, Optional, Tuple, Union
 from uuid import uuid4
 
 from PySide6.QtCore import (
-    Qt,
-    QEventLoop,
-    QMutex,
-    QMutexLocker,
     QObject,
     QRunnable,
     QThread,
@@ -24,17 +16,15 @@ from PySide6.QtCore import (
     Signal,
 )
 
-from controller.settings_controller import SettingsController
+from RimSort.controllers.settings_controller import SettingsController
 from model.dialogue import (
     show_dialogue_conditional,
     show_dialogue_file,
-    show_information,
     show_warning,
 )
 from util.app_info import AppInfo
 from util.constants import (
     DB_BUILDER_PRUNE_EXCEPTIONS,
-    DB_BUILDER_PURGE_KEYS,
     DB_BUILDER_RECURSE_EXCEPTIONS,
     DEFAULT_USER_RULES,
     RIMWORLD_DLC_METADATA,
@@ -48,8 +38,7 @@ from util.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetPublishedFileDetails,
 )
 from util.xml import xml_path_to_json
-from view.game_configuration_panel import GameConfiguration
-from window.runner_panel import RunnerPanel
+
 
 # Locally installed mod metadata
 

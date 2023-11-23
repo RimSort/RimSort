@@ -8,7 +8,7 @@ from loguru import logger
 from watchdog.observers.api import BaseObserver
 
 from RimSort.controllers.menu_bar_controller import MenuBarController
-from controller.settings_controller import SettingsController
+from RimSort.controllers.settings_controller import SettingsController
 from RimSort.models.settings import Settings
 from util.app_info import AppInfo
 from util.system_info import SystemInfo

@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from controller.settings_controller import SettingsController
+from RimSort.controllers.settings_controller import SettingsController
 from model.mod_list import ModListWidget
 from model.mod_list_item import ModListItemInner
 from util.constants import SEARCH_DATA_SOURCE_FILTER_INDEXES

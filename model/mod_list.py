@@ -4,9 +4,8 @@ from loguru import logger
 import os
 import shutil
 from pathlib import Path
-from time import sleep
 import traceback
-from typing import Any, List, Optional
+from typing import List, Optional
 
 from pyperclip import copy as copy_to_clipboard
 from PySide6.QtCore import Qt, QEvent, QModelIndex, QObject, Signal, Slot
@@ -18,7 +17,7 @@ from PySide6.QtWidgets import (
     QMenu,
 )
 
-from controller.settings_controller import SettingsController
+from RimSort.controllers.settings_controller import SettingsController
 from model.mod_list_item import ModListItemInner
 from model.dialogue import show_dialogue_conditional, show_dialogue_input, show_warning
 from util.event_bus import EventBus
@@ -30,8 +29,6 @@ from util.generic import (
     sanitize_filename,
 )
 from util.metadata import MetadataManager
-from util.steam.steamcmd.wrapper import SteamcmdInterface
-from view.game_configuration_panel import GameConfiguration
 
 
 class ModListWidget(QListWidget):

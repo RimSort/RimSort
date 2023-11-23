@@ -1,7 +1,6 @@
 import webbrowser
 from functools import partial
 from gc import collect
-from pathlib import Path
 import platform
 from typing import Callable
 import subprocess
@@ -9,16 +8,12 @@ import sys
 import datetime
 from io import BytesIO
 from math import ceil
-from multiprocessing import cpu_count, current_process, Pool
-from stat import S_IEXEC
-from shutil import copytree
+from multiprocessing import cpu_count, Pool
 from tempfile import gettempdir
-from time import time
 from zipfile import ZipFile
 
 from loguru import logger
 
-from controller.settings_controller import SettingsController
 from util.event_bus import EventBus
 
 # GitPython depends on git executable being available in PATH
@@ -39,35 +34,27 @@ from pyperclip import copy as copy_to_clipboard
 from requests import get as requests_get
 
 from model.dialogue import (
-    show_dialogue_conditional,
-    show_dialogue_file,
     show_dialogue_input,
+    show_information,
 )
 from model.animations import LoadingAnimation
 
-from util.constants import RIMWORLD_DLC_METADATA
 from util.generic import (
     chunks,
     delete_files_except_extension,
-    handle_remove_read_only,
     open_url_browser,
     platform_specific_open,
     upload_data_to_0x0_st,
 )
 from util.rentry.wrapper import RentryUpload, RentryImport
 from util.steam.browser import SteamBrowser
-from util.steam.webapi.wrapper import ISteamRemoteStorage_GetPublishedFileDetails
 
-from PySide6.QtCore import QEventLoop, QObject, QProcess, Qt, Signal, Slot
+from PySide6.QtCore import QEventLoop, QProcess, Qt, Slot
 from PySide6.QtWidgets import (
     QApplication,
     QFrame,
     QHBoxLayout,
     QLabel,
-    QLineEdit,
-    QMainWindow,
-    QPushButton,
-    QToolButton,
 )
 
 from sort.dependencies import *
@@ -77,8 +64,6 @@ from sub_view.actions_panel import Actions
 from sub_view.active_mods_panel import ActiveModList
 from sub_view.inactive_mods_panel import InactiveModList
 from sub_view.mod_info_panel import ModInfo
-from util.constants import DEFAULT_USER_RULES
-from util.generic import launch_game_process
 from util.metadata import *
 from util.schema import validate_mods_config_format
 from util.steam.steamcmd.wrapper import SteamcmdInterface

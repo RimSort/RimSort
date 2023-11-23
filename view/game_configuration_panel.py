@@ -1,34 +1,10 @@
-import getpass
-import json
-from logging import INFO
-from loguru import logger
-import os
-from pathlib import Path
-import platform
-import webbrowser
-from functools import partial
-from os.path import expanduser
-from typing import Any, Dict
+from typing import Any
 
-from PySide6.QtCore import QObject, QPoint, QSize, QStandardPaths, Qt, Signal, Slot
-from PySide6.QtGui import QAction, QIcon
-from PySide6.QtWidgets import (
-    QFrame,
-    QHBoxLayout,
-    QLabel,
-    QLineEdit,
-    QMenu,
-    QPushButton,
-    QToolButton,
-    QVBoxLayout,
-)
+from PySide6.QtCore import QObject, Signal
 
-from controller.settings_controller import SettingsController
+from RimSort.controllers.settings_controller import SettingsController
 from model.dialogue import *
-from model.multibutton import MultiButton
 from util.app_info import AppInfo
-from util.constants import DEFAULT_SETTINGS, DEFAULT_USER_RULES
-from util.event_bus import EventBus
 from util.generic import *
 from window.settings_panel import SettingsPanel
 

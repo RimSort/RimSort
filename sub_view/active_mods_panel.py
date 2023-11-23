@@ -1,7 +1,6 @@
 from loguru import logger
 import os
 from pathlib import Path
-from typing import Any
 
 from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtGui import QIcon
@@ -12,18 +11,16 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QListWidgetItem,
-    QStyle,
     QToolButton,
     QVBoxLayout,
     QWidget,
 )
 
-from controller.settings_controller import SettingsController
+from RimSort.controllers.settings_controller import SettingsController
 from model.mod_list import ModListWidget
 from model.mod_list_item import ModListItemInner
 from util.constants import SEARCH_DATA_SOURCE_FILTER_INDEXES
 from util.metadata import MetadataManager
-from util.steam.steamcmd.wrapper import SteamcmdInterface
 
 
 class ActiveModList(QWidget):
