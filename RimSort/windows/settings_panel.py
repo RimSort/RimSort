@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from model.multibutton import MultiButton
+from RimSort.models.multibutton import MultiButton
 from util.generic import platform_specific_open
 
 

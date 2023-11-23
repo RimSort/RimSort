@@ -37,7 +37,7 @@ class MultiButton(QWidget):
             if secondary_action_icon_path
             else str(
                 Path(
-                    os.path.join(os.path.dirname(__file__), "../data/kebab.png")
+                    os.path.join(os.path.dirname(__file__), "../../data/kebab.png")
                 ).resolve()
             )
         )

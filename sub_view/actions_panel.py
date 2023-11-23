@@ -2,22 +2,17 @@ from loguru import logger
 from functools import partial
 from PySide6.QtCore import (
     Qt,
-    QPoint,
     QTimer,
     Signal,
 )
-from PySide6.QtGui import QColor, QIcon
 from PySide6.QtWidgets import (
-    QHBoxLayout,
     QLabel,
-    QMenu,
     QPushButton,
-    QToolButton,
     QVBoxLayout,
     QWidget,
 )
 
-from model.multibutton import MultiButton
+from RimSort.models.multibutton import MultiButton
 
 
 class Actions(QWidget):
