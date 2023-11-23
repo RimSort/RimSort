@@ -23,7 +23,7 @@ from RimSort.models.dialogue import (
     show_warning,
 )
 from RimSort.utils.app_info import AppInfo
-from util.constants import (
+from RimSort.utils.constants import (
     DB_BUILDER_PRUNE_EXCEPTIONS,
     DB_BUILDER_RECURSE_EXCEPTIONS,
     DEFAULT_USER_RULES,

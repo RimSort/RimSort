@@ -12,7 +12,7 @@ from typing import Any, Dict, Optional, Tuple
 from PySide6.QtCore import QObject, Signal
 
 from steam.webapi import WebAPI
-from util.constants import RIMWORLD_DLC_METADATA
+from RimSort.utils.constants import RIMWORLD_DLC_METADATA
 from util.generic import chunks
 from util.steam.steamworks.wrapper import SteamworksAppDependenciesQuery
 
