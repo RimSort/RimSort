@@ -3,10 +3,9 @@ from loguru import logger
 from pathlib import Path
 import os
 import platform
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional
 
-
-from PySide6.QtCore import Qt, QObject, QPoint, QSize, QUrl, Signal
+from PySide6.QtCore import Qt, QPoint, QSize, QUrl, Signal
 from PySide6.QtGui import QAction, QPixmap
 from PySide6.QtWebEngineCore import QWebEnginePage
 from PySide6.QtWebEngineWidgets import QWebEngineView
@@ -26,7 +25,7 @@ from PySide6.QtWidgets import (
 )
 
 from model.dialogue import show_warning
-from model.image_label import ImageLabel
+from RimSort.models.image_label import ImageLabel
 from util.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetCollectionDetails,
     ISteamRemoteStorage_GetPublishedFileDetails,

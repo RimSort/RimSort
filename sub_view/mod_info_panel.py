@@ -8,7 +8,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout
 
-from model.image_label import ImageLabel
+from RimSort.models.image_label import ImageLabel
 from model.scroll_label import ScrollLabel
 from util.generic import set_to_list
 
