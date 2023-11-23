@@ -57,7 +57,7 @@ from PySide6.QtWidgets import (
     QLabel,
 )
 
-from sort.dependencies import *
+from RimSort.sort.dependencies import *
 from RimSort.sort.alphabetical_sort import *
 from sort.topo_sort import *
 from RimSort.views.sub_views.actions_panel import Actions
