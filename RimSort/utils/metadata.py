@@ -32,7 +32,7 @@ from RimSort.utils.constants import (
 from RimSort.utils.generic import directories
 from RimSort.utils.schema import validate_mods_config_format
 from RimSort.utils.steam.steamcmd.wrapper import SteamcmdInterface
-from util.steam.steamfiles.wrapper import acf_to_dict, dict_to_acf
+from RimSort.utils.steam.steamfiles.wrapper import acf_to_dict, dict_to_acf
 from util.steam.webapi.wrapper import (
     DynamicQuery,
     ISteamRemoteStorage_GetPublishedFileDetails,
