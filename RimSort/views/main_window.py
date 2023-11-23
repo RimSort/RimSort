@@ -16,7 +16,7 @@ from util.watchdog import RSFileSystemEventHandler
 from view.game_configuration_panel import GameConfiguration
 from view.main_content_panel import MainContent
 from RimSort.views.menu_bar import MenuBar
-from view.settings_dialog import SettingsDialog
+from RimSort.views.settings_dialog import SettingsDialog
 from view.status_panel import Status
 
 if SystemInfo().operating_system == SystemInfo.OperatingSystem.WINDOWS:

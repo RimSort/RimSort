@@ -12,7 +12,7 @@ from RimSort.models.settings import Settings
 from RimSort.utils.event_bus import EventBus
 from util.generic import platform_specific_open
 from RimSort.utils.system_info import SystemInfo
-from view.settings_dialog import SettingsDialog
+from RimSort.views.settings_dialog import SettingsDialog
 
 
 class SettingsController(QObject):
