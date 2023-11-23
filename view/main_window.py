@@ -9,7 +9,7 @@ from watchdog.observers.api import BaseObserver
 
 from RimSort.controllers.menu_bar_controller import MenuBarController
 from controller.settings_controller import SettingsController
-from model.settings import Settings
+from RimSort.models.settings import Settings
 from util.app_info import AppInfo
 from util.system_info import SystemInfo
 from util.watchdog import RSFileSystemEventHandler

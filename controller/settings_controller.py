@@ -8,7 +8,7 @@ from PySide6.QtCore import QObject, Slot, Qt
 from PySide6.QtWidgets import QFileDialog, QMessageBox, QApplication
 from loguru import logger
 
-from model.settings import Settings
+from RimSort.models.settings import Settings
 from util.event_bus import EventBus
 from util.generic import platform_specific_open
 from util.system_info import SystemInfo
