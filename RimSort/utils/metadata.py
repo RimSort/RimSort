@@ -31,7 +31,7 @@ from RimSort.utils.constants import (
 )
 from RimSort.utils.generic import directories
 from RimSort.utils.schema import validate_mods_config_format
-from util.steam.steamcmd.wrapper import SteamcmdInterface
+from RimSort.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from util.steam.steamfiles.wrapper import acf_to_dict, dict_to_acf
 from util.steam.webapi.wrapper import (
     DynamicQuery,
