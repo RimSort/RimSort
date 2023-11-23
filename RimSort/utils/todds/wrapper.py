@@ -4,6 +4,7 @@ from pathlib import Path
 import platform
 import sys
 
+from RimSort.utils.app_info import AppInfo
 from RimSort.windows.runner_panel import RunnerPanel
 
 
@@ -67,15 +68,7 @@ class ToddsInterface:
             todds_executable = "todds.exe"
         else:
             todds_executable = "todds"
-        todds_exe_path = str(
-            Path(
-                os.path.join(
-                    os.path.split(os.path.split(os.path.dirname(__file__))[0])[0],
-                    "todds",
-                    todds_executable,
-                )
-            ).resolve()
-        )
+        todds_exe_path = str(AppInfo().application_folder / "todds" / todds_executable)
         logger.info("Checking for todds...")
         if os.path.exists(todds_exe_path):
             logger.debug(f"Found todds executable at: {todds_exe_path}")

@@ -71,7 +71,7 @@ from util.steam.steamworks.wrapper import (
     SteamworksGameLaunch,
     SteamworksSubscriptionHandler,
 )
-from util.todds.wrapper import ToddsInterface
+from RimSort.utils.todds.wrapper import ToddsInterface
 from util.xml import json_to_xml_write, xml_path_to_json
 from RimSort.views.game_configuration_panel import GameConfiguration
 from RimSort.windows.missing_mods_panel import MissingModsPrompt
