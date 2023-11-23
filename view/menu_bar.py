@@ -2,7 +2,7 @@ from PySide6.QtCore import QObject
 from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import QMenuBar, QMenu
 
-from util.system_info import SystemInfo
+from RimSort.utils.system_info import SystemInfo
 
 
 class MenuBar(QObject):

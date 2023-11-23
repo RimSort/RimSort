@@ -11,7 +11,7 @@ from RimSort.controllers.menu_bar_controller import MenuBarController
 from RimSort.controllers.settings_controller import SettingsController
 from RimSort.models.settings import Settings
 from RimSort.utils.app_info import AppInfo
-from util.system_info import SystemInfo
+from RimSort.utils.system_info import SystemInfo
 from util.watchdog import RSFileSystemEventHandler
 from view.game_configuration_panel import GameConfiguration
 from view.main_content_panel import MainContent
