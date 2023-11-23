@@ -74,7 +74,9 @@ class ActiveModList(QWidget):
             QIcon(
                 str(
                     Path(
-                        os.path.join(os.path.dirname(__file__), "../data/AppIcon_b.png")
+                        os.path.join(
+                            os.path.dirname(__file__), "../../../data/AppIcon_b.png"
+                        )
                     ).resolve()
                 )
             ),
@@ -97,14 +99,16 @@ class ActiveModList(QWidget):
         self.active_mods_search_mode_filter_icon = QIcon(
             str(
                 Path(
-                    os.path.join(os.path.dirname(__file__), "../data/filter.png")
+                    os.path.join(os.path.dirname(__file__), "../../../data/filter.png")
                 ).resolve()
             )
         )
         self.active_mods_search_mode_nofilter_icon = QIcon(
             str(
                 Path(
-                    os.path.join(os.path.dirname(__file__), "../data/nofilter.png")
+                    os.path.join(
+                        os.path.dirname(__file__), "../../../data/nofilter.png"
+                    )
                 ).resolve()
             )
         )
