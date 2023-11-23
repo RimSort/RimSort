@@ -73,7 +73,7 @@ from util.steam.steamworks.wrapper import (
 )
 from util.todds.wrapper import ToddsInterface
 from util.xml import json_to_xml_write, xml_path_to_json
-from view.game_configuration_panel import GameConfiguration
+from RimSort.views.game_configuration_panel import GameConfiguration
 from window.missing_mods_panel import MissingModsPrompt
 from window.rule_editor_panel import RuleEditor
 from window.runner_panel import RunnerPanel

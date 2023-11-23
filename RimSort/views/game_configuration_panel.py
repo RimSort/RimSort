@@ -52,12 +52,12 @@ class GameConfiguration(QObject):
 
             self.lock_icon_path = str(
                 Path(
-                    os.path.join(os.path.dirname(__file__), "../data/lock.png")
+                    os.path.join(os.path.dirname(__file__), "../../data/lock.png")
                 ).resolve()
             )
             self.unlock_icon_path = str(
                 Path(
-                    os.path.join(os.path.dirname(__file__), "../data/unlock.png")
+                    os.path.join(os.path.dirname(__file__), "../../data/unlock.png")
                 ).resolve()
             )
 
