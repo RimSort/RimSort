@@ -1,5 +1,4 @@
 import json
-import os
 from json import JSONDecodeError
 from pathlib import Path
 from typing import Dict, Any, Optional, List
@@ -7,7 +6,7 @@ from typing import Dict, Any, Optional, List
 from PySide6.QtCore import QObject
 from loguru import logger
 
-from util.app_info import AppInfo
+from RimSort.utils.app_info import AppInfo
 from util.event_bus import EventBus
 
 

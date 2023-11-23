@@ -11,7 +11,7 @@ from typing import Type, Optional
 from loguru import logger
 
 from RimSort.controllers.app_controller import AppController
-from util.app_info import AppInfo
+from RimSort.utils.app_info import AppInfo
 
 SYSTEM = platform.system()
 # Watchdog conditionals

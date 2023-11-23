@@ -6,7 +6,7 @@ from pathlib import Path
 from PySide6.QtCore import QObject
 from PySide6.QtWidgets import QApplication
 
-from util.app_info import AppInfo
+from RimSort.utils.app_info import AppInfo
 from util.constants import DEFAULT_USER_RULES
 from util.system_info import SystemInfo
 from view.main_window import MainWindow

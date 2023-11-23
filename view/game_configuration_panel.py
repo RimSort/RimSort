@@ -4,7 +4,7 @@ from PySide6.QtCore import QObject, Signal
 
 from RimSort.controllers.settings_controller import SettingsController
 from model.dialogue import *
-from util.app_info import AppInfo
+from RimSort.utils.app_info import AppInfo
 from util.generic import *
 from window.settings_panel import SettingsPanel
 
