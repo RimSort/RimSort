@@ -279,7 +279,7 @@ class RuleEditor(QWidget):
             str(
                 Path(
                     os.path.join(
-                        os.path.dirname(__file__), "../data/save_community_rules.png"
+                        os.path.dirname(__file__), "../../data/save_community_rules.png"
                     )
                 ).resolve()
             )
@@ -299,7 +299,7 @@ class RuleEditor(QWidget):
             str(
                 Path(
                     os.path.join(
-                        os.path.dirname(__file__), "../data/save_user_rules.png"
+                        os.path.dirname(__file__), "../../data/save_user_rules.png"
                     )
                 ).resolve()
             )
