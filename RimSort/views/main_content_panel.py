@@ -46,7 +46,7 @@ from util.generic import (
     platform_specific_open,
     upload_data_to_0x0_st,
 )
-from util.rentry.wrapper import RentryUpload, RentryImport
+from RimSort.utils.rentry.wrapper import RentryUpload, RentryImport
 from util.steam.browser import SteamBrowser
 
 from PySide6.QtCore import QEventLoop, QProcess, Qt, Slot
