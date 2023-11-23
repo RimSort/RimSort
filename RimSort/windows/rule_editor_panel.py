@@ -27,7 +27,7 @@ from PySide6.QtWidgets import (
 )
 
 from RimSort.models.dialogue import show_dialogue_input, show_warning
-from util.metadata import MetadataManager
+from RimSort.utils.metadata import MetadataManager
 
 
 class EditableDelegate(QItemDelegate):

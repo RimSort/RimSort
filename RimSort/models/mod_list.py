@@ -32,7 +32,7 @@ from RimSort.utils.generic import (
     platform_specific_open,
     sanitize_filename,
 )
-from util.metadata import MetadataManager
+from RimSort.utils.metadata import MetadataManager
 
 
 class ModListWidget(QListWidget):

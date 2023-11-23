@@ -3,13 +3,13 @@ from functools import partial
 from pathlib import Path
 
 from loguru import logger
-from typing import Any, Dict, Optional
+from typing import Optional
 
 from PySide6.QtCore import QRectF, QSize, Qt, Signal
 from PySide6.QtGui import QFontMetrics, QIcon, QResizeEvent
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QStyle, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QWidget
 
-from util.metadata import MetadataManager
+from RimSort.utils.metadata import MetadataManager
 
 
 class ClickableQLabel(QLabel):

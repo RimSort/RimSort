@@ -1,9 +1,9 @@
 from loguru import logger
-from typing import Any, List
+from typing import List
 
 from toposort import toposort
 
-from util.metadata import MetadataManager
+from RimSort.utils.metadata import MetadataManager
 
 
 def do_topo_sort(

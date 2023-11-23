@@ -20,7 +20,7 @@ from RimSort.controllers.settings_controller import SettingsController
 from RimSort.models.mod_list import ModListWidget
 from RimSort.models.mod_list_item import ModListItemInner
 from RimSort.utils.constants import SEARCH_DATA_SOURCE_FILTER_INDEXES
-from util.metadata import MetadataManager
+from RimSort.utils.metadata import MetadataManager
 
 
 class ActiveModList(QWidget):
