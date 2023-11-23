@@ -87,7 +87,7 @@ class SettingsPanel(QDialog):
         )
         self.rimworld_woodlog_icon_path = str(
             Path(
-                os.path.join(os.path.dirname(__file__), "../data/WoodLog_a.png")
+                os.path.join(os.path.dirname(__file__), "../../data/WoodLog_a.png")
             ).resolve()
         )
         self.upload_log_multibutton = MultiButton(
@@ -176,7 +176,7 @@ class SettingsPanel(QDialog):
         self.external_metadata_icon_path = QIcon(
             str(
                 Path(
-                    os.path.join(os.path.dirname(__file__), "../data/database.png")
+                    os.path.join(os.path.dirname(__file__), "../../data/database.png")
                 ).resolve()
             )
         )
