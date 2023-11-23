@@ -1,6 +1,3 @@
-from functools import partial
-from tempfile import gettempdir
-
 from loguru import logger
 import os
 from pathlib import Path
@@ -19,7 +16,7 @@ from PySide6.QtWidgets import (
     QProgressBar,
 )
 
-from model.dialogue import show_dialogue_file, show_dialogue_conditional, show_warning
+from RimSort.models.dialogue import show_dialogue_file, show_dialogue_conditional
 from util.steam.webapi.wrapper import ISteamRemoteStorage_GetPublishedFileDetails
 
 

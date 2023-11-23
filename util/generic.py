@@ -11,7 +11,7 @@ from requests import post as requests_post
 import sys
 import webbrowser
 
-from model.dialogue import show_information, show_warning
+from RimSort.models.dialogue import show_warning
 
 
 def chunks(_list: list, limit: int):

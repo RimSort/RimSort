@@ -2,23 +2,15 @@ from functools import partial
 from loguru import logger
 import os
 from pathlib import Path
-import platform
-from typing import Any, Dict, List, Optional, Tuple
 
-
-from PySide6.QtCore import Qt, QMimeData, QModelIndex, QObject, QPoint, QSize, Signal
+from PySide6.QtCore import Qt, QPoint, QSize, Signal
 from PySide6.QtGui import (
-    QAction,
-    QDrag,
     QIcon,
-    QPixmap,
     QStandardItemModel,
     QStandardItem,
 )
 from PySide6.QtWidgets import (
-    QAbstractItemView,
     QCheckBox,
-    QGridLayout,
     QHeaderView,
     QItemDelegate,
     QLabel,
@@ -27,7 +19,6 @@ from PySide6.QtWidgets import (
     QListWidgetItem,
     QMenu,
     QPushButton,
-    QSizePolicy,
     QTableView,
     QToolButton,
     QWidget,
@@ -35,7 +26,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from model.dialogue import show_dialogue_input, show_warning
+from RimSort.models.dialogue import show_dialogue_input, show_warning
 from util.metadata import MetadataManager
 
 

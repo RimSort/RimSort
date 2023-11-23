@@ -3,7 +3,7 @@ from typing import Any
 from PySide6.QtCore import QObject, Signal
 
 from RimSort.controllers.settings_controller import SettingsController
-from model.dialogue import *
+from RimSort.models.dialogue import *
 from RimSort.utils.app_info import AppInfo
 from util.generic import *
 from RimSort.windows.settings_panel import SettingsPanel

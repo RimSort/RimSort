@@ -33,7 +33,7 @@ from github import Github
 from pyperclip import copy as copy_to_clipboard
 from requests import get as requests_get
 
-from model.dialogue import (
+from RimSort.models.dialogue import (
     show_dialogue_input,
     show_information,
 )

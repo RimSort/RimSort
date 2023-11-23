@@ -29,7 +29,7 @@ elif SYSTEM == "Windows":
     # I still can't figure out why it won't log at all on Windows...?
     # getLogger("").setLevel(WARNING)
 
-from model.dialogue import show_fatal_error
+from RimSort.models.dialogue import show_fatal_error
 
 
 def handle_exception(

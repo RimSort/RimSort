@@ -2,10 +2,8 @@ from functools import partial
 from loguru import logger
 import os
 from pathlib import Path
-import sys
-from tempfile import gettempdir
 
-from PySide6.QtCore import QPoint, QSize, QStandardPaths, Qt, Signal
+from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -13,18 +11,15 @@ from PySide6.QtWidgets import (
     QDialog,
     QHBoxLayout,
     QLabel,
-    QMenu,
     QPushButton,
     QStyledItemDelegate,
     QTabWidget,
-    QToolButton,
     QVBoxLayout,
     QWidget,
 )
 
-from model.dialogue import show_information
 from model.multibutton import MultiButton
-from util.generic import platform_specific_open, upload_data_to_0x0_st
+from util.generic import platform_specific_open
 
 
 class CenteredItemDelegate(QStyledItemDelegate):

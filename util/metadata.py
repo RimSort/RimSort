@@ -17,7 +17,7 @@ from PySide6.QtCore import (
 )
 
 from RimSort.controllers.settings_controller import SettingsController
-from model.dialogue import (
+from RimSort.models.dialogue import (
     show_dialogue_conditional,
     show_dialogue_file,
     show_warning,

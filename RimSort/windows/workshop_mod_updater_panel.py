@@ -1,33 +1,21 @@
 from functools import partial
 from loguru import logger
-import os
-import platform
 from time import localtime, strftime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict
 
-
-from PySide6.QtCore import Qt, QEvent, QModelIndex, QObject, QPoint, QSize, Signal
-from PySide6.QtGui import QAction, QPixmap, QStandardItemModel, QStandardItem
+from PySide6.QtCore import Qt, QEvent, QSize, Signal
+from PySide6.QtGui import QStandardItemModel, QStandardItem
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QCheckBox,
-    QGridLayout,
     QHeaderView,
-    QItemDelegate,
     QLabel,
-    QListWidget,
-    QListWidgetItem,
-    QMenu,
     QPushButton,
-    QSizePolicy,
     QTableView,
-    QToolButton,
     QWidget,
     QHBoxLayout,
     QVBoxLayout,
 )
-
-from model.dialogue import show_warning
 
 
 class ModUpdaterPrompt(QWidget):

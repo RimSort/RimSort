@@ -12,7 +12,7 @@ from zipfile import ZipFile
 
 import shutil
 
-from model.dialogue import (
+from RimSort.models.dialogue import (
     show_dialogue_conditional,
     show_fatal_error,
     show_warning,

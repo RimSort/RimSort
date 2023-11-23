@@ -1,22 +1,16 @@
-from functools import partial
-import json
 from logging import getLogger, WARNING
 from loguru import logger
 from math import ceil
 from multiprocessing import cpu_count, Pool
-import os
 from requests import post as requests_post
-from requests.exceptions import HTTPError, JSONDecodeError, ConnectionError
+from requests.exceptions import JSONDecodeError
 import sys
 from time import time
 import traceback
-from typing import Any, Dict, List, Optional, Tuple, Union
-
+from typing import Any, Dict, Optional, Tuple
 
 from PySide6.QtCore import QObject, Signal
-from PySide6.QtWidgets import QApplication
 
-from model.dialogue import show_fatal_error
 from steam.webapi import WebAPI
 from util.constants import RIMWORLD_DLC_METADATA
 from util.generic import chunks

@@ -1,18 +1,12 @@
 from loguru import logger
-from multiprocessing import current_process, Process, Queue
-import os
-import platform
-import subprocess
+from multiprocessing import Process
 from threading import Thread
 from time import sleep
 from typing import Union
 import sys
 
 from steamworks import STEAMWORKS
-import traceback
 from util.generic import launch_game_process
-
-from model.dialogue import show_warning
 
 
 class SteamworksInterface:
