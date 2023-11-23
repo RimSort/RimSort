@@ -60,7 +60,7 @@ from PySide6.QtWidgets import (
 from sort.dependencies import *
 from sort.alphabetical_sort import *
 from sort.topo_sort import *
-from sub_view.actions_panel import Actions
+from RimSort.views.sub_views.actions_panel import Actions
 from sub_view.active_mods_panel import ActiveModList
 from sub_view.inactive_mods_panel import InactiveModList
 from sub_view.mod_info_panel import ModInfo
