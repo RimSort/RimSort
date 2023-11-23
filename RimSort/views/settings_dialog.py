@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
     QGridLayout,
 )
 
-from util.gui_info import GUIInfo
+from RimSort.utils.gui_info import GUIInfo
 
 
 class SettingsDialog(QDialog):
