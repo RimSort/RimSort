@@ -869,7 +869,7 @@ class MainContent(QObject):
                         gif_path=str(
                             Path(
                                 os.path.join(
-                                    os.path.dirname(__file__), "../data/refresh.gif"
+                                    os.path.dirname(__file__), "../../data/refresh.gif"
                                 )
                             ).resolve()
                         ),
@@ -929,7 +929,7 @@ class MainContent(QObject):
                                 Path(
                                     os.path.join(
                                         os.path.dirname(__file__),
-                                        f"../update.sh",
+                                        f"../../update.sh",
                                     )
                                 ).resolve()
                             ),
@@ -948,7 +948,7 @@ class MainContent(QObject):
                                 Path(
                                     os.path.join(
                                         os.path.dirname(__file__),
-                                        f"../update.bat",
+                                        f"../../update.bat",
                                     )
                                 ).resolve()
                             ),
@@ -1060,7 +1060,7 @@ class MainContent(QObject):
             # Run expensive calculations to set cache data
             loading_gif_path = str(
                 Path(
-                    os.path.join(os.path.dirname(__file__), "../data/rimsort.gif")
+                    os.path.join(os.path.dirname(__file__), "../../data/rimsort.gif")
                 ).resolve()
             )
             self._do_threaded_loading_animation(
@@ -1878,7 +1878,7 @@ class MainContent(QObject):
         updates_checked = self._do_threaded_loading_animation(
             gif_path=str(
                 Path(
-                    os.path.join(os.path.dirname(__file__), "../data/steam_api.gif")
+                    os.path.join(os.path.dirname(__file__), "../../data/steam_api.gif")
                 ).resolve()
             ),
             target=partial(
@@ -2131,7 +2131,7 @@ class MainContent(QObject):
         self._do_threaded_loading_animation(
             gif_path=str(
                 Path(
-                    os.path.join(os.path.dirname(__file__), "../data/steam.gif")
+                    os.path.join(os.path.dirname(__file__), "../../data/steam.gif")
                 ).resolve()
             ),
             target=partial(self._do_steamworks_api_call, instruction=instruction),

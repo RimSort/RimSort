@@ -14,7 +14,7 @@ from RimSort.utils.app_info import AppInfo
 from RimSort.utils.system_info import SystemInfo
 from util.watchdog import RSFileSystemEventHandler
 from view.game_configuration_panel import GameConfiguration
-from view.main_content_panel import MainContent
+from RimSort.views.main_content_panel import MainContent
 from RimSort.views.menu_bar import MenuBar
 from RimSort.views.settings_dialog import SettingsDialog
 from view.status_panel import Status
