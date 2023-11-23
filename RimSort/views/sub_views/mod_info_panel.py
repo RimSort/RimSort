@@ -10,7 +10,7 @@ from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QSizePolicy, QVBoxLay
 
 from RimSort.models.image_label import ImageLabel
 from RimSort.models.scroll_label import ScrollLabel
-from util.generic import set_to_list
+from RimSort.utils.generic import set_to_list
 
 
 class ModInfo:

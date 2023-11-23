@@ -13,7 +13,7 @@ from PySide6.QtCore import QObject, Signal
 
 from steam.webapi import WebAPI
 from RimSort.utils.constants import RIMWORLD_DLC_METADATA
-from util.generic import chunks
+from RimSort.utils.generic import chunks
 from util.steam.steamworks.wrapper import SteamworksAppDependenciesQuery
 
 

@@ -29,7 +29,7 @@ from RimSort.utils.constants import (
     DEFAULT_USER_RULES,
     RIMWORLD_DLC_METADATA,
 )
-from util.generic import directories
+from RimSort.utils.generic import directories
 from util.schema import validate_mods_config_format
 from util.steam.steamcmd.wrapper import SteamcmdInterface
 from util.steam.steamfiles.wrapper import acf_to_dict, dict_to_acf

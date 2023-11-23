@@ -25,7 +25,7 @@ from RimSort.models.dialogue import (
     show_warning,
 )
 from RimSort.utils.event_bus import EventBus
-from util.generic import (
+from RimSort.utils.generic import (
     delete_files_except_extension,
     handle_remove_read_only,
     open_url_browser,

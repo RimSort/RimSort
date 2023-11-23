@@ -10,7 +10,7 @@ from loguru import logger
 
 from RimSort.models.settings import Settings
 from RimSort.utils.event_bus import EventBus
-from util.generic import platform_specific_open
+from RimSort.utils.generic import platform_specific_open
 from RimSort.utils.system_info import SystemInfo
 from RimSort.views.settings_dialog import SettingsDialog
 

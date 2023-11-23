@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
 )
 
 from RimSort.models.multibutton import MultiButton
-from util.generic import platform_specific_open
+from RimSort.utils.generic import platform_specific_open
 
 
 class CenteredItemDelegate(QStyledItemDelegate):

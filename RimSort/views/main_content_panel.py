@@ -39,7 +39,7 @@ from RimSort.models.dialogue import (
 )
 from RimSort.models.animations import LoadingAnimation
 
-from util.generic import (
+from RimSort.utils.generic import (
     chunks,
     delete_files_except_extension,
     open_url_browser,

@@ -6,7 +6,7 @@ from typing import Union
 import sys
 
 from steamworks import STEAMWORKS
-from util.generic import launch_game_process
+from RimSort.utils.generic import launch_game_process
 
 
 class SteamworksInterface:
