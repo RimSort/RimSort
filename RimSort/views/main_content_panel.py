@@ -65,7 +65,7 @@ from RimSort.views.sub_views.active_mods_panel import ActiveModList
 from RimSort.views.sub_views.inactive_mods_panel import InactiveModList
 from RimSort.views.sub_views.mod_info_panel import ModInfo
 from util.metadata import *
-from util.schema import validate_mods_config_format
+from RimSort.utils.schema import validate_mods_config_format
 from util.steam.steamcmd.wrapper import SteamcmdInterface
 from util.steam.steamworks.wrapper import (
     SteamworksGameLaunch,
