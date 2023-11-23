@@ -26,7 +26,7 @@ from PySide6.QtWidgets import (
 
 from RimSort.models.dialogue import show_warning
 from RimSort.models.image_label import ImageLabel
-from util.steam.webapi.wrapper import (
+from RimSort.utils.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetCollectionDetails,
     ISteamRemoteStorage_GetPublishedFileDetails,
 )
