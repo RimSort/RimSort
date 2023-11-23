@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QApplication
 from RimSort.utils.app_info import AppInfo
 from util.constants import DEFAULT_USER_RULES
 from RimSort.utils.system_info import SystemInfo
-from view.main_window import MainWindow
+from RimSort.views.main_window import MainWindow
 
 
 class AppController(QObject):
