@@ -17,7 +17,7 @@ from view.game_configuration_panel import GameConfiguration
 from RimSort.views.main_content_panel import MainContent
 from RimSort.views.menu_bar import MenuBar
 from RimSort.views.settings_dialog import SettingsDialog
-from view.status_panel import Status
+from RimSort.views.status_panel import Status
 
 if SystemInfo().operating_system == SystemInfo.OperatingSystem.WINDOWS:
     from watchdog.observers.polling import PollingObserver
