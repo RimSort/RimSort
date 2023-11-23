@@ -37,7 +37,7 @@ from model.dialogue import (
     show_dialogue_input,
     show_information,
 )
-from model.animations import LoadingAnimation
+from RimSort.models.animations import LoadingAnimation
 
 from util.generic import (
     chunks,
