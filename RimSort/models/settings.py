@@ -7,7 +7,7 @@ from PySide6.QtCore import QObject
 from loguru import logger
 
 from RimSort.utils.app_info import AppInfo
-from util.event_bus import EventBus
+from RimSort.utils.event_bus import EventBus
 
 
 class Settings(QObject):

@@ -14,7 +14,7 @@ from zipfile import ZipFile
 
 from loguru import logger
 
-from util.event_bus import EventBus
+from RimSort.utils.event_bus import EventBus
 
 # GitPython depends on git executable being available in PATH
 try:

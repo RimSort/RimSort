@@ -2,7 +2,7 @@ from PySide6.QtCore import QObject, Slot
 from PySide6.QtWidgets import QApplication, QLineEdit, QTextEdit, QPlainTextEdit
 
 from RimSort.controllers.settings_controller import SettingsController
-from util.event_bus import EventBus
+from RimSort.utils.event_bus import EventBus
 from util.generic import open_url_browser
 from view.menu_bar import MenuBar
 
