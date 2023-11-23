@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
 )
 
 from RimSort.controllers.settings_controller import SettingsController
-from model.mod_list import ModListWidget
+from RimSort.models.mod_list import ModListWidget
 from RimSort.models.mod_list_item import ModListItemInner
 from util.constants import SEARCH_DATA_SOURCE_FILTER_INDEXES
 from util.metadata import MetadataManager

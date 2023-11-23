@@ -97,42 +97,48 @@ class ModListWidget(QListWidget):
         EventBus().settings_have_changed.connect(self._on_settings_have_changed)
         self.csharp_icon_path = str(
             Path(
-                os.path.join(os.path.dirname(__file__), "../data/csharp.png")
+                os.path.join(os.path.dirname(__file__), "../../data/csharp.png")
             ).resolve()
         )
         self.xml_icon_path = str(
-            Path(os.path.join(os.path.dirname(__file__), "../data/xml.png")).resolve()
+            Path(
+                os.path.join(os.path.dirname(__file__), "../../data/xml.png")
+            ).resolve()
         )
         self.git_icon_path = str(
-            Path(os.path.join(os.path.dirname(__file__), "../data/git.png")).resolve()
+            Path(
+                os.path.join(os.path.dirname(__file__), "../../data/git.png")
+            ).resolve()
         )
         self.local_icon_path = str(
             Path(
-                os.path.join(os.path.dirname(__file__), "../data/local_icon.png")
+                os.path.join(os.path.dirname(__file__), "../../data/local_icon.png")
             ).resolve()
         )
         self.ludeon_icon_path = str(
             Path(
-                os.path.join(os.path.dirname(__file__), "../data/ludeon_icon.png")
+                os.path.join(os.path.dirname(__file__), "../../data/ludeon_icon.png")
             ).resolve()
         )
         self.steamcmd_icon_path = str(
             Path(
-                os.path.join(os.path.dirname(__file__), "../data/steamcmd_icon.png")
+                os.path.join(os.path.dirname(__file__), "../../data/steamcmd_icon.png")
             ).resolve()
         )
         self.steam_icon_path = str(
             Path(
-                os.path.join(os.path.dirname(__file__), "../data/steam_icon.png")
+                os.path.join(os.path.dirname(__file__), "../../data/steam_icon.png")
             ).resolve()
         )
         self.warning_icon_path = str(
             Path(
-                os.path.join(os.path.dirname(__file__), "../data/warning.png")
+                os.path.join(os.path.dirname(__file__), "../../data/warning.png")
             ).resolve()
         )
         self.error_icon_path = str(
-            Path(os.path.join(os.path.dirname(__file__), "../data/error.png")).resolve()
+            Path(
+                os.path.join(os.path.dirname(__file__), "../../data/error.png")
+            ).resolve()
         )
 
         # Allow inserting custom list items
