@@ -282,7 +282,7 @@ class ModListItemInner(QWidget):
 
 
 class ModListIcons:
-    _data_path: str = os.path.join(os.path.dirname(__file__), "../data")
+    _data_path: str = os.path.join(os.path.dirname(__file__), "../../data")
 
     _ludeon_icon_path: str = str(
         Path(os.path.join(_data_path, "ludeon_icon.png")).resolve()

@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
 )
 
 from RimSort.controllers.settings_controller import SettingsController
-from model.mod_list_item import ModListItemInner
+from RimSort.models.mod_list_item import ModListItemInner
 from RimSort.models.dialogue import (
     show_dialogue_conditional,
     show_dialogue_input,
