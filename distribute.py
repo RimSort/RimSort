@@ -423,15 +423,8 @@ def get_latest_todds_release() -> None:
     print(f"Latest release: {tag_name}\n")
     # Setup environment
     if _SYSTEM == "Darwin":
-        if _PROCESSOR == "i386":
-            print(f"Darwin/MacOS system detected with a {_ARCH} {_PROCESSOR} CPU...")
-            target_archive = f"todds_{_SYSTEM}_{_PROCESSOR}_{tag_name}.zip"
-        if _PROCESSOR == "arm":
-            print(f"Darwin/MacOS system currently unsupported by todds.")
-            print(
-                "Skipping todds download. The resultant RimSort build will not include todds!"
-            )
-            return
+        print(f"Darwin/MacOS system detected with a {_ARCH} {_PROCESSOR} CPU...")
+        target_archive = f"todds_{_SYSTEM}_{_PROCESSOR}_{tag_name}.zip"
     elif _SYSTEM == "Linux":
         print(f"Linux system detected with a {_ARCH} {_PROCESSOR} CPU...")
         target_archive = f"todds_{_SYSTEM}_{_PROCESSOR}_{tag_name}.zip"
