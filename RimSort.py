@@ -5,16 +5,13 @@ import traceback
 from logging import getLogger, WARNING
 from multiprocessing import freeze_support, set_start_method
 from pathlib import Path
-from tempfile import gettempdir
 from types import TracebackType
 from typing import Type, Optional
 
-from PySide6.QtWidgets import QApplication
 from loguru import logger
 
-from controller.app_controller import AppController
-from util.app_info import AppInfo
-from view.main_window import MainWindow
+from RimSort.controllers.app_controller import AppController
+from RimSort.utils.app_info import AppInfo
 
 SYSTEM = platform.system()
 # Watchdog conditionals
@@ -32,8 +29,7 @@ elif SYSTEM == "Windows":
     # I still can't figure out why it won't log at all on Windows...?
     # getLogger("").setLevel(WARNING)
 
-from model.dialogue import show_fatal_error
-from util.proxy_style import ProxyStyle
+from RimSort.models.dialogue import show_fatal_error
 
 
 def handle_exception(
