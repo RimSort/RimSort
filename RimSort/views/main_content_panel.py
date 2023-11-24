@@ -3189,11 +3189,11 @@ class MainContent(QObject):
 
     @Slot()
     def _on_do_download_all_mods_via_steamcmd(self) -> None:
-        pass
+        self._do_download_entire_workshop("download_entire_workshop_steamcmd")
 
     @Slot()
     def _on_do_download_all_mods_via_steam(self) -> None:
-        pass
+        self._do_download_entire_workshop("download_entire_workshop_steamworks")
 
     @Slot()
     def _on_do_build_steam_workshop_database(self) -> None:
