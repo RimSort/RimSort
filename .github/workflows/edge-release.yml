@@ -92,10 +92,6 @@ jobs:
             source venv/bin/activate
           else
             python3.11 -m venv venv
-            cd venv/bin/
-            ln -sf python3.11 python
-            ln -sf python3.11 python3
-            cd ..
             source venv/bin/activate
           fi
           python -m pip install requests
