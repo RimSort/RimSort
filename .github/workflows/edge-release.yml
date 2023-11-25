@@ -150,6 +150,11 @@ jobs:
         run: |
           if [[ "$(uname)" == "Darwin" ]]; then
             DIST="RimSort.app"
+            if [ -d "dist/$DIST" ]; then
+                echo "Existing build found. Deleting old build and replacing with a new build."
+                rm -rf "./dist/$DIST"
+            fi
+            mv dist/__main__.app ."/dist/$DIST"
             echo ${{ steps.sha_unix.outputs.short }} > ./dist/$DIST/Contents/MacOS/SHA
           else    
             DIST="RimSort"
@@ -157,7 +162,7 @@ jobs:
                 echo "Existing build found. Deleting old build and replacing with a new build."
                 rm -rf "./dist/$DIST"
             fi
-            mv dist/RimSort.dist ."/dist/$DIST"
+            mv dist/__main__.dist ."/dist/$DIST"
             echo ${{ steps.sha_unix.outputs.short }} > ./dist/$DIST/SHA
           fi
           cd ./dist/
@@ -170,7 +175,7 @@ jobs:
               Remove-Item -Path .\dist\RimSort -Force -Recurse
           }
           cd ./dist/
-          Rename-Item -Path RimSort.dist -NewName RimSort
+          Rename-Item -Path __main__.dist -NewName RimSort
           Set-Content -Path .\RimSort\SHA -Value "${{ steps.sha_win.outputs.short }}"
           Compress-Archive -Force -Path RimSort -DestinationPath ${{ env.FILENAME }}
         shell: powershell

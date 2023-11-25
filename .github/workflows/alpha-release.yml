@@ -162,13 +162,18 @@ jobs:
         run: |
           if [[ "$(uname)" == "Darwin" ]]; then
             DIST="RimSort.app"
+            if [ -d "dist/$DIST" ]; then
+                echo "Existing build found. Deleting old build and replacing with a new build."
+                rm -rf "./dist/$DIST"
+            fi
+            mv dist/__main__.app ."/dist/$DIST"
           else    
             DIST="RimSort"
             if [ -d "dist/$DIST" ]; then
                 echo "Existing build found. Deleting old build and replacing with a new build."
                 rm -rf "./dist/$DIST"
             fi
-            mv dist/RimSort.dist ."/dist/$DIST"
+            mv dist/__main__.dist ."/dist/$DIST"
           fi
           cd ./dist/
           zip -r ${{ env.FILENAME }} $DIST
@@ -180,7 +185,7 @@ jobs:
               Remove-Item -Path .\dist\RimSort -Force -Recurse
           }
           cd ./dist/
-          Rename-Item -Path RimSort.dist -NewName RimSort
+          Rename-Item -Path __main__.dist -NewName RimSort
           Compress-Archive -Force -Path RimSort -DestinationPath ${{ env.FILENAME }}
         shell: powershell
       # Upload ZIP as artifact
