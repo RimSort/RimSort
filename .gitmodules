@@ -1,9 +1,9 @@
 [submodule "steamfiles"]
-	path = steamfiles
+	path = submodules/steamfiles
 	url = https://github.com/twstagg/steamfiles
 	ignore = dirty
 [submodule "SteamworksPy"]
-	path = SteamworksPy
+	path = submodules/SteamworksPy
 	url = https://github.com/twstagg/SteamworksPy
 	ignore = dirty
 	branch = master

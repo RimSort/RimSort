@@ -87,12 +87,16 @@ jobs:
       - name: Init venv & execute distribute.py (Unix)
         if: matrix.platform != 'Windows'
         run: |
-          python3.9 -m pip install --upgrade pip
-          python3.9 -m pip install requests virtualenv
+          python3.11 -m pip install --upgrade pip
+          python3.11 -m pip install requests virtualenv
           if [ -f "bin/activate" ]; then
             source bin/activate
           else
-            python3.9 -m venv .
+            python3.11 -m venv .
+            cd bin/activate
+            ln -sf python3.11 python
+            ln -sf python3.11 python3
+            cd ..
             source bin/activate
           fi
           python -m pip install requests

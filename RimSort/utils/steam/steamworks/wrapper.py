@@ -1,9 +1,17 @@
 from loguru import logger
 from multiprocessing import Process
+from os import getcwd
+from pathlib import Path
 from threading import Thread
 from time import sleep
 from typing import Union
 import sys
+
+# If we're running from a Python interpreter, makesure steamworks module is in our sys.path ($PYTHONPATH)
+# Ensure that this is available by running `git submodule update --init --recursive`
+# You can automatically ensure this is done by utilizing distribute.py
+if not "__compiled__" in globals():
+    sys.path.append(str((Path(getcwd()) / "submodules" / "SteamworksPy")))
 
 from steamworks import STEAMWORKS
 from RimSort.utils.generic import launch_game_process
