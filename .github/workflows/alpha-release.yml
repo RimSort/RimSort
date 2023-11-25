@@ -164,29 +164,29 @@ jobs:
         run: |
           if [[ "$(uname)" == "Darwin" ]]; then
             DIST="RimSort.app"
-            if [ -d "dist/$DIST" ]; then
+            if [ -d "build/$DIST" ]; then
                 echo "Existing build found. Deleting old build and replacing with a new build."
-                rm -rf "./dist/$DIST"
+                rm -rf "./build/$DIST"
             fi
-            mv dist/__main__.app ."/dist/$DIST"
+            mv build/__main__.app ."/build/$DIST"
           else    
             DIST="RimSort"
-            if [ -d "dist/$DIST" ]; then
+            if [ -d "build/$DIST" ]; then
                 echo "Existing build found. Deleting old build and replacing with a new build."
-                rm -rf "./dist/$DIST"
+                rm -rf "./build/$DIST"
             fi
-            mv dist/__main__.dist ."/dist/$DIST"
+            mv build/__main__.dist ."/build/$DIST"
           fi
-          cd ./dist/
+          cd ./build/
           zip -r ${{ env.FILENAME }} $DIST
       - name: Create ZIP (Windows)
         if: matrix.platform == 'Windows'
         run: |
-          if (Test-Path -Path .\dist\RimSort -PathType Container) {
+          if (Test-Path -Path .\build\RimSort -PathType Container) {
               Write-Host "Existing build found. Deleting old build and replacing with new build."
-              Remove-Item -Path .\dist\RimSort -Force -Recurse
+              Remove-Item -Path .\build\RimSort -Force -Recurse
           }
-          cd ./dist/
+          cd ./build/
           Rename-Item -Path __main__.dist -NewName RimSort
           Compress-Archive -Force -Path RimSort -DestinationPath ${{ env.FILENAME }}
         shell: powershell
@@ -195,7 +195,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: ${{ env.FILENAME }}
-          path: ./dist/${{ env.FILENAME }}
+          path: ./build/${{ env.FILENAME }}
     outputs:
       formatted_tag_name: ${{ env.FORMATTED_TAG_NAME }}
       raw_tag_name: ${{ env.RAW_TAG_NAME }}
