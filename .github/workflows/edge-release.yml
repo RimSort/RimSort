@@ -9,16 +9,16 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-10.14.6-i386 
+          - os: macos-11
             platform: "Darwin"
             arch: "i386"
           - os: macos-14-arm64
             platform: "Darwin"
             arch: "arm"
-          - os: debian-11
+          - os: ubuntu-20.04
             platform: "Linux"
             arch: "x86_64"
-          - os: windows-10-21h2
+          - os: windows-2019
             platform: "Windows"
             arch: "x86_64"
     steps:
