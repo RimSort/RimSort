@@ -44,7 +44,7 @@ if _SYSTEM == "Darwin" and _PROCESSOR == "arm":
         "--include-data-file=./libsteam_api.dylib=libsteam_api.dylib",
         "--include-data-file=./steam_appid.txt=steam_appid.txt",
         "--include-package=steamworks",
-        "RimSort/__main__.py",
+        "app/__main__.py",
         "--output-dir=./dist/",
         "--output-filename=RimSort",
     ]
@@ -66,7 +66,7 @@ elif _SYSTEM == "Darwin" and _PROCESSOR == "i386":
         "--include-data-file=./libsteam_api.dylib=libsteam_api.dylib",
         "--include-data-file=./steam_appid.txt=steam_appid.txt",
         "--include-package=steamworks",
-        "RimSort/__main__.py",
+        "app/__main__.py",
         "--output-dir=./dist/",
         "--output-filename=RimSort",
     ]
@@ -87,7 +87,7 @@ elif _SYSTEM == "Linux":
         "--include-data-file=./libsteam_api.so=libsteam_api.so",
         "--include-data-file=./steam_appid.txt=steam_appid.txt",
         "--include-package=steamworks",
-        "RimSort/__main__.py",
+        "app/__main__.py",
         "--output-dir=./dist/",
         "--output-filename=RimSort",
     ]
@@ -109,7 +109,7 @@ elif _SYSTEM == "Windows" and _ARCH == "64bit":
         "--include-data-file=./steam_api64.dll=steam_api64.dll",
         "--include-data-file=./steam_appid.txt=steam_appid.txt",
         "--include-package=steamworks",
-        "RimSort/__main__.py",
+        "app/__main__.py",
         "--output-dir=./dist",
         "--output-filename=RimSort",
     ]
