@@ -36,7 +36,6 @@ if _SYSTEM == "Darwin" and _PROCESSOR == "arm":
         "--macos-create-app-bundle",
         "--macos-app-icon=./themes/.default-icons/AppIcon_a.icns",
         "--enable-plugin=pyside6",
-        "--include-data-dir=./data/=data",
         "--include-data-dir=./themes/=themes",
         "--include-data-dir=./todds/=todds",
         "--include-data-file=./update.sh=update.sh",
