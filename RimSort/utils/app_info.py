@@ -44,7 +44,13 @@ class AppInfo:
         if main_file is None:
             raise ValueError("AppInfo must be initialized once with __file__.")
 
-        self._application_folder = Path(main_file).resolve().parent
+        # Need to go one up if we are running from source
+        self._application_folder = (
+            Path(main_file).resolve().parent.parent
+            if not "__compiled__"
+            in globals()  # __compiled__ will be present if Nuitka has frozen this
+            else Path(main_file).resolve().parent
+        )
 
         # Application metadata
 
@@ -55,13 +61,13 @@ class AppInfo:
         # Define important directories using platformdirs
 
         platform_dirs = PlatformDirs(appname=self._app_name, appauthor=False)
-        self._app_storage_folder = Path(platform_dirs.user_data_dir)
-        self._user_log_folder = Path(platform_dirs.user_log_dir)
+        self._app_storage_folder: Path = Path(platform_dirs.user_data_dir)
+        self._user_log_folder: Path = Path(platform_dirs.user_log_dir)
 
         # Derive some secondary directory paths
 
-        self._app_data_folder = self._application_folder / "data"
-        self._databases_folder = self._app_storage_folder / "dbs"
+        self._databases_folder: Path = self._app_storage_folder / "dbs"
+        self._theme_data_folder: Path = self._application_folder / "themes"
 
         # Make sure important directories exist
 
@@ -137,11 +143,11 @@ class AppInfo:
         return self._user_log_folder
 
     @property
-    def app_data_folder(self) -> Path:
+    def theme_data_folder(self) -> Path:
         """
         Get the path to the folder where application-specific data is stored.
         """
-        return self._app_data_folder
+        return self._theme_data_folder
 
     @property
     def databases_folder(self) -> Path:

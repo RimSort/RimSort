@@ -16,8 +16,9 @@ from PySide6.QtWidgets import (
     QProgressBar,
 )
 
-from RimSort.models.dialogue import show_dialogue_file, show_dialogue_conditional
-from RimSort.utils.steam.webapi.wrapper import (
+from models.dialogue import show_dialogue_file, show_dialogue_conditional
+from utils.app_info import AppInfo
+from utils.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetPublishedFileDetails,
 )
 
@@ -75,11 +76,7 @@ class RunnerPanel(QWidget):
         # CREATE WIDGETS
         # Clear btn
         self.clear_runner_icon = QIcon(
-            str(
-                Path(
-                    os.path.join(os.path.dirname(__file__), "../../data/clear.png")
-                ).resolve()
-            )
+            str(AppInfo().theme_data_folder / ".default-icons" / "clear.png")
         )
         self.clear_runner_button = QToolButton()
         self.clear_runner_button.setIcon(self.clear_runner_icon)
@@ -89,13 +86,7 @@ class RunnerPanel(QWidget):
         )
         # Restart btn
         self.restart_process_icon = QIcon(
-            str(
-                Path(
-                    os.path.join(
-                        os.path.dirname(__file__), "../../data/restart_process.png"
-                    )
-                ).resolve()
-            )
+            str(AppInfo().theme_data_folder / ".default-icons" / "restart_process.png")
         )
         self.restart_process_button = QToolButton()
         self.restart_process_button.setIcon(self.restart_process_icon)
@@ -106,13 +97,7 @@ class RunnerPanel(QWidget):
         self.restart_process_button.hide()  # Hide this by default - it will be enabled if self.execute()
         # Kill btn
         self.kill_process_icon = QIcon(
-            str(
-                Path(
-                    os.path.join(
-                        os.path.dirname(__file__), "../../data/kill_process.png"
-                    )
-                ).resolve()
-            )
+            str(AppInfo().theme_data_folder / ".default-icons" / "kill_process.png")
         )
         self.kill_process_button = QToolButton()
         self.kill_process_button.setIcon(self.kill_process_icon)
@@ -123,13 +108,7 @@ class RunnerPanel(QWidget):
         self.kill_process_button.hide()  # Hide this by default - it will be enabled if self.execute()
         # Save process output btn
         self.save_runner_icon = QIcon(
-            str(
-                Path(
-                    os.path.join(
-                        os.path.dirname(__file__), "../../data/save_output.png"
-                    )
-                ).resolve()
-            )
+            str(AppInfo().theme_data_folder / ".default-icons" / "save_output.png")
         )
         self.save_runner_output_button = QToolButton()
         self.save_runner_output_button.setIcon(self.save_runner_icon)

@@ -14,6 +14,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from utils.app_info import AppInfo
+
 
 class MultiButton(QWidget):
     def __init__(
@@ -35,11 +37,7 @@ class MultiButton(QWidget):
         self.secondary_action_icon_path = (
             secondary_action_icon_path
             if secondary_action_icon_path
-            else str(
-                Path(
-                    os.path.join(os.path.dirname(__file__), "../../data/kebab.png")
-                ).resolve()
-            )
+            else str(AppInfo().theme_data_folder / ".default-icons" / "kebab.png")
         )
 
         # Create a horizontal layout

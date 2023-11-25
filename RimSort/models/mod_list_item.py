@@ -9,7 +9,8 @@ from PySide6.QtCore import QRectF, QSize, Qt, Signal
 from PySide6.QtGui import QFontMetrics, QIcon, QResizeEvent
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QWidget
 
-from RimSort.utils.metadata import MetadataManager
+from utils.app_info import AppInfo
+from utils.metadata import MetadataManager
 
 
 class ClickableQLabel(QLabel):
@@ -31,14 +32,6 @@ class ModListItemInner(QWidget):
     def __init__(
         self,
         mod_type_filter_enable: bool,
-        csharp_icon_path: str,
-        xml_icon_path: str,
-        git_icon_path: str,
-        local_icon_path: str,
-        ludeon_icon_path: str,
-        steamcmd_icon_path: str,
-        steam_icon_path: str,
-        warning_icon_path: str,
         uuid: str,
     ) -> None:
         """
@@ -77,14 +70,6 @@ class ModListItemInner(QWidget):
 
         # Icon paths
         self.mod_type_filter_enable = mod_type_filter_enable
-        self.csharp_icon_path = csharp_icon_path
-        self.xml_icon_path = xml_icon_path
-        self.git_icon_path = git_icon_path
-        self.local_icon_path = local_icon_path
-        self.ludeon_icon_path = ludeon_icon_path
-        self.steamcmd_icon_path = steamcmd_icon_path
-        self.steam_icon_path = steam_icon_path
-        self.warning_icon_path = warning_icon_path
 
         # Visuals
         self.setToolTip(self.get_tool_tip_text())
@@ -282,27 +267,16 @@ class ModListItemInner(QWidget):
 
 
 class ModListIcons:
-    _data_path: str = os.path.join(os.path.dirname(__file__), "../../data")
-
-    _ludeon_icon_path: str = str(
-        Path(os.path.join(_data_path, "ludeon_icon.png")).resolve()
-    )
-    _local_icon_path: str = str(
-        Path(os.path.join(_data_path, "local_icon.png")).resolve()
-    )
-    _steam_icon_path: str = str(
-        Path(os.path.join(_data_path, "steam_icon.png")).resolve()
-    )
-    _csharp_icon_path: str = str(Path(os.path.join(_data_path, "csharp.png")).resolve())
-    _xml_icon_path: str = str(Path(os.path.join(_data_path, "xml.png")).resolve())
-    _git_icon_path: str = str(Path(os.path.join(_data_path, "git.png")).resolve())
-    _steamcmd_icon_path: str = str(
-        Path(os.path.join(_data_path, "steamcmd_icon.png")).resolve()
-    )
-    _warning_icon_path: str = str(
-        Path(os.path.join(_data_path, "warning.png")).resolve()
-    )
-    _error_icon_path: str = str(Path(os.path.join(_data_path, "error.png")).resolve())
+    _data_path: Path = AppInfo().theme_data_folder / ".default-icons"
+    _ludeon_icon_path: str = str(_data_path / "ludeon_icon.png")
+    _local_icon_path: str = str(_data_path / "local_icon.png")
+    _steam_icon_path: str = str(_data_path / "steam_icon.png")
+    _csharp_icon_path: str = str(_data_path / "csharp.png")
+    _xml_icon_path: str = str(_data_path / "xml.png")
+    _git_icon_path: str = str(_data_path / "git.png")
+    _steamcmd_icon_path: str = str(_data_path / "steamcmd_icon.png")
+    _warning_icon_path: str = str(_data_path / "warning.png")
+    _error_icon_path: str = str(_data_path / "error.png")
 
     _ludeon_icon: Optional[QIcon] = None
     _local_icon: Optional[QIcon] = None

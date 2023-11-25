@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from RimSort.models.multibutton import MultiButton
+from models.multibutton import MultiButton
 
 
 class Actions(QWidget):

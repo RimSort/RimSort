@@ -4,8 +4,8 @@ from pathlib import Path
 import platform
 import sys
 
-from RimSort.utils.app_info import AppInfo
-from RimSort.windows.runner_panel import RunnerPanel
+from utils.app_info import AppInfo
+from windows.runner_panel import RunnerPanel
 
 
 class ToddsInterface:

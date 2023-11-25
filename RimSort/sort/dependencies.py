@@ -1,6 +1,6 @@
 from loguru import logger
 
-from RimSort.utils.metadata import MetadataManager
+from utils.metadata import MetadataManager
 
 
 def gen_deps_graph(

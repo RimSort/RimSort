@@ -26,8 +26,9 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from RimSort.models.dialogue import show_dialogue_input, show_warning
-from RimSort.utils.metadata import MetadataManager
+from models.dialogue import show_dialogue_input, show_warning
+from utils.app_info import AppInfo
+from utils.metadata import MetadataManager
 
 
 class EditableDelegate(QItemDelegate):
@@ -268,11 +269,9 @@ class RuleEditor(QWidget):
         # community rules
         self.editor_save_community_rules_icon = QIcon(
             str(
-                Path(
-                    os.path.join(
-                        os.path.dirname(__file__), "../../data/save_community_rules.png"
-                    )
-                ).resolve()
+                AppInfo().theme_data_folder
+                / ".default-icons"
+                / "save_community_rules.png"
             )
         )
         self.editor_save_community_rules_button = QToolButton()
@@ -287,13 +286,7 @@ class RuleEditor(QWidget):
         )
         # user rules
         self.editor_save_user_rules_icon = QIcon(
-            str(
-                Path(
-                    os.path.join(
-                        os.path.dirname(__file__), "../../data/save_user_rules.png"
-                    )
-                ).resolve()
-            )
+            str(AppInfo().theme_data_folder / ".default-icons" / "save_user_rules.png")
         )
         self.editor_save_user_rules_button = QToolButton()
         self.editor_save_user_rules_button.setToolTip("Save rules to userRules.json")

@@ -10,8 +10,14 @@ from typing import Type, Optional
 
 from loguru import logger
 
-from RimSort.controllers.app_controller import AppController
-from RimSort.utils.app_info import AppInfo
+from utils.app_info import AppInfo
+
+if __name__ == "__main__":
+    # One-time initialization of AppInfo class (this must be done in __main__ so we can use __file__)
+    # Initialize as early as possible!
+    AppInfo(main_file=__file__)
+
+from controllers.app_controller import AppController
 
 SYSTEM = platform.system()
 # Watchdog conditionals
@@ -29,7 +35,7 @@ elif SYSTEM == "Windows":
     # I still can't figure out why it won't log at all on Windows...?
     # getLogger("").setLevel(WARNING)
 
-from RimSort.models.dialogue import show_fatal_error
+from models.dialogue import show_fatal_error
 
 
 def handle_exception(
@@ -111,9 +117,6 @@ def main_thread() -> None:
 
 
 if __name__ == "__main__":
-    # One-time initialization of AppInfo class (this must be done in __main__ so we can use __file__)
-    AppInfo(main_file=__file__)
-
     # If RimSort is running from a --onefile Nuitka build, there are some nuances to consider:
     # https://nuitka.net/doc/user-manual.html#onefile-finding-files
     # You can override by passing --onefile-tempdir-spec to `nuitka`
@@ -122,7 +125,7 @@ if __name__ == "__main__":
     #########################################################################################
 
     # Set the log level from the presence (or absence) of a "DEBUG" file in the app_data_folder
-    debug_file_path = AppInfo().app_data_folder / "DEBUG"
+    debug_file_path = AppInfo().application_folder / "DEBUG"
     if debug_file_path.exists() and debug_file_path.is_file():
         DEBUG_MODE = True
     else:
@@ -168,9 +171,9 @@ if __name__ == "__main__":
         logger.debug("Running using Python interpreter")
     else:
         # Configure QtWebEngine locales path
-        os.environ[
-            "QTWEBENGINE_LOCALES_PATH"
-        ] = f'{str(Path(os.path.join(os.path.dirname(__file__), "qtwebengine_locales")).resolve())}'
+        os.environ["QTWEBENGINE_LOCALES_PATH"] = str(
+            AppInfo().application_folder / "qtwebengine_locales"
+        )
 
         # MacOS and Windows do not support fork, and can only use spawn
         if SYSTEM != "Linux":

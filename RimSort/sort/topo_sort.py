@@ -3,7 +3,7 @@ from typing import List
 
 from toposort import toposort
 
-from RimSort.utils.metadata import MetadataManager
+from utils.metadata import MetadataManager
 
 
 def do_topo_sort(

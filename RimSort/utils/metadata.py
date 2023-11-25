@@ -16,28 +16,28 @@ from PySide6.QtCore import (
     Signal,
 )
 
-from RimSort.controllers.settings_controller import SettingsController
-from RimSort.models.dialogue import (
+from controllers.settings_controller import SettingsController
+from models.dialogue import (
     show_dialogue_conditional,
     show_dialogue_file,
     show_warning,
 )
-from RimSort.utils.app_info import AppInfo
-from RimSort.utils.constants import (
+from utils.app_info import AppInfo
+from utils.constants import (
     DB_BUILDER_PRUNE_EXCEPTIONS,
     DB_BUILDER_RECURSE_EXCEPTIONS,
     DEFAULT_USER_RULES,
     RIMWORLD_DLC_METADATA,
 )
-from RimSort.utils.generic import directories
-from RimSort.utils.schema import validate_mods_config_format
-from RimSort.utils.steam.steamcmd.wrapper import SteamcmdInterface
-from RimSort.utils.steam.steamfiles.wrapper import acf_to_dict, dict_to_acf
-from RimSort.utils.steam.webapi.wrapper import (
+from utils.generic import directories
+from utils.schema import validate_mods_config_format
+from utils.steam.steamcmd.wrapper import SteamcmdInterface
+from utils.steam.steamfiles.wrapper import acf_to_dict, dict_to_acf
+from utils.steam.webapi.wrapper import (
     DynamicQuery,
     ISteamRemoteStorage_GetPublishedFileDetails,
 )
-from RimSort.utils.xml import xml_path_to_json
+from utils.xml import xml_path_to_json
 
 
 # Locally installed mod metadata
@@ -84,18 +84,10 @@ class MetadataManager(QObject):
 
             # Generate Steam .acf file path
             self.steam_acf_path = str(
-                Path(
-                    # This is just getting the path 2 directories up from content/294100,
-                    # so that we can find workshop/appworkshop_294100.acf
-                    os.path.join(
-                        os.path.split(
-                            os.path.split(
-                                self.settings_controller.settings.workshop_folder
-                            )[0]
-                        )[0],
-                        "appworkshop_294100.acf",
-                    )
-                ).resolve()
+                # This is just getting the path 2 directories up from content/294100,
+                # so that we can find workshop/appworkshop_294100.acf
+                Path(self.settings_controller.settings.workshop_folder).parent.parent
+                / "appworkshop_294100.acf",
             )
             logger.info("Finished MetadataManager initialization")
             self.initialized = True
@@ -224,7 +216,7 @@ class MetadataManager(QObject):
                 self,
                 life=self.settings_controller.settings.database_expiry,
                 path=str(
-                    Path(
+                    (
                         os.path.join(
                             str(AppInfo().databases_folder),
                             os.path.split(
@@ -232,7 +224,7 @@ class MetadataManager(QObject):
                             )[1],
                             "steamDB.json",
                         )
-                    ).resolve()
+                    )
                 ),
             )
         else:
@@ -262,15 +254,15 @@ class MetadataManager(QObject):
             ) = get_configured_community_rules_db(
                 self,
                 path=str(
-                    Path(
-                        os.path.join(
-                            str(AppInfo().databases_folder),
+                    (
+                        Path(str(AppInfo().databases_folder))
+                        / Path(
                             os.path.split(
                                 self.settings_controller.settings.external_community_rules_repo
-                            )[1],
-                            "communityRules.json",
+                            )[1]
                         )
-                    ).resolve()
+                        / "communityRules.json"
+                    )
                 ),
             )
         else:
@@ -362,9 +354,7 @@ class MetadataManager(QObject):
             """
             logger.info(f"Getting game version from Game Folder: {game_path}")
             version = ""
-            version_file_path = str(
-                Path(os.path.join(game_path, "Version.txt")).resolve()
-            )
+            version_file_path = str((Path(game_path) / "Version.txt"))
             logger.debug(f"Generated Version.txt path: {version_file_path}")
             if os.path.exists(version_file_path):
                 try:
@@ -409,11 +399,7 @@ class MetadataManager(QObject):
 
                 # Get mod data
                 data_path = str(
-                    Path(
-                        os.path.join(
-                            self.settings_controller.settings.game_folder, "Data"
-                        )
-                    ).resolve()
+                    (Path(self.settings_controller.settings.game_folder) / "Data")
                 )
                 logger.info(
                     f"Attempting to get expansion data from RimWorld's Data folder: {data_path}"
@@ -1133,7 +1119,8 @@ class ModParser(QRunnable):
     ) -> Dict[str, Any]:
         logger.debug(f"Parsing directory: {directory}")
         mods = {}
-        directory_name = os.path.split(directory)[1]
+        directory = Path(directory)
+        directory_name = str(directory.parent)
         # Use this to trigger invalid clause intentionally, i.e. when handling exceptions
         data_malformed = None
         # Any pfid parsed will be stored here locally
@@ -1155,9 +1142,7 @@ class ModParser(QRunnable):
         invalid_about_file_path_found = True
         if not invalid_about_folder_path_found:
             about_file_name = "About.xml"
-            for temp_file in os.scandir(
-                str(Path(os.path.join(directory, about_folder_name)).resolve())
-            ):
+            for temp_file in os.scandir(str((directory / about_folder_name))):
                 if (
                     temp_file.name.lower() == about_file_name.lower()
                     and temp_file.is_file()
@@ -1188,19 +1173,13 @@ class ModParser(QRunnable):
             logger.debug(
                 f"Unable to find PublishedFileId for dir {directory_name} in Steam DB. Trying to find a {pfid_file_name} to parse"
             )
-            for temp_file in os.scandir(
-                str(Path(os.path.join(directory, about_folder_name)).resolve())
-            ):
+            for temp_file in os.scandir(str((directory / about_folder_name))):
                 if (
                     temp_file.name.lower() == pfid_file_name.lower()
                     and temp_file.is_file()
                 ):
                     pfid_file_name = temp_file.name
-                    pfid_path = str(
-                        Path(
-                            os.path.join(directory, about_folder_name, pfid_file_name)
-                        ).resolve()
-                    )
+                    pfid_path = str((directory / about_folder_name / pfid_file_name))
                     logger.debug(
                         f"Found a variation of /About/PublishedFileId.txt at: {pfid_path}"
                     )
@@ -1217,11 +1196,7 @@ class ModParser(QRunnable):
                     )
         # If we were able to find an About.xml, populate mod data...
         if not invalid_about_file_path_found:
-            mod_data_path = str(
-                Path(
-                    os.path.join(directory, about_folder_name, about_file_name)
-                ).resolve()
-            )
+            mod_data_path = str((directory / about_folder_name / about_file_name))
             logger.debug(f"Found mod metadata at: {mod_data_path}")
             mod_data = {}
             try:
@@ -1328,9 +1303,7 @@ class ModParser(QRunnable):
                             "steam_url"
                         ] = f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
                     # If a mod contains C# assemblies, we want to tag the mod
-                    assemblies_path = str(
-                        Path(os.path.join(directory, "Assemblies")).resolve()
-                    )
+                    assemblies_path = str((directory / "Assemblies"))
                     if os.path.exists(assemblies_path):
                         if any(
                             filename.endswith((".dll", ".DLL"))
@@ -1339,17 +1312,13 @@ class ModParser(QRunnable):
                             mod_metadata["csharp"] = True
                     else:
                         subfolder_paths = [
-                            str(Path(os.path.join(directory, folder)).resolve())
+                            str((directory / folder))
                             for folder in os.listdir(directory)
-                            if os.path.isdir(
-                                str(Path(os.path.join(directory, folder)).resolve())
-                            )
+                            if os.path.isdir(str((directory / folder)))
                         ]
                         for subfolder_path in subfolder_paths:
                             assemblies_path = str(
-                                Path(
-                                    os.path.join(subfolder_path, "Assemblies")
-                                ).resolve()
+                                os.path.join(Path(subfolder_path) / "Assemblies")
                             )
                             if os.path.exists(assemblies_path):
                                 if any(
@@ -1376,9 +1345,7 @@ class ModParser(QRunnable):
                     data_malformed = True
         # ...or, if we didn't find an About.xml, but we have a RimWorld scenario .rsc to parse...
         elif invalid_about_file_path_found and scenario_rsc_found:
-            scenario_data_path = str(
-                Path(os.path.join(directory, scenario_rsc_file)).resolve()
-            )
+            scenario_data_path = str((directory / scenario_rsc_file))
             logger.debug(f"Found scenario metadata at: {scenario_data_path}")
             scenario_data = {}
             try:
@@ -1473,7 +1440,7 @@ class ModParser(QRunnable):
         if intent == "local":
             metadata = mods[uuid]
             # Check for git repository inside local mods, tag appropriately
-            if os.path.exists(str(Path(os.path.join(directory, ".git")).resolve())):
+            if os.path.exists(str((directory / ".git"))):
                 metadata["git_repo"] = True
             # Check for local mods that are SteamCMD mods, tag appropriately
             if metadata.get("folder") == metadata.get("publishedfileid"):
@@ -2083,12 +2050,8 @@ class SteamDatabaseBuilder(QThread):
                     "Unable to load database from specified path! Does the file exist...?"
                 )
                 appended_path = str(
-                    Path(
-                        os.path.join(
-                            os.path.split(self.output_database_path)[0],
-                            "NEW_" + str(os.path.split(self.output_database_path[1])),
-                        )
-                    ).resolve()
+                    Path(self.output_database_path).parent
+                    / ("NEW_" + Path(self.output_database_path).name)
                 )
                 self.db_builder_message_output_signal.emit(
                     f"\nCaching DynamicQuery result:\n\n{appended_path}"

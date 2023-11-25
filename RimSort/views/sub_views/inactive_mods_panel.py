@@ -14,11 +14,12 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from RimSort.controllers.settings_controller import SettingsController
-from RimSort.models.mod_list import ModListWidget
-from RimSort.models.mod_list_item import ModListItemInner
-from RimSort.utils.constants import SEARCH_DATA_SOURCE_FILTER_INDEXES
-from RimSort.utils.metadata import MetadataManager
+from controllers.settings_controller import SettingsController
+from models.mod_list import ModListWidget
+from models.mod_list_item import ModListItemInner, ModListIcons
+from utils.app_info import AppInfo
+from utils.constants import SEARCH_DATA_SOURCE_FILTER_INDEXES
+from utils.metadata import MetadataManager
 
 
 class InactiveModList:
@@ -67,19 +68,13 @@ class InactiveModList:
         ]
         self.inactive_mods_filter_data_source_icons = [
             QIcon(
-                str(
-                    Path(
-                        os.path.join(
-                            os.path.dirname(__file__), "../../../data/AppIcon_b.png"
-                        )
-                    ).resolve()
-                )
+                str(AppInfo().theme_data_folder / ".default-icons" / "AppIcon_b.png")
             ),
-            QIcon(self.inactive_mods_list.ludeon_icon_path),
-            QIcon(self.inactive_mods_list.local_icon_path),
-            QIcon(self.inactive_mods_list.git_icon_path),
-            QIcon(self.inactive_mods_list.steamcmd_icon_path),
-            QIcon(self.inactive_mods_list.steam_icon_path),
+            ModListIcons.ludeon_icon(),
+            ModListIcons.local_icon(),
+            ModListIcons.git_icon(),
+            ModListIcons.steamcmd_icon(),
+            ModListIcons.steam_icon(),
         ]
         self.inactive_mods_filter_data_source_button = QToolButton()
         self.inactive_mods_filter_data_source_button.setIcon(
@@ -92,20 +87,10 @@ class InactiveModList:
         )
         self.inactive_mods_search_filter_state = True
         self.inactive_mods_search_mode_filter_icon = QIcon(
-            str(
-                Path(
-                    os.path.join(os.path.dirname(__file__), "../../../data/filter.png")
-                ).resolve()
-            )
+            str(AppInfo().theme_data_folder / ".default-icons" / "filter.png")
         )
         self.inactive_mods_search_mode_nofilter_icon = QIcon(
-            str(
-                Path(
-                    os.path.join(
-                        os.path.dirname(__file__), "../../../data/nofilter.png"
-                    )
-                ).resolve()
-            )
+            str(AppInfo().theme_data_folder / ".default-icons" / "nofilter.png")
         )
         self.inactive_mods_search_mode_filter_button = QToolButton()
         self.inactive_mods_search_mode_filter_button.setIcon(

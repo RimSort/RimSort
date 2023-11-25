@@ -11,7 +11,7 @@ from requests import post as requests_post
 import sys
 import webbrowser
 
-from RimSort.models.dialogue import show_warning
+from models.dialogue import show_warning
 
 
 def chunks(_list: list, limit: int):
@@ -29,7 +29,7 @@ def delete_files_except_extension(directory, extension):
     for root, dirs, files in os.walk(directory):
         for file in files:
             if not file.endswith(extension):
-                file_path = str(Path(os.path.join(root, file)).resolve())
+                file_path = str(root / file)
                 try:
                     os.remove(file_path)
                 except OSError as e:
@@ -39,7 +39,7 @@ def delete_files_except_extension(directory, extension):
 
     for root, dirs, _ in os.walk(directory, topdown=False):
         for dir in dirs:
-            dir_path = str(Path(os.path.join(root, dir)).resolve())
+            dir_path = str((root / dir))
             if not os.listdir(dir_path):
                 shutil.rmtree(
                     dir_path,
@@ -74,7 +74,7 @@ def handle_remove_read_only(func, path: str, exc):
         raise
 
 
-def launch_game_process(game_install_path: str, args: list) -> None:
+def launch_game_process(game_install_path: Path, args: list) -> None:
     """
     This function starts the Rimworld game process in it's own Process,
     by launching the executable found in the configured game directory.
@@ -92,14 +92,10 @@ def launch_game_process(game_install_path: str, args: list) -> None:
             executable_path = str(game_install_path)
         elif system_name == "Linux":
             # Linux
-            executable_path = str(
-                Path(os.path.join(game_install_path, "RimWorldLinux")).resolve()
-            )
+            executable_path = str((game_install_path / "RimWorldLinux"))
         elif "Windows":
             # Windows
-            executable_path = str(
-                Path(os.path.join(game_install_path, "RimWorldWin64.exe")).resolve()
-            )
+            executable_path = str((game_install_path / "RimWorldWin64.exe"))
         else:
             logger.error("Unable to launch the game on an unknown system")
         logger.info(f"Path to game executable generated: {executable_path}")

@@ -7,17 +7,17 @@ from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QWidget
 from loguru import logger
 from watchdog.observers.api import BaseObserver
 
-from RimSort.controllers.menu_bar_controller import MenuBarController
-from RimSort.controllers.settings_controller import SettingsController
-from RimSort.models.settings import Settings
-from RimSort.utils.app_info import AppInfo
-from RimSort.utils.system_info import SystemInfo
-from RimSort.utils.watchdog import RSFileSystemEventHandler
-from RimSort.views.game_configuration_panel import GameConfiguration
-from RimSort.views.main_content_panel import MainContent
-from RimSort.views.menu_bar import MenuBar
-from RimSort.views.settings_dialog import SettingsDialog
-from RimSort.views.status_panel import Status
+from controllers.menu_bar_controller import MenuBarController
+from controllers.settings_controller import SettingsController
+from models.settings import Settings
+from utils.app_info import AppInfo
+from utils.system_info import SystemInfo
+from utils.watchdog import RSFileSystemEventHandler
+from views.game_configuration_panel import GameConfiguration
+from views.main_content_panel import MainContent
+from views.menu_bar import MenuBar
+from views.settings_dialog import SettingsDialog
+from views.status_panel import Status
 
 if SystemInfo().operating_system == SystemInfo.OperatingSystem.WINDOWS:
     from watchdog.observers.polling import PollingObserver
@@ -52,7 +52,7 @@ class MainWindow(QMainWindow):
         self.version_string = "Alpha-v1.0.6.2-hf"
 
         # Check for SHA and append to version string if found
-        sha_file = str(AppInfo().app_data_folder / "SHA")
+        sha_file = str(AppInfo().application_folder / "SHA")
         if os.path.exists(sha_file):
             with open(sha_file, encoding="utf-8") as f:
                 sha = f.read().strip()

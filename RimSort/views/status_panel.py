@@ -2,7 +2,7 @@ from loguru import logger
 
 from PySide6.QtWidgets import QFrame, QHBoxLayout
 
-from RimSort.models.animations import AnimationLabel
+from models.animations import AnimationLabel
 
 
 class Status:

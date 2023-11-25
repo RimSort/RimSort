@@ -1,7 +1,7 @@
 from loguru import logger
 from typing import Any, Dict
 
-from RimSort.models.dialogue import show_warning
+from models.dialogue import show_warning
 
 
 def validate_mods_config_format(mods_config_data: Dict[str, Any]) -> bool:

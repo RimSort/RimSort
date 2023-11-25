@@ -1,6 +1,6 @@
-import webbrowser
 from functools import partial
 from gc import collect
+from pathlib import Path
 import platform
 from typing import Callable
 import subprocess
@@ -10,11 +10,13 @@ from io import BytesIO
 from math import ceil
 from multiprocessing import cpu_count, Pool
 from tempfile import gettempdir
+import webbrowser
 from zipfile import ZipFile
 
 from loguru import logger
 
-from RimSort.utils.event_bus import EventBus
+from utils.app_info import AppInfo
+from utils.event_bus import EventBus
 
 # GitPython depends on git executable being available in PATH
 try:
@@ -33,21 +35,21 @@ from github import Github
 from pyperclip import copy as copy_to_clipboard
 from requests import get as requests_get
 
-from RimSort.models.dialogue import (
+from models.dialogue import (
     show_dialogue_input,
     show_information,
 )
-from RimSort.models.animations import LoadingAnimation
+from models.animations import LoadingAnimation
 
-from RimSort.utils.generic import (
+from utils.generic import (
     chunks,
     delete_files_except_extension,
     open_url_browser,
     platform_specific_open,
     upload_data_to_0x0_st,
 )
-from RimSort.utils.rentry.wrapper import RentryUpload, RentryImport
-from RimSort.utils.steam.browser import SteamBrowser
+from utils.rentry.wrapper import RentryUpload, RentryImport
+from utils.steam.browser import SteamBrowser
 
 from PySide6.QtCore import QEventLoop, QProcess, Qt, Slot
 from PySide6.QtWidgets import (
@@ -57,27 +59,27 @@ from PySide6.QtWidgets import (
     QLabel,
 )
 
-from RimSort.sort.dependencies import *
-from RimSort.sort.alphabetical_sort import *
-from RimSort.sort.topo_sort import *
-from RimSort.views.sub_views.actions_panel import Actions
-from RimSort.views.sub_views.active_mods_panel import ActiveModList
-from RimSort.views.sub_views.inactive_mods_panel import InactiveModList
-from RimSort.views.sub_views.mod_info_panel import ModInfo
-from RimSort.utils.metadata import *
-from RimSort.utils.schema import validate_mods_config_format
-from RimSort.utils.steam.steamcmd.wrapper import SteamcmdInterface
-from RimSort.utils.steam.steamworks.wrapper import (
+from sort.dependencies import *
+from sort.alphabetical_sort import *
+from sort.topo_sort import *
+from views.sub_views.actions_panel import Actions
+from views.sub_views.active_mods_panel import ActiveModList
+from views.sub_views.inactive_mods_panel import InactiveModList
+from views.sub_views.mod_info_panel import ModInfo
+from utils.metadata import *
+from utils.schema import validate_mods_config_format
+from utils.steam.steamcmd.wrapper import SteamcmdInterface
+from utils.steam.steamworks.wrapper import (
     SteamworksGameLaunch,
     SteamworksSubscriptionHandler,
 )
-from RimSort.utils.todds.wrapper import ToddsInterface
-from RimSort.utils.xml import json_to_xml_write, xml_path_to_json
-from RimSort.views.game_configuration_panel import GameConfiguration
-from RimSort.windows.missing_mods_panel import MissingModsPrompt
-from RimSort.windows.rule_editor_panel import RuleEditor
-from RimSort.windows.runner_panel import RunnerPanel
-from RimSort.windows.workshop_mod_updater_panel import ModUpdaterPrompt
+from utils.todds.wrapper import ToddsInterface
+from utils.xml import json_to_xml_write, xml_path_to_json
+from views.game_configuration_panel import GameConfiguration
+from windows.missing_mods_panel import MissingModsPrompt
+from windows.rule_editor_panel import RuleEditor
+from windows.runner_panel import RunnerPanel
+from windows.workshop_mod_updater_panel import ModUpdaterPrompt
 
 
 class MainContent(QObject):
@@ -585,14 +587,13 @@ class MainContent(QObject):
             self.missing_mods,
         ) = get_active_inactive_mods(
             mod_list=str(
-                Path(
-                    os.path.join(
-                        self.settings_controller.settings.config_folder,
-                        "ModsConfig.xml",
-                    )
-                ).resolve()
-            ),
+                (
+                    Path(self.settings_controller.settings.config_folder)
+                    / "ModsConfig.xml"
+                )
+            )
         )
+
         if is_initial:
             logger.info("Caching initial active/inactive mod lists")
             self.active_mods_uuids_restore_state = active_mods_uuids
@@ -632,9 +633,7 @@ class MainContent(QObject):
         if "textures" in action:
             logger.debug("Initiating new todds operation...")
             # Setup Environment
-            todds_txt_path = str(
-                Path(os.path.join(gettempdir(), "todds.txt")).resolve()
-            )
+            todds_txt_path = str((Path(gettempdir()) / "todds.txt"))
             if os.path.exists(todds_txt_path):
                 os.remove(todds_txt_path)
             if not self.settings_controller.settings.todds_active_mods_target:
@@ -867,11 +866,9 @@ class MainContent(QObject):
                     )
                     self._do_threaded_loading_animation(
                         gif_path=str(
-                            Path(
-                                os.path.join(
-                                    os.path.dirname(__file__), "../../data/refresh.gif"
-                                )
-                            ).resolve()
+                            AppInfo().theme_data_folder
+                            / ".default-icons"
+                            / "refresh.gif"
                         ),
                         target=partial(
                             self.__do_download_extract_release_to_tempdir,
@@ -905,16 +902,7 @@ class MainContent(QObject):
                 if SYSTEM == "Darwin":  # MacOS
                     popen_args = [
                         "/bin/bash",
-                        str(
-                            Path(
-                                os.path.join(
-                                    current_dir,
-                                    "Contents",
-                                    "MacOS",
-                                    "update.sh",
-                                )
-                            ).resolve()
-                        ),
+                        str((Path(current_dir) / "Contents" / "MacOS" / "update.sh")),
                     ]
                     p = subprocess.Popen(popen_args)
                 else:
@@ -925,14 +913,7 @@ class MainContent(QObject):
                     ):  # not Windows, so assume POSIX; if not, we'll get a usable exception
                         popen_args = [
                             "/bin/bash",
-                            str(
-                                Path(
-                                    os.path.join(
-                                        os.path.dirname(__file__),
-                                        f"../../update.sh",
-                                    )
-                                ).resolve()
-                            ),
+                            str((AppInfo().application_folder / "update.sh")),
                         ]
                         p = subprocess.Popen(
                             popen_args,
@@ -945,12 +926,10 @@ class MainContent(QObject):
                             "cmd",
                             "/c",
                             str(
-                                Path(
-                                    os.path.join(
-                                        os.path.dirname(__file__),
-                                        f"../../update.bat",
-                                    )
-                                ).resolve()
+                                (
+                                    AppInfo.application_folder,
+                                    "update.bat",
+                                )
                             ),
                         ]
                         p = subprocess.Popen(
@@ -1058,13 +1037,10 @@ class MainContent(QObject):
         # Check if paths are set
         if GameConfiguration.instance().check_if_essential_paths_are_set():
             # Run expensive calculations to set cache data
-            loading_gif_path = str(
-                Path(
-                    os.path.join(os.path.dirname(__file__), "../../data/rimsort.gif")
-                ).resolve()
-            )
             self._do_threaded_loading_animation(
-                gif_path=loading_gif_path,
+                gif_path=str(
+                    AppInfo().theme_data_folder / ".default-icons" / "rimsort.gif"
+                ),
                 target=partial(
                     self.metadata_manager.refresh_cache, is_initial=is_initial
                 ),
@@ -1376,12 +1352,10 @@ class MainContent(QObject):
             logger.info("Getting current ModsConfig.xml to use as a reference format")
             mods_config_data = xml_path_to_json(
                 str(
-                    Path(
-                        os.path.join(
-                            self.settings_controller.settings.config_folder,
-                            "ModsConfig.xml",
-                        )
-                    ).resolve()
+                    (
+                        Path(self.settings_controller.settings.config_folder)
+                        / "ModsConfig.xml"
+                    )
                 )
             )
             if validate_mods_config_format(mods_config_data):
@@ -1668,11 +1642,10 @@ class MainContent(QObject):
 
     def _do_upload_rw_log(self):
         player_log_path = str(
-            Path(
-                os.path.join(
-                    self.settings_controller.settings.config_folder + "/../Player.log"
-                )
-            ).resolve()
+            (
+                Path(self.settings_controller.settings.config_folder).parent
+                / "Player.log"
+            )
         )
         if os.path.exists(player_log_path):
             ret = upload_data_to_0x0_st(player_log_path)
@@ -1685,9 +1658,7 @@ class MainContent(QObject):
                 )
 
     def _upload_rs_log(self):
-        ret = upload_data_to_0x0_st(
-            str(Path(os.path.join(gettempdir(), "RimSort.log")).resolve())
-        )
+        ret = upload_data_to_0x0_st(str((Path(gettempdir()) / "RimSort.log")))
         if ret:
             copy_to_clipboard(ret)
             show_information(
@@ -1697,9 +1668,7 @@ class MainContent(QObject):
             )
 
     def _upload_rs_old_log(self):
-        ret = upload_data_to_0x0_st(
-            str(Path(os.path.join(gettempdir(), "RimSort.old.log")).resolve())
-        )
+        ret = upload_data_to_0x0_st(str((Path(gettempdir()) / "RimSort.old.log")))
         if ret:
             copy_to_clipboard(ret)
             show_information(
@@ -1738,12 +1707,7 @@ class MainContent(QObject):
                 active_mods.append(package_id)
         logger.info(f"Collected {len(active_mods)} active mods for saving")
         mods_config_path = str(
-            Path(
-                os.path.join(
-                    self.settings_controller.settings.config_folder,
-                    "ModsConfig.xml",
-                )
-            ).resolve()
+            (Path(self.settings_controller.settings.config_folder) / "ModsConfig.xml",)
         )
         mods_config_data = xml_path_to_json(mods_config_path)
         if validate_mods_config_format(mods_config_data):
@@ -1877,9 +1841,7 @@ class MainContent(QObject):
         # Query Workshop for update data
         updates_checked = self._do_threaded_loading_animation(
             gif_path=str(
-                Path(
-                    os.path.join(os.path.dirname(__file__), "../../data/steam_api.gif")
-                ).resolve()
+                AppInfo().theme_data_folder / ".default-icons" / "steam_api.gif"
             ),
             target=partial(
                 query_workshop_update_data,
@@ -2129,11 +2091,7 @@ class MainContent(QObject):
             self.steam_browser.close()
         # Process API call
         self._do_threaded_loading_animation(
-            gif_path=str(
-                Path(
-                    os.path.join(os.path.dirname(__file__), "../../data/steam.gif")
-                ).resolve()
-            ),
+            gif_path=str(AppInfo().theme_data_folder / ".default-icons" / "steam.gif"),
             target=partial(self._do_steamworks_api_call, instruction=instruction),
             text="Processing Steam subscription action(s) via Steamworks API...",
         )
@@ -2228,14 +2186,7 @@ class MainContent(QObject):
             # Calculate folder name from provided URL
             repo_folder_name = os.path.split(repo_url)[1]
             # Calculate path from generated folder name
-            repo_path = str(
-                Path(
-                    os.path.join(
-                        base_path,
-                        repo_folder_name,
-                    )
-                ).resolve()
-            )
+            repo_path = str((Path(base_path) / repo_folder_name))
             if os.path.exists(repo_path):  # If local repo does exists
                 # Prompt to user to handle
                 answer = show_dialogue_conditional(
@@ -2337,14 +2288,7 @@ class MainContent(QObject):
             # Calculate folder name from provided URL
             repo_folder_name = os.path.split(repo_url)[1]
             # Calculate path from generated folder name
-            repo_path = str(
-                Path(
-                    os.path.join(
-                        base_path,
-                        repo_folder_name,
-                    )
-                ).resolve()
-            )
+            repo_path = str((Path(base_path) / repo_folder_name))
             if os.path.exists(repo_path):  # If local repo does exists
                 # Clone the repo to storage path and notify user
                 logger.info(f"Force updating git repository at: {repo_path}")
@@ -2425,15 +2369,7 @@ class MainContent(QObject):
             repo_user_or_org = os.path.split(os.path.split(repo_url)[0])[1]
             repo_folder_name = os.path.split(repo_url)[1]
             # Calculate path from generated folder name
-            repo_path = str(
-                Path(
-                    os.path.join(
-                        str(AppInfo().app_storage_folder),
-                        str(AppInfo().databases_folder),
-                        repo_folder_name,
-                    )
-                ).resolve()
-            )
+            repo_path = str((AppInfo().databases_folder / repo_folder_name))
             if os.path.exists(repo_path):  # If local repo exists
                 # Update the file, commit + PR to repo
                 logger.info(
@@ -2441,9 +2377,7 @@ class MainContent(QObject):
                 )
                 try:
                     # Specify the file path relative to the local repository
-                    file_full_path = str(
-                        Path(os.path.join(repo_path, file_name)).resolve()
-                    )
+                    file_full_path = str((Path(repo_path) / file_name))
                     if os.path.exists(file_full_path):
                         # Load JSON data
                         with open(file_full_path, encoding="utf-8") as f:

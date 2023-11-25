@@ -12,12 +12,12 @@ from zipfile import ZipFile
 
 import shutil
 
-from RimSort.models.dialogue import (
+from models.dialogue import (
     show_dialogue_conditional,
     show_fatal_error,
     show_warning,
 )
-from RimSort.windows.runner_panel import RunnerPanel
+from windows.runner_panel import RunnerPanel
 
 
 class SteamcmdInterface:
@@ -37,36 +37,23 @@ class SteamcmdInterface:
             self.initialized = True
             super(SteamcmdInterface, self).__init__()
             logger.debug("Initializing SteamcmdInterface")
-            self.steamcmd_install_path = str(
-                Path(steamcmd_prefix, "steamcmd").resolve()
-            )
-            self.steamcmd_steam_path = str(Path(steamcmd_prefix, "steam").resolve())
+            steamcmd_prefix = Path(steamcmd_prefix)
+            self.steamcmd_install_path = str((steamcmd_prefix / "steamcmd"))
+            self.steamcmd_steam_path = str((steamcmd_prefix / "steam"))
             self.system = platform.system()
             self.validate_downloads = validate
 
             if self.system == "Darwin":
                 self.steamcmd_url = "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_osx.tar.gz"
-                self.steamcmd = str(
-                    Path(
-                        os.path.join(self.steamcmd_install_path, "steamcmd.sh")
-                    ).resolve()
-                )
+                self.steamcmd = str((Path(self.steamcmd_install_path) / "steamcmd.sh"))
             elif self.system == "Linux":
                 self.steamcmd_url = "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz"
-                self.steamcmd = str(
-                    Path(
-                        os.path.join(self.steamcmd_install_path, "steamcmd.sh")
-                    ).resolve()
-                )
+                self.steamcmd = str((Path(self.steamcmd_install_path) / "steamcmd.sh"))
             elif self.system == "Windows":
                 self.steamcmd_url = (
                     "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip"
                 )
-                self.steamcmd = str(
-                    Path(
-                        os.path.join(self.steamcmd_install_path, "steamcmd.exe")
-                    ).resolve()
-                )
+                self.steamcmd = str((Path(self.steamcmd_install_path) / "steamcmd.exe"))
             else:
                 show_fatal_error(
                     "SteamcmdInterface",
@@ -83,21 +70,15 @@ class SteamcmdInterface:
             if not os.path.exists(self.steamcmd_steam_path):
                 os.makedirs(self.steamcmd_steam_path)
             self.steamcmd_appworkshop_acf_path = str(
-                Path(
-                    os.path.join(
-                        self.steamcmd_steam_path,
-                        "steamapps",
-                        "workshop",
-                        "appworkshop_294100.acf",
-                    )
-                ).resolve()
+                (
+                    Path(self.steamcmd_steam_path)
+                    / "steamapps"
+                    / "workshop"
+                    / "appworkshop_294100.acf"
+                )
             )
             self.steamcmd_content_path = str(
-                Path(
-                    os.path.join(
-                        self.steamcmd_steam_path, "steamapps", "workshop", "content"
-                    )
-                ).resolve()
+                (Path(self.steamcmd_steam_path) / "steamapps" / "workshop" / "content")
             )
             logger.debug("Finished SteamcmdInterface initialization")
 
@@ -137,9 +118,7 @@ class SteamcmdInterface:
                 else:
                     script.append(f"{download_cmd} {publishedfileid}")
             script.extend(["quit\n"])
-            script_path = str(
-                Path(os.path.join(gettempdir(), "steamcmd_script.txt")).resolve()
-            )
+            script_path = str((Path(gettempdir()) / "steamcmd_script.txt"))
             with open(script_path, "w", encoding="utf-8") as script_output:
                 script_output.write("\n".join(script))
             runner.message(f"Compiled & using script: {script_path}")
@@ -211,7 +190,7 @@ class SteamcmdInterface:
                     f"Workshop content path does not exist. Creating for symlinking:\n\n{self.steamcmd_content_path}\n"
                 )
             symlink_destination_path = str(
-                Path(os.path.join(self.steamcmd_content_path, "294100"))
+                (Path(self.steamcmd_content_path) / "294100")
             )
             runner.message(f"Symlink source : {symlink_source_path}")
             runner.message(f"Symlink destination: {symlink_destination_path}")

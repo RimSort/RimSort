@@ -16,11 +16,12 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from RimSort.controllers.settings_controller import SettingsController
-from RimSort.models.mod_list import ModListWidget
-from RimSort.models.mod_list_item import ModListItemInner
-from RimSort.utils.constants import SEARCH_DATA_SOURCE_FILTER_INDEXES
-from RimSort.utils.metadata import MetadataManager
+from controllers.settings_controller import SettingsController
+from models.mod_list import ModListWidget
+from models.mod_list_item import ModListItemInner, ModListIcons
+from utils.app_info import AppInfo
+from utils.constants import SEARCH_DATA_SOURCE_FILTER_INDEXES
+from utils.metadata import MetadataManager
 
 
 class ActiveModList(QWidget):
@@ -72,19 +73,13 @@ class ActiveModList(QWidget):
         ]
         self.active_mods_filter_data_source_icons = [
             QIcon(
-                str(
-                    Path(
-                        os.path.join(
-                            os.path.dirname(__file__), "../../../data/AppIcon_b.png"
-                        )
-                    ).resolve()
-                )
+                str(AppInfo().theme_data_folder / ".default-icons" / "AppIcon_b.png")
             ),
-            QIcon(self.active_mods_list.ludeon_icon_path),
-            QIcon(self.active_mods_list.local_icon_path),
-            QIcon(self.active_mods_list.git_icon_path),
-            QIcon(self.active_mods_list.steamcmd_icon_path),
-            QIcon(self.active_mods_list.steam_icon_path),
+            ModListIcons.ludeon_icon(),
+            ModListIcons.local_icon(),
+            ModListIcons.git_icon(),
+            ModListIcons.steamcmd_icon(),
+            ModListIcons.steam_icon(),
         ]
         self.active_mods_filter_data_source_button = QToolButton()
         self.active_mods_filter_data_source_button.setIcon(
@@ -97,20 +92,10 @@ class ActiveModList(QWidget):
         )
         self.active_mods_search_filter_state = True
         self.active_mods_search_mode_filter_icon = QIcon(
-            str(
-                Path(
-                    os.path.join(os.path.dirname(__file__), "../../../data/filter.png")
-                ).resolve()
-            )
+            str(AppInfo().theme_data_folder / ".default-icons" / "filter.png")
         )
         self.active_mods_search_mode_nofilter_icon = QIcon(
-            str(
-                Path(
-                    os.path.join(
-                        os.path.dirname(__file__), "../../../data/nofilter.png"
-                    )
-                ).resolve()
-            )
+            str(AppInfo().theme_data_folder / ".default-icons" / "nofilter.png")
         )
         self.active_mods_search_mode_filter_button = QToolButton()
         self.active_mods_search_mode_filter_button.setIcon(
@@ -155,15 +140,11 @@ class ActiveModList(QWidget):
         self.errors_summary_layout.setContentsMargins(0, 0, 0, 0)
         self.errors_summary_layout.setSpacing(2)
         self.warnings_icon = QLabel()
-        self.warnings_icon.setPixmap(
-            QIcon(self.active_mods_list.warning_icon_path).pixmap(QSize(20, 20))
-        )
+        self.warnings_icon.setPixmap(ModListIcons.warning_icon().pixmap(QSize(20, 20)))
         self.warnings_text = QLabel("0 warnings(s)")
         self.warnings_text.setObjectName("summaryValue")
         self.errors_icon = QLabel()
-        self.errors_icon.setPixmap(
-            QIcon(self.active_mods_list.error_icon_path).pixmap(QSize(20, 20))
-        )
+        self.errors_icon.setPixmap(ModListIcons.error_icon().pixmap(QSize(20, 20)))
         self.errors_text = QLabel("0 error(s)")
         self.errors_text.setObjectName("summaryValue")
 

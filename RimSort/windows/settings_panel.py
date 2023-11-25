@@ -18,8 +18,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from RimSort.models.multibutton import MultiButton
-from RimSort.utils.generic import platform_specific_open
+from models.multibutton import MultiButton
+from utils.app_info import AppInfo
+from utils.generic import platform_specific_open
 
 
 class CenteredItemDelegate(QStyledItemDelegate):
@@ -81,9 +82,7 @@ class SettingsPanel(QDialog):
             )
         )
         self.rimworld_woodlog_icon_path = str(
-            Path(
-                os.path.join(os.path.dirname(__file__), "../../data/WoodLog_a.png")
-            ).resolve()
+            str(AppInfo().theme_data_folder / ".default-icons" / "WoodLog_a.png")
         )
         self.upload_log_multibutton = MultiButton(
             main_action="Upload RimSort.log",
@@ -169,11 +168,7 @@ class SettingsPanel(QDialog):
         self.sorting_algorithm_configuration_layout = QVBoxLayout()
         # metadata / sorting widgets
         self.external_metadata_icon_path = QIcon(
-            str(
-                Path(
-                    os.path.join(os.path.dirname(__file__), "../../data/database.png")
-                ).resolve()
-            )
+            str(AppInfo().theme_data_folder / ".default-icons" / "database.png")
         )
         # external steam metadata
         self.external_steam_metadata_label = QLabel("Steam Workshop DB")
@@ -446,12 +441,7 @@ class SettingsPanel(QDialog):
         self.tabs.addTab(self.todds_tab, "todds")
 
     def __loggerDebugCheckboxEvent(self) -> None:
-        data_path = str(
-            Path(
-                os.path.join(os.path.split(os.path.dirname(__file__))[0], "data")
-            ).resolve()
-        )
-        debug_file = str(Path(os.path.join(data_path, "DEBUG")).resolve())
+        debug_file = str((AppInfo.application_folder / "DEBUG"))
         if self.logger_debug_checkbox.isChecked():
             if not os.path.exists(debug_file):
                 # Create an empty file

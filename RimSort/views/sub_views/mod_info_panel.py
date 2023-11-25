@@ -8,9 +8,10 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout
 
-from RimSort.models.image_label import ImageLabel
-from RimSort.models.scroll_label import ScrollLabel
-from RimSort.utils.generic import set_to_list
+from utils.app_info import AppInfo
+from models.image_label import ImageLabel
+from models.scroll_label import ScrollLabel
+from utils.generic import set_to_list
 
 
 class ModInfo:
@@ -51,16 +52,16 @@ class ModInfo:
 
         # Create widgets
         self.missing_image_path = str(
-            Path(os.path.join(os.getcwd(), "data", "missing.png")).resolve()
+            AppInfo().theme_data_folder / ".default-icons" / "missing.png"
         )
         self.rimsort_image_a_path = str(
-            Path(os.path.join(os.getcwd(), "data", "AppIcon_a.png")).resolve()
+            AppInfo().theme_data_folder / ".default-icons" / "AppIcon_a.png"
         )
         self.rimsort_image_b_path = str(
-            Path(os.path.join(os.getcwd(), "data", "AppIcon_b.png")).resolve()
+            AppInfo().theme_data_folder / ".default-icons" / "AppIcon_b.png"
         )
         self.scenario_image_path = str(
-            Path(os.path.join(os.getcwd(), "data", "rimworld.png")).resolve()
+            AppInfo().theme_data_folder / ".default-icons" / "rimworld.png"
         )
         self.preview_picture = ImageLabel()
         self.preview_picture.setAlignment(Qt.AlignCenter)
@@ -255,9 +256,7 @@ class ModInfo:
             if os.path.exists(workshop_folder_path):
                 about_folder_name = "About"
                 about_folder_target_path = str(
-                    Path(
-                        os.path.join(workshop_folder_path, about_folder_name)
-                    ).resolve()
+                    (Path(workshop_folder_path) / about_folder_name)
                 )
                 if os.path.exists(about_folder_target_path):
                     # Look for a case-insensitive About folder
@@ -274,11 +273,7 @@ class ModInfo:
                     invalid_file_path_found = True
                     preview_file_name = "Preview.png"
                     for temp_file in os.scandir(
-                        str(
-                            Path(
-                                os.path.join(workshop_folder_path, about_folder_name)
-                            ).resolve()
-                        )
+                        str((Path(workshop_folder_path) / about_folder_name))
                     ):
                         if (
                             temp_file.name.lower() == preview_file_name.lower()
@@ -299,13 +294,11 @@ class ModInfo:
                     else:
                         logger.info("Preview image found")
                         image_path = str(
-                            Path(
-                                os.path.join(
-                                    workshop_folder_path,
-                                    about_folder_name,
-                                    preview_file_name,
-                                )
-                            ).resolve()
+                            (
+                                Path(workshop_folder_path)
+                                / about_folder_name
+                                / preview_file_name
+                            )
                         )
                         pixmap = QPixmap(image_path)
                         self.preview_picture.setPixmap(

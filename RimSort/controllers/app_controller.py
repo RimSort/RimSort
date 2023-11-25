@@ -6,10 +6,10 @@ from pathlib import Path
 from PySide6.QtCore import QObject
 from PySide6.QtWidgets import QApplication
 
-from RimSort.utils.app_info import AppInfo
-from RimSort.utils.constants import DEFAULT_USER_RULES
-from RimSort.utils.system_info import SystemInfo
-from RimSort.views.main_window import MainWindow
+from utils.app_info import AppInfo
+from utils.constants import DEFAULT_USER_RULES
+from utils.system_info import SystemInfo
+from views.main_window import MainWindow
 
 
 class AppController(QObject):
@@ -26,8 +26,8 @@ class AppController(QObject):
             self.app.setStyle("macOS")
 
         self.app.setStyleSheet(  # Add style sheet for styling layouts and widgets
-            Path(
-                os.path.join(AppInfo().application_folder, "themes/RimPy/style.qss")
+            (
+                (AppInfo().application_folder / "themes" / "RimPy" / "style.qss")
             ).read_text()
         )
 

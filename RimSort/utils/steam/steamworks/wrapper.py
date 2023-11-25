@@ -14,7 +14,7 @@ if not "__compiled__" in globals():
     sys.path.append(str((Path(getcwd()) / "submodules" / "SteamworksPy")))
 
 from steamworks import STEAMWORKS
-from RimSort.utils.generic import launch_game_process
+from utils.generic import launch_game_process
 
 
 class SteamworksInterface:
@@ -222,7 +222,9 @@ class SteamworksGameLaunch(Process):
         if steamworks_interface.steam_not_running:  # Delete if true
             steamworks_interface = None
         # Launch the game
-        launch_game_process(game_install_path=self.game_install_path, args=self.args)
+        launch_game_process(
+            game_install_path=Path(self.game_install_path), args=self.args
+        )
         # If we had an API initialization, try to unload it
         if steamworks_interface and steamworks_interface.steamworks:
             # Unload Steamworks API

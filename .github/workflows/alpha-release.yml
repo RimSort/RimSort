@@ -162,7 +162,6 @@ jobs:
         run: |
           if [[ "$(uname)" == "Darwin" ]]; then
             DIST="RimSort.app"
-            echo ${{ steps.sha_unix.outputs.short }} > ./dist/$DIST/Contents/MacOS/data/SHA
           else    
             DIST="RimSort"
             if [ -d "dist/$DIST" ]; then

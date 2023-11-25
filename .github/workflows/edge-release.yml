@@ -61,7 +61,6 @@ jobs:
             git checkout Edge
           fi
         shell: bash
-
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       # Check-out repository (Windows)
@@ -151,7 +150,7 @@ jobs:
         run: |
           if [[ "$(uname)" == "Darwin" ]]; then
             DIST="RimSort.app"
-            echo ${{ steps.sha_unix.outputs.short }} > ./dist/$DIST/Contents/MacOS/data/SHA
+            echo ${{ steps.sha_unix.outputs.short }} > ./dist/$DIST/Contents/MacOS/SHA
           else    
             DIST="RimSort"
             if [ -d "dist/$DIST" ]; then
@@ -159,7 +158,7 @@ jobs:
                 rm -rf "./dist/$DIST"
             fi
             mv dist/RimSort.dist ."/dist/$DIST"
-            echo ${{ steps.sha_unix.outputs.short }} > ./dist/$DIST/data/SHA
+            echo ${{ steps.sha_unix.outputs.short }} > ./dist/$DIST/SHA
           fi
           cd ./dist/
           zip -r ${{ env.FILENAME }} $DIST
@@ -172,7 +171,7 @@ jobs:
           }
           cd ./dist/
           Rename-Item -Path RimSort.dist -NewName RimSort
-          Set-Content -Path .\RimSort\data\SHA -Value "${{ steps.sha_win.outputs.short }}"
+          Set-Content -Path .\RimSort\SHA -Value "${{ steps.sha_win.outputs.short }}"
           Compress-Archive -Force -Path RimSort -DestinationPath ${{ env.FILENAME }}
         shell: powershell
       # Upload ZIP as artifact

@@ -1,7 +1,7 @@
 from loguru import logger
 from typing import List
 
-from RimSort.utils.metadata import MetadataManager
+from utils.metadata import MetadataManager
 
 
 def do_alphabetical_sort(

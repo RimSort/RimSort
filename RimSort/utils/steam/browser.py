@@ -24,9 +24,10 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from RimSort.models.dialogue import show_warning
-from RimSort.models.image_label import ImageLabel
-from RimSort.utils.steam.webapi.wrapper import (
+from models.dialogue import show_warning
+from models.image_label import ImageLabel
+from utils.app_info import AppInfo
+from utils.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetCollectionDetails,
     ISteamRemoteStorage_GetPublishedFileDetails,
 )
@@ -106,19 +107,7 @@ class SteamBrowser(QWidget):
         )
         self.web_view_loading_placeholder.setPixmap(
             QPixmap(
-                str(
-                    Path(
-                        os.path.join(
-                            os.path.split(
-                                os.path.split(
-                                    os.path.split(os.path.dirname(__file__))[0]
-                                )[0]
-                            )[0],
-                            "data",
-                            "AppIcon_b.png",
-                        )
-                    ).resolve()
-                )
+                str(AppInfo().theme_data_folder / ".default-icons" / "AppIcon_b.png")
             )
         )
         # WebEngineView

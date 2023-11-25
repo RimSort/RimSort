@@ -2,11 +2,11 @@ from typing import Any
 
 from PySide6.QtCore import QObject, Signal
 
-from RimSort.controllers.settings_controller import SettingsController
-from RimSort.models.dialogue import *
-from RimSort.utils.app_info import AppInfo
-from RimSort.utils.generic import *
-from RimSort.windows.settings_panel import SettingsPanel
+from controllers.settings_controller import SettingsController
+from models.dialogue import *
+from utils.app_info import AppInfo
+from utils.generic import *
+from windows.settings_panel import SettingsPanel
 
 
 class GameConfiguration(QObject):
@@ -51,14 +51,10 @@ class GameConfiguration(QObject):
             self.system_name = platform.system()
 
             self.lock_icon_path = str(
-                Path(
-                    os.path.join(os.path.dirname(__file__), "../../data/lock.png")
-                ).resolve()
+                str(AppInfo().theme_data_folder / ".default-icons" / "lock.png")
             )
             self.unlock_icon_path = str(
-                Path(
-                    os.path.join(os.path.dirname(__file__), "../../data/unlock.png")
-                ).resolve()
+                str(AppInfo().theme_data_folder / ".default-icons" / "unlock.png")
             )
 
             # INITIALIZE WIDGETS / FEATURES

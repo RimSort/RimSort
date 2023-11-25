@@ -1,4 +1,3 @@
-import getpass
 import os
 from os.path import expanduser
 from pathlib import Path
@@ -8,11 +7,11 @@ from PySide6.QtCore import QObject, Slot, Qt
 from PySide6.QtWidgets import QFileDialog, QMessageBox, QApplication
 from loguru import logger
 
-from RimSort.models.settings import Settings
-from RimSort.utils.event_bus import EventBus
-from RimSort.utils.generic import platform_specific_open
-from RimSort.utils.system_info import SystemInfo
-from RimSort.views.settings_dialog import SettingsDialog
+from models.settings import Settings
+from utils.event_bus import EventBus
+from utils.generic import platform_specific_open
+from utils.system_info import SystemInfo
+from views.settings_dialog import SettingsDialog
 
 
 class SettingsController(QObject):
@@ -692,67 +691,47 @@ class SettingsController(QObject):
         defaults typically found per-platform, and set them in the client.
         """
         logger.info("USER ACTION: starting autodetect paths")
-        os_paths = []
+        user_home = Path.home()
+
         darwin_paths = [
-            f"/Users/{getpass.getuser()}/Library/Application Support/Steam/steamapps/common/Rimworld/RimworldMac.app/",
-            f"/Users/{getpass.getuser()}/Library/Application Support/Rimworld/Config/",
-            f"/Users/{getpass.getuser()}/Library/Application Support/Steam/steamapps/workshop/content/294100/",
+            Path(
+                f"/{user_home}/Library/Application Support/Steam/steamapps/common/Rimworld/RimworldMac.app"
+            ),
+            Path(f"/{user_home}/Library/Application Support/Rimworld/Config"),
+            Path(
+                f"/{user_home}/Library/Application Support/Steam/steamapps/workshop/content/294100"
+            ),
         ]
+
         # If on mac and the steam path doesn't exist, try the default path
-        if not (os.path.exists(darwin_paths[0])):
-            darwin_paths[0] = f"/Applications/RimWorld.app/"
-        if os.path.exists("{expanduser('~')}/.steam/debian-installation"):
+        if not darwin_paths[0].exists():
+            darwin_paths[0] = Path("/Applications/RimWorld.app")
+
+        debian_path = user_home / ".steam/debian-installation"
+        linux_paths = [
+            debian_path / "steamapps/common/RimWorld",
+            user_home
+            / ".config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios/Config",
+            debian_path / "steamapps/workshop/content/294100",
+        ]
+
+        if not debian_path.exists():
+            steam_path = user_home / ".steam/steam"
             linux_paths = [
-                f"{expanduser('~')}/.steam/debian-installation/steamapps/common/RimWorld",
-                f"{expanduser('~')}/.config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios/Config",
-                f"{expanduser('~')}/.steam/debian-installation/steamapps/workshop/content/294100",
+                steam_path / "steamapps/common/RimWorld",
+                user_home
+                / ".config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios/Config",
+                steam_path / "steamapps/workshop/content/294100",
             ]
-        else:
-            linux_paths = [  # TODO detect the path and not having hardcoded thing
-                f"{expanduser('~')}/.steam/steam/steamapps/common/RimWorld",
-                f"{expanduser('~')}/.config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios/Config",
-                f"{expanduser('~')}/.steam/steam/steamapps/workshop/content/294100",
-            ]
+
         windows_paths = [
-            str(
-                Path(
-                    os.path.join(
-                        "C:" + os.sep,
-                        "Program Files (x86)",
-                        "Steam",
-                        "steamapps",
-                        "common",
-                        "Rimworld",
-                    )
-                ).resolve()
-            ),
-            str(
-                Path(
-                    os.path.join(
-                        "C:" + os.sep,
-                        "Users",
-                        getpass.getuser(),
-                        "AppData",
-                        "LocalLow",
-                        "Ludeon Studios",
-                        "RimWorld by Ludeon Studios",
-                        "Config",
-                    )
-                ).resolve()
-            ),
-            str(
-                Path(
-                    os.path.join(
-                        "C:" + os.sep,
-                        "Program Files (x86)",
-                        "Steam",
-                        "steamapps",
-                        "workshop",
-                        "content",
-                        "294100",
-                    )
-                ).resolve()
-            ),
+            Path("C:/Program Files (x86)/Steam/steamapps/common/Rimworld").resolve(),
+            Path(
+                f"{user_home}/AppData/LocalLow/Ludeon Studios/RimWorld by Ludeon Studios/Config"
+            ).resolve(),
+            Path(
+                "C:/Program Files (x86)/Steam/steamapps/workshop/content/294100"
+            ).resolve(),
         ]
 
         if SystemInfo().operating_system == SystemInfo.OperatingSystem.MACOS:
@@ -766,6 +745,9 @@ class SettingsController(QObject):
             logger.info(f"Running on Windows with the following paths: {os_paths}")
         else:
             logger.error("Attempting to autodetect paths on an unknown system.")
+
+        # Convert our paths to str
+        os_paths = [str(path) for path in os_paths]
 
         # If the game folder exists...
         if os.path.exists(os_paths[0]):
@@ -813,7 +795,7 @@ class SettingsController(QObject):
             )
 
         # Checking for an existing Rimworld/Mods folder
-        rimworld_mods_path = str(Path(os.path.join(os_paths[0], "Mods")).resolve())
+        rimworld_mods_path = (Path(os_paths[0]) / "Mods").resolve()
         if os.path.exists(rimworld_mods_path):
             logger.info(
                 f"Autodetected local mods folder path exists: {rimworld_mods_path}"

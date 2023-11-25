@@ -6,8 +6,8 @@ from typing import Dict, Any, Optional, List
 from PySide6.QtCore import QObject
 from loguru import logger
 
-from RimSort.utils.app_info import AppInfo
-from RimSort.utils.event_bus import EventBus
+from utils.app_info import AppInfo
+from utils.event_bus import EventBus
 
 
 class Settings(QObject):
@@ -15,7 +15,7 @@ class Settings(QObject):
         super().__init__()
 
         self._settings_file = AppInfo().app_storage_folder / "settings.json"
-        self._debug_file = AppInfo().app_data_folder / "DEBUG"
+        self._debug_file = AppInfo().application_folder / "DEBUG"
 
         self._debug_logging_enabled: bool = False
         self._check_for_update_startup: bool = False

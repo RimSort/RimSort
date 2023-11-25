@@ -17,22 +17,22 @@ from PySide6.QtWidgets import (
     QMenu,
 )
 
-from RimSort.controllers.settings_controller import SettingsController
-from RimSort.models.mod_list_item import ModListItemInner
-from RimSort.models.dialogue import (
+from controllers.settings_controller import SettingsController
+from models.mod_list_item import ModListItemInner
+from models.dialogue import (
     show_dialogue_conditional,
     show_dialogue_input,
     show_warning,
 )
-from RimSort.utils.event_bus import EventBus
-from RimSort.utils.generic import (
+from utils.event_bus import EventBus
+from utils.generic import (
     delete_files_except_extension,
     handle_remove_read_only,
     open_url_browser,
     platform_specific_open,
     sanitize_filename,
 )
-from RimSort.utils.metadata import MetadataManager
+from utils.metadata import MetadataManager
 
 
 class ModListWidget(QListWidget):
@@ -92,54 +92,11 @@ class ModListWidget(QListWidget):
         self.horizontalScrollBar().setEnabled(False)
         self.horizontalScrollBar().setVisible(False)
 
-        # Store icon paths
+        # Enable mod type filtering based on user preference
         self.mod_type_filter_enable = mod_type_filter_enable
+
+        # Connect signal for settings have changed
         EventBus().settings_have_changed.connect(self._on_settings_have_changed)
-        self.csharp_icon_path = str(
-            Path(
-                os.path.join(os.path.dirname(__file__), "../../data/csharp.png")
-            ).resolve()
-        )
-        self.xml_icon_path = str(
-            Path(
-                os.path.join(os.path.dirname(__file__), "../../data/xml.png")
-            ).resolve()
-        )
-        self.git_icon_path = str(
-            Path(
-                os.path.join(os.path.dirname(__file__), "../../data/git.png")
-            ).resolve()
-        )
-        self.local_icon_path = str(
-            Path(
-                os.path.join(os.path.dirname(__file__), "../../data/local_icon.png")
-            ).resolve()
-        )
-        self.ludeon_icon_path = str(
-            Path(
-                os.path.join(os.path.dirname(__file__), "../../data/ludeon_icon.png")
-            ).resolve()
-        )
-        self.steamcmd_icon_path = str(
-            Path(
-                os.path.join(os.path.dirname(__file__), "../../data/steamcmd_icon.png")
-            ).resolve()
-        )
-        self.steam_icon_path = str(
-            Path(
-                os.path.join(os.path.dirname(__file__), "../../data/steam_icon.png")
-            ).resolve()
-        )
-        self.warning_icon_path = str(
-            Path(
-                os.path.join(os.path.dirname(__file__), "../../data/warning.png")
-            ).resolve()
-        )
-        self.error_icon_path = str(
-            Path(
-                os.path.join(os.path.dirname(__file__), "../../data/error.png")
-            ).resolve()
-        )
 
         # Allow inserting custom list items
         self.model().rowsInserted.connect(
@@ -597,20 +554,16 @@ class ModListWidget(QListWidget):
                         publishedfileid,
                     ) in local_steamcmd_name_to_publishedfileid.items():
                         original_mod_path = str(
-                            Path(
-                                os.path.join(
-                                    self.settings_controller.settings.local_folder,
-                                    folder_name,
-                                )
-                            ).resolve()
+                            (
+                                Path(self.settings_controller.settings.local_folder)
+                                / folder_name,
+                            )
                         )
                         renamed_mod_path = str(
-                            Path(
-                                os.path.join(
-                                    self.settings_controller.settings.local_folder,
-                                    publishedfileid,
-                                )
-                            ).resolve()
+                            (
+                                Path(self.settings_controller.settings.local_folder)
+                                / publishedfileid
+                            )
                         )
                         if os.path.exists(original_mod_path):
                             if not os.path.exists(renamed_mod_path):
@@ -645,20 +598,16 @@ class ModListWidget(QListWidget):
                             else f"{publishedfileid}_local"
                         )
                         original_mod_path = str(
-                            Path(
-                                os.path.join(
-                                    self.settings_controller.settings.local_folder,
-                                    publishedfileid,
-                                )
-                            ).resolve()
+                            (
+                                Path(self.settings_controller.settings.local_folder)
+                                / publishedfileid,
+                            )
                         )
                         renamed_mod_path = str(
-                            Path(
-                                os.path.join(
-                                    self.settings_controller.settings.local_folder,
-                                    mod_name,
-                                )
-                            ).resolve()
+                            (
+                                Path(self.settings_controller.settings.local_folder)
+                                / mod_name,
+                            )
                         )
                         if os.path.exists(original_mod_path):
                             if not os.path.exists(renamed_mod_path):
@@ -716,14 +665,12 @@ class ModListWidget(QListWidget):
                         if mod_name:
                             mod_name = sanitize_filename(mod_name)
                         renamed_mod_path = str(
-                            Path(
-                                os.path.join(
-                                    self.settings_controller.settings.local_folder,
-                                    mod_name
-                                    if mod_name
-                                    else publishedfileid_from_folder_name,
-                                )
-                            ).resolve()
+                            (
+                                Path(self.settings_controller.settings.local_folder)
+                                / mod_name
+                                if mod_name
+                                else publishedfileid_from_folder_name,
+                            )
                         )
                         if os.path.exists(path):
                             try:
@@ -1054,14 +1001,6 @@ class ModListWidget(QListWidget):
                 uuid = item.data(Qt.UserRole)
                 widget = ModListItemInner(
                     mod_type_filter_enable=self.mod_type_filter_enable,
-                    csharp_icon_path=self.csharp_icon_path,
-                    xml_icon_path=self.xml_icon_path,
-                    git_icon_path=self.git_icon_path,
-                    local_icon_path=self.local_icon_path,
-                    ludeon_icon_path=self.ludeon_icon_path,
-                    steamcmd_icon_path=self.steamcmd_icon_path,
-                    steam_icon_path=self.steam_icon_path,
-                    warning_icon_path=self.warning_icon_path,
                     uuid=uuid,
                 )
                 widget.toggle_warning_signal.connect(self.toggle_warning)
