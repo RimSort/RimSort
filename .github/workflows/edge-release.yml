@@ -114,7 +114,7 @@ jobs:
           if (Test-Path "venv\Scripts\Activate.ps1") {
             .\venv\Scripts\Activate.ps1
           } else {
-            python -m venv app
+            python -m venv venv
             .\venv\Scripts\Activate.ps1
           }
           python -m pip install requests
