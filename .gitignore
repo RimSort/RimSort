@@ -165,15 +165,9 @@ lib64
 pyvenv.cfg
 
 # RimSort
-data/DEBUG
 .DS_Store
-test*
-*_AppIDQuery*
-/steamworks
-SteamworksPy.dylib
 *.build/
 *.dist/
 *.onefile-build/
-logger_tt/
 /todds
 .vs
