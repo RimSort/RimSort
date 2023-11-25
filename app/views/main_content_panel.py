@@ -1707,7 +1707,7 @@ class MainContent(QObject):
                 active_mods.append(package_id)
         logger.info(f"Collected {len(active_mods)} active mods for saving")
         mods_config_path = str(
-            (Path(self.settings_controller.settings.config_folder) / "ModsConfig.xml",)
+            (Path(self.settings_controller.settings.config_folder) / "ModsConfig.xml")
         )
         mods_config_data = xml_path_to_json(mods_config_path)
         if validate_mods_config_format(mods_config_data):
