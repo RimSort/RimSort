@@ -17,22 +17,22 @@ from PySide6.QtWidgets import (
     QMenu,
 )
 
-from controllers.settings_controller import SettingsController
-from models.mod_list_item import ModListItemInner
-from models.dialogue import (
+from app.controllers.settings_controller import SettingsController
+from app.models.mod_list_item import ModListItemInner
+from app.models.dialogue import (
     show_dialogue_conditional,
     show_dialogue_input,
     show_warning,
 )
-from utils.event_bus import EventBus
-from utils.generic import (
+from app.utils.event_bus import EventBus
+from app.utils.generic import (
     delete_files_except_extension,
     handle_remove_read_only,
     open_url_browser,
     platform_specific_open,
     sanitize_filename,
 )
-from utils.metadata import MetadataManager
+from app.utils.metadata import MetadataManager
 
 
 class ModListWidget(QListWidget):

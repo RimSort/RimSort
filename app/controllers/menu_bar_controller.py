@@ -1,10 +1,10 @@
 from PySide6.QtCore import QObject, Slot
 from PySide6.QtWidgets import QApplication, QLineEdit, QTextEdit, QPlainTextEdit
 
-from controllers.settings_controller import SettingsController
-from utils.event_bus import EventBus
-from utils.generic import open_url_browser
-from views.menu_bar import MenuBar
+from app.controllers.settings_controller import SettingsController
+from app.utils.event_bus import EventBus
+from app.utils.generic import open_url_browser
+from app.views.menu_bar import MenuBar
 
 
 class MenuBarController(QObject):

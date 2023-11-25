@@ -8,10 +8,10 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout
 
-from utils.app_info import AppInfo
-from models.image_label import ImageLabel
-from models.scroll_label import ScrollLabel
-from utils.generic import set_to_list
+from app.utils.app_info import AppInfo
+from app.models.image_label import ImageLabel
+from app.models.scroll_label import ScrollLabel
+from app.utils.generic import set_to_list
 
 
 class ModInfo:

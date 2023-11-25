@@ -15,8 +15,8 @@ from zipfile import ZipFile
 
 from loguru import logger
 
-from utils.app_info import AppInfo
-from utils.event_bus import EventBus
+from app.utils.app_info import AppInfo
+from app.utils.event_bus import EventBus
 
 # GitPython depends on git executable being available in PATH
 try:
@@ -35,21 +35,21 @@ from github import Github
 from pyperclip import copy as copy_to_clipboard
 from requests import get as requests_get
 
-from models.dialogue import (
+from app.models.dialogue import (
     show_dialogue_input,
     show_information,
 )
-from models.animations import LoadingAnimation
+from app.models.animations import LoadingAnimation
 
-from utils.generic import (
+from app.utils.generic import (
     chunks,
     delete_files_except_extension,
     open_url_browser,
     platform_specific_open,
     upload_data_to_0x0_st,
 )
-from utils.rentry.wrapper import RentryUpload, RentryImport
-from utils.steam.browser import SteamBrowser
+from app.utils.rentry.wrapper import RentryUpload, RentryImport
+from app.utils.steam.browser import SteamBrowser
 
 from PySide6.QtCore import QEventLoop, QProcess, Qt, Slot
 from PySide6.QtWidgets import (
@@ -59,27 +59,27 @@ from PySide6.QtWidgets import (
     QLabel,
 )
 
-from sort.dependencies import *
-from sort.alphabetical_sort import *
-from sort.topo_sort import *
-from views.sub_views.actions_panel import Actions
-from views.sub_views.active_mods_panel import ActiveModList
-from views.sub_views.inactive_mods_panel import InactiveModList
-from views.sub_views.mod_info_panel import ModInfo
-from utils.metadata import *
-from utils.schema import validate_mods_config_format
-from utils.steam.steamcmd.wrapper import SteamcmdInterface
-from utils.steam.steamworks.wrapper import (
+from app.sort.dependencies import *
+from app.sort.alphabetical_sort import *
+from app.sort.topo_sort import *
+from app.views.sub_views.actions_panel import Actions
+from app.views.sub_views.active_mods_panel import ActiveModList
+from app.views.sub_views.inactive_mods_panel import InactiveModList
+from app.views.sub_views.mod_info_panel import ModInfo
+from app.utils.metadata import *
+from app.utils.schema import validate_mods_config_format
+from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
+from app.utils.steam.steamworks.wrapper import (
     SteamworksGameLaunch,
     SteamworksSubscriptionHandler,
 )
-from utils.todds.wrapper import ToddsInterface
-from utils.xml import json_to_xml_write, xml_path_to_json
-from views.game_configuration_panel import GameConfiguration
-from windows.missing_mods_panel import MissingModsPrompt
-from windows.rule_editor_panel import RuleEditor
-from windows.runner_panel import RunnerPanel
-from windows.workshop_mod_updater_panel import ModUpdaterPrompt
+from app.utils.todds.wrapper import ToddsInterface
+from app.utils.xml import json_to_xml_write, xml_path_to_json
+from app.views.game_configuration_panel import GameConfiguration
+from app.windows.missing_mods_panel import MissingModsPrompt
+from app.windows.rule_editor_panel import RuleEditor
+from app.windows.runner_panel import RunnerPanel
+from app.windows.workshop_mod_updater_panel import ModUpdaterPrompt
 
 
 class MainContent(QObject):

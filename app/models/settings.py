@@ -6,8 +6,8 @@ from typing import Dict, Any, Optional, List
 from PySide6.QtCore import QObject
 from loguru import logger
 
-from utils.app_info import AppInfo
-from utils.event_bus import EventBus
+from app.utils.app_info import AppInfo
+from app.utils.event_bus import EventBus
 
 
 class Settings(QObject):

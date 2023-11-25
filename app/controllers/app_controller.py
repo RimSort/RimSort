@@ -6,10 +6,10 @@ from pathlib import Path
 from PySide6.QtCore import QObject
 from PySide6.QtWidgets import QApplication
 
-from utils.app_info import AppInfo
-from utils.constants import DEFAULT_USER_RULES
-from utils.system_info import SystemInfo
-from views.main_window import MainWindow
+from app.utils.app_info import AppInfo
+from app.utils.constants import DEFAULT_USER_RULES
+from app.utils.system_info import SystemInfo
+from app.views.main_window import MainWindow
 
 
 class AppController(QObject):

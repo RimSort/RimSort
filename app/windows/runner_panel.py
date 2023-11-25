@@ -16,9 +16,9 @@ from PySide6.QtWidgets import (
     QProgressBar,
 )
 
-from models.dialogue import show_dialogue_file, show_dialogue_conditional
-from utils.app_info import AppInfo
-from utils.steam.webapi.wrapper import (
+from app.models.dialogue import show_dialogue_file, show_dialogue_conditional
+from app.utils.app_info import AppInfo
+from app.utils.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetPublishedFileDetails,
 )
 

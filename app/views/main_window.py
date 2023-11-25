@@ -7,17 +7,17 @@ from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QWidget
 from loguru import logger
 from watchdog.observers.api import BaseObserver
 
-from controllers.menu_bar_controller import MenuBarController
-from controllers.settings_controller import SettingsController
-from models.settings import Settings
-from utils.app_info import AppInfo
-from utils.system_info import SystemInfo
-from utils.watchdog import RSFileSystemEventHandler
-from views.game_configuration_panel import GameConfiguration
-from views.main_content_panel import MainContent
-from views.menu_bar import MenuBar
-from views.settings_dialog import SettingsDialog
-from views.status_panel import Status
+from app.controllers.menu_bar_controller import MenuBarController
+from app.controllers.settings_controller import SettingsController
+from app.models.settings import Settings
+from app.utils.app_info import AppInfo
+from app.utils.system_info import SystemInfo
+from app.utils.watchdog import RSFileSystemEventHandler
+from app.views.game_configuration_panel import GameConfiguration
+from app.views.main_content_panel import MainContent
+from app.views.menu_bar import MenuBar
+from app.views.settings_dialog import SettingsDialog
+from app.views.status_panel import Status
 
 if SystemInfo().operating_system == SystemInfo.OperatingSystem.WINDOWS:
     from watchdog.observers.polling import PollingObserver

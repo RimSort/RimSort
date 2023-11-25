@@ -9,8 +9,8 @@ from PySide6.QtCore import QRectF, QSize, Qt, Signal
 from PySide6.QtGui import QFontMetrics, QIcon, QResizeEvent
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QWidget
 
-from utils.app_info import AppInfo
-from utils.metadata import MetadataManager
+from app.utils.app_info import AppInfo
+from app.utils.metadata import MetadataManager
 
 
 class ClickableQLabel(QLabel):

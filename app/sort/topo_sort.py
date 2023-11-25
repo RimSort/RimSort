@@ -3,7 +3,7 @@ from typing import List
 
 from toposort import toposort
 
-from utils.metadata import MetadataManager
+from app.utils.metadata import MetadataManager
 
 
 def do_topo_sort(

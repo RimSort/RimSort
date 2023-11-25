@@ -2,7 +2,7 @@ from loguru import logger
 
 from PySide6.QtWidgets import QFrame, QHBoxLayout
 
-from models.animations import AnimationLabel
+from app.models.animations import AnimationLabel
 
 
 class Status:

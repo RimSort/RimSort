@@ -18,9 +18,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from models.multibutton import MultiButton
-from utils.app_info import AppInfo
-from utils.generic import platform_specific_open
+from app.models.multibutton import MultiButton
+from app.utils.app_info import AppInfo
+from app.utils.generic import platform_specific_open
 
 
 class CenteredItemDelegate(QStyledItemDelegate):

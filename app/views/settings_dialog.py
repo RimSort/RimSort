@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
     QGridLayout,
 )
 
-from utils.gui_info import GUIInfo
+from app.utils.gui_info import GUIInfo
 
 
 class SettingsDialog(QDialog):

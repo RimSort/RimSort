@@ -12,12 +12,12 @@ from zipfile import ZipFile
 
 import shutil
 
-from models.dialogue import (
+from app.models.dialogue import (
     show_dialogue_conditional,
     show_fatal_error,
     show_warning,
 )
-from windows.runner_panel import RunnerPanel
+from app.windows.runner_panel import RunnerPanel
 
 
 class SteamcmdInterface:

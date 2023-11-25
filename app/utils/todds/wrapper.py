@@ -4,8 +4,8 @@ from pathlib import Path
 import platform
 import sys
 
-from utils.app_info import AppInfo
-from windows.runner_panel import RunnerPanel
+from app.utils.app_info import AppInfo
+from app.windows.runner_panel import RunnerPanel
 
 
 class ToddsInterface:

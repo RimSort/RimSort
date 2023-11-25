@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from models.multibutton import MultiButton
+from app.models.multibutton import MultiButton
 
 
 class Actions(QWidget):

@@ -10,14 +10,14 @@ from typing import Type, Optional
 
 from loguru import logger
 
-from utils.app_info import AppInfo
+from app.utils.app_info import AppInfo
 
 if __name__ == "__main__":
     # One-time initialization of AppInfo class (this must be done in __main__ so we can use __file__)
     # Initialize as early as possible!
     AppInfo(main_file=__file__)
 
-from controllers.app_controller import AppController
+from app.controllers.app_controller import AppController
 
 SYSTEM = platform.system()
 # Watchdog conditionals
@@ -35,7 +35,7 @@ elif SYSTEM == "Windows":
     # I still can't figure out why it won't log at all on Windows...?
     # getLogger("").setLevel(WARNING)
 
-from models.dialogue import show_fatal_error
+from app.models.dialogue import show_fatal_error
 
 
 def handle_exception(

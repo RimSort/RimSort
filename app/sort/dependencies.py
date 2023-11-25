@@ -1,6 +1,6 @@
 from loguru import logger
 
-from utils.metadata import MetadataManager
+from app.utils.metadata import MetadataManager
 
 
 def gen_deps_graph(

@@ -14,12 +14,12 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from controllers.settings_controller import SettingsController
-from models.mod_list import ModListWidget
-from models.mod_list_item import ModListItemInner, ModListIcons
-from utils.app_info import AppInfo
-from utils.constants import SEARCH_DATA_SOURCE_FILTER_INDEXES
-from utils.metadata import MetadataManager
+from app.controllers.settings_controller import SettingsController
+from app.models.mod_list import ModListWidget
+from app.models.mod_list_item import ModListItemInner, ModListIcons
+from app.utils.app_info import AppInfo
+from app.utils.constants import SEARCH_DATA_SOURCE_FILTER_INDEXES
+from app.utils.metadata import MetadataManager
 
 
 class InactiveModList:

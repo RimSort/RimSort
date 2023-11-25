@@ -16,28 +16,28 @@ from PySide6.QtCore import (
     Signal,
 )
 
-from controllers.settings_controller import SettingsController
-from models.dialogue import (
+from app.controllers.settings_controller import SettingsController
+from app.models.dialogue import (
     show_dialogue_conditional,
     show_dialogue_file,
     show_warning,
 )
-from utils.app_info import AppInfo
-from utils.constants import (
+from app.utils.app_info import AppInfo
+from app.utils.constants import (
     DB_BUILDER_PRUNE_EXCEPTIONS,
     DB_BUILDER_RECURSE_EXCEPTIONS,
     DEFAULT_USER_RULES,
     RIMWORLD_DLC_METADATA,
 )
-from utils.generic import directories
-from utils.schema import validate_mods_config_format
-from utils.steam.steamcmd.wrapper import SteamcmdInterface
-from utils.steam.steamfiles.wrapper import acf_to_dict, dict_to_acf
-from utils.steam.webapi.wrapper import (
+from app.utils.generic import directories
+from app.utils.schema import validate_mods_config_format
+from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
+from app.utils.steam.steamfiles.wrapper import acf_to_dict, dict_to_acf
+from app.utils.steam.webapi.wrapper import (
     DynamicQuery,
     ISteamRemoteStorage_GetPublishedFileDetails,
 )
-from utils.xml import xml_path_to_json
+from app.utils.xml import xml_path_to_json
 
 
 # Locally installed mod metadata

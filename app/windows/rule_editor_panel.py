@@ -26,9 +26,9 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from models.dialogue import show_dialogue_input, show_warning
-from utils.app_info import AppInfo
-from utils.metadata import MetadataManager
+from app.models.dialogue import show_dialogue_input, show_warning
+from app.utils.app_info import AppInfo
+from app.utils.metadata import MetadataManager
 
 
 class EditableDelegate(QItemDelegate):

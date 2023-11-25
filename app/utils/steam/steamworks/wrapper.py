@@ -14,7 +14,7 @@ if not "__compiled__" in globals():
     sys.path.append(str((Path(getcwd()) / "submodules" / "SteamworksPy")))
 
 from steamworks import STEAMWORKS
-from utils.generic import launch_game_process
+from app.utils.generic import launch_game_process
 
 
 class SteamworksInterface:

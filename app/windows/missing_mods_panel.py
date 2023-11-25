@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from utils.constants import RIMWORLD_DLC_METADATA
+from app.utils.constants import RIMWORLD_DLC_METADATA
 
 
 class MissingModsPrompt(QWidget):

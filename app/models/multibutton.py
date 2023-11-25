@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from utils.app_info import AppInfo
+from app.utils.app_info import AppInfo
 
 
 class MultiButton(QWidget):

@@ -1,7 +1,7 @@
 from loguru import logger
 from typing import List
 
-from utils.metadata import MetadataManager
+from app.utils.metadata import MetadataManager
 
 
 def do_alphabetical_sort(

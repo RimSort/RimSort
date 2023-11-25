@@ -7,11 +7,11 @@ from PySide6.QtCore import QObject, Slot, Qt
 from PySide6.QtWidgets import QFileDialog, QMessageBox, QApplication
 from loguru import logger
 
-from models.settings import Settings
-from utils.event_bus import EventBus
-from utils.generic import platform_specific_open
-from utils.system_info import SystemInfo
-from views.settings_dialog import SettingsDialog
+from app.models.settings import Settings
+from app.utils.event_bus import EventBus
+from app.utils.generic import platform_specific_open
+from app.utils.system_info import SystemInfo
+from app.views.settings_dialog import SettingsDialog
 
 
 class SettingsController(QObject):
