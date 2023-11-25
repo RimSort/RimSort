@@ -82,6 +82,12 @@ jobs:
         shell: powershell
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Grab Py3.11 if not self-hosted runner
+      - name: Set up Python 3.11
+        if: matrix.os != 'macos-14-arm64'
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.11'
       # Execute distribute.py on Unix
       - name: Init venv & execute distribute.py (Unix)
         if: matrix.platform != 'Windows'
