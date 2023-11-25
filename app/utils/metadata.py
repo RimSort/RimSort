@@ -1119,8 +1119,8 @@ class ModParser(QRunnable):
     ) -> Dict[str, Any]:
         logger.debug(f"Parsing directory: {directory}")
         mods = {}
-        directory = Path(directory)
-        directory_name = str(directory.parent)
+        directory_path = Path(directory)
+        directory_name = str(directory_path.parent)
         # Use this to trigger invalid clause intentionally, i.e. when handling exceptions
         data_malformed = None
         # Any pfid parsed will be stored here locally
@@ -1142,7 +1142,7 @@ class ModParser(QRunnable):
         invalid_about_file_path_found = True
         if not invalid_about_folder_path_found:
             about_file_name = "About.xml"
-            for temp_file in os.scandir(str((directory / about_folder_name))):
+            for temp_file in os.scandir(str((directory_path / about_folder_name))):
                 if (
                     temp_file.name.lower() == about_file_name.lower()
                     and temp_file.is_file()
@@ -1173,13 +1173,15 @@ class ModParser(QRunnable):
             logger.debug(
                 f"Unable to find PublishedFileId for dir {directory_name} in Steam DB. Trying to find a {pfid_file_name} to parse"
             )
-            for temp_file in os.scandir(str((directory / about_folder_name))):
+            for temp_file in os.scandir(str((directory_path / about_folder_name))):
                 if (
                     temp_file.name.lower() == pfid_file_name.lower()
                     and temp_file.is_file()
                 ):
                     pfid_file_name = temp_file.name
-                    pfid_path = str((directory / about_folder_name / pfid_file_name))
+                    pfid_path = str(
+                        (directory_path / about_folder_name / pfid_file_name)
+                    )
                     logger.debug(
                         f"Found a variation of /About/PublishedFileId.txt at: {pfid_path}"
                     )
@@ -1196,7 +1198,7 @@ class ModParser(QRunnable):
                     )
         # If we were able to find an About.xml, populate mod data...
         if not invalid_about_file_path_found:
-            mod_data_path = str((directory / about_folder_name / about_file_name))
+            mod_data_path = str((directory_path / about_folder_name / about_file_name))
             logger.debug(f"Found mod metadata at: {mod_data_path}")
             mod_data = {}
             try:
@@ -1303,7 +1305,7 @@ class ModParser(QRunnable):
                             "steam_url"
                         ] = f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
                     # If a mod contains C# assemblies, we want to tag the mod
-                    assemblies_path = str((directory / "Assemblies"))
+                    assemblies_path = str((directory_path / "Assemblies"))
                     if os.path.exists(assemblies_path):
                         if any(
                             filename.endswith((".dll", ".DLL"))
@@ -1312,9 +1314,9 @@ class ModParser(QRunnable):
                             mod_metadata["csharp"] = True
                     else:
                         subfolder_paths = [
-                            str((directory / folder))
+                            str((directory_path / folder))
                             for folder in os.listdir(directory)
-                            if os.path.isdir(str((directory / folder)))
+                            if os.path.isdir(str((directory_path / folder)))
                         ]
                         for subfolder_path in subfolder_paths:
                             assemblies_path = str(
@@ -1345,7 +1347,7 @@ class ModParser(QRunnable):
                     data_malformed = True
         # ...or, if we didn't find an About.xml, but we have a RimWorld scenario .rsc to parse...
         elif invalid_about_file_path_found and scenario_rsc_found:
-            scenario_data_path = str((directory / scenario_rsc_file))
+            scenario_data_path = str((directory_path / scenario_rsc_file))
             logger.debug(f"Found scenario metadata at: {scenario_data_path}")
             scenario_data = {}
             try:
@@ -1440,7 +1442,7 @@ class ModParser(QRunnable):
         if intent == "local":
             metadata = mods[uuid]
             # Check for git repository inside local mods, tag appropriately
-            if os.path.exists(str((directory / ".git"))):
+            if os.path.exists(str((directory_path / ".git"))):
                 metadata["git_repo"] = True
             # Check for local mods that are SteamCMD mods, tag appropriately
             if metadata.get("folder") == metadata.get("publishedfileid"):
