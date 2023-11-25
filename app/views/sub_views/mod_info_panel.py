@@ -52,16 +52,16 @@ class ModInfo:
 
         # Create widgets
         self.missing_image_path = str(
-            AppInfo().theme_data_folder / ".default-icons" / "missing.png"
+            AppInfo().theme_data_folder / "default-icons" / "missing.png"
         )
         self.rimsort_image_a_path = str(
-            AppInfo().theme_data_folder / ".default-icons" / "AppIcon_a.png"
+            AppInfo().theme_data_folder / "default-icons" / "AppIcon_a.png"
         )
         self.rimsort_image_b_path = str(
-            AppInfo().theme_data_folder / ".default-icons" / "AppIcon_b.png"
+            AppInfo().theme_data_folder / "default-icons" / "AppIcon_b.png"
         )
         self.scenario_image_path = str(
-            AppInfo().theme_data_folder / ".default-icons" / "rimworld.png"
+            AppInfo().theme_data_folder / "default-icons" / "rimworld.png"
         )
         self.preview_picture = ImageLabel()
         self.preview_picture.setAlignment(Qt.AlignCenter)

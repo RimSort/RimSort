@@ -107,7 +107,7 @@ class SteamBrowser(QWidget):
         )
         self.web_view_loading_placeholder.setPixmap(
             QPixmap(
-                str(AppInfo().theme_data_folder / ".default-icons" / "AppIcon_b.png")
+                str(AppInfo().theme_data_folder / "default-icons" / "AppIcon_b.png")
             )
         )
         # WebEngineView

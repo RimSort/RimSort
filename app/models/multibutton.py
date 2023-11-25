@@ -37,7 +37,7 @@ class MultiButton(QWidget):
         self.secondary_action_icon_path = (
             secondary_action_icon_path
             if secondary_action_icon_path
-            else str(AppInfo().theme_data_folder / ".default-icons" / "kebab.png")
+            else str(AppInfo().theme_data_folder / "default-icons" / "kebab.png")
         )
 
         # Create a horizontal layout

@@ -867,7 +867,7 @@ class MainContent(QObject):
                     self._do_threaded_loading_animation(
                         gif_path=str(
                             AppInfo().theme_data_folder
-                            / ".default-icons"
+                            / "default-icons"
                             / "refresh.gif"
                         ),
                         target=partial(
@@ -1039,7 +1039,7 @@ class MainContent(QObject):
             # Run expensive calculations to set cache data
             self._do_threaded_loading_animation(
                 gif_path=str(
-                    AppInfo().theme_data_folder / ".default-icons" / "rimsort.gif"
+                    AppInfo().theme_data_folder / "default-icons" / "rimsort.gif"
                 ),
                 target=partial(
                     self.metadata_manager.refresh_cache, is_initial=is_initial
@@ -1841,7 +1841,7 @@ class MainContent(QObject):
         # Query Workshop for update data
         updates_checked = self._do_threaded_loading_animation(
             gif_path=str(
-                AppInfo().theme_data_folder / ".default-icons" / "steam_api.gif"
+                AppInfo().theme_data_folder / "default-icons" / "steam_api.gif"
             ),
             target=partial(
                 query_workshop_update_data,
@@ -2091,7 +2091,7 @@ class MainContent(QObject):
             self.steam_browser.close()
         # Process API call
         self._do_threaded_loading_animation(
-            gif_path=str(AppInfo().theme_data_folder / ".default-icons" / "steam.gif"),
+            gif_path=str(AppInfo().theme_data_folder / "default-icons" / "steam.gif"),
             target=partial(self._do_steamworks_api_call, instruction=instruction),
             text="Processing Steam subscription action(s) via Steamworks API...",
         )

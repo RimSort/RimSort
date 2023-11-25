@@ -76,7 +76,7 @@ class RunnerPanel(QWidget):
         # CREATE WIDGETS
         # Clear btn
         self.clear_runner_icon = QIcon(
-            str(AppInfo().theme_data_folder / ".default-icons" / "clear.png")
+            str(AppInfo().theme_data_folder / "default-icons" / "clear.png")
         )
         self.clear_runner_button = QToolButton()
         self.clear_runner_button.setIcon(self.clear_runner_icon)
@@ -86,7 +86,7 @@ class RunnerPanel(QWidget):
         )
         # Restart btn
         self.restart_process_icon = QIcon(
-            str(AppInfo().theme_data_folder / ".default-icons" / "restart_process.png")
+            str(AppInfo().theme_data_folder / "default-icons" / "restart_process.png")
         )
         self.restart_process_button = QToolButton()
         self.restart_process_button.setIcon(self.restart_process_icon)
@@ -97,7 +97,7 @@ class RunnerPanel(QWidget):
         self.restart_process_button.hide()  # Hide this by default - it will be enabled if self.execute()
         # Kill btn
         self.kill_process_icon = QIcon(
-            str(AppInfo().theme_data_folder / ".default-icons" / "kill_process.png")
+            str(AppInfo().theme_data_folder / "default-icons" / "kill_process.png")
         )
         self.kill_process_button = QToolButton()
         self.kill_process_button.setIcon(self.kill_process_icon)
@@ -108,7 +108,7 @@ class RunnerPanel(QWidget):
         self.kill_process_button.hide()  # Hide this by default - it will be enabled if self.execute()
         # Save process output btn
         self.save_runner_icon = QIcon(
-            str(AppInfo().theme_data_folder / ".default-icons" / "save_output.png")
+            str(AppInfo().theme_data_folder / "default-icons" / "save_output.png")
         )
         self.save_runner_output_button = QToolButton()
         self.save_runner_output_button.setIcon(self.save_runner_icon)

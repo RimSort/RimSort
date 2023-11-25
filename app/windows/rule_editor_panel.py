@@ -270,7 +270,7 @@ class RuleEditor(QWidget):
         self.editor_save_community_rules_icon = QIcon(
             str(
                 AppInfo().theme_data_folder
-                / ".default-icons"
+                / "default-icons"
                 / "save_community_rules.png"
             )
         )
@@ -286,7 +286,7 @@ class RuleEditor(QWidget):
         )
         # user rules
         self.editor_save_user_rules_icon = QIcon(
-            str(AppInfo().theme_data_folder / ".default-icons" / "save_user_rules.png")
+            str(AppInfo().theme_data_folder / "default-icons" / "save_user_rules.png")
         )
         self.editor_save_user_rules_button = QToolButton()
         self.editor_save_user_rules_button.setToolTip("Save rules to userRules.json")

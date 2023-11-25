@@ -51,10 +51,10 @@ class GameConfiguration(QObject):
             self.system_name = platform.system()
 
             self.lock_icon_path = str(
-                str(AppInfo().theme_data_folder / ".default-icons" / "lock.png")
+                str(AppInfo().theme_data_folder / "default-icons" / "lock.png")
             )
             self.unlock_icon_path = str(
-                str(AppInfo().theme_data_folder / ".default-icons" / "unlock.png")
+                str(AppInfo().theme_data_folder / "default-icons" / "unlock.png")
             )
 
             # INITIALIZE WIDGETS / FEATURES

@@ -14,6 +14,7 @@ if not "__compiled__" in globals():
     sys.path.append(str((Path(getcwd()) / "submodules" / "SteamworksPy")))
 
 from steamworks import STEAMWORKS
+from app.utils.app_info import AppInfo
 from app.utils.generic import launch_game_process
 
 
@@ -48,7 +49,7 @@ class SteamworksInterface:
         # Used for GetAppDependencies data
         self.get_app_deps_query_result = {}
         self.steam_not_running = False  # Skip action if True. Log occurrences.
-        self.steamworks = STEAMWORKS()
+        self.steamworks = STEAMWORKS(_libs=str((AppInfo().application_folder / "libs")))
         try:
             self.steamworks.initialize()  # Init the Steamworks API
         except Exception as e:

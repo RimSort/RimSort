@@ -82,7 +82,7 @@ class SettingsPanel(QDialog):
             )
         )
         self.rimworld_woodlog_icon_path = str(
-            str(AppInfo().theme_data_folder / ".default-icons" / "WoodLog_a.png")
+            str(AppInfo().theme_data_folder / "default-icons" / "WoodLog_a.png")
         )
         self.upload_log_multibutton = MultiButton(
             main_action="Upload RimSort.log",
@@ -168,7 +168,7 @@ class SettingsPanel(QDialog):
         self.sorting_algorithm_configuration_layout = QVBoxLayout()
         # metadata / sorting widgets
         self.external_metadata_icon_path = QIcon(
-            str(AppInfo().theme_data_folder / ".default-icons" / "database.png")
+            str(AppInfo().theme_data_folder / "default-icons" / "database.png")
         )
         # external steam metadata
         self.external_steam_metadata_label = QLabel("Steam Workshop DB")

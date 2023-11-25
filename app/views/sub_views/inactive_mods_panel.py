@@ -67,9 +67,7 @@ class InactiveModList:
             self.inactive_mods_filter_data_source_index
         ]
         self.inactive_mods_filter_data_source_icons = [
-            QIcon(
-                str(AppInfo().theme_data_folder / ".default-icons" / "AppIcon_b.png")
-            ),
+            QIcon(str(AppInfo().theme_data_folder / "default-icons" / "AppIcon_b.png")),
             ModListIcons.ludeon_icon(),
             ModListIcons.local_icon(),
             ModListIcons.git_icon(),
@@ -87,10 +85,10 @@ class InactiveModList:
         )
         self.inactive_mods_search_filter_state = True
         self.inactive_mods_search_mode_filter_icon = QIcon(
-            str(AppInfo().theme_data_folder / ".default-icons" / "filter.png")
+            str(AppInfo().theme_data_folder / "default-icons" / "filter.png")
         )
         self.inactive_mods_search_mode_nofilter_icon = QIcon(
-            str(AppInfo().theme_data_folder / ".default-icons" / "nofilter.png")
+            str(AppInfo().theme_data_folder / "default-icons" / "nofilter.png")
         )
         self.inactive_mods_search_mode_filter_button = QToolButton()
         self.inactive_mods_search_mode_filter_button.setIcon(

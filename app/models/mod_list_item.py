@@ -267,7 +267,7 @@ class ModListItemInner(QWidget):
 
 
 class ModListIcons:
-    _data_path: Path = AppInfo().theme_data_folder / ".default-icons"
+    _data_path: Path = AppInfo().theme_data_folder / "default-icons"
     _ludeon_icon_path: str = str(_data_path / "ludeon_icon.png")
     _local_icon_path: str = str(_data_path / "local_icon.png")
     _steam_icon_path: str = str(_data_path / "steam_icon.png")
