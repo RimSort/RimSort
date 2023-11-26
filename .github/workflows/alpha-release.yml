@@ -98,7 +98,7 @@ jobs:
           python-version: '3.11'
       # Install Py3.11 with brew if Intel Mac for self-hosted runner
       - name: Install Py3.11 with brew on Intel Mac
-        if: matrix.os == 'macos-11-x64'
+        if: matrix.os == 'macos-11'
         run: |
           brew install python@3.11
       # Execute distribute.py on Unix
