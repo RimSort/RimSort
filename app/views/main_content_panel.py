@@ -1014,11 +1014,11 @@ class MainContent(QObject):
             self.mods_panel.active_mods_filter_data_source_index = len(
                 self.mods_panel.data_source_filter_icons
             )
-            self.mods_panel.clear_active_mods_search()
+            self.mods_panel.signal_clear_search(list_type="Active")
             self.mods_panel.inactive_mods_filter_data_source_index = len(
-                self.mods_panel.inactive_mods_filter_data_source_icons
+                self.mods_panel.data_source_filter_icons
             )
-            self.mods_panel.clear_inactive_mods_search()
+            self.mods_panel.signal_clear_search(list_type="Inactive")
         # Check if paths are set
         if GameConfiguration.instance().check_if_essential_paths_are_set():
             # Run expensive calculations to set cache data
