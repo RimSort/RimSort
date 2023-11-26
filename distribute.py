@@ -2,6 +2,7 @@
 
 from io import BytesIO
 import os
+from pathlib import Path
 import platform
 import requests
 import shutil
@@ -33,17 +34,18 @@ if _SYSTEM == "Darwin" and _PROCESSOR == "arm":
         "--standalone",
         # "--onefile",
         "--macos-create-app-bundle",
-        "--macos-app-icon=./data/AppIcon_a.icns",
+        "--macos-app-icon=./themes/default-icons/AppIcon_a.icns",
         "--enable-plugin=pyside6",
-        "--include-data-dir=./data/=data",
         "--include-data-dir=./themes/=themes",
         "--include-data-dir=./todds/=todds",
         "--include-data-file=./update.sh=update.sh",
-        f"--include-data-file=./SteamworksPy_{_PROCESSOR}.dylib=SteamworksPy.dylib",
-        "--include-data-file=./libsteam_api.dylib=libsteam_api.dylib",
+        f"--include-data-file=./libs/SteamworksPy_{_PROCESSOR}.dylib=SteamworksPy.dylib",
+        "--include-data-file=./libs/libsteam_api.dylib=libsteam_api.dylib",
         "--include-data-file=./steam_appid.txt=steam_appid.txt",
-        "RimSort.py",
-        "--output-dir=./dist/",
+        "--include-package=steamworks",
+        "app/__main__.py",
+        "--output-dir=./build/",
+        "--output-filename=RimSort",
     ]
 elif _SYSTEM == "Darwin" and _PROCESSOR == "i386":
     _NUITKA_CMD = [
@@ -54,17 +56,18 @@ elif _SYSTEM == "Darwin" and _PROCESSOR == "i386":
         "--standalone",
         # "--onefile",
         "--macos-create-app-bundle",
-        "--macos-app-icon=./data/AppIcon_a.icns",
+        "--macos-app-icon=./themes/default-icons/AppIcon_a.icns",
         "--enable-plugin=pyside6",
-        "--include-data-dir=./data/=data",
         "--include-data-dir=./themes/=themes",
         "--include-data-dir=./todds/=todds",
         "--include-data-file=./update.sh=update.sh",
-        f"--include-data-file=./SteamworksPy_{_PROCESSOR}.dylib=SteamworksPy.dylib",
-        "--include-data-file=./libsteam_api.dylib=libsteam_api.dylib",
+        f"--include-data-file=./libs/SteamworksPy_{_PROCESSOR}.dylib=SteamworksPy.dylib",
+        "--include-data-file=./libs/libsteam_api.dylib=libsteam_api.dylib",
         "--include-data-file=./steam_appid.txt=steam_appid.txt",
-        "RimSort.py",
-        "--output-dir=./dist/",
+        "--include-package=steamworks",
+        "app/__main__.py",
+        "--output-dir=./build/",
+        "--output-filename=RimSort",
     ]
 elif _SYSTEM == "Linux":
     _NUITKA_CMD = [
@@ -74,17 +77,18 @@ elif _SYSTEM == "Linux":
         "--assume-yes-for-downloads",
         "--standalone",
         # "--onefile",
-        "--linux-icon=./data/AppIcon_a.png",
+        "--linux-icon=./themes/default-icons/AppIcon_a.png",
         "--enable-plugin=pyside6",
-        "--include-data-dir=./data/=data",
         "--include-data-dir=./themes/=themes",
         "--include-data-dir=./todds/=todds",
         "--include-data-file=./update.sh=update.sh",
-        f"--include-data-file=./SteamworksPy_{_PROCESSOR}.so=SteamworksPy.so",
-        "--include-data-file=./libsteam_api.so=libsteam_api.so",
+        f"--include-data-file=./libs/SteamworksPy_{_PROCESSOR}.so=SteamworksPy.so",
+        "--include-data-file=./libs/libsteam_api.so=libsteam_api.so",
         "--include-data-file=./steam_appid.txt=steam_appid.txt",
-        "RimSort.py",
-        "--output-dir=./dist/",
+        "--include-package=steamworks",
+        "app/__main__.py",
+        "--output-dir=./build/",
+        "--output-filename=RimSort",
     ]
 elif _SYSTEM == "Windows" and _ARCH == "64bit":
     _NUITKA_CMD = [
@@ -95,24 +99,25 @@ elif _SYSTEM == "Windows" and _ARCH == "64bit":
         "--standalone",
         "--disable-console",
         # "--onefile",
-        "--windows-icon-from-ico=./data/AppIcon_a.png",
+        "--windows-icon-from-ico=./themes/default-icons/AppIcon_a.png",
         "--enable-plugin=pyside6",
-        "--include-data-dir=./data/=data",
         "--include-data-dir=./themes/=themes",
         "--include-data-dir=./todds/=todds",
         "--include-data-file=./update.bat=update.bat",
-        "--include-data-file=./SteamworksPy64.dll=SteamworksPy64.dll",
-        "--include-data-file=./steam_api64.dll=steam_api64.dll",
+        "--include-data-file=./libs/SteamworksPy64.dll=SteamworksPy64.dll",
+        "--include-data-file=./libs/steam_api64.dll=steam_api64.dll",
         "--include-data-file=./steam_appid.txt=steam_appid.txt",
-        "RimSort.py",
-        "--output-dir=./dist",
+        "--include-package=steamworks",
+        "app/__main__.py",
+        "--output-dir=./build/",
+        "--output-filename=RimSort",
     ]
 else:
     print(f"Unsupported SYSTEM: {_SYSTEM} {_ARCH} with {_PROCESSOR}")
     print("Exiting...")
 GET_REQ_CMD = [PY_CMD, "-m", "pip", "install", "-r", "requirements.txt"]
-STEAMFILES_SRC = os.path.join(_CWD, "steamfiles")
-STEAMWORKSPY_BUILD_CMD = [PY_CMD, "build_steamworkspy.py"]
+STEAMFILES_BUILD_CMD = [PY_CMD, "setup.py", "install"]
+STEAMFILES_SRC = os.path.join(_CWD, "submodules", "steamfiles")
 SUBMODULE_UPDATE_INIT_CMD = ["git", "submodule", "update", "--init", "--recursive"]
 
 
@@ -126,7 +131,7 @@ def get_rimsort_deps() -> None:
     print(f"Changing directory to {STEAMFILES_SRC}")
     os.chdir(STEAMFILES_SRC)
     print("Building steamfiles module...")
-    _execute(GET_REQ_CMD)
+    _execute(STEAMFILES_BUILD_CMD)
     print(f"Leaving {STEAMFILES_SRC}")
     os.chdir(_CWD)
 
@@ -134,8 +139,7 @@ def get_rimsort_deps() -> None:
 def build_steamworkspy() -> None:
     # Setup environment
     print("Setting up environment...")
-    MODULE_SRC_PATH = os.path.join(_CWD, "SteamworksPy", "steamworks")
-    MODULE_DEST_PATH = os.path.join(_CWD, "steamworks")
+    MODULE_SRC_PATH = os.path.join(_CWD, "submodules", "SteamworksPy", "steamworks")
     STEAMWORKSPY_BIN_DARWIN = f"SteamworksPy_{_PROCESSOR}.dylib"
     STEAMWORKSPY_BIN_DARWIN_LINK_PATH = os.path.join(_CWD, "SteamworksPy.dylib")
     DARWIN_COMPILE_CMD = [
@@ -201,9 +205,7 @@ def build_steamworkspy() -> None:
     # SOURCE: "https://partner.steamgames.com/downloads/steamworks_sdk_*.zip"
     STEAMWORKS_SDK_URL = "https://github.com/oceancabbage/RimSort/raw/steamworks-sdk/steamworks_sdk_155.zip"
     SUBMODULE_UPDATE_INIT_CMD = ["git", "submodule", "update", "--init", "--recursive"]
-    STEAMWORKS_PY_PATH = os.path.join(_CWD, "SteamworksPy", "library")
-    STEAMWORKS_MODULE_PATH = os.path.join(_CWD, "SteamworksPy", "steamworks")
-    STEAMWORKS_MODULE_FIN = os.path.join(_CWD, "steamworks")
+    STEAMWORKS_PY_PATH = os.path.join(_CWD, "submodules", "SteamworksPy", "library")
     STEAMWORKS_SDK_PATH = os.path.join(STEAMWORKS_PY_PATH, "sdk")
     STEAMWORKS_SDK_HEADER_PATH = os.path.join(STEAMWORKS_SDK_PATH, "public", "steam")
     STEAMWORKS_SDK_HEADER_DEST_PATH = os.path.join(STEAMWORKS_PY_PATH, "sdk", "steam")
@@ -214,7 +216,7 @@ def build_steamworkspy() -> None:
         STEAMWORKS_SDK_REDIST_BIN_PATH, "steam_api.lib"
     )
     STEAMWORKS_SDK_APILIB_DEST_PATH = os.path.join(STEAMWORKS_PY_PATH, "steam_api.lib")
-    STEAMWORKS_SDK_APILIB_FIN_PATH = os.path.join(_CWD, "steam_api.lib")
+    STEAMWORKS_SDK_APILIB_FIN_PATH = os.path.join(_CWD, "libs", "steam_api.lib")
 
     print(f"Running on {_SYSTEM} {_ARCH} {_PROCESSOR}...")
 
@@ -229,12 +231,14 @@ def build_steamworkspy() -> None:
         STEAMWORKS_SDK_LIBSTEAM_DEST_PATH = os.path.join(
             STEAMWORKS_PY_PATH, "libsteam_api.dylib"
         )
-        STEAMWORKS_SDK_LIBSTEAM_FIN_PATH = os.path.join(_CWD, "libsteam_api.dylib")
+        STEAMWORKS_SDK_LIBSTEAM_FIN_PATH = os.path.join(
+            _CWD, "libs", "libsteam_api.dylib"
+        )
         COMPILE_CMD = DARWIN_COMPILE_CMD
         STEAMWORKSPY_BIN_PATH = os.path.join(
             STEAMWORKS_PY_PATH, STEAMWORKSPY_BIN_DARWIN
         )
-        STEAMWORKSPY_BIN_FIN_PATH = os.path.join(_CWD, STEAMWORKSPY_BIN_DARWIN)
+        STEAMWORKSPY_BIN_FIN_PATH = os.path.join(_CWD, "libs", STEAMWORKSPY_BIN_DARWIN)
     elif _SYSTEM == "Linux":
         if _ARCH == "32bit":
             STEAMWORKS_SDK_LIBSTEAM_PATH = os.path.join(
@@ -251,10 +255,10 @@ def build_steamworkspy() -> None:
         STEAMWORKS_SDK_LIBSTEAM_DEST_PATH = os.path.join(
             STEAMWORKS_PY_PATH, "libsteam_api.so"
         )
-        STEAMWORKS_SDK_LIBSTEAM_FIN_PATH = os.path.join(_CWD, "libsteam_api.so")
+        STEAMWORKS_SDK_LIBSTEAM_FIN_PATH = os.path.join(_CWD, "libs", "libsteam_api.so")
         COMPILE_CMD = LINUX_COMPILE_CMD
         STEAMWORKSPY_BIN_PATH = os.path.join(STEAMWORKS_PY_PATH, STEAMWORKSPY_BIN_LINUX)
-        STEAMWORKSPY_BIN_FIN_PATH = os.path.join(_CWD, STEAMWORKSPY_BIN_LINUX)
+        STEAMWORKSPY_BIN_FIN_PATH = os.path.join(_CWD, "libs", STEAMWORKSPY_BIN_LINUX)
     elif _SYSTEM == "Windows":
         if _ARCH == "32bit":
             STEAMWORKS_SDK_LIBSTEAM_PATH = os.path.join(
@@ -266,16 +270,20 @@ def build_steamworkspy() -> None:
             STEAMWORKS_SDK_LIBSTEAM_DEST_PATH = os.path.join(
                 STEAMWORKS_PY_PATH, "steam_api.dll"
             )
-            STEAMWORKS_SDK_LIBSTEAM_FIN_PATH = os.path.join(_CWD, "steam_api.dll")
+            STEAMWORKS_SDK_LIBSTEAM_FIN_PATH = os.path.join(
+                _CWD, "libs", "steam_api.dll"
+            )
             STEAMWORKS_SDK_APILIB_DEST_PATH = os.path.join(
                 STEAMWORKS_PY_PATH, "steam_api.lib"
             )
-            STEAMWORKS_SDK_APILIB_FIN_PATH = os.path.join(_CWD, "steam_api.lib")
+            STEAMWORKS_SDK_APILIB_FIN_PATH = os.path.join(_CWD, "libs", "steam_api.lib")
             COMPILE_CMD = STEAMWORKS_COMPILE_CMD_WIN32
             STEAMWORKSPY_BIN_PATH = os.path.join(
                 STEAMWORKS_PY_PATH, STEAMWORKSPY_BIN_WIN32
             )
-            STEAMWORKSPY_BIN_FIN_PATH = os.path.join(_CWD, STEAMWORKSPY_BIN_WIN32)
+            STEAMWORKSPY_BIN_FIN_PATH = os.path.join(
+                _CWD, "libs", STEAMWORKSPY_BIN_WIN32
+            )
         elif _ARCH == "64bit":
             STEAMWORKS_SDK_LIBSTEAM_PATH = os.path.join(
                 STEAMWORKS_SDK_REDIST_BIN_PATH, "win64", "steam_api64.dll"
@@ -286,11 +294,15 @@ def build_steamworkspy() -> None:
             STEAMWORKS_SDK_LIBSTEAM_DEST_PATH = os.path.join(
                 STEAMWORKS_PY_PATH, "steam_api64.dll"
             )
-            STEAMWORKS_SDK_LIBSTEAM_FIN_PATH = os.path.join(_CWD, "steam_api64.dll")
+            STEAMWORKS_SDK_LIBSTEAM_FIN_PATH = os.path.join(
+                _CWD, "libs", "steam_api64.dll"
+            )
             STEAMWORKS_SDK_APILIB_DEST_PATH = os.path.join(
                 STEAMWORKS_PY_PATH, "steam_api64.lib"
             )
-            STEAMWORKS_SDK_APILIB_FIN_PATH = os.path.join(_CWD, "steam_api64.lib")
+            STEAMWORKS_SDK_APILIB_FIN_PATH = os.path.join(
+                _CWD, "libs", "steam_api64.lib"
+            )
             COMPILE_CMD = STEAMWORKS_COMPILE_CMD_WIN64
             STEAMWORKSPY_BIN_PATH = os.path.join(
                 STEAMWORKS_PY_PATH, STEAMWORKSPY_BIN_WIN64
@@ -372,40 +384,16 @@ def copy_swp_libs() -> None:
     if _SYSTEM != "Windows":
         if _SYSTEM == "Darwin":
             STEAMWORKSPY_BUILT_LIB = os.path.join(
-                _CWD, f"SteamworksPy_{_PROCESSOR}.dylib"
+                _CWD, "libs", f"SteamworksPy_{_PROCESSOR}.dylib"
             )
-            STEAMWORKSPY_LIB_FIN = os.path.join(_CWD, "SteamworksPy.dylib")
+            STEAMWORKSPY_LIB_FIN = os.path.join(_CWD, "libs", "SteamworksPy.dylib")
         elif _SYSTEM == "Linux":
-            STEAMWORKSPY_BUILT_LIB = os.path.join(_CWD, f"SteamworksPy_{_PROCESSOR}.so")
-            STEAMWORKSPY_LIB_FIN = os.path.join(_CWD, "SteamworksPy.so")
+            STEAMWORKSPY_BUILT_LIB = os.path.join(
+                _CWD, "libs", f"SteamworksPy_{_PROCESSOR}.so"
+            )
+            STEAMWORKSPY_LIB_FIN = os.path.join(_CWD, "libs", "SteamworksPy.so")
         print("Copying libs for non-Windows platform")
         shutil.copyfile(STEAMWORKSPY_BUILT_LIB, STEAMWORKSPY_LIB_FIN)
-
-    # Symlink built module
-    print("Creating symlink to built module...")
-    MODULE_SRC_PATH = os.path.join(_CWD, "SteamworksPy", "steamworks")
-    MODULE_DEST_PATH = os.path.join(_CWD, "steamworks")
-    try:
-        if _SYSTEM != "Windows":
-            os.symlink(
-                MODULE_SRC_PATH,
-                MODULE_DEST_PATH,
-                target_is_directory=True,
-            )
-            print(f"Symlink created: [{MODULE_SRC_PATH}] -> {MODULE_DEST_PATH}")
-        else:
-            from _winapi import CreateJunction
-
-            CreateJunction(MODULE_SRC_PATH, MODULE_DEST_PATH)
-            print(f"Symlink created: [{MODULE_SRC_PATH}] -> {MODULE_DEST_PATH}")
-    except FileExistsError:
-        print(
-            f"Unable to create symlink from source: {MODULE_SRC_PATH} to destination: {MODULE_DEST_PATH}"
-        )
-        print(
-            "Destination already exists, or you don't have permission."
-            + " You can safely ignore this as long as you are able to run RimSort after completing runtime setup."
-        )
 
 
 def get_latest_todds_release() -> None:
@@ -468,12 +456,19 @@ def get_latest_todds_release() -> None:
 def freeze_application() -> None:
     # Nuitka
     print(f"Running on {_SYSTEM} {_ARCH} {_PROCESSOR}...")
-    _execute(_NUITKA_CMD)
+    # Set the PYTHONPATH environment variable to include your submodules directory
+    env = os.environ.copy()
+    env["PYTHONPATH"] = (
+        str((Path(_CWD) / "submodules" / "SteamworksPy"))
+        + os.pathsep
+        + env.get("PYTHONPATH", "")
+    )
+    _execute(_NUITKA_CMD, env=env)
 
 
-def _execute(cmd: list[str]) -> None:
+def _execute(cmd: list[str], env=None) -> None:
     print(f"\nExecuting command: {cmd}\n")
-    p = subprocess.Popen(cmd)
+    p = subprocess.Popen(cmd, env=env)
     p.wait()
 
 
@@ -500,4 +495,4 @@ if __name__ == "__main__":
 
     # Build Nuitka distributable binary
     print("Building RimSort application with Nuitka...")
-    _execute(_NUITKA_CMD)
+    freeze_application()

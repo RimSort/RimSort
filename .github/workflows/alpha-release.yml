@@ -9,16 +9,16 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-10.14.6-i386 
+          - os: macos-11-x64
             platform: "Darwin"
             arch: "i386"
           - os: macos-14-arm64
             platform: "Darwin"
             arch: "arm"
-          - os: debian-11
+          - os: ubuntu-20.04
             platform: "Linux"
             arch: "x86_64"
-          - os: windows-10-21h2
+          - os: windows-2019
             platform: "Windows"
             arch: "x86_64"
     steps:
@@ -90,17 +90,28 @@ jobs:
         shell: powershell
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Grab Py3.11 if not self-hosted runner for Linux/Windows
+      - name: Set up Python 3.11 for Linux/Windows
+        if: matrix.platform != 'Darwin'
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.11'
+      # Install Py3.11 with brew if Intel Mac for self-hosted runner
+      - name: Install Py3.11 with brew on Intel Mac
+        if: matrix.os == 'macos-11'
+        run: |
+          brew install python@3.11
       # Execute distribute.py on Unix
       - name: Init venv & execute distribute.py (Unix)
         if: matrix.platform != 'Windows'
         run: |
-          python3.9 -m pip install --upgrade pip
-          python3.9 -m pip install requests virtualenv
-          if [ -f "bin/activate" ]; then
-            source bin/activate
+          python3.11 -m pip install --upgrade pip
+          python3.11 -m pip install requests virtualenv
+          if [ -f "venv/bin/activate" ]; then
+            source venv/bin/activate
           else
-            python3.9 -m venv .
-            source bin/activate
+            python3.11 -m venv venv
+            source venv/bin/activate
           fi
           python -m pip install requests
           python distribute.py
@@ -113,11 +124,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install requests virtualenv
-          if (Test-Path "Scripts\Activate.ps1") {
-            .\Scripts\Activate.ps1
+          if (Test-Path "venv\Scripts\Activate.ps1") {
+            .\venv\Scripts\Activate.ps1
           } else {
-            python -m venv .
-            .\Scripts\Activate.ps1
+            python -m venv venv
+            .\venv\Scripts\Activate.ps1
           }
           python -m pip install requests
           python distribute.py
@@ -158,26 +169,30 @@ jobs:
         run: |
           if [[ "$(uname)" == "Darwin" ]]; then
             DIST="RimSort.app"
-            echo ${{ steps.sha_unix.outputs.short }} > ./dist/$DIST/Contents/MacOS/data/SHA
+            if [ -d "build/$DIST" ]; then
+                echo "Existing build found. Deleting old build and replacing with a new build."
+                rm -rf "./build/$DIST"
+            fi
+            mv build/__main__.app ."/build/$DIST"
           else    
             DIST="RimSort"
-            if [ -d "dist/$DIST" ]; then
+            if [ -d "build/$DIST" ]; then
                 echo "Existing build found. Deleting old build and replacing with a new build."
-                rm -rf "./dist/$DIST"
+                rm -rf "./build/$DIST"
             fi
-            mv dist/RimSort.dist ."/dist/$DIST"
+            mv build/__main__.dist ."/build/$DIST"
           fi
-          cd ./dist/
+          cd ./build/
           zip -r ${{ env.FILENAME }} $DIST
       - name: Create ZIP (Windows)
         if: matrix.platform == 'Windows'
         run: |
-          if (Test-Path -Path .\dist\RimSort -PathType Container) {
+          if (Test-Path -Path .\build\RimSort -PathType Container) {
               Write-Host "Existing build found. Deleting old build and replacing with new build."
-              Remove-Item -Path .\dist\RimSort -Force -Recurse
+              Remove-Item -Path .\build\RimSort -Force -Recurse
           }
-          cd ./dist/
-          Rename-Item -Path RimSort.dist -NewName RimSort
+          cd ./build/
+          Rename-Item -Path __main__.dist -NewName RimSort
           Compress-Archive -Force -Path RimSort -DestinationPath ${{ env.FILENAME }}
         shell: powershell
       # Upload ZIP as artifact
@@ -185,7 +200,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: ${{ env.FILENAME }}
-          path: ./dist/${{ env.FILENAME }}
+          path: ./build/${{ env.FILENAME }}
     outputs:
       formatted_tag_name: ${{ env.FORMATTED_TAG_NAME }}
       raw_tag_name: ${{ env.RAW_TAG_NAME }}
