@@ -572,7 +572,7 @@ class ModsPanel(QWidget):
                             widget.main_label.setObjectName("ListItemLabel")
                             repolish_label(label=widget.main_label)
 
-        self.update_count(list_type=list_type, wni=wni)
+        self.update_count(list_type=list_type, widgets_and_items=wni)
 
     def signal_data_source_filter(self, list_type: str) -> None:
         if list_type == "Active":
