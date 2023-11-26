@@ -1064,17 +1064,10 @@ class MainContent(QObject):
                     "User preference is not configured to check Steam mods for updates. Skipping..."
                 )
         else:
-            self.__insert_data_into_lists({}, {})
+            self.__insert_data_into_lists([], [])
             logger.debug(
                 "Essential paths have not been set. Passing refresh and resetting mod lists"
             )
-        self.mods_panel.game_version = self.metadata_manager.game_version
-        # Feed all_mods and Steam DB info to Active Mods list to surface
-        # names instead of package_ids when able
-        self.mods_panel.all_mods = self.metadata_manager.internal_local_metadata
-        self.mods_panel.steam_package_id_to_name = (
-            self.metadata_manager.info_from_steam_package_id_to_name
-        )
 
     def _do_refresh_animation(self, path: str) -> None:
         logger.debug(f"File change detected: {path}")
@@ -1139,16 +1132,16 @@ class MainContent(QObject):
         # Get the live list of active and inactive mods. This is because the user
         # will likely sort before saving.
         logger.debug("Starting sorting mods")
-        self.mods_panel.clear_active_mods_search()
+        self.mods_panel.signal_clear_search(list_type="Active")
         self.mods_panel.active_mods_filter_data_source_index = len(
             self.mods_panel.data_source_filter_icons
         )
-        self.mods_panel.signal_active_mods_data_source_filter()
-        self.mods_panel.clear_inactive_mods_search()
+        self.mods_panel.on_active_mods_search_data_source_filter()
+        self.mods_panel.signal_clear_search(list_type="Inactive")
         self.mods_panel.inactive_mods_filter_data_source_index = len(
-            self.mods_panel.inactive_mods_filter_data_source_icons
+            self.mods_panel.data_source_filter_icons
         )
-        self.mods_panel.signal_inactive_mods_data_source_filter()
+        self.mods_panel.on_inactive_mods_search_data_source_filter()
         active_mod_ids = list()
         for uuid in self.mods_panel.active_mods_list.uuids:
             active_mod_ids.append(
