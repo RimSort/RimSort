@@ -1120,7 +1120,7 @@ class ModParser(QRunnable):
         logger.debug(f"Parsing directory: {directory}")
         mods = {}
         directory_path = Path(directory)
-        directory_name = str(directory_path.parent)
+        directory_name = str(directory_path.name)
         # Use this to trigger invalid clause intentionally, i.e. when handling exceptions
         data_malformed = None
         # Any pfid parsed will be stored here locally
