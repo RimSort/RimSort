@@ -24,7 +24,6 @@ from app.models.dialogue import (
     show_dialogue_input,
     show_warning,
 )
-from app.utils.event_bus import EventBus
 from app.utils.generic import (
     delete_files_except_extension,
     handle_remove_read_only,
@@ -54,9 +53,7 @@ class ModListWidget(QListWidget):
     steamcmd_downloader_signal = Signal(list)
     steamworks_subscription_signal = Signal(list)
 
-    def __init__(
-        self, mod_type_filter_enable: bool, settings_controller: SettingsController
-    ) -> None:
+    def __init__(self, settings_controller: SettingsController) -> None:
         """
         Initialize the ListWidget with a dict of mods.
         Keys are the package ids and values are a dict of
@@ -91,12 +88,6 @@ class ModListWidget(QListWidget):
         # Disable horizontal scroll bar
         self.horizontalScrollBar().setEnabled(False)
         self.horizontalScrollBar().setVisible(False)
-
-        # Enable mod type filtering based on user preference
-        self.mod_type_filter_enable = mod_type_filter_enable
-
-        # Connect signal for settings have changed
-        EventBus().settings_have_changed.connect(self._on_settings_have_changed)
 
         # Allow inserting custom list items
         self.model().rowsInserted.connect(
@@ -987,9 +978,8 @@ class ModListWidget(QListWidget):
         widgets are still being added. Only when widgets == items does it mean
         we are done with adding the initial set of mods. We can do this
         by keeping track of the number of widgets currently loaded in the list
-        through a set of package_ids (this is imperfect, we will need to switch
-        this to using UUID keys TODO). This way, we easily compare `self.count()`
-        to the length of the set.
+        through a set of UUIDs which we can compare to the number of items
+        directly, as this set will equate to the items in the list.
 
         :param parent: parent to get rows under (not used)
         :param first: index of first item inserted
@@ -1000,7 +990,7 @@ class ModListWidget(QListWidget):
             if item is not None and self.itemWidget(item) is None:
                 uuid = item.data(Qt.UserRole)
                 widget = ModListItemInner(
-                    mod_type_filter_enable=self.mod_type_filter_enable,
+                    settings_controller=self.settings_controller,
                     uuid=uuid,
                 )
                 widget.toggle_warning_signal.connect(self.toggle_warning)
@@ -1091,9 +1081,3 @@ class ModListWidget(QListWidget):
         else:
             self.ignore_warning_list.remove(packageid)
         self.recalculate_warnings_signal.emit()
-
-    @Slot()
-    def _on_settings_have_changed(self) -> None:
-        self.mod_type_filter_enable = (
-            self.settings_controller.settings.mod_type_filter_toggle
-        )

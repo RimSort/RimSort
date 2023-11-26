@@ -9,6 +9,7 @@ from PySide6.QtCore import QRectF, QSize, Qt, Signal
 from PySide6.QtGui import QFontMetrics, QIcon, QResizeEvent
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QWidget
 
+from app.controllers.settings_controller import SettingsController
 from app.utils.app_info import AppInfo
 from app.utils.metadata import MetadataManager
 
@@ -31,7 +32,7 @@ class ModListItemInner(QWidget):
 
     def __init__(
         self,
-        mod_type_filter_enable: bool,
+        settings_controller: SettingsController,
         uuid: str,
     ) -> None:
         """
@@ -41,15 +42,7 @@ class ModListItemInner(QWidget):
         exists in the metadata dict. See tags:
         https://rimworldwiki.com/wiki/About.xml
 
-        :param mod_type_filter_enable: bool, pass True to enable mod type filtering
-        :param csharp_icon_path: str, path to the csharp icon to be used for list items
-        :param xml_icon_path: str, path to the xml icon to be used for list items
-        :param git_icon_path: str, path to the git icon to be used for list items
-        :param local_icon_path: str, path to the local icon to be used for list items
-        :param ludeon_icon_path: str, path to the Ludeon icon to be used for list items
-        :param steamcmd_icon_path: str, path to the SteamCMD icon to be used for list items
-        :param steam_icon_path: str, path to the Steam icon to be used for list items
-        :param warning_icon_path: str, path to the warning icon to be used for list items
+        :param settings_controller: an instance of SettingsController for accessing settings
         :param uuid: str, the uuid of the mod which corresponds to a mod's metadata
         """
 
@@ -57,6 +50,8 @@ class ModListItemInner(QWidget):
 
         # Cache MetadataManager instance
         self.metadata_manager = MetadataManager.instance()
+        # Cache SettingsManager instance
+        self.settings_controller = settings_controller
 
         # All data, including name, author, package id, dependencies,
         # whether the mod is a workshop mod or expansion, etc is encapsulated
@@ -68,9 +63,6 @@ class ModListItemInner(QWidget):
         ].get("name")
         self.main_label = QLabel()
 
-        # Icon paths
-        self.mod_type_filter_enable = mod_type_filter_enable
-
         # Visuals
         self.setToolTip(self.get_tool_tip_text())
         self.main_item_layout = QHBoxLayout()
@@ -81,7 +73,7 @@ class ModListItemInner(QWidget):
         # Icons that are conditional
         self.csharp_icon = None
         self.xml_icon = None
-        if self.mod_type_filter_enable:
+        if self.settings_controller.settings.mod_type_filter_toggle:
             if self.metadata_manager.internal_local_metadata[self.uuid].get("csharp"):
                 self.csharp_icon = QLabel()
                 self.csharp_icon.setPixmap(
