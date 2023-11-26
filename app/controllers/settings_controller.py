@@ -805,7 +805,7 @@ class SettingsController(QObject):
                     "No value set currently for local mods folder. Overwriting with autodetected path"
                 )
                 self.settings_dialog.local_mods_folder_location.setText(
-                    rimworld_mods_path
+                    str(rimworld_mods_path)
                 )
             else:
                 logger.info("Value already set for local mods folder. Passing")
