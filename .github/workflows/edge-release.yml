@@ -15,12 +15,12 @@ jobs:
           - os: macos-14-arm64
             platform: "Darwin"
             arch: "arm"
-#          - os: ubuntu-20.04
-#            platform: "Linux"
-#            arch: "x86_64"
-#          - os: windows-2019
-#            platform: "Windows"
-#            arch: "x86_64"
+          - os: ubuntu-20.04
+            platform: "Linux"
+            arch: "x86_64"
+          - os: windows-2019
+            platform: "Windows"
+            arch: "x86_64"
     steps:
       # Debian/Ubuntu dependencies
       - name: Install Debian/Ubuntu system dependencies
