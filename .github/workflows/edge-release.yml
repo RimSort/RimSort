@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-13
+          - os: macos-11
             platform: "Darwin"
             arch: "i386"
           - os: macos-14-arm64
@@ -82,12 +82,17 @@ jobs:
         shell: powershell
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # Grab Py3.11 if not self-hosted runner
-      - name: Set up Python 3.11
-        if: matrix.os != 'macos-14-arm64'
+      # Grab Py3.11 if not self-hosted runner for Linux/Windows
+      - name: Set up Python 3.11 for Linux/Windows
+        if: matrix.platform != 'Darwin'
         uses: actions/setup-python@v2
         with:
           python-version: '3.11'
+      # Install Py3.11 with brew if Intel Mac for self-hosted runner
+      - name: Install Py3.11 with brew on Intel Mac
+        if: matrix.os == 'macos-11'
+        run: |
+          brew install python@3.11
       # Execute distribute.py on Unix
       - name: Init venv & execute distribute.py (Unix)
         if: matrix.platform != 'Windows'
