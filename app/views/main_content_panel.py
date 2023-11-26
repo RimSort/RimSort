@@ -1012,7 +1012,7 @@ class MainContent(QObject):
                     self.actions_panel.save_button
                 )
             self.mods_panel.active_mods_filter_data_source_index = len(
-                self.mods_panel.active_mods_filter_data_source_icons
+                self.mods_panel.data_source_filter_icons
             )
             self.mods_panel.clear_active_mods_search()
             self.mods_panel.inactive_mods_filter_data_source_index = len(
@@ -1090,7 +1090,7 @@ class MainContent(QObject):
         list widget and put them all into the inactive list widget.
         """
         self.mods_panel.active_mods_filter_data_source_index = len(
-            self.mods_panel.active_mods_filter_data_source_icons
+            self.mods_panel.data_source_filter_icons
         )
         self.mods_panel.clear_active_mods_search()
         self.mods_panel.inactive_mods_filter_data_source_index = len(
@@ -1141,7 +1141,7 @@ class MainContent(QObject):
         logger.debug("Starting sorting mods")
         self.mods_panel.clear_active_mods_search()
         self.mods_panel.active_mods_filter_data_source_index = len(
-            self.mods_panel.active_mods_filter_data_source_icons
+            self.mods_panel.data_source_filter_icons
         )
         self.mods_panel.signal_active_mods_data_source_filter()
         self.mods_panel.clear_inactive_mods_search()
@@ -1261,7 +1261,7 @@ class MainContent(QObject):
         if file_path:
             self.mods_panel.clear_active_mods_search()
             self.mods_panel.active_mods_filter_data_source_index = len(
-                self.mods_panel.active_mods_filter_data_source_icons
+                self.mods_panel.data_source_filter_icons
             )
             self.mods_panel.signal_active_mods_data_source_filter()
             self.mods_panel.clear_inactive_mods_search()
@@ -1368,7 +1368,7 @@ class MainContent(QObject):
                 self.mods_panel.clear_active_mods_search()
                 # Update active mods and inactive mods filter data source indices
                 self.mods_panel.active_mods_filter_data_source_index = len(
-                    self.mods_panel.active_mods_filter_data_source_icons
+                    self.mods_panel.data_source_filter_icons
                 )
                 self.mods_panel.signal_active_mods_data_source_filter()
                 self.mods_panel.clear_inactive_mods_search()
@@ -1738,7 +1738,7 @@ class MainContent(QObject):
         ):
             self.mods_panel.clear_active_mods_search()
             self.mods_panel.active_mods_filter_data_source_index = len(
-                self.mods_panel.active_mods_filter_data_source_icons
+                self.mods_panel.data_source_filter_icons
             )
             self.mods_panel.signal_active_mods_data_source_filter()
             self.mods_panel.clear_inactive_mods_search()

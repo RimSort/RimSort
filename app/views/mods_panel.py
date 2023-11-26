@@ -41,7 +41,7 @@ class ModsPanel(QWidget):
         super(ModsPanel, self).__init__()
 
         # Cache MetadataManager instance and initialize panel
-        logger.debug("Initializing ActiveModList")
+        logger.debug("Initializing ModsPanel")
         self.metadata_manager = MetadataManager.instance()
         self.settings_controller = settings_controller
         self.list_updated = False
@@ -51,8 +51,8 @@ class ModsPanel(QWidget):
         self.active_panel = QVBoxLayout()
         self.inactive_panel = QVBoxLayout()
         # Add vertical layouts to it
-        self.panel.addLayout(self.active_panel)
         self.panel.addLayout(self.inactive_panel)
+        self.panel.addLayout(self.active_panel)
 
         # Instantiate WIDGETS
 
