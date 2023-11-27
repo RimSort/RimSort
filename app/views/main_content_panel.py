@@ -35,22 +35,6 @@ from github import Github
 from pyperclip import copy as copy_to_clipboard
 from requests import get as requests_get
 
-from app.models.dialogue import (
-    show_dialogue_input,
-    show_information,
-)
-from app.models.animations import LoadingAnimation
-
-from app.utils.generic import (
-    chunks,
-    delete_files_except_extension,
-    open_url_browser,
-    platform_specific_open,
-    upload_data_to_0x0_st,
-)
-from app.utils.rentry.wrapper import RentryUpload, RentryImport
-from app.utils.steam.browser import SteamBrowser
-
 from PySide6.QtCore import QEventLoop, QProcess, Qt, Slot
 from PySide6.QtWidgets import (
     QApplication,
@@ -59,14 +43,28 @@ from PySide6.QtWidgets import (
     QLabel,
 )
 
+from app.models.dialogue import (
+    show_dialogue_input,
+    show_information,
+)
+from app.models.animations import LoadingAnimation
 from app.sort.dependencies import *
 from app.sort.alphabetical_sort import *
 from app.sort.topo_sort import *
 from app.views.actions_panel import Actions
 from app.views.mods_panel import ModsPanel
 from app.views.mod_info_panel import ModInfo
+from app.utils.generic import (
+    chunks,
+    delete_files_except_extension,
+    open_url_browser,
+    platform_specific_open,
+    upload_data_to_0x0_st,
+)
 from app.utils.metadata import *
+from app.utils.rentry.wrapper import RentryUpload, RentryImport
 from app.utils.schema import validate_mods_config_format
+from app.utils.steam.browser import SteamBrowser
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.steam.steamworks.wrapper import (
     SteamworksGameLaunch,

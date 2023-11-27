@@ -2,10 +2,21 @@ from functools import partial
 from loguru import logger
 import os
 from pathlib import Path
+from shutil import copy2, copytree, rmtree
+from traceback import format_exc
 from typing import List, Optional
 
+from pyperclip import copy as copy_to_clipboard
 from PySide6.QtCore import QEvent, QModelIndex, QObject, QRectF, QSize, Qt, Signal
-from PySide6.QtGui import QDropEvent, QFocusEvent, QFontMetrics, QIcon, QResizeEvent
+from PySide6.QtGui import (
+    QAction,
+    QCursor,
+    QDropEvent,
+    QFocusEvent,
+    QFontMetrics,
+    QIcon,
+    QResizeEvent,
+)
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
@@ -15,6 +26,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QListWidget,
     QListWidgetItem,
+    QMenu,
     QToolButton,
     QVBoxLayout,
     QWidget,
@@ -23,7 +35,15 @@ from PySide6.QtWidgets import (
 from app.controllers.settings_controller import SettingsController
 from app.utils.app_info import AppInfo
 from app.utils.constants import SEARCH_DATA_SOURCE_FILTER_INDEXES
+from app.utils.generic import (
+    delete_files_except_extension,
+    handle_remove_read_only,
+    open_url_browser,
+    platform_specific_open,
+    sanitize_filename,
+)
 from app.utils.metadata import MetadataManager
+from app.models.dialogue import show_dialogue_conditional, show_dialogue_input
 
 
 class ClickableQLabel(QLabel):
@@ -877,7 +897,7 @@ class ModListWidget(QListWidget):
                                         f'Successfully "converted" local mod -> SteamCMD by renaming from {folder_name} -> {publishedfileid}'
                                     )
                                 except:
-                                    stacktrace = traceback.format_exc()
+                                    stacktrace = format_exc()
                                     logger.error(
                                         f"Failed to convert mod: {original_mod_path}"
                                     )
@@ -921,7 +941,7 @@ class ModListWidget(QListWidget):
                                         f'Successfully "converted" SteamCMD mod by renaming from {publishedfileid} -> {mod_name}'
                                     )
                                 except:
-                                    stacktrace = traceback.format_exc()
+                                    stacktrace = format_exc()
                                     logger.error(
                                         f"Failed to convert mod: {original_mod_path}"
                                     )
@@ -986,7 +1006,7 @@ class ModListWidget(QListWidget):
                                         directory=renamed_mod_path, extension=".dds"
                                     )
                                 try:
-                                    shutil.copytree(path, renamed_mod_path)
+                                    copytree(path, renamed_mod_path)
                                 except FileExistsError:
                                     for root, dirs, files in os.walk(path):
                                         dest_dir = root.replace(path, renamed_mod_path)
@@ -995,12 +1015,12 @@ class ModListWidget(QListWidget):
                                         for file in files:
                                             src_file = os.path.join(root, file)
                                             dst_file = os.path.join(dest_dir, file)
-                                            shutil.copy2(src_file, dst_file)
+                                            copy2(src_file, dst_file)
                                 logger.debug(
                                     f'Successfully "converted" Steam mod by copying {publishedfileid_from_folder_name} -> {mod_name} and migrating mod to local mods directory'
                                 )
                             except:
-                                stacktrace = traceback.format_exc()
+                                stacktrace = format_exc()
                                 logger.error(f"Failed to convert mod: {path}")
                                 logger.error(stacktrace)
                     self.refresh_signal.emit()
@@ -1109,7 +1129,7 @@ class ModListWidget(QListWidget):
                                     "ludeon.rimworld"
                                 ):
                                     self.takeItem(self.row(source_item))
-                                    shutil.rmtree(
+                                    rmtree(
                                         widget_json_data["path"],
                                         ignore_errors=False,
                                         onerror=handle_remove_read_only,
@@ -1610,13 +1630,16 @@ class ModsPanel(QWidget):
             # The purpose of this is for the _do_save_animation slot in the main_content_panel
             self.list_updated_signal.emit()
             self.list_updated = True
+            wni = self.active_mods_list.get_widgets_and_items()
+        elif list_type == "Inactive":
+            wni = self.inactive_mods_list.get_widgets_and_items()
         # 'drop' indicates that the update was just a drag and drop
         # within the list.
         if count != "drop":
             logger.info(f"{list_type} mod count changed to: {count}")
             self.update_count(
                 list_type=list_type,
-                widgets_and_items=self.active_mods_list.get_widgets_and_items(),
+                widgets_and_items=wni,
             )
         if list_type == "Active":
             self.recalculate_active_mods()
