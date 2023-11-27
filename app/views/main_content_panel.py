@@ -1416,8 +1416,6 @@ class MainContent(QObject):
 
         # Insert data into lists
         self.__insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
-
-        self.progress_dialog.close()
         logger.info("Got new mods according to imported Rentry.co")
 
         # If we have duplicate mods and user preference is configured to display them, prompt user

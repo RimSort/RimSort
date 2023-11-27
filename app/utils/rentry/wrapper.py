@@ -84,11 +84,10 @@ class RentryUpload:
         # Perform the POST request to create a new entry
         return json_loads(client.post(API_NEW_ENDPOINT, payload, headers=_HEADERS).data)
 
-
 class RentryImport(QDialog):
     def __init__(self):
         super().__init__()
-        self.package_ids = []  # Initialize an empty list to store package_ids
+        self.package_ids: list[str] = []  # Initialize an empty list to store package_ids
         self.input_dialog()  # Call the input_dialog method to set up the UI
 
     def input_dialog(self):
@@ -128,7 +127,8 @@ class RentryImport(QDialog):
             response = requests.get(raw_url)
 
             if response.status_code == 200:
-                page_content = response.text
+                # Decode the content using UTF-8
+                page_content = response.content.decode("utf-8")
                 pattern = r"\{packageid:\s*([\w.]+)\}|packageid:\s*([\w.]+)"
                 matches = re.findall(pattern, page_content)
                 self.package_ids = [
@@ -142,7 +142,6 @@ class RentryImport(QDialog):
 
         # Close the dialog after processing the link
         self.accept()
-
 
 if __name__ == "__main__":
     sys.exit()
