@@ -1085,11 +1085,11 @@ class MainContent(QObject):
         self.mods_panel.active_mods_filter_data_source_index = len(
             self.mods_panel.data_source_filter_icons
         )
-        self.mods_panel.clear_active_mods_search()
+        self.mods_panel.signal_clear_search(list_type="Active")
         self.mods_panel.inactive_mods_filter_data_source_index = len(
-            self.mods_panel.inactive_mods_filter_data_source_icons
+            self.mods_panel.data_source_filter_icons
         )
-        self.mods_panel.clear_inactive_mods_search()
+        self.mods_panel.signal_clear_search(list_type="Inactive")
         # Metadata to insert
         active_mods_uuids = []
         inactive_mods_uuids = []
@@ -1729,16 +1729,16 @@ class MainContent(QObject):
             self.active_mods_uuids_restore_state
             and self.active_mods_uuids_restore_state
         ):
-            self.mods_panel.clear_active_mods_search()
+            self.mods_panel.signal_clear_search("Active")
             self.mods_panel.active_mods_filter_data_source_index = len(
                 self.mods_panel.data_source_filter_icons
             )
-            self.mods_panel.signal_active_mods_data_source_filter()
-            self.mods_panel.clear_inactive_mods_search()
+            self.mods_panel.on_active_mods_search_data_source_filter()
+            self.mods_panel.signal_clear_search("Inactive")
             self.mods_panel.inactive_mods_filter_data_source_index = len(
-                self.mods_panel.inactive_mods_filter_data_source_icons
+                self.mods_panel.data_source_filter_icons
             )
-            self.mods_panel.signal_inactive_mods_data_source_filter()
+            self.mods_panel.on_inactive_mods_search_data_source_filter()
             logger.info(
                 f"Restoring cached mod lists with active list [{len(self.active_mods_uuids_restore_state)}] and inactive list [{len(self.inactive_mods_uuids_restore_state)}]"
             )
