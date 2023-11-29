@@ -29,7 +29,7 @@ def delete_files_except_extension(directory, extension):
     for root, dirs, files in os.walk(directory):
         for file in files:
             if not file.endswith(extension):
-                file_path = str(root / file)
+                file_path = str((Path(root) / file))
                 try:
                     os.remove(file_path)
                 except OSError as e:
@@ -39,7 +39,7 @@ def delete_files_except_extension(directory, extension):
 
     for root, dirs, _ in os.walk(directory, topdown=False):
         for _dir in dirs:
-            dir_path = str((root / _dir))
+            dir_path = str((Path(root) / _dir))
             if not os.listdir(dir_path):
                 shutil.rmtree(
                     dir_path,
