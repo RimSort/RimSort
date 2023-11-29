@@ -1,14 +1,15 @@
 import re
 import sys
-import requests
 from json import loads as json_loads
+
+import requests
 from PySide6.QtWidgets import (
     QDialog,
     QVBoxLayout,
     QLineEdit,
     QMessageBox,
     QPushButton,
-)
+    )
 from loguru import logger
 
 # Constants
@@ -17,7 +18,8 @@ API_NEW_ENDPOINT = f"{BASE_URL}/api/new"
 
 _HEADERS = {"Referer": BASE_URL}
 
-class UrllibClient:
+
+class HttpClient:
     def __init__(self):
         # Initialize a session for making HTTP requests
         self.session = requests.Session()
@@ -26,7 +28,6 @@ class UrllibClient:
         # Perform a GET request and return the response
         headers = headers or {}
         response = self.session.get(url, headers=headers)
-        response.status_code = response.status_code
         response.data = response.text
         return response
 
@@ -34,7 +35,6 @@ class UrllibClient:
         # Perform a POST request and return the response
         headers = headers or {}
         response = self.session.post(url, data=data, headers=headers)
-        response.status_code = response.status_code
         response.data = response.text
         return response
 
@@ -42,6 +42,7 @@ class UrllibClient:
         # Get CSRF token from the response cookies after making a GET request to the base URL
         response = self.get(BASE_URL)
         return response.cookies.get("csrftoken")
+
 
 class RentryUpload:
     def __init__(self, text: str):
@@ -69,8 +70,8 @@ class RentryUpload:
         logger.error("RentryUpload failed!")
 
     def new(self, text):
-        # Initialize an UrllibClient for making HTTP requests
-        client = UrllibClient()
+        # Initialize an HttpClient for making HTTP requests
+        client = HttpClient()
 
         # Get CSRF token for authentication
         csrf_token = client.get_csrf_token()
@@ -79,10 +80,11 @@ class RentryUpload:
         payload = {
             "csrfmiddlewaretoken": csrf_token,
             "text": text,
-        }
+            }
 
         # Perform the POST request to create a new entry
         return json_loads(client.post(API_NEW_ENDPOINT, payload, headers=_HEADERS).data)
+
 
 class RentryImport(QDialog):
     def __init__(self):
@@ -135,13 +137,14 @@ class RentryImport(QDialog):
                     match[0] if match[0] else match[1]
                     for match in matches
                     if match[0] or match[1]
-                ]
+                    ]
                 logger.info("Parsed package_ids successfully.")
         except Exception as e:
             logger.error(f"An error occurred while fetching rentry.co content: {str(e)}")
 
         # Close the dialog after processing the link
         self.accept()
+
 
 if __name__ == "__main__":
     sys.exit()
