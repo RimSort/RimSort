@@ -1250,16 +1250,16 @@ class MainContent(QObject):
         )
         logger.info(f"Selected path: {file_path}")
         if file_path:
-            self.mods_panel.clear_active_mods_search()
+            self.mods_panel.signal_clear_search(list_type="Active")
             self.mods_panel.active_mods_filter_data_source_index = len(
                 self.mods_panel.data_source_filter_icons
             )
-            self.mods_panel.signal_active_mods_data_source_filter()
-            self.mods_panel.clear_inactive_mods_search()
+            self.mods_panel.signal_search_source_filter(list_type="Active")
+            self.mods_panel.signal_clear_search(list_type="Inactive")
             self.mods_panel.inactive_mods_filter_data_source_index = len(
-                self.mods_panel.inactive_mods_filter_data_source_icons
+                self.mods_panel.data_source_filter_icons
             )
-            self.mods_panel.signal_inactive_mods_data_source_filter()
+            self.mods_panel.signal_search_source_filter(list_type="Inactive")
             logger.info(f"Trying to import mods list from XML: {file_path}")
             (
                 active_mods_uuids,
@@ -1355,18 +1355,16 @@ class MainContent(QObject):
         rentry_import = RentryImport()
         if rentry_import.exec() == 1:
             if rentry_import.package_ids:
-                # Clear active mods and inactive mods lists
-                self.mods_panel.clear_active_mods_search()
-                # Update active mods and inactive mods filter data source indices
+                self.mods_panel.signal_clear_search(list_type="Active")
                 self.mods_panel.active_mods_filter_data_source_index = len(
                     self.mods_panel.data_source_filter_icons
                 )
-                self.mods_panel.signal_active_mods_data_source_filter()
-                self.mods_panel.clear_inactive_mods_search()
+                self.mods_panel.signal_search_source_filter(list_type="Active")
+                self.mods_panel.signal_clear_search(list_type="Inactive")
                 self.mods_panel.inactive_mods_filter_data_source_index = len(
-                    self.mods_panel.inactive_mods_filter_data_source_icons
+                    self.mods_panel.data_source_filter_icons
                 )
-                self.mods_panel.signal_inactive_mods_data_source_filter()
+                self.mods_panel.signal_search_source_filter(list_type="Inactive")
 
                 # Log the attempt to import mods list from Rentry.co
                 logger.info(

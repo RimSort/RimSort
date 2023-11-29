@@ -38,8 +38,8 @@ def delete_files_except_extension(directory, extension):
                     logger.debug(f"Deleted: {file_path}")
 
     for root, dirs, _ in os.walk(directory, topdown=False):
-        for dir in dirs:
-            dir_path = str((root / dir))
+        for _dir in dirs:
+            dir_path = str((root / _dir))
             if not os.listdir(dir_path):
                 shutil.rmtree(
                     dir_path,
