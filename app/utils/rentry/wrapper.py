@@ -1,84 +1,91 @@
-import http.cookiejar
 import re
 import sys
-import urllib.parse
-import urllib.request
-from http.cookies import SimpleCookie
 from json import loads as json_loads
+
+import requests
 from PySide6.QtWidgets import (
     QDialog,
     QVBoxLayout,
     QLineEdit,
-    QPushButton,
     QMessageBox,
-)
+    QPushButton,
+    )
 from loguru import logger
 
-_headers = {"Referer": "https://rentry.co"}
+# Constants
+BASE_URL = "https://rentry.co"
+API_NEW_ENDPOINT = f"{BASE_URL}/api/new"
+
+_HEADERS = {"Referer": BASE_URL}
 
 
-class UrllibClient:
-    """Simple HTTP Session Client, keeps cookies."""
-
+class HttpClient:
     def __init__(self):
-        self.cookie_jar = http.cookiejar.CookieJar()
-        self.opener = urllib.request.build_opener(
-            urllib.request.HTTPCookieProcessor(self.cookie_jar)
-        )
-        urllib.request.install_opener(self.opener)
+        # Initialize a session for making HTTP requests
+        self.session = requests.Session()
 
-    def get(self, url, headers={}):
-        request = urllib.request.Request(url, headers=headers)
-        return self._request(request)
-
-    def post(self, url, data=None, headers={}):
-        postdata = urllib.parse.urlencode(data).encode()
-        request = urllib.request.Request(url, postdata, headers)
-        return self._request(request)
-
-    def _request(self, request):
-        response = self.opener.open(request)
-        response.status_code = response.getcode()
-        response.data = response.read().decode("utf-8")
+    def make_request(self, method, url, data=None, headers=None):
+        # Perform a HTTP request and return the response
+        headers = headers or {}
+        request_method = getattr(self.session, method.lower())
+        response = request_method(url, data=data, headers=headers)
+        response.data = response.text
         return response
+
+    def get(self, url, headers=None):
+        return self.make_request("GET", url, headers=headers)
+
+    def post(self, url, data=None, headers=None):
+        return self.make_request("POST", url, data=data, headers=headers)
+
+    def get_csrf_token(self):
+        # Get CSRF token from the response cookies after making a GET request to the base URL
+        response = self.get(BASE_URL)
+        return response.cookies.get("csrftoken")
 
 
 class RentryUpload:
-    """Uploader class to attempt to upload data to Rentry.co"""
-
     def __init__(self, text: str):
-        response = self.new(text)
-        if response["status"] != "200":
-            self.upload_success = False
-            self.url = None
-            logger.error("error: {}".format(response["content"]))
-            try:
-                for i in response["errors"].split("."):
-                    i and logger.warning(i)
-                logger.error("RentryUpload failed!")
-            except:
-                logger.error("RentryUpload failed!")
-        else:
-            self.upload_success = True
-            self.url = response["url"]
-            logger.debug("RentryUpload successfully uploaded data!")
-            logger.debug("Url: {}".format(self.url))
-            logger.debug("Edit code: {}".format(response["edit_code"]))
+        self.upload_success = False
+        self.url = None
+
+        try:
+            response = self.new(text)
+            if response.get("status") != "200":
+                self.handle_upload_failure(response)
+            else:
+                self.upload_success = True
+                self.url = response["url"]
+        finally:
+            if self.upload_success:
+                logger.debug(
+                    f"RentryUpload successfully uploaded data! Url: {self.url}, Edit code: {response['edit_code']}"
+                    )
+
+    def handle_upload_failure(self, response):
+        # Log and handle upload failure details
+        error_content = response.get("content", "Unknown")
+        errors = response.get("errors", "").split(".")
+        logger.error(f"Error: {error_content}")
+        for error in errors:
+            error and logger.warning(error)
+        logger.error("RentryUpload failed!")
 
     def new(self, text):
-        client, cookie = UrllibClient(), SimpleCookie()
+        # Initialize an HttpClient for making HTTP requests
+        client = HttpClient()
 
-        cookie.load(vars(client.get("https://rentry.co"))["headers"]["Set-Cookie"])
-        csrftoken = cookie["csrftoken"].value
+        # Get CSRF token for authentication
+        csrf_token = client.get_csrf_token()
 
+        # Prepare payload for the POST request
         payload = {
-            "csrfmiddlewaretoken": csrftoken,
+            "csrfmiddlewaretoken": csrf_token,
             "text": text,
-        }
+            }
 
-        return json_loads(
-            client.post("https://rentry.co/api/new", payload, headers=_headers).data
-        )
+        # Perform the POST request to create a new entry
+        return json_loads(client.post(API_NEW_ENDPOINT, payload, headers=_HEADERS).data)
 
 
 class RentryImport(QDialog):
@@ -88,6 +95,7 @@ class RentryImport(QDialog):
         self.input_dialog()  # Call the input_dialog method to set up the UI
 
     def input_dialog(self):
+        # Initialize the UI for entering Rentry.co links
         logger.info("Rentry.co link Input UI initializing")
         self.setWindowTitle("Add Rentry.co link")
 
@@ -101,11 +109,12 @@ class RentryImport(QDialog):
         layout.addWidget(self.import_rentry_link_button)
         logger.info("Rentry.co link Input UI initialized successfully!")
 
-    # Define the is_valid_rentry_link function within the class
     def is_valid_rentry_link(self, link):
-        return link.startswith("https://rentry.co/")
+        # Check if the provided link is a valid Rentry link
+        return link.startswith(BASE_URL)
 
     def import_rentry_link(self):
+        # Handle the import button click event
         logger.info("Import Rentry Link clicked")
         rentry_link = self.link_input.text()
 
@@ -118,28 +127,22 @@ class RentryImport(QDialog):
             return
 
         try:
-            raw_url = rentry_link + "/raw"
-            response = urllib.request.urlopen(raw_url)
+            raw_url = f"{rentry_link}/raw"
+            response = requests.get(raw_url)
 
-            if response.getcode() == 200:
-                page_content = response.read().decode("utf-8")
+            if response.status_code == 200:
+                # Decode the content using UTF-8
+                page_content = response.content.decode("utf-8")
                 pattern = r"\{packageid:\s*([\w.]+)\}|packageid:\s*([\w.]+)"
                 matches = re.findall(pattern, page_content)
                 self.package_ids = [
                     match[0] if match[0] else match[1]
                     for match in matches
                     if match[0] or match[1]
-                ]
+                    ]
                 logger.info("Parsed package_ids successfully.")
-
         except Exception as e:
-            logger.error(
-                f"An error occurred while fetching rentry.co content: {str(e)}"
-            )
+            logger.error(f"An error occurred while fetching rentry.co content: {str(e)}")
 
-        # Close the dialog after processing
+        # Close the dialog after processing the link
         self.accept()
-
-
-if __name__ == "__main__":
-    sys.exit()

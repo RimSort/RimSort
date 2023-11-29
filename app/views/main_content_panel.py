@@ -54,6 +54,7 @@ from app.utils.steam.browser import SteamBrowser
 from PySide6.QtCore import QEventLoop, QProcess, Qt, Slot
 from PySide6.QtWidgets import (
     QApplication,
+    QDialog,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -1377,56 +1378,61 @@ class MainContent(QObject):
 
     def _do_import_list_rentry(self) -> None:
         rentry_import = RentryImport()
-        if rentry_import.exec() == 1:
-            if rentry_import.package_ids:
-                # Clear active mods and inactive mods lists
-                self.active_mods_panel.clear_active_mods_search()
-                # Update active mods and inactive mods filter data source indices
-                self.active_mods_panel.active_mods_filter_data_source_index = len(
-                    self.active_mods_panel.active_mods_filter_data_source_icons
-                )
-                self.active_mods_panel.signal_active_mods_data_source_filter()
-                self.inactive_mods_panel.clear_inactive_mods_search()
-                self.inactive_mods_panel.inactive_mods_filter_data_source_index = len(
-                    self.inactive_mods_panel.inactive_mods_filter_data_source_icons
-                )
-                self.inactive_mods_panel.signal_inactive_mods_data_source_filter()
 
-                # Log the attempt to import mods list from Rentry.co
-                logger.info(
-                    f"Trying to import {len(rentry_import.package_ids)} mods from Rentry.co list"
-                )
+        if rentry_import.exec() != QDialog.Accepted or not rentry_import.package_ids:
+            logger.debug("USER ACTION: pressed cancel or no package IDs, passing")
+            return
 
-                # Generate uuids based on existing mods, as well as calculate duplicates and missing mods
-                (
-                    active_mods_uuids,
-                    inactive_mods_uuids,
-                    self.duplicate_mods,
-                    self.missing_mods,
-                ) = get_active_inactive_mods(mod_list=rentry_import.package_ids)
+        # Clear active and inactive mods lists
+        self.active_mods_panel.clear_active_mods_search()
+        self.inactive_mods_panel.clear_inactive_mods_search()
 
-                # Insert data into lists
-                self.__insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
+        # Update active mods filter data source indices
+        self.active_mods_panel.active_mods_filter_data_source_index = len(
+            self.active_mods_panel.active_mods_filter_data_source_icons
+        )
 
-                logger.info("Got new mods according to imported Rentry.co")
+        # Update inactive mods filter data source indices
+        self.inactive_mods_panel.inactive_mods_filter_data_source_index = len(
+            self.inactive_mods_panel.inactive_mods_filter_data_source_icons
+        )
 
-                # If we have duplicate mods, prompt user
-                if (
-                    self.settings_controller.settings.duplicate_mods_warning
-                    and self.duplicate_mods
-                    and len(self.duplicate_mods) > 0
-                ):
-                    self.__duplicate_mods_prompt()
-                elif not self.settings_controller.settings.duplicate_mods_warning:
-                    logger.debug(
-                        "User preference is not configured to display duplicate mods. Skipping..."
-                    )
+        # Signal data source filter for both active and inactive mods
+        self.active_mods_panel.signal_active_mods_data_source_filter()
+        self.inactive_mods_panel.signal_inactive_mods_data_source_filter()
 
-                # If we have missing mods, prompt the user
-                if self.missing_mods and len(self.missing_mods) >= 1:
-                    self.__missing_mods_prompt()
-            else:
-                logger.debug("USER ACTION: pressed cancel, passing")
+        # Log the attempt to import mods list from Rentry.co
+        logger.info(
+            f"Trying to import {len(rentry_import.package_ids)} mods from Rentry.co list"
+        )
+
+        # Generate uuids based on existing mods, calculate duplicates, and missing mods
+        (
+            active_mods_uuids,
+            inactive_mods_uuids,
+            self.duplicate_mods,
+            self.missing_mods,
+        ) = get_active_inactive_mods(mod_list=rentry_import.package_ids)
+
+        # Insert data into lists
+        self.__insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
+        logger.info("Got new mods according to imported Rentry.co")
+
+        # If we have duplicate mods and user preference is configured to display them, prompt user
+        if (
+            self.settings_controller.settings.duplicate_mods_warning
+            and self.duplicate_mods
+            and len(self.duplicate_mods) > 0
+        ):
+            self.__duplicate_mods_prompt()
+        elif not self.settings_controller.settings.duplicate_mods_warning:
+            logger.debug(
+                "User preference is not configured to display duplicate mods. Skipping..."
+            )
+
+        # If we have missing mods, prompt the user
+        if self.missing_mods and len(self.missing_mods) >= 1:
+            self.__missing_mods_prompt()
 
     def _do_export_list_clipboard(self) -> None:
         """
