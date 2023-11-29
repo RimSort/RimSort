@@ -146,7 +146,3 @@ class RentryImport(QDialog):
 
         # Close the dialog after processing the link
         self.accept()
-
-
-if __name__ == "__main__":
-    sys.exit()
