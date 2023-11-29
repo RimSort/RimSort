@@ -24,19 +24,19 @@ class HttpClient:
         # Initialize a session for making HTTP requests
         self.session = requests.Session()
 
-    def get(self, url, headers=None):
-        # Perform a GET request and return the response
+    def make_request(self, method, url, data=None, headers=None):
+        # Perform a HTTP request and return the response
         headers = headers or {}
-        response = self.session.get(url, headers=headers)
+        request_method = getattr(self.session, method.lower())
+        response = request_method(url, data=data, headers=headers)
         response.data = response.text
         return response
 
+    def get(self, url, headers=None):
+        return self.make_request("GET", url, headers=headers)
+
     def post(self, url, data=None, headers=None):
-        # Perform a POST request and return the response
-        headers = headers or {}
-        response = self.session.post(url, data=data, headers=headers)
-        response.data = response.text
-        return response
+        return self.make_request("POST", url, data=data, headers=headers)
 
     def get_csrf_token(self):
         # Get CSRF token from the response cookies after making a GET request to the base URL
@@ -59,9 +59,11 @@ class RentryUpload:
         finally:
             if self.upload_success:
                 logger.debug(
-                    f"RentryUpload successfully uploaded data! Url: {self.url}, Edit code: {response['edit_code']}")
+                    f"RentryUpload successfully uploaded data! Url: {self.url}, Edit code: {response['edit_code']}"
+                    )
 
     def handle_upload_failure(self, response):
+        # Log and handle upload failure details
         error_content = response.get("content", "Unknown")
         errors = response.get("errors", "").split(".")
         logger.error(f"Error: {error_content}")
