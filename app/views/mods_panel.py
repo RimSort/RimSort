@@ -15,6 +15,7 @@ from PySide6.QtGui import (
     QFocusEvent,
     QFontMetrics,
     QIcon,
+    QKeySequence,
     QResizeEvent,
 )
 from PySide6.QtWidgets import (
@@ -1330,9 +1331,9 @@ class ModListWidget(QListWidget):
                 if self.metadata_manager.internal_local_metadata[uuid].get("invalid"):
                     widget.main_label.setObjectName("summaryValueInvalid")
                 else:
-                    widget.main_label.setObjectName("summaryValue")
-                widget.main_label.style().unpolish(widget.main_label)
-                widget.main_label.style().polish(widget.main_label)
+                    widget.main_label.setObjectName("ListItemLabel")
+                # widget.main_label.style().unpolish(widget.main_label)
+                # widget.main_label.style().polish(widget.main_label)
                 item.setSizeHint(widget.sizeHint())
                 self.setItemWidget(item, widget)
                 self.uuids.insert(idx, uuid)
@@ -1569,7 +1570,7 @@ class ModsPanel(QWidget):
         )
         self.inactive_mods_search_filter_state = True
         self.inactive_mods_search_mode_filter_button = QToolButton()
-        self.inactive_mods_search_mode_filter_button.setIcon(self.mode_nofilter_icon)
+        self.inactive_mods_search_mode_filter_button.setIcon(self.mode_filter_icon)
         self.inactive_mods_search_mode_filter_button.clicked.connect(
             self.on_inactive_mods_mode_filter_toggle
         )
@@ -1630,19 +1631,13 @@ class ModsPanel(QWidget):
             # The purpose of this is for the _do_save_animation slot in the main_content_panel
             self.list_updated_signal.emit()
             self.list_updated = True
-            wni = self.active_mods_list.get_widgets_and_items()
-        elif list_type == "Inactive":
-            wni = self.inactive_mods_list.get_widgets_and_items()
         # 'drop' indicates that the update was just a drag and drop
         # within the list.
         if count != "drop":
             logger.info(f"{list_type} mod count changed to: {count}")
-            self.update_count(
-                list_type=list_type,
-                widgets_and_items=wni,
-            )
+            self.update_count(list_type=list_type)
         if list_type == "Active":
-            self.recalculate_active_mods()
+            self.recalculate_active_mods()  # Recalculate active mod list errors/warnings
 
     def recalculate_active_mods(self) -> None:
         """
@@ -1840,7 +1835,7 @@ class ModsPanel(QWidget):
         self.signal_clear_search(list_type="Active")
 
     def on_active_mods_search_data_source_filter(self) -> None:
-        self.signal_data_source_filter(list_type="Active")
+        self.signal_search_source_filter(list_type="Active")
 
     def on_active_mods_mode_filter_toggle(self) -> None:
         self.signal_search_mode_filter(list_type="Active")
@@ -1855,37 +1850,39 @@ class ModsPanel(QWidget):
         self.signal_clear_search(list_type="Inactive")
 
     def on_inactive_mods_search_data_source_filter(self) -> None:
-        self.signal_data_source_filter(list_type="Inactive")
+        self.signal_search_source_filter(list_type="Inactive")
 
     def on_inactive_mods_mode_filter_toggle(self) -> None:
         self.signal_search_mode_filter(list_type="Inactive")
 
     def signal_clear_search(self, list_type: str) -> None:
         if list_type == "Active":
-            self.active_mods_search.setText("")
+            self.active_mods_search.clear()
+            self.signal_search_and_filters(list_type=list_type, pattern="")
             self.active_mods_search.clearFocus()
         elif list_type == "Inactive":
-            self.inactive_mods_search.setText("")
+            self.inactive_mods_search.clear()
+            self.signal_search_and_filters(list_type=list_type, pattern="")
             self.inactive_mods_search.clearFocus()
 
     def signal_search_and_filters(self, list_type: str, pattern: str) -> None:
-        def repolish_label(label: QLabel) -> None:
-            label.style().unpolish(label)
-            label.style().polish(label)
+        _filter = None
+        filter_state = None
+        source_filter = None
+        uuids = None
 
         if list_type == "Active":
             _filter = self.active_mods_search_filter
             filter_state = self.active_mods_search_filter_state
             source_filter = self.active_mods_data_source_filter
-            search = self.active_mods_search
-            wni = self.active_mods_list.get_widgets_and_items()
+            uuids = self.active_mods_list.uuids
         elif list_type == "Inactive":
             _filter = self.inactive_mods_search_filter
             filter_state = self.inactive_mods_search_filter_state
             source_filter = self.inactive_mods_data_source_filter
-            search = self.inactive_mods_search
-            wni = self.inactive_mods_list.get_widgets_and_items()
+            uuids = self.inactive_mods_list.uuids
 
+        search_filter = None
         if _filter.currentText() == "Name":
             search_filter = "name"
         elif _filter.currentText() == "PackageId":
@@ -1895,77 +1892,80 @@ class ModsPanel(QWidget):
         elif _filter.currentText() == "PublishedFileId":
             search_filter = "publishedfileid"
 
-        for widget, item in wni:
+        for uuid in uuids:
+            metadata = self.metadata_manager.internal_local_metadata[uuid]
+            invalid = metadata.get("invalid")
+            if invalid:
+                continue
+
+            filtered = False
+            item = (
+                self.active_mods_list.item(uuids.index(uuid))
+                if list_type == "Active"
+                else self.inactive_mods_list.item(uuids.index(uuid))
+            )
+            widget = (
+                self.active_mods_list.itemWidget(item)
+                if list_type == "Active"
+                else self.inactive_mods_list.itemWidget(item)
+            )
+
             if (
                 pattern
-                and self.metadata_manager.internal_local_metadata[widget.uuid].get(
-                    search_filter
-                )
-                and not pattern.lower()
-                in str(
-                    self.metadata_manager.internal_local_metadata[widget.uuid].get(
-                        search_filter
-                    )
-                ).lower()
+                and metadata.get(search_filter)
+                and pattern.lower() not in str(metadata.get(search_filter)).lower()
             ):
-                if filter_state:
-                    item.setHidden(True)
-                else:
-                    widget.main_label.setObjectName("ListItemLabelFiltered")
-                    repolish_label(label=widget.main_label)
+                filtered = True
+            elif source_filter == "all":
+                filtered = False
+            elif source_filter == "git_repo":
+                filtered = not metadata.get("git_repo")
+            elif source_filter == "steamcmd":
+                filtered = not metadata.get("steamcmd")
+            elif source_filter != metadata.get("data_source"):
+                filtered = True
+
+            repolish = False
+
+            if filter_state:
+                item.setHidden(filtered)
+                if widget.main_label.objectName() == "ListItemLabelFiltered":
+                    widget.main_label.setObjectName("ListItemLabel")
+                    repolish = True
             else:
-                if source_filter == "all":
-                    if filter_state:
-                        item.setHidden(False)
-                    else:
-                        widget.main_label.setObjectName("ListItemLabel")
-                        repolish_label(label=widget.main_label)
-                elif source_filter == "git_repo":
-                    if not widget.git_icon:
-                        if filter_state:
-                            item.setHidden(True)
-                        else:
-                            widget.main_label.setObjectName("ListItemLabelFiltered")
-                            repolish_label(label=widget.main_label)
-                    else:
-                        if filter_state:
-                            item.setHidden(False)
-                        else:
-                            widget.main_label.setObjectName("ListItemLabel")
-                            repolish_label(label=widget.main_label)
-                elif source_filter == "steamcmd":
-                    if not widget.steamcmd_icon:
-                        if filter_state:
-                            item.setHidden(True)
-                        else:
-                            widget.main_label.setObjectName("ListItemLabelFiltered")
-                            repolish_label(label=widget.main_label)
-                    else:
-                        if filter_state:
-                            item.setHidden(False)
-                        else:
-                            widget.main_label.setObjectName("ListItemLabel")
-                            repolish_label(label=widget.main_label)
-                else:
-                    if not widget.mod_source_icon or (
-                        widget.mod_source_icon
-                        and (widget.mod_source_icon.objectName() != source_filter)
-                    ):
-                        if filter_state:
-                            item.setHidden(True)
-                        else:
-                            widget.main_label.setObjectName("ListItemLabelFiltered")
-                            repolish_label(label=widget.main_label)
-                    else:
-                        if filter_state:
-                            item.setHidden(False)
-                        else:
-                            widget.main_label.setObjectName("ListItemLabel")
-                            repolish_label(label=widget.main_label)
+                widget.main_label.setObjectName(
+                    "ListItemLabelFiltered" if filtered else "ListItemLabel"
+                )
+                repolish = True
+                if (
+                    widget.main_label.objectName() == "ListItemLabelFiltered"
+                    and item.isHidden()
+                ):
+                    item.setHidden(False)
 
-        self.update_count(list_type=list_type, widgets_and_items=wni)
+            if repolish:
+                widget.main_label.style().unpolish(widget.main_label)
+                widget.main_label.style().polish(widget.main_label)
 
-    def signal_data_source_filter(self, list_type: str) -> None:
+        self.update_count(list_type=list_type)
+
+    def signal_search_mode_filter(self, list_type: str) -> None:
+        filter_state = False
+        icon = self.mode_nofilter_icon
+        if list_type == "Active":
+            filter_state = self.active_mods_search_filter_state
+            self.active_mods_search_filter_state = not filter_state
+            self.active_mods_search_mode_filter_button.setIcon(self.mode_filter_icon)
+            pattern = self.active_mods_search.text()
+        elif list_type == "Inactive":
+            filter_state = self.inactive_mods_search_filter_state
+            self.inactive_mods_search_filter_state = not filter_state
+            self.inactive_mods_search_mode_filter_button.setIcon(self.mode_filter_icon)
+            pattern = self.inactive_mods_search.text()
+
+        self.signal_search_and_filters(list_type=list_type, pattern=pattern)
+
+    def signal_search_source_filter(self, list_type: str) -> None:
         if list_type == "Active":
             button = self.active_mods_filter_data_source_button
             search = self.active_mods_search
@@ -1979,9 +1979,7 @@ class ModsPanel(QWidget):
             source_index += 1
         else:
             source_index = 0
-
         button.setIcon(self.data_source_filter_icons[source_index])
-        # Update the class attribute directly
         if list_type == "Active":
             self.active_mods_filter_data_source_index = source_index
             self.active_mods_data_source_filter = SEARCH_DATA_SOURCE_FILTER_INDEXES[
@@ -1995,59 +1993,45 @@ class ModsPanel(QWidget):
         # Filter widgets by data source, while preserving any active search pattern
         self.signal_search_and_filters(list_type=list_type, pattern=search.text())
 
-    def signal_search_mode_filter(self, list_type: str) -> None:
-        if list_type == "Active":
-            if self.active_mods_search_filter_state:
-                self.active_mods_search_filter_state = False
-                self.active_mods_search_mode_filter_button.setIcon(
-                    self.mode_nofilter_icon
-                )
+    def update_count(self, list_type: str) -> None:
+        # Calculate filtered items
+        label = (
+            self.active_mods_label
+            if list_type == "Active"
+            else self.inactive_mods_label
+        )
+        mods_list = (
+            self.active_mods_list if list_type == "Active" else self.inactive_mods_list
+        )
+        search = (
+            self.active_mods_search
+            if list_type == "Active"
+            else self.inactive_mods_search
+        )
+        uuids = (
+            self.active_mods_list.uuids
+            if list_type == "Active"
+            else self.inactive_mods_list.uuids
+        )
+        num_filtered = 0
+        num_unfiltered = 0
+        for uuid in uuids:
+            item = (
+                self.active_mods_list.item(uuids.index(uuid))
+                if list_type == "Active"
+                else self.inactive_mods_list.item(uuids.index(uuid))
+            )
+            if (
+                item.isHidden()
+                or mods_list.itemWidget(item).main_label.objectName()
+                == "ListItemLabelFiltered"
+            ):
+                num_filtered += 1
             else:
-                self.active_mods_search_filter_state = True
-                self.active_mods_search_mode_filter_button.setIcon(
-                    self.mode_filter_icon
-                )
-            buffer = self.active_mods_search.text()
-            self.signal_clear_search(list_type=list_type)
-            self.active_mods_search.setFocus()
-            self.active_mods_search.setText(buffer)
-            self.active_mods_search.textChanged.emit(buffer)
-        elif list_type == "Inactive":
-            if self.inactive_mods_search_filter_state:
-                self.inactive_mods_search_filter_state = False
-                self.inactive_mods_search_mode_filter_button.setIcon(
-                    self.mode_nofilter_icon
-                )
-            else:
-                self.inactive_mods_search_filter_state = True
-                self.inactive_mods_search_mode_filter_button.setIcon(
-                    self.mode_filter_icon
-                )
-            buffer = self.inactive_mods_search.text()
-            self.signal_clear_search(list_type=list_type)
-            self.inactive_mods_search.setFocus()
-            self.inactive_mods_search.setText(buffer)
-            self.inactive_mods_search.textChanged.emit(buffer)
-
-    def update_count(
-        self,
-        list_type: str,
-        widgets_and_items: list[tuple[ModListItemInner, QListWidgetItem]],
-    ) -> None:
-        if list_type == "Active":
-            search = self.active_mods_search
-            label = self.active_mods_label
-        elif list_type == "Inactive":
-            search = self.inactive_mods_search
-            label = self.inactive_mods_label
-        num_hidden = 0
-        num_visible = 0
-        for w, i in widgets_and_items:
-            if i.isHidden():
-                num_hidden += 1
-            else:
-                num_visible += 1
+                num_unfiltered += 1
         if search.text():
-            label.setText(f"{list_type} [{num_visible}/{num_hidden + num_visible}]")
+            label.setText(
+                f"{list_type} [{num_unfiltered}/{num_filtered + num_unfiltered}]"
+            )
         else:
-            label.setText(f"{list_type} [{num_hidden + num_visible}]")
+            label.setText(f"{list_type} [{num_filtered + num_unfiltered}]")
