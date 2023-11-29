@@ -31,7 +31,7 @@ class SteamworksInterface:
     Thanks to Paladin for the example
     """
 
-    def __init__(self, callbacks: bool, callbacks_total=None):
+    def __init__(self, callbacks: bool, callbacks_total=None, _libs=None):
         logger.info("SteamworksInterface initializing...")
         self.callbacks = callbacks
         self.callbacks_count = 0
@@ -49,7 +49,7 @@ class SteamworksInterface:
         # Used for GetAppDependencies data
         self.get_app_deps_query_result = {}
         self.steam_not_running = False  # Skip action if True. Log occurrences.
-        self.steamworks = STEAMWORKS(_libs=str((AppInfo().application_folder / "libs")))
+        self.steamworks = STEAMWORKS(_libs=_libs)
         try:
             self.steamworks.initialize()  # Init the Steamworks API
         except Exception as e:
@@ -153,7 +153,8 @@ class SteamworksInterface:
 
 
 class SteamworksAppDependenciesQuery:
-    def __init__(self, pfid_or_pfids: Union[int, list], interval=1):
+    def __init__(self, pfid_or_pfids: Union[int, list], interval=1, _libs=None):
+        self._libs = _libs
         self.interval = interval
         self.pfid_or_pfids = pfid_or_pfids
 
@@ -172,7 +173,7 @@ class SteamworksAppDependenciesQuery:
             self.pfid_or_pfids = [self.pfid_or_pfids]
         # Create our Steamworks interface and initialize Steamworks API
         steamworks_interface = SteamworksInterface(
-            callbacks=True, callbacks_total=len(self.pfid_or_pfids)
+            callbacks=True, callbacks_total=len(self.pfid_or_pfids), _libs=self._libs
         )
         if not steamworks_interface.steam_not_running:  # Skip if True
             while (
@@ -205,8 +206,9 @@ class SteamworksAppDependenciesQuery:
 
 
 class SteamworksGameLaunch(Process):
-    def __init__(self, game_install_path: str, args: list) -> None:
+    def __init__(self, game_install_path: str, args: list, _libs=None) -> None:
         Process.__init__(self)
+        self._libs = _libs
         self.game_install_path = game_install_path
         self.args = args
 
@@ -219,7 +221,7 @@ class SteamworksGameLaunch(Process):
         """
         logger.info(f"Creating SteamworksInterface and launching game executable")
         # Try to initialize the SteamWorks API, but allow game to launch if Steam not found
-        steamworks_interface = SteamworksInterface(callbacks=False)
+        steamworks_interface = SteamworksInterface(callbacks=False, _libs=self._libs)
         if steamworks_interface.steam_not_running:  # Delete if true
             steamworks_interface = None
         # Launch the game
@@ -235,7 +237,11 @@ class SteamworksGameLaunch(Process):
 
 
 class SteamworksSubscriptionHandler:
-    def __init__(self, action: str, pfid_or_pfids: Union[int, list], interval=1):
+    def __init__(
+        self, action: str, pfid_or_pfids: Union[int, list], interval=1, _libs=None
+    ):
+        # Optionally set _libs path for Steamworks
+        self._libs = _libs
         self.action = action
         self.pfid_or_pfids = pfid_or_pfids
         self.interval = interval
@@ -249,6 +255,7 @@ class SteamworksSubscriptionHandler:
                             OR is a list of int that corresponds with multiple Steam mod PublishedFileIds
         :param interval: time in seconds to sleep between multiple subsequent API calls
         """
+
         logger.info(
             f"Creating SteamworksInterface and passing instruction {self.action}"
         )
@@ -267,7 +274,7 @@ class SteamworksSubscriptionHandler:
         else:
             callbacks_total = len(self.pfid_or_pfids)
         steamworks_interface = SteamworksInterface(
-            callbacks=True, callbacks_total=callbacks_total
+            callbacks=True, callbacks_total=callbacks_total, _libs=self._libs
         )
         if not steamworks_interface.steam_not_running:  # Skip if True
             while (

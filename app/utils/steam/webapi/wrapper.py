@@ -12,6 +12,7 @@ from typing import Any, Dict, Optional, Tuple
 from PySide6.QtCore import QObject, Signal
 
 from steam.webapi import WebAPI
+from app.utils.app_info import AppInfo
 from app.utils.constants import RIMWORLD_DLC_METADATA
 from app.utils.generic import chunks
 from app.utils.steam.steamworks.wrapper import SteamworksAppDependenciesQuery
@@ -437,7 +438,9 @@ class DynamicQuery(QObject):
             # Create instances of SteamworksAppDependenciesQuery for each chunk
             queries = [
                 SteamworksAppDependenciesQuery(
-                    pfid_or_pfids=[eval(str_pfid) for str_pfid in chunk], interval=1
+                    pfid_or_pfids=[eval(str_pfid) for str_pfid in chunk],
+                    interval=1,
+                    _libs=str((AppInfo().application_folder / "libs")),
                 )
                 for chunk in list(
                     chunks(

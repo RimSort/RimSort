@@ -1989,7 +1989,9 @@ class MainContent(QObject):
                 if instruction[0] == "launch_game_process":  # SW API init + game launch
                     self.steamworks_in_use = True
                     steamworks_api_process = SteamworksGameLaunch(
-                        game_install_path=instruction[1][0], args=instruction[1][1]
+                        game_install_path=instruction[1][0],
+                        args=instruction[1][1],
+                        _libs=str((AppInfo().application_folder / "libs")),
                     )
                     # Start the Steamworks API Process
                     steamworks_api_process.start()
@@ -2023,7 +2025,10 @@ class MainContent(QObject):
                         # Create instances of SteamworksSubscriptionHandler for each chunk
                         actions = [
                             SteamworksSubscriptionHandler(
-                                action=instruction[0], pfid_or_pfids=chunk, interval=1
+                                action=instruction[0],
+                                pfid_or_pfids=chunk,
+                                interval=1,
+                                _libs=str((AppInfo().application_folder / "libs")),
                             )
                             for chunk in pfids_chunked
                         ]
