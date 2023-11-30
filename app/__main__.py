@@ -125,7 +125,7 @@ if __name__ == "__main__":
     #########################################################################################
 
     # Set the log level from the presence (or absence) of a "DEBUG" file in the app_data_folder
-    debug_file_path = AppInfo().application_folder / "DEBUG"
+    debug_file_path = AppInfo().app_storage_folder / "DEBUG"
     if debug_file_path.exists() and debug_file_path.is_file():
         DEBUG_MODE = True
     else:

@@ -35,12 +35,25 @@ from github import Github
 from pyperclip import copy as copy_to_clipboard
 from requests import get as requests_get
 
+from PySide6.QtCore import QEventLoop, QProcess, Qt, Slot
+from PySide6.QtWidgets import (
+    QApplication,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+)
+
 from app.models.dialogue import (
     show_dialogue_input,
     show_information,
 )
 from app.models.animations import LoadingAnimation
-
+from app.sort.dependencies import *
+from app.sort.alphabetical_sort import *
+from app.sort.topo_sort import *
+from app.views.actions_panel import Actions
+from app.views.mods_panel import ModsPanel
+from app.views.mod_info_panel import ModInfo
 from app.utils.generic import (
     chunks,
     delete_files_except_extension,
@@ -63,12 +76,10 @@ from PySide6.QtWidgets import (
 from app.sort.dependencies import *
 from app.sort.alphabetical_sort import *
 from app.sort.topo_sort import *
-from app.views.sub_views.actions_panel import Actions
-from app.views.sub_views.active_mods_panel import ActiveModList
-from app.views.sub_views.inactive_mods_panel import InactiveModList
-from app.views.sub_views.mod_info_panel import ModInfo
 from app.utils.metadata import *
+from app.utils.rentry.wrapper import RentryUpload, RentryImport
 from app.utils.schema import validate_mods_config_format
+from app.utils.steam.browser import SteamBrowser
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.steam.steamworks.wrapper import (
     SteamworksGameLaunch,
@@ -189,20 +200,14 @@ class MainContent(QObject):
 
             # INSTANTIATE WIDGETS
             self.mod_info_panel = ModInfo()
-            self.active_mods_panel = ActiveModList(
-                mod_type_filter_enable=self.settings_controller.settings.mod_type_filter_toggle,
-                settings_controller=self.settings_controller,
-            )
-            self.inactive_mods_panel = InactiveModList(
-                mod_type_filter_enable=self.settings_controller.settings.mod_type_filter_toggle,
+            self.mods_panel = ModsPanel(
                 settings_controller=self.settings_controller,
             )
             self.actions_panel = Actions()
 
             # WIDGETS INTO BASE LAYOUT
             self.main_layout.addLayout(self.mod_info_panel.panel, 50)
-            self.main_layout.addLayout(self.inactive_mods_panel.panel, 25)
-            self.main_layout.addLayout(self.active_mods_panel.panel, 25)
+            self.main_layout.addLayout(self.mods_panel.panel, 50)
             self.main_layout.addLayout(self.actions_panel.panel)
 
             # SIGNALS AND SLOTS
@@ -211,66 +216,58 @@ class MainContent(QObject):
             GameConfiguration.instance().settings_panel.actions_signal.connect(
                 self.actions_slot
             )  # Settings
-            self.active_mods_panel.list_updated_signal.connect(
+            self.mods_panel.list_updated_signal.connect(
                 self.__do_save_animation
             )  # Save btn animation
-            self.active_mods_panel.active_mods_list.key_press_signal.connect(
+            self.mods_panel.active_mods_list.key_press_signal.connect(
                 self.__handle_active_mod_key_press
             )
-            self.inactive_mods_panel.inactive_mods_list.key_press_signal.connect(
+            self.mods_panel.inactive_mods_list.key_press_signal.connect(
                 self.__handle_inactive_mod_key_press
             )
-            self.active_mods_panel.active_mods_list.mod_info_signal.connect(
+            self.mods_panel.active_mods_list.mod_info_signal.connect(
                 self.__mod_list_slot
             )
-            self.inactive_mods_panel.inactive_mods_list.mod_info_signal.connect(
+            self.mods_panel.inactive_mods_list.mod_info_signal.connect(
                 self.__mod_list_slot
             )
-            self.active_mods_panel.active_mods_list.item_added_signal.connect(
-                self.inactive_mods_panel.inactive_mods_list.handle_other_list_row_added
+            self.mods_panel.active_mods_list.item_added_signal.connect(
+                self.mods_panel.inactive_mods_list.handle_other_list_row_added
             )
-            self.inactive_mods_panel.inactive_mods_list.item_added_signal.connect(
-                self.active_mods_panel.active_mods_list.handle_other_list_row_added
+            self.mods_panel.inactive_mods_list.item_added_signal.connect(
+                self.mods_panel.active_mods_list.handle_other_list_row_added
             )
-            self.active_mods_panel.active_mods_list.recalculate_warnings_signal.connect(
-                self.active_mods_panel.recalculate_internal_list_errors
+            self.mods_panel.active_mods_list.recalculate_warnings_signal.connect(
+                self.mods_panel.recalculate_active_mods
             )
-            self.active_mods_panel.active_mods_list.edit_rules_signal.connect(
+            self.mods_panel.active_mods_list.edit_rules_signal.connect(
                 self._do_open_rule_editor
             )
-            self.inactive_mods_panel.inactive_mods_list.edit_rules_signal.connect(
+            self.mods_panel.inactive_mods_list.edit_rules_signal.connect(
                 self._do_open_rule_editor
             )
-            self.active_mods_panel.active_mods_list.re_git_signal.connect(
-                self._do_re_git
-            )
-            self.inactive_mods_panel.inactive_mods_list.re_git_signal.connect(
-                self._do_re_git
-            )
-            self.active_mods_panel.active_mods_list.steamcmd_downloader_signal.connect(
+            self.mods_panel.active_mods_list.re_git_signal.connect(self._do_re_git)
+            self.mods_panel.inactive_mods_list.re_git_signal.connect(self._do_re_git)
+            self.mods_panel.active_mods_list.steamcmd_downloader_signal.connect(
                 self._do_download_mods_with_steamcmd
             )
-            self.inactive_mods_panel.inactive_mods_list.steamcmd_downloader_signal.connect(
+            self.mods_panel.inactive_mods_list.steamcmd_downloader_signal.connect(
                 self._do_download_mods_with_steamcmd
             )
-            self.active_mods_panel.active_mods_list.steamworks_subscription_signal.connect(
+            self.mods_panel.active_mods_list.steamworks_subscription_signal.connect(
                 self._do_steamworks_api_call_animated
             )
-            self.inactive_mods_panel.inactive_mods_list.steamworks_subscription_signal.connect(
+            self.mods_panel.inactive_mods_list.steamworks_subscription_signal.connect(
                 self._do_steamworks_api_call_animated
             )
-            self.active_mods_panel.active_mods_list.steamdb_blacklist_signal.connect(
+            self.mods_panel.active_mods_list.steamdb_blacklist_signal.connect(
                 self._do_blacklist_action_steamdb
             )
-            self.inactive_mods_panel.inactive_mods_list.steamdb_blacklist_signal.connect(
+            self.mods_panel.inactive_mods_list.steamdb_blacklist_signal.connect(
                 self._do_blacklist_action_steamdb
             )
-            self.active_mods_panel.active_mods_list.refresh_signal.connect(
-                self._do_refresh
-            )
-            self.inactive_mods_panel.inactive_mods_list.refresh_signal.connect(
-                self._do_refresh
-            )
+            self.mods_panel.active_mods_list.refresh_signal.connect(self._do_refresh)
+            self.mods_panel.inactive_mods_list.refresh_signal.connect(self._do_refresh)
             # Restore cache initially set to empty
             self.active_mods_uuids_restore_state: list[str] = []
             self.inactive_mods_uuids_restore_state: list[str] = []
@@ -320,8 +317,8 @@ class MainContent(QObject):
         current list are deleted from the current list and inserted
         into the other list.
         """
-        aml = self.active_mods_panel.active_mods_list
-        iml = self.inactive_mods_panel.inactive_mods_list
+        aml = self.mods_panel.active_mods_list
+        iml = self.mods_panel.inactive_mods_list
         if key == "Left":
             iml.setFocus()
             if not iml.selectedIndexes():
@@ -338,8 +335,8 @@ class MainContent(QObject):
 
                 # Remove items from current list
                 for item in items_to_move:
-                    aml.takeItem(aml.row(item))
                     aml.uuids.remove(item.data(Qt.UserRole))
+                    aml.takeItem(aml.row(item))
                 if aml.count():
                     if aml.count() == first_selected:
                         aml.setCurrentRow(aml.count() - 1)
@@ -356,7 +353,7 @@ class MainContent(QObject):
                     count += 1
 
                 # If the other list is the active mod list, recalculate errors
-                self.active_mods_panel.recalculate_internal_list_errors()
+                self.mods_panel.recalculate_active_mods()
 
     def __handle_inactive_mod_key_press(self, key) -> None:
         """
@@ -371,8 +368,8 @@ class MainContent(QObject):
         into the other list.
         """
 
-        aml = self.active_mods_panel.active_mods_list
-        iml = self.inactive_mods_panel.inactive_mods_list
+        aml = self.mods_panel.active_mods_list
+        iml = self.mods_panel.inactive_mods_list
         if key == "Right":
             aml.setFocus()
             if not aml.selectedIndexes():
@@ -389,8 +386,8 @@ class MainContent(QObject):
 
                 # Remove items from current list
                 for item in items_to_move:
-                    iml.takeItem(iml.row(item))
                     iml.uuids.remove(item.data(Qt.UserRole))
+                    iml.takeItem(iml.row(item))
                 if iml.count():
                     if iml.count() == first_selected:
                         iml.setCurrentRow(iml.count() - 1)
@@ -407,7 +404,7 @@ class MainContent(QObject):
                     count += 1
 
                 # If the other list is the active mod list, recalculate errors
-                self.active_mods_panel.recalculate_internal_list_errors()
+                self.mods_panel.recalculate_active_mods()
 
     def __insert_data_into_lists(
         self, active_mods_uuids: List[str], inactive_mods_uuids: List[str]
@@ -421,10 +418,10 @@ class MainContent(QObject):
         logger.info(
             f"Inserting mod data into active [{len(active_mods_uuids)}] and inactive [{len(inactive_mods_uuids)}] mod lists"
         )
-        self.active_mods_panel.active_mods_list.recreate_mod_list(
+        self.mods_panel.active_mods_list.recreate_mod_list(
             list_type="active", uuids=active_mods_uuids
         )
-        self.inactive_mods_panel.inactive_mods_list.recreate_mod_list(
+        self.mods_panel.inactive_mods_list.recreate_mod_list(
             list_type="inactive", uuids=inactive_mods_uuids
         )
 
@@ -648,7 +645,7 @@ class MainContent(QObject):
                         todds_txt_file.write(workshop_mods_target + "\n")
             else:
                 with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
-                    for uuid in self.active_mods_panel.active_mods_list.uuids:
+                    for uuid in self.mods_panel.active_mods_list.uuids:
                         todds_txt_file.write(
                             self.metadata_manager.internal_local_metadata[uuid]["path"]
                             + "\n"
@@ -1006,7 +1003,7 @@ class MainContent(QObject):
         """
         # If we are refreshing cache from user action
         if not is_initial:
-            self.active_mods_panel.list_updated = False
+            self.mods_panel.list_updated = False
             # Stop the refresh button from blinking if it is blinking
             if self.actions_panel.refresh_button_flashing_animation.isActive():
                 self.actions_panel.refresh_button_flashing_animation.stop()
@@ -1027,14 +1024,14 @@ class MainContent(QObject):
                 self.actions_panel.save_button.style().polish(
                     self.actions_panel.save_button
                 )
-            self.active_mods_panel.active_mods_filter_data_source_index = len(
-                self.active_mods_panel.active_mods_filter_data_source_icons
+            self.mods_panel.active_mods_filter_data_source_index = len(
+                self.mods_panel.data_source_filter_icons
             )
-            self.active_mods_panel.clear_active_mods_search()
-            self.inactive_mods_panel.inactive_mods_filter_data_source_index = len(
-                self.inactive_mods_panel.inactive_mods_filter_data_source_icons
+            self.mods_panel.signal_clear_search(list_type="Active")
+            self.mods_panel.inactive_mods_filter_data_source_index = len(
+                self.mods_panel.data_source_filter_icons
             )
-            self.inactive_mods_panel.clear_inactive_mods_search()
+            self.mods_panel.signal_clear_search(list_type="Inactive")
         # Check if paths are set
         if GameConfiguration.instance().check_if_essential_paths_are_set():
             # Run expensive calculations to set cache data
@@ -1080,17 +1077,10 @@ class MainContent(QObject):
                     "User preference is not configured to check Steam mods for updates. Skipping..."
                 )
         else:
-            self.__insert_data_into_lists({}, {})
+            self.__insert_data_into_lists([], [])
             logger.debug(
                 "Essential paths have not been set. Passing refresh and resetting mod lists"
             )
-        self.active_mods_panel.game_version = self.metadata_manager.game_version
-        # Feed all_mods and Steam DB info to Active Mods list to surface
-        # names instead of package_ids when able
-        self.active_mods_panel.all_mods = self.metadata_manager.internal_local_metadata
-        self.active_mods_panel.steam_package_id_to_name = (
-            self.metadata_manager.info_from_steam_package_id_to_name
-        )
 
     def _do_refresh_animation(self, path: str) -> None:
         logger.debug(f"File change detected: {path}")
@@ -1105,14 +1095,14 @@ class MainContent(QObject):
         Method to clear all the non-base, non-DLC mods from the active
         list widget and put them all into the inactive list widget.
         """
-        self.active_mods_panel.active_mods_filter_data_source_index = len(
-            self.active_mods_panel.active_mods_filter_data_source_icons
+        self.mods_panel.active_mods_filter_data_source_index = len(
+            self.mods_panel.data_source_filter_icons
         )
-        self.active_mods_panel.clear_active_mods_search()
-        self.inactive_mods_panel.inactive_mods_filter_data_source_index = len(
-            self.inactive_mods_panel.inactive_mods_filter_data_source_icons
+        self.mods_panel.signal_clear_search(list_type="Active")
+        self.mods_panel.inactive_mods_filter_data_source_index = len(
+            self.mods_panel.data_source_filter_icons
         )
-        self.inactive_mods_panel.clear_inactive_mods_search()
+        self.mods_panel.signal_clear_search(list_type="Inactive")
         # Metadata to insert
         active_mods_uuids = []
         inactive_mods_uuids = []
@@ -1155,30 +1145,30 @@ class MainContent(QObject):
         # Get the live list of active and inactive mods. This is because the user
         # will likely sort before saving.
         logger.debug("Starting sorting mods")
-        self.active_mods_panel.clear_active_mods_search()
-        self.active_mods_panel.active_mods_filter_data_source_index = len(
-            self.active_mods_panel.active_mods_filter_data_source_icons
+        self.mods_panel.signal_clear_search(list_type="Active")
+        self.mods_panel.active_mods_filter_data_source_index = len(
+            self.mods_panel.data_source_filter_icons
         )
-        self.active_mods_panel.signal_active_mods_data_source_filter()
-        self.inactive_mods_panel.clear_inactive_mods_search()
-        self.inactive_mods_panel.inactive_mods_filter_data_source_index = len(
-            self.inactive_mods_panel.inactive_mods_filter_data_source_icons
+        self.mods_panel.on_active_mods_search_data_source_filter()
+        self.mods_panel.signal_clear_search(list_type="Inactive")
+        self.mods_panel.inactive_mods_filter_data_source_index = len(
+            self.mods_panel.data_source_filter_icons
         )
-        self.inactive_mods_panel.signal_inactive_mods_data_source_filter()
+        self.mods_panel.on_inactive_mods_search_data_source_filter()
         active_mod_ids = list()
-        for uuid in self.active_mods_panel.active_mods_list.uuids:
+        for uuid in self.mods_panel.active_mods_list.uuids:
             active_mod_ids.append(
                 self.metadata_manager.internal_local_metadata[uuid]["packageid"]
             )
 
         # Get all active mods and their dependencies (if also active mod)
         dependencies_graph = gen_deps_graph(
-            self.active_mods_panel.active_mods_list.uuids, active_mod_ids
+            self.mods_panel.active_mods_list.uuids, active_mod_ids
         )
 
         # Get all active mods and their reverse dependencies
         reverse_dependencies_graph = gen_rev_deps_graph(
-            self.active_mods_panel.active_mods_list.uuids, active_mod_ids
+            self.mods_panel.active_mods_list.uuids, active_mod_ids
         )
 
         # Get dependencies graph for tier one mods (load at top mods)
@@ -1190,12 +1180,12 @@ class MainContent(QObject):
         tier_three_dependency_graph, tier_three_mods = gen_tier_three_deps_graph(
             dependencies_graph,
             reverse_dependencies_graph,
-            self.active_mods_panel.active_mods_list.uuids,
+            self.mods_panel.active_mods_list.uuids,
         )
 
         # Get dependencies graph for tier two mods (load in middle)
         tier_two_dependency_graph = gen_tier_two_deps_graph(
-            self.active_mods_panel.active_mods_list.uuids,
+            self.mods_panel.active_mods_list.uuids,
             active_mod_ids,
             tier_one_mods,
             tier_three_mods,
@@ -1208,29 +1198,29 @@ class MainContent(QObject):
         if sorting_algorithm == "Alphabetical":
             logger.info("Alphabetical sorting algorithm is selected")
             reordered_tier_one_sorted = do_alphabetical_sort(
-                tier_one_dependency_graph, self.active_mods_panel.active_mods_list.uuids
+                tier_one_dependency_graph, self.mods_panel.active_mods_list.uuids
             )
             reordered_tier_three_sorted = do_alphabetical_sort(
                 tier_three_dependency_graph,
-                self.active_mods_panel.active_mods_list.uuids,
+                self.mods_panel.active_mods_list.uuids,
             )
             reordered_tier_two_sorted = do_alphabetical_sort(
-                tier_two_dependency_graph, self.active_mods_panel.active_mods_list.uuids
+                tier_two_dependency_graph, self.mods_panel.active_mods_list.uuids
             )
         else:
             logger.info("Topological sorting algorithm is selected")
             # Sort tier one mods
             reordered_tier_one_sorted = do_topo_sort(
-                tier_one_dependency_graph, self.active_mods_panel.active_mods_list.uuids
+                tier_one_dependency_graph, self.mods_panel.active_mods_list.uuids
             )
             # Sort tier three mods
             reordered_tier_three_sorted = do_topo_sort(
                 tier_three_dependency_graph,
-                self.active_mods_panel.active_mods_list.uuids,
+                self.mods_panel.active_mods_list.uuids,
             )
             # Sort tier two mods
             reordered_tier_two_sorted = do_topo_sort(
-                tier_two_dependency_graph, self.active_mods_panel.active_mods_list.uuids
+                tier_two_dependency_graph, self.mods_panel.active_mods_list.uuids
             )
 
         logger.info(f"Sorted tier one mods: {len(reordered_tier_one_sorted)}")
@@ -1275,16 +1265,16 @@ class MainContent(QObject):
         )
         logger.info(f"Selected path: {file_path}")
         if file_path:
-            self.active_mods_panel.clear_active_mods_search()
-            self.active_mods_panel.active_mods_filter_data_source_index = len(
-                self.active_mods_panel.active_mods_filter_data_source_icons
+            self.mods_panel.signal_clear_search(list_type="Active")
+            self.mods_panel.active_mods_filter_data_source_index = len(
+                self.mods_panel.data_source_filter_icons
             )
-            self.active_mods_panel.signal_active_mods_data_source_filter()
-            self.inactive_mods_panel.clear_inactive_mods_search()
-            self.inactive_mods_panel.inactive_mods_filter_data_source_index = len(
-                self.inactive_mods_panel.inactive_mods_filter_data_source_icons
+            self.mods_panel.signal_search_source_filter(list_type="Active")
+            self.mods_panel.signal_clear_search(list_type="Inactive")
+            self.mods_panel.inactive_mods_filter_data_source_index = len(
+                self.mods_panel.data_source_filter_icons
             )
-            self.inactive_mods_panel.signal_inactive_mods_data_source_filter()
+            self.mods_panel.signal_search_source_filter(list_type="Inactive")
             logger.info(f"Trying to import mods list from XML: {file_path}")
             (
                 active_mods_uuids,
@@ -1327,7 +1317,7 @@ class MainContent(QObject):
         if file_path:
             logger.info("Exporting current active mods to ModsConfig.xml format")
             active_mods = []
-            for uuid in self.active_mods_panel.active_mods_list.uuids:
+            for uuid in self.mods_panel.active_mods_list.uuids:
                 package_id = self.metadata_manager.internal_local_metadata[uuid][
                     "packageid"
                 ]
@@ -1378,28 +1368,21 @@ class MainContent(QObject):
 
     def _do_import_list_rentry(self) -> None:
         rentry_import = RentryImport()
-
+        # Exit if user cancels or no package IDs
         if rentry_import.exec() != QDialog.Accepted or not rentry_import.package_ids:
             logger.debug("USER ACTION: pressed cancel or no package IDs, passing")
             return
-
-        # Clear active and inactive mods lists
-        self.active_mods_panel.clear_active_mods_search()
-        self.inactive_mods_panel.clear_inactive_mods_search()
-
-        # Update active mods filter data source indices
-        self.active_mods_panel.active_mods_filter_data_source_index = len(
-            self.active_mods_panel.active_mods_filter_data_source_icons
+        # Clear Active and Inactive search and data source filter
+        self.mods_panel.signal_clear_search(list_type="Active")
+        self.mods_panel.active_mods_filter_data_source_index = len(
+            self.mods_panel.data_source_filter_icons
         )
-
-        # Update inactive mods filter data source indices
-        self.inactive_mods_panel.inactive_mods_filter_data_source_index = len(
-            self.inactive_mods_panel.inactive_mods_filter_data_source_icons
+        self.mods_panel.signal_search_source_filter(list_type="Active")
+        self.mods_panel.signal_clear_search(list_type="Inactive")
+        self.mods_panel.inactive_mods_filter_data_source_index = len(
+            self.mods_panel.data_source_filter_icons
         )
-
-        # Signal data source filter for both active and inactive mods
-        self.active_mods_panel.signal_active_mods_data_source_filter()
-        self.inactive_mods_panel.signal_inactive_mods_data_source_filter()
+        self.mods_panel.signal_search_source_filter(list_type="Inactive")
 
         # Log the attempt to import mods list from Rentry.co
         logger.info(
@@ -1443,7 +1426,7 @@ class MainContent(QObject):
         # Build our lists
         active_mods = []
         active_mods_packageid_to_uuid = {}
-        for uuid in self.active_mods_panel.active_mods_list.uuids:
+        for uuid in self.mods_panel.active_mods_list.uuids:
             package_id = self.metadata_manager.internal_local_metadata[uuid][
                 "packageid"
             ]
@@ -1502,7 +1485,7 @@ class MainContent(QObject):
         active_steam_mods_pfid_to_preview_url = {}
         pfids = []
         # Build our lists
-        for uuid in self.active_mods_panel.active_mods_list.uuids:
+        for uuid in self.mods_panel.active_mods_list.uuids:
             package_id = MetadataManager.instance().internal_local_metadata[uuid][
                 "packageid"
             ]
@@ -1689,7 +1672,7 @@ class MainContent(QObject):
         """
         logger.info("Saving current active mods to ModsConfig.xml")
         active_mods = []
-        for uuid in self.active_mods_panel.active_mods_list.uuids:
+        for uuid in self.mods_panel.active_mods_list.uuids:
             package_id = self.metadata_manager.internal_local_metadata[uuid][
                 "packageid"
             ]
@@ -1739,7 +1722,7 @@ class MainContent(QObject):
     def __do_save_animation(self) -> None:
         logger.debug("Active mods list updated")
         if (
-            self.active_mods_panel.list_updated  # This will only evaluate True if this is initialization, or _do_refresh()
+            self.mods_panel.list_updated  # This will only evaluate True if this is initialization, or _do_refresh()
             and not self.actions_panel.save_button_flashing_animation.isActive()  # No need to re-enable if it's already blinking
         ):
             logger.debug("Starting save button animation")
@@ -1757,16 +1740,16 @@ class MainContent(QObject):
             self.active_mods_uuids_restore_state
             and self.active_mods_uuids_restore_state
         ):
-            self.active_mods_panel.clear_active_mods_search()
-            self.active_mods_panel.active_mods_filter_data_source_index = len(
-                self.active_mods_panel.active_mods_filter_data_source_icons
+            self.mods_panel.signal_clear_search("Active")
+            self.mods_panel.active_mods_filter_data_source_index = len(
+                self.mods_panel.data_source_filter_icons
             )
-            self.active_mods_panel.signal_active_mods_data_source_filter()
-            self.inactive_mods_panel.clear_inactive_mods_search()
-            self.inactive_mods_panel.inactive_mods_filter_data_source_index = len(
-                self.inactive_mods_panel.inactive_mods_filter_data_source_icons
+            self.mods_panel.on_active_mods_search_data_source_filter()
+            self.mods_panel.signal_clear_search("Inactive")
+            self.mods_panel.inactive_mods_filter_data_source_index = len(
+                self.mods_panel.data_source_filter_icons
             )
-            self.inactive_mods_panel.signal_inactive_mods_data_source_filter()
+            self.mods_panel.on_inactive_mods_search_data_source_filter()
             logger.info(
                 f"Restoring cached mod lists with active list [{len(self.active_mods_uuids_restore_state)}] and inactive list [{len(self.inactive_mods_uuids_restore_state)}]"
             )
@@ -1987,10 +1970,10 @@ class MainContent(QObject):
                 self.settings_controller.settings.steamcmd_install_path,
                 self.settings_controller.settings.steamcmd_validate_downloads,
             )
-            self.active_mods_panel.active_mods_list.steamcmd_appworkshop_acf_path = (
+            self.mods_panel.active_mods_list.steamcmd_appworkshop_acf_path = (
                 self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
             )
-            self.inactive_mods_panel.inactive_mods_list.steamcmd_appworkshop_acf_path = (
+            self.mods_panel.inactive_mods_list.steamcmd_appworkshop_acf_path = (
                 self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
             )
         else:
@@ -2021,7 +2004,9 @@ class MainContent(QObject):
                 if instruction[0] == "launch_game_process":  # SW API init + game launch
                     self.steamworks_in_use = True
                     steamworks_api_process = SteamworksGameLaunch(
-                        game_install_path=instruction[1][0], args=instruction[1][1]
+                        game_install_path=instruction[1][0],
+                        args=instruction[1][1],
+                        _libs=str((AppInfo().application_folder / "libs")),
                     )
                     # Start the Steamworks API Process
                     steamworks_api_process.start()
@@ -2055,7 +2040,10 @@ class MainContent(QObject):
                         # Create instances of SteamworksSubscriptionHandler for each chunk
                         actions = [
                             SteamworksSubscriptionHandler(
-                                action=instruction[0], pfid_or_pfids=chunk, interval=1
+                                action=instruction[0],
+                                pfid_or_pfids=chunk,
+                                interval=1,
+                                _libs=str((AppInfo().application_folder / "libs")),
                             )
                             for chunk in pfids_chunked
                         ]
