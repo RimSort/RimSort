@@ -61,6 +61,21 @@ from app.utils.generic import (
     platform_specific_open,
     upload_data_to_0x0_st,
 )
+from app.utils.rentry.wrapper import RentryUpload, RentryImport
+from app.utils.steam.browser import SteamBrowser
+
+from PySide6.QtCore import QEventLoop, QProcess, Qt, Slot
+from PySide6.QtWidgets import (
+    QApplication,
+    QDialog,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+)
+
+from app.sort.dependencies import *
+from app.sort.alphabetical_sort import *
+from app.sort.topo_sort import *
 from app.utils.metadata import *
 from app.utils.rentry.wrapper import RentryUpload, RentryImport
 from app.utils.schema import validate_mods_config_format
@@ -1353,54 +1368,54 @@ class MainContent(QObject):
 
     def _do_import_list_rentry(self) -> None:
         rentry_import = RentryImport()
-        if rentry_import.exec() == 1:
-            if rentry_import.package_ids:
-                self.mods_panel.signal_clear_search(list_type="Active")
-                self.mods_panel.active_mods_filter_data_source_index = len(
-                    self.mods_panel.data_source_filter_icons
-                )
-                self.mods_panel.signal_search_source_filter(list_type="Active")
-                self.mods_panel.signal_clear_search(list_type="Inactive")
-                self.mods_panel.inactive_mods_filter_data_source_index = len(
-                    self.mods_panel.data_source_filter_icons
-                )
-                self.mods_panel.signal_search_source_filter(list_type="Inactive")
+        # Exit if user cancels or no package IDs
+        if rentry_import.exec() != QDialog.Accepted or not rentry_import.package_ids:
+            logger.debug("USER ACTION: pressed cancel or no package IDs, passing")
+            return
+        # Clear Active and Inactive search and data source filter
+        self.mods_panel.signal_clear_search(list_type="Active")
+        self.mods_panel.active_mods_filter_data_source_index = len(
+            self.mods_panel.data_source_filter_icons
+        )
+        self.mods_panel.signal_search_source_filter(list_type="Active")
+        self.mods_panel.signal_clear_search(list_type="Inactive")
+        self.mods_panel.inactive_mods_filter_data_source_index = len(
+            self.mods_panel.data_source_filter_icons
+        )
+        self.mods_panel.signal_search_source_filter(list_type="Inactive")
 
-                # Log the attempt to import mods list from Rentry.co
-                logger.info(
-                    f"Trying to import {len(rentry_import.package_ids)} mods from Rentry.co list"
-                )
+        # Log the attempt to import mods list from Rentry.co
+        logger.info(
+            f"Trying to import {len(rentry_import.package_ids)} mods from Rentry.co list"
+        )
 
-                # Generate uuids based on existing mods, as well as calculate duplicates and missing mods
-                (
-                    active_mods_uuids,
-                    inactive_mods_uuids,
-                    self.duplicate_mods,
-                    self.missing_mods,
-                ) = get_active_inactive_mods(mod_list=rentry_import.package_ids)
+        # Generate uuids based on existing mods, calculate duplicates, and missing mods
+        (
+            active_mods_uuids,
+            inactive_mods_uuids,
+            self.duplicate_mods,
+            self.missing_mods,
+        ) = get_active_inactive_mods(mod_list=rentry_import.package_ids)
 
-                # Insert data into lists
-                self.__insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
+        # Insert data into lists
+        self.__insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
+        logger.info("Got new mods according to imported Rentry.co")
 
-                logger.info("Got new mods according to imported Rentry.co")
+        # If we have duplicate mods and user preference is configured to display them, prompt user
+        if (
+            self.settings_controller.settings.duplicate_mods_warning
+            and self.duplicate_mods
+            and len(self.duplicate_mods) > 0
+        ):
+            self.__duplicate_mods_prompt()
+        elif not self.settings_controller.settings.duplicate_mods_warning:
+            logger.debug(
+                "User preference is not configured to display duplicate mods. Skipping..."
+            )
 
-                # If we have duplicate mods, prompt user
-                if (
-                    self.settings_controller.settings.duplicate_mods_warning
-                    and self.duplicate_mods
-                    and len(self.duplicate_mods) > 0
-                ):
-                    self.__duplicate_mods_prompt()
-                elif not self.settings_controller.settings.duplicate_mods_warning:
-                    logger.debug(
-                        "User preference is not configured to display duplicate mods. Skipping..."
-                    )
-
-                # If we have missing mods, prompt the user
-                if self.missing_mods and len(self.missing_mods) >= 1:
-                    self.__missing_mods_prompt()
-            else:
-                logger.debug("USER ACTION: pressed cancel, passing")
+        # If we have missing mods, prompt the user
+        if self.missing_mods and len(self.missing_mods) >= 1:
+            self.__missing_mods_prompt()
 
     def _do_export_list_clipboard(self) -> None:
         """
