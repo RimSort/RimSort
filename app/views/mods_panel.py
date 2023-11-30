@@ -1129,6 +1129,7 @@ class ModListWidget(QListWidget):
                                 ].startswith(
                                     "ludeon.rimworld"
                                 ):
+                                    self.uuids.remove(source_item.data(Qt.UserRole))
                                     self.takeItem(self.row(source_item))
                                     rmtree(
                                         widget_json_data["path"],
@@ -1159,6 +1160,7 @@ class ModListWidget(QListWidget):
                                 ].startswith(
                                     "ludeon.rimworld"
                                 ):
+                                    self.uuids.remove(source_item.data(Qt.UserRole))
                                     self.takeItem(self.row(source_item))
                                     delete_files_except_extension(
                                         directory=widget_json_data["path"],
@@ -1893,12 +1895,6 @@ class ModsPanel(QWidget):
             search_filter = "publishedfileid"
 
         for uuid in uuids:
-            metadata = self.metadata_manager.internal_local_metadata[uuid]
-            invalid = metadata.get("invalid")
-            if invalid:
-                continue
-
-            filtered = False
             item = (
                 self.active_mods_list.item(uuids.index(uuid))
                 if list_type == "Active"
@@ -1909,6 +1905,13 @@ class ModsPanel(QWidget):
                 if list_type == "Active"
                 else self.inactive_mods_list.itemWidget(item)
             )
+
+            metadata = self.metadata_manager.internal_local_metadata[uuid]
+            invalid = metadata.get("invalid")
+            if invalid:
+                continue
+
+            filtered = False
 
             if (
                 pattern
