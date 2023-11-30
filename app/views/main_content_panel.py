@@ -1531,7 +1531,7 @@ class MainContent(QObject):
                     ]
         # Build our report
         active_mods_rentry_report = (
-            f"# RimWorld mod list       ![](https://github.com/RimSort/RimSort/blob/main/rentry_preview.png?raw=true)"
+            f"# RimWorld mod list       ![](https://github.com/RimSort/RimSort/blob/main/docs/rentry_preview.png?raw=true)"
             + f"\nCreated with RimSort {GameConfiguration.instance().rimsort_version}"
             + f"\nMod list was created for game version: `{self.metadata_manager.game_version}`"
             + f"\n!!! info Local mods are marked as yellow labels with packageid in brackets."
@@ -1557,7 +1557,7 @@ class MainContent(QObject):
                         + "?imw=100&imh=100&impolicy=Letterbox"
                     )
                 else:
-                    preview_url = "https://github.com/RimSort/RimSort/blob/main/rentry_steam_icon.png?raw=true"
+                    preview_url = "https://github.com/RimSort/RimSort/blob/main/docs/rentry_steam_icon.png?raw=true"
                 if self.metadata_manager.internal_local_metadata[uuid].get("steam_url"):
                     url = self.metadata_manager.internal_local_metadata[uuid][
                         "steam_url"
