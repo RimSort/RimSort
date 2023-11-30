@@ -157,8 +157,6 @@ class RunnerPanel(QWidget):
 
     def _do_clear_runner(self):
         self.text.clear()
-        if not self.todds_dry_run_support:
-            self.message("ヽ༼ ຈل͜ຈ༼ ▀̿̿Ĺ̯̿̿▀̿ ̿༽Ɵ͆ل͜Ɵ͆ ༽ﾉ")
 
     def _do_kill_process(self):
         if self.process and self.process.state() == QProcess.Running:

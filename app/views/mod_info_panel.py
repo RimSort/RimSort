@@ -112,9 +112,7 @@ class ModInfo:
         self.mod_info_path_value.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.mod_info_path_value.setWordWrap(True)
         self.description = ScrollLabel()
-        self.description.setText(
-            "\n\t\t\t  Welcome to RimSort!\n\n\n\t୧༼ಠ益ಠ༽୨\t\t(̿▀̿ ̿Ĺ̯̿̿▀̿ ̿)̄\t\t\tヽ༼ຈل͜ຈ༽ﾉ"
-        )
+        self.description.setText("\n\n\n\n\t\t\t        Welcome to RimSort!")
         # Add widgets to child layouts
         self.image_layout.addWidget(self.preview_picture)
         self.mod_info_name.addWidget(self.mod_info_name_label, 20)
