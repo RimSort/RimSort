@@ -881,7 +881,7 @@ class ModListWidget(QListWidget):
                         original_mod_path = str(
                             (
                                 Path(self.settings_controller.settings.local_folder)
-                                / folder_name,
+                                / folder_name
                             )
                         )
                         renamed_mod_path = str(
@@ -925,13 +925,13 @@ class ModListWidget(QListWidget):
                         original_mod_path = str(
                             (
                                 Path(self.settings_controller.settings.local_folder)
-                                / publishedfileid,
+                                / publishedfileid
                             )
                         )
                         renamed_mod_path = str(
                             (
                                 Path(self.settings_controller.settings.local_folder)
-                                / mod_name,
+                                / mod_name
                             )
                         )
                         if os.path.exists(original_mod_path):
@@ -992,9 +992,11 @@ class ModListWidget(QListWidget):
                         renamed_mod_path = str(
                             (
                                 Path(self.settings_controller.settings.local_folder)
-                                / mod_name
-                                if mod_name
-                                else publishedfileid_from_folder_name,
+                                / (
+                                    mod_name
+                                    if mod_name
+                                    else publishedfileid_from_folder_name
+                                )
                             )
                         )
                         if os.path.exists(path):
