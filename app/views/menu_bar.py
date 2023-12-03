@@ -72,6 +72,11 @@ class MenuBar(QObject):
         self.import_from_rentry_action = QAction("From Rentry.co", self)
         self.import_submenu.addAction(self.import_from_rentry_action)
 
+        self.import_from_workshop_collection_action = QAction(
+            "From Workshop collection", self
+        )
+        self.import_submenu.addAction(self.import_from_workshop_collection_action)
+
         self.file_menu.addSeparator()
 
         self.export_submenu = QMenu("Export")
@@ -122,6 +127,11 @@ class MenuBar(QObject):
 
         self.import_from_rentry_action = QAction("From Rentry.co", self)
         self.import_submenu.addAction(self.import_from_rentry_action)
+
+        self.import_from_workshop_collection_action = QAction(
+            "From Workshop collection", self
+        )
+        self.import_submenu.addAction(self.import_from_workshop_collection_action)
 
         self.file_menu.addSeparator()
 

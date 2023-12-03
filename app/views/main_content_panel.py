@@ -9,14 +9,12 @@ import datetime
 from io import BytesIO
 from math import ceil
 from multiprocessing import cpu_count, Pool
+from requests import get as requests_get
 from tempfile import gettempdir
 import webbrowser
 from zipfile import ZipFile
 
 from loguru import logger
-
-from app.utils.app_info import AppInfo
-from app.utils.event_bus import EventBus
 
 # GitPython depends on git executable being available in PATH
 try:
@@ -31,13 +29,11 @@ except ImportError:
     GIT_EXISTS = False
 
 from github import Github
-
 from pyperclip import copy as copy_to_clipboard
-from requests import get as requests_get
-
 from PySide6.QtCore import QEventLoop, QProcess, Qt, Slot
 from PySide6.QtWidgets import (
     QApplication,
+    QDialog,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -51,6 +47,8 @@ from app.sort.topo_sort import *
 from app.views.actions_panel import Actions
 from app.views.mods_panel import ModsPanel
 from app.views.mod_info_panel import ModInfo
+from app.utils.app_info import AppInfo
+from app.utils.event_bus import EventBus
 from app.utils.generic import (
     chunks,
     delete_files_except_extension,
@@ -58,21 +56,6 @@ from app.utils.generic import (
     platform_specific_open,
     upload_data_to_0x0_st,
 )
-from app.utils.rentry.wrapper import RentryUpload, RentryImport
-from app.utils.steam.browser import SteamBrowser
-
-from PySide6.QtCore import QEventLoop, QProcess, Qt, Slot
-from PySide6.QtWidgets import (
-    QApplication,
-    QDialog,
-    QFrame,
-    QHBoxLayout,
-    QLabel,
-)
-
-from app.sort.dependencies import *
-from app.sort.alphabetical_sort import *
-from app.sort.topo_sort import *
 from app.utils.metadata import *
 from app.utils.rentry.wrapper import RentryUpload, RentryImport
 from app.utils.schema import validate_rimworld_mods_list
@@ -82,6 +65,7 @@ from app.utils.steam.steamworks.wrapper import (
     SteamworksGameLaunch,
     SteamworksSubscriptionHandler,
 )
+from app.utils.steam.webapi.wrapper import CollectionImport
 from app.utils.todds.wrapper import ToddsInterface
 from app.utils.xml import json_to_xml_write, xml_path_to_json
 from app.views.game_configuration_panel import GameConfiguration
@@ -129,6 +113,9 @@ class MainContent(QObject):
             EventBus().do_open_mod_list.connect(self._do_import_list_file_xml)
             EventBus().do_import_mod_list_from_rentry.connect(
                 self._do_import_list_rentry
+            )
+            EventBus().do_import_mod_list_from_workshop_collection.connect(
+                self._do_import_list_workshop_collection
             )
             EventBus().do_save_mod_list_as.connect(self._do_export_list_file_xml)
             EventBus().do_export_mod_list_to_clipboard.connect(
@@ -1399,6 +1386,60 @@ class MainContent(QObject):
         # Insert data into lists
         self.__insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
         logger.info("Got new mods according to imported Rentry.co")
+
+        # If we have duplicate mods and user preference is configured to display them, prompt user
+        if (
+            self.settings_controller.settings.duplicate_mods_warning
+            and self.duplicate_mods
+            and len(self.duplicate_mods) > 0
+        ):
+            self.__duplicate_mods_prompt()
+        elif not self.settings_controller.settings.duplicate_mods_warning:
+            logger.debug(
+                "User preference is not configured to display duplicate mods. Skipping..."
+            )
+
+        # If we have missing mods, prompt the user
+        if self.missing_mods and len(self.missing_mods) >= 1:
+            self.__missing_mods_prompt()
+
+    def _do_import_list_workshop_collection(self) -> None:
+        collection_import = CollectionImport(metadata_manager=self.metadata_manager)
+        # Exit if user cancels or no package IDs
+        if (
+            collection_import.exec() != QDialog.Accepted
+            or not collection_import.package_ids
+        ):
+            logger.debug("USER ACTION: pressed cancel or no package IDs, passing")
+            return
+        # Clear Active and Inactive search and data source filter
+        self.mods_panel.signal_clear_search(list_type="Active")
+        self.mods_panel.active_mods_filter_data_source_index = len(
+            self.mods_panel.data_source_filter_icons
+        )
+        self.mods_panel.signal_search_source_filter(list_type="Active")
+        self.mods_panel.signal_clear_search(list_type="Inactive")
+        self.mods_panel.inactive_mods_filter_data_source_index = len(
+            self.mods_panel.data_source_filter_icons
+        )
+        self.mods_panel.signal_search_source_filter(list_type="Inactive")
+
+        # Log the attempt to import mods list from Workshop collection
+        logger.info(
+            f"Trying to import {len(collection_import.package_ids)} mods from Workshop collection list"
+        )
+
+        # Generate uuids based on existing mods, calculate duplicates, and missing mods
+        (
+            active_mods_uuids,
+            inactive_mods_uuids,
+            self.duplicate_mods,
+            self.missing_mods,
+        ) = get_mods_from_list(mod_list=collection_import.package_ids)
+
+        # Insert data into lists
+        self.__insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
+        logger.info("Got new mods according to imported Workshop collection")
 
         # If we have duplicate mods and user preference is configured to display them, prompt user
         if (

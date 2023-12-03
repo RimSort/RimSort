@@ -27,6 +27,7 @@ class EventBus(QObject):
     do_open_mod_list = Signal()
     do_save_mod_list_as = Signal()
     do_import_mod_list_from_rentry = Signal()
+    do_import_mod_list_from_workshop_collection = Signal()
     do_export_mod_list_to_clipboard = Signal()
     do_export_mod_list_to_rentry = Signal()
 
