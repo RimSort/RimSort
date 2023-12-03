@@ -1738,14 +1738,14 @@ class MainContent(QObject):
         mods_config_path = str(
             (Path(self.settings_controller.settings.config_folder) / "ModsConfig.xml")
         )
-        mods_config_data = validate_rimworld_mods_list(
+        package_ids_from_file = validate_rimworld_mods_list(
             xml_path_to_json(mods_config_path)
         )
-        if mods_config_data:
+        if package_ids_from_file:
             logger.info(
                 "Successfully got ModsConfig.xml data. Overwriting with current active mods"
             )
-            mods_config_data["ModsConfigData"]["activeMods"]["li"] = active_mods
+            mods_config_data = {"ModsConfigData": {"activeMods": {"li": active_mods}}}
             json_to_xml_write(mods_config_data, mods_config_path)
         else:
             logger.error("Could not save active mods")
