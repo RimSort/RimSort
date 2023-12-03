@@ -1325,21 +1325,22 @@ class MainContent(QObject):
                     active_mods.append(package_id)
             logger.info(f"Collected {len(active_mods)} active mods for export")
             logger.info("Getting current ModsConfig.xml to use as a reference format")
-            mods_config_data = validate_rimworld_mods_list(
-                xml_path_to_json(
-                    str(
-                        (
-                            Path(self.settings_controller.settings.config_folder)
-                            / "ModsConfig.xml"
-                        )
-                    )
+            mods_config_path = str(
+                (
+                    Path(self.settings_controller.settings.config_folder)
+                    / "ModsConfig.xml"
                 )
             )
-            if mods_config_data:
+            package_ids_from_file = validate_rimworld_mods_list(
+                xml_path_to_json(mods_config_path)
+            )
+            if package_ids_from_file:
                 logger.info(
                     "Successfully got ModsConfig.xml data. Overwriting with current active mods"
                 )
-                mods_config_data["ModsConfigData"]["activeMods"]["li"] = active_mods
+                mods_config_data = {
+                    "ModsConfigData": {"activeMods": {"li": active_mods}}
+                }
                 logger.info(
                     f"Saving generated ModsConfig.xml to selected path: {file_path}"
                 )
