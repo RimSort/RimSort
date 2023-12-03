@@ -30,7 +30,7 @@ from app.utils.constants import (
     RIMWORLD_DLC_METADATA,
 )
 from app.utils.generic import directories
-from app.utils.schema import validate_mods_config_format
+from app.utils.schema import validate_rimworld_mods_list
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.steam.steamfiles.wrapper import acf_to_dict, dict_to_acf
 from app.utils.steam.webapi.wrapper import (
@@ -1336,6 +1336,7 @@ class ModParser(QRunnable):
                     mod_metadata["internal_time_touched"] = int(
                         os.path.getmtime(directory)
                     )
+                    mod_metadata["about_xml_path"] = mod_data_path
                     mod_metadata["path"] = directory
                     logger.debug(
                         f"Finished editing XML mod content, adding final content to larger list: {mod_metadata}"
@@ -1422,6 +1423,11 @@ class ModParser(QRunnable):
             invalid_about_file_path_found and not scenario_rsc_found
         ) or data_malformed:  # ...finally, if we don't have any metadata parsed, populate invalid mod entry for visibility
             logger.debug(f"Invalid dir. Populating invalid mod for path: {directory}")
+            logger.warning(
+                f"invalid_about_file_path_found {invalid_about_file_path_found}",
+                # f"scenario_rsc_found {scenario_rsc_found}",
+                f"data_malformed {data_malformed}",
+            )
             mods[uuid] = {
                 "invalid": True,
                 "name": "Invalid item",
@@ -1644,17 +1650,16 @@ def add_load_rule_to_mod(
             )
 
 
-def get_active_inactive_mods(
+def get_mods_from_list(
     mod_list: Union[str, list[str]],
 ) -> Tuple[list[str], list[str], Dict[str, Any], list]:
     """
-    Given a path to the ModsConfig.xml folder and a complete list of
-    mods (including base game and DLC) and their dependencies,
+    Given a RimWorld mods list containing a complete list of mods,
+    including base game and DLC, as well as their dependencies in order,
     return a list of mods for the active list widget and a list of
     mods for the inactive list widget.
 
-    :param mod_list: path to ModsConfig.xml style list, or a list of package ids
-    :param all_mods: dict of all mods
+    :param mod_list: path to an .rws/.xml style list, or a list of package ids
     :return: a Tuple which contains the active mods dict, inactive mods dict,
     duplicate mods dict, and missing mods list
     """
@@ -1662,9 +1667,9 @@ def get_active_inactive_mods(
 
     active_mods_uuids: list[str] = []
     inactive_mods_uuids: list[str] = []
-    duplicate_mods = {}
+    duplicate_mods: dict[str, Any] = {}
     duplicates_processed = []
-    missing_mods = []
+    missing_mods: list[str] = []
     populated_mods = []
     to_populate = []
     logger.debug("Started generating active and inactive mods")
@@ -1676,14 +1681,14 @@ def get_active_inactive_mods(
     duplicate_mods = {k: v for k, v in duplicate_mods.items() if len(v) > 1}
     # Calculate mod lists
     if isinstance(mod_list, str):
-        logger.info(f"Retrieving active mods from RimWorld ModsConfig.xml")
+        logger.info(f"Retrieving active mods from RimWorld mod list")
         mod_data = xml_path_to_json(mod_list)
-        if not validate_mods_config_format(mod_data):
+        package_ids_to_import = validate_rimworld_mods_list(mod_data)
+        if not package_ids_to_import:
             logger.error(
                 f"Unable to get active mods from config with read data: {mod_data}"
             )
-            return active_mods_uuids, inactive_mods, duplicate_mods, missing_mods
-        package_ids_to_import = mod_data["ModsConfigData"]["activeMods"]["li"]
+            return active_mods_uuids, inactive_mods_uuids, duplicate_mods, missing_mods
     elif isinstance(mod_list, list):
         logger.info("Retrieving active mods from the provided list of package ids")
         package_ids_to_import = mod_list
@@ -1691,7 +1696,7 @@ def get_active_inactive_mods(
         logger.error(
             "This should only be a path to XML mod list, or a list of package ids!"
         )
-        return active_mods_uuids, inactive_mods, duplicate_mods, missing_mods
+        return active_mods_uuids, inactive_mods_uuids, duplicate_mods, missing_mods
     # Parse the ModsConfig.xml data
     logger.info("Generating active mod list")
     for (

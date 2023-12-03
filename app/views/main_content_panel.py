@@ -43,10 +43,7 @@ from PySide6.QtWidgets import (
     QLabel,
 )
 
-from app.models.dialogue import (
-    show_dialogue_input,
-    show_information,
-)
+from app.models.dialogue import show_dialogue_input, show_information, show_fatal_error
 from app.models.animations import LoadingAnimation
 from app.sort.dependencies import *
 from app.sort.alphabetical_sort import *
@@ -78,7 +75,7 @@ from app.sort.alphabetical_sort import *
 from app.sort.topo_sort import *
 from app.utils.metadata import *
 from app.utils.rentry.wrapper import RentryUpload, RentryImport
-from app.utils.schema import validate_mods_config_format
+from app.utils.schema import validate_rimworld_mods_list
 from app.utils.steam.browser import SteamBrowser
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.steam.steamworks.wrapper import (
@@ -583,7 +580,7 @@ class MainContent(QObject):
             inactive_mods_uuids,
             self.duplicate_mods,
             self.missing_mods,
-        ) = get_active_inactive_mods(
+        ) = get_mods_from_list(
             mod_list=str(
                 (
                     Path(self.settings_controller.settings.config_folder)
@@ -1259,9 +1256,9 @@ class MainContent(QObject):
         logger.info("Opening file dialog to select input file")
         file_path = show_dialogue_file(
             mode="open",
-            caption="Open mod list",
+            caption="Open RimWorld mod list",
             _dir=str(AppInfo().app_storage_folder),
-            _filter="XML (*.xml)",
+            _filter="RimWorld mod list (*.rws *.xml)",
         )
         logger.info(f"Selected path: {file_path}")
         if file_path:
@@ -1281,7 +1278,7 @@ class MainContent(QObject):
                 inactive_mods_uuids,
                 self.duplicate_mods,
                 self.missing_mods,
-            ) = get_active_inactive_mods(mod_list=file_path)
+            ) = get_mods_from_list(mod_list=file_path)
             logger.info("Got new mods according to imported XML")
             self.__insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
             # If we have duplicate mods, prompt user
@@ -1341,15 +1338,17 @@ class MainContent(QObject):
                     active_mods.append(package_id)
             logger.info(f"Collected {len(active_mods)} active mods for export")
             logger.info("Getting current ModsConfig.xml to use as a reference format")
-            mods_config_data = xml_path_to_json(
-                str(
-                    (
-                        Path(self.settings_controller.settings.config_folder)
-                        / "ModsConfig.xml"
+            mods_config_data = validate_rimworld_mods_list(
+                xml_path_to_json(
+                    str(
+                        (
+                            Path(self.settings_controller.settings.config_folder)
+                            / "ModsConfig.xml"
+                        )
                     )
                 )
             )
-            if validate_mods_config_format(mods_config_data):
+            if mods_config_data:
                 logger.info(
                     "Successfully got ModsConfig.xml data. Overwriting with current active mods"
                 )
@@ -1395,7 +1394,7 @@ class MainContent(QObject):
             inactive_mods_uuids,
             self.duplicate_mods,
             self.missing_mods,
-        ) = get_active_inactive_mods(mod_list=rentry_import.package_ids)
+        ) = get_mods_from_list(mod_list=rentry_import.package_ids)
 
         # Insert data into lists
         self.__insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
@@ -1698,8 +1697,10 @@ class MainContent(QObject):
         mods_config_path = str(
             (Path(self.settings_controller.settings.config_folder) / "ModsConfig.xml")
         )
-        mods_config_data = xml_path_to_json(mods_config_path)
-        if validate_mods_config_format(mods_config_data):
+        mods_config_data = validate_rimworld_mods_list(
+            xml_path_to_json(mods_config_path)
+        )
+        if mods_config_data:
             logger.info(
                 "Successfully got ModsConfig.xml data. Overwriting with current active mods"
             )
@@ -1707,6 +1708,11 @@ class MainContent(QObject):
             json_to_xml_write(mods_config_data, mods_config_path)
         else:
             logger.error("Could not save active mods")
+            show_fatal_error(
+                text="Could not save active mods",
+                details=f"Failed to save active mods to {mods_config_path}",
+                information="Please report this error!",
+            )
         # Stop the save button from blinking if it is blinking
         if self.actions_panel.save_button_flashing_animation.isActive():
             self.actions_panel.save_button_flashing_animation.stop()
