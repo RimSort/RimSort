@@ -1,16 +1,16 @@
 import re
 import sys
 from json import loads as json_loads
-
 import requests
+
+from loguru import logger
 from PySide6.QtWidgets import (
     QDialog,
     QVBoxLayout,
     QLineEdit,
     QMessageBox,
     QPushButton,
-    )
-from loguru import logger
+)
 
 # Constants
 BASE_URL = "https://rentry.co"
@@ -60,7 +60,7 @@ class RentryUpload:
             if self.upload_success:
                 logger.debug(
                     f"RentryUpload successfully uploaded data! Url: {self.url}, Edit code: {response['edit_code']}"
-                    )
+                )
 
     def handle_upload_failure(self, response):
         # Log and handle upload failure details
@@ -82,7 +82,7 @@ class RentryUpload:
         payload = {
             "csrfmiddlewaretoken": csrf_token,
             "text": text,
-            }
+        }
 
         # Perform the POST request to create a new entry
         return json_loads(client.post(API_NEW_ENDPOINT, payload, headers=_HEADERS).data)
@@ -91,7 +91,9 @@ class RentryUpload:
 class RentryImport(QDialog):
     def __init__(self):
         super().__init__()
-        self.package_ids: list[str] = []  # Initialize an empty list to store package_ids
+        self.package_ids: list[
+            str
+        ] = []  # Initialize an empty list to store package_ids
         self.input_dialog()  # Call the input_dialog method to set up the UI
 
     def input_dialog(self):
@@ -139,10 +141,16 @@ class RentryImport(QDialog):
                     match[0] if match[0] else match[1]
                     for match in matches
                     if match[0] or match[1]
-                    ]
+                ]
                 logger.info("Parsed package_ids successfully.")
         except Exception as e:
-            logger.error(f"An error occurred while fetching rentry.co content: {str(e)}")
+            logger.error(
+                f"An error occurred while fetching rentry.co content: {str(e)}"
+            )
 
         # Close the dialog after processing the link
         self.accept()
+
+
+if __name__ == "__main__":
+    sys.exit()

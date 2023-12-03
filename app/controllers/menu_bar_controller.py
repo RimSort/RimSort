@@ -48,6 +48,10 @@ class MenuBarController(QObject):
             EventBus().do_import_mod_list_from_rentry
         )
 
+        self.menu_bar.import_from_workshop_collection_action.triggered.connect(
+            EventBus().do_import_mod_list_from_workshop_collection
+        )
+
         self.menu_bar.export_to_clipboard_action.triggered.connect(
             EventBus().do_export_mod_list_to_clipboard
         )
