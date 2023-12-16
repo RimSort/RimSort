@@ -62,7 +62,7 @@ For the most part, RimSort will adhere to this functionality.
         * Dependency metadata that is available on Steam - mod developers list DLC dependencies as well as additional mod dependencies on Steam.
             * In an ideal world, this can be taken care of completely by proper About.xml creation. However, SteamDB can supplement the available data if this is not done.
         * Some local metadata is included from mods' About.xml. This includes PackageId and gameVersions.
-            * Providing a complete database, this allows the user to be able to sometimes find mod dependencies even without having the mods already downloaded downloaded.
+            * Providing a complete database, this allows the user to be able to sometimes find mod dependencies even without having the mods already downloaded.
                 * When trying to import a mod list that contains mods that are not already available locally, in order to try to lookup PackageId -> PublishedFileId, SteamDB is necessary.
 * Community Rules Database (Paladin's/RimSort's `communityRules.json`)
     * Contains a database of custom sorting rules compiled by a community, utilizing the schema defined by Paladin's RimPy Mod Manager Database communityRules.json
@@ -85,7 +85,7 @@ For the most part, RimSort will adhere to this functionality.
 #### Getting started
 _**NOTE:**_ DB Builder has some "soft requirements". If you are not a RimWorld Steam user, sadly, you will likely be limited in your DB building capabilities.
 * I believe you need to have spent at least $5 USD on your Steam account to have general access to Steam WebAPI. This is a big part of how RimSort builds the full picture of mod dependency metadata, as well as some other things.
-* In order to utilize SteamWorks, you also need to own RimWorld on Steam. This is required as far as I can tell for Steam to allow access to certain mechanisms over the SteamWorks API
+* In order to utilize SteamWorks, you also need to own RimWorld on Steam. This is required as far as I can tell for Steam to allow access to certain mechanisms over the SteamWorks API.
 
 ##### How to obtain your Steam WebAPI key for use with with DB Builder DynamicQuery
 1. Open Steam's [API Key signup page.](https://steamcommunity.com/login/home/?goto=%2Fdev%2Fapikey) It requires a Steam account and a domain name to register it to, but I've found the actual domain you use does not seem to matter:
