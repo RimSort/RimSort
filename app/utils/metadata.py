@@ -689,9 +689,25 @@ class MetadataManager(QObject):
 
             # moddependencies are not equal to mod load order rules
             if self.internal_local_metadata[uuid].get("moddependencies"):
-                dependencies = self.internal_local_metadata[uuid][
-                    "moddependencies"
-                ].get("li")
+                if isinstance(
+                    self.internal_local_metadata[uuid]["moddependencies"], dict
+                ):
+                    dependencies = self.internal_local_metadata[uuid][
+                        "moddependencies"
+                    ].get("li")
+                elif isinstance(
+                    self.internal_local_metadata[uuid]["moddependencies"], list
+                ):
+                    # Loop through the list and try to find dictionary. If we find one, use it.
+                    for potential_dependencies in self.internal_local_metadata[uuid][
+                        "moddependencies"
+                    ]:
+                        if (
+                            potential_dependencies
+                            and isinstance(potential_dependencies, dict)
+                            and potential_dependencies.get("li")
+                        ):
+                            dependencies = potential_dependencies["li"]
                 if dependencies:
                     logger.debug(
                         f"Current mod requires these mods to work: {dependencies}"
@@ -1283,9 +1299,13 @@ class ModParser(QRunnable):
                     if mod_metadata.get("packageid"):
                         # ...check type of packageid, use first packageid parsed
                         if isinstance(mod_metadata["packageid"], list):
-                            mod_metadata["packageid"] = mod_metadata["packageid"][
-                                0
-                            ].lower()
+                            # Loop through the list and find str. If we find one, use it.
+                            for potential_packageid in mod_metadata["packageid"]:
+                                if potential_packageid and isinstance(
+                                    potential_packageid, str
+                                ):
+                                    mod_metadata["packageid"] = potential_packageid
+                                    break
                         # Normalize package ID in metadata
                         mod_metadata["packageid"] = mod_metadata["packageid"].lower()
                     else:  # ...otherwise, we don't have one from About.xml, and we can check Steam DB...
@@ -1423,9 +1443,9 @@ class ModParser(QRunnable):
             invalid_about_file_path_found and not scenario_rsc_found
         ) or data_malformed:  # ...finally, if we don't have any metadata parsed, populate invalid mod entry for visibility
             logger.debug(f"Invalid dir. Populating invalid mod for path: {directory}")
-            logger.warning(
+            logger.debug(
                 f"invalid_about_file_path_found {invalid_about_file_path_found}",
-                # f"scenario_rsc_found {scenario_rsc_found}",
+                f"scenario_rsc_found {scenario_rsc_found}",
                 f"data_malformed {data_malformed}",
             )
             mods[uuid] = {
@@ -1576,9 +1596,12 @@ def add_incompatibility_to_mod(
         elif isinstance(dependency_or_dependency_ids, list):
             if isinstance(dependency_or_dependency_ids[0], str):
                 for dependency in dependency_or_dependency_ids:
-                    dependency_id = dependency.lower()
-                    if dependency_id in all_package_ids:
-                        mod_data["incompatibilities"].add(dependency_id)
+                    if (
+                        dependency
+                    ):  # Sometimes, this can be None or an empty string if XML syntax error/extra elements
+                        dependency_id = dependency.lower()
+                        if dependency_id in all_package_ids:
+                            mod_data["incompatibilities"].add(dependency_id)
             else:
                 logger.error(
                     f"List of incompatibilities does not contain strings: [{dependency_or_dependency_ids}]"
