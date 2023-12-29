@@ -753,6 +753,8 @@ class MainContent(QObject):
     # GAME CONFIGURATION PANEL
 
     def _do_check_for_update(self) -> None:
+        logger.debug("Skipping update check...")
+        return
         # NOT NUITKA
         if not "__compiled__" in globals():
             logger.debug(
