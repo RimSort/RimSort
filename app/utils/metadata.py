@@ -1443,11 +1443,6 @@ class ModParser(QRunnable):
             invalid_about_file_path_found and not scenario_rsc_found
         ) or data_malformed:  # ...finally, if we don't have any metadata parsed, populate invalid mod entry for visibility
             logger.debug(f"Invalid dir. Populating invalid mod for path: {directory}")
-            logger.debug(
-                f"invalid_about_file_path_found {invalid_about_file_path_found}",
-                f"scenario_rsc_found {scenario_rsc_found}",
-                f"data_malformed {data_malformed}",
-            )
             mods[uuid] = {
                 "invalid": True,
                 "name": "Invalid item",
