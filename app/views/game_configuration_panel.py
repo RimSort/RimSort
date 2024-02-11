@@ -33,9 +33,9 @@ class GameConfiguration(QObject):
 
     def __init__(
         self,
-        RIMSORT_VERSION: str,
+        rimsort_version: str,
         settings_controller: SettingsController = None,
-        DEBUG_MODE=None,
+        debug_mode=None,
     ) -> None:
         """
         Initialize the game configuration.
@@ -46,8 +46,8 @@ class GameConfiguration(QObject):
 
             self.settings_controller = settings_controller
 
-            self.debug_mode = DEBUG_MODE
-            self.rimsort_version = RIMSORT_VERSION
+            self.debug_mode = debug_mode
+            self.rimsort_version = rimsort_version
             self.system_name = platform.system()
 
             self.lock_icon_path = str(

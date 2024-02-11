@@ -517,6 +517,11 @@ class SettingsDialog(QDialog):
             "Update database instead of overwriting"
         )
         group_layout.addWidget(self.db_builder_update_instead_of_overwriting_checkbox)
+        # Todo: Add a checkbox to enable/disable the database expiry feature.
+        self.db_builder_database_expiry_checkbox = QCheckBox(
+            "Notify about Database expiry when epoch time set below is reached"
+        )
+        group_layout.addWidget(self.db_builder_database_expiry_checkbox)
 
         # Text fields
         group_box = QGroupBox()
@@ -775,9 +780,6 @@ class SettingsDialog(QDialog):
         tab_layout.addLayout(buttons_layout)
 
         buttons_layout.addStretch()
-
-        self.upload_log_button = QPushButton("Upload RimSort Log")
-        buttons_layout.addWidget(self.upload_log_button)
 
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)

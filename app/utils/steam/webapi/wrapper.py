@@ -1,23 +1,22 @@
+import sys
+import traceback
 from logging import getLogger, WARNING
-from loguru import logger
 from math import ceil
 from multiprocessing import cpu_count, Pool
-from requests import post as requests_post
-from requests.exceptions import JSONDecodeError
-import sys
 from time import time
-import traceback
 from typing import Any, Dict, Optional, Tuple
 
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QDialog, QLineEdit, QMessageBox, QPushButton, QVBoxLayout
+from loguru import logger
+from requests import post as requests_post
+from requests.exceptions import JSONDecodeError
 from steam.webapi import WebAPI
 
 from app.utils.app_info import AppInfo
 from app.utils.constants import RIMWORLD_DLC_METADATA
 from app.utils.generic import chunks
 from app.utils.steam.steamworks.wrapper import SteamworksAppDependenciesQuery
-
 
 # This is redundant since it is also done in `logger-tt` config,
 # however, it can't hurt, just in case!
@@ -96,7 +95,7 @@ class CollectionImport(QDialog):
                 collection_link = collection_link.split(BASE_URL_STEAMFILES, 1)[1]
             elif BASE_URL_WORKSHOP in collection_link:
                 collection_link = collection_link.split(BASE_URL_WORKSHOP, 1)[1]
-            collection_webapi_result = ISteamRemoteStorage_GetCollectionDetails(
+            collection_webapi_result = i_steam_remote_storage_get_collection_details(
                 [collection_link]
             )
             if len(collection_webapi_result) > 0:
@@ -574,7 +573,7 @@ class DynamicQuery(QObject):
                         )
 
 
-def ISteamRemoteStorage_GetCollectionDetails(
+def i_steam_remote_storage_get_collection_details(
     publishedfileids: list,
 ) -> Optional[list]:
     """
@@ -620,7 +619,7 @@ def ISteamRemoteStorage_GetCollectionDetails(
     return metadata
 
 
-def ISteamRemoteStorage_GetPublishedFileDetails(
+def i_steam_remote_storage_get_published_file_details(
     publishedfileids: list,
 ) -> Optional[list]:
     """

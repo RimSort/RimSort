@@ -82,11 +82,22 @@ class MenuBar(QObject):
         self.export_submenu = QMenu("Export")
         self.file_menu.addMenu(self.export_submenu)
 
-        self.export_to_clipboard_action = QAction("To Clipboard…", self)
+        self.export_to_clipboard_action = QAction("To Clipboard", self)
         self.export_submenu.addAction(self.export_to_clipboard_action)
 
-        self.export_to_rentry_action = QAction("To Rentry.co…", self)
+        self.export_to_rentry_action = QAction("To Rentry.co", self)
         self.export_submenu.addAction(self.export_to_rentry_action)
+
+        self.file_menu.addSeparator()
+
+        self.upload_submenu = QMenu("Upload Log")
+        self.file_menu.addMenu(self.upload_submenu)
+
+        self.upload_rimsort_log_action = QAction("RimSort.log", self)
+        self.upload_submenu.addAction(self.upload_rimsort_log_action)
+
+        self.upload_rimworld_log_action = QAction("RimWorld.log", self)
+        self.upload_submenu.addAction(self.upload_rimworld_log_action)
 
         self.edit_menu = self.menu_bar.addMenu("Edit")
 
@@ -138,11 +149,25 @@ class MenuBar(QObject):
         self.export_submenu = QMenu("Export")
         self.file_menu.addMenu(self.export_submenu)
 
-        self.export_to_clipboard_action = QAction("To Clipboard…", self)
+        self.export_to_clipboard_action = QAction("To Clipboard", self)
         self.export_submenu.addAction(self.export_to_clipboard_action)
 
-        self.export_to_rentry_action = QAction("To Rentry.co…", self)
+        self.export_to_rentry_action = QAction("To Rentry.co", self)
         self.export_submenu.addAction(self.export_to_rentry_action)
+
+        self.file_menu.addSeparator()
+
+        self.upload_submenu = QMenu("Upload Log")
+        self.file_menu.addMenu(self.upload_submenu)
+
+        self.upload_rimsort_log_action = QAction("RimSort.log", self)
+        self.upload_submenu.addAction(self.upload_rimsort_log_action)
+
+        self.upload_rimsort_old_log_action = QAction("RimSort.old.log", self)
+        self.upload_submenu.addAction(self.upload_rimsort_old_log_action)
+
+        self.upload_rimworld_log_action = QAction("RimWorld Player.log", self)
+        self.upload_submenu.addAction(self.upload_rimworld_log_action)
 
         self.file_menu.addSeparator()
 

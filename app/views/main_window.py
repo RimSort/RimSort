@@ -73,9 +73,9 @@ class MainWindow(QMainWindow):
 
         # Create various panels on the application GUI
         self.game_configuration = GameConfiguration.instance(
-            DEBUG_MODE=debug_mode,
+            debug_mode=debug_mode,
             settings_controller=self.settings_controller,
-            RIMSORT_VERSION=self.version_string,
+            rimsort_version=self.version_string,
         )
         self.main_content_panel = MainContent(
             settings_controller=self.settings_controller

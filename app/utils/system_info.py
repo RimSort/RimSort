@@ -67,6 +67,7 @@ class SystemInfo:
         if hasattr(self, "_is_initialized") and self._is_initialized:
             return
 
+        # Detect the operating system
         if platform.system() in ["Windows"]:
             self._operating_system = SystemInfo.OperatingSystem.WINDOWS
         elif platform.system() in ["Linux"]:
@@ -78,6 +79,7 @@ class SystemInfo:
                 f"Unsupported operating system detected: {platform.system()}."
             )
 
+        # Detect the system architecture
         if platform.machine() in ["x86_64", "AMD64"]:
             self._architecture = SystemInfo.Architecture.X64
         elif platform.machine() in ["arm64", "aarch64"]:

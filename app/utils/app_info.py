@@ -44,36 +44,31 @@ class AppInfo:
         if main_file is None:
             raise ValueError("AppInfo must be initialized once with __file__.")
 
-        # Need to go one up if we are running from source
+        # Determine the application folder
         self._application_folder = (
             Path(main_file).resolve().parent.parent
             if not "__compiled__"
-            in globals()  # __compiled__ will be present if Nuitka has frozen this
+            in globals()  # Adjust the path if running from source or compiled
             else Path(main_file).resolve().parent
         )
 
         # Application metadata
-
         self._app_name = "RimSort"
         self._app_version = ""
         self._app_copyright = ""
 
         # Define important directories using platformdirs
-
         platform_dirs = PlatformDirs(appname=self._app_name, appauthor=False)
         self._app_storage_folder: Path = Path(platform_dirs.user_data_dir)
         self._user_log_folder: Path = Path(platform_dirs.user_log_dir)
 
         # Derive some secondary directory paths
-
         self._databases_folder: Path = self._app_storage_folder / "dbs"
         self._theme_data_folder: Path = self._application_folder / "themes"
 
         # Make sure important directories exist
-
         self._app_storage_folder.mkdir(parents=True, exist_ok=True)
         self._user_log_folder.mkdir(parents=True, exist_ok=True)
-
         self._databases_folder.mkdir(parents=True, exist_ok=True)
 
         self._is_initialized: bool = True
@@ -82,9 +77,6 @@ class AppInfo:
     def app_name(self) -> str:
         """
         Get the name of the application.
-
-        Returns:
-            str: The name of the application.
         """
         return self._app_name
 
@@ -92,9 +84,6 @@ class AppInfo:
     def app_version(self) -> str:
         """
         Get the application version string.
-
-        Returns:
-            str: The version of the application.
         """
         return self._app_version
 
@@ -102,9 +91,6 @@ class AppInfo:
     def app_copyright(self) -> str:
         """
         Get the copyright information for the application.
-
-        Returns:
-            str: The copyright information for the application.
         """
         return self._app_copyright
 
@@ -112,9 +98,6 @@ class AppInfo:
     def application_folder(self) -> Path:
         """
         Get the path to the folder where the main application file resides.
-
-        Returns:
-            Path: The path to the application's main folder.
         """
         return self._application_folder
 
@@ -124,9 +107,6 @@ class AppInfo:
         Get the path to the folder where user-specific data for the application is stored.
 
         This directory is determined using platform-specific conventions.
-
-        Returns:
-            Path: The path to the user-specific data folder.
         """
         return self._app_storage_folder
 
@@ -136,9 +116,6 @@ class AppInfo:
         Get the path to the folder where application logs are stored for the user.
 
         This directory is determined using platform-specific conventions.
-
-        Returns:
-            Path: The path to the user-specific log folder.
         """
         return self._user_log_folder
 

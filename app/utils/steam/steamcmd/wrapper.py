@@ -1,16 +1,16 @@
-from io import BytesIO
-from loguru import logger
 import os
-from pathlib import Path
 import platform
-import requests
+import shutil
 import sys
 import tarfile
+from io import BytesIO
+from pathlib import Path
 from tempfile import gettempdir
 from typing import Any, Optional
 from zipfile import ZipFile
 
-import shutil
+import requests
+from loguru import logger
 
 from app.models.dialogue import (
     show_dialogue_conditional,

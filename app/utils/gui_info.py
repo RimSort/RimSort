@@ -38,14 +38,18 @@ class GUIInfo:
         if hasattr(self, "_is_initialized") and self._is_initialized:
             return
 
+        # Get default font from QApplication
         self._default_font: QFont = QApplication.font()
 
+        # Create an emphasis font by making a bolder version of the default font
         self._emphasis_font: QFont = QFont(self._default_font)
         self._emphasis_font.setWeight(QFont.Weight.Bold)
 
+        # Create a smaller version of the default font
         self._smaller_font: QFont = QFont(self._default_font)
         self._smaller_font.setPointSize(self._smaller_font.pointSize() - 1)
 
+        # Calculate line height and average character width of the default font
         self._default_font_line_height: int = QFontMetrics(
             self._default_font
         ).lineSpacing()
@@ -53,17 +57,16 @@ class GUIInfo:
             self._default_font
         ).averageCharWidth()
 
+        # Define default margins for text fields
         self._text_field_margins: QMargins = QMargins(4, 4, 4, 4)
 
+        # Set initialization flag to True
         self._is_initialized: bool = True
 
     @property
     def default_font(self) -> QFont:
         """
         Get the default font used in the application.
-
-        Returns:
-            QFont: The default font.
         """
         return self._default_font
 
@@ -71,9 +74,6 @@ class GUIInfo:
     def emphasis_font(self) -> QFont:
         """
         Get a bolder version of the default font for emphasis.
-
-        Returns:
-            QFont: The emphasis font.
         """
         return self._emphasis_font
 
@@ -81,9 +81,6 @@ class GUIInfo:
     def smaller_font(self) -> QFont:
         """
         Get the smaller version of the default font.
-
-        Returns:
-            QFont: The smaller font.
         """
         return self._smaller_font
 
@@ -91,9 +88,6 @@ class GUIInfo:
     def default_font_line_height(self) -> int:
         """
         Get the line height of the default font.
-
-        Returns:
-            int: The line height of the default font.
         """
         return self._default_font_line_height
 
@@ -101,9 +95,6 @@ class GUIInfo:
     def default_font_average_char_width(self) -> int:
         """
         Get the average character width of the default font.
-
-        Returns:
-            int: The average character width of the default font.
         """
         return self._default_font_average_char_width
 
@@ -111,8 +102,5 @@ class GUIInfo:
     def text_field_margins(self) -> QMargins:
         """
         Get the margins for text fields.
-
-        Returns:
-            QMargins: The margins for text fields.
         """
         return self._text_field_margins

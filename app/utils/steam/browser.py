@@ -1,8 +1,6 @@
-from functools import partial
-from loguru import logger
-from pathlib import Path
 import os
 import platform
+from functools import partial
 from typing import Any, Dict, Optional
 
 from PySide6.QtCore import Qt, QPoint, QSize, QUrl, Signal
@@ -23,13 +21,14 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QVBoxLayout,
 )
+from loguru import logger
 
 from app.models.dialogue import show_warning
 from app.models.image_label import ImageLabel
 from app.utils.app_info import AppInfo
 from app.utils.steam.webapi.wrapper import (
-    ISteamRemoteStorage_GetCollectionDetails,
-    ISteamRemoteStorage_GetPublishedFileDetails,
+    i_steam_remote_storage_get_collection_details,
+    i_steam_remote_storage_get_published_file_details,
 )
 
 
@@ -216,7 +215,7 @@ class SteamBrowser(QWidget):
 
     def __compile_collection_datas(self, publishedfileid: str) -> Dict[str, Any]:
         collection_mods_pfid_to_title = {}
-        collection_webapi_result = ISteamRemoteStorage_GetCollectionDetails(
+        collection_webapi_result = i_steam_remote_storage_get_collection_details(
             [publishedfileid]
         )
         collection_pfids = []
@@ -226,7 +225,7 @@ class SteamBrowser(QWidget):
                     collection_pfids.append(mod["publishedfileid"])
             if len(collection_pfids) > 0:
                 collection_mods_webapi_response = (
-                    ISteamRemoteStorage_GetPublishedFileDetails(collection_pfids)
+                    i_steam_remote_storage_get_published_file_details(collection_pfids)
                 )
             else:
                 return collection_mods_pfid_to_title

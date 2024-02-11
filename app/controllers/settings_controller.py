@@ -1,5 +1,4 @@
 import os
-from os.path import expanduser
 from pathlib import Path
 from typing import Optional
 
@@ -184,11 +183,6 @@ class SettingsController(QObject):
         )
         self.settings_dialog.steamcmd_install_button.clicked.connect(
             self._on_steamcmd_install_button_clicked
-        )
-
-        # Advanced tab
-        self.settings_dialog.upload_log_button.clicked.connect(
-            EventBus().do_upload_log.emit
         )
 
     def show_settings_dialog(self) -> None:
@@ -466,14 +460,12 @@ class SettingsController(QObject):
         )
 
         # todds tab
-        if self.settings_dialog.todds_preset_combobox.currentIndex() == 0:
-            self.settings.todds_preset = "optimized"
-        else:
-            self.settings.todds_preset = "optimized"
-        if self.settings_dialog.todds_active_mods_only_radio.isChecked():
-            self.settings.todds_active_mods_target = True
-        elif self.settings_dialog.todds_all_mods_radio.isChecked():
-            self.settings.todds_active_mods_target = False
+        self.settings.todds_preset = "optimized"
+
+        self.settings.todds_active_mods_target = (
+            self.settings_dialog.todds_active_mods_only_radio.isChecked()
+        )
+
         self.settings.todds_dry_run = (
             self.settings_dialog.todds_dry_run_checkbox.isChecked()
         )
@@ -703,7 +695,7 @@ class SettingsController(QObject):
             ),
         ]
 
-        # If on mac and the steam path doesn't exist, try the default path
+        # If on Mac and the steam path doesn't exist, try the default path
         if not darwin_paths[0].exists():
             darwin_paths[0] = Path("/Applications/RimWorld.app")
 

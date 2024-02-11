@@ -1,8 +1,8 @@
-from loguru import logger
 import os
-from pathlib import Path
 import platform
 import sys
+
+from loguru import logger
 
 from app.utils.app_info import AppInfo
 from app.windows.runner_panel import RunnerPanel

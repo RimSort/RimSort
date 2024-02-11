@@ -1,15 +1,16 @@
-from loguru import logger
-from errno import EACCES
 import os
-from pathlib import Path
 import platform
-from re import sub
 import shutil
-from stat import S_IRWXU, S_IRWXG, S_IRWXO
 import subprocess
-from requests import post as requests_post
 import sys
 import webbrowser
+from errno import EACCES
+from pathlib import Path
+from re import sub
+from stat import S_IRWXU, S_IRWXG, S_IRWXO
+
+from loguru import logger
+from requests import post as requests_post
 
 from app.models.dialogue import show_warning
 
@@ -93,7 +94,7 @@ def launch_game_process(game_install_path: Path, args: list) -> None:
         elif system_name == "Linux":
             # Linux
             executable_path = str((game_install_path / "RimWorldLinux"))
-        elif "Windows":
+        elif system_name == "Windows":
             # Windows
             executable_path = str((game_install_path / "RimWorldWin64.exe"))
         else:

@@ -1,5 +1,4 @@
 from functools import partial
-from loguru import logger
 from typing import Any, Dict
 
 from PySide6.QtCore import Qt, QEvent, QSize, Signal
@@ -15,14 +14,13 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QVBoxLayout,
 )
+from loguru import logger
 
 from app.utils.constants import RIMWORLD_DLC_METADATA
 
 
 class MissingModsPrompt(QWidget):
-    """
-    A generic panel used to prompt a user to download missing mods
-    """
+    # A panel to prompt a user to download missing mods
 
     steamcmd_downloader_signal = Signal(list)
     steamworks_subscription_signal = Signal(list)
@@ -35,39 +33,39 @@ class MissingModsPrompt(QWidget):
         super().__init__()
         logger.debug("Initializing MissingModsPrompt")
 
-        self.installEventFilter(self)
-
+        # Initialize class attributes
         self.data_by_variants = {}
         self.DEPENDENCY_TAG = "_-_DEPENDENCY_-_"
         self.packageids = packageids
         self.steam_workshop_metadata = steam_workshop_metadata
         self.setObjectName("missingModsPanel")
-        # MOD LABEL
+
+        # Mod Label
         self.missing_mods_label = QLabel(
             "There are mods missing from the active mods list!"
         )
         self.missing_mods_label.setAlignment(Qt.AlignCenter)
 
-        # CONTAINER LAYOUTS
+        # Container Layouts
         self.upper_layout = QVBoxLayout()
         self.lower_layout = QVBoxLayout()
         self.layout = QVBoxLayout()
 
-        # SUB LAYOUTS
+        # Sub Layouts
         self.details_layout = QVBoxLayout()
         self.editor_layout = QVBoxLayout()
         self.editor_actions_layout = QHBoxLayout()
 
-        # DETAILS WIDGETS
+        # Details Widgets
         self.details_label = QLabel(
-            "\nUser-configured SteamDB database was queried. The following table displays mods available for download from Steam. "
-            + '\n\nRimworld mods on Steam Workshop that share a packageId are "variants". Please keep this in mind before downloading. '
-            + "\n\nPlease select your preferred mod variant in the table below. You can also open each variant in Steam/Web browser to verify."
+            "\nUser-configured SteamDB database was queried. The following table displays mods available for download "
+            'from Steam. \n\nRimworld mods on Steam Workshop that share a packageId are "variants". Please keep '
+            "this in mind before downloading. \n\nPlease select your preferred mod variant in the table below. You "
+            "can also open each variant in Steam/Web browser to verify."
         )
         self.details_label.setAlignment(Qt.AlignCenter)
 
-        # EDITOR WIDGETS
-        # Create the model and set column headers
+        # Editor Widgets
         self.editor_model = QStandardItemModel(0, 5)
         self.editor_model.setHorizontalHeaderLabels(
             [
@@ -76,69 +74,64 @@ class MissingModsPrompt(QWidget):
                 "Game Versions",
                 "# Variants",
                 "PublishedFileID",
-                # "Open page",
             ]
         )
-        # Create the table view and set the model
+        # Create the table view and set its model
         self.editor_table_view = QTableView()
         self.editor_table_view.setModel(self.editor_model)
-        self.editor_table_view.setSortingEnabled(True)  # Enable sorting on the columns
-        self.editor_table_view.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.editor_table_view.setSelectionMode(QAbstractItemView.NoSelection)
-        # Set default stretch for each column
-        self.editor_table_view.horizontalHeader().setSectionResizeMode(
-            0, QHeaderView.Stretch
+
+        # Set properties of the table view
+        self.editor_table_view.setSortingEnabled(True)
+        self.editor_table_view.setEditTriggers(
+            QAbstractItemView.EditTrigger.NoEditTriggers
+        )
+        self.editor_table_view.setSelectionMode(
+            QAbstractItemView.SelectionMode.NoSelection
         )
         self.editor_table_view.horizontalHeader().setSectionResizeMode(
-            1, QHeaderView.Stretch
+            QHeaderView.ResizeMode.Stretch
         )
-        self.editor_table_view.horizontalHeader().setSectionResizeMode(
-            2, QHeaderView.ResizeToContents
-        )
-        self.editor_table_view.horizontalHeader().setSectionResizeMode(
-            3, QHeaderView.ResizeToContents
-        )
-        self.editor_table_view.horizontalHeader().setSectionResizeMode(
-            4, QHeaderView.ResizeToContents
-        )
+
+        # Editor Buttons
         self.editor_cancel_button = QPushButton("Do nothing and exit")
-        self.editor_cancel_button.clicked.connect(self.close)
         self.editor_download_steamcmd_button = QPushButton("Download with SteamCMD")
-        self.editor_download_steamcmd_button.clicked.connect(
-            partial(self._download_list_from_table, mode="steamcmd")
-        )
         self.editor_download_steamworks_button = QPushButton(
             "Download with Steam client"
+        )
+        # Connect buttons to their respective slots
+        self.editor_cancel_button.clicked.connect(self.close)
+        self.editor_download_steamcmd_button.clicked.connect(
+            partial(self._download_list_from_table, mode="steamcmd")
         )
         self.editor_download_steamworks_button.clicked.connect(
             partial(self._download_list_from_table, mode="steamworks")
         )
+        # Add buttons to actions layout
         self.editor_actions_layout.addWidget(self.editor_cancel_button)
         self.editor_actions_layout.addWidget(self.editor_download_steamcmd_button)
         self.editor_actions_layout.addWidget(self.editor_download_steamworks_button)
 
-        # Build the details layout
+        # Build Layouts
         self.details_layout.addWidget(self.details_label)
-
-        # Build the editor layouts
         self.editor_layout.addWidget(self.editor_table_view)
         self.editor_layout.addLayout(self.editor_actions_layout)
 
-        # Add our widget layouts to the containers
+        # Add layouts to upper and lower layouts
+        self.upper_layout.addWidget(self.missing_mods_label)
         self.upper_layout.addLayout(self.details_layout)
         self.lower_layout.addLayout(self.editor_layout)
 
-        # Add our layouts to the main layout
-        self.layout.addWidget(self.missing_mods_label)
+        # Add layouts to main layout
         self.layout.addLayout(self.upper_layout)
         self.layout.addLayout(self.lower_layout)
 
-        # Put it all together
+        # Set main layout and window properties
         self.setWindowTitle("RimSort - Missing mods found")
         self.setLayout(self.layout)
         self.setMinimumSize(QSize(900, 600))
 
     def eventFilter(self, obj, event):
+        # Filters events to handle the escape key
         if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Escape:
             self.close()
             return True
@@ -149,7 +142,7 @@ class MissingModsPrompt(QWidget):
         self,
         name: str,
         packageid: str,
-        gameVersions: list,
+        gameversions: list,
         mod_variants: str,
         publishedfileid: str,
     ):
@@ -165,7 +158,7 @@ class MissingModsPrompt(QWidget):
         items = [
             QStandardItem(name),
             QStandardItem(packageid),
-            QStandardItem(str(gameVersions)),
+            QStandardItem(str(gameversions)),
             QStandardItem(mod_variants if publishedfileid != "" else "0"),
             QStandardItem(),
         ]
@@ -182,6 +175,7 @@ class MissingModsPrompt(QWidget):
         self.editor_table_view.setIndexWidget(combo_box_index, combo_box)
 
     def _download_list_from_table(self, mode: str) -> None:
+        # Downloads mods based on the selected mode
         publishedfileids = []
         # Iterate through the editor's rows
         for row in range(self.editor_model.rowCount()):
@@ -206,17 +200,20 @@ class MissingModsPrompt(QWidget):
             )
 
     def _populate_from_metadata(self) -> None:
-        # Build a dict of missing mod variant(s)
+        """
+        Build a dict of missing mod variant(s)
+        Generate a list of all missing mods + any missing mod dependencies listed
+        in the user-configured Steam metadata.
+        Populates the table view from metadata.
+        """
         if (
             self.steam_workshop_metadata
             and len(self.steam_workshop_metadata.keys()) > 0
         ):
-            # Generate a list of all missing mods + any missing mod dependencies listed
-            # in the user-configured Steam metadata.
             for publishedfileid, metadata in self.steam_workshop_metadata.items():
                 name = metadata.get("steamName", metadata.get("name", "Not found"))
                 packageid = metadata.get("packageId", "None").lower()
-                gameVersions = metadata.get("gameVersions", ["None listed"])
+                gameversions = metadata.get("gameVersions", ["None listed"])
 
                 # Remove AppId dependencies from this dict. They cannot be subscribed like mods.
                 dependencies = {
@@ -230,7 +227,7 @@ class MissingModsPrompt(QWidget):
                     variants = self.data_by_variants.setdefault(packageid, {})
                     variants[publishedfileid] = {
                         "name": name,
-                        "gameVersions": gameVersions,
+                        "gameversions": gameversions,
                         "dependencies": dependencies,
                     }
 
@@ -240,7 +237,7 @@ class MissingModsPrompt(QWidget):
                     self.data_by_variants[packageid] = {
                         "": {
                             "name": "Not found",
-                            "gameVersions": ["None listed"],
+                            "gameversions": ["None listed"],
                         }
                     }
 
@@ -250,12 +247,13 @@ class MissingModsPrompt(QWidget):
                     self._add_row(
                         name=variant_data["name"],
                         packageid=packageid,
-                        gameVersions=variant_data["gameVersions"],
+                        gameversions=variant_data["gameversions"],
                         mod_variants=str(len(variants.keys())),
                         publishedfileid=publishedfileid,
                     )
 
     def _update_mod_info(self, publishedfileid: str):
+        # Updates mod info in the table view
         combo_box = self.sender()
         index = self.editor_table_view.indexAt(combo_box.pos())
         if index.isValid():

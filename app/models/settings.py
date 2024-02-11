@@ -512,19 +512,18 @@ class Settings(QObject):
         EventBus().settings_have_changed.emit()
 
     def load(self) -> None:
-        if self._debug_file.exists() and self._debug_file.is_file():
+        if self._debug_file.is_file():
             self._debug_logging_enabled = True
         else:
             self._debug_logging_enabled = False
 
         try:
-            with open(str(self._settings_file), "r") as file:
-                data = json.load(file)
-                self._from_dict(data)
+            data = json.loads(self._settings_file.read_text())
+            self._from_dict(data)
         except FileNotFoundError:
             self.save()
-        except JSONDecodeError:
-            raise
+        except JSONDecodeError as e:
+            logger.error(f"Error decoding JSON: {e}")
 
     def save(self) -> None:
         if self._debug_logging_enabled:

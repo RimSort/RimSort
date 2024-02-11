@@ -7,7 +7,7 @@ def gen_deps_graph(
     active_mods_uuids: set[str], active_mod_ids: list[str]
 ) -> dict[str, set[str]]:
     """
-    Get dependencies
+    Generate dependency graph for active mods.
     """
     # Cache MetadataManager instance
     metadata_manager = MetadataManager.instance()
@@ -43,6 +43,9 @@ def gen_deps_graph(
 def gen_rev_deps_graph(
     active_mods_uuids: set[str], active_mod_ids: list[str]
 ) -> dict[str, set[str]]:
+    """
+    Generate reverse dependency graph for active mods.
+    """
     # Cache MetadataManager instance
     metadata_manager = MetadataManager.instance()
     # Schema: {item: {isDependentOn1, isDependentOn2, ...}}
@@ -113,6 +116,9 @@ def gen_tier_one_deps_graph(
 def get_dependencies_recursive(
     package_id: str, active_mods_dependencies: dict[str, set[str]]
 ) -> set[str]:
+    """
+    Recursively get dependencies for a given package ID.
+    """
     dependencies_set = set()
     # Should always be true since all active ids get initialized with a set()
     if package_id in active_mods_dependencies:

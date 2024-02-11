@@ -1,20 +1,19 @@
-from functools import partial
-from gc import collect
-from pathlib import Path
+import datetime
 import platform
-from typing import Callable
 import subprocess
 import sys
-import datetime
+import webbrowser
+from functools import partial
+from gc import collect
 from io import BytesIO
 from math import ceil
 from multiprocessing import cpu_count, Pool
-from requests import get as requests_get
 from tempfile import gettempdir
-import webbrowser
+from typing import Callable
 from zipfile import ZipFile
 
 from loguru import logger
+from requests import get as requests_get
 
 # GitPython depends on git executable being available in PATH
 try:
@@ -47,7 +46,6 @@ from app.sort.topo_sort import *
 from app.views.actions_panel import Actions
 from app.views.mods_panel import ModsPanel
 from app.views.mod_info_panel import ModInfo
-from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 from app.utils.generic import (
     chunks,
@@ -129,7 +127,11 @@ class MainContent(QObject):
             EventBus().do_download_steam_workshop_db_from_github.connect(
                 self._on_do_download_steam_workshop_db_from_github
             )
-            EventBus().do_upload_log.connect(self._on_do_upload_log)
+            EventBus().do_upload_rimsort_log.connect(self._on_do_upload_rimsort_log)
+            EventBus().do_upload_rimsort_old_log.connect(
+                self._on_do_upload_rimsort_old_log
+            )
+            EventBus().do_upload_rimworld_log.connect(self._on_do_upload_rimworld_log)
             EventBus().do_download_all_mods_via_steamcmd.connect(
                 self._on_do_download_all_mods_via_steamcmd
             )
@@ -691,8 +693,6 @@ class MainContent(QObject):
             self._do_edit_run_args()
 
         # settings panel actions
-        if action == "upload_rw_log":
-            self._do_upload_rw_log()
         if action == "configure_github_identity":
             self._do_configure_github_identity()
         if action == "configure_steam_database_path":
@@ -1559,7 +1559,7 @@ class MainContent(QObject):
         if len(pfids) > 0:  # No empty queries...
             # Compile list of Steam Workshop publishing preview images that correspond
             # to a Steam mod in the active mod list
-            webapi_response = ISteamRemoteStorage_GetPublishedFileDetails(pfids)
+            webapi_response = i_steam_remote_storage_get_published_file_details(pfids)
             for metadata in webapi_response:
                 pfid = metadata["publishedfileid"]
                 if metadata["result"] != 1:
@@ -1672,7 +1672,32 @@ class MainContent(QObject):
                 text="Failed to upload exported active mod list to Rentry.co",
             )
 
-    def _do_upload_rw_log(self):
+    @Slot()
+    def _on_do_upload_rimsort_log(self) -> None:
+        ret = upload_data_to_0x0_st(str(AppInfo().user_log_folder / "RimSort.log"))
+        if ret:
+            webbrowser.open(ret)
+            copy_to_clipboard(ret)
+            show_information(
+                title="Uploaded file",
+                text=f"Uploaded RimSort log to http://0x0.st/",
+                information=f"The URL has been copied to your clipboard:\n\n{ret}",
+            )
+
+    @Slot()
+    def _on_do_upload_rimsort_old_log(self) -> None:
+        ret = upload_data_to_0x0_st(str(AppInfo().user_log_folder / "RimSort.old.log"))
+        if ret:
+            webbrowser.open(ret)
+            copy_to_clipboard(ret)
+            show_information(
+                title="Uploaded file",
+                text=f"Uploaded RimSort log to http://0x0.st/",
+                information=f"The URL has been copied to your clipboard:\n\n{ret}",
+            )
+
+    @Slot()
+    def _on_do_upload_rimworld_log(self):
         player_log_path = str(
             (
                 Path(self.settings_controller.settings.config_folder).parent
@@ -1682,32 +1707,13 @@ class MainContent(QObject):
         if os.path.exists(player_log_path):
             ret = upload_data_to_0x0_st(player_log_path)
             if ret:
+                webbrowser.open(ret)
                 copy_to_clipboard(ret)
                 show_information(
                     title="Uploaded file",
                     text=f"Uploaded RimWorld log to http://0x0.st/",
                     information=f"The URL has been copied to your clipboard:\n\n{ret}",
                 )
-
-    def _upload_rs_log(self):
-        ret = upload_data_to_0x0_st(str((Path(gettempdir()) / "RimSort.log")))
-        if ret:
-            copy_to_clipboard(ret)
-            show_information(
-                title="Uploaded file",
-                text=f"Uploaded RimSort.log to http://0x0.st/",
-                information=f"The URL has been copied to your clipboard:\n\n{ret}",
-            )
-
-    def _upload_rs_old_log(self):
-        ret = upload_data_to_0x0_st(str((Path(gettempdir()) / "RimSort.old.log")))
-        if ret:
-            copy_to_clipboard(ret)
-            show_information(
-                title="Uploaded file",
-                text=f"Uploaded RimSort.old.log to http://0x0.st/",
-                information=f"The URL has been copied to your clipboard:\n\n{ret}",
-            )
 
     def _do_save(self) -> None:
         """
@@ -1773,7 +1779,8 @@ class MainContent(QObject):
         logger.debug("Active mods list updated")
         if (
             self.mods_panel.list_updated  # This will only evaluate True if this is initialization, or _do_refresh()
-            and not self.actions_panel.save_button_flashing_animation.isActive()  # No need to re-enable if it's already blinking
+            and not self.actions_panel.save_button_flashing_animation.isActive()
+            # No need to re-enable if it's already blinking
         ):
             logger.debug("Starting save button animation")
             self.actions_panel.save_button_flashing_animation.start(
@@ -3156,14 +3163,6 @@ class MainContent(QObject):
             )
         else:
             self._do_notify_no_git()
-
-    @Slot()
-    def _on_do_upload_log(self) -> None:
-        ret = upload_data_to_0x0_st(
-            str(AppInfo().user_log_folder / (AppInfo().app_name + ".log"))
-        )
-        if ret:
-            webbrowser.open(ret)
 
     @Slot()
     def _on_do_download_all_mods_via_steamcmd(self) -> None:

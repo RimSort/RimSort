@@ -1,9 +1,8 @@
 import re
 import sys
 from json import loads as json_loads
-import requests
 
-from loguru import logger
+import requests
 from PySide6.QtWidgets import (
     QDialog,
     QVBoxLayout,
@@ -11,6 +10,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPushButton,
 )
+from loguru import logger
 
 # Constants
 BASE_URL = "https://rentry.co"
@@ -91,9 +91,9 @@ class RentryUpload:
 class RentryImport(QDialog):
     def __init__(self):
         super().__init__()
-        self.package_ids: list[
-            str
-        ] = []  # Initialize an empty list to store package_ids
+        self.package_ids: list[str] = (
+            []
+        )  # Initialize an empty list to store package_ids
         self.input_dialog()  # Call the input_dialog method to set up the UI
 
     def input_dialog(self):

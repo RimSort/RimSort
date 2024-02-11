@@ -11,75 +11,74 @@ class MenuBarController(QObject):
     def __init__(self, view: MenuBar, settings_controller: SettingsController) -> None:
         super().__init__()
 
+        # Initialize MenuBarController with MenuBar view and SettingsController instance
         self.menu_bar = view
         self.settings_controller = settings_controller
 
+        # Connect actions with corresponding methods or signals
+
         # Application menu
-
         self.menu_bar.quit_action.triggered.connect(QApplication.instance().quit)
-
         self.menu_bar.check_for_updates_action.triggered.connect(
             EventBus().do_check_for_application_update.emit
         )
-
         self.menu_bar.check_for_updates_on_startup_action.toggled.connect(
             self._on_menu_bar_check_for_updates_on_startup_triggered
         )
-
         self.menu_bar.check_for_updates_on_startup_action.setChecked(
             self.settings_controller.settings.check_for_update_startup
         )
-
         self.menu_bar.settings_action.triggered.connect(
             self.settings_controller.show_settings_dialog
         )
 
         # File menu
-
         self.menu_bar.open_mod_list_action.triggered.connect(
             EventBus().do_open_mod_list.emit
         )
-
         self.menu_bar.save_mod_list_action.triggered.connect(
             EventBus().do_save_mod_list_as.emit
         )
-
         self.menu_bar.import_from_rentry_action.triggered.connect(
             EventBus().do_import_mod_list_from_rentry
         )
-
         self.menu_bar.import_from_workshop_collection_action.triggered.connect(
             EventBus().do_import_mod_list_from_workshop_collection
         )
-
         self.menu_bar.export_to_clipboard_action.triggered.connect(
             EventBus().do_export_mod_list_to_clipboard
         )
-
         self.menu_bar.export_to_rentry_action.triggered.connect(
             EventBus().do_export_mod_list_to_rentry
         )
+        self.menu_bar.upload_rimsort_log_action.triggered.connect(
+            EventBus().do_upload_rimsort_log
+        )
+        self.menu_bar.upload_rimsort_old_log_action.triggered.connect(
+            EventBus().do_upload_rimsort_old_log
+        )
+        self.menu_bar.upload_rimworld_log_action.triggered.connect(
+            EventBus().do_upload_rimworld_log
+        )
 
         # Edit menu
-
         self.menu_bar.cut_action.triggered.connect(self._on_menu_bar_cut_triggered)
-
         self.menu_bar.copy_action.triggered.connect(self._on_menu_bar_copy_triggered)
-
         self.menu_bar.paste_action.triggered.connect(self._on_menu_bar_paste_triggered)
 
         # Help menu
-
         self.menu_bar.wiki_action.triggered.connect(self._on_menu_bar_wiki_triggered)
 
     @Slot()
     def _on_menu_bar_check_for_updates_on_startup_triggered(self) -> None:
+        # Handle the check for updates on startup action toggled
         is_checked = self.menu_bar.check_for_updates_on_startup_action.isChecked()
         self.settings_controller.settings.check_for_update_startup = is_checked
         self.settings_controller.settings.save()
 
     @Slot()
     def _on_menu_bar_cut_triggered(self) -> None:
+        # Handle the cut action triggered
         app_instance = QApplication.instance()
         if isinstance(app_instance, QApplication):
             focused_widget = app_instance.focusWidget()
@@ -88,6 +87,7 @@ class MenuBarController(QObject):
 
     @Slot()
     def _on_menu_bar_copy_triggered(self) -> None:
+        # Handle the copy action triggered
         app_instance = QApplication.instance()
         if isinstance(app_instance, QApplication):
             focused_widget = app_instance.focusWidget()
@@ -96,6 +96,7 @@ class MenuBarController(QObject):
 
     @Slot()
     def _on_menu_bar_paste_triggered(self) -> None:
+        # Handle the paste action triggered
         app_instance = QApplication.instance()
         if isinstance(app_instance, QApplication):
             focused_widget = app_instance.focusWidget()
@@ -104,4 +105,5 @@ class MenuBarController(QObject):
 
     @Slot()
     def _on_menu_bar_wiki_triggered(self) -> None:
+        # Handle the wiki action triggered
         open_url_browser("https://github.com/RimSort/RimSort/wiki")

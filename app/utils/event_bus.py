@@ -33,7 +33,9 @@ class EventBus(QObject):
 
     do_download_community_rules_db_from_github = Signal()
     do_download_steam_workshop_db_from_github = Signal()
-    do_upload_log = Signal()
+    do_upload_rimsort_log = Signal()
+    do_upload_rimsort_old_log = Signal()
+    do_upload_rimworld_log = Signal()
     do_download_all_mods_via_steamcmd = Signal()
     do_download_all_mods_via_steam = Signal()
     do_compare_steam_workshop_databases = Signal()
