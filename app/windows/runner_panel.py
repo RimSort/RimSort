@@ -201,7 +201,7 @@ class RunnerPanel(QWidget):
         self.progress_bar.style().polish(self.progress_bar)
 
     def execute(self, command: str, args: list, progress_bar=None, additional=None):
-        """ "
+        """
         Execute the given command in a new terminal like gui
 
         command:str, path to .exe
@@ -392,7 +392,8 @@ class RunnerPanel(QWidget):
                             if (
                                 show_dialogue_conditional(
                                     title="SteamCMD downloader",
-                                    text='SteamCMD failed to download mod(s)! Would you like to retry download of the mods that failed?\n\nClick "Show Details" to see a list of mods that failed.',
+                                    text="SteamCMD failed to download mod(s)! Would you like to retry download of the "
+                                    'mods that failed?\n\nClick "Show Details" to see a list of mods that failed.',
                                     details=details,
                                 )
                                 == "&Yes"

@@ -20,6 +20,7 @@ DEFAULT_SETTINGS = {
     "external_community_rules_repo": "https://github.com/RimSort/Community-Rules-Database",
     "external_community_rules_metadata_source": "None",
     "db_builder_include": "all_mods",
+    "database_expiry_toggle": True,
     "database_expiry": 604800,
     "build_steam_database_dlc_data": True,
     "build_steam_database_update_toggle": False,

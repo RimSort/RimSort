@@ -329,6 +329,9 @@ class SettingsController(QObject):
         self.settings_dialog.db_builder_update_instead_of_overwriting_checkbox.setChecked(
             self.settings.build_steam_database_update_toggle
         )
+        self.settings_dialog.database_expiry_toggle_checkbox.setChecked(
+            self.settings.database_expiry_toggle
+        )
         self.settings_dialog.db_builder_database_expiry.setText(
             str(self.settings.database_expiry)
         )
@@ -443,6 +446,9 @@ class SettingsController(QObject):
         )
         self.settings.build_steam_database_update_toggle = (
             self.settings_dialog.db_builder_update_instead_of_overwriting_checkbox.isChecked()
+        )
+        self.settings.database_expiry_toggle = (
+            self.settings_dialog.database_expiry_toggle_checkbox.isChecked()
         )
         self.settings.database_expiry = int(
             self.settings_dialog.db_builder_database_expiry.text()

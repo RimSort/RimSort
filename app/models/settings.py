@@ -28,6 +28,7 @@ class Settings(QObject):
         self._external_community_rules_repo: str = ""
         self._external_community_rules_metadata_source: str = ""
         self._db_builder_include: str = ""
+        self._database_expiry_toggle: bool = False
         self._database_expiry: int = 0
         self._build_steam_database_dlc_data: bool = False
         self._build_steam_database_update_toggle: bool = False
@@ -73,6 +74,7 @@ class Settings(QObject):
         )
         self._external_community_rules_metadata_source = "None"
         self._db_builder_include = "all_mods"
+        self._database_expiry_toggle = True
         self._database_expiry = 604800
         self._build_steam_database_dlc_data = True
         self._build_steam_database_update_toggle = False
@@ -215,6 +217,17 @@ class Settings(QObject):
         if value == self._db_builder_include:
             return
         self._db_builder_include = value
+        EventBus().settings_have_changed.emit()
+
+    @property
+    def database_expiry_toggle(self) -> bool:
+        return self._database_expiry_toggle
+
+    @database_expiry_toggle.setter
+    def database_expiry_toggle(self, value: bool) -> None:
+        if value == self._database_expiry_toggle:
+            return
+        self._database_expiry_toggle = value
         EventBus().settings_have_changed.emit()
 
     @property
@@ -581,6 +594,10 @@ class Settings(QObject):
             self.db_builder_include = data["db_builder_include"]
             del data["db_builder_include"]
 
+        if "database_expiry_toggle" in data:
+            self.database_expiry_toggle = data["database_expiry_toggle"]
+            del data["database_expiry_toggle"]
+
         if "database_expiry" in data:
             self.database_expiry = data["database_expiry"]
             del data["database_expiry"]
@@ -683,6 +700,7 @@ class Settings(QObject):
             "external_community_rules_repo": self.external_community_rules_repo,
             "external_community_rules_metadata_source": self.external_community_rules_metadata_source,
             "db_builder_include": self.db_builder_include,
+            "database_expiry_toggle": self.database_expiry_toggle,
             "database_expiry": self.database_expiry,
             "build_steam_database_dlc_data": self.build_steam_database_dlc_data,
             "build_steam_database_update_toggle": self.build_steam_database_update_toggle,

@@ -135,15 +135,7 @@ class MetadataManager(QObject):
                         logger.info(
                             f"Loaded metadata for {total_entries} Steam Workshop mods from Steam DB"
                         )
-                    else:  # If the cached db data is expired but NOT missing
-                        # Fallback to the expired metadata
-                        self.show_warning_signal.emit(
-                            "Steam DB metadata expired",
-                            "Steam DB is expired! Consider updating!\n",
-                            f'Steam DB last updated: {strftime("%Y-%m-%d %H:%M:%S", localtime(db_data["version"] - life))}\n\n'
-                            + "Falling back to cached, but EXPIRED Steam Database...",
-                            "",
-                        )
+                    else:
                         db_json_data = db_data[
                             "database"
                         ]  # TODO: additional check to verify integrity of this data's schema
@@ -151,7 +143,19 @@ class MetadataManager(QObject):
                         logger.info(
                             f"Loaded metadata for {total_entries} Steam Workshop mods from Steam DB"
                         )
-                    return db_json_data, path
+                        # If the cached db data is expired but NOT missing
+                        # Fallback to the expired metadata
+                        if self.settings_controller.settings._database_expiry_toggle:
+                            self.show_warning_signal.emit(
+                                "Steam DB metadata expired",
+                                "Steam DB is expired! Consider updating!\n",
+                                f'Steam DB last updated: {strftime("%Y-%m-%d %H:%M:%S", localtime(db_data["version"] - life))}\n\n'
+                                + "Falling back to cached, but EXPIRED Steam Database...",
+                                "",
+                            )
+                            return db_json_data, path
+                        else:
+                            return db_json_data, path
 
             else:  # Assume db_data_missing
                 self.show_warning_signal.emit(

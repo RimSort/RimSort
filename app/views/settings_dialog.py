@@ -517,11 +517,11 @@ class SettingsDialog(QDialog):
             "Update database instead of overwriting"
         )
         group_layout.addWidget(self.db_builder_update_instead_of_overwriting_checkbox)
-        # Todo: Add a checkbox to enable/disable the database expiry feature.
-        self.db_builder_database_expiry_checkbox = QCheckBox(
+
+        self.database_expiry_toggle_checkbox = QCheckBox(
             "Notify about Database expiry when epoch time set below is reached"
         )
-        group_layout.addWidget(self.db_builder_database_expiry_checkbox)
+        group_layout.addWidget(self.database_expiry_toggle_checkbox)
 
         # Text fields
         group_box = QGroupBox()
