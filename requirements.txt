@@ -1,5 +1,4 @@
 beautifulsoup4==4.12.3
-GitPython==3.1.41
 imageio==2.34.0
 loguru==0.7.2
 lxml==5.1.0
@@ -10,13 +9,14 @@ platformdirs==4.2.0
 PyGithub==2.2.0
 pyperclip==1.8.2
 PySide6
-PySide6<=6.6.1; sys_platform == 'darwin'
-PySide6<=6.6.1; sys_platform == 'linux'
-PySide6<=6.6.1; sys_platform == 'win32'
+PySide6<=6.6.2; sys_platform == 'darwin'
+PySide6<=6.6.2; sys_platform == 'linux'
+PySide6<=6.6.2; sys_platform == 'win32'
+pygit2==1.14.1
+psutil==5.9.8
 pytz==2024.1
 requests==2.31.0
 steam==1.4.4
 toposort==1.10
-xmltodict==0.13.0
 watchdog==4.0.0
-psutil==5.9.8
+xmltodict==0.13.0
