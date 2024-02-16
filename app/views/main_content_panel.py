@@ -655,20 +655,6 @@ class MainContent(QObject):
             self._do_set_steamcmd_path()
         if action == "update_workshop_mods":
             self._do_check_for_workshop_updates()
-        if action == "import_list_file_xml":
-            self._do_import_list_file_xml()
-        if action == "import_list_rentry":
-            self._do_import_list_rentry()
-        if action == "export_list_file_xml":
-            self._do_export_list_file_xml()
-        if action == "export_list_clipboard":
-            self._do_export_list_clipboard()
-        if action == "upload_list_rentry":
-            self._do_upload_list_rentry()
-        if action == "upload_rs_log":
-            self._upload_rs_log()
-        if action == "upload_rs_old_log":
-            self._upload_rs_old_log()
         if action == "save":
             self._do_save()
         if action == "run":
@@ -2147,8 +2133,8 @@ class MainContent(QObject):
         else:
             logger.debug("Cancelling operation.")
 
-    def _do_re_git(self, repo_paths: list) -> None:
-        for path in repo_paths:
+    def _do_re_git(self, repo_path: list) -> None:
+        for path in repo_path:
             try:
                 repo = Repository(path)
                 remote = repo.remotes["origin"]

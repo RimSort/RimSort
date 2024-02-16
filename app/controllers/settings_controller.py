@@ -185,6 +185,7 @@ class SettingsController(QObject):
             self._on_steamcmd_install_button_clicked
         )
 
+    # Advanced tab
     def show_settings_dialog(self) -> None:
         """
         Update the view from the model and show the settings dialog.
