@@ -1783,7 +1783,7 @@ def get_mods_from_list(
                                 source_paths_sorted[0]
                             ]
                             logger.debug(
-                                f"Using duplicate {source} mod for {target_id}: {['path']}"
+                                f"Using duplicate {source} mod for {target_id}: {all_mods[calculated_duplicate_uuid]['path']}"
                             )
                             populated_mods.append(target_id)
                             duplicates_processed.append(target_id)
