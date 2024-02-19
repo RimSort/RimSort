@@ -776,9 +776,6 @@ class SettingsDialog(QDialog):
 
         buttons_layout.addStretch()
 
-        self.upload_log_button = QPushButton("Upload RimSort Log")
-        buttons_layout.addWidget(self.upload_log_button)
-
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
         self.global_ok_button.setFocus()

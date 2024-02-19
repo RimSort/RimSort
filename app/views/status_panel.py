@@ -1,6 +1,5 @@
-from loguru import logger
-
 from PySide6.QtWidgets import QFrame, QHBoxLayout
+from loguru import logger
 
 from app.models.animations import AnimationLabel
 
@@ -89,8 +88,6 @@ class Status:
             self.status_text.start_pause_fade(
                 "Copied mod report to clipboard; uploaded to http://rentry.co"
             )
-        elif action == "upload_rw_log":
-            self.status_text.start_pause_fade("Uploaded RimWorld log to http://0x0.st")
         elif action == "save":
             self.status_text.start_pause_fade("Active mods saved into ModsConfig.xml")
         elif action == "run":
@@ -99,8 +96,6 @@ class Status:
             self.status_text.start_pause_fade("Editing configured run arguments...")
 
         # settings panel actions
-        elif action == "upload_rs_log":
-            self.status_text.start_pause_fade("Uploaded RimSort log to http://0x0.st")
         elif action == "configure_github_identity":
             self.status_text.start_pause_fade("Configured Github identity")
         elif action == "configure_steam_database_path":

@@ -1,5 +1,5 @@
-from loguru import logger
 from functools import partial
+
 from PySide6.QtCore import (
     Qt,
     QTimer,
@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from loguru import logger
 
 from app.models.multibutton import MultiButton
 
@@ -184,13 +185,6 @@ class Actions(QWidget):
             partial(self.__flash_button, button=self.save_button)
         )
 
-        # UPLOAD LOG BUTTON
-        self.upload_rwlog_button = QPushButton("Upload logfile")
-        self.upload_rwlog_button.setToolTip("Upload RimWorld log to 0x0.st")
-        self.upload_rwlog_button.clicked.connect(
-            partial(self.actions_signal.emit, "upload_rw_log")
-        )
-
         # Add buttons to sub-layouts and sub-layouts to the main layout
         self.top_panel.addWidget(self.list_options_label)
         self.top_panel.addWidget(self.refresh_button)
@@ -207,7 +201,6 @@ class Actions(QWidget):
         self.bottom_panel.addWidget(self.rimworld_label)
         self.bottom_panel.addWidget(self.run_button)
         self.bottom_panel.addWidget(self.save_button)
-        self.bottom_panel.addWidget(self.upload_rwlog_button)
 
         logger.debug("Finished Actions initialization")
 

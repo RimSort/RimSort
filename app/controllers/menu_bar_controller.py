@@ -59,6 +59,17 @@ class MenuBarController(QObject):
         self.menu_bar.export_to_rentry_action.triggered.connect(
             EventBus().do_export_mod_list_to_rentry
         )
+        self.menu_bar.upload_rimsort_log_action.triggered.connect(
+            EventBus().do_upload_rimsort_log
+        )
+
+        self.menu_bar.upload_rimsort_old_log_action.triggered.connect(
+            EventBus().do_upload_rimsort_old_log
+        )
+
+        self.menu_bar.upload_rimworld_log_action.triggered.connect(
+            EventBus().do_upload_rimworld_log
+        )
 
         # Edit menu
 

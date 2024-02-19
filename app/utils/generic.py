@@ -1,15 +1,16 @@
-from loguru import logger
-from errno import EACCES
 import os
-from pathlib import Path
 import platform
-from re import sub
 import shutil
-from stat import S_IRWXU, S_IRWXG, S_IRWXO
 import subprocess
-from requests import post as requests_post
 import sys
 import webbrowser
+from errno import EACCES
+from pathlib import Path
+from re import sub
+from stat import S_IRWXU, S_IRWXG, S_IRWXO
+
+from loguru import logger
+from requests import post as requests_post
 
 from app.models.dialogue import show_warning
 

@@ -1,5 +1,6 @@
-from loguru import logger
 from typing import Any, Dict, Optional
+
+from loguru import logger
 
 from app.models.dialogue import show_warning
 

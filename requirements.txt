@@ -1,22 +1,22 @@
-bs4==0.0.1
-GitPython==3.1.31
-imageio==2.33.0
+beautifulsoup4==4.12.3
+imageio==2.34.0
 loguru==0.7.2
-lxml==4.9.3
-mypy==1.7.1
+lxml==5.1.0
+mypy==1.8.0
 natsort==8.4.0
-nuitka==1.9.1
-platformdirs==4.0.0
-PyGithub==1.58.2
+nuitka==2.0.3
+platformdirs==4.2.0
+PyGithub==2.2.0
 pyperclip==1.8.2
 PySide6
-PySide6<=6.6.0; sys_platform == 'darwin'
-PySide6<=6.6.0; sys_platform == 'linux'
-PySide6<=6.6.0; sys_platform == 'win32'
-pytz==2023.3
+PySide6<=6.6.2; sys_platform == 'darwin'
+PySide6<=6.6.2; sys_platform == 'linux'
+PySide6<=6.6.2; sys_platform == 'win32'
+psutil==5.9.8
+pygit2==1.14.1
+pytz==2024.1
 requests==2.31.0
 steam==1.4.4
 toposort==1.10
+watchdog==4.0.0
 xmltodict==0.13.0
-watchdog==3.0.0
-psutil==5.9.6
