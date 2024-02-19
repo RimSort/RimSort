@@ -1,7 +1,8 @@
 import os
 from typing import Any, Dict
-from bs4 import BeautifulSoup
+
 import xmltodict
+from bs4 import BeautifulSoup
 from loguru import logger
 
 

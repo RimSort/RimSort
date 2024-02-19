@@ -1,7 +1,4 @@
 from functools import partial
-from loguru import logger
-import os
-from pathlib import Path
 
 from PySide6.QtCore import Qt, QPoint, QSize, Signal
 from PySide6.QtGui import (
@@ -25,6 +22,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QVBoxLayout,
 )
+from loguru import logger
 
 from app.models.dialogue import show_dialogue_input, show_warning
 from app.utils.app_info import AppInfo
@@ -643,27 +641,31 @@ class RuleEditor(QWidget):
                         if isinstance(loadAfters, str):
                             self._create_list_item(
                                 _list=self.local_metadata_loadAfter_list,
-                                title=self.steam_workshop_metadata_packageids_to_name[
-                                    loadAfters.lower()
-                                ]
-                                if loadAfters.lower()
-                                in [
-                                    key.lower()
-                                    for key in self.steam_workshop_metadata_packageids_to_name.keys()
-                                ]
-                                else loadAfters,
+                                title=(
+                                    self.steam_workshop_metadata_packageids_to_name[
+                                        loadAfters.lower()
+                                    ]
+                                    if loadAfters.lower()
+                                    in [
+                                        key.lower()
+                                        for key in self.steam_workshop_metadata_packageids_to_name.keys()
+                                    ]
+                                    else loadAfters
+                                ),
                                 metadata=loadAfters,
                             )
                             self._add_rule_to_table(
-                                name=self.steam_workshop_metadata_packageids_to_name[
-                                    loadAfters.lower()
-                                ]
-                                if loadAfters.lower()
-                                in [
-                                    key.lower()
-                                    for key in self.steam_workshop_metadata_packageids_to_name.keys()
-                                ]
-                                else loadAfters,
+                                name=(
+                                    self.steam_workshop_metadata_packageids_to_name[
+                                        loadAfters.lower()
+                                    ]
+                                    if loadAfters.lower()
+                                    in [
+                                        key.lower()
+                                        for key in self.steam_workshop_metadata_packageids_to_name.keys()
+                                    ]
+                                    else loadAfters
+                                ),
                                 packageid=loadAfters,
                                 rule_source="About.xml",
                                 rule_type="loadAfter",
@@ -674,27 +676,31 @@ class RuleEditor(QWidget):
                             for rule in loadAfters:
                                 self._create_list_item(
                                     _list=self.local_metadata_loadAfter_list,
-                                    title=self.steam_workshop_metadata_packageids_to_name[
-                                        rule.lower()
-                                    ]
-                                    if rule.lower()
-                                    in [
-                                        key.lower()
-                                        for key in self.steam_workshop_metadata_packageids_to_name.keys()
-                                    ]
-                                    else rule,
+                                    title=(
+                                        self.steam_workshop_metadata_packageids_to_name[
+                                            rule.lower()
+                                        ]
+                                        if rule.lower()
+                                        in [
+                                            key.lower()
+                                            for key in self.steam_workshop_metadata_packageids_to_name.keys()
+                                        ]
+                                        else rule
+                                    ),
                                     metadata=rule,
                                 )
                                 self._add_rule_to_table(
-                                    name=self.steam_workshop_metadata_packageids_to_name[
-                                        rule.lower()
-                                    ]
-                                    if rule.lower()
-                                    in [
-                                        key.lower()
-                                        for key in self.steam_workshop_metadata_packageids_to_name.keys()
-                                    ]
-                                    else rule,
+                                    name=(
+                                        self.steam_workshop_metadata_packageids_to_name[
+                                            rule.lower()
+                                        ]
+                                        if rule.lower()
+                                        in [
+                                            key.lower()
+                                            for key in self.steam_workshop_metadata_packageids_to_name.keys()
+                                        ]
+                                        else rule
+                                    ),
                                     packageid=rule,
                                     rule_source="About.xml",
                                     rule_type="loadAfter",
@@ -706,27 +712,31 @@ class RuleEditor(QWidget):
                         if isinstance(loadBefores, str):
                             self._create_list_item(
                                 _list=self.local_metadata_loadBefore_list,
-                                title=self.steam_workshop_metadata_packageids_to_name[
-                                    loadBefores.lower()
-                                ]
-                                if loadBefores.lower()
-                                in [
-                                    key.lower()
-                                    for key in self.steam_workshop_metadata_packageids_to_name.keys()
-                                ]
-                                else loadBefores,
+                                title=(
+                                    self.steam_workshop_metadata_packageids_to_name[
+                                        loadBefores.lower()
+                                    ]
+                                    if loadBefores.lower()
+                                    in [
+                                        key.lower()
+                                        for key in self.steam_workshop_metadata_packageids_to_name.keys()
+                                    ]
+                                    else loadBefores
+                                ),
                                 metadata=loadBefores,
                             )
                             self._add_rule_to_table(
-                                name=self.steam_workshop_metadata_packageids_to_name[
-                                    loadBefores.lower()
-                                ]
-                                if loadBefores.lower()
-                                in [
-                                    key.lower()
-                                    for key in self.steam_workshop_metadata_packageids_to_name.keys()
-                                ]
-                                else loadBefores,
+                                name=(
+                                    self.steam_workshop_metadata_packageids_to_name[
+                                        loadBefores.lower()
+                                    ]
+                                    if loadBefores.lower()
+                                    in [
+                                        key.lower()
+                                        for key in self.steam_workshop_metadata_packageids_to_name.keys()
+                                    ]
+                                    else loadBefores
+                                ),
                                 packageid=loadBefores,
                                 rule_source="About.xml",
                                 rule_type="loadBefore",
@@ -737,27 +747,31 @@ class RuleEditor(QWidget):
                             for rule in loadBefores:
                                 self._create_list_item(
                                     _list=self.local_metadata_loadBefore_list,
-                                    title=self.steam_workshop_metadata_packageids_to_name[
-                                        rule.lower()
-                                    ]
-                                    if rule.lower()
-                                    in [
-                                        key.lower()
-                                        for key in self.steam_workshop_metadata_packageids_to_name.keys()
-                                    ]
-                                    else rule,
+                                    title=(
+                                        self.steam_workshop_metadata_packageids_to_name[
+                                            rule.lower()
+                                        ]
+                                        if rule.lower()
+                                        in [
+                                            key.lower()
+                                            for key in self.steam_workshop_metadata_packageids_to_name.keys()
+                                        ]
+                                        else rule
+                                    ),
                                     metadata=rule,
                                 )
                                 self._add_rule_to_table(
-                                    name=self.steam_workshop_metadata_packageids_to_name[
-                                        rule.lower()
-                                    ]
-                                    if rule.lower()
-                                    in [
-                                        key.lower()
-                                        for key in self.steam_workshop_metadata_packageids_to_name.keys()
-                                    ]
-                                    else rule,
+                                    name=(
+                                        self.steam_workshop_metadata_packageids_to_name[
+                                            rule.lower()
+                                        ]
+                                        if rule.lower()
+                                        in [
+                                            key.lower()
+                                            for key in self.steam_workshop_metadata_packageids_to_name.keys()
+                                        ]
+                                        else rule
+                                    ),
                                     packageid=rule,
                                     rule_source="About.xml",
                                     rule_type="loadBefore",
@@ -794,9 +808,11 @@ class RuleEditor(QWidget):
                                 packageid=rule_id,
                                 rule_source="Community Rules",
                                 rule_type="loadAfter",
-                                comment=rule_data["comment"][0]
-                                if rule_data.get("comment")
-                                else "",
+                                comment=(
+                                    rule_data["comment"][0]
+                                    if rule_data.get("comment")
+                                    else ""
+                                ),
                                 hidden=self.community_rules_hidden,
                             )
                     if metadata.get("loadBefore"):
@@ -811,9 +827,11 @@ class RuleEditor(QWidget):
                                 packageid=rule_id,
                                 rule_source="Community Rules",
                                 rule_type="loadBefore",
-                                comment=rule_data["comment"][0]
-                                if rule_data.get("comment")
-                                else "",
+                                comment=(
+                                    rule_data["comment"][0]
+                                    if rule_data.get("comment")
+                                    else ""
+                                ),
                                 hidden=self.community_rules_hidden,
                             )
                     if metadata.get("loadBottom") and metadata["loadBottom"].get(
@@ -829,9 +847,11 @@ class RuleEditor(QWidget):
                             packageid=self.edit_packageid,
                             rule_source="Community Rules",
                             rule_type="loadBottom",
-                            comment=rule_data["comment"][0]
-                            if rule_data.get("comment")
-                            else "",
+                            comment=(
+                                rule_data["comment"][0]
+                                if rule_data.get("comment")
+                                else ""
+                            ),
                             hidden=self.community_rules_hidden,
                         )
         logger.debug("Parsing User Rules")
@@ -854,9 +874,11 @@ class RuleEditor(QWidget):
                                 packageid=rule_id,
                                 rule_source="User Rules",
                                 rule_type="loadAfter",
-                                comment=rule_data["comment"][0]
-                                if rule_data.get("comment")
-                                else "",
+                                comment=(
+                                    rule_data["comment"][0]
+                                    if rule_data.get("comment")
+                                    else ""
+                                ),
                                 hidden=self.user_rules_hidden,
                             )
                     if metadata.get("loadBefore"):
@@ -871,9 +893,11 @@ class RuleEditor(QWidget):
                                 packageid=rule_id,
                                 rule_source="User Rules",
                                 rule_type="loadBefore",
-                                comment=rule_data["comment"][0]
-                                if rule_data.get("comment")
-                                else "",
+                                comment=(
+                                    rule_data["comment"][0]
+                                    if rule_data.get("comment")
+                                    else ""
+                                ),
                                 hidden=self.user_rules_hidden,
                             )
                     if metadata.get("loadBottom") and metadata["loadBottom"].get(
@@ -886,9 +910,11 @@ class RuleEditor(QWidget):
                             packageid=self.edit_packageid,
                             rule_source="User Rules",
                             rule_type="loadBottom",
-                            comment=rule_data["comment"][0]
-                            if rule_data.get("comment")
-                            else "",
+                            comment=(
+                                rule_data["comment"][0]
+                                if rule_data.get("comment")
+                                else ""
+                            ),
                             hidden=self.user_rules_hidden,
                         )
                         self.block_comment_prompt = False

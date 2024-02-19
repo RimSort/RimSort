@@ -1,10 +1,8 @@
 import json
-from loguru import logger
-from natsort import natsorted
 import os
+import traceback
 from pathlib import Path
 from time import localtime, strftime, time
-import traceback
 from typing import Any, Dict, Optional, Tuple, Union
 from uuid import uuid4
 
@@ -15,6 +13,8 @@ from PySide6.QtCore import (
     QThreadPool,
     Signal,
 )
+from loguru import logger
+from natsort import natsorted
 
 from app.controllers.settings_controller import SettingsController
 from app.models.dialogue import (
@@ -445,11 +445,11 @@ class MetadataManager(QObject):
                                 "description": RIMWORLD_DLC_METADATA[dlc_data["appid"]][
                                     "description"
                                 ],
-                                "supportedversions": {
-                                    "li": ".".join(self.game_version.split(".")[:2])
-                                }
-                                if not data.get("supportedversions")
-                                else data.get("supportedversions"),
+                                "supportedversions": (
+                                    {"li": ".".join(self.game_version.split(".")[:2])}
+                                    if not data.get("supportedversions")
+                                    else data.get("supportedversions")
+                                ),
                             }
                         )
                     else:
@@ -928,9 +928,9 @@ class MetadataManager(QObject):
                 if db_packageid:
                     db_packageid = db_packageid.lower()  # Normalize packageid
                     steam_id_to_package_id[publishedfileid] = db_packageid
-                    self.info_from_steam_package_id_to_name[
-                        db_packageid
-                    ] = mod_data.get("name")
+                    self.info_from_steam_package_id_to_name[db_packageid] = (
+                        mod_data.get("name")
+                    )
                     package_uuid = packageid_to_uuid.get(db_packageid)
                     if (
                         package_uuid
@@ -1319,12 +1319,12 @@ class ModParser(QRunnable):
                     # Track pfid if we parsed one earlier
                     if pfid:  # Make some assumptions if we have a pfid
                         mod_metadata["publishedfileid"] = pfid
-                        mod_metadata[
-                            "steam_uri"
-                        ] = f"steam://url/CommunityFilePage/{pfid}"
-                        mod_metadata[
-                            "steam_url"
-                        ] = f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
+                        mod_metadata["steam_uri"] = (
+                            f"steam://url/CommunityFilePage/{pfid}"
+                        )
+                        mod_metadata["steam_url"] = (
+                            f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
+                        )
                     # If a mod contains C# assemblies, we want to tag the mod
                     assemblies_path = str((directory_path / "Assemblies"))
                     if os.path.exists(assemblies_path):
@@ -1418,12 +1418,12 @@ class ModParser(QRunnable):
                     if scenario_metadata.get(
                         "publishedfileid"
                     ):  # Make some assumptions if we have a pfid
-                        scenario_metadata[
-                            "steam_uri"
-                        ] = f"steam://url/CommunityFilePage/{pfid}"
-                        scenario_metadata[
-                            "steam_url"
-                        ] = f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
+                        scenario_metadata["steam_uri"] = (
+                            f"steam://url/CommunityFilePage/{pfid}"
+                        )
+                        scenario_metadata["steam_url"] = (
+                            f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
+                        )
                     # data_source will be used with setIcon later
                     scenario_metadata["data_source"] = intent
                     scenario_metadata["folder"] = directory_name
@@ -1772,9 +1772,9 @@ def get_mods_from_list(
                         paths_to_uuid = {}
                         for duplicate_uuid in duplicate_mods[target_id]:
                             if source in all_mods[duplicate_uuid]["data_source"]:
-                                paths_to_uuid[
-                                    all_mods[duplicate_uuid]["path"]
-                                ] = duplicate_uuid
+                                paths_to_uuid[all_mods[duplicate_uuid]["path"]] = (
+                                    duplicate_uuid
+                                )
                         # Sort duplicate mod paths from current source priority using natsort
                         source_paths_sorted = natsorted(paths_to_uuid.keys())
                         if source_paths_sorted:  # If we have paths returned
@@ -1969,11 +1969,13 @@ class SteamDatabaseBuilder(QThread):
                         "url": f'https://store.steampowered.com/app/{v["appid"]}',
                         "packageid": v.get("packageid"),
                         "name": v.get("name"),
-                        "authors": ", ".join(v.get("authors").get("li"))
-                        if v.get("authors")
-                        and isinstance(v.get("authors"), dict)
-                        and v.get("authors").get("li")
-                        else v.get("authors", "Missing XML: <author(s)>"),
+                        "authors": (
+                            ", ".join(v.get("authors").get("li"))
+                            if v.get("authors")
+                            and isinstance(v.get("authors"), dict)
+                            and v.get("authors").get("li")
+                            else v.get("authors", "Missing XML: <author(s)>")
+                        ),
                     }
                     for v in self.mods.values()
                     if v.get("appid")
@@ -1982,26 +1984,36 @@ class SteamDatabaseBuilder(QThread):
                     v["publishedfileid"]: {
                         "url": f'https://steamcommunity.com/sharedfiles/filedetails/?id={v["publishedfileid"]}',
                         "packageId": v.get("packageid"),
-                        "name": v.get("name")
-                        if not v.get("DB_BUILDER_NO_NAME")
-                        else "Missing XML: <name>",
-                        "authors": ", ".join(v.get("authors").get("li"))
-                        if v.get("authors")
-                        and isinstance(v.get("authors"), dict)
-                        and v.get("authors").get("li")
-                        else v.get("authors", "Missing XML: <author(s)>"),
-                        "gameVersions": v.get("supportedversions").get("li")
-                        if isinstance(v.get("supportedversions", {}).get("li"), list)
-                        else [
-                            v.get("supportedversions", {}).get(
-                                "li",
+                        "name": (
+                            v.get("name")
+                            if not v.get("DB_BUILDER_NO_NAME")
+                            else "Missing XML: <name>"
+                        ),
+                        "authors": (
+                            ", ".join(v.get("authors").get("li"))
+                            if v.get("authors")
+                            and isinstance(v.get("authors"), dict)
+                            and v.get("authors").get("li")
+                            else v.get("authors", "Missing XML: <author(s)>")
+                        ),
+                        "gameVersions": (
+                            v.get("supportedversions").get("li")
+                            if isinstance(
+                                v.get("supportedversions", {}).get("li"), list
                             )
-                            if v.get("supportedversions")
-                            else v.get(
-                                "targetversion",
-                                "Missing XML: <supportedversions> or <targetversion>",
-                            )
-                        ],
+                            else [
+                                (
+                                    v.get("supportedversions", {}).get(
+                                        "li",
+                                    )
+                                    if v.get("supportedversions")
+                                    else v.get(
+                                        "targetversion",
+                                        "Missing XML: <supportedversions> or <targetversion>",
+                                    )
+                                )
+                            ]
+                        ),
                     }
                     for v in self.mods.values()
                     if v.get("publishedfileid")

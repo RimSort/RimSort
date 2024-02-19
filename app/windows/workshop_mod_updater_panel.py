@@ -1,5 +1,4 @@
 from functools import partial
-from loguru import logger
 from time import localtime, strftime
 from typing import Any, Dict
 
@@ -16,6 +15,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QVBoxLayout,
 )
+from loguru import logger
 
 
 class ModUpdaterPrompt(QWidget):

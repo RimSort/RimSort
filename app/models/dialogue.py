@@ -8,10 +8,7 @@ from PySide6.QtWidgets import (
     QInputDialog,
     QMessageBox,
     QPushButton,
-    QHBoxLayout,
-    QVBoxLayout,
 )
-
 from loguru import logger
 
 DEFAULT_TITLE = "RimSort"

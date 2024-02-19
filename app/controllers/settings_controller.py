@@ -1,5 +1,4 @@
 import os
-from os.path import expanduser
 from pathlib import Path
 from typing import Optional
 

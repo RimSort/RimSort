@@ -1,5 +1,4 @@
 from functools import partial
-from loguru import logger
 from typing import Any, Dict
 
 from PySide6.QtCore import Qt, QEvent, QSize, Signal
@@ -15,6 +14,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QVBoxLayout,
 )
+from loguru import logger
 
 from app.utils.constants import RIMWORLD_DLC_METADATA
 

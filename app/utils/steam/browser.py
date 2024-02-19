@@ -1,8 +1,6 @@
-from functools import partial
-from loguru import logger
-from pathlib import Path
 import os
 import platform
+from functools import partial
 from typing import Any, Dict, Optional
 
 from PySide6.QtCore import Qt, QPoint, QSize, QUrl, Signal
@@ -23,6 +21,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QVBoxLayout,
 )
+from loguru import logger
 
 from app.models.dialogue import show_warning
 from app.models.image_label import ImageLabel

@@ -1,7 +1,5 @@
-from functools import partial
-from loguru import logger
 import os
-from pathlib import Path
+from functools import partial
 
 from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtGui import QAction, QIcon
@@ -17,6 +15,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from loguru import logger
 
 from app.models.multibutton import MultiButton
 from app.utils.app_info import AppInfo
