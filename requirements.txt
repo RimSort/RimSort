@@ -4,7 +4,7 @@ loguru==0.7.2
 lxml==5.1.0
 mypy==1.8.0
 natsort==8.4.0
-nuitka==2.0.2
+nuitka==2.0.3
 platformdirs==4.2.0
 PyGithub==2.2.0
 pyperclip==1.8.2

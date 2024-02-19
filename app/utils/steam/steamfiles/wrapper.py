@@ -1,6 +1,6 @@
 from typing import Any, Dict
 
-from submodules.steamfiles.steamfiles import acf
+from steamfiles import acf
 
 
 def acf_to_dict(path: str) -> Dict[str, Any]:
