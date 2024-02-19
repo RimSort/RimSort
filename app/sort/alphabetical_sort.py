@@ -1,5 +1,6 @@
-from loguru import logger
 from typing import List
+
+from loguru import logger
 
 from app.utils.metadata import MetadataManager
 
@@ -76,9 +77,9 @@ def recursively_force_insert(
         for uuid in active_mods_uuids:
             mod_package_id = metadata_manager.internal_local_metadata[uuid]["packageid"]
             if dependency_id == mod_package_id:
-                deps_id_to_name[
-                    dependency_id
-                ] = metadata_manager.internal_local_metadata[uuid]["name"]
+                deps_id_to_name[dependency_id] = (
+                    metadata_manager.internal_local_metadata[uuid]["name"]
+                )
     deps_of_package_alphabetized = sorted(
         deps_id_to_name.items(), key=lambda x: x[1], reverse=True
     )

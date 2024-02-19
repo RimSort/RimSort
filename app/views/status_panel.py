@@ -1,6 +1,5 @@
-from loguru import logger
-
 from PySide6.QtWidgets import QFrame, QHBoxLayout
+from loguru import logger
 
 from app.models.animations import AnimationLabel
 

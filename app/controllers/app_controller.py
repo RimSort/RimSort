@@ -6,7 +6,6 @@ from PySide6.QtWidgets import QApplication
 
 from app.utils.app_info import AppInfo
 from app.utils.constants import DEFAULT_USER_RULES
-from app.utils.system_info import SystemInfo
 from app.views.main_window import MainWindow
 
 

@@ -1,5 +1,5 @@
-from loguru import logger
 from functools import partial
+
 from PySide6.QtCore import (
     Qt,
     QTimer,
@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from loguru import logger
 
 from app.models.multibutton import MultiButton
 

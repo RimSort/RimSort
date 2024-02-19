@@ -1,30 +1,16 @@
-from functools import partial
-from pathlib import Path
+import datetime
 import platform
-from typing import Callable
 import subprocess
 import sys
-import datetime
+import webbrowser
+from functools import partial
 from io import BytesIO
 from math import ceil
 from multiprocessing import cpu_count, Pool
-from requests import get as requests_get
 from tempfile import gettempdir
-import webbrowser
+from typing import Callable
 from zipfile import ZipFile
 
-from loguru import logger
-
-from pygit2 import (
-    Repository,
-    RemoteCallbacks,
-    GitError,
-    init_repository,
-    clone_repository,
-)
-
-from github import Github
-from pyperclip import copy as copy_to_clipboard
 from PySide6.QtCore import QEventLoop, QProcess, Qt, Slot
 from PySide6.QtWidgets import (
     QApplication,
@@ -33,16 +19,22 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
 )
-
-from app.models.dialogue import show_dialogue_input, show_information, show_fatal_error
+from github import Github
+from pygit2 import (
+    Repository,
+    RemoteCallbacks,
+    GitError,
+    init_repository,
+    clone_repository,
+)
+from pyperclip import copy as copy_to_clipboard
+from requests import get as requests_get
+from loguru import logger
 from app.models.animations import LoadingAnimation
-from app.sort.dependencies import *
+from app.models.dialogue import show_dialogue_input, show_information, show_fatal_error
 from app.sort.alphabetical_sort import *
+from app.sort.dependencies import *
 from app.sort.topo_sort import *
-from app.views.actions_panel import Actions
-from app.views.mods_panel import ModsPanel
-from app.views.mod_info_panel import ModInfo
-from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 from app.utils.generic import (
     chunks,
@@ -63,7 +55,10 @@ from app.utils.steam.steamworks.wrapper import (
 from app.utils.steam.webapi.wrapper import CollectionImport
 from app.utils.todds.wrapper import ToddsInterface
 from app.utils.xml import json_to_xml_write, xml_path_to_json
+from app.views.actions_panel import Actions
 from app.views.game_configuration_panel import GameConfiguration
+from app.views.mod_info_panel import ModInfo
+from app.views.mods_panel import ModsPanel
 from app.windows.missing_mods_panel import MissingModsPrompt
 from app.windows.rule_editor_panel import RuleEditor
 from app.windows.runner_panel import RunnerPanel

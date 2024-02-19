@@ -1,6 +1,4 @@
-from loguru import logger
 import os
-from pathlib import Path
 from platform import system
 from re import compile
 
@@ -15,6 +13,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QProgressBar,
 )
+from loguru import logger
 
 from app.models.dialogue import show_dialogue_file, show_dialogue_conditional
 from app.utils.app_info import AppInfo
@@ -348,15 +347,15 @@ class RunnerPanel(QWidget):
                                         if self.steam_db[failed_mod_pfid].get(
                                             "steamName"
                                         ):
-                                            pfids_to_name[
-                                                failed_mod_pfid
-                                            ] = self.steam_db[failed_mod_pfid][
-                                                "steamName"
-                                            ]
+                                            pfids_to_name[failed_mod_pfid] = (
+                                                self.steam_db[failed_mod_pfid][
+                                                    "steamName"
+                                                ]
+                                            )
                                         elif self.steam_db[failed_mod_pfid].get("name"):
-                                            pfids_to_name[
-                                                failed_mod_pfid
-                                            ] = self.steam_db[failed_mod_pfid]["name"]
+                                            pfids_to_name[failed_mod_pfid] = (
+                                                self.steam_db[failed_mod_pfid]["name"]
+                                            )
                                         else:
                                             failed_mods_no_names.append(failed_mod_pfid)
                             # If we didn't return all names from Steam DB, try to look them up using WebAPI
