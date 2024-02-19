@@ -187,9 +187,6 @@ class SettingsController(QObject):
         )
 
         # Advanced tab
-        self.settings_dialog.upload_log_button.clicked.connect(
-            EventBus().do_upload_log.emit
-        )
 
     def show_settings_dialog(self) -> None:
         """

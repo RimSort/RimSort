@@ -124,7 +124,11 @@ class MainContent(QObject):
             EventBus().do_download_steam_workshop_db_from_github.connect(
                 self._on_do_download_steam_workshop_db_from_github
             )
-            EventBus().do_upload_log.connect(self._on_do_upload_log)
+            EventBus().do_upload_rimsort_log.connect(self._on_do_upload_rimsort_log)
+            EventBus().do_upload_rimsort_old_log.connect(
+                self._on_do_upload_rimsort_old_log
+            )
+            EventBus().do_upload_rimworld_log.connect(self._on_do_upload_rimworld_log)
             EventBus().do_download_all_mods_via_steamcmd.connect(
                 self._on_do_download_all_mods_via_steamcmd
             )
@@ -666,10 +670,6 @@ class MainContent(QObject):
             self._do_export_list_clipboard()
         if action == "upload_list_rentry":
             self._do_upload_list_rentry()
-        if action == "upload_rs_log":
-            self._upload_rs_log()
-        if action == "upload_rs_old_log":
-            self._upload_rs_old_log()
         if action == "save":
             self._do_save()
         if action == "run":
@@ -686,8 +686,6 @@ class MainContent(QObject):
             self._do_edit_run_args()
 
         # settings panel actions
-        if action == "upload_rw_log":
-            self._do_upload_rw_log()
         if action == "configure_github_identity":
             self._do_configure_github_identity()
         if action == "configure_steam_database_path":
@@ -1655,7 +1653,32 @@ class MainContent(QObject):
                 text="Failed to upload exported active mod list to Rentry.co",
             )
 
-    def _do_upload_rw_log(self):
+    @Slot()
+    def _on_do_upload_rimsort_log(self) -> None:
+        ret = upload_data_to_0x0_st(str(AppInfo().user_log_folder / "RimSort.log"))
+        if ret:
+            copy_to_clipboard(ret)
+            show_information(
+                title="Uploaded file",
+                text=f"Uploaded RimSort log to http://0x0.st/",
+                information=f"The URL has been copied to your clipboard:\n\n{ret}",
+            )
+            webbrowser.open(ret)
+
+    @Slot()
+    def _on_do_upload_rimsort_old_log(self) -> None:
+        ret = upload_data_to_0x0_st(str(AppInfo().user_log_folder / "RimSort.old.log"))
+        if ret:
+            copy_to_clipboard(ret)
+            show_information(
+                title="Uploaded file",
+                text=f"Uploaded RimSort log to http://0x0.st/",
+                information=f"The URL has been copied to your clipboard:\n\n{ret}",
+            )
+            webbrowser.open(ret)
+
+    @Slot()
+    def _on_do_upload_rimworld_log(self):
         player_log_path = str(
             (
                 Path(self.settings_controller.settings.config_folder).parent
@@ -1671,26 +1694,7 @@ class MainContent(QObject):
                     text=f"Uploaded RimWorld log to http://0x0.st/",
                     information=f"The URL has been copied to your clipboard:\n\n{ret}",
                 )
-
-    def _upload_rs_log(self):
-        ret = upload_data_to_0x0_st(str((Path(gettempdir()) / "RimSort.log")))
-        if ret:
-            copy_to_clipboard(ret)
-            show_information(
-                title="Uploaded file",
-                text=f"Uploaded RimSort.log to http://0x0.st/",
-                information=f"The URL has been copied to your clipboard:\n\n{ret}",
-            )
-
-    def _upload_rs_old_log(self):
-        ret = upload_data_to_0x0_st(str((Path(gettempdir()) / "RimSort.old.log")))
-        if ret:
-            copy_to_clipboard(ret)
-            show_information(
-                title="Uploaded file",
-                text=f"Uploaded RimSort.old.log to http://0x0.st/",
-                information=f"The URL has been copied to your clipboard:\n\n{ret}",
-            )
+                webbrowser.open(ret)
 
     def _do_save(self) -> None:
         """
@@ -3133,14 +3137,6 @@ class MainContent(QObject):
             base_path=str(AppInfo().databases_folder),
             repo_url=self.settings_controller.settings.external_steam_metadata_repo,
         )
-
-    @Slot()
-    def _on_do_upload_log(self) -> None:
-        ret = upload_data_to_0x0_st(
-            str(AppInfo().user_log_folder / (AppInfo().app_name + ".log"))
-        )
-        if ret:
-            webbrowser.open(ret)
 
     @Slot()
     def _on_do_download_all_mods_via_steamcmd(self) -> None:
