@@ -1779,12 +1779,15 @@ def get_mods_from_list(
                         source_paths_sorted = natsorted(paths_to_uuid.keys())
                         if source_paths_sorted:  # If we have paths returned
                             # If we are here, we've found our calculated duplicate, log and use this mod
+                            calculated_duplicate_uuid = paths_to_uuid[
+                                source_paths_sorted[0]
+                            ]
                             logger.debug(
-                                f"Using duplicate {source} mod for {target_id}: {all_mods[paths_to_uuid[source_paths_sorted[0]]]['path']}"
+                                f"Using duplicate {source} mod for {target_id}: {['path']}"
                             )
                             populated_mods.append(target_id)
                             duplicates_processed.append(target_id)
-                            active_mods_uuids.append(duplicate_uuid)
+                            active_mods_uuids.append(calculated_duplicate_uuid)
                             break
                         else:  # Skip this source priority if no paths
                             logger.debug(f"No paths returned for {source}")
