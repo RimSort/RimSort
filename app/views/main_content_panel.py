@@ -405,7 +405,7 @@ class MainContent(QObject):
         self.mods_panel.active_mods_list.recreate_mod_list(
             list_type="active", uuids=active_mods_uuids
         )
-        self.mods_panel.inactive_mods_list.recreate_mod_list(
+        self.mods_panel.inactive_mods_list.recreate_mod_list_and_sort_alphabetically(
             list_type="inactive", uuids=inactive_mods_uuids
         )
 

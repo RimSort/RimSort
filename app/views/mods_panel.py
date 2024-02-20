@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from shutil import copy2, copytree, rmtree
 from traceback import format_exc
-from typing import List, Optional
+from typing import Any, Callable, List, Optional
 
 from pyperclip import copy as copy_to_clipboard
 from PySide6.QtCore import QEvent, QModelIndex, QObject, QRectF, QSize, Qt, Signal
@@ -580,9 +580,9 @@ class ModListWidget(QListWidget):
                             and publishedfileid
                             in self.metadata_manager.external_steam_metadata.keys()
                         ):
-                            local_steamcmd_name_to_publishedfileid[
-                                mod_folder_name
-                            ] = publishedfileid
+                            local_steamcmd_name_to_publishedfileid[mod_folder_name] = (
+                                publishedfileid
+                            )
                             # Convert local mods -> steamcmd
                             convert_local_steamcmd_action = QAction()
                             convert_local_steamcmd_action.setText(
@@ -708,9 +708,9 @@ class ModListWidget(QListWidget):
                                     )
                             if widget_json_data.get("steamcmd"):
                                 steamcmd_mod_paths.append(mod_folder_path)
-                                steamcmd_publishedfileid_to_name[
-                                    publishedfileid
-                                ] = mod_name
+                                steamcmd_publishedfileid_to_name[publishedfileid] = (
+                                    mod_name
+                                )
                                 # Convert steamcmd mods -> local
                                 if not convert_steamcmd_local_action:
                                     convert_steamcmd_local_action = QAction()
@@ -1388,6 +1388,61 @@ class ModListWidget(QListWidget):
     def mod_double_clicked(self, item: QListWidgetItem):
         widget = ModListItemInner = self.itemWidget(item)
         self.key_press_signal.emit("DoubleClick")
+
+    def show_items_in_list_order(self, uuids: List[str]) -> None:
+        """
+        Show the items in the list in the order of the provided list of UUIDs.
+        Requiring we are able to find all the UUIDs in the metadata.
+
+        :param uuids: list of UUIDs
+        """
+        valid_uuids = []
+        for uuid in uuids:
+            if uuid in self.metadata_manager.internal_local_metadata:
+                valid_uuids.append(uuid)
+        uuids = valid_uuids
+
+        self.setUpdatesEnabled(False)
+        for idx, uuid in enumerate(uuids):
+            item = self.item(idx)
+
+            if item is not None:
+                widget = ModListItemInner(
+                    settings_controller=self.settings_controller,
+                    uuid=uuid,
+                )
+                widget.toggle_warning_signal.connect(self.toggle_warning)
+                if self.metadata_manager.internal_local_metadata[uuid].get("invalid"):
+                    widget.main_label.setObjectName("summaryValueInvalid")
+                else:
+                    widget.main_label.setObjectName("ListItemLabel")
+                item.setSizeHint(widget.sizeHint())
+                self.setItemWidget(item, widget)
+        self.uuids = uuids
+        self.setUpdatesEnabled(True)
+        self.repaint()
+
+    def recreate_mod_list_and_sort_alphabetically(
+        self, list_type: str, uuids: List[str]
+    ) -> None:
+        """
+        Recreates the mod list based on the given list type and sorts it alphabetically.
+
+        Args:
+            list_type (str): The type of mod list to recreate.
+            uuids (List[str]): The list of UUIDs representing the mods.
+
+        Returns:
+            None
+        """
+        self.recreate_mod_list(list_type, uuids)
+        sorted_uuids = sorted(
+            uuids,
+            key=lambda x: self.metadata_manager.internal_local_metadata[x][
+                "name"
+            ].lower(),
+        )
+        self.show_items_in_list_order(sorted_uuids)
 
     def recreate_mod_list(self, list_type: str, uuids: List[str]) -> None:
         """
