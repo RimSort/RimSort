@@ -1,6 +1,6 @@
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QLabel
 from PySide6.QtGui import QResizeEvent
+from PySide6.QtWidgets import QLabel
 
 
 class ImageLabel(QLabel):

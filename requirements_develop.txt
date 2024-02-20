@@ -1,4 +1,4 @@
-autoflake>=1.5.2
+autoflake>=2.3.0
 black
 mypy
 #types-pyside6

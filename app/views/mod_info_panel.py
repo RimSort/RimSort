@@ -1,5 +1,4 @@
 import json
-from loguru import logger
 import os
 from pathlib import Path
 from typing import Any, Dict
@@ -7,10 +6,11 @@ from typing import Any, Dict
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout
+from loguru import logger
 
-from app.utils.app_info import AppInfo
 from app.models.image_label import ImageLabel
 from app.models.scroll_label import ScrollLabel
+from app.utils.app_info import AppInfo
 from app.utils.generic import set_to_list
 
 

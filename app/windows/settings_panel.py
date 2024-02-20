@@ -1,7 +1,5 @@
-from functools import partial
-from loguru import logger
 import os
-from pathlib import Path
+from functools import partial
 
 from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtGui import QAction, QIcon
@@ -17,6 +15,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from loguru import logger
 
 from app.models.multibutton import MultiButton
 from app.utils.app_info import AppInfo
@@ -84,20 +83,6 @@ class SettingsPanel(QDialog):
         self.rimworld_woodlog_icon_path = str(
             str(AppInfo().theme_data_folder / "default-icons" / "WoodLog_a.png")
         )
-        self.upload_log_multibutton = MultiButton(
-            main_action="Upload RimSort.log",
-            main_action_tooltip="Log will be uploaded to http://0x0.st/ and\n"
-            + "the URL will be copied to your clipboard.",
-            context_menu_content={
-                "open_rs_log": self.open_storage_action,
-                "upload_rs_old_log": "Upload RimSort.old.log",
-            },
-            actions_signal=self.actions_signal,
-            secondary_action_icon_path=self.rimworld_woodlog_icon_path,
-        )
-        self.upload_log_multibutton.main_action.clicked.connect(
-            partial(self.actions_signal.emit, "upload_rs_log")
-        )
         self.logger_debug_checkbox = QCheckBox(
             "Enable RimSort logger verbose DEBUG mode"
         )
@@ -149,7 +134,6 @@ class SettingsPanel(QDialog):
         )
         # Build the general options layout
         self.general_actions_layout.addWidget(self.set_github_identity_button)
-        self.general_actions_layout.addWidget(self.upload_log_multibutton)
         self.general_preferences_layout.addWidget(self.logger_debug_checkbox)
         self.general_preferences_layout.addWidget(self.watchdog_checkbox)
         self.general_preferences_layout.addWidget(self.mod_type_filter_checkbox)

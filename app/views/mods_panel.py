@@ -1,12 +1,10 @@
-from functools import partial
-from loguru import logger
 import os
+from functools import partial
 from pathlib import Path
 from shutil import copy2, copytree, rmtree
 from traceback import format_exc
 from typing import Any, Callable, List, Optional
 
-from pyperclip import copy as copy_to_clipboard
 from PySide6.QtCore import QEvent, QModelIndex, QObject, QRectF, QSize, Qt, Signal
 from PySide6.QtGui import (
     QAction,
@@ -32,8 +30,11 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from loguru import logger
+from pyperclip import copy as copy_to_clipboard
 
 from app.controllers.settings_controller import SettingsController
+from app.models.dialogue import show_dialogue_conditional, show_dialogue_input
 from app.utils.app_info import AppInfo
 from app.utils.constants import SEARCH_DATA_SOURCE_FILTER_INDEXES
 from app.utils.generic import (
@@ -44,7 +45,6 @@ from app.utils.generic import (
     sanitize_filename,
 )
 from app.utils.metadata import MetadataManager
-from app.models.dialogue import show_dialogue_conditional, show_dialogue_input
 
 
 class ClickableQLabel(QLabel):

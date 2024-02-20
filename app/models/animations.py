@@ -1,17 +1,15 @@
 import traceback
-from typing import Any, Callable
-
-from loguru import logger
+from typing import Callable
 
 from PySide6.QtCore import QEasingCurve, QPropertyAnimation, QTimer, QThread, Qt, Signal
-from PySide6.QtGui import QMovie, QPainter
+from PySide6.QtGui import QMovie
 from PySide6.QtWidgets import (
-    QApplication,
     QGraphicsOpacityEffect,
     QLabel,
     QVBoxLayout,
     QWidget,
 )
+from loguru import logger
 
 
 class AnimationLabel(QLabel):

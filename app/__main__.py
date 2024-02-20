@@ -4,7 +4,6 @@ import sys
 import traceback
 from logging import getLogger, WARNING
 from multiprocessing import freeze_support, set_start_method
-from pathlib import Path
 from types import TracebackType
 from typing import Type, Optional
 
