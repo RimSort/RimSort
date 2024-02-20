@@ -58,17 +58,26 @@ class ClickableQLabel(QLabel):
         super().mousePressEvent(event)
 
 
+def uuid_to_mod_name(uuid: str) -> str:
+    """
+    Converts a UUID to the corresponding mod name.
+
+    Args:
+        uuid (str): The UUID of the mod.
+
+    Returns:
+        str: The name of the mod corresponding to the UUID.
+    """
+    return MetadataManager.instance().internal_local_metadata[uuid]["name"].lower()
+
+
 class ModsPanelSortKey(Enum):
     """
     Enum class representing different sorting keys for mods.
     """
 
     NOKEY = None
-    MODNAME = (
-        lambda x: MetadataManager.instance()
-        .metadata_manager.internal_local_metadata[x]["name"]
-        .lower()
-    )
+    MODNAME = uuid_to_mod_name
 
 
 class ModListItemInner(QWidget):
@@ -1422,8 +1431,8 @@ class ModListWidget(QListWidget):
             None
         """
         sorted_uuids = uuids
-        if key != self.ModsPanelSortKey.NOKEY:
-            sorted_uuids = sorted(uuids, key=key.value)
+        if key != ModsPanelSortKey.NOKEY:
+            sorted_uuids = sorted(uuids, key=key)
         self.recreate_mod_list(list_type, sorted_uuids)
 
     def recreate_mod_list(self, list_type: str, uuids: List[str]) -> None:
