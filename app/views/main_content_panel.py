@@ -29,16 +29,12 @@ from pygit2 import (
 )
 from pyperclip import copy as copy_to_clipboard
 from requests import get as requests_get
-from loguru import logger
+
 from app.models.animations import LoadingAnimation
 from app.models.dialogue import show_dialogue_input, show_information, show_fatal_error
 from app.sort.alphabetical_sort import *
 from app.sort.dependencies import *
 from app.sort.topo_sort import *
-from app.views.actions_panel import Actions
-from app.views.mods_panel import ModsPanel, ModsPanelSortKey
-from app.views.mod_info_panel import ModInfo
-from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 from app.utils.generic import (
     chunks,
@@ -62,7 +58,7 @@ from app.utils.xml import json_to_xml_write, xml_path_to_json
 from app.views.actions_panel import Actions
 from app.views.game_configuration_panel import GameConfiguration
 from app.views.mod_info_panel import ModInfo
-from app.views.mods_panel import ModsPanel
+from app.views.mods_panel import ModsPanel, ModsPanelSortKey
 from app.windows.missing_mods_panel import MissingModsPrompt
 from app.windows.rule_editor_panel import RuleEditor
 from app.windows.runner_panel import RunnerPanel
