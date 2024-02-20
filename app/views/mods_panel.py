@@ -1,3 +1,6 @@
+from enum import Enum
+from functools import partial
+from loguru import logger
 import os
 from functools import partial
 from pathlib import Path
@@ -53,6 +56,19 @@ class ClickableQLabel(QLabel):
     def mousePressEvent(self, event):
         self.clicked.emit()
         super().mousePressEvent(event)
+
+
+class ModsPanelSortKey(Enum):
+    """
+    Enum class representing different sorting keys for mods.
+    """
+
+    NOKEY = None
+    MODNAME = (
+        lambda x: MetadataManager.instance()
+        .metadata_manager.internal_local_metadata[x]["name"]
+        .lower()
+    )
 
 
 class ModListItemInner(QWidget):
@@ -1389,44 +1405,14 @@ class ModListWidget(QListWidget):
         widget = ModListItemInner = self.itemWidget(item)
         self.key_press_signal.emit("DoubleClick")
 
-    def show_items_in_list_order(self, uuids: List[str]) -> None:
-        """
-        Show the items in the list in the order of the provided list of UUIDs.
-        Requiring we are able to find all the UUIDs in the metadata.
-
-        :param uuids: list of UUIDs
-        """
-        valid_uuids = []
-        for uuid in uuids:
-            if uuid in self.metadata_manager.internal_local_metadata:
-                valid_uuids.append(uuid)
-        uuids = valid_uuids
-
-        self.setUpdatesEnabled(False)
-        for idx, uuid in enumerate(uuids):
-            item = self.item(idx)
-
-            if item is not None:
-                widget = ModListItemInner(
-                    settings_controller=self.settings_controller,
-                    uuid=uuid,
-                )
-                widget.toggle_warning_signal.connect(self.toggle_warning)
-                if self.metadata_manager.internal_local_metadata[uuid].get("invalid"):
-                    widget.main_label.setObjectName("summaryValueInvalid")
-                else:
-                    widget.main_label.setObjectName("ListItemLabel")
-                item.setSizeHint(widget.sizeHint())
-                self.setItemWidget(item, widget)
-        self.uuids = uuids
-        self.setUpdatesEnabled(True)
-        self.repaint()
-
-    def recreate_mod_list_and_sort_alphabetically(
-        self, list_type: str, uuids: List[str]
+    def recreate_mod_list_and_sort(
+        self,
+        list_type: str,
+        uuids: List[str],
+        key: ModsPanelSortKey = ModsPanelSortKey.NOKEY,
     ) -> None:
         """
-        Recreates the mod list based on the given list type and sorts it alphabetically.
+        Sort the provided list of UUIDs alphabetically based on the mod names and recreate the mod list.
 
         Args:
             list_type (str): The type of mod list to recreate.
@@ -1435,14 +1421,10 @@ class ModListWidget(QListWidget):
         Returns:
             None
         """
-        self.recreate_mod_list(list_type, uuids)
-        sorted_uuids = sorted(
-            uuids,
-            key=lambda x: self.metadata_manager.internal_local_metadata[x][
-                "name"
-            ].lower(),
-        )
-        self.show_items_in_list_order(sorted_uuids)
+        sorted_uuids = uuids
+        if key != self.ModsPanelSortKey.NOKEY:
+            sorted_uuids = sorted(uuids, key=key.value)
+        self.recreate_mod_list(list_type, sorted_uuids)
 
     def recreate_mod_list(self, list_type: str, uuids: List[str]) -> None:
         """
