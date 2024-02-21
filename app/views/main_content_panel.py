@@ -35,6 +35,10 @@ from app.models.dialogue import show_dialogue_input, show_information, show_fata
 from app.sort.alphabetical_sort import *
 from app.sort.dependencies import *
 from app.sort.topo_sort import *
+from app.views.actions_panel import Actions
+from app.views.mods_panel import ModsPanel, ModsPanelSortKey
+from app.views.mod_info_panel import ModInfo
+from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 from app.utils.generic import (
     chunks,
@@ -399,8 +403,10 @@ class MainContent(QObject):
         self.mods_panel.active_mods_list.recreate_mod_list(
             list_type="active", uuids=active_mods_uuids
         )
-        self.mods_panel.inactive_mods_list.recreate_mod_list(
-            list_type="inactive", uuids=inactive_mods_uuids
+        self.mods_panel.inactive_mods_list.recreate_mod_list_and_sort(
+            list_type="inactive",
+            uuids=inactive_mods_uuids,
+            key=ModsPanelSortKey.MODNAME,
         )
 
         logger.info(

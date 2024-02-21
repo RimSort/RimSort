@@ -1,9 +1,12 @@
+from enum import Enum
+from functools import partial
+from loguru import logger
 import os
 from functools import partial
 from pathlib import Path
 from shutil import copy2, copytree, rmtree
 from traceback import format_exc
-from typing import List, Optional
+from typing import Any, Callable, List, Optional
 
 from PySide6.QtCore import QEvent, QModelIndex, QObject, QRectF, QSize, Qt, Signal
 from PySide6.QtGui import (
@@ -53,6 +56,28 @@ class ClickableQLabel(QLabel):
     def mousePressEvent(self, event):
         self.clicked.emit()
         super().mousePressEvent(event)
+
+
+def uuid_to_mod_name(uuid: str) -> str:
+    """
+    Converts a UUID to the corresponding mod name.
+
+    Args:
+        uuid (str): The UUID of the mod.
+
+    Returns:
+        str: The name of the mod corresponding to the UUID.
+    """
+    return MetadataManager.instance().internal_local_metadata[uuid]["name"].lower()
+
+
+class ModsPanelSortKey(Enum):
+    """
+    Enum class representing different sorting keys for mods.
+    """
+
+    NOKEY = None
+    MODNAME = uuid_to_mod_name
 
 
 class ModListItemInner(QWidget):
@@ -1388,6 +1413,27 @@ class ModListWidget(QListWidget):
     def mod_double_clicked(self, item: QListWidgetItem):
         widget = ModListItemInner = self.itemWidget(item)
         self.key_press_signal.emit("DoubleClick")
+
+    def recreate_mod_list_and_sort(
+        self,
+        list_type: str,
+        uuids: List[str],
+        key: ModsPanelSortKey = ModsPanelSortKey.NOKEY,
+    ) -> None:
+        """
+        Sort the provided list of UUIDs alphabetically based on the mod names and recreate the mod list.
+
+        Args:
+            list_type (str): The type of mod list to recreate.
+            uuids (List[str]): The list of UUIDs representing the mods.
+
+        Returns:
+            None
+        """
+        sorted_uuids = uuids
+        if key != ModsPanelSortKey.NOKEY:
+            sorted_uuids = sorted(uuids, key=key)
+        self.recreate_mod_list(list_type, sorted_uuids)
 
     def recreate_mod_list(self, list_type: str, uuids: List[str]) -> None:
         """
