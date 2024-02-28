@@ -1,12 +1,10 @@
-from enum import Enum
-from functools import partial
-from loguru import logger
 import os
+from enum import Enum
 from functools import partial
 from pathlib import Path
 from shutil import copy2, copytree, rmtree
 from traceback import format_exc
-from typing import Any, Callable, List, Optional
+from typing import List, Optional
 
 from PySide6.QtCore import QEvent, QModelIndex, QObject, QRectF, QSize, Qt, Signal
 from PySide6.QtGui import (
@@ -61,10 +59,8 @@ class ClickableQLabel(QLabel):
 def uuid_to_mod_name(uuid: str) -> str:
     """
     Converts a UUID to the corresponding mod name.
-
     Args:
         uuid (str): The UUID of the mod.
-
     Returns:
         str: The name of the mod corresponding to the UUID.
     """
@@ -1422,11 +1418,9 @@ class ModListWidget(QListWidget):
     ) -> None:
         """
         Sort the provided list of UUIDs alphabetically based on the mod names and recreate the mod list.
-
         Args:
             list_type (str): The type of mod list to recreate.
             uuids (List[str]): The list of UUIDs representing the mods.
-
         Returns:
             None
         """
