@@ -265,6 +265,37 @@ class ModListItemInner(QWidget):
                 f"No type found for ModListItemInner with package id {self.metadata_manager.internal_local_metadata[self.uuid].get('packageid')}"
             )
 
+    @staticmethod
+    def mod_compatible(mod_uuid: str, game_version: str) -> bool:
+        """
+        Check if the mod is compatible with the game version
+        """
+        metadata = MetadataManager.instance().internal_local_metadata[mod_uuid]
+        mod_name = metadata.get("name")
+        mod_support_versions = metadata.get("supportedversions")
+
+        if game_version is None:
+            return False
+
+        if "supportedversions" not in metadata:
+            logger.error(
+                f"supportedversions not found in metadata for mod: {mod_name}, supportedversions: {mod_support_versions}"
+            )
+            return True
+
+        mod_support_versions = metadata["supportedversions"]["li"]
+        if isinstance(mod_support_versions, str):
+            return game_version.startswith(mod_support_versions)
+        elif isinstance(mod_support_versions, list):
+            for version in mod_support_versions:
+                if game_version.startswith(version):
+                    return True
+        else:
+            logger.error(
+                f"mod_support_versions is not a list or string: {mod_support_versions}"
+            )
+        return False
+
     def resizeEvent(self, event: QResizeEvent) -> None:
         """
         When the label is resized (as the window is resized),
@@ -280,6 +311,19 @@ class ModListItemInner(QWidget):
         text_width_needed = QRectF(
             self.font_metrics.boundingRect(self.list_item_name)
         ).width()
+
+        # Adding checks for game version and mod supported game versions
+        # Use red to highlight the mod that is not compatible with the game version
+        # TODO
+        game_version = self.metadata_manager.game_version
+        uuid = self.uuid
+        data_source = self.metadata_manager.internal_local_metadata[uuid].get(
+            "data_source"
+        )
+        if data_source != "expansion":
+            if not self.mod_compatible(uuid, game_version):
+                self.main_label.setStyleSheet("QLabel { color : red; }")
+
         if text_width_needed > self.item_width - icon_width:
             available_width = self.item_width - icon_width
             shortened_text = self.font_metrics.elidedText(
