@@ -335,15 +335,21 @@ class ModListItemInner(QWidget):
 
         # Adding checks for game version and mod supported game versions
         # Use red to highlight the mod that is not compatible with the game version
-        # TODO
         game_version = self.metadata_manager.game_version
         uuid = self.uuid
-        data_source = self.metadata_manager.internal_local_metadata[uuid].get(
-            "data_source"
-        )
-        if data_source != "expansion":
-            if not self.mod_compatible(uuid, game_version):
-                self.main_label.setStyleSheet("QLabel { color : red; }")
+        if uuid in self.metadata_manager.internal_local_metadata:
+            data_source = self.metadata_manager.internal_local_metadata[uuid].get(
+                "data_source"
+            )
+            if data_source != "expansion":
+                if not self.mod_compatible(uuid, game_version):
+                    self.main_label.setStyleSheet("QLabel { color : red; }")
+        else:
+            # After rrunning for a long time (for me it's after a computer waking up), it seems to get here
+            # Probably this is due to mods updates, but I'm not sure
+            logger.error(
+                f"UUID {uuid} not found in internal_local_metadata, cannot determine mod compatibility"
+            )
 
         if text_width_needed > self.item_width - icon_width:
             available_width = self.item_width - icon_width
