@@ -1,8 +1,8 @@
 from PySide6.QtCore import QObject, Slot
 
-from util.event_bus import EventBus
-from util.metadata import MetadataManager
-from view.main_window import MainWindow
+from app.utils.event_bus import EventBus
+from app.utils.metadata import MetadataManager
+from app.views.main_window import MainWindow
 
 
 class MainWindowController(QObject):

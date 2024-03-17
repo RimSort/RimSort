@@ -32,7 +32,6 @@ from github import Github
 from pyperclip import copy as copy_to_clipboard
 from PySide6.QtCore import QEventLoop, QProcess, Qt, Slot
 from PySide6.QtWidgets import (
-    QApplication,
     QDialog,
     QFrame,
     QHBoxLayout,
@@ -219,12 +218,9 @@ class MainContent(QObject):
                 self.actions_slot
             )  # Settings
             self.mods_panel.list_updated_signal.connect(
-                self.__do_save_animation
-            )  # Save btn animation
-            self.active_mods_panel.list_updated_signal.connect(
                 self.__do_save_button_set_default
             )  # Save btn animation
-            self.active_mods_panel.active_mods_list.key_press_signal.connect(
+            self.mods_panel.active_mods_list.key_press_signal.connect(
                 self.__handle_active_mod_key_press
             )
             self.mods_panel.inactive_mods_list.key_press_signal.connect(
@@ -986,33 +982,9 @@ class MainContent(QObject):
         # If we are refreshing cache from user action
         if not is_initial:
             self.mods_panel.list_updated = False
-            # Stop the refresh button from blinking if it is blinking
-            if self.actions_panel.refresh_button_flashing_animation.isActive():
-                self.actions_panel.refresh_button_flashing_animation.stop()
-                self.actions_panel.refresh_button.setObjectName("")
-                self.actions_panel.refresh_button.style().unpolish(
-                    self.actions_panel.refresh_button
-                )
-                self.actions_panel.refresh_button.style().polish(
-                    self.actions_panel.refresh_button
-                )
-            # Stop the save button from blinking if it is blinking
-            if self.actions_panel.save_button_flashing_animation.isActive():
-                self.actions_panel.save_button_flashing_animation.stop()
-                self.actions_panel.save_button.setObjectName("")
-                self.actions_panel.save_button.style().unpolish(
-                    self.actions_panel.save_button
-                )
-                self.actions_panel.save_button.style().polish(
-                    self.actions_panel.save_button
-                )
+            EventBus().do_refresh_button_unset_default.emit()
             self.mods_panel.active_mods_filter_data_source_index = len(
                 self.mods_panel.data_source_filter_icons
-            )
-            self.active_mods_panel.list_updated = False
-            EventBus().do_refresh_button_unset_default.emit()
-            self.active_mods_panel.active_mods_filter_data_source_index = len(
-                self.active_mods_panel.active_mods_filter_data_source_icons
             )
             self.mods_panel.signal_clear_search(list_type="Active")
             self.mods_panel.inactive_mods_filter_data_source_index = len(
@@ -1068,15 +1040,14 @@ class MainContent(QObject):
             logger.debug(
                 "Essential paths have not been set. Passing refresh and resetting mod lists"
             )
-
-            self.active_mods_panel.game_version = self.metadata_manager.game_version
-            # Feed all_mods and Steam DB info to Active Mods list to surface
-            # names instead of package_ids when able
-            self.active_mods_panel.all_mods = self.metadata_manager.all_mods_compiled
-            self.active_mods_panel.steam_package_id_to_name = (
-                self.metadata_manager.info_from_steam_package_id_to_name
-            )
-            EventBus().refresh_finished.emit()
+        self.mods_panel.game_version = self.metadata_manager.game_version
+        # Feed all_mods and Steam DB info to Active Mods list to surface
+        # names instead of package_ids when able
+        self.mods_panel.all_mods = self.metadata_manager.internal_local_metadata
+        self.mods_panel.steam_package_id_to_name = (
+            self.metadata_manager.info_from_steam_package_id_to_name
+        )
+        EventBus().refresh_finished.emit()
 
     def _do_refresh_button_set_default(self, path: str) -> None:
         logger.debug(f"File change detected: {path}")

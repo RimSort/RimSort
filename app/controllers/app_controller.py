@@ -4,14 +4,14 @@ import sys
 from PySide6.QtCore import QObject
 from PySide6.QtWidgets import QApplication
 
-from controller.main_window_controller import MainWindowController
-from controller.settings_controller import SettingsController
-from model.settings import Settings
-from util.app_info import AppInfo
-from util.constants import DEFAULT_USER_RULES
-from util.metadata import MetadataManager
-from view.main_window import MainWindow
-from view.settings_dialog import SettingsDialog
+from app.controllers.main_window_controller import MainWindowController
+from app.controllers.settings_controller import SettingsController
+from app.models.settings import Settings
+from app.utils.app_info import AppInfo
+from app.utils.constants import DEFAULT_USER_RULES
+from app.utils.metadata import MetadataManager
+from app.views.main_window import MainWindow
+from app.views.settings_dialog import SettingsDialog
 
 
 class AppController(QObject):
@@ -23,8 +23,8 @@ class AppController(QObject):
         self.app.setStyle("Fusion")
 
         self.app.setStyleSheet(  # Add style sheet for styling layouts and widgets
-            Path(
-                os.path.join(AppInfo().application_folder, "themes/RimPy/style.qss")
+            (
+                (AppInfo().application_folder / "themes" / "RimPy" / "style.qss")
             ).read_text()
         )
 
