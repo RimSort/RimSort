@@ -1,7 +1,6 @@
 import os
 from typing import Optional
 
-from PySide6.QtCore import QSize
 from PySide6.QtGui import QShowEvent
 from PySide6.QtWidgets import (
     QApplication,
@@ -66,10 +65,6 @@ class MainWindow(QMainWindow):
         self.watchdog_event_handler: Optional[RSFileSystemEventHandler] = None
         self.watchdog_observer: Optional[BaseObserver] = None
 
-        # Set up the window
-        self.setWindowTitle(f"RimSort {self.version_string}")
-        self.setMinimumSize(QSize(1024, 768))
-
         # Create the window layout
         app_layout = QVBoxLayout()
         app_layout.setContentsMargins(0, 0, 0, 0)  # Space from main layout to border
@@ -96,11 +91,6 @@ class MainWindow(QMainWindow):
         self.game_configuration.settings_panel.actions_signal.connect(
             self.bottom_panel.actions_slot
         )
-        # Connect the actions_signal to Status panel to display fading action text
-        self.main_content_panel.actions_panel.actions_signal.connect(
-            self.bottom_panel.actions_slot
-        )
-        self.main_content_panel.status_signal.connect(self.bottom_panel.actions_slot)
 
         # Arrange all panels vertically on the main window layout
         app_layout.addWidget(self.main_content_panel.main_layout_frame)
@@ -117,26 +107,26 @@ class MainWindow(QMainWindow):
 
         button_layout.addStretch()
 
+        # Define button attributes
         self.refresh_button = QPushButton("Refresh")
-        self.refresh_button.setMinimumWidth(100)
-        button_layout.addWidget(self.refresh_button)
-
         self.clear_button = QPushButton("Clear")
-        self.clear_button.setMinimumWidth(100)
-        button_layout.addWidget(self.clear_button)
-
         self.sort_button = QPushButton("Sort")
-        self.sort_button.setMinimumWidth(100)
-        button_layout.addWidget(self.sort_button)
-
         self.save_button = QPushButton("Save")
-        self.save_button.setMinimumWidth(100)
-        button_layout.addWidget(self.save_button)
+        self.run_button = QPushButton("Run")
 
-        self.run_button = QPushButton("Run Game")
-        self.run_button.setMinimumWidth(100)
-        button_layout.addWidget(self.run_button)
+        buttons = [
+            self.refresh_button,
+            self.clear_button,
+            self.sort_button,
+            self.save_button,
+            self.run_button,
+        ]
 
+        for button in buttons:
+            button.setMinimumWidth(100)
+            button_layout.addWidget(button)
+
+        # Create the bottom panel
         app_layout.addWidget(self.bottom_panel.frame)
 
         # Display all items
@@ -149,6 +139,8 @@ class MainWindow(QMainWindow):
             view=self.menu_bar, settings_controller=self.settings_controller
         )
 
+        self.setWindowTitle(f"RimSort {self.version_string}")
+        self.setGeometry(100, 100, 1024, 768)
         logger.debug("Finished MainWindow initialization")
 
     def __disable_enable_widgets(self, enable: bool) -> None:
@@ -204,7 +196,7 @@ class MainWindow(QMainWindow):
                 workshop_folder_path,
                 # recursive=True,
             )
-        # Connect watchdog to our refresh button animation
+        # TODO: Connect watchdog to our refresh button animation
         self.watchdog_event_handler.file_changes_signal.connect(
             self.main_content_panel._do_refresh_button_set_default
         )
