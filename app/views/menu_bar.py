@@ -96,6 +96,9 @@ class MenuBar(QObject):
         self.upload_rimsort_log_action = QAction("RimSort.log", self)
         self.upload_submenu.addAction(self.upload_rimsort_log_action)
 
+        self.upload_rimsort_old_log_action = QAction("RimSort.old.log", self)
+        self.upload_submenu.addAction(self.upload_rimsort_old_log_action)
+
         self.upload_rimworld_log_action = QAction("RimWorld.log", self)
         self.upload_submenu.addAction(self.upload_rimworld_log_action)
 
