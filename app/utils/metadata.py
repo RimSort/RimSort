@@ -428,6 +428,9 @@ class MetadataManager(QObject):
                     "ludeon.rimworld.biotech": {
                         "appid": "1826140",
                     },
+                    "ludeon.rimworld.anomaly": {
+                        "appid": "2380740",
+                    },
                 }
                 for data in expansion_data.values():
                     package_id = data["packageid"]

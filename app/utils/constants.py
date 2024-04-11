@@ -65,6 +65,12 @@ RIMWORLD_DLC_METADATA = {
         "steam_url": "https://store.steampowered.com/app/1826140/RimWorld__Biotech",
         "description": "DLC #3",
     },
+    "2380740": {
+        "packageid": "ludeon.rimworld.anomaly",
+        "name": "RimWorld - Anomaly",
+        "steam_url": "https://store.steampowered.com/app/2380740/RimWorld__Anomaly/",
+        "description": "DLC #4",
+    },
 }
 SEARCH_DATA_SOURCE_FILTER_INDEXES = [
     "all",
