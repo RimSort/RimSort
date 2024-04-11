@@ -88,6 +88,7 @@ def gen_tier_one_deps_graph(
         "ludeon.rimworld.royalty",
         "ludeon.rimworld.ideology",
         "ludeon.rimworld.biotech",
+        "ludeon.rimworld.anomaly",
         "unlimitedhugs.hugslib",
     }
     tier_one_mods = set()
