@@ -482,7 +482,8 @@ class ModListWidget(QListWidget):
         self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
 
         # When an item is clicked, display the mod information
-        self.currentItemChanged.connect(self.mod_clicked)
+        self.currentItemChanged.connect(self.mod_changed_to)
+        self.itemClicked.connect(self.mod_clicked)
 
         # When an item is double clicked, move it to the opposite list
         self.itemDoubleClicked.connect(self.mod_double_clicked)
@@ -1448,10 +1449,21 @@ class ModListWidget(QListWidget):
             (self.itemWidget(self.item(i)), self.item(i)) for i in range(self.count())
         ]
 
-    def mod_clicked(self, current: QListWidgetItem, previous: QListWidgetItem) -> None:
+    def mod_changed_to(self, current: QListWidgetItem, previous: QListWidgetItem) -> None:
         """
         Method to handle clicking on a row or navigating between rows with
         the keyboard. Look up the mod's data by uuid
+        """
+        if current is not None:
+            self.mod_info_signal.emit(current.data(Qt.UserRole))
+
+    def mod_clicked(self, current: QListWidgetItem) -> None:
+        """
+        Method to handle clicking on a row. Necessary because `mod_changed_to` does not
+        properly handle clicking on a previous selected item after clicking on an item
+        in another list. For example, clicking on item 1 in the inactive list, then on item 2
+        in the active list, then back to item 1 in the inactive list-- this method makes
+        it so that mod info is updated as expected.
         """
         if current is not None:
             self.mod_info_signal.emit(current.data(Qt.UserRole))
