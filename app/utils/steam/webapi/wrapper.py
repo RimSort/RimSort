@@ -335,6 +335,7 @@ class DynamicQuery(QObject):
                 appid=self.appid,
                 strip_description_bbcode=False,
                 includereactions=False,
+                admin_query=False,
             )
             for metadata in response["response"]["publishedfiledetails"]:
                 publishedfileid = metadata[
