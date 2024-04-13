@@ -46,10 +46,9 @@ class AppInfo:
 
         # Need to go one up if we are running from source
         self._application_folder = (
-            Path(main_file).resolve().parent.parent
-            if not "__compiled__"
-            in globals()  # __compiled__ will be present if Nuitka has frozen this
-            else Path(main_file).resolve().parent
+            Path(main_file).resolve().parent
+            if "__compiled__" in globals()  # __compiled__ will be present if Nuitka has frozen this
+            else Path(main_file).resolve().parent.parent
         )
 
         # Application metadata

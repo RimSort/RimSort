@@ -11,7 +11,7 @@ from loguru import logger
 # If we're running from a Python interpreter, makesure steamworks module is in our sys.path ($PYTHONPATH)
 # Ensure that this is available by running `git submodule update --init --recursive`
 # You can automatically ensure this is done by utilizing distribute.py
-if not "__compiled__" in globals():
+if "__compiled__" not in globals():
     sys.path.append(str((Path(getcwd()) / "submodules" / "SteamworksPy")))
 
 from steamworks import STEAMWORKS

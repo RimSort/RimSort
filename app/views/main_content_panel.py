@@ -734,7 +734,7 @@ class MainContent(QObject):
         logger.debug("Skipping update check...")
         return
         # NOT NUITKA
-        if not "__compiled__" in globals():
+        if "__compiled__" not in globals():
             logger.debug(
                 "You are running from Python interpreter. Skipping update check..."
             )

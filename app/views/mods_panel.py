@@ -35,7 +35,7 @@ from loguru import logger
 from pyperclip import copy as copy_to_clipboard
 
 from app.controllers.settings_controller import SettingsController
-from app.models.dialogue import show_dialogue_conditional, show_dialogue_input
+from app.models.dialogue import show_dialogue_conditional, show_dialogue_input, show_warning
 from app.utils.app_info import AppInfo
 from app.utils.constants import SEARCH_DATA_SOURCE_FILTER_INDEXES
 from app.utils.generic import (
