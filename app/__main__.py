@@ -166,7 +166,7 @@ if __name__ == "__main__":
         colorize=False,
     )
 
-    if not "__compiled__" in globals():
+    if "__compiled__" not in globals():
         logger.debug("Running using Python interpreter")
     else:
         # Configure QtWebEngine locales path
