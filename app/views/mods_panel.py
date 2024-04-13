@@ -1205,11 +1205,17 @@ class ModListWidget(QListWidget):
                                 ):
                                     self.uuids.remove(source_item.data(Qt.UserRole))
                                     self.takeItem(self.row(source_item))
-                                    rmtree(
-                                        widget_json_data["path"],
-                                        ignore_errors=False,
-                                        onerror=handle_remove_read_only,
-                                    )
+                                    try:
+                                        rmtree(
+                                            widget_json_data["path"],
+                                            ignore_errors=False,
+                                            onerror=handle_remove_read_only,
+                                        )
+                                    except FileNotFoundError:
+                                        logger.debug(
+                                            f"Unable to delete mod. Path does not exist: {widget_json_data['path']}"
+                                        )
+                                        pass
                     return True
                 elif action == delete_mod_keep_dds_action:  # ACTION: Delete mods action
                     answer = show_dialogue_conditional(
