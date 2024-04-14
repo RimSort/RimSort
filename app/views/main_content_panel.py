@@ -2817,7 +2817,7 @@ class MainContent(QObject):
                     if metadata.get("steamcmd"):
                         mod_pfid = metadata.get("publishedfileid")
                     if mod_pfid and mod_pfid in self.db_builder.publishedfileids:
-                        logger.warning(
+                        logger.debug(
                             f"Skipping download of existing SteamCMD mod: {mod_pfid}"
                         )
                         self.db_builder.publishedfileids.remove(mod_pfid)

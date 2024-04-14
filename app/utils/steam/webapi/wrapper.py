@@ -482,6 +482,7 @@ class DynamicQuery(QObject):
             return_playtime_stats=False,
             return_details=False,
             strip_description_bbcode=False,
+            admin_query=False,
         )
         # Print total mods found we need to iter through paginations to get info for
         if (
