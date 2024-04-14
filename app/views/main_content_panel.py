@@ -488,12 +488,18 @@ class MainContent(QObject):
                 self.mod_info_panel.mod_info_package_id_value.setObjectName(
                     "summaryValueInvalid"
                 )
+                self.mod_info_panel.mod_info_supported_versions_value.setObjectName(
+                    "summaryValueInvalid"
+                )
             else:
                 # Set valid value style
                 self.mod_info_panel.mod_info_name_value.setObjectName("summaryValue")
                 self.mod_info_panel.mod_info_path_value.setObjectName("summaryValue")
                 self.mod_info_panel.mod_info_author_value.setObjectName("summaryValue")
                 self.mod_info_panel.mod_info_package_id_value.setObjectName(
+                    "summaryValue"
+                )
+                self.mod_info_panel.mod_info_supported_versions_value.setObjectName(
                     "summaryValue"
                 )
             # Polish and unpolish to reload styling from the .qss file
@@ -520,6 +526,12 @@ class MainContent(QObject):
             )
             self.mod_info_panel.mod_info_name_value.style().polish(
                 self.mod_info_panel.mod_info_package_id_value
+            )
+            self.mod_info_panel.mod_info_name_value.style().unpolish(
+                self.mod_info_panel.mod_info_supported_versions_value
+            )
+            self.mod_info_panel.mod_info_name_value.style().polish(
+                self.mod_info_panel.mod_info_supported_versions_value
             )
 
     def __update_game_configuration(self) -> None:
