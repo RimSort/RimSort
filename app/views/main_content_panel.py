@@ -1206,7 +1206,7 @@ class MainContent(QObject):
 
         logger.info("Finished combining all tiers of mods. Inserting into mod lists!")
         # Disable widgets while inserting
-        self.mods_panel.active_mods_list.setEnabled(False)
+        self.disable_enable_widgets_signal.emit(False)
         # Insert data into lists
         self.__insert_data_into_lists(
             combined_mods,
@@ -1222,7 +1222,7 @@ class MainContent(QObject):
             },
         )
         # Enable widgets again after inserting
-        self.mods_panel.active_mods_list.setEnabled(True)
+        self.disable_enable_widgets_signal.emit(True)
 
     def _do_import_list_file_xml(self) -> None:
         """
@@ -1781,7 +1781,7 @@ class MainContent(QObject):
         """
         if (
             self.active_mods_uuids_restore_state
-            and self.active_mods_uuids_restore_state
+            and self.inactive_mods_uuids_restore_state
         ):
             self.mods_panel.signal_clear_search("Active")
             self.mods_panel.active_mods_filter_data_source_index = len(
