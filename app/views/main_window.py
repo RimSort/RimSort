@@ -3,7 +3,7 @@ from typing import Optional
 
 from PySide6.QtCore import QSize
 from PySide6.QtGui import QShowEvent
-from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 from loguru import logger
 from watchdog.observers.api import BaseObserver
 
@@ -80,6 +80,9 @@ class MainWindow(QMainWindow):
         self.main_content_panel = MainContent(
             settings_controller=self.settings_controller
         )
+        self.main_content_panel.disable_enable_widgets_signal.connect(
+            self.__disable_enable_widgets
+        )
         self.bottom_panel = Status()
 
         # Connect the game configuration actions signals to Status panel to display fading action text
@@ -110,6 +113,11 @@ class MainWindow(QMainWindow):
         )
 
         logger.debug("Finished MainWindow initialization")
+
+    def __disable_enable_widgets(self, enable: bool) -> None:
+        # Disable widgets
+        for widget in QApplication.instance().allWidgets():
+            widget.setEnabled(enable)
 
     def showEvent(self, event: QShowEvent) -> None:
         # Call the original showEvent handler

@@ -76,6 +76,7 @@ class MainContent(QObject):
 
     _instance: Optional["MainContent"] = None
 
+    disable_enable_widgets_signal = Signal(bool)
     status_signal = Signal(str)
     stop_watchdog_signal = Signal()
 
@@ -928,9 +929,8 @@ class MainContent(QObject):
         loading_animation_text_label = None
         # Hide the info panel widgets
         self.mod_info_panel.info_panel_frame.hide()
-        # Disable widgets
-        for widget in QApplication.instance().allWidgets():
-            widget.setEnabled(False)
+        # Disable widgets while loading
+        self.disable_enable_widgets_signal.emit(False)
         # Encapsulate mod parsing inside a nice lil animation
         loading_animation = LoadingAnimation(
             gif_path=gif_path,
@@ -951,9 +951,8 @@ class MainContent(QObject):
         if text:
             self.mod_info_panel.panel.removeWidget(loading_animation_text_label)
             loading_animation_text_label.close()
-        # Enable widgets
-        for widget in QApplication.instance().allWidgets():
-            widget.setEnabled(True)
+        # Enable widgets again after loading
+        self.disable_enable_widgets_signal.emit(True)
         # Show the info panel widgets
         self.mod_info_panel.info_panel_frame.show()
         logger.debug(f"Returning {type(data)}")
@@ -1099,7 +1098,12 @@ class MainContent(QObject):
             for uuid in self.metadata_manager.internal_local_metadata.keys()
             if uuid not in active_mods_uuids
         )
+        # Disable widgets while inserting
+        self.disable_enable_widgets_signal.emit(False)
+        # Insert data into lists
         self.__insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
+        # Re-enable widgets after inserting
+        self.disable_enable_widgets_signal.emit(True)
 
     def _do_sort(self) -> None:
         """
@@ -1201,6 +1205,9 @@ class MainContent(QObject):
             combined_mods[uuid] = self.metadata_manager.internal_local_metadata[uuid]
 
         logger.info("Finished combining all tiers of mods. Inserting into mod lists!")
+        # Disable widgets while inserting
+        self.mods_panel.active_mods_list.setEnabled(False)
+        # Insert data into lists
         self.__insert_data_into_lists(
             combined_mods,
             {
@@ -1214,6 +1221,8 @@ class MainContent(QObject):
                 )
             },
         )
+        # Enable widgets again after inserting
+        self.mods_panel.active_mods_list.setEnabled(True)
 
     def _do_import_list_file_xml(self) -> None:
         """
@@ -1787,10 +1796,15 @@ class MainContent(QObject):
             logger.info(
                 f"Restoring cached mod lists with active list [{len(self.active_mods_uuids_restore_state)}] and inactive list [{len(self.inactive_mods_uuids_restore_state)}]"
             )
+            # Disable widgets while inserting
+            self.disable_enable_widgets_signal.emit(False)
+            # Insert items into lists
             self.__insert_data_into_lists(
                 self.active_mods_uuids_restore_state,
                 self.inactive_mods_uuids_restore_state,
             )
+            # Reenable widgets after inserting
+            self.disable_enable_widgets_signal.emit(True)
         else:
             logger.warning(
                 "Cached mod lists for restore function not set as client started improperly. Passing on restore"
