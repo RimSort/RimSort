@@ -90,6 +90,7 @@ class ModListItemInner(QWidget):
 
     def __init__(
         self,
+        filtered: bool,
         settings_controller: SettingsController,
         uuid: str,
     ) -> None:
@@ -100,6 +101,7 @@ class ModListItemInner(QWidget):
         exists in the metadata dict. See tags:
         https://rimworldwiki.com/wiki/About.xml
 
+        :param filtered: a bool representing whether the widget's item is filtered
         :param settings_controller: an instance of SettingsController for accessing settings
         :param uuid: str, the uuid of the mod which corresponds to a mod's metadata
         """
@@ -108,6 +110,8 @@ class ModListItemInner(QWidget):
 
         # Cache MetadataManager instance
         self.metadata_manager = MetadataManager.instance()
+        # Cache filtered state of widget's item - used to determine styling of widget
+        self.filtered = filtered
         # Cache SettingsManager instance
         self.settings_controller = settings_controller
 
@@ -210,7 +214,9 @@ class ModListItemInner(QWidget):
                 self.mod_source_icon.setObjectName("workshop")
                 self.mod_source_icon.setToolTip("Subscribed via Steam")
         # Set label color if mod is invalid
-        if self.metadata_manager.internal_local_metadata[self.uuid].get("invalid"):
+        if self.filtered:
+            self.main_label.setObjectName("ListItemLabelFiltered")
+        elif self.metadata_manager.internal_local_metadata[self.uuid].get("invalid"):
             self.main_label.setObjectName("ListItemLabelInvalid")
         else:
             self.main_label.setObjectName("ListItemLabel")
@@ -319,6 +325,16 @@ class ModListItemInner(QWidget):
         else:
             self.main_label.setText(self.list_item_name)
         return super().resizeEvent(event)
+
+    def repolishLabel(self, objectName: str) -> None:
+        """
+        Repolish the widget with a new object name
+
+        :param objectName: the name of the object
+        """
+        self.main_label.setObjectName(objectName)
+        self.main_label.style().unpolish(self.main_label)
+        self.main_label.style().polish(self.main_label)
 
 
 class ModListIcons:
@@ -489,9 +505,12 @@ class ModListWidget(QListWidget):
                 self.create_widget_for_item(item)
 
     def create_widget_for_item(self, item: QListWidgetItem) -> None:
-        uuid = item.data(Qt.UserRole)
+        data = item.data(Qt.UserRole)
+        filtered = data["filtered"]
+        uuid = data["uuid"]
         if uuid:
             widget = ModListItemInner(
+                filtered=filtered,
                 settings_controller=self.settings_controller,
                 uuid=uuid,
             )
@@ -508,7 +527,7 @@ class ModListWidget(QListWidget):
             # Get the new indexes of the dropped items
             new_indexes = [index.row() for index in self.selectedIndexes()]
             # Get the UUIDs of the dropped items
-            uuids = [item.data(Qt.UserRole) for item in self.selectedItems()]
+            uuids = [item.data(Qt.UserRole)["uuid"] for item in self.selectedItems()]
             # Insert the UUIDs at the respective new indexes
             for idx, uuid in zip(new_indexes, uuids):
                 if uuid in self.uuids:  # Remove the uuid if it exists in the list
@@ -1192,7 +1211,8 @@ class ModListWidget(QListWidget):
                                 ].startswith(
                                     "ludeon.rimworld"
                                 ):
-                                    self.uuids.remove(source_item.data(Qt.UserRole))
+                                    data = source_item.data(Qt.UserRole)
+                                    self.uuids.remove(data["uuid"])
                                     self.takeItem(self.row(source_item))
                                     try:
                                         rmtree(
@@ -1229,7 +1249,8 @@ class ModListWidget(QListWidget):
                                 ].startswith(
                                     "ludeon.rimworld"
                                 ):
-                                    self.uuids.remove(source_item.data(Qt.UserRole))
+                                    data = source_item.data(Qt.UserRole)
+                                    self.uuids.remove(data["uuid"])
                                     self.takeItem(self.row(source_item))
                                     delete_files_except_extension(
                                         directory=widget_json_data["path"],
@@ -1395,7 +1416,8 @@ class ModListWidget(QListWidget):
         for idx in range(first, last + 1):
             item = self.item(idx)
             if item:
-                uuid = item.data(Qt.UserRole)
+                data = item.data(Qt.UserRole)
+                uuid = data["uuid"]
                 self.uuids.insert(idx, uuid)
                 self.item_added_signal.emit(uuid)
         # Update list signal if all items are loaded
@@ -1454,7 +1476,8 @@ class ModListWidget(QListWidget):
         the keyboard. Look up the mod's data by uuid
         """
         if current is not None:
-            self.mod_info_signal.emit(current.data(Qt.UserRole))
+            data = current.data(Qt.UserRole)
+            self.mod_info_signal.emit(data["uuid"])
 
     def mod_clicked(self, current: QListWidgetItem) -> None:
         """
@@ -1465,7 +1488,8 @@ class ModListWidget(QListWidget):
         it so that mod info is updated as expected.
         """
         if current is not None:
-            self.mod_info_signal.emit(current.data(Qt.UserRole))
+            data = current.data(Qt.UserRole)
+            self.mod_info_signal.emit(data["uuid"])
 
     def mod_double_clicked(self, item: QListWidgetItem):
         widget = ModListItemInner = self.itemWidget(item)
@@ -1505,7 +1529,7 @@ class ModListWidget(QListWidget):
         if uuids:  # Insert data...
             for uuid_key in uuids:
                 list_item = QListWidgetItem(self)
-                list_item.setData(Qt.UserRole, uuid_key)
+                list_item.setData(Qt.UserRole, {"filtered": False, "uuid": uuid_key})
                 self.addItem(list_item)
         else:  # ...unless we don't have mods, at which point reenable updates and exit
             self.setUpdatesEnabled(True)
@@ -1992,11 +2016,15 @@ class ModsPanel(QWidget):
             filter_state = self.active_mods_search_filter_state
             source_filter = self.active_mods_data_source_filter
             uuids = self.active_mods_list.uuids
+            # Ensure visible items have their widgets created
+            self.active_mods_list.check_widgets_visible()
         elif list_type == "Inactive":
             _filter = self.inactive_mods_search_filter
             filter_state = self.inactive_mods_search_filter_state
             source_filter = self.inactive_mods_data_source_filter
             uuids = self.inactive_mods_list.uuids
+            # Ensure visible items have their widgets created
+            self.inactive_mods_list.check_widgets_visible()
 
         search_filter = None
         if _filter.currentText() == "Name":
@@ -2014,6 +2042,7 @@ class ModsPanel(QWidget):
                 if list_type == "Active"
                 else self.inactive_mods_list.item(uuids.index(uuid))
             )
+            item_data = item.data(Qt.UserRole)
             widget = (
                 self.active_mods_list.itemWidget(item)
                 if list_type == "Active"
@@ -2025,46 +2054,45 @@ class ModsPanel(QWidget):
             if invalid:
                 continue
 
-            filtered = False
+            item_filtered = item_data["filtered"]
 
             if (
                 pattern
                 and metadata.get(search_filter)
                 and pattern.lower() not in str(metadata.get(search_filter)).lower()
             ):
-                filtered = True
+                item_filtered = True
             elif source_filter == "all":
-                filtered = False
+                item_filtered = False
             elif source_filter == "git_repo":
-                filtered = not metadata.get("git_repo")
+                item_filtered = not metadata.get("git_repo")
             elif source_filter == "steamcmd":
-                filtered = not metadata.get("steamcmd")
+                item_filtered = not metadata.get("steamcmd")
             elif source_filter != metadata.get("data_source"):
-                filtered = True
+                item_filtered = True
 
             repolish = False
 
             if filter_state:
-                item.setHidden(filtered)
-                if widget and widget.main_label.objectName() == "ListItemLabelFiltered":
-                    widget.main_label.setObjectName("ListItemLabel")
+                item.setHidden(item_filtered)
+                if item_filtered:
+                    item_filtered = False
                     repolish = True
             else:
-                if widget:
-                    widget.main_label.setObjectName(
-                        "ListItemLabelFiltered" if filtered else "ListItemLabel"
-                    )
-                    repolish = True
-                if (
-                    widget
-                    and widget.main_label.objectName() == "ListItemLabelFiltered"
-                    and item.isHidden()
-                ):
+                repolish = True
+                if item_filtered and item.isHidden():
                     item.setHidden(False)
 
+            # Update item data
+            item_data["filtered"] = item_filtered
+            item.setData(Qt.UserRole, item_data)
+
             if repolish and widget:
-                widget.main_label.style().unpolish(widget.main_label)
-                widget.main_label.style().polish(widget.main_label)
+                widget.repolishLabel(
+                    objectName=(
+                        "ListItemLabelFiltered" if item_filtered else "ListItemLabel"
+                    )
+                )
 
         self.update_count(list_type=list_type)
 
@@ -2140,10 +2168,10 @@ class ModsPanel(QWidget):
                 if list_type == "Active"
                 else self.inactive_mods_list.item(uuids.index(uuid))
             )
+            item_data = item.data(Qt.UserRole)
+            item_filtered = item_data["filtered"]
             widget = mods_list.itemWidget(item)
-            if item.isHidden() or (
-                widget and widget.main_label.objectName() == "ListItemLabelFiltered"
-            ):
+            if item.isHidden() or item_filtered:
                 num_filtered += 1
             else:
                 num_unfiltered += 1
