@@ -517,9 +517,7 @@ class ModListWidget(QListWidget):
                 self.uuids.insert(idx, uuid)
         # Update list signal
         self.list_update_signal.emit("drop")
-        logger.debug(
-            "List update signal emitted after rows dropped (n=%s)", self.count()
-        )
+        logger.debug(f"List update signal emitted after rows dropped [{self.count()}]")
 
     def eventFilter(self, source_object: QObject, event: QEvent) -> None:
         """
@@ -1407,7 +1405,7 @@ class ModListWidget(QListWidget):
             # Update list with the number of items
             self.list_update_signal.emit(str(self.count()))
             logger.debug(
-                "List update signal emitted after rows inserted (n=%s)", self.count()
+                f"List update signal emitted after rows inserted [{self.count()}]"
             )
 
     def handle_rows_removed(self, parent: QModelIndex, first: int, last: int) -> None:
@@ -1434,7 +1432,7 @@ class ModListWidget(QListWidget):
             # Update list with the number of items
             self.list_update_signal.emit(str(self.count()))
             logger.debug(
-                "List update signal emitted after rows removed (n=%s)", self.count()
+                f"List update signal emitted after rows removed [{self.count()}]"
             )
 
     def get_item_widget_at_index(self, idx: int) -> Optional[ModListItemInner]:
