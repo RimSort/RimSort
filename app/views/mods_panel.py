@@ -272,23 +272,46 @@ class ModListItemInner(QWidget):
 
         :return: string containing the tool_tip_text
         """
-        name_line = f"Mod: {self.metadata_manager.internal_local_metadata[self.uuid].get('name')}\n"
+        metadata = self.metadata_manager.internal_local_metadata.get(self.uuid, {})
 
-        authors_tag = self.metadata_manager.internal_local_metadata[self.uuid].get(
-            "authors"
+        name_line = f"Mod: {metadata.get('name', 'Not specified')}\n"
+
+        authors_tag = metadata.get("authors")
+        authors_text = (
+            ", ".join(authors_tag.get("li", ["Not specified"]))
+            if isinstance(authors_tag, dict)
+            else authors_tag or "Not specified"
         )
+        author_line = f"Authors: {authors_text}\n"
 
-        if authors_tag and isinstance(authors_tag, dict) and authors_tag.get("li"):
-            list_of_authors = authors_tag["li"]
-            authors_text = ", ".join(list_of_authors)
-            author_line = f"Authors: {authors_text}\n"
-        else:
-            author_line = f"Author: {authors_tag if authors_tag else 'Not specified'}\n"
+        package_id = metadata.get("packageid", "Not specified")
+        package_id_line = f"PackageID: {package_id}\n"
 
-        package_id_line = f"PackageID: {self.metadata_manager.internal_local_metadata[self.uuid].get('packageid')}\n"
-        modversion_line = f"Mod Version: {self.metadata_manager.internal_local_metadata[self.uuid].get('modversion', 'Not specified')}\n"
-        path_line = f"Path: {self.metadata_manager.internal_local_metadata[self.uuid].get('path')}"
-        return name_line + author_line + package_id_line + modversion_line + path_line
+        mod_version = metadata.get("modversion", "Not specified")
+        modversion_line = f"Mod Version: {mod_version}\n"
+
+        supported_versions_tag = metadata.get("supportedversions", {})
+        supported_versions_list = supported_versions_tag.get("li")
+        supported_versions_text = (
+            ", ".join(supported_versions_list)
+            if isinstance(supported_versions_list, list)
+            else supported_versions_list or "Not specified"
+        )
+        supported_versions_line = f"Supported Versions: {supported_versions_text}\n"
+
+        path = metadata.get("path", "Not specified")
+        path_line = f"Path: {path}"
+
+        return "".join(
+            [
+                name_line,
+                author_line,
+                package_id_line,
+                modversion_line,
+                supported_versions_line,
+                path_line,
+            ]
+        )
 
     def get_icon(self) -> QIcon:  # type: ignore
         """
