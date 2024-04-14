@@ -11,12 +11,6 @@
     "editor.formatOnType": true,
     "editor.formatOnPaste": true,
     "editor.formatOnSave": true,
-    "python.linting.enabled": true,
-    "python.linting.mypyEnabled": true,
-    "python.linting.pylintArgs": [
-        "--enable=W0611", "--enable=W0614"
-    ],
     "python.terminal.activateEnvironment": true,
     "search.maxResults": 100000,
-    "python.formatting.provider": "black"
 }
