@@ -35,7 +35,11 @@ from loguru import logger
 from pyperclip import copy as copy_to_clipboard
 
 from app.controllers.settings_controller import SettingsController
-from app.models.dialogue import show_dialogue_conditional, show_dialogue_input, show_warning
+from app.models.dialogue import (
+    show_dialogue_conditional,
+    show_dialogue_input,
+    show_warning,
+)
 from app.utils.app_info import AppInfo
 from app.utils.constants import SEARCH_DATA_SOURCE_FILTER_INDEXES
 from app.utils.generic import (
@@ -450,6 +454,9 @@ class ModListWidget(QListWidget):
         self.horizontalScrollBar().setEnabled(False)
         self.horizontalScrollBar().setVisible(False)
 
+        # Optimizes performance
+        # self.setUniformItemSizes(True)
+
         # Allow inserting custom list items
         self.model().rowsInserted.connect(
             self.handle_rows_inserted, Qt.QueuedConnection
@@ -460,11 +467,37 @@ class ModListWidget(QListWidget):
             self.handle_rows_removed, Qt.QueuedConnection
         )
 
+        # Lazy load ModListItemInner
+        self.verticalScrollBar().valueChanged.connect(self.check_widgets_visible)
+
         # This set is used to keep track of mods that have been loaded
         # into widgets. Used for an optimization strategy for `handle_rows_inserted`
         self.uuids = list()
         self.ignore_warning_list = []
         logger.debug("Finished ModListWidget initialization")
+
+    def check_item_visible(self, item: QListWidgetItem) -> bool:
+        # Determines if the item is currently visible in the viewport.
+        rect = self.visualItemRect(item)
+        return rect.top() < self.viewport().height() and rect.bottom() > 0
+
+    def check_widgets_visible(self):
+        # This function checks the visibility of each item and creates a widget if the item is visible and not already setup.
+        for idx in range(self.count()):
+            item = self.item(idx)
+            if item and self.check_item_visible(item) and self.itemWidget(item) is None:
+                self.create_widget_for_item(item)
+
+    def create_widget_for_item(self, item: QListWidgetItem) -> None:
+        uuid = item.data(Qt.UserRole)
+        if uuid:
+            widget = ModListItemInner(
+                settings_controller=self.settings_controller,
+                uuid=uuid,
+            )
+            widget.toggle_warning_signal.connect(self.toggle_warning)
+            item.setSizeHint(widget.sizeHint())
+            self.setItemWidget(item, widget)
 
     def dropEvent(self, event: QDropEvent) -> None:
         super().dropEvent(event)
@@ -484,6 +517,9 @@ class ModListWidget(QListWidget):
                 self.uuids.insert(idx, uuid)
         # Update list signal
         self.list_update_signal.emit("drop")
+        logger.debug(
+            "List update signal emitted after rows dropped (n=%s)", self.count()
+        )
 
     def eventFilter(self, source_object: QObject, event: QEvent) -> None:
         """
@@ -1356,22 +1392,23 @@ class ModListWidget(QListWidget):
         :param first: index of first item inserted
         :param last: index of last item inserted
         """
+        # Loop through the indexes of inserted items, load widgets if not
+        # already loaded. Each item index corresponds to a UUID index.
         for idx in range(first, last + 1):
             item = self.item(idx)
-            if item is not None and self.itemWidget(item) is None:
+            if item:
                 uuid = item.data(Qt.UserRole)
-                widget = ModListItemInner(
-                    settings_controller=self.settings_controller,
-                    uuid=uuid,
-                )
-                widget.toggle_warning_signal.connect(self.toggle_warning)
-                item.setSizeHint(widget.sizeHint())
-                self.setItemWidget(item, widget)
                 self.uuids.insert(idx, uuid)
                 self.item_added_signal.emit(uuid)
-
+        # Update list signal if all items are loaded
         if len(self.uuids) == self.count():
+            # Check if all visible items have their widgets loaded
+            self.check_widgets_visible()
+            # Update list with the number of items
             self.list_update_signal.emit(str(self.count()))
+            logger.debug(
+                "List update signal emitted after rows inserted (n=%s)", self.count()
+            )
 
     def handle_rows_removed(self, parent: QModelIndex, first: int, last: int) -> None:
         """
@@ -1390,8 +1427,15 @@ class ModListWidget(QListWidget):
         :param first: index of first item removed (not used)
         :param last: index of last item removed (not used)
         """
+        # Update list signal if all items are loaded
         if len(self.uuids) == self.count():
+            # Check if all visible items have their widgets loaded
+            self.check_widgets_visible()
+            # Update list with the number of items
             self.list_update_signal.emit(str(self.count()))
+            logger.debug(
+                "List update signal emitted after rows removed (n=%s)", self.count()
+            )
 
     def get_item_widget_at_index(self, idx: int) -> Optional[ModListItemInner]:
         item = self.item(idx)
@@ -1404,7 +1448,9 @@ class ModListWidget(QListWidget):
             (self.itemWidget(self.item(i)), self.item(i)) for i in range(self.count())
         ]
 
-    def mod_changed_to(self, current: QListWidgetItem, previous: QListWidgetItem) -> None:
+    def mod_changed_to(
+        self, current: QListWidgetItem, previous: QListWidgetItem
+    ) -> None:
         """
         Method to handle clicking on a row or navigating between rows with
         the keyboard. Look up the mod's data by uuid
@@ -1829,7 +1875,9 @@ class ModsPanel(QWidget):
                 # Handle version mismatch behavior
                 if mod_errors["version_mismatch"] and not self.ignore_error:
                     # Change the text styling to indicate a version mismatch
-                    item_widget_at_index.main_label.setObjectName("ListItemLabelInvalid")
+                    item_widget_at_index.main_label.setObjectName(
+                        "ListItemLabelInvalid"
+                    )
                     item_widget_at_index.main_label.style().unpolish(
                         item_widget_at_index.main_label
                     )
@@ -1886,7 +1934,7 @@ class ModsPanel(QWidget):
                 self.errors_icon.setToolTip(total_error_text.lstrip())
             if total_warning_text:
                 self.warnings_icon.setToolTip(total_warning_text.lstrip())
-        else: # Hide the summary if there are no errors or warnings
+        else:  # Hide the summary if there are no errors or warnings
             self.errors_summary_frame.setHidden(True)
             self.warnings_text.setText("0 warnings(s)")
             self.errors_text.setText("0 errors(s)")
@@ -2000,21 +2048,23 @@ class ModsPanel(QWidget):
 
             if filter_state:
                 item.setHidden(filtered)
-                if widget.main_label.objectName() == "ListItemLabelFiltered":
+                if widget and widget.main_label.objectName() == "ListItemLabelFiltered":
                     widget.main_label.setObjectName("ListItemLabel")
                     repolish = True
             else:
-                widget.main_label.setObjectName(
-                    "ListItemLabelFiltered" if filtered else "ListItemLabel"
-                )
-                repolish = True
+                if widget:
+                    widget.main_label.setObjectName(
+                        "ListItemLabelFiltered" if filtered else "ListItemLabel"
+                    )
+                    repolish = True
                 if (
-                    widget.main_label.objectName() == "ListItemLabelFiltered"
+                    widget
+                    and widget.main_label.objectName() == "ListItemLabelFiltered"
                     and item.isHidden()
                 ):
                     item.setHidden(False)
 
-            if repolish:
+            if repolish and widget:
                 widget.main_label.style().unpolish(widget.main_label)
                 widget.main_label.style().polish(widget.main_label)
 
@@ -2092,10 +2142,9 @@ class ModsPanel(QWidget):
                 if list_type == "Active"
                 else self.inactive_mods_list.item(uuids.index(uuid))
             )
-            if (
-                item.isHidden()
-                or mods_list.itemWidget(item).main_label.objectName()
-                == "ListItemLabelFiltered"
+            widget = mods_list.itemWidget(item)
+            if item.isHidden() or (
+                widget and widget.main_label.objectName() == "ListItemLabelFiltered"
             ):
                 num_filtered += 1
             else:
