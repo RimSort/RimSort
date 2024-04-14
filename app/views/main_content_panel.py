@@ -302,7 +302,9 @@ class MainContent(QObject):
             iml.setFocus()
             if not iml.selectedIndexes():
                 iml.setCurrentRow(self.___get_relative_middle(iml))
-            self.__mod_list_slot(iml.selectedItems()[0].data(Qt.UserRole))
+            data = iml.selectedItems()[0].data(Qt.UserRole)
+            uuid = data["uuid"]
+            self.__mod_list_slot(uuid)
 
         elif key == "Return" or key == "Space" or key == "DoubleClick":
             # TODO: graphical bug where if you hold down the key, items are
@@ -314,7 +316,9 @@ class MainContent(QObject):
 
                 # Remove items from current list
                 for item in items_to_move:
-                    aml.uuids.remove(item.data(Qt.UserRole))
+                    data = item.data(Qt.UserRole)
+                    uuid = data["uuid"]
+                    aml.uuids.remove(uuid)
                     aml.takeItem(aml.row(item))
                 if aml.count():
                     if aml.count() == first_selected:
@@ -353,7 +357,9 @@ class MainContent(QObject):
             aml.setFocus()
             if not aml.selectedIndexes():
                 aml.setCurrentRow(self.___get_relative_middle(aml))
-            self.__mod_list_slot(aml.selectedItems()[0].data(Qt.UserRole))
+            data = aml.selectedItems()[0].data(Qt.UserRole)
+            uuid = data["uuid"]
+            self.__mod_list_slot(uuid)
 
         elif key == "Return" or key == "Space" or key == "DoubleClick":
             # TODO: graphical bug where if you hold down the key, items are
@@ -365,7 +371,9 @@ class MainContent(QObject):
 
                 # Remove items from current list
                 for item in items_to_move:
-                    iml.uuids.remove(item.data(Qt.UserRole))
+                    data = item.data(Qt.UserRole)
+                    uuid = data["uuid"]
+                    iml.uuids.remove(uuid)
                     iml.takeItem(iml.row(item))
                 if iml.count():
                     if iml.count() == first_selected:
