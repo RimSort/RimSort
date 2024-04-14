@@ -439,6 +439,9 @@ QLabel#ListItemLabel {
 QLabel#ListItemLabelFiltered { 
     color: grey; 
 }
+QLabel#ListItemLabelInvalid {
+    color: red;
+}
 /* Styling for the errors summary frame */
 QWidget#errorFrame { /* Outer-most encapsulator */
     background-color: #19232d;

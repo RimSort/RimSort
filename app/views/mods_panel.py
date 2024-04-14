@@ -205,8 +205,12 @@ class ModListItemInner(QWidget):
             elif data_source == "workshop":
                 self.mod_source_icon.setObjectName("workshop")
                 self.mod_source_icon.setToolTip("Subscribed via Steam")
-
-        self.main_label.setObjectName("ListItemLabel")
+        # Set label color if mod is invalid
+        if self.metadata_manager.internal_local_metadata[self.uuid].get("invalid"):
+            self.main_label.setObjectName("ListItemLabelInvalid")
+        else:
+            self.main_label.setObjectName("ListItemLabel")
+        # Add icons
         if self.git_icon:
             self.main_item_layout.addWidget(self.git_icon, Qt.AlignRight)
         if self.steamcmd_icon:
@@ -217,6 +221,7 @@ class ModListItemInner(QWidget):
             self.main_item_layout.addWidget(self.csharp_icon, Qt.AlignRight)
         if self.xml_icon:
             self.main_item_layout.addWidget(self.xml_icon, Qt.AlignRight)
+        # Compose the layout of our widget and set it to the main layout
         self.main_item_layout.addWidget(self.main_label, Qt.AlignCenter)
         self.main_item_layout.addWidget(self.warning_icon_label, Qt.AlignRight)
         self.main_item_layout.addStretch()
@@ -1360,12 +1365,6 @@ class ModListWidget(QListWidget):
                     uuid=uuid,
                 )
                 widget.toggle_warning_signal.connect(self.toggle_warning)
-                if self.metadata_manager.internal_local_metadata[uuid].get("invalid"):
-                    widget.main_label.setObjectName("summaryValueInvalid")
-                else:
-                    widget.main_label.setObjectName("ListItemLabel")
-                # widget.main_label.style().unpolish(widget.main_label)
-                # widget.main_label.style().polish(widget.main_label)
                 item.setSizeHint(widget.sizeHint())
                 self.setItemWidget(item, widget)
                 self.uuids.insert(idx, uuid)
@@ -1827,20 +1826,29 @@ class ModsPanel(QWidget):
                                 packageid_to_uuid.get(key), {}
                             ).get("name", info_from_steam.get(key, key))
                             tool_tip_text += f"\n  * {name}"
-
+                # Handle version mismatch behavior
                 if mod_errors["version_mismatch"] and not self.ignore_error:
+                    # Change the text styling to indicate a version mismatch
+                    item_widget_at_index.main_label.setObjectName("ListItemLabelInvalid")
+                    item_widget_at_index.main_label.style().unpolish(
+                        item_widget_at_index.main_label
+                    )
+                    item_widget_at_index.main_label.style().polish(
+                        item_widget_at_index.main_label
+                    )
+                    # Add tool tip to indicate mod and game version mismatch
                     tool_tip_text += "\n\nMod and Game Version Mismatch"
-
+                # Set the warning icon to be visible if necessary and set the tool tip
                 if tool_tip_text:
                     item_widget_at_index.warning_icon_label.setHidden(False)
                     item_widget_at_index.warning_icon_label.setToolTip(
                         tool_tip_text.lstrip()
                     )
-                else:
+                else:  # Hide the warning icon if no tool tip text
                     item_widget_at_index.warning_icon_label.setHidden(True)
                     item_widget_at_index.warning_icon_label.setToolTip("")
 
-                # Add to error/warnings summary if necessary
+                # Add to error summary if any missing dependencies or incompatibilities
                 if any(
                     [
                         mod_errors[key]
@@ -1854,7 +1862,7 @@ class ModsPanel(QWidget):
                     total_error_text += f"\n\n{mod_data['name']}"
                     total_error_text += "\n" + "=" * len(mod_data["name"])
                     total_error_text += tool_tip_text
-
+                # Add to warning summary if any loadBefore or loadAfter violations, or version mismatch
                 if any(
                     [
                         mod_errors[key]
@@ -1869,7 +1877,7 @@ class ModsPanel(QWidget):
                     total_warning_text += f"\n\n{mod_data['name']}"
                     total_warning_text += "\n============================="
                     total_warning_text += tool_tip_text
-
+        # Calculate total errors and warnings and set the text and tool tip
         if total_error_text or total_warning_text or num_errors or num_warnings:
             self.errors_summary_frame.setHidden(False)
             self.warnings_text.setText(f"{num_warnings} warnings(s)")
@@ -1878,7 +1886,7 @@ class ModsPanel(QWidget):
                 self.errors_icon.setToolTip(total_error_text.lstrip())
             if total_warning_text:
                 self.warnings_icon.setToolTip(total_warning_text.lstrip())
-        else:
+        else: # Hide the summary if there are no errors or warnings
             self.errors_summary_frame.setHidden(True)
             self.warnings_text.setText("0 warnings(s)")
             self.errors_text.setText("0 errors(s)")
