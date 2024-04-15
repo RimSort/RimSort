@@ -621,6 +621,33 @@ class MetadataManager(QObject):
         logger.info("Parsing dependencies & load order rules from external metadata")
         self.compile_metadata()
 
+    def is_version_mismatch(self, uuid: str):
+        # Check version for everything except Core
+        mod_data = self.internal_local_metadata.get(uuid, {})
+        if (
+            self.game_version
+            and mod_data
+            and mod_data.get("supportedversions", {}).get("li")
+        ):
+            supported_versions = self.internal_local_metadata[uuid][
+                "supportedversions"
+            ]["li"]
+            if isinstance(supported_versions, str):
+                if self.game_version.startswith(supported_versions):
+                    return False
+            elif isinstance(supported_versions, list):
+                return not any(
+                    [
+                        ver
+                        for ver in supported_versions
+                        if self.game_version.startswith(ver)
+                    ]
+                )
+            else:
+                logger.error(
+                    f"supportedversions value not str or list: {supported_versions}"
+                )
+
     def process_mods(self, directories_to_process: list, intent: str) -> Dict[str, Any]:
         logger.info(
             f"Processing updates for {len(directories_to_process)} mod directories"

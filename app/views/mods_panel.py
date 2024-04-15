@@ -90,7 +90,10 @@ class ModListItemInner(QWidget):
 
     def __init__(
         self,
+        errors_warnings: str,
         filtered: bool,
+        invalid: bool,
+        mismatch: bool,
         settings_controller: SettingsController,
         uuid: str,
     ) -> None:
@@ -101,7 +104,9 @@ class ModListItemInner(QWidget):
         exists in the metadata dict. See tags:
         https://rimworldwiki.com/wiki/About.xml
 
+        :param errors_warnings: a string of errors and warnings for the notification tooltip
         :param filtered: a bool representing whether the widget's item is filtered
+        :param invalid: a bool representing whether the widget's item is an invalid mod
         :param settings_controller: an instance of SettingsController for accessing settings
         :param uuid: str, the uuid of the mod which corresponds to a mod's metadata
         """
@@ -110,8 +115,14 @@ class ModListItemInner(QWidget):
 
         # Cache MetadataManager instance
         self.metadata_manager = MetadataManager.instance()
+        # Cache errors and warnings string for tooltip
+        self.errors_warnings = errors_warnings
         # Cache filtered state of widget's item - used to determine styling of widget
         self.filtered = filtered
+        # Cache invalid state of widget's item - used to determine styling of widget
+        self.invalid = invalid
+        # Cache mismatch state of widget's item - used to determine warning icon visibility
+        self.mismatch = mismatch
         # Cache SettingsManager instance
         self.settings_controller = settings_controller
 
@@ -182,7 +193,12 @@ class ModListItemInner(QWidget):
         self.warning_icon_label.setPixmap(
             ModListIcons.warning_icon().pixmap(QSize(20, 20))
         )
-        self.warning_icon_label.setHidden(True)
+        # Set tooltip on warning icon if any, otherwise hide the icon
+        if not self.errors_warnings:
+            self.warning_icon_label.setHidden(True)
+        else:
+            self.warning_icon_label.setToolTip(self.errors_warnings)
+            self.warning_icon_label.setHidden(False)
 
         # Icons by mod source
         self.mod_source_icon = None
@@ -216,7 +232,7 @@ class ModListItemInner(QWidget):
         # Set label color if mod is invalid
         if self.filtered:
             self.main_label.setObjectName("ListItemLabelFiltered")
-        elif self.metadata_manager.internal_local_metadata[self.uuid].get("invalid"):
+        elif self.invalid or self.mismatch:
             self.main_label.setObjectName("ListItemLabelInvalid")
         else:
             self.main_label.setObjectName("ListItemLabel")
@@ -326,15 +342,32 @@ class ModListItemInner(QWidget):
             self.main_label.setText(self.list_item_name)
         return super().resizeEvent(event)
 
-    def repolishLabel(self, objectName: str) -> None:
+    def repolish(self, item: QListWidgetItem) -> None:
         """
-        Repolish the widget with a new object name
-
-        :param objectName: the name of the object
+        Repolish the widget items
         """
-        self.main_label.setObjectName(objectName)
-        self.main_label.style().unpolish(self.main_label)
-        self.main_label.style().polish(self.main_label)
+        item_data = item.data(Qt.UserRole)
+        tooltip = item_data["errors_warnings"]
+        # Set the warning icon to be visible if necessary and set the tool tip
+        if tooltip:
+            self.warning_icon_label.setHidden(False)
+            self.warning_icon_label.setToolTip(tooltip.lstrip())
+        else:  # Hide the warning icon if no tool tip text
+            self.warning_icon_label.setHidden(True)
+            self.warning_icon_label.setToolTip("")
+        # Recalculate the widget label's styling based on item data
+        widget_object_name = self.main_label.objectName()
+        if item_data["filtered"]:
+            new_widget_object_name = "ListItemLabelFiltered"
+        elif item_data["invalid"] or item_data["mismatch"]:
+            new_widget_object_name = "ListItemLabelInvalid"
+        else:
+            new_widget_object_name = "ListItemLabel"
+        if widget_object_name != new_widget_object_name:
+            logger.debug("Repolishing: " + new_widget_object_name)
+            self.main_label.setObjectName(new_widget_object_name)
+            self.main_label.style().unpolish(self.main_label)
+            self.main_label.style().polish(self.main_label)
 
 
 class ModListIcons:
@@ -433,7 +466,7 @@ class ModListWidget(QListWidget):
     steamcmd_downloader_signal = Signal(list)
     steamworks_subscription_signal = Signal(list)
 
-    def __init__(self, settings_controller: SettingsController) -> None:
+    def __init__(self, list_type: str, settings_controller: SettingsController) -> None:
         """
         Initialize the ListWidget with a dict of mods.
         Keys are the package ids and values are a dict of
@@ -441,6 +474,9 @@ class ModListWidget(QListWidget):
         https://rimworldwiki.com/wiki/About.xml
         """
         logger.debug("Initializing ModListWidget")
+
+        # Cache list_type for later use
+        self.list_type = list_type
 
         # Cache MetadataManager instance
         self.metadata_manager = MetadataManager.instance()
@@ -457,7 +493,7 @@ class ModListWidget(QListWidget):
         self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
 
         # When an item is clicked, display the mod information
-        self.currentItemChanged.connect(self.mod_changed_to)
+        # self.currentItemChanged.connect(self.mod_changed_to)
         self.itemClicked.connect(self.mod_clicked)
 
         # When an item is double clicked, move it to the opposite list
@@ -472,6 +508,9 @@ class ModListWidget(QListWidget):
 
         # Optimizes performance
         # self.setUniformItemSizes(True)
+
+        # Slot to handle item widgets when itemChanged()
+        self.itemChanged.connect(self.handle_item_data_changed)
 
         # Allow inserting custom list items
         self.model().rowsInserted.connect(
@@ -501,16 +540,23 @@ class ModListWidget(QListWidget):
         # This function checks the visibility of each item and creates a widget if the item is visible and not already setup.
         for idx in range(self.count()):
             item = self.item(idx)
+            # Check for visible item without a widget set
             if item and self.check_item_visible(item) and self.itemWidget(item) is None:
                 self.create_widget_for_item(item)
 
     def create_widget_for_item(self, item: QListWidgetItem) -> None:
         data = item.data(Qt.UserRole)
+        errors_warnings = data["errors_warnings"]
         filtered = data["filtered"]
+        invalid = data["invalid"]
+        mismatch = data["mismatch"]
         uuid = data["uuid"]
         if uuid:
             widget = ModListItemInner(
+                errors_warnings=errors_warnings,
                 filtered=filtered,
+                invalid=invalid,
+                mismatch=mismatch,
                 settings_controller=self.settings_controller,
                 uuid=uuid,
             )
@@ -535,8 +581,10 @@ class ModListWidget(QListWidget):
                 # Reinsert uuid at it's new index
                 self.uuids.insert(idx, uuid)
         # Update list signal
+        logger.debug(
+            f"Emitting {self.list_type} list update signal after rows dropped [{self.count()}]"
+        )
         self.list_update_signal.emit("drop")
-        logger.debug(f"List update signal emitted after rows dropped [{self.count()}]")
 
     def eventFilter(self, source_object: QObject, event: QEvent) -> None:
         """
@@ -1372,6 +1420,14 @@ class ModListWidget(QListWidget):
         else:
             return super().keyPressEvent(e)
 
+    def handle_item_data_changed(self, item: QListWidgetItem) -> None:
+        """
+        This slot is called when an item's data changes
+        """
+        widget = self.itemWidget(item)
+        if widget:
+            widget.repolish(item)
+
     def handle_other_list_row_added(self, uuid: str) -> None:
         if uuid in self.uuids:
             self.uuids.remove(uuid)
@@ -1422,13 +1478,11 @@ class ModListWidget(QListWidget):
                 self.item_added_signal.emit(uuid)
         # Update list signal if all items are loaded
         if len(self.uuids) == self.count():
-            # Check if all visible items have their widgets loaded
-            self.check_widgets_visible()
             # Update list with the number of items
-            self.list_update_signal.emit(str(self.count()))
             logger.debug(
-                f"List update signal emitted after rows inserted [{self.count()}]"
+                f"Emitting {self.list_type} list update signal after rows inserted [{self.count()}]"
             )
+            self.list_update_signal.emit(str(self.count()))
 
     def handle_rows_removed(self, parent: QModelIndex, first: int, last: int) -> None:
         """
@@ -1449,13 +1503,11 @@ class ModListWidget(QListWidget):
         """
         # Update list signal if all items are loaded
         if len(self.uuids) == self.count():
-            # Check if all visible items have their widgets loaded
-            self.check_widgets_visible()
             # Update list with the number of items
-            self.list_update_signal.emit(str(self.count()))
             logger.debug(
-                f"List update signal emitted after rows removed [{self.count()}]"
+                f"Emitting {self.list_type} list update signal after rows removed [{self.count()}]"
             )
+            self.list_update_signal.emit(str(self.count()))
 
     def get_item_widget_at_index(self, idx: int) -> Optional[ModListItemInner]:
         item = self.item(idx)
@@ -1495,6 +1547,148 @@ class ModListWidget(QListWidget):
         widget = ModListItemInner = self.itemWidget(item)
         self.key_press_signal.emit("DoubleClick")
 
+    def recalculate_internal_errors_warnings(self) -> None:
+        """
+        Whenever the respective mod list has items added to it, or has
+        items removed from it, or has items rearranged around within it,
+        calculate the internal list errors / warnings for the mod list
+        """
+        logger.info(f"Recalculating {self.list_type} list errors / warnings")
+
+        internal_local_metadata = self.metadata_manager.internal_local_metadata
+        game_version = self.metadata_manager.game_version
+        info_from_steam = self.metadata_manager.info_from_steam_package_id_to_name
+
+        packageid_to_uuid = {
+            internal_local_metadata[uuid]["packageid"]: uuid for uuid in self.uuids
+        }
+        package_ids_set = set(packageid_to_uuid.keys())
+
+        package_id_to_errors = {
+            uuid: {
+                "missing_dependencies": set() if self.list_type == "Active" else None,
+                "conflicting_incompatibilities": (
+                    set() if self.list_type == "Active" else None
+                ),
+                "load_before_violations": set() if self.list_type == "Active" else None,
+                "load_after_violations": set() if self.list_type == "Active" else None,
+                "version_mismatch": True,
+            }
+            for uuid in self.uuids
+        }
+
+        num_warnings = 0
+        total_warning_text = ""
+        num_errors = 0
+        total_error_text = ""
+
+        for uuid, mod_errors in package_id_to_errors.items():
+            current_mod_index = self.uuids.index(uuid)
+            current_item = self.item(current_mod_index)
+            current_item_data = current_item.data(Qt.UserRole)
+            mod_data = internal_local_metadata[uuid]
+            # Check mod supportedversions against currently loaded version of game
+            mod_errors["version_mismatch"] = self.metadata_manager.is_version_mismatch(
+                uuid
+            )
+            # Set an item's validity dynamically based on the version mismatch value
+            current_item_data["mismatch"] = mod_errors["version_mismatch"]
+            # Check for "Active" mod list specific errors and warnings
+            if (
+                self.list_type == "Active"
+                and mod_data.get("packageid")
+                and mod_data["packageid"] not in self.ignore_warning_list
+            ):
+                # Check dependencies
+                mod_errors["missing_dependencies"] = {
+                    dep
+                    for dep in mod_data.get("dependencies", [])
+                    if dep not in package_ids_set
+                }
+
+                # Check incompatibilities
+                mod_errors["conflicting_incompatibilities"] = {
+                    incomp
+                    for incomp in mod_data.get("incompatibilities", [])
+                    if incomp in package_ids_set
+                }
+
+                # Check loadTheseBefore
+                for load_this_before in mod_data.get("loadTheseBefore", []):
+                    if (
+                        load_this_before[1]
+                        and load_this_before[0] in packageid_to_uuid
+                        and current_mod_index
+                        <= self.uuids.index(packageid_to_uuid[load_this_before[0]])
+                    ):
+                        mod_errors["load_before_violations"].add(load_this_before[0])
+
+                # Check loadTheseAfter
+                for load_this_after in mod_data.get("loadTheseAfter", []):
+                    if (
+                        load_this_after[1]
+                        and load_this_after[0] in packageid_to_uuid
+                        and current_mod_index
+                        >= self.uuids.index(packageid_to_uuid[load_this_after[0]])
+                    ):
+                        mod_errors["load_after_violations"].add(load_this_after[0])
+            # Calculate any needed string for errors / warnings
+            tool_tip_text = ""
+            for error_type, tooltip_header in [
+                ("missing_dependencies", "\nMissing Dependencies:"),
+                ("conflicting_incompatibilities", "\nIncompatibilities:"),
+                ("load_before_violations", "\nShould be Loaded After:"),
+                ("load_after_violations", "\nShould be Loaded Before:"),
+            ]:
+                if mod_errors[error_type]:
+                    tool_tip_text += tooltip_header
+                    for key in mod_errors[error_type]:
+                        name = internal_local_metadata.get(
+                            packageid_to_uuid.get(key), {}
+                        ).get("name", info_from_steam.get(key, key))
+                        tool_tip_text += f"\n  * {name}"
+            # Handle version mismatch behavior
+            if (
+                mod_errors["version_mismatch"]
+                and not mod_data["packageid"] in self.ignore_warning_list
+            ):
+                # Add tool tip to indicate mod and game version mismatch
+                tool_tip_text += "\nMod and Game Version Mismatch"
+            # Add to error summary if any missing dependencies or incompatibilities
+            if self.list_type == "Active" and any(
+                [
+                    mod_errors[key]
+                    for key in [
+                        "missing_dependencies",
+                        "conflicting_incompatibilities",
+                    ]
+                ]
+            ):
+                num_errors += 1
+                total_error_text += f"\n\n{mod_data['name']}"
+                total_error_text += "\n" + "=" * len(mod_data["name"])
+                total_error_text += tool_tip_text
+            # Add to warning summary if any loadBefore or loadAfter violations, or version mismatch
+            if self.list_type == "Active" and any(
+                [
+                    mod_errors[key]
+                    for key in [
+                        "load_before_violations",
+                        "load_after_violations",
+                        "version_mismatch",
+                    ]
+                ]
+            ):
+                num_warnings += 1
+                total_warning_text += f"\n\n{mod_data['name']}"
+                total_warning_text += "\n============================="
+                total_warning_text += tool_tip_text
+            # Add tooltip to item data and set the data back to the item
+            current_item_data["errors_warnings"] = tool_tip_text
+            current_item.setData(Qt.UserRole, current_item_data)
+        logger.info(f"Finished recalculating {self.list_type} list errors")
+        return total_error_text, total_warning_text, num_errors, num_warnings
+
     def recreate_mod_list_and_sort(
         self,
         list_type: str,
@@ -1529,7 +1723,18 @@ class ModListWidget(QListWidget):
         if uuids:  # Insert data...
             for uuid_key in uuids:
                 list_item = QListWidgetItem(self)
-                list_item.setData(Qt.UserRole, {"filtered": False, "uuid": uuid_key})
+                list_item.setData(
+                    Qt.UserRole,
+                    {
+                        "errors_warnings": "",
+                        "filtered": False,
+                        "invalid": self.metadata_manager.internal_local_metadata[
+                            uuid_key
+                        ].get("invalid"),
+                        "mismatch": self.metadata_manager.is_version_mismatch(uuid_key),
+                        "uuid": uuid_key,
+                    },
+                )
                 self.addItem(list_item)
         else:  # ...unless we don't have mods, at which point reenable updates and exit
             self.setUpdatesEnabled(True)
@@ -1599,6 +1804,7 @@ class ModsPanel(QWidget):
         self.active_mods_label.setAlignment(Qt.AlignCenter)
         self.active_mods_label.setObjectName("summaryValue")
         self.active_mods_list = ModListWidget(
+            list_type="Active",
             settings_controller=self.settings_controller,
         )
         # Active mods search widgets
@@ -1682,6 +1888,7 @@ class ModsPanel(QWidget):
         self.inactive_mods_label.setAlignment(Qt.AlignCenter)
         self.inactive_mods_label.setObjectName("summaryValue")
         self.inactive_mods_list = ModListWidget(
+            list_type="Inactive",
             settings_controller=self.settings_controller,
         )
         # Inactive mods search widgets
@@ -1747,223 +1954,25 @@ class ModsPanel(QWidget):
         self.active_mods_list.list_update_signal.connect(
             self.on_active_mods_list_updated
         )
-        # Connect signals and slots
         self.inactive_mods_list.list_update_signal.connect(
             self.on_inactive_mods_list_updated
+        )
+        self.active_mods_list.recalculate_warnings_signal.connect(
+            partial(self.recalculate_list_errors_warnings, list_type="Active")
+        )
+        self.inactive_mods_list.recalculate_warnings_signal.connect(
+            partial(self.recalculate_list_errors_warnings, list_type="Inactive")
         )
 
         logger.debug("Finished ModsPanel initialization")
 
     def mod_list_updated(self, count: str, list_type: str) -> None:
-        if list_type == "Active":
-            # First time, and when Refreshing, the slot will evaluate false and do nothing.
-            # The purpose of this is for the _do_save_animation slot in the main_content_panel
-            self.list_updated_signal.emit()
-            self.list_updated = True
-        # 'drop' indicates that the update was just a drag and drop
-        # within the list.
+        # If count is 'drop', it indicates that the update was just a drag and drop within the list
         if count != "drop":
             logger.info(f"{list_type} mod count changed to: {count}")
             self.update_count(list_type=list_type)
-        if list_type == "Active":
-            self.recalculate_active_mods()  # Recalculate active mod list errors/warnings
-
-    def recalculate_active_mods(self) -> None:
-        """
-        Whenever the active mod list has items added to it,
-        or has items removed from it, or has items rearranged around within it,
-        calculate the internal list errors for the active mod list
-        """
-        logger.info("Recalculating internal list errors")
-
-        internal_local_metadata = self.metadata_manager.internal_local_metadata
-        game_version = self.metadata_manager.game_version
-        info_from_steam = self.metadata_manager.info_from_steam_package_id_to_name
-
-        packageid_to_uuid = {
-            internal_local_metadata[uuid]["packageid"]: uuid
-            for uuid in self.active_mods_list.uuids
-        }
-        package_ids_set = set(packageid_to_uuid.keys())
-
-        package_id_to_errors = {
-            uuid: {
-                "missing_dependencies": set(),
-                "conflicting_incompatibilities": set(),
-                "load_before_violations": set(),
-                "load_after_violations": set(),
-                "version_mismatch": True,
-            }
-            for uuid in self.active_mods_list.uuids
-        }
-
-        num_warnings = 0
-        total_warning_text = ""
-        num_errors = 0
-        total_error_text = ""
-
-        for uuid, mod_errors in package_id_to_errors.items():
-            current_mod_index = self.active_mods_list.uuids.index(uuid)
-            mod_data = internal_local_metadata[uuid]
-
-            # Check version for everything except Core
-            if game_version and mod_data.get("supportedversions", {}).get("li"):
-                supported_versions = mod_data["supportedversions"]["li"]
-                if isinstance(supported_versions, str):
-                    if game_version.startswith(supported_versions):
-                        mod_errors["version_mismatch"] = False
-                elif isinstance(supported_versions, list):
-                    mod_errors["version_mismatch"] = (
-                        not any(
-                            [
-                                ver
-                                for ver in supported_versions
-                                if game_version.startswith(ver)
-                            ]
-                        )
-                        and mod_data["packageid"]
-                        not in self.active_mods_list.ignore_warning_list
-                    )
-                else:
-                    logger.error(
-                        f"supportedversions value not str or list: {supported_versions}"
-                    )
-
-            if (
-                mod_data.get("packageid")
-                and mod_data["packageid"]
-                not in self.active_mods_list.ignore_warning_list
-            ):
-                # Check dependencies
-                mod_errors["missing_dependencies"] = {
-                    dep
-                    for dep in mod_data.get("dependencies", [])
-                    if dep not in package_ids_set
-                }
-
-                # Check incompatibilities
-                mod_errors["conflicting_incompatibilities"] = {
-                    incomp
-                    for incomp in mod_data.get("incompatibilities", [])
-                    if incomp in package_ids_set
-                }
-
-                # Check loadTheseBefore
-                for load_this_before in mod_data.get("loadTheseBefore", []):
-                    if (
-                        load_this_before[1]
-                        and load_this_before[0] in packageid_to_uuid
-                        and current_mod_index
-                        <= self.active_mods_list.uuids.index(
-                            packageid_to_uuid[load_this_before[0]]
-                        )
-                    ):
-                        mod_errors["load_before_violations"].add(load_this_before[0])
-
-                # Check loadTheseAfter
-                for load_this_after in mod_data.get("loadTheseAfter", []):
-                    if (
-                        load_this_after[1]
-                        and load_this_after[0] in packageid_to_uuid
-                        and current_mod_index
-                        >= self.active_mods_list.uuids.index(
-                            packageid_to_uuid[load_this_after[0]]
-                        )
-                    ):
-                        mod_errors["load_after_violations"].add(load_this_after[0])
-
-            # Consolidate results
-            self.ignore_error = self.active_mods_list.ignore_warning_list
-
-            # Set icon if necessary
-            item_widget_at_index = self.active_mods_list.get_item_widget_at_index(
-                current_mod_index
-            )
-            if item_widget_at_index:
-                tool_tip_text = ""
-                for error_type, tooltip_header in [
-                    ("missing_dependencies", "\nMissing Dependencies:"),
-                    ("conflicting_incompatibilities", "\nIncompatibilities:"),
-                    ("load_before_violations", "\nShould be Loaded After:"),
-                    ("load_after_violations", "\nShould be Loaded Before:"),
-                ]:
-                    if mod_errors[error_type]:
-                        tool_tip_text += tooltip_header
-                        for key in mod_errors[error_type]:
-                            name = internal_local_metadata.get(
-                                packageid_to_uuid.get(key), {}
-                            ).get("name", info_from_steam.get(key, key))
-                            tool_tip_text += f"\n  * {name}"
-                # Handle version mismatch behavior
-                if mod_errors["version_mismatch"] and not self.ignore_error:
-                    # Change the text styling to indicate a version mismatch
-                    item_widget_at_index.main_label.setObjectName(
-                        "ListItemLabelInvalid"
-                    )
-                    item_widget_at_index.main_label.style().unpolish(
-                        item_widget_at_index.main_label
-                    )
-                    item_widget_at_index.main_label.style().polish(
-                        item_widget_at_index.main_label
-                    )
-                    # Add tool tip to indicate mod and game version mismatch
-                    tool_tip_text += "\n\nMod and Game Version Mismatch"
-                # Set the warning icon to be visible if necessary and set the tool tip
-                if tool_tip_text:
-                    item_widget_at_index.warning_icon_label.setHidden(False)
-                    item_widget_at_index.warning_icon_label.setToolTip(
-                        tool_tip_text.lstrip()
-                    )
-                else:  # Hide the warning icon if no tool tip text
-                    item_widget_at_index.warning_icon_label.setHidden(True)
-                    item_widget_at_index.warning_icon_label.setToolTip("")
-
-                # Add to error summary if any missing dependencies or incompatibilities
-                if any(
-                    [
-                        mod_errors[key]
-                        for key in [
-                            "missing_dependencies",
-                            "conflicting_incompatibilities",
-                        ]
-                    ]
-                ):
-                    num_errors += 1
-                    total_error_text += f"\n\n{mod_data['name']}"
-                    total_error_text += "\n" + "=" * len(mod_data["name"])
-                    total_error_text += tool_tip_text
-                # Add to warning summary if any loadBefore or loadAfter violations, or version mismatch
-                if any(
-                    [
-                        mod_errors[key]
-                        for key in [
-                            "load_before_violations",
-                            "load_after_violations",
-                            "version_mismatch",
-                        ]
-                    ]
-                ):
-                    num_warnings += 1
-                    total_warning_text += f"\n\n{mod_data['name']}"
-                    total_warning_text += "\n============================="
-                    total_warning_text += tool_tip_text
-        # Calculate total errors and warnings and set the text and tool tip
-        if total_error_text or total_warning_text or num_errors or num_warnings:
-            self.errors_summary_frame.setHidden(False)
-            self.warnings_text.setText(f"{num_warnings} warnings(s)")
-            self.errors_text.setText(f"{num_errors} errors(s)")
-            if total_error_text:
-                self.errors_icon.setToolTip(total_error_text.lstrip())
-            if total_warning_text:
-                self.warnings_icon.setToolTip(total_warning_text.lstrip())
-        else:  # Hide the summary if there are no errors or warnings
-            self.errors_summary_frame.setHidden(True)
-            self.warnings_text.setText("0 warnings(s)")
-            self.errors_text.setText("0 errors(s)")
-            self.errors_icon.setToolTip("")
-            self.warnings_icon.setToolTip("")
-
-        logger.info("Finished recalculating internal list errors")
+        # Update the mod list widget errors and warnings
+        self.recalculate_list_errors_warnings(list_type=list_type)
 
     def on_active_mods_list_updated(self, count: str) -> None:
         self.mod_list_updated(count=count, list_type="Active")
@@ -1995,6 +2004,38 @@ class ModsPanel(QWidget):
     def on_inactive_mods_mode_filter_toggle(self) -> None:
         self.signal_search_mode_filter(list_type="Inactive")
 
+    def recalculate_list_errors_warnings(self, list_type: str) -> None:
+        if list_type == "Active":
+            # Check if all visible items have their widgets loaded
+            self.active_mods_list.check_widgets_visible()
+            # Calculate internal errors and warnings for all mods in the respective mod list
+            total_error_text, total_warning_text, num_errors, num_warnings = (
+                self.active_mods_list.recalculate_internal_errors_warnings()
+            )
+            # Calculate total errors and warnings and set the text and tool tip for the summary
+            if total_error_text or total_warning_text or num_errors or num_warnings:
+                self.errors_summary_frame.setHidden(False)
+                self.warnings_text.setText(f"{num_warnings} warnings(s)")
+                self.errors_text.setText(f"{num_errors} errors(s)")
+                if total_error_text:
+                    self.errors_icon.setToolTip(total_error_text.lstrip())
+                if total_warning_text:
+                    self.warnings_icon.setToolTip(total_warning_text.lstrip())
+            else:  # Hide the summary if there are no errors or warnings
+                self.errors_summary_frame.setHidden(True)
+                self.warnings_text.setText("0 warnings(s)")
+                self.errors_text.setText("0 errors(s)")
+                self.errors_icon.setToolTip("")
+                self.warnings_icon.setToolTip("")
+            # First time, and when Refreshing, the slot will evaluate false and do nothing.
+            # The purpose of this is for the _do_save_animation slot in the main_content_panel
+            self.list_updated_signal.emit()
+        else:
+            # Check if all visible items have their widgets loaded
+            self.inactive_mods_list.check_widgets_visible()
+            # Calculate internal errors and warnings for all mods in the respective mod list
+            self.inactive_mods_list.recalculate_internal_errors_warnings()
+
     def signal_clear_search(self, list_type: str) -> None:
         if list_type == "Active":
             self.active_mods_search.clear()
@@ -2016,15 +2057,11 @@ class ModsPanel(QWidget):
             filter_state = self.active_mods_search_filter_state
             source_filter = self.active_mods_data_source_filter
             uuids = self.active_mods_list.uuids
-            # Ensure visible items have their widgets created
-            self.active_mods_list.check_widgets_visible()
         elif list_type == "Inactive":
             _filter = self.inactive_mods_search_filter
             filter_state = self.inactive_mods_search_filter_state
             source_filter = self.inactive_mods_data_source_filter
             uuids = self.inactive_mods_list.uuids
-            # Ensure visible items have their widgets created
-            self.inactive_mods_list.check_widgets_visible()
 
         search_filter = None
         if _filter.currentText() == "Name":
@@ -2043,14 +2080,9 @@ class ModsPanel(QWidget):
                 else self.inactive_mods_list.item(uuids.index(uuid))
             )
             item_data = item.data(Qt.UserRole)
-            widget = (
-                self.active_mods_list.itemWidget(item)
-                if list_type == "Active"
-                else self.inactive_mods_list.itemWidget(item)
-            )
 
             metadata = self.metadata_manager.internal_local_metadata[uuid]
-            invalid = metadata.get("invalid")
+            invalid = item_data["invalid"]
             if invalid:
                 continue
 
@@ -2071,15 +2103,11 @@ class ModsPanel(QWidget):
             elif source_filter != metadata.get("data_source"):
                 item_filtered = True
 
-            repolish = False
-
             if filter_state:
                 item.setHidden(item_filtered)
                 if item_filtered:
                     item_filtered = False
-                    repolish = True
             else:
-                repolish = True
                 if item_filtered and item.isHidden():
                     item.setHidden(False)
 
@@ -2087,14 +2115,7 @@ class ModsPanel(QWidget):
             item_data["filtered"] = item_filtered
             item.setData(Qt.UserRole, item_data)
 
-            if repolish and widget:
-                widget.repolishLabel(
-                    objectName=(
-                        "ListItemLabelFiltered" if item_filtered else "ListItemLabel"
-                    )
-                )
-
-        self.update_count(list_type=list_type)
+        self.mod_list_updated(str(len(uuids)), list_type)
 
     def signal_search_mode_filter(self, list_type: str) -> None:
         filter_state = False

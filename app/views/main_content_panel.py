@@ -216,9 +216,6 @@ class MainContent(QObject):
             self.mods_panel.inactive_mods_list.item_added_signal.connect(
                 self.mods_panel.active_mods_list.handle_other_list_row_added
             )
-            self.mods_panel.active_mods_list.recalculate_warnings_signal.connect(
-                self.mods_panel.recalculate_active_mods
-            )
             self.mods_panel.active_mods_list.edit_rules_signal.connect(
                 self._do_open_rule_editor
             )
@@ -334,9 +331,8 @@ class MainContent(QObject):
                 for item in items_to_move:
                     iml.insertItem(count, item)
                     count += 1
-
-                # If the other list is the active mod list, recalculate errors
-                self.mods_panel.recalculate_active_mods()
+        self.mods_panel.active_mods_list.recalculate_warnings_signal.emit()
+        self.mods_panel.inactive_mods_list.recalculate_warnings_signal.emit()
 
     def __handle_inactive_mod_key_press(self, key) -> None:
         """
@@ -389,9 +385,8 @@ class MainContent(QObject):
                 for item in items_to_move:
                     aml.insertItem(count, item)
                     count += 1
-
-                # If the other list is the active mod list, recalculate errors
-                self.mods_panel.recalculate_active_mods()
+        self.mods_panel.active_mods_list.recalculate_warnings_signal.emit()
+        self.mods_panel.inactive_mods_list.recalculate_warnings_signal.emit()
 
     def __insert_data_into_lists(
         self, active_mods_uuids: List[str], inactive_mods_uuids: List[str]
