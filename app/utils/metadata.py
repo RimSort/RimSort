@@ -621,22 +621,38 @@ class MetadataManager(QObject):
         logger.info("Parsing dependencies & load order rules from external metadata")
         self.compile_metadata()
 
-    def is_version_mismatch(self, uuid: str):
-        # Check version for everything except Core
+    def is_version_mismatch(self, uuid: str) -> bool:
+        """
+        Check version for everything except Core.
+        Return True if the version does not match.
+        Return False if the version matches.
+        If there is an error, log it and return True.
+        """
+        # Initialize result to True, if an error occurs, it will be changed to False
+        result = True
+
+        # Get mod data
         mod_data = self.internal_local_metadata.get(uuid, {})
+
+        # Check if game_version exists and mod_data exists and mod_data contains 'supportedversions' with 'li' key
         if (
             self.game_version
             and mod_data
             and mod_data.get("supportedversions", {}).get("li")
         ):
+            # Get supported versions
             supported_versions = self.internal_local_metadata[uuid][
                 "supportedversions"
             ]["li"]
+
+            # Check if supported versions is a string or a list
             if isinstance(supported_versions, str):
+                # If game_version starts with supported_versions, result is False
                 if self.game_version.startswith(supported_versions):
-                    return False
+                    result = False
             elif isinstance(supported_versions, list):
-                return not any(
+                # If any version from supported_versions starts with game_version, result is False
+                result = not any(
                     [
                         ver
                         for ver in supported_versions
@@ -644,9 +660,14 @@ class MetadataManager(QObject):
                     ]
                 )
             else:
+                # If supported_versions is not a string or a list, log error and return True
                 logger.error(
                     f"supportedversions value not str or list: {supported_versions}"
                 )
+                result = True
+
+        # Return result
+        return result
 
     def process_mods(self, directories_to_process: list, intent: str) -> Dict[str, Any]:
         logger.info(
