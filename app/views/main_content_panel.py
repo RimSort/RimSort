@@ -172,6 +172,13 @@ class MainContent(QObject):
             EventBus().do_save_active_mods_list.connect(self._do_save)
             EventBus().do_run_game.connect(self._do_run_game)
 
+            # Download Menu bar Eventbus
+            EventBus().do_add_git_mod.connect(self._do_add_git_mod)
+            EventBus().do_browse_workshop.connect(self._do_browse_workshop)
+            EventBus().do_check_for_workshop_updates.connect(
+                self._do_check_for_workshop_updates
+            )
+
             # INITIALIZE WIDGETS
             # Initialize Steam(CMD) integraations
             self.steam_browser = SteamcmdDownloader = None

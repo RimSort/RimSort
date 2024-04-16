@@ -29,6 +29,11 @@ class EventBus(QObject):
     do_export_mod_list_to_clipboard = Signal()
     do_export_mod_list_to_rentry = Signal()
 
+    # Download Menu bar signals
+    do_add_git_mod = Signal()
+    do_browse_workshop = Signal()
+    do_check_for_workshop_updates = Signal()
+
     # Settings signals
     settings_have_changed = Signal()
 

@@ -116,6 +116,21 @@ class MenuBar(QObject):
         self.paste_action.setShortcut(QKeySequence("Ctrl+V"))
         self.edit_menu.addAction(self.paste_action)
 
+        self.file_menu = self.menu_bar.addMenu("Download")
+
+        self.add_git_mod_action = QAction("Add Git Mod", self)
+        self.file_menu.addAction(self.add_git_mod_action)
+
+        self.file_menu.addSeparator()
+
+        self.browse_workshop_action = QAction("Browse Workshop", self)
+        self.file_menu.addAction(self.browse_workshop_action)
+
+        self.file_menu.addSeparator()
+
+        self.update_workshop_mods_action = QAction("Update Workshop Mods", self)
+        self.file_menu.addAction(self.update_workshop_mods_action)
+
         self.help_menu = self.menu_bar.addMenu("Help")
 
         self.wiki_action = QAction(f"RimSort Wiki…", self)
@@ -197,6 +212,21 @@ class MenuBar(QObject):
         self.paste_action = QAction("Paste", self)
         self.paste_action.setShortcut(QKeySequence("Ctrl+V"))
         self.edit_menu.addAction(self.paste_action)
+
+        self.file_menu = self.menu_bar.addMenu("Download")
+
+        self.add_git_mod_action = QAction("Add Git Mod", self)
+        self.file_menu.addAction(self.add_git_mod_action)
+
+        self.file_menu.addSeparator()
+
+        self.browse_workshop_action = QAction("Browse Workshop", self)
+        self.file_menu.addAction(self.browse_workshop_action)
+
+        self.file_menu.addSeparator()
+
+        self.update_workshop_mods_action = QAction("Update Workshop Mods", self)
+        self.file_menu.addAction(self.update_workshop_mods_action)
 
         self.help_menu = self.menu_bar.addMenu("Help")
 
