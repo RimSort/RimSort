@@ -331,8 +331,8 @@ class MainContent(QObject):
                 for item in items_to_move:
                     iml.insertItem(count, item)
                     count += 1
-        self.mods_panel.active_mods_list.recalculate_warnings_signal.emit()
-        self.mods_panel.inactive_mods_list.recalculate_warnings_signal.emit()
+            self.mods_panel.active_mods_list.recalculate_warnings_signal.emit()
+            self.mods_panel.inactive_mods_list.recalculate_warnings_signal.emit()
 
     def __handle_inactive_mod_key_press(self, key) -> None:
         """
@@ -385,8 +385,8 @@ class MainContent(QObject):
                 for item in items_to_move:
                     aml.insertItem(count, item)
                     count += 1
-        self.mods_panel.active_mods_list.recalculate_warnings_signal.emit()
-        self.mods_panel.inactive_mods_list.recalculate_warnings_signal.emit()
+            self.mods_panel.active_mods_list.recalculate_warnings_signal.emit()
+            self.mods_panel.inactive_mods_list.recalculate_warnings_signal.emit()
 
     def __insert_data_into_lists(
         self, active_mods_uuids: List[str], inactive_mods_uuids: List[str]
@@ -408,10 +408,12 @@ class MainContent(QObject):
             uuids=inactive_mods_uuids,
             key=ModsPanelSortKey.MODNAME,
         )
-
         logger.info(
             f"Finished inserting mod data into active [{len(active_mods_uuids)}] and inactive [{len(inactive_mods_uuids)}] mod lists"
         )
+        # Recalculate warnings for both lists
+        self.mods_panel.active_mods_list.recalculate_warnings_signal.emit()
+        self.mods_panel.inactive_mods_list.recalculate_warnings_signal.emit()
 
     def __duplicate_mods_prompt(self) -> None:
         list_of_duplicate_mods = "\n".join(
