@@ -93,6 +93,16 @@ class MenuBarController(QObject):
             EventBus().do_check_for_workshop_updates
         )
 
+        # Textures menu
+
+        self.menu_bar.optimize_textures_action.triggered.connect(
+            EventBus().do_optimize_textures
+        )
+
+        self.menu_bar.delete_dds_textures_action.triggered.connect(
+            EventBus().do_delete_dds_textures
+        )
+
         # Help menu
 
         self.menu_bar.wiki_action.triggered.connect(self._on_menu_bar_wiki_triggered)

@@ -179,6 +179,14 @@ class MainContent(QObject):
                 self._do_check_for_workshop_updates
             )
 
+            # Textures Menu bar Eventbus
+            EventBus().do_optimize_textures.connect(
+                lambda: self.actions_slot("optimize_textures")
+            )
+            EventBus().do_delete_dds_textures.connect(
+                lambda: self.actions_slot("delete_textures")
+            )
+
             # INITIALIZE WIDGETS
             # Initialize Steam(CMD) integraations
             self.steam_browser = SteamcmdDownloader = None

@@ -131,6 +131,16 @@ class MenuBar(QObject):
         self.update_workshop_mods_action = QAction("Update Workshop Mods", self)
         self.file_menu.addAction(self.update_workshop_mods_action)
 
+        self.file_menu = self.menu_bar.addMenu("Textures")
+
+        self.optimize_textures_action = QAction("Optimize Textures", self)
+        self.file_menu.addAction(self.optimize_textures_action)
+
+        self.file_menu.addSeparator()
+
+        self.delete_dds_textures_action = QAction("Delete .dds Textures", self)
+        self.file_menu.addAction(self.delete_dds_textures_action)
+
         self.help_menu = self.menu_bar.addMenu("Help")
 
         self.wiki_action = QAction(f"RimSort Wiki…", self)
@@ -227,6 +237,16 @@ class MenuBar(QObject):
 
         self.update_workshop_mods_action = QAction("Update Workshop Mods", self)
         self.file_menu.addAction(self.update_workshop_mods_action)
+
+        self.file_menu = self.menu_bar.addMenu("Textures")
+
+        self.optimize_textures_action = QAction("Optimize Textures", self)
+        self.file_menu.addAction(self.optimize_textures_action)
+
+        self.file_menu.addSeparator()
+
+        self.delete_dds_textures_action = QAction("Delete .dds Textures", self)
+        self.file_menu.addAction(self.delete_dds_textures_action)
 
         self.help_menu = self.menu_bar.addMenu("Help")
 
