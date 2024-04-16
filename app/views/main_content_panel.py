@@ -467,72 +467,35 @@ class MainContent(QObject):
         complete json mod info for that internal uuid. It passes
         this information to the mod info panel to display.
 
+        It updates the styling of the summary values based
+        on the validity of the mod, and will highlight red if invalid.
+
         :param uuid: uuid of mod
         """
-        logger.info(f"USER ACTION: clicked on a mod list item: {uuid}")
-        if uuid in self.metadata_manager.internal_local_metadata.keys():
-            self.mod_info_panel.display_mod_info(
-                self.metadata_manager.internal_local_metadata[uuid]
-            )
-            if self.metadata_manager.internal_local_metadata[uuid].get("invalid"):
-                # Set invalid value style
-                self.mod_info_panel.mod_info_name_value.setObjectName(
-                    "summaryValueInvalid"
-                )
-                self.mod_info_panel.mod_info_path_value.setObjectName(
-                    "summaryValueInvalid"
-                )
-                self.mod_info_panel.mod_info_author_value.setObjectName(
-                    "summaryValueInvalid"
-                )
-                self.mod_info_panel.mod_info_package_id_value.setObjectName(
-                    "summaryValueInvalid"
-                )
-                self.mod_info_panel.mod_info_supported_versions_value.setObjectName(
-                    "summaryValueInvalid"
-                )
-            else:
-                # Set valid value style
-                self.mod_info_panel.mod_info_name_value.setObjectName("summaryValue")
-                self.mod_info_panel.mod_info_path_value.setObjectName("summaryValue")
-                self.mod_info_panel.mod_info_author_value.setObjectName("summaryValue")
-                self.mod_info_panel.mod_info_package_id_value.setObjectName(
-                    "summaryValue"
-                )
-                self.mod_info_panel.mod_info_supported_versions_value.setObjectName(
-                    "summaryValue"
-                )
-            # Polish and unpolish to reload styling from the .qss file
-            self.mod_info_panel.mod_info_name_value.style().unpolish(
-                self.mod_info_panel.mod_info_name_value
-            )
-            self.mod_info_panel.mod_info_name_value.style().polish(
-                self.mod_info_panel.mod_info_name_value
-            )
-            self.mod_info_panel.mod_info_name_value.style().unpolish(
-                self.mod_info_panel.mod_info_path_value
-            )
-            self.mod_info_panel.mod_info_name_value.style().polish(
-                self.mod_info_panel.mod_info_path_value
-            )
-            self.mod_info_panel.mod_info_name_value.style().unpolish(
-                self.mod_info_panel.mod_info_author_value
-            )
-            self.mod_info_panel.mod_info_name_value.style().polish(
-                self.mod_info_panel.mod_info_author_value
-            )
-            self.mod_info_panel.mod_info_name_value.style().unpolish(
-                self.mod_info_panel.mod_info_package_id_value
-            )
-            self.mod_info_panel.mod_info_name_value.style().polish(
-                self.mod_info_panel.mod_info_package_id_value
-            )
-            self.mod_info_panel.mod_info_name_value.style().unpolish(
-                self.mod_info_panel.mod_info_supported_versions_value
-            )
-            self.mod_info_panel.mod_info_name_value.style().polish(
-                self.mod_info_panel.mod_info_supported_versions_value
-            )
+        mod_info = self.metadata_manager.internal_local_metadata.get(uuid)
+        self.mod_info_panel.display_mod_info(mod_info=mod_info)
+        if mod_info and mod_info.get("invalid"):
+            # Set invalid value style
+            for widget in (
+                self.mod_info_panel.mod_info_name_value,
+                self.mod_info_panel.mod_info_path_value,
+                self.mod_info_panel.mod_info_author_value,
+                self.mod_info_panel.mod_info_package_id_value,
+            ):
+                widget.setObjectName("summaryValueInvalid")
+                widget.style().unpolish(widget)
+                widget.style().polish(widget)
+        else:
+            # Set valid value style
+            for widget in (
+                self.mod_info_panel.mod_info_name_value,
+                self.mod_info_panel.mod_info_path_value,
+                self.mod_info_panel.mod_info_author_value,
+                self.mod_info_panel.mod_info_package_id_value,
+            ):
+                widget.setObjectName("summaryValue")
+                widget.style().unpolish(widget)
+                widget.style().polish(widget)
 
     def __update_game_configuration(self) -> None:
         self.metadata_manager.community_rules_repo = (

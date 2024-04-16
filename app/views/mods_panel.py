@@ -1,6 +1,7 @@
 import os
 from enum import Enum
 from functools import partial
+import json
 from pathlib import Path
 from shutil import copy2, copytree, rmtree
 from traceback import format_exc
@@ -48,6 +49,7 @@ from app.utils.generic import (
     open_url_browser,
     platform_specific_open,
     sanitize_filename,
+    set_to_list,
 )
 from app.utils.metadata import MetadataManager
 
@@ -516,7 +518,7 @@ class ModListWidget(QListWidget):
         self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
 
         # When an item is clicked, display the mod information
-        # self.currentItemChanged.connect(self.mod_changed_to)
+        self.currentItemChanged.connect(self.mod_changed_to)
         self.itemClicked.connect(self.mod_clicked)
 
         # When an item is double clicked, move it to the opposite list
@@ -1565,8 +1567,17 @@ class ModListWidget(QListWidget):
         if current is not None:
             data = current.data(Qt.UserRole)
             self.mod_info_signal.emit(data["uuid"])
+            mod_info = self.metadata_manager.internal_local_metadata[data["uuid"]]
+            mod_info = set_to_list(mod_info)
+            mod_info_pretty = json.dumps(mod_info, indent=4)
+            logger.debug(
+                f"USER ACTION: mod was clicked: [{data['uuid']}] {mod_info_pretty}"
+            )
 
     def mod_double_clicked(self, item: QListWidgetItem):
+        """
+        Method to handle double clicking on a row.
+        """
         widget = ModListItemInner = self.itemWidget(item)
         self.key_press_signal.emit("DoubleClick")
 

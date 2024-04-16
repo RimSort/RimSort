@@ -11,7 +11,6 @@ from loguru import logger
 from app.models.image_label import ImageLabel
 from app.models.scroll_label import ScrollLabel
 from app.utils.app_info import AppInfo
-from app.utils.generic import set_to_list
 
 
 class ModInfo:
@@ -179,16 +178,12 @@ class ModInfo:
 
         :param mod_info: complete json info for the mod
         """
-
-        mod_info = set_to_list(mod_info)
-        mod_info_pretty = json.dumps(mod_info, indent=4)
-        logger.debug(f"Starting display of mod info: {mod_info_pretty}")
+        # Set name value
         self.mod_info_name_value.setText(mod_info.get("name", "Not specified"))
-
+        # Show essential info widgets
         for widget in self.essential_info_widgets:
             if not widget.isVisible():
                 widget.show()
-
         # If it's not invalid, and it's not a scenario, it must be a mod!
         if not mod_info.get("invalid") and not mod_info.get("scenario"):
             # Show valid-mod-specific fields, hide scenario summary
@@ -268,7 +263,6 @@ class ModInfo:
             self.scenario_info_summary_label.hide()
             self.scenario_info_summary_value.hide()
         self.mod_info_path_value.setText(mod_info.get("path"))
-
         # Set the scrolling description for the Mod Info Panel
         self.description.setText("")
         if "description" in mod_info:
@@ -289,7 +283,7 @@ class ModInfo:
         else:
             # Get Preview.png
             workshop_folder_path = mod_info["path"]
-            logger.info(
+            logger.debug(
                 f"Retrieved mod path to parse preview image: {workshop_folder_path}"
             )
             if os.path.exists(workshop_folder_path):
@@ -323,7 +317,7 @@ class ModInfo:
                             break
                     # If there was an issue getting the expected path, track and exit
                     if invalid_folder_path_found or invalid_file_path_found:
-                        logger.info("No preview image found for the mod")
+                        logger.debug("No preview image found for the mod")
                         pixmap = QPixmap(self.missing_image_path)
                         self.preview_picture.setPixmap(
                             pixmap.scaled(
@@ -331,7 +325,7 @@ class ModInfo:
                             )
                         )
                     else:
-                        logger.info("Preview image found")
+                        logger.debug("Preview image found")
                         image_path = str(
                             (
                                 Path(workshop_folder_path)
