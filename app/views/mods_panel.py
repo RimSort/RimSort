@@ -556,39 +556,6 @@ class ModListWidget(QListWidget):
         self.ignore_warning_list = []
         logger.debug("Finished ModListWidget initialization")
 
-    def check_item_visible(self, item: QListWidgetItem) -> bool:
-        # Determines if the item is currently visible in the viewport.
-        rect = self.visualItemRect(item)
-        return rect.top() < self.viewport().height() and rect.bottom() > 0
-
-    def check_widgets_visible(self):
-        # This function checks the visibility of each item and creates a widget if the item is visible and not already setup.
-        for idx in range(self.count()):
-            item = self.item(idx)
-            # Check for visible item without a widget set
-            if item and self.check_item_visible(item) and self.itemWidget(item) is None:
-                self.create_widget_for_item(item)
-
-    def create_widget_for_item(self, item: QListWidgetItem) -> None:
-        data = item.data(Qt.UserRole)
-        errors_warnings = data["errors_warnings"]
-        filtered = data["filtered"]
-        invalid = data["invalid"]
-        mismatch = data["mismatch"]
-        uuid = data["uuid"]
-        if uuid:
-            widget = ModListItemInner(
-                errors_warnings=errors_warnings,
-                filtered=filtered,
-                invalid=invalid,
-                mismatch=mismatch,
-                settings_controller=self.settings_controller,
-                uuid=uuid,
-            )
-            widget.toggle_warning_signal.connect(self.toggle_warning)
-            item.setSizeHint(widget.sizeHint())
-            self.setItemWidget(item, widget)
-
     def dropEvent(self, event: QDropEvent) -> None:
         super().dropEvent(event)
         # Get the drop action
@@ -1444,6 +1411,49 @@ class ModListWidget(QListWidget):
             self.key_press_signal.emit(key_pressed)
         else:
             return super().keyPressEvent(e)
+
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        """
+        When the list widget is resized (as the window is resized),
+        ensure that all visible items have widgets loaded.
+
+        :param event: the resize event
+        """
+        self.check_widgets_visible()
+        return super().resizeEvent(event)
+
+    def check_item_visible(self, item: QListWidgetItem) -> bool:
+        # Determines if the item is currently visible in the viewport.
+        rect = self.visualItemRect(item)
+        return rect.top() < self.viewport().height() and rect.bottom() > 0
+
+    def create_widget_for_item(self, item: QListWidgetItem) -> None:
+        data = item.data(Qt.UserRole)
+        errors_warnings = data["errors_warnings"]
+        filtered = data["filtered"]
+        invalid = data["invalid"]
+        mismatch = data["mismatch"]
+        uuid = data["uuid"]
+        if uuid:
+            widget = ModListItemInner(
+                errors_warnings=errors_warnings,
+                filtered=filtered,
+                invalid=invalid,
+                mismatch=mismatch,
+                settings_controller=self.settings_controller,
+                uuid=uuid,
+            )
+            widget.toggle_warning_signal.connect(self.toggle_warning)
+            item.setSizeHint(widget.sizeHint())
+            self.setItemWidget(item, widget)
+
+    def check_widgets_visible(self):
+        # This function checks the visibility of each item and creates a widget if the item is visible and not already setup.
+        for idx in range(self.count()):
+            item = self.item(idx)
+            # Check for visible item without a widget set
+            if item and self.check_item_visible(item) and self.itemWidget(item) is None:
+                self.create_widget_for_item(item)
 
     def handle_item_data_changed(self, item: QListWidgetItem) -> None:
         """
