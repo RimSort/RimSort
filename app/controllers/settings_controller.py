@@ -192,6 +192,9 @@ class SettingsController(QObject):
         )
 
         # Advanced tab
+        self.settings_dialog.edit_run_arguments_button.clicked.connect(
+            self._on_edit_run_arguments_button_clicked
+        )
 
     def show_settings_dialog(self) -> None:
         """
@@ -1005,3 +1008,7 @@ class SettingsController(QObject):
         """
         self.settings_dialog.global_ok_button.click()
         EventBus().do_build_steam_workshop_database.emit()
+
+    def _on_edit_run_arguments_button_clicked(self) -> None:
+        self.settings_dialog.global_ok_button.click()
+        EventBus().do_edit_run_arguments.emit()

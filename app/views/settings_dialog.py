@@ -786,6 +786,11 @@ class SettingsDialog(QDialog):
 
         buttons_layout.addStretch()
 
+        self.edit_run_arguments_button = QPushButton("Edit Game Run Arguments")
+        buttons_layout.addWidget(self.edit_run_arguments_button)
+
+        buttons_layout.addStretch()
+
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
         self.global_ok_button.setFocus()

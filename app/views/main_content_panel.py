@@ -170,6 +170,8 @@ class MainContent(QObject):
                 lambda: self.actions_slot("reset_steamcmd_acf_data")
             )
             EventBus().do_install_steamcmd.connect(self._do_setup_steamcmd)
+            # EventBus().do_run_arguments.connect(lambda: self.actions_slot("run_game"))
+            EventBus().do_edit_run_arguments.connect(self._do_edit_run_args)
 
             EventBus().do_refresh_mods_lists.connect(self._do_refresh)
             EventBus().do_clear_active_mods_list.connect(self._do_clear)
