@@ -131,9 +131,14 @@ class MainContent(QObject):
                 self._do_export_list_clipboard
             )
             EventBus().do_export_mod_list_to_rentry.connect(self._do_upload_list_rentry)
-
+            EventBus().do_upload_community_rules_db_to_github.connect(
+                self._on_do_upload_community_db_to_github
+            )
             EventBus().do_download_community_rules_db_from_github.connect(
                 self._on_do_download_community_db_from_github
+            )
+            EventBus().do_upload_steam_workshop_db_to_github.connect(
+                self._on_do_upload_steam_workshop_db_to_github
             )
             EventBus().do_download_steam_workshop_db_from_github.connect(
                 self._on_do_download_steam_workshop_db_from_github
@@ -3141,6 +3146,13 @@ class MainContent(QObject):
         )
 
     @Slot()
+    def _on_do_upload_community_db_to_github(self) -> None:
+        self._do_upload_db_to_repo(
+            repo_url=self.settings_controller.settings.external_community_rules_repo,
+            file_name="communityRules.json",
+        )
+
+    @Slot()
     def _on_do_download_community_db_from_github(self) -> None:
         if GIT_EXISTS:
             self._do_clone_repo_to_path(
@@ -3149,6 +3161,13 @@ class MainContent(QObject):
             )
         else:
             self._do_notify_no_git()
+
+    @Slot()
+    def _on_do_upload_steam_workshop_db_to_github(self) -> None:
+        self._do_upload_db_to_repo(
+            repo_url=self.settings_controller.settings.external_steam_metadata_repo,
+            file_name="steamDB.json",
+        )
 
     @Slot()
     def _on_do_download_steam_workshop_db_from_github(self) -> None:

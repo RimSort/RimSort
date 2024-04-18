@@ -288,6 +288,11 @@ class SettingsDialog(QDialog):
         self.community_rules_db_github_url.setEnabled(False)
         row_layout.addWidget(self.community_rules_db_github_url)
 
+        self.community_rules_db_github_upload_button = QToolButton()
+        self.community_rules_db_github_upload_button.setText("Upload…")
+        self.community_rules_db_github_upload_button.setEnabled(False)
+        row_layout.addWidget(self.community_rules_db_github_upload_button)
+
         self.community_rules_db_github_download_button = QToolButton()
         self.community_rules_db_github_download_button.setText("Download…")
         self.community_rules_db_github_download_button.setEnabled(False)
@@ -387,6 +392,11 @@ class SettingsDialog(QDialog):
         self.steam_workshop_db_github_url.setClearButtonEnabled(True)
         self.steam_workshop_db_github_url.setEnabled(False)
         row_layout.addWidget(self.steam_workshop_db_github_url)
+
+        self.steam_workshop_db_github_upload_button = QToolButton()
+        self.steam_workshop_db_github_upload_button.setText("Upload…")
+        self.steam_workshop_db_github_upload_button.setEnabled(False)
+        row_layout.addWidget(self.steam_workshop_db_github_upload_button)
 
         self.steam_workshop_db_github_download_button = QToolButton()
         self.steam_workshop_db_github_download_button.setText("Download…")

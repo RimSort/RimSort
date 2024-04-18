@@ -130,11 +130,14 @@ class SettingsController(QObject):
             self._on_community_rules_db_radio_clicked
         )
 
-        self.settings_dialog.community_rules_db_github_download_button.clicked.connect(
-            EventBus().do_download_community_rules_db_from_github
-        )
         self.settings_dialog.community_rules_db_local_file_choose_button.clicked.connect(
             self._on_community_rules_db_local_file_choose_button_clicked
+        )
+        self.settings_dialog.community_rules_db_github_upload_button.clicked.connect(
+            EventBus().do_upload_community_rules_db_to_github
+        )
+        self.settings_dialog.community_rules_db_github_download_button.clicked.connect(
+            EventBus().do_download_community_rules_db_from_github
         )
 
         self.settings_dialog.steam_workshop_db_none_radio.clicked.connect(
@@ -149,6 +152,9 @@ class SettingsController(QObject):
 
         self.settings_dialog.steam_workshop_db_local_file_choose_button.clicked.connect(
             self._on_steam_workshop_db_local_file_choose_button_clicked
+        )
+        self.settings_dialog.steam_workshop_db_github_upload_button.clicked.connect(
+            EventBus().do_upload_steam_workshop_db_to_github
         )
         self.settings_dialog.steam_workshop_db_github_download_button.clicked.connect(
             EventBus().do_download_steam_workshop_db_from_github

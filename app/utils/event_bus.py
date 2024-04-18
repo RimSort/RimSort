@@ -42,7 +42,9 @@ class EventBus(QObject):
     settings_have_changed = Signal()
 
     # SettingsDialog signals
+    do_upload_community_rules_db_to_github = Signal()
     do_download_community_rules_db_from_github = Signal()
+    do_upload_steam_workshop_db_to_github = Signal()
     do_download_steam_workshop_db_from_github = Signal()
     do_upload_rimsort_log = Signal()
     do_upload_rimsort_old_log = Signal()
