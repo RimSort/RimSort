@@ -63,7 +63,6 @@ from app.utils.generic import (
 )
 from app.utils.metadata import *
 from app.utils.rentry.wrapper import RentryUpload, RentryImport
-from app.utils.schema import validate_rimworld_mods_list
 from app.utils.steam.browser import SteamBrowser
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.steam.steamworks.wrapper import (
@@ -287,6 +286,7 @@ class MainContent(QObject):
             self.mods_panel.active_mods_list.refresh_signal.connect(self._do_refresh)
             self.mods_panel.inactive_mods_list.refresh_signal.connect(self._do_refresh)
             # Restore cache initially set to empty
+            self.active_mods_uuids_last_save: list[str] = []
             self.active_mods_uuids_restore_state: list[str] = []
             self.inactive_mods_uuids_restore_state: list[str] = []
 
@@ -594,7 +594,7 @@ class MainContent(QObject):
                 )
             )
         )
-
+        self.active_mods_uuids_last_save = active_mods_uuids
         if is_initial:
             logger.info("Caching initial active/inactive mod lists")
             self.active_mods_uuids_restore_state = active_mods_uuids
@@ -1339,32 +1339,22 @@ class MainContent(QObject):
                             continue  # Append `_steam` suffix if Steam mod, continue to next mod
                     active_mods.append(package_id)
             logger.info(f"Collected {len(active_mods)} active mods for export")
-            logger.info("Getting current ModsConfig.xml to use as a reference format")
-            mods_config_path = str(
-                (
-                    Path(self.settings_controller.settings.config_folder)
-                    / "ModsConfig.xml"
-                )
-            )
-            package_ids_from_file = validate_rimworld_mods_list(
-                xml_path_to_json(mods_config_path)
-            )
-            if package_ids_from_file:
+            mods_config_data = {"ModsConfigData": {"activeMods": {"li": active_mods}}}
+            try:
                 logger.info(
-                    "Successfully got ModsConfig.xml data. Overwriting with current active mods"
-                )
-                mods_config_data = {
-                    "ModsConfigData": {"activeMods": {"li": active_mods}}
-                }
-                logger.info(
-                    f"Saving generated ModsConfig.xml to selected path: {file_path}"
+                    f"Saving generated ModsConfig.xml style list to selected path: {file_path}"
                 )
                 if not file_path.endswith(".xml"):
                     json_to_xml_write(mods_config_data, file_path + ".xml")
                 else:
                     json_to_xml_write(mods_config_data, file_path)
-            else:
-                logger.error("Could not export active mods")
+            except:
+                show_fatal_error(
+                    title="Failed to export to file",
+                    text="Failed to export active mods to file:",
+                    information=f"{file_path}",
+                    details=traceback.format_exc(),
+                )
         else:
             logger.debug("USER ACTION: pressed cancel, passing")
 
@@ -1757,24 +1747,17 @@ class MainContent(QObject):
                         continue  # Append `_steam` suffix if Steam mod, continue to next mod
                 active_mods.append(package_id)
         logger.info(f"Collected {len(active_mods)} active mods for saving")
-        mods_config_path = str(
-            (Path(self.settings_controller.settings.config_folder) / "ModsConfig.xml")
-        )
-        package_ids_from_file = validate_rimworld_mods_list(
-            xml_path_to_json(mods_config_path)
-        )
-        if package_ids_from_file:
-            logger.info(
-                "Successfully got ModsConfig.xml data. Overwriting with current active mods"
-            )
-            mods_config_data = {"ModsConfigData": {"activeMods": {"li": active_mods}}}
+
+        mods_config_data = {"ModsConfigData": {"activeMods": {"li": active_mods}}}
+        try:
             json_to_xml_write(mods_config_data, mods_config_path)
-        else:
+        except:
             logger.error("Could not save active mods")
             show_fatal_error(
-                text="Could not save active mods",
-                details=f"Failed to save active mods to {mods_config_path}",
-                information="Please report this error!",
+                title="Could not save active mods",
+                text="Failed to save active mods to file:",
+                information=f"{mods_config_path}",
+                details=traceback.format_exc(),
             )
         EventBus().do_save_button_animation_stop.emit()
         logger.info("Finished saving active mods")

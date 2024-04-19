@@ -35,7 +35,7 @@ def validate_rimworld_mods_list(
         else:
             logger.error(f"Invalid format: {mods_config_data}")
     show_warning(
-        text="Unable to read data from file",
+        text="Unable to read data",
         information=(
             "RimSort was unable to read the supplied mods list because it may be invalid or missing."
         ),

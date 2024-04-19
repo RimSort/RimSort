@@ -1802,6 +1802,9 @@ class ModsPanel(QWidget):
     active/inactive mods list panel on the GUI.
     """
 
+    list_updated_signal = Signal()
+    save_btn_animation_signal = Signal()
+
     def __init__(self, settings_controller: SettingsController) -> None:
         """
         Initialize the class.
@@ -1814,7 +1817,6 @@ class ModsPanel(QWidget):
         logger.debug("Initializing ModsPanel")
         self.metadata_manager = MetadataManager.instance()
         self.settings_controller = settings_controller
-        self.list_updated = False
 
         # Base layout horizontal, sub-layouts vertical
         self.panel = QHBoxLayout()
@@ -2014,6 +2016,8 @@ class ModsPanel(QWidget):
         if count != "drop":
             logger.info(f"{list_type} mod count changed to: {count}")
             self.update_count(list_type=list_type)
+        # Signal save button animation
+        self.save_btn_animation_signal.emit()
         # Update the mod list widget errors and warnings
         self.recalculate_list_errors_warnings(list_type=list_type)
 
