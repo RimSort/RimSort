@@ -2177,6 +2177,13 @@ class SteamDatabaseBuilder(QThread):
 
 
 def check_if_pfids_blacklisted(publishedfileids: list, steamdb: Dict[str, Any]) -> list:
+    # None-check for steamdb
+    if not steamdb:
+        show_warning(
+            title="No SteamDB found",
+            text="Unable to check for blacklisted mods. Please configure a SteamDB for RimSort to use in Settings.",
+        )
+        return publishedfileids
     # Warn attempt of blacklisted mods
     blacklisted_mods = {}
     for publishedfileid in publishedfileids:
@@ -2199,16 +2206,22 @@ def check_if_pfids_blacklisted(publishedfileids: list, steamdb: Dict[str, Any]) 
             )
             blacklisted_mods_report += f'Reason for blacklisting: {blacklisted_mods[publishedfileid]["comment"]}'
         answer = show_dialogue_conditional(
-            "Blacklisted mods found",
-            "Some mods are blacklisted in your SteamDB",
-            "Are you sure you want to download these mods? These mods are known mods that are recommended to be avoided.",
-            blacklisted_mods_report,
+            title="Blacklisted mods found",
+            text="Some mods are blacklisted in your SteamDB",
+            information="Are you sure you want to download these mods? These mods are known mods that are recommended to be avoided.",
+            details=blacklisted_mods_report,
+            button_text_override=[
+                "Download blacklisted mods",
+                "Skip blacklisted mods",
+            ],
         )
-        if answer != "&Yes":
+        # Remove blacklisted mods from list if user wants to download them still
+        if "Download" in answer:
             publishedfileids.remove(publishedfileid)
             logger.debug(
-                f"Skipping download of unpublished Workshop mod: {publishedfileid}"
+                f"Skipping download of blacklisted Workshop mod: {publishedfileid}"
             )
+
     return publishedfileids
 
 
