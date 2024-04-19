@@ -73,7 +73,8 @@ from app.utils.steam.steamworks.wrapper import (
 from app.utils.steam.webapi.wrapper import CollectionImport
 from app.utils.todds.wrapper import ToddsInterface
 from app.utils.xml import json_to_xml_write, xml_path_to_json
-from app.views.actions_panel import Actions
+
+# from app.views.actions_panel import Actions
 from app.views.game_configuration_panel import GameConfiguration
 from app.views.mod_info_panel import ModInfo
 from app.views.mods_panel import ModsPanel, ModsPanelSortKey
@@ -226,15 +227,15 @@ class MainContent(QObject):
             self.mods_panel = ModsPanel(
                 settings_controller=self.settings_controller,
             )
-            self.actions_panel = Actions()
+            # self.actions_panel = Actions()
 
             # WIDGETS INTO BASE LAYOUT
             self.main_layout.addLayout(self.mod_info_panel.panel, 50)
             self.main_layout.addLayout(self.mods_panel.panel, 50)
-            self.main_layout.addLayout(self.actions_panel.panel)
+            # self.main_layout.addLayout(self.actions_panel.panel)
 
             # SIGNALS AND SLOTS
-            self.actions_panel.actions_signal.connect(self.actions_slot)  # Actions
+            # self.actions_panel.actions_signal.connect(self.actions_slot)  # Actions
             GameConfiguration.instance().configuration_signal.connect(self.actions_slot)
             GameConfiguration.instance().settings_panel.actions_signal.connect(
                 self.actions_slot
