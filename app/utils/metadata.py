@@ -710,7 +710,7 @@ class MetadataManager(QObject):
         mod_directory = callback["path"]
         path = callback["path"]
         uuid = callback["uuid"]
-        name = self.internal_local_metadata[uuid]["name"]
+        name = self.internal_local_metadata.get(uuid, {}).get("name", mod_directory)
         logger.debug(f"Processing deletion for {name}")
         del self.internal_local_metadata[uuid]
         self.mod_deleted_signal.emit(uuid)

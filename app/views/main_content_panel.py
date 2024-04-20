@@ -73,7 +73,6 @@ from app.utils.steam.webapi.wrapper import CollectionImport
 from app.utils.todds.wrapper import ToddsInterface
 from app.utils.xml import json_to_xml_write, xml_path_to_json
 
-# from app.views.actions_panel import Actions
 from app.views.game_configuration_panel import GameConfiguration
 from app.views.mod_info_panel import ModInfo
 from app.views.mods_panel import ModsPanel, ModsPanelSortKey
@@ -226,12 +225,10 @@ class MainContent(QObject):
             self.mods_panel = ModsPanel(
                 settings_controller=self.settings_controller,
             )
-            # self.actions_panel = Actions()
 
             # WIDGETS INTO BASE LAYOUT
             self.main_layout.addLayout(self.mod_info_panel.panel, 50)
             self.main_layout.addLayout(self.mods_panel.panel, 50)
-            # self.main_layout.addLayout(self.actions_panel.panel)
 
             # SIGNALS AND SLOTS
             self.metadata_manager.mod_created_signal.connect(
@@ -243,7 +240,6 @@ class MainContent(QObject):
             self.metadata_manager.mod_metadata_updated_signal.connect(
                 self.mods_panel.on_mod_metadata_updated  # Connect MetadataManager to ModPanel for mod metadata updates
             )
-            # self.actions_panel.actions_signal.connect(self.actions_slot)  # Actions
             GameConfiguration.instance().configuration_signal.connect(self.actions_slot)
             GameConfiguration.instance().settings_panel.actions_signal.connect(
                 self.actions_slot
@@ -1733,6 +1729,9 @@ class MainContent(QObject):
         logger.info(f"Collected {len(active_mods)} active mods for saving")
 
         mods_config_data = {"ModsConfigData": {"activeMods": {"li": active_mods}}}
+        mods_config_path = str(
+            Path(self.settings_controller.settings.config_folder) / "ModsConfig.xml"
+        )
         try:
             json_to_xml_write(mods_config_data, mods_config_path)
         except:
@@ -1744,16 +1743,6 @@ class MainContent(QObject):
                 details=traceback.format_exc(),
             )
         EventBus().do_save_button_animation_stop.emit()
-        # Stop the save button from blinking if it is blinking
-        if self.actions_panel.save_button_flashing_animation.isActive():
-            self.actions_panel.save_button_flashing_animation.stop()
-            self.actions_panel.save_button.setObjectName("")
-            self.actions_panel.save_button.style().unpolish(
-                self.actions_panel.save_button
-            )
-            self.actions_panel.save_button.style().polish(
-                self.actions_panel.save_button
-            )
         logger.info("Finished saving active mods")
 
     def _do_restore(self) -> None:

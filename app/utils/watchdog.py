@@ -13,7 +13,9 @@ from watchdog.observers.api import BaseObserver
 from app.controllers.settings_controller import SettingsController
 from app.utils.system_info import SystemInfo
 
-if SystemInfo().operating_system == SystemInfo.OperatingSystem.WINDOWS:
+SYSTEM_INFO = SystemInfo()
+
+if SYSTEM_INFO.operating_system == SystemInfo.OperatingSystem.WINDOWS:
     from watchdog.observers.polling import PollingObserver
 else:
     from watchdog.observers import Observer
@@ -46,7 +48,7 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
         self.settings_controller = settings_controller
         self.targets = targets
         self.watchdog_observer: Optional[BaseObserver]
-        if SystemInfo().operating_system == SystemInfo.OperatingSystem.WINDOWS:
+        if SYSTEM_INFO.operating_system == SystemInfo.OperatingSystem.WINDOWS:
             self.watchdog_observer = PollingObserver()
         else:
             self.watchdog_observer = Observer()
