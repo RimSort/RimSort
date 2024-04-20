@@ -37,14 +37,6 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
 )
-from github import Github
-from pygit2 import (
-    Repository,
-    RemoteCallbacks,
-    GitError,
-    init_repository,
-    clone_repository,
-)
 from pyperclip import copy as copy_to_clipboard
 from requests import get as requests_get
 
