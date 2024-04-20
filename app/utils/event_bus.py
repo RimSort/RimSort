@@ -1,4 +1,5 @@
 from PySide6.QtCore import QObject, Signal
+from PySide6.QtWidgets import QPushButton
 
 
 class EventBus(QObject):
@@ -60,7 +61,7 @@ class EventBus(QObject):
     do_edit_run_arguments = Signal()
 
     # MainWindow signals
-    do_button_animation = Signal()
+    do_button_animation = Signal(QPushButton)
     do_save_button_animation_start = Signal()
     do_save_button_animation_stop = Signal()
     do_refresh_mods_lists = Signal()

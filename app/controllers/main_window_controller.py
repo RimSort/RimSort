@@ -72,15 +72,33 @@ class MainWindowController(QObject):
 
     @Slot()
     def on_save_button_animation_start(self) -> None:
-        logger.debug("Active mods list updated")
+        logger.debug(
+            "Active mods list has been updated. Managing save button animation state."
+        )
+        active_mods_uuids = (
+            self.main_window.main_content_panel.mods_panel.active_mods_list.uuids
+        )
         if (
-            self.main_window.main_content_panel.mods_panel.list_updated  # This will only evaluate True if not initialization
-            and not self.main_window.save_button_flashing_animation.isActive()  # No need to re-enable if it's already blinking
+            # Compare current active list with last save to see if the list has changed
+            self.main_window.main_content_panel.mods_panel.active_mods_list.uuids
+            != self.main_window.main_content_panel.active_mods_uuids_last_save
         ):
-            logger.debug("Starting save button animation")
-            self.main_window.save_button_flashing_animation.start(
-                500
-            )  # Blink every 500 milliseconds
+            if not self.main_window.save_button_flashing_animation.isActive():
+                logger.debug("Starting save button animation")
+                self.main_window.save_button_flashing_animation.start(
+                    500
+                )  # Blink every 500 milliseconds
+        else:
+            if self.main_window.save_button_flashing_animation.isActive():
+                logger.debug("Stopping save button animation")
+                self.main_window.save_button_flashing_animation.stop()
+                self.main_window.save_button.setObjectName("")
+                self.main_window.save_button.style().unpolish(
+                    self.main_window.save_button
+                )
+                self.main_window.save_button.style().polish(
+                    self.main_window.save_button
+                )
 
     @Slot()
     def on_save_button_animation_stop(self) -> None:

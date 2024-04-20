@@ -132,7 +132,7 @@ class MainWindow(QMainWindow):
         # Save button flashing animation
         self.save_button_flashing_animation = QTimer()
         self.save_button_flashing_animation.timeout.connect(
-            partial(EventBus().do_button_animation, button=self.save_button)
+            partial(EventBus().do_button_animation.emit, self.save_button)
         )
 
         # Create the bottom panel
