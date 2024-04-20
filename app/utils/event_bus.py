@@ -60,12 +60,9 @@ class EventBus(QObject):
     do_edit_run_arguments = Signal()
 
     # MainWindow signals
-    do_refresh_button_set_default = Signal()
-    do_refresh_button_unset_default = Signal()
-
-    do_save_button_set_default = Signal()
-    do_save_button_unset_default = Signal()
-
+    do_button_animation = Signal()
+    do_save_button_animation_start = Signal()
+    do_save_button_animation_stop = Signal()
     do_refresh_mods_lists = Signal()
     do_clear_active_mods_list = Signal()
     do_sort_active_mods_list = Signal()
@@ -74,6 +71,9 @@ class EventBus(QObject):
 
     refresh_started = Signal()
     refresh_finished = Signal()
+
+    # ModsPanel signals
+    list_updated_signal = Signal()  # count, list_type
 
     def __new__(cls) -> "EventBus":
         """

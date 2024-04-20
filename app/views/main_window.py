@@ -1,6 +1,8 @@
+from functools import partial
 import os
 from typing import Optional
 
+from PySide6.QtCore import QTimer
 from PySide6.QtGui import QShowEvent
 from PySide6.QtWidgets import (
     QApplication,
@@ -17,6 +19,7 @@ from watchdog.observers.api import BaseObserver
 from app.controllers.menu_bar_controller import MenuBarController
 from app.controllers.settings_controller import SettingsController
 from app.utils.app_info import AppInfo
+from app.utils.event_bus import EventBus
 from app.utils.gui_info import GUIInfo
 from app.utils.system_info import SystemInfo
 from app.utils.watchdog import RSFileSystemEventHandler
@@ -126,6 +129,12 @@ class MainWindow(QMainWindow):
             button.setMinimumWidth(100)
             button_layout.addWidget(button)
 
+        # Save button flashing animation
+        self.save_button_flashing_animation = QTimer()
+        self.save_button_flashing_animation.timeout.connect(
+            partial(EventBus().do_button_animation, button=self.save_button)
+        )
+
         # Create the bottom panel
         app_layout.addWidget(self.bottom_panel.frame)
 
@@ -196,10 +205,6 @@ class MainWindow(QMainWindow):
                 workshop_folder_path,
                 # recursive=True,
             )
-        # TODO: Connect watchdog to our refresh button animation
-        self.watchdog_event_handler.file_changes_signal.connect(
-            self.main_content_panel._do_refresh_button_set_default
-        )
         # Connect main content signal so it can stop watchdog
         self.main_content_panel.stop_watchdog_signal.connect(self.shutdown_watchdog)
         # Start watchdog

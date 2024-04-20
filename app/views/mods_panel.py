@@ -43,6 +43,7 @@ from app.models.dialogue import (
 )
 from app.utils.app_info import AppInfo
 from app.utils.constants import SEARCH_DATA_SOURCE_FILTER_INDEXES
+from app.utils.event_bus import EventBus
 from app.utils.generic import (
     delete_files_except_extension,
     handle_remove_read_only,
@@ -1801,8 +1802,6 @@ class ModsPanel(QWidget):
     active/inactive mods list panel on the GUI.
     """
 
-    list_updated_signal = Signal()
-
     def __init__(self, settings_controller: SettingsController) -> None:
         """
         Initialize the class.
@@ -2073,7 +2072,7 @@ class ModsPanel(QWidget):
                 self.warnings_icon.setToolTip("")
             # First time, and when Refreshing, the slot will evaluate false and do nothing.
             # The purpose of this is for the _do_save_animation slot in the main_content_panel
-            self.list_updated_signal.emit()
+            EventBus().list_updated_signal.emit()
         else:
             # Check if all visible items have their widgets loaded
             self.inactive_mods_list.check_widgets_visible()

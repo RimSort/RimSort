@@ -1,4 +1,7 @@
+from loguru import logger
+
 from PySide6.QtCore import QObject, Slot
+from PySide6.QtWidgets import QPushButton
 
 from app.utils.event_bus import EventBus
 from app.utils.metadata import MetadataManager
@@ -38,36 +41,23 @@ class MainWindowController(QObject):
             button.clicked.connect(signal.emit)
 
         # Connect EventBus signals to slots
-        EventBus().do_refresh_button_set_default.connect(
-            self.on_do_refresh_button_set_default
+        EventBus().do_button_animation.connect(self.on_button_animation)
+        EventBus().do_save_button_animation_stop.connect(
+            self.on_save_button_animation_stop
         )
-        EventBus().do_refresh_button_unset_default.connect(
-            self.on_do_refresh_button_unset_default
-        )
-        EventBus().do_save_button_set_default.connect(
-            self.on_do_save_button_set_default
-        )
-        EventBus().do_save_button_unset_default.connect(
-            self.on_do_save_button_unset_default
-        )
+        EventBus().list_updated_signal.connect(
+            self.on_save_button_animation_start
+        )  # Save btn animation
         EventBus().refresh_started.connect(self.on_refresh_started)
         EventBus().refresh_finished.connect(self.on_refresh_finished)
 
     @Slot()
-    def on_do_refresh_button_set_default(self) -> None:
-        self.set_default_button(self.main_window.refresh_button)
-
-    @Slot()
-    def on_do_refresh_button_unset_default(self) -> None:
-        self.unset_default_buttons()
-
-    @Slot()
-    def on_do_save_button_set_default(self) -> None:
-        self.set_default_button(self.main_window.save_button)
-
-    @Slot()
-    def on_do_save_button_unset_default(self) -> None:
-        self.unset_default_buttons()
+    def on_button_animation(self, button: QPushButton) -> None:
+        button.setObjectName(
+            "%s" % ("" if button.objectName() == "indicator" else "indicator")
+        )
+        button.style().unpolish(button)
+        button.style().polish(button)
 
     @Slot()
     def on_refresh_started(self) -> None:
@@ -80,13 +70,26 @@ class MainWindowController(QObject):
             "RimWorld version " + MetadataManager.instance().game_version
         )
 
-    def set_default_button(self, button):
-        for btn in self.buttons:
-            btn.setDefault(btn is button)
+    @Slot()
+    def on_save_button_animation_start(self) -> None:
+        logger.debug("Active mods list updated")
+        if (
+            self.main_window.main_content_panel.mods_panel.list_updated  # This will only evaluate True if not initialization
+            and not self.main_window.save_button_flashing_animation.isActive()  # No need to re-enable if it's already blinking
+        ):
+            logger.debug("Starting save button animation")
+            self.main_window.save_button_flashing_animation.start(
+                500
+            )  # Blink every 500 milliseconds
 
-    def unset_default_buttons(self):
-        for btn in self.buttons:
-            btn.setDefault(False)
+    @Slot()
+    def on_save_button_animation_stop(self) -> None:
+        # Stop the save button from blinking if it is blinking
+        if self.main_window.save_button_flashing_animation.isActive():
+            self.main_window.save_button_flashing_animation.stop()
+            self.main_window.save_button.setObjectName("")
+            self.main_window.save_button.style().unpolish(self.main_window.save_button)
+            self.main_window.save_button.style().polish(self.main_window.save_button)
 
     def set_buttons_enabled(self, enabled: bool) -> None:
         for btn in self.buttons:

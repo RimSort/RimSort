@@ -240,9 +240,6 @@ class MainContent(QObject):
             GameConfiguration.instance().settings_panel.actions_signal.connect(
                 self.actions_slot
             )  # Settings
-            self.mods_panel.list_updated_signal.connect(
-                self.__do_save_button_set_default
-            )  # Save btn animation
             self.mods_panel.active_mods_list.key_press_signal.connect(
                 self.__handle_active_mod_key_press
             )
@@ -1002,10 +999,19 @@ class MainContent(QObject):
         Refresh expensive calculations & repopulate lists with that refreshed data
         """
         EventBus().refresh_started.emit()
+        EventBus().do_save_button_animation_stop.emit()
         # If we are refreshing cache from user action
         if not is_initial:
             self.mods_panel.list_updated = False
-            EventBus().do_refresh_button_unset_default.emit()
+            # Reset the data source filters to default and clear searches
+            self.mods_panel.active_mods_filter_data_source_index = len(
+                self.mods_panel.data_source_filter_icons
+            )
+            self.mods_panel.signal_clear_search(list_type="Active")
+            self.mods_panel.inactive_mods_filter_data_source_index = len(
+                self.mods_panel.data_source_filter_icons
+            )
+            self.mods_panel.signal_clear_search(list_type="Inactive")
             self.mods_panel.active_mods_filter_data_source_index = len(
                 self.mods_panel.data_source_filter_icons
             )
@@ -1071,10 +1077,6 @@ class MainContent(QObject):
             self.metadata_manager.info_from_steam_package_id_to_name
         )
         EventBus().refresh_finished.emit()
-
-    def _do_refresh_button_set_default(self, path: str) -> None:
-        logger.debug(f"File change detected: {path}")
-        EventBus().do_refresh_button_set_default.emit()
 
     def _do_clear(self) -> None:
         """
@@ -1774,17 +1776,8 @@ class MainContent(QObject):
                 details=f"Failed to save active mods to {mods_config_path}",
                 information="Please report this error!",
             )
-        # Stop the save button from blinking if it is blinking
-        EventBus().do_save_button_unset_default.emit()
+        EventBus().do_save_button_animation_stop.emit()
         logger.info("Finished saving active mods")
-
-    def __do_save_button_set_default(self) -> None:
-        logger.debug("Active mods list updated")
-        if (
-            self.mods_panel.list_updated  # This will only evaluate True if this is initialization, or _do_refresh()
-            and not self.actions_panel.save_button_flashing_animation.isActive()  # No need to re-enable if it's already blinking
-        ):
-            EventBus().do_save_button_set_default.emit()
 
     def _do_restore(self) -> None:
         """
