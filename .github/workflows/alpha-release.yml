@@ -9,16 +9,16 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-11-x64
+          - os: macos-11
             platform: "Darwin"
             arch: "i386"
-          - os: macos-14-arm64
+          - os: macos-14
             platform: "Darwin"
             arch: "arm"
-          - os: ubuntu-20.04
+          - os: ubuntu-22.04
             platform: "Linux"
             arch: "x86_64"
-          - os: windows-2019
+          - os: windows-2022
             platform: "Windows"
             arch: "x86_64"
     steps:
@@ -135,7 +135,7 @@ jobs:
         shell: powershell
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # Format tag name, filename (Unix)
+      # Format tag name + filename (Unix)
       - name: Format filename
         if: matrix.platform != 'Windows'
         run: |
@@ -149,7 +149,7 @@ jobs:
           FILENAME="RimSort-${FORMATTED_TAG_NAME}_${{ matrix.platform }}_${{ matrix.arch }}.zip"
           echo "FILENAME=$FILENAME" >> $GITHUB_ENV
         shell: bash
-      # Format tag name, filename (Windows)
+      # Format tag name + filename (Windows)
       - name: Format filename
         if: matrix.platform == 'Windows'
         run: |
@@ -244,10 +244,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.TWSTA_ACTIONS }}
       # Download artifacts
-      - name: Download all workflow artifacts
+      - name: Download all workflow run artifacts
         uses: actions/download-artifact@v2
       # Upload artifacts to release
-      - name: Upload artifacts to release
+      - name: Upload assets to the Alpha release
         run: |
           for artifact_dir in RimSort-Alpha*; do
             artifact="$artifact_dir/$artifact_dir"
