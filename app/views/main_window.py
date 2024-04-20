@@ -1,8 +1,9 @@
 from functools import partial
 import os
+from pathlib import Path
 from typing import Optional
 
-from PySide6.QtCore import QTimer
+from PySide6.QtCore import QSize, QTimer
 from PySide6.QtGui import QShowEvent
 from PySide6.QtWidgets import (
     QApplication,
@@ -14,7 +15,6 @@ from PySide6.QtWidgets import (
     QPushButton,
 )
 from loguru import logger
-from watchdog.observers.api import BaseObserver
 
 from app.controllers.menu_bar_controller import MenuBarController
 from app.controllers.settings_controller import SettingsController
@@ -22,16 +22,11 @@ from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 from app.utils.gui_info import GUIInfo
 from app.utils.system_info import SystemInfo
-from app.utils.watchdog import RSFileSystemEventHandler
+from app.utils.watchdog import WatchdogHandler
 from app.views.game_configuration_panel import GameConfiguration
 from app.views.main_content_panel import MainContent
 from app.views.menu_bar import MenuBar
 from app.views.status_panel import Status
-
-if SystemInfo().operating_system == SystemInfo.OperatingSystem.WINDOWS:
-    from watchdog.observers.polling import PollingObserver
-else:
-    from watchdog.observers import Observer
 
 
 class MainWindow(QMainWindow):
@@ -65,8 +60,11 @@ class MainWindow(QMainWindow):
             self.version_string += f" [Edge {sha}]"
 
         # Watchdog
-        self.watchdog_event_handler: Optional[RSFileSystemEventHandler] = None
-        self.watchdog_observer: Optional[BaseObserver] = None
+        self.watchdog_event_handler: Optional[WatchdogHandler] = None
+
+        # Set up the window
+        self.setWindowTitle(f"RimSort {self.version_string}")
+        self.setMinimumSize(QSize(1024, 768))
 
         # Create the window layout
         app_layout = QVBoxLayout()
@@ -179,44 +177,41 @@ class MainWindow(QMainWindow):
     def __initialize_watchdog(self) -> None:
         logger.info("Initializing watchdog FS Observer")
         # INITIALIZE WATCHDOG - WE WAIT TO START UNTIL DONE PARSING MOD LIST
-        game_folder_path = self.settings_controller.settings.game_folder
-        local_folder_path = self.settings_controller.settings.local_folder
-        workshop_folder_path = self.settings_controller.settings.workshop_folder
-        self.watchdog_event_handler = RSFileSystemEventHandler()
-        if SystemInfo().operating_system == SystemInfo.OperatingSystem.WINDOWS:
-            self.watchdog_observer = PollingObserver()
-        else:
-            self.watchdog_observer = Observer()
-        if game_folder_path and game_folder_path != "":
-            self.watchdog_observer.schedule(
-                self.watchdog_event_handler,
-                game_folder_path,
-                # recursive=True,
-            )
-        if local_folder_path and local_folder_path != "":
-            self.watchdog_observer.schedule(
-                self.watchdog_event_handler,
-                local_folder_path,
-                # recursive=True,
-            )
-        if workshop_folder_path and workshop_folder_path != "":
-            self.watchdog_observer.schedule(
-                self.watchdog_event_handler,
-                workshop_folder_path,
-                # recursive=True,
-            )
+        # Instantiate event handler
+        # Pass a mapper of metadata-containing About.xml or Scenario.rsc files to their mod uuids
+        self.watchdog_event_handler = WatchdogHandler(
+            settings_controller=self.settings_controller,
+            targets=[
+                str(Path(self.settings_controller.settings.game_folder) / "Data"),
+                self.settings_controller.settings.local_folder,
+                self.settings_controller.settings.workshop_folder,
+            ],
+        )
+        # Connect watchdog to MetadataManager
+        self.watchdog_event_handler.mod_created.connect(
+            self.main_content_panel.metadata_manager.process_creation
+        )
+        self.watchdog_event_handler.mod_deleted.connect(
+            self.main_content_panel.metadata_manager.process_deletion
+        )
+        self.watchdog_event_handler.mod_modified.connect(
+            self.main_content_panel.metadata_manager.process_update
+        )
         # Connect main content signal so it can stop watchdog
         self.main_content_panel.stop_watchdog_signal.connect(self.shutdown_watchdog)
         # Start watchdog
         try:
-            self.watchdog_observer.start()
+            self.watchdog_event_handler.watchdog_observer.start()
         except Exception as e:
             logger.warning(
                 f"Unable to initialize watchdog Observer due to exception: {e.__class__.__name__}"
             )
 
     def shutdown_watchdog(self) -> None:
-        if self.watchdog_observer and self.watchdog_observer.is_alive():
-            self.watchdog_observer.stop()
-            self.watchdog_observer.join()
-            self.watchdog_observer = None
+        if (
+            self.watchdog_event_handler.watchdog_observer
+            and self.watchdog_event_handler.watchdog_observer.is_alive()
+        ):
+            self.watchdog_event_handler.watchdog_observer.stop()
+            self.watchdog_event_handler.watchdog_observer.join()
+            self.watchdog_event_handler.watchdog_observer = None

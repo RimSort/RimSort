@@ -234,6 +234,15 @@ class MainContent(QObject):
             # self.main_layout.addLayout(self.actions_panel.panel)
 
             # SIGNALS AND SLOTS
+            self.metadata_manager.mod_created_signal.connect(
+                self.mods_panel.on_mod_created  # Connect MetadataManager to ModPanel for mod creation
+            )
+            self.metadata_manager.mod_deleted_signal.connect(
+                self.mods_panel.on_mod_deleted  # Connect MetadataManager to ModPanel for mod deletion
+            )
+            self.metadata_manager.mod_metadata_updated_signal.connect(
+                self.mods_panel.on_mod_metadata_updated  # Connect MetadataManager to ModPanel for mod metadata updates
+            )
             # self.actions_panel.actions_signal.connect(self.actions_slot)  # Actions
             GameConfiguration.instance().configuration_signal.connect(self.actions_slot)
             GameConfiguration.instance().settings_panel.actions_signal.connect(
@@ -454,8 +463,8 @@ class MainContent(QObject):
             f"Finished inserting mod data into active [{len(active_mods_uuids)}] and inactive [{len(inactive_mods_uuids)}] mod lists"
         )
         # Recalculate warnings for both lists
-        self.mods_panel.active_mods_list.recalculate_warnings_signal.emit()
-        self.mods_panel.inactive_mods_list.recalculate_warnings_signal.emit()
+        # self.mods_panel.active_mods_list.recalculate_warnings_signal.emit()
+        # self.mods_panel.inactive_mods_list.recalculate_warnings_signal.emit()
 
     def __duplicate_mods_prompt(self) -> None:
         list_of_duplicate_mods = "\n".join(
@@ -511,35 +520,10 @@ class MainContent(QObject):
         complete json mod info for that internal uuid. It passes
         this information to the mod info panel to display.
 
-        It updates the styling of the summary values based
-        on the validity of the mod, and will highlight red if invalid.
-
         :param uuid: uuid of mod
         """
         mod_info = self.metadata_manager.internal_local_metadata.get(uuid)
         self.mod_info_panel.display_mod_info(mod_info=mod_info)
-        if mod_info and mod_info.get("invalid"):
-            # Set invalid value style
-            for widget in (
-                self.mod_info_panel.mod_info_name_value,
-                self.mod_info_panel.mod_info_path_value,
-                self.mod_info_panel.mod_info_author_value,
-                self.mod_info_panel.mod_info_package_id_value,
-            ):
-                widget.setObjectName("summaryValueInvalid")
-                widget.style().unpolish(widget)
-                widget.style().polish(widget)
-        else:
-            # Set valid value style
-            for widget in (
-                self.mod_info_panel.mod_info_name_value,
-                self.mod_info_panel.mod_info_path_value,
-                self.mod_info_panel.mod_info_author_value,
-                self.mod_info_panel.mod_info_package_id_value,
-            ):
-                widget.setObjectName("summaryValue")
-                widget.style().unpolish(widget)
-                widget.style().polish(widget)
 
     def __update_game_configuration(self) -> None:
         self.metadata_manager.community_rules_repo = (
@@ -1760,6 +1744,16 @@ class MainContent(QObject):
                 details=traceback.format_exc(),
             )
         EventBus().do_save_button_animation_stop.emit()
+        # Stop the save button from blinking if it is blinking
+        if self.actions_panel.save_button_flashing_animation.isActive():
+            self.actions_panel.save_button_flashing_animation.stop()
+            self.actions_panel.save_button.setObjectName("")
+            self.actions_panel.save_button.style().unpolish(
+                self.actions_panel.save_button
+            )
+            self.actions_panel.save_button.style().polish(
+                self.actions_panel.save_button
+            )
         logger.info("Finished saving active mods")
 
     def _do_restore(self) -> None:

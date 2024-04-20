@@ -27,6 +27,7 @@ from app.utils.constants import (
     DB_BUILDER_PRUNE_EXCEPTIONS,
     DB_BUILDER_RECURSE_EXCEPTIONS,
     DEFAULT_USER_RULES,
+    MOD_RECURSE_EXCEPTIONS,
     RIMWORLD_DLC_METADATA,
 )
 from app.utils.generic import directories
@@ -45,7 +46,9 @@ from app.utils.xml import xml_path_to_json
 
 class MetadataManager(QObject):
     _instance: Optional["MetadataManager"] = None
-
+    mod_created_signal = Signal(str)
+    mod_deleted_signal = Signal(str)
+    mod_metadata_updated_signal = Signal(str)
     show_warning_signal = Signal(str, str, str, str)
     update_game_configuration_signal = Signal()
 
@@ -78,9 +81,6 @@ class MetadataManager(QObject):
                 AppInfo().databases_folder / "userRules.json"
             )
             self.internal_local_metadata = {}
-            self.expansion_subdirectories = []
-            self.local_subdirectories = []
-            self.workshop_subdirectories = []
 
             # Empty game version string unless the data is populated
             self.game_version = ""
@@ -405,9 +405,9 @@ class MetadataManager(QObject):
                 logger.info(
                     f"Attempting to get expansion data from RimWorld's Data folder: {data_path}"
                 )
-                self.expansion_subdirectories = directories(data_path)
-                expansion_data = self.process_mods(
-                    directories_to_process=self.expansion_subdirectories,
+                expansion_subdirectories = directories(data_path)
+                expansion_data = self.process_batch_update(
+                    directories_to_process=expansion_subdirectories,
                     intent="expansion",
                 )
                 logger.info("Finished getting expansion data")
@@ -488,11 +488,11 @@ class MetadataManager(QObject):
                 logger.info(
                     f"Getting local mods from path: {self.settings_controller.settings.local_folder}"
                 )
-                self.local_subdirectories = directories(
+                local_subdirectories = directories(
                     self.settings_controller.settings.local_folder
                 )
-                mod_data = self.process_mods(
-                    directories_to_process=self.local_subdirectories, intent="local"
+                mod_data = self.process_batch_update(
+                    directories_to_process=local_subdirectories, intent="local"
                 )
                 logger.info("Finished getting local mod data")
             else:
@@ -517,11 +517,11 @@ class MetadataManager(QObject):
                 logger.info(
                     f"Getting workshop mods from path: {self.settings_controller.settings.workshop_folder}"
                 )
-                self.workshop_subdirectories = directories(
+                workshop_subdirectories = directories(
                     self.settings_controller.settings.workshop_folder
                 )
-                mod_data = self.process_mods(
-                    directories_to_process=self.workshop_subdirectories,
+                mod_data = self.process_batch_update(
+                    directories_to_process=workshop_subdirectories,
                     intent="workshop",
                 )
                 logger.info("Finished getting workshop mods")
@@ -669,10 +669,10 @@ class MetadataManager(QObject):
         # Return result
         return result
 
-    def process_mods(self, directories_to_process: list, intent: str) -> Dict[str, Any]:
-        logger.info(
-            f"Processing updates for {len(directories_to_process)} mod directories"
-        )
+    def process_batch_update(
+        self, directories_to_process: list[str], intent: str
+    ) -> Dict[str, Any]:
+        logger.info(f"Processing {len(directories_to_process)} mod update(s)")
         # Create a shared results dict for our metadata
         results = {}
         # Process our parsers
@@ -682,6 +682,7 @@ class MetadataManager(QObject):
                 intent=intent,
                 results=results,
                 steam_db=self.external_steam_metadata,
+                uuid=str(uuid4()),
             )
             # Start each parser in the pool
             self.parser_threadpool.start(parser)
@@ -690,6 +691,60 @@ class MetadataManager(QObject):
         # Collect our results
         logger.info(f"Finished processing directories for {intent}")
         return results
+
+    def process_creation(self, callback: dict[str, str]) -> None:
+        data_source = callback["data_source"]
+        path = callback["path"]
+        uuid = callback["uuid"]
+        logger.debug(
+            f'Processing creation of {data_source + " mod" if data_source != "expansion" else data_source} for {path}'
+        )
+        self.process_update(callback=callback),
+        name = self.internal_local_metadata[uuid]["name"]
+        self.mod_created_signal.emit(uuid)
+        logger.debug(f"Finished processing creation for {name}")
+
+    def process_deletion(self, callback: dict[str, str]) -> None:
+        logger.debug(json.dumps(callback))
+        data_source = callback["data_source"]
+        mod_directory = callback["path"]
+        path = callback["path"]
+        uuid = callback["uuid"]
+        name = self.internal_local_metadata[uuid]["name"]
+        logger.debug(f"Processing deletion for {name}")
+        del self.internal_local_metadata[uuid]
+        self.mod_deleted_signal.emit(uuid)
+        logger.debug(f"Finished processing deletion for {name}")
+
+    def process_update(
+        self,
+        callback: dict[str, str],
+    ) -> None:
+        data_source = callback["data_source"]
+        mod_directory = callback["path"]
+        operation = callback["operation"]
+        results = {}
+        uuid = callback["uuid"]
+        parser = ModParser(
+            directory=mod_directory,
+            intent=data_source,
+            results=results,
+            steam_db=self.external_steam_metadata,
+            uuid=uuid,
+        )
+        self.parser_threadpool.start(parser)
+        self.parser_threadpool.waitForDone()
+        recursively_update_dict(
+            a_dict=self.internal_local_metadata,
+            b_dict=results,
+            recurse_exceptions=MOD_RECURSE_EXCEPTIONS,
+        )
+        self.compile_metadata(uuids=[uuid])
+        if operation == "update":
+            self.mod_metadata_updated_signal.emit(uuid)
+        logger.debug(
+            f"Finished processing update for {self.internal_local_metadata[uuid]['name']}"
+        )
 
     def refresh_cache(self, is_initial=None) -> None:
         """
@@ -716,28 +771,25 @@ class MetadataManager(QObject):
 
         logger.info("Finished refreshing cache calculations")
 
-    def compile_metadata(self) -> None:
+    def compile_metadata(self, uuids: list[str] = None) -> None:
         """
-        Iterate through each expansion or mod and add new key-values describing
-        its dependencies, incompatibilities, and load order rules from external metadata.
+        Iterate through each expansion or mod and add new key-values describing the
+        dependencies, incompatibilities, and load order rules compiled from metadata.
         """
-
-        logger.info("Started compiling internal metadata with external metadata")
-
+        # Compile metadata for all mods if uuids is None
+        uuids = uuids or list(self.internal_local_metadata.keys())
+        logger.info(f"Started compiling metadata for {len(uuids)} mods")
         # Create an index for self.internal_local_metadata
         packageid_to_uuid = {
-            mod.get("packageid"): uuid
-            for uuid, mod in self.internal_local_metadata.items()
+            self.internal_local_metadata[uuid].get("packageid"): uuid for uuid in uuids
         }
-
         # Add dependencies to installed mods based on dependencies listed in About.xml TODO manifest.xml
         logger.info("Started compiling metadata from About.xml")
-        for uuid in self.internal_local_metadata:
+        for uuid in uuids:
             logger.debug(
                 f"UUID: {uuid} packageid: "
                 + self.internal_local_metadata[uuid].get("packageid")
             )
-
             # moddependencies are not equal to mod load order rules
             if self.internal_local_metadata[uuid].get("moddependencies"):
                 if isinstance(
@@ -995,14 +1047,12 @@ class MetadataManager(QObject):
                             tracking_dict.setdefault(db_packageid, set()).update(
                                 dependencies.keys()
                             )
-
             logger.debug(
                 f"Tracking {len(steam_id_to_package_id)} SteamDB packageids for lookup"
             )
             logger.debug(
                 f"Tracking Steam dependency data for {len(tracking_dict)} installed mods"
             )
-
             # For each mod that exists in self.internal_local_metadata -> dependencies (in Steam ID form)
             for (
                 installed_mod_package_id,
@@ -1032,7 +1082,6 @@ class MetadataManager(QObject):
             log_deps_order_info(self.internal_local_metadata)
         else:
             logger.info("No Steam database supplied from external metadata. skipping.")
-
         # Add load order to installed mods based on dependencies from community rules
         if self.external_community_rules:
             logger.info("Started compiling metadata from configured Community Rules")
@@ -1062,7 +1111,6 @@ class MetadataManager(QObject):
                                 self.internal_local_metadata,
                                 packageid_to_uuid,
                             )
-
                     load_these_before = self.external_community_rules[package_id].get(
                         "loadAfter"
                     )
@@ -1173,6 +1221,7 @@ class ModParser(QRunnable):
         intent: str,
         results: Dict[str, Any],
         steam_db: Dict[str, Any],
+        uuid: str = None,
     ):
         super(ModParser, self).__init__()
         # This is very spammy - only enable if you are really wanting to debug this class.
@@ -1181,20 +1230,22 @@ class ModParser(QRunnable):
         self.intent = intent
         self.results = results
         self.steam_db = steam_db
+        self.uuid = uuid
 
-    def __parse_mod_data(
-        self, directory: str, intent: str, steam_db: Dict[str, Any]
+    def __parse_mod_metadata(
+        self, directory: str, intent: str, steam_db: Dict[str, Any], uuid: str
     ) -> Dict[str, Any]:
-        logger.debug(f"Parsing directory: {directory}")
-        mods = {}
+        logger.debug(f"Parsing [{intent}] directory: {directory}")
+        metadata = {}
+        # Populate a UUID for the directory we are populating - re-use the same UUID
+        # if passed as the "intent" parameter for single-mod updates
+        uuid = uuid
         directory_path = Path(directory)
         directory_name = str(directory_path.name)
         # Use this to trigger invalid clause intentionally, i.e. when handling exceptions
         data_malformed = None
         # Any pfid parsed will be stored here locally
         pfid = None
-        # Generate a UUID for the directory we are populating
-        uuid = str(uuid4())
         # Look for a case-insensitive "About" folder
         invalid_about_folder_path_found = True
         about_folder_name = "About"
@@ -1422,12 +1473,15 @@ class ModParser(QRunnable):
                     mod_metadata["internal_time_touched"] = int(
                         os.path.getmtime(directory)
                     )
-                    mod_metadata["about_xml_path"] = mod_data_path
                     mod_metadata["path"] = directory
+                    mod_metadata["metadata_file_mtime"] = int(
+                        os.path.getmtime(mod_data_path)
+                    )
+                    mod_metadata["metadata_file_path"] = mod_data_path
                     logger.debug(
                         f"Finished editing XML mod content, adding final content to larger list: {mod_metadata}"
                     )
-                    mods[uuid] = mod_metadata
+                    metadata[uuid] = mod_metadata
                 else:
                     logger.error(
                         f"Key <modmetadata> does not exist in this data: {mod_data}"
@@ -1494,12 +1548,20 @@ class ModParser(QRunnable):
                     scenario_metadata["data_source"] = intent
                     scenario_metadata["folder"] = directory_name
                     scenario_metadata["path"] = directory
+                    # This is overwritten if acf data is parsed for Steam/SteamCMD mods
+                    scenario_metadata["internal_time_touched"] = int(
+                        os.path.getmtime(directory)
+                    )
+                    scenario_metadata["metadata_file_path"] = mod_data_path
+                    scenario_metadata["metadata_file_mtime"] = int(
+                        os.path.getmtime(mod_data_path)
+                    )
                     # Track source & uuid in case metadata becomes detached
                     scenario_metadata["uuid"] = uuid
                     logger.debug(
                         f"Finished editing XML scenario content, adding final content to larger list: {scenario_metadata}"
                     )
-                    mods[uuid] = scenario_metadata
+                    metadata[uuid] = scenario_metadata
                 else:
                     logger.error(
                         f"Key <savedscenario><scenario> does not exist in this data: {scenario_metadata}"
@@ -1509,7 +1571,7 @@ class ModParser(QRunnable):
             invalid_about_file_path_found and not scenario_rsc_found
         ) or data_malformed:  # ...finally, if we don't have any metadata parsed, populate invalid mod entry for visibility
             logger.debug(f"Invalid dir. Populating invalid mod for path: {directory}")
-            mods[uuid] = {
+            metadata[uuid] = {
                 "invalid": True,
                 "name": "Invalid item",
                 "packageid": "invalid.item",
@@ -1522,31 +1584,35 @@ class ModParser(QRunnable):
                 "data_source": intent,
                 "folder": directory_name,
                 "path": directory,
+                # This is overwritten if acf data is parsed for Steam/SteamCMD mods
+                "internal_time_touched": int(os.path.getmtime(directory)),
                 "uuid": uuid,
             }
             if pfid:
-                mods[uuid].update({"publishedfileid": pfid})
+                metadata[uuid].update({"publishedfileid": pfid})
         # Additional checks for local mods
         if intent == "local":
-            metadata = mods[uuid]
+            local_mod_metadata = metadata[uuid]
             # Check for git repository inside local mods, tag appropriately
             if os.path.exists(str((directory_path / ".git"))):
-                metadata["git_repo"] = True
+                local_mod_metadata["git_repo"] = True
             # Check for local mods that are SteamCMD mods, tag appropriately
-            if metadata.get("folder") == metadata.get("publishedfileid"):
-                metadata["steamcmd"] = True
+            if local_mod_metadata.get("folder") == local_mod_metadata.get(
+                "publishedfileid"
+            ):
+                local_mod_metadata["steamcmd"] = True
         logger.debug(f"Finished parsing directory")
-        return mods
+        return metadata
 
     def run(self):
         try:
-            mod_metadata = self.__parse_mod_data(
-                self.directory, self.intent, self.steam_db
+            mod_metadata = self.__parse_mod_metadata(
+                self.directory, self.intent, self.steam_db, self.uuid
             )
             self.results.update(mod_metadata)
         except Exception as e:
             error_message = f"{type(e).__name__}: {str(e)}\n{traceback.format_exc()}"
-            logger.error(error_message)
+            logger.error(f"ERROR: Unable to initialize ModParser {error_message}")
 
 
 # Mod helper functions

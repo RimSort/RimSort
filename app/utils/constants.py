@@ -9,6 +9,12 @@ DB_BUILDER_RECURSE_EXCEPTIONS = [
     "loadAfter",
     "loadBottom",
 ]
+MOD_RECURSE_EXCEPTIONS = [
+    "incompatiblewith",
+    "loadafter",
+    "loadbefore",
+    "moddependencies",
+]
 DEFAULT_SETTINGS = {
     "check_for_update_startup": False,
     "show_folder_rows": True,

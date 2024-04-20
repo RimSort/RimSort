@@ -1252,9 +1252,6 @@ class ModListWidget(QListWidget):
                                 ].startswith(
                                     "ludeon.rimworld"
                                 ):
-                                    data = source_item.data(Qt.UserRole)
-                                    self.uuids.remove(data["uuid"])
-                                    self.takeItem(self.row(source_item))
                                     try:
                                         rmtree(
                                             widget_json_data["path"],
@@ -1292,7 +1289,6 @@ class ModListWidget(QListWidget):
                                 ):
                                     data = source_item.data(Qt.UserRole)
                                     self.uuids.remove(data["uuid"])
-                                    self.takeItem(self.row(source_item))
                                     delete_files_except_extension(
                                         directory=widget_json_data["path"],
                                         extension=".dds",
@@ -1422,6 +1418,20 @@ class ModListWidget(QListWidget):
         """
         self.check_widgets_visible()
         return super().resizeEvent(event)
+
+    def append_new_item(self, uuid: str) -> None:
+        data = {
+            "errors_warnings": "",
+            "filtered": False,
+            "invalid": self.metadata_manager.internal_local_metadata[uuid].get(
+                "invalid"
+            ),
+            "mismatch": self.metadata_manager.is_version_mismatch(uuid),
+            "uuid": uuid,
+        }
+        item = QListWidgetItem(self)
+        item.setData(Qt.UserRole, data)
+        self.addItem(item)
 
     def check_item_visible(self, item: QListWidgetItem) -> bool:
         # Determines if the item is currently visible in the viewport.
@@ -1591,6 +1601,21 @@ class ModListWidget(QListWidget):
         """
         widget = ModListItemInner = self.itemWidget(item)
         self.key_press_signal.emit("DoubleClick")
+
+    def rebuild_item_widget_from_uuid(self, uuid: str) -> None:
+        item_index = self.uuids.index(uuid)
+        item = self.item(item_index)
+        logger.debug(f"Rebuilding widget for item {uuid} at index {item_index}")
+        # Destroy the item's previous widget immediately. Recreate if the item is visible.
+        widget = self.itemWidget(item)
+        if widget:
+            self.removeItemWidget(item)
+        # If it is visible, create a new widget. Otherwise, allow lazy loading to handle this.
+        if self.check_item_visible(item):
+            self.create_widget_for_item(item)
+        # If the current item is selected, update the info panel
+        if self.currentItem() == item:
+            self.mod_info_signal.emit(uuid)
 
     def recalculate_internal_errors_warnings(self) -> None:
         """
@@ -2050,6 +2075,27 @@ class ModsPanel(QWidget):
 
     def on_inactive_mods_mode_filter_toggle(self) -> None:
         self.signal_search_mode_filter(list_type="Inactive")
+
+    def on_mod_created(self, uuid: str) -> None:
+        self.inactive_mods_list.append_new_item(uuid)
+
+    def on_mod_deleted(self, uuid: str) -> None:
+        if uuid in self.active_mods_list.uuids:
+            index = self.active_mods_list.uuids.index(uuid)
+            self.active_mods_list.takeItem(index)
+            self.active_mods_list.uuids.pop(index)
+            self.update_count(list_type="Active")
+        elif uuid in self.inactive_mods_list.uuids:
+            index = self.inactive_mods_list.uuids.index(uuid)
+            self.inactive_mods_list.takeItem(index)
+            self.inactive_mods_list.uuids.pop(index)
+            self.update_count(list_type="Inactive")
+
+    def on_mod_metadata_updated(self, uuid: str) -> None:
+        if uuid in self.active_mods_list.uuids:
+            self.active_mods_list.rebuild_item_widget_from_uuid(uuid=uuid)
+        elif uuid in self.inactive_mods_list.uuids:
+            self.inactive_mods_list.rebuild_item_widget_from_uuid(uuid=uuid)
 
     def recalculate_list_errors_warnings(self, list_type: str) -> None:
         if list_type == "Active":

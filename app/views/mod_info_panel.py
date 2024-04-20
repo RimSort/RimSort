@@ -178,6 +178,29 @@ class ModInfo:
 
         :param mod_info: complete json info for the mod
         """
+        # Style summary values based on validity
+        if mod_info and mod_info.get("invalid"):
+            # Set invalid value style
+            for widget in (
+                self.mod_info_name_value,
+                self.mod_info_path_value,
+                self.mod_info_author_value,
+                self.mod_info_package_id_value,
+            ):
+                widget.setObjectName("summaryValueInvalid")
+                widget.style().unpolish(widget)
+                widget.style().polish(widget)
+        else:
+            # Set valid value style
+            for widget in (
+                self.mod_info_name_value,
+                self.mod_info_path_value,
+                self.mod_info_author_value,
+                self.mod_info_package_id_value,
+            ):
+                widget.setObjectName("summaryValue")
+                widget.style().unpolish(widget)
+                widget.style().polish(widget)
         # Set name value
         self.mod_info_name_value.setText(mod_info.get("name", "Not specified"))
         # Show essential info widgets
