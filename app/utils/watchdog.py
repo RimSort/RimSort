@@ -71,7 +71,6 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
                 for uuid, metadata in self.metadata_manager.internal_local_metadata.items()
             },
         }
-        logger.debug(f"Mapper: {json.dumps(self.mod_file_mapper, indent=4)}")
 
     def __cooldown(self, callback: dict[str, str]) -> None:
         """
@@ -227,7 +226,7 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
 
         Returns: None
         """
-        # logger.warning(f"File moved: {event.src_path} to {event.dest_path}")
+        # logger.debug(f"File moved: {event.src_path} to {event.dest_path}")
 
     def on_closed(self, event: FileSystemEvent):
         """
@@ -238,7 +237,7 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
 
         Returns: None
         """
-        # logger.warning(f"File closed: {event.src_path}")
+        # logger.debug(f"File closed: {event.src_path}")
 
     def on_opened(self, event: FileSystemEvent):
         """
@@ -249,4 +248,4 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
 
         Returns: None
         """
-        # logger.warning(f"File opened: {event.src_path}")
+        # logger.debug(f"File opened: {event.src_path}")
