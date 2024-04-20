@@ -209,7 +209,8 @@ class MainWindow(QMainWindow):
 
     def shutdown_watchdog(self) -> None:
         if (
-            self.watchdog_event_handler.watchdog_observer
+            self.watchdog_event_handler
+            and self.watchdog_event_handler.watchdog_observer
             and self.watchdog_event_handler.watchdog_observer.is_alive()
         ):
             self.watchdog_event_handler.watchdog_observer.stop()
