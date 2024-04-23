@@ -1336,9 +1336,9 @@ class ModParser(QRunnable):
                     scenario_metadata["internal_time_touched"] = int(
                         os.path.getmtime(mod_directory)
                     )
-                    scenario_metadata["metadata_file_path"] = mod_data_path
+                    scenario_metadata["metadata_file_path"] = scenario_data_path
                     scenario_metadata["metadata_file_mtime"] = int(
-                        os.path.getmtime(mod_data_path)
+                        os.path.getmtime(scenario_data_path)
                     )
                     # Track source & uuid in case metadata becomes detached
                     scenario_metadata["uuid"] = uuid
