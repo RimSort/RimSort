@@ -1020,7 +1020,6 @@ class ModParser(QRunnable):
                     )
                     mod_metadata["loadBottom"] = True
             logger.info("Finished adding dependencies from User Rules")
-        logger.info("Finished compiling internal metadata with external metadata")
 
     def __parse_mod_metadata(
         self,

@@ -16,10 +16,10 @@ from app.utils.system_info import SystemInfo
 
 SYSTEM_INFO = SystemInfo()
 
-if SYSTEM_INFO.operating_system == SystemInfo.OperatingSystem.WINDOWS:
-    from watchdog.observers.polling import PollingObserver
-else:
-    from watchdog.observers import Observer
+# if SYSTEM_INFO.operating_system == SystemInfo.OperatingSystem.WINDOWS:
+#     from watchdog.observers.polling import PollingObserver
+# else:
+from watchdog.observers import Observer
 
 from app.utils.metadata import MetadataManager
 
@@ -48,10 +48,10 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
         self.metadata_manager: MetadataManager = MetadataManager.instance()
         self.settings_controller: SettingsController = settings_controller
         self.watchdog_observer: Optional[BaseObserver]
-        if SYSTEM_INFO.operating_system == SystemInfo.OperatingSystem.WINDOWS:
-            self.watchdog_observer = PollingObserver()
-        else:
-            self.watchdog_observer = Observer()
+        # if SYSTEM_INFO.operating_system == SystemInfo.OperatingSystem.WINDOWS:
+        #     self.watchdog_observer = PollingObserver()
+        # else:
+        self.watchdog_observer = Observer()
         # Keep track of cooldowns for each uuid
         self.cooldown_timers = {}
         self.__add_observers(self.settings_controller.get_mod_paths())
