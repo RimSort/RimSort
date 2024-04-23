@@ -1,3 +1,4 @@
+from functools import partial
 import json
 from pathlib import Path
 import os
@@ -28,9 +29,9 @@ from app.utils.metadata import MetadataManager
 
 class WatchdogHandler(FileSystemEventHandler, QObject):
 
-    mod_created = Signal(dict)
-    mod_deleted = Signal(dict)
-    mod_modified = Signal(dict)
+    mod_created = Signal(str, str, str)
+    mod_deleted = Signal(str, str, str)
+    mod_updated = Signal(bool, bool, str, str, str)
 
     def __init__(self, settings_controller: SettingsController, targets: list[str]):
         """
@@ -44,37 +45,33 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
         """
         super().__init__()
         logger.info("Initializing WatchdogHandler")
-        self.metadata_manager = MetadataManager.instance()
-        self.settings_controller = settings_controller
-        self.targets = targets
+        self.metadata_manager: MetadataManager = MetadataManager.instance()
+        self.settings_controller: SettingsController = settings_controller
         self.watchdog_observer: Optional[BaseObserver]
         if SYSTEM_INFO.operating_system == SystemInfo.OperatingSystem.WINDOWS:
             self.watchdog_observer = PollingObserver()
         else:
             self.watchdog_observer = Observer()
-        # Go through mod source paths to schedule Observer
-        for path in self.targets:
-            if path and path != "" and os.path.exists(path):
-                self.watchdog_observer.schedule(self, path, recursive=True)
         # Keep track of cooldowns for each uuid
         self.cooldown_timers = {}
-        # Map mod uuid to metadata file path
-        self.mod_file_mapper = {
-            **{
-                metadata.get(
-                    "metadata_file_path"
-                ): uuid  # We watch the mod's parent directory for changes, so we need to map to the mod's uuid
-                for uuid, metadata in self.metadata_manager.internal_local_metadata.items()
-            },
-            **{
-                metadata.get(
-                    "path"
-                ): uuid  # We watch the mod's parent directory for changes, so we need to map to the mod's uuid
-                for uuid, metadata in self.metadata_manager.internal_local_metadata.items()
-            },
-        }
+        self.__add_observers(self.settings_controller.get_mod_paths())
 
-    def __cooldown(self, callback: dict[str, str]) -> None:
+    def __add_observers(self, targets: list[str]):
+        """
+        Add observers to the watchdog observer for all of our data source target paths.
+
+        Parameters:
+            None
+        """
+        for path in targets:
+            if path and os.path.exists(path) and os.path.isdir(path):
+                self.watchdog_observer.schedule(
+                    self,
+                    path,
+                    recursive=True,
+                )
+
+    def __cooldown_uuid_change(self, callback: dict[str, str]) -> None:
         """
         Start the cooldown timer for the given value.
 
@@ -86,66 +83,48 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
         Returns:
             None
         """
-        data_source = callback.get("data_source")
-        operation = callback.get("operation")
-        path = callback.get("path")
-        uuid = callback.get("uuid")
-        key = uuid or path
+        operation = callback["operation"]
+        mod_directory = callback["path"]
+        uuid = callback["uuid"]
+        data_source = callback.get(
+            "data_source"  # This is resolved upon new mod creation, or we use the existing value for
+        ) or self.metadata_manager.internal_local_metadata.get(
+            uuid, {}
+        ).get(  # an existing mod
+            "data_source"
+        )
         # Cancel any existing timers for this key
-        if key in self.cooldown_timers:
-            self.cooldown_timers[key].cancel()
-        # Construct cooldown timer for the given operation from the callback
-        if operation == "created":
-            self.cooldown_timers[key] = Timer(
-                1.0, self.mod_created.emit, args=(callback,)
-            )
-        elif operation == "deleted":
-            self.cooldown_timers[key] = Timer(
-                1.0, self.mod_deleted.emit, args=(callback,)
-            )
-        elif operation == "update":
-            self.cooldown_timers[key] = Timer(
+        timer = self.cooldown_timers.get(uuid)
+        if timer:
+            timer.cancel()
+        # Construct cooldown timer for the given operation from the callback and start it
+        if operation == "updated":
+            self.cooldown_timers[uuid] = Timer(
                 1.0,
-                self.mod_modified.emit,
-                args=(callback,),
+                partial(
+                    self.mod_updated.emit,
+                    False,
+                    True,
+                    data_source,
+                    mod_directory,
+                    uuid,
+                ),
             )
-        self.cooldown_timers[key].start()
-
-    def __check_for_mod_dir(self, path: str) -> None:
-        """
-        A helper function to create a new mod. This will determine if the file constitues
-        a "mod directory" that needs to be scanned. This will check if the path is a directory
-        contained directly within one of our mod data sources.
-
-        Can be expansion, local, or workshop. Will only create if it is not already mapped.
-
-        Parameters:
-        path (str): The path to the new mod.
-
-        Returns: A string representing the data_source of the mod
-        """
-        # Pathlib our str path
-        path = Path(path)
-        # Ignore temporary files
-        if path.name.startswith(".temp_write_"):
-            return False
-        # Grab paths from Settings
-        expansions_path = Path(self.settings_controller.settings.game_folder) / "Data"
-        local_path = Path(self.settings_controller.settings.local_folder)
-        workshop_path = Path(self.settings_controller.settings.workshop_folder)
-        # Validate data source, then emit if path is valid and not mapped
-        if path.parent == expansions_path:
-            return "expansion"
-        elif path.parent == local_path:
-            return "local"
-        elif path.parent == workshop_path:
-            return "workshop"
         else:
-            return ""
+            self.cooldown_timers[uuid] = Timer(
+                1.0,
+                partial(
+                    getattr(self, f"mod_{operation}").emit,
+                    data_source,
+                    mod_directory,
+                    uuid,
+                ),
+            )
+        self.cooldown_timers[uuid].start()
 
     def on_created(self, event: FileSystemEvent):
         """
-        A callback function called when a file is moved.
+        A callback function called when a file is created.
 
         We want to signal any changes to a mods' About.xml file.
 
@@ -154,18 +133,27 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
 
         Returns: None
         """
-        data_source = self.__check_for_mod_dir(event.src_path)
-        uuid = self.mod_file_mapper.get(event.src_path)
-        if data_source and not uuid:
+        # Resolve the data source from the path
+        data_source = self.settings_controller.resolve_data_source(event.src_path)
+        # Generate a UUID after confirming we don't already have one for this path
+        uuid = (
+            str(uuid4())
+            if event.is_directory
+            and not self.metadata_manager.mod_metadata_dir_mapper.get(event.src_path)
+            else None
+        )
+        # If we know the intent, and have a UUID generated, proceed to create the mod
+        if data_source and uuid:
             logger.debug(f"Mod directory created: {event.src_path}")
-            uuid = str(uuid4())
+            logger.debug(f"Mod UUID created: {uuid}")
+            logger.debug(f"Mod data source created: {data_source}")
             # Add the mod directory to our mapper
-            self.mod_file_mapper[event.src_path] = uuid
+            self.metadata_manager.mod_metadata_dir_mapper[event.src_path] = uuid
             # Signal mod creation
-            self.__cooldown(
+            self.__cooldown_uuid_change(
                 callback={
-                    "data_source": data_source,
                     "operation": "created",
+                    "data_source": data_source,
                     "path": event.src_path,
                     "uuid": uuid,
                 }
@@ -180,14 +168,22 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
 
         Returns: None
         """
-        data_source = self.__check_for_mod_dir(event.src_path)
-        uuid = self.mod_file_mapper.get(event.src_path)
-        if data_source and uuid:
-            del self.mod_file_mapper[event.src_path]
+        # Resolve an existing UUID from our mapper
+        uuid = self.metadata_manager.mod_metadata_dir_mapper.get(event.src_path)
+        # If we have a UUID resolved, proceed to delete the mod
+        if uuid:
+            # Remove the mod's metadata file from our mapper
+            mod_metadata_file_path = self.metadata_manager.internal_local_metadata.get(
+                uuid, {}
+            ).get("metadata_file_path")
+            self.metadata_manager.mod_metadata_file_mapper.pop(
+                mod_metadata_file_path, None
+            )
+            # Remove the mod directory from our mapper
+            self.metadata_manager.mod_metadata_dir_mapper.pop(event.src_path, None)
             logger.debug(f"Mod directory deleted: {event.src_path}")
-            self.__cooldown(
+            self.__cooldown_uuid_change(
                 callback={
-                    "data_source": data_source,
                     "operation": "deleted",
                     "path": event.src_path,
                     "uuid": uuid,
@@ -203,17 +199,18 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
 
         Returns: None
         """
-        uuid = self.mod_file_mapper.get(event.src_path)
+        # Resolve an existing UUID from our mapper
+        uuid = self.metadata_manager.mod_metadata_file_mapper.get(event.src_path)
+        # Try to resolve a mod path from the from metadata
         mod_path = self.metadata_manager.internal_local_metadata.get(uuid, {}).get(
             "path"
         )
-        data_source = self.__check_for_mod_dir(mod_path) if mod_path else None
-        if data_source and uuid:
+        # If we have a UUID and mod path resolved, proceed to update the mod
+        if uuid and mod_path:
             logger.debug(f"Mod metadata modified: {event.src_path}")
-            self.__cooldown(
+            self.__cooldown_uuid_change(
                 callback={
-                    "data_source": data_source,
-                    "operation": "update",
+                    "operation": "updated",
                     "path": mod_path,
                     "uuid": uuid,
                 }

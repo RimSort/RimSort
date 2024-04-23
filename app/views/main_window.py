@@ -194,7 +194,7 @@ class MainWindow(QMainWindow):
         self.watchdog_event_handler.mod_deleted.connect(
             self.main_content_panel.metadata_manager.process_deletion
         )
-        self.watchdog_event_handler.mod_modified.connect(
+        self.watchdog_event_handler.mod_updated.connect(
             self.main_content_panel.metadata_manager.process_update
         )
         # Connect main content signal so it can stop watchdog
