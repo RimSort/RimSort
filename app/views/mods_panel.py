@@ -670,32 +670,31 @@ class ModListWidget(QListWidget):
                 logger.debug(f"{len(selected_items)} items selected")
                 source_item = selected_items[0]
                 if type(source_item) is QListWidgetItem:
-                    source_widget = self.itemWidget(source_item)
+                    item_data = source_item.data(Qt.UserRole)
+                    uuid = item_data["uuid"]
                     # Retrieve metadata
-                    widget_json_data = self.metadata_manager.internal_local_metadata[
-                        source_widget.uuid
-                    ]
-                    mod_data_source = widget_json_data.get("data_source")
+                    mod_metadata = self.metadata_manager.internal_local_metadata[uuid]
+                    mod_data_source = mod_metadata.get("data_source")
                     # Open folder action text
                     open_folder_action = QAction()
                     open_folder_action.setText("Open folder")
                     # If we have a "url" or "steam_url"
-                    if widget_json_data.get("url") or widget_json_data.get("steam_url"):
+                    if mod_metadata.get("url") or mod_metadata.get("steam_url"):
                         open_url_browser_action = QAction()
                         open_url_browser_action.setText("Open URL in browser")
                         copy_url_to_clipboard_action = QAction()
                         copy_url_to_clipboard_action.setText("Copy URL to clipboard")
                     # If we have a "steam_uri"
-                    if widget_json_data.get("steam_uri"):
+                    if mod_metadata.get("steam_uri"):
                         open_mod_steam_action = QAction()
                         open_mod_steam_action.setText("Open mod in Steam")
                     # Conversion options (SteamCMD <-> local) + re-download (local mods found in SteamDB and SteamCMD)
                     if mod_data_source == "local":
-                        mod_name = widget_json_data.get("name")
-                        mod_folder_name = widget_json_data["folder"]
-                        mod_folder_path = widget_json_data["path"]
-                        publishedfileid = widget_json_data.get("publishedfileid")
-                        if not widget_json_data.get("steamcmd") and (
+                        mod_name = mod_metadata.get("name")
+                        mod_folder_name = mod_metadata["folder"]
+                        mod_folder_path = mod_metadata["path"]
+                        publishedfileid = mod_metadata.get("publishedfileid")
+                        if not mod_metadata.get("steamcmd") and (
                             self.metadata_manager.external_steam_metadata
                             and publishedfileid
                             and publishedfileid
@@ -709,7 +708,7 @@ class ModListWidget(QListWidget):
                             convert_local_steamcmd_action.setText(
                                 "Convert local mod to SteamCMD"
                             )
-                        if widget_json_data.get("steamcmd"):
+                        if mod_metadata.get("steamcmd"):
                             steamcmd_mod_paths.append(mod_folder_path)
                             steamcmd_publishedfileid_to_name[publishedfileid] = mod_name
                             # Convert steamcmd mods -> local
@@ -721,19 +720,19 @@ class ModListWidget(QListWidget):
                             re_steamcmd_action = QAction()
                             re_steamcmd_action.setText("Re-download mod with SteamCMD")
                         # Update local mods that contain git repos that are not steamcmd mods
-                        if not widget_json_data.get(
-                            "steamcmd"
-                        ) and widget_json_data.get("git_repo"):
+                        if not mod_metadata.get("steamcmd") and mod_metadata.get(
+                            "git_repo"
+                        ):
                             git_paths.append(mod_folder_path)
                             re_git_action = QAction()
                             re_git_action.setText("Update mod with git")
                     # If Workshop, and pfid, allow Steam actions
-                    if mod_data_source == "workshop" and widget_json_data.get(
+                    if mod_data_source == "workshop" and mod_metadata.get(
                         "publishedfileid"
                     ):
-                        mod_name = widget_json_data.get("name")
-                        mod_folder_path = widget_json_data["path"]
-                        publishedfileid = widget_json_data["publishedfileid"]
+                        mod_name = mod_metadata.get("name")
+                        mod_folder_path = mod_metadata["path"]
+                        publishedfileid = mod_metadata["publishedfileid"]
                         steam_mod_paths.append(mod_folder_path)
                         steam_publishedfileid_to_name[publishedfileid] = mod_name
                         # Convert steam mods -> local
@@ -752,9 +751,9 @@ class ModListWidget(QListWidget):
                     # SteamDB blacklist options
                     if (
                         self.metadata_manager.external_steam_metadata
-                        and widget_json_data.get("publishedfileid")
+                        and mod_metadata.get("publishedfileid")
                     ):
-                        publishedfileid = widget_json_data["publishedfileid"]
+                        publishedfileid = mod_metadata["publishedfileid"]
                         if self.metadata_manager.external_steam_metadata.get(
                             publishedfileid, {}
                         ).get("blacklist"):
@@ -789,30 +788,27 @@ class ModListWidget(QListWidget):
             elif len(selected_items) > 1:  # Multiple items selected
                 for source_item in selected_items:
                     if type(source_item) is QListWidgetItem:
-                        source_widget = self.itemWidget(source_item)
+                        item_data = source_item.data(Qt.UserRole)
+                        uuid = item_data["uuid"]
                         # Retrieve metadata
-                        widget_json_data = (
-                            self.metadata_manager.internal_local_metadata[
-                                source_widget.uuid
-                            ]
-                        )
-                        mod_data_source = widget_json_data.get("data_source")
+                        mod_metadata = self.metadata_manager.internal_local_metadata[
+                            uuid
+                        ]
+                        mod_data_source = mod_metadata.get("data_source")
                         # Open folder action text
                         open_folder_action = QAction()
                         open_folder_action.setText("Open folder(s)")
                         # If we have a "url" or "steam_url"
-                        if widget_json_data.get("url") or widget_json_data.get(
-                            "steam_url"
-                        ):
+                        if mod_metadata.get("url") or mod_metadata.get("steam_url"):
                             open_url_browser_action = QAction()
                             open_url_browser_action.setText("Open URL(s) in browser")
                         # Conversion options (local <-> SteamCMD)
                         if mod_data_source == "local":
-                            mod_name = widget_json_data.get("name")
-                            mod_folder_name = widget_json_data["folder"]
-                            mod_folder_path = widget_json_data["path"]
-                            publishedfileid = widget_json_data.get("publishedfileid")
-                            if not widget_json_data.get("steamcmd") and (
+                            mod_name = mod_metadata.get("name")
+                            mod_folder_name = mod_metadata["folder"]
+                            mod_folder_path = mod_metadata["path"]
+                            publishedfileid = mod_metadata.get("publishedfileid")
+                            if not mod_metadata.get("steamcmd") and (
                                 self.metadata_manager.external_steam_metadata
                                 and publishedfileid
                                 and publishedfileid
@@ -827,7 +823,7 @@ class ModListWidget(QListWidget):
                                     convert_local_steamcmd_action.setText(
                                         "Convert local mod(s) to SteamCMD"
                                     )
-                            if widget_json_data.get("steamcmd"):
+                            if mod_metadata.get("steamcmd"):
                                 steamcmd_mod_paths.append(mod_folder_path)
                                 steamcmd_publishedfileid_to_name[publishedfileid] = (
                                     mod_name
@@ -845,9 +841,9 @@ class ModListWidget(QListWidget):
                                         "Re-download mod(s) with SteamCMD"
                                     )
                             # Update git mods if local mod with git repo, but not steamcmd
-                            if not widget_json_data.get(
-                                "steamcmd"
-                            ) and widget_json_data.get("git_repo"):
+                            if not mod_metadata.get("steamcmd") and mod_metadata.get(
+                                "git_repo"
+                            ):
                                 git_paths.append(mod_folder_path)
                                 if not re_git_action:
                                     re_git_action = QAction()
@@ -858,12 +854,12 @@ class ModListWidget(QListWidget):
                             toggle_warning_action = QAction()
                             toggle_warning_action.setText("Toggle warning(s)")
                         # If Workshop, and pfid, allow Steam actions
-                        if mod_data_source == "workshop" and widget_json_data.get(
+                        if mod_data_source == "workshop" and mod_metadata.get(
                             "publishedfileid"
                         ):
-                            mod_name = widget_json_data.get("name")
-                            mod_folder_path = widget_json_data["path"]
-                            publishedfileid = widget_json_data["publishedfileid"]
+                            mod_name = mod_metadata.get("name")
+                            mod_folder_path = mod_metadata["path"]
+                            publishedfileid = mod_metadata["publishedfileid"]
                             steam_mod_paths.append(mod_folder_path)
                             steam_publishedfileid_to_name[publishedfileid] = mod_name
                             # Convert steam mods -> local
@@ -1239,28 +1235,27 @@ class ModListWidget(QListWidget):
                     if answer == "&Yes":
                         for source_item in selected_items:
                             if type(source_item) is QListWidgetItem:
-                                source_widget = self.itemWidget(source_item)
-                                widget_json_data = (
-                                    self.metadata_manager.internal_local_metadata[
-                                        source_widget.uuid
-                                    ]
+                                item_data = source_item.data(Qt.UserRole)
+                                uuid = item_data["uuid"]
+                                mod_metadata = (
+                                    self.metadata_manager.internal_local_metadata[uuid]
                                 )
-                                if not widget_json_data[
+                                if not mod_metadata[
                                     "data_source"  # Disallow Official Expansions
-                                ] == "expansion" or not widget_json_data[
+                                ] == "expansion" or not mod_metadata[
                                     "packageid"
                                 ].startswith(
                                     "ludeon.rimworld"
                                 ):
                                     try:
                                         rmtree(
-                                            widget_json_data["path"],
+                                            mod_metadata["path"],
                                             ignore_errors=False,
                                             onerror=handle_remove_read_only,
                                         )
                                     except FileNotFoundError:
                                         logger.debug(
-                                            f"Unable to delete mod. Path does not exist: {widget_json_data['path']}"
+                                            f"Unable to delete mod. Path does not exist: {mod_metadata['path']}"
                                         )
                                         pass
                     return True
@@ -1274,15 +1269,14 @@ class ModListWidget(QListWidget):
                     if answer == "&Yes":
                         for source_item in selected_items:
                             if type(source_item) is QListWidgetItem:
-                                source_widget = self.itemWidget(source_item)
-                                widget_json_data = (
-                                    self.metadata_manager.internal_local_metadata[
-                                        source_widget.uuid
-                                    ]
+                                item_data = source_item.data(Qt.UserRole)
+                                uuid = item_data["uuid"]
+                                mod_metadata = (
+                                    self.metadata_manager.internal_local_metadata[uuid]
                                 )
-                                if not widget_json_data[
+                                if not mod_metadata[
                                     "data_source"  # Disallow Official Expansions
-                                ] == "expansion" or not widget_json_data[
+                                ] == "expansion" or not mod_metadata[
                                     "packageid"
                                 ].startswith(
                                     "ludeon.rimworld"
@@ -1290,25 +1284,24 @@ class ModListWidget(QListWidget):
                                     data = source_item.data(Qt.UserRole)
                                     self.uuids.remove(data["uuid"])
                                     delete_files_except_extension(
-                                        directory=widget_json_data["path"],
+                                        directory=mod_metadata["path"],
                                         extension=".dds",
                                     )
                     return True
                 # Execute action for each selected mod
                 for source_item in selected_items:
                     if type(source_item) is QListWidgetItem:
-                        source_widget = self.itemWidget(source_item)
+                        item_data = source_item.data(Qt.UserRole)
+                        uuid = item_data["uuid"]
                         # Retrieve metadata
-                        widget_json_data = (
-                            self.metadata_manager.internal_local_metadata[
-                                source_widget.uuid
-                            ]
-                        )
-                        mod_data_source = widget_json_data.get("data_source")
-                        mod_path = widget_json_data["path"]
+                        mod_metadata = self.metadata_manager.internal_local_metadata[
+                            uuid
+                        ]
+                        mod_data_source = mod_metadata.get("data_source")
+                        mod_path = mod_metadata["path"]
                         # Toggle warning action
                         if action == toggle_warning_action:
-                            self.toggle_warning(widget_json_data["packageid"])
+                            self.toggle_warning(mod_metadata["packageid"])
                         # Open folder action
                         elif action == open_folder_action:  # ACTION: Open folder
                             if os.path.exists(mod_path):  # If the path actually exists
@@ -1318,24 +1311,24 @@ class ModListWidget(QListWidget):
                         elif (
                             action == open_url_browser_action
                         ):  # ACTION: Open URL in browser
-                            if widget_json_data.get("url") or widget_json_data.get(
+                            if mod_metadata.get("url") or mod_metadata.get(
                                 "steam_url"
                             ):  # If we have some form of "url" to work with...
                                 url = None
                                 if (
                                     mod_data_source == "expansion"
-                                    or widget_json_data.get("steamcmd")
+                                    or mod_metadata.get("steamcmd")
                                     or mod_data_source == "workshop"
                                 ):
-                                    url = widget_json_data.get(
-                                        "steam_url", widget_json_data.get("url")
+                                    url = mod_metadata.get(
+                                        "steam_url", mod_metadata.get("url")
                                     )
                                 elif (
                                     mod_data_source == "local"
-                                    and not widget_json_data.get("steamcmd")
+                                    and not mod_metadata.get("steamcmd")
                                 ):
-                                    url = widget_json_data.get(
-                                        "url", widget_json_data.get("steam_url")
+                                    url = mod_metadata.get(
+                                        "url", mod_metadata.get("steam_url")
                                     )
                                 if url:
                                     logger.info(f"Opening url in browser: {url}")
@@ -1344,43 +1337,41 @@ class ModListWidget(QListWidget):
                         elif (
                             action == open_mod_steam_action
                         ):  # ACTION: Open steam:// uri in Steam
-                            if widget_json_data.get(
-                                "steam_uri"
-                            ):  # If we have steam_uri
-                                platform_specific_open(widget_json_data["steam_uri"])
+                            if mod_metadata.get("steam_uri"):  # If we have steam_uri
+                                platform_specific_open(mod_metadata["steam_uri"])
                         # Copy to clipboard actions
                         elif (
                             action == copy_packageId_to_clipboard_action
                         ):  # ACTION: Copy packageId to clipboard
-                            copy_to_clipboard(widget_json_data["packageid"])
+                            copy_to_clipboard(mod_metadata["packageid"])
                         elif (
                             action == copy_url_to_clipboard_action
                         ):  # ACTION: Copy URL to clipboard
-                            if widget_json_data.get("url") or widget_json_data.get(
+                            if mod_metadata.get("url") or mod_metadata.get(
                                 "steam_url"
                             ):  # If we have some form of "url" to work with...
                                 url = None
                                 if (
                                     mod_data_source == "expansion"
-                                    or widget_json_data.get("steamcmd")
+                                    or mod_metadata.get("steamcmd")
                                     or mod_data_source == "workshop"
                                 ):
-                                    url = widget_json_data.get(
-                                        "steam_url", widget_json_data.get("url")
+                                    url = mod_metadata.get(
+                                        "steam_url", mod_metadata.get("url")
                                     )
                                 elif (
                                     mod_data_source == "local"
-                                    and not widget_json_data.get("steamcmd")
+                                    and not mod_metadata.get("steamcmd")
                                 ):
-                                    url = widget_json_data.get(
-                                        "url", widget_json_data.get("steam_url")
+                                    url = mod_metadata.get(
+                                        "url", mod_metadata.get("steam_url")
                                     )
                                 if url:
                                     copy_to_clipboard(url)
                         # Edit mod rules action
                         elif action == edit_mod_rules_action:
                             self.edit_rules_signal.emit(
-                                True, "user_rules", widget_json_data["packageid"]
+                                True, "user_rules", mod_metadata["packageid"]
                             )
             return True
         return super().eventFilter(source_object, event)
@@ -1561,11 +1552,6 @@ class ModListWidget(QListWidget):
             return self.itemWidget(item)
         return None
 
-    def get_widgets_and_items(self) -> list[tuple[ModListItemInner, QListWidgetItem]]:
-        return [
-            (self.itemWidget(self.item(i)), self.item(i)) for i in range(self.count())
-        ]
-
     def mod_changed_to(
         self, current: QListWidgetItem, previous: QListWidgetItem
     ) -> None:
@@ -1627,7 +1613,6 @@ class ModListWidget(QListWidget):
 
         internal_local_metadata = self.metadata_manager.internal_local_metadata
         game_version = self.metadata_manager.game_version
-        info_from_steam = self.metadata_manager.info_from_steam_package_id_to_name
 
         packageid_to_uuid = {
             internal_local_metadata[uuid]["packageid"]: uuid for uuid in self.uuids
@@ -1715,7 +1700,12 @@ class ModListWidget(QListWidget):
                     for key in mod_errors[error_type]:
                         name = internal_local_metadata.get(
                             packageid_to_uuid.get(key), {}
-                        ).get("name", info_from_steam.get(key, key))
+                        ).get(
+                            "name",
+                            self.metadata_manager.steamdb_packageid_to_name.get(
+                                key, key
+                            ),
+                        )
                         tool_tip_text += f"\n  * {name}"
             # Handle version mismatch behavior
             if (
