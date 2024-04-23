@@ -11,6 +11,7 @@ from loguru import logger
 from app.models.image_label import ImageLabel
 from app.models.scroll_label import ScrollLabel
 from app.utils.app_info import AppInfo
+from app.utils.metadata import MetadataManager
 
 
 class ModInfo:
@@ -24,6 +25,9 @@ class ModInfo:
         Initialize the class.
         """
         logger.debug("Initializing ModInfo")
+
+        # Cache MetadataManager instance
+        self.metadata_manager = MetadataManager.instance()
 
         # Base layout type
         self.panel = QVBoxLayout()
@@ -170,7 +174,7 @@ class ModInfo:
 
         logger.debug("Finished ModInfo initialization")
 
-    def display_mod_info(self, mod_info: Dict[str, Any]) -> None:
+    def display_mod_info(self, uuid: str) -> None:
         """
         This slot receives a the complete mod data json for
         the mod that was just clicked on. It will set the relevant
@@ -178,6 +182,7 @@ class ModInfo:
 
         :param mod_info: complete json info for the mod
         """
+        mod_info = self.metadata_manager.internal_local_metadata.get(uuid)
         # Style summary values based on validity
         if mod_info and mod_info.get("invalid"):
             # Set invalid value style
@@ -363,9 +368,6 @@ class ModInfo:
                             )
                         )
                 else:
-                    logger.error(
-                        f"The local data for the mod {self.mod_info_package_id_value} was not found. Using cached metadata with missing Preview image."
-                    )
                     pixmap = QPixmap(self.missing_image_path)
                     self.preview_picture.setPixmap(
                         pixmap.scaled(self.preview_picture.size(), Qt.KeepAspectRatio)

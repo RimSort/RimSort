@@ -510,8 +510,7 @@ class MainContent(QObject):
 
         :param uuid: uuid of mod
         """
-        mod_info = self.metadata_manager.internal_local_metadata.get(uuid)
-        self.mod_info_panel.display_mod_info(mod_info=mod_info)
+        self.mod_info_panel.display_mod_info(uuid=uuid)
 
     def __update_game_configuration(self) -> None:
         self.metadata_manager.community_rules_repo = (
@@ -1041,13 +1040,6 @@ class MainContent(QObject):
             logger.debug(
                 "Essential paths have not been set. Passing refresh and resetting mod lists"
             )
-        self.mods_panel.game_version = self.metadata_manager.game_version
-        # Feed all_mods and Steam DB info to Active Mods list to surface
-        # names instead of package_ids when able
-        self.mods_panel.all_mods = self.metadata_manager.internal_local_metadata
-        self.mods_panel.steam_package_id_to_name = (
-            self.metadata_manager.info_from_steam_package_id_to_name
-        )
         EventBus().refresh_finished.emit()
 
     def _do_clear(self) -> None:
