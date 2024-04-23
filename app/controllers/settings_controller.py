@@ -196,6 +196,30 @@ class SettingsController(QObject):
             self._on_edit_run_arguments_button_clicked
         )
 
+    def get_mod_paths(self) -> list[str]:
+        return [
+            str(Path(self.settings.game_folder) / "Data"),
+            str(Path(self.settings.local_folder)),
+            str(Path(self.settings.workshop_folder)),
+        ]
+
+    def resolve_data_source(self, path: str) -> str:
+        # Pathlib the provided path string
+        path = Path(path)
+        # Grab paths from Settings
+        expansions_path = Path(self.settings.game_folder) / "Data"
+        local_path = Path(self.settings.local_folder)
+        workshop_path = Path(self.settings.workshop_folder)
+        # Validate data source, then emit if path is valid and not mapped
+        if path.parent == expansions_path:
+            return "expansion"
+        elif path.parent == local_path:
+            return "local"
+        elif path.parent == workshop_path:
+            return "workshop"
+        else:
+            return None
+
     def show_settings_dialog(self) -> None:
         """
         Update the view from the model and show the settings dialog.
