@@ -15,7 +15,7 @@ class Settings(QObject):
         super().__init__()
 
         self._settings_file = AppInfo().app_storage_folder / "settings.json"
-        self._debug_file = AppInfo().application_folder / "DEBUG"
+        self._debug_file = AppInfo().app_storage_folder / "DEBUG"
 
         self._debug_logging_enabled: bool = False
         self._check_for_update_startup: bool = False
