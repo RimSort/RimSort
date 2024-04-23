@@ -157,7 +157,6 @@ class ModUpdaterPrompt(QWidget):
         internal_time_touched: str,
         external_time_updated: str,
     ):
-        logger.debug("Adding new row")
         # Create a new row
         items = [
             QStandardItem(),
