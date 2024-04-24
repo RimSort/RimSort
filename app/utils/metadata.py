@@ -1318,6 +1318,62 @@ class ModParser(QRunnable):
                         os.path.getmtime(mod_data_path)
                     )
                     mod_metadata["metadata_file_path"] = mod_data_path
+                    # Grab our mod's publishedfileid
+                    publishedfileid = mod_metadata.get("publishedfileid")
+                    if publishedfileid:
+                        # Get our metadata based on data source
+                        if data_source == "local":
+                            workshop_item_details = (
+                                self.metadata_manager.steamcmd_acf_data["AppWorkshop"][
+                                    "WorkshopItemDetails"
+                                ]
+                            )
+                            workshop_items_installed = (
+                                self.metadata_manager.steamcmd_acf_data["AppWorkshop"][
+                                    "WorkshopItemsInstalled"
+                                ]
+                            )
+                        elif data_source == "workshop":
+                            # Reference needed information from appworkshop_294100.acf
+                            workshop_item_details = (
+                                self.metadata_manager.workshop_acf_data["AppWorkshop"][
+                                    "WorkshopItemDetails"
+                                ]
+                            )
+                            workshop_items_installed = (
+                                self.metadata_manager.workshop_acf_data["AppWorkshop"][
+                                    "WorkshopItemsInstalled"
+                                ]
+                            )
+                        # Edit our metadata, append values
+                        if (
+                            workshop_item_details.get(publishedfileid, {}).get(
+                                "timetouched"
+                            )
+                            and workshop_item_details.get(publishedfileid, {}).get(
+                                "timetouched"
+                            )
+                            != 0
+                        ):
+                            # The last time SteamCMD/Steam client touched a mod according to its entry
+                            mod_metadata["internal_time_touched"] = int(
+                                workshop_item_details[publishedfileid]["timetouched"]
+                            )
+                        if publishedfileid and workshop_item_details.get(
+                            publishedfileid, {}
+                        ).get("timeupdated"):
+                            # The last time SteamCMD/Steam client updated a mod according to its entry
+                            mod_metadata["internal_time_updated"] = int(
+                                workshop_item_details[publishedfileid]["timeupdated"]
+                            )
+                        if publishedfileid and workshop_items_installed.get(
+                            publishedfileid, {}
+                        ).get("timeupdated"):
+                            # The last time SteamCMD/Steam client updated a mod according to its entry
+                            mod_metadata["internal_time_updated"] = int(
+                                workshop_items_installed[publishedfileid]["timeupdated"]
+                            )
+                    # Assign our metadata to the UUID
                     metadata[uuid] = mod_metadata
                 else:
                     logger.error(
@@ -1392,6 +1448,7 @@ class ModParser(QRunnable):
                     )
                     # Track source & uuid in case metadata becomes detached
                     scenario_metadata["uuid"] = uuid
+                    # Assign our metadata to the UUID
                     metadata[uuid] = scenario_metadata
                 else:
                     logger.error(
@@ -1404,6 +1461,7 @@ class ModParser(QRunnable):
             logger.debug(
                 f"Invalid dir. Populating invalid mod for path: {mod_directory}"
             )
+            # Assign our metadata to the UUID
             metadata[uuid] = {
                 "invalid": True,
                 "name": "Invalid item",
