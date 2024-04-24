@@ -36,7 +36,6 @@ def xml_path_to_json(path: str) -> Dict[str, Any]:
                 for empty_tag in empty_tags:
                     empty_tag.extract()
                 data = xmltodict.parse(str(soup), dict_constructor=dict)
-                logger.debug(f"XML file parsed")
     except Exception as e:
         logger.error(f"Error parsing XML file with BeautifulSoup: {e}")
         return {}
