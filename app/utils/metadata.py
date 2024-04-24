@@ -1024,7 +1024,7 @@ class MetadataManager(QObject):
             logger.debug(f"Waiting for metadata update to complete...")
             self.parser_threadpool.waitForDone()
         # Send signal to UI to update mod list if the mod we are updating exists
-        if exists:
+        if exists and not batch:
             self.compile_metadata(uuids=[uuid])
             self.mod_metadata_updated_signal.emit(uuid)
 
