@@ -1323,7 +1323,7 @@ class ModParser(QRunnable):
                     if publishedfileid:
                         # Get our metadata based on data source
                         workshop_acf_data = (
-                            self.metadata_manager.workshop_acf_data_data
+                            self.metadata_manager.workshop_acf_data
                             if data_source == "workshop"
                             else self.metadata_manager.steamcmd_acf_data
                         )
