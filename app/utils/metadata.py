@@ -1518,8 +1518,10 @@ def add_dependency_to_mod(
 
         # If the value is a single dict (for moddependencies)
         if isinstance(dependency_or_dependency_ids, dict):
-            if dependency_or_dependency_ids.get("packageId") and not isinstance(
-                dependency_or_dependency_ids["packageId"], list
+            if (
+                dependency_or_dependency_ids.get("packageId")
+                and not isinstance(dependency_or_dependency_ids["packageId"], list)
+                and not isinstance(dependency_or_dependency_ids["packageId"], dict)
             ):
                 # if dependency_id in all_mods:
                 # ^ dependencies are required regardless of whether they are in all_mods
