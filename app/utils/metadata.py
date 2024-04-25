@@ -1322,29 +1322,17 @@ class ModParser(QRunnable):
                     publishedfileid = mod_metadata.get("publishedfileid")
                     if publishedfileid:
                         # Get our metadata based on data source
-                        if data_source == "local":
-                            workshop_item_details = (
-                                self.metadata_manager.steamcmd_acf_data["AppWorkshop"][
-                                    "WorkshopItemDetails"
-                                ]
-                            )
-                            workshop_items_installed = (
-                                self.metadata_manager.steamcmd_acf_data["AppWorkshop"][
-                                    "WorkshopItemsInstalled"
-                                ]
-                            )
-                        elif data_source == "workshop":
-                            # Reference needed information from appworkshop_294100.acf
-                            workshop_item_details = (
-                                self.metadata_manager.workshop_acf_data["AppWorkshop"][
-                                    "WorkshopItemDetails"
-                                ]
-                            )
-                            workshop_items_installed = (
-                                self.metadata_manager.workshop_acf_data["AppWorkshop"][
-                                    "WorkshopItemsInstalled"
-                                ]
-                            )
+                        workshop_acf_data = (
+                            self.metadata_manager.workshop_acf_data_data
+                            if data_source == "workshop"
+                            else self.metadata_manager.steamcmd_acf_data
+                        )
+                        workshop_item_details = workshop_acf_data.get(
+                            "AppWorkshop", {}
+                        ).get("WorkshopItemDetails", {})
+                        workshop_items_installed = workshop_acf_data.get(
+                            "AppWorkshop", {}
+                        ).get("WorkshopItemsInstalled", {})
                         # Edit our metadata, append values
                         if (
                             workshop_item_details.get(publishedfileid, {}).get(
