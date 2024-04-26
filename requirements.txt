@@ -1,18 +1,18 @@
 beautifulsoup4==4.12.3
-GitPython==3.1.31
-imageio==2.34.0
+GitPython==3.1.43
+imageio==2.34.1
 loguru==0.7.2
-lxml==5.1.0
-mypy==1.8.0
+lxml==5.2.1
+mypy==1.10.0
 natsort==8.4.0
-nuitka==2.0.3
-platformdirs==4.2.0
-PyGithub==2.2.0
+nuitka==2.2.1
+platformdirs==4.2.1
+PyGithub==2.3.0
 pyperclip==1.8.2
 PySide6
-PySide6<=6.6.2; sys_platform == 'darwin'
-PySide6<=6.6.2; sys_platform == 'linux'
-PySide6<=6.6.2; sys_platform == 'win32'
+PySide6==6.6.2; sys_platform == 'darwin'
+PySide6==6.6.2; sys_platform == 'linux'
+PySide6==6.6.2; sys_platform == 'win32'
 psutil==5.9.8
 pytz==2024.1
 requests==2.31.0
