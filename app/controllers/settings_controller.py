@@ -79,6 +79,9 @@ class SettingsController(QObject):
         self.settings_dialog.game_location_choose_button.clicked.connect(
             self._on_game_location_choose_button_clicked
         )
+        self.settings_dialog.game_location_clear_button.clicked.connect(
+            self._on_game_location_clear_button_clicked
+            )
 
         self.settings_dialog.config_folder_location.textChanged.connect(
             self._on_config_folder_location_text_changed
@@ -89,6 +92,9 @@ class SettingsController(QObject):
         self.settings_dialog.config_folder_location_choose_button.clicked.connect(
             self._on_config_folder_location_choose_button_clicked
         )
+        self.settings_dialog.config_folder_location_clear_button.clicked.connect(
+            self._on_config_folder_location_clear_button_clicked
+            )
 
         self.settings_dialog.steam_mods_folder_location.textChanged.connect(
             self._on_steam_mods_folder_location_text_changed
@@ -99,6 +105,9 @@ class SettingsController(QObject):
         self.settings_dialog.steam_mods_folder_location_choose_button.clicked.connect(
             self._on_steam_mods_folder_location_choose_button_clicked
         )
+        self.settings_dialog.steam_mods_folder_location_clear_button.clicked.connect(
+            self._on_steam_mods_folder_location_clear_button_clicked
+            )
 
         self.settings_dialog.local_mods_folder_location.textChanged.connect(
             self._on_local_mods_folder_location_text_changed
@@ -109,6 +118,9 @@ class SettingsController(QObject):
         self.settings_dialog.local_mods_folder_location_choose_button.clicked.connect(
             self._on_local_mods_folder_location_choose_button_clicked
         )
+        self.settings_dialog.local_mods_folder_location_clear_button.clicked.connect(
+            self._on_local_mods_folder_location_clear_button_clicked
+            )
 
         self.settings_dialog.locations_clear_button.clicked.connect(
             self._on_locations_clear_button_clicked
@@ -615,6 +627,10 @@ class SettingsController(QObject):
         return Path(game_location).resolve()
 
     @Slot()
+    def _on_game_location_clear_button_clicked(self) -> None:
+        self.settings_dialog.game_location.setText( "" )
+
+    @Slot()
     def _on_config_folder_location_text_changed(self) -> None:
         self.settings_dialog.config_folder_location_open_button.setEnabled(
             self.settings_dialog.config_folder_location.text() != ""
@@ -637,6 +653,10 @@ class SettingsController(QObject):
             return
         self.settings_dialog.config_folder_location.setText(config_folder_location)
         self._last_file_dialog_path = config_folder_location
+
+    @Slot()
+    def _on_config_folder_location_clear_button_clicked(self) -> None:
+        self.settings_dialog.config_folder_location.setText( "" )
 
     @Slot()
     def _on_steam_mods_folder_location_text_changed(self) -> None:
@@ -665,6 +685,10 @@ class SettingsController(QObject):
         self._last_file_dialog_path = steam_mods_folder_location
 
     @Slot()
+    def _on_steam_mods_folder_location_clear_button_clicked(self) -> None:
+        self.settings_dialog.steam_mods_folder_location.setText( "" )
+
+    @Slot()
     def _on_local_mods_folder_location_text_changed(self) -> None:
         self.settings_dialog.local_mods_folder_location_open_button.setEnabled(
             self.settings_dialog.local_mods_folder_location.text() != ""
@@ -689,6 +713,10 @@ class SettingsController(QObject):
             local_mods_folder_location
         )
         self._last_file_dialog_path = local_mods_folder_location
+
+    @Slot()
+    def _on_local_mods_folder_location_clear_button_clicked(self) -> None:
+        self.settings_dialog.local_mods_folder_location.setText( "" )
 
     @Slot()
     def _on_locations_clear_button_clicked(self) -> None:
