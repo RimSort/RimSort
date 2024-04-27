@@ -1,6 +1,6 @@
 import os
 from platform import system
-from re import compile
+from re import compile, search
 
 import psutil
 from PySide6.QtCore import Qt, QEvent, QProcess, Signal
@@ -66,6 +66,7 @@ class RunnerPanel(QWidget):
         self.process_last_output = ""
         self.process_last_command = ""
         self.process_last_args = []
+        self.steamcmd_current_pfid = None
         self.todds_dry_run_support = todds_dry_run_support
 
         # SET STYLESHEET
@@ -229,7 +230,7 @@ class RunnerPanel(QWidget):
                     self.progress_bar.setRange(0, progress_bar)
                     self.progress_bar.setFormat("%v/%m")
         if not self.todds_dry_run_support:
-            self.message(f"\nExecuting command:\n{command} {args}\n\n")
+            self.message(f"\nExecuting command:\n{command} {' '.join(args)}\n\n")
         self.process.start()
 
     def handle_output(self):
@@ -240,7 +241,7 @@ class RunnerPanel(QWidget):
     def message(self, line: str):
         overwrite = False
         if self.process and self.process.state() == QProcess.Running:
-            logger.debug(f"{self.process.program()} {line}")
+            logger.debug(f"[{self.process.program().split('/')[-1]}] {line}")
         else:
             logger.debug(f"{line}")
 
@@ -251,8 +252,9 @@ class RunnerPanel(QWidget):
             and "steamcmd" in self.process.program()
         ):
             if "Downloading item " in line:
-                pfid = line.split("Downloading item ")[1].replace("...", "").strip()
-                pfid = str(pfid[: pfid.index(" ")])
+                match = search(r"Downloading item (\d+)...", line)
+                if match:
+                    self.steamcmd_current_pfid = match.group(1)
             # Overwrite when SteamCMD client is doing updates
             if (
                 ("] Downloading update (" in line)
@@ -268,8 +270,8 @@ class RunnerPanel(QWidget):
             elif ") quit" in line:
                 line = line.replace(") quit", ")\n\nquit")
             # Progress bar output support
-            if "Success. Downloaded item " in line:
-                self.steamcmd_download_tracking.remove(pfid)
+            if self.steamcmd_current_pfid and "Success. Downloaded item " in line:
+                self.steamcmd_download_tracking.remove(self.steamcmd_current_pfid)
                 self.progress_bar.setValue(self.progress_bar.value() + 1)
             elif "ERROR! Download item " in line:
                 self.change_progress_bar_color("warn")
@@ -285,29 +287,23 @@ class RunnerPanel(QWidget):
             and self.process.state() == QProcess.Running
             and "todds" in self.process.program()
         ):
-            if line[1:10] == "Progress:":
-                self.progress_bar.setValue(
-                    int(line[line.index(":") + 1 : line.index("/")])
-                )
-            if "Progress: 1/" in line:
-                self.progress_bar.setRange(0, int(line.split("Progress: 1/")[1]))
-            if "Progress: " in line:
+            match = search(r"Progress: (\d+)/(\d+)", line)
+            if match:
+                self.progress_bar.setRange(0, int(match.group(2)))
+                self.progress_bar.setValue(int(match.group(1)))
                 overwrite = True
             # -------TODDS-------
 
         # Hardcoded query progress output support
         # -------QUERY-------
-        elif (
-            "IPublishedFileService/QueryFiles page" in line
-            or "IPublishedFileService/GetDetails chunk" in line
-        ):
-            if int(line[line.index("[") + 1 : line.index("/", 22)]) == 0:
-                self.progress_bar.setRange(
-                    0, int(line[line.index("/", 22) + 1 : line.index("]")])
-                )
-            self.progress_bar.setValue(
-                int(line[line.index("[") + 1 : line.index("/", 22)])
-            )
+        match = search(
+            r"IPublishedFileService/(QueryFiles|GetDetails) page \[(\d+)\/(\d+)\]",
+            line,
+        )
+        if match:
+            operation, start, end = match.groups()
+            self.progress_bar.setRange(0, int(end))
+            self.progress_bar.setValue(int(start))
             overwrite = True
         # -------QUERY-------
 
@@ -323,93 +319,79 @@ class RunnerPanel(QWidget):
         self.previous_line = line
 
     def finished(self):
-        # If todds dry run, we explicitly filter the output
+        # Handle output filtering if todds dry run support is not enabled
         if not self.todds_dry_run_support:
-            # If the process was killed, adjust the message to reflect
-            if self.process_killed:
-                self.message("Subprocess killed!")
-                self.process_killed = False
-            else:  # Otherwise, alert the user the process was completed
-                self.message("Subprocess completed.")
-                # -------STEAM-------
-                if "steamcmd" in self.process.program():
-                    # If we have mods that did not successfully download
-                    if self.steamcmd_download_tracking is not None:
-                        if len(self.steamcmd_download_tracking) > 0:
-                            self.change_progress_bar_color("emergency")
-                            # Try to get the names of our mods
-                            pfids_to_name = {}
-                            failed_mods_no_names = []
-                            # Use Steam DB as initial source
-                            if self.steam_db and len(self.steam_db.keys()) > 0:
-                                for failed_mod_pfid in self.steamcmd_download_tracking:
-                                    if failed_mod_pfid in self.steam_db.keys():
-                                        if self.steam_db[failed_mod_pfid].get(
-                                            "steamName"
-                                        ):
-                                            pfids_to_name[failed_mod_pfid] = (
-                                                self.steam_db[failed_mod_pfid][
-                                                    "steamName"
-                                                ]
-                                            )
-                                        elif self.steam_db[failed_mod_pfid].get("name"):
-                                            pfids_to_name[failed_mod_pfid] = (
-                                                self.steam_db[failed_mod_pfid]["name"]
-                                            )
-                                        else:
-                                            failed_mods_no_names.append(failed_mod_pfid)
-                            # If we didn't return all names from Steam DB, try to look them up using WebAPI
-                            if len(failed_mods_no_names) > 0:
-                                failed_mods_name_lookup = (
-                                    ISteamRemoteStorage_GetPublishedFileDetails(
-                                        self.steamcmd_download_tracking
-                                    )
+            # Determine message based on whether the process was killed
+            self.message(
+                "Subprocess killed!" if self.process_killed else "Subprocess completed."
+            )
+            self.process_killed = False  # Reset the kill flag
+
+            # Process-specific logic for steamcmd
+            if "steamcmd" in self.process.program():
+                # Only proceed if there are mods that did not successfully download
+                if (
+                    self.steamcmd_download_tracking
+                    and len(self.steamcmd_download_tracking) > 0
+                ):
+                    self.change_progress_bar_color("emergency")
+                    pfids_to_name = {}
+                    failed_mods_no_names = []
+
+                    # Attempt to resolve mod names from a local database
+                    if self.steam_db:
+                        for failed_mod_pfid in self.steamcmd_download_tracking:
+                            mod_info = self.steam_db.get(failed_mod_pfid)
+                            if mod_info:
+                                mod_name = mod_info.get("steamName") or mod_info.get(
+                                    "name"
                                 )
-                                if failed_mods_name_lookup != None:
-                                    for mod_metadata in failed_mods_name_lookup:
-                                        if (
-                                            mod_metadata["publishedfileid"]
-                                            not in pfids_to_name
-                                        ):
-                                            if mod_metadata.get("title"):
-                                                pfids_to_name[
-                                                    mod_metadata["publishedfileid"]
-                                                ] = mod_metadata["title"]
-                            # Build our report
-                            details = ""
-                            for failed_mod_pfid in self.steamcmd_download_tracking:
-                                if failed_mod_pfid in pfids_to_name:
-                                    details = (
-                                        details
-                                        + f"{pfids_to_name[failed_mod_pfid]} - {failed_mod_pfid}\n"
-                                    )
+                                if mod_name:
+                                    pfids_to_name[failed_mod_pfid] = mod_name
                                 else:
-                                    details = (
-                                        details
-                                        + f"*Mod name not found!* - {failed_mod_pfid}\n"
+                                    failed_mods_no_names.append(failed_mod_pfid)
+
+                    # Attempt to resolve remaining mod names via a WebAPI
+                    if failed_mods_no_names:
+                        mod_details_lookup = (
+                            ISteamRemoteStorage_GetPublishedFileDetails(
+                                failed_mods_no_names
+                            )
+                        )
+                        if mod_details_lookup:
+                            for mod_metadata in mod_details_lookup:
+                                mod_title = mod_metadata.get("title")
+                                if mod_title:
+                                    pfids_to_name[mod_metadata["publishedfileid"]] = (
+                                        mod_title
                                     )
-                            # Prompt user to redownload mods
-                            if (
-                                show_dialogue_conditional(
-                                    title="SteamCMD downloader",
-                                    text='SteamCMD failed to download mod(s)! Would you like to retry download of the mods that failed?\n\nClick "Show Details" to see a list of mods that failed.',
-                                    details=details,
-                                )
-                                == "&Yes"
-                            ):
-                                self.steamcmd_downloader_signal.emit(
-                                    self.steamcmd_download_tracking
-                                )
-                            else:  # Otherwise do nothing
-                                logger.debug(
-                                    "User declined re-download of failed mods."
-                                )
-                        else:
-                            self.change_progress_bar_color("success")
-                # -------STEAM-------
-                # -------TODDS-------
-                if "todds" in self.process.program():
+
+                    # Compile details of failed mods for the report
+                    details = "\n".join(
+                        f"{pfids_to_name.get(pfid, '*Mod name not found!*')} - {pfid}"
+                        for pfid in self.steamcmd_download_tracking
+                    )
+
+                    # Prompt user for action on failed mods
+                    if (
+                        show_dialogue_conditional(
+                            title="SteamCMD downloader",
+                            text="SteamCMD failed to download mod(s)! Would you like to retry download of the mods that failed?\n\nClick 'Show Details' to see a list of mods that failed.",
+                            details=details,
+                        )
+                        == "&Yes"
+                    ):
+                        self.steamcmd_downloader_signal.emit(
+                            self.steamcmd_download_tracking
+                        )
+                    else:
+                        logger.debug("User declined re-download of failed mods.")
+                else:
                     self.change_progress_bar_color("success")
-                # -------TODDS-------
+
+            # Process-specific logic for todds
+            if "todds" in self.process.program():
+                self.change_progress_bar_color("success")
+
         # Cleanup process
         self.process = None
