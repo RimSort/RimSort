@@ -111,6 +111,7 @@ class MainWindow(QMainWindow):
         # Define button attributes
         self.refresh_button = QPushButton("Refresh")
         self.clear_button = QPushButton("Clear")
+        self.restore_button = QPushButton("Restore")
         self.sort_button = QPushButton("Sort")
         self.save_button = QPushButton("Save")
         self.run_button = QPushButton("Run")
@@ -118,6 +119,7 @@ class MainWindow(QMainWindow):
         buttons = [
             self.refresh_button,
             self.clear_button,
+            self.restore_button,
             self.sort_button,
             self.save_button,
             self.run_button,
