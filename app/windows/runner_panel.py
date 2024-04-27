@@ -241,7 +241,7 @@ class RunnerPanel(QWidget):
     def message(self, line: str):
         overwrite = False
         if self.process and self.process.state() == QProcess.Running:
-            logger.debug(f"[{self.process.program().split('/')[-1]}] {line}")
+            logger.debug(f"[{self.process.program().split('/')[-1]}]\n{line}")
         else:
             logger.debug(f"{line}")
 
