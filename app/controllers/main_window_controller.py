@@ -18,6 +18,7 @@ class MainWindowController(QObject):
         self.buttons = [
             self.main_window.refresh_button,
             self.main_window.clear_button,
+            self.main_window.restore_button,
             self.main_window.sort_button,
             self.main_window.save_button,
             self.main_window.run_button,
@@ -33,6 +34,7 @@ class MainWindowController(QObject):
             [
                 EventBus().do_refresh_mods_lists,
                 EventBus().do_clear_active_mods_list,
+                EventBus().do_restore_active_mods_list,
                 EventBus().do_sort_active_mods_list,
                 EventBus().do_save_active_mods_list,
                 EventBus().do_run_game,
