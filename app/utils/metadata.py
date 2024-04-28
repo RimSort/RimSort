@@ -335,10 +335,53 @@ class MetadataManager(QObject):
         def batch_by_data_source(
             self, data_source: str, mod_directories: list[str]
         ) -> dict[str, Any]:
+            """
+            Returns a batch of mod path <-> uuid mappings for a given data source.
+
+            Parameters:
+                data_source (str): The data source to batch.
+                mod_directories (list[str]): A list of mod directories to use to filter items not in that batch.
+            """
             return {
                 path: self.mod_metadata_dir_mapper.get(path, str(uuid4()))
                 for path in mod_directories
             }
+
+        def purge_by_data_source(
+            self, data_source: str, batch: list[str] = None
+        ) -> None:
+            """
+            Removes all metadata for a given data source.
+
+            Optionally pass a batch of uuids to use to filter items not in that batch.
+
+            Parameters:
+                data_source (str): The data source to purge.
+                batch (list[str], optional): A list of uuids to use to filter items not in that batch.
+            """
+            if not batch:  # Purge all metadata for a given data source
+                uuids_to_remove = [
+                    uuid
+                    for uuid, metadata in self.internal_local_metadata.items()
+                    if metadata.get("data_source") == data_source
+                ]
+            else:  # Purge all metadata for a given data source that is not in the batch
+                uuids_to_remove = [
+                    uuid
+                    for uuid, metadata in self.internal_local_metadata.items()
+                    if metadata.get("data_source") == data_source and uuid not in batch
+                ]
+            # If we have uuids to remove
+            if uuids_to_remove:
+                logger.debug(
+                    f"[{data_source}] Purging leftover metadata from directories that no longer exist"
+                )
+                # Purge metadata from internal metadata
+                for uuid in uuids_to_remove:
+                    logger.debug(
+                        f"Removing metadata for {uuid}: {self.internal_local_metadata[uuid]}"
+                    )
+                    self.internal_local_metadata.pop(uuid)
 
         # Get & set Rimworld version string
         version_file_path = str(
@@ -379,9 +422,15 @@ class MetadataManager(QObject):
             )
             # Scan our Official expansions directory
             expansion_subdirectories = directories(data_path)
+            expansions_batch = batch_by_data_source(
+                self, "expansion", expansion_subdirectories
+            )
+            if not is_initial:
+                # Pop any uuids from metadata that are not in the batch - these can be leftover from a previous directory
+                purge_by_data_source(self, "expansion", list(expansions_batch.values()))
             # Query the batch
             self.process_batch(
-                batch=batch_by_data_source(self, "expansion", expansion_subdirectories),
+                batch=expansions_batch,
                 data_source="expansion",
             )
             # Wait for pool to complete
@@ -420,6 +469,8 @@ class MetadataManager(QObject):
             logger.error(
                 "Skipping parsing data from empty game data path. Is the game path configured?"
             )
+            # Check for and purge any found expansion metadata from cache
+            purge_by_data_source(self, "expansion")
         # Get and cache installed local/SteamCMD Workshop mods
         if (
             self.settings_controller.settings.local_folder
@@ -432,14 +483,21 @@ class MetadataManager(QObject):
             local_subdirectories = directories(
                 self.settings_controller.settings.local_folder
             )
+            local_batch = batch_by_data_source(self, "local", local_subdirectories)
+            if not is_initial:
+                # Pop any uuids from metadata that are not in the batch - these can be leftover from a previous directory
+                purge_by_data_source(self, "local", list(local_batch.values()))
+            # Query the batch
             self.process_batch(
-                batch=batch_by_data_source(self, "local", local_subdirectories),
+                batch=local_batch,
                 data_source="local",
             )
         else:
             logger.debug(
                 "Skipping parsing data from empty local mods path. Is the local mods path configured?"
             )
+            # Check for and purge any found local mod metadata from cache
+            purge_by_data_source(self, "local")
         # Get and cache installed Steam client Workshop mods
         if (
             self.settings_controller.settings.workshop_folder
@@ -451,14 +509,23 @@ class MetadataManager(QObject):
             workshop_subdirectories = directories(
                 self.settings_controller.settings.workshop_folder
             )
+            workshop_batch = batch_by_data_source(
+                self, "workshop", workshop_subdirectories
+            )
+            if not is_initial:
+                # Pop any uuids from metadata that are not in the batch - these can be leftover from a previous directory
+                purge_by_data_source(self, "workshop", list(workshop_batch.values()))
+            # Query the batch
             self.process_batch(
-                batch=batch_by_data_source(self, "workshop", workshop_subdirectories),
+                batch=workshop_batch,
                 data_source="workshop",
             )
         else:
             logger.debug(
                 "Skipping parsing data from empty workshop mods path. Is the workshop mods path configured?"
             )
+            # Check for and purge any found workshop mod metadata from cache
+            purge_by_data_source(self, "workshop")
         # Wait for pool to complete
         self.parser_threadpool.waitForDone()
         # Generate our file <-> UUID mappers for Watchdog and friends
