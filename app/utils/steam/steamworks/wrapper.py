@@ -148,7 +148,7 @@ class SteamworksInterface:
         start_time = time()
         logger.debug(f"Waiting {timeout} seconds for Steamworks API callbacks...")
         while self.steamworks_thread.is_alive():
-            elapsed_time = time.time() - start_time
+            elapsed_time = time() - start_time
             if elapsed_time >= timeout:
                 self.end_callbacks = True
                 break

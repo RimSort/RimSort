@@ -106,6 +106,9 @@ class MenuBarController(QObject):
         # Help menu
 
         self.menu_bar.wiki_action.triggered.connect(self._on_menu_bar_wiki_triggered)
+        self.menu_bar.validate_steam_client_action.triggered.connect(
+            EventBus().do_validate_steam_client
+        )
 
         # External signals
 

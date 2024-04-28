@@ -110,6 +110,7 @@ class MainContent(QObject):
             EventBus().do_check_for_application_update.connect(
                 self._do_check_for_update
             )
+            EventBus().do_validate_steam_client.connect(self._do_validate_steam_client)
             EventBus().do_open_mod_list.connect(self._do_import_list_file_xml)
             EventBus().do_import_mod_list_from_rentry.connect(
                 self._do_import_list_rentry
@@ -914,6 +915,9 @@ class MainContent(QObject):
                 title="RimSort is up to date!",
                 text=f"You are already running the latest release: {tag_name}",
             )
+
+    def _do_validate_steam_client(self) -> None:
+        platform_specific_open("steam://validate/294100")
 
     def __do_download_extract_release_to_tempdir(self, url: str) -> None:
         with ZipFile(BytesIO(requests_get(url).content)) as zipobj:
@@ -2053,7 +2057,6 @@ class MainContent(QObject):
                         ]
                         # Map the execution of the subscription actions to the pool of processes
                         pool.map(SteamworksSubscriptionHandler.run, actions)
-                    platform_specific_open("steam://validate/294100")
                     self.steamworks_in_use = False
                 else:
                     logger.warning(
