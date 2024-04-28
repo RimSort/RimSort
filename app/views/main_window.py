@@ -206,7 +206,7 @@ class MainWindow(QMainWindow):
             self.watchdog_event_handler.watchdog_observer.start()
         except Exception as e:
             logger.warning(
-                f"Unable to initialize watchdog Observer due to exception: {e.__class__.__name__}"
+                f"Unable to initialize watchdog Observer due to exception: {str(e)}"
             )
 
     def shutdown_watchdog(self) -> None:
