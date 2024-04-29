@@ -1490,7 +1490,7 @@ class MainContent(QObject):
         logger.info(f"Collected {len(active_mods)} active mods for export")
         # Build our report
         active_mods_clipboard_report = (
-            f"Created with RimSort {GameConfiguration.instance().rimsort_version}"
+            f"Created with RimSort {self.version_string}"
             + f"\nRimWorld game version this list was created for: {self.metadata_manager.game_version}"
             + f"\nTotal # of mods: {len(active_mods)}\n"
         )
@@ -1580,7 +1580,7 @@ class MainContent(QObject):
         # Build our report
         active_mods_rentry_report = (
             f"# RimWorld mod list       ![](https://github.com/RimSort/RimSort/blob/main/docs/rentry_preview.png?raw=true)"
-            + f"\nCreated with RimSort {GameConfiguration.instance().rimsort_version}"
+            + f"\nCreated with RimSort {self.version_string}"
             + f"\nMod list was created for game version: `{self.metadata_manager.game_version}`"
             + f"\n!!! info Local mods are marked as yellow labels with packageid in brackets."
             + f"\n\n\n\n!!! note Mod list length: `{len(active_mods)}`\n"
