@@ -233,10 +233,6 @@ class MainContent(QObject):
             self.metadata_manager.mod_metadata_updated_signal.connect(
                 self.mods_panel.on_mod_metadata_updated  # Connect MetadataManager to ModPanel for mod metadata updates
             )
-            GameConfiguration.instance().configuration_signal.connect(self.actions_slot)
-            GameConfiguration.instance().settings_panel.actions_signal.connect(
-                self.actions_slot
-            )  # Settings
             self.mods_panel.active_mods_list.key_press_signal.connect(
                 self.__handle_active_mod_key_press
             )
@@ -310,6 +306,44 @@ class MainContent(QObject):
         elif args or kwargs:
             raise ValueError("MainContent instance has already been initialized.")
         return cls._instance
+
+    def check_if_essential_paths_are_set(self) -> bool:
+        """
+        When the user starts the app for the first time, none
+        of the paths will be set. We should check for this and
+        not throw a fatal error trying to load mods until the
+        user has had a chance to set paths.
+        """
+        game_folder_path = self.settings_controller.settings.game_folder
+        config_folder_path = self.settings_controller.settings.config_folder
+        logger.debug(f"Game folder: {game_folder_path}")
+        logger.debug(f"Config folder: {config_folder_path}")
+        if not game_folder_path or not config_folder_path:
+            logger.warning("Essential path(s) not set!")
+            show_warning(
+                text="Essential path(s) not set!",
+                information=(
+                    "RimSort requires, at the minimum, for the game install folder and the "
+                    "config folder paths to be set. Please set both these either manually "
+                    "or by using the AutoDetect functionality."
+                ),
+            )
+            return False
+        if not os.path.exists(game_folder_path) or not os.path.exists(
+            config_folder_path
+        ):
+            logger.warning("Essential path(s) invalid!")
+            show_warning(
+                text="Essential path(s) are invalid!",
+                information=(
+                    "RimSort has detected that the game install folder path or the "
+                    "config folder path is invalid. Please check that both of these path(s) "
+                    "reference folders that actually exist at the specified location."
+                ),
+            )
+            return False
+        logger.info("Essential paths set!")
+        return True
 
     def ___get_relative_middle(self, some_list):
         rect = some_list.contentsRect()
@@ -753,7 +787,7 @@ class MainContent(QObject):
             return
         # NUITKA
         logger.debug("Checking for RimSort update...")
-        current_version = GameConfiguration.instance().rimsort_version.lower()
+        current_version = self.metadata_manager.game_version
         try:
             json_response = self.__do_get_github_release_info()
         except Exception as e:
@@ -996,7 +1030,7 @@ class MainContent(QObject):
             )
             self.mods_panel.signal_clear_search(list_type="Inactive")
         # Check if paths are set
-        if GameConfiguration.instance().check_if_essential_paths_are_set():
+        if self.check_if_essential_paths_are_set():
             # Run expensive calculations to set cache data
             self._do_threaded_loading_animation(
                 gif_path=str(
