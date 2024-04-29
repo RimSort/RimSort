@@ -65,7 +65,6 @@ from app.utils.steam.webapi.wrapper import CollectionImport
 from app.utils.todds.wrapper import ToddsInterface
 from app.utils.xml import json_to_xml_write, xml_path_to_json
 
-from app.views.game_configuration_panel import GameConfiguration
 from app.views.mod_info_panel import ModInfo
 from app.views.mods_panel import ModsPanel, ModsPanelSortKey
 from app.windows.missing_mods_panel import MissingModsPrompt
@@ -98,7 +97,7 @@ class MainContent(QObject):
         """
         Initialize the main content panel.
 
-        :param game_configuration: game configuration panel to get paths
+        :param settings_controller: the settings controller for the application
         """
         if not hasattr(self, "initialized"):
             super(MainContent, self).__init__()
@@ -197,9 +196,6 @@ class MainContent(QObject):
 
             # Initialize MetadataManager
             self.metadata_manager = MetadataManager.instance()
-            self.metadata_manager.update_game_configuration_signal.connect(
-                self.__update_game_configuration
-            )
 
             # BASE LAYOUT
             self.main_layout = QHBoxLayout()
@@ -546,37 +542,6 @@ class MainContent(QObject):
         :param uuid: uuid of mod
         """
         self.mod_info_panel.display_mod_info(uuid=uuid)
-
-    def __update_game_configuration(self) -> None:
-        self.metadata_manager.community_rules_repo = (
-            self.settings_controller.settings.external_community_rules_repo
-        )
-        self.metadata_manager.dbs_path = AppInfo().databases_folder
-        self.metadata_manager.external_community_rules_metadata_source = (
-            self.settings_controller.settings.external_community_rules_metadata_source
-        )
-        self.metadata_manager.external_community_rules_file_path = (
-            self.settings_controller.settings.external_community_rules_file_path
-        )
-        self.metadata_manager.external_steam_metadata_file_path = (
-            self.settings_controller.settings.external_steam_metadata_file_path
-        )
-        self.metadata_manager.external_steam_metadata_source = (
-            self.settings_controller.settings.external_steam_metadata_source
-        )
-        self.metadata_manager.game_path = self.settings_controller.settings.game_folder
-        self.metadata_manager.local_path = (
-            self.settings_controller.settings.local_folder
-        )
-        self.metadata_manager.steamcmd_acf_path = (
-            self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
-        )
-        self.metadata_manager.user_rules_file_path = str(
-            AppInfo().databases_folder / "userRules.json"
-        )
-        self.metadata_manager.workshop_path = (
-            self.settings_controller.settings.workshop_folder
-        )
 
     def __repopulate_lists(self, is_initial: bool = False) -> None:
         """

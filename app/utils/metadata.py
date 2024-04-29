@@ -50,7 +50,6 @@ class MetadataManager(QObject):
     mod_deleted_signal = Signal(str)
     mod_metadata_updated_signal = Signal(str)
     show_warning_signal = Signal(str, str, str, str)
-    update_game_configuration_signal = Signal()
 
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
@@ -554,6 +553,37 @@ class MetadataManager(QObject):
                 for uuid, metadata in self.internal_local_metadata.items()
             },
         }
+
+    def __update_from_settings(self) -> None:
+        self.community_rules_repo = (
+            self.settings_controller.settings.external_community_rules_repo
+        )
+        self.dbs_path = AppInfo().databases_folder
+        self.external_community_rules_metadata_source = (
+            self.settings_controller.settings.external_community_rules_metadata_source
+        )
+        self.external_community_rules_file_path = (
+            self.settings_controller.settings.external_community_rules_file_path
+        )
+        self.external_steam_metadata_file_path = (
+            self.settings_controller.settings.external_steam_metadata_file_path
+        )
+        self.external_steam_metadata_source = (
+            self.settings_controller.settings.external_steam_metadata_source
+        )
+        self.game_path = self.settings_controller.settings.game_folder
+        self.local_path = (
+            self.settings_controller.settings.local_folder
+        )
+        self.steamcmd_acf_path = (
+            self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
+        )
+        self.user_rules_file_path = str(
+            AppInfo().databases_folder / "userRules.json"
+        )
+        self.workshop_path = (
+            self.settings_controller.settings.workshop_folder
+        )
 
     def compile_metadata(self, uuids: list[str] = None) -> None:
         """
@@ -1126,7 +1156,7 @@ class MetadataManager(QObject):
 
         # If we are refreshing cache from user action, update user paths as well in case of change
         if not is_initial:
-            self.update_game_configuration_signal.emit()
+            self.__update_from_settings()
 
         # Update paths from game configuration
 
