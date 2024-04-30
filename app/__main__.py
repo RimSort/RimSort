@@ -11,10 +11,10 @@ from loguru import logger
 
 from app.utils.app_info import AppInfo
 
-if __name__ == "__main__":
+#if __name__ == "__main__": # Todo find a better fix So appinfo is initialized since Run Game is broken in compiled version without this
     # One-time initialization of AppInfo class (this must be done in __main__ so we can use __file__)
     # Initialize as early as possible!
-    AppInfo(main_file=__file__)
+AppInfo(main_file=__file__)
 
 from app.controllers.app_controller import AppController
 
