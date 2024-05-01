@@ -62,6 +62,7 @@ class MetadataManager(QObject):
             logger.info("Initializing MetadataManager")
 
             self.settings_controller = settings_controller
+            self.steamcmd_wrapper = SteamcmdInterface.instance()
 
             # Initialize our threadpool for multithreaded parsing
             self.parser_threadpool = QThreadPool.globalInstance()
@@ -572,18 +573,10 @@ class MetadataManager(QObject):
             self.settings_controller.settings.external_steam_metadata_source
         )
         self.game_path = self.settings_controller.settings.game_folder
-        self.local_path = (
-            self.settings_controller.settings.local_folder
-        )
-        self.steamcmd_acf_path = (
-            self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
-        )
-        self.user_rules_file_path = str(
-            AppInfo().databases_folder / "userRules.json"
-        )
-        self.workshop_path = (
-            self.settings_controller.settings.workshop_folder
-        )
+        self.local_path = self.settings_controller.settings.local_folder
+        self.steamcmd_acf_path = self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
+        self.user_rules_file_path = str(AppInfo().databases_folder / "userRules.json")
+        self.workshop_path = self.settings_controller.settings.workshop_folder
 
     def compile_metadata(self, uuids: list[str] = None) -> None:
         """

@@ -189,10 +189,7 @@ class MainContent(QObject):
             # Initialize Steam(CMD) integraations
             self.steam_browser = SteamcmdDownloader = None
             self.steamcmd_runner = RunnerPanel = None
-            self.steamcmd_wrapper = SteamcmdInterface.instance(
-                self.settings_controller.settings.steamcmd_install_path,
-                self.settings_controller.settings.steamcmd_validate_downloads,
-            )
+            self.steamcmd_wrapper = SteamcmdInterface.instance()
 
             # Initialize MetadataManager
             self.metadata_manager = MetadataManager.instance()
