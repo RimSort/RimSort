@@ -1,7 +1,6 @@
-from loguru import logger
-
 from PySide6.QtCore import QObject, Slot
 from PySide6.QtWidgets import QPushButton
+from loguru import logger
 
 from app.utils.event_bus import EventBus
 from app.utils.metadata import MetadataManager
@@ -21,7 +20,6 @@ class MainWindowController(QObject):
             self.main_window.restore_button,
             self.main_window.sort_button,
             self.main_window.save_button,
-            self.main_window.run_button,
         ]
 
         # Connect signals to slots
@@ -37,7 +35,6 @@ class MainWindowController(QObject):
                 EventBus().do_restore_active_mods_list,
                 EventBus().do_sort_active_mods_list,
                 EventBus().do_save_active_mods_list,
-                EventBus().do_run_game,
             ],
         ):
             button.clicked.connect(signal.emit)

@@ -1,10 +1,10 @@
-from functools import partial
 import os
+from functools import partial
 from pathlib import Path
 from typing import Optional
 
 from PySide6.QtCore import QSize, QTimer
-from PySide6.QtGui import QShowEvent
+from PySide6.QtGui import QAction, QShowEvent
 from PySide6.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -13,6 +13,8 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
+    QToolButton,
+    QMenu,
 )
 from loguru import logger
 
@@ -21,7 +23,6 @@ from app.controllers.settings_controller import SettingsController
 from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 from app.utils.gui_info import GUIInfo
-from app.utils.system_info import SystemInfo
 from app.utils.watchdog import WatchdogHandler
 from app.views.game_configuration_panel import GameConfiguration
 from app.views.main_content_panel import MainContent
@@ -109,25 +110,40 @@ class MainWindow(QMainWindow):
         button_layout.addStretch()
 
         # Define button attributes
-        self.refresh_button = QPushButton("Refresh")
-        self.clear_button = QPushButton("Clear")
-        self.restore_button = QPushButton("Restore")
-        self.sort_button = QPushButton("Sort")
-        self.save_button = QPushButton("Save")
-        self.run_button = QPushButton("Run")
-
         buttons = [
+            QPushButton("Refresh"),
+            QPushButton("Clear"),
+            QPushButton("Restore"),
+            QPushButton("Sort"),
+            QPushButton("Save"),
+            QToolButton(),
+        ]
+        for button in buttons:
+            button.setMinimumWidth(100)
+            button_layout.addWidget(button)
+
+        (
             self.refresh_button,
             self.clear_button,
             self.restore_button,
             self.sort_button,
             self.save_button,
             self.run_button,
-        ]
+        ) = buttons
 
-        for button in buttons:
-            button.setMinimumWidth(100)
-            button_layout.addWidget(button)
+        # Create the Run button with a dropdown arrow
+        self.run_button.setText("Run")
+        self.run_button.setPopupMode(QToolButton.InstantPopup)
+        self.run_menu = QMenu(self.run_button)
+        run_action = QAction("Run", self)
+        run_action.setStatusTip("This is Run button")
+        run_action.triggered.connect(self.run_action_triggered)
+        self.run_menu.addAction(run_action)
+        edit_run_arguments_action = QAction("Edit Run Arguments", self)
+        edit_run_arguments_action.setStatusTip("This is Edit Run Arguments button")
+        edit_run_arguments_action.triggered.connect(self.edit_run_arguments_triggered)
+        self.run_menu.addAction(edit_run_arguments_action)
+        self.run_button.setMenu(self.run_menu)
 
         # Save button flashing animation
         self.save_button_flashing_animation = QTimer()
@@ -178,31 +194,31 @@ class MainWindow(QMainWindow):
 
     def __initialize_watchdog(self) -> None:
         logger.info("Initializing watchdog FS Observer")
-        # INITIALIZE WATCHDOG - WE WAIT TO START UNTIL DONE PARSING MOD LIST
-        # Instantiate event handler
-        # Pass a mapper of metadata-containing About.xml or Scenario.rsc files to their mod uuids
-        self.watchdog_event_handler = WatchdogHandler(
-            settings_controller=self.settings_controller,
-            targets=[
-                str(Path(self.settings_controller.settings.game_folder) / "Data"),
-                self.settings_controller.settings.local_folder,
-                self.settings_controller.settings.workshop_folder,
-            ],
-        )
-        # Connect watchdog to MetadataManager
-        self.watchdog_event_handler.mod_created.connect(
-            self.main_content_panel.metadata_manager.process_creation
-        )
-        self.watchdog_event_handler.mod_deleted.connect(
-            self.main_content_panel.metadata_manager.process_deletion
-        )
-        self.watchdog_event_handler.mod_updated.connect(
-            self.main_content_panel.metadata_manager.process_update
-        )
-        # Connect main content signal so it can stop watchdog
-        self.main_content_panel.stop_watchdog_signal.connect(self.shutdown_watchdog)
-        # Start watchdog
         try:
+            # INITIALIZE WATCHDOG - WE WAIT TO START UNTIL DONE PARSING MOD LIST
+            # Instantiate event handler
+            # Pass a mapper of metadata-containing About.xml or Scenario.rsc files to their mod uuids
+            self.watchdog_event_handler = WatchdogHandler(
+                settings_controller=self.settings_controller,
+                targets=[
+                    str(Path(self.settings_controller.settings.game_folder) / "Data"),
+                    self.settings_controller.settings.local_folder,
+                    self.settings_controller.settings.workshop_folder,
+                ],
+            )
+            # Connect watchdog to MetadataManager
+            self.watchdog_event_handler.mod_created.connect(
+                self.main_content_panel.metadata_manager.process_creation
+            )
+            self.watchdog_event_handler.mod_deleted.connect(
+                self.main_content_panel.metadata_manager.process_deletion
+            )
+            self.watchdog_event_handler.mod_updated.connect(
+                self.main_content_panel.metadata_manager.process_update
+            )
+            # Connect main content signal so it can stop watchdog
+            self.main_content_panel.stop_watchdog_signal.connect(self.shutdown_watchdog)
+            # Start watchdog
             self.watchdog_event_handler.watchdog_observer.start()
         except Exception as e:
             logger.warning(
@@ -218,3 +234,11 @@ class MainWindow(QMainWindow):
             self.watchdog_event_handler.watchdog_observer.stop()
             self.watchdog_event_handler.watchdog_observer.join()
             self.watchdog_event_handler.watchdog_observer = None
+
+    def run_action_triggered(self):
+        EventBus().do_run_game.emit()
+        logger.info("Run action triggered.")
+
+    def edit_run_arguments_triggered(self):
+        EventBus().do_edit_run_arguments.emit()
+        logger.info("Edit Run Arguments action triggered.")
