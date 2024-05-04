@@ -1,7 +1,5 @@
-import json
 import os
 from pathlib import Path
-from typing import Any, Dict
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap

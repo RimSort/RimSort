@@ -1,7 +1,7 @@
+import json
 import os
 from enum import Enum
 from functools import partial
-import json
 from pathlib import Path
 from shutil import copy2, copytree, rmtree
 from traceback import format_exc

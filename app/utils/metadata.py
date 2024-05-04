@@ -27,7 +27,6 @@ from app.utils.constants import (
     DB_BUILDER_PRUNE_EXCEPTIONS,
     DB_BUILDER_RECURSE_EXCEPTIONS,
     DEFAULT_USER_RULES,
-    MOD_RECURSE_EXCEPTIONS,
     RIMWORLD_DLC_METADATA,
 )
 from app.utils.generic import directories

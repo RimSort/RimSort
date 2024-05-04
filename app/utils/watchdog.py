@@ -1,7 +1,5 @@
-from functools import partial
-import json
-from pathlib import Path
 import os
+from functools import partial
 from threading import Timer
 from uuid import uuid4
 

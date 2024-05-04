@@ -1,12 +1,10 @@
 import datetime
-from functools import partial
-from gc import collect
-from pathlib import Path
 import platform
 import subprocess
 import sys
 import webbrowser
 from functools import partial
+from gc import collect
 from io import BytesIO
 from math import ceil
 from multiprocessing import cpu_count, Pool
@@ -29,7 +27,6 @@ except ImportError:
     GIT_EXISTS = False
 
 from github import Github
-from pyperclip import copy as copy_to_clipboard
 from PySide6.QtCore import QEventLoop, QProcess, Qt, Slot
 from PySide6.QtWidgets import (
     QDialog,
@@ -63,7 +60,7 @@ from app.utils.steam.steamworks.wrapper import (
 )
 from app.utils.steam.webapi.wrapper import CollectionImport
 from app.utils.todds.wrapper import ToddsInterface
-from app.utils.xml import json_to_xml_write, xml_path_to_json
+from app.utils.xml import json_to_xml_write
 
 from app.views.game_configuration_panel import GameConfiguration
 from app.views.mod_info_panel import ModInfo
