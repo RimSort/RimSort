@@ -81,7 +81,7 @@ class SettingsController(QObject):
         )
         self.settings_dialog.game_location_clear_button.clicked.connect(
             self._on_game_location_clear_button_clicked
-            )
+        )
 
         self.settings_dialog.config_folder_location.textChanged.connect(
             self._on_config_folder_location_text_changed
@@ -94,7 +94,7 @@ class SettingsController(QObject):
         )
         self.settings_dialog.config_folder_location_clear_button.clicked.connect(
             self._on_config_folder_location_clear_button_clicked
-            )
+        )
 
         self.settings_dialog.steam_mods_folder_location.textChanged.connect(
             self._on_steam_mods_folder_location_text_changed
@@ -107,7 +107,7 @@ class SettingsController(QObject):
         )
         self.settings_dialog.steam_mods_folder_location_clear_button.clicked.connect(
             self._on_steam_mods_folder_location_clear_button_clicked
-            )
+        )
 
         self.settings_dialog.local_mods_folder_location.textChanged.connect(
             self._on_local_mods_folder_location_text_changed
@@ -120,7 +120,7 @@ class SettingsController(QObject):
         )
         self.settings_dialog.local_mods_folder_location_clear_button.clicked.connect(
             self._on_local_mods_folder_location_clear_button_clicked
-            )
+        )
 
         self.settings_dialog.locations_clear_button.clicked.connect(
             self._on_locations_clear_button_clicked
@@ -201,11 +201,6 @@ class SettingsController(QObject):
         )
         self.settings_dialog.steamcmd_install_button.clicked.connect(
             self._on_steamcmd_install_button_clicked
-        )
-
-        # Advanced tab
-        self.settings_dialog.edit_run_arguments_button.clicked.connect(
-            self._on_edit_run_arguments_button_clicked
         )
 
     def get_mod_paths(self) -> list[str]:
@@ -429,6 +424,13 @@ class SettingsController(QObject):
         self.settings_dialog.github_token.setText(self.settings.github_token)
         self.settings_dialog.github_token.setCursorPosition(0)
 
+        run_args_str = " ".join(self.settings.run_args)
+        self.settings_dialog.run_args.setText(run_args_str)
+        self.settings_dialog.run_args.setCursorPosition(0)
+        self.settings_dialog.run_args.textChanged.connect(
+            self._on_run_args_text_changed
+        )
+
     def _update_model_from_view(self) -> None:
         """
         Update the settings model from the view.
@@ -543,6 +545,8 @@ class SettingsController(QObject):
         )
         self.settings.github_username = self.settings_dialog.github_username.text()
         self.settings.github_token = self.settings_dialog.github_token.text()
+        run_args_str = ",".join(self.settings.run_args)
+        self.settings_dialog.run_args.setText(run_args_str)
 
     @Slot()
     def _on_global_reset_to_defaults_button_clicked(self) -> None:
@@ -628,7 +632,7 @@ class SettingsController(QObject):
 
     @Slot()
     def _on_game_location_clear_button_clicked(self) -> None:
-        self.settings_dialog.game_location.setText( "" )
+        self.settings_dialog.game_location.setText("")
 
     @Slot()
     def _on_config_folder_location_text_changed(self) -> None:
@@ -656,7 +660,7 @@ class SettingsController(QObject):
 
     @Slot()
     def _on_config_folder_location_clear_button_clicked(self) -> None:
-        self.settings_dialog.config_folder_location.setText( "" )
+        self.settings_dialog.config_folder_location.setText("")
 
     @Slot()
     def _on_steam_mods_folder_location_text_changed(self) -> None:
@@ -686,7 +690,7 @@ class SettingsController(QObject):
 
     @Slot()
     def _on_steam_mods_folder_location_clear_button_clicked(self) -> None:
-        self.settings_dialog.steam_mods_folder_location.setText( "" )
+        self.settings_dialog.steam_mods_folder_location.setText("")
 
     @Slot()
     def _on_local_mods_folder_location_text_changed(self) -> None:
@@ -716,7 +720,7 @@ class SettingsController(QObject):
 
     @Slot()
     def _on_local_mods_folder_location_clear_button_clicked(self) -> None:
-        self.settings_dialog.local_mods_folder_location.setText( "" )
+        self.settings_dialog.local_mods_folder_location.setText("")
 
     @Slot()
     def _on_locations_clear_button_clicked(self) -> None:
@@ -1061,6 +1065,8 @@ class SettingsController(QObject):
         self.settings_dialog.global_ok_button.click()
         EventBus().do_build_steam_workshop_database.emit()
 
-    def _on_edit_run_arguments_button_clicked(self) -> None:
-        self.settings_dialog.global_ok_button.click()
-        EventBus().do_edit_run_arguments.emit()
+    @Slot(str)
+    def _on_run_args_text_changed(self, text: str) -> None:
+        run_args_list = [arg.strip() for arg in text.split(" ") if arg.strip()]
+        self.settings.run_args = run_args_list
+        self.settings.save()
