@@ -802,10 +802,36 @@ class SettingsDialog(QDialog):
 
         buttons_layout.addStretch()
 
-        self.edit_run_arguments_button = QPushButton("Edit Game Run Arguments")
-        buttons_layout.addWidget(self.edit_run_arguments_button)
+        run_args_group = QGroupBox()
+        tab_layout.addWidget(run_args_group)
 
-        buttons_layout.addStretch()
+        run_args_layout = QGridLayout()
+        run_args_group.setLayout(run_args_layout)
+
+        run_args_info_layout = QHBoxLayout()
+
+        self.run_args_info_label = QLabel(
+            "Enter a space separated list of arguments to pass to the Rimworld executable \n"
+            "\n Examples : \n"
+            "\n -popupwindow -logfile /path/to/file.log \n"
+        )
+        self.run_args_info_label.setFixedHeight(GUIInfo().default_font_line_height * 6)
+        run_args_info_layout.addWidget(self.run_args_info_label, 0)
+        self.run_args_info_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
+
+        run_args_layout.addLayout(run_args_info_layout, 0, 0, 1, 2)
+
+        run_args_label = QLabel("Edit Game Run Arguments:")
+        run_args_layout.addWidget(
+            run_args_label, 1, 0, alignment=Qt.AlignmentFlag.AlignRight
+        )
+
+        self.run_args = QLineEdit()
+        self.run_args.setTextMargins(GUIInfo().text_field_margins)
+        self.run_args.setFixedHeight(GUIInfo().default_font_line_height * 2)
+        run_args_layout.addWidget(self.run_args, 1, 1)
+
+        self.setTabOrder(self.run_args_info_label, self.run_args)
 
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
