@@ -811,9 +811,9 @@ class SettingsDialog(QDialog):
         run_args_info_layout = QHBoxLayout()
 
         self.run_args_info_label = QLabel(
-            "Enter a comma separated list of arguments to pass to the Rimworld executable \n"
+            "Enter a space separated list of arguments to pass to the Rimworld executable \n"
             "\n Examples : \n"
-            "\n -popupwindow,-logfile,/path/to/file.log \n"
+            "\n -popupwindow -logfile /path/to/file.log \n"
         )
         self.run_args_info_label.setFixedHeight(GUIInfo().default_font_line_height * 6)
         run_args_info_layout.addWidget(self.run_args_info_label, 0)
