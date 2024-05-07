@@ -3,7 +3,7 @@ from multiprocessing import Process
 from os import getcwd
 from pathlib import Path
 from threading import Thread
-from time import sleep
+from time import sleep, time
 from typing import Union
 
 from loguru import logger
@@ -136,20 +136,23 @@ class SteamworksInterface:
         return Thread(target=self._callbacks, daemon=True)
 
     def _wait_for_callbacks(self, timeout: int) -> None:
-        # While the thread is alive, we wait for it.
-        tick = 0
+        """
+        Waits for the Steamworks API callbacks to complete within a specified time interval.
+
+        Args:
+            timeout (int): Maximum time to wait in seconds.
+
+        Returns:
+            None
+        """
+        start_time = time()
+        logger.debug(f"Waiting {timeout} seconds for Steamworks API callbacks...")
         while self.steamworks_thread.is_alive():
-            if (
-                tick == timeout
-            ):  # Wait the specified interval without additional responses before we quit forcefully
+            elapsed_time = time() - start_time
+            if elapsed_time >= timeout:
                 self.end_callbacks = True
                 break
-            else:
-                tick += 1
-                logger.debug(
-                    f"Waiting for Steamworks API callbacks to complete {tick} : [{self.callbacks_count}/{self.callbacks_total}]"
-                )
-                sleep(1)
+            sleep(1)
 
 
 class SteamworksAppDependenciesQuery:
@@ -263,14 +266,10 @@ class SteamworksSubscriptionHandler:
         if isinstance(self.pfid_or_pfids, int):
             self.pfid_or_pfids = [self.pfid_or_pfids]
         # Create our Steamworks interface and initialize Steamworks API
-        # If we are resubscribing, it's actually 3 callbacks to expect per pfid
+        # If we are resubscribing, it's actually 2 callbacks to expect per pfid, because it is 2 API calls
         if self.action == "resubscribe":
-            callbacks_total = len(self.pfid_or_pfids) * 3  # per API call
-        elif (
-            self.action == "unsubscribe"
-        ):  # If we are unsubscribing, it's actually 2 callbacks to expect per pfid
             callbacks_total = len(self.pfid_or_pfids) * 2  # per API call
-        # Otherwise we only expect a single callback for each mod
+        # Otherwise we only expect a single callback for each API call
         else:
             callbacks_total = len(self.pfid_or_pfids)
         steamworks_interface = SteamworksInterface(
@@ -285,7 +284,7 @@ class SteamworksSubscriptionHandler:
                 if self.action == "resubscribe":
                     for pfid in self.pfid_or_pfids:
                         logger.debug(
-                            f"ISteamUGC/UnsubscribeItem x2 + SubscribeItem Action : {pfid}"
+                            f"ISteamUGC/UnsubscribeItem + SubscribeItem Action : {pfid}"
                         )
                         # Point Steamworks API callback response to our functions
                         steamworks_interface.steamworks.Workshop.SetItemUnsubscribedCallback(
@@ -297,10 +296,6 @@ class SteamworksSubscriptionHandler:
                         # Create API calls
                         steamworks_interface.steamworks.Workshop.UnsubscribeItem(pfid)
                         sleep(self.interval)
-                        steamworks_interface.steamworks.Workshop.UnsubscribeItem(pfid)
-                        sleep(
-                            5
-                        )  # Wait for a few seconds while Steam does its thing, then subscribe again
                         steamworks_interface.steamworks.Workshop.SubscribeItem(pfid)
                         # Sleep for the interval if we have more than one pfid to action on
                         if len(self.pfid_or_pfids) > 1:
@@ -326,13 +321,11 @@ class SteamworksSubscriptionHandler:
                         )
                         # Create API calls
                         steamworks_interface.steamworks.Workshop.UnsubscribeItem(pfid)
-                        sleep(self.interval)
-                        steamworks_interface.steamworks.Workshop.UnsubscribeItem(pfid)
                         # Sleep for the interval if we have more than one pfid to action on
                         if len(self.pfid_or_pfids) > 1:
                             sleep(self.interval)
                 # Patience, but don't wait forever
-                steamworks_interface._wait_for_callbacks(timeout=60)
+                steamworks_interface._wait_for_callbacks(timeout=10)
                 # This means that the callbacks thread has ended. We are done with Steamworks API now, so we dispose of everything.
                 logger.info("Thread completed. Unloading Steamworks...")
                 steamworks_interface.steamworks_thread.join()

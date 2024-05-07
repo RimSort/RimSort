@@ -23,7 +23,6 @@ from app.utils.event_bus import EventBus
 from app.utils.gui_info import GUIInfo
 from app.utils.system_info import SystemInfo
 from app.utils.watchdog import WatchdogHandler
-from app.views.game_configuration_panel import GameConfiguration
 from app.views.main_content_panel import MainContent
 from app.views.menu_bar import MenuBar
 from app.views.status_panel import Status
@@ -72,11 +71,6 @@ class MainWindow(QMainWindow):
         app_layout.setSpacing(0)  # Space between widgets
 
         # Create various panels on the application GUI
-        self.game_configuration = GameConfiguration.instance(
-            DEBUG_MODE=debug_mode,
-            settings_controller=self.settings_controller,
-            RIMSORT_VERSION=self.version_string,
-        )
         self.main_content_panel = MainContent(
             settings_controller=self.settings_controller
         )
@@ -84,14 +78,6 @@ class MainWindow(QMainWindow):
             self.__disable_enable_widgets
         )
         self.bottom_panel = Status()
-
-        # Connect the game configuration actions signals to Status panel to display fading action text
-        self.game_configuration.configuration_signal.connect(
-            self.bottom_panel.actions_slot
-        )
-        self.game_configuration.settings_panel.actions_signal.connect(
-            self.bottom_panel.actions_slot
-        )
 
         # Arrange all panels vertically on the main window layout
         app_layout.addWidget(self.main_content_panel.main_layout_frame)
@@ -206,7 +192,7 @@ class MainWindow(QMainWindow):
             self.watchdog_event_handler.watchdog_observer.start()
         except Exception as e:
             logger.warning(
-                f"Unable to initialize watchdog Observer due to exception: {e.__class__.__name__}"
+                f"Unable to initialize watchdog Observer due to exception: {str(e)}"
             )
 
     def shutdown_watchdog(self) -> None:

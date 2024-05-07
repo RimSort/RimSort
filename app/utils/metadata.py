@@ -50,7 +50,6 @@ class MetadataManager(QObject):
     mod_deleted_signal = Signal(str)
     mod_metadata_updated_signal = Signal(str)
     show_warning_signal = Signal(str, str, str, str)
-    update_game_configuration_signal = Signal()
 
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
@@ -63,6 +62,7 @@ class MetadataManager(QObject):
             logger.info("Initializing MetadataManager")
 
             self.settings_controller = settings_controller
+            self.steamcmd_wrapper = SteamcmdInterface.instance()
 
             # Initialize our threadpool for multithreaded parsing
             self.parser_threadpool = QThreadPool.globalInstance()
@@ -335,10 +335,60 @@ class MetadataManager(QObject):
         def batch_by_data_source(
             self, data_source: str, mod_directories: list[str]
         ) -> dict[str, Any]:
+            """
+            Returns a batch of mod path <-> uuid mappings for a given data source.
+
+            Parameters:
+                data_source (str): The data source to batch.
+                mod_directories (list[str]): A list of mod directories to use to filter items not in that batch.
+            """
             return {
                 path: self.mod_metadata_dir_mapper.get(path, str(uuid4()))
                 for path in mod_directories
             }
+
+        def purge_by_data_source(
+            self, data_source: str, batch: list[str] = None
+        ) -> None:
+            """
+            Removes all metadata for a given data source.
+
+            Optionally pass a batch of uuids to use to filter items not in that batch.
+
+            Parameters:
+                data_source (str): The data source to purge.
+                batch (list[str], optional): A list of uuids to use to filter items not in that batch.
+            """
+            if not batch:  # Purge all metadata for a given data source
+                uuids_to_remove = [
+                    uuid
+                    for uuid, metadata in self.internal_local_metadata.items()
+                    if metadata.get("data_source") == data_source
+                ]
+            else:  # Purge all metadata for a given data source that is not in the batch
+                uuids_to_remove = [
+                    uuid
+                    for uuid, metadata in self.internal_local_metadata.items()
+                    if metadata.get("data_source") == data_source and uuid not in batch
+                ]
+            # If we have uuids to remove
+            if uuids_to_remove:
+                logger.debug(
+                    f"[{data_source}] Purging leftover metadata from directories that no longer exist"
+                )
+                # Purge metadata from internal metadata
+                for uuid in uuids_to_remove:
+                    logger.debug(
+                        f"Removing metadata for {uuid}: {self.internal_local_metadata[uuid]}"
+                    )
+                    deleted_mod_packageid = self.internal_local_metadata[uuid].get(
+                        "packageid"
+                    )
+                    self.internal_local_metadata.pop(uuid)
+                    if deleted_mod_packageid and self.packageid_to_uuids.get(
+                        deleted_mod_packageid
+                    ):
+                        self.packageid_to_uuids[deleted_mod_packageid].remove(uuid)
 
         # Get & set Rimworld version string
         version_file_path = str(
@@ -379,9 +429,15 @@ class MetadataManager(QObject):
             )
             # Scan our Official expansions directory
             expansion_subdirectories = directories(data_path)
+            expansions_batch = batch_by_data_source(
+                self, "expansion", expansion_subdirectories
+            )
+            if not is_initial:
+                # Pop any uuids from metadata that are not in the batch - these can be leftover from a previous directory
+                purge_by_data_source(self, "expansion", list(expansions_batch.values()))
             # Query the batch
             self.process_batch(
-                batch=batch_by_data_source(self, "expansion", expansion_subdirectories),
+                batch=expansions_batch,
                 data_source="expansion",
             )
             # Wait for pool to complete
@@ -420,6 +476,8 @@ class MetadataManager(QObject):
             logger.error(
                 "Skipping parsing data from empty game data path. Is the game path configured?"
             )
+            # Check for and purge any found expansion metadata from cache
+            purge_by_data_source(self, "expansion")
         # Get and cache installed local/SteamCMD Workshop mods
         if (
             self.settings_controller.settings.local_folder
@@ -432,14 +490,21 @@ class MetadataManager(QObject):
             local_subdirectories = directories(
                 self.settings_controller.settings.local_folder
             )
+            local_batch = batch_by_data_source(self, "local", local_subdirectories)
+            if not is_initial:
+                # Pop any uuids from metadata that are not in the batch - these can be leftover from a previous directory
+                purge_by_data_source(self, "local", list(local_batch.values()))
+            # Query the batch
             self.process_batch(
-                batch=batch_by_data_source(self, "local", local_subdirectories),
+                batch=local_batch,
                 data_source="local",
             )
         else:
             logger.debug(
                 "Skipping parsing data from empty local mods path. Is the local mods path configured?"
             )
+            # Check for and purge any found local mod metadata from cache
+            purge_by_data_source(self, "local")
         # Get and cache installed Steam client Workshop mods
         if (
             self.settings_controller.settings.workshop_folder
@@ -451,14 +516,23 @@ class MetadataManager(QObject):
             workshop_subdirectories = directories(
                 self.settings_controller.settings.workshop_folder
             )
+            workshop_batch = batch_by_data_source(
+                self, "workshop", workshop_subdirectories
+            )
+            if not is_initial:
+                # Pop any uuids from metadata that are not in the batch - these can be leftover from a previous directory
+                purge_by_data_source(self, "workshop", list(workshop_batch.values()))
+            # Query the batch
             self.process_batch(
-                batch=batch_by_data_source(self, "workshop", workshop_subdirectories),
+                batch=workshop_batch,
                 data_source="workshop",
             )
         else:
             logger.debug(
                 "Skipping parsing data from empty workshop mods path. Is the workshop mods path configured?"
             )
+            # Check for and purge any found workshop mod metadata from cache
+            purge_by_data_source(self, "workshop")
         # Wait for pool to complete
         self.parser_threadpool.waitForDone()
         # Generate our file <-> UUID mappers for Watchdog and friends
@@ -481,6 +555,29 @@ class MetadataManager(QObject):
             },
         }
 
+    def __update_from_settings(self) -> None:
+        self.community_rules_repo = (
+            self.settings_controller.settings.external_community_rules_repo
+        )
+        self.dbs_path = AppInfo().databases_folder
+        self.external_community_rules_metadata_source = (
+            self.settings_controller.settings.external_community_rules_metadata_source
+        )
+        self.external_community_rules_file_path = (
+            self.settings_controller.settings.external_community_rules_file_path
+        )
+        self.external_steam_metadata_file_path = (
+            self.settings_controller.settings.external_steam_metadata_file_path
+        )
+        self.external_steam_metadata_source = (
+            self.settings_controller.settings.external_steam_metadata_source
+        )
+        self.game_path = self.settings_controller.settings.game_folder
+        self.local_path = self.settings_controller.settings.local_folder
+        self.steamcmd_acf_path = self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
+        self.user_rules_file_path = str(AppInfo().databases_folder / "userRules.json")
+        self.workshop_path = self.settings_controller.settings.workshop_folder
+
     def compile_metadata(self, uuids: list[str] = None) -> None:
         """
         Iterate through each expansion or mod and add new key-values describing the
@@ -489,10 +586,7 @@ class MetadataManager(QObject):
         # Compile metadata for all mods if uuids is None
         uuids = uuids or list(self.internal_local_metadata.keys())
         logger.info(f"Started compiling metadata for {len(uuids)} mods")
-        # Create an index for self.internal_local_metadata
-        packageid_to_uuid = {
-            self.internal_local_metadata[uuid].get("packageid"): uuid for uuid in uuids
-        }
+
         # Add dependencies to installed mods based on dependencies listed in About.xml TODO manifest.xml
         logger.info("Started compiling metadata from About.xml")
         for uuid in uuids:
@@ -598,13 +692,14 @@ class MetadataManager(QObject):
                             "loadTheseBefore",
                             "loadTheseAfter",
                             self.internal_local_metadata,
-                            packageid_to_uuid,
+                            self.packageid_to_uuids,
                         )
-                except:
+                except Exception as e:
                     mod_path = self.internal_local_metadata[uuid]["path"]
                     logger.warning(
                         f"About.xml syntax error. Unable to read <loadafter> tag from XML: {mod_path}"
                     )
+                    logger.debug(e)
 
             if self.internal_local_metadata[uuid].get("forceloadafter"):
                 try:
@@ -621,13 +716,14 @@ class MetadataManager(QObject):
                             "loadTheseBefore",
                             "loadTheseAfter",
                             self.internal_local_metadata,
-                            packageid_to_uuid,
+                            self.packageid_to_uuids,
                         )
-                except:
+                except Exception as e:
                     mod_path = self.internal_local_metadata[uuid]["path"]
                     logger.warning(
                         f"About.xml syntax error. Unable to read <forceloadafter> tag from XML: {mod_path}"
                     )
+                    logger.debug(e)
 
             if self.internal_local_metadata[uuid].get("loadafterbyversion"):
                 if self.internal_local_metadata[uuid]["loadafterbyversion"].get("v1.4"):
@@ -645,13 +741,14 @@ class MetadataManager(QObject):
                                 "loadTheseBefore",
                                 "loadTheseAfter",
                                 self.internal_local_metadata,
-                                packageid_to_uuid,
+                                self.packageid_to_uuids,
                             )
-                    except:
+                    except Exception as e:
                         mod_path = self.internal_local_metadata[uuid]["path"]
                         logger.warning(
                             f"About.xml syntax error. Unable to read <loadafterbyversion><v1.4> tag from XML: {mod_path}"
                         )
+                        logger.debug(e)
 
             # Current mod should be loaded BEFORE these mods
             # The current mod is a dependency for all these mods
@@ -670,13 +767,14 @@ class MetadataManager(QObject):
                             "loadTheseAfter",
                             "loadTheseBefore",
                             self.internal_local_metadata,
-                            packageid_to_uuid,
+                            self.packageid_to_uuids,
                         )
-                except:
+                except Exception as e:
                     mod_path = self.internal_local_metadata[uuid]["path"]
                     logger.warning(
                         f"About.xml syntax error. Unable to read <loadbefore> tag from XML: {mod_path}"
                     )
+                    logger.debug(e)
 
             if self.internal_local_metadata[uuid].get("forceloadbefore"):
                 try:
@@ -693,13 +791,14 @@ class MetadataManager(QObject):
                             "loadTheseAfter",
                             "loadTheseBefore",
                             self.internal_local_metadata,
-                            packageid_to_uuid,
+                            self.packageid_to_uuids,
                         )
-                except:
+                except Exception as e:
                     mod_path = self.internal_local_metadata[uuid]["path"]
                     logger.warning(
                         f"About.xml syntax error. Unable to read <forceloadbefore> tag from XML: {mod_path}"
                     )
+                    logger.debug(e)
 
             if self.internal_local_metadata[uuid].get("loadbeforebyversion"):
                 if self.internal_local_metadata[uuid]["loadbeforebyversion"].get(
@@ -719,9 +818,9 @@ class MetadataManager(QObject):
                                 "loadTheseAfter",
                                 "loadTheseBefore",
                                 self.internal_local_metadata,
-                                packageid_to_uuid,
+                                self.packageid_to_uuids,
                             )
-                    except:
+                    except Exception as e:
                         mod_path = self.internal_local_metadata[uuid]["path"]
                         logger.warning(
                             f"About.xml syntax error. Unable to read <loadbeforebyversion><v1.4> tag from XML: {mod_path}"
@@ -742,19 +841,21 @@ class MetadataManager(QObject):
                     db_packageid = db_packageid.lower()  # Normalize packageid
                     steam_id_to_package_id[publishedfileid] = db_packageid
                     self.steamdb_packageid_to_name[db_packageid] = mod_data.get("name")
-                    package_uuid = packageid_to_uuid.get(db_packageid)
-                    if (
-                        package_uuid
-                        and self.internal_local_metadata[package_uuid].get(
-                            "publishedfileid"
-                        )
-                        == publishedfileid
-                    ):
-                        dependencies = mod_data.get("dependencies")
-                        if dependencies:
-                            tracking_dict.setdefault(db_packageid, set()).update(
-                                dependencies.keys()
-                            )
+                    potential_uuids = self.packageid_to_uuids.get(db_packageid)
+                    if potential_uuids:  # Potential uuids is a set
+                        for uuid in potential_uuids:
+                            if (
+                                uuid
+                                and self.internal_local_metadata[uuid].get(
+                                    "publishedfileid"
+                                )
+                                == publishedfileid
+                            ):
+                                dependencies = mod_data.get("dependencies")
+                                if dependencies:
+                                    tracking_dict.setdefault(uuid, set()).update(
+                                        dependencies.keys()
+                                    )
             logger.debug(
                 f"Tracking {len(steam_id_to_package_id)} SteamDB packageids for lookup"
             )
@@ -763,19 +864,17 @@ class MetadataManager(QObject):
             )
             # For each mod that exists in self.internal_local_metadata -> dependencies (in Steam ID form)
             for (
-                installed_mod_package_id,
-                set_of_dependency_steam_ids,
+                installed_mod_uuid,
+                set_of_dependency_publishedfileids,
             ) in tracking_dict.items():
-                for dependency_steam_id in set_of_dependency_steam_ids:
+                for dependency_steam_id in set_of_dependency_publishedfileids:
                     # Dependencies are added as package_ids. We should be able to
                     # resolve the package_id from the Steam ID for any mod, unless
                     # the metadata actually references a Steam ID that itself does not
                     # wire to a package_id defined in an installed & valid mod.
                     if dependency_steam_id in steam_id_to_package_id:
                         add_dependency_to_mod_from_steamdb(
-                            self.internal_local_metadata[
-                                packageid_to_uuid[installed_mod_package_id]
-                            ],
+                            self.internal_local_metadata[installed_mod_uuid],
                             steam_id_to_package_id[dependency_steam_id],
                             self.internal_local_metadata,
                         )
@@ -797,7 +896,8 @@ class MetadataManager(QObject):
                 # Note: requiring the package be in self.internal_local_metadata should be fine, as
                 # if the mod doesn't exist self.internal_local_metadata, then either mod_data or dependency_id
                 # will be None, and then we don't insert a dependency
-                if package_id.lower() in packageid_to_uuid:
+                if package_id.lower() in self.packageid_to_uuids:
+                    potential_uuids = self.packageid_to_uuids.get(package_id.lower())
                     load_these_after = self.external_community_rules[package_id].get(
                         "loadBefore"
                     )
@@ -809,16 +909,17 @@ class MetadataManager(QObject):
                         # Cannot call add_load_rule_to_mod outside of this for loop,
                         # as that expects a list
                         for load_this_after in load_these_after:
-                            add_load_rule_to_mod(
-                                self.internal_local_metadata[
-                                    packageid_to_uuid[package_id.lower()]
-                                ],  # Already checked above
-                                load_this_after,  # Lower() done in call
-                                "loadTheseAfter",
-                                "loadTheseBefore",
-                                self.internal_local_metadata,
-                                packageid_to_uuid,
-                            )
+                            for uuid in potential_uuids:
+                                add_load_rule_to_mod(
+                                    self.internal_local_metadata[
+                                        uuid
+                                    ],  # Already checked above
+                                    load_this_after,  # Lower() done in call
+                                    "loadTheseAfter",
+                                    "loadTheseBefore",
+                                    self.internal_local_metadata,
+                                    self.packageid_to_uuids,
+                                )
                     load_these_before = self.external_community_rules[package_id].get(
                         "loadAfter"
                     )
@@ -828,16 +929,17 @@ class MetadataManager(QObject):
                         )
                         # In Alphabetical, load_these_before is at least an empty dict
                         for load_this_before in load_these_before:
-                            add_load_rule_to_mod(
-                                self.internal_local_metadata[
-                                    packageid_to_uuid[package_id.lower()]
-                                ],  # Already checked above
-                                load_this_before,  # lower() done in call
-                                "loadTheseBefore",
-                                "loadTheseAfter",
-                                self.internal_local_metadata,
-                                packageid_to_uuid,
-                            )
+                            for uuid in potential_uuids:
+                                add_load_rule_to_mod(
+                                    self.internal_local_metadata[
+                                        uuid
+                                    ],  # Already checked above
+                                    load_this_before,  # lower() done in call
+                                    "loadTheseBefore",
+                                    "loadTheseAfter",
+                                    self.internal_local_metadata,
+                                    self.packageid_to_uuids,
+                                )
                     load_this_bottom = self.external_community_rules[package_id].get(
                         "loadBottom"
                     )
@@ -845,9 +947,8 @@ class MetadataManager(QObject):
                         logger.debug(
                             f'Current mod should load at the bottom of a mods list, and will be considered a "tier 3" mod'
                         )
-                        self.internal_local_metadata[
-                            packageid_to_uuid[package_id.lower()]
-                        ]["loadBottom"] = True
+                        for uuid in potential_uuids:
+                            self.internal_local_metadata[uuid]["loadBottom"] = True
             logger.info("Finished adding dependencies from Community Rules")
             log_deps_order_info(self.internal_local_metadata)
         else:
@@ -861,7 +962,8 @@ class MetadataManager(QObject):
                 # Note: requiring the package be in self.internal_local_metadata should be fine, as
                 # if the mod doesn't exist self.internal_local_metadata, then either mod_data or dependency_id
                 # will be None, and then we don't insert a dependency
-                if package_id.lower() in packageid_to_uuid:
+                if package_id.lower() in self.packageid_to_uuids:
+                    potential_uuids = self.packageid_to_uuids.get(package_id.lower())
                     load_these_after = self.external_user_rules[package_id].get(
                         "loadBefore"
                     )
@@ -873,16 +975,17 @@ class MetadataManager(QObject):
                         # Cannot call add_load_rule_to_mod outside of this for loop,
                         # as that expects a list
                         for load_this_after in load_these_after:
-                            add_load_rule_to_mod(
-                                self.internal_local_metadata[
-                                    packageid_to_uuid[package_id.lower()]
-                                ],  # Already checked above
-                                load_this_after,  # lower() done in call
-                                "loadTheseAfter",
-                                "loadTheseBefore",
-                                self.internal_local_metadata,
-                                packageid_to_uuid,
-                            )
+                            for uuid in potential_uuids:
+                                add_load_rule_to_mod(
+                                    self.internal_local_metadata[
+                                        uuid
+                                    ],  # Already checked above
+                                    load_this_after,  # lower() done in call
+                                    "loadTheseAfter",
+                                    "loadTheseBefore",
+                                    self.internal_local_metadata,
+                                    self.packageid_to_uuids,
+                                )
 
                     load_these_before = self.external_user_rules[package_id].get(
                         "loadAfter"
@@ -893,16 +996,17 @@ class MetadataManager(QObject):
                         )
                         # In Alphabetical, load_these_before is at least an empty dict
                         for load_this_before in load_these_before:
-                            add_load_rule_to_mod(
-                                self.internal_local_metadata[
-                                    packageid_to_uuid[package_id.lower()]
-                                ],  # Already checked above
-                                load_this_before,  # lower() done in call
-                                "loadTheseBefore",
-                                "loadTheseAfter",
-                                self.internal_local_metadata,
-                                packageid_to_uuid,
-                            )
+                            for uuid in potential_uuids:
+                                add_load_rule_to_mod(
+                                    self.internal_local_metadata[
+                                        uuid
+                                    ],  # Already checked above
+                                    load_this_before,  # lower() done in call
+                                    "loadTheseBefore",
+                                    "loadTheseAfter",
+                                    self.internal_local_metadata,
+                                    self.packageid_to_uuids,
+                                )
                     load_this_bottom = self.external_user_rules[package_id].get(
                         "loadBottom"
                     )
@@ -910,9 +1014,8 @@ class MetadataManager(QObject):
                         logger.debug(
                             f'Current mod should load at the bottom of a mods list, and will be considered a "tier 3" mod'
                         )
-                        self.internal_local_metadata[
-                            packageid_to_uuid[package_id.lower()]
-                        ]["loadBottom"] = True
+                        for uuid in potential_uuids:
+                            self.internal_local_metadata[uuid]["loadBottom"] = True
             logger.info("Finished adding dependencies from User Rules")
             log_deps_order_info(self.internal_local_metadata)
         else:
@@ -1000,7 +1103,10 @@ class MetadataManager(QObject):
         logger.debug(
             f"Processing deletion for {self.internal_local_metadata.get(uuid, {}).get('name', 'Unknown')}: {mod_directory}"
         )
+        deleted_mod_packageid = self.internal_local_metadata[uuid].get("packageid")
         self.internal_local_metadata.pop(uuid, None)
+        if deleted_mod_packageid and self.packageid_to_uuids.get(deleted_mod_packageid):
+            self.packageid_to_uuids[deleted_mod_packageid].remove(uuid)
         self.mod_deleted_signal.emit(uuid)
 
     def process_update(
@@ -1043,7 +1149,7 @@ class MetadataManager(QObject):
 
         # If we are refreshing cache from user action, update user paths as well in case of change
         if not is_initial:
-            self.update_game_configuration_signal.emit()
+            self.__update_from_settings()
 
         # Update paths from game configuration
 
@@ -1630,7 +1736,7 @@ def add_load_rule_to_mod(
     explicit_key: str,
     indirect_key: str,
     all_mods: Dict[str, Any],
-    packageid_to_uuid: Dict[str, Any],
+    packageid_to_uuids: Dict[str, Any],
 ) -> None:
     """
     Load order data is collected only if the mod referenced is in `all_mods`, as
@@ -1645,7 +1751,7 @@ def add_load_rule_to_mod(
     B should load before A
     :param indirect_key:
     :param all_mods: dict of all mods to verify keys against
-    :param packageid_to_uuid: a helper dict to reduce work
+    :param packageid_to_uuids: a helper dict to reduce work
     """
     if not mod_data:
         return
@@ -1671,18 +1777,19 @@ def add_load_rule_to_mod(
                 logger.error(f"Load rule is not an expected str or dict: {dep}")
     else:
         logger.error(
-            f"Load order rules is not a single string/dict or a list of strigs/dicts: [{dependency_or_dependency_ids}]"
+            f"Load order rules is not a single string/dict/list of strings/dicts: [{dependency_or_dependency_ids}]"
         )
         return
 
     mod_data.setdefault(explicit_key, set())
     for dep in dependencies:
-        if dep in packageid_to_uuid:
-            uuid = packageid_to_uuid[dep]
+        if dep in packageid_to_uuids:
             mod_data[explicit_key].add((dep, True))
-            all_mods[uuid].setdefault(indirect_key, set()).add(
-                (mod_data["packageid"], False)
-            )
+            potential_dep_uuids = packageid_to_uuids[dep]
+            for dep_uuid in potential_dep_uuids:
+                all_mods[dep_uuid].setdefault(indirect_key, set()).add(
+                    (mod_data["packageid"], False)
+                )
 
 
 def get_mods_from_list(
@@ -1987,7 +2094,7 @@ class SteamDatabaseBuilder(QThread):
                     v["appid"]: {
                         "appid": True,
                         "url": f'https://store.steampowered.com/app/{v["appid"]}',
-                        "packageid": v.get("packageid"),
+                        "packageId": v.get("packageid"),
                         "name": v.get("name"),
                         "authors": (
                             ", ".join(v.get("authors").get("li"))

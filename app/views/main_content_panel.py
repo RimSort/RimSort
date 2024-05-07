@@ -65,7 +65,6 @@ from app.utils.steam.webapi.wrapper import CollectionImport
 from app.utils.todds.wrapper import ToddsInterface
 from app.utils.xml import json_to_xml_write, xml_path_to_json
 
-from app.views.game_configuration_panel import GameConfiguration
 from app.views.mod_info_panel import ModInfo
 from app.views.mods_panel import ModsPanel, ModsPanelSortKey
 from app.windows.missing_mods_panel import MissingModsPrompt
@@ -98,7 +97,7 @@ class MainContent(QObject):
         """
         Initialize the main content panel.
 
-        :param game_configuration: game configuration panel to get paths
+        :param settings_controller: the settings controller for the application
         """
         if not hasattr(self, "initialized"):
             super(MainContent, self).__init__()
@@ -110,6 +109,7 @@ class MainContent(QObject):
             EventBus().do_check_for_application_update.connect(
                 self._do_check_for_update
             )
+            EventBus().do_validate_steam_client.connect(self._do_validate_steam_client)
             EventBus().do_open_mod_list.connect(self._do_import_list_file_xml)
             EventBus().do_import_mod_list_from_rentry.connect(
                 self._do_import_list_rentry
@@ -189,16 +189,10 @@ class MainContent(QObject):
             # Initialize Steam(CMD) integraations
             self.steam_browser = SteamcmdDownloader = None
             self.steamcmd_runner = RunnerPanel = None
-            self.steamcmd_wrapper = SteamcmdInterface.instance(
-                self.settings_controller.settings.steamcmd_install_path,
-                self.settings_controller.settings.steamcmd_validate_downloads,
-            )
+            self.steamcmd_wrapper = SteamcmdInterface.instance()
 
             # Initialize MetadataManager
             self.metadata_manager = MetadataManager.instance()
-            self.metadata_manager.update_game_configuration_signal.connect(
-                self.__update_game_configuration
-            )
 
             # BASE LAYOUT
             self.main_layout = QHBoxLayout()
@@ -232,10 +226,6 @@ class MainContent(QObject):
             self.metadata_manager.mod_metadata_updated_signal.connect(
                 self.mods_panel.on_mod_metadata_updated  # Connect MetadataManager to ModPanel for mod metadata updates
             )
-            GameConfiguration.instance().configuration_signal.connect(self.actions_slot)
-            GameConfiguration.instance().settings_panel.actions_signal.connect(
-                self.actions_slot
-            )  # Settings
             self.mods_panel.active_mods_list.key_press_signal.connect(
                 self.__handle_active_mod_key_press
             )
@@ -309,6 +299,44 @@ class MainContent(QObject):
         elif args or kwargs:
             raise ValueError("MainContent instance has already been initialized.")
         return cls._instance
+
+    def check_if_essential_paths_are_set(self) -> bool:
+        """
+        When the user starts the app for the first time, none
+        of the paths will be set. We should check for this and
+        not throw a fatal error trying to load mods until the
+        user has had a chance to set paths.
+        """
+        game_folder_path = self.settings_controller.settings.game_folder
+        config_folder_path = self.settings_controller.settings.config_folder
+        logger.debug(f"Game folder: {game_folder_path}")
+        logger.debug(f"Config folder: {config_folder_path}")
+        if not game_folder_path or not config_folder_path:
+            logger.warning("Essential path(s) not set!")
+            show_warning(
+                text="Essential path(s) not set!",
+                information=(
+                    "RimSort requires, at the minimum, for the game install folder and the "
+                    "config folder paths to be set. Please set both these either manually "
+                    "or by using the AutoDetect functionality."
+                ),
+            )
+            return False
+        if not os.path.exists(game_folder_path) or not os.path.exists(
+            config_folder_path
+        ):
+            logger.warning("Essential path(s) invalid!")
+            show_warning(
+                text="Essential path(s) are invalid!",
+                information=(
+                    "RimSort has detected that the game install folder path or the "
+                    "config folder path is invalid. Please check that both of these path(s) "
+                    "reference folders that actually exist at the specified location."
+                ),
+            )
+            return False
+        logger.info("Essential paths set!")
+        return True
 
     def ___get_relative_middle(self, some_list):
         rect = some_list.contentsRect()
@@ -511,37 +539,6 @@ class MainContent(QObject):
         :param uuid: uuid of mod
         """
         self.mod_info_panel.display_mod_info(uuid=uuid)
-
-    def __update_game_configuration(self) -> None:
-        self.metadata_manager.community_rules_repo = (
-            self.settings_controller.settings.external_community_rules_repo
-        )
-        self.metadata_manager.dbs_path = AppInfo().databases_folder
-        self.metadata_manager.external_community_rules_metadata_source = (
-            self.settings_controller.settings.external_community_rules_metadata_source
-        )
-        self.metadata_manager.external_community_rules_file_path = (
-            self.settings_controller.settings.external_community_rules_file_path
-        )
-        self.metadata_manager.external_steam_metadata_file_path = (
-            self.settings_controller.settings.external_steam_metadata_file_path
-        )
-        self.metadata_manager.external_steam_metadata_source = (
-            self.settings_controller.settings.external_steam_metadata_source
-        )
-        self.metadata_manager.game_path = self.settings_controller.settings.game_folder
-        self.metadata_manager.local_path = (
-            self.settings_controller.settings.local_folder
-        )
-        self.metadata_manager.steamcmd_acf_path = (
-            self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
-        )
-        self.metadata_manager.user_rules_file_path = str(
-            AppInfo().databases_folder / "userRules.json"
-        )
-        self.metadata_manager.workshop_path = (
-            self.settings_controller.settings.workshop_folder
-        )
 
     def __repopulate_lists(self, is_initial: bool = False) -> None:
         """
@@ -752,7 +749,7 @@ class MainContent(QObject):
             return
         # NUITKA
         logger.debug("Checking for RimSort update...")
-        current_version = GameConfiguration.instance().rimsort_version.lower()
+        current_version = self.metadata_manager.game_version
         try:
             json_response = self.__do_get_github_release_info()
         except Exception as e:
@@ -915,6 +912,9 @@ class MainContent(QObject):
                 text=f"You are already running the latest release: {tag_name}",
             )
 
+    def _do_validate_steam_client(self) -> None:
+        platform_specific_open("steam://validate/294100")
+
     def __do_download_extract_release_to_tempdir(self, url: str) -> None:
         with ZipFile(BytesIO(requests_get(url).content)) as zipobj:
             zipobj.extractall(gettempdir())
@@ -992,7 +992,7 @@ class MainContent(QObject):
             )
             self.mods_panel.signal_clear_search(list_type="Inactive")
         # Check if paths are set
-        if GameConfiguration.instance().check_if_essential_paths_are_set():
+        if self.check_if_essential_paths_are_set():
             # Run expensive calculations to set cache data
             self._do_threaded_loading_animation(
                 gif_path=str(
@@ -1452,7 +1452,7 @@ class MainContent(QObject):
         logger.info(f"Collected {len(active_mods)} active mods for export")
         # Build our report
         active_mods_clipboard_report = (
-            f"Created with RimSort {GameConfiguration.instance().rimsort_version}"
+            f"Created with RimSort {self.version_string}"
             + f"\nRimWorld game version this list was created for: {self.metadata_manager.game_version}"
             + f"\nTotal # of mods: {len(active_mods)}\n"
         )
@@ -1542,7 +1542,7 @@ class MainContent(QObject):
         # Build our report
         active_mods_rentry_report = (
             f"# RimWorld mod list       ![](https://github.com/RimSort/RimSort/blob/main/docs/rentry_preview.png?raw=true)"
-            + f"\nCreated with RimSort {GameConfiguration.instance().rimsort_version}"
+            + f"\nCreated with RimSort {self.version_string}"
             + f"\nMod list was created for game version: `{self.metadata_manager.game_version}`"
             + f"\n!!! info Local mods are marked as yellow labels with packageid in brackets."
             + f"\n\n\n\n!!! note Mod list length: `{len(active_mods)}`\n"
@@ -2053,7 +2053,6 @@ class MainContent(QObject):
                         ]
                         # Map the execution of the subscription actions to the pool of processes
                         pool.map(SteamworksSubscriptionHandler.run, actions)
-                    platform_specific_open("steam://validate/294100")
                     self.steamworks_in_use = False
                 else:
                     logger.warning(

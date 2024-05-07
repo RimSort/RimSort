@@ -220,35 +220,29 @@ class ModUpdaterPrompt(QWidget):
 
     def _populate_from_metadata(self) -> None:
         # Check our metadata for available updates, append row if found by data source
-        for mod_metadata in self.internal_mod_metadata.values():
-            # If we have data to compare and publishing has been updated since the last time it was touched
+        for metadata in self.internal_mod_metadata.values():
             if (
-                mod_metadata.get("internal_time_touched")
-                and mod_metadata.get("external_time_updated")
-                and mod_metadata["external_time_updated"]
-                > mod_metadata["internal_time_touched"]
+                (metadata.get("steamcmd") or metadata.get("data_source") == "workshop")
+                and metadata.get("internal_time_touched")
+                and metadata.get("external_time_updated")
+                and metadata["external_time_updated"]
+                > metadata["internal_time_touched"]
             ):
-                logger.debug(
-                    f"Update found for Workshop mod: {mod_metadata.get('name')}"
-                )
                 if not self.updates_found:
                     self.updates_found = True
                 # Retrieve values from metadata
-                name = mod_metadata.get("name")
-                publishedfileid = mod_metadata.get("publishedfileid")
-                if mod_metadata.get("steamcmd"):
-                    mod_source = "SteamCMD"
-                elif mod_metadata["data_source"] == "workshop":
-                    mod_source = "Steam"
+                name = metadata.get("name")
+                publishedfileid = metadata.get("publishedfileid")
+                mod_source = "SteamCMD" if metadata.get("steamcmd") else "Steam"
                 internal_time_touched = strftime(
                     "%Y-%m-%d %H:%M:%S",
-                    localtime(mod_metadata["internal_time_touched"]),
+                    localtime(metadata["internal_time_touched"]),
                 )
                 external_time_updated = strftime(
                     "%Y-%m-%d %H:%M:%S",
-                    localtime(mod_metadata["external_time_updated"]),
+                    localtime(metadata["external_time_updated"]),
                 )
-                # Add row
+                # Add row to table
                 self._add_row(
                     name=name,
                     publishedfileid=publishedfileid,

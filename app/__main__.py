@@ -11,10 +11,12 @@ from loguru import logger
 
 from app.utils.app_info import AppInfo
 
-if __name__ == "__main__":
-    # One-time initialization of AppInfo class (this must be done in __main__ so we can use __file__)
-    # Initialize as early as possible!
-    AppInfo(main_file=__file__)
+# One-time initialization of AppInfo class (this must be done in __main__ so we can use __file__)
+# Initialize as early as possible!
+# When the application is frozen, __file__ should be the same when we are __process_main__. 
+# This should be the same relative path as the initial __file__ in __main__, i.e. on Win11:
+# __file__ is [C:\Users\Tristin\RimSort\build\__MAIN~1.DIS\__main__.py] when __main__ and __process_main__
+AppInfo(main_file=__file__)
 
 from app.controllers.app_controller import AppController
 
