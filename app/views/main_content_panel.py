@@ -2532,8 +2532,6 @@ class MainContent(QObject):
     def _do_open_rule_editor(
         self, compact: bool, initial_mode=str, packageid=None
     ) -> None:
-        if GameConfiguration.instance().settings_panel.isVisible():
-            GameConfiguration.instance().settings_panel.close()  # Close this if we came from game configuration
         self.rule_editor = RuleEditor(
             # Initialization options
             compact=compact,
@@ -2612,9 +2610,6 @@ class MainContent(QObject):
             self.settings_controller.settings.save()
 
     def _do_build_database_thread(self) -> None:
-        # If settings panel is still open, close it.
-        if GameConfiguration.instance().settings_panel.isVisible():
-            GameConfiguration.instance().settings_panel.close()
         # Prompt user file dialog to choose/create new DB
         logger.info("Opening file dialog to specify output file")
         output_path = show_dialogue_file(
@@ -2723,9 +2718,6 @@ class MainContent(QObject):
             self._do_refresh()
 
     def _do_download_entire_workshop(self, action: str) -> None:
-        # If settings panel is still open, close it.
-        if GameConfiguration.instance().settings_panel.isVisible():
-            GameConfiguration.instance().settings_panel.close()
         # DB Builder is used to run DQ and grab entirety of
         # any available Steam Workshop PublishedFileIDs
         self.db_builder = SteamDatabaseBuilder(
