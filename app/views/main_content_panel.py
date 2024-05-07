@@ -1327,9 +1327,12 @@ class MainContent(QObject):
             logger.debug("USER ACTION: pressed cancel, passing")
 
     def _do_import_list_rentry(self) -> None:
+        # Create an instance of RentryImport
         rentry_import = RentryImport()
+        # Open the RentryImport dialogue
+        rentry_import.import_rentry_link()
         # Exit if user cancels or no package IDs
-        if rentry_import.exec() != QDialog.Accepted or not rentry_import.package_ids:
+        if not rentry_import.package_ids:
             logger.debug("USER ACTION: pressed cancel or no package IDs, passing")
             return
         # Clear Active and Inactive search and data source filter

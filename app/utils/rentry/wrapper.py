@@ -3,19 +3,14 @@ import sys
 from json import loads as json_loads
 
 import requests
-from PySide6.QtWidgets import (
-    QDialog,
-    QVBoxLayout,
-    QLineEdit,
-    QMessageBox,
-    QPushButton,
-)
 from loguru import logger
+
+from app.models.dialogue import show_dialogue_input, show_warning, show_fatal_error
 
 # Constants
 BASE_URL = "https://rentry.co"
+BASE_URL_RAW = f"{BASE_URL}/raw"
 API_NEW_ENDPOINT = f"{BASE_URL}/api/new"
-
 _HEADERS = {"Referer": BASE_URL}
 
 
@@ -63,15 +58,24 @@ class RentryUpload:
                 )
 
     def handle_upload_failure(self, response):
-        # Log and handle upload failure details
+        """
+        Log and handle upload failure details.
+        """
         error_content = response.get("content", "Unknown")
         errors = response.get("errors", "").split(".")
         logger.error(f"Error: {error_content}")
         for error in errors:
             error and logger.warning(error)
+        show_fatal_error(
+            title="Rentry Upload Error",
+            text=f"Rentry.co upload failed! Error: {error_content}",
+        )
         logger.error("RentryUpload failed!")
 
     def new(self, text):
+        """
+        Upload new entry to Rentry.co.
+        """
         # Initialize an HttpClient for making HTTP requests
         client = HttpClient()
 
@@ -85,12 +89,20 @@ class RentryUpload:
         }
 
         # Perform the POST request to create a new entry
-        return json_loads(client.post(API_NEW_ENDPOINT, payload, headers=_HEADERS).data)
+        return json_loads(
+            client.post(API_NEW_ENDPOINT, data=payload, headers=_HEADERS).data
+        )
 
 
-class RentryImport(QDialog):
+class RentryImport:
+    """
+    Class to handle importing Rentry.co links and extracting package IDs.
+    """
+
     def __init__(self):
-        super().__init__()
+        """
+        Initialize the Rentry Import instance.
+        """
         self.package_ids: list[str] = (
             []
         )  # Initialize an empty list to store package_ids
@@ -98,58 +110,67 @@ class RentryImport(QDialog):
 
     def input_dialog(self):
         # Initialize the UI for entering Rentry.co links
-        logger.info("Rentry.co link Input UI initializing")
-        self.setWindowTitle("Add Rentry.co link")
+        link_input = show_dialogue_input(
+            title="Enter Rentry.co link",
+            text="Enter the Rentry.co link:",
+        )
 
-        layout = QVBoxLayout(self)
-
-        self.link_input = QLineEdit(self)
-        layout.addWidget(self.link_input)
-
-        self.import_rentry_link_button = QPushButton("Import Rentry Link", self)
-        self.import_rentry_link_button.clicked.connect(self.import_rentry_link)
-        layout.addWidget(self.import_rentry_link_button)
-        logger.info("Rentry.co link Input UI initialized successfully!")
+        self.link_input = link_input
+        self.import_rentry_link()
+        logger.info("Rentry link Input UI initialized successfully!")
 
     def is_valid_rentry_link(self, link):
-        # Check if the provided link is a valid Rentry link
-        return link.startswith(BASE_URL)
+        """
+        Check if the provided link is a valid Rentry link.
+        """
+        return link.startswith(BASE_URL) or link.startswith(BASE_URL_RAW)
 
     def import_rentry_link(self):
-        # Handle the import button click event
-        logger.info("Import Rentry Link clicked")
-        rentry_link = self.link_input.text()
+        """
+        Import Rentry link and extract package IDs.
+        """
+        rentry_link = self.link_input[0]
 
-        # Check if the input link is a valid Rentry link
         if not self.is_valid_rentry_link(rentry_link):
-            logger.error("Invalid Rentry link. Please enter a valid Rentry link.")
-            # Show an error message box
-            error_message = "Invalid Rentry link. Please enter a valid Rentry link."
-            QMessageBox.critical(self, "Invalid Link", error_message)
+            logger.warning("Invalid Rentry link. Please enter a valid Rentry link.")
+            # Show warning message box
+            show_warning(
+                title="Invalid Link",
+                text="Invalid Rentry link. Please enter a valid Rentry link.",
+            )
             return
 
         try:
-            raw_url = f"{rentry_link}/raw"
+            if rentry_link.endswith("/raw"):
+                raw_url = rentry_link
+            else:
+                raw_url = f"{rentry_link}/raw"
+
             response = requests.get(raw_url)
 
             if response.status_code == 200:
                 # Decode the content using UTF-8
                 page_content = response.content.decode("utf-8")
-                pattern = r"\{packageid:\s*([\w.]+)\}|packageid:\s*([\w.]+)"
-                matches = re.findall(pattern, page_content)
-                self.package_ids = [
-                    match[0] if match[0] else match[1]
-                    for match in matches
-                    if match[0] or match[1]
+
+                # Define regex patterns for both variations of 'packageid' and 'packageId'
+                patterns = [
+                    r"package(?:id|Id)?:\s*([^}\s]+)",
+                    r"package(?:id|Id)?:\s*\[?([^\]]+)\]?",
                 ]
+
+                # Extract package IDs using each pattern
+                for pattern in patterns:
+                    self.package_ids.extend(re.findall(pattern, page_content))
+
                 logger.info("Parsed package_ids successfully.")
         except Exception as e:
             logger.error(
                 f"An error occurred while fetching rentry.co content: {str(e)}"
             )
-
-        # Close the dialog after processing the link
-        self.accept()
+            show_fatal_error(
+                title="Error",
+                text=f"An error occurred: {str(e)}",
+            )
 
 
 if __name__ == "__main__":
