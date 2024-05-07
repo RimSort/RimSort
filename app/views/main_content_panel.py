@@ -92,7 +92,9 @@ class MainContent(QObject):
             cls._instance = super(MainContent, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self, settings_controller: SettingsController) -> None:
+    def __init__(
+        self, settings_controller: SettingsController, version_string: str
+    ) -> None:
         """
         Initialize the main content panel.
 
@@ -103,8 +105,9 @@ class MainContent(QObject):
             logger.debug("Initializing MainContent")
 
             self.settings_controller = settings_controller
-            EventBus().settings_have_changed.connect(self._on_settings_have_changed)
+            self.version_string = version_string
 
+            EventBus().settings_have_changed.connect(self._on_settings_have_changed)
             EventBus().do_check_for_application_update.connect(
                 self._do_check_for_update
             )
