@@ -321,8 +321,6 @@ class SteamworksSubscriptionHandler:
                         )
                         # Create API calls
                         steamworks_interface.steamworks.Workshop.UnsubscribeItem(pfid)
-                        sleep(self.interval)
-                        steamworks_interface.steamworks.Workshop.UnsubscribeItem(pfid)
                         # Sleep for the interval if we have more than one pfid to action on
                         if len(self.pfid_or_pfids) > 1:
                             sleep(self.interval)
