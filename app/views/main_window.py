@@ -72,7 +72,8 @@ class MainWindow(QMainWindow):
 
         # Create various panels on the application GUI
         self.main_content_panel = MainContent(
-            settings_controller=self.settings_controller
+            settings_controller=self.settings_controller,
+            version_string=self.version_string,
         )
         self.main_content_panel.disable_enable_widgets_signal.connect(
             self.__disable_enable_widgets
