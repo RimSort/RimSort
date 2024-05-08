@@ -29,7 +29,6 @@ except ImportError:
     GIT_EXISTS = False
 
 from github import Github
-from pyperclip import copy as copy_to_clipboard
 from PySide6.QtCore import QEventLoop, QProcess, Qt, Slot
 from PySide6.QtWidgets import (
     QDialog,
@@ -37,7 +36,6 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
 )
-from pyperclip import copy as copy_to_clipboard
 from requests import get as requests_get
 
 from app.models.animations import LoadingAnimation
@@ -48,6 +46,7 @@ from app.sort.topo_sort import *
 from app.utils.event_bus import EventBus
 from app.utils.generic import (
     chunks,
+    copy_to_clipboard_safely,
     delete_files_except_extension,
     open_url_browser,
     platform_specific_open,
@@ -1481,7 +1480,7 @@ class MainContent(QObject):
             information='Click "Show Details" to see the full report!',
             details=f"{active_mods_clipboard_report}",
         )
-        copy_to_clipboard(active_mods_clipboard_report)
+        copy_to_clipboard_safely(active_mods_clipboard_report)
 
     def _do_upload_list_rentry(self) -> None:
         """
@@ -1626,7 +1625,7 @@ class MainContent(QObject):
             and rentry_uploader.url != None
             and "https://rentry.co/" in rentry_uploader.url
         ):
-            copy_to_clipboard(rentry_uploader.url)
+            copy_to_clipboard_safely(rentry_uploader.url)
             show_information(
                 title="Uploaded active mod list",
                 text=f"Uploaded active mod list report to Rentry.co! The URL has been copied to your clipboard:\n\n{rentry_uploader.url}",
@@ -1643,7 +1642,7 @@ class MainContent(QObject):
     def _on_do_upload_rimsort_log(self) -> None:
         ret = upload_data_to_0x0_st(str(AppInfo().user_log_folder / "RimSort.log"))
         if ret:
-            copy_to_clipboard(ret)
+            copy_to_clipboard_safely(ret)
             show_information(
                 title="Uploaded file",
                 text=f"Uploaded RimSort log to http://0x0.st/",
@@ -1655,7 +1654,7 @@ class MainContent(QObject):
     def _on_do_upload_rimsort_old_log(self) -> None:
         ret = upload_data_to_0x0_st(str(AppInfo().user_log_folder / "RimSort.old.log"))
         if ret:
-            copy_to_clipboard(ret)
+            copy_to_clipboard_safely(ret)
             show_information(
                 title="Uploaded file",
                 text=f"Uploaded RimSort log to http://0x0.st/",
@@ -1674,7 +1673,7 @@ class MainContent(QObject):
         if os.path.exists(player_log_path):
             ret = upload_data_to_0x0_st(player_log_path)
             if ret:
-                copy_to_clipboard(ret)
+                copy_to_clipboard_safely(ret)
                 show_information(
                     title="Uploaded file",
                     text=f"Uploaded RimWorld log to http://0x0.st/",

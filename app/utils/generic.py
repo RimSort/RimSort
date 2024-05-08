@@ -10,9 +10,10 @@ from re import sub
 from stat import S_IRWXU, S_IRWXG, S_IRWXO
 
 from loguru import logger
+from pyperclip import copy as copy_to_clipboard
 from requests import post as requests_post
 
-from app.models.dialogue import show_warning
+from app.models.dialogue import show_fatal_error, show_warning
 
 
 def chunks(_list: list, limit: int):
@@ -24,6 +25,23 @@ def chunks(_list: list, limit: int):
     """
     for i in range(0, len(_list), limit):
         yield _list[i : i + limit]
+
+
+def copy_to_clipboard_safely(text: str) -> None:
+    """
+    Safely copies text to clipboard
+
+    :param text: text to copy to clipboard
+    """
+    try:
+        copy_to_clipboard(text)
+    except Exception as e:
+        logger.error(f"Failed to copy to clipboard: {e}")
+        show_fatal_error(
+            title="Failed to copy to clipboard.",
+            text="RimSort failed to copy the text to your clipboard. Please copy it manually.",
+            details=str(e),
+        )
 
 
 def delete_files_except_extension(directory, extension):

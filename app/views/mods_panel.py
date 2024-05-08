@@ -33,7 +33,6 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 from loguru import logger
-from pyperclip import copy as copy_to_clipboard
 
 from app.controllers.settings_controller import SettingsController
 from app.models.dialogue import (
@@ -45,6 +44,7 @@ from app.utils.app_info import AppInfo
 from app.utils.constants import SEARCH_DATA_SOURCE_FILTER_INDEXES
 from app.utils.event_bus import EventBus
 from app.utils.generic import (
+    copy_to_clipboard_safely,
     delete_files_except_extension,
     delete_files_only_extension,
     handle_remove_read_only,
@@ -1391,7 +1391,7 @@ class ModListWidget(QListWidget):
                         elif (
                             action == copy_packageId_to_clipboard_action
                         ):  # ACTION: Copy packageId to clipboard
-                            copy_to_clipboard(mod_metadata["packageid"])
+                            copy_to_clipboard_safely(mod_metadata["packageid"])
                         elif (
                             action == copy_url_to_clipboard_action
                         ):  # ACTION: Copy URL to clipboard
@@ -1415,7 +1415,7 @@ class ModListWidget(QListWidget):
                                         "url", mod_metadata.get("steam_url")
                                     )
                                 if url:
-                                    copy_to_clipboard(url)
+                                    copy_to_clipboard_safely(url)
                         # Edit mod rules action
                         elif action == edit_mod_rules_action:
                             self.edit_rules_signal.emit(
