@@ -3,9 +3,10 @@ from pathlib import Path
 from typing import Optional
 
 from PySide6.QtCore import QObject, Slot, Qt
-from PySide6.QtWidgets import QFileDialog, QMessageBox, QApplication
+from PySide6.QtWidgets import QApplication
 from loguru import logger
 
+from app.models.dialogue import show_dialogue_confirmation, show_dialogue_file
 from app.models.settings import Settings
 from app.utils.event_bus import EventBus
 from app.utils.generic import platform_specific_open
@@ -553,19 +554,11 @@ class SettingsController(QObject):
         """
         Reset the settings to their default values.
         """
-        message_box = QMessageBox(self.settings_dialog)
-        message_box.setWindowTitle("Reset to defaults")
-        message_box.setText(
-            "Are you sure you want to reset all settings to their default values?"
+        answer = show_dialogue_confirmation(
+            title="Reset to defaults",
+            text="Are you sure you want to reset all settings to their default values?",
         )
-        message_box.setStandardButtons(
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-        )
-        message_box.setDefaultButton(QMessageBox.StandardButton.No)
-        message_box.setWindowModality(Qt.WindowModality.WindowModal)
-
-        pressed_button = message_box.exec()
-        if pressed_button == QMessageBox.StandardButton.No:
+        if answer == "Cancel":
             return
 
         self.settings.apply_default_settings()
@@ -613,21 +606,31 @@ class SettingsController(QObject):
         self._last_file_dialog_path = str(game_location)
 
     def _on_game_location_choose_button_clicked_macos(self) -> Optional[Path]:
-        game_location, _ = QFileDialog.getOpenFileName(
-            parent=self.settings_dialog,
-            dir=str(self._last_file_dialog_path),
+        """
+        Open a directory dialog to select the game location for macOS and handle the result.
+        """
+        game_location = show_dialogue_file(
+            mode="open_dir",
+            caption="Select Game Location",
+            _dir=str(self._last_file_dialog_path),
         )
-        if game_location == "":
+        if not game_location:
             return None
-        return Path(game_location).resolve()
+
+        return Path(game_location)
 
     def _on_game_location_choose_button_clicked_non_macos(self) -> Optional[Path]:
-        game_location = QFileDialog.getExistingDirectory(
-            parent=self.settings_dialog,
-            dir=str(self._last_file_dialog_path),
+        """
+        Open a directory dialog to select the game location and handle the result.
+        """
+        game_location = show_dialogue_file(
+            mode="open_dir",
+            caption="Select Game Location",
+            _dir=str(self._last_file_dialog_path),
         )
-        if game_location == "":
+        if not game_location:
             return None
+
         return Path(game_location).resolve()
 
     @Slot()
@@ -649,14 +652,16 @@ class SettingsController(QObject):
         """
         Open a directory dialog to select the config folder and handle the result.
         """
-        config_folder_location = QFileDialog.getExistingDirectory(
-            parent=self.settings_dialog,
-            dir=str(self._last_file_dialog_path),
+        config_folder_location = show_dialogue_file(
+            mode="open_dir",
+            caption="Select Config Folder",
+            _dir=str(self._last_file_dialog_path),
         )
-        if config_folder_location == "":
+        if not config_folder_location:
             return
+
         self.settings_dialog.config_folder_location.setText(config_folder_location)
-        self._last_file_dialog_path = config_folder_location
+        self._last_file_dialog_path = Path(config_folder_location).parent
 
     @Slot()
     def _on_config_folder_location_clear_button_clicked(self) -> None:
@@ -677,16 +682,18 @@ class SettingsController(QObject):
         """
         Open a directory dialog to select the Steam mods folder and handle the result.
         """
-        steam_mods_folder_location = QFileDialog.getExistingDirectory(
-            parent=self.settings_dialog,
-            dir=str(self._last_file_dialog_path),
+        steam_mods_folder_location = show_dialogue_file(
+            mode="open_dir",
+            caption="Select Steam Mods Folder",
+            _dir=str(self._last_file_dialog_path),
         )
-        if steam_mods_folder_location == "":
+        if not steam_mods_folder_location:
             return
+
         self.settings_dialog.steam_mods_folder_location.setText(
             steam_mods_folder_location
         )
-        self._last_file_dialog_path = steam_mods_folder_location
+        self._last_file_dialog_path = Path(steam_mods_folder_location).parent
 
     @Slot()
     def _on_steam_mods_folder_location_clear_button_clicked(self) -> None:
@@ -707,16 +714,18 @@ class SettingsController(QObject):
         """
         Open a directory dialog to select the local mods folder and handle the result.
         """
-        local_mods_folder_location = QFileDialog.getExistingDirectory(
-            parent=self.settings_dialog,
-            dir=str(self._last_file_dialog_path),
+        local_mods_folder_location = show_dialogue_file(
+            mode="open_dir",
+            caption="Select Local Mods Folder",
+            _dir=str(self._last_file_dialog_path),
         )
-        if local_mods_folder_location == "":
+        if not local_mods_folder_location:
             return
+
         self.settings_dialog.local_mods_folder_location.setText(
             local_mods_folder_location
         )
-        self._last_file_dialog_path = local_mods_folder_location
+        self._last_file_dialog_path = Path(local_mods_folder_location).parent
 
     @Slot()
     def _on_local_mods_folder_location_clear_button_clicked(self) -> None:
@@ -727,17 +736,11 @@ class SettingsController(QObject):
         """
         Clear the settings dialog's location fields.
         """
-        message_box = QMessageBox(self.settings_dialog)
-        message_box.setWindowTitle("Clear all locations")
-        message_box.setText("Are you sure you want to clear all locations?")
-        message_box.setStandardButtons(
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        answer = show_dialogue_confirmation(
+            title="Clear all locations",
+            text="Are you sure you want to clear all locations?",
         )
-        message_box.setDefaultButton(QMessageBox.StandardButton.No)
-        message_box.setWindowModality(Qt.WindowModality.WindowModal)
-
-        pressed_button = message_box.exec()
-        if pressed_button == QMessageBox.StandardButton.No:
+        if answer == "Cancel":
             return
 
         self.settings_dialog.game_location.setText("")
@@ -935,16 +938,18 @@ class SettingsController(QObject):
         """
         Open a file dialog to select the community rules database and handle the result.
         """
-        community_rules_db_location, _ = QFileDialog.getOpenFileName(
-            parent=self.settings_dialog,
-            dir=str(self._last_file_dialog_path),
+        community_rules_db_location = show_dialogue_file(
+            mode="open",
+            caption="Select Community Rules Database",
+            _dir=str(self._last_file_dialog_path),
         )
-        if community_rules_db_location == "":
+        if not community_rules_db_location:
             return
+
         self.settings_dialog.community_rules_db_local_file.setText(
             community_rules_db_location
         )
-        self._last_file_dialog_path = str(Path(community_rules_db_location).parent)
+        self._last_file_dialog_path = Path(community_rules_db_location).parent
 
     @Slot()
     def _on_steam_workshop_db_radio_clicked(self, checked: bool) -> None:
@@ -1006,32 +1011,36 @@ class SettingsController(QObject):
         """
         Open a file dialog to select the Steam workshop database and handle the result.
         """
-        steam_workshop_db_location, _ = QFileDialog.getOpenFileName(
-            parent=self.settings_dialog,
-            dir=str(self._last_file_dialog_path),
+        steam_workshop_db_location = show_dialogue_file(
+            mode="open",
+            caption="Select Steam Workshop Database",
+            _dir=str(self._last_file_dialog_path),
         )
-        if steam_workshop_db_location == "":
+        if not steam_workshop_db_location:
             return
+
         self.settings_dialog.steam_workshop_db_local_file.setText(
             steam_workshop_db_location
         )
-        self._last_file_dialog_path = str(Path(steam_workshop_db_location).parent)
+        self._last_file_dialog_path = Path(steam_workshop_db_location).parent
 
     @Slot()
     def _on_steamcmd_install_location_choose_button_clicked(self) -> None:
         """
         Open a file dialog to select the Steamcmd install location and handle the result.
         """
-        steamcmd_install_location = QFileDialog.getExistingDirectory(
-            parent=self.settings_dialog,
-            dir=str(self._last_file_dialog_path),
+        steamcmd_install_location = show_dialogue_file(
+            mode="open_dir",
+            caption="Select Steamcmd Install Location",
+            _dir=str(self._last_file_dialog_path),
         )
-        if steamcmd_install_location == "":
+        if not steamcmd_install_location:
             return
+
         self.settings_dialog.steamcmd_install_location.setText(
             steamcmd_install_location
         )
-        self._last_file_dialog_path = str(Path(steamcmd_install_location).parent)
+        self._last_file_dialog_path = Path(steamcmd_install_location).parent
 
     @Slot()
     def _on_steamcmd_import_acf_button_clicked(self) -> None:
