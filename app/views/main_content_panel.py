@@ -1,12 +1,10 @@
 import datetime
-from functools import partial
-from gc import collect
-from pathlib import Path
 import platform
 import subprocess
 import sys
 import webbrowser
 from functools import partial
+from gc import collect
 from io import BytesIO
 from math import ceil
 from multiprocessing import cpu_count, Pool
@@ -31,7 +29,6 @@ except ImportError:
 from github import Github
 from PySide6.QtCore import QEventLoop, QProcess, Qt, Slot
 from PySide6.QtWidgets import (
-    QDialog,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -62,7 +59,7 @@ from app.utils.steam.steamworks.wrapper import (
 )
 from app.utils.steam.webapi.wrapper import CollectionImport
 from app.utils.todds.wrapper import ToddsInterface
-from app.utils.xml import json_to_xml_write, xml_path_to_json
+from app.utils.xml import json_to_xml_write
 
 from app.views.mod_info_panel import ModInfo
 from app.views.mods_panel import ModsPanel, ModsPanelSortKey
@@ -1376,12 +1373,14 @@ class MainContent(QObject):
             self.__missing_mods_prompt()
 
     def _do_import_list_workshop_collection(self) -> None:
+        # Create an instance of collection_import
         collection_import = CollectionImport(metadata_manager=self.metadata_manager)
+
+        # Trigger the import dialogue and get the result
+        collection_import.import_collection_link()
+
         # Exit if user cancels or no package IDs
-        if (
-            collection_import.exec() != QDialog.Accepted
-            or not collection_import.package_ids
-        ):
+        if not collection_import.package_ids:
             logger.debug("USER ACTION: pressed cancel or no package IDs, passing")
             return
         # Clear Active and Inactive search and data source filter
