@@ -91,6 +91,9 @@ class MenuBar(QObject):
         self.paste_action = QAction("Paste", self)
         self.paste_action.setShortcut(QKeySequence("Ctrl+V"))
         self.edit_menu.addAction(self.paste_action)
+        self.edit_menu.addSeparator()
+        self.rule_editor_action = QAction("Rule Editor…", self)
+        self.edit_menu.addAction(self.rule_editor_action)
         # Download menu
         self.download_menu = self.menu_bar.addMenu("Download")
         self.add_git_mod_action = QAction("Add Git Mod", self)
@@ -169,6 +172,9 @@ class MenuBar(QObject):
         self.paste_action = QAction("Paste", self)
         self.paste_action.setShortcut(QKeySequence("Ctrl+V"))
         self.edit_menu.addAction(self.paste_action)
+        self.edit_menu.addSeparator()
+        self.rule_editor_action = QAction("Rule Editor…", self)
+        self.edit_menu.addAction(self.rule_editor_action)
         # Download menu
         self.file_menu = self.menu_bar.addMenu("Download")
         self.add_git_mod_action = QAction("Add Git Mod", self)

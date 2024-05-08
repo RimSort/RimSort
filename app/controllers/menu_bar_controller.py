@@ -79,6 +79,8 @@ class MenuBarController(QObject):
 
         self.menu_bar.paste_action.triggered.connect(self._on_menu_bar_paste_triggered)
 
+        self.menu_bar.rule_editor_action.triggered.connect(EventBus().do_rule_editor)
+
         # Download menu
 
         self.menu_bar.add_git_mod_action.triggered.connect(
