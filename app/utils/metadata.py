@@ -1,5 +1,6 @@
 import json
 import os
+from re import match
 import traceback
 from pathlib import Path
 from time import localtime, strftime, time
@@ -626,19 +627,24 @@ class MetadataManager(QObject):
                     )
 
             if self.internal_local_metadata[uuid].get("moddependenciesbyversion"):
-                if self.internal_local_metadata[uuid]["moddependenciesbyversion"].get(
-                    "v1.4"
-                ):
-                    dependencies_by_ver = self.internal_local_metadata[uuid][
-                        "moddependenciesbyversion"
-                    ]["v1.4"].get("li")
-                    if dependencies_by_ver:
+                major, minor = self.game_version.split(".")[
+                    :2
+                ]  # Split the version and take the first two parts
+                version_regex = rf"v{major}\.{minor}"  # Construct the regex to match both major and minor versions
+                for version, dependencies_by_ver in self.internal_local_metadata[uuid][
+                    "moddependenciesbyversion"
+                ].items():
+                    if (
+                        dependencies_by_ver
+                        and dependencies_by_ver.get("li")
+                        and match(version_regex, version)
+                    ):
                         logger.debug(
-                            f"Current mod requires these mods by version to work: {dependencies_by_ver}"
+                            f"Current mod requires these mods by version to work: {dependencies_by_ver['li']}"
                         )
                         add_dependency_to_mod(
                             self.internal_local_metadata[uuid],
-                            dependencies_by_ver,
+                            dependencies_by_ver["li"],
                             self.internal_local_metadata,
                         )
 
@@ -657,19 +663,24 @@ class MetadataManager(QObject):
                     )
 
             if self.internal_local_metadata[uuid].get("incompatiblewithbyversion"):
-                if self.internal_local_metadata[uuid]["incompatiblewithbyversion"].get(
-                    "v1.4"
-                ):
-                    incompatibilities_by_ver = self.internal_local_metadata[uuid][
-                        "incompatiblewithbyversion"
-                    ]["v1.4"].get("li")
-                    if incompatibilities_by_ver:
+                major, minor = self.game_version.split(".")[
+                    :2
+                ]  # Split the version and take the first two parts
+                version_regex = rf"v{major}\.{minor}"  # Construct the regex to match both major and minor versions
+                for version, incompatibilities_by_ver in self.internal_local_metadata[
+                    uuid
+                ]["incompatiblewithbyversion"].items():
+                    if (
+                        incompatibilities_by_ver
+                        and incompatibilities_by_ver.get("li")
+                        and match(version_regex, version)
+                    ):
                         logger.debug(
-                            f"Current mod is incompatible by version with these mods: {incompatibilities_by_ver}"
+                            f"Current mod is incompatible by version with these mods: {incompatibilities_by_ver['li']}"
                         )
                         add_incompatibility_to_mod(
                             self.internal_local_metadata[uuid],
-                            incompatibilities_by_ver,
+                            incompatibilities_by_ver["li"],
                             self.internal_local_metadata,
                         )
 
@@ -695,9 +706,11 @@ class MetadataManager(QObject):
                             self.packageid_to_uuids,
                         )
                 except Exception as e:
-                    mod_path = self.internal_local_metadata[uuid]["path"]
+                    mod_metadata_path = self.internal_local_metadata[uuid][
+                        "metadata_file_path"
+                    ]
                     logger.warning(
-                        f"About.xml syntax error. Unable to read <loadafter> tag from XML: {mod_path}"
+                        f"About.xml syntax error. Unable to read <loadafter> tag from XML: {mod_metadata_path}"
                     )
                     logger.debug(e)
 
@@ -719,34 +732,43 @@ class MetadataManager(QObject):
                             self.packageid_to_uuids,
                         )
                 except Exception as e:
-                    mod_path = self.internal_local_metadata[uuid]["path"]
+                    mod_metadata_path = self.internal_local_metadata[uuid][
+                        "mod_metadata_path"
+                    ]
                     logger.warning(
-                        f"About.xml syntax error. Unable to read <forceloadafter> tag from XML: {mod_path}"
+                        f"About.xml syntax error. Unable to read <forceloadafter> tag from XML: {mod_metadata_path}"
                     )
                     logger.debug(e)
 
             if self.internal_local_metadata[uuid].get("loadafterbyversion"):
-                if self.internal_local_metadata[uuid]["loadafterbyversion"].get("v1.4"):
+                major, minor = self.game_version.split(".")[:2]
+                version_regex = rf"v{major}\.{minor}"
+                for version, load_these_before_by_ver in self.internal_local_metadata[
+                    uuid
+                ]["loadafterbyversion"].items():
                     try:
-                        load_these_before_by_ver = self.internal_local_metadata[uuid][
-                            "loadafterbyversion"
-                        ]["v1.4"].get("li")
-                        if load_these_before_by_ver:
+                        if (
+                            load_these_before_by_ver
+                            and load_these_before_by_ver.get("li")
+                            and match(version_regex, version)
+                        ):
                             logger.debug(
-                                f"Current mod should load after these mods for v1.4: {load_these_before_by_ver}"
+                                f"Current mod should load before these mods for {version}: {load_these_before_by_ver['li']}"
                             )
                             add_load_rule_to_mod(
                                 self.internal_local_metadata[uuid],
-                                load_these_before_by_ver,
+                                load_these_before_by_ver["li"],
                                 "loadTheseBefore",
                                 "loadTheseAfter",
                                 self.internal_local_metadata,
                                 self.packageid_to_uuids,
                             )
                     except Exception as e:
-                        mod_path = self.internal_local_metadata[uuid]["path"]
+                        mod_metadata_path = self.internal_local_metadata[uuid].get(
+                            "metadata_file_path"
+                        )
                         logger.warning(
-                            f"About.xml syntax error. Unable to read <loadafterbyversion><v1.4> tag from XML: {mod_path}"
+                            f"Error processing <loadafterbyversion> tag for {version} from XML: {mod_metadata_path}"
                         )
                         logger.debug(e)
 
@@ -770,9 +792,11 @@ class MetadataManager(QObject):
                             self.packageid_to_uuids,
                         )
                 except Exception as e:
-                    mod_path = self.internal_local_metadata[uuid]["path"]
+                    mod_metadata_path = self.internal_local_metadata[uuid][
+                        "metadata_file_path"
+                    ]
                     logger.warning(
-                        f"About.xml syntax error. Unable to read <loadbefore> tag from XML: {mod_path}"
+                        f"About.xml syntax error. Unable to read <loadbefore> tag from XML: {mod_metadata_path}"
                     )
                     logger.debug(e)
 
@@ -794,37 +818,45 @@ class MetadataManager(QObject):
                             self.packageid_to_uuids,
                         )
                 except Exception as e:
-                    mod_path = self.internal_local_metadata[uuid]["path"]
+                    mod_metadata_path = self.internal_local_metadata[uuid][
+                        "metadata_file_path"
+                    ]
                     logger.warning(
-                        f"About.xml syntax error. Unable to read <forceloadbefore> tag from XML: {mod_path}"
+                        f"About.xml syntax error. Unable to read <forceloadbefore> tag from XML: {mod_metadata_path}"
                     )
                     logger.debug(e)
 
             if self.internal_local_metadata[uuid].get("loadbeforebyversion"):
-                if self.internal_local_metadata[uuid]["loadbeforebyversion"].get(
-                    "v1.4"
-                ):
+                major, minor = self.game_version.split(".")[:2]
+                version_regex = rf"v{major}\.{minor}"
+                for version, load_these_after_by_ver in self.internal_local_metadata[
+                    uuid
+                ]["loadbeforebyversion"].items():
                     try:
-                        load_these_after_by_ver = self.internal_local_metadata[uuid][
-                            "loadbeforebyversion"
-                        ]["v1.4"].get("li")
-                        if load_these_after_by_ver:
+                        if (
+                            load_these_after_by_ver
+                            and load_these_after_by_ver.get("li")
+                            and match(version_regex, version)
+                        ):
                             logger.debug(
-                                f"Current mod should load before these mods for v1.4: {load_these_after_by_ver}"
+                                f"Current mod should load after these mods for {version}: {load_these_after_by_ver['li']}"
                             )
                             add_load_rule_to_mod(
                                 self.internal_local_metadata[uuid],
-                                load_these_after_by_ver,
+                                load_these_after_by_ver["li"],
                                 "loadTheseAfter",
                                 "loadTheseBefore",
                                 self.internal_local_metadata,
                                 self.packageid_to_uuids,
                             )
                     except Exception as e:
-                        mod_path = self.internal_local_metadata[uuid]["path"]
-                        logger.warning(
-                            f"About.xml syntax error. Unable to read <loadbeforebyversion><v1.4> tag from XML: {mod_path}"
+                        mod_metadata_path = self.internal_local_metadata[uuid].get(
+                            "metadata_file_path"
                         )
+                        logger.warning(
+                            f"Error processing <loadbeforebyversion> tag for {version} from XML: {mod_metadata_path}"
+                        )
+                        logger.debug(e)
 
         logger.info("Finished adding dependencies through About.xml information")
         log_deps_order_info(self.internal_local_metadata)
