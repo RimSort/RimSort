@@ -205,19 +205,31 @@ class SteamcmdInterface:
                     f"[{symlink_source_path}] -> " + symlink_destination_path,
                 )
                 if answer == "&Yes":
-                    runner.message(
-                        f"[{symlink_source_path}] -> " + symlink_destination_path
-                    )
-                    if self.system != "Windows":
-                        os.symlink(
-                            symlink_source_path,
-                            symlink_destination_path,
-                            target_is_directory=True,
+                    try:
+                        runner.message(
+                            f"[{symlink_source_path}] -> " + symlink_destination_path
                         )
-                    else:
-                        from _winapi import CreateJunction
+                        if self.system != "Windows":
+                            os.symlink(
+                                symlink_source_path,
+                                symlink_destination_path,
+                                target_is_directory=True,
+                            )
+                        else:
+                            from _winapi import CreateJunction
 
-                        CreateJunction(symlink_source_path, symlink_destination_path)
+                            CreateJunction(
+                                symlink_source_path, symlink_destination_path
+                            )
+                    except Exception as e:
+                        runner.message(
+                            f"Failed to create symlink. Error: {type(e).__name__}: {str(e)}"
+                        )
+                        show_fatal_error(
+                            "SteamcmdInterface",
+                            f"Failed to create symlink for {self.system}",
+                            f"Error: {type(e).__name__}: {str(e)}",
+                        )
 
 
 if __name__ == "__main__":
