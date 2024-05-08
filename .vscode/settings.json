@@ -11,7 +11,8 @@
     "editor.formatOnType": true,
     "editor.formatOnPaste": true,
     "editor.formatOnSave": true,
-    "python.terminal.activateEnvironment": true,
     "search.maxResults": 100000,
     "editor.defaultFormatter": "ms-python.black-formatter",
+    "python.terminal.activateEnvironment": true,
+    "python.terminal.activateEnvInCurrentTerminal": true,
 }
