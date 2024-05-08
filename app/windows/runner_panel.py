@@ -270,7 +270,11 @@ class RunnerPanel(QWidget):
             elif ") quit" in line:
                 line = line.replace(") quit", ")\n\nquit")
             # Progress bar output support
-            if self.steamcmd_current_pfid and "Success. Downloaded item " in line:
+            if (
+                self.steamcmd_current_pfid
+                and "Success. Downloaded item " in line
+                and self.steamcmd_current_pfid in self.steamcmd_download_tracking
+            ):
                 self.steamcmd_download_tracking.remove(self.steamcmd_current_pfid)
                 self.progress_bar.setValue(self.progress_bar.value() + 1)
             elif "ERROR! Download item " in line:
