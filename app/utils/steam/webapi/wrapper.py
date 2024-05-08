@@ -7,12 +7,12 @@ from time import time
 from typing import Any, Dict, Optional, Tuple
 
 from PySide6.QtCore import QObject, Signal
-from PySide6.QtWidgets import QDialog, QLineEdit, QMessageBox, QPushButton, QVBoxLayout
 from loguru import logger
 from requests import post as requests_post
 from requests.exceptions import JSONDecodeError
 from steam.webapi import WebAPI
 
+from app.models.dialogue import show_dialogue_input, show_warning
 from app.utils.app_info import AppInfo
 from app.utils.constants import RIMWORLD_DLC_METADATA
 from app.utils.generic import chunks
@@ -29,31 +29,44 @@ BASE_URL_STEAMFILES = "https://steamcommunity.com/sharedfiles/filedetails/?id="
 BASE_URL_WORKSHOP = "https://steamcommunity.com/workshop/filedetails/?id="
 
 
-class CollectionImport(QDialog):
+class CollectionImport:
+    """
+    Class to handle importing workshop collection links and extracting package IDs.
+    """
+
     def __init__(self, metadata_manager):
-        super().__init__()
+        """
+        Initialize the CollectionImport instance.
+
+        Args:
+            metadata_manager: The metadata manager instance.
+        """
         self.metadata_manager = metadata_manager
-        self.package_ids: list[str] = []  # Initialize an empty list to store packageids
+        self.package_ids: list[str] = (
+            []
+        )  # Initialize an empty list to store package IDs
         self.publishedfileids: list[str] = []  # Initialize an empty list to store pfids
         self.input_dialog()  # Call the input_dialog method to set up the UI
 
     def input_dialog(self):
         # Initialize the UI for entering collection links
-        logger.info("Workshop collection link Input UI initializing")
-        self.setWindowTitle("Add Workshop collection link")
-
-        layout = QVBoxLayout(self)
-
-        self.link_input = QLineEdit(self)
-        layout.addWidget(self.link_input)
-
-        self.import_collection_link_button = QPushButton("Import collection", self)
-        self.import_collection_link_button.clicked.connect(self.import_collection_link)
-        layout.addWidget(self.import_collection_link_button)
+        self.link_input = show_dialogue_input(
+            title="Add Workshop collection link",
+            text="Add Workshop collection link",
+        )
+        self.import_collection_link()
         logger.info("Workshop collection link Input UI initialized successfully!")
 
     def is_valid_collection_link(self, link):
-        # Check if the provided link is a valid workshop collection link
+        """
+        Check if the provided link is a valid workshop collection link.
+
+        Args:
+            link: The collection link to validate.
+
+        Returns:
+            bool: True if the link is valid, False otherwise.
+        """
         return link.startswith(BASE_URL) and (
             BASE_URL_STEAMFILES in link or BASE_URL_WORKSHOP in link
         )
@@ -61,7 +74,7 @@ class CollectionImport(QDialog):
     def import_collection_link(self):
         # Handle the import button click event
         logger.info("Import Workshop collection clicked")
-        collection_link = self.link_input.text()
+        collection_link = self.link_input[0]
         steamdb = (
             self.metadata_manager.external_steam_metadata
             if self.metadata_manager
@@ -71,22 +84,24 @@ class CollectionImport(QDialog):
         # Check if the input link is a valid workshop collection link
         if not self.is_valid_collection_link(collection_link):
             logger.error(
-                "Invalid Workshop collection link. Please enter a valid collection link."
+                "Invalid Workshop collection link. Please enter a valid Workshop collection link."
             )
-            # Show an error message box
-            error_message = "Invalid Workshop collection link. Please enter a valid collection link."
-            QMessageBox.critical(self, "Invalid Link", error_message)
+            # Show warning message box
+            show_warning(
+                title="Invalid Link",
+                text="Invalid Workshop collection link. Please enter a valid Workshop collection link.",
+            )
             return
 
         # Check if there is a steamdb supplied
         if not steamdb:
-            error_message = "Cannot import collection without a SteamDB supplied."
-            logger.error(error_message)
-            # Show an error message box
-            QMessageBox.critical(
-                self,
-                "Cannot import collection without SteamDB supplied! Please configure Steam Workshop Database in settings.",
-                error_message,
+            logger.error(
+                "Cannot import collection without SteamDB supplied! Please configure Steam Workshop Database in settings."
+            )
+            # Show warning message box
+            show_warning(
+                title="Invalid Database",
+                text="Cannot import collection without SteamDB supplied! Please configure Steam Workshop Database in settings.",
             )
             return
 
@@ -114,9 +129,6 @@ class CollectionImport(QDialog):
             logger.error(
                 f"An error occurred while fetching collection content: {str(e)}"
             )
-
-        # Close the dialog after processing the link
-        self.accept()
 
 
 class DynamicQuery(QObject):
