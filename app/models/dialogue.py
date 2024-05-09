@@ -13,6 +13,21 @@ from loguru import logger
 
 DEFAULT_TITLE = "RimSort"
 
+# Constants
+RichText = Qt.TextFormat.RichText
+Accepted = QInputDialog.accepted
+Yes = QMessageBox.StandardButton.Yes
+No = QMessageBox.StandardButton.No
+Cancel = QMessageBox.StandardButton.Cancel
+Question = QMessageBox.Icon.Question
+Warning = QMessageBox.Icon.Warning
+Critical = QMessageBox.Icon.Critical
+Information = QMessageBox.Icon.Information
+ActionRole = QMessageBox.ButtonRole.ActionRole
+ResetRole = QMessageBox.ButtonRole.ResetRole
+ApplyRole = QMessageBox.ButtonRole.ApplyRole
+DestructiveRole = QMessageBox.ButtonRole.DestructiveRole
+
 
 def show_dialogue_confirmation(
     title: Optional[str] = None,
@@ -34,8 +49,8 @@ def show_dialogue_confirmation(
 
     # Set up the message box
     dialogue = QMessageBox()
-    dialogue.setTextFormat(Qt.RichText)
-    dialogue.setIcon(QMessageBox.Question)
+    dialogue.setTextFormat(RichText)
+    dialogue.setIcon(Question)
     dialogue.setObjectName("dialogue")
     if title:
         dialogue.setWindowTitle(title)
@@ -43,10 +58,8 @@ def show_dialogue_confirmation(
         dialogue.setWindowTitle(DEFAULT_TITLE)
 
     # Remove standard buttons
-    dialogue.setStandardButtons(
-        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel
-    )
-    dialogue.setDefaultButton(QMessageBox.StandardButton.Cancel)
+    dialogue.setStandardButtons(Yes | Cancel)
+    dialogue.setDefaultButton(Cancel)
 
     # Add data
     if text:
@@ -82,8 +95,8 @@ def show_dialogue_conditional(
 
     # Set up the message box
     dialogue = QMessageBox()
-    dialogue.setTextFormat(Qt.RichText)
-    dialogue.setIcon(QMessageBox.Question)
+    dialogue.setTextFormat(RichText)
+    dialogue.setIcon(Question)
     dialogue.setObjectName("dialogue")
     if title:
         dialogue.setWindowTitle(title)
@@ -93,23 +106,23 @@ def show_dialogue_conditional(
     # Create our buttons (accommodate any overrides passed)
     if button_text_override:
         # Remove standard buttons
-        dialogue.setStandardButtons(QMessageBox.Cancel)
+        dialogue.setStandardButtons(Cancel)
 
         # Add custom buttons
 
         # Custom 1
         custom_btn_1 = QPushButton(button_text_override[0])
         custom_btn_1.setFixedWidth(custom_btn_1.sizeHint().width())
-        dialogue.addButton(custom_btn_1, QMessageBox.ActionRole)
+        dialogue.addButton(custom_btn_1, ActionRole)
         # Custom 2
         custom_btn_2 = QPushButton(button_text_override[1])
         custom_btn_2.setFixedWidth(custom_btn_2.sizeHint().width())
-        dialogue.addButton(custom_btn_2, QMessageBox.ActionRole)
-        dialogue.setEscapeButton(QMessageBox.Cancel)
+        dialogue.addButton(custom_btn_2, ActionRole)
+        dialogue.setEscapeButton(Cancel)
     else:
         # Configure buttons
-        dialogue.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-        dialogue.setEscapeButton(QMessageBox.No)
+        dialogue.setStandardButtons(Yes | No)
+        dialogue.setEscapeButton(No)
 
     # Add data
     if text:
@@ -144,7 +157,7 @@ def show_dialogue_input(
         dialogue.setTextValue(value)
 
     # Show the message box & return response
-    if dialogue.exec() == QInputDialog.Accepted:
+    if dialogue.exec() == Accepted:
         result = True
     else:
         result = False
@@ -187,8 +200,8 @@ def show_information(
     )
     # Set up the message box
     info_message_box = QMessageBox()
-    info_message_box.setTextFormat(Qt.RichText)
-    info_message_box.setIcon(QMessageBox.Information)
+    info_message_box.setTextFormat(RichText)
+    info_message_box.setIcon(Information)
     info_message_box.setObjectName("dialogue")
     if title:
         info_message_box.setWindowTitle(title)
@@ -226,8 +239,8 @@ def show_warning(
     )
     # Set up the message box
     warning_message_box = QMessageBox()
-    warning_message_box.setTextFormat(Qt.RichText)
-    warning_message_box.setIcon(QMessageBox.Warning)
+    warning_message_box.setTextFormat(RichText)
+    warning_message_box.setIcon(Warning)
     warning_message_box.setObjectName("dialogue")
     if title:
         warning_message_box.setWindowTitle(title)
@@ -268,8 +281,8 @@ def show_fatal_error(
     )
     # Set up the message box
     fatal_message_box = QMessageBox()
-    fatal_message_box.setTextFormat(Qt.RichText)
-    fatal_message_box.setIcon(QMessageBox.Critical)
+    fatal_message_box.setTextFormat(RichText)
+    fatal_message_box.setIcon(Critical)
     fatal_message_box.setObjectName("dialogue")
     if title:
         fatal_message_box.setWindowTitle(title)
