@@ -152,16 +152,14 @@ class RentryImport:
                 # Decode the content using UTF-8
                 page_content = response.content.decode("utf-8")
 
-                # Define regex patterns for both variations of 'packageid' and 'packageId'
-                patterns = [
-                    r"package(?:id|Id)?:\s*([^}\s]+)",
-                    r"package(?:id|Id)?:\s*\[?([^\]]+)\]?",
+                # Define regex pattern for both variations of 'packageid' and 'packageId'
+                pattern = r"(?i){packageid:\s*([\w.]+)\}|packageid:\s*([\w.]+)"
+                matches = re.findall(pattern, page_content)
+                self.package_ids = [
+                    match[0] if match[0] else match[1]
+                    for match in matches
+                    if match[0] or match[1]
                 ]
-
-                # Extract package IDs using each pattern
-                for pattern in patterns:
-                    self.package_ids.extend(re.findall(pattern, page_content))
-
                 logger.info("Parsed package_ids successfully.")
         except Exception as e:
             logger.error(
