@@ -2190,7 +2190,7 @@ class MainContent(QObject):
             repo_folder_name = os.path.split(repo_url)[1]
             # Calculate path from generated folder name
             repo_path = str((Path(base_path) / repo_folder_name))
-            if os.path.exists(repo_path):  # If local repo does exists
+            if os.path.exists(repo_path):  # If local repo does exist
                 # Prompt to user to handle
                 answer = show_dialogue_conditional(
                     title="Existing repository found",
@@ -2206,7 +2206,7 @@ class MainContent(QObject):
                         "Update existing",
                     ],
                 )
-                if answer == "&Cancel":
+                if answer == "Cancel":
                     logger.debug(
                         f"User cancelled prompt. Skipping any {repo_folder_name} repository actions."
                     )
