@@ -24,7 +24,7 @@ def xml_path_to_json(path: str) -> Dict[str, Any]:
                 data = xmltodict.parse(file.read(), dict_constructor=dict)
         except Exception as e:
             # If xmltodict parsing fails, attempt parsing with BeautifulSoup
-            logger.error(f"Error parsing XML file with xmltodict: {e}")
+            logger.debug(f"Error parsing XML file with xmltodict: {e}")
             logger.debug("Trying to parse with BeautifulSoup as a fallback")
             with open(path, "rb") as f:
                 xml_data = f.read()
@@ -37,7 +37,8 @@ def xml_path_to_json(path: str) -> Dict[str, Any]:
                     empty_tag.extract()
                 data = xmltodict.parse(str(soup), dict_constructor=dict)
     except Exception as e:
-        logger.error(f"Error parsing XML file with BeautifulSoup: {e}")
+        logger.debug(f"Error parsing XML file with BeautifulSoup: {e}")
+        logger.error(f"Error parsing XML file: {path}")
         return {}
     return data
 
