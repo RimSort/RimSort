@@ -650,7 +650,7 @@ class MetadataManager(QObject):
                         )
                     else:
                         logger.warning(
-                            f"About.xml syntax error. Unable to read <moddependenciesbyversion> tag from XML: {self.internal_local_metadata[uuid]["metadata_file_path"]}"
+                            f"About.xml syntax error. Unable to read <moddependenciesbyversion> tag from XML: {self.internal_local_metadata[uuid]['metadata_file_path']}"
                         )
                         logger.debug(dependencies_by_ver)
             if self.internal_local_metadata[uuid].get("incompatiblewith"):
@@ -691,7 +691,7 @@ class MetadataManager(QObject):
                         )
                     else:
                         logger.warning(
-                            f"About.xml syntax error. Unable to read <incompatiblewithbyversion> tag from XML: {self.internal_local_metadata[uuid]["metadata_file_path"]}"
+                            f"About.xml syntax error. Unable to read <incompatiblewithbyversion> tag from XML: {self.internal_local_metadata[uuid]['metadata_file_path']}"
                         )
                         logger.debug(incompatibilities_by_ver)
             # Current mod should be loaded AFTER these mods. These mods can be thought
@@ -776,7 +776,7 @@ class MetadataManager(QObject):
                             )
                         else:
                             logger.warning(
-                                f"About.xml syntax error. Unable to read <loadafterbyversion> tag from XML: {self.internal_local_metadata[uuid]["metadata_file_path"]}"
+                                f"About.xml syntax error. Unable to read <loadafterbyversion> tag from XML: {self.internal_local_metadata[uuid]['metadata_file_path']}"
                             )
                             logger.debug(load_these_before_by_ver)
                     except Exception as e:
@@ -868,7 +868,7 @@ class MetadataManager(QObject):
                             )
                         else:
                             logger.warning(
-                                f"About.xml syntax error. Unable to read <loadbeforebyversion> tag from XML: {self.internal_local_metadata[uuid]["metadata_file_path"]}"
+                                f"About.xml syntax error. Unable to read <loadbeforebyversion> tag from XML: {self.internal_local_metadata[uuid]['metadata_file_path']}"
                             )
                             logger.debug(load_these_after_by_ver)
                     except Exception as e:
