@@ -175,16 +175,16 @@ class SettingsController(QObject):
 
         # Build DB tab
         self.settings_dialog.db_builder_download_all_mods_via_steamcmd_button.clicked.connect(
-            EventBus().do_download_all_mods_via_steamcmd.emit
+            self._on_db_builder_download_all_mods_via_steamcmd_button_clicked
         )
         self.settings_dialog.db_builder_download_all_mods_via_steam_button.clicked.connect(
-            EventBus().do_download_all_mods_via_steam.emit
+            self._on_db_builder_download_all_mods_via_steam_button_clicked
         )
         self.settings_dialog.db_builder_compare_databases_button.clicked.connect(
-            EventBus().do_compare_steam_workshop_databases.emit
+            self._on_db_builder_compare_databases_button_clicked
         )
         self.settings_dialog.db_builder_merge_databases_button.clicked.connect(
-            EventBus().do_merge_steam_workshop_databases.emit
+            self._on_db_builder_merge_databases_button_clicked
         )
         self.settings_dialog.db_builder_build_database_button.clicked.connect(
             self._on_db_builder_build_database_button_clicked
@@ -1065,6 +1065,38 @@ class SettingsController(QObject):
         """
         self.settings_dialog.global_ok_button.click()
         EventBus().do_install_steamcmd.emit()
+
+    @Slot()
+    def _on_db_builder_download_all_mods_via_steamcmd_button_clicked(self) -> None:
+        """
+        Build the Steam Workshop database of all mods using steamcmd.
+        """
+        self.settings_dialog.global_ok_button.click()
+        EventBus().do_download_all_mods_via_steamcmd.emit()
+
+    @Slot()
+    def _on_db_builder_download_all_mods_via_steam_button_clicked(self) -> None:
+        """
+        Build the Steam Workshop database of all mods using steam.
+        """
+        self.settings_dialog.global_ok_button.click()
+        EventBus().do_download_all_mods_via_steam.emit()
+
+    @Slot()
+    def _on_db_builder_compare_databases_button_clicked(self) -> None:
+        """
+        Compare the Steam Workshop database.
+        """
+        self.settings_dialog.global_ok_button.click()
+        EventBus().do_compare_steam_workshop_databases.emit()
+
+    @Slot()
+    def _on_db_builder_merge_databases_button_clicked(self) -> None:
+        """
+        Merge the Steam Workshop database.
+        """
+        self.settings_dialog.global_ok_button.click()
+        EventBus().do_merge_steam_workshop_databases.emit()
 
     @Slot()
     def _on_db_builder_build_database_button_clicked(self) -> None:
