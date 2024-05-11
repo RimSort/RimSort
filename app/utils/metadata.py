@@ -634,25 +634,25 @@ class MetadataManager(QObject):
                 for version, dependencies_by_ver in self.internal_local_metadata[uuid][
                     "moddependenciesbyversion"
                 ].items():
-                    if (
-                        dependencies_by_ver
-                        and isinstance(dependencies_by_ver, dict)
-                        and dependencies_by_ver.get("li")
-                        and match(version_regex, version)
-                    ):
-                        logger.debug(
-                            f"Current mod requires these mods by version to work: {dependencies_by_ver['li']}"
-                        )
-                        add_dependency_to_mod(
-                            self.internal_local_metadata[uuid],
-                            dependencies_by_ver["li"],
-                            self.internal_local_metadata,
-                        )
-                    else:
-                        logger.warning(
-                            f"About.xml syntax error. Unable to read <moddependenciesbyversion> tag from XML: {self.internal_local_metadata[uuid]['metadata_file_path']}"
-                        )
-                        logger.debug(dependencies_by_ver)
+                    if match(version_regex, version):
+                        if (
+                            dependencies_by_ver
+                            and isinstance(dependencies_by_ver, dict)
+                            and dependencies_by_ver.get("li")
+                        ):
+                            logger.debug(
+                                f"Current mod requires these mods by version to work: {dependencies_by_ver['li']}"
+                            )
+                            add_dependency_to_mod(
+                                self.internal_local_metadata[uuid],
+                                dependencies_by_ver["li"],
+                                self.internal_local_metadata,
+                            )
+                        else:
+                            logger.warning(
+                                f"About.xml syntax error. Unable to read <moddependenciesbyversion> tag from XML for version [{version}]: {self.internal_local_metadata[uuid]['metadata_file_path']}"
+                            )
+                            logger.debug(dependencies_by_ver)
             if self.internal_local_metadata[uuid].get("incompatiblewith"):
                 incompatibilities = self.internal_local_metadata[uuid][
                     "incompatiblewith"
@@ -675,25 +675,25 @@ class MetadataManager(QObject):
                 for version, incompatibilities_by_ver in self.internal_local_metadata[
                     uuid
                 ]["incompatiblewithbyversion"].items():
-                    if (
-                        incompatibilities_by_ver
-                        and isinstance(incompatibilities_by_ver, dict)
-                        and incompatibilities_by_ver.get("li")
-                        and match(version_regex, version)
-                    ):
-                        logger.debug(
-                            f"Current mod is incompatible by version with these mods: {incompatibilities_by_ver['li']}"
-                        )
-                        add_incompatibility_to_mod(
-                            self.internal_local_metadata[uuid],
-                            incompatibilities_by_ver["li"],
-                            self.internal_local_metadata,
-                        )
-                    else:
-                        logger.warning(
-                            f"About.xml syntax error. Unable to read <incompatiblewithbyversion> tag from XML: {self.internal_local_metadata[uuid]['metadata_file_path']}"
-                        )
-                        logger.debug(incompatibilities_by_ver)
+                    if match(version_regex, version):
+                        if (
+                            incompatibilities_by_ver
+                            and isinstance(incompatibilities_by_ver, dict)
+                            and incompatibilities_by_ver.get("li")
+                        ):
+                            logger.debug(
+                                f"Current mod is incompatible by version with these mods: {incompatibilities_by_ver['li']}"
+                            )
+                            add_incompatibility_to_mod(
+                                self.internal_local_metadata[uuid],
+                                incompatibilities_by_ver["li"],
+                                self.internal_local_metadata,
+                            )
+                        else:
+                            logger.warning(
+                                f"About.xml syntax error. Unable to read <incompatiblewithbyversion> tag from XML for version [{version}]: {self.internal_local_metadata[uuid]['metadata_file_path']}"
+                            )
+                            logger.debug(incompatibilities_by_ver)
             # Current mod should be loaded AFTER these mods. These mods can be thought
             # of as "load these before". These are not necessarily dependencies in the sense
             # that they "depend" on them. But, if they exist in the same mod list, they
@@ -756,37 +756,37 @@ class MetadataManager(QObject):
                 for version, load_these_before_by_ver in self.internal_local_metadata[
                     uuid
                 ]["loadafterbyversion"].items():
-                    try:
-                        if (
-                            load_these_before_by_ver
-                            and isinstance(load_these_before_by_ver, dict)
-                            and load_these_before_by_ver.get("li")
-                            and match(version_regex, version)
-                        ):
-                            logger.debug(
-                                f"Current mod should load before these mods for {version}: {load_these_before_by_ver['li']}"
+                    if match(version_regex, version):
+                        try:
+                            if (
+                                load_these_before_by_ver
+                                and isinstance(load_these_before_by_ver, dict)
+                                and load_these_before_by_ver.get("li")
+                            ):
+                                logger.debug(
+                                    f"Current mod should load before these mods for {version}: {load_these_before_by_ver['li']}"
+                                )
+                                add_load_rule_to_mod(
+                                    self.internal_local_metadata[uuid],
+                                    load_these_before_by_ver["li"],
+                                    "loadTheseBefore",
+                                    "loadTheseAfter",
+                                    self.internal_local_metadata,
+                                    self.packageid_to_uuids,
+                                )
+                            else:
+                                logger.warning(
+                                    f"About.xml syntax error. Unable to read <loadafterbyversion> tag from XML for version [{version}]: {self.internal_local_metadata[uuid]['metadata_file_path']}"
+                                )
+                                logger.debug(load_these_before_by_ver)
+                        except Exception as e:
+                            mod_metadata_path = self.internal_local_metadata[uuid].get(
+                                "metadata_file_path"
                             )
-                            add_load_rule_to_mod(
-                                self.internal_local_metadata[uuid],
-                                load_these_before_by_ver["li"],
-                                "loadTheseBefore",
-                                "loadTheseAfter",
-                                self.internal_local_metadata,
-                                self.packageid_to_uuids,
-                            )
-                        else:
                             logger.warning(
-                                f"About.xml syntax error. Unable to read <loadafterbyversion> tag from XML: {self.internal_local_metadata[uuid]['metadata_file_path']}"
+                                f"Error processing <loadafterbyversion> tag for {version} from XML: {mod_metadata_path}"
                             )
-                            logger.debug(load_these_before_by_ver)
-                    except Exception as e:
-                        mod_metadata_path = self.internal_local_metadata[uuid].get(
-                            "metadata_file_path"
-                        )
-                        logger.warning(
-                            f"Error processing <loadafterbyversion> tag for {version} from XML: {mod_metadata_path}"
-                        )
-                        logger.debug(e)
+                            logger.debug(e)
 
             # Current mod should be loaded BEFORE these mods
             # The current mod is a dependency for all these mods
@@ -848,37 +848,37 @@ class MetadataManager(QObject):
                 for version, load_these_after_by_ver in self.internal_local_metadata[
                     uuid
                 ]["loadbeforebyversion"].items():
-                    try:
-                        if (
-                            load_these_after_by_ver
-                            and isinstance(load_these_after_by_ver, dict)
-                            and load_these_after_by_ver.get("li")
-                            and match(version_regex, version)
-                        ):
-                            logger.debug(
-                                f"Current mod should load after these mods for {version}: {load_these_after_by_ver['li']}"
+                    if match(version_regex, version):
+                        try:
+                            if (
+                                load_these_after_by_ver
+                                and isinstance(load_these_after_by_ver, dict)
+                                and load_these_after_by_ver.get("li")
+                            ):
+                                logger.debug(
+                                    f"Current mod should load after these mods for {version}: {load_these_after_by_ver['li']}"
+                                )
+                                add_load_rule_to_mod(
+                                    self.internal_local_metadata[uuid],
+                                    load_these_after_by_ver["li"],
+                                    "loadTheseAfter",
+                                    "loadTheseBefore",
+                                    self.internal_local_metadata,
+                                    self.packageid_to_uuids,
+                                )
+                            else:
+                                logger.warning(
+                                    f"About.xml syntax error. Unable to read <loadbeforebyversion> tag from XML for version [{version}]: {self.internal_local_metadata[uuid]['metadata_file_path']}"
+                                )
+                                logger.debug(load_these_after_by_ver)
+                        except Exception as e:
+                            mod_metadata_path = self.internal_local_metadata[uuid].get(
+                                "metadata_file_path"
                             )
-                            add_load_rule_to_mod(
-                                self.internal_local_metadata[uuid],
-                                load_these_after_by_ver["li"],
-                                "loadTheseAfter",
-                                "loadTheseBefore",
-                                self.internal_local_metadata,
-                                self.packageid_to_uuids,
-                            )
-                        else:
                             logger.warning(
-                                f"About.xml syntax error. Unable to read <loadbeforebyversion> tag from XML: {self.internal_local_metadata[uuid]['metadata_file_path']}"
+                                f"Error processing <loadbeforebyversion> tag for {version} from XML: {mod_metadata_path}"
                             )
-                            logger.debug(load_these_after_by_ver)
-                    except Exception as e:
-                        mod_metadata_path = self.internal_local_metadata[uuid].get(
-                            "metadata_file_path"
-                        )
-                        logger.warning(
-                            f"Error processing <loadbeforebyversion> tag for {version} from XML: {mod_metadata_path}"
-                        )
-                        logger.debug(e)
+                            logger.debug(e)
 
         logger.info("Finished adding dependencies through About.xml information")
         log_deps_order_info(self.internal_local_metadata)
