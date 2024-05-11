@@ -488,7 +488,7 @@ class ModListWidget(QListWidget):
     mod_info_signal = Signal(str)
     recalculate_warnings_signal = Signal()
     refresh_signal = Signal()
-    re_git_signal = Signal(list)
+    update_git_mods_signal = Signal(list)
     steamdb_blacklist_signal = Signal(list)
     steamcmd_downloader_signal = Signal(list)
     steamworks_subscription_signal = Signal(list)
@@ -1004,7 +1004,7 @@ class ModListWidget(QListWidget):
                     )
                     if answer == "&Yes":
                         logger.debug(f"Updating {len(git_paths)} git mod(s)")
-                        self.re_git_signal.emit(git_paths)
+                        self.update_git_mods_signal.emit(git_paths)
                     return True
                 elif (  # ACTION: Convert local mod(s) -> SteamCMD
                     action == convert_local_steamcmd_action

@@ -254,8 +254,12 @@ class MainContent(QObject):
             self.mods_panel.inactive_mods_list.edit_rules_signal.connect(
                 self._do_open_rule_editor
             )
-            self.mods_panel.active_mods_list.re_git_signal.connect(self._do_re_git)
-            self.mods_panel.inactive_mods_list.re_git_signal.connect(self._do_re_git)
+            self.mods_panel.active_mods_list.update_git_mods_signal.connect(
+                self._check_git_repos_for_update
+            )
+            self.mods_panel.inactive_mods_list.update_git_mods_signal.connect(
+                self._check_git_repos_for_update
+            )
             self.mods_panel.active_mods_list.steamcmd_downloader_signal.connect(
                 self._do_download_mods_with_steamcmd
             )
@@ -2122,24 +2126,6 @@ class MainContent(QObject):
         else:
             logger.debug("Cancelling operation.")
 
-    def _do_re_git(self, repo_paths: list) -> None:
-        if GIT_EXISTS:
-            for path in repo_paths:
-                try:
-                    repo = Repo(path)
-                    origin_url = repo.remote("origin").url
-                except Exception as e:
-                    show_warning(
-                        title="Unable to open repository",
-                        text="RimSort failed to open the git repository inside this mod. Please re-download the mod.",
-                    )
-                self._do_clone_repo_to_path(
-                    base_path=os.path.split(path)[0], repo_url=origin_url
-                )
-                self._do_cleanup_gitpython(repo)
-        else:
-            self._do_notify_no_git()
-
     # EXTERNAL METADATA ACTIONS
 
     def _do_configure_github_identity(self) -> None:
@@ -2176,6 +2162,82 @@ class MainContent(QObject):
         collect()
         repo.git.clear_cache()
         del repo
+
+    def _check_git_repos_for_update(self, repo_paths: list) -> None:
+        if GIT_EXISTS:
+            # Track summary of repo updates
+            updates_summary = {}
+            for repo_path in repo_paths:
+                logger.info(f"Checking git repository for updates at: {repo_path}")
+                if os.path.exists(repo_path):
+                    repo = Repo(repo_path)
+                    try:
+                        # Fetch the latest changes from the remote
+                        origin = repo.remote(name="origin")
+                        origin.fetch()
+
+                        # Get the local and remote refs
+                        local_ref = repo.head.reference
+                        remote_ref = repo.refs[f"origin/{local_ref.name}"]
+
+                        # Check if the local branch is behind the remote branch
+                        if local_ref.commit != remote_ref.commit:
+                            local_name = local_ref.name
+                            remote_name = remote_ref.name
+                            logger.info(
+                                f"Local branch {local_name} is not up-to-date with remote branch {remote_name}. Updating forcefully."
+                            )
+                            # Create a summary of the changes that will be made for the repo to be updated
+                            updates_summary[repo_path] = {
+                                "HEAD~1": local_ref.commit.hexsha[:7],
+                            }
+                            # Force pull the latest changes
+                            repo.git.reset("--hard", remote_ref.name)
+                            repo.git.clean("-fdx")  # Remove untracked files
+                            origin.pull(local_ref.name, rebase=True)
+                            updates_summary[repo_path].update( {
+                                "HEAD": remote_ref.commit.hexsha[:7],
+                                "message": remote_ref.commit.message
+                            })
+                        else:
+                            logger.info("The local repository is already up-to-date.")
+                    except GitCommandError as e:
+                        stacktrace = traceback.format_exc()
+                        show_warning(
+                            title="Failed to update repo!",
+                            text=f"The repository supplied at [{repo_path}] failed to update!\n"
+                            + "Are you connected to the Internet? "
+                            + "Is the repo valid?",
+                            information=(
+                                f"Supplied repository: {repo.remotes.origin.url}"
+                                if repo
+                                and repo.remotes
+                                and repo.remotes.origin
+                                and repo.remotes.origin.url
+                                else None
+                            ),
+                            details=stacktrace,
+                        )
+                    finally:
+                        self._do_cleanup_gitpython(repo)
+            # If any updates were found, notify the user
+            if updates_summary:
+                repos_updated = "\n".join(list(os.path.split(k)[1] for k in updates_summary.keys()))
+                updates_summarized = "\n".join(
+                    [
+                        f"[{os.path.split(k)[1]}]: {v['HEAD~1']  + "..." + v['HEAD']}\n"
+                        + f"{v['message']}\n"
+                        for k, v in updates_summary.items()
+                    ]
+                )
+                show_information(
+                    title=f"Git repo(s) updated",
+                    text="The following repo(s) had updates pulled from the remote:",
+                    information=repos_updated,
+                    details=updates_summarized,
+                )
+        else:
+            self._do_notify_no_git()
 
     def _do_clone_repo_to_path(self, base_path: str, repo_url: str) -> None:
         """
