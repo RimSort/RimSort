@@ -2195,10 +2195,12 @@ class MainContent(QObject):
                             repo.git.reset("--hard", remote_ref.name)
                             repo.git.clean("-fdx")  # Remove untracked files
                             origin.pull(local_ref.name, rebase=True)
-                            updates_summary[repo_path].update( {
-                                "HEAD": remote_ref.commit.hexsha[:7],
-                                "message": remote_ref.commit.message
-                            })
+                            updates_summary[repo_path].update(
+                                {
+                                    "HEAD": remote_ref.commit.hexsha[:7],
+                                    "message": remote_ref.commit.message,
+                                }
+                            )
                         else:
                             logger.info("The local repository is already up-to-date.")
                     except GitCommandError as e:
@@ -2222,10 +2224,12 @@ class MainContent(QObject):
                         self._do_cleanup_gitpython(repo)
             # If any updates were found, notify the user
             if updates_summary:
-                repos_updated = "\n".join(list(os.path.split(k)[1] for k in updates_summary.keys()))
+                repos_updated = "\n".join(
+                    list(os.path.split(k)[1] for k in updates_summary.keys())
+                )
                 updates_summarized = "\n".join(
                     [
-                        f"[{os.path.split(k)[1]}]: {v['HEAD~1']  + "..." + v['HEAD']}\n"
+                        f"[{os.path.split(k)[1]}]: {v['HEAD~1']  + '...' + v['HEAD']}\n"
                         + f"{v['message']}\n"
                         for k, v in updates_summary.items()
                     ]
