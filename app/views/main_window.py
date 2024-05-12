@@ -241,7 +241,7 @@ class MainWindow(QMainWindow):
                 "local_folder": "",
                 "workshop_folder": "",
                 "config_folder": "",
-                "run_args": "",
+                "run_args": [],
             }
             # Save settings
             self.settings_controller.settings.save()

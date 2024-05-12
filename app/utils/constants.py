@@ -47,6 +47,7 @@ DEFAULT_SETTINGS = {
             "config_folder": "",
             "local_folder": "",
             "workshop_folder": "",
+            "run_args": [],
         }
     },
 }
