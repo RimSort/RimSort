@@ -34,7 +34,6 @@ DEFAULT_SETTINGS = {
     "duplicate_mods_warning": False,
     "steam_mods_update_check": False,
     "try_download_missing_mods": False,
-    "steamcmd_install_path": ".",
     "steamcmd_validate_downloads": True,
     "todds_preset": "optimized",
     "todds_active_mods_target": True,
@@ -48,6 +47,7 @@ DEFAULT_SETTINGS = {
             "local_folder": "",
             "workshop_folder": "",
             "run_args": [],
+            "steamcmd_install_path": "",
         }
     },
 }
