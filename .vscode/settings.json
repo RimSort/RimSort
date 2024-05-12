@@ -15,4 +15,6 @@
     "editor.defaultFormatter": "ms-python.black-formatter",
     "python.terminal.activateEnvironment": true,
     "python.terminal.activateEnvInCurrentTerminal": true,
+    "python.languageServer": "Jedi",
+    "mypy.runUsingActiveInterpreter": true,
 }
