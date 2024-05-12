@@ -225,13 +225,14 @@ class MainWindow(QMainWindow):
             )
 
     def __create_new_instance(self) -> None:
-        instance_name, _ = show_dialogue_input(
+        instance_name, ok = show_dialogue_input(
             title="Create new instance",
             text="Enter name of new instance:",
         )
         current_instances = list(self.settings_controller.settings.instances.keys())
         if (
-            instance_name
+            ok
+            and instance_name
             and instance_name != "Default"
             and instance_name not in current_instances
         ):
