@@ -35,52 +35,65 @@ class SteamcmdInterface:
     def __init__(self, steamcmd_prefix: str, validate: bool) -> None:
         if not hasattr(self, "initialized"):
             self.initialized = True
+            self.setup = False
+            self.steamcmd_prefix = steamcmd_prefix
             super(SteamcmdInterface, self).__init__()
             logger.debug("Initializing SteamcmdInterface")
-            steamcmd_prefix = Path(steamcmd_prefix)
-            self.steamcmd_install_path = str((steamcmd_prefix / "steamcmd"))
-            self.steamcmd_steam_path = str((steamcmd_prefix / "steam"))
-            self.system = platform.system()
-            self.validate_downloads = validate
-
-            if self.system == "Darwin":
-                self.steamcmd_url = "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_osx.tar.gz"
-                self.steamcmd = str((Path(self.steamcmd_install_path) / "steamcmd.sh"))
-            elif self.system == "Linux":
-                self.steamcmd_url = "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz"
-                self.steamcmd = str((Path(self.steamcmd_install_path) / "steamcmd.sh"))
-            elif self.system == "Windows":
-                self.steamcmd_url = (
-                    "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip"
-                )
-                self.steamcmd = str((Path(self.steamcmd_install_path) / "steamcmd.exe"))
-            else:
-                show_fatal_error(
-                    "SteamcmdInterface",
-                    f"Found platform {self.system}. steamcmd is not supported on this platform.",
-                )
-                return
-
-            if not os.path.exists(self.steamcmd_install_path):
-                os.makedirs(self.steamcmd_install_path)
-                logger.debug(
-                    f"SteamCMD does not exist. Creating path for installation: {self.steamcmd_install_path}"
-                )
-
-            if not os.path.exists(self.steamcmd_steam_path):
-                os.makedirs(self.steamcmd_steam_path)
-            self.steamcmd_appworkshop_acf_path = str(
-                (
-                    Path(self.steamcmd_steam_path)
-                    / "steamapps"
-                    / "workshop"
-                    / "appworkshop_294100.acf"
-                )
-            )
-            self.steamcmd_content_path = str(
-                (Path(self.steamcmd_steam_path) / "steamapps" / "workshop" / "content")
-            )
+            self.initialize_prefix(steamcmd_prefix, validate)
             logger.debug("Finished SteamcmdInterface initialization")
+
+    def initialize_prefix(self, steamcmd_prefix: str, validate: bool) -> None:
+        self.steamcmd_prefix = Path(self.steamcmd_prefix)
+        self.steamcmd_install_path = str((self.steamcmd_prefix / "steamcmd"))
+        self.steamcmd_steam_path = str((self.steamcmd_prefix / "steam"))
+        self.system = platform.system()
+        self.validate_downloads = validate
+
+        if self.system == "Darwin":
+            self.steamcmd_url = (
+                "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_osx.tar.gz"
+            )
+            self.steamcmd = str((Path(self.steamcmd_install_path) / "steamcmd.sh"))
+        elif self.system == "Linux":
+            self.steamcmd_url = (
+                "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz"
+            )
+            self.steamcmd = str((Path(self.steamcmd_install_path) / "steamcmd.sh"))
+        elif self.system == "Windows":
+            self.steamcmd_url = (
+                "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip"
+            )
+            self.steamcmd = str((Path(self.steamcmd_install_path) / "steamcmd.exe"))
+        else:
+            show_fatal_error(
+                "SteamcmdInterface",
+                f"Found platform {self.system}. steamcmd is not supported on this platform.",
+            )
+            return
+
+        if not os.path.exists(self.steamcmd_install_path):
+            os.makedirs(self.steamcmd_install_path)
+            logger.debug(
+                f"SteamCMD does not exist. Creating path for installation: {self.steamcmd_install_path}"
+            )
+
+        if not os.path.exists(self.steamcmd_steam_path):
+            os.makedirs(self.steamcmd_steam_path)
+        self.steamcmd_appworkshop_acf_path = str(
+            (
+                Path(self.steamcmd_steam_path)
+                / "steamapps"
+                / "workshop"
+                / "appworkshop_294100.acf"
+            )
+        )
+        self.steamcmd_content_path = str(
+            (Path(self.steamcmd_steam_path) / "steamapps" / "workshop" / "content")
+        )
+
+        # Check for the steamcmd executable existing.
+        if not self.check_for_steamcmd(prefix=self.steamcmd_prefix):
+            self.on_steamcmd_not_found()
 
     @classmethod
     def instance(cls, *args: Any, **kwargs: Any) -> "SteamcmdInterface":
@@ -101,7 +114,7 @@ class SteamcmdInterface:
         :param runner: a RimSort RunnerPanel to interact with
         """
         runner.message("Checking for steamcmd...")
-        if self.steamcmd is not None and os.path.exists(self.steamcmd):
+        if self.setup:
             runner.message(
                 f"Got it: {self.steamcmd}\n"
                 + f"Downloading list of {str(len(publishedfileids))} "
@@ -129,6 +142,22 @@ class SteamcmdInterface:
             )
         else:
             runner.message("SteamCMD was not found. Please setup SteamCMD first!")
+            self.on_steamcmd_not_found(runner=runner)
+
+    def check_for_steamcmd(self, prefix: str) -> bool:
+        executable_name = os.path.split(self.steamcmd)[1] if self.steamcmd else None
+        return os.path.exists(str(Path(prefix) / "steamcmd" / executable_name))
+
+    def on_steamcmd_not_found(self, runner: RunnerPanel = None) -> None:
+        answer = show_dialogue_conditional(
+            title="SteamcmdInterface",
+            text="RimSort was unable to find SteamCMD installed in the configured prefix:\n",
+            information=self.steamcmd_prefix,
+        )
+        if answer == "&Yes":
+            self.setup_steamcmd(self.steamcmd_prefix, True, runner)
+        elif runner:
+            runner.close()
 
     def setup_steamcmd(
         self, symlink_source_path: str, reinstall: bool, runner: RunnerPanel
@@ -141,9 +170,7 @@ class SteamcmdInterface:
             )
             shutil.rmtree(self.steamcmd_install_path)
             os.makedirs(self.steamcmd_install_path)
-            # shutil.rmtree(self.steamcmd_steam_path)
-            # os.makedirs(self.steamcmd_steam_path)
-        if not os.path.exists(self.steamcmd):
+        if not self.check_for_steamcmd(prefix=self.steamcmd_prefix):
             try:
                 runner.message(
                     f"Downloading & extracting steamcmd release from: {self.steamcmd_url}"

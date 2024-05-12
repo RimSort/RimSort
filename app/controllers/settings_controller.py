@@ -422,7 +422,9 @@ class SettingsController(QObject):
             self.settings.steamcmd_validate_downloads
         )
         self.settings_dialog.steamcmd_install_location.setText(
-            self.settings.steamcmd_install_path
+            self.settings.instances[self.settings.current_instance][
+                "steamcmd_install_path"
+            ]
         )
 
         # todds tab
@@ -549,9 +551,9 @@ class SettingsController(QObject):
         self.settings.steamcmd_validate_downloads = (
             self.settings_dialog.steamcmd_validate_downloads_checkbox.isChecked()
         )
-        self.settings.steamcmd_install_path = (
-            self.settings_dialog.steamcmd_install_location.text()
-        )
+        self.settings.instances[self.settings.current_instance][
+            "steamcmd_install_path"
+        ] = self.settings_dialog.steamcmd_install_location.text()
 
         # todds tab
         if self.settings_dialog.todds_preset_combobox.currentIndex() == 0:

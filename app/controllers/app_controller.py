@@ -45,7 +45,9 @@ class AppController(QObject):
 
         # Initialize SteamcmdInterface
         self.steamcmd_wrapper = SteamcmdInterface.instance(
-            self.settings_controller.settings.steamcmd_install_path,
+            self.settings_controller.settings.instances[
+                self.settings_controller.settings.current_instance
+            ]["steamcmd_install_path"],
             self.settings_controller.settings.steamcmd_validate_downloads,
         )
 

@@ -1,6 +1,9 @@
 import json
 from json import JSONDecodeError
+from os import path, rename
 from pathlib import Path
+from shutil import copytree, rmtree
+from time import time
 from typing import Dict, Any, Optional, List
 
 from PySide6.QtCore import QObject
@@ -36,7 +39,6 @@ class Settings(QObject):
         self._duplicate_mods_warning: bool = False
         self._steam_mods_update_check: bool = False
         self._try_download_missing_mods: bool = False
-        self._steamcmd_install_path: str = ""
         self._steamcmd_validate_downloads: bool = False
         self._todds_preset: str = ""
         self._todds_active_mods_target: bool = False
@@ -77,7 +79,6 @@ class Settings(QObject):
         self._duplicate_mods_warning = False
         self._steam_mods_update_check = False
         self._try_download_missing_mods = False
-        self._steamcmd_install_path = str(AppInfo().app_storage_folder)
         self._steamcmd_validate_downloads = True
         self._todds_preset = "optimized"
         self._todds_active_mods_target = True
@@ -91,6 +92,9 @@ class Settings(QObject):
                 "local_folder": "",
                 "workshop_folder": "",
                 "run_args": [],
+                "steamcmd_install_path": str(
+                    Path(AppInfo().app_storage_folder / "instances" / "Default")
+                ),
             }
         }
         self._github_username = ""
@@ -307,17 +311,6 @@ class Settings(QObject):
         EventBus().settings_have_changed.emit()
 
     @property
-    def steamcmd_install_path(self) -> str:
-        return self._steamcmd_install_path
-
-    @steamcmd_install_path.setter
-    def steamcmd_install_path(self, value: str) -> None:
-        if value == self._steamcmd_install_path:
-            return
-        self._steamcmd_install_path = value
-        EventBus().settings_have_changed.emit()
-
-    @property
     def steamcmd_validate_downloads(self) -> bool:
         return self._steamcmd_validate_downloads
 
@@ -441,6 +434,12 @@ class Settings(QObject):
                 )
                 # Mitigate issues when "instances" key is not parsed, but the old path attributes are present
                 if not data.get("instances"):
+                    logger.debug(
+                        "Instances key not found in settings.json. Performing mitigation."
+                    )
+                    steamcmd_prefix_default_instance_path = str(
+                        Path(AppInfo().app_storage_folder / "instances" / "Default")
+                    )
                     # Create Default instance
                     data["instances"] = {
                         "Default": {
@@ -449,8 +448,68 @@ class Settings(QObject):
                             "workshop_folder": data.get("workshop_folder", ""),
                             "config_folder": data.get("config_folder", ""),
                             "run_args": data.get("run_args", []),
+                            "steamcmd_install_path": steamcmd_prefix_default_instance_path,
                         }
                     }
+                    steamcmd_prefix_to_mitigate = data.get("steamcmd_install_path")
+                    steamcmd_path_to_mitigate = str(
+                        Path(steamcmd_prefix_to_mitigate) / "steamcmd"
+                    )
+                    steam_path_to_mitigate = str(
+                        Path(steamcmd_prefix_to_mitigate) / "steam"
+                    )
+                    if steamcmd_prefix_to_mitigate and path.exists(
+                        steamcmd_prefix_to_mitigate
+                    ):
+                        logger.debug(
+                            "Configured SteamCMD install path found. Attempting to migrate it to the Default instance path..."
+                        )
+                        steamcmd_prefix_steamcmd_path = str(
+                            Path(steamcmd_prefix_default_instance_path) / "steamcmd"
+                        )
+                        steamcmd_prefix_steam_path = str(
+                            Path(steamcmd_prefix_default_instance_path) / "steam"
+                        )
+                        try:
+                            if path.exists(steamcmd_prefix_steamcmd_path):
+                                current_timestamp = int(time())
+                                rename(
+                                    steamcmd_prefix_steamcmd_path,
+                                    f"{steamcmd_prefix_steamcmd_path}_{current_timestamp}",
+                                )
+                            elif path.exists(steamcmd_prefix_steam_path):
+                                rename(
+                                    steamcmd_prefix_steam_path,
+                                    f"{steamcmd_prefix_steam_path}_{current_timestamp}",
+                                )
+                            logger.info(
+                                f"Migrated SteamCMD install path from {steamcmd_prefix_to_mitigate} to {steamcmd_prefix_default_instance_path}"
+                            )
+                            copytree(
+                                steamcmd_path_to_mitigate,
+                                steamcmd_prefix_steamcmd_path,
+                                symlinks=True,
+                            )
+                            logger.info(
+                                f"Deleting old SteamCMD install path at {steamcmd_path_to_mitigate}..."
+                            )
+                            rmtree(steamcmd_path_to_mitigate)
+                            logger.info(
+                                f"Migrated SteamCMD data path from {steam_path_to_mitigate} to {steamcmd_prefix_default_instance_path}"
+                            )
+                            copytree(
+                                steam_path_to_mitigate,
+                                steamcmd_prefix_steam_path,
+                                symlinks=True,
+                            )
+                            logger.info(
+                                f"Deleting old SteamCMD data path at {steam_path_to_mitigate}..."
+                            )
+                            rmtree(steam_path_to_mitigate)
+                        except Exception as e:
+                            logger.error(
+                                f"Failed to migrate SteamCMD install path. Error: {e}"
+                            )
                 else:
                     # There was nothing to mitigate, so don't save the model to the file
                     mitigations = False
@@ -554,10 +613,6 @@ class Settings(QObject):
             self.try_download_missing_mods = data["try_download_missing_mods"]
             del data["try_download_missing_mods"]
 
-        if "steamcmd_install_path" in data:
-            self.steamcmd_install_path = data["steamcmd_install_path"]
-            del data["steamcmd_install_path"]
-
         if "steamcmd_validate_downloads" in data:
             self.steamcmd_validate_downloads = data["steamcmd_validate_downloads"]
             del data["steamcmd_validate_downloads"]
@@ -618,7 +673,6 @@ class Settings(QObject):
             "duplicate_mods_warning": self.duplicate_mods_warning,
             "steam_mods_update_check": self.steam_mods_update_check,
             "try_download_missing_mods": self.try_download_missing_mods,
-            "steamcmd_install_path": self.steamcmd_install_path,
             "steamcmd_validate_downloads": self.steamcmd_validate_downloads,
             "todds_preset": self.todds_preset,
             "todds_active_mods_target": self.todds_active_mods_target,
