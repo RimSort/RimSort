@@ -307,7 +307,7 @@ class MainContent(QObject):
             raise ValueError("MainContent instance has already been initialized.")
         return cls._instance
 
-    def check_if_essential_paths_are_set(self) -> bool:
+    def check_if_essential_paths_are_set(self, prompt: bool = True) -> bool:
         """
         When the user starts the app for the first time, none
         of the paths will be set. We should check for this and
@@ -323,32 +323,40 @@ class MainContent(QObject):
         ]["config_folder"]
         logger.debug(f"Game folder: {game_folder_path}")
         logger.debug(f"Config folder: {config_folder_path}")
-        if not game_folder_path or not config_folder_path:
-            logger.warning("Essential path(s) not set!")
-            show_warning(
-                text="Essential path(s) not set!",
-                information=(
-                    "RimSort requires, at the minimum, for the game install folder and the "
-                    "config folder paths to be set. Please set both these either manually "
-                    "or by using the AutoDetect functionality."
-                ),
-            )
-            return False
-        if not os.path.exists(game_folder_path) or not os.path.exists(
-            config_folder_path
+        if (
+            not game_folder_path
+            or not config_folder_path
+            or not os.path.exists(game_folder_path)
+            or not os.path.exists(config_folder_path)
         ):
-            logger.warning("Essential path(s) invalid!")
-            show_warning(
-                text="Essential path(s) are invalid!",
-                information=(
-                    "RimSort has detected that the game install folder path or the "
-                    "config folder path is invalid. Please check that both of these path(s) "
-                    "reference folders that actually exist at the specified location."
-                ),
-            )
+            logger.warning("Essential path(s) are invalid or not set!")
+            if not prompt:
+                show_warning(
+                    title="Essential path(s)",
+                    text="Essential path(s) are invalid or not set!",
+                    information=(
+                        "RimSort requires, at the minimum, for the game install folder and the "
+                        "config folder paths to be set, and that the paths both exist. Please set "
+                        "both of these manually or by using the autodetect functionality."
+                    ),
+                )
+            else:
+                answer = show_dialogue_conditional(
+                    title="Essential path(s)",
+                    text="Essential path(s) are invalid or not set!\n",
+                    information=(
+                        "RimSort requires, at the minimum, for the game install folder and the "
+                        "config folder paths to be set, and that the paths both exist. Please set "
+                        "both of these manually or by using the autodetect functionality.\n\n"
+                        "Would you like to configure them now?"
+                    ),
+                )
+                if answer == "&Yes":
+                    self.settings_controller.show_settings_dialog("Locations")
             return False
-        logger.info("Essential paths set!")
-        return True
+        else:
+            logger.info("Essential paths set!")
+            return True
 
     def ___get_relative_middle(self, some_list):
         rect = some_list.contentsRect()
@@ -686,12 +694,10 @@ class MainContent(QObject):
                 [
                     "launch_game_process",
                     [
-                        self.settings_controller.settings.instances[
-                            current_instance
-                        ]["game_folder"],
-                        self.settings_controller.settings.instances[
-                            current_instance
+                        self.settings_controller.settings.instances[current_instance][
+                            "game_folder"
                         ],
+                        self.settings_controller.settings.instances[current_instance],
                     ],
                 ]
             )
@@ -3260,9 +3266,9 @@ class MainContent(QObject):
             [
                 "launch_game_process",
                 [
-                    self.settings_controller.settings.instances[
-                        current_instance
-                    ]["game_folder"],
+                    self.settings_controller.settings.instances[current_instance][
+                        "game_folder"
+                    ],
                     self.settings_controller.settings.instances[current_instance][
                         "run_args"
                     ],
