@@ -49,7 +49,7 @@ class MainWindow(QMainWindow):
 
         # Create the main application window
         self.DEBUG_MODE = debug_mode
-        # SteamCMD wrapper
+        # SteamCMDInterface
         self.steamcmd_wrapper = SteamcmdInterface.instance()
         # Content initialization should only fire on startup. Otherwise, this is handled by Refresh button
         self.version_string = "Alpha-v1.0.6.2-hf"
@@ -165,23 +165,19 @@ class MainWindow(QMainWindow):
             self.settings_controller.settings.current_instance
         )
 
-        # LOAD ANY CONFIGURED STEAMCMD PREFIX
-        steamcmd_prefix = self.settings_controller.settings.instances[
-            self.settings_controller.settings.current_instance
-        ]["steamcmd_install_path"]
-        if steamcmd_prefix and self.steamcmd_wrapper.check_for_steamcmd(
-            steamcmd_prefix
-        ):
-            self.steamcmd_wrapper.initialize_prefix(
-                steamcmd_prefix=steamcmd_prefix,
-                validate=self.settings_controller.settings.steamcmd_validate_downloads,
-            )
-        else:
-            self.steamcmd_wrapper.on_steamcmd_not_found()
-
         # IF CHECK FOR UPDATE ON STARTUP...
         if self.settings_controller.settings.check_for_update_startup:
             self.main_content_panel.actions_slot("check_for_update")
+
+        # Check for the steamcmd prefix + executable existence.
+        if not os.path.exists(
+            self.steamcmd_wrapper.steamcmd_prefix
+        ) or not self.steamcmd_wrapper.check_for_steamcmd(
+            prefix=self.steamcmd_wrapper.steamcmd_prefix
+        ):
+            self.steamcmd_wrapper.on_steamcmd_not_found()
+        else:
+            self.steamcmd_wrapper.setup = True
 
         # REFRESH CONFIGURED METADATA
         self.main_content_panel._do_refresh(is_initial=True)
@@ -196,63 +192,27 @@ class MainWindow(QMainWindow):
             ):
                 self.shutdown_watchdog()
             # Setup watchdog
-            self.__initialize_watchdog()
-
-    def __initialize_watchdog(self) -> None:
-        logger.info("Initializing watchdog FS Observer")
-        # INITIALIZE WATCHDOG - WE WAIT TO START UNTIL DONE PARSING MOD LIST
-        # Instantiate event handler
-        # Pass a mapper of metadata-containing About.xml or Scenario.rsc files to their mod uuids
-        current_instance = self.settings_controller.settings.current_instance
-        self.watchdog_event_handler = WatchdogHandler(
-            settings_controller=self.settings_controller,
-            targets=[
-                str(
-                    Path(
-                        self.settings_controller.settings.instances[current_instance][
-                            "game_folder"
-                        ]
-                    )
-                    / "Data"
-                ),
-                self.settings_controller.settings.instances[current_instance],
-                self.settings_controller.settings.instances[current_instance][
-                    "workshop_folder"
-                ],
-            ],
-        )
-        # Connect watchdog to MetadataManager
-        self.watchdog_event_handler.mod_created.connect(
-            self.main_content_panel.metadata_manager.process_creation
-        )
-        self.watchdog_event_handler.mod_deleted.connect(
-            self.main_content_panel.metadata_manager.process_deletion
-        )
-        self.watchdog_event_handler.mod_updated.connect(
-            self.main_content_panel.metadata_manager.process_update
-        )
-        # Connect main content signal so it can stop watchdog
-        self.main_content_panel.stop_watchdog_signal.connect(self.shutdown_watchdog)
-        # Start watchdog
-        try:
-            self.watchdog_event_handler.watchdog_observer.start()
-        except Exception as e:
-            logger.warning(
-                f"Unable to initialize watchdog Observer due to exception: {str(e)}"
-            )
+            self.initialize_watchdog()
 
     def __create_new_instance(self) -> None:
-        instance_name, ok = show_dialogue_input(
+        instance_name, cancelled = show_dialogue_input(
             title="Create new instance",
             text="Enter name of new instance:",
         )
+        # Sanitize the input so that it does not produce any KeyError down the road
+        instance_name = instance_name.strip()
         current_instances = list(self.settings_controller.settings.instances.keys())
         if (
-            ok
+            not cancelled
             and instance_name
             and instance_name != "Default"
             and instance_name not in current_instances
         ):
+            instance_path = str(
+                Path(AppInfo().app_storage_folder)
+                / "instances"
+                / self.settings_controller.settings.current_instance
+            )
             self.settings_controller.settings.current_instance = instance_name
             self.settings_controller.settings.instances[instance_name] = {
                 "game_folder": "",
@@ -260,8 +220,10 @@ class MainWindow(QMainWindow):
                 "workshop_folder": "",
                 "config_folder": "",
                 "run_args": [],
-                "steamcmd_install_path": "",
+                "steamcmd_install_path": instance_path,
             }
+            if not os.path.exists(instance_path):
+                os.makedirs(instance_path)
             # Save settings
             self.settings_controller.settings.save()
             # Initialize content
@@ -308,6 +270,49 @@ class MainWindow(QMainWindow):
         self.settings_controller.settings.save()
         # Initialize content
         self.initialize_content()
+
+    def initialize_watchdog(self) -> None:
+        logger.info("Initializing watchdog FS Observer")
+        # INITIALIZE WATCHDOG - WE WAIT TO START UNTIL DONE PARSING MOD LIST
+        # Instantiate event handler
+        # Pass a mapper of metadata-containing About.xml or Scenario.rsc files to their mod uuids
+        current_instance = self.settings_controller.settings.current_instance
+        self.watchdog_event_handler = WatchdogHandler(
+            settings_controller=self.settings_controller,
+            targets=[
+                str(
+                    Path(
+                        self.settings_controller.settings.instances[current_instance][
+                            "game_folder"
+                        ]
+                    )
+                    / "Data"
+                ),
+                self.settings_controller.settings.instances[current_instance],
+                self.settings_controller.settings.instances[current_instance][
+                    "workshop_folder"
+                ],
+            ],
+        )
+        # Connect watchdog to MetadataManager
+        self.watchdog_event_handler.mod_created.connect(
+            self.main_content_panel.metadata_manager.process_creation
+        )
+        self.watchdog_event_handler.mod_deleted.connect(
+            self.main_content_panel.metadata_manager.process_deletion
+        )
+        self.watchdog_event_handler.mod_updated.connect(
+            self.main_content_panel.metadata_manager.process_update
+        )
+        # Connect main content signal so it can stop watchdog
+        self.main_content_panel.stop_watchdog_signal.connect(self.shutdown_watchdog)
+        # Start watchdog
+        try:
+            self.watchdog_event_handler.watchdog_observer.start()
+        except Exception as e:
+            logger.warning(
+                f"Unable to initialize watchdog Observer due to exception: {str(e)}"
+            )
 
     def shutdown_watchdog(self) -> None:
         if (
