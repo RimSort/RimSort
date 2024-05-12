@@ -78,8 +78,6 @@ class Status:
             )
         elif action == "reset_steamcmd_acf_data":
             self.status_text.start_pause_fade("Deleted SteamCMD ACF data")
-        elif action == "set_steamcmd_path":
-            self.status_text.start_pause_fade("Configured SteamCMD prefix path")
         elif "import_list" in action:
             self.status_text.start_pause_fade("Imported active mods list")
         elif "export_list" in action:

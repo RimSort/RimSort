@@ -22,6 +22,7 @@ from app.models.dialogue import show_dialogue_input, show_fatal_error, show_warn
 from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 from app.utils.gui_info import GUIInfo
+from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.system_info import SystemInfo
 from app.utils.watchdog import WatchdogHandler
 from app.views.main_content_panel import MainContent
@@ -48,6 +49,8 @@ class MainWindow(QMainWindow):
 
         # Create the main application window
         self.DEBUG_MODE = debug_mode
+        # SteamCMD wrapper
+        self.steamcmd_wrapper = SteamcmdInterface.instance()
         # Content initialization should only fire on startup. Otherwise, this is handled by Refresh button
         self.version_string = "Alpha-v1.0.6.2-hf"
 
@@ -162,6 +165,20 @@ class MainWindow(QMainWindow):
             self.settings_controller.settings.current_instance
         )
 
+        # LOAD ANY CONFIGURED STEAMCMD PREFIX
+        steamcmd_prefix = self.settings_controller.settings.instances[
+            self.settings_controller.settings.current_instance
+        ]["steamcmd_install_path"]
+        if steamcmd_prefix and self.steamcmd_wrapper.check_for_steamcmd(
+            steamcmd_prefix
+        ):
+            self.steamcmd_wrapper.initialize_prefix(
+                steamcmd_prefix=steamcmd_prefix,
+                validate=self.settings_controller.settings.steamcmd_validate_downloads,
+            )
+        else:
+            self.steamcmd_wrapper.on_steamcmd_not_found()
+
         # IF CHECK FOR UPDATE ON STARTUP...
         if self.settings_controller.settings.check_for_update_startup:
             self.main_content_panel.actions_slot("check_for_update")
@@ -243,6 +260,7 @@ class MainWindow(QMainWindow):
                 "workshop_folder": "",
                 "config_folder": "",
                 "run_args": [],
+                "steamcmd_install_path": "",
             }
             # Save settings
             self.settings_controller.settings.save()

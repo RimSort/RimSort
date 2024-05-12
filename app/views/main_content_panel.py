@@ -672,8 +672,6 @@ class MainContent(QObject):
                 os.remove(self.steamcmd_wrapper.steamcmd_appworkshop_acf_path)
             else:
                 logger.debug("SteamCMD ACF data does not exist. Skipping action.")
-        if action == "set_steamcmd_path":
-            self._do_set_steamcmd_path()
         if action == "update_workshop_mods":
             self._do_check_for_workshop_updates()
         if action == "import_list_file_xml":
@@ -1993,38 +1991,6 @@ class MainContent(QObject):
                 information='Please setup an existing SteamCMD prefix, or setup a new prefix with "Setup SteamCMD".',
             )
 
-    def _do_set_steamcmd_path(self):
-        """
-        Open a file dialog to allow the user to select the game executable.
-        """
-        logger.info("USER ACTION: set the steamcmd folder")
-        steamcmd_folder = show_dialogue_file(
-            mode="open_dir",
-            caption="Select steamcmd folder",
-            _dir=os.path.expanduser("~"),
-        )
-        if steamcmd_folder:
-            logger.info(f"Selected path: {steamcmd_folder}")
-            logger.info(
-                f"steamcmd install folder chosen. Updating storage with new path: {steamcmd_folder}"
-            )
-
-            self.settings_controller.settings.steamcmd_install_path = steamcmd_folder
-            self.settings_controller.settings.save()
-
-            self.steamcmd_wrapper = SteamcmdInterface.instance(
-                self.settings_controller.settings.steamcmd_install_path,
-                self.settings_controller.settings.steamcmd_validate_downloads,
-            )
-            self.mods_panel.active_mods_list.steamcmd_appworkshop_acf_path = (
-                self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
-            )
-            self.mods_panel.inactive_mods_list.steamcmd_appworkshop_acf_path = (
-                self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
-            )
-        else:
-            logger.debug("USER ACTION: pressed cancel, passing")
-
     def _do_steamworks_api_call(self, instruction: list):
         """
         Create & launch Steamworks API process to handle instructions received from connected signals
@@ -3189,6 +3155,18 @@ class MainContent(QObject):
 
     @Slot()
     def _on_settings_have_changed(self) -> None:
+        steamcmd_prefix = self.settings_controller.settings.instances[
+            self.settings_controller.settings.current_instance
+        ]["steamcmd_install_path"]
+        if steamcmd_prefix and self.steamcmd_wrapper.check_for_steamcmd(
+            steamcmd_prefix
+        ):
+            self.steamcmd_wrapper.initialize_prefix(
+                steamcmd_prefix=steamcmd_prefix,
+                validate=self.settings_controller.settings.steamcmd_validate_downloads,
+            )
+        else:
+            self.steamcmd_wrapper.on_steamcmd_not_found()
         self.steamcmd_wrapper.validate_downloads = (
             self.settings_controller.settings.steamcmd_validate_downloads
         )
