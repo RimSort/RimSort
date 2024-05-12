@@ -963,21 +963,16 @@ class ModListWidget(QListWidget):
                 or add_to_steamdb_blacklist_action
                 or remove_from_steamdb_blacklist_action
             ):
+                current_mods = self.get_selected_mods()
+                local_folder = self.settings_controller.settings.instances[
+                    self.settings_controller.settings.current_instance
+                ]
                 workshop_actions_menu = QMenu(title="Workshop mods options")
-                if (
-                    self.settings_controller.settings.local_folder
-                    and convert_local_steamcmd_action
-                ):
+                if local_folder and convert_local_steamcmd_action:
                     workshop_actions_menu.addAction(convert_local_steamcmd_action)
-                if (
-                    self.settings_controller.settings.local_folder
-                    and convert_steamcmd_local_action
-                ):
+                if local_folder and convert_steamcmd_local_action:
                     workshop_actions_menu.addAction(convert_steamcmd_local_action)
-                if (
-                    self.settings_controller.settings.local_folder
-                    and convert_workshop_local_action
-                ):
+                if local_folder and convert_workshop_local_action:
                     workshop_actions_menu.addAction(convert_workshop_local_action)
                 if re_steamcmd_action:
                     workshop_actions_menu.addAction(re_steamcmd_action)
@@ -1017,22 +1012,15 @@ class ModListWidget(QListWidget):
                     action == convert_local_steamcmd_action
                     and len(local_steamcmd_name_to_publishedfileid) > 0
                 ):
+                    local_folder = self.settings_controller.settings.instances[
+                        self.settings_controller.settings.current_instance
+                    ]
                     for (
                         folder_name,
                         publishedfileid,
                     ) in local_steamcmd_name_to_publishedfileid.items():
-                        original_mod_path = str(
-                            (
-                                Path(self.settings_controller.settings.local_folder)
-                                / folder_name
-                            )
-                        )
-                        renamed_mod_path = str(
-                            (
-                                Path(self.settings_controller.settings.local_folder)
-                                / publishedfileid
-                            )
-                        )
+                        original_mod_path = str((Path(local_folder) / folder_name))
+                        renamed_mod_path = str((Path(local_folder) / publishedfileid))
                         if os.path.exists(original_mod_path):
                             if not os.path.exists(renamed_mod_path):
                                 try:
@@ -1056,6 +1044,9 @@ class ModListWidget(QListWidget):
                     action == convert_steamcmd_local_action
                     and len(steamcmd_publishedfileid_to_name) > 0
                 ):
+                    local_folder = self.settings_controller.settings.instances[
+                        self.settings_controller.settings.current_instance
+                    ]
                     for (
                         publishedfileid,
                         mod_name,
@@ -1065,18 +1056,8 @@ class ModListWidget(QListWidget):
                             if mod_name
                             else f"{publishedfileid}_local"
                         )
-                        original_mod_path = str(
-                            (
-                                Path(self.settings_controller.settings.local_folder)
-                                / publishedfileid
-                            )
-                        )
-                        renamed_mod_path = str(
-                            (
-                                Path(self.settings_controller.settings.local_folder)
-                                / mod_name
-                            )
-                        )
+                        original_mod_path = str((Path(local_folder) / publishedfileid))
+                        renamed_mod_path = str((Path(local_folder) / mod_name))
                         if os.path.exists(original_mod_path):
                             if not os.path.exists(renamed_mod_path):
                                 try:
@@ -1134,7 +1115,11 @@ class ModListWidget(QListWidget):
                             mod_name = sanitize_filename(mod_name)
                         renamed_mod_path = str(
                             (
-                                Path(self.settings_controller.settings.local_folder)
+                                Path(
+                                    self.settings_controller.settings.instances[
+                                        self.settings_controller.settings.current_instance
+                                    ]["local_folder"]
+                                )
                                 / (
                                     mod_name
                                     if mod_name
