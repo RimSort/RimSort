@@ -47,8 +47,6 @@ class Settings(QObject):
         self._github_username: str = ""
         self._github_token: str = ""
         self._steam_apikey: str = ""
-        self._run_args: List[str] = []
-
         self.apply_default_settings()
 
     def apply_default_settings(self) -> None:
@@ -93,13 +91,13 @@ class Settings(QObject):
                     "config_folder": "",
                     "local_folder": "",
                     "workshop_folder": "",
+                    "run_args": [],
                 }
             },
         )
         self._github_username = ""
         self._github_token = ""
         self._steam_apikey = ""
-        self._run_args = []
 
     @property
     def debug_logging_enabled(self) -> bool:
@@ -431,17 +429,6 @@ class Settings(QObject):
         self._steam_apikey = value
         EventBus().settings_have_changed.emit()
 
-    @property
-    def run_args(self) -> List[str]:
-        return self._run_args
-
-    @run_args.setter
-    def run_args(self, value: List[str]) -> None:
-        if value == self._run_args:
-            return
-        self._run_args = value
-        EventBus().settings_have_changed.emit()
-
     def load(self) -> None:
         if self._debug_file.exists() and self._debug_file.is_file():
             self._debug_logging_enabled = True
@@ -451,7 +438,29 @@ class Settings(QObject):
         try:
             with open(str(self._settings_file), "r") as file:
                 data = json.load(file)
+                mitigations = (
+                    True  # Assume there are mitigations unless we reach else block
+                )
+                # Mitigate issues when "instances" key is not parsed, but the old path attributes are present
+                if not data.get("instances"):
+                    # Create Default instance
+                    data["instances"] = {
+                        "Default": {
+                            "game_folder": data.get("game_folder", ""),
+                            "local_folder": data.get("local_folder", ""),
+                            "workshop_folder": data.get("workshop_folder", ""),
+                            "config_folder": data.get("config_folder", ""),
+                            "run_args": data.get("run_args", []),
+                        }
+                    }
+                else:
+                    # There was nothing to mitigate, so don't save the model to the file
+                    mitigations = False
+                # Parse data from settings.json into the model
                 self._from_dict(data)
+                # Save the model to the file if there were mitigations
+                if mitigations:
+                    self.save()
         except FileNotFoundError:
             self.save()
         except JSONDecodeError:
@@ -591,10 +600,6 @@ class Settings(QObject):
             self.steam_apikey = data["steam_apikey"]
             del data["steam_apikey"]
 
-        if "run_args" in data:
-            self.run_args = data["run_args"]
-            del data["run_args"]
-
     def _to_dict(self) -> Dict[str, Any]:
         data = {
             "check_for_update_startup": self.check_for_update_startup,
@@ -626,6 +631,5 @@ class Settings(QObject):
             "github_username": self.github_username,
             "github_token": self.github_token,
             "steam_apikey": self.steam_apikey,
-            "run_args": self.run_args,
         }
         return data

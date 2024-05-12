@@ -160,7 +160,6 @@ class MainContent(QObject):
                 lambda: self.actions_slot("reset_steamcmd_acf_data")
             )
             EventBus().do_install_steamcmd.connect(self._do_setup_steamcmd)
-            EventBus().do_edit_run_arguments.connect(self._do_edit_run_args)
 
             EventBus().do_refresh_mods_lists.connect(self._do_refresh)
             EventBus().do_clear_active_mods_list.connect(self._do_clear)
@@ -682,20 +681,20 @@ class MainContent(QObject):
         if action == "save":
             self._do_save()
         if action == "run":
+            current_instance = self.settings_controller.settings.current_instance
             self._do_steamworks_api_call(
                 [
                     "launch_game_process",
                     [
                         self.settings_controller.settings.instances[
-                            self.settings_controller.settings.current_instance
+                            current_instance
                         ]["game_folder"],
-                        self.settings_controller.settings.run_args,
+                        self.settings_controller.settings.instances[
+                            current_instance
+                        ],
                     ],
                 ]
             )
-        if action == "edit_run_args":
-            self._do_edit_run_args()
-
         # settings panel actions
         if action == "configure_github_identity":
             self._do_configure_github_identity()
@@ -1802,21 +1801,6 @@ class MainContent(QObject):
             logger.warning(
                 "Cached mod lists for restore function not set as client started improperly. Passing on restore"
             )
-
-    def _do_edit_run_args(self) -> None:
-        """
-        Opens a QDialogInput that allows the user to edit the run args
-        that are configured to be passed to the Rimworld executable
-        """
-        args, ok = show_dialogue_input(
-            title="Edit run arguments",
-            text="Enter a comma separated list of arguments to pass to the Rimworld executable\n\n"
-            + "Example: \n-popupwindow,-logfile,/path/to/file.log",
-            value=",".join(self.settings_controller.settings.run_args),
-        )
-        if ok:
-            self.settings_controller.settings.run_args = args.split(",")
-            self.settings_controller.settings.save()
 
     # TODDS ACTIONS
 
@@ -3238,14 +3222,17 @@ class MainContent(QObject):
 
     @Slot()
     def _do_run_game(self) -> None:
+        current_instance = self.settings_controller.settings.current_instance
         self._do_steamworks_api_call(
             [
                 "launch_game_process",
                 [
                     self.settings_controller.settings.instances[
-                        self.settings_controller.settings.current_instance
+                        current_instance
                     ]["game_folder"],
-                    self.settings_controller.settings.run_args,
+                    self.settings_controller.settings.instances[current_instance][
+                        "run_args"
+                    ],
                 ],
             ]
         )

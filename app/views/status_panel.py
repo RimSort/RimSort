@@ -92,9 +92,6 @@ class Status:
             self.status_text.start_pause_fade("Active mods saved into ModsConfig.xml")
         elif action == "run":
             self.status_text.start_pause_fade("Starting RimWorld")
-        elif action == "edit_run_args":
-            self.status_text.start_pause_fade("Editing configured run arguments...")
-
         # settings panel actions
         elif action == "configure_github_identity":
             self.status_text.start_pause_fade("Configured Github identity")
