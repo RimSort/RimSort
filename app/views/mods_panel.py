@@ -963,7 +963,6 @@ class ModListWidget(QListWidget):
                 or add_to_steamdb_blacklist_action
                 or remove_from_steamdb_blacklist_action
             ):
-                current_mods = self.get_selected_mods()
                 local_folder = self.settings_controller.settings.instances[
                     self.settings_controller.settings.current_instance
                 ]
