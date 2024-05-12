@@ -17,6 +17,7 @@ from app.models.dialogue import (
     show_fatal_error,
     show_warning,
 )
+from app.utils.event_bus import EventBus
 from app.windows.runner_panel import RunnerPanel
 
 
@@ -43,9 +44,9 @@ class SteamcmdInterface:
             logger.debug("Finished SteamcmdInterface initialization")
 
     def initialize_prefix(self, steamcmd_prefix: str, validate: bool) -> None:
-        self.steamcmd_prefix = Path(self.steamcmd_prefix)
-        self.steamcmd_install_path = str((self.steamcmd_prefix / "steamcmd"))
-        self.steamcmd_steam_path = str((self.steamcmd_prefix / "steam"))
+        self.steamcmd_prefix = steamcmd_prefix
+        self.steamcmd_install_path = str(Path(self.steamcmd_prefix) / "steamcmd")
+        self.steamcmd_steam_path = str(Path(self.steamcmd_prefix) / "steam")
         self.system = platform.system()
         self.validate_downloads = validate
 
@@ -90,10 +91,6 @@ class SteamcmdInterface:
         self.steamcmd_content_path = str(
             (Path(self.steamcmd_steam_path) / "steamapps" / "workshop" / "content")
         )
-
-        # Check for the steamcmd executable existing.
-        if not self.check_for_steamcmd(prefix=self.steamcmd_prefix):
-            self.on_steamcmd_not_found()
 
     @classmethod
     def instance(cls, *args: Any, **kwargs: Any) -> "SteamcmdInterface":
@@ -150,13 +147,14 @@ class SteamcmdInterface:
 
     def on_steamcmd_not_found(self, runner: RunnerPanel = None) -> None:
         answer = show_dialogue_conditional(
-            title="SteamcmdInterface",
+            title="RimSort - SteamCMD setup",
             text="RimSort was unable to find SteamCMD installed in the configured prefix:\n",
-            information=self.steamcmd_prefix,
+            information=f"{self.steamcmd_prefix if self.steamcmd_prefix else '<None>'}\n\n"
+            + "Do you want to setup SteamCMD?",
         )
         if answer == "&Yes":
-            self.setup_steamcmd(self.steamcmd_prefix, True, runner)
-        elif runner:
+            EventBus().do_install_steamcmd.emit()
+        if runner:
             runner.close()
 
     def setup_steamcmd(
@@ -248,6 +246,7 @@ class SteamcmdInterface:
                             CreateJunction(
                                 symlink_source_path, symlink_destination_path
                             )
+                        self.setup = True
                     except Exception as e:
                         runner.message(
                             f"Failed to create symlink. Error: {type(e).__name__}: {str(e)}"
