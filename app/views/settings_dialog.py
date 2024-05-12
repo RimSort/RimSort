@@ -38,8 +38,8 @@ class SettingsDialog(QDialog):
         self.setLayout(main_layout)
 
         # Initialize the QTabWidget
-        self._tab_widget = QTabWidget()
-        main_layout.addWidget(self._tab_widget)
+        self.tab_widget = QTabWidget()
+        main_layout.addWidget(self.tab_widget)
 
         # Initialize the tabs
         self._do_locations_tab()
@@ -71,7 +71,7 @@ class SettingsDialog(QDialog):
 
     def _do_locations_tab(self) -> None:
         tab = QWidget()
-        self._tab_widget.addTab(tab, "Locations")
+        self.tab_widget.addTab(tab, "Locations")
 
         tab_layout = QVBoxLayout(tab)
         tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -239,7 +239,7 @@ class SettingsDialog(QDialog):
 
     def _do_databases_tab(self) -> None:
         tab = QWidget()
-        self._tab_widget.addTab(tab, "Databases")
+        self.tab_widget.addTab(tab, "Databases")
 
         tab_layout = QVBoxLayout()
         tab.setLayout(tab_layout)
@@ -459,7 +459,7 @@ class SettingsDialog(QDialog):
 
     def _do_sorting_tab(self) -> None:
         tab = QWidget()
-        self._tab_widget.addTab(tab, "Sorting")
+        self.tab_widget.addTab(tab, "Sorting")
 
         tab_layout = QVBoxLayout(tab)
         tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -489,7 +489,7 @@ class SettingsDialog(QDialog):
 
     def _do_db_builder_tab(self) -> None:
         tab = QWidget()
-        self._tab_widget.addTab(tab, "DB Builder")
+        self.tab_widget.addTab(tab, "DB Builder")
 
         tab_layout = QVBoxLayout(tab)
         tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -621,7 +621,7 @@ class SettingsDialog(QDialog):
 
     def _do_steamcmd_tab(self) -> None:
         tab = QWidget()
-        self._tab_widget.addTab(tab, "SteamCMD")
+        self.tab_widget.addTab(tab, "SteamCMD")
 
         tab_layout = QVBoxLayout(tab)
         tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -679,7 +679,7 @@ class SettingsDialog(QDialog):
 
     def _do_todds_tab(self) -> None:
         tab = QWidget()
-        self._tab_widget.addTab(tab, "todds")
+        self.tab_widget.addTab(tab, "todds")
 
         tab_layout = QVBoxLayout(tab)
         tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -733,7 +733,7 @@ class SettingsDialog(QDialog):
 
     def _do_advanced_tab(self) -> None:
         tab = QWidget()
-        self._tab_widget.addTab(tab, "Advanced")
+        self.tab_widget.addTab(tab, "Advanced")
 
         tab_layout = QVBoxLayout(tab)
         tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -832,6 +832,20 @@ class SettingsDialog(QDialog):
         run_args_layout.addWidget(self.run_args, 1, 1)
 
         self.setTabOrder(self.run_args_info_label, self.run_args)
+
+    def _find_tab_index(self, tab_name):
+        for i in range(self.tab_widget.count()):
+            if self.tab_widget.tabText(i) == tab_name:
+                return i
+        return -1  # Return -1 if no tab found
+
+    def switch_to_tab(self, tab_name):
+        """
+        Switch to the specified tab by name if it exists.
+        """
+        index = self._find_tab_index(tab_name)
+        if index and index != -1:
+            self.tab_widget.setCurrentIndex(index)
 
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)

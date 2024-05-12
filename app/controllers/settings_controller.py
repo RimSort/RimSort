@@ -260,11 +260,13 @@ class SettingsController(QObject):
         else:
             return None
 
-    def show_settings_dialog(self) -> None:
+    def show_settings_dialog(self, tab_name: str = None) -> None:
         """
         Update the view from the model and show the settings dialog.
         """
         self._update_view_from_model()
+        if tab_name:
+            self.settings_dialog.switch_to_tab(tab_name)
         self.settings_dialog.show()
 
     def _update_view_from_model(self) -> None:
