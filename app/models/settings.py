@@ -84,17 +84,15 @@ class Settings(QObject):
         self._todds_dry_run = False
         self._todds_overwrite = False
         self._current_instance = "Default"
-        self._instances: Dict[str, Dict[str, str]] = (
-            {
-                "Default": {
-                    "game_folder": "",
-                    "config_folder": "",
-                    "local_folder": "",
-                    "workshop_folder": "",
-                    "run_args": [],
-                }
-            },
-        )
+        self._instances: Dict[str, Dict[str, str]] = {
+            "Default": {
+                "game_folder": "",
+                "config_folder": "",
+                "local_folder": "",
+                "workshop_folder": "",
+                "run_args": [],
+            }
+        }
         self._github_username = ""
         self._github_token = ""
         self._steam_apikey = ""
