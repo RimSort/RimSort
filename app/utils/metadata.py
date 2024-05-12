@@ -92,10 +92,15 @@ class MetadataManager(QObject):
             # SteamCMD .acf file data
             self.steamcmd_acf_data: Dict[str, Any] = {}
             # Steam .acf file path / data
+            current_instance = self.settings_controller.settings.current_instance
             self.workshop_acf_path: Optional[str] = str(
                 # This is just getting the path 2 directories up from content/294100,
                 # so that we can find workshop/appworkshop_294100.acf
-                Path(self.settings_controller.settings.workshop_folder).parent.parent
+                Path(
+                    self.settings_controller.settings.instances[current_instance][
+                        "game_folder"
+                    ]
+                ).parent.parent
                 / "appworkshop_294100.acf",
             )
             self.workshop_acf_data: Dict[str, Any] = {}
@@ -360,6 +365,7 @@ class MetadataManager(QObject):
                 data_source (str): The data source to purge.
                 batch (list[str], optional): A list of uuids to use to filter items not in that batch.
             """
+            current_instance = self.settings_controller.settings.current_instance
             if not batch:  # Purge all metadata for a given data source
                 uuids_to_remove = [
                     uuid
@@ -392,9 +398,10 @@ class MetadataManager(QObject):
                         self.packageid_to_uuids[deleted_mod_packageid].remove(uuid)
 
         # Get & set Rimworld version string
-        version_file_path = str(
-            (Path(self.settings_controller.settings.game_folder) / "Version.txt")
-        )
+        game_folder = self.settings_controller.settings.instances[
+            self.settings_controller.settings.current_instance
+        ]["game_folder"]
+        version_file_path = str((Path(game_folder) / "Version.txt"))
         if os.path.exists(version_file_path):
             try:
                 with open(version_file_path, encoding="utf-8") as f:
@@ -413,18 +420,13 @@ class MetadataManager(QObject):
             self.show_warning_signal.emit(
                 "Missing Version.txt",
                 f"RimSort is unable to get the game version at the expected path: [{version_file_path}].",
-                f"\nIs your game path [{self.settings_controller.settings.game_folder}] set correctly? There should be a Version.txt file in the game install directory.",
+                f"\nIs your game path [{self.settings_controller.settings.instances[self.settings_controller.settings.current_instance]['game_folder']}] set correctly? There should be a Version.txt file in the game install directory.",
                 "",
             )
         # Get and cache installed base game / DLC data
-        if (
-            self.settings_controller.settings.game_folder
-            and self.settings_controller.settings.game_folder != ""
-        ):
+        if game_folder and game_folder != "":
             # Get mod data
-            data_path = str(
-                (Path(self.settings_controller.settings.game_folder) / "Data")
-            )
+            data_path = str((Path(game_folder) / "Data"))
             logger.info(
                 f"Querying Official expansions from RimWorld's Data folder: {data_path}"
             )
@@ -480,17 +482,14 @@ class MetadataManager(QObject):
             # Check for and purge any found expansion metadata from cache
             purge_by_data_source(self, "expansion")
         # Get and cache installed local/SteamCMD Workshop mods
-        if (
-            self.settings_controller.settings.local_folder
-            and self.settings_controller.settings.local_folder != ""
-        ):
+        current_instance = self.settings_controller.settings.current_instance
+        local_folder = self.settings_controller.settings.instances[current_instance][
+            "local_folder"
+        ]
+        if local_folder and local_folder != "":
             # Get mod data
-            logger.info(
-                f"Querying local mods from path: {self.settings_controller.settings.local_folder}"
-            )
-            local_subdirectories = directories(
-                self.settings_controller.settings.local_folder
-            )
+            logger.info(f"Querying local mods from path: {local_folder}")
+            local_subdirectories = directories(local_folder)
             local_batch = batch_by_data_source(self, "local", local_subdirectories)
             if not is_initial:
                 # Pop any uuids from metadata that are not in the batch - these can be leftover from a previous directory
@@ -507,16 +506,13 @@ class MetadataManager(QObject):
             # Check for and purge any found local mod metadata from cache
             purge_by_data_source(self, "local")
         # Get and cache installed Steam client Workshop mods
-        if (
-            self.settings_controller.settings.workshop_folder
-            and self.settings_controller.settings.workshop_folder != ""
-        ):
-            logger.info(
-                f"Querying workshop mods from path: {self.settings_controller.settings.workshop_folder}"
-            )
-            workshop_subdirectories = directories(
-                self.settings_controller.settings.workshop_folder
-            )
+        current_instance = self.settings_controller.settings.current_instance
+        workshop_folder = self.settings_controller.settings.instances[current_instance][
+            "workshop_folder"
+        ]
+        if workshop_folder and workshop_folder != "":
+            logger.info(f"Querying workshop mods from path: {workshop_folder}")
+            workshop_subdirectories = directories(workshop_folder)
             workshop_batch = batch_by_data_source(
                 self, "workshop", workshop_subdirectories
             )
@@ -573,11 +569,8 @@ class MetadataManager(QObject):
         self.external_steam_metadata_source = (
             self.settings_controller.settings.external_steam_metadata_source
         )
-        self.game_path = self.settings_controller.settings.game_folder
-        self.local_path = self.settings_controller.settings.local_folder
         self.steamcmd_acf_path = self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
         self.user_rules_file_path = str(AppInfo().databases_folder / "userRules.json")
-        self.workshop_path = self.settings_controller.settings.workshop_folder
 
     def compile_metadata(self, uuids: list[str] = None) -> None:
         """

@@ -205,19 +205,51 @@ class SettingsController(QObject):
         )
 
     def get_mod_paths(self) -> list[str]:
+        """
+        Get the mod paths for the current instance. Return the Default instance if the current instance is not found.
+        """
         return [
-            str(Path(self.settings.game_folder) / "Data"),
-            str(Path(self.settings.local_folder)),
-            str(Path(self.settings.workshop_folder)),
+            str(
+                Path(
+                    self.settings.instances[self.settings.current_instance][
+                        "game_folder"
+                    ]
+                )
+                / "Data"
+            ),
+            str(
+                Path(
+                    self.settings.instances[self.settings.current_instance][
+                        "local_folder"
+                    ]
+                )
+            ),
+            str(
+                Path(
+                    self.settings.instances[self.settings.current_instance][
+                        "workshop_folder"
+                    ]
+                )
+            ),
         ]
 
     def resolve_data_source(self, path: str) -> str:
+        """
+        Resolve the data source for the provided path string.
+        """
         # Pathlib the provided path string
         path = Path(path)
         # Grab paths from Settings
-        expansions_path = Path(self.settings.game_folder) / "Data"
-        local_path = Path(self.settings.local_folder)
-        workshop_path = Path(self.settings.workshop_folder)
+        expansions_path = (
+            Path(self.settings.instances[self.settings.current_instance]["game_folder"])
+            / "Data"
+        )
+        local_path = Path(
+            self.settings.instances[self.settings.current_instance]["local_folder"]
+        )
+        workshop_path = Path(
+            self.settings.instances[self.settings.current_instance]["workshop_folder"]
+        )
         # Validate data source, then emit if path is valid and not mapped
         if path.parent == expansions_path:
             return "expansion"
@@ -241,20 +273,24 @@ class SettingsController(QObject):
         """
 
         # Locations tab
-        self.settings_dialog.game_location.setText(self.settings.game_folder)
+        self.settings_dialog.game_location.setText(
+            self.settings.instances[self.settings.current_instance]["game_folder"]
+        )
         self.settings_dialog.game_location.setCursorPosition(0)
         self.settings_dialog.game_location_open_button.setEnabled(
             self.settings_dialog.game_location.text() != ""
         )
 
-        self.settings_dialog.config_folder_location.setText(self.settings.config_folder)
+        self.settings_dialog.config_folder_location.setText(
+            self.settings.instances[self.settings.current_instance]["config_folder"]
+        )
         self.settings_dialog.config_folder_location.setCursorPosition(0)
         self.settings_dialog.config_folder_location_open_button.setEnabled(
             self.settings_dialog.config_folder_location.text() != ""
         )
 
         self.settings_dialog.steam_mods_folder_location.setText(
-            self.settings.workshop_folder
+            self.settings.instances[self.settings.current_instance]["workshop_folder"]
         )
         self.settings_dialog.steam_mods_folder_location.setCursorPosition(0)
         self.settings_dialog.steam_mods_folder_location_open_button.setEnabled(
@@ -262,7 +298,7 @@ class SettingsController(QObject):
         )
 
         self.settings_dialog.local_mods_folder_location.setText(
-            self.settings.local_folder
+            self.settings.instances[self.settings.current_instance]["local_folder"]
         )
         self.settings_dialog.local_mods_folder_location.setCursorPosition(0)
         self.settings_dialog.local_mods_folder_location_open_button.setEnabled(
@@ -438,14 +474,18 @@ class SettingsController(QObject):
         """
 
         # Locations tab
-        self.settings.game_folder = self.settings_dialog.game_location.text()
-        self.settings.config_folder = self.settings_dialog.config_folder_location.text()
-        self.settings.workshop_folder = (
-            self.settings_dialog.steam_mods_folder_location.text()
-        )
-        self.settings.local_folder = (
-            self.settings_dialog.local_mods_folder_location.text()
-        )
+        self.settings.instances[self.settings.current_instance][
+            "game_folder"
+        ] = self.settings_dialog.game_location.text()
+        self.settings.instances[self.settings.current_instance][
+            "config_folder"
+        ] = self.settings_dialog.config_folder_location.text()
+        self.settings.instances[self.settings.current_instance][
+            "workshop_folder"
+        ] = self.settings_dialog.steam_mods_folder_location.text()
+        self.settings.instances[self.settings.current_instance][
+            "local_folder"
+        ] = self.settings_dialog.local_mods_folder_location.text()
 
         # Databases tab
         if self.settings_dialog.community_rules_db_none_radio.isChecked():
