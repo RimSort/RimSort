@@ -103,6 +103,15 @@ class MenuBar(QObject):
         self.download_menu.addAction(self.browse_workshop_action)
         self.update_workshop_mods_action = QAction("Update Workshop Mods", self)
         self.download_menu.addAction(self.update_workshop_mods_action)
+        # Instances menu
+        self.instances_menu = self.menu_bar.addMenu("Instances")
+        self.instances_submenu = QMenu('Current: "Default"')
+        self.create_instance_action = QAction("Create Instance…", self)
+        self.delete_instance_action = QAction("Delete Instance…", self)
+        self.instances_menu.addMenu(self.instances_submenu)
+        self.instances_menu.addSeparator()
+        self.instances_menu.addAction(self.create_instance_action)
+        self.instances_menu.addAction(self.delete_instance_action)
         # Textures menu
         self.texture_menu = self.menu_bar.addMenu("Textures")
         self.optimize_textures_action = QAction("Optimize Textures", self)
@@ -184,6 +193,15 @@ class MenuBar(QObject):
         self.file_menu.addAction(self.browse_workshop_action)
         self.update_workshop_mods_action = QAction("Update Workshop Mods", self)
         self.file_menu.addAction(self.update_workshop_mods_action)
+        # Instances menu
+        self.instances_menu = self.menu_bar.addMenu("Instances")
+        self.instances_submenu = QMenu('Current: "Default"')
+        self.create_instance_action = QAction("Create Instance…", self)
+        self.delete_instance_action = QAction("Delete Instance…", self)
+        self.instances_menu.addMenu(self.instances_submenu)
+        self.instances_menu.addSeparator()
+        self.instances_menu.addAction(self.create_instance_action)
+        self.instances_menu.addAction(self.delete_instance_action)
         # Textures menu
         self.file_menu = self.menu_bar.addMenu("Textures")
         self.optimize_textures_action = QAction("Optimize Textures", self)

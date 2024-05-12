@@ -1,4 +1,7 @@
+from functools import partial
+
 from PySide6.QtCore import QObject, Slot
+from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QApplication, QLineEdit, QTextEdit, QPlainTextEdit
 
 from app.controllers.settings_controller import SettingsController
@@ -95,6 +98,15 @@ class MenuBarController(QObject):
             EventBus().do_check_for_workshop_updates
         )
 
+        # Instances menu
+
+        self.menu_bar.create_instance_action.triggered.connect(
+            EventBus().do_create_new_instance.emit
+        )
+        self.menu_bar.delete_instance_action.triggered.connect(
+            EventBus().do_delete_current_instance.emit
+        )
+
         # Textures menu
 
         self.menu_bar.optimize_textures_action.triggered.connect(
@@ -116,6 +128,33 @@ class MenuBarController(QObject):
 
         EventBus().refresh_started.connect(self._on_refresh_started)
         EventBus().refresh_finished.connect(self._on_refresh_finished)
+
+    def _on_instances_submenu_population(self, instance_names: list[str]) -> None:
+        self.menu_bar.instances_submenu.clear()
+        actions = [QAction(name, self) for name in instance_names]
+        for action in actions:
+            action.triggered.connect(
+                partial(
+                    self._on_set_current_instance,
+                    current_instance=action.text(),
+                    initialize=True,
+                )
+            )
+        self.menu_bar.instances_submenu.addActions(actions)
+
+    def _on_set_current_instance(self, current_instance: str, initialize=False) -> None:
+        self.menu_bar.instances_submenu.setActiveAction(
+            next(
+                (
+                    action
+                    for action in self.menu_bar.instances_submenu.actions()
+                    if action.text() == current_instance
+                ),
+                None,
+            )
+        )
+        if initialize:
+            EventBus().do_activate_current_instance.emit(current_instance)
 
     @Slot()
     def _on_menu_bar_check_for_updates_on_startup_triggered(self) -> None:
