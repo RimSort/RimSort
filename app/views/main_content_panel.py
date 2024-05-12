@@ -657,8 +657,6 @@ class MainContent(QObject):
             self._do_add_git_mod()
         if action == "browse_workshop":
             self._do_browse_workshop()
-        if action == "setup_steamcmd":
-            self._do_setup_steamcmd()
         if action == "import_steamcmd_acf_data":
             import_steamcmd_acf_data(
                 rimsort_storage_path=str(AppInfo().app_storage_folder),
@@ -1018,7 +1016,7 @@ class MainContent(QObject):
             )
             self.mods_panel.signal_clear_search(list_type="Inactive")
         # Check if paths are set
-        if self.check_if_essential_paths_are_set():
+        if self.check_if_essential_paths_are_set(prompt=is_initial):
             # Run expensive calculations to set cache data
             self._do_threaded_loading_animation(
                 gif_path=str(
@@ -1912,24 +1910,32 @@ class MainContent(QObject):
             and self.steamcmd_runner.process.state() == QProcess.Running
         ):
             show_warning(
-                title="RimSort",
+                title="RimSort - SteamCMD setup",
                 text="Unable to create SteamCMD runner!",
                 information="There is an active process already running!",
                 details=f"PID {self.steamcmd_runner.process.processId()} : "
                 + self.steamcmd_runner.process.program(),
             )
             return
-        self.steamcmd_runner = RunnerPanel()
-        self.steamcmd_runner.setWindowTitle("RimSort - SteamCMD setup")
-        self.steamcmd_runner.show()
-        self.steamcmd_runner.message("Setting up steamcmd...")
-        self.steamcmd_wrapper.setup_steamcmd(
-            self.settings_controller.settings.instances[
-                self.settings_controller.settings.current_instance
-            ]["local_folder"],
-            False,
-            self.steamcmd_runner,
-        )
+        local_mods_path = self.settings_controller.settings.instances[
+            self.settings_controller.settings.current_instance
+        ]["local_folder"]
+        if local_mods_path and os.path.exists(local_mods_path):
+            self.steamcmd_runner = RunnerPanel()
+            self.steamcmd_runner.setWindowTitle("RimSort - SteamCMD setup")
+            self.steamcmd_runner.show()
+            self.steamcmd_runner.message("Setting up steamcmd...")
+            self.steamcmd_wrapper.setup_steamcmd(
+                local_mods_path,
+                False,
+                self.steamcmd_runner,
+            )
+        else:
+            show_warning(
+                title="RimSort - SteamCMD setup",
+                text="Unable to initiate SteamCMD installtion. Local mods path not set!",
+                information="Please configure local mods path in Settings before attempting to install.",
+            )
 
     def _do_download_mods_with_steamcmd(self, publishedfileids: list):
         logger.debug(
@@ -3155,18 +3161,14 @@ class MainContent(QObject):
 
     @Slot()
     def _on_settings_have_changed(self) -> None:
-        steamcmd_prefix = self.settings_controller.settings.instances[
-            self.settings_controller.settings.current_instance
-        ]["steamcmd_install_path"]
-        if steamcmd_prefix and self.steamcmd_wrapper.check_for_steamcmd(
-            steamcmd_prefix
-        ):
+        steamcmd_prefix = self.settings_controller.settings.instances.get(
+            self.settings_controller.settings.current_instance, {}
+        ).get("steamcmd_install_path", "")
+        if steamcmd_prefix:
             self.steamcmd_wrapper.initialize_prefix(
                 steamcmd_prefix=steamcmd_prefix,
                 validate=self.settings_controller.settings.steamcmd_validate_downloads,
             )
-        else:
-            self.steamcmd_wrapper.on_steamcmd_not_found()
         self.steamcmd_wrapper.validate_downloads = (
             self.settings_controller.settings.steamcmd_validate_downloads
         )

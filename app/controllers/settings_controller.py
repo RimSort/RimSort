@@ -10,6 +10,7 @@ from app.models.dialogue import show_dialogue_confirmation, show_dialogue_file
 from app.models.settings import Settings
 from app.utils.event_bus import EventBus
 from app.utils.generic import platform_specific_open
+from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.system_info import SystemInfo
 from app.views.settings_dialog import SettingsDialog
 
@@ -625,8 +626,16 @@ class SettingsController(QObject):
         """
         Close the settings dialog, update the model from the view, and save the settings.
         """
+        steamcmd_wrapper = SteamcmdInterface.instance()
         self.settings_dialog.close()
         self._update_model_from_view()
+        # Check for the steamcmd prefix + executable existence.
+        if not os.path.exists(
+            steamcmd_wrapper.steamcmd_prefix
+        ) or not self.check_for_steamcmd(prefix=steamcmd_wrapper.steamcmd_prefix):
+            self.on_steamcmd_not_found()
+        else:
+            steamcmd_wrapper.setup = True
         self.settings.save()
 
     @Slot()
