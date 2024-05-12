@@ -98,7 +98,7 @@ class MetadataManager(QObject):
                 # so that we can find workshop/appworkshop_294100.acf
                 Path(
                     self.settings_controller.settings.instances[current_instance][
-                        "game_folder"
+                        "workshop_folder"
                     ]
                 ).parent.parent
                 / "appworkshop_294100.acf",
