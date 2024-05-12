@@ -1,5 +1,6 @@
 from functools import partial
 
+from loguru import logger
 from PySide6.QtCore import QObject, Slot
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QApplication, QLineEdit, QTextEdit, QPlainTextEdit
@@ -143,6 +144,7 @@ class MenuBarController(QObject):
         self.menu_bar.instances_submenu.addActions(actions)
 
     def _on_set_current_instance(self, current_instance: str, initialize=False) -> None:
+        self.menu_bar.instances_submenu.setTitle(f"Current: {current_instance}")
         self.menu_bar.instances_submenu.setActiveAction(
             next(
                 (
