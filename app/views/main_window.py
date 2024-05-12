@@ -48,7 +48,6 @@ class MainWindow(QMainWindow):
         # Create the main application window
         self.DEBUG_MODE = debug_mode
         # Content initialization should only fire on startup. Otherwise, this is handled by Refresh button
-        self.init: bool = False
         self.version_string = "Alpha-v1.0.6.2-hf"
 
         # Check for SHA and append to version string if found
@@ -134,6 +133,8 @@ class MainWindow(QMainWindow):
         self.menu_bar_controller = MenuBarController(
             view=self.menu_bar, settings_controller=self.settings_controller
         )
+        # Connect Instances Menu Bar signals
+        EventBus().do_activate_current_instance.connect(self.__switch_to_instance)
 
         self.setWindowTitle(f"RimSort {self.version_string}")
         self.setGeometry(100, 100, 1024, 768)
@@ -149,7 +150,14 @@ class MainWindow(QMainWindow):
         super().showEvent(event)
 
     def initialize_content(self) -> None:
-        self.init = True
+
+        # POPULATE INSTANCES SUBMENU
+        self.menu_bar_controller._on_instances_submenu_population(
+            instance_names=list(self.settings_controller.settings.instances.keys())
+        )
+        self.menu_bar_controller._on_set_current_instance(
+            self.settings_controller.settings.current_instance
+        )
 
         # IF CHECK FOR UPDATE ON STARTUP...
         if self.settings_controller.settings.check_for_update_startup:
@@ -160,6 +168,13 @@ class MainWindow(QMainWindow):
 
         # CHECK USER PREFERENCE FOR WATCHDOG
         if self.settings_controller.settings.watchdog_toggle:
+            # Check if watchdog is already running, restart if it is
+            if (
+                self.watchdog_event_handler is not None
+                and self.watchdog_event_handler.watchdog_observer is not None
+                and self.watchdog_event_handler.watchdog_observer.is_alive()
+            ):
+                self.shutdown_watchdog()
             # Setup watchdog
             self.__initialize_watchdog()
 
@@ -205,6 +220,10 @@ class MainWindow(QMainWindow):
             logger.warning(
                 f"Unable to initialize watchdog Observer due to exception: {str(e)}"
             )
+
+    def __switch_to_instance(self, instance: str) -> None:
+        self.settings_controller.settings.current_instance = instance
+        self.initialize_content()
 
     def shutdown_watchdog(self) -> None:
         if (
