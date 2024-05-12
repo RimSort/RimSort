@@ -772,16 +772,19 @@ class SettingsController(QObject):
         self.settings_dialog.local_mods_folder_location.setText("")
 
     @Slot()
-    def _on_locations_clear_button_clicked(self) -> None:
+    def _on_locations_clear_button_clicked(
+        self, skip_confirmation: bool = False
+    ) -> None:
         """
         Clear the settings dialog's location fields.
         """
-        answer = show_dialogue_confirmation(
-            title="Clear all locations",
-            text="Are you sure you want to clear all locations?",
-        )
-        if answer == "Cancel":
-            return
+        if not skip_confirmation:
+            answer = show_dialogue_confirmation(
+                title="Clear all locations",
+                text="Are you sure you want to clear all locations?",
+            )
+            if answer == "Cancel":
+                return
 
         self.settings_dialog.game_location.setText("")
         self.settings_dialog.config_folder_location.setText("")

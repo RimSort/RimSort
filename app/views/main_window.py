@@ -18,6 +18,7 @@ from loguru import logger
 
 from app.controllers.menu_bar_controller import MenuBarController
 from app.controllers.settings_controller import SettingsController
+from app.models.dialogue import show_dialogue_input, show_fatal_error, show_warning
 from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 from app.utils.gui_info import GUIInfo
@@ -135,6 +136,8 @@ class MainWindow(QMainWindow):
         )
         # Connect Instances Menu Bar signals
         EventBus().do_activate_current_instance.connect(self.__switch_to_instance)
+        EventBus().do_create_new_instance.connect(self.__create_new_instance)
+        EventBus().do_delete_current_instance.connect(self.__delete_current_instance)
 
         self.setWindowTitle(f"RimSort {self.version_string}")
         self.setGeometry(100, 100, 1024, 768)
@@ -221,8 +224,70 @@ class MainWindow(QMainWindow):
                 f"Unable to initialize watchdog Observer due to exception: {str(e)}"
             )
 
+    def __create_new_instance(self) -> None:
+        instance_name, _ = show_dialogue_input(
+            title="Create new instance",
+            text="Enter name of new instance:",
+        )
+        current_instances = list(self.settings_controller.settings.instances.keys())
+        if (
+            instance_name
+            and instance_name != "Default"
+            and instance_name not in current_instances
+        ):
+            self.settings_controller.settings.current_instance = instance_name
+            self.settings_controller.settings.instances[instance_name] = {
+                "game_folder": "",
+                "local_folder": "",
+                "workshop_folder": "",
+                "config_folder": "",
+                "run_args": "",
+            }
+            # Save settings
+            self.settings_controller.settings.save()
+            # Initialize content
+            self.initialize_content()
+        else:
+            show_warning(
+                title="Error creating instance",
+                text="Unable to create new instance.",
+                information="Please enter a valid, unique instance name. It cannot be 'Default' or empty.",
+            )
+
+    def __delete_current_instance(self) -> None:
+        if self.settings_controller.settings.current_instance == "Default":
+            show_warning(
+                title="Problem deleting instance",
+                text=f"Unable to delete instance {self.settings_controller.settings.current_instance}.",
+                information="The default instance cannot be deleted.",
+            )
+            return
+        elif not self.settings_controller.settings.instances.get(
+            self.settings_controller.settings.current_instance
+        ):
+            show_fatal_error(
+                title="Error deleting instance",
+                text=f"Unable to delete instance {self.settings_controller.settings.current_instance}.",
+                information="The selected instance does not exist.",
+            )
+            return
+        else:
+            # Remove instance from settings and reset to Default
+            self.settings_controller.settings.instances.pop(
+                self.settings_controller.settings.current_instance
+            )
+            self.settings_controller.settings.current_instance = "Default"
+            # Save settings
+            self.settings_controller.settings.save()
+            # Initialize content
+            self.initialize_content()
+
     def __switch_to_instance(self, instance: str) -> None:
+        # Set current instance
         self.settings_controller.settings.current_instance = instance
+        # Save settings
+        self.settings_controller.settings.save()
+        # Initialize content
         self.initialize_content()
 
     def shutdown_watchdog(self) -> None:
