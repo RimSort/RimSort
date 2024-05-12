@@ -39,6 +39,11 @@ class EventBus(QObject):
     do_browse_workshop = Signal()
     do_check_for_workshop_updates = Signal()
 
+    # Instances Menu bar signals
+    do_activate_current_instance = Signal(str)
+    do_create_new_instance = Signal()
+    do_delete_current_instance = Signal()
+
     # Textures Menu bar signals
     do_optimize_textures = Signal()
     do_delete_dds_textures = Signal()
