@@ -42,10 +42,8 @@ class Settings(QObject):
         self._todds_active_mods_target: bool = False
         self._todds_dry_run: bool = False
         self._todds_overwrite: bool = False
-        self._game_folder: Optional[Path] = None
-        self._config_folder: Optional[Path] = None
-        self._local_folder: Optional[Path] = None
-        self._workshop_folder: Optional[Path] = None
+        self._current_instance: Optional[str] = None
+        self._instances: Dict[str, Dict[str, str]] = {}
         self._github_username: str = ""
         self._github_token: str = ""
         self._steam_apikey: str = ""
@@ -87,10 +85,17 @@ class Settings(QObject):
         self._todds_active_mods_target = True
         self._todds_dry_run = False
         self._todds_overwrite = False
-        self._game_folder = None
-        self._config_folder = None
-        self._local_folder = None
-        self._workshop_folder = None
+        self._current_instance = "Default"
+        self._instances: Dict[str, Dict[str, str]] = (
+            {
+                "Default": {
+                    "game_folder": "",
+                    "config_folder": "",
+                    "local_folder": "",
+                    "workshop_folder": "",
+                }
+            },
+        )
         self._github_username = ""
         self._github_token = ""
         self._steam_apikey = ""
@@ -372,99 +377,25 @@ class Settings(QObject):
         EventBus().settings_have_changed.emit()
 
     @property
-    def game_folder(self) -> str:
-        if self._game_folder is None:
-            return ""
-        else:
-            return str(self._game_folder)
+    def current_instance(self) -> str:
+        return self._current_instance
 
-    @game_folder.setter
-    def game_folder(self, value: str) -> None:
-        if value == str(self._game_folder):
+    @current_instance.setter
+    def current_instance(self, value: str) -> None:
+        if value == self._current_instance:
             return
-        if value == "":
-            self._game_folder = None
-            EventBus().settings_have_changed.emit()
-            return
-        p = Path(value).resolve()
-        if not p.exists() or not p.is_dir():
-            logger.warning(f"Invalid game folder: {p}")
-            self._game_folder = None
-            EventBus().settings_have_changed.emit()
-            return
-        self._game_folder = p
+        self._current_instance = value
         EventBus().settings_have_changed.emit()
 
     @property
-    def config_folder(self) -> str:
-        if self._config_folder is None:
-            return ""
-        else:
-            return str(self._config_folder)
+    def instances(self) -> Dict[str, Dict[str, str]]:
+        return self._instances
 
-    @config_folder.setter
-    def config_folder(self, value: str) -> None:
-        if value == str(self._config_folder):
+    @instances.setter
+    def instances(self, value: Dict[str, Dict[str, str]]) -> None:
+        if value == self._instances:
             return
-        if value == "":
-            self._config_folder = None
-            EventBus().settings_have_changed.emit()
-            return
-        p = Path(value).resolve()
-        if not p.exists() or not p.is_dir():
-            logger.warning(f"Invalid config folder: {p}")
-            self._config_folder = None
-            EventBus().settings_have_changed.emit()
-            return
-        self._config_folder = p
-        EventBus().settings_have_changed.emit()
-
-    @property
-    def local_folder(self) -> str:
-        if self._local_folder is None:
-            return ""
-        else:
-            return str(self._local_folder)
-
-    @local_folder.setter
-    def local_folder(self, value: str) -> None:
-        if value == str(self._local_folder):
-            return
-        if value == "":
-            self._local_folder = None
-            EventBus().settings_have_changed.emit()
-            return
-        p = Path(value).resolve()
-        if not p.exists() or not p.is_dir():
-            logger.warning(f"Invalid local folder: {p}")
-            self._local_folder = None
-            EventBus().settings_have_changed.emit()
-            return
-        self._local_folder = p
-        EventBus().settings_have_changed.emit()
-
-    @property
-    def workshop_folder(self) -> str:
-        if self._workshop_folder is None:
-            return ""
-        else:
-            return str(self._workshop_folder)
-
-    @workshop_folder.setter
-    def workshop_folder(self, value: str) -> None:
-        if value == str(self._workshop_folder):
-            return
-        if value == "":
-            self._workshop_folder = None
-            EventBus().settings_have_changed.emit()
-            return
-        p = Path(value).resolve()
-        if not p.exists() or not p.is_dir():
-            logger.warning(f"Invalid workshop folder: {p}")
-            self._workshop_folder = None
-            EventBus().settings_have_changed.emit()
-            return
-        self._workshop_folder = p
+        self._instances = value
         EventBus().settings_have_changed.emit()
 
     @property
@@ -640,21 +571,13 @@ class Settings(QObject):
             self.todds_overwrite = data["todds_overwrite"]
             del data["todds_overwrite"]
 
-        if "game_folder" in data:
-            self.game_folder = data["game_folder"]
-            del data["game_folder"]
+        if "current_instance" in data:
+            self.current_instance = data["current_instance"]
+            del data["current_instance"]
 
-        if "config_folder" in data:
-            self.config_folder = data["config_folder"]
-            del data["config_folder"]
-
-        if "local_folder" in data:
-            self.local_folder = data["local_folder"]
-            del data["local_folder"]
-
-        if "workshop_folder" in data:
-            self.workshop_folder = data["workshop_folder"]
-            del data["workshop_folder"]
+        if "instances" in data:
+            self.instances = data["instances"]
+            del data["instances"]
 
         if "github_username" in data:
             self.github_username = data["github_username"]
@@ -698,10 +621,8 @@ class Settings(QObject):
             "todds_active_mods_target": self.todds_active_mods_target,
             "todds_dry_run": self.todds_dry_run,
             "todds_overwrite": self.todds_overwrite,
-            "game_folder": self.game_folder,
-            "config_folder": self.config_folder,
-            "local_folder": self.local_folder,
-            "workshop_folder": self.workshop_folder,
+            "current_instance": self.current_instance,
+            "instances": self.instances,
             "github_username": self.github_username,
             "github_token": self.github_token,
             "steam_apikey": self.steam_apikey,

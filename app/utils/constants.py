@@ -40,10 +40,15 @@ DEFAULT_SETTINGS = {
     "todds_active_mods_target": True,
     "todds_dry_run": False,
     "todds_overwrite": False,
-    "game_folder": "",
-    "config_folder": "",
-    "local_folder": "",
-    "workshop_folder": "",
+    "current_instance": "Default",
+    "instances": {
+        "Default": {
+            "game_folder": "",
+            "config_folder": "",
+            "local_folder": "",
+            "workshop_folder": "",
+        }
+    },
 }
 DEFAULT_USER_RULES = {"timestamp": 0, "rules": {}}
 RIMWORLD_DLC_METADATA = {

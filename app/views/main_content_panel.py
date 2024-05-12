@@ -315,8 +315,13 @@ class MainContent(QObject):
         not throw a fatal error trying to load mods until the
         user has had a chance to set paths.
         """
-        game_folder_path = self.settings_controller.settings.game_folder
-        config_folder_path = self.settings_controller.settings.config_folder
+        current_instance = self.settings_controller.settings.current_instance
+        game_folder_path = self.settings_controller.settings.instances[
+            current_instance
+        ]["game_folder"]
+        config_folder_path = self.settings_controller.settings.instances[
+            current_instance
+        ]["config_folder"]
         logger.debug(f"Game folder: {game_folder_path}")
         logger.debug(f"Config folder: {config_folder_path}")
         if not game_folder_path or not config_folder_path:
@@ -565,7 +570,11 @@ class MainContent(QObject):
         ) = get_mods_from_list(
             mod_list=str(
                 (
-                    Path(self.settings_controller.settings.config_folder)
+                    Path(
+                        self.settings_controller.settings.instances[
+                            self.settings_controller.settings.current_instance
+                        ]["config_folder"]
+                    )
                     / "ModsConfig.xml"
                 )
             )
@@ -614,11 +623,15 @@ class MainContent(QObject):
             if os.path.exists(todds_txt_path):
                 os.remove(todds_txt_path)
             if not self.settings_controller.settings.todds_active_mods_target:
-                local_mods_target = self.settings_controller.settings.local_folder
+                local_mods_target = self.settings_controller.settings.instances[
+                    self.settings_controller.settings.current_instance
+                ]["local_folder"]
                 if local_mods_target and local_mods_target != "":
                     with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
                         todds_txt_file.write(local_mods_target + "\n")
-                workshop_mods_target = self.settings_controller.settings.workshop_folder
+                workshop_mods_target = self.settings_controller.settings.instances[
+                    self.settings_controller.settings.current_instance
+                ]["workshop_folder"]
                 if workshop_mods_target and workshop_mods_target != "":
                     with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
                         todds_txt_file.write(workshop_mods_target + "\n")
@@ -673,7 +686,9 @@ class MainContent(QObject):
                 [
                     "launch_game_process",
                     [
-                        self.settings_controller.settings.game_folder,
+                        self.settings_controller.settings.instances[
+                            self.settings_controller.settings.current_instance
+                        ]["game_folder"],
                         self.settings_controller.settings.run_args,
                     ],
                 ]
@@ -1680,7 +1695,11 @@ class MainContent(QObject):
     def _on_do_upload_rimworld_log(self):
         player_log_path = str(
             (
-                Path(self.settings_controller.settings.config_folder).parent
+                Path(
+                    self.settings_controller.settings.instances[
+                        self.settings_controller.settings.current_instance
+                    ]["config_folder"]
+                ).parent
                 / "Player.log"
             )
         )
@@ -1727,7 +1746,12 @@ class MainContent(QObject):
 
         mods_config_data = {"ModsConfigData": {"activeMods": {"li": active_mods}}}
         mods_config_path = str(
-            Path(self.settings_controller.settings.config_folder) / "ModsConfig.xml"
+            Path(
+                self.settings_controller.settings.instances[
+                    self.settings_controller.settings.current_instance
+                ]["config_folder"]
+            )
+            / "ModsConfig.xml"
         )
         try:
             json_to_xml_write(mods_config_data, mods_config_path)
@@ -1899,7 +1923,9 @@ class MainContent(QObject):
         self.steamcmd_runner.show()
         self.steamcmd_runner.message("Setting up steamcmd...")
         self.steamcmd_wrapper.setup_steamcmd(
-            self.settings_controller.settings.local_folder,
+            self.settings_controller.settings.instances[
+                self.settings_controller.settings.current_instance
+            ]["local_folder"],
             False,
             self.steamcmd_runner,
         )
@@ -2120,7 +2146,9 @@ class MainContent(QObject):
         )
         if ok:
             self._do_clone_repo_to_path(
-                base_path=self.settings_controller.settings.local_folder,
+                base_path=self.settings_controller.settings.instances[
+                    self.settings_controller.settings.current_instance
+                ]["local_folder"],
                 repo_url=args,
             )
         else:
@@ -3214,7 +3242,9 @@ class MainContent(QObject):
             [
                 "launch_game_process",
                 [
-                    self.settings_controller.settings.game_folder,
+                    self.settings_controller.settings.instances[
+                        self.settings_controller.settings.current_instance
+                    ]["game_folder"],
                     self.settings_controller.settings.run_args,
                 ],
             ]
