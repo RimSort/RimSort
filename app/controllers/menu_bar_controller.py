@@ -101,6 +101,12 @@ class MenuBarController(QObject):
 
         # Instances menu
 
+        self.menu_bar.clone_instance_action.triggered.connect(
+            partial(
+                EventBus().do_clone_existing_instance.emit,
+                self.settings_controller.settings.current_instance,
+            )
+        )
         self.menu_bar.create_instance_action.triggered.connect(
             EventBus().do_create_new_instance.emit
         )
