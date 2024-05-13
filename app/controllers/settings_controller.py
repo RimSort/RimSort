@@ -632,8 +632,10 @@ class SettingsController(QObject):
         # Check for the steamcmd prefix + executable existence.
         if not os.path.exists(
             steamcmd_wrapper.steamcmd_prefix
-        ) or not self.check_for_steamcmd(prefix=steamcmd_wrapper.steamcmd_prefix):
-            self.on_steamcmd_not_found()
+        ) or not steamcmd_wrapper.check_for_steamcmd(
+            prefix=steamcmd_wrapper.steamcmd_prefix
+        ):
+            steamcmd_wrapper.on_steamcmd_not_found()
         else:
             steamcmd_wrapper.setup = True
         self.settings.save()
