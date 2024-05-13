@@ -106,10 +106,12 @@ class MenuBar(QObject):
         # Instances menu
         self.instances_menu = self.menu_bar.addMenu("Instances")
         self.instances_submenu = QMenu('Current: "Default"')
+        self.clone_instance_action = QAction("Clone Instance…", self)
         self.create_instance_action = QAction("Create Instance…", self)
         self.delete_instance_action = QAction("Delete Instance…", self)
         self.instances_menu.addMenu(self.instances_submenu)
         self.instances_menu.addSeparator()
+        self.instances_menu.addAction(self.clone_instance_action)
         self.instances_menu.addAction(self.create_instance_action)
         self.instances_menu.addAction(self.delete_instance_action)
         # Textures menu
@@ -196,10 +198,12 @@ class MenuBar(QObject):
         # Instances menu
         self.instances_menu = self.menu_bar.addMenu("Instances")
         self.instances_submenu = QMenu('Current: "Default"')
+        self.clone_instance_action = QAction("Clone Instance…", self)
         self.create_instance_action = QAction("Create Instance…", self)
         self.delete_instance_action = QAction("Delete Instance…", self)
         self.instances_menu.addMenu(self.instances_submenu)
         self.instances_menu.addSeparator()
+        self.instances_menu.addAction(self.clone_instance_action)
         self.instances_menu.addAction(self.create_instance_action)
         self.instances_menu.addAction(self.delete_instance_action)
         # Textures menu

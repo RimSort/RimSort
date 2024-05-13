@@ -45,7 +45,7 @@ class Settings(QObject):
         self._todds_dry_run: bool = False
         self._todds_overwrite: bool = False
         self._current_instance: Optional[str] = None
-        self._instances: Dict[str, Dict[str, str]] = {}
+        self._instances: dict[str, dict[str, Any]] = {}
         self._github_username: str = ""
         self._github_token: str = ""
         self._steam_apikey: str = ""
@@ -510,6 +510,14 @@ class Settings(QObject):
                             logger.error(
                                 f"Failed to migrate SteamCMD install path. Error: {e}"
                             )
+                elif (
+                    not data.get("current_instance")
+                    or not data["current_instance"] in data["instances"]
+                ):
+                    logger.debug(
+                        "Current instance not found in settings.json. Performing mitigation."
+                    )
+                    data["current_instance"] = "Default"
                 else:
                     # There was nothing to mitigate, so don't save the model to the file
                     mitigations = False
