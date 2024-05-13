@@ -1127,6 +1127,9 @@ class MainContent(QObject):
                 self.metadata_manager.internal_local_metadata[uuid]["packageid"]
             )
 
+        # Get the current order of active mods list
+        current_order = self.mods_panel.active_mods_list.uuids.copy()
+
         # Get all active mods and their dependencies (if also active mod)
         dependencies_graph = gen_deps_graph(
             self.mods_panel.active_mods_list.uuids, active_mod_ids
@@ -1202,25 +1205,35 @@ class MainContent(QObject):
         ):
             combined_mods[uuid] = self.metadata_manager.internal_local_metadata[uuid]
 
-        logger.info("Finished combining all tiers of mods. Inserting into mod lists!")
-        # Disable widgets while inserting
-        self.disable_enable_widgets_signal.emit(False)
-        # Insert data into lists
-        self.__insert_data_into_lists(
-            combined_mods,
-            {
-                uuid: self.metadata_manager.internal_local_metadata[uuid]
-                for uuid in self.metadata_manager.internal_local_metadata
-                if uuid
-                not in set(
-                    reordered_tier_one_sorted
-                    + reordered_tier_two_sorted
-                    + reordered_tier_three_sorted
-                )
-            },
-        )
-        # Enable widgets again after inserting
-        self.disable_enable_widgets_signal.emit(True)
+        new_order = list(combined_mods.keys())
+
+        # Check if the order has changed
+        if new_order == current_order:
+            logger.info(
+                "The order of mods in List has not changed. Skipping insertion."
+            )
+        else:
+            logger.info(
+                "Finished combining all tiers of mods. Inserting into mod lists!"
+            )
+            # Disable widgets while inserting
+            self.disable_enable_widgets_signal.emit(False)
+            # Insert data into lists
+            self.__insert_data_into_lists(
+                combined_mods,
+                {
+                    uuid: self.metadata_manager.internal_local_metadata[uuid]
+                    for uuid in self.metadata_manager.internal_local_metadata
+                    if uuid
+                    not in set(
+                        reordered_tier_one_sorted
+                        + reordered_tier_two_sorted
+                        + reordered_tier_three_sorted
+                    )
+                },
+            )
+            # Enable widgets again after inserting
+            self.disable_enable_widgets_signal.emit(True)
 
     def _do_import_list_file_xml(self) -> None:
         """
