@@ -163,8 +163,14 @@ class MainWindow(QMainWindow):
         # Call the original showEvent handler
         super().showEvent(event)
 
-    def initialize_content(self) -> None:
-
+    def initialize_content(self, is_initial: bool = True) -> None:
+        # STOP WATCHDOG IF IT IS ALREADY RUNNING
+        if (
+            self.watchdog_event_handler is not None
+            and self.watchdog_event_handler.watchdog_observer is not None
+            and self.watchdog_event_handler.watchdog_observer.is_alive()
+        ):
+            self.shutdown_watchdog()
         # POPULATE INSTANCES SUBMENU
         self.menu_bar_controller._on_instances_submenu_population(
             instance_names=list(self.settings_controller.settings.instances.keys())
@@ -177,7 +183,7 @@ class MainWindow(QMainWindow):
         if self.settings_controller.settings.check_for_update_startup:
             self.main_content_panel.actions_slot("check_for_update")
 
-        # Check for the steamcmd prefix + executable existence.
+        # CHECK FOR STEAMCMD SETUP
         if not os.path.exists(
             self.steamcmd_wrapper.steamcmd_prefix
         ) or not self.steamcmd_wrapper.check_for_steamcmd(
@@ -188,17 +194,10 @@ class MainWindow(QMainWindow):
             self.steamcmd_wrapper.setup = True
 
         # REFRESH CONFIGURED METADATA
-        self.main_content_panel._do_refresh(is_initial=True)
+        self.main_content_panel._do_refresh(is_initial=is_initial)
 
         # CHECK USER PREFERENCE FOR WATCHDOG
         if self.settings_controller.settings.watchdog_toggle:
-            # Check if watchdog is already running, restart if it is
-            if (
-                self.watchdog_event_handler is not None
-                and self.watchdog_event_handler.watchdog_observer is not None
-                and self.watchdog_event_handler.watchdog_observer.is_alive()
-            ):
-                self.shutdown_watchdog()
             # Setup watchdog
             self.initialize_watchdog()
 
@@ -226,7 +225,7 @@ class MainWindow(QMainWindow):
         existing_instance_workshop_folder = self.settings_controller.settings.instances[
             existing_instance_name
         ]["workshop_folder"]
-        # workshop_folder_name = os.path.split(existing_instance_workshop_folder)[1]
+        workshop_folder_name = os.path.split(existing_instance_workshop_folder)[1]
         existing_instance_config_folder = self.settings_controller.settings.instances[
             existing_instance_name
         ]["config_folder"]
@@ -250,7 +249,7 @@ class MainWindow(QMainWindow):
                 Path(AppInfo().app_storage_folder) / "instances" / new_instance_name
             )
             # Prompt user with the existing instance configuration and confirm that they would like to clone it
-            answer = show_dialogue_conditional(
+            answer = show_dialogue_confirmation(
                 title=f"Clone instance {existing_instance_name}",
                 text=f"Would you like to clone instance {existing_instance_name} to create new instance {new_instance_name}?"
                 + "\n\n",
@@ -264,6 +263,10 @@ class MainWindow(QMainWindow):
             if answer == "&Yes":
                 target_game_folder = str(Path(new_instance_path) / game_folder_name)
                 target_local_folder = str(Path(new_instance_path) / local_folder_name)
+                # target_workshop_folder = str(
+                #     Path(new_instance_path) / workshop_folder_name
+                # )
+                target_workshop_folder = ""
                 target_config_folder = str(Path(new_instance_path) / config_folder_name)
                 # Clone the existing game_folder to the new instance
                 if os.path.exists(existing_instance_game_folder) and os.path.isdir(
@@ -351,7 +354,7 @@ class MainWindow(QMainWindow):
                     instance_data={
                         "game_folder": target_game_folder,
                         "local_folder": target_local_folder,
-                        # "workshop_folder": target_workshop_folder,
+                        "workshop_folder": target_workshop_folder,
                         "config_folder": target_config_folder,
                         "run_args": existing_instance_run_args or [],
                     },
@@ -389,7 +392,7 @@ class MainWindow(QMainWindow):
             self.settings_controller.settings.instances[instance_name] = {
                 "game_folder": instance_data.get("game_folder", ""),
                 "local_folder": instance_data.get("local_folder", ""),
-                # "workshop_folder": instance_data.get("workshop_folder", ""),
+                "workshop_folder": instance_data.get("workshop_folder", ""),
                 "config_folder": instance_data.get("config_folder", ""),
                 "run_args": run_args,
                 "steamcmd_install_path": instance_path,
@@ -445,11 +448,7 @@ class MainWindow(QMainWindow):
                 self.settings_controller.settings.instances.pop(
                     self.settings_controller.settings.current_instance
                 )
-                self.settings_controller.settings.current_instance = "Default"
-                # Save settings
-                self.settings_controller.settings.save()
-                # Initialize content
-                self.initialize_content()
+                self.__switch_to_instance("Default")
 
     def __switch_to_instance(self, instance: str) -> None:
         # Set current instance
@@ -457,7 +456,7 @@ class MainWindow(QMainWindow):
         # Save settings
         self.settings_controller.settings.save()
         # Initialize content
-        self.initialize_content()
+        self.initialize_content(is_initial=False)
 
     def initialize_watchdog(self) -> None:
         logger.info("Initializing watchdog FS Observer")
