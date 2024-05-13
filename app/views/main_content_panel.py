@@ -2249,6 +2249,11 @@ class MainContent(QObject):
         Handles possible existing repo, and prompts (re)download of repo
         Otherwise it just clones the repo and notifies user
         """
+        # Check if git is installed
+        if not GIT_EXISTS:
+            self._do_notify_no_git()
+            return
+
         if (
             repo_url
             and repo_url != ""
