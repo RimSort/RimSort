@@ -62,7 +62,7 @@ class AppController(QObject):
 
     def run(self) -> int:
         self.main_window.show()
-        self.main_window.initialize_content()
+        self.main_window.initialize_content(is_initial=True)
         return self.app.exec()
 
     def shutdown_watchdog(self) -> None:

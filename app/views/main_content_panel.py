@@ -330,29 +330,18 @@ class MainContent(QObject):
             or not os.path.exists(config_folder_path)
         ):
             logger.warning("Essential path(s) are invalid or not set!")
-            if not prompt:
-                show_warning(
-                    title="Essential path(s)",
-                    text="Essential path(s) are invalid or not set!",
-                    information=(
-                        "RimSort requires, at the minimum, for the game install folder and the "
-                        "config folder paths to be set, and that the paths both exist. Please set "
-                        "both of these manually or by using the autodetect functionality."
-                    ),
-                )
-            else:
-                answer = show_dialogue_conditional(
-                    title="Essential path(s)",
-                    text="Essential path(s) are invalid or not set!\n",
-                    information=(
-                        "RimSort requires, at the minimum, for the game install folder and the "
-                        "config folder paths to be set, and that the paths both exist. Please set "
-                        "both of these manually or by using the autodetect functionality.\n\n"
-                        "Would you like to configure them now?"
-                    ),
-                )
-                if answer == "&Yes":
-                    self.settings_controller.show_settings_dialog("Locations")
+            answer = show_dialogue_conditional(
+                title="Essential path(s)",
+                text="Essential path(s) are invalid or not set!\n",
+                information=(
+                    "RimSort requires, at the minimum, for the game install folder and the "
+                    "config folder paths to be set, and that the paths both exist. Please set "
+                    "both of these manually or by using the autodetect functionality.\n\n"
+                    "Would you like to configure them now?"
+                ),
+            )
+            if answer == "&Yes":
+                self.settings_controller.show_settings_dialog("Locations")
             return False
         else:
             logger.info("Essential paths set!")
