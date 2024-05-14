@@ -164,13 +164,6 @@ class MainWindow(QMainWindow):
         super().showEvent(event)
 
     def initialize_content(self, is_initial: bool = True) -> None:
-        # STOP WATCHDOG IF IT IS ALREADY RUNNING
-        if (
-            self.watchdog_event_handler is not None
-            and self.watchdog_event_handler.watchdog_observer is not None
-            and self.watchdog_event_handler.watchdog_observer.is_alive()
-        ):
-            self.shutdown_watchdog()
         # POPULATE INSTANCES SUBMENU
         self.menu_bar_controller._on_instances_submenu_population(
             instance_names=list(self.settings_controller.settings.instances.keys())
@@ -178,11 +171,9 @@ class MainWindow(QMainWindow):
         self.menu_bar_controller._on_set_current_instance(
             self.settings_controller.settings.current_instance
         )
-
         # IF CHECK FOR UPDATE ON STARTUP...
         if self.settings_controller.settings.check_for_update_startup:
             self.main_content_panel.actions_slot("check_for_update")
-
         # CHECK FOR STEAMCMD SETUP
         if not os.path.exists(
             self.steamcmd_wrapper.steamcmd_prefix
@@ -192,10 +183,8 @@ class MainWindow(QMainWindow):
             self.steamcmd_wrapper.on_steamcmd_not_found()
         else:
             self.steamcmd_wrapper.setup = True
-
         # REFRESH CONFIGURED METADATA
         self.main_content_panel._do_refresh(is_initial=is_initial)
-
         # CHECK USER PREFERENCE FOR WATCHDOG
         if self.settings_controller.settings.watchdog_toggle:
             # Setup watchdog
@@ -204,7 +193,7 @@ class MainWindow(QMainWindow):
     def __ask_for_new_instance_name(self) -> str:
         instance_name, cancelled = show_dialogue_input(
             title="Create new instance",
-            text="Enter name of new instance:",
+            text="Input a unique name of new instance that is not already used:",
         )
         return instance_name if not cancelled else None
 
@@ -262,7 +251,9 @@ class MainWindow(QMainWindow):
             )
             if answer == "&Yes":
                 target_game_folder = str(Path(new_instance_path) / game_folder_name)
-                target_local_folder = str(Path(new_instance_path) / local_folder_name)
+                target_local_folder = str(
+                    Path(new_instance_path) / game_folder_name / local_folder_name
+                )
                 # target_workshop_folder = str(
                 #     Path(new_instance_path) / workshop_folder_name
                 # )
@@ -282,7 +273,9 @@ class MainWindow(QMainWindow):
                     logger.info(
                         f"Copying game folder from {existing_instance_game_folder} to {target_game_folder}"
                     )
-                    copytree(existing_instance_game_folder, target_game_folder)
+                    copytree(
+                        existing_instance_game_folder, target_game_folder, symlinks=True
+                    )
                 # Clone the existing config_folder to the new instance
                 if os.path.exists(existing_instance_config_folder) and os.path.isdir(
                     existing_instance_config_folder
@@ -297,15 +290,16 @@ class MainWindow(QMainWindow):
                     logger.info(
                         f"Copying config folder from {existing_instance_config_folder} to {target_config_folder}"
                     )
-                    copytree(existing_instance_config_folder, target_config_folder)
+                    copytree(
+                        existing_instance_config_folder,
+                        target_config_folder,
+                        symlinks=True,
+                    )
                 # Clone the existing local_folder to the new instance
                 if existing_instance_local_folder:
                     if os.path.exists(existing_instance_local_folder) and os.path.isdir(
                         existing_instance_local_folder
                     ):
-                        target_local_folder = str(
-                            Path(new_instance_path) / local_folder_name
-                        )
                         if os.path.exists(target_local_folder) and os.path.isdir(
                             target_local_folder
                         ):
@@ -316,7 +310,11 @@ class MainWindow(QMainWindow):
                         logger.info(
                             f"Copying local folder from {existing_instance_local_folder} to {target_local_folder}"
                         )
-                        copytree(existing_instance_local_folder, target_local_folder)
+                        copytree(
+                            existing_instance_local_folder,
+                            target_local_folder,
+                            symlinks=True,
+                        )
                 # Clone the existing workshop_folder to the new instance's local mods folder
                 if existing_instance_workshop_folder:
                     # Prompt user to confirm before initiating the procedure
@@ -347,7 +345,76 @@ class MainWindow(QMainWindow):
                                             existing_instance_workshop_folder, subdir
                                         ),
                                         os.path.join(target_local_folder, subdir),
+                                        symlinks=True,
                                     )
+                # If the instance has a 'steamcmd' folder, clone it to the new instance
+                steamcmd_install_path = str(
+                    Path(existing_instance_steamcmd_install_path) / "steamcmd"
+                )
+                if os.path.exists(steamcmd_install_path) and os.path.isdir(
+                    steamcmd_install_path
+                ):
+                    target_steamcmd_install_path = str(
+                        Path(new_instance_path) / "steamcmd"
+                    )
+                    if os.path.exists(target_steamcmd_install_path) and os.path.isdir(
+                        target_steamcmd_install_path
+                    ):
+                        logger.info(
+                            f"Replacing existing steamcmd folder at {target_steamcmd_install_path}"
+                        )
+                        rmtree(target_steamcmd_install_path)
+                    logger.info(
+                        f"Copying steamcmd folder from {steamcmd_install_path} to {target_steamcmd_install_path}"
+                    )
+                    copytree(
+                        steamcmd_install_path,
+                        target_steamcmd_install_path,
+                        symlinks=True,
+                    )
+                # If the instance has a 'steam' folder, clone it to the new instance
+                steam_install_path = str(
+                    Path(existing_instance_steamcmd_install_path) / "steam"
+                )
+                if os.path.exists(steam_install_path) and os.path.isdir(
+                    steam_install_path
+                ):
+                    target_steam_install_path = str(Path(new_instance_path) / "steam")
+                    if os.path.exists(target_steam_install_path) and os.path.isdir(
+                        target_steam_install_path
+                    ):
+                        logger.info(
+                            f"Replacing existing steam folder at {target_steam_install_path}"
+                        )
+                        rmtree(target_steam_install_path)
+                    logger.info(
+                        f"Copying steam folder from {steam_install_path} to {target_steam_install_path}"
+                    )
+                    copytree(
+                        steam_install_path, target_steam_install_path, symlinks=True
+                    )
+                    # Unlink steam/workshop/content/294100 symlink if it exists, and relink it to our new target local mods folder
+                    link_path = str(
+                        Path(target_steam_install_path)
+                        / "workshop"
+                        / "content"
+                        / "294100"
+                    )
+                    if os.path.islink(link_path) or os.path.ismount(link_path):
+                        logger.debug(
+                            f"Unlinking {link_path} and relinking to {target_local_folder}"
+                        )
+                        os.remove(link_path)
+                        if self.system != "Windows":
+                            os.symlink(
+                                target_local_folder,
+                                link_path,
+                                target_is_directory=True,
+                            )
+                        else:
+                            from _winapi import CreateJunction
+
+                            CreateJunction(target_local_folder, link_path)
                 # Create the new instance for our cloned instance
                 self.__create_new_instance(
                     instance_name=new_instance_name,
@@ -451,6 +518,7 @@ class MainWindow(QMainWindow):
                 self.__switch_to_instance("Default")
 
     def __switch_to_instance(self, instance: str) -> None:
+        self.stop_watchdog_if_running()
         # Set current instance
         self.settings_controller.settings.current_instance = instance
         # Save settings
@@ -501,6 +569,15 @@ class MainWindow(QMainWindow):
                 f"Unable to initialize watchdog Observer due to exception: {str(e)}"
             )
 
+    def stop_watchdog_if_running(self) -> None:
+        # STOP WATCHDOG IF IT IS ALREADY RUNNING
+        if (
+            self.watchdog_event_handler
+            and self.watchdog_event_handler.watchdog_observer
+            and self.watchdog_event_handler.watchdog_observer.is_alive()
+        ):
+            self.shutdown_watchdog()
+
     def shutdown_watchdog(self) -> None:
         if (
             self.watchdog_event_handler
@@ -510,3 +587,6 @@ class MainWindow(QMainWindow):
             self.watchdog_event_handler.watchdog_observer.stop()
             self.watchdog_event_handler.watchdog_observer.join()
             self.watchdog_event_handler.watchdog_observer = None
+            for timer in self.watchdog_event_handler.cooldown_timers.values():
+                timer.cancel()
+            self.watchdog_event_handler = None
