@@ -90,6 +90,8 @@ def show_dialogue_conditional(
     :param title: text to pass to setWindowTitle
     :param text: text to pass to setText
     :param information: text to pass to setInformativeText
+    :param details: text to pass to setDetailedText
+    :param button_text_override: list of strings to override the default button texts. [0] is the first button, [1] is the second
     """
     logger.info(
         f"Showing dialogue box with input: [{title}], [{text}], [{information}] [{details}] BTN OVERRIDES: [{button_text_override}]"

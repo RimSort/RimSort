@@ -842,7 +842,7 @@ class MainContent(QObject):
                     logger.debug(
                         f"Downloading & extracting RimSort release from: {browser_download_url}"
                     )
-                    self._do_threaded_loading_animation(
+                    self.do_threaded_loading_animation(
                         gif_path=str(
                             AppInfo().theme_data_folder
                             / "default-icons"
@@ -941,7 +941,7 @@ class MainContent(QObject):
 
     # INFO PANEL ANIMATIONS
 
-    def _do_threaded_loading_animation(
+    def do_threaded_loading_animation(
         self, gif_path: str, target: Callable, text=None
     ) -> Any:
         loading_animation_text_label = None
@@ -1007,7 +1007,7 @@ class MainContent(QObject):
         # Check if paths are set
         if self.check_if_essential_paths_are_set(prompt=is_initial):
             # Run expensive calculations to set cache data
-            self._do_threaded_loading_animation(
+            self.do_threaded_loading_animation(
                 gif_path=str(
                     AppInfo().theme_data_folder / "default-icons" / "rimsort.gif"
                 ),
@@ -1872,7 +1872,7 @@ class MainContent(QObject):
 
     def _do_check_for_workshop_updates(self) -> None:
         # Query Workshop for update data
-        updates_checked = self._do_threaded_loading_animation(
+        updates_checked = self.do_threaded_loading_animation(
             gif_path=str(
                 AppInfo().theme_data_folder / "default-icons" / "steam_api.gif"
             ),
@@ -2105,7 +2105,7 @@ class MainContent(QObject):
         if self.steam_browser:
             self.steam_browser.close()
         # Process API call
-        self._do_threaded_loading_animation(
+        self.do_threaded_loading_animation(
             gif_path=str(AppInfo().theme_data_folder / "default-icons" / "steam.gif"),
             target=partial(self._do_steamworks_api_call, instruction=instruction),
             text="Processing Steam subscription action(s) via Steamworks API...",
