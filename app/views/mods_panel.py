@@ -991,7 +991,7 @@ class ModListWidget(QListWidget):
                     )
                 contextMenu.addMenu(workshop_actions_menu)
             # Execute QMenu and return it's ACTION
-            action = contextMenu.exec_(self.mapToGlobal(event.pos()))
+            action = contextMenu.exec_(self.mapToGlobal(pos_local))
             if action:  # Handle the action for all selected items
                 if (  # ACTION: Update git mod(s)
                     action == re_git_action and len(git_paths) > 0
