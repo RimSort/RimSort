@@ -198,6 +198,92 @@ class MainWindow(QMainWindow):
         return instance_name if not cancelled else None
 
     def __clone_existing_instance(self, existing_instance_name: str) -> None:
+
+        def copy_game_folder(
+            existing_instance_game_folder: str, target_game_folder: str
+        ) -> None:
+            if os.path.exists(target_game_folder) and os.path.isdir(target_game_folder):
+                logger.info(f"Replacing existing game folder at {target_game_folder}")
+                rmtree(target_game_folder)
+            logger.info(
+                f"Copying game folder from {existing_instance_game_folder} to {target_game_folder}"
+            )
+            copytree(existing_instance_game_folder, target_game_folder, symlinks=True)
+
+        def copy_config_folder(
+            existing_instance_config_folder: str, target_config_folder: str
+        ) -> None:
+            if os.path.exists(target_config_folder) and os.path.isdir(
+                target_config_folder
+            ):
+                logger.info(
+                    f"Replacing existing config folder at {target_config_folder}"
+                )
+                rmtree(target_config_folder)
+            logger.info(
+                f"Copying config folder from {existing_instance_config_folder} to {target_config_folder}"
+            )
+            copytree(
+                existing_instance_config_folder,
+                target_config_folder,
+                symlinks=True,
+            )
+
+        def copy_local_folder(
+            existing_instance_local_folder: str, target_local_folder: str
+        ) -> None:
+            if os.path.exists(target_local_folder) and os.path.isdir(
+                target_local_folder
+            ):
+                logger.info(f"Replacing existing local folder at {target_local_folder}")
+                rmtree(target_local_folder)
+            logger.info(
+                f"Copying local folder from {existing_instance_local_folder} to {target_local_folder}"
+            )
+            copytree(
+                existing_instance_local_folder,
+                target_local_folder,
+                symlinks=True,
+            )
+
+        def copy_workshop_mods_to_local(
+            existing_instance_workshop_folder: str, target_local_folder: str
+        ) -> None:
+            if not os.path.exists(target_local_folder):
+                os.mkdir(target_local_folder)
+            logger.info(
+                f"Cloning Workshop mods from {existing_instance_workshop_folder} to {target_local_folder}"
+            )
+            # Copy each subdirectory of the existing Workshop folder to the new local mods folder
+            for subdir in os.listdir(existing_instance_workshop_folder):
+                if os.path.isdir(
+                    os.path.join(existing_instance_workshop_folder, subdir)
+                ):
+                    copytree(
+                        os.path.join(existing_instance_workshop_folder, subdir),
+                        os.path.join(target_local_folder, subdir),
+                        symlinks=True,
+                    )
+
+        def clone_essential_paths(
+            existing_instance_game_folder: str,
+            target_game_folder: str,
+            existing_instance_config_folder: str,
+            target_config_folder: str,
+        ) -> None:
+            # Clone the existing game_folder to the new instance
+            if os.path.exists(existing_instance_game_folder) and os.path.isdir(
+                existing_instance_game_folder
+            ):
+                copy_game_folder(existing_instance_game_folder, target_game_folder)
+            # Clone the existing config_folder to the new instance
+            if os.path.exists(existing_instance_config_folder) and os.path.isdir(
+                existing_instance_config_folder
+            ):
+                copy_config_folder(
+                    existing_instance_config_folder, target_config_folder
+                )
+
         # Check if paths are set. We can't clone if they aren't set
         if not self.main_content_panel.check_if_essential_paths_are_set(prompt=True):
             return
@@ -214,7 +300,6 @@ class MainWindow(QMainWindow):
         existing_instance_workshop_folder = self.settings_controller.settings.instances[
             existing_instance_name
         ]["workshop_folder"]
-        workshop_folder_name = os.path.split(existing_instance_workshop_folder)[1]
         existing_instance_config_folder = self.settings_controller.settings.instances[
             existing_instance_name
         ]["config_folder"]
@@ -239,114 +324,94 @@ class MainWindow(QMainWindow):
             )
             # Prompt user with the existing instance configuration and confirm that they would like to clone it
             answer = show_dialogue_confirmation(
-                title=f"Clone instance {existing_instance_name}",
-                text=f"Would you like to clone instance {existing_instance_name} to create new instance {new_instance_name}?"
+                title=f"Clone instance [{existing_instance_name}]",
+                text=f"Would you like to clone instance [{existing_instance_name}] to create new instance [{new_instance_name}]?"
                 + "\n\n",
-                information=f"Game folder: {existing_instance_game_folder if existing_instance_game_folder else '<None>'}\n"
-                + f"Local folder: {existing_instance_local_folder if existing_instance_local_folder else '<None>'}\n"
-                + f"Workshop folder: {existing_instance_workshop_folder if existing_instance_workshop_folder else '<None>'}\n"
-                + f"Config folder: {existing_instance_config_folder if existing_instance_config_folder else '<None>'}\n"
-                + f"Run args: {existing_instance_run_args if existing_instance_run_args else '<None>'}\n"
-                + f"SteamCMD install path: {existing_instance_steamcmd_install_path if existing_instance_steamcmd_install_path else '<None>'}\n",
+                information=f"Game folder:\n{existing_instance_game_folder if existing_instance_game_folder else '<None>'}\n"
+                + f"\nLocal folder:\n{existing_instance_local_folder if existing_instance_local_folder else '<None>'}\n"
+                + f"\nWorkshop folder:\n{existing_instance_workshop_folder if existing_instance_workshop_folder else '<None>'}\n"
+                + f"\nConfig folder:\n{existing_instance_config_folder if existing_instance_config_folder else '<None>'}\n"
+                + f"\nRun args:\n{'[' + ' '.join(existing_instance_run_args) + ']' if existing_instance_run_args else '<None>'}\n"
+                + "\nSteamCMD install path (steamcmd + steam folders will be cloned):"
+                + f"\n{existing_instance_steamcmd_install_path if existing_instance_steamcmd_install_path else '<None>'}\n",
             )
             if answer == "&Yes":
                 target_game_folder = str(Path(new_instance_path) / game_folder_name)
                 target_local_folder = str(
                     Path(new_instance_path) / game_folder_name / local_folder_name
                 )
-                # target_workshop_folder = str(
-                #     Path(new_instance_path) / workshop_folder_name
-                # )
                 target_workshop_folder = ""
                 target_config_folder = str(Path(new_instance_path) / config_folder_name)
-                # Clone the existing game_folder to the new instance
-                if os.path.exists(existing_instance_game_folder) and os.path.isdir(
-                    existing_instance_game_folder
-                ):
-                    if os.path.exists(target_game_folder) and os.path.isdir(
-                        target_game_folder
-                    ):
-                        logger.info(
-                            f"Replacing existing game folder at {target_game_folder}"
-                        )
-                        rmtree(target_game_folder)
-                    logger.info(
-                        f"Copying game folder from {existing_instance_game_folder} to {target_game_folder}"
-                    )
-                    copytree(
-                        existing_instance_game_folder, target_game_folder, symlinks=True
-                    )
-                # Clone the existing config_folder to the new instance
-                if os.path.exists(existing_instance_config_folder) and os.path.isdir(
-                    existing_instance_config_folder
-                ):
-                    if os.path.exists(target_config_folder) and os.path.isdir(
-                        target_config_folder
-                    ):
-                        logger.info(
-                            f"Replacing existing config folder at {target_config_folder}"
-                        )
-                        rmtree(target_config_folder)
-                    logger.info(
-                        f"Copying config folder from {existing_instance_config_folder} to {target_config_folder}"
-                    )
-                    copytree(
+                self.main_content_panel.do_threaded_loading_animation(
+                    gif_path=str(
+                        AppInfo().theme_data_folder / "default-icons" / "rimworld.gif"
+                    ),
+                    target=partial(
+                        clone_essential_paths,
+                        existing_instance_game_folder,
+                        target_game_folder,
                         existing_instance_config_folder,
                         target_config_folder,
-                        symlinks=True,
-                    )
+                    ),
+                    text=f"Cloning RimWorld game / config folders from [{existing_instance_name}] to [{new_instance_name}] instance...",
+                )
                 # Clone the existing local_folder to the new instance
                 if existing_instance_local_folder:
                     if os.path.exists(existing_instance_local_folder) and os.path.isdir(
                         existing_instance_local_folder
                     ):
-                        if os.path.exists(target_local_folder) and os.path.isdir(
-                            target_local_folder
-                        ):
-                            logger.info(
-                                f"Replacing existing local folder at {target_local_folder}"
-                            )
-                            rmtree(target_local_folder)
-                        logger.info(
-                            f"Copying local folder from {existing_instance_local_folder} to {target_local_folder}"
-                        )
-                        copytree(
-                            existing_instance_local_folder,
-                            target_local_folder,
-                            symlinks=True,
+                        self.main_content_panel.do_threaded_loading_animation(
+                            gif_path=str(
+                                AppInfo().theme_data_folder
+                                / "default-icons"
+                                / "rimworld.gif"
+                            ),
+                            target=partial(
+                                copy_local_folder,
+                                existing_instance_local_folder,
+                                target_local_folder,
+                            ),
+                            text=f"Cloning local mods folder from [{existing_instance_name}] instance to [{new_instance_name}] instance...",
                         )
                 # Clone the existing workshop_folder to the new instance's local mods folder
                 if existing_instance_workshop_folder:
                     # Prompt user to confirm before initiating the procedure
                     answer = show_dialogue_conditional(
-                        title=f"Clone instance workshop folder {existing_instance_name}",
+                        title=f"Clone instance [{existing_instance_name}]",
                         text=(
-                            "Would you like to clone the existing instance's Workshop mods the new instance's local mods folder?"
+                            "What would you like to do with the configured Workshop mods folder?"
                         ),
+                        information=(
+                            f"Workshop folder: {existing_instance_workshop_folder}\n\n"
+                            + "RimSort can copy all of your Workshop mods to the new instance's local mods folder. This will effectively "
+                            + " convert any existing Steam client mods to SteamCMD mods that you can then  manage inside the new instance.\n\n"
+                            + "Alternatively, you may keep your old Steam workshop folder preference. You can always change this later in the settings.\n\n"
+                            + "How would you like to proceed?"
+                        ),
+                        button_text_override=[
+                            "Convert to SteamCMD",
+                            "Keep Workshop Folder",
+                        ],
                     )
-                    if answer == "&Yes":
+                    if answer == "Convert to SteamCMD":
                         if os.path.exists(
                             existing_instance_workshop_folder
                         ) and os.path.isdir(existing_instance_workshop_folder):
-                            if not os.path.exists(target_local_folder):
-                                os.mkdir(target_local_folder)
-                            logger.info(
-                                f"Cloning Workshop mods from {existing_instance_workshop_folder} to {target_local_folder}"
+                            self.main_content_panel.do_threaded_loading_animation(
+                                gif_path=str(
+                                    AppInfo().theme_data_folder
+                                    / "default-icons"
+                                    / "steam_api.gif"
+                                ),
+                                target=partial(
+                                    copy_workshop_mods_to_local,
+                                    existing_instance_workshop_folder,
+                                    target_local_folder,
+                                ),
+                                text=f"Cloning Workshop mods from [{existing_instance_name}] instance to [{new_instance_name}] instance's local mods...",
                             )
-                            # Copy each subdirectory of the existing Workshop folder to the new local mods folder
-                            for subdir in os.listdir(existing_instance_workshop_folder):
-                                if os.path.isdir(
-                                    os.path.join(
-                                        existing_instance_workshop_folder, subdir
-                                    )
-                                ):
-                                    copytree(
-                                        os.path.join(
-                                            existing_instance_workshop_folder, subdir
-                                        ),
-                                        os.path.join(target_local_folder, subdir),
-                                        symlinks=True,
-                                    )
+                    else:
+                        target_workshop_folder = existing_instance_workshop_folder
                 # If the instance has a 'steamcmd' folder, clone it to the new instance
                 steamcmd_install_path = str(
                     Path(existing_instance_steamcmd_install_path) / "steamcmd"
