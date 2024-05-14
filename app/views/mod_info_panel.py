@@ -182,7 +182,7 @@ class ModInfo:
 
         :param mod_info: complete json info for the mod
         """
-        mod_info = self.metadata_manager.internal_local_metadata.get(uuid)
+        mod_info = self.metadata_manager.internal_local_metadata.get(uuid, {})
         # Style summary values based on validity
         if mod_info and mod_info.get("invalid"):
             # Set invalid value style
@@ -310,7 +310,7 @@ class ModInfo:
             )
         else:
             # Get Preview.png
-            workshop_folder_path = mod_info["path"]
+            workshop_folder_path = mod_info.get("path", "")
             logger.debug(
                 f"Retrieved mod path to parse preview image: {workshop_folder_path}"
             )
