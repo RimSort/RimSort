@@ -100,7 +100,15 @@ class MenuBarController(QObject):
         )
 
         # Instances menu
-
+        self.menu_bar.backup_instance_action.triggered.connect(
+            partial(
+                EventBus().do_backup_existing_instance.emit,
+                self.settings_controller.settings.current_instance,
+            )
+        )
+        self.menu_bar.restore_instance_action.triggered.connect(
+            EventBus().do_restore_instance_from_archive.emit
+        )
         self.menu_bar.clone_instance_action.triggered.connect(
             partial(
                 EventBus().do_clone_existing_instance.emit,
