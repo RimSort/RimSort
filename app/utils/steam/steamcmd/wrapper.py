@@ -18,6 +18,7 @@ from app.models.dialogue import (
     show_warning,
 )
 from app.utils.event_bus import EventBus
+from app.utils.system_info import SystemInfo
 from app.windows.runner_panel import RunnerPanel
 
 
@@ -99,6 +100,32 @@ class SteamcmdInterface:
         elif args or kwargs:
             raise ValueError("SteamcmdInterface instance has already been initialized.")
         return cls._instance
+
+    def check_symlink(self, link_path: str, target_local_folder: str) -> None:
+        logger.debug(
+            "Checking for SteamCMD <-> Local mods symlink, and recreating if it exists"
+        )
+        logger.debug(f"Link path: {link_path}")
+        if os.path.exists(link_path):
+            logger.debug(
+                f"Removing existing link at {link_path} and recreating link to {target_local_folder}"
+            )
+            # Check if link path is a directory
+            if not os.path.isdir(link_path):
+                os.remove(link_path)
+            else:
+                os.rmdir(link_path)
+        # Recreate the link
+        if SystemInfo().operating_system != SystemInfo.OperatingSystem.WINDOWS:
+            os.symlink(
+                target_local_folder,
+                link_path,
+                target_is_directory=True,
+            )
+        else:
+            from _winapi import CreateJunction
+
+            CreateJunction(target_local_folder, link_path)
 
     def download_mods(self, publishedfileids: list, runner: RunnerPanel):
         """
@@ -234,6 +261,15 @@ class SteamcmdInterface:
                         runner.message(
                             f"[{symlink_source_path}] -> " + symlink_destination_path
                         )
+                        if os.path.exists(symlink_destination_path):
+                            logger.debug(
+                                f"Removing existing link at {symlink_destination_path} and recreating link to {symlink_source_path}"
+                            )
+                            # Check if link path is a directory
+                            if not os.path.isdir(symlink_destination_path):
+                                os.remove(symlink_destination_path)
+                            else:
+                                os.rmdir(symlink_destination_path)
                         if self.system != "Windows":
                             os.symlink(
                                 symlink_source_path,

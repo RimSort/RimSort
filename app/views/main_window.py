@@ -4,6 +4,7 @@ from json import dumps, loads
 import os
 from pathlib import Path
 from shutil import copytree, rmtree
+from traceback import format_exc
 from typing import Optional
 from zipfile import ZipFile
 
@@ -220,25 +221,32 @@ class MainWindow(QMainWindow):
         def compress_instance_folder_to_archive(
             instance_data_to_save: dict, instance_path: str, output_path: str
         ) -> None:
-            logger.info(f"Compressing instance folder to archive: {output_path}")
             # Compress instance folder to archive.
             # Preserve folder structure.
             # Overwrite if exists.
-            # Output a pretty JSON "instance.json" into the root of the archive file using the instance_data_to_save dictionary.
-            with ZipFile(output_path, "w") as archive:
-                for root, dirs, files in os.walk(instance_path):
-                    for _dir in dirs:
-                        dir_path = os.path.join(root, _dir)
-                        archive.write(
-                            dir_path, os.path.relpath(dir_path, instance_path)
-                        )
-                    for file in files:
-                        file_path = os.path.join(root, file)
-                        archive.write(
-                            file_path, os.path.relpath(file_path, instance_path)
-                        )
-                archive.writestr(
-                    "instance.json", dumps(instance_data_to_save, indent=4)
+            try:
+                logger.info(f"Compressing instance folder to archive: {output_path}")
+                with ZipFile(output_path, "w") as archive:
+                    for root, dirs, files in os.walk(instance_path):
+                        for _dir in dirs:
+                            dir_path = os.path.join(root, _dir)
+                            archive.write(
+                                dir_path, os.path.relpath(dir_path, instance_path)
+                            )
+                            logger.info(f"Added directory to archive: {dir_path}")
+                        for file in files:
+                            file_path = os.path.join(root, file)
+                            archive.write(
+                                file_path, os.path.relpath(file_path, instance_path)
+                            )
+                            logger.info(f"Added file to archive: {file_path}")
+                    archive.writestr(
+                        "instance.json", dumps(instance_data_to_save, indent=4)
+                    )
+                    logger.info(f"Added instance data to archive: {instance_path}")
+            except Exception as e:
+                logger.error(
+                    f"An error occurred while compressing instance folder: {e}"
                 )
 
         # Get instance data from Settings
@@ -299,13 +307,26 @@ class MainWindow(QMainWindow):
             # Parse the "instance.json" file to get the instance data.
             # Use the "name" key from the instance data to use as the instance folder.
             # Replace if exists.
-            with ZipFile(archive_path, "r") as archive:
-                instance_folder = str(Path(instances_path) / instance_name)
-                for info in archive.infolist():
-                    if info.filename == "instance.json":
-                        continue
-                    archive.extract(info, path=instance_folder)
+            instance_folder = str(Path(instances_path) / instance_name)
+            try:
+                logger.info(f"Extracting instance folder from archive: {archive_path}")
+                logger.info(f"Destination instance folder: {instance_folder}")
+                with ZipFile(archive_path, "r") as archive:
+                    for info in archive.infolist():
+                        if info.filename == "instance.json":
+                            continue
+                        logger.info(f"Extracting file: {info.filename}")
+                        archive.extract(info, path=instance_folder)
+            except Exception as e:
+                logger.error(f"An error occurred while extracting instance folder: {e}")
 
+        # Initialize instance data variables
+        instances_path = str(AppInfo().app_storage_folder / "instances")
+        instance_game_folder = ""
+        instance_config_folder = ""
+        instance_local_folder = ""
+        instance_workshop_folder = ""
+        instance_run_args = []
         # Prompt user to select input path for instance archive
         input_path = show_dialogue_file(
             mode="open",
@@ -314,26 +335,35 @@ class MainWindow(QMainWindow):
             _filter="Zip files (*.zip)",
         )
         # Grab the instance name from the archive's "instance.json" file and extract archive
-        with ZipFile(input_path, "r") as archive:
-            instance_data = loads(archive.read("instance.json"))
-            instance_name = instance_data.get("name")
-            if instance_name:
-                instance_data.pop("name")
-            instance_game_folder = instance_data.get("game_folder", "")
-            instance_config_folder = instance_data.get("config_folder", "")
-            instance_local_folder = instance_data.get("local_folder", "")
-            instance_workshop_folder = instance_data.get("workshop_folder", "")
-            instance_run_args = instance_data.get("run_args", [])
-            instance_steamcmd_install_path = instance_data.get(
-                "steamcmd_install_path", ""
+        try:
+            with ZipFile(input_path, "r") as archive:
+                instance_data = loads(archive.read("instance.json"))
+                instance_name = instance_data.get("name")
+                if instance_name:
+                    instance_data.pop("name")
+                instance_game_folder = instance_data.get("game_folder", "")
+                instance_config_folder = instance_data.get("config_folder", "")
+                instance_local_folder = instance_data.get("local_folder", "")
+                instance_workshop_folder = instance_data.get("workshop_folder", "")
+                instance_run_args = instance_data.get("run_args", [])
+                instance_steamcmd_install_path = str(
+                    Path(instances_path) / instance_name
+                )
+        except Exception as e:
+            logger.error(f"An error occurred while reading instance archive: {e}")
+            show_fatal_error(
+                title="Error restoring instance",
+                text=f"An error occurred while reading instance archive: {e}",
+                details=format_exc(),
             )
+            return
         logger.info(f"Selected path: {input_path}")
         if input_path and os.path.exists(input_path):
             self.main_content_panel.do_threaded_loading_animation(
                 target=partial(
                     extract_instance_folder_from_archive,
                     instance_name,
-                    str(AppInfo().app_storage_folder / "instances"),
+                    instances_path,
                     input_path,
                 ),
                 gif_path=str(
@@ -341,6 +371,18 @@ class MainWindow(QMainWindow):
                 ),
                 text=f"Restoring instance [{instance_name}] from archive...",
             )
+        # Correct SteamCMD symlink if exists
+        steamcmd_link_path = str(
+            AppInfo().app_storage_folder
+            / "instances"
+            / instance_name
+            / "steam"
+            / "steamapps"
+            / "workshop"
+            / "content"
+            / "294100"
+        )
+        self.steamcmd_wrapper.check_symlink(steamcmd_link_path, instance_local_folder)
         # Check that the instance folder exists. If it does, update Settings with the instance data
         instance_path = str(AppInfo().app_storage_folder / "instances" / instance_name)
         if os.path.exists(instance_path):
@@ -350,9 +392,15 @@ class MainWindow(QMainWindow):
                     instance_config_folder if instance_config_folder else ""
                 ),
                 "local_folder": instance_local_folder if instance_local_folder else "",
-                "workshop_folder": instance_workshop_folder if instance_workshop_folder else "",
+                "workshop_folder": (
+                    instance_workshop_folder if instance_workshop_folder else ""
+                ),
                 "run_args": instance_run_args if instance_run_args else [],
-                "steamcmd_install_path": instance_steamcmd_install_path if instance_steamcmd_install_path else "",
+                "steamcmd_install_path": (
+                    instance_steamcmd_install_path
+                    if instance_steamcmd_install_path
+                    else ""
+                ),
             }
             self.__switch_to_instance(instance_name)
 
@@ -361,68 +409,88 @@ class MainWindow(QMainWindow):
         def copy_game_folder(
             existing_instance_game_folder: str, target_game_folder: str
         ) -> None:
-            if os.path.exists(target_game_folder) and os.path.isdir(target_game_folder):
-                logger.info(f"Replacing existing game folder at {target_game_folder}")
-                rmtree(target_game_folder)
-            logger.info(
-                f"Copying game folder from {existing_instance_game_folder} to {target_game_folder}"
-            )
-            copytree(existing_instance_game_folder, target_game_folder, symlinks=True)
+            try:
+                if os.path.exists(target_game_folder) and os.path.isdir(
+                    target_game_folder
+                ):
+                    logger.info(
+                        f"Replacing existing game folder at {target_game_folder}"
+                    )
+                    rmtree(target_game_folder)
+                logger.info(
+                    f"Copying game folder from {existing_instance_game_folder} to {target_game_folder}"
+                )
+                copytree(
+                    existing_instance_game_folder, target_game_folder, symlinks=True
+                )
+            except Exception as e:
+                logger.error(f"An error occurred while copying game folder: {e}")
 
         def copy_config_folder(
             existing_instance_config_folder: str, target_config_folder: str
         ) -> None:
-            if os.path.exists(target_config_folder) and os.path.isdir(
-                target_config_folder
-            ):
+            try:
+                if os.path.exists(target_config_folder) and os.path.isdir(
+                    target_config_folder
+                ):
+                    logger.info(
+                        f"Replacing existing config folder at {target_config_folder}"
+                    )
+                    rmtree(target_config_folder)
                 logger.info(
-                    f"Replacing existing config folder at {target_config_folder}"
+                    f"Copying config folder from {existing_instance_config_folder} to {target_config_folder}"
                 )
-                rmtree(target_config_folder)
-            logger.info(
-                f"Copying config folder from {existing_instance_config_folder} to {target_config_folder}"
-            )
-            copytree(
-                existing_instance_config_folder,
-                target_config_folder,
-                symlinks=True,
-            )
+                copytree(
+                    existing_instance_config_folder,
+                    target_config_folder,
+                    symlinks=True,
+                )
+            except Exception as e:
+                logger.error(f"An error occurred while copying config folder: {e}")
 
         def copy_local_folder(
             existing_instance_local_folder: str, target_local_folder: str
         ) -> None:
-            if os.path.exists(target_local_folder) and os.path.isdir(
-                target_local_folder
-            ):
-                logger.info(f"Replacing existing local folder at {target_local_folder}")
-                rmtree(target_local_folder)
-            logger.info(
-                f"Copying local folder from {existing_instance_local_folder} to {target_local_folder}"
-            )
-            copytree(
-                existing_instance_local_folder,
-                target_local_folder,
-                symlinks=True,
-            )
+            try:
+                if os.path.exists(target_local_folder) and os.path.isdir(
+                    target_local_folder
+                ):
+                    logger.info(
+                        f"Replacing existing local folder at {target_local_folder}"
+                    )
+                    rmtree(target_local_folder)
+                logger.info(
+                    f"Copying local folder from {existing_instance_local_folder} to {target_local_folder}"
+                )
+                copytree(
+                    existing_instance_local_folder,
+                    target_local_folder,
+                    symlinks=True,
+                )
+            except Exception as e:
+                logger.error(f"An error occurred while copying local folder: {e}")
 
         def copy_workshop_mods_to_local(
             existing_instance_workshop_folder: str, target_local_folder: str
         ) -> None:
-            if not os.path.exists(target_local_folder):
-                os.mkdir(target_local_folder)
-            logger.info(
-                f"Cloning Workshop mods from {existing_instance_workshop_folder} to {target_local_folder}"
-            )
-            # Copy each subdirectory of the existing Workshop folder to the new local mods folder
-            for subdir in os.listdir(existing_instance_workshop_folder):
-                if os.path.isdir(
-                    os.path.join(existing_instance_workshop_folder, subdir)
-                ):
-                    copytree(
-                        os.path.join(existing_instance_workshop_folder, subdir),
-                        os.path.join(target_local_folder, subdir),
-                        symlinks=True,
-                    )
+            try:
+                if not os.path.exists(target_local_folder):
+                    os.mkdir(target_local_folder)
+                logger.info(
+                    f"Cloning Workshop mods from {existing_instance_workshop_folder} to {target_local_folder}"
+                )
+                # Copy each subdirectory of the existing Workshop folder to the new local mods folder
+                for subdir in os.listdir(existing_instance_workshop_folder):
+                    if os.path.isdir(
+                        os.path.join(existing_instance_workshop_folder, subdir)
+                    ):
+                        copytree(
+                            os.path.join(existing_instance_workshop_folder, subdir),
+                            os.path.join(target_local_folder, subdir),
+                            symlinks=True,
+                        )
+            except Exception as e:
+                logger.error(f"An error occurred while cloning Workshop mods: {e}")
 
         def clone_essential_paths(
             existing_instance_game_folder: str,
@@ -620,25 +688,12 @@ class MainWindow(QMainWindow):
                     # Unlink steam/workshop/content/294100 symlink if it exists, and relink it to our new target local mods folder
                     link_path = str(
                         Path(target_steam_install_path)
+                        / "steamapps"
                         / "workshop"
                         / "content"
                         / "294100"
                     )
-                    if os.path.islink(link_path) or os.path.ismount(link_path):
-                        logger.debug(
-                            f"Unlinking {link_path} and relinking to {target_local_folder}"
-                        )
-                        os.remove(link_path)
-                        if self.system != "Windows":
-                            os.symlink(
-                                target_local_folder,
-                                link_path,
-                                target_is_directory=True,
-                            )
-                        else:
-                            from _winapi import CreateJunction
-
-                            CreateJunction(target_local_folder, link_path)
+                    self.steamcmd_wrapper.check_symlink(link_path, target_local_folder)
                 # Create the new instance for our cloned instance
                 self.__create_new_instance(
                     instance_name=new_instance_name,
@@ -648,6 +703,11 @@ class MainWindow(QMainWindow):
                         "workshop_folder": target_workshop_folder,
                         "config_folder": target_config_folder,
                         "run_args": existing_instance_run_args or [],
+                        "steamcmd_install_path": str(
+                            AppInfo().app_storage_folder
+                            / "instances"
+                            / new_instance_name
+                        ),
                     },
                 )
 
@@ -671,14 +731,26 @@ class MainWindow(QMainWindow):
             )
             if not os.path.exists(instance_path):
                 os.makedirs(instance_path)
-            # Append new run args to the existing run args
-            run_args = [
-                "-logfile",
-                str(Path(instance_path) / "RimWorld.log"),
-                "-savedatafolder",
-                instance_data.get("config_folder", ""),
-            ]
-            run_args.extend(instance_data.get("run_args", []))
+            # Get run args from instance data, autogenerate additional config items if desired
+            run_args = []
+            generated_instance_run_args = []
+            if instance_data.get("game_folder") and instance_data.get("config_folder"):
+                # Prompt the user if they would like to automatically generate run args for the instance
+                answer = show_dialogue_conditional(
+                    title=f"Create new instance [{instance_name}]",
+                    text="Would you like to automatically generate run args for the new instance?",
+                    information="This will try to generate run args for the new instance based on the configured Game/Config folders.",
+                )
+                if answer == "&Yes":
+                    # Append new run args to the existing run args
+                    generated_instance_run_args = [
+                        "-logfile",
+                        str(Path(instance_path) / "RimWorld.log"),
+                        "-savedatafolder",
+                        instance_data.get("config_folder", ""),
+                    ]
+                run_args.extend(generated_instance_run_args)
+                run_args.extend(instance_data.get("run_args", []))
             # Add new instance to Settings
             self.settings_controller.settings.instances[instance_name] = {
                 "game_folder": instance_data.get("game_folder", ""),
