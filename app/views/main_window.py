@@ -328,9 +328,11 @@ class MainWindow(QMainWindow):
                     if os.path.exists(instance_local_folder_default)
                     else ""
                 ),
+                "workshop_folder": "",
                 "run_args": instance_run_args if instance_run_args else [],
+                "steamcmd_install_path": "",
             }
-            self.settings_controller.settings.save()
+            self.__switch_to_instance(instance_name)
 
     def __clone_existing_instance(self, existing_instance_name: str) -> None:
 
