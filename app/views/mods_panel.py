@@ -597,7 +597,7 @@ class ModListWidget(QListWidget):
         :param object: the source object returned from the event
         :param event: the QEvent type
         """
-        if event.type() == QEvent.ContextMenu and source_object is self:
+        if event.type() == QEvent.Type.ContextMenu and source_object is self:
             # Get the position of the right-click event
             pos = QCursor.pos()
             # Convert the global position to the list widget's coordinate system
