@@ -233,17 +233,17 @@ class MainWindow(QMainWindow):
                             archive.write(
                                 dir_path, os.path.relpath(dir_path, instance_path)
                             )
-                            logger.info(f"Added directory to archive: {dir_path}")
+                            logger.debug(f"Added directory to archive: {dir_path}")
                         for file in files:
                             file_path = os.path.join(root, file)
                             archive.write(
                                 file_path, os.path.relpath(file_path, instance_path)
                             )
-                            logger.info(f"Added file to archive: {file_path}")
+                            logger.debug(f"Added file to archive: {file_path}")
                     archive.writestr(
                         "instance.json", dumps(instance_data_to_save, indent=4)
                     )
-                    logger.info(f"Added instance data to archive: {instance_path}")
+                    logger.debug(f"Added instance data to archive: {instance_path}")
             except Exception as e:
                 logger.error(
                     f"An error occurred while compressing instance folder: {e}"
@@ -315,7 +315,7 @@ class MainWindow(QMainWindow):
                     for info in archive.infolist():
                         if info.filename == "instance.json":
                             continue
-                        logger.info(f"Extracting file: {info.filename}")
+                        logger.debug(f"Extracting file: {info.filename}")
                         archive.extract(info, path=instance_folder)
             except Exception as e:
                 logger.error(f"An error occurred while extracting instance folder: {e}")
