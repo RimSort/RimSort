@@ -41,9 +41,11 @@ class EventBus(QObject):
 
     # Instances Menu bar signals
     do_activate_current_instance = Signal(str)
+    do_backup_existing_instance = Signal(str)
     do_clone_existing_instance = Signal(str)
     do_create_new_instance = Signal()
     do_delete_current_instance = Signal()
+    do_restore_instance_from_archive = Signal()
 
     # Textures Menu bar signals
     do_optimize_textures = Signal()

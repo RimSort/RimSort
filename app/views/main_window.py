@@ -1,8 +1,11 @@
 from functools import partial
+from io import BytesIO
+from json import dumps, loads
 import os
 from pathlib import Path
 from shutil import copytree, rmtree
 from typing import Optional
+from zipfile import ZipFile
 
 from PySide6.QtCore import QSize, QTimer
 from PySide6.QtGui import QShowEvent
@@ -22,6 +25,7 @@ from app.controllers.settings_controller import SettingsController
 from app.models.dialogue import (
     show_dialogue_conditional,
     show_dialogue_confirmation,
+    show_dialogue_file,
     show_dialogue_input,
     show_fatal_error,
     show_warning,
@@ -146,9 +150,13 @@ class MainWindow(QMainWindow):
         )
         # Connect Instances Menu Bar signals
         EventBus().do_activate_current_instance.connect(self.__switch_to_instance)
+        EventBus().do_backup_existing_instance.connect(self.__backup_existing_instance)
         EventBus().do_clone_existing_instance.connect(self.__clone_existing_instance)
         EventBus().do_create_new_instance.connect(self.__create_new_instance)
         EventBus().do_delete_current_instance.connect(self.__delete_current_instance)
+        EventBus().do_restore_instance_from_archive.connect(
+            self.__restore_instance_from_archive
+        )
 
         self.setWindowTitle(f"RimSort {self.version_string}")
         self.setGeometry(100, 100, 1024, 768)
@@ -196,6 +204,133 @@ class MainWindow(QMainWindow):
             text="Input a unique name of new instance that is not already used:",
         )
         return instance_name if not cancelled else None
+
+    def __backup_existing_instance(self, instance_name: str) -> None:
+        def compress_instance_folder_to_archive(
+            instance_data_to_save: dict, instance_path: str, output_path: str
+        ) -> None:
+            logger.info(f"Compressing instance folder to archive: {output_path}")
+            # Compress instance folder to archive.
+            # Preserve folder structure.
+            # Overwrite if exists.
+            # Output a pretty JSON "instance.json" into the root of the archive file using the instance_data_to_save dictionary.
+            with ZipFile(output_path, "w") as archive:
+                for root, dirs, files in os.walk(instance_path):
+                    for _dir in dirs:
+                        dir_path = os.path.join(root, _dir)
+                        archive.write(
+                            dir_path, os.path.relpath(dir_path, instance_path)
+                        )
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        archive.write(
+                            file_path, os.path.relpath(file_path, instance_path)
+                        )
+                archive.writestr("instance.json", dumps(instance_data_to_save))
+
+        # Get instance data from Settings
+        instance_data = self.settings_controller.settings.instances.get(instance_name)
+        instance_data_to_save = {
+            "name": instance_name,
+            "run_args": instance_data.get("run_args", []),
+        }
+        # Prompt user to select output path for instance archive
+        output_path = show_dialogue_file(
+            mode="save",
+            caption="Select output path for instance archive",
+            _dir=str(AppInfo().app_storage_folder),
+            _filter="Zip files (*.zip)",
+        )
+        logger.info(f"Selected path: {output_path}")
+        if output_path:
+            if not output_path.endswith(".zip"):
+                output_path += ".zip"
+            instance_path = AppInfo().app_storage_folder / "instances" / instance_name
+            self.main_content_panel.do_threaded_loading_animation(
+                gif_path=str(
+                    AppInfo().theme_data_folder / "default-icons" / "rimsort.gif"
+                ),
+                target=partial(
+                    compress_instance_folder_to_archive,
+                    instance_data_to_save,
+                    instance_path,
+                    output_path,
+                ),
+                text=f"Compressing [{instance_name}] instance folder to archive...",
+            )
+        else:
+            logger.warning("Backup cancelled: User cancelled selection...")
+            return
+
+    def __restore_instance_from_archive(self) -> None:
+        def extract_instance_folder_from_archive(
+            instance_name: str, instances_path: str, archive_path: str
+        ) -> str:
+            logger.info(f"Extracting instance folder from archive: {archive_path}")
+            # Extract instance folder from archive.
+            # Parse the "instance.json" file to get the instance data.
+            # Use the "name" key from the instance data to use as the instance folder.
+            # Replace if exists.
+            with ZipFile(archive_path, "r") as archive:
+                instance_folder = str(Path(instances_path) / instance_name)
+                for info in archive.infolist():
+                    if info.filename == "instance.json":
+                        continue
+                    archive.extract(info, path=instance_folder)
+
+        # Prompt user to select input path for instance archive
+        input_path = show_dialogue_file(
+            mode="open",
+            caption="Select input path for instance archive",
+            _dir=str(AppInfo().app_storage_folder),
+            _filter="Zip files (*.zip)",
+        )
+        # Grab the instance name from the archive's "instance.json" file and extract archive
+        with ZipFile(input_path, "r") as archive:
+            instance_data = loads(archive.read("instance.json"))
+            instance_name = instance_data.get("name")
+            instance_run_args = instance_data.get("run_args", [])
+        logger.info(f"Selected path: {input_path}")
+        if input_path and os.path.exists(input_path):
+            self.main_content_panel.do_threaded_loading_animation(
+                target=partial(
+                    extract_instance_folder_from_archive,
+                    instance_name,
+                    str(AppInfo().app_storage_folder / "instances"),
+                    input_path,
+                ),
+                gif_path=str(
+                    AppInfo().theme_data_folder / "default-icons" / "rimsort.gif"
+                ),
+                text=f"Restoring instance [{instance_name}] from archive...",
+            )
+        # Check that the instance folder exists. If it does, update Settings with the instance data
+        instance_path = str(AppInfo().app_storage_folder / "instances" / instance_name)
+        if os.path.exists(instance_path):
+            instance_game_folder_default = str(Path(instance_path) / "RimWorld")
+            instance_config_folder_default = str(Path(instance_path) / "Config")
+            instance_local_folder_default = str(
+                Path(instance_game_folder_default) / "Local"
+            )
+            self.settings_controller.settings.instances[instance_name] = {
+                "game_folder": (
+                    instance_game_folder_default
+                    if os.path.exists(instance_game_folder_default)
+                    else ""
+                ),
+                "config_folder": (
+                    instance_config_folder_default
+                    if os.path.exists(instance_config_folder_default)
+                    else ""
+                ),
+                "local_folder": (
+                    instance_local_folder_default
+                    if os.path.exists(instance_local_folder_default)
+                    else ""
+                ),
+                "run_args": instance_run_args if instance_run_args else [],
+            }
+            self.settings_controller.settings.save()
 
     def __clone_existing_instance(self, existing_instance_name: str) -> None:
 
