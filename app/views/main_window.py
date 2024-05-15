@@ -205,6 +205,17 @@ class MainWindow(QMainWindow):
         )
         return instance_name if not cancelled else None
 
+    def __ask_for_non_default_instance_name(self) -> str:
+        while True:
+            instance_name, cancelled = show_dialogue_input(
+                title="Provide instance name",
+                text='Input a unique name for the backed up instance that is not "Default"',
+            )
+            if cancelled:
+                return None
+            if instance_name.lower() != "default":
+                return instance_name
+
     def __backup_existing_instance(self, instance_name: str) -> None:
         def compress_instance_folder_to_archive(
             instance_data_to_save: dict, instance_path: str, output_path: str
@@ -226,13 +237,30 @@ class MainWindow(QMainWindow):
                         archive.write(
                             file_path, os.path.relpath(file_path, instance_path)
                         )
-                archive.writestr("instance.json", dumps(instance_data_to_save))
+                archive.writestr(
+                    "instance.json", dumps(instance_data_to_save, indent=4)
+                )
 
         # Get instance data from Settings
         instance_data = self.settings_controller.settings.instances.get(instance_name)
+
+        # If the instance_name is "Default", prompt the user for a new instance name.
+        if instance_name == "Default":
+            new_instance_name = self.__ask_for_non_default_instance_name()
+            if not new_instance_name:
+                logger.info("User cancelled operation")
+                return
+            instance_name = new_instance_name
+
+        # Determine instance data to save
         instance_data_to_save = {
             "name": instance_name,
+            "game_folder": instance_data.get("game_folder", ""),
+            "config_folder": instance_data.get("config_folder", ""),
+            "local_folder": instance_data.get("local_folder", ""),
+            "workshop_folder": instance_data.get("workshop_folder", ""),
             "run_args": instance_data.get("run_args", []),
+            "steamcmd_install_path": instance_data.get("steamcmd_install_path", ""),
         }
         # Prompt user to select output path for instance archive
         output_path = show_dialogue_file(
@@ -289,7 +317,16 @@ class MainWindow(QMainWindow):
         with ZipFile(input_path, "r") as archive:
             instance_data = loads(archive.read("instance.json"))
             instance_name = instance_data.get("name")
+            if instance_name:
+                instance_data.pop("name")
+            instance_game_folder = instance_data.get("game_folder", "")
+            instance_config_folder = instance_data.get("config_folder", "")
+            instance_local_folder = instance_data.get("local_folder", "")
+            instance_workshop_folder = instance_data.get("workshop_folder", "")
             instance_run_args = instance_data.get("run_args", [])
+            instance_steamcmd_install_path = instance_data.get(
+                "steamcmd_install_path", ""
+            )
         logger.info(f"Selected path: {input_path}")
         if input_path and os.path.exists(input_path):
             self.main_content_panel.do_threaded_loading_animation(
@@ -307,30 +344,15 @@ class MainWindow(QMainWindow):
         # Check that the instance folder exists. If it does, update Settings with the instance data
         instance_path = str(AppInfo().app_storage_folder / "instances" / instance_name)
         if os.path.exists(instance_path):
-            instance_game_folder_default = str(Path(instance_path) / "RimWorld")
-            instance_config_folder_default = str(Path(instance_path) / "Config")
-            instance_local_folder_default = str(
-                Path(instance_game_folder_default) / "Local"
-            )
             self.settings_controller.settings.instances[instance_name] = {
-                "game_folder": (
-                    instance_game_folder_default
-                    if os.path.exists(instance_game_folder_default)
-                    else ""
-                ),
+                "game_folder": (instance_game_folder if instance_game_folder else ""),
                 "config_folder": (
-                    instance_config_folder_default
-                    if os.path.exists(instance_config_folder_default)
-                    else ""
+                    instance_config_folder if instance_config_folder else ""
                 ),
-                "local_folder": (
-                    instance_local_folder_default
-                    if os.path.exists(instance_local_folder_default)
-                    else ""
-                ),
-                "workshop_folder": "",
+                "local_folder": instance_local_folder if instance_local_folder else "",
+                "workshop_folder": instance_workshop_folder if instance_workshop_folder else "",
                 "run_args": instance_run_args if instance_run_args else [],
-                "steamcmd_install_path": "",
+                "steamcmd_install_path": instance_steamcmd_install_path if instance_steamcmd_install_path else "",
             }
             self.__switch_to_instance(instance_name)
 
