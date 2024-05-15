@@ -101,19 +101,13 @@ class MenuBarController(QObject):
 
         # Instances menu
         self.menu_bar.backup_instance_action.triggered.connect(
-            partial(
-                EventBus().do_backup_existing_instance.emit,
-                self.settings_controller.settings.current_instance,
-            )
+            self._on_do_backup_current_instance
         )
         self.menu_bar.restore_instance_action.triggered.connect(
             EventBus().do_restore_instance_from_archive.emit
         )
         self.menu_bar.clone_instance_action.triggered.connect(
-            partial(
-                EventBus().do_clone_existing_instance.emit,
-                self.settings_controller.settings.current_instance,
-            )
+            self._on_do_clone_current_instance
         )
         self.menu_bar.create_instance_action.triggered.connect(
             EventBus().do_create_new_instance.emit
@@ -143,6 +137,16 @@ class MenuBarController(QObject):
 
         EventBus().refresh_started.connect(self._on_refresh_started)
         EventBus().refresh_finished.connect(self._on_refresh_finished)
+
+    def _on_do_backup_current_instance(self) -> None:
+        EventBus().do_backup_existing_instance.emit(
+            self.settings_controller.settings.current_instance
+        )
+
+    def _on_do_clone_current_instance(self) -> None:
+        EventBus().do_clone_existing_instance.emit(
+            self.settings_controller.settings.current_instance
+        )
 
     def _on_instances_submenu_population(self, instance_names: list[str]) -> None:
         self.menu_bar.instances_submenu.clear()
