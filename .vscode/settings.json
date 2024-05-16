@@ -17,4 +17,5 @@
     "python.terminal.activateEnvInCurrentTerminal": true,
     "python.languageServer": "Jedi",
     "mypy.runUsingActiveInterpreter": true,
+    "autoDocstring.docstringFormat": "sphinx"
 }
