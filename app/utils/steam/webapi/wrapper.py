@@ -52,7 +52,7 @@ class CollectionImport:
         # Initialize the UI for entering collection links
         self.link_input = show_dialogue_input(
             title="Add Workshop collection link",
-            text="Add Workshop collection link",
+            label="Add Workshop collection link",
         )
         self.import_collection_link()
         logger.info("Workshop collection link Input UI initialized successfully!")

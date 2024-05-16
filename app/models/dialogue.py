@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from typing import List, Optional, Tuple
+import warnings
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -8,6 +9,7 @@ from PySide6.QtWidgets import (
     QInputDialog,
     QMessageBox,
     QPushButton,
+    QWidget,
 )
 from loguru import logger
 
@@ -140,29 +142,14 @@ def show_dialogue_conditional(
 
 def show_dialogue_input(
     title: Optional[str] = None,
+    label: Optional[str] = None,
     text: Optional[str] = None,
-    value: Optional[str] = None,
+    parent: Optional[QWidget] = None,
 ) -> Tuple[str, bool]:
-    # Set up the message box
-    dialogue = QInputDialog()
-    dialogue.setObjectName("dialogue")
-    if title:
-        dialogue.setWindowTitle(title)
-    else:
-        dialogue.setWindowTitle(DEFAULT_TITLE)
-    # Add data
-    if text:
-        dialogue.setLabelText(text)
-    if value:
-        dialogue.setTextValue(value)
-
-    # Show the message box & return response
-    if dialogue.exec() == Accepted:
-        result = True
-    else:
-        result = False
-    response = dialogue.textValue()
-    return response, result
+    warnings.warn(
+        "May deprecate show_dialogue_input. Currently it is just a wrapper around a single function"
+    )
+    return QInputDialog().getText(parent, title, label, text=text)
 
 
 def show_dialogue_file(

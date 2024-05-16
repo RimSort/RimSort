@@ -499,7 +499,7 @@ class RuleEditor(QWidget):
                 # Add a new row in the editor - prompt user to enter a comment for their rule addition
                 args, ok = show_dialogue_input(
                     title="Enter comment",
-                    text="Enter a comment to annotate why this rule exists. This is useful for your own records, as well as others.",
+                    label="Enter a comment to annotate why this rule exists. This is useful for your own records, as well as others.",
                 )
                 if ok:
                     comment = args
@@ -1014,7 +1014,9 @@ class RuleEditor(QWidget):
                     # Add a new row in the editor - prompt user to enter a comment for their rule addition
                     args, ok = show_dialogue_input(
                         title="Enter comment",
-                        text="Enter a comment to annotate why this rule exists. This is useful for your own records, as well as others.",
+                        label="Enter a comment to annotate why this rule exists."
+                        "This is useful for your own records, as well as others.",
+                        parent=self,
                     )
                     if ok:
                         comment = args

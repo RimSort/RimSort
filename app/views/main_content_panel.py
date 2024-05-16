@@ -1799,9 +1799,9 @@ class MainContent(QObject):
         """
         args, ok = show_dialogue_input(
             title="Edit run arguments",
-            text="Enter a comma separated list of arguments to pass to the Rimworld executable\n\n"
+            label="Enter a comma separated list of arguments to pass to the Rimworld executable\n\n"
             + "Example: \n-popupwindow,-logfile,/path/to/file.log",
-            value=",".join(self.settings_controller.settings.run_args),
+            text=",".join(self.settings_controller.settings.run_args),
         )
         if ok:
             self.settings_controller.settings.run_args = args.split(",")
@@ -2129,7 +2129,7 @@ class MainContent(QObject):
         """
         args, ok = show_dialogue_input(
             title="Enter git repo",
-            text="Enter a git repository url (http/https) to clone to local mods:",
+            label="Enter a git repository url (http/https) to clone to local mods:",
         )
         if ok:
             self._do_clone_repo_to_path(
@@ -2149,8 +2149,8 @@ class MainContent(QObject):
         """
         args, ok = show_dialogue_input(
             title="Edit username",
-            text="Enter your Github username:",
-            value=self.settings_controller.settings.github_username,
+            label="Enter your Github username:",
+            text=self.settings_controller.settings.github_username,
         )
         if ok:
             self.settings_controller.settings.github_username = args
@@ -2160,8 +2160,8 @@ class MainContent(QObject):
             return
         args, ok = show_dialogue_input(
             title="Edit token",
-            text="Enter your Github personal access token here (ghp_*):",
-            value=self.settings_controller.settings.github_token,
+            label="Enter your Github personal access token here (ghp_*):",
+            text=self.settings_controller.settings.github_token,
         )
         if ok:
             self.settings_controller.settings.github_token = args
@@ -2679,8 +2679,8 @@ class MainContent(QObject):
         """
         args, ok = show_dialogue_input(
             title="Edit Steam DB repo",
-            text="Enter URL (https://github.com/AccountName/RepositoryName):",
-            value=self.settings_controller.settings.external_steam_metadata_repo,
+            label="Enter URL (https://github.com/AccountName/RepositoryName):",
+            text=self.settings_controller.settings.external_steam_metadata_repo,
         )
         if ok:
             self.settings_controller.settings.external_steam_metadata_repo = args
@@ -2693,8 +2693,8 @@ class MainContent(QObject):
         """
         args, ok = show_dialogue_input(
             title="Edit Community Rules DB repo",
-            text="Enter URL (https://github.com/AccountName/RepositoryName):",
-            value=self.settings_controller.settings.external_community_rules_repo,
+            label="Enter URL (https://github.com/AccountName/RepositoryName):",
+            text=self.settings_controller.settings.external_community_rules_repo,
         )
         if ok:
             self.settings_controller.settings.external_community_rules_repo = args
@@ -2896,8 +2896,8 @@ class MainContent(QObject):
         """
         args, ok = show_dialogue_input(
             title="Edit Steam WebAPI key",
-            text="Enter your personal 32 character Steam WebAPI key here:",
-            value=self.settings_controller.settings.steam_apikey,
+            label="Enter your personal 32 character Steam WebAPI key here:",
+            text=self.settings_controller.settings.steam_apikey,
         )
         if ok:
             self.settings_controller.settings.steam_apikey = args
@@ -3156,8 +3156,8 @@ class MainContent(QObject):
         """
         args, ok = show_dialogue_input(
             title="Edit SteamDB expiry:",
-            text="Enter your preferred expiry duration in seconds (default 1 week/604800 sec):",
-            value=str(self.settings_controller.settings.database_expiry),
+            label="Enter your preferred expiry duration in seconds (default 1 week/604800 sec):",
+            text=str(self.settings_controller.settings.database_expiry),
         )
         if ok:
             try:
