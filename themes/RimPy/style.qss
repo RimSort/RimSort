@@ -551,6 +551,9 @@ QCheckBox::indicator:unchecked {
 QCheckBox::indicator:hover {
     border: 1px solid #54687a;
 }
+QRadioButton {
+    color: white;
+}
 
 /* ===== Status panel (bottom message bar) */
 QWidget#StatusPanel {
