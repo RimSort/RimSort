@@ -784,140 +784,106 @@ class RuleEditor(QWidget):
                         title=metadata.get("name"),
                         metadata=metadata.get("packageid"),
                     )
+
+        def _parse_rules(
+            rules: dict,
+            loadAfter_list: QListWidget,
+            loadBefore_list: QListWidget,
+            loadBottom_checkbox: QCheckBox,
+            hidden: bool,
+            rule_source: str,
+        ) -> None:
+            """Parses rules from a given dictionary and populates the editor with them
+
+            :param rules: The dictionary containing the rules
+            :type rules: dict
+            :param loadAfter_list: The QListWidget to populate with loadAfter rules
+            :type loadAfter_list: QListWidget
+            :param loadBefore_list: The QListWidget to populate with loadBefore rules
+            :type loadBefore_list: QListWidget
+            :param loadBottom_checkbox: The checkbox to set for loadBottom rules
+            :type loadBottom_checkbox: QCheckBox
+            :param hidden: Indicates if the rules should be hidden
+            :type hidden: bool
+            :param rule_source: The source of the rules
+            :type rule_source: str
+            """
+            if not rules or not self.edit_packageid:
+                return
+
+            # TODO: Leaving for now in case case-insensitivity matters
+            for packageid, metadata in rules.items():
+                if self.edit_packageid.lower() != packageid.lower():
+                    continue
+
+                def _get_first_item_or_value(data):
+                    return data[0] if isinstance(data, list) else data
+
+                for rule_type in ["loadAfter", "loadBefore"]:
+                    if not metadata.get(rule_type):
+                        continue
+                    for rule_id, rule_data in metadata[rule_type].items():
+                        rule_name = _get_first_item_or_value(rule_data.get("name", ""))
+                        rule_comment = _get_first_item_or_value(
+                            rule_data.get("comment", "")
+                        )
+
+                        self._create_list_item(
+                            _list=(
+                                loadAfter_list
+                                if rule_type == "loadAfter"
+                                else loadBefore_list
+                            ),
+                            title=rule_name,
+                            metadata=rule_id,
+                        )
+                        self._add_rule_to_table(
+                            name=rule_name,
+                            packageid=rule_id,
+                            rule_source=rule_source,
+                            rule_type=rule_type,
+                            comment=rule_comment,
+                            hidden=hidden,
+                        )
+
+                rule_data = metadata.get("loadBottom")
+                if rule_data:
+                    self.block_comment_prompt = True
+                    loadBottom_checkbox.setChecked(rule_data.get("value", False))
+                    self.block_comment_prompt = False
+                    if rule_data.get("value"):
+                        self._add_rule_to_table(
+                            name=self.edit_name,
+                            packageid=self.edit_packageid,
+                            rule_source=rule_source,
+                            rule_type="loadBottom",
+                            comment=_get_first_item_or_value(
+                                rule_data.get("comment", "")
+                            ),
+                            hidden=hidden,
+                        )
+
         logger.debug("Parsing Community Rules")
         # Community Rules rulez
-        if (
-            self.community_rules
-            and len(self.community_rules.keys()) > 0
-            and self.edit_packageid
-        ):
-            for packageid, metadata in self.community_rules.items():
-                if (
-                    self.edit_packageid
-                    and self.edit_packageid.lower() == packageid.lower()
-                ):
-                    if metadata.get("loadAfter"):
-                        for rule_id, rule_data in metadata["loadAfter"].items():
-                            self._create_list_item(
-                                _list=self.external_community_rules_loadAfter_list,
-                                title=rule_data["name"][0],
-                                metadata=rule_id,
-                            )
-                            self._add_rule_to_table(
-                                name=rule_data["name"][0],
-                                packageid=rule_id,
-                                rule_source="Community Rules",
-                                rule_type="loadAfter",
-                                comment=(
-                                    rule_data["comment"][0]
-                                    if rule_data.get("comment")
-                                    else ""
-                                ),
-                                hidden=self.community_rules_hidden,
-                            )
-                    if metadata.get("loadBefore"):
-                        for rule_id, rule_data in metadata["loadBefore"].items():
-                            self._create_list_item(
-                                _list=self.external_community_rules_loadBefore_list,
-                                title=rule_data["name"][0],
-                                metadata=rule_id,
-                            )
-                            self._add_rule_to_table(
-                                name=rule_data["name"][0],
-                                packageid=rule_id,
-                                rule_source="Community Rules",
-                                rule_type="loadBefore",
-                                comment=(
-                                    rule_data["comment"][0]
-                                    if rule_data.get("comment")
-                                    else ""
-                                ),
-                                hidden=self.community_rules_hidden,
-                            )
-                    if metadata.get("loadBottom") and metadata["loadBottom"].get(
-                        "value"
-                    ):
-                        self.block_comment_prompt = True
-                        self.external_community_rules_loadBottom_checkbox.setChecked(
-                            True
-                        )
-                        self.block_comment_prompt = False
-                        self._add_rule_to_table(
-                            name=self.edit_name,
-                            packageid=self.edit_packageid,
-                            rule_source="Community Rules",
-                            rule_type="loadBottom",
-                            comment=(
-                                rule_data["comment"][0]
-                                if rule_data.get("comment")
-                                else ""
-                            ),
-                            hidden=self.community_rules_hidden,
-                        )
+        _parse_rules(
+            rules=self.community_rules,
+            loadAfter_list=self.external_community_rules_loadAfter_list,
+            loadBefore_list=self.external_community_rules_loadBefore_list,
+            loadBottom_checkbox=self.external_community_rules_loadBottom_checkbox,
+            hidden=self.community_rules_hidden,
+            rule_source="Community Rules",
+        )
+
         logger.debug("Parsing User Rules")
         # User Rules rulez
-        if self.user_rules and len(self.user_rules.keys()) > 0 and self.edit_packageid:
-            for packageid, metadata in self.user_rules.items():
-                if (
-                    self.edit_packageid
-                    and self.edit_packageid.lower() == packageid.lower()
-                ):
-                    if metadata.get("loadAfter"):
-                        for rule_id, rule_data in metadata["loadAfter"].items():
-                            self._create_list_item(
-                                _list=self.external_user_rules_loadAfter_list,
-                                title=rule_data["name"][0],
-                                metadata=rule_id,
-                            )
-                            self._add_rule_to_table(
-                                name=rule_data["name"][0],
-                                packageid=rule_id,
-                                rule_source="User Rules",
-                                rule_type="loadAfter",
-                                comment=(
-                                    rule_data["comment"][0]
-                                    if rule_data.get("comment")
-                                    else ""
-                                ),
-                                hidden=self.user_rules_hidden,
-                            )
-                    if metadata.get("loadBefore"):
-                        for rule_id, rule_data in metadata["loadBefore"].items():
-                            self._create_list_item(
-                                _list=self.external_user_rules_loadBefore_list,
-                                title=rule_data["name"][0],
-                                metadata=rule_id,
-                            )
-                            self._add_rule_to_table(
-                                name=rule_data["name"][0],
-                                packageid=rule_id,
-                                rule_source="User Rules",
-                                rule_type="loadBefore",
-                                comment=(
-                                    rule_data["comment"][0]
-                                    if rule_data.get("comment")
-                                    else ""
-                                ),
-                                hidden=self.user_rules_hidden,
-                            )
-                    if metadata.get("loadBottom") and metadata["loadBottom"].get(
-                        "value"
-                    ):
-                        self.block_comment_prompt = True
-                        self.external_user_rules_loadBottom_checkbox.setChecked(True)
-                        self._add_rule_to_table(
-                            name=self.edit_name,
-                            packageid=self.edit_packageid,
-                            rule_source="User Rules",
-                            rule_type="loadBottom",
-                            comment=(
-                                rule_data["comment"][0]
-                                if rule_data.get("comment")
-                                else ""
-                            ),
-                            hidden=self.user_rules_hidden,
-                        )
-                        self.block_comment_prompt = False
+        _parse_rules(
+            rules=self.user_rules,
+            loadAfter_list=self.external_user_rules_loadAfter_list,
+            loadBefore_list=self.external_user_rules_loadBefore_list,
+            loadBottom_checkbox=self.external_user_rules_loadBottom_checkbox,
+            hidden=self.user_rules_hidden,
+            rule_source="User Rules",
+        )
 
     def _remove_rule(self, context_item: QListWidgetItem, _list: QListWidget) -> None:
         logger.debug(f"Removing rule from mod: {self.edit_packageid}")
