@@ -216,9 +216,7 @@ QPushButton {
     border-radius: 5px;
     min-height: 1em;
     min-width: 6em;
-    padding: 2px;
-    padding-left: 4px;
-    padding-right: 4px;
+    padding: 2px 4px;
 }
 
 QPushButton#indicator {
