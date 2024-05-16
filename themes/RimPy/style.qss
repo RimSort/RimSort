@@ -183,6 +183,26 @@ QMenu::item:checked:selected {
 QMenu::item:checked:hover {
     background-color: #37414f;
 }
+
+/* Default Menu Bar styling. Note that this does not apply in MacOS */
+QMenuBar {
+    background-color: #19232d;
+    color: white;
+    border-radius: 3px;
+}
+
+QMenuBar::item {
+    padding: 4px 8px;
+}
+
+QMenuBar::item:selected {
+    background-color: #37414f;
+}
+
+QMenuBar::item:pressed {
+    background-color: #54687a;
+}
+
 /* Default message box style */
 QMessageBox#dialogue{
     background: #1B2838;
