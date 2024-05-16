@@ -107,6 +107,10 @@ QLineEdit {
     border-width: 1px;
     border-radius: 3px;
 }
+QLineEdit:disabled {
+    color: #999999;
+    background-color: #272e37;
+}
 /* Styling for list widgets (mod list and rule editor lists) */
 QListWidget {
     background-color: #19232d;
@@ -431,6 +435,9 @@ QToolButton:hover {
 QToolButton:pressed {
     background-color: #3e4a52;
     border-style: inset;
+}
+QToolButton:disabled {
+    color: #999999;
 }
 
 /* ===== Browser (util/steam/browser.py) ===== */
