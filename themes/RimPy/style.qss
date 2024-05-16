@@ -44,7 +44,7 @@ QComboBox {
     border-radius: 5px;
     min-height: 1em;
     min-width: 6em;
-    padding: 1px;
+    padding: 2px 4px;
 }
 QComboBox:hover {
     background-color: #54687a;
