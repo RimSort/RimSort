@@ -571,6 +571,22 @@ QRadioButton {
     color: white;
 }
 
+QRadioButton::indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 8px;
+    border: 3px solid #455364;
+}
+
+QRadioButton::indicator:checked {
+    background-color:#3688c3;
+}
+
+QRadioButton::indicator:unchecked {
+    background-color: #455364;
+}
+
+
 /* ===== Status panel (bottom message bar) */
 QWidget#StatusPanel {
     background-color: #455364;
