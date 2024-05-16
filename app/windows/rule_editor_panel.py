@@ -497,8 +497,14 @@ class RuleEditor(QWidget):
                 destination_list.addItem(copied_item)
                 destination_list.setItemWidget(copied_item, QLabel(item_label_text))
                 # Add a new row in the editor - prompt user to enter a comment for their rule addition
-                comment = self._show_comment_input()
-
+                args, ok = show_dialogue_input(
+                    title="Enter comment",
+                    label="Enter a comment to annotate why this rule exists. This is useful for your own records, as well as others.",
+                )
+                if ok:
+                    comment = args
+                else:
+                    comment = ""
                 # Populate new row for our rule
                 self._add_rule_to_table(
                     item_label_text,
@@ -902,8 +908,14 @@ class RuleEditor(QWidget):
                 comment = None
                 if not self.block_comment_prompt:
                     # Add a new row in the editor - prompt user to enter a comment for their rule addition
-                    comment = self._show_comment_input()
-
+                    args, ok = show_dialogue_input(
+                        title="Enter comment",
+                        label="Enter a comment to annotate why this rule exists."
+                        "This is useful for your own records, as well as others.",
+                        parent=self,
+                    )
+                    if ok:
+                        comment = args
                     self._add_rule_to_table(
                         name=self.edit_name,
                         packageid=self.edit_packageid,
