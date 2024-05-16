@@ -145,21 +145,21 @@ class RunnerPanel(QWidget):
         self.destroy()
 
     def eventFilter(self, obj, event):
-        if event.type() == QEvent.KeyPress and event.type() == Qt.Key_Escape:
+        if event.type() == QEvent.Type.KeyPress and event.type() == Qt.Key.Key_Escape:
             self.close()
             return True
 
         return super().eventFilter(obj, event)
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Escape:
+        if event.key() == Qt.Key.Key_Escape:
             self.close()
 
     def _do_clear_runner(self):
         self.text.clear()
 
     def _do_kill_process(self):
-        if self.process and self.process.state() == QProcess.Running:
+        if self.process and self.process.state() == QProcess.ProcessState.Running:
             # Terminate the main process and its child processes
             parent_process = psutil.Process(self.process.processId())
             children = parent_process.children(recursive=True)
@@ -218,7 +218,7 @@ class RunnerPanel(QWidget):
         self.process = QProcess(self)
         self.process.setProgram(command)
         self.process.setArguments(args)
-        self.process.setProcessChannelMode(QProcess.MergedChannels)
+        self.process.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
         self.process.readyReadStandardError.connect(self.handle_output)
         self.process.readyReadStandardOutput.connect(self.handle_output)
         self.process.finished.connect(self.finished)
@@ -240,7 +240,7 @@ class RunnerPanel(QWidget):
 
     def message(self, line: str):
         overwrite = False
-        if self.process and self.process.state() == QProcess.Running:
+        if self.process and self.process.state() == QProcess.ProcessState.Running:
             logger.debug(f"[{self.process.program().split('/')[-1]}]\n{line}")
         else:
             logger.debug(f"{line}")
@@ -248,7 +248,7 @@ class RunnerPanel(QWidget):
         # Hardcoded steamcmd progress output support
         if (  # -------STEAM-------
             self.process
-            and self.process.state() == QProcess.Running
+            and self.process.state() == QProcess.ProcessState.Running
             and "steamcmd" in self.process.program()
         ):
             if "Downloading item " in line:
@@ -288,7 +288,7 @@ class RunnerPanel(QWidget):
         # Hardcoded todds progress output support
         elif (  # -------TODDS-------
             self.process
-            and self.process.state() == QProcess.Running
+            and self.process.state() == QProcess.ProcessState.Running
             and "todds" in self.process.program()
         ):
             match = search(r"Progress: (\d+)/(\d+)", line)
@@ -314,8 +314,11 @@ class RunnerPanel(QWidget):
         # Overwrite support - set the overwrite bool to overwrite the last line instead of appending
         if overwrite:
             cursor = self.text.textCursor()
-            cursor.movePosition(QTextCursor.End)
-            cursor.movePosition(QTextCursor.StartOfLine, QTextCursor.KeepAnchor)
+            cursor.movePosition(QTextCursor.MoveOperation.End)
+            cursor.movePosition(
+                QTextCursor.MoveOperation.StartOfLine,
+                QTextCursor.MoveMode.KeepAnchor,
+            )
             cursor.removeSelectedText()
             cursor.insertText(line.strip())
         else:
