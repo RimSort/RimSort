@@ -145,7 +145,7 @@ class RunnerPanel(QWidget):
         self.destroy()
 
     def eventFilter(self, obj, event):
-        if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Escape:
+        if event.type() == QEvent.KeyPress and event.type() == Qt.Key_Escape:
             self.close()
             return True
 
