@@ -84,6 +84,7 @@ RIMWORLD_DLC_METADATA = {
         "description": "DLC #4",
     },
 }
+RIMWORLD_PACKAGE_IDS = [v["packageid"] for v in RIMWORLD_DLC_METADATA.values()]
 SEARCH_DATA_SOURCE_FILTER_INDEXES = [
     "all",
     "expansion",
