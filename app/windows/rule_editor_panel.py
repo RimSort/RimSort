@@ -1,4 +1,5 @@
 from functools import partial
+import time
 
 from PySide6.QtCore import Qt, QPoint, QSize, Signal
 from PySide6.QtGui import (
@@ -105,16 +106,20 @@ class RuleEditor(QWidget):
         self.user_rules_hidden = None
         # Can be used to get proper names for mods found in list
         # items that are not locally available
+        timer = time.time()
         self.steam_workshop_metadata_packageids_to_name = {}
-        if (
-            self.metadata_manager.external_steam_metadata
-            and len(self.metadata_manager.external_steam_metadata.keys()) > 0
-        ):
-            for metadata in self.metadata_manager.external_steam_metadata.values():
-                if metadata.get("packageid"):
-                    self.steam_workshop_metadata_packageids_to_name[
-                        metadata["packageid"]
-                    ] = metadata["name"]
+        external_steam_metadata = self.metadata_manager.external_steam_metadata
+        if external_steam_metadata and len(external_steam_metadata.keys()) > 0:
+            for metadata in external_steam_metadata.values():
+                package_id = metadata.get("packageId") or metadata.get("packageid")
+                if package_id:
+                    self.steam_workshop_metadata_packageids_to_name[package_id] = (
+                        metadata["name"]
+                    )
+
+        logger.warning(
+            f"Metadata packageid to name mapping took: {time.time() - timer}"
+        )
 
         # MOD LABEL
         self.mod_label = QLabel("No mod currently being edited")
@@ -637,67 +642,19 @@ class RuleEditor(QWidget):
                     if metadata.get("loadafter") and metadata["loadafter"].get("li"):
                         loadAfters = metadata["loadafter"]["li"]
                         if isinstance(loadAfters, str):
-                            self._create_list_item(
-                                _list=self.local_metadata_loadAfter_list,
-                                title=(
-                                    self.steam_workshop_metadata_packageids_to_name[
-                                        loadAfters.lower()
-                                    ]
-                                    if loadAfters.lower()
-                                    in [
-                                        key.lower()
-                                        for key in self.steam_workshop_metadata_packageids_to_name.keys()
-                                    ]
-                                    else loadAfters
-                                ),
-                                metadata=loadAfters,
-                            )
-                            self._add_rule_to_table(
-                                name=(
-                                    self.steam_workshop_metadata_packageids_to_name[
-                                        loadAfters.lower()
-                                    ]
-                                    if loadAfters.lower()
-                                    in [
-                                        key.lower()
-                                        for key in self.steam_workshop_metadata_packageids_to_name.keys()
-                                    ]
-                                    else loadAfters
-                                ),
-                                packageid=loadAfters,
-                                rule_source="About.xml",
-                                rule_type="loadAfter",
-                                comment="Added from mod metadata",
-                                hidden=self.local_rules_hidden,
-                            )
-                        elif isinstance(loadAfters, list):
+                            loadAfters = [loadAfters]
+                        if isinstance(loadAfters, list):
                             for rule in loadAfters:
                                 self._create_list_item(
                                     _list=self.local_metadata_loadAfter_list,
-                                    title=(
-                                        self.steam_workshop_metadata_packageids_to_name[
-                                            rule.lower()
-                                        ]
-                                        if rule.lower()
-                                        in [
-                                            key.lower()
-                                            for key in self.steam_workshop_metadata_packageids_to_name.keys()
-                                        ]
-                                        else rule
+                                    title=self.steam_workshop_metadata_packageids_to_name.get(
+                                        rule.lower(), rule
                                     ),
                                     metadata=rule,
                                 )
                                 self._add_rule_to_table(
-                                    name=(
-                                        self.steam_workshop_metadata_packageids_to_name[
-                                            rule.lower()
-                                        ]
-                                        if rule.lower()
-                                        in [
-                                            key.lower()
-                                            for key in self.steam_workshop_metadata_packageids_to_name.keys()
-                                        ]
-                                        else rule
+                                    name=self.steam_workshop_metadata_packageids_to_name.get(
+                                        rule.lower(), rule
                                     ),
                                     packageid=rule,
                                     rule_source="About.xml",
@@ -708,33 +665,16 @@ class RuleEditor(QWidget):
                     if metadata.get("loadbefore") and metadata["loadbefore"].get("li"):
                         loadBefores = metadata["loadbefore"]["li"]
                         if isinstance(loadBefores, str):
+                            name = self.steam_workshop_metadata_packageids_to_name.get(
+                                loadBefores.lower(), loadBefores
+                            )
                             self._create_list_item(
                                 _list=self.local_metadata_loadBefore_list,
-                                title=(
-                                    self.steam_workshop_metadata_packageids_to_name[
-                                        loadBefores.lower()
-                                    ]
-                                    if loadBefores.lower()
-                                    in [
-                                        key.lower()
-                                        for key in self.steam_workshop_metadata_packageids_to_name.keys()
-                                    ]
-                                    else loadBefores
-                                ),
+                                title=name,
                                 metadata=loadBefores,
                             )
                             self._add_rule_to_table(
-                                name=(
-                                    self.steam_workshop_metadata_packageids_to_name[
-                                        loadBefores.lower()
-                                    ]
-                                    if loadBefores.lower()
-                                    in [
-                                        key.lower()
-                                        for key in self.steam_workshop_metadata_packageids_to_name.keys()
-                                    ]
-                                    else loadBefores
-                                ),
+                                name=name,
                                 packageid=loadBefores,
                                 rule_source="About.xml",
                                 rule_type="loadBefore",
@@ -743,33 +683,18 @@ class RuleEditor(QWidget):
                             )
                         elif isinstance(loadBefores, list):
                             for rule in loadBefores:
+                                name = (
+                                    self.steam_workshop_metadata_packageids_to_name.get(
+                                        rule.lower(), rule
+                                    )
+                                )
                                 self._create_list_item(
                                     _list=self.local_metadata_loadBefore_list,
-                                    title=(
-                                        self.steam_workshop_metadata_packageids_to_name[
-                                            rule.lower()
-                                        ]
-                                        if rule.lower()
-                                        in [
-                                            key.lower()
-                                            for key in self.steam_workshop_metadata_packageids_to_name.keys()
-                                        ]
-                                        else rule
-                                    ),
+                                    title=name,
                                     metadata=rule,
                                 )
                                 self._add_rule_to_table(
-                                    name=(
-                                        self.steam_workshop_metadata_packageids_to_name[
-                                            rule.lower()
-                                        ]
-                                        if rule.lower()
-                                        in [
-                                            key.lower()
-                                            for key in self.steam_workshop_metadata_packageids_to_name.keys()
-                                        ]
-                                        else rule
-                                    ),
+                                    name=name,
                                     packageid=rule,
                                     rule_source="About.xml",
                                     rule_type="loadBefore",
