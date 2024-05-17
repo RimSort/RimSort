@@ -37,37 +37,10 @@ jobs:
           cache-dependency-path: |
             **/requirements*.txt
 
-      - name: Setup Environment Variables
-        shell: bash
-        run: |
-            echo "NUITKA_CACHE_DIR=${{ github.action_path }}/nuitka/cache" >> $GITHUB_ENV
-            echo "PYTHON_VERSION=$(python --version | awk '{print $2}' | cut -d '.' -f 1,2)" >> $GITHUB_ENV
-      
       - name: Install Dependencies
         run: |
           pip install -r requirements.txt -r requirements_develop.txt
 
-      - name: Install ccache (Linux)
-        if: matrix.platform == 'Linux'
-        run: |
-          sudo apt-get install -y ccache
-
-      - name: Install ccache (Windows)
-        if: matrix.platform == 'Windows'
-        run: |
-          choco install ccache
-
-      - name: Cache Nuitka cache directory
-        if: ${{ !inputs.disable-cache }}
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.NUITKA_CACHE_DIR }}
-          key: ${{ runner.os }}-python-${{ env.PYTHON_VERSION }}-nuitka-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-python-${{ env.PYTHON_VERSION }}-
-            ${{ runner.os }}-python-
-            ${{ runner.os }}-
-              
       - name: Build
         run: |
           set -e
