@@ -826,6 +826,14 @@ class RuleEditor(QWidget):
                             rule_data.get("comment", "")
                         )
 
+                        if not rule_name:
+                            # Set rule name to the packageid if it's empty
+                            rule_name = rule_id
+                            logger.warning(
+                                f"Rule name is missing for {rule_type} rule in mod {self.edit_packageid}."
+                                f" Using packageid {rule_id} as name."
+                            )
+
                         self._create_list_item(
                             _list=(
                                 loadAfter_list
