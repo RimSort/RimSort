@@ -497,17 +497,15 @@ class RuleEditor(QWidget):
                 destination_list.addItem(copied_item)
                 destination_list.setItemWidget(copied_item, QLabel(item_label_text))
                 # Add a new row in the editor - prompt user to enter a comment for their rule addition
-                args, ok = show_dialogue_input(
-                    title="Enter comment",
-                    label="Enter a comment to annotate why this rule exists. This is useful for your own records, as well as others.",
-                )
-                if ok:
-                    comment = args
-                else:
-                    comment = ""
+                comment = self._show_comment_input()
+
                 # Populate new row for our rule
                 self._add_rule_to_table(
-                    item_label_text, rule_data, mode[0], mode[1], comment
+                    item_label_text,
+                    rule_data,
+                    mode[0],
+                    mode[1],
+                    comment=comment,
                 )
                 # Select database for editing
                 if mode[0] == "Community Rules":
@@ -1012,20 +1010,14 @@ class RuleEditor(QWidget):
                 comment = None
                 if not self.block_comment_prompt:
                     # Add a new row in the editor - prompt user to enter a comment for their rule addition
-                    args, ok = show_dialogue_input(
-                        title="Enter comment",
-                        label="Enter a comment to annotate why this rule exists."
-                        "This is useful for your own records, as well as others.",
-                        parent=self,
-                    )
-                    if ok:
-                        comment = args
+                    comment = self._show_comment_input()
+
                     self._add_rule_to_table(
                         name=self.edit_name,
                         packageid=self.edit_packageid,
                         rule_source=rule_source,
                         rule_type="loadBottom",
-                        comment=comment if comment else "",
+                        comment=comment,
                     )
                 # Add rule to the database if it doesn't already exist
                 if not metadata.get(self.edit_packageid):
@@ -1068,6 +1060,22 @@ class RuleEditor(QWidget):
                     .get("value")
                 ):
                     metadata[self.edit_packageid].pop("loadBottom")
+
+    def _show_comment_input(self) -> str:
+        """Creates comment input dialogue for the user to enter a comment for their rule addition.
+
+        Returns:
+            str: The comment entered by the user if dialogue is accepted, otherwise an empty string.
+        """
+        item, ok = show_dialogue_input(
+            title="Enter comment",
+            label="Enter a comment to annotate why this rule exists."
+            " This is useful for your own records, as well as others.",
+            parent=self,
+        )
+        if ok:
+            return item
+        return ""
 
     def modItemContextMenuEvent(self, point: QPoint) -> None:
         context_menu = QMenu(self)  # Mod item context menu event
