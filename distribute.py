@@ -513,7 +513,7 @@ def main():
         print("Building RimSort application with Nuitka...")
         freeze_application()
     else:
-        print("Skipping build...")
+        print("Skipping distribute.py build...")
 
 
 if __name__ == "__main__":
