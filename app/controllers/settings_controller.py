@@ -466,7 +466,7 @@ class SettingsController(QObject):
         self.settings_dialog.github_token.setText(self.settings.github_token)
         self.settings_dialog.github_token.setCursorPosition(0)
 
-        run_args_str = " ".join(
+        run_args_str = ",".join(
             self.settings.instances[self.settings.current_instance]["run_args"]
         )
         self.settings_dialog.run_args.setText(run_args_str)
@@ -1170,7 +1170,7 @@ class SettingsController(QObject):
 
     @Slot(str)
     def _on_run_args_text_changed(self, text: str) -> None:
-        run_args_list = [arg.strip() for arg in text.split(" ") if arg.strip()]
+        run_args_list = text.split(",")
         self.settings.instances[self.settings.current_instance][
             "run_args"
         ] = run_args_list
