@@ -695,7 +695,13 @@ class ModListWidget(QListWidget):
                         copy_url_to_clipboard_action = QAction()
                         copy_url_to_clipboard_action.setText("Copy URL to clipboard")
                     # If we have a "steam_uri"
-                    if mod_metadata.get("steam_uri"):
+                    if mod_metadata.get(
+                        "steam_uri"
+                    ) and self.settings_controller.settings.instances[
+                        self.settings_controller.settings.current_instance
+                    ].get(
+                        "steam_client_integration", False
+                    ):
                         open_mod_steam_action = QAction()
                         open_mod_steam_action.setText("Open mod in Steam")
                     # Conversion options (SteamCMD <-> local) + re-download (local mods found in SteamDB and SteamCMD)
@@ -750,14 +756,18 @@ class ModListWidget(QListWidget):
                         convert_workshop_local_action.setText(
                             "Convert Steam mod to local"
                         )
-                        # Re-subscribe steam mods
-                        re_steam_action = QAction()
-                        re_steam_action.setText("Re-subscribe mod with Steam")
-                        # Unsubscribe steam mods
-                        unsubscribe_mod_steam_action = QAction()
-                        unsubscribe_mod_steam_action.setText(
-                            "Unsubscribe mod with Steam"
-                        )
+                        # Only enable subscription actions if user has enabled Steam client integration
+                        if self.settings_controller.settings.instances[
+                            self.settings_controller.settings.current_instance
+                        ]["steam_client_integration"]:
+                            # Re-subscribe steam mods
+                            re_steam_action = QAction()
+                            re_steam_action.setText("Re-subscribe mod with Steam")
+                            # Unsubscribe steam mods
+                            unsubscribe_mod_steam_action = QAction()
+                            unsubscribe_mod_steam_action.setText(
+                                "Unsubscribe mod with Steam"
+                            )
                     # SteamDB blacklist options
                     if (
                         self.metadata_manager.external_steam_metadata
@@ -882,18 +892,22 @@ class ModListWidget(QListWidget):
                                 convert_workshop_local_action.setText(
                                     "Convert Steam mod(s) to local"
                                 )
-                            # Re-subscribe steam mods
-                            if not re_steam_action:
-                                re_steam_action = QAction()
-                                re_steam_action.setText(
-                                    "Re-subscribe mod(s) with Steam"
-                                )
-                            # Unsubscribe steam mods
-                            if not unsubscribe_mod_steam_action:
-                                unsubscribe_mod_steam_action = QAction()
-                                unsubscribe_mod_steam_action.setText(
-                                    "Unsubscribe mod(s) with Steam"
-                                )
+                            # Only enable subscription actions if user has enabled Steam client integration
+                            if self.settings_controller.settings.instances[
+                                self.settings_controller.settings.current_instance
+                            ]["steam_client_integration"]:
+                                # Re-subscribe steam mods
+                                if not re_steam_action:
+                                    re_steam_action = QAction()
+                                    re_steam_action.setText(
+                                        "Re-subscribe mod(s) with Steam"
+                                    )
+                                # Unsubscribe steam mods
+                                if not unsubscribe_mod_steam_action:
+                                    unsubscribe_mod_steam_action = QAction()
+                                    unsubscribe_mod_steam_action.setText(
+                                        "Unsubscribe mod(s) with Steam"
+                                    )
                         # No SteamDB blacklist options when multiple selected
                         # Prohibit deletion of game files
                         if not delete_mod_action:
