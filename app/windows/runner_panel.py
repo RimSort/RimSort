@@ -202,7 +202,7 @@ class RunnerPanel(QWidget):
         self.progress_bar.style().polish(self.progress_bar)
 
     def execute(self, command: str, args: list, progress_bar=None, additional=None):
-        """ "
+        """
         Execute the given command in a new terminal like gui
 
         command:str, path to .exe
