@@ -3,11 +3,12 @@ on:
   push:
     tags:
       - 'Edge'
-  workflow_run:
-    workflows: ["Build"]
-    types: 
-      - completed
+  workflow_dispatch:
+
 jobs:
+  call-build:
+    uses: ./.github/workflows/build.yml
+
   release:
     runs-on: ubuntu-latest
     steps:

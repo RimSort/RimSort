@@ -1,11 +1,10 @@
 name: Build
 on:
-  push:
-    branches:
-      - main
   pull_request:
     branches:
       - main
+  workflow_call:
+  workflow_dispatch:
 
 jobs:
   build:
@@ -38,12 +37,45 @@ jobs:
           cache-dependency-path: |
             **/requirements*.txt
 
+      - name: Setup Environment Variables
+        shell: bash
+        run: |
+            echo "NUITKA_CACHE_DIR=${{ github.action_path }}/nuitka/cache" >> $GITHUB_ENV
+            echo "PYTHON_VERSION=$(python --version | awk '{print $2}' | cut -d '.' -f 1,2)" >> $GITHUB_ENV
+      
       - name: Install Dependencies
         run: |
           pip install -r requirements.txt -r requirements_develop.txt
 
+      - name: Install ccache Linux
+        if: matrix.platform == 'Linux'
+        run: sudo apt-get install -y ccache
+
+      - name: Install ccache Windows
+        if: matrix.platform == 'Windows'
+        run: choco install ccache
+
+      - name: Install ccache MacOS
+        if: matrix.platform == 'Darwin'
+        run: brew install ccache
+
+      - name: Cache Nuitka cache directory
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.NUITKA_CACHE_DIR }}
+          key: ${{ runner.os }}-python-${{ env.PYTHON_VERSION }}-nuitka-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-python-${{ env.PYTHON_VERSION }}-
+            ${{ runner.os }}-python-
+            ${{ runner.os }}-
+
       - name: Nuitka Build
-        run: python distribute.py --skip-deps
+        run: |
+          set -e
+          python distribute.py --skip-deps
+        env: 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NUITKA_CACHE_DIR: ${{ env.NUITKA_CACHE_DIR }}
 
       - name: Get Short SHA and Set up filename (Unix)
         if: matrix.platform != 'Windows'
@@ -51,7 +83,7 @@ jobs:
         run: |
           # Get the short SHA of the commit
           SHORT_SHA=$(git rev-parse --short HEAD)
-          echo "::set-output name=short::$SHORT_SHA"
+          echo "short=$SHORT_SHA" >> $GITHUB_OUTPUT
           # Format the filename, set in env for output
           FILENAME="RimSort-Edge_${SHORT_SHA}_${{ matrix.platform }}_${{ matrix.arch }}.zip"
           echo "FILENAME=$FILENAME" >> $GITHUB_ENV
@@ -63,7 +95,7 @@ jobs:
         run: |
           # Get the short SHA of the commit
           $SHORT_SHA = git rev-parse --short HEAD
-          echo "::set-output name=short::$SHORT_SHA"
+          echo "short=$SHORT_SHA" >> $GITHUB_OUTPUT
           # Format the filename, set in env for output
           $FILENAME = "RimSort-Edge_${SHORT_SHA}_${{ matrix.platform }}_${{ matrix.arch }}.zip"
           Add-Content -Path $env:GITHUB_ENV -Value "FILENAME=$FILENAME"
@@ -92,7 +124,6 @@ jobs:
           fi
           cd ./build/
           zip -r ${{ env.FILENAME }} $DIST
-
       - name: Create ZIP (Windows)
         if: matrix.platform == 'Windows'
         run: |

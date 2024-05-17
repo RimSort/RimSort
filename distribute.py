@@ -411,6 +411,10 @@ def get_latest_todds_release() -> None:
 def freeze_application() -> None:
     # Nuitka
     print(f"Running on {_SYSTEM} {_ARCH} {_PROCESSOR}...")
+
+    # Check if NUITKA_CACHE_DIR exists in environment
+    if "NUITKA_CACHE_DIR" in os.environ:
+        print(f"NUITKA_CACHE_DIR: {os.environ['NUITKA_CACHE_DIR']}")
     # Set the PYTHONPATH environment variable to include your submodules directory
     env = os.environ.copy()
     env["PYTHONPATH"] = (
