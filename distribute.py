@@ -41,8 +41,8 @@ _NUITKA_CMD = [
     "app/__main__.py",
     "--output-dir=./build/",
     "--output-filename=RimSort",
-    "--enable-console",
-    "--show-progress",
+    "--noinclude-default-mode=error",
+    "--disable-console",
 ]
 
 darwin = [
@@ -62,6 +62,8 @@ windows_64 = [
     "--include-data-file=./libs/SteamworksPy64.dll=SteamworksPy64.dll",
     "--include-data-file=./libs/steam_api64.dll=steam_api64.dll",
 ]
+
+print(f"Running on {_SYSTEM} {_ARCH} {_PROCESSOR}...")
 
 if _SYSTEM == "Darwin" and _PROCESSOR in ["i386", "arm"]:
     _NUITKA_CMD.extend(darwin)

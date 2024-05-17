@@ -12,16 +12,18 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-11
+          - os: macos-13
             platform: "Darwin"
             arch: "i386"
-          - os: macos-14
+          - os: macos-latest
             platform: "Darwin"
             arch: "arm"
-          - os: ubuntu-22.04
+          - os: ubuntu-latest
             platform: "Linux"
             arch: "x86_64"
           - os: windows-latest
+            platform: "Windows"
+            arch: "x86_64"
     steps:
       - name: Check-out repository
         uses: actions/checkout@v4
