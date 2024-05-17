@@ -761,6 +761,11 @@ class SettingsDialog(QDialog):
         self.show_mod_updates_checkbox = QCheckBox("Check for mod updates on refresh")
         group_layout.addWidget(self.show_mod_updates_checkbox)
 
+        self.steam_client_integration_checkbox = QCheckBox(
+            "Enable Steam client integration"
+        )
+        group_layout.addWidget(self.steam_client_integration_checkbox)
+
         self.download_missing_mods_checkbox = QCheckBox(
             "Download missing mods automatically"
         )
