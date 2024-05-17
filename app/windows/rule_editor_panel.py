@@ -106,7 +106,6 @@ class RuleEditor(QWidget):
         self.user_rules_hidden = None
         # Can be used to get proper names for mods found in list
         # items that are not locally available
-        timer = time.time()
         self.steam_workshop_metadata_packageids_to_name = {}
         external_steam_metadata = self.metadata_manager.external_steam_metadata
         if external_steam_metadata and len(external_steam_metadata.keys()) > 0:
@@ -116,10 +115,6 @@ class RuleEditor(QWidget):
                     self.steam_workshop_metadata_packageids_to_name[package_id] = (
                         metadata["name"]
                     )
-
-        logger.warning(
-            f"Metadata packageid to name mapping took: {time.time() - timer}"
-        )
 
         # MOD LABEL
         self.mod_label = QLabel("No mod currently being edited")
