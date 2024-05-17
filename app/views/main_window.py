@@ -217,6 +217,28 @@ class MainWindow(QMainWindow):
             if instance_name.lower() != "default":
                 return instance_name
 
+    def __ask_how_to_workshop_mods(
+        self, existing_instance_name: str, existing_instance_workshop_folder: str
+    ) -> str:
+        answer = show_dialogue_conditional(
+            title=f"Clone instance [{existing_instance_name}]",
+            text=(
+                "What would you like to do with the configured Workshop mods folder?"
+            ),
+            information=(
+                f"Workshop folder: {existing_instance_workshop_folder}\n\n"
+                + "RimSort can copy all of your Workshop mods to the new instance's local mods folder. This will effectively "
+                + " convert any existing Steam client mods to SteamCMD mods that you can then  manage inside the new instance.\n\n"
+                + "Alternatively, you may keep your old Steam workshop folder preference. You can always change this later in the settings.\n\n"
+                + "How would you like to proceed?"
+            ),
+            button_text_override=[
+                "Convert to SteamCMD",
+                "Keep Workshop Folder",
+            ],
+        )
+        return answer or "Cancelled"
+
     def __backup_existing_instance(self, instance_name: str) -> None:
         def compress_instance_folder_to_archive(
             instance_data_to_save: dict, instance_path: str, output_path: str
@@ -484,6 +506,7 @@ class MainWindow(QMainWindow):
                     if os.path.isdir(
                         os.path.join(existing_instance_workshop_folder, subdir)
                     ):
+                        logger.debug(f"Cloning Workshop mod: {subdir}")
                         copytree(
                             os.path.join(existing_instance_workshop_folder, subdir),
                             os.path.join(target_local_folder, subdir),
@@ -530,7 +553,6 @@ class MainWindow(QMainWindow):
         existing_instance_config_folder = self.settings_controller.settings.instances[
             existing_instance_name
         ]["config_folder"]
-        config_folder_name = os.path.split(existing_instance_config_folder)[1]
         existing_instance_run_args = self.settings_controller.settings.instances.get(
             existing_instance_name, {}
         ).get("run_args", [])
@@ -538,6 +560,11 @@ class MainWindow(QMainWindow):
             self.settings_controller.settings.instances[existing_instance_name][
                 "steamcmd_install_path"
             ]
+        )
+        existing_instance_steam_client_integration = (
+            self.settings_controller.settings.instances[existing_instance_name].get(
+                "steam_client_integration"
+            )
         )
         # Sanitize the input so that it does not produce any KeyError down the road
         new_instance_name = self.__ask_for_new_instance_name().strip()
@@ -568,7 +595,9 @@ class MainWindow(QMainWindow):
                     Path(new_instance_path) / game_folder_name / local_folder_name
                 )
                 target_workshop_folder = ""
-                target_config_folder = str(Path(new_instance_path) / config_folder_name)
+                target_config_folder = str(
+                    Path(new_instance_path) / "InstanceData" / "Config"
+                )
                 self.main_content_panel.do_threaded_loading_animation(
                     gif_path=str(
                         AppInfo().theme_data_folder / "default-icons" / "rimworld.gif"
@@ -603,22 +632,9 @@ class MainWindow(QMainWindow):
                 # Clone the existing workshop_folder to the new instance's local mods folder
                 if existing_instance_workshop_folder:
                     # Prompt user to confirm before initiating the procedure
-                    answer = show_dialogue_conditional(
-                        title=f"Clone instance [{existing_instance_name}]",
-                        text=(
-                            "What would you like to do with the configured Workshop mods folder?"
-                        ),
-                        information=(
-                            f"Workshop folder: {existing_instance_workshop_folder}\n\n"
-                            + "RimSort can copy all of your Workshop mods to the new instance's local mods folder. This will effectively "
-                            + " convert any existing Steam client mods to SteamCMD mods that you can then  manage inside the new instance.\n\n"
-                            + "Alternatively, you may keep your old Steam workshop folder preference. You can always change this later in the settings.\n\n"
-                            + "How would you like to proceed?"
-                        ),
-                        button_text_override=[
-                            "Convert to SteamCMD",
-                            "Keep Workshop Folder",
-                        ],
+                    answer = self.__ask_how_to_workshop_mods(
+                        existing_instance_name=existing_instance_name,
+                        existing_instance_workshop_folder=existing_instance_workshop_folder,
                     )
                     if answer == "Convert to SteamCMD":
                         if os.path.exists(
@@ -637,7 +653,12 @@ class MainWindow(QMainWindow):
                                 ),
                                 text=f"Cloning Workshop mods from [{existing_instance_name}] instance to [{new_instance_name}] instance's local mods...",
                             )
-                    else:
+                        else:
+                            show_warning(
+                                title="Workshop mods not found",
+                                text=f"Workshop mods folder at [{existing_instance_workshop_folder}] not found.",
+                            )
+                    elif answer == "Keep Workshop Folder":
                         target_workshop_folder = existing_instance_workshop_folder
                 # If the instance has a 'steamcmd' folder, clone it to the new instance
                 steamcmd_install_path = str(
@@ -708,6 +729,7 @@ class MainWindow(QMainWindow):
                             / "instances"
                             / new_instance_name
                         ),
+                        "steam_client_integration": existing_instance_steam_client_integration,
                     },
                 )
 
@@ -746,8 +768,7 @@ class MainWindow(QMainWindow):
                     generated_instance_run_args = [
                         "-logfile",
                         str(Path(instance_path) / "RimWorld.log"),
-                        "-savedatafolder",
-                        instance_data.get("config_folder", ""),
+                        f'-savedatafolder={str(Path(instance_path) / "InstanceData")}',
                     ]
                 run_args.extend(generated_instance_run_args)
                 run_args.extend(instance_data.get("run_args", []))
@@ -759,6 +780,9 @@ class MainWindow(QMainWindow):
                 "config_folder": instance_data.get("config_folder", ""),
                 "run_args": run_args,
                 "steamcmd_install_path": instance_path,
+                "steam_client_integration": instance_data.get(
+                    "steam_client_integration"
+                ),
             }
             # Save settings
             self.settings_controller.settings.save()
