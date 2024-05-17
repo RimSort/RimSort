@@ -47,10 +47,12 @@ from app.utils.generic import (
     delete_files_except_extension,
     open_url_browser,
     platform_specific_open,
+    launch_game_process,
     upload_data_to_0x0_st,
 )
 from app.utils.metadata import *
 from app.utils.rentry.wrapper import RentryUpload, RentryImport
+from app.utils.schema import generate_rimworld_mods_list
 from app.utils.steam.browser import SteamBrowser
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.steam.steamworks.wrapper import (
@@ -673,19 +675,6 @@ class MainContent(QObject):
             self._do_upload_list_rentry()
         if action == "save":
             self._do_save()
-        if action == "run":
-            current_instance = self.settings_controller.settings.current_instance
-            self._do_steamworks_api_call(
-                [
-                    "launch_game_process",
-                    [
-                        self.settings_controller.settings.instances[current_instance][
-                            "game_folder"
-                        ],
-                        self.settings_controller.settings.instances[current_instance],
-                    ],
-                ]
-            )
         # settings panel actions
         if action == "configure_github_identity":
             self._do_configure_github_identity()
@@ -1329,7 +1318,9 @@ class MainContent(QObject):
                             continue  # Append `_steam` suffix if Steam mod, continue to next mod
                     active_mods.append(package_id)
             logger.info(f"Collected {len(active_mods)} active mods for export")
-            mods_config_data = {"ModsConfigData": {"activeMods": {"li": active_mods}}}
+            mods_config_data = generate_rimworld_mods_list(
+                self.metadata_manager.game_version, active_mods
+            )
             try:
                 logger.info(
                     f"Saving generated ModsConfig.xml style list to selected path: {file_path}"
@@ -1747,7 +1738,9 @@ class MainContent(QObject):
                 active_mods.append(package_id)
         logger.info(f"Collected {len(active_mods)} active mods for saving")
 
-        mods_config_data = {"ModsConfigData": {"activeMods": {"li": active_mods}}}
+        mods_config_data = generate_rimworld_mods_list(
+            self.metadata_manager.game_version, active_mods
+        )
         mods_config_path = str(
             Path(
                 self.settings_controller.settings.instances[
@@ -3216,16 +3209,30 @@ class MainContent(QObject):
     @Slot()
     def _do_run_game(self) -> None:
         current_instance = self.settings_controller.settings.current_instance
-        self._do_steamworks_api_call(
-            [
-                "launch_game_process",
-                [
-                    self.settings_controller.settings.instances[current_instance][
-                        "game_folder"
-                    ],
-                    self.settings_controller.settings.instances[current_instance][
-                        "run_args"
-                    ],
-                ],
-            ]
+        game_install_path = Path(
+            self.settings_controller.settings.instances[current_instance]["game_folder"]
         )
+        run_args = self.settings_controller.settings.instances[current_instance][
+            "run_args"
+        ]
+        steam_client_integration = self.settings_controller.settings.instances[
+            current_instance
+        ].get("steam_client_integration", False)
+
+        if current_instance != "Default":  # Only do this for non-default instances
+            # If integration is enabled, check for file called "steam_appid.txt" in game folder.
+            # in the game folder. If not, create one and add the Steam App ID to it.
+            # The Steam App ID is "294100" for RimWorld.
+            steam_appid_file_exists = os.path.exists(
+                game_install_path / "steam_appid.txt"
+            )
+            if steam_client_integration and not steam_appid_file_exists:
+                with open(
+                    game_install_path / "steam_appid.txt", "w", encoding="utf-8"
+                ) as f:
+                    f.write("294100")
+            elif not steam_client_integration and steam_appid_file_exists:
+                os.remove(game_install_path / "steam_appid.txt")
+
+        # Launch independent game process without Steamworks API
+        launch_game_process(game_install_path=game_install_path, args=run_args)
