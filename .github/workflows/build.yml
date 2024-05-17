@@ -1,0 +1,116 @@
+name: Build
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-11
+            platform: "Darwin"
+            arch: "i386"
+          - os: macos-14
+            platform: "Darwin"
+            arch: "arm"
+          - os: ubuntu-22.04
+            platform: "Linux"
+            arch: "x86_64"
+          - os: windows-latest
+    steps:
+      - name: Check-out repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          architecture: "x64" # optional x64 or x86. Defaults to x64 if not specified
+          cache: "pip"
+          cache-dependency-path: |
+            **/requirements*.txt
+
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt -r requirements_develop.txt
+
+      - name: Nuitka Build
+        run: python distribute.py --skip-deps
+
+      - name: Get Short SHA and Set up filename (Unix)
+        if: matrix.platform != 'Windows'
+        id: sha_unix
+        run: |
+          # Get the short SHA of the commit
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          echo "::set-output name=short::$SHORT_SHA"
+          # Format the filename, set in env for output
+          FILENAME="RimSort-Edge_${SHORT_SHA}_${{ matrix.platform }}_${{ matrix.arch }}.zip"
+          echo "FILENAME=$FILENAME" >> $GITHUB_ENV
+        shell: bash
+      # Get the short SHA of the commit + filename (Windows)
+      - name: Get Short SHA and Set up filename (Windows)
+        if: matrix.platform == 'Windows'
+        id: sha_win
+        run: |
+          # Get the short SHA of the commit
+          $SHORT_SHA = git rev-parse --short HEAD
+          echo "::set-output name=short::$SHORT_SHA"
+          # Format the filename, set in env for output
+          $FILENAME = "RimSort-Edge_${SHORT_SHA}_${{ matrix.platform }}_${{ matrix.arch }}.zip"
+          Add-Content -Path $env:GITHUB_ENV -Value "FILENAME=$FILENAME"
+        shell: powershell
+
+        # Create ZIP archive of release
+      - name: Create ZIP (Unix)
+        if: matrix.platform != 'Windows'
+        run: |
+          if [[ "$(uname)" == "Darwin" ]]; then
+            DIST="RimSort.app"
+            if [ -d "build/$DIST" ]; then
+                echo "Existing build found. Deleting old build and replacing with a new build."
+                rm -rf "./build/$DIST"
+            fi
+            mv build/__main__.app ."/build/$DIST"
+            echo ${{ steps.sha_unix.outputs.short }} > ./build/$DIST/Contents/MacOS/SHA
+          else    
+            DIST="RimSort"
+            if [ -d "build/$DIST" ]; then
+                echo "Existing build found. Deleting old build and replacing with a new build."
+                rm -rf "./build/$DIST"
+            fi
+            mv build/__main__.dist ."/build/$DIST"
+            echo ${{ steps.sha_unix.outputs.short }} > ./build/$DIST/SHA
+          fi
+          cd ./build/
+          zip -r ${{ env.FILENAME }} $DIST
+
+      - name: Create ZIP (Windows)
+        if: matrix.platform == 'Windows'
+        run: |
+          if (Test-Path -Path .\build\RimSort -PathType Container) {
+              Write-Host "Existing build found. Deleting old build and replacing with new build."
+              Remove-Item -Path .\build\RimSort -Force -Recurse
+          }
+          cd ./build/
+          Rename-Item -Path __main__.dist -NewName RimSort
+          Set-Content -Path .\RimSort\SHA -Value "${{ steps.sha_win.outputs.short }}"
+          Compress-Archive -Force -Path RimSort -DestinationPath ${{ env.FILENAME }}
+        shell: powershell
+
+        # Upload ZIP as artifact
+      - name: Upload ZIP as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.FILENAME }}
+          path: ./build/${{ env.FILENAME }}
+    outputs:
+      sha_short: ${{ steps.sha_unix.outputs.short }}${{ steps.sha_windows.outputs.short }}

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 from io import BytesIO
 import os
 from pathlib import Path
@@ -9,7 +10,6 @@ import shutil
 from stat import S_IEXEC
 import subprocess
 import sys
-import time
 from zipfile import ZipFile
 
 """
@@ -25,93 +25,49 @@ if _PROCESSOR == "":
 _SYSTEM = platform.system()
 
 PY_CMD = sys.executable
-if _SYSTEM == "Darwin" and _PROCESSOR == "arm":
-    _NUITKA_CMD = [
-        PY_CMD,
-        "-m",
-        "nuitka",
-        "--assume-yes-for-downloads",
-        "--standalone",
-        # "--onefile",
-        "--macos-create-app-bundle",
-        "--macos-app-icon=./themes/default-icons/AppIcon_a.icns",
-        "--enable-plugin=pyside6",
-        "--include-data-dir=./themes/=themes",
-        "--include-data-dir=./todds/=todds",
-        "--include-data-file=./update.sh=update.sh",
-        f"--include-data-file=./libs/SteamworksPy_{_PROCESSOR}.dylib=SteamworksPy.dylib",
-        "--include-data-file=./libs/libsteam_api.dylib=libsteam_api.dylib",
-        "--include-data-file=./steam_appid.txt=steam_appid.txt",
-        "--include-package=steamworks",
-        "app/__main__.py",
-        "--output-dir=./build/",
-        "--output-filename=RimSort",
-    ]
-elif _SYSTEM == "Darwin" and _PROCESSOR == "i386":
-    _NUITKA_CMD = [
-        PY_CMD,
-        "-m",
-        "nuitka",
-        "--assume-yes-for-downloads",
-        "--standalone",
-        # "--onefile",
-        "--macos-create-app-bundle",
-        "--macos-app-icon=./themes/default-icons/AppIcon_a.icns",
-        "--enable-plugin=pyside6",
-        "--include-data-dir=./themes/=themes",
-        "--include-data-dir=./todds/=todds",
-        "--include-data-file=./update.sh=update.sh",
-        f"--include-data-file=./libs/SteamworksPy_{_PROCESSOR}.dylib=SteamworksPy.dylib",
-        "--include-data-file=./libs/libsteam_api.dylib=libsteam_api.dylib",
-        "--include-data-file=./steam_appid.txt=steam_appid.txt",
-        "--include-package=steamworks",
-        "app/__main__.py",
-        "--output-dir=./build/",
-        "--output-filename=RimSort",
-    ]
+
+_NUITKA_CMD = [
+    PY_CMD,
+    "-m",
+    "nuitka",
+    "--assume-yes-for-downloads",
+    "--standalone",
+    "--enable-plugin=pyside6",
+    "--include-data-dir=./themes/=themes",
+    "--include-data-dir=./todds/=todds",
+    "--include-data-file=./update.sh=update.sh",
+    "--include-data-file=./steam_appid.txt=steam_appid.txt",
+    "--include-package=steamworks",
+    "app/__main__.py",
+    "--output-dir=./build/",
+    "--output-filename=RimSort",
+    "--enable-console",
+]
+
+darwin = [
+    "--macos-create-app-bundle",
+    "--macos-app-icon=./themes/default-icons/AppIcon_a.icns",
+    f"--include-data-file=./libs/SteamworksPy_{_PROCESSOR}.dylib=SteamworksPy.dylib",
+    "--include-data-file=./libs/libsteam_api.dylib=libsteam_api.dylib",
+]
+
+linux = [
+    f"--include-data-file=./libs/SteamworksPy_{_PROCESSOR}.so=SteamworksPy.so",
+    "--include-data-file=./libs/libsteam_api.so=libsteam_api.so",
+]
+
+windows_64 = [
+    "--windows-icon-from-ico=./themes/default-icons/AppIcon_a.png",
+    "--include-data-file=./libs/SteamworksPy64.dll=SteamworksPy64.dll",
+    "--include-data-file=./libs/steam_api64.dll=steam_api64.dll",
+]
+
+if _SYSTEM == "Darwin" and _PROCESSOR in ["i386", "arm"]:
+    _NUITKA_CMD.extend(darwin)
 elif _SYSTEM == "Linux":
-    _NUITKA_CMD = [
-        PY_CMD,
-        "-m",
-        "nuitka",
-        "--assume-yes-for-downloads",
-        "--standalone",
-        # "--onefile",
-        "--linux-icon=./themes/default-icons/AppIcon_a.png",
-        "--enable-plugin=pyside6",
-        "--include-data-dir=./themes/=themes",
-        "--include-data-dir=./todds/=todds",
-        "--include-data-file=./update.sh=update.sh",
-        f"--include-data-file=./libs/SteamworksPy_{_PROCESSOR}.so=SteamworksPy.so",
-        "--include-data-file=./libs/libsteam_api.so=libsteam_api.so",
-        "--include-data-file=./steam_appid.txt=steam_appid.txt",
-        "--include-package=steamworks",
-        "app/__main__.py",
-        "--output-dir=./build/",
-        "--output-filename=RimSort",
-    ]
+    _NUITKA_CMD.extend(linux)
 elif _SYSTEM == "Windows" and _ARCH == "64bit":
-    _NUITKA_CMD = [
-        PY_CMD,
-        "-m",
-        "nuitka",
-        "--assume-yes-for-downloads",
-        "--standalone",
-        "--disable-console",
-        # "--onefile",
-        "--windows-icon-from-ico=./themes/default-icons/AppIcon_a.png",
-        "--enable-plugin=pyside6",
-        "--include-data-dir=./themes/=themes",
-        "--include-data-dir=./todds/=todds",
-        "--include-data-file=./update.bat=update.bat",
-        "--include-data-file=./libs/SteamworksPy64.dll=SteamworksPy64.dll",
-        "--include-data-file=./libs/steam_api64.dll=steam_api64.dll",
-        "--include-data-file=./steam_appid.txt=steam_appid.txt",
-        "--include-package=steamworks",
-        "app/__main__.py",
-        "--output-dir=./build/",
-        "--output-filename=RimSort",
-    ]
+    _NUITKA_CMD.extend(windows_64)
 else:
     print(f"Unsupported SYSTEM: {_SYSTEM} {_ARCH} with {_PROCESSOR}")
     print("Exiting...")
@@ -472,27 +428,84 @@ def _execute(cmd: list[str], env=None) -> None:
     p.wait()
 
 
+def make_args():
+    # Create the parser
+    parser = argparse.ArgumentParser(description="Distribute RimSort")
+
+    # Skip dependencies
+    parser.add_argument(
+        "--skip-deps",
+        action="store_true",
+        help="Skip installing RimSort dependencies",
+    )
+
+    # Skip SteamworksPy Copy
+    parser.add_argument(
+        "--skip-steamworkspy",
+        action="store_true",
+        help="Skip copying SteamworksPy library",
+    )
+
+    # Skip SteamworksPy
+    parser.add_argument(
+        "--build-steamworkspy",
+        action="store_true",
+        help="Building SteamworksPy library instead of copying it",
+    )
+
+    # Skip todds
+    parser.add_argument(
+        "--skip-todds",
+        action="store_true",
+        help="Skip grabbing latest todds release",
+    )
+
+    # Don't build
+    parser.add_argument(
+        "--skip-build",
+        action="store_true",
+        help="Skip building RimSort application with Nuitka",
+    )
+
+    return parser
+
+
+def main():
+    # Parse arguments
+    parser = make_args()
+    args = parser.parse_args()
+
+    # RimSort dependencies
+    if not args.skip_deps:
+        print("Getting RimSort dependencies...")
+        get_rimsort_deps()
+    else:
+        print("Skipping dependencies...")
+
+    if args.build_steamworkspy:
+        print("Building SteamworksPy library. Skipping copy...")
+        build_steamworkspy()
+    elif not args.skip_steamworkspy:
+        print("Copying SteamworksPy library...")
+        copy_swp_libs()
+
+    # Grab latest todds release
+    if not args.skip_todds:
+        print("Grabbing latest todds release...")
+        get_latest_todds_release()
+    else:
+        print("Skipping todds release...")
+
+    # Build Nuitka distributable binary
+    if not args.skip_build:
+        print("Building RimSort application with Nuitka...")
+        freeze_application()
+    else:
+        print("Skipping build...")
+
+
 if __name__ == "__main__":
     """
     Do stuff!
     """
-
-    # RimSort dependencies
-    print("Getting RimSort dependencies...")
-    get_rimsort_deps()
-
-    # Build SteamworksPy
-    # print("Building SteamworksPy library...")
-    # build_steamworkspy()
-
-    # Copy SteamworksPy prebuilt libs
-    print("Copying SteamworksPy libs for release...")
-    copy_swp_libs()
-
-    # Grab latest todds release
-    print("Grabbing latest todds release...")
-    get_latest_todds_release()
-
-    # Build Nuitka distributable binary
-    print("Building RimSort application with Nuitka...")
-    freeze_application()
+    main()
