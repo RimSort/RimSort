@@ -1034,11 +1034,17 @@ class RuleEditor(QWidget):
         self.mods_search.clearFocus()
 
     def signal_mods_search(self, pattern: str) -> None:
+        # Convert the pattern to lowercase once
+        pattern_lower = pattern.lower() if pattern else ""
+
         # Loop through the items
         for index in range(self.mods_list.count()):
             item = self.mods_list.item(index)
             name = item.listWidget().itemWidget(item).text()
-            if pattern and name and not pattern.lower() in name.lower():
+            name_lower = name.lower() if name else ""
+
+            # Check if the pattern is not found in the name
+            if pattern_lower and pattern_lower not in name_lower:
                 item.setHidden(True)
             else:
                 item.setHidden(False)
