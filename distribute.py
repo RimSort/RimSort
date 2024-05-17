@@ -283,7 +283,7 @@ def build_steamworkspy() -> None:
     if os.path.exists(STEAMWORKS_SDK_PATH):
         print("Existing SDK found. Removing, and re-downloading fresh copy.")
         shutil.rmtree(STEAMWORKS_SDK_PATH)
-    with ZipFile(BytesIO(requests.get(STEAMWORKS_SDK_URL).content)) as zipobj:
+    with ZipFile(BytesIO(handle_request(STEAMWORKS_SDK_URL).content)) as zipobj:
         zipobj.extractall(STEAMWORKS_PY_PATH)
 
     print(f"Getting Steam headers...")
@@ -357,9 +357,8 @@ def get_latest_todds_release() -> None:
     headers = None
     if "GITHUB_TOKEN" in os.environ:
         headers = {"Authorization": f"token {os.environ['GITHUB_TOKEN']}"}
-    raw = requests.get(
-        "https://api.github.com/repos/joseasoler/todds/releases/latest", headers=headers
-    )
+    raw = handle_request("https://api.github.com/repos/joseasoler/todds/releases/latest", headers=headers)
+
     json_response = raw.json()
     tag_name = json_response["tag_name"]
     todds_path = os.path.join(_CWD, "todds")
@@ -395,7 +394,7 @@ def get_latest_todds_release() -> None:
     target_archive_extracted = target_archive.replace(".zip", "")
     try:
         print(f"Downloading & extracting todds release from: {browser_download_url}")
-        with ZipFile(BytesIO(requests.get(browser_download_url).content)) as zipobj:
+        with ZipFile(BytesIO(handle_request(browser_download_url).content)) as zipobj:
             zipobj.extractall(todds_path)
         # Set executable permissions as ZipFile does not preserve this in the zip archive
         todds_executable_path = os.path.join(todds_path, todds_executable_name)
@@ -426,6 +425,15 @@ def _execute(cmd: list[str], env=None) -> None:
     print(f"\nExecuting command: {cmd}\n")
     p = subprocess.Popen(cmd, env=env)
     p.wait()
+
+
+def handle_request(url: str, headers: dict = None) -> requests.Response:
+    raw = requests.get(url, headers=headers)
+    if raw.status_code != 200:
+        raise Exception(
+            f"Failed to get latest release: {raw.status_code}" f"\nResponse: {raw.text}"
+        )
+    return raw
 
 
 def make_args():
