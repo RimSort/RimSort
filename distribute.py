@@ -42,6 +42,7 @@ _NUITKA_CMD = [
     "--output-dir=./build/",
     "--output-filename=RimSort",
     "--enable-console",
+    "--show-progress",
 ]
 
 darwin = [
@@ -357,7 +358,9 @@ def get_latest_todds_release() -> None:
     headers = None
     if "GITHUB_TOKEN" in os.environ:
         headers = {"Authorization": f"token {os.environ['GITHUB_TOKEN']}"}
-    raw = handle_request("https://api.github.com/repos/joseasoler/todds/releases/latest", headers=headers)
+    raw = handle_request(
+        "https://api.github.com/repos/joseasoler/todds/releases/latest", headers=headers
+    )
 
     json_response = raw.json()
     tag_name = json_response["tag_name"]
