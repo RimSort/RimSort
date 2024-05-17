@@ -634,68 +634,31 @@ class RuleEditor(QWidget):
                 ):
                     self.edit_name = metadata["name"]
                     self.mod_label.setText(f"Editing rules for: {self.edit_name}")
-                    if metadata.get("loadafter") and metadata["loadafter"].get("li"):
-                        loadAfters = metadata["loadafter"]["li"]
-                        if isinstance(loadAfters, str):
-                            loadAfters = [loadAfters]
-                        if isinstance(loadAfters, list):
-                            for rule in loadAfters:
-                                self._create_list_item(
-                                    _list=self.local_metadata_loadAfter_list,
-                                    title=self.steam_workshop_metadata_packageids_to_name.get(
-                                        rule.lower(), rule
-                                    ),
-                                    metadata=rule,
-                                )
-                                self._add_rule_to_table(
-                                    name=self.steam_workshop_metadata_packageids_to_name.get(
-                                        rule.lower(), rule
-                                    ),
-                                    packageid=rule,
-                                    rule_source="About.xml",
-                                    rule_type="loadAfter",
-                                    comment="Added from mod metadata",
-                                    hidden=self.local_rules_hidden,
-                                )
-                    if metadata.get("loadbefore") and metadata["loadbefore"].get("li"):
-                        loadBefores = metadata["loadbefore"]["li"]
-                        if isinstance(loadBefores, str):
-                            name = self.steam_workshop_metadata_packageids_to_name.get(
-                                loadBefores.lower(), loadBefores
-                            )
-                            self._create_list_item(
-                                _list=self.local_metadata_loadBefore_list,
-                                title=name,
-                                metadata=loadBefores,
-                            )
-                            self._add_rule_to_table(
-                                name=name,
-                                packageid=loadBefores,
-                                rule_source="About.xml",
-                                rule_type="loadBefore",
-                                comment="Added from mod metadata",
-                                hidden=self.local_rules_hidden,
-                            )
-                        elif isinstance(loadBefores, list):
-                            for rule in loadBefores:
-                                name = (
-                                    self.steam_workshop_metadata_packageids_to_name.get(
+                    # All Lowercase!!!
+                    rule_types = {
+                        "loadafter": self.local_metadata_loadAfter_list,
+                        "loadbefore": self.local_metadata_loadBefore_list,
+                    }
+
+                    for rule_type, _list in rule_types.items():
+                        if metadata.get(rule_type) and metadata[rule_type].get("li"):
+                            rules = metadata[rule_type]["li"]
+                            if isinstance(rules, str):
+                                rules = [rules]
+                            if isinstance(rules, list):
+                                for rule in rules:
+                                    name = self.steam_workshop_metadata_packageids_to_name.get(
                                         rule.lower(), rule
                                     )
-                                )
-                                self._create_list_item(
-                                    _list=self.local_metadata_loadBefore_list,
-                                    title=name,
-                                    metadata=rule,
-                                )
-                                self._add_rule_to_table(
-                                    name=name,
-                                    packageid=rule,
-                                    rule_source="About.xml",
-                                    rule_type="loadBefore",
-                                    comment="Added from mod metadata",
-                                    hidden=self.local_rules_hidden,
-                                )
+                                    self._create_list_item(_list=_list, title=name)
+                                    self._add_rule_to_table(
+                                        name=name,
+                                        packageid=rule,
+                                        rule_source="About.xml",
+                                        rule_type=rule_type,
+                                        comment="Added from mod metadata",
+                                        hidden=self.local_rules_hidden,
+                                    )
                 else:  # Otherwise, add everything else to the mod list
                     self._create_list_item(
                         _list=self.mods_list,
@@ -737,6 +700,7 @@ class RuleEditor(QWidget):
                 def _get_first_item_or_value(data):
                     return data[0] if isinstance(data, list) else data
 
+                # Snake Case!
                 for rule_type in ["loadAfter", "loadBefore"]:
                     if not metadata.get(rule_type):
                         continue
