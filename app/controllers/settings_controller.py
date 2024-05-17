@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from typing import Optional
 
-from PySide6.QtCore import QObject, Slot, Qt
+from PySide6.QtCore import QObject, Slot
 from PySide6.QtWidgets import QApplication
 from loguru import logger
 
@@ -829,7 +829,7 @@ class SettingsController(QObject):
             ),
         ]
 
-        # If on mac and the steam path doesn't exist, try the default path
+        # If on Mac and the steam path doesn't exist, try the default path
         if not darwin_paths[0].exists():
             darwin_paths[0] = Path("/Applications/RimWorld.app")
 
@@ -860,6 +860,7 @@ class SettingsController(QObject):
             ).resolve(),
         ]
 
+        os_paths = None  # Initialize os_paths
         if SystemInfo().operating_system == SystemInfo.OperatingSystem.MACOS:
             os_paths = darwin_paths
             logger.info(f"Running on MacOS with the following paths: {os_paths}")
@@ -870,7 +871,7 @@ class SettingsController(QObject):
             os_paths = windows_paths
             logger.info(f"Running on Windows with the following paths: {os_paths}")
         else:
-            logger.error("Attempting to autodetect paths on an unknown system.")
+            logger.error("Attempting to autodetect paths on an unknown system")
 
         # Convert our paths to str
         os_paths = [str(path) for path in os_paths]

@@ -12,6 +12,7 @@ Theme: RimPy Theme
 - Primary Text: #455364
 - Secondary Text: #54687a
 - Tertiary Text: #60798b
+- White: #e6edf3
 - Highlight: #999999
 - Subtext: #cfcfcf
 - Detail: #dddee1
@@ -37,14 +38,14 @@ MultiButton QToolButton::menu-indicator {
 }
 /* Styling for combo boxes */
 QComboBox {
-    color: white;
+    color: #e6edf3;
     background-color: #455364;
     border-style: solid;
     border-width: 0px;
     border-radius: 5px;
     min-height: 1em;
     min-width: 6em;
-    padding: 1px;
+    padding: 2px 4px;
 }
 QComboBox:hover {
     background-color: #54687a;
@@ -62,13 +63,13 @@ QComboBox::drop-down#MissingModsUI {
 }
 QComboBox QAbstractItemView {
     background-color: #54687a;
-    color: white;
+    color: #e6edf3;
     selection-background-color: #455364;
-    selection-color: white;
+    selection-color: #e6edf3;
 }
 /* Horizontal line for use as a spacer */
 QFrame#horizontalLine {
-    background-color: white;
+    background-color: #e6edf3;
 }
 /* Default input box style */
 QInputDialog#dialogue{
@@ -76,11 +77,11 @@ QInputDialog#dialogue{
 }
 /* Styling for labels */
 QLabel {
-    color: white;
+    color: #e6edf3;
 }
 /* Bold style header */
 QLabel#summaryHeader {
-    color: white;
+    color: #e6edf3;
     font-weight: bold;
 }
 /* LoadingAnimation text label */
@@ -89,11 +90,11 @@ QLabel#loadingAnimationString {
 }
 /* Metadata value labels + text */
 QLabel#summaryLabel {
-    color: white;
+    color: #e6edf3;
     font-weight: 500;
 }
 QLabel#summaryValue {
-    color: white;
+    color: #e6edf3;
 }
 QLabel#summaryValueInvalid {
     color: red;
@@ -106,6 +107,10 @@ QLineEdit {
     border-color: #455364;
     border-width: 1px;
     border-radius: 3px;
+}
+QLineEdit:disabled {
+    color: #999999;
+    background-color: #272e37;
 }
 /* Styling for list widgets (mod list and rule editor lists) */
 QListWidget {
@@ -140,7 +145,7 @@ QMenu {
 }
 QMenu::item {
     background-color: transparent;
-    color: white;
+    color: #e6edf3;
     padding: 8px 16px;
 }
 QMenu::item:selected {
@@ -179,6 +184,26 @@ QMenu::item:checked:selected {
 QMenu::item:checked:hover {
     background-color: #37414f;
 }
+
+/* Default Menu Bar styling. Note that this does not apply in MacOS */
+QMenuBar {
+    background-color: #19232d;
+    color: #e6edf3;
+    border-radius: 3px;
+}
+
+QMenuBar::item {
+    padding: 4px 8px;
+}
+
+QMenuBar::item:selected {
+    background-color: #37414f;
+}
+
+QMenuBar::item:pressed {
+    background-color: #54687a;
+}
+
 /* Default message box style */
 QMessageBox#dialogue{
     background: #1B2838;
@@ -188,7 +213,7 @@ QProgressBar {
     border: 1px solid #455364;
     border-radius: 5px;
     background-color: #19232d;
-    color: white;
+    color: #e6edf3;
     text-align: center;
 }
 QProgressBar::chunk#default {
@@ -209,14 +234,14 @@ QProgressBar::chunk#warn {
 }
 /* Styling for push buttons */
 QPushButton {
-    color: white;
+    color: #e6edf3;
     background-color: #455364;
     border-style: solid;
     border-width: 0px;
     border-radius: 5px;
     min-height: 1em;
     min-width: 6em;
-    padding: 1px;
+    padding: 2px 4px;
 }
 
 QPushButton#indicator {
@@ -255,7 +280,7 @@ QTabWidget::tab-bar {
 /* Styling for individual tab buttons */
 QTabBar::tab {
     background-color: #455364; /* Normal button color */
-    color: white; /* Text color */
+    color: #e6edf3; /* Text color */
     border: 1px solid #455364; /* Normal border color */
     border-bottom-color: #19232d; /* Border color for active tab */
     border-top-left-radius: 3px; /* Consistent with your button styles */
@@ -266,7 +291,7 @@ QTabBar::tab {
 
 QTabBar::tab:selected {
     background-color: #54687a; /* Button hover color for selected tab */
-    color: white;
+    color: #e6edf3;
     border-bottom: 1px solid #19232d; /* Hide bottom border for selected tab */
 }
 
@@ -286,7 +311,7 @@ QTabBar::tab:disabled {
 QToolTip {
     border-style: none;
     background: #346792;
-    color: white;
+    color: #e6edf3;
 }
 /* Default style for vertical scrollbars */
 QScrollBar:vertical {
@@ -336,16 +361,16 @@ QScrollBar:horizontal {
 }
 /* Used in conjunction with proxy_style.py for drag-drop styling */
 QStyle::PE_IndicatorItemViewItemDrop {
-    color: white;
+    color: #e6edf3;
 }
 /* Style for table view with sortable columns */
 QHeaderView {
     background-color: #455364;
-    color: white;
+    color: #e6edf3;
 }
 QHeaderView::section {
     background-color: #455364;
-    color: white;
+    color: #e6edf3;
     padding: 4px;
     border-radius: 0px;
 }
@@ -357,15 +382,15 @@ QHeaderView::section:vertical:hover {
 QTableView {
     gridline-color: #455364;
     background-color: #19232d;
-    color: white;
+    color: #e6edf3;
     alternate-background-color: #22303d;
     selection-background-color: #54687a;
-    selection-color: white;
+    selection-color: #e6edf3;
 }
 /* Styling for table view cells */
 QTableView::item {
     padding: 4px;
-    color: white;
+    color: #e6edf3;
     gridline-color: #455364;
     background-color: #19232d;
 }
@@ -381,7 +406,7 @@ QTableView::item:selected {
 /* Styling for table corner button */
 QTableView QTableCornerButton::section {
     background-color: #455364;
-    color: white;
+    color: #e6edf3;
 }
 QTableView QTableCornerButton::section:hover {
     background-color: #54687a;
@@ -402,7 +427,7 @@ QToolButton {
     border-style: solid;
     border-width: 0px;
     border-radius: 5px;
-    color: white;
+    color: #e6edf3;
     padding: 1px;
 }
 QToolButton:hover {
@@ -412,13 +437,16 @@ QToolButton:pressed {
     background-color: #3e4a52;
     border-style: inset;
 }
+QToolButton:disabled {
+    color: #999999;
+}
 
 /* ===== Browser (util/steam/browser.py) ===== */
 QWidget#browserPanel {
     background-color: #19232d;
 }
 QLabel#browserPaneldownloader_label {
-    color: white;
+    color: #e6edf3;
 }
 
 /* ======= MainWindow (view/main_content_panel.py) ======= */
@@ -434,7 +462,7 @@ QWidget#MainPanel {
 }
 /* Styling for the mod item text */
 QLabel#ListItemLabel {
-    color: white;
+    color: #e6edf3;
 }
 QLabel#ListItemLabelFiltered { 
     color: grey; 
@@ -453,7 +481,7 @@ QWidget#errorFrame { /* Outer-most encapsulator */
 
 /* ===== GameConfiguration (view/game_configuration_panel.py) ===== */
 QLabel#gameVersion {
-    color: white;
+    color: #e6edf3;
     margin-right: 4px;
 }
 
@@ -476,7 +504,7 @@ QWidget#descriptionContent {
 }
 /* Description text itself */
 QLabel#descriptionLabel { 
-    color: white;
+    color: #e6edf3;
     background-color: #19232d;
     margin-right: 3px;
 }
@@ -488,11 +516,11 @@ QWidget#missingModsPanel{
 /*
 QHeaderView#missingModPanelTableView {
     background-color: #1B2838;
-    color: white;
+    color: #e6edf3;
 }*/
 QComboBox#missing_mods_variant_cb{
     background-color: #1B2838;
-    color: white;
+    color: #e6edf3;
     border-radius: 0;
 }
 
@@ -517,7 +545,7 @@ QWidget#RunnerPanel {
 }
 QPlainTextEdit#RunnerPaneltext {
     background-color: #22303d;
-    color: white;
+    color: #e6edf3;
 }
 
 /* ===== Settings (window/settings_panel.py) ===== */
@@ -525,11 +553,11 @@ QDialog#settingsPanel {
     background-color: #19232d;
 }
 QCheckBox#summaryValue {
-    color: white;
+    color: #e6edf3;
 }
 QCheckBox {
     padding: 2px;
-    color: white;
+    color: #e6edf3;
 }
 QCheckBox::indicator {
     width: 13px;
@@ -547,12 +575,31 @@ QCheckBox::indicator:unchecked {
 QCheckBox::indicator:hover {
     border: 1px solid #54687a;
 }
+QRadioButton {
+    color: #e6edf3;
+}
+
+QRadioButton::indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 8px;
+    border: 3px solid #455364;
+}
+
+QRadioButton::indicator:checked {
+    background-color:#3688c3;
+}
+
+QRadioButton::indicator:unchecked {
+    background-color: #455364;
+}
+
 
 /* ===== Status panel (bottom message bar) */
 QWidget#StatusPanel {
     background-color: #455364;
 }
 QLabel#StatusLabel {
-    color: white;
+    color: #e6edf3;
     background-color: #455364;
 }
