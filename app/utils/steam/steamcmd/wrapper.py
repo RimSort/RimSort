@@ -110,11 +110,13 @@ class SteamcmdInterface:
             logger.debug(
                 f"Removing existing link at {link_path} and recreating link to {target_local_folder}"
             )
-            # Check if link path is a directory
-            if not os.path.isdir(link_path):
-                os.remove(link_path)
-            else:
+            # Remove by type
+            if os.path.islink(link_path) or os.path.ismount(link_path):
+                os.unlink(link_path)
+            elif os.path.isdir(link_path):
                 os.rmdir(link_path)
+            else:
+                os.remove(link_path)
         # Recreate the link
         if SystemInfo().operating_system != SystemInfo.OperatingSystem.WINDOWS:
             os.symlink(
@@ -265,11 +267,15 @@ class SteamcmdInterface:
                             logger.debug(
                                 f"Removing existing link at {symlink_destination_path} and recreating link to {symlink_source_path}"
                             )
-                            # Check if link path is a directory
-                            if not os.path.isdir(symlink_destination_path):
-                                os.remove(symlink_destination_path)
-                            else:
+                            # Remove by type
+                            if os.path.islink(
+                                symlink_destination_path
+                            ) or os.path.ismount(symlink_destination_path):
+                                os.unlink(symlink_destination_path)
+                            elif os.path.isdir(symlink_destination_path):
                                 os.rmdir(symlink_destination_path)
+                            else:
+                                os.remove(symlink_destination_path)
                         if self.system != "Windows":
                             os.symlink(
                                 symlink_source_path,

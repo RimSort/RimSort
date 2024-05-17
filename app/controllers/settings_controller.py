@@ -458,6 +458,11 @@ class SettingsController(QObject):
         self.settings_dialog.show_mod_updates_checkbox.setChecked(
             self.settings.steam_mods_update_check
         )
+        self.settings_dialog.steam_client_integration_checkbox.setChecked(
+            self.settings.instances[self.settings.current_instance].get(
+                "steam_client_integration", False
+            )
+        )
         self.settings_dialog.download_missing_mods_checkbox.setChecked(
             self.settings.try_download_missing_mods
         )
@@ -588,6 +593,9 @@ class SettingsController(QObject):
         self.settings.steam_mods_update_check = (
             self.settings_dialog.show_mod_updates_checkbox.isChecked()
         )
+        self.settings.instances[self.settings.current_instance][
+            "steam_client_integration"
+        ] = self.settings_dialog.steam_client_integration_checkbox.isChecked()
         self.settings.try_download_missing_mods = (
             self.settings_dialog.download_missing_mods_checkbox.isChecked()
         )
