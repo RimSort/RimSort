@@ -14,9 +14,10 @@ def xml_path_to_json(path: str) -> Dict[str, Any]:
     :param path: Path to the XML file.
     :return: JSON dict of XML file contents.
     """
+    data = {}
     if not os.path.exists(path):
         logger.error(f"XML file does not exist at: {path}")
-        return {}
+        return data
     try:
         try:
             # Try parsing the XML file using xmltodict
@@ -27,20 +28,21 @@ def xml_path_to_json(path: str) -> Dict[str, Any]:
             logger.debug(f"Error parsing XML file with xmltodict: {e}")
             logger.debug("Trying to parse with BeautifulSoup as a fallback")
             with open(path, "rb") as f:
-                xml_data = f.read()
-                soup = BeautifulSoup(xml_data, "lxml-xml")
+                soup = BeautifulSoup(f.read(), "lxml-xml")
                 # Find and remove empty tags
                 empty_tags = soup.find_all(
                     lambda tag: not tag.text.strip() or len(tag) == 0
                 )
                 for empty_tag in empty_tags:
                     empty_tag.extract()
+                # Convert the BeautifulSoup object to a dictionary using xmltodict
                 data = xmltodict.parse(str(soup), dict_constructor=dict)
+        # Return the parsed data
+        return data
     except Exception as e:
         logger.debug(f"Error parsing XML file with BeautifulSoup: {e}")
         logger.error(f"Error parsing XML file: {path}")
-        return {}
-    return data
+        return data
 
 
 def json_to_xml_write(data: Dict[str, Any], path: str) -> None:

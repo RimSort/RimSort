@@ -32,14 +32,14 @@ from app.utils.constants import (
     RIMWORLD_DLC_METADATA,
 )
 from app.utils.generic import directories
-from app.utils.schema import validate_rimworld_mods_list
+from app.utils.schema import generate_rimworld_mods_list, validate_rimworld_mods_list
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.steam.steamfiles.wrapper import acf_to_dict, dict_to_acf
 from app.utils.steam.webapi.wrapper import (
     DynamicQuery,
     ISteamRemoteStorage_GetPublishedFileDetails,
 )
-from app.utils.xml import xml_path_to_json
+from app.utils.xml import json_to_xml_write, xml_path_to_json
 
 
 # Locally installed mod metadata
@@ -1848,7 +1848,9 @@ def get_mods_from_list(
     return a list of mods for the active list widget and a list of
     mods for the inactive list widget.
 
-    :param mod_list: path to an .rws/.xml style list, or a list of package ids
+    :param mod_list:
+        A path to an .rws/.xml style list, or a list of package ids
+        OR a list of mod uuids
     :return: a Tuple which contains the active mods dict, inactive mods dict,
     duplicate mods dict, and missing mods list
     """
@@ -1870,22 +1872,24 @@ def get_mods_from_list(
     duplicate_mods = {k: v for k, v in duplicate_mods.items() if len(v) > 1}
     # Calculate mod lists
     if isinstance(mod_list, str):
-        logger.info(f"Retrieving active mods from RimWorld mod list")
+        # Handle the mod list not existing
+        if not os.path.exists(mod_list):
+            logger.debug(f"Could not find mods list at: {mod_list}")
+            logger.debug("Creating an empty list with available expansions...")
+            metadata_manager = MetadataManager.instance()
+            game_version = metadata_manager.game_version
+            generated_xml = generate_rimworld_mods_list(
+                game_version, ["Ludeon.RimWorld"]
+            )
+            logger.debug(f"Saving new mods list to: {mod_list}")
+            json_to_xml_write(generated_xml, mod_list)
+        # Parse the ModsConfig.xml activeMods list
+        logger.info(f"Retrieving active mods from RimWorld mod list: {mod_list}")
         mod_data = xml_path_to_json(mod_list)
         package_ids_to_import = validate_rimworld_mods_list(mod_data)
-        if not package_ids_to_import:
-            logger.error(
-                f"Unable to get active mods from config with read data: {mod_data}"
-            )
-            return active_mods_uuids, inactive_mods_uuids, duplicate_mods, missing_mods
     elif isinstance(mod_list, list):
         logger.info("Retrieving active mods from the provided list of package ids")
         package_ids_to_import = mod_list
-    else:
-        logger.error(
-            "This should only be a path to XML mod list, or a list of package ids!"
-        )
-        return active_mods_uuids, inactive_mods_uuids, duplicate_mods, missing_mods
     # Parse the ModsConfig.xml data
     logger.info("Generating active mod list")
     for (
