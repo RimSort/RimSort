@@ -120,8 +120,9 @@ jobs:
         run: |
           cd artifacts
           for artifact in ./*; do
-            echo "Renaming $artifact to RimSort-${{ steps.version.outputs.version }}-$(basename ${artifact}).zip"
-            zip -r "RimSort-${{ steps.version.outputs.version }}-$(basename ${artifact}).zip" "$artifact"
+            name="$(basename ${artifact})"
+            echo "Renaming $artifact to RimSort-${{ steps.version.outputs.version }}-$name.zip"
+            zip -r "RimSort-${{ steps.version.outputs.version }}-$name.zip" "$artifact"
             rm -rf "$artifact"
           done
         shell: bash
@@ -148,6 +149,7 @@ jobs:
           draft: ${{ github.event.inputs.draft }}
           body: ${{ steps.body.outputs.body }}
           allowUpdates: ${{ github.event.inputs.type == 'Edge' }}
+          removeArtifacts: true
 
       - name: Echo Release URL
         run: |
