@@ -56,14 +56,15 @@ jobs:
       - name: Set FILENAME
         id: filename
         run: |
-          FILENAME="${{ matrix.platform }}_${{ matrix.arch }}"
+          FILENAME="${{ matrix.platform }}_"
+          FILENAME+="${{ matrix.arch }}"
           echo "FILENAME=$FILENAME" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: Delete old build, rename new build
         run: |
           rm -rf ./build/"${{ steps.filename.outputs.FILENAME }}"
-          mv ./build/ "${{ steps.filename.outputs.FILENAME }}"
+          mv "./build/" "./build/${{ steps.filename.outputs.FILENAME }}"
        
         # Upload folder as artifact
       - name: Upload folder as artifact
@@ -71,5 +72,6 @@ jobs:
         with:
           name: ${{ steps.filename.outputs.FILENAME }}
           path: ./build/${{ steps.filename.outputs.FILENAME }}
+          if-no-files-found: error
     outputs:
       filename: ${{ steps.filename.outputs.FILENAME }}
