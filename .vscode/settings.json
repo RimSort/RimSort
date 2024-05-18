@@ -16,5 +16,10 @@
     "python.terminal.activateEnvironment": true,
     "python.terminal.activateEnvInCurrentTerminal": true,
     "mypy.runUsingActiveInterpreter": true,
-    "autoDocstring.docstringFormat": "sphinx"
+    "autoDocstring.docstringFormat": "sphinx",
+    "cSpell.words": [
+        "joseasoler",
+        "rimsort"
+    ],
+    "python.analysis.typeCheckingMode": "basic"
 }
