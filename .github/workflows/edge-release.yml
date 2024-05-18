@@ -4,25 +4,12 @@ on:
     tags:
       - 'Edge'
   workflow_dispatch:
-    inputs:
-      build:
-        description: 'Rebuild the project first'
-        required: false
-        default: true
-        type: 'boolean'
 
 jobs:
   call-build:
-    if: | 
-      github.event_name == 'workflow_dispatch' && github.event.inputs.build == 'true' || 
-      github.event_name == 'push'
     uses: ./.github/workflows/build.yml
 
   release:
-    if: |
-      github.event_name == 'workflow_dispatch' && github.event.inputs.build == 'true' || 
-      github.event_name == 'push' ||
-      github.event_name == 'workflow_dispatch' && github.event.inputs.build == 'false' && always()
     needs: call-build
     runs-on: ubuntu-latest
     steps:
