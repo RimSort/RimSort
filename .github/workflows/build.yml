@@ -48,8 +48,8 @@ jobs:
       - name: Build
         shell: bash
         run: |
-          "set -e"
-          "python distribute.py --skip-deps"
+          set -e
+          python distribute.py --skip-deps
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -57,15 +57,15 @@ jobs:
         id: sha
         run: |
           # Get the short SHA of the commit
-          "SHORT_SHA=$(git rev-parse --short HEAD)"
-          "echo "short=$SHORT_SHA" >> $GITHUB_OUTPUT"
+          SHORT_SHA="$(git rev-parse --short HEAD)"
+          echo "short=$SHORT_SHA" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: Set FILENAME
         id: filename
         run: |
-          "FILENAME=${{ matrix.platform }}_${{ matrix.arch }}.zip"
-          "echo "FILENAME=$FILENAME" >> $GITHUB_ENV"
+          FILENAME=${{ matrix.platform }}_${{ matrix.arch }}.zip
+          echo "FILENAME=$FILENAME" >> $GITHUB_ENV
         shell: bash
 
         # Create ZIP archive of release
