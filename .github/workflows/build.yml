@@ -65,7 +65,7 @@ jobs:
           echo "PYTHON_VERSION=$(python --version | awk '{print $2}' | cut -d '.' -f 1,2)" >> "$GITHUB_OUTPUT"
 
       - name: Cache build files
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ${{ steps.env.outputs.NUITKA_CACHE_DIR }}
           key: ${{ runner.os }}_${{ matrix.platform }}_${{ matrix.arch }}-python-${{ steps.env.outputs.PYTHON_VERSION }}-nuitka-${{ github.sha }}
