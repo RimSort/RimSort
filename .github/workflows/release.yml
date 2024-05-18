@@ -59,8 +59,8 @@ jobs:
             echo "Unknown type: ${{ github.event.inputs.type }}"
             exit 1
           fi
-          echo "version_format=$v_format" >> $GITHUB_OUTPUT
-          echo "prerelease=$prerelease" >> $GITHUB_OUTPUT
+          echo "version_format=$v_format" >> "$GITHUB_OUTPUT"
+          echo "prerelease=$prerelease" >> "$GITHUB_OUTPUT"
         shell: bash
 
       - name: Get semantic version
@@ -79,7 +79,7 @@ jobs:
           else
           version="${{steps.sem_version.outputs.version}}"
           fi
-          echo "version=$version" >> $GITHUB_OUTPUT
+          echo "version=$version" >> "$GITHUB_OUTPUT"
         shell: bash
 
       - name: Determine tag
@@ -93,7 +93,7 @@ jobs:
             echo "Unknown type: ${{ github.event.inputs.type }}"
             exit 1
           fi
-          echo "tag=$tag" >> $GITHUB_OUTPUT
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
         shell: bash
 
       - name: Download artifacts - Current Flow
@@ -127,7 +127,7 @@ jobs:
           
           Refer to the [action run]($ACTION_RUN_URL) that created this release."
           EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
-          echo "body<<EOF"$'\n'"$message"$'\n'EOF >> $GITHUB_OUTPUT
+          echo "body<<EOF"$'\n'"$message"$'\n'EOF >> "$GITHUB_OUTPUT"
         shell: bash
 
       - name: Delete last edge release
