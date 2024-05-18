@@ -1239,7 +1239,7 @@ class MainContent(QObject):
             mode="open",
             caption="Open RimWorld mod list",
             _dir=str(AppInfo().app_storage_folder),
-            _filter="RimWorld mod list (*.rws *.xml)",
+            _filter="RimWorld mod list (*.rml *.rws *.xml)",
         )
         logger.info(f"Selected path: {file_path}")
         if file_path:
@@ -3222,9 +3222,7 @@ class MainContent(QObject):
         # If integration is enabled, check for file called "steam_appid.txt" in game folder.
         # in the game folder. If not, create one and add the Steam App ID to it.
         # The Steam App ID is "294100" for RimWorld.
-        steam_appid_file_exists = os.path.exists(
-            game_install_path / "steam_appid.txt"
-        )
+        steam_appid_file_exists = os.path.exists(game_install_path / "steam_appid.txt")
         if steam_client_integration and not steam_appid_file_exists:
             with open(
                 game_install_path / "steam_appid.txt", "w", encoding="utf-8"
