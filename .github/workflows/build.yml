@@ -53,18 +53,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Get sha
-        id: sha
-        run: |
-          # Get the short SHA of the commit
-          SHORT_SHA="$(git rev-parse --short HEAD)"
-          echo "short=$SHORT_SHA" >> $GITHUB_OUTPUT
-        shell: bash
-
       - name: Set FILENAME
         id: filename
         run: |
-          FILENAME=${{ matrix.platform }}_${{ matrix.arch }}.zip
+          FILENAME="${{ matrix.platform }}_${{ matrix.arch }}.zip"
           echo "FILENAME=$FILENAME" >> $GITHUB_ENV
         shell: bash
 
@@ -78,7 +70,6 @@ jobs:
                 rm -rf "./build/$DIST"
             fi
             mv build/__main__.app ."/build/$DIST"
-            echo ${{ steps.sha.outputs.short }} > ./build/$DIST/Contents/MacOS/SHA
           else    
             DIST="RimSort"
             if [ -d "build/$DIST" ]; then
@@ -86,7 +77,6 @@ jobs:
                 rm -rf "./build/$DIST"
             fi
             mv build/__main__.dist ."/build/$DIST"
-            echo ${{ steps.sha.outputs.short }} > ./build/$DIST/SHA
           fi
           cd ./build/
           zip -r ${{ steps.filename.outputs.FILENAME }} $DIST
