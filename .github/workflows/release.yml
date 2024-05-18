@@ -56,10 +56,10 @@ jobs:
         id: version_format
         run: |
           if [[ "${{ github.event.inputs.type }}" == "Stable" ]]; then
-            v_format="${major}.${minor}.${patch}"
+            v_format="\${major}.\${minor}.\${patch}"
             prerelease=false
           elif [[ "${{ github.event.inputs.type }}" == "Edge" ]]; then
-            v_format="${major}.${minor}.${patch}-edge${increment}"
+            v_format="\${major}.\${minor}.\${patch}-edge\${increment}"
             prerelease=true
           else
             echo "Unknown type: ${{ github.event.inputs.type }}"
