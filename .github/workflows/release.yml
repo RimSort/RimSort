@@ -113,8 +113,8 @@ jobs:
         id: artifacts
         run: |
           for artifact in artifacts/*; do
-            echo "Renaming $artifact to RimSort-${{ steps.version.outputs.version }}-$artifact"
-            mv "$artifact" "RimSort-${{ steps.version.outputs.version }}-$artifact"
+            echo "Renaming $artifact to artifacts/RimSort-${{ steps.version.outputs.version }}-$artifact"
+            mv "$artifact" "artifacts/RimSort-${{ steps.version.outputs.version }}-$artifact"
           done
           ls -l artifacts
         shell: bash
