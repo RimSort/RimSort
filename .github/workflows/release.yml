@@ -26,7 +26,7 @@ permissions: {}
 
 jobs:
   build:
-    if:  inputs.skip_build != true
+    if: inputs.skip_build != true
     permissions:
       id-token: write
       contents: read
@@ -102,13 +102,13 @@ jobs:
         shell: bash
 
       - name: Download artifacts - Current Flow
-        if : ${{ inputs.skip_build == false }}
+        if: ${{ inputs.skip_build == false }}
         uses: actions/download-artifact@v4.1.7
         with:
           path: artifacts
 
       - name: Download artifacts - Previous FLow
-        if : ${{ inputs.skip_build == true}}
+        if: ${{ inputs.skip_build == true}}
         uses: actions/download-artifact@v4.1.7
         with:
           path: artifacts
@@ -133,7 +133,7 @@ jobs:
           ACTION_RUN_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           message="${{ github.event.inputs.type }} release ${{steps.version.outputs.version}}.
           The latest commit is ${{ steps.sem_version.outputs.current_commit }}.
-          
+
           Refer to the [action run]($ACTION_RUN_URL) that created this release."
           echo "body<<EOF"$'\n'"$message"$'\n'EOF >> "$GITHUB_OUTPUT"
         shell: bash

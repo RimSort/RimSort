@@ -18,22 +18,22 @@ jobs:
           - os: macos-13
             platform: "Darwin"
             arch: "i386"
-            env: 
+            env:
               BUILD_OUTPUT: "__main__.app"
           - os: macos-latest
             platform: "Darwin"
             arch: "arm"
-            env: 
+            env:
               BUILD_OUTPUT: "__main__.app"
           - os: ubuntu-latest
             platform: "Linux"
             arch: "x86_64"
-            env: 
+            env:
               BUILD_OUTPUT: "__main__.dist"
           - os: windows-latest
             platform: "Windows"
             arch: "x86_64"
-            env: 
+            env:
               BUILD_OUTPUT: "__main__.dist"
     steps:
       - name: Check-out repository
@@ -49,7 +49,7 @@ jobs:
           cache: "pip"
           cache-dependency-path: |
             **/requirements*.txt
-      
+
       - name: Install Dependencies
         run: pip install -r requirements.txt -r requirements_develop.txt
 
