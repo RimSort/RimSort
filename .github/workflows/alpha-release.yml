@@ -3,214 +3,19 @@ on:
   push:
     tags:
       - 'alpha-v*'
+  workflow_dispatch:
+
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: macos-13
-            platform: "Darwin"
-            arch: "i386"
-          - os: macos-14
-            platform: "Darwin"
-            arch: "arm"
-          - os: ubuntu-22.04
-            platform: "Linux"
-            arch: "x86_64"
-          - os: windows-2022
-            platform: "Windows"
-            arch: "x86_64"
-    steps:
-      # Debian/Ubuntu dependencies
-      - name: Install Debian/Ubuntu system dependencies
-        if: matrix.platform == 'Linux'
-        run: |
-          # Update apt
-          sudo apt update
-          # Install PySide6 system dependencies
-          # https://doc.qt.io/qt-6/linux-requirements.html
-          sudo apt install -y \
-            gvfs-libs \
-            libfontconfig1-dev \
-            libfreetype6-dev \
-            libx11-dev \
-            libx11-xcb-dev \
-            libxext-dev \
-            libxfixes-dev \
-            libxi-dev \
-            libxrender-dev \
-            libxkbcommon-dev \
-            libxkbcommon-x11-dev \
-            libatspi2.0-dev \
-            '^libxcb.*-dev'
-          # Install Nuitka dependencies
-          sudo apt install -y build-essential ccache clang patchelf
-      # Check-out repository with history (Unix)
-      - name: Checkout code at triggered tag (Unix)
-        if: matrix.platform != 'Windows'
-        run: |
-          if git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
-            git checkout main
-            git pull --rebase
-            git fetch --force --tags
-            TAG=$(echo "$GITHUB_REF" | sed 's#refs/tags/##')
-            git checkout $TAG
-            git fetch --depth=1 origin +refs/tags/*:refs/tags/*
-          else
-            rm -rf *
-            git clone https://github.com/RimSort/RimSort.git .
-            TAG=$(echo "$GITHUB_REF" | sed 's#refs/tags/##')
-            git checkout $TAG
-            git fetch --depth=1 origin +refs/tags/*:refs/tags/*
-          fi
-        shell: bash
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # Check-out repository with history (Windows)
-      - name: Checkout code at triggered tag (Windows)
-        if: matrix.platform == 'Windows'
-        run: |
-          $ErrorActionPreference = "Continue"
-          if ((git rev-parse --is-inside-work-tree) -eq "true") {
-            git checkout main
-            git pull --rebase
-            git fetch --force --tags
-            $TAG = $env:GITHUB_REF -replace "refs/tags/"
-            git checkout $TAG
-            git fetch --depth=1 origin +refs/tags/*:refs/tags/*
-          }
-          else {
-            Remove-Item * -Recurse -Force
-            git clone https://github.com/RimSort/RimSort.git .
-            $TAG = $env:GITHUB_REF -replace "refs/tags/"
-            git checkout $TAG
-            git fetch --depth=1 origin +refs/tags/*:refs/tags/*
-          }
-        shell: powershell
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # Grab Py3.11 if not self-hosted runner for Linux/Windows
-      - name: Set up Python 3.11 for Linux/Windows
-        if: matrix.platform != 'Darwin'
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.11'
-      # Install Py3.11 with brew if Intel Mac for self-hosted runner
-      - name: Install Py3.11 with brew on Intel Mac
-        if: matrix.os == 'macos-11'
-        run: |
-          brew install python@3.11
-      # Execute distribute.py on Unix
-      - name: Init venv & execute distribute.py (Unix)
-        if: matrix.platform != 'Windows'
-        run: |
-          python3.11 -m pip install --upgrade pip
-          python3.11 -m pip install requests virtualenv
-          if [ -f "venv/bin/activate" ]; then
-            source venv/bin/activate
-          else
-            python3.11 -m venv venv
-            source venv/bin/activate
-          fi
-          python -m pip install requests
-          python distribute.py
-        shell: bash
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # Execute distribute.py on Windows
-      - name: Init venv & execute distribute.py (Windows)
-        if: matrix.platform == 'Windows'
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install requests virtualenv
-          if (Test-Path "venv\Scripts\Activate.ps1") {
-            .\venv\Scripts\Activate.ps1
-          } else {
-            python -m venv venv
-            .\venv\Scripts\Activate.ps1
-          }
-          python -m pip install requests
-          python distribute.py
-        shell: powershell
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # Format tag name + filename (Unix)
-      - name: Format filename
-        if: matrix.platform != 'Windows'
-        run: |
-          # Extract the tag name, set in env for output
-          RAW_TAG_NAME=$(echo "${{ github.ref }}" | sed 's#refs/tags/##')
-          echo "RAW_TAG_NAME=$RAW_TAG_NAME" >> $GITHUB_ENV
-          # Format the tag name, set in env for output
-          FORMATTED_TAG_NAME=$(echo $RAW_TAG_NAME | sed 's/alpha/Alpha/')
-          echo "FORMATTED_TAG_NAME=$FORMATTED_TAG_NAME" >> $GITHUB_ENV
-          # Format the filename, set in env for output
-          FILENAME="RimSort-${FORMATTED_TAG_NAME}_${{ matrix.platform }}_${{ matrix.arch }}.zip"
-          echo "FILENAME=$FILENAME" >> $GITHUB_ENV
-        shell: bash
-      # Format tag name + filename (Windows)
-      - name: Format filename
-        if: matrix.platform == 'Windows'
-        run: |
-          # Extract the tag name, set in env for output
-          $RAW_TAG_NAME = "${{ github.ref }}" -replace 'refs/tags/', ''
-          echo "RAW_TAG_NAME=$RAW_TAG_NAME" | Out-File -Append -FilePath $env:GITHUB_ENV -Encoding utf8
-          # Format the tag name, set in env for output
-          $FORMATTED_TAG_NAME = $RAW_TAG_NAME -replace 'alpha', 'Alpha'
-          echo "FORMATTED_TAG_NAME=$FORMATTED_TAG_NAME" | Out-File -Append -FilePath $env:GITHUB_ENV -Encoding utf8
-          # Format the filename, set in env for output
-          $FILENAME = "RimSort-${FORMATTED_TAG_NAME}_${{ matrix.platform }}_${{ matrix.arch }}.zip"
-          echo "FILENAME=$FILENAME" | Out-File -Append -FilePath $env:GITHUB_ENV -Encoding utf8
-        shell: powershell
-      # Create ZIP archive of release
-      - name: Create ZIP (Unix)
-        if: matrix.platform != 'Windows'
-        run: |
-          if [[ "$(uname)" == "Darwin" ]]; then
-            DIST="RimSort.app"
-            if [ -d "build/$DIST" ]; then
-                echo "Existing build found. Deleting old build and replacing with a new build."
-                rm -rf "./build/$DIST"
-            fi
-            mv build/__main__.app ."/build/$DIST"
-          else    
-            DIST="RimSort"
-            if [ -d "build/$DIST" ]; then
-                echo "Existing build found. Deleting old build and replacing with a new build."
-                rm -rf "./build/$DIST"
-            fi
-            mv build/__main__.dist ."/build/$DIST"
-          fi
-          cd ./build/
-          zip -r ${{ env.FILENAME }} $DIST
-      - name: Create ZIP (Windows)
-        if: matrix.platform == 'Windows'
-        run: |
-          if (Test-Path -Path .\build\RimSort -PathType Container) {
-              Write-Host "Existing build found. Deleting old build and replacing with new build."
-              Remove-Item -Path .\build\RimSort -Force -Recurse
-          }
-          cd ./build/
-          Rename-Item -Path __main__.dist -NewName RimSort
-          Compress-Archive -Force -Path RimSort -DestinationPath ${{ env.FILENAME }}
-        shell: powershell
-      # Upload ZIP as artifact
-      - name: Upload ZIP as artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ env.FILENAME }}
-          path: ./build/${{ env.FILENAME }}
-    outputs:
-      formatted_tag_name: ${{ env.FORMATTED_TAG_NAME }}
-      raw_tag_name: ${{ env.RAW_TAG_NAME }}
+  call-build:
+    uses: ./.github/workflows/build.yml
+  
   release:
-    needs: build
+    needs: call-build
     runs-on: ubuntu-latest
     steps:
       # Check-out repository
       - name: Checkout tag
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -245,7 +50,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.TWSTA_ACTIONS }}
       # Download artifacts
       - name: Download all workflow run artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
       # Upload artifacts to release
       - name: Upload assets to the Alpha release
         run: |
