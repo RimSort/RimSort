@@ -478,6 +478,7 @@ class Settings(QObject):
                                     f"{steamcmd_prefix_steamcmd_path}_{current_timestamp}",
                                 )
                             elif path.exists(steamcmd_prefix_steam_path):
+                                current_timestamp = int(time())
                                 rename(
                                     steamcmd_prefix_steam_path,
                                     f"{steamcmd_prefix_steam_path}_{current_timestamp}",
