@@ -112,11 +112,11 @@ jobs:
       - name: Add version to artifact filenames
         id: artifacts
         run: |
-          for artifact in artifacts/*; do
-            echo "Renaming $artifact to artifacts/RimSort-${{ steps.version.outputs.version }}-$artifact"
-            mv "$artifact" "artifacts/RimSort-${{ steps.version.outputs.version }}-$artifact"
+          cd artifacts
+          for artifact in * do
+            echo "Renaming $artifact to RimSort-${{ steps.version.outputs.version }}-$artifact"
+            mv "$artifact" "RimSort-${{ steps.version.outputs.version }}-$artifact"
           done
-          ls -l artifacts
         shell: bash
 
       - name: Create body
