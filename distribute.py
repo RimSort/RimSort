@@ -35,6 +35,7 @@ _NUITKA_CMD = [
     "--enable-plugin=pyside6",
     "--include-data-file=./update.sh=update.sh",
     "--include-data-file=./steam_appid.txt=steam_appid.txt",
+    "--include-data-dir=./themes=themes",
     "--include-package=steamworks",
     "--user-package-configuration-file=./rimsort.nuitka-package.config.yml",
     "app/__main__.py",
