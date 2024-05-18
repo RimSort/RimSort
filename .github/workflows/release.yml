@@ -59,7 +59,7 @@ jobs:
         uses: PaulHatch/semantic-version@v5.4.0
         with:
           enable_prerelease_mode: true
-          version_format: ${{ steps.version_format.outputs.version_format }}
+          version_format: "${{ steps.version_format.outputs.version_format }}"
           change_path: "app libs submodules themes"
 
       - name: Get final version
@@ -81,7 +81,7 @@ jobs:
           elif [[ "${{ github.event.inputs.type }}" == "Edge" ]]; then
             tag="Edge"
           else
-            echo "Unknown type: ${{ github.event.inputs.type }}"
+            echo "Unknown type: "${{ github.event.inputs.type }}""
             exit 1
           fi
           echo "tag=$tag" >> $GITHUB_ENV
