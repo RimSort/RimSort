@@ -14,34 +14,50 @@
         relative_path: '../todds'
         prefixes:
           - 'todds'
-        dest_path: 'todds'
         executable: 'yes'
-
+      dest_path: 'todds'
     - from_filenames:
         relative_path: '../libs'
-        patterns:
-          - '*.dll'
-        when: 'win32'
+        prefixes:
+        - 'steam*'
+        - 'Steam*'
+        suffixes:
+          - 'dll'
+      dest_path: '.'
+      when: 'win32'
     - from_filenames:
         relative_path: '../libs'
-        patterns:
-          - '.so'
-        when: 'linux'
+        prefixes:
+        - 'libsteam*'
+        - 'Steam*'
+        suffixes:
+          - 'so'
+      dest_path: '.'
+      when: 'linux'
     - from_filenames:
         relative_path: '../libs'
-        patterns:
-          - '*arm.dylib'
-        when: 'macos and platform.machine() == "arm"'
+        prefixes:
+          - '*arm'
+        suffixes:
+          - 'dylib'
+      dest_path: '.'
+      when: 'macos and platform.machine() == "arm"'
     - from_filenames:
         relative_path: '../libs'
-        patterns:
-          - '*i386.dylib'
-        when: 'macos and platform.machine() == "i386"'
+        prefixes:
+          - '*i386'
+        suffixes:
+          - 'dylib'
+      dest_path: '.'
+      when: 'macos and platform.machine() == "i386"'
     - from_filenames:
         relative_path: '../libs'
-        patterns:
-          - '*api.dylib'
-        when: 'macos'
+        prefixes:
+          - '*api'
+        suffixes:
+          - 'dylib'
+      dest_path: '.'
+      when: 'macos'
 
   options:
     checks:
