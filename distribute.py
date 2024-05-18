@@ -82,7 +82,6 @@ def get_rimsort_deps() -> None:
 def build_steamworkspy() -> None:
     # Setup environment
     print("Setting up environment...")
-    MODULE_SRC_PATH = os.path.join(_CWD, "submodules", "SteamworksPy", "steamworks")
     STEAMWORKSPY_BIN_DARWIN = f"SteamworksPy_{_PROCESSOR}.dylib"
     STEAMWORKSPY_BIN_DARWIN_LINK_PATH = os.path.join(_CWD, "SteamworksPy.dylib")
     DARWIN_COMPILE_CMD = [
@@ -147,7 +146,6 @@ def build_steamworkspy() -> None:
     ]
     # SOURCE: "https://partner.steamgames.com/downloads/steamworks_sdk_*.zip"
     STEAMWORKS_SDK_URL = "https://github.com/oceancabbage/RimSort/raw/steamworks-sdk/steamworks_sdk_155.zip"
-    SUBMODULE_UPDATE_INIT_CMD = ["git", "submodule", "update", "--init", "--recursive"]
     STEAMWORKS_PY_PATH = os.path.join(_CWD, "submodules", "SteamworksPy", "library")
     STEAMWORKS_SDK_PATH = os.path.join(STEAMWORKS_PY_PATH, "sdk")
     STEAMWORKS_SDK_HEADER_PATH = os.path.join(STEAMWORKS_SDK_PATH, "public", "steam")
@@ -374,13 +372,13 @@ def get_latest_todds_release() -> None:
     for asset in json_response["assets"]:
         if asset["name"] == target_archive:
             browser_download_url = asset["browser_download_url"]
-    if not "browser_download_url" in locals():
+    if "browser_download_url" not in locals():
         print(
             f"Failed to find valid joseasoler/todds release for {_SYSTEM} {_ARCH} {_PROCESSOR}"
         )
         return
+
     # Try to download & extract todds release from browser_download_url
-    target_archive_extracted = target_archive.replace(".zip", "")
     try:
         print(f"Downloading & extracting todds release from: {browser_download_url}")
         with ZipFile(BytesIO(handle_request(browser_download_url).content)) as zipobj:
@@ -390,11 +388,12 @@ def get_latest_todds_release() -> None:
         if os.path.exists(todds_executable_path):
             original_stat = os.stat(todds_executable_path)
             os.chmod(todds_executable_path, original_stat.st_mode | S_IEXEC)
-    except:
+    except Exception as e:
         print(f"Failed to download: {browser_download_url}")
         print(
             "Did the file/url change?\nDoes your environment have access to the Internet?"
         )
+        print(f"Error: {e}")
 
 
 def freeze_application() -> None:
