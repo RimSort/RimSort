@@ -137,15 +137,9 @@ jobs:
           echo "body<<EOF"$'\n'"$message"$'\n'EOF >> "$GITHUB_OUTPUT"
         shell: bash
 
-      - name: Delete last edge release
-        if: ${{ github.event.inputs.type == 'Edge' }}
-        run: |
-          gh release delete Edge --yes || true
-        env:
-          GITHUB_TOKEN: ${{ github.token}}
-
       - name: Create Release
         uses: ncipollo/release-action@v1.14.0
+        id: release
         with:
           artifacts: artifacts/*
           tag: ${{ steps.tag.outputs.tag }}
@@ -153,3 +147,9 @@ jobs:
           prerelease: ${{ steps.version_format.outputs.prerelease }}
           draft: ${{ github.event.inputs.draft }}
           body: ${{ steps.body.outputs.body }}
+          allowUpdates: ${{ github.event.inputs.type == 'Edge' }}
+
+      - name: Echo Release URL
+        run: |
+          echo "Release URL: ${{ steps.release.outputs.html_url }}"
+        shell: bash
