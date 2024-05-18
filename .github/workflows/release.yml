@@ -13,11 +13,20 @@ on:
         description: "Only create a draft release"
         type: boolean
         default: true
+      skip_build:
+        description: "Skip the build step (For debugging)"
+        type: boolean
+        default: false
+      run_id:
+        description: "Run ID to use if skipping build (For debugging)"
+        type: number
+        required: false
 
 permissions: {}
 
 jobs:
   build:
+    if: ${{ github.event.inputs.skip_build != true }}
     permissions:
       id-token: write
       contents: read
@@ -87,10 +96,19 @@ jobs:
           echo "tag=$tag" >> $GITHUB_OUTPUT
         shell: bash
 
-      - name: Download artifacts
+      - name: Download artifacts - Current Flow
+        if : ${{ github.event.inputs.skip_build != true }}
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+
+      - name: Download artifacts - Previous FLow
+        if : ${{ github.event.inputs.skip_build == true }}
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          run-id: ${{ github.event.inputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Add version to artifact filenames
         id: artifacts
