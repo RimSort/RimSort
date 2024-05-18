@@ -21,7 +21,8 @@ jobs:
   release:
     if: |
       github.event_name == 'workflow_dispatch' && github.event.inputs.build == 'true' || 
-      github.event_name == 'push'
+      github.event_name == 'push' ||
+      github.event_name == 'workflow_dispatch' && github.event.inputs.build == 'false' && always()
     needs: call-build
     runs-on: ubuntu-latest
     steps:
