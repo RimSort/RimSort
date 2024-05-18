@@ -445,6 +445,7 @@ class MetadataManager(QObject):
             )
             # Wait for pool to complete
             self.parser_threadpool.waitForDone()
+            self.parser_threadpool.clear()
             logger.info(
                 "Finished querying Official expansions. Supplementing metadata..."
             )
@@ -532,6 +533,7 @@ class MetadataManager(QObject):
             purge_by_data_source(self, "workshop")
         # Wait for pool to complete
         self.parser_threadpool.waitForDone()
+        self.parser_threadpool.clear()
         # Generate our file <-> UUID mappers for Watchdog and friends
         # Map mod uuid to metadata file path
         self.mod_metadata_file_mapper = {
@@ -1174,8 +1176,9 @@ class MetadataManager(QObject):
         self.parser_threadpool.start(parser)
         # Wait for pool to complete if this is a single update
         if not batch:
-            logger.debug(f"Waiting for metadata update to complete...")
+            logger.debug("Waiting for metadata update to complete...")
             self.parser_threadpool.waitForDone()
+            self.parser_threadpool.clear()
         # Send signal to UI to update mod list if the mod we are updating exists
         if exists and not batch:
             self.compile_metadata(uuids=[uuid])
@@ -1223,6 +1226,9 @@ class ModParser(QRunnable):
         self.mod_directory = mod_directory
         self.metadata_manager = metadata_manager
         self.uuid = uuid
+
+        # Set autoDelete to True
+        self.setAutoDelete(True)
 
     def __parse_mod_metadata(
         self,
