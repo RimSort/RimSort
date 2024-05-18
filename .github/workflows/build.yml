@@ -1,13 +1,16 @@
 name: Build
 on:
-  pull_request:
-    branches:
-      - main
-  workflow_call:
-  workflow_dispatch:
+  workflow_call: null
+  workflow_dispatch: null
+
+permissions: {}
 
 jobs:
   build:
+    permissions:
+      id-token: write
+      contents: read
+
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -40,44 +43,33 @@ jobs:
             **/requirements*.txt
 
       - name: Install Dependencies
-        run: |
-          pip install -r requirements.txt -r requirements_develop.txt
+        run: pip install -r requirements.txt -r requirements_develop.txt
 
       - name: Build
         shell: bash
         run: |
-          set -e
-          python distribute.py --skip-deps
-        env: 
+          "set -e"
+          "python distribute.py --skip-deps"
+        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Get Short SHA and Set up filename (Unix)
-        if: matrix.platform != 'Windows'
-        id: sha_unix
+      - name: Get sha
+        id: sha
         run: |
           # Get the short SHA of the commit
-          SHORT_SHA=$(git rev-parse --short HEAD)
-          echo "short=$SHORT_SHA" >> $GITHUB_OUTPUT
-          # Format the filename, set in env for output
-          FILENAME="RimSort-Edge_${SHORT_SHA}_${{ matrix.platform }}_${{ matrix.arch }}.zip"
-          echo "FILENAME=$FILENAME" >> $GITHUB_ENV
+          "SHORT_SHA=$(git rev-parse --short HEAD)"
+          "echo "short=$SHORT_SHA" >> $GITHUB_OUTPUT"
         shell: bash
-      # Get the short SHA of the commit + filename (Windows)
-      - name: Get Short SHA and Set up filename (Windows)
-        if: matrix.platform == 'Windows'
-        id: sha_win
+
+      - name: Set FILENAME
+        id: filename
         run: |
-          # Get the short SHA of the commit
-          $SHORT_SHA = git rev-parse --short HEAD
-          echo "short=$SHORT_SHA" >> $GITHUB_OUTPUT
-          # Format the filename, set in env for output
-          $FILENAME = "RimSort-Edge_${SHORT_SHA}_${{ matrix.platform }}_${{ matrix.arch }}.zip"
-          Add-Content -Path $env:GITHUB_ENV -Value "FILENAME=$FILENAME"
-        shell: powershell
+          "FILENAME=${{ matrix.platform }}_${{ matrix.arch }}.zip"
+          "echo "FILENAME=$FILENAME" >> $GITHUB_ENV"
+        shell: bash
 
         # Create ZIP archive of release
       - name: Create ZIP (Unix)
-        if: matrix.platform != 'Windows'
         run: |
           if [[ "$(uname)" == "Darwin" ]]; then
             DIST="RimSort.app"
@@ -86,7 +78,7 @@ jobs:
                 rm -rf "./build/$DIST"
             fi
             mv build/__main__.app ."/build/$DIST"
-            echo ${{ steps.sha_unix.outputs.short }} > ./build/$DIST/Contents/MacOS/SHA
+            echo ${{ steps.sha.outputs.short }} > ./build/$DIST/Contents/MacOS/SHA
           else    
             DIST="RimSort"
             if [ -d "build/$DIST" ]; then
@@ -94,28 +86,17 @@ jobs:
                 rm -rf "./build/$DIST"
             fi
             mv build/__main__.dist ."/build/$DIST"
-            echo ${{ steps.sha_unix.outputs.short }} > ./build/$DIST/SHA
+            echo ${{ steps.sha.outputs.short }} > ./build/$DIST/SHA
           fi
           cd ./build/
-          zip -r ${{ env.FILENAME }} $DIST
-      - name: Create ZIP (Windows)
-        if: matrix.platform == 'Windows'
-        run: |
-          if (Test-Path -Path .\build\RimSort -PathType Container) {
-              Write-Host "Existing build found. Deleting old build and replacing with new build."
-              Remove-Item -Path .\build\RimSort -Force -Recurse
-          }
-          cd ./build/
-          Rename-Item -Path __main__.dist -NewName RimSort
-          Set-Content -Path .\RimSort\SHA -Value "${{ steps.sha_win.outputs.short }}"
-          Compress-Archive -Force -Path RimSort -DestinationPath ${{ env.FILENAME }}
-        shell: powershell
+          zip -r ${{ steps.filename.outputs.FILENAME }} $DIST
+        shell: bash
 
         # Upload ZIP as artifact
       - name: Upload ZIP as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.FILENAME }}
-          path: ./build/${{ env.FILENAME }}
+          name: ${{ steps.filename.outputs.FILENAME }}
+          path: ./build/${{ steps.filename.outputs.FILENAME }}
     outputs:
-      sha_short: ${{ steps.sha_unix.outputs.short }}${{ steps.sha_windows.outputs.short }}
+      filename: ${{ steps.filename.outputs.FILENAME }}
