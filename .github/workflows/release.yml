@@ -50,8 +50,8 @@ jobs:
             echo "Unknown type: ${{ github.event.inputs.type }}"
             exit 1
           fi
-          echo "version_format=$v_format" >> $GITHUB_ENV
-          echo "prerelease=$prerelease" >> $GITHUB_ENV
+          echo "version_format=$v_format" >> $GITHUB_OUTPUT
+          echo "prerelease=$prerelease" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: Get semantic version
@@ -70,7 +70,7 @@ jobs:
           else
           version="${{steps.sem_version.outputs.version}}"
           fi
-          echo "version=$version" >> $GITHUB_ENV
+          echo "version=$version" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: Determine tag
@@ -81,10 +81,10 @@ jobs:
           elif [[ "${{ github.event.inputs.type }}" == "Edge" ]]; then
             tag="Edge"
           else
-            echo "Unknown type: "${{ github.event.inputs.type }}""
+            echo "Unknown type: ${{ github.event.inputs.type }}"
             exit 1
           fi
-          echo "tag=$tag" >> $GITHUB_ENV
+          echo "tag=$tag" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: Download artifacts
@@ -108,7 +108,7 @@ jobs:
           The latest commit is ${{ steps.sem_version.outputs.current_commit }}.
           
           Refer to the [action run]($ACTION_RUN_URL) that created this release."
-          echo "body=$body" >> $GITHUB_ENV
+          echo "body=$body" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: Delete last edge release

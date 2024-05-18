@@ -57,7 +57,7 @@ jobs:
         id: filename
         run: |
           FILENAME="${{ matrix.platform }}_${{ matrix.arch }}.zip"
-          echo "FILENAME=$FILENAME" >> $GITHUB_ENV
+          echo "FILENAME=$FILENAME" >> $GITHUB_OUTPUT
         shell: bash
 
         # Create ZIP archive of release
