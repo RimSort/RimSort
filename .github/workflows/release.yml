@@ -120,7 +120,7 @@ jobs:
         run: |
           cd artifacts
           for artifact in ./*; do
-            name="$(basename ${artifact})"
+            name="$(basename "${artifact}")"
             echo "Renaming $artifact to RimSort-${{ steps.version.outputs.version }}-$name.zip"
             zip -r "RimSort-${{ steps.version.outputs.version }}-$name.zip" "$artifact"
             rm -rf "$artifact"
