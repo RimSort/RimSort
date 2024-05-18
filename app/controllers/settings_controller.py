@@ -466,6 +466,11 @@ class SettingsController(QObject):
         self.settings_dialog.download_missing_mods_checkbox.setChecked(
             self.settings.try_download_missing_mods
         )
+        self.settings_dialog.enable_stylesheet_checkbox.setChecked(
+            self.settings.instances[self.settings.current_instance].get(
+                "stylesheet_enabled", True
+            )
+        )
         self.settings_dialog.github_username.setText(self.settings.github_username)
         self.settings_dialog.github_username.setCursorPosition(0)
         self.settings_dialog.github_token.setText(self.settings.github_token)
@@ -599,6 +604,9 @@ class SettingsController(QObject):
         self.settings.try_download_missing_mods = (
             self.settings_dialog.download_missing_mods_checkbox.isChecked()
         )
+        self.settings.instances[self.settings.current_instance][
+            "stylesheet_enabled"
+        ] = self.settings_dialog.enable_stylesheet_checkbox.isChecked()
         self.settings.github_username = self.settings_dialog.github_username.text()
         self.settings.github_token = self.settings_dialog.github_token.text()
         run_args_str = ",".join(

@@ -46,6 +46,7 @@ class Settings(QObject):
         self._todds_overwrite: bool = False
         self._current_instance: Optional[str] = None
         self._instances: dict[str, dict[str, Any]] = {}
+        self._stylesheet_enabled: bool = False
         self._github_username: str = ""
         self._github_token: str = ""
         self._steam_apikey: str = ""
@@ -97,6 +98,7 @@ class Settings(QObject):
                 ),
             }
         }
+        self._stylesheet_enabled = True
         self._github_username = ""
         self._github_token = ""
         self._steam_apikey = ""
@@ -388,6 +390,17 @@ class Settings(QObject):
         EventBus().settings_have_changed.emit()
 
     @property
+    def stylesheet_enabled(self) -> bool:
+        return self._stylesheet_enabled
+
+    @stylesheet_enabled.setter
+    def stylesheet_enabled(self, value: bool) -> None:
+        if value == self._stylesheet_enabled:
+            return
+        self._stylesheet_enabled = value
+        EventBus().settings_have_changed.emit()
+
+    @property
     def github_username(self) -> str:
         return self._github_username
 
@@ -649,6 +662,10 @@ class Settings(QObject):
             self.instances = data["instances"]
             del data["instances"]
 
+        if "stylesheet_enabled" in data:
+            self.stylesheet_enabled = data["stylesheet_enabled"]
+            del data["stylesheet_enabled"]
+
         if "github_username" in data:
             self.github_username = data["github_username"]
             del data["github_username"]
@@ -688,6 +705,7 @@ class Settings(QObject):
             "todds_overwrite": self.todds_overwrite,
             "current_instance": self.current_instance,
             "instances": self.instances,
+            "stylesheet_enabled": self.stylesheet_enabled,
             "github_username": self.github_username,
             "github_token": self.github_token,
             "steam_apikey": self.steam_apikey,

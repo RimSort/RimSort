@@ -771,6 +771,11 @@ class SettingsDialog(QDialog):
         )
         group_layout.addWidget(self.download_missing_mods_checkbox)
 
+        self.enable_stylesheet_checkbox = QCheckBox(
+            "Enable stylesheet (RimSort Restart required)"
+        )
+        group_layout.addWidget(self.enable_stylesheet_checkbox)
+
         github_identity_group = QGroupBox()
         tab_layout.addWidget(github_identity_group)
 

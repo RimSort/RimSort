@@ -21,14 +21,6 @@ class AppController(QObject):
 
         self.app = QApplication(sys.argv)
 
-        self.app.setStyle("Fusion")
-
-        self.app.setStyleSheet(  # Add style sheet for styling layouts and widgets
-            (
-                (AppInfo().application_folder / "themes" / "RimPy" / "style.qss")
-            ).read_text()
-        )
-
         # One-time initialization of userRules.json
         user_rules_path = AppInfo().databases_folder / "userRules.json"
         if not user_rules_path.exists():
@@ -59,6 +51,21 @@ class AppController(QObject):
         # Instantiate the main window and its controller
         self.main_window = MainWindow(settings_controller=self.settings_controller)
         self.main_window_controller = MainWindowController(self.main_window)
+
+        # Set stylesheet
+        if (
+            self.settings.instances[self.settings.current_instance].get(
+                "stylesheet_enabled", True
+            )
+        ) is True:
+            self.app.setStyleSheet(  # Add style sheet for styling layouts and widgets
+                (
+                    (AppInfo().application_folder / "themes" / "RimPy" / "style.qss")
+                ).read_text()
+            )
+
+        else:
+            self.app.setStyle("Fusion")
 
     def run(self) -> int:
         self.main_window.show()
