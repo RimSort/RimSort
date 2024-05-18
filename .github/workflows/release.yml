@@ -115,13 +115,14 @@ jobs:
           run-id: ${{ github.event.inputs.run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Add version to artifact filenames
+      - name: Add zip versioned artifact and remove old artifacts
         id: artifacts
         run: |
           cd artifacts
-          for artifact in ./* do
-            echo "Renaming $artifact to RimSort-${{ steps.version.outputs.version }}-$artifact"
-            mv "$artifact" "RimSort-${{ steps.version.outputs.version }}-$artifact"
+          for artifact in ./*; do
+            echo "Renaming $artifact to RimSort-${{ steps.version.outputs.version }}-$(basename ${artifact}).zip"
+            zip -r "RimSort-${{ steps.version.outputs.version }}-$(basename ${artifact}).zip" "$artifact"
+            rm -rf "$artifact"
           done
         shell: bash
 
