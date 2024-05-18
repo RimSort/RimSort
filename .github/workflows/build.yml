@@ -78,7 +78,7 @@ jobs:
         shell: bash
         run: |
           set -e
-          python distribute.py --skip-deps
+          python distribute.py --skip-pip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

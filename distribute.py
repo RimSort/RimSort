@@ -64,9 +64,12 @@ STEAMFILES_SRC = os.path.join(_CWD, "submodules", "steamfiles")
 SUBMODULE_UPDATE_INIT_CMD = ["git", "submodule", "update", "--init", "--recursive"]
 
 
-def get_rimsort_deps() -> None:
+def get_rimsort_pip() -> None:
     print("Installing core RimSort requirements with pip...")
     _execute(GET_REQ_CMD)
+
+
+def get_rimsort_submodules() -> None:
     print("Ensuring we have all submodules initiated & up-to-date...")
     _execute(SUBMODULE_UPDATE_INIT_CMD)
     # Get Steamfiles requirements
@@ -271,7 +274,7 @@ def build_steamworkspy() -> None:
     with ZipFile(BytesIO(handle_request(STEAMWORKS_SDK_URL).content)) as zipobj:
         zipobj.extractall(STEAMWORKS_PY_PATH)
 
-    print(f"Getting Steam headers...")
+    print("Getting Steam headers...")
     shutil.copytree(STEAMWORKS_SDK_HEADER_PATH, STEAMWORKS_SDK_HEADER_DEST_PATH)
 
     print("Getting Steam API lib file...")
@@ -434,9 +437,15 @@ def make_args():
 
     # Skip dependencies
     parser.add_argument(
-        "--skip-deps",
+        "--skip-pip",
         action="store_true",
-        help="Skip installing RimSort dependencies",
+        help="Skip installing RimSort pip requirements",
+    )
+
+    parser.add_argument(
+        "--skip-submodules",
+        action="store_true",
+        help="Skip installing RimSort submodules",
     )
 
     # Skip SteamworksPy Copy
@@ -476,11 +485,17 @@ def main():
     args = parser.parse_args()
 
     # RimSort dependencies
-    if not args.skip_deps:
-        print("Getting RimSort dependencies...")
-        get_rimsort_deps()
+    if not args.skip_pip:
+        print("Getting RimSort python requirements...")
+        get_rimsort_pip()
     else:
-        print("Skipping dependencies...")
+        print("Skipping getting python pip requirements...")
+
+    if not args.skip_submodules:
+        print("Getting RimSort submodules...")
+        get_rimsort_submodules()
+    else:
+        print("Skipping getting submodules...")
 
     if args.build_steamworkspy:
         print("Building SteamworksPy library. Skipping copy...")
