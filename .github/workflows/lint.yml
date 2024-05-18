@@ -2,6 +2,13 @@ name: Lint
 on:
     push: null
     pull_request: null
+    workflow_dispatch: 
+      inputs:
+        Validate_All_Codebase:
+          description: 'Run linters on entire codebase'
+          default: false
+          type: boolean
+
 
 permissions: { }
 
@@ -29,3 +36,19 @@ jobs:
         env:
           # To report GitHub Actions status checks
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_PYTHON_BLACK: true
+          VALIDATE_PYTHON_FLAKE8: true
+          VALIDATE_PYTHON_ISORT: true
+          VALIDATE_PYTHON_MYPY: true
+          VALIDATE_PYTHON_RUFF: true
+          VALIDATE_GITHUB_ACTIONS: true
+          VALIDATE_GITLEAKS: true
+          VALIDATE_JSON: true
+          VALIDATE_YAML: true
+          VALIDATE_BASH: true
+          VALIDATE_SHELL_SHFMT: true
+          VALIDATE_CHECKOV: true
+          VALIDATE_JSCPD: true
+          VALIDATE_MARKDOWN: true
+          VALIDATE_VALIDATE_NATURAL_LANGUAGE: true
+          VALIDATE_ALL_CODEBASE: ${{ github.event.inputs.Validate_All_Codebase }}
