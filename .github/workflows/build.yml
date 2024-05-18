@@ -18,20 +18,32 @@ jobs:
           - os: macos-13
             platform: "Darwin"
             arch: "i386"
+            env: 
+              BUILD_OUTPUT: "__main__.app"
           - os: macos-latest
             platform: "Darwin"
             arch: "arm"
+            env: 
+              BUILD_OUTPUT: "__main__.app"
           - os: ubuntu-latest
             platform: "Linux"
             arch: "x86_64"
+            env: 
+              BUILD_OUTPUT: "__main__.dist"
           - os: windows-latest
             platform: "Windows"
             arch: "x86_64"
+            env: 
+              BUILD_OUTPUT: "__main__.dist"
     steps:
       - name: Check-out repository
         uses: actions/checkout@v4
         with:
           submodules: recursive
+
+      - name: Clean build directory
+        run: rm -rf ./build
+        shell: bash
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -41,9 +53,26 @@ jobs:
           cache: "pip"
           cache-dependency-path: |
             **/requirements*.txt
-
+      
       - name: Install Dependencies
         run: pip install -r requirements.txt -r requirements_develop.txt
+
+      - name: Setup Environment Variables
+        id: env
+        shell: bash
+        run: |
+          echo "NUITKA_CACHE_DIR=${{ github.action_path }}/nuitka/cache" >> $GITHUB_OUTPUT
+          echo "PYTHON_VERSION=$(python --version | awk '{print $2}' | cut -d '.' -f 1,2)" >> $GITHUB_OUTPUT
+
+      - name: Cache build files
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.env.outputs.NUITKA_CACHE_DIR }}
+          key: ${{ runner.os }}_${{ matrix.platform }}_${{ matrix.arch }}-python-${{ steps.env.outputs.PYTHON_VERSION }}-nuitka-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}_${{ matrix.platform }}_${{ matrix.arch }}-python-${{ steps.env.outputs.PYTHON_VERSION }}-
+            ${{ runner.os }}_${{ matrix.platform }}_${{ matrix.arch }}-python-
+            ${{ runner.os }}_${{ matrix.platform }}_${{ matrix.arch }}-
 
       - name: Build
         shell: bash
@@ -61,11 +90,12 @@ jobs:
           echo "FILENAME=$FILENAME" >> $GITHUB_OUTPUT
         shell: bash
 
-      - name: Delete old build, rename new build
+      - name: Rename new build
         run: |
           rm -rf ./build/"${{ steps.filename.outputs.FILENAME }}"
-          mv "./build/" "./build/${{ steps.filename.outputs.FILENAME }}"
-       
+          mv "./build/${{ matrix.env.BUILD_OUTPUT }}" "./build/${{ steps.filename.outputs.FILENAME }}"
+        shell: bash
+
         # Upload folder as artifact
       - name: Upload folder as artifact
         uses: actions/upload-artifact@v4

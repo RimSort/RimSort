@@ -1,0 +1,51 @@
+# yamllint disable rule:line-length
+# yamllint disable rule:indentation
+# yamllint disable rule:comments-indentation
+# too many spelling things, spell-checker: disable
+---
+
+- module-name: 'app'
+  data-files:
+    dirs:
+      - 'themes'
+
+  dlls:
+    - from_filenames:
+        relative_path: '../todds'
+        prefixes:
+          - 'todds'
+        dest_path: 'todds'
+        executable: 'yes'
+
+    - from_filenames:
+        relative_path: '../libs'
+        patterns:
+          - '*.dll'
+        when: 'win32'
+    - from_filenames:
+        relative_path: '../libs'
+        patterns:
+          - '.so'
+        when: 'linux'
+    - from_filenames:
+        relative_path: '../libs'
+        patterns:
+          - '*arm.dylib'
+        when: 'macos and platform.machine() == "arm"'
+    - from_filenames:
+        relative_path: '../libs'
+        patterns:
+          - '*i386.dylib'
+        when: 'macos and platform.machine() == "i386"'
+    - from_filenames:
+        relative_path: '../libs'
+        patterns:
+          - '*api.dylib'
+        when: 'macos'
+
+  options:
+    checks:
+    - description: 'Mac Specific Build Options'
+      macos_bundle: 'yes'
+      macos_bundle_as_onefile: 'no'
+      when: 'macos'

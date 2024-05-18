@@ -114,7 +114,7 @@ jobs:
         id: artifacts
         run: |
           for artifact in artifacts/*; do
-            mv $artifact artifacts/RimSort-${{steps.version.outputs.version}}-${artifact}
+            mv "$artifact" "${RimSort-${{ steps.version.outputs.version }}-$(basename $artifact)}"
           done
         shell: bash
 
@@ -122,11 +122,12 @@ jobs:
         id: body
         run: |
           ACTION_RUN_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          body="This is a ${{ github.event.inputs.type }} release, version ${{steps.version.outputs.version}}.
+          message="This is a ${{ github.event.inputs.type }} release, version ${{steps.version.outputs.version}}.
           The latest commit is ${{ steps.sem_version.outputs.current_commit }}.
           
           Refer to the [action run]($ACTION_RUN_URL) that created this release."
-          echo "body=$body" >> $GITHUB_OUTPUT
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "body<<EOF"$'\n'"$message"$'\n'EOF >> $GITHUB_OUTPUT
         shell: bash
 
       - name: Delete last edge release

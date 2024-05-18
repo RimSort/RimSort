@@ -33,44 +33,28 @@ _NUITKA_CMD = [
     "--assume-yes-for-downloads",
     "--standalone",
     "--enable-plugin=pyside6",
-    "--include-data-dir=./themes/=themes",
-    "--include-data-dir=./todds/=todds",
     "--include-data-file=./update.sh=update.sh",
     "--include-data-file=./steam_appid.txt=steam_appid.txt",
     "--include-package=steamworks",
+    "--user-package-configuration-file=./rimsort.nuitka-package.config.yml",
     "app/__main__.py",
     "--output-dir=./build/",
     "--output-filename=RimSort",
     "--noinclude-default-mode=error",
     "--disable-console",
-]
-
-darwin = [
     "--macos-create-app-bundle",
     "--macos-app-icon=./themes/default-icons/AppIcon_a.icns",
-    f"--include-data-file=./libs/SteamworksPy_{_PROCESSOR}.dylib=SteamworksPy.dylib",
-    "--include-data-file=./libs/libsteam_api.dylib=libsteam_api.dylib",
-]
-
-linux = [
-    f"--include-data-file=./libs/SteamworksPy_{_PROCESSOR}.so=SteamworksPy.so",
-    "--include-data-file=./libs/libsteam_api.so=libsteam_api.so",
-]
-
-windows_64 = [
     "--windows-icon-from-ico=./themes/default-icons/AppIcon_a.png",
-    "--include-data-file=./libs/SteamworksPy64.dll=SteamworksPy64.dll",
-    "--include-data-file=./libs/steam_api64.dll=steam_api64.dll",
 ]
 
 print(f"Running on {_SYSTEM} {_ARCH} {_PROCESSOR}...")
 
 if _SYSTEM == "Darwin" and _PROCESSOR in ["i386", "arm"]:
-    _NUITKA_CMD.extend(darwin)
+    pass
 elif _SYSTEM == "Linux":
-    _NUITKA_CMD.extend(linux)
+    pass
 elif _SYSTEM == "Windows" and _ARCH == "64bit":
-    _NUITKA_CMD.extend(windows_64)
+    pass
 else:
     print(f"Unsupported SYSTEM: {_SYSTEM} {_ARCH} with {_PROCESSOR}")
     print("Exiting...")
