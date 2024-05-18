@@ -102,13 +102,13 @@ jobs:
         shell: bash
 
       - name: Download artifacts - Current Flow
-        if : ${{ github.event.inputs.skip_build != true }}
+        if : ${{ inputs.skip_build == false }}
         uses: actions/download-artifact@v4
         with:
           path: artifacts
 
       - name: Download artifacts - Previous FLow
-        if : ${{ github.event.inputs.skip_build == true }}
+        if : ${{ inputs.skip_build == true}}
         uses: actions/download-artifact@v4
         with:
           path: artifacts
