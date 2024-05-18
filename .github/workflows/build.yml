@@ -56,34 +56,17 @@ jobs:
       - name: Set FILENAME
         id: filename
         run: |
-          FILENAME="${{ matrix.platform }}_${{ matrix.arch }}.zip"
+          FILENAME="${{ matrix.platform }}_${{ matrix.arch }}"
           echo "FILENAME=$FILENAME" >> $GITHUB_OUTPUT
         shell: bash
 
-        # Create ZIP archive of release
-      - name: Create ZIP (Unix)
+      - name: Delete old build, rename new build
         run: |
-          if [[ "$(uname)" == "Darwin" ]]; then
-            DIST="RimSort.app"
-            if [ -d "build/$DIST" ]; then
-                echo "Existing build found. Deleting old build and replacing with a new build."
-                rm -rf "./build/$DIST"
-            fi
-            mv build/__main__.app ."/build/$DIST"
-          else    
-            DIST="RimSort"
-            if [ -d "build/$DIST" ]; then
-                echo "Existing build found. Deleting old build and replacing with a new build."
-                rm -rf "./build/$DIST"
-            fi
-            mv build/__main__.dist ."/build/$DIST"
-          fi
-          cd ./build/
-          zip -r ${{ steps.filename.outputs.FILENAME }} $DIST
-        shell: bash
-
-        # Upload ZIP as artifact
-      - name: Upload ZIP as artifact
+          rm -rf ./build/"${{ steps.filename.outputs.FILENAME }}"
+          mv ./build/ "${{ steps.filename.outputs.FILENAME }}"
+       
+        # Upload folder as artifact
+      - name: Upload folder as artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.filename.outputs.FILENAME }}
