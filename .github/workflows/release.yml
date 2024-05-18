@@ -119,7 +119,7 @@ jobs:
         id: artifacts
         run: |
           cd artifacts
-          for artifact in * do
+          for artifact in ./* do
             echo "Renaming $artifact to RimSort-${{ steps.version.outputs.version }}-$artifact"
             mv "$artifact" "RimSort-${{ steps.version.outputs.version }}-$artifact"
           done
