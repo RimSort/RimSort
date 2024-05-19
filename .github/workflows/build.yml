@@ -66,7 +66,7 @@ jobs:
           if [ "${{ matrix.platform }}" == "Windows" ]; then
             echo "PYTHONPATH=$PYTHONPATH;${{ github.workspace }}\submodules\SteamworksPy" >> "$GITHUB_OUTPUT"
           else
-            echo "PYTHONPATH=$PYTHONPATH;${{ github.workspace }}/submodules/SteamworksPy" >> "$GITHUB_OUTPUT"
+            echo "PYTHONPATH=$PYTHONPATH:${{ github.workspace }}/submodules/SteamworksPy" >> "$GITHUB_OUTPUT"
           fi
         shell: bash
 
@@ -134,7 +134,9 @@ jobs:
             update.bat=update.bat
             steam_appid.txt=steam_appid.txt
             version.xml=version.xml
-          include-package: steamworks
+          include-package: |
+            steamworks
+            submodules/SteamworksPy/steamworks
           user-package-configuration-file: rimsort.nuitka-package.config.yml
           disable-console: true
           macos-create-app-bundle: true
