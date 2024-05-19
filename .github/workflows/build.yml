@@ -96,6 +96,10 @@ jobs:
       - name: Install Dependencies
         run: pip install -r requirements.txt -r requirements_develop.txt
 
+      - name: Echo path for debugging
+        run: echo $PATH
+        shell: bash
+
       - name: Build
         shell: bash
         run: |

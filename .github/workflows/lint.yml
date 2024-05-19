@@ -1,16 +1,15 @@
 name: Lint
 on:
-    push: null
-    pull_request: null
-    workflow_dispatch: 
-      inputs:
-        Validate_All_Codebase:
-          description: 'Run linters on entire codebase'
-          default: false
-          type: boolean
+  push: null
+  pull_request: null
+  workflow_dispatch:
+    inputs:
+      Validate_All_Codebase:
+        description: "Run linters on entire codebase"
+        default: false
+        type: boolean
 
-
-permissions: { }
+permissions: {}
 
 jobs:
   build:
@@ -32,7 +31,7 @@ jobs:
           fetch-depth: 0
 
       - name: Super-linter
-        uses: super-linter/super-linter@v6.5.0  # x-release-please-version
+        uses: super-linter/super-linter@v6.5.0 # x-release-please-version
         env:
           # To report GitHub Actions status checks
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -52,3 +51,5 @@ jobs:
           VALIDATE_MARKDOWN: true
           VALIDATE_VALIDATE_NATURAL_LANGUAGE: true
           VALIDATE_ALL_CODEBASE: ${{ github.event.inputs.Validate_All_Codebase }}
+          # Linter not up to date
+          GITHUB_ACTIONS_COMMAND_ARGS: '--ignore ''"ubuntu-24.04" is unknown'''
