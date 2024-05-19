@@ -449,6 +449,7 @@ class Settings(QObject):
                             "config_folder": data.get("config_folder", ""),
                             "run_args": data.get("run_args", []),
                             "steamcmd_install_path": steamcmd_prefix_default_instance_path,
+                            "steam_client_integration": False,
                         }
                     }
                     steamcmd_prefix_to_mitigate = data.get("steamcmd_install_path")
