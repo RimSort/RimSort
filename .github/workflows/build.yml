@@ -60,10 +60,20 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
+      - name: Add submodules to pythonpath
+        id: pythonpath
+        run: |
+          if [ "${{ matrix.platform }}" == "Windows" ]; then
+            echo "PYTHONPATH=$PYTHONPATH;${{ github.workspace }}\submodules\SteamworksPy" >> $GITHUB_OUTPUT
+          else
+            echo "PYTHONPATH=$PYTHONPATH:${{ github.workspace }}/submodules/SteamworksPy" >> $GITHUB_OUTPUT
+          fi
+        shell: bash
+
       - name: Remove problematic brew libs
         run: |
           brew remove --force --ignore-dependencies openssl@3
-          brew cleanup
+          brew cleanup openssl@3
         if: runner.os == 'macos' && matrix.arch == 'i386'
 
       - name: Get semantic version
@@ -100,30 +110,48 @@ jobs:
             **/requirements*.txt
 
       - name: Install Dependencies
-        run: pip install -r requirements.txt -r requirements_develop.txt
+        run: pip install -r requirements.txt
 
-      - name: Build
+      - name: Pre-Build Actions
         shell: bash
         run: |
           set -e
-          echo "PATH=$PATH"
-          python distribute.py --skip-pip
+          python distribute.py --skip-pip --skip-build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build
         uses: Nuitka/Nuitka-Action@main
-        if: false
         with:
           nuitka-version: main
-          script-name: "app/__main__.py"
+          script-name: app/__main__.py
           standalone: true
-          enable-plugins: pyside6
+          enable-plugins: |
+            pyside6
           include-data-files: |
-            "./update.sh=update.sh"
-            "./steam_appid.txt=steam_appid.txt"
-            "./version.xml=version.xml"
+            update.sh=update.sh
+            update.bat=update.bat
+            steam_appid.txt=steam_appid.txt
+            version.xml=version.xml
           include-package: steamworks
+          user-package-configuration-file: rimsort.nuitka-package.config.yml
+          disable-console: true
+          macos-create-app-bundle: true
+          static-libpython: auto
+          macos-app-icon: themes/default-icons/AppIcon_a.icns
+          windows-icon-from-ico: themes/default-icons/AppIcon_a.png
+          product-version: >-
+            ${{ steps.sem_version.outputs.major }}.
+            ${{ steps.sem_version.outputs.minor }}.
+            ${{ steps.sem_version.outputs.patch }}.
+            ${{ steps.sem_version.outputs.increment }}
+          file-description: "An open source RimWorld mod manager."
+        env:
+          PYTHONPATH: ${{ steps.pythonpath.outputs.PYTHONPATH }}
+
+      - name: Echo ls for debugging
+        run: ls -la ./build
+        shell: bash
 
       - name: Set FILENAME
         id: filename

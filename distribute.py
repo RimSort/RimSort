@@ -68,14 +68,19 @@ else:
     print(f"Unsupported SYSTEM: {_SYSTEM} {_ARCH} with {_PROCESSOR}")
     print("Exiting...")
 GET_REQ_CMD = [PY_CMD, "-m", "pip", "install", "-r", "requirements.txt"]
+GET_REQ_CMD_BUILD = [PY_CMD, "-m", "pip", "install", "-r", "requirements_build.txt"]
 STEAMFILES_BUILD_CMD = [PY_CMD, "setup.py", "install"]
 STEAMFILES_SRC = os.path.join(_CWD, "submodules", "steamfiles")
 SUBMODULE_UPDATE_INIT_CMD = ["git", "submodule", "update", "--init", "--recursive"]
 
 
-def get_rimsort_pip() -> None:
+def get_rimsort_pip(skip_build: bool = False) -> None:
     print("Installing core RimSort requirements with pip...")
     _execute(GET_REQ_CMD)
+
+    if not skip_build:
+        print("Installing RimSort build requirements with pip...")
+        _execute(GET_REQ_CMD_BUILD)
 
 
 def get_rimsort_submodules() -> None:
@@ -416,13 +421,9 @@ def freeze_application() -> None:
     if "NUITKA_CACHE_DIR" in os.environ:
         print(f"NUITKA_CACHE_DIR: {os.environ['NUITKA_CACHE_DIR']}")
     # Set the PYTHONPATH environment variable to include your submodules directory
-    env = os.environ.copy()
-    env["PYTHONPATH"] = (
-        str((Path(_CWD) / "submodules" / "SteamworksPy"))
-        + os.pathsep
-        + env.get("PYTHONPATH", "")
-    )
-    _execute(_NUITKA_CMD, env=env)
+    os.environ["PYTHONPATH"] = os.path.join(_CWD, "submodules", "SteamworksPy")
+
+    _execute(_NUITKA_CMD, env=os.environ)
 
 
 def _execute(cmd: list[str], env=None) -> None:
@@ -499,7 +500,7 @@ def main():
     # RimSort dependencies
     if not args.skip_pip:
         print("Getting RimSort python requirements...")
-        get_rimsort_pip()
+        get_rimsort_pip(args.skip_build)
     else:
         print("Skipping getting python pip requirements...")
 
