@@ -161,7 +161,7 @@ jobs:
       - name: Rename new build
         run: |
           rm -rf "./build/${{ steps.filename.outputs.FILENAME }}"
-          mv "./build/${{ matrix.env.BUILD_OUTPUT }}" "./build/${{ steps.filename.outputs.FILENAME }}"
+          mv "./build/RimSort" "./build/${{ steps.filename.outputs.FILENAME }}"
         shell: bash
 
         # Upload folder as artifact
