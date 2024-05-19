@@ -60,6 +60,12 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
+      - name: remove brew
+        run: |
+          brew remove --force --ignore-dependencies $(brew list)
+          brew cleanup
+        if: runner.os == 'macos'
+
       - name: Get semantic version
         id: sem_version
         uses: PaulHatch/semantic-version@v5.4.0
@@ -95,10 +101,6 @@ jobs:
 
       - name: Install Dependencies
         run: pip install -r requirements.txt -r requirements_develop.txt
-
-      - name: Echo path for debugging
-        run: echo $PATH
-        shell: bash
 
       - name: Build
         shell: bash
