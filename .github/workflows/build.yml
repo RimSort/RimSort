@@ -64,7 +64,7 @@ jobs:
         run: |
           brew remove --force --ignore-dependencies $(brew list)
           brew cleanup
-        if: runner.os == 'macos'
+        if: runner.os == 'macos' && false
 
       - name: Get semantic version
         id: sem_version
@@ -102,6 +102,11 @@ jobs:
       - name: Install Dependencies
         run: pip install -r requirements.txt -r requirements_develop.txt
 
+      - name: Remove /usr/local/bin from path
+        run: |
+          export PATH=$(echo $PATH | sed -e 's/:\/usr\/local\/bin//')
+        if: runner.os == 'macos'
+      
       - name: Build
         shell: bash
         run: |
