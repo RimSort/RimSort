@@ -25,33 +25,9 @@ on:
 permissions: {}
 
 jobs:
-  build:
-    if: inputs.skip_build != true
-    permissions:
-      id-token: write
-      contents: read
-    uses: ./.github/workflows/build.yml
-
-  release:
-    permissions:
-      contents: write
-      packages: read
-      statuses: write
-    needs: build
+  pre-build:
     runs-on: ubuntu-latest
-    if: always()
     steps:
-      - name: Check Build or Skip
-        if: ${{ needs.build.result == 'failure'  }}
-        run: exit 1
-        shell: bash
-
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      # .patch
       - name: Determine version format
         id: version_format
         run: |
@@ -68,12 +44,44 @@ jobs:
           echo "version_format=$v_format" >> "$GITHUB_OUTPUT"
           echo "prerelease=$prerelease" >> "$GITHUB_OUTPUT"
         shell: bash
+    outputs:
+      version_format: ${{ steps.version_format.outputs.version_format }}
+      prerelease: ${{ steps.version_format.outputs.prerelease }}
+
+  build:
+    needs: pre-build
+    if: inputs.skip_build != true
+    permissions:
+      id-token: write
+      contents: read
+    uses: ./.github/workflows/build.yml
+    with:
+      version_format: ${{ needs.pre-build.outputs.version_format }}
+
+  release:
+    permissions:
+      contents: write
+      packages: read
+      statuses: write
+    needs: [build, pre-build]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check Build or Skip
+        if: ${{ needs.build.result == 'failure'  || needs.pre-build.result == 'failure'}}
+        run: exit 1
+        shell: bash
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Get semantic version
         id: sem_version
         uses: PaulHatch/semantic-version@v5.4.0
         with:
-          version_format: "${{ steps.version_format.outputs.version_format }}"
+          version_format: "${{ needs.pre-build.outputs.version_format }}"
           change_path: "app libs submodules themes"
 
       - name: Get short Sha
@@ -131,7 +139,7 @@ jobs:
             echo "Renaming $artifact to RimSort-${{ steps.version.outputs.version }}-$name.zip"
             mv "$artifact" "RimSort"
             zip -r "RimSort-${{ steps.version.outputs.version }}-$name.zip" "RimSort"
-            rm -rf "$artifact"
+            rm -rf "$artifact" "RimSort"
           done
         shell: bash
 
@@ -153,7 +161,7 @@ jobs:
           artifacts: artifacts/*
           tag: ${{ steps.tag.outputs.tag }}
           generateReleaseNotes: true
-          prerelease: ${{ steps.version_format.outputs.prerelease }}
+          prerelease: ${{ needs.pre-build.outputs.prerelease }}
           draft: ${{ github.event.inputs.draft }}
           body: ${{ steps.body.outputs.body }}
           allowUpdates: ${{ github.event.inputs.type == 'Edge' }}
