@@ -759,7 +759,7 @@ class ModListWidget(QListWidget):
                         # Only enable subscription actions if user has enabled Steam client integration
                         if self.settings_controller.settings.instances[
                             self.settings_controller.settings.current_instance
-                        ]["steam_client_integration"]:
+                        ].get("steam_client_integration"):
                             # Re-subscribe steam mods
                             re_steam_action = QAction()
                             re_steam_action.setText("Re-subscribe mod with Steam")
