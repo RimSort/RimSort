@@ -36,23 +36,8 @@
     - from_filenames:
         relative_path: "../libs"
         prefixes:
-          - "*arm"
-        suffixes:
-          - "dylib"
-      dest_path: "."
-      when: 'macos and platform.machine() == "arm"'
-    - from_filenames:
-        relative_path: "../libs"
-        prefixes:
-          - "*i386"
-        suffixes:
-          - "dylib"
-      dest_path: "."
-      when: 'macos and platform.machine() == "i386"'
-    - from_filenames:
-        relative_path: "../libs"
-        prefixes:
-          - "*api"
+          - "Libsteam*"
+          - "Steam*"
         suffixes:
           - "dylib"
       dest_path: "."
