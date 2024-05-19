@@ -60,11 +60,11 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
-      - name: remove brew
+      - name: Remove problematic brew libs
         run: |
-          brew remove --force --ignore-dependencies $(brew list)
+          brew remove --force --ignore-dependencies openssl@3
           brew cleanup
-        if: runner.os == 'macos' && false
+        if: runner.os == 'macos' && matrix.arch == 'i386'
 
       - name: Get semantic version
         id: sem_version
@@ -102,13 +102,7 @@ jobs:
       - name: Install Dependencies
         run: pip install -r requirements.txt -r requirements_develop.txt
 
-      - name: Remove /usr/local/bin from path (Intel Mac workaround)
-        run: |
-          export PATH=$(echo $PATH | sed -e 's/:\/usr\/local\/bin//')
-          echo "PATH=$PATH" >> "$GITHUB_ENV"
-        if: runner.os == 'macos' && matrix.arch == 'i386'
-
-      - name: Build (Standard)
+      - name: Build
         shell: bash
         run: |
           set -e
@@ -116,18 +110,6 @@ jobs:
           python distribute.py --skip-pip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        if: runner.os != 'macos' || matrix.arch == 'arm'
-
-      - name: Build (Intel Mac)
-        shell: bash
-        run: |
-          set -e
-          echo "PATH=$PATH"
-          python distribute.py --skip-pip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PATH: ${{ github.env.PATH }}
-        if: runner.os == 'macos' && matrix.arch == 'i386'
 
       - name: Build
         uses: Nuitka/Nuitka-Action@main
