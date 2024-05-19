@@ -102,18 +102,46 @@ jobs:
       - name: Install Dependencies
         run: pip install -r requirements.txt -r requirements_develop.txt
 
-      - name: Remove /usr/local/bin from path
+      - name: Remove /usr/local/bin from path (Intel Mac workaround)
         run: |
           export PATH=$(echo $PATH | sed -e 's/:\/usr\/local\/bin//')
-        if: runner.os == 'macos'
-      
-      - name: Build
+          echo "PATH=$PATH" >> "$GITHUB_ENV"
+        if: runner.os == 'macos' && matrix.arch == 'i386'
+
+      - name: Build (Standard)
         shell: bash
         run: |
           set -e
+          echo "PATH=$PATH"
           python distribute.py --skip-pip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: runner.os != 'macos' || matrix.arch == 'arm'
+
+      - name: Build (Intel Mac)
+        shell: bash
+        run: |
+          set -e
+          echo "PATH=$PATH"
+          python distribute.py --skip-pip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PATH: ${{ github.env.PATH }}
+        if: runner.os == 'macos' && matrix.arch == 'i386'
+
+      - name: Build
+        uses: Nuitka/Nuitka-Action@main
+        if: false
+        with:
+          nuitka-version: main
+          script-name: "app/__main__.py"
+          standalone: true
+          enable-plugins: pyside6
+          include-data-files: |
+            "./update.sh=update.sh"
+            "./steam_appid.txt=steam_appid.txt"
+            "./version.xml=version.xml"
+          include-package: steamworks
 
       - name: Set FILENAME
         id: filename
