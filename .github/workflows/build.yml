@@ -25,8 +25,13 @@ jobs:
             arch: "arm"
             env:
               BUILD_OUTPUT: "__main__.app"
-          - os: ubuntu-latest
-            platform: "Linux"
+          - os: ubuntu-22.04
+            platform: "Ubuntu-22.04"
+            arch: "x86_64"
+            env:
+              BUILD_OUTPUT: "__main__.dist"
+          - os: ubuntu-24.04
+            platform: "Ubuntu-24.04"
             arch: "x86_64"
             env:
               BUILD_OUTPUT: "__main__.dist"
