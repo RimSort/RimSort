@@ -55,7 +55,7 @@ jobs:
               BUILD_OUTPUT: "__main__.dist"
     steps:
       - name: Check-out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@main
         with:
           fetch-depth: 0
           submodules: recursive
@@ -101,7 +101,7 @@ jobs:
         shell: bash
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@main
         with:
           python-version: "3.11"
           architecture: "x64" # optional x64 or x86. Defaults to x64 if not specified
@@ -125,6 +125,7 @@ jobs:
         with:
           nuitka-version: main
           script-name: app/__main__.py
+          output-file: RimSort
           standalone: true
           enable-plugins: |
             pyside6
@@ -149,10 +150,6 @@ jobs:
         env:
           PYTHONPATH: ${{ steps.pythonpath.outputs.PYTHONPATH }}
 
-      - name: Echo ls for debugging
-        run: ls -la ./build
-        shell: bash
-
       - name: Set FILENAME
         id: filename
         run: |
@@ -169,7 +166,7 @@ jobs:
 
         # Upload folder as artifact
       - name: Upload folder as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@main
         with:
           name: ${{ steps.filename.outputs.FILENAME }}
           path: ./build/${{ steps.filename.outputs.FILENAME }}
