@@ -429,9 +429,12 @@ def _execute(cmd: list[str], env=None) -> None:
     print(f"\nExecuting command: {cmd}\n")
     p = subprocess.Popen(cmd, env=env)
     p.wait()
+    if p.returncode != 0:
+        print(f"Command failed: {cmd}")
+        sys.exit(p.returncode)
 
 
-def handle_request(url: str, headers: dict = None) -> requests.Response:
+def handle_request(url: str, headers: dict | None = None) -> requests.Response:
     raw = requests.get(url, headers=headers)
     if raw.status_code != 200:
         raise Exception(
