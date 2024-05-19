@@ -66,7 +66,7 @@ jobs:
           if [ "${{ matrix.platform }}" == "Windows" ]; then
             echo "PYTHONPATH=$PYTHONPATH;${{ github.workspace }}\submodules\SteamworksPy" >> "$GITHUB_OUTPUT"
           else
-            echo "PYTHONPATH=$PYTHONPATH:${{ github.workspace }}/submodules/SteamworksPy" >> "$GITHUB_OUTPUT"
+            echo "PYTHONPATH=$PYTHONPATH;${{ github.workspace }}/submodules/SteamworksPy" >> "$GITHUB_OUTPUT"
           fi
         shell: bash
 
