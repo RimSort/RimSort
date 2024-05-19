@@ -1,7 +1,19 @@
 name: Build
 on:
-  workflow_call: null
-  workflow_dispatch: null
+  workflow_call:
+    inputs:
+      version_format:
+        description: "Versioning format"
+        required: false
+        type: string
+        default: "v${major}.${minor}.${patch}"
+  workflow_dispatch:
+    inputs:
+      version_format:
+        description: "Versioning format"
+        required: false
+        type: string
+        default: "v${major}.${minor}.${patch}"
 
 permissions: {}
 
@@ -45,6 +57,28 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+
+      - name: Get semantic version
+        id: sem_version
+        uses: PaulHatch/semantic-version@v5.4.0
+        with:
+          version_format: "${{ inputs.version_format }}"
+          change_path: "app libs submodules themes"
+
+      - name: Make (overwrite) version.xml
+        id: version_xml
+        run: |
+          rm -f version.xml
+          echo "<version>" > version.xml
+          echo "  <version>${{ steps.sem_version.outputs.version  }}</version>" >> version.xml
+          echo "  <major>${{ steps.sem_version.outputs.major }}</major>" >> version.xml
+          echo "  <minor>${{ steps.sem_version.outputs.minor }}</minor>" >> version.xml
+          echo "  <patch>${{ steps.sem_version.outputs.patch }}</patch>" >> version.xml
+          echo "  <increment>${{ steps.sem_version.outputs.increment }}</increment>" >> version.xml
+          echo "  <commit>${{ steps.sem_version.outputs.current_commit   }}</commit>" >> version.xml
+          echo "  <tag>${{ steps.sem_version.outputs.version_tag  }}</tag>" >> version.xml
+          echo "</version>" >> version.xml
+        shell: bash
 
       - name: Setup Python
         uses: actions/setup-python@v5
