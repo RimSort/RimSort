@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
     QPushButton,
 )
 from loguru import logger
+from lxml import etree, objectify
 
 from app.controllers.menu_bar_controller import MenuBarController
 from app.controllers.settings_controller import SettingsController
@@ -64,14 +65,17 @@ class MainWindow(QMainWindow):
         # SteamCMDInterface
         self.steamcmd_wrapper = SteamcmdInterface.instance()
         # Content initialization should only fire on startup. Otherwise, this is handled by Refresh button
-        self.version_string = "Alpha-v1.0.6.2-hf"
 
-        # Check for SHA and append to version string if found
-        sha_file = str(AppInfo().application_folder / "SHA")
-        if os.path.exists(sha_file):
-            with open(sha_file, encoding="utf-8") as f:
-                sha = f.read().strip()
-            self.version_string += f" [Edge {sha}]"
+        # Read version string from version.xml in root folder
+        self.version_string = "Unknown version"
+        version_file = str(AppInfo().application_folder / "version.xml")
+        if os.path.exists(version_file):
+            root = objectify.parse(version_file, parser=etree.XMLParser(recover=True))
+            self.version_string = root.find("version").text
+
+            # If edge in version_string, append short sha
+            if "edge" in self.version_string.lower():
+                self.version_string += f"+{root.find('commit').text[:7]}"
 
         # Watchdog
         self.watchdog_event_handler: Optional[WatchdogHandler] = None
