@@ -69,15 +69,17 @@ jobs:
         id: version_xml
         run: |
           rm -f version.xml
-          echo "<version>" > version.xml
-          echo "  <version>${{ steps.sem_version.outputs.version  }}</version>" >> version.xml
-          echo "  <major>${{ steps.sem_version.outputs.major }}</major>" >> version.xml
-          echo "  <minor>${{ steps.sem_version.outputs.minor }}</minor>" >> version.xml
-          echo "  <patch>${{ steps.sem_version.outputs.patch }}</patch>" >> version.xml
-          echo "  <increment>${{ steps.sem_version.outputs.increment }}</increment>" >> version.xml
-          echo "  <commit>${{ steps.sem_version.outputs.current_commit   }}</commit>" >> version.xml
-          echo "  <tag>${{ steps.sem_version.outputs.version_tag  }}</tag>" >> version.xml
-          echo "</version>" >> version.xml
+          {
+          echo "<version>"
+          echo "  <version>${{ steps.sem_version.outputs.version  }}</version>"
+          echo "  <major>${{ steps.sem_version.outputs.major }}</major>"
+          echo "  <minor>${{ steps.sem_version.outputs.minor }}</minor>"
+          echo "  <patch>${{ steps.sem_version.outputs.patch }}</patch>"
+          echo "  <increment>${{ steps.sem_version.outputs.increment }}</increment>"
+          echo "  <commit>${{ steps.sem_version.outputs.current_commit   }}</commit>"
+          echo "  <tag>${{ steps.sem_version.outputs.version_tag  }}</tag>"
+          echo "</version>"
+          } >> version.xml
         shell: bash
 
       - name: Setup Python
