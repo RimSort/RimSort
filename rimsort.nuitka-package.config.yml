@@ -6,7 +6,7 @@
 - module-name: "app"
   data-files:
     dirs:
-      - "themes"
+      - "../themes"
 
   dlls:
     - from_filenames:
