@@ -36,8 +36,23 @@
     - from_filenames:
         relative_path: "../libs"
         prefixes:
-          - "Libsteam*"
-          - "Steam*"
+          - "*arm"
+        suffixes:
+          - "dylib"
+      dest_path: "."
+      when: "macos and arch_arm64"
+    - from_filenames:
+        relative_path: "../libs"
+        prefixes:
+          - "*i386"
+        suffixes:
+          - "dylib"
+      dest_path: "."
+      when: "macos and arch_amd64"
+    - from_filenames:
+        relative_path: "../libs"
+        prefixes:
+          - "libsteam*"
         suffixes:
           - "dylib"
       dest_path: "."
