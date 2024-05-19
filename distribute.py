@@ -37,14 +37,14 @@ _NUITKA_CMD = [
     "--include-data-file=./steam_appid.txt=steam_appid.txt",
     "--include-package=steamworks",
     "--user-package-configuration-file=./rimsort.nuitka-package.config.yml",
-    "app/__main__.py",
-    "--output-dir=./build/",
-    "--output-filename=RimSort",
     "--noinclude-default-mode=error",
     "--disable-console",
     "--macos-create-app-bundle",
     "--macos-app-icon=./themes/default-icons/AppIcon_a.icns",
     "--windows-icon-from-ico=./themes/default-icons/AppIcon_a.png",
+    "app/__main__.py",
+    "--output-dir=./build/",
+    "--output-filename=RimSort",
 ]
 
 print(f"Running on {_SYSTEM} {_ARCH} {_PROCESSOR}...")
