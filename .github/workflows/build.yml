@@ -32,12 +32,12 @@ jobs:
             platform: "Darwin"
             arch: "i386"
             env:
-              BUILD_OUTPUT: "__main__.app"
+              BUILD_OUTPUT: "RimSort"
           - os: macos-latest
             platform: "Darwin"
             arch: "arm"
             env:
-              BUILD_OUTPUT: "__main__.app"
+              BUILD_OUTPUT: "RimSort"
           - os: ubuntu-22.04
             platform: "Ubuntu-22.04"
             arch: "x86_64"
@@ -138,6 +138,7 @@ jobs:
           user-package-configuration-file: rimsort.nuitka-package.config.yml
           disable-console: true
           macos-create-app-bundle: true
+          onefile: false
           static-libpython: auto
           macos-app-icon: themes/default-icons/AppIcon_a.icns
           windows-icon-from-ico: themes/default-icons/AppIcon_a.png
@@ -161,7 +162,7 @@ jobs:
       - name: Rename new build
         run: |
           rm -rf "./build/${{ steps.filename.outputs.FILENAME }}"
-          mv "./build/RimSort" "./build/${{ steps.filename.outputs.FILENAME }}"
+          mv "./build/${{ matrix.env.BUILD_OUTPUT }}" "./build/${{ steps.filename.outputs.FILENAME }}"
         shell: bash
 
         # Upload folder as artifact
