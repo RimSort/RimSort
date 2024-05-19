@@ -76,11 +76,18 @@ jobs:
           version_format: "${{ steps.version_format.outputs.version_format }}"
           change_path: "app libs submodules themes"
 
+      - name: Get short Sha
+        id: short_sha
+        run: |
+          short_sha=$(echo "${{ steps.sem_version.outputs.current_commit }}" | cut -c1-7)
+          echo "short_sha=$short_sha" >> "$GITHUB_OUTPUT"
+        shell: bash
+
       - name: Get final version
         id: version
         run: |
           if [[ "${{ github.event.inputs.type }}" == "Edge" ]]; then
-          version="${{steps.sem_version.outputs.version}}+${{steps.sem_version.outputs.current_commit}}"
+          version="${{steps.sem_version.outputs.version}}+${{steps.short_sha.outputs.short_sha}}"
           else
           version="${{steps.sem_version.outputs.version}}"
           fi
@@ -115,14 +122,15 @@ jobs:
           run-id: ${{ github.event.inputs.run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Add zip versioned artifact and remove old artifacts
+      - name: Rename artifacts and zip to versioned file
         id: artifacts
         run: |
           cd artifacts
           for artifact in ./*; do
             name="$(basename "${artifact}")"
             echo "Renaming $artifact to RimSort-${{ steps.version.outputs.version }}-$name.zip"
-            zip -r "RimSort-${{ steps.version.outputs.version }}-$name.zip" "$artifact"
+            mv "$artifact" "RimSort"
+            zip -r "RimSort-${{ steps.version.outputs.version }}-$name.zip" "RimSort"
             rm -rf "$artifact"
           done
         shell: bash
