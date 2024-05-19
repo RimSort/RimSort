@@ -42,10 +42,19 @@ _NUITKA_CMD = [
     "--macos-create-app-bundle",
     "--macos-app-icon=./themes/default-icons/AppIcon_a.icns",
     "--windows-icon-from-ico=./themes/default-icons/AppIcon_a.png",
-    "app/__main__.py",
-    "--output-dir=./build/",
-    "--output-filename=RimSort",
 ]
+
+# If version.xml exists in root, add it to the Nuitka command
+if os.path.exists("version.xml"):
+    _NUITKA_CMD.append("--include-data-file=./version.xml=version.xml")
+
+_NUITKA_CMD.extend(
+    [
+        "app/__main__.py",
+        "--output-dir=./build/",
+        "--output-filename=RimSort",
+    ]
+)
 
 print(f"Running on {_SYSTEM} {_ARCH} {_PROCESSOR}...")
 
