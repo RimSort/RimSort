@@ -136,7 +136,7 @@ jobs:
             version.xml=version.xml
           include-package: |
             steamworks
-            submodules/SteamworksPy/steamworks
+            submodules.SteamworksPy.steamworks
           user-package-configuration-file: rimsort.nuitka-package.config.yml
           disable-console: true
           macos-create-app-bundle: true
