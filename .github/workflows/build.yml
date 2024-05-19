@@ -53,23 +53,6 @@ jobs:
       - name: Install Dependencies
         run: pip install -r requirements.txt -r requirements_develop.txt
 
-      - name: Setup Environment Variables
-        id: env
-        shell: bash
-        run: |
-          echo "NUITKA_CACHE_DIR=${{ github.action_path }}/build/__main__.build" >> "$GITHUB_OUTPUT"
-          echo "PYTHON_VERSION=$(python --version | awk '{print $2}' | cut -d '.' -f 1,2)" >> "$GITHUB_OUTPUT"
-
-      - name: Cache build files
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.env.outputs.NUITKA_CACHE_DIR }}
-          key: ${{ runner.os }}_${{ matrix.platform }}_${{ matrix.arch }}-python-${{ steps.env.outputs.PYTHON_VERSION }}-nuitka-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}_${{ matrix.platform }}_${{ matrix.arch }}-python-${{ steps.env.outputs.PYTHON_VERSION }}-
-            ${{ runner.os }}_${{ matrix.platform }}_${{ matrix.arch }}-python-
-            ${{ runner.os }}_${{ matrix.platform }}_${{ matrix.arch }}-
-
       - name: Build
         shell: bash
         run: |
