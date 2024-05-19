@@ -150,6 +150,7 @@ jobs:
           body: ${{ steps.body.outputs.body }}
           allowUpdates: ${{ github.event.inputs.type == 'Edge' }}
           removeArtifacts: true
+          commit: ${{ steps.sem_version.outputs.current_commit }}
 
       - name: Echo Release URL
         run: |
