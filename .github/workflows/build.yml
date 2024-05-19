@@ -32,12 +32,12 @@ jobs:
             platform: "Darwin"
             arch: "i386"
             env:
-              BUILD_OUTPUT: "RimSort"
+              BUILD_OUTPUT: "__main__.app"
           - os: macos-latest
             platform: "Darwin"
             arch: "arm"
             env:
-              BUILD_OUTPUT: "RimSort"
+              BUILD_OUTPUT: "__main__.app"
           - os: ubuntu-22.04
             platform: "Ubuntu-22.04"
             arch: "x86_64"
