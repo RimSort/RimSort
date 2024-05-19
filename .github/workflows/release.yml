@@ -91,7 +91,7 @@ jobs:
           echo "short_sha=$short_sha" >> "$GITHUB_OUTPUT"
         shell: bash
 
-      - name: Get final version
+      - name: Get version string
         id: version
         run: |
           if [[ "${{ github.event.inputs.type }}" == "Edge" ]]; then
@@ -154,11 +154,13 @@ jobs:
           echo "body<<EOF"$'\n'"$message"$'\n'EOF >> "$GITHUB_OUTPUT"
         shell: bash
 
-      - name: If edge release, delete last edge release github cli
+      - name: Delete Previous Edge Release
         if: ${{ github.event.inputs.type == 'Edge' }}
         run: |
           gh release delete Edge -y
         shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create Release
         uses: ncipollo/release-action@v1.14.0
