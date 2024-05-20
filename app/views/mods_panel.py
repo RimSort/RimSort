@@ -55,15 +55,6 @@ from app.utils.generic import (
 )
 from app.utils.metadata import MetadataManager
 
-# Constants
-AlignCenter = Qt.AlignmentFlag.AlignCenter
-AlignRight = Qt.AlignmentFlag.AlignRight
-AlignLeft = Qt.AlignmentFlag.AlignLeft
-UserRole = Qt.ItemDataRole.UserRole
-MoveAction = Qt.DropAction.MoveAction
-QueuedConnection = Qt.ConnectionType.QueuedConnection
-ElideRight = Qt.TextElideMode.ElideRight
-
 
 class ClickableQLabel(QLabel):
     clicked = Signal()
@@ -251,18 +242,26 @@ class ModListItemInner(QWidget):
             self.main_label.setObjectName("ListItemLabel")
         # Add icons
         if self.git_icon:
-            self.main_item_layout.addWidget(self.git_icon, AlignRight)
+            self.main_item_layout.addWidget(self.git_icon, Qt.AlignmentFlag.AlignRight)
         if self.steamcmd_icon:
-            self.main_item_layout.addWidget(self.steamcmd_icon, AlignRight)
+            self.main_item_layout.addWidget(
+                self.steamcmd_icon, Qt.AlignmentFlag.AlignRight
+            )
         if self.mod_source_icon:
-            self.main_item_layout.addWidget(self.mod_source_icon, AlignRight)
+            self.main_item_layout.addWidget(
+                self.mod_source_icon, Qt.AlignmentFlag.AlignRight
+            )
         if self.csharp_icon:
-            self.main_item_layout.addWidget(self.csharp_icon, AlignRight)
+            self.main_item_layout.addWidget(
+                self.csharp_icon, Qt.AlignmentFlag.AlignRight
+            )
         if self.xml_icon:
-            self.main_item_layout.addWidget(self.xml_icon, AlignRight)
+            self.main_item_layout.addWidget(self.xml_icon, Qt.AlignmentFlag.AlignRight)
         # Compose the layout of our widget and set it to the main layout
-        self.main_item_layout.addWidget(self.main_label, AlignCenter)
-        self.main_item_layout.addWidget(self.warning_icon_label, AlignRight)
+        self.main_item_layout.addWidget(self.main_label, Qt.AlignmentFlag.AlignCenter)
+        self.main_item_layout.addWidget(
+            self.warning_icon_label, Qt.AlignmentFlag.AlignRight
+        )
         self.main_item_layout.addStretch()
         self.setLayout(self.main_item_layout)
 
@@ -371,7 +370,7 @@ class ModListItemInner(QWidget):
         if text_width_needed > self.item_width - icon_width:
             available_width = self.item_width - icon_width
             shortened_text = self.font_metrics.elidedText(
-                self.list_item_name, ElideRight, int(available_width)
+                self.list_item_name, Qt.TextElideMode.ElideRight, int(available_width)
             )
             self.main_label.setText(str(shortened_text))
         else:
@@ -382,7 +381,7 @@ class ModListItemInner(QWidget):
         """
         Repolish the widget items
         """
-        item_data = item.data(UserRole)
+        item_data = item.data(Qt.ItemDataRole.UserRole)
         tooltip = item_data["errors_warnings"]
         # Set the warning icon to be visible if necessary and set the tool tip
         if tooltip:
@@ -522,7 +521,7 @@ class ModListWidget(QListWidget):
         super(ModListWidget, self).__init__()
 
         # Allow for dragging and dropping between lists
-        self.setDefaultDropAction(MoveAction)
+        self.setDefaultDropAction(Qt.DropAction.MoveAction)
         self.setDragDropMode(QAbstractItemView.DragDropMode.DragDrop)
 
         # Allow for selecting and moving multiple items
@@ -549,11 +548,13 @@ class ModListWidget(QListWidget):
         self.itemChanged.connect(self.handle_item_data_changed)
 
         # Allow inserting custom list items
-        self.model().rowsInserted.connect(self.handle_rows_inserted, QueuedConnection)
+        self.model().rowsInserted.connect(
+            self.handle_rows_inserted, Qt.ConnectionType.QueuedConnection
+        )
 
         # Handle removing items to update count
         self.model().rowsAboutToBeRemoved.connect(
-            self.handle_rows_removed, QueuedConnection
+            self.handle_rows_removed, Qt.ConnectionType.QueuedConnection
         )
 
         # Lazy load ModListItemInner
@@ -570,11 +571,14 @@ class ModListWidget(QListWidget):
         # Get the drop action
         drop_action = event.dropAction()
         # Check if the drop action is MoveAction
-        if drop_action == MoveAction:
+        if drop_action == Qt.DropAction.MoveAction:
             # Get the new indexes of the dropped items
             new_indexes = [index.row() for index in self.selectedIndexes()]
             # Get the UUIDs of the dropped items
-            uuids = [item.data(UserRole)["uuid"] for item in self.selectedItems()]
+            uuids = [
+                item.data(Qt.ItemDataRole.UserRole)["uuid"]
+                for item in self.selectedItems()
+            ]
             # Insert the UUIDs at the respective new indexes
             for idx, uuid in zip(new_indexes, uuids):
                 if uuid in self.uuids:  # Remove the uuid if it exists in the list
@@ -680,7 +684,7 @@ class ModListWidget(QListWidget):
                 logger.debug(f"{len(selected_items)} items selected")
                 source_item = selected_items[0]
                 if type(source_item) is QListWidgetItem:
-                    item_data = source_item.data(UserRole)
+                    item_data = source_item.data(Qt.ItemDataRole.UserRole)
                     uuid = item_data["uuid"]
                     # Retrieve metadata
                     mod_metadata = self.metadata_manager.internal_local_metadata[uuid]
@@ -812,7 +816,7 @@ class ModListWidget(QListWidget):
             elif len(selected_items) > 1:  # Multiple items selected
                 for source_item in selected_items:
                     if type(source_item) is QListWidgetItem:
-                        item_data = source_item.data(UserRole)
+                        item_data = source_item.data(Qt.ItemDataRole.UserRole)
                         uuid = item_data["uuid"]
                         # Retrieve metadata
                         mod_metadata = self.metadata_manager.internal_local_metadata[
@@ -1259,7 +1263,7 @@ class ModListWidget(QListWidget):
                     if answer == "&Yes":
                         for source_item in selected_items:
                             if type(source_item) is QListWidgetItem:
-                                item_data = source_item.data(UserRole)
+                                item_data = source_item.data(Qt.ItemDataRole.UserRole)
                                 uuid = item_data["uuid"]
                                 mod_metadata = (
                                     self.metadata_manager.internal_local_metadata[uuid]
@@ -1293,7 +1297,7 @@ class ModListWidget(QListWidget):
                     if answer == "&Yes":
                         for source_item in selected_items:
                             if type(source_item) is QListWidgetItem:
-                                item_data = source_item.data(UserRole)
+                                item_data = source_item.data(Qt.ItemDataRole.UserRole)
                                 uuid = item_data["uuid"]
                                 mod_metadata = (
                                     self.metadata_manager.internal_local_metadata[uuid]
@@ -1305,7 +1309,7 @@ class ModListWidget(QListWidget):
                                 ].startswith(
                                     "ludeon.rimworld"
                                 ):
-                                    data = source_item.data(UserRole)
+                                    data = source_item.data(Qt.ItemDataRole.UserRole)
                                     self.uuids.remove(data["uuid"])
                                     delete_files_except_extension(
                                         directory=mod_metadata["path"],
@@ -1322,7 +1326,7 @@ class ModListWidget(QListWidget):
                     if answer == "&Yes":
                         for source_item in selected_items:
                             if type(source_item) is QListWidgetItem:
-                                item_data = source_item.data(UserRole)
+                                item_data = source_item.data(Qt.ItemDataRole.UserRole)
                                 uuid = item_data["uuid"]
                                 mod_metadata = (
                                     self.metadata_manager.internal_local_metadata[uuid]
@@ -1334,7 +1338,7 @@ class ModListWidget(QListWidget):
                                 ].startswith(
                                     "ludeon.rimworld"
                                 ):
-                                    data = source_item.data(UserRole)
+                                    data = source_item.data(Qt.ItemDataRole.UserRole)
                                     self.uuids.remove(data["uuid"])
                                     delete_files_only_extension(
                                         directory=mod_metadata["path"],
@@ -1344,7 +1348,7 @@ class ModListWidget(QListWidget):
                 # Execute action for each selected mod
                 for source_item in selected_items:
                     if type(source_item) is QListWidgetItem:
-                        item_data = source_item.data(UserRole)
+                        item_data = source_item.data(Qt.ItemDataRole.UserRole)
                         uuid = item_data["uuid"]
                         # Retrieve metadata
                         mod_metadata = self.metadata_manager.internal_local_metadata[
@@ -1474,7 +1478,7 @@ class ModListWidget(QListWidget):
             "uuid": uuid,
         }
         item = QListWidgetItem(self)
-        item.setData(UserRole, data)
+        item.setData(Qt.ItemDataRole.UserRole, data)
         self.addItem(item)
 
     def check_item_visible(self, item: QListWidgetItem) -> bool:
@@ -1483,7 +1487,7 @@ class ModListWidget(QListWidget):
         return rect.top() < self.viewport().height() and rect.bottom() > 0
 
     def create_widget_for_item(self, item: QListWidgetItem) -> None:
-        data = item.data(UserRole)
+        data = item.data(Qt.ItemDataRole.UserRole)
         errors_warnings = data["errors_warnings"]
         filtered = data["filtered"]
         invalid = data["invalid"]
@@ -1562,7 +1566,7 @@ class ModListWidget(QListWidget):
         for idx in range(first, last + 1):
             item = self.item(idx)
             if item:
-                data = item.data(UserRole)
+                data = item.data(Qt.ItemDataRole.UserRole)
                 uuid = data["uuid"]
                 self.uuids.insert(idx, uuid)
                 self.item_added_signal.emit(uuid)
@@ -1613,7 +1617,7 @@ class ModListWidget(QListWidget):
         the keyboard. Look up the mod's data by uuid
         """
         if current is not None:
-            data = current.data(UserRole)
+            data = current.data(Qt.ItemDataRole.UserRole)
             self.mod_info_signal.emit(data["uuid"])
 
     def mod_clicked(self, current: QListWidgetItem) -> None:
@@ -1625,7 +1629,7 @@ class ModListWidget(QListWidget):
         it so that mod info is updated as expected.
         """
         if current is not None:
-            data = current.data(UserRole)
+            data = current.data(Qt.ItemDataRole.UserRole)
             self.mod_info_signal.emit(data["uuid"])
             mod_info = self.metadata_manager.internal_local_metadata[data["uuid"]]
             mod_info = set_to_list(mod_info)
@@ -1693,7 +1697,7 @@ class ModListWidget(QListWidget):
         for uuid, mod_errors in package_id_to_errors.items():
             current_mod_index = self.uuids.index(uuid)
             current_item = self.item(current_mod_index)
-            current_item_data = current_item.data(UserRole)
+            current_item_data = current_item.data(Qt.ItemDataRole.UserRole)
             mod_data = internal_local_metadata[uuid]
             # Check mod supportedversions against currently loaded version of game
             mod_errors["version_mismatch"] = self.metadata_manager.is_version_mismatch(
@@ -1798,7 +1802,7 @@ class ModListWidget(QListWidget):
                 total_warning_text += tool_tip_text
             # Add tooltip to item data and set the data back to the item
             current_item_data["errors_warnings"] = tool_tip_text
-            current_item.setData(UserRole, current_item_data)
+            current_item.setData(Qt.ItemDataRole.UserRole, current_item_data)
         logger.info(f"Finished recalculating {self.list_type} list errors")
         return total_error_text, total_warning_text, num_errors, num_warnings
 
@@ -1837,7 +1841,7 @@ class ModListWidget(QListWidget):
             for uuid_key in uuids:
                 list_item = QListWidgetItem(self)
                 list_item.setData(
-                    UserRole,
+                    Qt.ItemDataRole.UserRole,
                     {
                         "errors_warnings": "",
                         "filtered": False,
@@ -1914,7 +1918,7 @@ class ModsPanel(QWidget):
 
         # ACTIVE mod list widget
         self.active_mods_label = QLabel("Active [0]")
-        self.active_mods_label.setAlignment(AlignCenter)
+        self.active_mods_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.active_mods_label.setObjectName("summaryValue")
         self.active_mods_list = ModListWidget(
             list_type="Active",
@@ -1998,7 +2002,7 @@ class ModsPanel(QWidget):
 
         # INACTIVE mod list widgets
         self.inactive_mods_label = QLabel("Inactive [0]")
-        self.inactive_mods_label.setAlignment(AlignCenter)
+        self.inactive_mods_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.inactive_mods_label.setObjectName("summaryValue")
         self.inactive_mods_list = ModListWidget(
             list_type="Inactive",
@@ -2215,7 +2219,7 @@ class ModsPanel(QWidget):
                 if list_type == "Active"
                 else self.inactive_mods_list.item(uuids.index(uuid))
             )
-            item_data = item.data(UserRole)
+            item_data = item.data(Qt.ItemDataRole.UserRole)
             # Check if the item is valid
             metadata = self.metadata_manager.internal_local_metadata[uuid]
             invalid = item_data["invalid"]
@@ -2248,7 +2252,7 @@ class ModsPanel(QWidget):
                     item.setHidden(False)
             # Update item data
             item_data["filtered"] = item_filtered
-            item.setData(UserRole, item_data)
+            item.setData(Qt.ItemDataRole.UserRole, item_data)
         self.mod_list_updated(str(len(uuids)), list_type)
 
     def signal_search_mode_filter(self, list_type: str) -> None:
@@ -2323,7 +2327,7 @@ class ModsPanel(QWidget):
                 if list_type == "Active"
                 else self.inactive_mods_list.item(uuids.index(uuid))
             )
-            item_data = item.data(UserRole)
+            item_data = item.data(Qt.ItemDataRole.UserRole)
             item_filtered = item_data["filtered"]
             widget = mods_list.itemWidget(item)
             if item.isHidden() or item_filtered:

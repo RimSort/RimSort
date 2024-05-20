@@ -39,7 +39,7 @@ class ModUpdaterPrompt(QWidget):
         self.updates_available_label = QLabel(
             "There updates available for Workshop mods!"
         )
-        self.updates_available_label.setAlignment(Qt.AlignCenter)
+        self.updates_available_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # CONTAINER LAYOUTS
         self.upper_layout = QVBoxLayout()
@@ -55,7 +55,7 @@ class ModUpdaterPrompt(QWidget):
         self.details_label = QLabel(
             "\nThe following table displays Workshop mods available for update from Steam."
         )
-        self.details_label.setAlignment(Qt.AlignCenter)
+        self.details_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # EDITOR WIDGETS
         # Create the model and set column headers
@@ -75,26 +75,30 @@ class ModUpdaterPrompt(QWidget):
         self.editor_table_view = QTableView()
         self.editor_table_view.setModel(self.editor_model)
         self.editor_table_view.setSortingEnabled(True)  # Enable sorting on the columns
-        self.editor_table_view.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.editor_table_view.setSelectionMode(QAbstractItemView.NoSelection)
+        self.editor_table_view.setEditTriggers(
+            QAbstractItemView.EditTrigger.NoEditTriggers
+        )
+        self.editor_table_view.setSelectionMode(
+            QAbstractItemView.SelectionMode.NoSelection
+        )
         # Set default stretch for each column
         self.editor_table_view.horizontalHeader().setSectionResizeMode(
-            0, QHeaderView.ResizeToContents
+            0, QHeaderView.ResizeMode.ResizeToContents
         )
         self.editor_table_view.horizontalHeader().setSectionResizeMode(
-            1, QHeaderView.Stretch
+            1, QHeaderView.ResizeMode.Stretch
         )
         self.editor_table_view.horizontalHeader().setSectionResizeMode(
-            2, QHeaderView.ResizeToContents
+            2, QHeaderView.ResizeMode.ResizeToContents
         )
         self.editor_table_view.horizontalHeader().setSectionResizeMode(
-            3, QHeaderView.ResizeToContents
+            3, QHeaderView.ResizeMode.ResizeToContents
         )
         self.editor_table_view.horizontalHeader().setSectionResizeMode(
-            4, QHeaderView.ResizeToContents
+            4, QHeaderView.ResizeMode.ResizeToContents
         )
         self.editor_table_view.horizontalHeader().setSectionResizeMode(
-            5, QHeaderView.ResizeToContents
+            5, QHeaderView.ResizeMode.ResizeToContents
         )
         self.editor_deselect_all_button = QPushButton("Deselect all")
         self.editor_deselect_all_button.clicked.connect(
