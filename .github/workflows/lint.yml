@@ -2,12 +2,6 @@ name: Lint
 on:
   push: null
   pull_request: null
-  workflow_dispatch:
-    inputs:
-      Validate_All_Codebase:
-        description: "Run linters on entire codebase"
-        default: false
-        type: boolean
 
 permissions: {}
 
@@ -50,6 +44,5 @@ jobs:
           VALIDATE_JSCPD: true
           VALIDATE_MARKDOWN: true
           VALIDATE_VALIDATE_NATURAL_LANGUAGE: true
-          VALIDATE_ALL_CODEBASE: ${{ github.event.inputs.Validate_All_Codebase }}
           # Linter not up to date
           GITHUB_ACTIONS_COMMAND_ARGS: '--ignore ''"ubuntu-24.04" is unknown'''
