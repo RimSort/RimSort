@@ -110,18 +110,19 @@ jobs:
             **/requirements*.txt
 
       - name: Install Dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r requirements.txt -r requirements-build.txt
 
       - name: Pre-Build Actions
         shell: bash
         run: |
           set -e
-          python distribute.py --skip-pip --skip-build
+          python distribute.py --skip-pip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build
         uses: Nuitka/Nuitka-Action@main
+        if: false
         with:
           nuitka-version: main
           script-name: app/__main__.py
