@@ -181,7 +181,7 @@ jobs:
       - name: Upload folder as artifact
         uses: actions/upload-artifact@main
         with:
-          name: ${{ steps.filename.outputs.FILENAME }}.tar
+          name: ${{ steps.filename.outputs.FILENAME }}
           path: ./build/${{ steps.filename.outputs.FILENAME }}.tar
           if-no-files-found: error
     outputs:
