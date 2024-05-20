@@ -1,25 +1,26 @@
 {
-    "saveAndRunExt": {
-        "commands": [
-            {
-                "match": ".*\\.py",
-                "isShellCommand": false,
-                "cmd": "autoflake.removeUnused"
-            },
-        ]
-    },
-    "editor.formatOnType": true,
-    "editor.formatOnPaste": true,
-    "editor.formatOnSave": true,
-    "search.maxResults": 100000,
-    "editor.defaultFormatter": "ms-python.black-formatter",
-    "python.terminal.activateEnvironment": true,
-    "python.terminal.activateEnvInCurrentTerminal": true,
-    "mypy.runUsingActiveInterpreter": true,
-    "autoDocstring.docstringFormat": "sphinx",
-    "cSpell.words": [
-        "joseasoler",
-        "rimsort"
-    ],
-    "python.analysis.typeCheckingMode": "basic"
+  "saveAndRunExt": {
+    "commands": [
+      {
+        "match": ".*\\.py",
+        "isShellCommand": false,
+        "cmd": "autoflake.removeUnused"
+      }
+    ]
+  },
+  "editor.formatOnType": true,
+  "editor.formatOnPaste": true,
+  "editor.formatOnSave": true,
+  "search.maxResults": 100000,
+  "editor.defaultFormatter": "ms-python.black-formatter",
+  "python.terminal.activateEnvironment": true,
+  "python.terminal.activateEnvInCurrentTerminal": true,
+  "mypy.runUsingActiveInterpreter": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": true
+  },
+  "autoDocstring.docstringFormat": "sphinx",
+  "cSpell.words": ["joseasoler", "rimsort"],
+  "python.analysis.typeCheckingMode": "basic",
+  "isort.args": ["--profile", "black"]
 }

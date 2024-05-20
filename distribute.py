@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 
 import argparse
-from io import BytesIO
 import os
 import platform
-import requests
 import shutil
-from stat import S_IEXEC
 import subprocess
 import sys
+from io import BytesIO
+from stat import S_IEXEC
 from zipfile import ZipFile
+
+import requests
 
 """
 Setup environment
