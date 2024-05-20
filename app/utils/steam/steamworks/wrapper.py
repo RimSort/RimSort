@@ -14,7 +14,7 @@ from loguru import logger
 if "__compiled__" not in globals():
     sys.path.append(str((Path(getcwd()) / "submodules" / "SteamworksPy")))
 
-from submodules.SteamworksPy.steamworks import STEAMWORKS
+from steamworks import STEAMWORKS
 from app.utils.generic import launch_game_process
 
 
