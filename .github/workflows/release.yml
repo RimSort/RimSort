@@ -142,8 +142,7 @@ jobs:
               rootname=RimSort.app
             fi
             # Untar
-            tar -xf "${artifact##*/}" 
-            mv "output" "$rootname"
+            mv "${artifact##*/}" "$rootname"
             zip -r "RimSort-${{ steps.version.outputs.version }}-$name.zip" "$rootname"
             rm -rf "$artifact" "$rootname"
           done
