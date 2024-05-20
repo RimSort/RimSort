@@ -142,10 +142,12 @@ jobs:
             if [[ $name == *"Darwin"* ]]; then
               rootname=RimSort.app
             fi
+            ls -la
+            cd "$artifact"
             tar -xf "$file"
             mv "output" "$rootname"
-            ls -la
             zip -r "RimSort-${{ steps.version.outputs.version }}-$base.zip" "$rootname"
+            cd ..
             rm -rf "$artifact" "$rootname"
           done
         shell: bash
