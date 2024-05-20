@@ -145,6 +145,7 @@ jobs:
             ls -la
             cd "$artifact"
             tar -xf "$file"
+            ls
             mv "output" "$rootname"
             zip -r "RimSort-${{ steps.version.outputs.version }}-$base.zip" "$rootname"
             cd ..
