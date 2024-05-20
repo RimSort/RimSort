@@ -110,7 +110,7 @@ jobs:
             **/requirements*.txt
 
       - name: Install Dependencies
-        run: pip install -r requirements.txt -r requirements-build.txt
+        run: pip install -r requirements.txt -r requirements_build.txt
 
       - name: Pre-Build Actions
         shell: bash
