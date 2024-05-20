@@ -170,11 +170,10 @@ jobs:
 
       - name: Rename new build
         run: |
-          rm -rf "./build/output"
-          mv "./build/${{ matrix.env.BUILD_OUTPUT }}" "./build/output"
-          rm -rf "./build/${{ steps.filename.outputs.FILENAME }}.tar"
-          tar -cf "./build/${{ steps.filename.outputs.FILENAME }}.tar" "./build/output" 
-          rm -rf "./build/output"
+          cd build
+          mv "${{ matrix.env.BUILD_OUTPUT }}" "output"
+          tar -cvf "${{ steps.filename.outputs.FILENAME }}.tar" "output" 
+          rm -rf "output"
         shell: bash
 
         # Upload folder as artifact
