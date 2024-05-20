@@ -43,7 +43,6 @@ _NUITKA_CMD = [
     "--macos-create-app-bundle",
     "--macos-app-icon=./themes/default-icons/AppIcon_a.icns",
     "--windows-icon-from-ico=./themes/default-icons/AppIcon_a.png",
-    "--file-description=An open source RimWorld mod manager.",
 ]
 
 # If version.xml exists in root, add it to the Nuitka command
@@ -495,7 +494,7 @@ def make_args():
         "--product-version",
         type=str,
         help="Product version to use for the build. Formatted as MAJOR.MINOR.PATCH.INCREMENT",
-        required=False
+        required=False,
     )
 
     return parser
@@ -536,7 +535,12 @@ def main():
     # Build Nuitka distributable binary
     if not args.skip_build:
         if args.product_version:
-            _NUITKA_CMD.extend(["--product-version", args.product_version])
+            _NUITKA_CMD.extend(
+                [
+                    "--file-description=An open source RimWorld mod manager.",
+                    f"--product-version={args.product_version}",
+                ]
+            )
 
         print("Building RimSort application with Nuitka...")
         freeze_application()

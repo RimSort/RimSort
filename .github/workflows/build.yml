@@ -116,7 +116,12 @@ jobs:
         shell: bash
         run: |
           set -e
-          python distribute.py --skip-pip
+          python distribute.py \
+          --skip-pip \
+          --product-version='${{ steps.sem_version.outputs.major }}.
+            ${{ steps.sem_version.outputs.minor }}.
+            ${{ steps.sem_version.outputs.patch }}.
+            ${{ steps.sem_version.outputs.increment }}'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
