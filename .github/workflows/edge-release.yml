@@ -46,6 +46,12 @@ jobs:
             '^libxcb.*-dev'
           # Install Nuitka dependencies
           sudo apt install -y build-essential ccache clang patchelf
+      # Remove problematic brew libs if Intel Mac
+      - name: Remove problematic brew libs
+        run: |
+          brew remove --force --ignore-dependencies openssl@3
+          brew cleanup openssl@3
+        if: runner.os == 'macos' && matrix.arch == 'i386'
       # Check-out repository (Unix)
       - name: Checkout code at triggered tag (Unix)
         if: matrix.platform != 'Windows'
