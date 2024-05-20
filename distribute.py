@@ -3,7 +3,6 @@
 import argparse
 from io import BytesIO
 import os
-from pathlib import Path
 import platform
 import requests
 import shutil
@@ -427,7 +426,7 @@ def freeze_application() -> None:
     _execute(_NUITKA_CMD, env=os.environ)
 
 
-def _execute(cmd: list[str], env=None) -> None:
+def _execute(cmd: list[str], env: subprocess._ENV | None = None) -> None:
     print(f"\nExecuting command: {cmd}\n")
     p = subprocess.Popen(cmd, env=env)
     p.wait()
@@ -436,7 +435,9 @@ def _execute(cmd: list[str], env=None) -> None:
         sys.exit(p.returncode)
 
 
-def handle_request(url: str, headers: dict | None = None) -> requests.Response:
+def handle_request(
+    url: str, headers: dict[str, str] | None = None
+) -> requests.Response:
     raw = requests.get(url, headers=headers)
     if raw.status_code != 200:
         raise Exception(
@@ -445,7 +446,7 @@ def handle_request(url: str, headers: dict | None = None) -> requests.Response:
     return raw
 
 
-def make_args():
+def make_args() -> argparse.ArgumentParser:
     # Create the parser
     parser = argparse.ArgumentParser(description="Distribute RimSort")
 
@@ -500,7 +501,7 @@ def make_args():
     return parser
 
 
-def main():
+def main() -> None:
     # Parse arguments
     parser = make_args()
     args = parser.parse_args()
