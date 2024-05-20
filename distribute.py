@@ -427,7 +427,7 @@ def freeze_application() -> None:
     _execute(_NUITKA_CMD, env=os.environ)
 
 
-def _execute(cmd: list[str], env: subprocess._ENV | None = None) -> None:
+def _execute(cmd: list[str], env: os._Environ | None = None) -> None:
     print(f"\nExecuting command: {cmd}\n")
     p = subprocess.Popen(cmd, env=env)
     p.wait()
