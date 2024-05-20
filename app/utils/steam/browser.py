@@ -232,7 +232,10 @@ class SteamBrowser(QWidget):
             for metadata in collection_mods_webapi_response:
                 # Retrieve the published mod's title from the response
                 pfid = metadata["publishedfileid"]
-                collection_mods_pfid_to_title[pfid] = metadata["title"]
+                if "title" in metadata:
+                    collection_mods_pfid_to_title[pfid] = metadata["title"]
+                else:
+                    collection_mods_pfid_to_title[pfid] = metadata["publishedfileid"]
         return collection_mods_pfid_to_title
 
     def _add_mod_to_list(
