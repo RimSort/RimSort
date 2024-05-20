@@ -46,7 +46,7 @@ class MissingModsPrompt(QWidget):
         self.missing_mods_label = QLabel(
             "There are mods missing from the active mods list!"
         )
-        self.missing_mods_label.setAlignment(Qt.AlignCenter)
+        self.missing_mods_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # CONTAINER LAYOUTS
         self.upper_layout = QVBoxLayout()
@@ -64,7 +64,7 @@ class MissingModsPrompt(QWidget):
             + '\n\nRimworld mods on Steam Workshop that share a packageId are "variants". Please keep this in mind before downloading. '
             + "\n\nPlease select your preferred mod variant in the table below. You can also open each variant in Steam/Web browser to verify."
         )
-        self.details_label.setAlignment(Qt.AlignCenter)
+        self.details_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # EDITOR WIDGETS
         # Create the model and set column headers
@@ -83,23 +83,27 @@ class MissingModsPrompt(QWidget):
         self.editor_table_view = QTableView()
         self.editor_table_view.setModel(self.editor_model)
         self.editor_table_view.setSortingEnabled(True)  # Enable sorting on the columns
-        self.editor_table_view.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.editor_table_view.setSelectionMode(QAbstractItemView.NoSelection)
+        self.editor_table_view.setEditTriggers(
+            QAbstractItemView.EditTrigger.NoEditTriggers
+        )
+        self.editor_table_view.setSelectionMode(
+            QAbstractItemView.SelectionMode.NoSelection
+        )
         # Set default stretch for each column
         self.editor_table_view.horizontalHeader().setSectionResizeMode(
-            0, QHeaderView.Stretch
+            0, QHeaderView.ResizeMode.Stretch
         )
         self.editor_table_view.horizontalHeader().setSectionResizeMode(
-            1, QHeaderView.Stretch
+            1, QHeaderView.ResizeMode.Stretch
         )
         self.editor_table_view.horizontalHeader().setSectionResizeMode(
-            2, QHeaderView.ResizeToContents
+            2, QHeaderView.ResizeMode.ResizeToContents
         )
         self.editor_table_view.horizontalHeader().setSectionResizeMode(
-            3, QHeaderView.ResizeToContents
+            3, QHeaderView.ResizeMode.ResizeToContents
         )
         self.editor_table_view.horizontalHeader().setSectionResizeMode(
-            4, QHeaderView.ResizeToContents
+            4, QHeaderView.ResizeMode.ResizeToContents
         )
         self.editor_cancel_button = QPushButton("Do nothing and exit")
         self.editor_cancel_button.clicked.connect(self.close)
