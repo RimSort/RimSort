@@ -135,14 +135,14 @@ jobs:
         run: |
           cd artifacts
           for artifact in ./*; do
-            name="$(basename "${artifact}")"
+            name="${artifact%.*}"
             echo "Renaming $artifact to RimSort-${{ steps.version.outputs.version }}-$name.zip"
             rootname=RimSort
             if [[ $name == *"Darwin"* ]]; then
               rootname=RimSort.app
             fi
             # Untar
-            tar -xf "${name}.tar" 
+            tar -xf "${artifact##*/}" 
             mv "output" "$rootname"
             zip -r "RimSort-${{ steps.version.outputs.version }}-$name.zip" "$rootname"
             rm -rf "$artifact" "$rootname"
