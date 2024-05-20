@@ -135,7 +135,7 @@ jobs:
         run: |
           cd artifacts
           for artifact in ./*; do
-            name="${artifact%.*}"
+            name="${artifact%%.*}"
             echo "Renaming $artifact to RimSort-${{ steps.version.outputs.version }}-$name.zip"
             rootname=RimSort
             if [[ $name == *"Darwin"* ]]; then
