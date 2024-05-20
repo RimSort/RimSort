@@ -1,14 +1,11 @@
 from functools import partial
-import time
 
-from PySide6.QtCore import Qt, QPoint, QSize, Signal
-from PySide6.QtGui import (
-    QIcon,
-    QStandardItemModel,
-    QStandardItem,
-)
+from loguru import logger
+from PySide6.QtCore import QPoint, QSize, Qt, Signal
+from PySide6.QtGui import QIcon, QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import (
     QCheckBox,
+    QHBoxLayout,
     QHeaderView,
     QItemDelegate,
     QLabel,
@@ -19,11 +16,9 @@ from PySide6.QtWidgets import (
     QPushButton,
     QTableView,
     QToolButton,
-    QWidget,
-    QHBoxLayout,
     QVBoxLayout,
+    QWidget,
 )
-from loguru import logger
 
 from app.models.dialogue import show_dialogue_input, show_warning
 from app.utils.app_info import AppInfo
@@ -499,7 +494,8 @@ class RuleEditor(QWidget):
                 # Add a new row in the editor - prompt user to enter a comment for their rule addition
                 args, ok = show_dialogue_input(
                     title="Enter comment",
-                    label="Enter a comment to annotate why this rule exists. This is useful for your own records, as well as others.",
+                    label="""Enter a comment to annotate why this rule exists.
+                      This is useful for your own records, as well as others.""",
                 )
                 if ok:
                     comment = args
@@ -631,7 +627,7 @@ class RuleEditor(QWidget):
             and len(self.metadata_manager.internal_local_metadata.keys()) > 0
         ):
             for metadata in self.metadata_manager.internal_local_metadata.values():
-                # Local metadata rulez
+                # Local metadata rule
                 # Additionally, populate anything that is not exit_packageid into the mods list
                 if (
                     metadata.get("packageid")
@@ -641,6 +637,7 @@ class RuleEditor(QWidget):
                     self.edit_name = metadata["name"]
                     self.mod_label.setText(f"Editing rules for: {self.edit_name}")
                     # All Lowercase!!!
+                    # cSpell:enableCompoundWords
                     rule_types = {
                         "loadafter": self.local_metadata_loadAfter_list,
                         "loadbefore": self.local_metadata_loadBefore_list,
@@ -760,7 +757,7 @@ class RuleEditor(QWidget):
                         )
 
         logger.debug("Parsing Community Rules")
-        # Community Rules rulez
+        # Community Rules rules
         _parse_rules(
             rules=self.community_rules,
             loadAfter_list=self.external_community_rules_loadAfter_list,
@@ -771,7 +768,7 @@ class RuleEditor(QWidget):
         )
 
         logger.debug("Parsing User Rules")
-        # User Rules rulez
+        # User Rules rules
         _parse_rules(
             rules=self.user_rules,
             loadAfter_list=self.external_user_rules_loadAfter_list,
@@ -840,7 +837,7 @@ class RuleEditor(QWidget):
         # Iterate through all widgets in layout
         for i in range(layout.count()):
             item = layout.itemAt(i)
-            if not "visibility" in locals():  # We only need to set this once per pass
+            if "visibility" not in locals():  # We only need to set this once per pass
                 visibility = item.widget().isVisible()
                 # Override so we can toggle this upon initialization if we want to
                 if override:
@@ -990,7 +987,7 @@ class RuleEditor(QWidget):
         open_mod.triggered.connect(
             partial(self._open_mod_in_editor, context_item=context_item)
         )
-        action = context_menu.exec_(self.mods_list.mapToGlobal(point))
+        _ = context_menu.exec_(self.mods_list.mapToGlobal(point))
 
     def ruleItemContextMenuEvent(self, point: QPoint, _list: QListWidget) -> None:
         context_menu = QMenu(self)  # Rule item context menu event
@@ -1003,7 +1000,7 @@ class RuleEditor(QWidget):
                 _list=_list,
             )
         )
-        action = context_menu.exec_(_list.mapToGlobal(point))
+        _ = context_menu.exec_(_list.mapToGlobal(point))
 
     def clear_mods_search(self) -> None:
         self.mods_search.setText("")
