@@ -535,10 +535,11 @@ def main():
     # Build Nuitka distributable binary
     if not args.skip_build:
         if args.product_version:
+            version = "".join(args.product_version.split())
             _NUITKA_CMD.extend(
                 [
                     "--file-description=An open source RimWorld mod manager.",
-                    f"--product-version={args.product_version}",
+                    f"--product-version={version}",
                 ]
             )
 
