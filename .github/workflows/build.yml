@@ -169,16 +169,19 @@ jobs:
 
       - name: Rename new build
         run: |
-          rm -rf "./build/${{ steps.filename.outputs.FILENAME }}"
-          mv "./build/${{ matrix.env.BUILD_OUTPUT }}" "./build/${{ steps.filename.outputs.FILENAME }}"
+          rm -rf "./build/output"
+          mv "./build/${{ matrix.env.BUILD_OUTPUT }}" "./build/output"
+          rm -rf "./build/${{ steps.filename.outputs.FILENAME }}.tar"
+          tar -cf "./build/${{ steps.filename.outputs.FILENAME }}.tar" "./build/output" 
+          rm -rf "./build/output"
         shell: bash
 
         # Upload folder as artifact
       - name: Upload folder as artifact
         uses: actions/upload-artifact@main
         with:
-          name: ${{ steps.filename.outputs.FILENAME }}
-          path: ./build/${{ steps.filename.outputs.FILENAME }}
+          name: ${{ steps.filename.outputs.FILENAME }}.tar
+          path: ./build/${{ steps.filename.outputs.FILENAME }}.tar
           if-no-files-found: error
     outputs:
       filename: ${{ steps.filename.outputs.FILENAME }}
