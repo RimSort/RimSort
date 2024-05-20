@@ -1,8 +1,7 @@
-from functools import partial
-import json
-from pathlib import Path
 import os
+from functools import partial
 from threading import Timer
+from typing import Optional
 from uuid import uuid4
 
 from PySide6.QtCore import QObject, Signal
