@@ -21,7 +21,7 @@
         - i386 utilizes GitHub's macos-13 runner
         - arm utilizes GitHub's macos-latest (macos-14 at the time of writing) runner
       - For Windows, we utilize Github's windows-latest (Windows 2022 at the time of writing) runner
-  - Install the latest version of [Python](https://python.org/) 3.11 for your platform
+  - Install the latest version of [Python](https://python.org/) 3.11 for your platform. (CPython recommended)
 - For a (mostly automated) experience building RimSort, please execute the provided script:
   - Run `python distribute.py`
     - This will build RimSort for your platform and output a build for your platform (Including all requirements and submodules)
@@ -45,10 +45,14 @@
 
 ### Setting up Python & dependencies
 
-- RimSort uses Python, and depends on several Python modules. You can install/view all of the above dependencies via `requirements.txt`. You can install them all at once by executing the command at the project root:
+- RimSort uses Python, and depends on several Python modules. You can install/view most of the above dependencies via `requirements.txt`. You can install them all at once by executing the command at the project root:
 
   - `pip install -r requirements.txt`
-  - Note that `requirements.txt` includes a module that needs to be built manually, and requires that the project submodules are updated
+  - Note that `requirements.txt`
+
+- There are **steamfiles** and **SteamworksPy** dependencies can't be installed with just requirements.txt for various reasons
+
+  - See their respective sections for information on how to set them up. Alternatively, use `distribute.py` to do so automatically. By default the script will build RimSort, but it can be configured to enable or disable various steps including building. See `python distribute.py --help` for more info.
 
 - If you are using a Mac with an Apple M1/M2 CPU, the following instructions also work for i386, if you would rather use MacPorts over Homebrew or another method. Consider the following:
 
@@ -63,9 +67,8 @@
 
 ### Setting up steamfiles module
 
-- You can setup this module using the following commands:
-  - `cd steamfiles`
-  - `pip install -r requirements.txt`
+- You can setup this module by running pip install on the module
+  - `pip install -e submodules/steamfiles`
 
 ### Using SteamworksPy binaries
 
@@ -131,7 +134,7 @@ Please ensure if you have any feature request to check if there is already somet
 
 ### Misc Coding Style
 
-- The preferred Python formatter is: black (`pip3 install black`)
+- The preferred Python formatter is: black (`pip install black`)
   - Here is a nice little article for [VSCode](https://dev.to/adamlombard/how-to-use-the-black-python-code-formatter-in-vscode-3lo0)
 - The preferred Docstring format is: [Sphinx reST](https://sphinx-rtd-tutorial.readthedocs.io/en/latest/docstrings.html)
 - Type annotations should be added to function/method signatures
@@ -142,3 +145,4 @@ Please ensure if you have any feature request to check if there is already somet
   - Set it up like such: [Stack Overflow](https://stackoverflow.com/a/67941822)
 - For quick setup, you can install some of the dependencies described above to automate your development:
   - `pip install -r requirements_develop.txt`
+- VSCode workspace settings are included
