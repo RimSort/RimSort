@@ -79,7 +79,7 @@ jobs:
       - name: Find executable
         id: find
         run: |
-          find . -type f -name ${{ matrix.env.EXPECTED_NAME }} >> $found
+          FOUND=$(find . -type f -name ${{ matrix.env.EXPECTED_NAME }})
           echo "FOUND=$(cat $found)" >> $GITHUB_OUTPUT
         shell: bash
 
