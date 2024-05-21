@@ -6,7 +6,7 @@ on:
         description: "Versioning format"
         required: false
         type: string
-        default: Stable
+        default: "Auto-Build"
       format_only:
         description: "Only get version format"
         required: false
