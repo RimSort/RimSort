@@ -4,12 +4,19 @@
 name: Test Builds
 on:
   workflow_call: null
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "Run ID to grab artifacts from if skipping build"
+        type: number
+        required: true
 
 permissions: {}
 
 jobs:
   test:
     runs-on: ${{ matrix.os }}
+    continue-on-error: true
     strategy:
       fail-fast: false
       matrix:
@@ -19,23 +26,86 @@ jobs:
             arch: "i386"
             env:
               ARTIFACT_KEY: "Darwin_i386"
+              EXPECTED_PATH: "RimSort.app/MacOS/RimSort"
+              EXPECTED_NAME: "RimSort"
           - os: macos-latest
-            platform: "Darwin"
             arch: "arm"
+            platform: "Darwin"
             env:
-              ARTIFACT_KEY: "Darwin_arm"
+              ARTIFACT_KEY_GLOB: "*Darwin_arm*"
+              EXPECTED_PATH: "RimSort.app/MacOS/RimSort"
+              EXPECTED_NAME: "RimSort"
           - os: ubuntu-22.04
             platform: "Ubuntu-22.04"
             arch: "x86_64"
             env:
-              ARTIFACT_KEY: "Ubuntu-22"
+              ARTIFACT_KEY_GLOB: "*Ubuntu-22*"
+              EXPECTED_PATH: "RimSort/RimSort"
+              EXPECTED_NAME: "RimSort"
           - os: ubuntu-24.04
             platform: "Ubuntu-24.04"
             arch: "x86_64"
             env:
-              ARTIFACT_KEY: "Ubuntu-24"
+              ARTIFACT_KEY_GLOB: "*Ubuntu-24*"
+              EXPECTED_PATH: "RimSort/RimSort"
+              EXPECTED_NAME: "RimSort"
           - os: windows-latest
             platform: "Windows"
             arch: "x86_64"
             env:
-              ARTIFACT_KEY: "Windows_x86_64"
+              ARTIFACT_KEY_GLOB: "*Windows_x86_64*"
+              EXPECTED_PATH: "RimSort/RimSort.exe"
+              EXPECTED_NAME: "RimSort.exe"
+    steps:
+      - name: Download artifact from previous run
+        if: ${{ github.event.inputs.run_id != null }}
+        uses: actions/download-artifact@v4.1.7
+        with:
+          pattern: ${{ matrix.env.ARTIFACT_KEY }}
+          run-id: ${{ github.event.inputs.run_id }}
+
+      - name: Download artifact from current run
+        uses: actions/download-artifact@v4.1.7
+        with:
+          pattern: ${{ matrix.env.ARTIFACT_KEY_GLOB }}
+
+      - name: Unzip artifact
+        run: |
+          unzip -q *.zip
+
+      - name: Find executable
+        run: |
+          find . -type f -name ${{ matrix.env.EXPECTED_NAME }} >> found.txt
+
+      - name: Check if a found file matches expected path
+        run: |
+          if [[ -s found.txt ]]; then
+            found=$(cat found.txt)
+            if [[ $found == *"${{ matrix.env.EXPECTED_PATH }}" ]]; then
+              echo "Found executable at $found"
+            else
+              echo "Found executable at $found, expected ${{ matrix.env.EXPECTED_PATH }}"
+              exit 1
+            fi
+          else
+            echo "No executable found matching expected name ${{ matrix.env.EXPECTED_NAME }}"
+            exit 1
+          fi
+
+      - name: Check executable permissions
+        run: |
+          if [[ -x $found ]]; then
+            echo "Executable is executable"
+          else
+            echo "Executable is not executable"
+            chmod +x $found
+            exit 1
+          fi
+
+      - name: Run executable. Attempt to run the executable, waits 10 seconds, then kills it.
+        run: |
+          $found &
+          sleep 10
+          kill $!
+          wait $!
+          echo "Executable ran successfully"
