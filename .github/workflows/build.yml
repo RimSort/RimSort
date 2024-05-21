@@ -61,8 +61,7 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
-      - name: Add submodules to pythonpath (Disabled)
-        if: false
+      - name: Add submodules to pythonpath
         id: pythonpath
         run: |
           if [ "${{ matrix.platform }}" == "Windows" ]; then
@@ -123,41 +122,28 @@ jobs:
           --product-version='${{ steps.sem_version.outputs.major }}.
             ${{ steps.sem_version.outputs.minor }}.
             ${{ steps.sem_version.outputs.patch }}.
-            ${{ steps.sem_version.outputs.increment }}'
+            ${{ steps.sem_version.outputs.increment }}' \
+          --skip-build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build (Disabled)
+      - name: Build
         uses: Nuitka/Nuitka-Action@main
-        if: false
+        if: true
         with:
           nuitka-version: main
           script-name: app/__main__.py
-          output-file: RimSort
-          standalone: true
-          enable-plugins: |
-            pyside6
-          include-data-files: |
-            update.sh=update.sh
-            update.bat=update.bat
-            steam_appid.txt=steam_appid.txt
-            version.xml=version.xml
-          include-package: |
-            steamworks
-            submodules.SteamworksPy.steamworks
-          user-package-configuration-file: rimsort.nuitka-package.config.yml
           disable-console: true
-          macos-create-app-bundle: true
           onefile: false
           static-libpython: auto
-          macos-app-icon: themes/default-icons/AppIcon_a.icns
-          windows-icon-from-ico: themes/default-icons/AppIcon_a.png
           product-version: >-
             ${{ steps.sem_version.outputs.major }}.
             ${{ steps.sem_version.outputs.minor }}.
             ${{ steps.sem_version.outputs.patch }}.
             ${{ steps.sem_version.outputs.increment }}
           file-description: "An open source RimWorld mod manager."
+          include-data-files: |
+            version.xml=version.xml
         env:
           PYTHONPATH: ${{ steps.pythonpath.outputs.PYTHONPATH }}
 

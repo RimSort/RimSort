@@ -11,16 +11,31 @@ on:
           - "Stable"
           - "Edge"
       draft:
-        description: "Only create a draft release"
+        description: "Draft release"
         type: boolean
         default: true
       skip_build:
-        description: "Skip the build step (For debugging)"
+        description: "Skip build step"
         type: boolean
         default: false
       run_id:
-        description: "Run ID to use if skipping build (For debugging)"
+        description: "Run ID to grab artifacts from if skipping build"
         type: number
+        required: false
+      update_release:
+        description: "(Danger!) Allow updating non-draft stable release"
+        type: boolean
+        default: false
+        required: false
+      omit_name_during_update:
+        description: "Don't override name if updating"
+        type: boolean
+        default: true
+        required: false
+      omit_body_during_update:
+        description: "Don't override body if updating"
+        type: boolean
+        default: true
         required: false
 
 permissions: {}
@@ -131,27 +146,30 @@ jobs:
           run-id: ${{ github.event.inputs.run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Rename artifacts and zip to versioned file. Add execute permissions
+      - name: Rename artifacts and zip to versioned file
         id: artifacts
         run: |
           cd artifacts
           for artifact in ./*; do
             file=${artifact##*/} 
             base="${file%%.*}"
-            echo "Renaming $artifact to RimSort-${{ steps.version.outputs.version }}-$base.zip"
+            name=RimSort-${{ steps.version.outputs.version }}-$base.zip
             rootname=RimSort
             if [[ $name == *"Darwin"* ]]; then
               rootname=RimSort.app
             fi
-            ls -la
+            echo "Zipping $artifact to $name"
             cd "$artifact"
             tar -xvf "${file}.tar"
             mv "output" "$rootname"
-            zip -r "../RimSort-${{ steps.version.outputs.version }}-$base.zip" "$rootname"
+            zip -rmqq "../$name" "$rootname" &
             cd ..
-            rm -rf "$artifact" "$rootname"
           done
-          ls -la
+          echo "Waiting for zips to finish"
+          wait
+          echo "Cleaning up - Removing non-zip files"
+          shopt -s extglob
+          rm -rf !(*.zip)
         shell: bash
 
       - name: Create body
@@ -165,10 +183,11 @@ jobs:
           echo "body<<EOF"$'\n'"$message"$'\n'EOF >> "$GITHUB_OUTPUT"
         shell: bash
 
-      - name: Delete Previous Edge Release
+      - name: Delete Previous Edge Release and Tag
         if: ${{ github.event.inputs.type == 'Edge' }}
         run: |
-          gh release delete Edge -y
+          gh release delete Edge -y --cleanup-tag || echo "No previous release with tag Edge found"
+          git tag -d Edge || echo "Edge tag doesn't exist locally"
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -184,9 +203,9 @@ jobs:
           draft: ${{ github.event.inputs.draft }}
           body: ${{ steps.body.outputs.body }}
           allowUpdates: true
-          updateOnlyUnreleased: true
-          omitNameDuringUpdate: true
-          omitBodyDuringUpdate: true
+          updateOnlyUnreleased: ${{ !inputs.update_release }}
+          omitNameDuringUpdate: ${{ inputs.omit_name_during_update }}
+          omitBodyDuringUpdate: ${{ inputs.omit_body_during_update }}
           removeArtifacts: true
           commit: ${{ steps.sem_version.outputs.current_commit }}
 
