@@ -112,6 +112,14 @@ jobs:
           if [[ ${{ matrix.platform }} == "Ubuntu-22.04" || ${{ matrix.platform }} == "Ubuntu-24.04" ]]; then
             export QT_QPA_PLATFORM=offscreen
           fi
-          timeout 15 ${{ steps.find.outputs.FOUND }} || true
-          echo $?
+          timeout 10 ${{ steps.find.outputs.FOUND }} || EXIT_CODE=$?
+
+          if [[ $EXIT_CODE == 124 ]]; then
+            echo "Executable ran and timedout correctly"
+          elif [[ $EXIT_CODE != 0 ]]; then
+            echo "Executable failed with exit code $EXIT_CODE"
+            exit $EXIT_CODE
+          else
+            echo "Executable ran successfully"
+          fi
         shell: bash
