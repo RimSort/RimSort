@@ -34,7 +34,7 @@ jobs:
             env:
               ARTIFACT_KEY_GLOB: "*Darwin_arm*"
               ARTIFACT_KEY: "Darwin_arm"
-              EXPECTED_PATH: "RimSort.app/MacOS/RimSort"
+              EXPECTED_PATH: "output/MacOS/RimSort"
               EXPECTED_NAME: "RimSort"
           - os: ubuntu-22.04
             platform: "Ubuntu-22.04"
@@ -42,7 +42,7 @@ jobs:
             env:
               ARTIFACT_KEY_GLOB: "*Ubuntu-22*"
               ARTIFACT_KEY: "Ubuntu-22.04_x86_64 "
-              EXPECTED_PATH: "RimSort/RimSort"
+              EXPECTED_PATH: "output/RimSort"
               EXPECTED_NAME: "RimSort"
           - os: ubuntu-24.04
             platform: "Ubuntu-24.04"
@@ -50,7 +50,7 @@ jobs:
             env:
               ARTIFACT_KEY_GLOB: "*Ubuntu-24*"
               ARTIFACT_KEY: "Ubuntu-24.04_x86_64"
-              EXPECTED_PATH: "RimSort/RimSort"
+              EXPECTED_PATH: "output/RimSort"
               EXPECTED_NAME: "RimSort"
           - os: windows-latest
             platform: "Windows"
@@ -58,7 +58,7 @@ jobs:
             env:
               ARTIFACT_KEY_GLOB: "*Windows_x86_64*"
               ARTIFACT_KEY: "Windows_x86_64"
-              EXPECTED_PATH: "RimSort/RimSort.exe"
+              EXPECTED_PATH: "output/RimSort.exe"
               EXPECTED_NAME: "RimSort.exe"
     steps:
       - name: Download artifact from previous run
@@ -75,14 +75,9 @@ jobs:
         with:
           pattern: ${{ matrix.env.ARTIFACT_KEY_GLOB }}
 
-      - name: Enter artifact
-        run: |
-          cd $(ls -d */|head -n 1)
-          ls
-        shell: bash
-
       - name: Un-tar artifact
         run: |
+          cd $(ls -d */|head -n 1)
           tar -xf *.tar
         shell: bash
 
