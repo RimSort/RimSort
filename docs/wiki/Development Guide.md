@@ -144,7 +144,7 @@ Releases are created through the manual triggering of the relevant GitHub workfl
 
 Edge releases will be overwritten, with a new edge tag created and the old release fully deleted. Stable releases will not be overwritten. By default, non-draft stable releases are protected, and the auto-action will fail if a release with the same version tag already exists.
 
-If, for whatever reason, the build step completed, but the remaining steps of the release pipeline fails, you may re-run the workflow with an override to skip the build step by providing the action with the run ID of which it will grab the build artifacts from for release. Note that doing so may cause a mismatch in the version that the release pipeline is working with and the version that the build is from. This will cause a mismatch between the reported version in the application itself, and the reported version, tag, and tag commit reference in the release. **The version and version.xml in the build is always correct.**
+If, for whatever reason, the build step completed, but the remaining steps of the release pipeline fails, you may re-run the workflow with an override to skip the build step by providing the action with the run ID of which it will grab the build artifacts from for release. Beware that if a new commit was pushed to the target branch between the new release attempt and when the builds were actually made, there will be a commit mismatch between the builds and the release information. By default, the release pipeline will detect this and fail to maintain correct release info. **The version and version.xml in the build is always correct.**
 
 #### Versioning Keywords and Patterns
 
@@ -163,7 +163,7 @@ Due to how GitHub runner environments work, there is a potential race condition 
 
 **Note that the actual version.xml and subsequent app reported version will always be correct.**
 
-To mitigate this issue, the version info for the release pipeline is grabbed first thing, before builds and testing has started. 
+To mitigate this issue, the version info for the release pipeline is grabbed first thing, before builds and testing has started. Additionally, a commit mismatch check is done just before release. If any of the artifact's target commits mismatch with the release commit, the workflow will fail by default.
 
 ### Developing Features
 
