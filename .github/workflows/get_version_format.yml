@@ -7,10 +7,17 @@ on:
         required: false
         type: string
         default: Stable
+    outputs:
+      version_format:
+        description: "Versioning format"
+        value: ${{ jobs.get-version-format.outputs.version_format }}
+      prerelease:
+        description: "Prerelease"
+        value: ${{ jobs.get-version-format.outputs.prerelease }}
 permissions: {}
 
 jobs:
-  pre-build:
+  get-version-format:
     runs-on: ubuntu-latest
     steps:
       - name: Determine version format
@@ -29,6 +36,7 @@ jobs:
               echo "Unknown type: ${{ github.event.inputs.type }}"
               exit 1
           fi
+          echo "Version Format is $v_format"
           echo "version_format=$v_format" >> "$GITHUB_OUTPUT"
           echo "prerelease=$prerelease" >> "$GITHUB_OUTPUT"
         shell: bash
