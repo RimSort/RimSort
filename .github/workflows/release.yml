@@ -63,7 +63,7 @@ jobs:
       statuses: write
     needs: [build, pre-build]
     runs-on: ubuntu-latest
-    if: always()
+    if: success() || needs.build.result == 'skipped'
     steps:
       - name: Check Build or Skip
         if: ${{ needs.build.result == 'failure'  || needs.pre-build.result == 'failure'}}
