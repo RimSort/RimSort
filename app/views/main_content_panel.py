@@ -7,7 +7,7 @@ from functools import partial
 from gc import collect
 from io import BytesIO
 from math import ceil
-from multiprocessing import cpu_count, Pool
+from multiprocessing import Pool, cpu_count
 from tempfile import gettempdir
 from typing import Callable
 from zipfile import ZipFile
@@ -28,41 +28,30 @@ except ImportError:
 
 from github import Github
 from PySide6.QtCore import QEventLoop, QProcess, Qt, Slot
-from PySide6.QtWidgets import (
-    QFrame,
-    QHBoxLayout,
-    QLabel,
-)
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel
 from requests import get as requests_get
 
 from app.models.animations import LoadingAnimation
-from app.models.dialogue import show_dialogue_input, show_information, show_fatal_error
+from app.models.dialogue import (show_dialogue_input, show_fatal_error,
+                                 show_information)
 from app.sort.alphabetical_sort import *
 from app.sort.dependencies import *
 from app.sort.topo_sort import *
 from app.utils.event_bus import EventBus
-from app.utils.generic import (
-    chunks,
-    copy_to_clipboard_safely,
-    delete_files_except_extension,
-    open_url_browser,
-    platform_specific_open,
-    launch_game_process,
-    upload_data_to_0x0_st,
-)
+from app.utils.generic import (chunks, copy_to_clipboard_safely,
+                               delete_files_except_extension,
+                               launch_game_process, open_url_browser,
+                               platform_specific_open, upload_data_to_0x0_st)
 from app.utils.metadata import *
-from app.utils.rentry.wrapper import RentryUpload, RentryImport
+from app.utils.rentry.wrapper import RentryImport, RentryUpload
 from app.utils.schema import generate_rimworld_mods_list
 from app.utils.steam.browser import SteamBrowser
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
-from app.utils.steam.steamworks.wrapper import (
-    SteamworksGameLaunch,
-    SteamworksSubscriptionHandler,
-)
+from app.utils.steam.steamworks.wrapper import (SteamworksGameLaunch,
+                                                SteamworksSubscriptionHandler)
 from app.utils.steam.webapi.wrapper import CollectionImport
 from app.utils.todds.wrapper import ToddsInterface
 from app.utils.xml import json_to_xml_write
-
 from app.views.mod_info_panel import ModInfo
 from app.views.mods_panel import ModsPanel, ModsPanelSortKey
 from app.windows.missing_mods_panel import MissingModsPrompt
@@ -1799,6 +1788,20 @@ class MainContent(QObject):
                 "Cached mod lists for restore function not set as client started improperly. Passing on restore"
             )
 
+    def _do_edit_run_args(self) -> None:
+        """
+        Opens a QDialogInput that allows the user to edit the run args
+        that are configured to be passed to the Rimworld executable
+        """
+        args, ok = show_dialogue_input(
+            title="Edit run arguments",
+            label="Enter a comma separated list of arguments to pass to the Rimworld executable\n\n"
+            + "Example: \n-popupwindow,-logfile,/path/to/file.log",
+            text=",".join(self.settings_controller.settings.run_args),
+        )
+        if ok:
+            self.settings_controller.settings.run_args = args.split(",")
+            self.settings_controller.settings.save()
     # TODDS ACTIONS
 
     def _do_optimize_textures(self, todds_txt_path: str) -> None:
@@ -2099,7 +2102,7 @@ class MainContent(QObject):
         """
         args, ok = show_dialogue_input(
             title="Enter git repo",
-            text="Enter a git repository url (http/https) to clone to local mods:",
+            label="Enter a git repository url (http/https) to clone to local mods:",
         )
         if ok:
             self._do_clone_repo_to_path(
@@ -2121,8 +2124,8 @@ class MainContent(QObject):
         """
         args, ok = show_dialogue_input(
             title="Edit username",
-            text="Enter your Github username:",
-            value=self.settings_controller.settings.github_username,
+            label="Enter your Github username:",
+            text=self.settings_controller.settings.github_username,
         )
         if ok:
             self.settings_controller.settings.github_username = args
@@ -2132,8 +2135,8 @@ class MainContent(QObject):
             return
         args, ok = show_dialogue_input(
             title="Edit token",
-            text="Enter your Github personal access token here (ghp_*):",
-            value=self.settings_controller.settings.github_token,
+            label="Enter your Github personal access token here (ghp_*):",
+            text=self.settings_controller.settings.github_token,
         )
         if ok:
             self.settings_controller.settings.github_token = args
@@ -2651,8 +2654,8 @@ class MainContent(QObject):
         """
         args, ok = show_dialogue_input(
             title="Edit Steam DB repo",
-            text="Enter URL (https://github.com/AccountName/RepositoryName):",
-            value=self.settings_controller.settings.external_steam_metadata_repo,
+            label="Enter URL (https://github.com/AccountName/RepositoryName):",
+            text=self.settings_controller.settings.external_steam_metadata_repo,
         )
         if ok:
             self.settings_controller.settings.external_steam_metadata_repo = args
@@ -2665,8 +2668,8 @@ class MainContent(QObject):
         """
         args, ok = show_dialogue_input(
             title="Edit Community Rules DB repo",
-            text="Enter URL (https://github.com/AccountName/RepositoryName):",
-            value=self.settings_controller.settings.external_community_rules_repo,
+            label="Enter URL (https://github.com/AccountName/RepositoryName):",
+            text=self.settings_controller.settings.external_community_rules_repo,
         )
         if ok:
             self.settings_controller.settings.external_community_rules_repo = args
@@ -2868,8 +2871,8 @@ class MainContent(QObject):
         """
         args, ok = show_dialogue_input(
             title="Edit Steam WebAPI key",
-            text="Enter your personal 32 character Steam WebAPI key here:",
-            value=self.settings_controller.settings.steam_apikey,
+            label="Enter your personal 32 character Steam WebAPI key here:",
+            text=self.settings_controller.settings.steam_apikey,
         )
         if ok:
             self.settings_controller.settings.steam_apikey = args
@@ -3128,8 +3131,8 @@ class MainContent(QObject):
         """
         args, ok = show_dialogue_input(
             title="Edit SteamDB expiry:",
-            text="Enter your preferred expiry duration in seconds (default 1 week/604800 sec):",
-            value=str(self.settings_controller.settings.database_expiry),
+            label="Enter your preferred expiry duration in seconds (default 1 week/604800 sec):",
+            text=str(self.settings_controller.settings.database_expiry),
         )
         if ok:
             try:

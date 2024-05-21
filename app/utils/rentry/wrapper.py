@@ -112,7 +112,7 @@ class RentryImport:
         # Initialize the UI for entering Rentry.co links
         link_input = show_dialogue_input(
             title="Enter Rentry.co link",
-            text="Enter the Rentry.co link:",
+            label="Enter the Rentry.co link:",
         )
 
         self.link_input = link_input

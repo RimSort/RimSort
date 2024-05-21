@@ -1,13 +1,11 @@
 from functools import partial
 
-from PySide6.QtCore import Qt, QPoint, QSize, Signal
-from PySide6.QtGui import (
-    QIcon,
-    QStandardItemModel,
-    QStandardItem,
-)
+from loguru import logger
+from PySide6.QtCore import QPoint, QSize, Qt, Signal
+from PySide6.QtGui import QIcon, QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import (
     QCheckBox,
+    QHBoxLayout,
     QHeaderView,
     QItemDelegate,
     QLabel,
@@ -18,11 +16,9 @@ from PySide6.QtWidgets import (
     QPushButton,
     QTableView,
     QToolButton,
-    QWidget,
-    QHBoxLayout,
     QVBoxLayout,
+    QWidget,
 )
-from loguru import logger
 
 from app.models.dialogue import show_dialogue_input, show_warning
 from app.utils.app_info import AppInfo
@@ -106,15 +102,14 @@ class RuleEditor(QWidget):
         # Can be used to get proper names for mods found in list
         # items that are not locally available
         self.steam_workshop_metadata_packageids_to_name = {}
-        if (
-            self.metadata_manager.external_steam_metadata
-            and len(self.metadata_manager.external_steam_metadata.keys()) > 0
-        ):
-            for metadata in self.metadata_manager.external_steam_metadata.values():
-                if metadata.get("packageid"):
-                    self.steam_workshop_metadata_packageids_to_name[
-                        metadata["packageid"]
-                    ] = metadata["name"]
+        external_steam_metadata = self.metadata_manager.external_steam_metadata
+        if external_steam_metadata and len(external_steam_metadata.keys()) > 0:
+            for metadata in external_steam_metadata.values():
+                package_id = metadata.get("packageId") or metadata.get("packageid")
+                if package_id:
+                    self.steam_workshop_metadata_packageids_to_name[package_id] = (
+                        metadata["name"]
+                    )
 
         # MOD LABEL
         self.mod_label = QLabel("No mod currently being edited")
@@ -499,7 +494,8 @@ class RuleEditor(QWidget):
                 # Add a new row in the editor - prompt user to enter a comment for their rule addition
                 args, ok = show_dialogue_input(
                     title="Enter comment",
-                    text="Enter a comment to annotate why this rule exists. This is useful for your own records, as well as others.",
+                    label="""Enter a comment to annotate why this rule exists.
+                      This is useful for your own records, as well as others.""",
                 )
                 if ok:
                     comment = args
@@ -507,7 +503,11 @@ class RuleEditor(QWidget):
                     comment = ""
                 # Populate new row for our rule
                 self._add_rule_to_table(
-                    item_label_text, rule_data, mode[0], mode[1], comment
+                    item_label_text,
+                    rule_data,
+                    mode[0],
+                    mode[1],
+                    comment=comment,
                 )
                 # Select database for editing
                 if mode[0] == "Community Rules":
@@ -627,7 +627,7 @@ class RuleEditor(QWidget):
             and len(self.metadata_manager.internal_local_metadata.keys()) > 0
         ):
             for metadata in self.metadata_manager.internal_local_metadata.values():
-                # Local metadata rulez
+                # Local metadata rule
                 # Additionally, populate anything that is not exit_packageid into the mods list
                 if (
                     metadata.get("packageid")
@@ -636,288 +636,147 @@ class RuleEditor(QWidget):
                 ):
                     self.edit_name = metadata["name"]
                     self.mod_label.setText(f"Editing rules for: {self.edit_name}")
-                    if metadata.get("loadafter") and metadata["loadafter"].get("li"):
-                        loadAfters = metadata["loadafter"]["li"]
-                        if isinstance(loadAfters, str):
-                            self._create_list_item(
-                                _list=self.local_metadata_loadAfter_list,
-                                title=(
-                                    self.steam_workshop_metadata_packageids_to_name[
-                                        loadAfters.lower()
-                                    ]
-                                    if loadAfters.lower()
-                                    in [
-                                        key.lower()
-                                        for key in self.steam_workshop_metadata_packageids_to_name.keys()
-                                    ]
-                                    else loadAfters
-                                ),
-                                metadata=loadAfters,
-                            )
-                            self._add_rule_to_table(
-                                name=(
-                                    self.steam_workshop_metadata_packageids_to_name[
-                                        loadAfters.lower()
-                                    ]
-                                    if loadAfters.lower()
-                                    in [
-                                        key.lower()
-                                        for key in self.steam_workshop_metadata_packageids_to_name.keys()
-                                    ]
-                                    else loadAfters
-                                ),
-                                packageid=loadAfters,
-                                rule_source="About.xml",
-                                rule_type="loadAfter",
-                                comment="Added from mod metadata",
-                                hidden=self.local_rules_hidden,
-                            )
-                        elif isinstance(loadAfters, list):
-                            for rule in loadAfters:
-                                self._create_list_item(
-                                    _list=self.local_metadata_loadAfter_list,
-                                    title=(
-                                        self.steam_workshop_metadata_packageids_to_name[
-                                            rule.lower()
-                                        ]
-                                        if rule.lower()
-                                        in [
-                                            key.lower()
-                                            for key in self.steam_workshop_metadata_packageids_to_name.keys()
-                                        ]
-                                        else rule
-                                    ),
-                                    metadata=rule,
-                                )
-                                self._add_rule_to_table(
-                                    name=(
-                                        self.steam_workshop_metadata_packageids_to_name[
-                                            rule.lower()
-                                        ]
-                                        if rule.lower()
-                                        in [
-                                            key.lower()
-                                            for key in self.steam_workshop_metadata_packageids_to_name.keys()
-                                        ]
-                                        else rule
-                                    ),
-                                    packageid=rule,
-                                    rule_source="About.xml",
-                                    rule_type="loadAfter",
-                                    comment="Added from mod metadata",
-                                    hidden=self.local_rules_hidden,
-                                )
-                    if metadata.get("loadbefore") and metadata["loadbefore"].get("li"):
-                        loadBefores = metadata["loadbefore"]["li"]
-                        if isinstance(loadBefores, str):
-                            self._create_list_item(
-                                _list=self.local_metadata_loadBefore_list,
-                                title=(
-                                    self.steam_workshop_metadata_packageids_to_name[
-                                        loadBefores.lower()
-                                    ]
-                                    if loadBefores.lower()
-                                    in [
-                                        key.lower()
-                                        for key in self.steam_workshop_metadata_packageids_to_name.keys()
-                                    ]
-                                    else loadBefores
-                                ),
-                                metadata=loadBefores,
-                            )
-                            self._add_rule_to_table(
-                                name=(
-                                    self.steam_workshop_metadata_packageids_to_name[
-                                        loadBefores.lower()
-                                    ]
-                                    if loadBefores.lower()
-                                    in [
-                                        key.lower()
-                                        for key in self.steam_workshop_metadata_packageids_to_name.keys()
-                                    ]
-                                    else loadBefores
-                                ),
-                                packageid=loadBefores,
-                                rule_source="About.xml",
-                                rule_type="loadBefore",
-                                comment="Added from mod metadata",
-                                hidden=self.local_rules_hidden,
-                            )
-                        elif isinstance(loadBefores, list):
-                            for rule in loadBefores:
-                                self._create_list_item(
-                                    _list=self.local_metadata_loadBefore_list,
-                                    title=(
-                                        self.steam_workshop_metadata_packageids_to_name[
-                                            rule.lower()
-                                        ]
-                                        if rule.lower()
-                                        in [
-                                            key.lower()
-                                            for key in self.steam_workshop_metadata_packageids_to_name.keys()
-                                        ]
-                                        else rule
-                                    ),
-                                    metadata=rule,
-                                )
-                                self._add_rule_to_table(
-                                    name=(
-                                        self.steam_workshop_metadata_packageids_to_name[
-                                            rule.lower()
-                                        ]
-                                        if rule.lower()
-                                        in [
-                                            key.lower()
-                                            for key in self.steam_workshop_metadata_packageids_to_name.keys()
-                                        ]
-                                        else rule
-                                    ),
-                                    packageid=rule,
-                                    rule_source="About.xml",
-                                    rule_type="loadBefore",
-                                    comment="Added from mod metadata",
-                                    hidden=self.local_rules_hidden,
-                                )
+                    # All Lowercase!!!
+                    # cSpell:enableCompoundWords
+                    rule_types = {
+                        "loadafter": self.local_metadata_loadAfter_list,
+                        "loadbefore": self.local_metadata_loadBefore_list,
+                    }
+
+                    for rule_type, _list in rule_types.items():
+                        if metadata.get(rule_type) and metadata[rule_type].get("li"):
+                            rules = metadata[rule_type]["li"]
+                            if isinstance(rules, str):
+                                rules = [rules]
+                            if isinstance(rules, list):
+                                for rule in rules:
+                                    name = self.steam_workshop_metadata_packageids_to_name.get(
+                                        rule.lower(), rule
+                                    )
+                                    self._create_list_item(_list=_list, title=name)
+                                    self._add_rule_to_table(
+                                        name=name,
+                                        packageid=rule,
+                                        rule_source="About.xml",
+                                        rule_type=rule_type,
+                                        comment="Added from mod metadata",
+                                        hidden=self.local_rules_hidden,
+                                    )
                 else:  # Otherwise, add everything else to the mod list
                     self._create_list_item(
                         _list=self.mods_list,
                         title=metadata.get("name"),
                         metadata=metadata.get("packageid"),
                     )
+
+        def _parse_rules(
+            rules: dict,
+            loadAfter_list: QListWidget,
+            loadBefore_list: QListWidget,
+            loadBottom_checkbox: QCheckBox,
+            hidden: bool,
+            rule_source: str,
+        ) -> None:
+            """Parses rules from a given dictionary and populates the editor with them
+
+            :param rules: The dictionary containing the rules
+            :type rules: dict
+            :param loadAfter_list: The QListWidget to populate with loadAfter rules
+            :type loadAfter_list: QListWidget
+            :param loadBefore_list: The QListWidget to populate with loadBefore rules
+            :type loadBefore_list: QListWidget
+            :param loadBottom_checkbox: The checkbox to set for loadBottom rules
+            :type loadBottom_checkbox: QCheckBox
+            :param hidden: Indicates if the rules should be hidden
+            :type hidden: bool
+            :param rule_source: The source of the rules
+            :type rule_source: str
+            """
+            if not rules or not self.edit_packageid:
+                return
+
+            # TODO: Leaving for now in case case-insensitivity matters
+            for packageid, metadata in rules.items():
+                if self.edit_packageid.lower() != packageid.lower():
+                    continue
+
+                def _get_first_item_or_value(data):
+                    return data[0] if isinstance(data, list) else data
+
+                # Snake Case!
+                for rule_type in ["loadAfter", "loadBefore"]:
+                    if not metadata.get(rule_type):
+                        continue
+                    for rule_id, rule_data in metadata[rule_type].items():
+                        rule_name = _get_first_item_or_value(rule_data.get("name", ""))
+                        rule_comment = _get_first_item_or_value(
+                            rule_data.get("comment", "")
+                        )
+
+                        if not rule_name:
+                            # Set rule name to the packageid if it's empty
+                            rule_name = rule_id
+                            logger.warning(
+                                f"Rule name is missing for {rule_type} rule in mod {self.edit_packageid}."
+                                f" Using packageid {rule_id} as name."
+                            )
+
+                        self._create_list_item(
+                            _list=(
+                                loadAfter_list
+                                if rule_type == "loadAfter"
+                                else loadBefore_list
+                            ),
+                            title=rule_name,
+                            metadata=rule_id,
+                        )
+                        self._add_rule_to_table(
+                            name=rule_name,
+                            packageid=rule_id,
+                            rule_source=rule_source,
+                            rule_type=rule_type,
+                            comment=rule_comment,
+                            hidden=hidden,
+                        )
+
+                rule_data = metadata.get("loadBottom")
+                if rule_data:
+                    self.block_comment_prompt = True
+                    loadBottom_checkbox.setChecked(rule_data.get("value", False))
+                    self.block_comment_prompt = False
+                    if rule_data.get("value"):
+                        self._add_rule_to_table(
+                            name=self.edit_name,
+                            packageid=self.edit_packageid,
+                            rule_source=rule_source,
+                            rule_type="loadBottom",
+                            comment=_get_first_item_or_value(
+                                rule_data.get("comment", "")
+                            ),
+                            hidden=hidden,
+                        )
+
         logger.debug("Parsing Community Rules")
-        # Community Rules rulez
-        if (
-            self.community_rules
-            and len(self.community_rules.keys()) > 0
-            and self.edit_packageid
-        ):
-            for packageid, metadata in self.community_rules.items():
-                if (
-                    self.edit_packageid
-                    and self.edit_packageid.lower() == packageid.lower()
-                ):
-                    if metadata.get("loadAfter"):
-                        for rule_id, rule_data in metadata["loadAfter"].items():
-                            self._create_list_item(
-                                _list=self.external_community_rules_loadAfter_list,
-                                title=rule_data["name"][0],
-                                metadata=rule_id,
-                            )
-                            self._add_rule_to_table(
-                                name=rule_data["name"][0],
-                                packageid=rule_id,
-                                rule_source="Community Rules",
-                                rule_type="loadAfter",
-                                comment=(
-                                    rule_data["comment"][0]
-                                    if rule_data.get("comment")
-                                    else ""
-                                ),
-                                hidden=self.community_rules_hidden,
-                            )
-                    if metadata.get("loadBefore"):
-                        for rule_id, rule_data in metadata["loadBefore"].items():
-                            self._create_list_item(
-                                _list=self.external_community_rules_loadBefore_list,
-                                title=rule_data["name"][0],
-                                metadata=rule_id,
-                            )
-                            self._add_rule_to_table(
-                                name=rule_data["name"][0],
-                                packageid=rule_id,
-                                rule_source="Community Rules",
-                                rule_type="loadBefore",
-                                comment=(
-                                    rule_data["comment"][0]
-                                    if rule_data.get("comment")
-                                    else ""
-                                ),
-                                hidden=self.community_rules_hidden,
-                            )
-                    if metadata.get("loadBottom") and metadata["loadBottom"].get(
-                        "value"
-                    ):
-                        self.block_comment_prompt = True
-                        self.external_community_rules_loadBottom_checkbox.setChecked(
-                            True
-                        )
-                        self.block_comment_prompt = False
-                        self._add_rule_to_table(
-                            name=self.edit_name,
-                            packageid=self.edit_packageid,
-                            rule_source="Community Rules",
-                            rule_type="loadBottom",
-                            comment=(
-                                rule_data["comment"][0]
-                                if rule_data.get("comment")
-                                else ""
-                            ),
-                            hidden=self.community_rules_hidden,
-                        )
+        # Community Rules rules
+        _parse_rules(
+            rules=self.community_rules,
+            loadAfter_list=self.external_community_rules_loadAfter_list,
+            loadBefore_list=self.external_community_rules_loadBefore_list,
+            loadBottom_checkbox=self.external_community_rules_loadBottom_checkbox,
+            hidden=self.community_rules_hidden,
+            rule_source="Community Rules",
+        )
+
         logger.debug("Parsing User Rules")
-        # User Rules rulez
-        if self.user_rules and len(self.user_rules.keys()) > 0 and self.edit_packageid:
-            for packageid, metadata in self.user_rules.items():
-                if (
-                    self.edit_packageid
-                    and self.edit_packageid.lower() == packageid.lower()
-                ):
-                    if metadata.get("loadAfter"):
-                        for rule_id, rule_data in metadata["loadAfter"].items():
-                            self._create_list_item(
-                                _list=self.external_user_rules_loadAfter_list,
-                                title=rule_data["name"][0],
-                                metadata=rule_id,
-                            )
-                            self._add_rule_to_table(
-                                name=rule_data["name"][0],
-                                packageid=rule_id,
-                                rule_source="User Rules",
-                                rule_type="loadAfter",
-                                comment=(
-                                    rule_data["comment"][0]
-                                    if rule_data.get("comment")
-                                    else ""
-                                ),
-                                hidden=self.user_rules_hidden,
-                            )
-                    if metadata.get("loadBefore"):
-                        for rule_id, rule_data in metadata["loadBefore"].items():
-                            self._create_list_item(
-                                _list=self.external_user_rules_loadBefore_list,
-                                title=rule_data["name"][0],
-                                metadata=rule_id,
-                            )
-                            self._add_rule_to_table(
-                                name=rule_data["name"][0],
-                                packageid=rule_id,
-                                rule_source="User Rules",
-                                rule_type="loadBefore",
-                                comment=(
-                                    rule_data["comment"][0]
-                                    if rule_data.get("comment")
-                                    else ""
-                                ),
-                                hidden=self.user_rules_hidden,
-                            )
-                    if metadata.get("loadBottom") and metadata["loadBottom"].get(
-                        "value"
-                    ):
-                        self.block_comment_prompt = True
-                        self.external_user_rules_loadBottom_checkbox.setChecked(True)
-                        self._add_rule_to_table(
-                            name=self.edit_name,
-                            packageid=self.edit_packageid,
-                            rule_source="User Rules",
-                            rule_type="loadBottom",
-                            comment=(
-                                rule_data["comment"][0]
-                                if rule_data.get("comment")
-                                else ""
-                            ),
-                            hidden=self.user_rules_hidden,
-                        )
-                        self.block_comment_prompt = False
+        # User Rules rules
+        _parse_rules(
+            rules=self.user_rules,
+            loadAfter_list=self.external_user_rules_loadAfter_list,
+            loadBefore_list=self.external_user_rules_loadBefore_list,
+            loadBottom_checkbox=self.external_user_rules_loadBottom_checkbox,
+            hidden=self.user_rules_hidden,
+            rule_source="User Rules",
+        )
 
     def _remove_rule(self, context_item: QListWidgetItem, _list: QListWidget) -> None:
         logger.debug(f"Removing rule from mod: {self.edit_packageid}")
@@ -978,7 +837,7 @@ class RuleEditor(QWidget):
         # Iterate through all widgets in layout
         for i in range(layout.count()):
             item = layout.itemAt(i)
-            if not "visibility" in locals():  # We only need to set this once per pass
+            if "visibility" not in locals():  # We only need to set this once per pass
                 visibility = item.widget().isVisible()
                 # Override so we can toggle this upon initialization if we want to
                 if override:
@@ -1048,7 +907,9 @@ class RuleEditor(QWidget):
                     # Add a new row in the editor - prompt user to enter a comment for their rule addition
                     args, ok = show_dialogue_input(
                         title="Enter comment",
-                        text="Enter a comment to annotate why this rule exists. This is useful for your own records, as well as others.",
+                        label="Enter a comment to annotate why this rule exists."
+                        "This is useful for your own records, as well as others.",
+                        parent=self,
                     )
                     if ok:
                         comment = args
@@ -1057,7 +918,7 @@ class RuleEditor(QWidget):
                         packageid=self.edit_packageid,
                         rule_source=rule_source,
                         rule_type="loadBottom",
-                        comment=comment if comment else "",
+                        comment=comment,
                     )
                 # Add rule to the database if it doesn't already exist
                 if not metadata.get(self.edit_packageid):
@@ -1101,6 +962,22 @@ class RuleEditor(QWidget):
                 ):
                     metadata[self.edit_packageid].pop("loadBottom")
 
+    def _show_comment_input(self) -> str:
+        """Creates comment input dialogue for the user to enter a comment for their rule addition.
+
+        Returns:
+            str: The comment entered by the user if dialogue is accepted, otherwise an empty string.
+        """
+        item, ok = show_dialogue_input(
+            title="Enter comment",
+            label="Enter a comment to annotate why this rule exists."
+            " This is useful for your own records, as well as others.",
+            parent=self,
+        )
+        if ok:
+            return item
+        return ""
+
     def modItemContextMenuEvent(self, point: QPoint) -> None:
         context_menu = QMenu(self)  # Mod item context menu event
         context_item = self.mods_list.itemAt(point)
@@ -1110,7 +987,7 @@ class RuleEditor(QWidget):
         open_mod.triggered.connect(
             partial(self._open_mod_in_editor, context_item=context_item)
         )
-        action = context_menu.exec_(self.mods_list.mapToGlobal(point))
+        _ = context_menu.exec_(self.mods_list.mapToGlobal(point))
 
     def ruleItemContextMenuEvent(self, point: QPoint, _list: QListWidget) -> None:
         context_menu = QMenu(self)  # Rule item context menu event
@@ -1123,18 +1000,24 @@ class RuleEditor(QWidget):
                 _list=_list,
             )
         )
-        action = context_menu.exec_(_list.mapToGlobal(point))
+        _ = context_menu.exec_(_list.mapToGlobal(point))
 
     def clear_mods_search(self) -> None:
         self.mods_search.setText("")
         self.mods_search.clearFocus()
 
     def signal_mods_search(self, pattern: str) -> None:
+        # Convert the pattern to lowercase once
+        pattern_lower = pattern.lower() if pattern else ""
+
         # Loop through the items
         for index in range(self.mods_list.count()):
             item = self.mods_list.item(index)
             name = item.listWidget().itemWidget(item).text()
-            if pattern and name and not pattern.lower() in name.lower():
+            name_lower = name.lower() if name else ""
+
+            # Check if the pattern is not found in the name
+            if pattern_lower and pattern_lower not in name_lower:
                 item.setHidden(True)
             else:
                 item.setHidden(False)
