@@ -117,7 +117,7 @@ jobs:
           cd artifacts
           for artifact in ./*; do
             file=${artifact##*/} 
-            base=${file%%.*}
+            base=${file%%.tar}
             name="RimSort-${{ needs.pre-build.outputs.version }}-$base.zip"
             rootname=RimSort
             if [[ $base == *"Darwin"* ]]; then
