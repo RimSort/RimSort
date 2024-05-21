@@ -110,10 +110,10 @@ jobs:
       - name: Get version string
         id: version
         run: |
-          if [[ "${{ github.event.inputs.type }}" == "Edge" ]]; then
-          version="${{ steps.sem_version.outputs.version}}+${{steps.short_sha.outputs.short_sha}}"
+          if [[ "${{ github.event.inputs.type }}" == "Stable" ]]; then
+                    version="${{ steps.sem_version.outputs.version}}"
           else
-          version="${{ steps.sem_version.outputs.version}}"
+            version="${{ steps.sem_version.outputs.version}}+${{steps.short_sha.outputs.short_sha}}"
           fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
         shell: bash
