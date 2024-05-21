@@ -132,6 +132,18 @@ Execute: `python -c "from distribute import build_steamworkspy; build_steamworks
 
 We utilize automated semantic versioning based on a [GitHub action](https://github.com/PaulHatch/semantic-version/tree/v5.4.0/). This action will auto-increment the version based on keywords in commit messages, tags, and commits in general. The process is utilized by both the release and auto-build pipelines. \*\*Manual overrides using tags should be formatted with `v` as the prefix and follow the release format, e.g. `v1.1.1`.
 
+**SemVer will only monitor changes in specific directories for purposes of implicit types.** This is to ensure that changes to the repository that are irrelevant to the function of the code don't change the app version.
+
+<details>
+<summary> Currently monitored directories </summary>
+  <ul>
+    <li> app </li>
+    <li> libs </li>
+    <li> submodules </li>
+    <li> themes </li>
+  </ul>
+</details>
+
 #### Release Description and Pipeline
 
 |    Type    |                        Version Format                         | Trigger | Description                                                                                                                                      |
@@ -157,9 +169,10 @@ If, for whatever reason, the build step completed, but the remaining steps of th
 | short-sha | n/a (Implicit) | First seven characters of the commit sha identifier a build is made from                                  |
 
 #### Caveats and Potential Issues
+
 ##### Potential Race Condition
 
-Due to how GitHub runner environments work, there is a potential race condition if a commit is made to the branch that the build and release action is running on. If something changes on the branch while the action is running, depending on what step the action is on, there may be differences in the version information in the release, and the commit being used for building. If especially unlucky where one runner for a specific build target loaded and checked out, but a commit is pushed to the branch before other runners for a different target, the builds created for the targets may all be on different commits. 
+Due to how GitHub runner environments work, there is a potential race condition if a commit is made to the branch that the build and release action is running on. If something changes on the branch while the action is running, depending on what step the action is on, there may be differences in the version information in the release, and the commit being used for building. If especially unlucky where one runner for a specific build target loaded and checked out, but a commit is pushed to the branch before other runners for a different target, the builds created for the targets may all be on different commits.
 
 **Note that the actual version.xml and subsequent app reported version will always be correct.**
 
