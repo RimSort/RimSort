@@ -83,7 +83,7 @@ jobs:
 
       - name: Un-tar artifact
         run: |
-          tar -xfq *.tar
+          tar -xf *.tar
         shell: bash
 
       - name: Find executable
