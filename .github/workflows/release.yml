@@ -15,7 +15,7 @@ on:
         type: boolean
         default: true
       skip_build:
-        description: "Skip build step"
+        description: "Skip build/test step"
         type: boolean
         default: false
       run_id:
@@ -34,6 +34,11 @@ on:
         required: false
       replace_body_during_update:
         description: "Override body if updating"
+        type: boolean
+        default: false
+        required: false
+      no_commit_match:
+        description: "Ignore commit match errors"
         type: boolean
         default: false
         required: false
@@ -79,7 +84,7 @@ jobs:
         id: tag
         run: |
           if [[ "${{ github.event.inputs.type }}" == "Stable" ]]; then
-            tag="${{needs.pre-build.outputs.version}}"
+            tag="${{needs.pre-build.outputs.version_tag}}"
           elif [[ "${{ github.event.inputs.type }}" == "Edge" ]]; then
             tag="Edge"
           else
@@ -88,6 +93,9 @@ jobs:
           fi
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
         shell: bash
+
+      - name: Install xmlstarlet
+        run: sudo apt-get install -y xmlstarlet
 
       - name: Download artifacts - Current Flow
         if: ${{ inputs.skip_build == false }}
@@ -109,17 +117,28 @@ jobs:
           cd artifacts
           for artifact in ./*; do
             file=${artifact##*/} 
-            base="${file%%.*}"
-            name=RimSort-${{ needs.pre-build.outputs.version }}-$base.zip
+            base=${file%%.*}
+            name="RimSort-${{ needs.pre-build.outputs.version }}-$base.zip"
             rootname=RimSort
             if [[ $base == *"Darwin"* ]]; then
               rootname=RimSort.app
             fi
-            echo "Zipping $artifact to $name"
+            echo "Will zip $artifact to $name"
             echo "Rootname $rootname"
             cd "$artifact"
             tar -xvf "${file}.tar"
             mv "output" "$rootname"
+            echo "Doing commit match check."
+            version_xml=$(find "$rootname" -name version.xml)
+            commit=$(xmlstarlet sel -t -v "//commit" "$version_xml")
+            if [[ "$commit" != "${{  needs.pre-build.outputs.current_commit }}" ]]; then
+              echo "Commit mismatch for artifact $artifact. Expected ${{  needs.pre-build.outputs.current_commit }} but true build commit was $commit"
+              if [[ "${{ inputs.no_commit_match }}" == true ]]; then
+                echo "Ignoring commit mismatch and continuing."
+              else
+                exit 1
+              fi
+            fi
             zip -rmqq "../$name" "$rootname" &
             cd ..
           done
