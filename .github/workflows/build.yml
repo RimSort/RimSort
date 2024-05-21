@@ -174,4 +174,5 @@ jobs:
       filename: ${{ steps.filename.outputs.FILENAME }}
 
   post-build-test:
+    needs: build
     uses: ./.github/workflows/test_builds.yml
