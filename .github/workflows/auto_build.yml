@@ -19,7 +19,6 @@ jobs:
 
   build:
     needs: pre-build
-    if: inputs.skip_build != true
     permissions:
       id-token: write
       contents: read
