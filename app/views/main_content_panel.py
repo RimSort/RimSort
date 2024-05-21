@@ -7,7 +7,7 @@ from functools import partial
 from gc import collect
 from io import BytesIO
 from math import ceil
-from multiprocessing import cpu_count, Pool
+from multiprocessing import Pool, cpu_count
 from tempfile import gettempdir
 from typing import Callable
 from zipfile import ZipFile
@@ -28,41 +28,30 @@ except ImportError:
 
 from github import Github
 from PySide6.QtCore import QEventLoop, QProcess, Qt, Slot
-from PySide6.QtWidgets import (
-    QFrame,
-    QHBoxLayout,
-    QLabel,
-)
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel
 from requests import get as requests_get
 
 from app.models.animations import LoadingAnimation
-from app.models.dialogue import show_dialogue_input, show_information, show_fatal_error
+from app.models.dialogue import (show_dialogue_input, show_fatal_error,
+                                 show_information)
 from app.sort.alphabetical_sort import *
 from app.sort.dependencies import *
 from app.sort.topo_sort import *
 from app.utils.event_bus import EventBus
-from app.utils.generic import (
-    chunks,
-    copy_to_clipboard_safely,
-    delete_files_except_extension,
-    open_url_browser,
-    platform_specific_open,
-    launch_game_process,
-    upload_data_to_0x0_st,
-)
+from app.utils.generic import (chunks, copy_to_clipboard_safely,
+                               delete_files_except_extension,
+                               launch_game_process, open_url_browser,
+                               platform_specific_open, upload_data_to_0x0_st)
 from app.utils.metadata import *
-from app.utils.rentry.wrapper import RentryUpload, RentryImport
+from app.utils.rentry.wrapper import RentryImport, RentryUpload
 from app.utils.schema import generate_rimworld_mods_list
 from app.utils.steam.browser import SteamBrowser
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
-from app.utils.steam.steamworks.wrapper import (
-    SteamworksGameLaunch,
-    SteamworksSubscriptionHandler,
-)
+from app.utils.steam.steamworks.wrapper import (SteamworksGameLaunch,
+                                                SteamworksSubscriptionHandler)
 from app.utils.steam.webapi.wrapper import CollectionImport
 from app.utils.todds.wrapper import ToddsInterface
 from app.utils.xml import json_to_xml_write
-
 from app.views.mod_info_panel import ModInfo
 from app.views.mods_panel import ModsPanel, ModsPanelSortKey
 from app.windows.missing_mods_panel import MissingModsPrompt
