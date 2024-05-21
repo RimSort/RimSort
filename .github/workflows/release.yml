@@ -42,7 +42,7 @@ permissions: {}
 
 jobs:
   pre-build:
-    uses: ./.github/workflows/get_version_format.yml
+    uses: ./.github/workflows/get_version_info.yml
     with:
       type: ${{ github.event.inputs.type }}
 
@@ -73,19 +73,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-
-      - name: Get semantic version
-        id: sem_version
-        uses: PaulHatch/semantic-version@v5.4.0
-        with:
-          version_format: "${{ needs.pre-build.outputs.version_format }}"
-          change_path: "app libs submodules themes"
+          fetch-tags: true
 
       - name: Get short Sha
         id: short_sha
         run: |
-          short_sha=$(echo "${{ steps.sem_version.outputs.current_commit }}" | cut -c1-7)
+          short_sha=$(echo "${{ needs.pre-build.outputs.current_commit }}" | cut -c1-7)
           echo "short_sha=$short_sha" >> "$GITHUB_OUTPUT"
         shell: bash
 
@@ -93,9 +86,9 @@ jobs:
         id: version
         run: |
           if [[ "${{ github.event.inputs.type }}" == "Edge" ]]; then
-          version="${{steps.sem_version.outputs.version}}+${{steps.short_sha.outputs.short_sha}}"
+          version="${{ needs.pre-build.outputs.version}}+${{steps.short_sha.outputs.short_sha}}"
           else
-          version="${{steps.sem_version.outputs.version}}"
+          version="${{ needs.pre-build.outputs.version}}"
           fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
         shell: bash
@@ -160,7 +153,7 @@ jobs:
         run: |
           ACTION_RUN_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           message="${{ github.event.inputs.type }} release ${{steps.version.outputs.version}}.
-          The latest commit is ${{ steps.sem_version.outputs.current_commit }}.
+          The latest commit is ${{  needs.pre-build.outputs.current_commit }}.
 
           Refer to the [action run]($ACTION_RUN_URL) that created this release."
           echo "body<<EOF"$'\n'"$message"$'\n'EOF >> "$GITHUB_OUTPUT"
@@ -190,7 +183,7 @@ jobs:
           omitNameDuringUpdate: ${{ !inputs.replace_name_during_update }}
           omitBodyDuringUpdate: ${{ !inputs.replace_body_during_update }}
           removeArtifacts: true
-          commit: ${{ steps.sem_version.outputs.current_commit }}
+          commit: ${{  needs.pre-build.outputs.current_commit }}
 
       - name: Echo Release URL
         run: |
