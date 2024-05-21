@@ -5,7 +5,7 @@ loguru==0.7.2
 lxml==5.2.1
 mypy==1.10.0
 natsort==8.4.0
-platformdirs==4.2.1
+platformdirs==4.2.2
 PyGithub==2.3.0
 pyperclip==1.8.2
 PySide6
