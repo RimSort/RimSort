@@ -25,6 +25,7 @@ jobs:
             platform: "Darwin"
             arch: "i386"
             env:
+              ARTIFACT_KEY_GLOB: "*Darwin_i386*"
               ARTIFACT_KEY: "Darwin_i386"
               EXPECTED_PATH: "RimSort.app/MacOS/RimSort"
               EXPECTED_NAME: "RimSort"
@@ -61,7 +62,7 @@ jobs:
         if: ${{ github.event.inputs.run_id != null }}
         uses: actions/download-artifact@v4.1.7
         with:
-          pattern: ${{ matrix.env.ARTIFACT_KEY }}
+          pattern: ${{ matrix.env.ARTIFACT_KEY_GLOB }}
           run-id: ${{ github.event.inputs.run_id }}
 
       - name: Download artifact from current run
