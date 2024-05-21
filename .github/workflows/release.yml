@@ -75,29 +75,11 @@ jobs:
         with:
           fetch-tags: true
 
-      - name: Get short Sha
-        id: short_sha
-        run: |
-          short_sha=$(echo "${{ needs.pre-build.outputs.current_commit }}" | cut -c1-7)
-          echo "short_sha=$short_sha" >> "$GITHUB_OUTPUT"
-        shell: bash
-
-      - name: Get version string
-        id: version
-        run: |
-          if [[ "${{ github.event.inputs.type }}" == "Edge" ]]; then
-          version="${{ needs.pre-build.outputs.version}}+${{steps.short_sha.outputs.short_sha}}"
-          else
-          version="${{ needs.pre-build.outputs.version}}"
-          fi
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-        shell: bash
-
       - name: Determine tag
         id: tag
         run: |
           if [[ "${{ github.event.inputs.type }}" == "Stable" ]]; then
-            tag="${{steps.version.outputs.version}}"
+            tag="${{needs.pre-build.outputs.version}}"
           elif [[ "${{ github.event.inputs.type }}" == "Edge" ]]; then
             tag="Edge"
           else
@@ -128,7 +110,7 @@ jobs:
           for artifact in ./*; do
             file=${artifact##*/} 
             base="${file%%.*}"
-            name=RimSort-${{ steps.version.outputs.version }}-$base.zip
+            name=RimSort-${{ needs.pre-build.outputs.version }}-$base.zip
             rootname=RimSort
             if [[ $base == *"Darwin"* ]]; then
               rootname=RimSort.app
@@ -152,7 +134,7 @@ jobs:
         id: body
         run: |
           ACTION_RUN_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          message="${{ github.event.inputs.type }} release ${{steps.version.outputs.version}}.
+          message="${{ github.event.inputs.type }} release ${{needs.pre-build.outputs.version}}.
           The latest commit is ${{  needs.pre-build.outputs.current_commit }}.
 
           Refer to the [action run]($ACTION_RUN_URL) that created this release."

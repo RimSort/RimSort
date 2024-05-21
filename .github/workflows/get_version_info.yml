@@ -100,10 +100,28 @@ jobs:
           version_format: "${{ steps.version_format.outputs.version_format }}"
           change_path: "app libs submodules themes"
 
+      - name: Get short Sha
+        id: short_sha
+        run: |
+          short_sha=$(echo "${{ steps.sem_version.outputs.current_commit }}" | cut -c1-7)
+          echo "short_sha=$short_sha" >> "$GITHUB_OUTPUT"
+        shell: bash
+
+      - name: Get version string
+        id: version
+        run: |
+          if [[ "${{ github.event.inputs.type }}" == "Edge" ]]; then
+          version="${{ steps.sem_version.outputs.version}}+${{steps.short_sha.outputs.short_sha}}"
+          else
+          version="${{ steps.sem_version.outputs.version}}"
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+        shell: bash
+
     outputs:
       version_format: ${{ steps.version_format.outputs.version_format }}
       prerelease: ${{ steps.version_format.outputs.prerelease }}
-      version: ${{ steps.sem_version.outputs.version }}
+      version: ${{ steps.version.outputs.version }}
       major: ${{ steps.sem_version.outputs.major }}
       minor: ${{ steps.sem_version.outputs.minor }}
       patch: ${{ steps.sem_version.outputs.patch }}
@@ -116,3 +134,4 @@ jobs:
       current_commit: ${{ steps.sem_version.outputs.current_commit }}
       previous_commit: ${{ steps.sem_version.outputs.previous_commit }}
       previous_version: ${{ steps.sem_version.outputs.previous_version }}
+      current_commit_short: ${{ steps.short_sha.outputs.short_sha }}
