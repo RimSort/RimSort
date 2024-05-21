@@ -7,6 +7,11 @@ on:
         required: false
         type: string
         default: Stable
+      format_only:
+        description: "Only get version format"
+        required: false
+        type: boolean
+        default: false
     outputs:
       version_format:
         description: "Versioning format"
@@ -82,12 +87,14 @@ jobs:
         shell: bash
 
       - name: Checkout
+        if: ${{ inputs.format_only == false }}
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Get semantic version
         id: sem_version
+        if: ${{ inputs.format_only == false }}
         uses: PaulHatch/semantic-version@v5.4.0
         with:
           version_format: "${{ steps.version_format.outputs.version_format }}"

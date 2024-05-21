@@ -16,9 +16,10 @@ on:
 
 jobs:
   pre-build:
-    uses: ./.github/workflows/get_version_format.yml
+    uses: ./.github/workflows/get_version_info.yml
     with:
       type: "Auto-Build"
+      format_only: true
 
   build:
     needs: pre-build
