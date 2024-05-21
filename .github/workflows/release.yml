@@ -27,15 +27,15 @@ on:
         type: boolean
         default: false
         required: false
-      omit_name_during_update:
-        description: "Don't override name if updating"
+      replace_name_during_update:
+        description: "Override name if updating"
         type: boolean
-        default: true
+        default: false
         required: false
-      omit_body_during_update:
-        description: "Don't override body if updating"
+      replace_body_during_update:
+        description: "Override body if updating"
         type: boolean
-        default: true
+        default: false
         required: false
 
 permissions: {}
@@ -204,8 +204,8 @@ jobs:
           body: ${{ steps.body.outputs.body }}
           allowUpdates: true
           updateOnlyUnreleased: ${{ !inputs.update_release }}
-          omitNameDuringUpdate: ${{ inputs.omit_name_during_update }}
-          omitBodyDuringUpdate: ${{ inputs.omit_body_during_update }}
+          omitNameDuringUpdate: ${{ !inputs.replace_name_during_update }}
+          omitBodyDuringUpdate: ${{ !inputs.replace_body_during_update }}
           removeArtifacts: true
           commit: ${{ steps.sem_version.outputs.current_commit }}
 
