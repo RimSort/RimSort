@@ -78,6 +78,7 @@ jobs:
       - name: Enter artifact
         run: |
           cd $(ls -d */|head -n 1)
+          ls
         shell: bash
 
       - name: Unzip artifact
