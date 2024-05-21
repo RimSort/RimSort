@@ -68,17 +68,17 @@ jobs:
       - name: Determine version format
         id: version_format
         run: |
-          if [[ "${{ github.event.inputs.type }}" == "Stable" ]]; then
+          if [[ "${{ inputs.type }}" == "Stable" ]]; then
               v_format="v\${major}.\${minor}.\${patch}"
               prerelease=false
-          elif [[ "${{ github.event.inputs.type }}" == "Edge" ]]; then
+          elif [[ "${{ inputs.type }}" == "Edge" ]]; then
               v_format="v\${major}.\${minor}.\${patch}-edge\${increment}"
               prerelease=true
-          elif [[ "${{ github.event.inputs.type }}" == "Auto-Build" ]]; then
+          elif [[ "${{ inputs.type }}" == "Auto-Build" ]]; then
               v_format="v\${major}.\${minor}.\${patch}-auto\${increment}"
               prerelease=true
           else
-              echo "Unknown type: ${{ github.event.inputs.type }}"
+              echo "Unknown type: ${{ inputs.type }}"
               exit 1
           fi
           echo "Version Format is $v_format"
