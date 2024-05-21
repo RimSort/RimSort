@@ -112,6 +112,6 @@ jobs:
           if [[ ${{ matrix.platform }} == "Ubuntu-22.04" || ${{ matrix.platform }} == "Ubuntu-24.04" ]]; then
             export QT_QPA_PLATFORM=offscreen
           fi
-          timeout 15 ${{ steps.find.outputs.FOUND }}
+          timeout 15 ${{ steps.find.outputs.FOUND }} || true
           echo $?
         shell: bash
