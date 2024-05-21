@@ -16,7 +16,6 @@ permissions: {}
 jobs:
   test:
     runs-on: ${{ matrix.os }}
-    continue-on-error: true
     strategy:
       fail-fast: false
       matrix:
@@ -94,11 +93,12 @@ jobs:
           fi
 
       - name: Check executable permissions
+        continue-on-error: true
         run: |
           if [[ -x $found ]]; then
             echo "Executable is executable"
           else
-            echo "Executable is not executable"
+            echo "Executable is not executable. Attempting to continue"
             chmod +x $found
             exit 1
           fi
