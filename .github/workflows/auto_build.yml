@@ -15,7 +15,7 @@ jobs:
   pre-build:
     uses: ./.github/workflows/get_version.yml
     with:
-      type: ${{ github.event.inputs.type }}
+      type: "Auto-Build"
 
   build:
     needs: pre-build
