@@ -33,6 +33,7 @@ jobs:
             platform: "Darwin"
             env:
               ARTIFACT_KEY_GLOB: "*Darwin_arm*"
+              ARTIFACT_KEY: "Darwin_arm"
               EXPECTED_PATH: "RimSort.app/MacOS/RimSort"
               EXPECTED_NAME: "RimSort"
           - os: ubuntu-22.04
@@ -40,6 +41,7 @@ jobs:
             arch: "x86_64"
             env:
               ARTIFACT_KEY_GLOB: "*Ubuntu-22*"
+              ARTIFACT_KEY: "Ubuntu-22.04_x86_64 "
               EXPECTED_PATH: "RimSort/RimSort"
               EXPECTED_NAME: "RimSort"
           - os: ubuntu-24.04
@@ -47,6 +49,7 @@ jobs:
             arch: "x86_64"
             env:
               ARTIFACT_KEY_GLOB: "*Ubuntu-24*"
+              ARTIFACT_KEY: "Ubuntu-24.04_x86_64"
               EXPECTED_PATH: "RimSort/RimSort"
               EXPECTED_NAME: "RimSort"
           - os: windows-latest
@@ -54,6 +57,7 @@ jobs:
             arch: "x86_64"
             env:
               ARTIFACT_KEY_GLOB: "*Windows_x86_64*"
+              ARTIFACT_KEY: "Windows_x86_64"
               EXPECTED_PATH: "RimSort/RimSort.exe"
               EXPECTED_NAME: "RimSort.exe"
     steps:
@@ -61,13 +65,14 @@ jobs:
         if: ${{ github.event.inputs.run_id != null }}
         uses: actions/download-artifact@v4.1.7
         with:
-          pattern: ${{ matrix.env.ARTIFACT_KEY_GLOB }}
+          name: ${{ matrix.env.ARTIFACT_KEY }}
           run-id: ${{ github.event.inputs.run_id }}
 
       - name: Download artifact from current run
+        if: ${{ github.event.inputs.run_id == null }}
         uses: actions/download-artifact@v4.1.7
         with:
-          pattern: ${{ matrix.env.ARTIFACT_KEY_GLOB }}
+          name: ${{ matrix.env.ARTIFACT_KEY }}
 
       - name: Unzip artifact
         run: |
