@@ -64,8 +64,11 @@ SUBMODULE_UPDATE_INIT_CMD = ["git", "submodule", "update", "--init", "--recursiv
 
 
 def get_rimsort_pip(build: bool = False, dev: bool = False) -> None:
-    print("Installing core RimSort requirements")
+    print("Will install core RimSort requirements")
     command = [PY_CMD, "-m", "pip", "install", "-r", REQUIREMENTS_FILES["main"]]
+
+    print("Will install local submodules")
+    command.extend(["-e", "submodules/steamfiles"])
 
     if build:
         print("Will install RimSort build requirements")

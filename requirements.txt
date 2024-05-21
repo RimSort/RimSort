@@ -19,4 +19,3 @@ steam==1.4.4
 toposort==1.10
 watchdog==4.0.0
 xmltodict==0.13.0
-submodules/steamfiles
