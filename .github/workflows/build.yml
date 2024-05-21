@@ -172,3 +172,6 @@ jobs:
           if-no-files-found: error
     outputs:
       filename: ${{ steps.filename.outputs.FILENAME }}
+
+  post-build-test:
+    uses: ./.github/workflows/test_builds.yml
