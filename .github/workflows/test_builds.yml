@@ -75,13 +75,20 @@ jobs:
         with:
           pattern: ${{ matrix.env.ARTIFACT_KEY_GLOB }}
 
+      - name: Enter artifact
+        run: |
+          cd $(ls -d */|head -n 1)
+        shell: bash
+
       - name: Unzip artifact
         run: |
           unzip -q *.zip
+        shell: bash
 
       - name: Find executable
         run: |
           find . -type f -name ${{ matrix.env.EXPECTED_NAME }} >> found.txt
+        shell: bash
 
       - name: Check if a found file matches expected path
         run: |
@@ -97,6 +104,7 @@ jobs:
             echo "No executable found matching expected name ${{ matrix.env.EXPECTED_NAME }}"
             exit 1
           fi
+        shell: bash
 
       - name: Check executable permissions
         continue-on-error: true
@@ -108,6 +116,7 @@ jobs:
             chmod +x $found
             exit 1
           fi
+        shell: bash
 
       - name: Run executable. Attempt to run the executable, waits 10 seconds, then kills it.
         run: |
@@ -116,3 +125,4 @@ jobs:
           kill $!
           wait $!
           echo "Executable ran successfully"
+        shell: bash
