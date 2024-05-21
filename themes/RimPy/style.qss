@@ -72,6 +72,10 @@ QFrame#horizontalLine {
     background-color: #e6edf3;
 }
 /* Default input box style */
+QInputDialog{
+    background: #1B2838;
+}
+/* TODO: Possibly redundant and can be deprecated */
 QInputDialog#dialogue{
     background: #1B2838;
 }
