@@ -1813,7 +1813,6 @@ class MainContent(QObject):
         if ok:
             self.settings_controller.settings.run_args = args.split(",")
             self.settings_controller.settings.save()
-
     # TODDS ACTIONS
 
     def _do_optimize_textures(self, todds_txt_path: str) -> None:
