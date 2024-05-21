@@ -104,9 +104,9 @@ jobs:
 
       - name: Run executable. Attempt to run the executable, waits 15 seconds, then kills it.
         run: |
+          export QT_QPA_PLATFORM=offscreen
           ${{ steps.find.outputs.FOUND }} &
           sleep 15
-          # Kill and ignore exit code
           echo "Killing process"
           kill $! || true
           echo "Process killed"
