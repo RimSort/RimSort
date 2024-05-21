@@ -73,7 +73,7 @@ jobs:
       - name: Un-tar artifact
         run: |
           cd "$(find . -type d | head -n 1)"
-          tar -xf -- *.tar
+          tar -xf "*.tar"
         shell: bash
 
       - name: Find executable
