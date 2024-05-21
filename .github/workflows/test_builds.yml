@@ -102,10 +102,16 @@ jobs:
           sudo apt-get install -y libegl-dev libxcb-cursor0 qt6-base-dev
         shell: bash
 
+      - name: If MacOS, install coreutils for timeout
+        if: ${{ matrix.platform == 'Darwin' }}
+        run: |
+          brew install coreutils
+
       - name: Run executable. Attempt to run the executable, waits 15 seconds, then kills it.
         run: |
           if [[ ${{ matrix.platform }} == "Ubuntu-22.04" || ${{ matrix.platform }} == "Ubuntu-24.04" ]]; then
             export QT_QPA_PLATFORM=offscreen
           fi
           timeout 15 ${{ steps.find.outputs.FOUND }}
+          echo $?
         shell: bash
