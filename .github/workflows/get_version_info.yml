@@ -1,0 +1,137 @@
+name: Get Version Info
+on:
+  workflow_call:
+    inputs:
+      type:
+        description: "Versioning format"
+        required: false
+        type: string
+        default: "Auto-Build"
+      format_only:
+        description: "Only get version format"
+        required: false
+        type: boolean
+        default: false
+    outputs:
+      version_format:
+        description: "Versioning format"
+        value: ${{ jobs.get-version-format.outputs.version_format }}
+      prerelease:
+        description: "Prerelease"
+        value: ${{ jobs.get-version-format.outputs.prerelease }}
+      version:
+        description: "Version"
+        value: ${{ jobs.get-version-format.outputs.version }}
+      major:
+        description: "Major"
+        value: ${{ jobs.get-version-format.outputs.major }}
+      minor:
+        description: "Minor"
+        value: ${{ jobs.get-version-format.outputs.minor }}
+      patch:
+        description: "Patch"
+        value: ${{ jobs.get-version-format.outputs.patch }}
+      increment:
+        description: "Increment"
+        value: ${{ jobs.get-version-format.outputs.increment }}
+      version_type:
+        description: "Version Type"
+        value: ${{ jobs.get-version-format.outputs.version_type }}
+      version_tag:
+        description: "Version Tag"
+        value: ${{ jobs.get-version-format.outputs.version_tag }}
+      changed:
+        description: "Changed"
+        value: ${{ jobs.get-version-format.outputs.changed }}
+      is_tagged:
+        description: "Is Tagged"
+        value: ${{ jobs.get-version-format.outputs.is_tagged }}
+      authors:
+        description: "Authors"
+        value: ${{ jobs.get-version-format.outputs.authors }}
+      current_commit:
+        description: "Current Commit"
+        value: ${{ jobs.get-version-format.outputs.current_commit }}
+      previous_commit:
+        description: "Previous Commit"
+        value: ${{ jobs.get-version-format.outputs.previous_commit }}
+      previous_version:
+        description: "Previous Version"
+        value: ${{ jobs.get-version-format.outputs.previous_version }}
+
+permissions: {}
+
+jobs:
+  get-version-format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine version format
+        id: version_format
+        run: |
+          if [[ "${{ inputs.type }}" == "Stable" ]]; then
+              v_format="v\${major}.\${minor}.\${patch}"
+              prerelease=false
+          elif [[ "${{ inputs.type }}" == "Edge" ]]; then
+              v_format="v\${major}.\${minor}.\${patch}-edge\${increment}"
+              prerelease=true
+          elif [[ "${{ inputs.type }}" == "Auto-Build" ]]; then
+              v_format="v\${major}.\${minor}.\${patch}-auto\${increment}"
+              prerelease=true
+          else
+              echo "Unknown type: ${{ inputs.type }}"
+              exit 1
+          fi
+          echo "Version Format is $v_format"
+          echo "version_format=$v_format" >> "$GITHUB_OUTPUT"
+          echo "prerelease=$prerelease" >> "$GITHUB_OUTPUT"
+        shell: bash
+
+      - name: Checkout
+        if: ${{ inputs.format_only == false }}
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get semantic version
+        id: sem_version
+        if: ${{ inputs.format_only == false }}
+        uses: PaulHatch/semantic-version@v5.4.0
+        with:
+          version_format: "${{ steps.version_format.outputs.version_format }}"
+          change_path: "app libs submodules themes"
+
+      - name: Get short Sha
+        id: short_sha
+        run: |
+          short_sha=$(echo "${{ steps.sem_version.outputs.current_commit }}" | cut -c1-7)
+          echo "short_sha=$short_sha" >> "$GITHUB_OUTPUT"
+        shell: bash
+
+      - name: Get version string
+        id: version
+        run: |
+          if [[ "${{ github.event.inputs.type }}" == "Stable" ]]; then
+                    version="${{ steps.sem_version.outputs.version}}"
+          else
+            version="${{ steps.sem_version.outputs.version}}+${{steps.short_sha.outputs.short_sha}}"
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+        shell: bash
+
+    outputs:
+      version_format: ${{ steps.version_format.outputs.version_format }}
+      prerelease: ${{ steps.version_format.outputs.prerelease }}
+      version: ${{ steps.version.outputs.version }}
+      major: ${{ steps.sem_version.outputs.major }}
+      minor: ${{ steps.sem_version.outputs.minor }}
+      patch: ${{ steps.sem_version.outputs.patch }}
+      increment: ${{ steps.sem_version.outputs.increment }}
+      version_type: ${{ steps.sem_version.outputs.version_type}}
+      version_tag: ${{ steps.sem_version.outputs.version_tag }}
+      changed: ${{ steps.sem_version.outputs.changed }}
+      is_tagged: ${{ steps.sem_version.outputs.is_tagged }}
+      authors: ${{ steps.sem_version.outputs.authors }}
+      current_commit: ${{ steps.sem_version.outputs.current_commit }}
+      previous_commit: ${{ steps.sem_version.outputs.previous_commit }}
+      previous_version: ${{ steps.sem_version.outputs.previous_version }}
+      current_commit_short: ${{ steps.short_sha.outputs.short_sha }}

@@ -1,16 +1,26 @@
 #!/usr/bin/env python3
+"""
+This script is used to set up the environment and build the RimSort application.
+It installs the required dependencies, initializes and updates submodules, and compiles the SteamworksPy library.
+The script supports different operating systems and architectures.
 
-from io import BytesIO
+For arguments and usage, run the script with the --help flag.
+
+Not meant to be imported as a module.
+"""
+
+
+import argparse
 import os
-from pathlib import Path
 import platform
-import requests
 import shutil
-from stat import S_IEXEC
 import subprocess
 import sys
-import time
+from io import BytesIO
+from stat import S_IEXEC
 from zipfile import ZipFile
+
+import requests
 
 """
 Setup environment
@@ -25,121 +35,61 @@ if _PROCESSOR == "":
 _SYSTEM = platform.system()
 
 PY_CMD = sys.executable
-if _SYSTEM == "Darwin" and _PROCESSOR == "arm":
-    _NUITKA_CMD = [
-        PY_CMD,
-        "-m",
-        "nuitka",
-        "--assume-yes-for-downloads",
-        "--standalone",
-        # "--onefile",
-        "--macos-create-app-bundle",
-        "--macos-app-icon=./themes/default-icons/AppIcon_a.icns",
-        "--enable-plugin=pyside6",
-        "--include-data-dir=./themes/=themes",
-        "--include-data-dir=./todds/=todds",
-        "--include-data-file=./update.sh=update.sh",
-        f"--include-data-file=./libs/SteamworksPy_{_PROCESSOR}.dylib=SteamworksPy.dylib",
-        "--include-data-file=./libs/libsteam_api.dylib=libsteam_api.dylib",
-        "--include-data-file=./steam_appid.txt=steam_appid.txt",
-        "--include-package=steamworks",
-        "app/__main__.py",
-        "--output-dir=./build/",
-        "--output-filename=RimSort",
-    ]
-elif _SYSTEM == "Darwin" and _PROCESSOR == "i386":
-    _NUITKA_CMD = [
-        PY_CMD,
-        "-m",
-        "nuitka",
-        "--assume-yes-for-downloads",
-        "--standalone",
-        # "--onefile",
-        "--macos-create-app-bundle",
-        "--macos-app-icon=./themes/default-icons/AppIcon_a.icns",
-        "--enable-plugin=pyside6",
-        "--include-data-dir=./themes/=themes",
-        "--include-data-dir=./todds/=todds",
-        "--include-data-file=./update.sh=update.sh",
-        f"--include-data-file=./libs/SteamworksPy_{_PROCESSOR}.dylib=SteamworksPy.dylib",
-        "--include-data-file=./libs/libsteam_api.dylib=libsteam_api.dylib",
-        "--include-data-file=./steam_appid.txt=steam_appid.txt",
-        "--include-package=steamworks",
-        "app/__main__.py",
-        "--output-dir=./build/",
-        "--output-filename=RimSort",
-    ]
+
+_NUITKA_CMD = [
+    PY_CMD,
+    "-m",
+    "nuitka",
+    "app/__main__.py",
+]
+
+if _SYSTEM == "Darwin" and _PROCESSOR in ["i386", "arm"]:
+    pass
 elif _SYSTEM == "Linux":
-    _NUITKA_CMD = [
-        PY_CMD,
-        "-m",
-        "nuitka",
-        "--assume-yes-for-downloads",
-        "--standalone",
-        # "--onefile",
-        "--linux-icon=./themes/default-icons/AppIcon_a.png",
-        "--enable-plugin=pyside6",
-        "--include-data-dir=./themes/=themes",
-        "--include-data-dir=./todds/=todds",
-        "--include-data-file=./update.sh=update.sh",
-        f"--include-data-file=./libs/SteamworksPy_{_PROCESSOR}.so=SteamworksPy.so",
-        "--include-data-file=./libs/libsteam_api.so=libsteam_api.so",
-        "--include-data-file=./steam_appid.txt=steam_appid.txt",
-        "--include-package=steamworks",
-        "app/__main__.py",
-        "--output-dir=./build/",
-        "--output-filename=RimSort",
-    ]
+    pass
 elif _SYSTEM == "Windows" and _ARCH == "64bit":
-    _NUITKA_CMD = [
-        PY_CMD,
-        "-m",
-        "nuitka",
-        "--assume-yes-for-downloads",
-        "--standalone",
-        "--disable-console",
-        # "--onefile",
-        "--windows-icon-from-ico=./themes/default-icons/AppIcon_a.png",
-        "--enable-plugin=pyside6",
-        "--include-data-dir=./themes/=themes",
-        "--include-data-dir=./todds/=todds",
-        "--include-data-file=./update.bat=update.bat",
-        "--include-data-file=./libs/SteamworksPy64.dll=SteamworksPy64.dll",
-        "--include-data-file=./libs/steam_api64.dll=steam_api64.dll",
-        "--include-data-file=./steam_appid.txt=steam_appid.txt",
-        "--include-package=steamworks",
-        "app/__main__.py",
-        "--output-dir=./build/",
-        "--output-filename=RimSort",
-    ]
+    pass
 else:
     print(f"Unsupported SYSTEM: {_SYSTEM} {_ARCH} with {_PROCESSOR}")
     print("Exiting...")
+
 GET_REQ_CMD = [PY_CMD, "-m", "pip", "install", "-r", "requirements.txt"]
-STEAMFILES_BUILD_CMD = [PY_CMD, "setup.py", "install"]
-STEAMFILES_SRC = os.path.join(_CWD, "submodules", "steamfiles")
+
+REQUIREMENTS_FILES = {
+    "main": "requirements.txt",
+    "build": "requirements_build.txt",
+    "dev": "requirements_develop.txt",
+}
 SUBMODULE_UPDATE_INIT_CMD = ["git", "submodule", "update", "--init", "--recursive"]
 
 
-def get_rimsort_deps() -> None:
-    print("Installing core RimSort requirements with pip...")
-    _execute(GET_REQ_CMD)
+def get_rimsort_pip(build: bool = False, dev: bool = False) -> None:
+    print("Will install core RimSort requirements")
+    command = [PY_CMD, "-m", "pip", "install", "-r", REQUIREMENTS_FILES["main"]]
+
+    if build:
+        print("Will install RimSort build requirements")
+        command.extend(["-r", REQUIREMENTS_FILES["build"]])
+
+    if dev:
+        print("Will install RimSort development requirements")
+        command.extend(["-r", REQUIREMENTS_FILES["dev"]])
+
+    _execute(command)
+
+
+def get_rimsort_submodules() -> None:
     print("Ensuring we have all submodules initiated & up-to-date...")
     _execute(SUBMODULE_UPDATE_INIT_CMD)
-    # Get Steamfiles requirements
-    print("Building submodules...")
-    print(f"Changing directory to {STEAMFILES_SRC}")
-    os.chdir(STEAMFILES_SRC)
-    print("Building steamfiles module...")
-    _execute(STEAMFILES_BUILD_CMD)
-    print(f"Leaving {STEAMFILES_SRC}")
-    os.chdir(_CWD)
+
+    print("pip install steamfiles from submodule")
+    path = os.path.join(_CWD, "submodules", "steamfiles")
+    _execute([PY_CMD, "-m", "pip", "install", "-e", path])
 
 
 def build_steamworkspy() -> None:
     # Setup environment
     print("Setting up environment...")
-    MODULE_SRC_PATH = os.path.join(_CWD, "submodules", "SteamworksPy", "steamworks")
     STEAMWORKSPY_BIN_DARWIN = f"SteamworksPy_{_PROCESSOR}.dylib"
     STEAMWORKSPY_BIN_DARWIN_LINK_PATH = os.path.join(_CWD, "SteamworksPy.dylib")
     DARWIN_COMPILE_CMD = [
@@ -204,7 +154,6 @@ def build_steamworkspy() -> None:
     ]
     # SOURCE: "https://partner.steamgames.com/downloads/steamworks_sdk_*.zip"
     STEAMWORKS_SDK_URL = "https://github.com/oceancabbage/RimSort/raw/steamworks-sdk/steamworks_sdk_155.zip"
-    SUBMODULE_UPDATE_INIT_CMD = ["git", "submodule", "update", "--init", "--recursive"]
     STEAMWORKS_PY_PATH = os.path.join(_CWD, "submodules", "SteamworksPy", "library")
     STEAMWORKS_SDK_PATH = os.path.join(STEAMWORKS_PY_PATH, "sdk")
     STEAMWORKS_SDK_HEADER_PATH = os.path.join(STEAMWORKS_SDK_PATH, "public", "steam")
@@ -327,10 +276,10 @@ def build_steamworkspy() -> None:
     if os.path.exists(STEAMWORKS_SDK_PATH):
         print("Existing SDK found. Removing, and re-downloading fresh copy.")
         shutil.rmtree(STEAMWORKS_SDK_PATH)
-    with ZipFile(BytesIO(requests.get(STEAMWORKS_SDK_URL).content)) as zipobj:
+    with ZipFile(BytesIO(handle_request(STEAMWORKS_SDK_URL).content)) as zipobj:
         zipobj.extractall(STEAMWORKS_PY_PATH)
 
-    print(f"Getting Steam headers...")
+    print("Getting Steam headers...")
     shutil.copytree(STEAMWORKS_SDK_HEADER_PATH, STEAMWORKS_SDK_HEADER_DEST_PATH)
 
     print("Getting Steam API lib file...")
@@ -401,9 +350,10 @@ def get_latest_todds_release() -> None:
     headers = None
     if "GITHUB_TOKEN" in os.environ:
         headers = {"Authorization": f"token {os.environ['GITHUB_TOKEN']}"}
-    raw = requests.get(
+    raw = handle_request(
         "https://api.github.com/repos/joseasoler/todds/releases/latest", headers=headers
     )
+
     json_response = raw.json()
     tag_name = json_response["tag_name"]
     todds_path = os.path.join(_CWD, "todds")
@@ -430,69 +380,187 @@ def get_latest_todds_release() -> None:
     for asset in json_response["assets"]:
         if asset["name"] == target_archive:
             browser_download_url = asset["browser_download_url"]
-    if not "browser_download_url" in locals():
+    if "browser_download_url" not in locals():
         print(
             f"Failed to find valid joseasoler/todds release for {_SYSTEM} {_ARCH} {_PROCESSOR}"
         )
         return
+
     # Try to download & extract todds release from browser_download_url
-    target_archive_extracted = target_archive.replace(".zip", "")
     try:
         print(f"Downloading & extracting todds release from: {browser_download_url}")
-        with ZipFile(BytesIO(requests.get(browser_download_url).content)) as zipobj:
+        with ZipFile(BytesIO(handle_request(browser_download_url).content)) as zipobj:
             zipobj.extractall(todds_path)
         # Set executable permissions as ZipFile does not preserve this in the zip archive
         todds_executable_path = os.path.join(todds_path, todds_executable_name)
         if os.path.exists(todds_executable_path):
             original_stat = os.stat(todds_executable_path)
             os.chmod(todds_executable_path, original_stat.st_mode | S_IEXEC)
-    except:
+    except Exception as e:
         print(f"Failed to download: {browser_download_url}")
         print(
             "Did the file/url change?\nDoes your environment have access to the Internet?"
         )
+        print(f"Error: {e}")
 
 
 def freeze_application() -> None:
-    # Nuitka
-    print(f"Running on {_SYSTEM} {_ARCH} {_PROCESSOR}...")
+    """Build the RimSort application using Nuitka."""
+    # Check if NUITKA_CACHE_DIR exists in environment
+    if "NUITKA_CACHE_DIR" in os.environ:
+        print(f"NUITKA_CACHE_DIR: {os.environ['NUITKA_CACHE_DIR']}")
     # Set the PYTHONPATH environment variable to include your submodules directory
-    env = os.environ.copy()
-    env["PYTHONPATH"] = (
-        str((Path(_CWD) / "submodules" / "SteamworksPy"))
-        + os.pathsep
-        + env.get("PYTHONPATH", "")
-    )
-    _execute(_NUITKA_CMD, env=env)
+    os.environ["PYTHONPATH"] = os.path.join(_CWD, "submodules", "SteamworksPy")
+
+    _execute(_NUITKA_CMD, env=os.environ)
 
 
-def _execute(cmd: list[str], env=None) -> None:
+def _execute(cmd: list[str], env: os._Environ | None = None) -> None:
     print(f"\nExecuting command: {cmd}\n")
     p = subprocess.Popen(cmd, env=env)
     p.wait()
+    if p.returncode != 0:
+        print(f"Command failed: {cmd}")
+        sys.exit(p.returncode)
+
+
+def handle_request(
+    url: str, headers: dict[str, str] | None = None
+) -> requests.Response:
+    raw = requests.get(url, headers=headers)
+    if raw.status_code != 200:
+        raise Exception(
+            f"Failed to get latest release: {raw.status_code}" f"\nResponse: {raw.text}"
+        )
+    return raw
+
+
+def make_args() -> argparse.ArgumentParser:
+    """
+    Create and configure the argument parser for the RimSort application setup script.
+
+    Returns:
+        argparse.ArgumentParser: The configured argument parser.
+    """
+    description = """This script is used to set up the environment and build the RimSort application.
+    It installs the required dependencies, initializes and updates submodules, and compiles the SteamworksPy library.
+    The script supports different operating systems and architectures."""
+
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument(
+        "-d",
+        "--dev",
+        action="store_true",
+        help="enables dev mode, installing dev requirements and enables application console if applicable",
+    )
+
+    parser.add_argument(
+        "--skip-submodules",
+        action="store_true",
+        help="skip installing RimSort submodules using git",
+    )
+
+    # Skip dependencies
+    parser.add_argument(
+        "--skip-pip",
+        action="store_true",
+        help="skip installing RimSort pip requirements",
+    )
+
+    # Skip SteamworksPy Copy
+    parser.add_argument(
+        "--skip-steamworkspy",
+        action="store_true",
+        help="skip copying SteamworksPy library",
+    )
+
+    # Enable SteamworksPy build
+    parser.add_argument(
+        "--build-steamworkspy",
+        action="store_true",
+        help="build SteamworksPy instead of copying it",
+    )
+
+    # Skip todds
+    parser.add_argument(
+        "--skip-todds",
+        action="store_true",
+        help="skip grabbing latest todds release",
+    )
+
+    # Don't build
+    parser.add_argument(
+        "--skip-build",
+        action="store_true",
+        help="skip building RimSort with Nuitka",
+    )
+
+    parser.add_argument(
+        "--product-version",
+        type=str,
+        help="product version to use for the build formatted as MAJOR.MINOR.PATCH.INCREMENT",
+        required=False,
+    )
+
+    return parser
+
+
+def main() -> None:
+    # Parse arguments
+    parser = make_args()
+    args = parser.parse_args()
+    build = not args.skip_build
+
+    print(f"Running on {_SYSTEM} {_ARCH} {_PROCESSOR}...")
+    if not args.skip_submodules:
+        print("Getting RimSort submodules...")
+        get_rimsort_submodules()
+    else:
+        print("Skipped getting submodules")
+
+    # RimSort dependencies
+    if not args.skip_pip:
+        print("Getting RimSort python requirements...")
+        get_rimsort_pip(build=build, dev=args.dev)
+    else:
+        print("Skipped getting python pip requirements")
+
+    if args.build_steamworkspy:
+        print("Building SteamworksPy library. Skipping copy...")
+        build_steamworkspy()
+    elif not args.skip_steamworkspy:
+        print("Copying SteamworksPy library")
+        copy_swp_libs()
+
+    # Grab latest todds release
+    if not args.skip_todds:
+        print("Grabbing latest todds release...")
+        get_latest_todds_release()
+    else:
+        print("Skipped todds release")
+
+    # Build Nuitka distributable binary
+    if not args.skip_build:
+        if args.product_version:
+            version = "".join(args.product_version.split())
+            _NUITKA_CMD.extend(
+                [
+                    "--file-description=An open source RimWorld mod manager.",
+                    f"--product-version={version}",
+                ]
+            )
+        if args.dev:
+            print("In dev mode, enabling console in build")
+            _NUITKA_CMD.append("--enable-console")
+
+        print("Building RimSort application with Nuitka...")
+        freeze_application()
+    else:
+        print("Skipped distribute.py build")
 
 
 if __name__ == "__main__":
     """
     Do stuff!
     """
-
-    # RimSort dependencies
-    print("Getting RimSort dependencies...")
-    get_rimsort_deps()
-
-    # Build SteamworksPy
-    # print("Building SteamworksPy library...")
-    # build_steamworkspy()
-
-    # Copy SteamworksPy prebuilt libs
-    print("Copying SteamworksPy libs for release...")
-    copy_swp_libs()
-
-    # Grab latest todds release
-    print("Grabbing latest todds release...")
-    get_latest_todds_release()
-
-    # Build Nuitka distributable binary
-    print("Building RimSort application with Nuitka...")
-    freeze_application()
+    main()

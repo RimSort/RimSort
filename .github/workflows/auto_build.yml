@@ -1,0 +1,30 @@
+# Auto build on push to main and PR.
+# Not recommended to release these builds due to versioning.
+
+name: Auto Build
+on:
+  pull_request:
+    types: [opened, synchronize]
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - "app/**"
+      - "distribute.py"
+      - "requirements*.txt"
+
+jobs:
+  pre-build:
+    uses: ./.github/workflows/get_version_info.yml
+    with:
+      format_only: true
+
+  build:
+    needs: pre-build
+    permissions:
+      id-token: write
+      contents: read
+    uses: ./.github/workflows/build.yml
+    with:
+      version_format: ${{ needs.pre-build.outputs.version_format }}

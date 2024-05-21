@@ -1,0 +1,178 @@
+name: Build
+on:
+  workflow_call:
+    inputs:
+      version_format:
+        description: "Versioning format"
+        required: false
+        type: string
+        default: "v${major}.${minor}.${patch}"
+  # checkov:skip=CKV_GHA_7
+  workflow_dispatch:
+    inputs:
+      version_format:
+        description: "Versioning format"
+        required: false
+        type: string
+        default: "v${major}.${minor}.${patch}"
+
+permissions: {}
+
+jobs:
+  build:
+    permissions:
+      id-token: write
+      contents: read
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-13
+            platform: "Darwin"
+            arch: "i386"
+            env:
+              BUILD_OUTPUT: "__main__.app"
+          - os: macos-latest
+            platform: "Darwin"
+            arch: "arm"
+            env:
+              BUILD_OUTPUT: "__main__.app"
+          - os: ubuntu-22.04
+            platform: "Ubuntu-22.04"
+            arch: "x86_64"
+            env:
+              BUILD_OUTPUT: "__main__.dist"
+          - os: ubuntu-24.04
+            platform: "Ubuntu-24.04"
+            arch: "x86_64"
+            env:
+              BUILD_OUTPUT: "__main__.dist"
+          - os: windows-latest
+            platform: "Windows"
+            arch: "x86_64"
+            env:
+              BUILD_OUTPUT: "__main__.dist"
+    steps:
+      - name: Check-out repository
+        uses: actions/checkout@main
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Add submodules to pythonpath
+        id: pythonpath
+        run: |
+          if [ "${{ matrix.platform }}" == "Windows" ]; then
+            echo "PYTHONPATH=$PYTHONPATH;${{ github.workspace }}\submodules\SteamworksPy" >> "$GITHUB_OUTPUT"
+          else
+            echo "PYTHONPATH=$PYTHONPATH:${{ github.workspace }}/submodules/SteamworksPy" >> "$GITHUB_OUTPUT"
+          fi
+        shell: bash
+
+      - name: Remove problematic brew libs
+        run: |
+          brew remove --force --ignore-dependencies openssl@3
+          brew cleanup openssl@3
+        if: runner.os == 'macos' && matrix.arch == 'i386'
+
+      - name: Get semantic version
+        id: sem_version
+        uses: PaulHatch/semantic-version@v5.4.0
+        with:
+          version_format: "${{ inputs.version_format }}"
+          change_path: "app libs submodules themes"
+
+      - name: Make (overwrite) version.xml
+        id: version_xml
+        run: |
+          rm -f version.xml
+          {
+          echo "<version>"
+          echo "  <version>${{ steps.sem_version.outputs.version  }}</version>"
+          echo "  <major>${{ steps.sem_version.outputs.major }}</major>"
+          echo "  <minor>${{ steps.sem_version.outputs.minor }}</minor>"
+          echo "  <patch>${{ steps.sem_version.outputs.patch }}</patch>"
+          echo "  <increment>${{ steps.sem_version.outputs.increment }}</increment>"
+          echo "  <commit>${{ steps.sem_version.outputs.current_commit   }}</commit>"
+          echo "  <tag>${{ steps.sem_version.outputs.version_tag  }}</tag>"
+          echo "</version>"
+          } >> version.xml
+        shell: bash
+
+      - name: Setup Python
+        uses: actions/setup-python@main
+        with:
+          python-version: "3.11"
+          architecture: "x64" # optional x64 or x86. Defaults to x64 if not specified
+          cache: "pip"
+          cache-dependency-path: |
+            **/requirements*.txt
+
+      - name: Install Dependencies
+        run: pip install -r requirements.txt -r requirements_build.txt
+
+      - name: Build Actions
+        shell: bash
+        run: |
+          set -e
+          python distribute.py \
+          --skip-pip \
+          --product-version='${{ steps.sem_version.outputs.major }}.
+            ${{ steps.sem_version.outputs.minor }}.
+            ${{ steps.sem_version.outputs.patch }}.
+            ${{ steps.sem_version.outputs.increment }}' \
+          --skip-build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build
+        uses: Nuitka/Nuitka-Action@main
+        if: true
+        with:
+          nuitka-version: main
+          script-name: app/__main__.py
+          disable-console: true
+          onefile: false
+          static-libpython: auto
+          product-version: >-
+            ${{ steps.sem_version.outputs.major }}.
+            ${{ steps.sem_version.outputs.minor }}.
+            ${{ steps.sem_version.outputs.patch }}.
+            ${{ steps.sem_version.outputs.increment }}
+          file-description: "An open source RimWorld mod manager."
+          include-data-files: |
+            version.xml=version.xml
+        env:
+          PYTHONPATH: ${{ steps.pythonpath.outputs.PYTHONPATH }}
+
+      - name: Set FILENAME
+        id: filename
+        run: |
+          FILENAME="${{ matrix.platform }}_"
+          FILENAME+="${{ matrix.arch }}"
+          echo "FILENAME=$FILENAME" >> "$GITHUB_OUTPUT"
+        shell: bash
+
+      - name: Rename new build
+        run: |
+          cd build
+          mv "${{ matrix.env.BUILD_OUTPUT }}" "output"
+          tar -cvf "${{ steps.filename.outputs.FILENAME }}.tar" "output" 
+          rm -rf "output"
+        shell: bash
+
+        # Upload folder as artifact
+      - name: Upload folder as artifact
+        uses: actions/upload-artifact@main
+        with:
+          name: ${{ steps.filename.outputs.FILENAME }}
+          path: ./build/${{ steps.filename.outputs.FILENAME }}.tar
+          if-no-files-found: error
+    outputs:
+      filename: ${{ steps.filename.outputs.FILENAME }}
+
+  post-build-test:
+    needs: build
+    uses: ./.github/workflows/test_builds.yml

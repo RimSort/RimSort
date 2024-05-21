@@ -1,0 +1,66 @@
+# yamllint disable rule:line-length
+# yamllint disable rule:indentation
+# yamllint disable rule:comments-indentation
+# too many spelling things, spell-checker: disable
+---
+- module-name: "app"
+  data-files:
+    dirs:
+      - "../themes"
+
+  dlls:
+    - from_filenames:
+        relative_path: "../todds"
+        prefixes:
+          - "todds"
+        executable: "yes"
+      dest_path: "todds"
+    - from_filenames:
+        relative_path: "../libs"
+        prefixes:
+          - "steam*"
+          - "Steam*"
+        suffixes:
+          - "dll"
+      dest_path: "."
+      when: "win32"
+    - from_filenames:
+        relative_path: "../libs"
+        prefixes:
+          - "libsteam*"
+          - "Steam*"
+        suffixes:
+          - "so"
+      dest_path: "."
+      when: "linux"
+    - from_filenames:
+        relative_path: "../libs"
+        prefixes:
+          - "*arm"
+        suffixes:
+          - "dylib"
+      dest_path: "."
+      when: "macos and arch_arm64"
+    - from_filenames:
+        relative_path: "../libs"
+        prefixes:
+          - "*i386"
+        suffixes:
+          - "dylib"
+      dest_path: "."
+      when: "macos and arch_amd64"
+    - from_filenames:
+        relative_path: "../libs"
+        prefixes:
+          - "libsteam*"
+        suffixes:
+          - "dylib"
+      dest_path: "."
+      when: "macos"
+
+  options:
+    checks:
+      - description: "Mac Specific Build Options"
+        macos_bundle: "yes"
+        macos_bundle_as_onefile: "no"
+        when: "macos"

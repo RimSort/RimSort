@@ -1,0 +1,192 @@
+name: Build and Release
+on:
+  # checkov:skip=CKV_GHA_7
+  workflow_dispatch:
+    inputs:
+      type:
+        description: "Release type"
+        required: true
+        type: choice
+        options:
+          - "Stable"
+          - "Edge"
+      draft:
+        description: "Draft release"
+        type: boolean
+        default: true
+      skip_build:
+        description: "Skip build/test step"
+        type: boolean
+        default: false
+      run_id:
+        description: "Run ID to grab artifacts from if skipping build"
+        type: number
+        required: false
+      update_release:
+        description: "(Danger!) Allow updating non-draft stable release"
+        type: boolean
+        default: false
+        required: false
+      replace_name_during_update:
+        description: "Override name if updating"
+        type: boolean
+        default: false
+        required: false
+      replace_body_during_update:
+        description: "Override body if updating"
+        type: boolean
+        default: false
+        required: false
+      no_commit_match:
+        description: "Ignore commit match errors"
+        type: boolean
+        default: false
+        required: false
+
+permissions: {}
+
+jobs:
+  pre-build:
+    uses: ./.github/workflows/get_version_info.yml
+    with:
+      type: ${{ github.event.inputs.type }}
+
+  build:
+    needs: pre-build
+    if: inputs.skip_build != true
+    permissions:
+      id-token: write
+      contents: read
+    uses: ./.github/workflows/build.yml
+    with:
+      version_format: ${{ needs.pre-build.outputs.version_format }}
+
+  release:
+    permissions:
+      contents: write
+      packages: read
+      statuses: write
+    needs: [build, pre-build]
+    runs-on: ubuntu-latest
+    if: success() || needs.build.result == 'skipped'
+    steps:
+      - name: Check Build or Skip
+        if: ${{ needs.build.result == 'failure'  || needs.pre-build.result == 'failure'}}
+        run: exit 1
+        shell: bash
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+
+      - name: Determine tag
+        id: tag
+        run: |
+          if [[ "${{ github.event.inputs.type }}" == "Stable" ]]; then
+            tag="${{needs.pre-build.outputs.version_tag}}"
+          elif [[ "${{ github.event.inputs.type }}" == "Edge" ]]; then
+            tag="Edge"
+          else
+            echo "Unknown type: ${{ github.event.inputs.type }}"
+            exit 1
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+        shell: bash
+
+      - name: Install xmlstarlet
+        run: sudo apt-get install -y xmlstarlet
+
+      - name: Download artifacts - Current Flow
+        if: ${{ inputs.skip_build == false }}
+        uses: actions/download-artifact@v4.1.7
+        with:
+          path: artifacts
+
+      - name: Download artifacts - Previous Flow
+        if: ${{ inputs.skip_build == true}}
+        uses: actions/download-artifact@v4.1.7
+        with:
+          path: artifacts
+          run-id: ${{ github.event.inputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Rename artifacts and zip to versioned file
+        id: artifacts
+        run: |
+          cd artifacts
+          for artifact in ./*; do
+            file=${artifact##*/} 
+            base=${file%%.tar}
+            name="RimSort-${{ needs.pre-build.outputs.version }}-$base.zip"
+            rootname=RimSort
+            if [[ $base == *"Darwin"* ]]; then
+              rootname=RimSort.app
+            fi
+            echo "Will zip $artifact to $name"
+            echo "Rootname $rootname"
+            cd "$artifact"
+            tar -xvf "${file}.tar"
+            mv "output" "$rootname"
+            echo "Doing commit match check."
+            version_xml=$(find "$rootname" -name version.xml)
+            commit=$(xmlstarlet sel -t -v "//commit" "$version_xml")
+            if [[ "$commit" != "${{  needs.pre-build.outputs.current_commit }}" ]]; then
+              echo "Commit mismatch for artifact $artifact. Expected ${{  needs.pre-build.outputs.current_commit }} but true build commit was $commit"
+              if [[ "${{ inputs.no_commit_match }}" == true ]]; then
+                echo "Ignoring commit mismatch and continuing."
+              else
+                exit 1
+              fi
+            fi
+            zip -rmqq "../$name" "$rootname" &
+            cd ..
+          done
+          echo "Waiting for zips to finish"
+          wait
+          echo "Cleaning up - Removing non-zip files"
+          shopt -s extglob
+          rm -rf !(*.zip)
+        shell: bash
+
+      - name: Create body
+        id: body
+        run: |
+          ACTION_RUN_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          message="${{ github.event.inputs.type }} release ${{needs.pre-build.outputs.version}}.
+          The latest commit is ${{  needs.pre-build.outputs.current_commit }}.
+
+          Refer to the [action run]($ACTION_RUN_URL) that created this release."
+          echo "body<<EOF"$'\n'"$message"$'\n'EOF >> "$GITHUB_OUTPUT"
+        shell: bash
+
+      - name: Delete Previous Edge Release and Tag
+        if: ${{ github.event.inputs.type == 'Edge' }}
+        run: |
+          gh release delete Edge -y --cleanup-tag || echo "No previous release with tag Edge found"
+          git tag -d Edge || echo "Edge tag doesn't exist locally"
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Release
+        uses: ncipollo/release-action@v1.14.0
+        id: release
+        with:
+          artifacts: artifacts/*
+          tag: ${{ steps.tag.outputs.tag }}
+          generateReleaseNotes: true
+          prerelease: ${{ needs.pre-build.outputs.prerelease }}
+          draft: ${{ github.event.inputs.draft }}
+          body: ${{ steps.body.outputs.body }}
+          allowUpdates: true
+          updateOnlyUnreleased: ${{ !inputs.update_release }}
+          omitNameDuringUpdate: ${{ !inputs.replace_name_during_update }}
+          omitBodyDuringUpdate: ${{ !inputs.replace_body_during_update }}
+          removeArtifacts: true
+          commit: ${{  needs.pre-build.outputs.current_commit }}
+
+      - name: Echo Release URL
+        run: |
+          echo "Release URL: ${{ steps.release.outputs.html_url }}"
+        shell: bash

@@ -1,11 +1,40 @@
+# Compilation mode
+# nuitka-project: --standalone
+# nuitka-project: --assume-yes-for-downloads
+# nuitka-project: --output-filename=RimSort
+# nuitka-project: --output-dir={MAIN_DIRECTORY}/../build/
+# nuitka-project: --disable-console
+# nuitka-project: --noinclude-default-mode=error
+# nuitka-project: --include-package=steamworks
+# nuitka-project: --user-package-configuration-file={MAIN_DIRECTORY}/../rimsort.nuitka-package.config.yml
+# nuitka-project: --include-data-file={MAIN_DIRECTORY}/../steam_appid.txt=steam_appid.txt
+# nuitka-project: --windows-icon-from-ico={MAIN_DIRECTORY}/../themes/default-icons/AppIcon_a.png
+
+# The PySide6 plugin covers qt-plugins
+# nuitka-project: --enable-plugin=pyside6
+
+# Mac-Specific options
+# nuitka-project-if: {OS} == "Darwin":
+#   nuitka-project: --macos-create-app-bundle
+#   nuitka-project: --macos-app-icon={MAIN_DIRECTORY}/../themes/default-icons/AppIcon_a.icns
+
+# Updater (OS-specific) options
+# nuitka-project-if: {OS} in ("Windows"):
+#   nuitka-project: --include-data-file={MAIN_DIRECTORY}/../update.bat=update.bat
+# nuitka-project-else:
+#  nuitka-project: --include-data-file={MAIN_DIRECTORY}/../update.sh=update.sh
+
+# nuitka-project-if: os.path.exists("{MAIN_DIRECTORY}/../version.xml"):
+#   nuitka-project: --include-data-file={MAIN_DIRECTORY}/../version.xml=version.xml
+
 import os
 import platform
 import sys
 import traceback
-from logging import getLogger, WARNING
+from logging import WARNING, getLogger
 from multiprocessing import freeze_support, set_start_method
 from types import TracebackType
-from typing import Type, Optional
+from typing import Optional, Type
 
 from loguru import logger
 
@@ -13,9 +42,11 @@ from app.utils.app_info import AppInfo
 
 # One-time initialization of AppInfo class (this must be done in __main__ so we can use __file__)
 # Initialize as early as possible!
-# When the application is frozen, __file__ should be the same when we are __process_main__. 
+# When the application is frozen, __file__ should be the same when we are __process_main__.
 # This should be the same relative path as the initial __file__ in __main__, i.e. on Win11:
 # __file__ is [C:\Users\Tristin\RimSort\build\__MAIN~1.DIS\__main__.py] when __main__ and __process_main__
+
+# TODO: Fix this so that this cursed import order is not required.
 AppInfo(main_file=__file__)
 
 from app.controllers.app_controller import AppController
@@ -36,6 +67,7 @@ elif SYSTEM == "Windows":
     # I still can't figure out why it won't log at all on Windows...?
     # getLogger("").setLevel(WARNING)
 
+# TODO: Fix this so that this cursed import order is not required
 from app.models.dialogue import show_fatal_error
 
 
@@ -108,8 +140,9 @@ def main_thread() -> None:
             try:
                 logger.debug("Stopping watchdog...")
                 app_controller.shutdown_watchdog()
-            except:
+            except Exception as e:
                 stacktrace = traceback.format_exc()
+                logger.warning(f"Exception: {e}")
                 logger.warning(
                     f"watchdog received the following exception while exiting: {stacktrace}"
                 )

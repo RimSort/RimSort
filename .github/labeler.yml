@@ -1,0 +1,25 @@
+documentation 📚:
+  - changed-files:
+      - any-glob-to-any-file: ["docs/**", "*.md"]
+
+DevOps 💻:
+  - changed-files:
+      - any-glob-to-any-file:
+          [
+            ".github/**",
+            "distribute.py",
+            "requirements*.txt",
+            "rimsort.nuitka-package.config.yml",
+          ]
+
+macOS 🍏:
+  - changed-files:
+      - any-glob-to-any-file: ["**/*.dylib"]
+
+Linux🐧:
+  - changed-files:
+      - any-glob-to-any-file: ["**/*.so"]
+
+Windows 🪟:
+  - changed-files:
+      - any-glob-to-any-file: ["**/*.dll"]
