@@ -137,10 +137,11 @@ jobs:
             base="${file%%.*}"
             name=RimSort-${{ steps.version.outputs.version }}-$base.zip
             rootname=RimSort
-            if [[ $name == *"Darwin"* ]]; then
+            if [[ $base == *"Darwin"* ]]; then
               rootname=RimSort.app
             fi
             echo "Zipping $artifact to $name"
+            echo "Rootname $rootname"
             cd "$artifact"
             tar -xvf "${file}.tar"
             mv "output" "$rootname"
