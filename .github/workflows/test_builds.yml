@@ -77,25 +77,27 @@ jobs:
         shell: bash
 
       - name: Find executable
+        id: find
         run: |
-          find . -type f -name ${{ matrix.env.EXPECTED_NAME }} >> found.txt
+          find . -type f -name ${{ matrix.env.EXPECTED_NAME }} >> $found
+          echo "FOUND=$(cat $found)" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: Check executable permissions
         continue-on-error: true
         run: |
-          if [[ -x $found ]]; then
+          if [[ -x ${{ steps.find.outputs.FOUND }} ]]; then
             echo "Executable is executable"
           else
             echo "Executable is not executable. Attempting to continue"
-            chmod +x $found
+            chmod +x ${{ steps.find.outputs.FOUND }}
             exit 1
           fi
         shell: bash
 
       - name: Run executable. Attempt to run the executable, waits 10 seconds, then kills it.
         run: |
-          $found &
+          ${{ steps.find.outputs.FOUND }} &
           sleep 10
           kill $!
           wait $!
