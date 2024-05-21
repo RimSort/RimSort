@@ -1,0 +1,28 @@
+name: Auto Build
+on:
+  pull_request:
+    types: [opened, synchronize]
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - "app/**"
+      - "distribute.py"
+      - "requirements*.txt"
+
+jobs:
+  pre-build:
+    uses: ./.github/workflows/get_version.yml
+    with:
+      type: ${{ github.event.inputs.type }}
+
+  build:
+    needs: pre-build
+    if: inputs.skip_build != true
+    permissions:
+      id-token: write
+      contents: read
+    uses: ./.github/workflows/build.yml
+    with:
+      version_format: ${{ needs.pre-build.outputs.version_format }}

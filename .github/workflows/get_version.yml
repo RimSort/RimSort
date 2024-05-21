@@ -1,0 +1,34 @@
+name: Get Version
+on:
+  workflow_call:
+    inputs:
+      type:
+        description: "Versioning format"
+        required: false
+        type: string
+        default: Stable
+permissions: {}
+
+jobs:
+  pre-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine version format
+        id: version_format
+        run: |
+          if [[ "${{ github.event.inputs.type }}" == "Stable" ]]; then
+              v_format="v\${major}.\${minor}.\${patch}"
+              prerelease=false
+          elif [[ "${{ github.event.inputs.type }}" == "Edge" ]]; then
+              v_format="v\${major}.\${minor}.\${patch}-edge\${increment}"
+              prerelease=true
+          else
+              echo "Unknown type: ${{ github.event.inputs.type }}"
+              exit 1
+          fi
+          echo "version_format=$v_format" >> "$GITHUB_OUTPUT"
+          echo "prerelease=$prerelease" >> "$GITHUB_OUTPUT"
+        shell: bash
+    outputs:
+      version_format: ${{ steps.version_format.outputs.version_format }}
+      prerelease: ${{ steps.version_format.outputs.prerelease }}
