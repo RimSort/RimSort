@@ -80,7 +80,7 @@ jobs:
         id: find
         run: |
           FOUND=$(find . -type f -name ${{ matrix.env.EXPECTED_NAME }})
-          echo "FOUND=$(cat $found)" >> $GITHUB_OUTPUT
+          echo "FOUND=$FOUND" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: Check executable permissions
