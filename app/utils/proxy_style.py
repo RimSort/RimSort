@@ -26,8 +26,8 @@ class ProxyStyle(QProxyStyle):
         Overrides the primitive-element-drawer. Currently used to
         change how the drag/drop indicator for QListWidgetItems looks like.
         """
-        if element == QStyle.PE_IndicatorItemViewItemDrop:
-            pen = QPen(Qt.cyan)
+        if element == QStyle.PrimitiveElement.PE_IndicatorItemViewItemDrop:
+            pen = QPen(Qt.GlobalColor.cyan)
             pen.setWidth(1)
             painter.setPen(pen)
             if option.rect:

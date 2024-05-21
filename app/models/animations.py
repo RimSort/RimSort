@@ -39,7 +39,7 @@ class AnimationLabel(QLabel):
         self.animation.setDuration(300)
         self.animation.setStartValue(1)
         self.animation.setEndValue(0)
-        self.animation.setEasingCurve(QEasingCurve.Linear)
+        self.animation.setEasingCurve(QEasingCurve.Type.Linear)
         self.animation.start()
 
     def start_pause_fade(self, text: str) -> None:
@@ -76,13 +76,13 @@ class LoadingAnimation(QWidget):
         self.thread.finished.connect(self.prepare_stop_animation)
         self.thread.start()
         # Window properties
-        self.setAttribute(Qt.WA_TranslucentBackground, True)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
         # Label and layout
         self.layout = QVBoxLayout(self)
         self.movie = QMovie(self.gif_path)
         self.movie.frameChanged.connect(self.check_animation_stop)
         self.movie.start()
-        self.label = QLabel(alignment=Qt.AlignCenter)
+        self.label = QLabel(alignment=Qt.AlignmentFlag.AlignCenter)
         self.label.setMovie(self.movie)
         self.layout.addWidget(self.label)
         self.setLayout(self.layout)

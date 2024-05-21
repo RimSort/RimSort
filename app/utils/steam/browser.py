@@ -78,8 +78,10 @@ class SteamBrowser(QWidget):
         self.downloader_label.setObjectName("browserPaneldownloader_label")
         self.downloader_list = QListWidget()
         self.downloader_list.setFixedWidth(200)
-        self.downloader_list.setItemAlignment(Qt.AlignCenter)
-        self.downloader_list.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.downloader_list.setItemAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.downloader_list.setContextMenuPolicy(
+            Qt.ContextMenuPolicy.CustomContextMenu
+        )
         self.downloader_list.customContextMenuRequested.connect(
             self._downloader_item_ContextMenuEvent
         )
@@ -100,7 +102,7 @@ class SteamBrowser(QWidget):
         # BROWSER WIDGETS
         # "Loading..." placeholder
         self.web_view_loading_placeholder = ImageLabel()
-        self.web_view_loading_placeholder.setAlignment(Qt.AlignCenter)
+        self.web_view_loading_placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.web_view_loading_placeholder.setSizePolicy(
             QSizePolicy.Expanding, QSizePolicy.Expanding
         )
@@ -114,7 +116,7 @@ class SteamBrowser(QWidget):
         self.web_view.loadStarted.connect(self._web_view_load_started)
         self.web_view.loadProgress.connect(self._web_view_load_progress)
         self.web_view.loadFinished.connect(self._web_view_load_finished)
-        self.web_view.setContextMenuPolicy(Qt.NoContextMenu)
+        self.web_view.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
         self.web_view.load(self.startpage)
 
         # Location box
@@ -130,10 +132,14 @@ class SteamBrowser(QWidget):
         self.add_to_list_button.triggered.connect(self._add_collection_or_mod_to_list)
         self.nav_bar = QToolBar()
         self.nav_bar.setObjectName("browserPanelnav_bar")
-        self.nav_bar.addAction(self.web_view.pageAction(QWebEnginePage.Back))
-        self.nav_bar.addAction(self.web_view.pageAction(QWebEnginePage.Forward))
-        self.nav_bar.addAction(self.web_view.pageAction(QWebEnginePage.Stop))
-        self.nav_bar.addAction(self.web_view.pageAction(QWebEnginePage.Reload))
+        self.nav_bar.addAction(self.web_view.pageAction(QWebEnginePage.WebAction.Back))
+        self.nav_bar.addAction(
+            self.web_view.pageAction(QWebEnginePage.WebAction.Forward)
+        )
+        self.nav_bar.addAction(self.web_view.pageAction(QWebEnginePage.WebAction.Stop))
+        self.nav_bar.addAction(
+            self.web_view.pageAction(QWebEnginePage.WebAction.Reload)
+        )
         # self.nav_bar.addSeparator()
         self.progress_bar = QProgressBar()
         self.progress_bar.setMinimum(0)
@@ -232,7 +238,10 @@ class SteamBrowser(QWidget):
             for metadata in collection_mods_webapi_response:
                 # Retrieve the published mod's title from the response
                 pfid = metadata["publishedfileid"]
-                collection_mods_pfid_to_title[pfid] = metadata["title"]
+                if "title" in metadata:
+                    collection_mods_pfid_to_title[pfid] = metadata["title"]
+                else:
+                    collection_mods_pfid_to_title[pfid] = metadata["publishedfileid"]
         return collection_mods_pfid_to_title
 
     def _add_mod_to_list(
@@ -248,7 +257,7 @@ class SteamBrowser(QWidget):
             self.downloader_list_mods_tracking.append(publishedfileid)
             # Create our list item
             item = QListWidgetItem()
-            item.setData(Qt.UserRole, publishedfileid)
+            item.setData(Qt.ItemDataRole.UserRole, publishedfileid)
             # Set list item label
             if not title:  # If title wasn't passed, get it from the web_view title
                 label = QLabel(page_title)
@@ -290,7 +299,7 @@ class SteamBrowser(QWidget):
             context_menu.exec_(self.downloader_list.mapToGlobal(point))
 
     def _remove_mod_from_list(self, context_item: QListWidgetItem) -> None:
-        publishedfileid = context_item.data(Qt.UserRole)
+        publishedfileid = context_item.data(Qt.ItemDataRole.UserRole)
         if publishedfileid in self.downloader_list_mods_tracking:
             self.downloader_list.takeItem(self.downloader_list.row(context_item))
             self.downloader_list_mods_tracking.remove(publishedfileid)

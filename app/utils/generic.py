@@ -143,7 +143,7 @@ def launch_game_process(game_install_path: Path, args: list) -> None:
         elif system_name == "Linux":
             # Linux
             executable_path = str((game_install_path / "RimWorldLinux"))
-        elif "Windows":
+        elif system_name == "Windows":
             # Windows
             executable_path = str((game_install_path / "RimWorldWin64.exe"))
         else:
