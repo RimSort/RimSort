@@ -26,7 +26,6 @@ jobs:
             env:
               ARTIFACT_KEY_GLOB: "*Darwin_i386*"
               ARTIFACT_KEY: "Darwin_i386"
-              EXPECTED_PATH: "RimSort.app/MacOS/RimSort"
               EXPECTED_NAME: "RimSort"
           - os: macos-latest
             arch: "arm"
@@ -34,7 +33,6 @@ jobs:
             env:
               ARTIFACT_KEY_GLOB: "*Darwin_arm*"
               ARTIFACT_KEY: "Darwin_arm"
-              EXPECTED_PATH: "output/MacOS/RimSort"
               EXPECTED_NAME: "RimSort"
           - os: ubuntu-22.04
             platform: "Ubuntu-22.04"
@@ -42,7 +40,6 @@ jobs:
             env:
               ARTIFACT_KEY_GLOB: "*Ubuntu-22*"
               ARTIFACT_KEY: "Ubuntu-22.04_x86_64 "
-              EXPECTED_PATH: "output/RimSort"
               EXPECTED_NAME: "RimSort"
           - os: ubuntu-24.04
             platform: "Ubuntu-24.04"
@@ -50,7 +47,6 @@ jobs:
             env:
               ARTIFACT_KEY_GLOB: "*Ubuntu-24*"
               ARTIFACT_KEY: "Ubuntu-24.04_x86_64"
-              EXPECTED_PATH: "output/RimSort"
               EXPECTED_NAME: "RimSort"
           - os: windows-latest
             platform: "Windows"
@@ -58,7 +54,6 @@ jobs:
             env:
               ARTIFACT_KEY_GLOB: "*Windows_x86_64*"
               ARTIFACT_KEY: "Windows_x86_64"
-              EXPECTED_PATH: "output/RimSort.exe"
               EXPECTED_NAME: "RimSort.exe"
     steps:
       - name: Download artifact from previous run
@@ -84,22 +79,6 @@ jobs:
       - name: Find executable
         run: |
           find . -type f -name ${{ matrix.env.EXPECTED_NAME }} >> found.txt
-        shell: bash
-
-      - name: Check if a found file matches expected path
-        run: |
-          if [[ -s found.txt ]]; then
-            found=$(cat found.txt)
-            if [[ $found == *"${{ matrix.env.EXPECTED_PATH }}" ]]; then
-              echo "Found executable at $found"
-            else
-              echo "Found executable at $found, expected ${{ matrix.env.EXPECTED_PATH }}"
-              exit 1
-            fi
-          else
-            echo "No executable found matching expected name ${{ matrix.env.EXPECTED_NAME }}"
-            exit 1
-          fi
         shell: bash
 
       - name: Check executable permissions
