@@ -1,4 +1,4 @@
-name: Get Version
+name: Get Version Format
 on:
   workflow_call:
     inputs:

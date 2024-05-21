@@ -1,3 +1,6 @@
+# Auto build on push to main and PR.
+# Not recommended to release these builds due to versioning.
+
 name: Auto Build
 on:
   pull_request:
@@ -13,7 +16,7 @@ on:
 
 jobs:
   pre-build:
-    uses: ./.github/workflows/get_version.yml
+    uses: ./.github/workflows/get_version_format.yml
     with:
       type: "Auto-Build"
 

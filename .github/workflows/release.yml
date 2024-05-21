@@ -42,7 +42,7 @@ permissions: {}
 
 jobs:
   pre-build:
-    uses: ./.github/workflows/get_version.yml
+    uses: ./.github/workflows/get_version_format.yml
     with:
       type: ${{ github.event.inputs.type }}
 
