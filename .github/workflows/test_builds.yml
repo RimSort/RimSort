@@ -72,8 +72,8 @@ jobs:
 
       - name: Un-tar artifact
         run: |
-          cd "$(ls -d */|head -n 1)"
-          tar -xf "./*.tar"
+          cd "$(find . -type d | head -n 1)"
+          tar -xf -- *.tar
         shell: bash
 
       - name: Find executable
