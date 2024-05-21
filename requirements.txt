@@ -2,7 +2,7 @@ beautifulsoup4==4.12.3
 GitPython==3.1.43
 imageio==2.34.1
 loguru==0.7.2
-lxml==5.2.1
+lxml==5.2.2
 mypy==1.10.0
 natsort==8.4.0
 platformdirs==4.2.1
