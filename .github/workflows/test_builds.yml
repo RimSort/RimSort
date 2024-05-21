@@ -95,11 +95,22 @@ jobs:
           fi
         shell: bash
 
+      - name: If Linux, install likely missing libs for gui
+        if: ${{ matrix.platform == 'Ubuntu-22.04' || matrix.platform == 'Ubuntu-24.04' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-glx libgl1-mesa-dri
+        shell: bash
+
       - name: Run executable. Attempt to run the executable, waits 10 seconds, then kills it.
         run: |
           ${{ steps.find.outputs.FOUND }} &
-          sleep 10
+          sleep 15
           kill $!
           wait $!
-          echo "Executable ran successfully"
+          if [[ $? -eq 143 ]]; then
+            echo "Executable ran successfully"
+          else
+            exit $?
+          fi
         shell: bash
