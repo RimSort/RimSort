@@ -128,6 +128,28 @@ Execute: `python -c "from distribute import build_steamworkspy; build_steamworks
    - Anybody can contribute to RimSort. That being said, we are a community and these guidelines will help encourage and enforce consistency with RimSort growth.
    - Maintainer or not - you do not have to be a maintainer to submit PR! Please don't hesitate to work from a fork or something if that's how you roll.
 
+### Versioning and Releases
+
+We utilize automated semantic versioning based on a [GitHub action](https://github.com/PaulHatch/semantic-version/tree/v5.4.0/). This action will auto-increment the version based on keywords in commit messages, tags, and commits in general. The process is utilized by both the release and auto-build pipelines. **Manual overrides using tags should be formatted with `v` as the prefix and follow the release format, e.g. `v1.1.1`.
+
+#### Release Description
+
+|    Type    |                        Version Format                         | Trigger |                                                                   Description                                                                    |
+| :--------: | :-----------------------------------------------------------: | :-----: | :---------------------------------------------------------------------------------------------------------------------------------------------- |
+|  Release   |                v\${major}.\${minor}.\${patch}                 | Manual  |                                           Versions that can be safely used and are considered stable.                                            |
+|    Edge    | v\${major}.\${minor}.\${patch}-edge\${increment}+${short-sha} | Manual  |           Versions that are released often and include the latest features and fixes, but may have significant breaking bugs in them.            |
+| Auto-Build | v\${major}.\${minor}.\${patch}-auto\${increment}+${short-sha} |  Auto   | Versions created by the auto-build pipeline triggered on every pull request and push to main. Not released. Builds created persist as artifacts. |
+
+#### Versioning Keywords and Patterns
+
+| Type  | Pattern | Description                                                                                               |
+| :---: | :-----: | --------------------------------------------------------------------------------------------------------- |
+| major |  (major)  | Major and breaking updates                                                                                |
+| minor |  (minor)  | Minor updates. Not expected to be breaking, but may introduce new features and large amounts of bug fixes |
+| patch |  n/a (Implicit)  | Non-breaking small changes. Incremented on PR if no other patterns.                                                                 |
+| increment | n/a (Implicit)| Number of commits since last version change |
+| short-sha | n/a (Implicit)| First seven characters of the commit sha identifier a build is made from |
+
 ### Developing Features
 
 Please ensure if you have any feature request to check if there is already something planned. We are tracking features and issues related to RimSort in the GitHub repo's "Issues" tab. If it is not already in the issues tab, you can discuss this with maintainers first through the RimSort Discord server.
