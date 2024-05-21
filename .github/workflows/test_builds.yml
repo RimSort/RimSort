@@ -104,7 +104,9 @@ jobs:
 
       - name: Run executable. Attempt to run the executable, waits 15 seconds, then kills it.
         run: |
-          export QT_QPA_PLATFORM=minimal 
+          if [[ ${{ matrix.platform }} == "Ubuntu-22.04" || ${{ matrix.platform }} == "Ubuntu-24.04" ]]; then
+            export QT_QPA_PLATFORM=offscreen
+          fi
           ${{ steps.find.outputs.FOUND }} &
           sleep 15
           echo "Killing process"
