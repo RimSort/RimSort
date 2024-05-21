@@ -1,0 +1,41 @@
+# Auto tests builds.
+# Downloads artifact matching system, nzips them, finds the executable and attempts to run them.
+
+name: Test Builds
+on:
+  workflow_call: null
+
+permissions: {}
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-13
+            platform: "Darwin"
+            arch: "i386"
+            env:
+              ARTIFACT_KEY: "Darwin_i386"
+          - os: macos-latest
+            platform: "Darwin"
+            arch: "arm"
+            env:
+              ARTIFACT_KEY: "Darwin_arm"
+          - os: ubuntu-22.04
+            platform: "Ubuntu-22.04"
+            arch: "x86_64"
+            env:
+              ARTIFACT_KEY: "Ubuntu-22"
+          - os: ubuntu-24.04
+            platform: "Ubuntu-24.04"
+            arch: "x86_64"
+            env:
+              ARTIFACT_KEY: "Ubuntu-24"
+          - os: windows-latest
+            platform: "Windows"
+            arch: "x86_64"
+            env:
+              ARTIFACT_KEY: "Windows_x86_64"
