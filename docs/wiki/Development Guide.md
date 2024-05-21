@@ -130,25 +130,40 @@ Execute: `python -c "from distribute import build_steamworkspy; build_steamworks
 
 ### Versioning and Releases
 
-We utilize automated semantic versioning based on a [GitHub action](https://github.com/PaulHatch/semantic-version/tree/v5.4.0/). This action will auto-increment the version based on keywords in commit messages, tags, and commits in general. The process is utilized by both the release and auto-build pipelines. **Manual overrides using tags should be formatted with `v` as the prefix and follow the release format, e.g. `v1.1.1`.
+We utilize automated semantic versioning based on a [GitHub action](https://github.com/PaulHatch/semantic-version/tree/v5.4.0/). This action will auto-increment the version based on keywords in commit messages, tags, and commits in general. The process is utilized by both the release and auto-build pipelines. \*\*Manual overrides using tags should be formatted with `v` as the prefix and follow the release format, e.g. `v1.1.1`.
 
-#### Release Description
+#### Release Description and Pipeline
 
-|    Type    |                        Version Format                         | Trigger |                                                                   Description                                                                    |
-| :--------: | :-----------------------------------------------------------: | :-----: | :---------------------------------------------------------------------------------------------------------------------------------------------- |
-|  Release   |                v\${major}.\${minor}.\${patch}                 | Manual  |                                           Versions that can be safely used and are considered stable.                                            |
-|    Edge    | v\${major}.\${minor}.\${patch}-edge\${increment}+${short-sha} | Manual  |           Versions that are released often and include the latest features and fixes, but may have significant breaking bugs in them.            |
+|    Type    |                        Version Format                         | Trigger | Description                                                                                                                                      |
+| :--------: | :-----------------------------------------------------------: | :-----: | :----------------------------------------------------------------------------------------------------------------------------------------------- |
+|  Release   |                v\${major}.\${minor}.\${patch}                 | Manual  | Versions that can be safely used and are considered stable.                                                                                      |
+|    Edge    | v\${major}.\${minor}.\${patch}-edge\${increment}+${short-sha} | Manual  | Versions that are released often and include the latest features and fixes, but may have significant breaking bugs in them.                      |
 | Auto-Build | v\${major}.\${minor}.\${patch}-auto\${increment}+${short-sha} |  Auto   | Versions created by the auto-build pipeline triggered on every pull request and push to main. Not released. Builds created persist as artifacts. |
+
+Releases are created through the manual triggering of the relevant GitHub workflow action. For safety, consider setting the release to only be created as a draft.
+
+Edge releases will be overwritten, with a new edge tag created and the old release fully deleted. Stable releases will not be overwritten. By default, non-draft stable releases are protected, and the auto-action will fail if a release with the same version tag already exists.
+
+If, for whatever reason, the build step completed, but the remaining steps of the release pipeline fails, you may re-run the workflow with an override to skip the build step by providing the action with the run ID of which it will grab the build artifacts from for release. Note that doing so may cause a mismatch in the version that the release pipeline is working with and the version that the build is from. This will cause a mismatch between the reported version in the application itself, and the reported version, tag, and tag commit reference in the release. **The version and version.xml in the build is always correct.**
 
 #### Versioning Keywords and Patterns
 
-| Type  | Pattern | Description                                                                                               |
-| :---: | :-----: | --------------------------------------------------------------------------------------------------------- |
-| major |  (major)  | Major and breaking updates                                                                                |
-| minor |  (minor)  | Minor updates. Not expected to be breaking, but may introduce new features and large amounts of bug fixes |
-| patch |  n/a (Implicit)  | Non-breaking small changes. Incremented on PR if no other patterns.                                                                 |
-| increment | n/a (Implicit)| Number of commits since last version change |
-| short-sha | n/a (Implicit)| First seven characters of the commit sha identifier a build is made from |
+|   Type    |    Pattern     | Description                                                                                               |
+| :-------: | :------------: | --------------------------------------------------------------------------------------------------------- |
+|   major   |    (major)     | Major and breaking updates                                                                                |
+|   minor   |    (minor)     | Minor updates. Not expected to be breaking, but may introduce new features and large amounts of bug fixes |
+|   patch   | n/a (Implicit) | Non-breaking small changes. Incremented on PR if no other patterns.                                       |
+| increment | n/a (Implicit) | Number of commits since last version change                                                               |
+| short-sha | n/a (Implicit) | First seven characters of the commit sha identifier a build is made from                                  |
+
+#### Caveats and Potential Issues
+##### Potential Race Condition
+
+Due to how GitHub runner environments work, there is a potential race condition if a commit is made to the branch that the build and release action is running on. If something changes on the branch while the action is running, depending on what step the action is on, there may be differences in the version information in the release, and the commit being used for building. If especially unlucky where one runner for a specific build target loaded and checked out, but a commit is pushed to the branch before other runners for a different target, the builds created for the targets may all be on different commits. 
+
+**Note that the actual version.xml and subsequent app reported version will always be correct.**
+
+To mitigate this issue, the version info for the release pipeline is grabbed first thing, before builds and testing has started. 
 
 ### Developing Features
 
