@@ -99,7 +99,7 @@ jobs:
         if: ${{ matrix.platform == 'Ubuntu-22.04' || matrix.platform == 'Ubuntu-24.04' }}
         run: |
           sudo apt-get update
-          sudo apt-get install -y libegl-dev libxcb-cursor0 qt6-base-dev
+          sudo apt-get install -y libegl-dev
         shell: bash
 
       - name: If MacOS, install coreutils for timeout
