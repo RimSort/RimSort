@@ -81,9 +81,9 @@ jobs:
           ls
         shell: bash
 
-      - name: Unzip artifact
+      - name: Un-tar artifact
         run: |
-          unzip -q *.zip
+          tar -xfq *.tar
         shell: bash
 
       - name: Find executable
