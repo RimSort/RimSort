@@ -104,7 +104,7 @@ class SteamBrowser(QWidget):
         self.web_view_loading_placeholder = ImageLabel()
         self.web_view_loading_placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.web_view_loading_placeholder.setSizePolicy(
-            QSizePolicy.Expanding, QSizePolicy.Expanding
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
         )
         self.web_view_loading_placeholder.setPixmap(
             QPixmap(
@@ -122,7 +122,7 @@ class SteamBrowser(QWidget):
         # Location box
         self.location = QLineEdit()
         self.location.setSizePolicy(
-            QSizePolicy.Expanding, self.location.sizePolicy().verticalPolicy()
+            QSizePolicy.Policy.Expanding, self.location.sizePolicy().verticalPolicy()
         )
         self.location.setText(self.startpage.url())
         self.location.returnPressed.connect(self.__browse_to_location)
