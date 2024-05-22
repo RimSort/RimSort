@@ -4,8 +4,8 @@ from threading import Timer
 from typing import Optional
 from uuid import uuid4
 
-from PySide6.QtCore import QObject, Signal
 from loguru import logger
+from PySide6.QtCore import QObject, Signal
 from watchdog.events import FileSystemEvent, FileSystemEventHandler
 from watchdog.observers.api import BaseObserver
 

@@ -3,11 +3,13 @@ import platform
 from functools import partial
 from typing import Any, Dict, Optional
 
-from PySide6.QtCore import Qt, QPoint, QSize, QUrl, Signal
+from loguru import logger
+from PySide6.QtCore import QPoint, QSize, Qt, QUrl, Signal
 from PySide6.QtGui import QAction, QPixmap
 from PySide6.QtWebEngineCore import QWebEnginePage
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtWidgets import (
+    QHBoxLayout,
     QLabel,
     QLineEdit,
     QListWidget,
@@ -17,11 +19,9 @@ from PySide6.QtWidgets import (
     QPushButton,
     QSizePolicy,
     QToolBar,
-    QWidget,
-    QHBoxLayout,
     QVBoxLayout,
+    QWidget,
 )
-from loguru import logger
 
 from app.models.dialogue import show_warning
 from app.models.image_label import ImageLabel

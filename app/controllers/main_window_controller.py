@@ -1,5 +1,4 @@
 from loguru import logger
-
 from PySide6.QtCore import QObject, Slot
 from PySide6.QtWidgets import QPushButton
 

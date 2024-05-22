@@ -1,8 +1,9 @@
 import os
+import warnings
 from pathlib import Path
 from typing import List, Optional, Tuple
-import warnings
 
+from loguru import logger
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QFileDialog,
@@ -11,8 +12,6 @@ from PySide6.QtWidgets import (
     QPushButton,
     QWidget,
 )
-from loguru import logger
-
 
 # Constants
 DEFAULT_TITLE = "RimSort"

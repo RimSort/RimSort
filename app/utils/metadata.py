@@ -1,12 +1,14 @@
 import json
 import os
-from re import match
 import traceback
 from pathlib import Path
+from re import match
 from time import localtime, strftime, time
 from typing import Any, Dict, Optional, Tuple, Union
 from uuid import uuid4
 
+from loguru import logger
+from natsort import natsorted
 from PySide6.QtCore import (
     QObject,
     QRunnable,
@@ -14,8 +16,6 @@ from PySide6.QtCore import (
     QThreadPool,
     Signal,
 )
-from loguru import logger
-from natsort import natsorted
 
 from app.controllers.settings_controller import SettingsController
 from app.models.dialogue import (
@@ -28,7 +28,6 @@ from app.utils.constants import (
     DB_BUILDER_PRUNE_EXCEPTIONS,
     DB_BUILDER_RECURSE_EXCEPTIONS,
     DEFAULT_USER_RULES,
-    MOD_RECURSE_EXCEPTIONS,
     RIMWORLD_DLC_METADATA,
 )
 from app.utils.generic import directories

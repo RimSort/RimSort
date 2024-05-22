@@ -7,6 +7,7 @@ from shutil import copy2, copytree, rmtree
 from traceback import format_exc
 from typing import List, Optional
 
+from loguru import logger
 from PySide6.QtCore import QEvent, QModelIndex, QObject, QRectF, QSize, Qt, Signal
 from PySide6.QtGui import (
     QAction,
@@ -32,7 +33,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from loguru import logger
 
 from app.controllers.settings_controller import SettingsController
 from app.models.dialogue import (

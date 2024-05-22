@@ -5,7 +5,7 @@ from json import loads as json_loads
 import requests
 from loguru import logger
 
-from app.models.dialogue import show_dialogue_input, show_warning, show_fatal_error
+from app.models.dialogue import show_dialogue_input, show_fatal_error, show_warning
 
 # Constants
 BASE_URL = "https://rentry.co"
