@@ -24,8 +24,8 @@ class ImageLabel(QLabel):
             self.setPixmap(
                 self.pixmap().scaled(
                     self.size(),
-                    Qt.KeepAspectRatio,  # SmoothTransformation is heftier, but we can afford it.
-                    Qt.SmoothTransformation,  # FastTransformation or something just as crappy is the default
+                    Qt.AspectRatioMode.KeepAspectRatio,  # SmoothTransformation is heftier, but we can afford it.
+                    Qt.TransformationMode.SmoothTransformation,  # FastTransformation or something just as crappy is the default
                 )
             )
         return super().resizeEvent(event)
