@@ -276,7 +276,7 @@ class SteamBrowser(QWidget):
             logger.debug(
                 f"Tried to add duplicate PFID to downloader list: {publishedfileid}"
             )
-            if not publishedfileid in self.downloader_list_dupe_tracking.keys():
+            if publishedfileid not in self.downloader_list_dupe_tracking.keys():
                 if not title:
                     self.downloader_list_dupe_tracking[publishedfileid] = page_title
                 else:
