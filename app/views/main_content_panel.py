@@ -10,6 +10,7 @@ from math import ceil
 from multiprocessing import Pool, cpu_count
 from tempfile import gettempdir
 from typing import Callable
+from urllib.parse import urlparse
 from zipfile import ZipFile
 
 from loguru import logger
@@ -27,28 +28,32 @@ except ImportError:
     GIT_EXISTS = False
 
 from github import Github
-from PySide6.QtCore import QEventLoop, QProcess, Qt, Slot
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel
 from requests import get as requests_get
 
 from app.models.animations import LoadingAnimation
-from app.models.dialogue import (show_dialogue_input, show_fatal_error,
-                                 show_information)
+from app.models.dialogue import show_dialogue_input, show_fatal_error, show_information
 from app.sort.alphabetical_sort import *
 from app.sort.dependencies import *
 from app.sort.topo_sort import *
 from app.utils.event_bus import EventBus
-from app.utils.generic import (chunks, copy_to_clipboard_safely,
-                               delete_files_except_extension,
-                               launch_game_process, open_url_browser,
-                               platform_specific_open, upload_data_to_0x0_st)
+from app.utils.generic import (
+    chunks,
+    copy_to_clipboard_safely,
+    delete_files_except_extension,
+    launch_game_process,
+    open_url_browser,
+    platform_specific_open,
+    upload_data_to_0x0_st,
+)
 from app.utils.metadata import *
 from app.utils.rentry.wrapper import RentryImport, RentryUpload
 from app.utils.schema import generate_rimworld_mods_list
 from app.utils.steam.browser import SteamBrowser
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
-from app.utils.steam.steamworks.wrapper import (SteamworksGameLaunch,
-                                                SteamworksSubscriptionHandler)
+from app.utils.steam.steamworks.wrapper import (
+    SteamworksGameLaunch,
+    SteamworksSubscriptionHandler,
+)
 from app.utils.steam.webapi.wrapper import CollectionImport
 from app.utils.todds.wrapper import ToddsInterface
 from app.utils.xml import json_to_xml_write
@@ -58,6 +63,8 @@ from app.windows.missing_mods_panel import MissingModsPrompt
 from app.windows.rule_editor_panel import RuleEditor
 from app.windows.runner_panel import RunnerPanel
 from app.windows.workshop_mod_updater_panel import ModUpdaterPrompt
+from PySide6.QtCore import QEventLoop, QProcess, Qt, Slot
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel
 
 
 class MainContent(QObject):
@@ -1632,11 +1639,9 @@ class MainContent(QObject):
                     )
         # Upload the report to Rentry.co
         rentry_uploader = RentryUpload(active_mods_rentry_report)
-        if (
-            rentry_uploader.upload_success
-            and rentry_uploader.url != None
-            and "https://rentry.co/" in rentry_uploader.url
-        ):
+        successful = rentry_uploader.upload_success
+        host = urlparse(rentry_uploader.url).hostname if successful else None
+        if rentry_uploader.url and host and host.endswith("rentry.co"):  # type: ignore (Pylance is confused)
             copy_to_clipboard_safely(rentry_uploader.url)
             show_information(
                 title="Uploaded active mod list",
@@ -1802,6 +1807,7 @@ class MainContent(QObject):
         if ok:
             self.settings_controller.settings.run_args = args.split(",")
             self.settings_controller.settings.save()
+
     # TODDS ACTIONS
 
     def _do_optimize_textures(self, todds_txt_path: str) -> None:
