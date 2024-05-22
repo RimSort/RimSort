@@ -3,19 +3,19 @@ from platform import system
 from re import compile, search
 
 import psutil
-from PySide6.QtCore import Qt, QEvent, QProcess, Signal
+from loguru import logger
+from PySide6.QtCore import QEvent, QProcess, Qt, Signal
 from PySide6.QtGui import QFont, QIcon, QTextCursor
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QPlainTextEdit,
-    QToolButton,
-    QWidget,
-    QVBoxLayout,
     QProgressBar,
+    QToolButton,
+    QVBoxLayout,
+    QWidget,
 )
-from loguru import logger
 
-from app.models.dialogue import show_dialogue_file, show_dialogue_conditional
+from app.models.dialogue import show_dialogue_conditional, show_dialogue_file
 from app.utils.app_info import AppInfo
 from app.utils.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetPublishedFileDetails,

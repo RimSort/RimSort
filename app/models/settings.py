@@ -4,10 +4,10 @@ from os import path, rename
 from pathlib import Path
 from shutil import copytree, rmtree
 from time import time
-from typing import Dict, Any, Optional, List
+from typing import Any, Dict, Optional
 
-from PySide6.QtCore import QObject
 from loguru import logger
+from PySide6.QtCore import QObject
 
 from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus

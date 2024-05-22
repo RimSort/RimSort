@@ -1,6 +1,6 @@
 from PySide6.QtCore import QObject
 from PySide6.QtGui import QAction, QKeySequence
-from PySide6.QtWidgets import QMenuBar, QMenu
+from PySide6.QtWidgets import QMenu, QMenuBar
 
 from app.utils.system_info import SystemInfo
 

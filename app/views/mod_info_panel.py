@@ -1,12 +1,10 @@
-import json
 import os
 from pathlib import Path
-from typing import Any, Dict
 
+from loguru import logger
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout
-from loguru import logger
 
 from app.models.image_label import ImageLabel
 from app.models.scroll_label import ScrollLabel

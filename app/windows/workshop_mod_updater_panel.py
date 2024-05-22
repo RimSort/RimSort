@@ -2,20 +2,20 @@ from functools import partial
 from time import localtime, strftime
 from typing import Any, Dict
 
-from PySide6.QtCore import Qt, QEvent, QSize, Signal
-from PySide6.QtGui import QStandardItemModel, QStandardItem
+from loguru import logger
+from PySide6.QtCore import QEvent, QSize, Qt, Signal
+from PySide6.QtGui import QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QCheckBox,
+    QHBoxLayout,
     QHeaderView,
     QLabel,
     QPushButton,
     QTableView,
-    QWidget,
-    QHBoxLayout,
     QVBoxLayout,
+    QWidget,
 )
-from loguru import logger
 
 
 class ModUpdaterPrompt(QWidget):

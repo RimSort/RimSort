@@ -6,8 +6,8 @@ from multiprocessing import cpu_count, Pool
 from time import time
 from typing import Any, Dict, Optional, Tuple
 
-from PySide6.QtCore import QObject, Signal
 from loguru import logger
+from PySide6.QtCore import QObject, Signal
 from requests import post as requests_post
 from requests.exceptions import JSONDecodeError
 from steam.webapi import WebAPI

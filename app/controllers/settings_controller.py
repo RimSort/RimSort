@@ -2,9 +2,9 @@ import os
 from pathlib import Path
 from typing import Optional
 
+from loguru import logger
 from PySide6.QtCore import QObject, Slot
 from PySide6.QtWidgets import QApplication
-from loguru import logger
 
 from app.models.dialogue import show_dialogue_confirmation, show_dialogue_file
 from app.models.settings import Settings
