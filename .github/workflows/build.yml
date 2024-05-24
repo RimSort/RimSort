@@ -168,6 +168,7 @@ jobs:
           executable=$(find . -name "${{ matrix.env.Executable }}")
           echo "EXECUTABLE=$executable" >> "$GITHUB_OUTPUT"
           echo "Executable found at $executable"
+        shell: bash
 
       - name: Generate executable attestations
         uses: actions/attest-build-provenance@v1.1.2
