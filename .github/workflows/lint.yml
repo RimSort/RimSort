@@ -25,7 +25,7 @@ jobs:
           fetch-depth: 0
 
       - name: Super-linter
-        uses: super-linter/super-linter@v6.5.0 # x-release-please-version
+        uses: super-linter/super-linter@v6.5.1 # x-release-please-version
         env:
           # To report GitHub Actions status checks
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -46,3 +46,4 @@ jobs:
           VALIDATE_VALIDATE_NATURAL_LANGUAGE: true
           # Linter not up to date
           GITHUB_ACTIONS_COMMAND_ARGS: '--ignore ''"ubuntu-24.04" is unknown'''
+          GITHUB_ACTIONS_COMMAND_ARGS: '--ignore ''unknown permission scope "attestations"'''
