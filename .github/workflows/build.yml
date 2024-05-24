@@ -23,6 +23,8 @@ jobs:
     permissions:
       id-token: write
       contents: read
+      attestations: write
+      packages: write
 
     runs-on: ${{ matrix.os }}
     strategy:
@@ -34,26 +36,31 @@ jobs:
             arch: "i386"
             env:
               BUILD_OUTPUT: "__main__.app"
+              Executable: RimSort
           - os: macos-latest
             platform: "Darwin"
             arch: "arm"
             env:
               BUILD_OUTPUT: "__main__.app"
+              Executable: RimSort
           - os: ubuntu-22.04
             platform: "Ubuntu-22.04"
             arch: "x86_64"
             env:
               BUILD_OUTPUT: "__main__.dist"
+              Executable: "RimSort"
           - os: ubuntu-24.04
             platform: "Ubuntu-24.04"
             arch: "x86_64"
             env:
               BUILD_OUTPUT: "__main__.dist"
+              Executable: RimSort
           - os: windows-latest
             platform: "Windows"
             arch: "x86_64"
             env:
               BUILD_OUTPUT: "__main__.dist"
+              Executable: RimSort.exe
     steps:
       - name: Check-out repository
         uses: actions/checkout@main
@@ -141,7 +148,7 @@ jobs:
             ${{ steps.sem_version.outputs.minor }}.
             ${{ steps.sem_version.outputs.patch }}.
             ${{ steps.sem_version.outputs.increment }}
-          file-description: "An open source RimWorld mod manager."
+          file-description: "RimSort"
           include-data-files: |
             version.xml=version.xml
         env:
@@ -155,6 +162,19 @@ jobs:
           echo "FILENAME=$FILENAME" >> "$GITHUB_OUTPUT"
         shell: bash
 
+      - name: Find Executable
+        id: find_executable
+        run: |
+          executable=$(find . -name "${{ matrix.env.Executable }}")
+          echo "EXECUTABLE=$executable" >> "$GITHUB_OUTPUT"
+          echo "Executable found at $executable"
+        shell: bash
+
+      - name: Generate executable attestations
+        uses: actions/attest-build-provenance@v1.1.2
+        with:
+          subject-path: ${{ steps.find_executable.outputs.EXECUTABLE }}
+
       - name: Rename new build
         run: |
           cd build
@@ -162,6 +182,11 @@ jobs:
           tar -cvf "${{ steps.filename.outputs.FILENAME }}.tar" "output" 
           rm -rf "output"
         shell: bash
+
+      - name: Generate artifact attestation
+        uses: actions/attest-build-provenance@v1.1.2
+        with:
+          subject-path: ./build/${{ steps.filename.outputs.FILENAME }}.tar
 
         # Upload folder as artifact
       - name: Upload folder as artifact

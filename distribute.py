@@ -545,7 +545,7 @@ def main() -> None:
             version = "".join(args.product_version.split())
             _NUITKA_CMD.extend(
                 [
-                    "--file-description=An open source RimWorld mod manager.",
+                    "--file-description=RimSort",
                     f"--product-version={version}",
                 ]
             )

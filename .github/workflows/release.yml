@@ -57,6 +57,8 @@ jobs:
     permissions:
       id-token: write
       contents: read
+      attestations: write
+      packages: write
     uses: ./.github/workflows/build.yml
     with:
       version_format: ${{ needs.pre-build.outputs.version_format }}
