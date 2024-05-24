@@ -17,5 +17,5 @@ pytz==2024.1
 requests==2.32.2
 steam==1.4.4
 toposort==1.10
-watchdog==4.0.0
+watchdog==4.0.1
 xmltodict==0.13.0
