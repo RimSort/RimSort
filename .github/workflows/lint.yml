@@ -45,5 +45,6 @@ jobs:
           VALIDATE_MARKDOWN: true
           VALIDATE_VALIDATE_NATURAL_LANGUAGE: true
           # Linter not up to date
-          GITHUB_ACTIONS_COMMAND_ARGS: '--ignore ''"ubuntu-24.04" is unknown'''
-          GITHUB_ACTIONS_COMMAND_ARGS: '--ignore ''unknown permission scope "attestations"'''
+          GITHUB_ACTIONS_COMMAND_ARGS: |
+            '--ignore ''"ubuntu-24.04" is unknown'''
+            '--ignore ''unknown permission scope "attestations"'''
