@@ -162,6 +162,18 @@ jobs:
           echo "FILENAME=$FILENAME" >> "$GITHUB_OUTPUT"
         shell: bash
 
+      - name: Find Executable
+        id: find_executable
+        run: |
+          executable=$(find . -name "${{ matrix.env.Executable }}")
+          echo "EXECUTABLE=$executable" >> "$GITHUB_OUTPUT"
+          echo "Executable found at $executable"
+
+      - name: Generate executable attestations
+        uses: actions/attest-build-provenance@v1.1.2
+        with:
+          subject-path: ${{ steps.find_executable.outputs.EXECUTABLE }}
+
       - name: Rename new build
         run: |
           cd build
@@ -174,18 +186,6 @@ jobs:
         uses: actions/attest-build-provenance@v1.1.2
         with:
           subject-path: ./build/${{ steps.filename.outputs.FILENAME }}.tar
-
-      - name: Find Executable
-        id: find_executable
-        run: |
-          executable=$(find . -name "${{ matrix.env.Executable }}")
-          echo "EXECUTABLE=$executable" >> "$GITHUB_OUTPUT"
-          echo "Executable found at $executable"
-
-      - name: Generate executable attestations
-        uses: actions/attest-build-provenance@v1.1.2
-        with:
-          subject-path: ${{ steps.find_executable.outputs.EXECUTABLE }}
 
         # Upload folder as artifact
       - name: Upload folder as artifact
