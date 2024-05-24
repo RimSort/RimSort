@@ -148,7 +148,7 @@ jobs:
             ${{ steps.sem_version.outputs.minor }}.
             ${{ steps.sem_version.outputs.patch }}.
             ${{ steps.sem_version.outputs.increment }}
-          file-description: "An open source RimWorld mod manager."
+          file-description: "RimSort"
           include-data-files: |
             version.xml=version.xml
         env:
