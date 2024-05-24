@@ -36,26 +36,31 @@ jobs:
             arch: "i386"
             env:
               BUILD_OUTPUT: "__main__.app"
+              Executable: "RimSort"
           - os: macos-latest
             platform: "Darwin"
             arch: "arm"
             env:
               BUILD_OUTPUT: "__main__.app"
+              Executable: "RimSort"
           - os: ubuntu-22.04
             platform: "Ubuntu-22.04"
             arch: "x86_64"
             env:
               BUILD_OUTPUT: "__main__.dist"
+              Executable: "RimSort"
           - os: ubuntu-24.04
             platform: "Ubuntu-24.04"
             arch: "x86_64"
             env:
               BUILD_OUTPUT: "__main__.dist"
+              Executable: "RimSort"
           - os: windows-latest
             platform: "Windows"
             arch: "x86_64"
             env:
               BUILD_OUTPUT: "__main__.dist"
+              Executable: "RimSort.exe"
     steps:
       - name: Check-out repository
         uses: actions/checkout@main
@@ -169,6 +174,16 @@ jobs:
         uses: actions/attest-build-provenance@v1.1.2
         with:
           subject-path: ./build/${{ steps.filename.outputs.FILENAME }}.tar
+
+      - name: Find Executable and save to attest
+        id: find_executable
+        run: |
+          find . -name "${{ matrix.env.Executable }}" -exec echo "EXECUTABLE={}" \; >> "$GITHUB_OUTPUT"
+
+      - name: Generate executable attestations
+        uses: actions/attest-build-provenance@v1.1.2
+        with:
+          subject-path: ${{ steps.find_executable.outputs.EXECUTABLE }}
 
         # Upload folder as artifact
       - name: Upload folder as artifact
