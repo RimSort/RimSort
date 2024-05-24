@@ -175,10 +175,11 @@ jobs:
         with:
           subject-path: ./build/${{ steps.filename.outputs.FILENAME }}.tar
 
-      - name: Find Executable and save to attest
+      - name: Find Executable
         id: find_executable
         run: |
-          find . -name "${{ matrix.env.Executable }}" -exec echo "EXECUTABLE={}" \; >> "$GITHUB_OUTPUT"
+          executable=(find . -name "${{ matrix.env.Executable }}")
+          echo "EXECUTABLE=$executable" >> "$GITHUB_OUTPUT"
 
       - name: Generate executable attestations
         uses: actions/attest-build-provenance@v1.1.2
