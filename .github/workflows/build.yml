@@ -36,13 +36,13 @@ jobs:
             arch: "i386"
             env:
               BUILD_OUTPUT: "__main__.app"
-              Executable: "RimSort"
+              Executable: RimSort
           - os: macos-latest
             platform: "Darwin"
             arch: "arm"
             env:
               BUILD_OUTPUT: "__main__.app"
-              Executable: "RimSort"
+              Executable: RimSort
           - os: ubuntu-22.04
             platform: "Ubuntu-22.04"
             arch: "x86_64"
@@ -54,13 +54,13 @@ jobs:
             arch: "x86_64"
             env:
               BUILD_OUTPUT: "__main__.dist"
-              Executable: "RimSort"
+              Executable: RimSort
           - os: windows-latest
             platform: "Windows"
             arch: "x86_64"
             env:
               BUILD_OUTPUT: "__main__.dist"
-              Executable: "RimSort.exe"
+              Executable: RimSort.exe
     steps:
       - name: Check-out repository
         uses: actions/checkout@main
@@ -180,6 +180,7 @@ jobs:
         run: |
           executable=$(find . -name "${{ matrix.env.Executable }}")
           echo "EXECUTABLE=$executable" >> "$GITHUB_OUTPUT"
+          echo "Executable found at $executable"
 
       - name: Generate executable attestations
         uses: actions/attest-build-provenance@v1.1.2
