@@ -178,7 +178,7 @@ jobs:
       - name: Find Executable
         id: find_executable
         run: |
-          executable=(find . -name "${{ matrix.env.Executable }}")
+          executable=$(find . -name "${{ matrix.env.Executable }}")
           echo "EXECUTABLE=$executable" >> "$GITHUB_OUTPUT"
 
       - name: Generate executable attestations
