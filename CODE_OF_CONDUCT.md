@@ -59,8 +59,8 @@ representative at an online or offline event.
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported to the community leaders responsible for enforcement at
-*https://github.com/RimSort*, or you may reach a community leader pretty much anytime on the [Discord](https://discord.gg/aV7g69JmR2).
+reported to the community leaders responsible for enforcement at our 
+[GitHub Repo](https://github.com/RimSort), or you may reach a community leader pretty much anytime on the [Discord](https://discord.gg/aV7g69JmR2).
 
 All complaints will be reviewed and investigated promptly and fairly.
 
