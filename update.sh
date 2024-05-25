@@ -35,5 +35,6 @@ else # Assume Linux if not macOS
     rm -rf "${parent_dir}"
     # Move files from the update source folder to the current directory
     chmod +x "${update_source_folder}/${executable_name}" && chmod +x "${update_source_folder}/todds/todds" && mv "${update_source_folder}" "${parent_dir}"
-    cd "${parent_dir}" && ./$executable_name & cd "${parent_dir}" || echo "Failed to cd to ${parent_dir}" && exit 1
+    cd "${parent_dir}" && ./$executable_name &
+    cd "${parent_dir}" || echo "Failed to cd to ${parent_dir}" && exit 1
 fi
