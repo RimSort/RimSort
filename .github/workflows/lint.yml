@@ -54,7 +54,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LINTER_RULES_PATH: .
           PYTHONPATH: "/github/workspace/:\
-            /github/workflow/.venv/lib/python${{ steps.get-python-version.outputs.python-version }}/site-packages"
+            /github/workflow/.venv/lib/python3.11/site-packages"
           VALIDATE_PYTHON_MYPY: true
           VALIDATE_PYTHON_RUFF: true
           VALIDATE_GITHUB_ACTIONS: true
