@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.controllers.theme_controller import Themes
 from app.utils.gui_info import GUIInfo
 
 
@@ -32,7 +33,7 @@ class SettingsDialog(QDialog):
 
         self.setWindowTitle("Settings")
         self.setObjectName("settingsPanel")
-        self.resize(800, 600)
+        self.resize(900, 600)
 
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
@@ -48,6 +49,7 @@ class SettingsDialog(QDialog):
         self._do_db_builder_tab()
         self._do_steamcmd_tab()
         self._do_todds_tab()
+        self._do_themes_tab()
         self._do_advanced_tab()
 
         # Bottom buttons layout
@@ -730,6 +732,51 @@ class SettingsDialog(QDialog):
             "Overwrite existing optimized textures"
         )
         group_layout.addWidget(self.todds_overwrite_checkbox)
+
+    def _do_themes_tab(self) -> None:
+        tab = QWidget()
+        self.tab_widget.addTab(tab, "Themes")
+
+        tab_layout = QVBoxLayout(tab)
+        tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        group_box = QGroupBox()
+        tab_layout.addWidget(group_box)
+
+        group_layout = QVBoxLayout()
+        group_box.setLayout(group_layout)
+
+        self.themes_label = QLabel("Themes Support")
+        self.themes_label.setFont(GUIInfo().emphasis_font)
+        group_layout.addWidget(self.themes_label)
+
+        self.enable_themes_checkbox = QCheckBox(
+            "Enable to use .qss Themes (stylesheet) / Disable to use System Themes"
+        )
+        group_layout.addWidget(self.enable_themes_checkbox)
+
+        self.themes_combobox = QComboBox()
+        self.themes_combobox.setSizePolicy(
+            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred
+        )
+
+        # Get the available themes from the Themes class
+        available_themes = [folder.name for folder in Themes.get_available_themes()]
+        self.themes_combobox.addItems(available_themes)
+        group_layout.addWidget(self.themes_combobox)
+
+        # Add Theme info label
+        self.themes_info_label = QLabel(
+            "How to add your own Themes \n"
+            "1) Open RimSort Config Folder \n"
+            "2) Create a new folder in themes folder in your RimSort Config Folder \n"
+            "3) Add your style.qss file to the folder you created \n"
+            "4) Start RimSort and Select your theme from the combobox \n\n"
+            "Note: The Name of Folder will be used as name of the Theme / Invalid Themes will be ignored \n\n"
+            "Use the default RimPy Theme As Refrence to create your own Themes"
+        )
+        self.themes_info_label.setFont(GUIInfo().emphasis_font)
+        group_layout.addWidget(self.themes_info_label)
 
     def _do_advanced_tab(self) -> None:
         tab = QWidget()
