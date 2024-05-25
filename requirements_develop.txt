@@ -1,5 +1,5 @@
 autoflake>=2.3.0
-black
+ruff
 mypy
 #types-pyside6
 types-requests

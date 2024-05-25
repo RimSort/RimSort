@@ -3,7 +3,6 @@ GitPython==3.1.43
 imageio==2.34.1
 loguru==0.7.2
 lxml==5.2.2
-mypy==1.10.0
 natsort==8.4.0
 platformdirs==4.2.2
 PyGithub==2.3.0
