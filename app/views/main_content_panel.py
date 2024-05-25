@@ -7,7 +7,7 @@ from functools import partial
 from gc import collect
 from io import BytesIO
 from math import ceil
-from multiprocessing import cpu_count, Pool
+from multiprocessing import Pool, cpu_count
 from tempfile import gettempdir
 from typing import Callable
 from urllib.parse import urlparse
@@ -28,6 +28,8 @@ except ImportError:
     GIT_EXISTS = False
 
 from github import Github
+from PySide6.QtCore import QEventLoop, QProcess, Qt, Slot
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel
 from requests import get as requests_get
 
 from app.models.animations import LoadingAnimation
@@ -63,8 +65,6 @@ from app.windows.missing_mods_panel import MissingModsPrompt
 from app.windows.rule_editor_panel import RuleEditor
 from app.windows.runner_panel import RunnerPanel
 from app.windows.workshop_mod_updater_panel import ModUpdaterPrompt
-from PySide6.QtCore import QEventLoop, QProcess, Qt, Slot
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel
 
 
 class MainContent(QObject):
@@ -871,9 +871,7 @@ class MainContent(QObject):
                 else:
                     try:
                         subprocess.CREATE_NEW_PROCESS_GROUP
-                    except (
-                        AttributeError
-                    ):  # not Windows, so assume POSIX; if not, we'll get a usable exception
+                    except AttributeError:  # not Windows, so assume POSIX; if not, we'll get a usable exception
                         popen_args = [
                             "/bin/bash",
                             str((AppInfo().application_folder / "update.sh")),
@@ -1641,7 +1639,7 @@ class MainContent(QObject):
         rentry_uploader = RentryUpload(active_mods_rentry_report)
         successful = rentry_uploader.upload_success
         host = urlparse(rentry_uploader.url).hostname if successful else None
-        if rentry_uploader.url and host and host.endswith("rentry.co"):  # type: ignore (Pylance is confused)
+        if rentry_uploader.url and host and host.endswith("rentry.co"):  # type: ignore
             copy_to_clipboard_safely(rentry_uploader.url)
             show_information(
                 title="Uploaded active mod list",

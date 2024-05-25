@@ -12,14 +12,13 @@
   "autoDocstring.docstringFormat": "sphinx",
   "cSpell.words": [
     "joseasoler",
-    "rimsort"
+    "rimsort",
+    "savedatafolder",
+    "steamapps",
+    "steamcmd"
   ],
-  "python.analysis.typeCheckingMode": "basic",
-  "isort.args": [
-    "--profile",
-    "black"
-  ],
+  "isort.args": ["--profile", "black"],
   "[python]": {
-    "editor.defaultFormatter": "ms-python.black-formatter"
+    "editor.defaultFormatter": "charliermarsh.ruff"
   }
 }
