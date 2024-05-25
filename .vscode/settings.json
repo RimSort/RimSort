@@ -11,14 +11,39 @@
   },
   "autoDocstring.docstringFormat": "sphinx",
   "cSpell.words": [
+    "docstrings",
+    "isort",
     "joseasoler",
+    "redistributables",
     "rimsort",
     "savedatafolder",
+    "shfmt",
     "steamapps",
-    "steamcmd"
+    "steamcmd",
+    "virtualenv"
   ],
   "isort.args": ["--profile", "black"],
   "[python]": {
     "editor.defaultFormatter": "charliermarsh.ruff"
-  }
+  },
+  "languageToolLinter.languageTool.ignoredWordsInWorkspace": [
+    " macport",
+    "codium",
+    "cpython",
+    "docstring",
+    "docstrings",
+    "isort",
+    "macos-latest",
+    "mypy",
+    "redistributables",
+    "rest",
+    "rimsort",
+    "shfmt",
+    "steamfiles",
+    "steamworks",
+    "steamworks-sdk",
+    "steamworkspy",
+    "todds",
+    "virtualenv"
+  ]
 }
