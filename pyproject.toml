@@ -14,7 +14,7 @@ warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
 module = 'steam.*'
-ignore_missing_imports = True
+ignore_missing_imports = true
 
 [tool.ruff]
 # Defaults to Black like
