@@ -23,6 +23,30 @@ jobs:
           # super-linter needs the full git history to get the
           # list of files that changed across commits
           fetch-depth: 0
+          submodules: recursive
+
+      - name: Setup Python
+        uses: actions/setup-python@main
+        with:
+          python-version: "3.11"
+          architecture: "x64" # optional x64 or x86. Defaults to x64 if not specified
+          cache: "pip"
+          cache-dependency-path: |
+            **/requirements*.txt
+
+      - name: Install dependencies with pip + requirements.txt
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install -r requirements.txt
+          .venv/bin/pip install -e submodules/SteamworksPy
+          .venv/bin/pip install -e submodules/steamfiles
+
+      - name: Move the dependencies
+        run: mv .venv /home/runner/work/_temp/_github_workflow
+
+      - name: Get Python version from .python-version file
+        id: get-python-version
+        run: echo "python-version=$(cut -d '.' -f 1,2 .python-version)" >> "$GITHUB_OUTPUT"
 
       - name: Super-linter
         uses: super-linter/super-linter/slim@v6.5.1 # x-release-please-version
@@ -30,6 +54,8 @@ jobs:
           # To report GitHub Actions status checks
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LINTER_RULES_PATH: .
+          PYTHONPATH: "/github/workspace/:\
+            /github/workflow/.venv/lib/python${{ steps.get-python-version.outputs.python-version }}/site-packages"
           VALIDATE_PYTHON_MYPY: true
           VALIDATE_PYTHON_RUFF: true
           VALIDATE_GITHUB_ACTIONS: true
