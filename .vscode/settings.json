@@ -1,13 +1,4 @@
 {
-  "saveAndRunExt": {
-    "commands": [
-      {
-        "match": ".*\\.py",
-        "isShellCommand": false,
-        "cmd": "autoflake.removeUnused"
-      }
-    ]
-  },
   "editor.formatOnType": true,
   "editor.formatOnPaste": true,
   "editor.formatOnSave": true,
@@ -26,6 +17,7 @@
     "steamapps",
     "steamcmd"
   ],
+  "isort.args": ["--profile", "black"],
   "[python]": {
     "editor.defaultFormatter": "charliermarsh.ruff"
   }
