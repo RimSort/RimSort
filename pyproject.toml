@@ -13,6 +13,8 @@ warn_redundant_casts = true
 # warn_return_any = true
 warn_unused_configs = true
 warn_unused_ignores = true
+exclude = ['venv', '.venv', 'submodules']
+mypy_path = 'submodules/steamfiles'
 
 [[tool.mypy.overrides]]
 module = 'steam.*'

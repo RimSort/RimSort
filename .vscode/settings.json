@@ -26,7 +26,6 @@
     "steamapps",
     "steamcmd"
   ],
-  "python.analysis.typeCheckingMode": "basic",
   "[python]": {
     "editor.defaultFormatter": "charliermarsh.ruff"
   }
