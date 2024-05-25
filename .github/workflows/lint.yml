@@ -29,9 +29,6 @@ jobs:
         env:
           # To report GitHub Actions status checks
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VALIDATE_PYTHON_BLACK: true
-          VALIDATE_PYTHON_FLAKE8: true
-          VALIDATE_PYTHON_ISORT: true
           VALIDATE_PYTHON_MYPY: true
           VALIDATE_PYTHON_RUFF: true
           VALIDATE_GITHUB_ACTIONS: true
@@ -48,3 +45,4 @@ jobs:
           GITHUB_ACTIONS_COMMAND_ARGS: >-
             -ignore 'unknown permission scope "attestations"'
             -ignore '"ubuntu-24.04" is unknown'
+          PYTHON_RUFF_CONFIG_FILE: pyproject.toml
