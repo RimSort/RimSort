@@ -1,13 +1,4 @@
 {
-  "saveAndRunExt": {
-    "commands": [
-      {
-        "match": ".*\\.py",
-        "isShellCommand": false,
-        "cmd": "autoflake.removeUnused"
-      }
-    ]
-  },
   "editor.formatOnType": true,
   "editor.formatOnPaste": true,
   "editor.formatOnSave": true,
@@ -19,9 +10,15 @@
     "source.organizeImports": "explicit"
   },
   "autoDocstring.docstringFormat": "sphinx",
-  "cSpell.words": ["joseasoler", "rimsort"],
+  "cSpell.words": [
+    "joseasoler",
+    "rimsort"
+  ],
   "python.analysis.typeCheckingMode": "basic",
-  "isort.args": ["--profile", "black"],
+  "isort.args": [
+    "--profile",
+    "black"
+  ],
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter"
   }
