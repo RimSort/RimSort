@@ -29,6 +29,7 @@ jobs:
         env:
           # To report GitHub Actions status checks
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LINTER_RULES_PATH: .
           VALIDATE_PYTHON_MYPY: true
           VALIDATE_PYTHON_RUFF: true
           VALIDATE_GITHUB_ACTIONS: true
