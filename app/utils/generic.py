@@ -7,7 +7,7 @@ import webbrowser
 from errno import EACCES
 from pathlib import Path
 from re import sub
-from stat import S_IRWXU, S_IRWXG, S_IRWXO
+from stat import S_IRWXG, S_IRWXO, S_IRWXU
 
 from loguru import logger
 from pyperclip import copy as copy_to_clipboard

@@ -1,26 +1,25 @@
-from functools import partial
-from io import BytesIO
-from json import dumps, loads
 import os
+from functools import partial
+from json import dumps, loads
 from pathlib import Path
 from shutil import copytree, rmtree
 from traceback import format_exc
 from typing import Optional
 from zipfile import ZipFile
 
+from loguru import logger
+from lxml import etree, objectify
 from PySide6.QtCore import QSize, QTimer
 from PySide6.QtGui import QShowEvent
 from PySide6.QtWidgets import (
     QApplication,
-    QMainWindow,
-    QVBoxLayout,
-    QWidget,
     QHBoxLayout,
     QLabel,
+    QMainWindow,
     QPushButton,
+    QVBoxLayout,
+    QWidget,
 )
-from loguru import logger
-from lxml import etree, objectify
 
 from app.controllers.menu_bar_controller import MenuBarController
 from app.controllers.settings_controller import SettingsController
@@ -36,7 +35,6 @@ from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 from app.utils.gui_info import GUIInfo
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
-from app.utils.system_info import SystemInfo
 from app.utils.watchdog import WatchdogHandler
 from app.views.main_content_panel import MainContent
 from app.views.menu_bar import MenuBar

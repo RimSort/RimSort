@@ -1,9 +1,8 @@
 from functools import partial
 
-from loguru import logger
 from PySide6.QtCore import QObject, Slot
 from PySide6.QtGui import QAction
-from PySide6.QtWidgets import QApplication, QLineEdit, QTextEdit, QPlainTextEdit
+from PySide6.QtWidgets import QApplication, QLineEdit, QPlainTextEdit, QTextEdit
 
 from app.controllers.settings_controller import SettingsController
 from app.utils.event_bus import EventBus

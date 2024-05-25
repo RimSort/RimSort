@@ -1,12 +1,10 @@
-import json
 import os
 from pathlib import Path
-from typing import Any, Dict
 
+from loguru import logger
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout
-from loguru import logger
 
 from app.models.image_label import ImageLabel
 from app.models.scroll_label import ScrollLabel
@@ -36,7 +34,7 @@ class ModInfo:
         # Child layouts
         self.info_layout = QVBoxLayout()
         self.image_layout = QHBoxLayout()
-        self.image_layout.setAlignment(Qt.AlignCenter)
+        self.image_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.mod_info_layout = QVBoxLayout()
         self.mod_info_name = QHBoxLayout()
         self.scenario_info_summary = QHBoxLayout()
@@ -68,45 +66,53 @@ class ModInfo:
             AppInfo().theme_data_folder / "default-icons" / "rimworld.png"
         )
         self.preview_picture = ImageLabel()
-        self.preview_picture.setAlignment(Qt.AlignCenter)
-        self.preview_picture.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.preview_picture.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.preview_picture.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+        )
         self.preview_picture.setMinimumSize(1, 1)
         self.preview_picture.setPixmap(
             QPixmap(self.rimsort_image_a_path).scaled(
-                self.preview_picture.size(), Qt.KeepAspectRatio
+                self.preview_picture.size(), Qt.AspectRatioMode.KeepAspectRatio
             )
         )
         self.mod_info_name_label = QLabel("Name:")
         self.mod_info_name_label.setObjectName("summaryLabel")
         self.mod_info_name_value = QLabel()
         self.mod_info_name_value.setObjectName("summaryValue")
-        self.mod_info_name_value.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self.mod_info_name_value.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
         self.mod_info_name_value.setWordWrap(True)
         self.scenario_info_summary_label = QLabel("Summary:")
         self.scenario_info_summary_label.setObjectName("summaryLabel")
         self.scenario_info_summary_value = QLabel()
         self.scenario_info_summary_value.setTextInteractionFlags(
-            Qt.TextSelectableByMouse
+            Qt.TextInteractionFlag.TextSelectableByMouse
         )
         self.scenario_info_summary_value.setWordWrap(True)
         self.mod_info_package_id_label = QLabel("PackageID:")
         self.mod_info_package_id_label.setObjectName("summaryLabel")
         self.mod_info_package_id_value = QLabel()
         self.mod_info_package_id_value.setObjectName("summaryValue")
-        self.mod_info_package_id_value.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self.mod_info_package_id_value.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
         self.mod_info_package_id_value.setWordWrap(True)
         self.mod_info_author_label = QLabel("Authors:")
         self.mod_info_author_label.setObjectName("summaryLabel")
         self.mod_info_author_value = QLabel()
         self.mod_info_author_value.setObjectName("summaryValue")
-        self.mod_info_author_value.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self.mod_info_author_value.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
         self.mod_info_author_value.setWordWrap(True)
         self.mod_info_mod_version_label = QLabel("Mod Version:")
         self.mod_info_mod_version_label.setObjectName("summaryLabel")
         self.mod_info_mod_version_value = QLabel()
         self.mod_info_mod_version_value.setObjectName("summaryValue")
         self.mod_info_mod_version_value.setTextInteractionFlags(
-            Qt.TextSelectableByMouse
+            Qt.TextInteractionFlag.TextSelectableByMouse
         )
         self.mod_info_mod_version_value.setWordWrap(True)
         self.mod_info_supported_versions_label = QLabel("Supported Version:")
@@ -117,7 +123,9 @@ class ModInfo:
         self.mod_info_path_label.setObjectName("summaryLabel")
         self.mod_info_path_value = QLabel()
         self.mod_info_path_value.setObjectName("summaryValue")
-        self.mod_info_path_value.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self.mod_info_path_value.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
         self.mod_info_path_value.setWordWrap(True)
         self.description = ScrollLabel()
         self.description.setText("\n\n\n\n\t\t\tWelcome to RimSort!")
@@ -306,7 +314,9 @@ class ModInfo:
         if mod_info.get("scenario"):
             pixmap = QPixmap(self.scenario_image_path)
             self.preview_picture.setPixmap(
-                pixmap.scaled(self.preview_picture.size(), Qt.KeepAspectRatio)
+                pixmap.scaled(
+                    self.preview_picture.size(), Qt.AspectRatioMode.KeepAspectRatio
+                )
             )
         else:
             # Get Preview.png
@@ -349,7 +359,8 @@ class ModInfo:
                         pixmap = QPixmap(self.missing_image_path)
                         self.preview_picture.setPixmap(
                             pixmap.scaled(
-                                self.preview_picture.size(), Qt.KeepAspectRatio
+                                self.preview_picture.size(),
+                                Qt.AspectRatioMode.KeepAspectRatio,
                             )
                         )
                     else:
@@ -364,12 +375,16 @@ class ModInfo:
                         pixmap = QPixmap(image_path)
                         self.preview_picture.setPixmap(
                             pixmap.scaled(
-                                self.preview_picture.size(), Qt.KeepAspectRatio
+                                self.preview_picture.size(),
+                                Qt.AspectRatioMode.KeepAspectRatio,
                             )
                         )
                 else:
                     pixmap = QPixmap(self.missing_image_path)
                     self.preview_picture.setPixmap(
-                        pixmap.scaled(self.preview_picture.size(), Qt.KeepAspectRatio)
+                        pixmap.scaled(
+                            self.preview_picture.size(),
+                            Qt.AspectRatioMode.KeepAspectRatio,
+                        )
                     )
         logger.debug("Finished displaying mod info")

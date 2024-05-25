@@ -3,11 +3,13 @@ import platform
 from functools import partial
 from typing import Any, Dict, Optional
 
-from PySide6.QtCore import Qt, QPoint, QSize, QUrl, Signal
+from loguru import logger
+from PySide6.QtCore import QPoint, QSize, Qt, QUrl, Signal
 from PySide6.QtGui import QAction, QPixmap
 from PySide6.QtWebEngineCore import QWebEnginePage
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtWidgets import (
+    QHBoxLayout,
     QLabel,
     QLineEdit,
     QListWidget,
@@ -17,11 +19,9 @@ from PySide6.QtWidgets import (
     QPushButton,
     QSizePolicy,
     QToolBar,
-    QWidget,
-    QHBoxLayout,
     QVBoxLayout,
+    QWidget,
 )
-from loguru import logger
 
 from app.models.dialogue import show_warning
 from app.models.image_label import ImageLabel
@@ -104,7 +104,7 @@ class SteamBrowser(QWidget):
         self.web_view_loading_placeholder = ImageLabel()
         self.web_view_loading_placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.web_view_loading_placeholder.setSizePolicy(
-            QSizePolicy.Expanding, QSizePolicy.Expanding
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
         )
         self.web_view_loading_placeholder.setPixmap(
             QPixmap(
@@ -122,7 +122,7 @@ class SteamBrowser(QWidget):
         # Location box
         self.location = QLineEdit()
         self.location.setSizePolicy(
-            QSizePolicy.Expanding, self.location.sizePolicy().verticalPolicy()
+            QSizePolicy.Policy.Expanding, self.location.sizePolicy().verticalPolicy()
         )
         self.location.setText(self.startpage.url())
         self.location.returnPressed.connect(self.__browse_to_location)
@@ -276,7 +276,7 @@ class SteamBrowser(QWidget):
             logger.debug(
                 f"Tried to add duplicate PFID to downloader list: {publishedfileid}"
             )
-            if not publishedfileid in self.downloader_list_dupe_tracking.keys():
+            if publishedfileid not in self.downloader_list_dupe_tracking.keys():
                 if not title:
                     self.downloader_list_dupe_tracking[publishedfileid] = page_title
                 else:

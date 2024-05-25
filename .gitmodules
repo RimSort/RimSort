@@ -7,3 +7,6 @@
 	url = https://github.com/twstagg/SteamworksPy
 	ignore = dirty
 	branch = master
+[submodule "docs/RimSort.wiki"]
+	path = docs/RimSort.wiki
+	url = https://github.com/RimSort/RimSort.wiki.git

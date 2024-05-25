@@ -1,7 +1,8 @@
 import traceback
 from typing import Callable
 
-from PySide6.QtCore import QEasingCurve, QPropertyAnimation, QTimer, QThread, Qt, Signal
+from loguru import logger
+from PySide6.QtCore import QEasingCurve, QPropertyAnimation, Qt, QThread, QTimer, Signal
 from PySide6.QtGui import QMovie
 from PySide6.QtWidgets import (
     QGraphicsOpacityEffect,
@@ -9,7 +10,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from loguru import logger
 
 
 class AnimationLabel(QLabel):

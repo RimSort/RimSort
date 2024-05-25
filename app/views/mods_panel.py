@@ -7,6 +7,7 @@ from shutil import copy2, copytree, rmtree
 from traceback import format_exc
 from typing import List, Optional
 
+from loguru import logger
 from PySide6.QtCore import QEvent, QModelIndex, QObject, QRectF, QSize, Qt, Signal
 from PySide6.QtGui import (
     QAction,
@@ -32,7 +33,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from loguru import logger
 
 from app.controllers.settings_controller import SettingsController
 from app.models.dialogue import (
@@ -1268,9 +1268,9 @@ class ModListWidget(QListWidget):
                                 mod_metadata = (
                                     self.metadata_manager.internal_local_metadata[uuid]
                                 )
-                                if not mod_metadata[
+                                if mod_metadata[
                                     "data_source"  # Disallow Official Expansions
-                                ] == "expansion" or not mod_metadata[
+                                ] != "expansion" or not mod_metadata[
                                     "packageid"
                                 ].startswith(
                                     "ludeon.rimworld"
@@ -1302,9 +1302,9 @@ class ModListWidget(QListWidget):
                                 mod_metadata = (
                                     self.metadata_manager.internal_local_metadata[uuid]
                                 )
-                                if not mod_metadata[
+                                if mod_metadata[
                                     "data_source"  # Disallow Official Expansions
-                                ] == "expansion" or not mod_metadata[
+                                ] != "expansion" or not mod_metadata[
                                     "packageid"
                                 ].startswith(
                                     "ludeon.rimworld"
@@ -1331,9 +1331,9 @@ class ModListWidget(QListWidget):
                                 mod_metadata = (
                                     self.metadata_manager.internal_local_metadata[uuid]
                                 )
-                                if not mod_metadata[
+                                if mod_metadata[
                                     "data_source"  # Disallow Official Expansions
-                                ] == "expansion" or not mod_metadata[
+                                ] != "expansion" or not mod_metadata[
                                     "packageid"
                                 ].startswith(
                                     "ludeon.rimworld"
@@ -1767,7 +1767,7 @@ class ModListWidget(QListWidget):
             # Handle version mismatch behavior
             if (
                 mod_errors["version_mismatch"]
-                and not mod_data["packageid"] in self.ignore_warning_list
+                and mod_data["packageid"] not in self.ignore_warning_list
             ):
                 # Add tool tip to indicate mod and game version mismatch
                 tool_tip_text += "\nMod and Game Version Mismatch"
@@ -1861,7 +1861,7 @@ class ModListWidget(QListWidget):
         self.repaint()
 
     def toggle_warning(self, packageid: str) -> None:
-        if not (packageid in self.ignore_warning_list):
+        if packageid not in self.ignore_warning_list:
             self.ignore_warning_list.append(packageid)
         else:
             self.ignore_warning_list.remove(packageid)
