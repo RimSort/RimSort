@@ -1,3 +1,5 @@
+#cSpell: ignore unimported, subclassing
+
 [tool.mypy]
 disallow_any_generics = true
 # disallow_any_unimported = true
