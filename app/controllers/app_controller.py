@@ -6,6 +6,7 @@ from PySide6.QtWidgets import QApplication
 
 from app.controllers.main_window_controller import MainWindowController
 from app.controllers.settings_controller import SettingsController
+from app.controllers.theme_controller import Themes
 from app.models.settings import Settings
 from app.utils.app_info import AppInfo
 from app.utils.constants import DEFAULT_USER_RULES
@@ -20,15 +21,6 @@ class AppController(QObject):
         super().__init__()
 
         self.app = QApplication(sys.argv)
-
-        self.app.setStyle("Fusion")
-
-        self.app.setStyleSheet(  # Add style sheet for styling layouts and widgets
-            (
-                AppInfo().application_folder / "themes" / "RimPy" / "style.qss"
-            ).read_text()
-        )
-
         # One-time initialization of userRules.json
         user_rules_path = AppInfo().databases_folder / "userRules.json"
         if not user_rules_path.exists():
@@ -59,6 +51,13 @@ class AppController(QObject):
         # Instantiate the main window and its controller
         self.main_window = MainWindow(settings_controller=self.settings_controller)
         self.main_window_controller = MainWindowController(self.main_window)
+
+        # Initialize themes
+        if self.settings.enable_themes is True:
+            self.app.setStyle("Fusion")
+            theme_name = self.settings.theme
+            theme = Themes(theme_name)
+            self.app.setStyleSheet(theme.style_sheet())
 
     def run(self) -> int:
         self.main_window.show()
