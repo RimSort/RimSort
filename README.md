@@ -4,9 +4,9 @@
 
 RimSort is an **open source** mod manager for the video game [RimWorld](https://store.steampowered.com/app/294100/RimWorld/). There is support for Linux, Mac, and Windows, built from the ground up to be a reliable, community-managed alternative to [RimPy Mod Manager](https://github.com/rimpy-custom/RimPy/releases).
 
-To run RimSort, visit the [Releases](https://github.com/oceancabbage/RimSort/releases) page and download the latest zipped release for your operating system. 
+To run RimSort, visit the [Releases](https://github.com/oceancabbage/RimSort/releases) page and download the latest zipped release for your operating system.
 
-For Windows and Linux, unzip the download and run the `RimSort` executable inside the unzipped folder. 
+For Windows and Linux, unzip the download and run the `RimSort` executable inside the unzipped folder.
 
 For MacOS, make sure you grab the appropriate release per your CPU (i386 is for an Intel CPU Mac, arm is for an Apple M1/M2 CPU Mac). You may need to follow [special instructions](https://github.com/RimSort/RimSort/wiki/User-Guide) to get around Gatekeeper errors.
 
