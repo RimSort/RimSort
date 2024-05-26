@@ -201,23 +201,23 @@ class MainWindow(QMainWindow):
             # Setup watchdog
             self.initialize_watchdog()
 
-    def __ask_for_new_instance_name(self) -> str:
-        instance_name, cancelled = show_dialogue_input(
+    def __ask_for_new_instance_name(self) -> str | None:
+        instance_name, ok = show_dialogue_input(
             title="Create new instance",
-            text="Input a unique name of new instance that is not already used:",
+            label="Input a unique name of new instance that is not already used:",
         )
-        return instance_name if not cancelled else None
+        return instance_name.strip() if ok else None
 
-    def __ask_for_non_default_instance_name(self) -> str:
+    def __ask_for_non_default_instance_name(self) -> str | None:
         while True:
-            instance_name, cancelled = show_dialogue_input(
+            instance_name, ok = show_dialogue_input(
                 title="Provide instance name",
-                text='Input a unique name for the backed up instance that is not "Default"',
+                label='Input a unique name for the backed up instance that is not "Default"',
             )
-            if cancelled:
-                return None
-            if instance_name.lower() != "default":
+            if ok and instance_name.lower() != "default":
                 return instance_name
+            else:
+                return None
 
     def __ask_how_to_workshop_mods(
         self, existing_instance_name: str, existing_instance_workshop_folder: str
@@ -569,7 +569,7 @@ class MainWindow(QMainWindow):
             )
         )
         # Sanitize the input so that it does not produce any KeyError down the road
-        new_instance_name = self.__ask_for_new_instance_name().strip()
+        new_instance_name = self.__ask_for_new_instance_name()
         if (
             new_instance_name
             and new_instance_name != "Default"
@@ -740,7 +740,7 @@ class MainWindow(QMainWindow):
     ) -> None:
         if not instance_name:
             # Sanitize the input so that it does not produce any KeyError down the road
-            instance_name = self.__ask_for_new_instance_name().strip()
+            instance_name = self.__ask_for_new_instance_name()
         current_instances = list(self.settings_controller.settings.instances.keys())
         if (
             instance_name
