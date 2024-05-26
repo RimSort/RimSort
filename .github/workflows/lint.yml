@@ -65,6 +65,7 @@ jobs:
           VALIDATE_JSON: true
           VALIDATE_YAML: true
           VALIDATE_BASH: true
+          VALIDATE_BASH_EXEC: true
           VALIDATE_CHECKOV: true
           VALIDATE_JSCPD: true
           VALIDATE_MARKDOWN: true
