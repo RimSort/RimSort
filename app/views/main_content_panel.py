@@ -527,7 +527,9 @@ class MainContent(QObject):
             self.missing_mods_prompt.steamworks_subscription_signal.connect(
                 self._do_steamworks_api_call_animated
             )
-            self.missing_mods_prompt.setWindowModality(Qt.ApplicationModal)
+            self.missing_mods_prompt.setWindowModality(
+                Qt.WindowModality.ApplicationModal
+            )
             self.missing_mods_prompt.show()
         else:
             list_of_missing_mods = "\n".join([f"* {mod}" for mod in self.missing_mods])
@@ -1903,7 +1905,7 @@ class MainContent(QObject):
         if (
             self.steamcmd_runner
             and self.steamcmd_runner.process
-            and self.steamcmd_runner.process.state() == QProcess.Running
+            and self.steamcmd_runner.process.state() == QProcess.ProcessState.Running
         ):
             show_warning(
                 title="RimSort - SteamCMD setup",
@@ -1955,7 +1957,7 @@ class MainContent(QObject):
         if (
             self.steamcmd_runner
             and self.steamcmd_runner.process
-            and self.steamcmd_runner.process.state() == QProcess.Running
+            and self.steamcmd_runner.process.state() == QProcess.ProcessState.Running
         ):
             show_warning(
                 title="RimSort",
@@ -2616,7 +2618,7 @@ class MainContent(QObject):
             initial_mode=initial_mode,
         )
         self.rule_editor._populate_from_metadata()
-        self.rule_editor.setWindowModality(Qt.ApplicationModal)
+        self.rule_editor.setWindowModality(Qt.WindowModality.ApplicationModal)
         self.rule_editor.update_database_signal.connect(self._do_update_rules_database)
         self.rule_editor.show()
 
