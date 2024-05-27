@@ -234,7 +234,7 @@ class SettingsController(QObject):
             ),
         ]
 
-    def resolve_data_source(self, path: str) -> str:
+    def resolve_data_source(self, path: str) -> str | None:
         """
         Resolve the data source for the provided path string.
         """

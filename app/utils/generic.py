@@ -262,7 +262,7 @@ def set_to_list(obj):
         return obj
 
 
-def upload_data_to_0x0_st(path: str) -> str:
+def upload_data_to_0x0_st(path: str) -> str | None:
     """
     Function to upload data to http://0x0.st/
 
