@@ -52,7 +52,9 @@ class EditableDelegate(QItemDelegate):
             # Send the column data back to the editor so we can update the metadata
             # edited_data = model.data(index, Qt.DisplayRole)  # Get the edited data
             column_values = [
-                model.data(model.index(index.row(), column), Qt.DisplayRole)
+                model.data(
+                    model.index(index.row(), column), Qt.ItemDataRole.DisplayRole
+                )
                 for column in range(model.columnCount())
             ]  # Get the values of all columns in the edited row
 
@@ -113,7 +115,7 @@ class RuleEditor(QWidget):
 
         # MOD LABEL
         self.mod_label = QLabel("No mod currently being edited")
-        self.mod_label.setAlignment(Qt.AlignCenter)
+        self.mod_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # CONTAINER LAYOUTS
         self.upper_layout = QHBoxLayout()
@@ -148,7 +150,7 @@ class RuleEditor(QWidget):
         )
         self.external_community_rules_loadAfter_list = QListWidget()
         self.external_community_rules_loadAfter_list.setContextMenuPolicy(
-            Qt.CustomContextMenu
+            Qt.ContextMenuPolicy.CustomContextMenu
         )
         self.external_community_rules_loadAfter_list.customContextMenuRequested.connect(
             partial(
@@ -158,14 +160,14 @@ class RuleEditor(QWidget):
         )
         self.external_community_rules_loadAfter_list.setAcceptDrops(True)
         self.external_community_rules_loadAfter_list.setDragDropMode(
-            QListWidget.DropOnly
+            QListWidget.DragDropMode.DropOnly
         )
         self.external_community_rules_loadAfter_list.dropEvent = self.createDropEvent(
             self.external_community_rules_loadAfter_list
         )
         self.external_community_rules_loadBefore_list = QListWidget()
         self.external_community_rules_loadBefore_list.setContextMenuPolicy(
-            Qt.CustomContextMenu
+            Qt.ContextMenuPolicy.CustomContextMenu
         )
         self.external_community_rules_loadBefore_list.customContextMenuRequested.connect(
             partial(
@@ -175,7 +177,7 @@ class RuleEditor(QWidget):
         )
         self.external_community_rules_loadBefore_list.setAcceptDrops(True)
         self.external_community_rules_loadBefore_list.setDragDropMode(
-            QListWidget.DropOnly
+            QListWidget.DragDropMode.DropOnly
         )
         self.external_community_rules_loadBefore_list.dropEvent = self.createDropEvent(
             self.external_community_rules_loadBefore_list
@@ -189,7 +191,7 @@ class RuleEditor(QWidget):
         self.external_user_rules_loadBefore_label = QLabel("User Rules (loadBefore)")
         self.external_user_rules_loadAfter_list = QListWidget()
         self.external_user_rules_loadAfter_list.setContextMenuPolicy(
-            Qt.CustomContextMenu
+            Qt.ContextMenuPolicy.CustomContextMenu
         )
         self.external_user_rules_loadAfter_list.customContextMenuRequested.connect(
             partial(
@@ -198,13 +200,15 @@ class RuleEditor(QWidget):
             )
         )
         self.external_user_rules_loadAfter_list.setAcceptDrops(True)
-        self.external_user_rules_loadAfter_list.setDragDropMode(QListWidget.DropOnly)
+        self.external_user_rules_loadAfter_list.setDragDropMode(
+            QListWidget.DragDropMode.DropOnly
+        )
         self.external_user_rules_loadAfter_list.dropEvent = self.createDropEvent(
             self.external_user_rules_loadAfter_list
         )
         self.external_user_rules_loadBefore_list = QListWidget()
         self.external_user_rules_loadBefore_list.setContextMenuPolicy(
-            Qt.CustomContextMenu
+            Qt.ContextMenuPolicy.CustomContextMenu
         )
         self.external_user_rules_loadBefore_list.customContextMenuRequested.connect(
             partial(
@@ -213,7 +217,9 @@ class RuleEditor(QWidget):
             )
         )
         self.external_user_rules_loadBefore_list.setAcceptDrops(True)
-        self.external_user_rules_loadBefore_list.setDragDropMode(QListWidget.DropOnly)
+        self.external_user_rules_loadBefore_list.setDragDropMode(
+            QListWidget.DragDropMode.DropOnly
+        )
         self.external_user_rules_loadBefore_list.dropEvent = self.createDropEvent(
             self.external_user_rules_loadBefore_list
         )
@@ -240,23 +246,23 @@ class RuleEditor(QWidget):
             self.editor_delegate
         )  # Set the delegate for editing
         self.editor_table_view.setEditTriggers(
-            QTableView.DoubleClicked | QTableView.EditKeyPressed
+            QTableView.EditTrigger.DoubleClicked | QTableView.EditTrigger.EditKeyPressed
         )  # Enable editing
         # Set default stretch for each column
         self.editor_table_view.horizontalHeader().setSectionResizeMode(
-            0, QHeaderView.Stretch
+            0, QHeaderView.ResizeMode.Stretch
         )
         self.editor_table_view.horizontalHeader().setSectionResizeMode(
-            1, QHeaderView.ResizeToContents
+            1, QHeaderView.ResizeMode.ResizeToContents
         )
         self.editor_table_view.horizontalHeader().setSectionResizeMode(
-            2, QHeaderView.ResizeToContents
+            2, QHeaderView.ResizeMode.ResizeToContents
         )
         self.editor_table_view.horizontalHeader().setSectionResizeMode(
-            3, QHeaderView.ResizeToContents
+            3, QHeaderView.ResizeMode.ResizeToContents
         )
         self.editor_table_view.horizontalHeader().setSectionResizeMode(
-            4, QHeaderView.Stretch
+            4, QHeaderView.ResizeMode.Stretch
         )
         # Editor actions
         # community rules
@@ -298,7 +304,7 @@ class RuleEditor(QWidget):
         self.mods_search_clear_button.clicked.connect(self.clear_mods_search)
         # Mods list
         self.mods_list = QListWidget()
-        self.mods_list.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.mods_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.mods_list.customContextMenuRequested.connect(self.modItemContextMenuEvent)
         self.mods_list.setDragEnabled(True)
 
@@ -440,15 +446,15 @@ class RuleEditor(QWidget):
             if event.source() == self.mods_list and self.edit_packageid:
                 logger.debug("DROP")
                 # Accept event
-                event.setDropAction(Qt.CopyAction)
+                event.setDropAction(Qt.DropAction.CopyAction)
                 event.accept()
                 # Create new item for destination list & copy source item
                 source_item = self.mods_list.currentItem()
                 item_label = source_item.listWidget().itemWidget(source_item)
                 item_label_text = item_label.text()
-                rule_data = source_item.data(Qt.UserRole)
+                rule_data = source_item.data(Qt.ItemDataRole.UserRole)
                 copied_item = QListWidgetItem()
-                copied_item.setData(Qt.UserRole, rule_data)
+                copied_item.setData(Qt.ItemDataRole.UserRole, rule_data)
                 # Create editor row & append rule to metadata after item is populated into the destination list
                 # Determine action mode
                 if destination_list is self.external_community_rules_loadAfter_list:
@@ -596,7 +602,7 @@ class RuleEditor(QWidget):
         # Create our list item
         item = QListWidgetItem()
         if metadata:
-            item.setData(Qt.UserRole, metadata)
+            item.setData(Qt.ItemDataRole.UserRole, metadata)
             if _list == self.mods_list:
                 item.setToolTip(metadata)
             else:
@@ -612,7 +618,7 @@ class RuleEditor(QWidget):
 
     def _open_mod_in_editor(self, context_item: QListWidgetItem) -> None:
         logger.debug(f"Opening mod in editor: {self.edit_packageid}")
-        self.edit_packageid = context_item.data(Qt.UserRole)
+        self.edit_packageid = context_item.data(Qt.ItemDataRole.UserRole)
         if self.edit_packageid:
             self.external_community_rules_loadBottom_checkbox.setCheckable(True)
             self.external_user_rules_loadBottom_checkbox.setCheckable(True)
@@ -781,7 +787,7 @@ class RuleEditor(QWidget):
     def _remove_rule(self, context_item: QListWidgetItem, _list: QListWidget) -> None:
         logger.debug(f"Removing rule from mod: {self.edit_packageid}")
         _list.takeItem(_list.row(context_item))
-        rule_data = context_item.data(Qt.UserRole)
+        rule_data = context_item.data(Qt.ItemDataRole.UserRole)
         # Determine action mode
         if _list is self.external_community_rules_loadAfter_list:
             mode = ["Community Rules", "loadAfter"]
