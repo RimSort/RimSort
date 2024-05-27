@@ -207,21 +207,21 @@ class SteamcmdInterface:
                         BytesIO(requests.get(self.steamcmd_url).content)
                     ) as zipobj:
                         zipobj.extractall(self.steamcmd_install_path)
-                    runner.message(f"Installation completed")
+                    runner.message("Installation completed")
                     installed = True
                 elif ".tar.gz" in self.steamcmd_url:
                     with requests.get(
                         self.steamcmd_url, stream=True
                     ) as rx, tarfile.open(fileobj=rx.raw, mode="r:gz") as tarobj:
                         tarobj.extractall(self.steamcmd_install_path)
-                    runner.message(f"Installation completed")
+                    runner.message("Installation completed")
                     installed = True
             except:
                 runner.message("Installation failed")
                 show_fatal_error(
                     "SteamcmdInterface",
                     f"Failed to download steamcmd for {self.system}",
-                    f"Did the file/url change?\nDoes your environment have access to the internet?",
+                    "Did the file/url change?\nDoes your environment have access to the internet?",
                 )
         else:
             runner.message("SteamCMD already installed...")

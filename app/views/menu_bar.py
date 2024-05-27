@@ -128,7 +128,7 @@ class MenuBar(QObject):
         self.texture_menu.addAction(self.delete_dds_textures_action)
         # Help menu
         self.help_menu = self.menu_bar.addMenu("Help")
-        self.wiki_action = QAction(f"RimSort Wiki…", self)
+        self.wiki_action = QAction("RimSort Wiki…", self)
         self.help_menu.addAction(self.wiki_action)
         self.help_menu.addSeparator()
         self.validate_steam_client_action = QAction("Validate Steam Client mods", self)
@@ -225,7 +225,7 @@ class MenuBar(QObject):
         self.file_menu.addAction(self.delete_dds_textures_action)
         # Help menu
         self.help_menu = self.menu_bar.addMenu("Help")
-        self.wiki_action = QAction(f"RimSort Wiki…", self)
+        self.wiki_action = QAction("RimSort Wiki…", self)
         self.help_menu.addAction(self.wiki_action)
         self.help_menu.addSeparator()
         self.check_for_updates_action = QAction("Check for Updates…", self)

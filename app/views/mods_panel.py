@@ -1225,7 +1225,7 @@ class ModListWidget(QListWidget):
                 ):  # ACTION: Blacklist workshop mod in SteamDB
                     args, ok = show_dialogue_input(
                         title="Add comment",
-                        label=f"Enter a comment providing your reasoning for wanting to blacklist this mod: "
+                        label="Enter a comment providing your reasoning for wanting to blacklist this mod: "
                         + f'{self.metadata_manager.external_steam_metadata.get(steamdb_add_blacklist, {}).get("steamName", steamdb_add_blacklist)}',
                     )
                     if ok:
@@ -1243,7 +1243,7 @@ class ModListWidget(QListWidget):
                 ):  # ACTION: Blacklist workshop mod in SteamDB
                     answer = show_dialogue_conditional(
                         title="Are you sure?",
-                        text=f"This will remove the selected mod, "
+                        text="This will remove the selected mod, "
                         + f'{self.metadata_manager.external_steam_metadata.get(steamdb_remove_blacklist, {}).get("steamName", steamdb_remove_blacklist)}, '
                         + "from your configured Steam DB blacklist."
                         + "\nDo you want to proceed?",

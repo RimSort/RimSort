@@ -246,7 +246,7 @@ class DynamicQuery(QObject):
                     missing_children,
                 ) = self.IPublishedFileService_GetDetails(query, missing_children)
                 self.dq_messaging_signal.emit(
-                    f"\nLaunching addiitonal full query to complete dependency information for the missing children"
+                    "\nLaunching addiitonal full query to complete dependency information for the missing children"
                 )
             else:  # Stop querying once we have 0 missing_children
                 missing_children = []
@@ -291,7 +291,7 @@ class DynamicQuery(QObject):
                 )
         else:
             self.query = False
-            self.dq_messaging_signal.emit(f"AppIDQuery: WebAPI failed to initialize!")
+            self.dq_messaging_signal.emit("AppIDQuery: WebAPI failed to initialize!")
 
     def IPublishedFileService_GetDetails(
         self, json_to_update: Dict[Any, Any], publishedfileids: list
@@ -532,7 +532,7 @@ class DynamicQuery(QObject):
                 # Since this is only run during the initial loop, we print out the 0
                 # needed for RunnerPanel progress bar calculations
                 self.dq_messaging_signal.emit(
-                    f"IPublishedFileService/QueryFiles page [0" + f"/{str(self.pages)}]"
+                    "IPublishedFileService/QueryFiles page [0" + f"/{str(self.pages)}]"
                 )
         self.dq_messaging_signal.emit(
             f"IPublishedFileService/QueryFiles page [{str(self.pagenum)}"
@@ -591,9 +591,7 @@ class DynamicQuery(QObject):
         # Uncomment to see the total metadata returned from all Processes
         # logger.debug(pfids_appid_deps)
         # Add our metadata to the query...
-        logger.debug(
-            f"Populating AppID dependency information into database from query"
-        )
+        logger.debug("Populating AppID dependency information into database from query")
         for pfid in query["database"].keys():
             if int(pfid) in pfids_appid_deps:
                 for appid in pfids_appid_deps[int(pfid)]:
@@ -623,7 +621,7 @@ def ISteamRemoteStorage_GetCollectionDetails(
     :return: a JSON object that is the response from your WebAPI query
     """
     # Construct the URL to retrieve information about the collection
-    url = f"https://api.steampowered.com/ISteamRemoteStorage/GetCollectionDetails/v1/"
+    url = "https://api.steampowered.com/ISteamRemoteStorage/GetCollectionDetails/v1/"
     # Construct arguments to pass to the API call
     metadata = []
     for chunk in list(chunks(_list=publishedfileids, limit=5000)):
@@ -669,9 +667,7 @@ def ISteamRemoteStorage_GetPublishedFileDetails(
     :return: a JSON object that is the response from your WebAPI query
     """
     # Construct the URL to retrieve information about the mod
-    url = (
-        f"https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/"
-    )
+    url = "https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/"
     metadata = []
     # Construct arguments to pass to the API call
     for chunk in list(chunks(_list=publishedfileids, limit=5000)):

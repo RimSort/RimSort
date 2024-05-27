@@ -51,7 +51,7 @@ def delete_files_except_extension(directory, extension):
                 file_path = str((Path(root) / file))
                 try:
                     os.remove(file_path)
-                except OSError as e:
+                except OSError:
                     handle_remove_read_only(os.remove, file_path, sys.exc_info())
                 finally:
                     logger.debug(f"Deleted: {file_path}")
@@ -82,7 +82,7 @@ def delete_files_only_extension(directory, extension):
                 file_path = str((Path(root) / file))
                 try:
                     os.remove(file_path)
-                except OSError as e:
+                except OSError:
                     handle_remove_read_only(os.remove, file_path, sys.exc_info())
                 finally:
                     logger.debug(f"Deleted: {file_path}")
@@ -151,7 +151,7 @@ def launch_game_process(game_install_path: Path, args: list) -> None:
         logger.info(f"Path to game executable generated: {executable_path}")
         if os.path.exists(executable_path):
             logger.info(
-                f"Launching the game with subprocess.Popen(): `"
+                "Launching the game with subprocess.Popen(): `"
                 + executable_path
                 + "` with args: `"
                 + str(args)
@@ -278,5 +278,5 @@ def upload_data_to_0x0_st(path: str) -> str:
         logger.info(f"Uploaded! Uploaded data can be found at: {url}")
         return url
     else:
-        logger.warning(f"Failed to upload data to http://0x0.st")
+        logger.warning("Failed to upload data to http://0x0.st")
         return None

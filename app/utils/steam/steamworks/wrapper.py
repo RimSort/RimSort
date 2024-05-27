@@ -222,7 +222,7 @@ class SteamworksGameLaunch(Process):
         :param game_install_path: is a string path to the game folder
         :param args: is a string representing the args to pass to the generated executable path
         """
-        logger.info(f"Creating SteamworksInterface and launching game executable")
+        logger.info("Creating SteamworksInterface and launching game executable")
         # Try to initialize the SteamWorks API, but allow game to launch if Steam not found
         steamworks_interface = SteamworksInterface(callbacks=False, _libs=self._libs)
         if steamworks_interface.steam_not_running:  # Delete if true
