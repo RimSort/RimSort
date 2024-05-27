@@ -84,7 +84,7 @@ class MetadataManager(QObject):
             # Mappers
             self.mod_metadata_file_mapper: Dict[str, str] = {}
             self.mod_metadata_dir_mapper: Dict[str, str] = {}
-            self.packageid_to_uuids: Dict[str, set(str)] = {}
+            self.packageid_to_uuids: Dict[str, set[str]] = {}
             self.steamdb_packageid_to_name: Dict[str, str] = {}
             # Empty game version string unless the data is populated
             self.game_version: str = ""
@@ -149,11 +149,11 @@ class MetadataManager(QObject):
                 path
             ):  # Look for cached data & load it if available & not expired
                 logger.info(
-                    f"Steam DB exists!",
+                    "Steam DB exists!",
                 )
                 with open(path, encoding="utf-8") as f:
                     json_string = f.read()
-                    logger.info(f"Checking metadata expiry against database...")
+                    logger.info("Checking metadata expiry against database...")
                     db_data = json.loads(json_string)
                     current_time = int(time())
                     db_time = int(db_data["version"])
@@ -213,7 +213,7 @@ class MetadataManager(QObject):
                 path
             ):  # Look for cached data & load it if available & not expired
                 logger.info(
-                    f"Community Rules DB exists!",
+                    "Community Rules DB exists!",
                 )
                 with open(path, encoding="utf-8") as f:
                     json_string = f.read()
@@ -993,7 +993,7 @@ class MetadataManager(QObject):
                     )
                     if load_this_bottom:
                         logger.debug(
-                            f'Current mod should load at the bottom of a mods list, and will be considered a "tier 3" mod'
+                            'Current mod should load at the bottom of a mods list, and will be considered a "tier 3" mod'
                         )
                         for uuid in potential_uuids:
                             self.internal_local_metadata[uuid]["loadBottom"] = True
@@ -1060,7 +1060,7 @@ class MetadataManager(QObject):
                     )
                     if load_this_bottom:
                         logger.debug(
-                            f'Current mod should load at the bottom of a mods list, and will be considered a "tier 3" mod'
+                            'Current mod should load at the bottom of a mods list, and will be considered a "tier 3" mod'
                         )
                         for uuid in potential_uuids:
                             self.internal_local_metadata[uuid]["loadBottom"] = True
@@ -2249,7 +2249,7 @@ class SteamDatabaseBuilder(QThread):
                 with open(self.output_database_path, encoding="utf-8") as f:
                     json_string = f.read()
                     self.db_builder_message_output_signal.emit(
-                        f"\nReading info from file..."
+                        "\nReading info from file..."
                     )
                     db_to_update = json.loads(json_string)
                     self.db_builder_message_output_signal.emit(
@@ -2344,7 +2344,7 @@ def import_steamcmd_acf_data(
 ) -> None:
     logger.info(f"SteamCMD acf data path to update: {steamcmd_appworkshop_acf_path}")
     if os.path.exists(steamcmd_appworkshop_acf_path):
-        logger.debug(f"Reading info...")
+        logger.debug("Reading info...")
         steamcmd_appworkshop_acf = acf_to_dict(steamcmd_appworkshop_acf_path)
         logger.debug("Retrieved SteamCMD data to update...")
     else:
@@ -2359,7 +2359,7 @@ def import_steamcmd_acf_data(
     )
     logger.info(f"SteamCMD acf data path to import: {acf_to_import_path}")
     if acf_to_import_path and os.path.exists(acf_to_import_path):
-        logger.debug(f"Reading info...")
+        logger.debug("Reading info...")
         acf_to_import = acf_to_dict(acf_to_import_path)
         logger.debug("Retrieved SteamCMD data to import...")
     else:

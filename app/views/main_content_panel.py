@@ -2,12 +2,13 @@ import datetime
 import platform
 import subprocess
 import sys
+import time
 import webbrowser
 from functools import partial
 from gc import collect
 from io import BytesIO
 from math import ceil
-from multiprocessing import Pool, cpu_count
+from multiprocessing import cpu_count, Pool
 from tempfile import gettempdir
 from typing import Callable
 from urllib.parse import urlparse
@@ -33,7 +34,11 @@ from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel
 from requests import get as requests_get
 
 from app.models.animations import LoadingAnimation
-from app.models.dialogue import show_dialogue_input, show_fatal_error, show_information
+from app.models.dialogue import (
+    show_dialogue_input,
+    show_fatal_error,
+    show_information,
+)
 from app.sort.alphabetical_sort import *
 from app.sort.dependencies import *
 from app.sort.topo_sort import *
@@ -322,11 +327,14 @@ class MainContent(QObject):
         logger.debug(f"Game folder: {game_folder_path}")
         logger.debug(f"Config folder: {config_folder_path}")
         if (
-            not game_folder_path
-            or not config_folder_path
-            or not os.path.exists(game_folder_path)
-            or not os.path.exists(config_folder_path)
+            game_folder_path
+            and config_folder_path
+            and os.path.exists(game_folder_path)
+            and os.path.exists(config_folder_path)
         ):
+            logger.info("Essential paths set!")
+            return True
+        else:
             logger.warning("Essential path(s) are invalid or not set!")
             answer = show_dialogue_conditional(
                 title="Essential path(s)",
@@ -341,9 +349,6 @@ class MainContent(QObject):
             if answer == "&Yes":
                 self.settings_controller.show_settings_dialog("Locations")
             return False
-        else:
-            logger.info("Essential paths set!")
-            return True
 
     def ___get_relative_middle(self, some_list):
         rect = some_list.contentsRect()
@@ -373,7 +378,7 @@ class MainContent(QObject):
             iml.setFocus()
             if not iml.selectedIndexes():
                 iml.setCurrentRow(self.___get_relative_middle(iml))
-            data = iml.selectedItems()[0].data(Qt.UserRole)
+            data = iml.selectedItems()[0].data(Qt.ItemDataRole.UserRole)
             uuid = data["uuid"]
             self.__mod_list_slot(uuid)
 
@@ -387,7 +392,7 @@ class MainContent(QObject):
 
                 # Remove items from current list
                 for item in items_to_move:
-                    data = item.data(Qt.UserRole)
+                    data = item.data(Qt.ItemDataRole.UserRole)
                     uuid = data["uuid"]
                     aml.uuids.remove(uuid)
                     aml.takeItem(aml.row(item))
@@ -427,7 +432,7 @@ class MainContent(QObject):
             aml.setFocus()
             if not aml.selectedIndexes():
                 aml.setCurrentRow(self.___get_relative_middle(aml))
-            data = aml.selectedItems()[0].data(Qt.UserRole)
+            data = aml.selectedItems()[0].data(Qt.ItemDataRole.UserRole)
             uuid = data["uuid"]
             self.__mod_list_slot(uuid)
 
@@ -441,7 +446,7 @@ class MainContent(QObject):
 
                 # Remove items from current list
                 for item in items_to_move:
-                    data = item.data(Qt.UserRole)
+                    data = item.data(Qt.ItemDataRole.UserRole)
                     uuid = data["uuid"]
                     iml.uuids.remove(uuid)
                     iml.takeItem(iml.row(item))
@@ -816,7 +821,7 @@ class MainContent(QObject):
                     if asset["name"] == target_archive:
                         browser_download_url = asset["browser_download_url"]
                 # If we don't have it from our query...
-                if not "browser_download_url" in locals():
+                if "browser_download_url" not in locals():
                     show_warning(
                         title="Unable to complete update",
                         text=f"Failed to find valid RimSort release for {SYSTEM} {ARCH} {PROCESSOR}",
@@ -852,7 +857,7 @@ class MainContent(QObject):
                     show_warning(
                         title="Failed to download update",
                         text="Failed to download latest RimSort release!",
-                        information=f"Did the file/url change? "
+                        information="Did the file/url change? "
                         + "Does your environment have access to the Internet?\n"
                         + f"URL: {browser_download_url}",
                         details=stacktrace,
@@ -871,7 +876,9 @@ class MainContent(QObject):
                 else:
                     try:
                         subprocess.CREATE_NEW_PROCESS_GROUP
-                    except AttributeError:  # not Windows, so assume POSIX; if not, we'll get a usable exception
+                    except (
+                        AttributeError
+                    ):  # not Windows, so assume POSIX; if not, we'll get a usable exception
                         popen_args = [
                             "/bin/bash",
                             str((AppInfo().application_folder / "update.sh")),
@@ -941,7 +948,7 @@ class MainContent(QObject):
         # If any text message specified, pass it to the info panel as well
         if text:
             loading_animation_text_label = QLabel(text)
-            loading_animation_text_label.setAlignment(Qt.AlignCenter)
+            loading_animation_text_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             loading_animation_text_label.setObjectName("loadingAnimationString")
             self.mod_info_panel.panel.addWidget(loading_animation_text_label)
         loop = QEventLoop()
@@ -1458,7 +1465,7 @@ class MainContent(QObject):
             ]
             if package_id in active_mods:  # This should NOT be happening
                 logger.critical(
-                    f"Tried to export more than 1 identical package ids to the same mod list. "
+                    "Tried to export more than 1 identical package ids to the same mod list. "
                     + f"Skipping duplicate {package_id}"
                 )
                 continue
@@ -1493,7 +1500,7 @@ class MainContent(QObject):
         # Copy report to clipboard
         show_information(
             title="Export active mod list",
-            text=f"Copied active mod list report to clipboard...",
+            text="Copied active mod list report to clipboard...",
             information='Click "Show Details" to see the full report!',
             details=f"{active_mods_clipboard_report}",
         )
@@ -1517,7 +1524,7 @@ class MainContent(QObject):
             ]
             if package_id in active_mods:  # This should NOT be happening
                 logger.critical(
-                    f"Tried to export more than 1 identical package ids to the same mod list. "
+                    "Tried to export more than 1 identical package ids to the same mod list. "
                     + f"Skipping duplicate {package_id}"
                 )
                 continue
@@ -1557,10 +1564,10 @@ class MainContent(QObject):
                     ]
         # Build our report
         active_mods_rentry_report = (
-            f"# RimWorld mod list       ![](https://github.com/RimSort/RimSort/blob/main/docs/rentry_preview.png?raw=true)"
+            "# RimWorld mod list       ![](https://github.com/RimSort/RimSort/blob/main/docs/rentry_preview.png?raw=true)"
             + f"\nCreated with RimSort {self.version_string}"
             + f"\nMod list was created for game version: `{self.metadata_manager.game_version}`"
-            + f"\n!!! info Local mods are marked as yellow labels with packageid in brackets."
+            + "\n!!! info Local mods are marked as yellow labels with packageid in brackets."
             + f"\n\n\n\n!!! note Mod list length: `{len(active_mods)}`\n"
         )
         # Add a line for each mod
@@ -1660,7 +1667,7 @@ class MainContent(QObject):
             copy_to_clipboard_safely(ret)
             show_information(
                 title="Uploaded file",
-                text=f"Uploaded RimSort log to http://0x0.st/",
+                text="Uploaded RimSort log to http://0x0.st/",
                 information=f"The URL has been copied to your clipboard:\n\n{ret}",
             )
             webbrowser.open(ret)
@@ -1672,7 +1679,7 @@ class MainContent(QObject):
             copy_to_clipboard_safely(ret)
             show_information(
                 title="Uploaded file",
-                text=f"Uploaded RimSort log to http://0x0.st/",
+                text="Uploaded RimSort log to http://0x0.st/",
                 information=f"The URL has been copied to your clipboard:\n\n{ret}",
             )
             webbrowser.open(ret)
@@ -1695,7 +1702,7 @@ class MainContent(QObject):
                 copy_to_clipboard_safely(ret)
                 show_information(
                     title="Uploaded file",
-                    text=f"Uploaded RimWorld log to http://0x0.st/",
+                    text="Uploaded RimWorld log to http://0x0.st/",
                     information=f"The URL has been copied to your clipboard:\n\n{ret}",
                 )
                 webbrowser.open(ret)
@@ -2195,7 +2202,7 @@ class MainContent(QObject):
                             )
                         else:
                             logger.info("The local repository is already up-to-date.")
-                    except GitCommandError as e:
+                    except GitCommandError:
                         stacktrace = traceback.format_exc()
                         show_warning(
                             title="Failed to update repo!",
@@ -2227,7 +2234,7 @@ class MainContent(QObject):
                     ]
                 )
                 show_information(
-                    title=f"Git repo(s) updated",
+                    title="Git repo(s) updated",
                     text="The following repo(s) had updates pulled from the remote:",
                     information=repos_updated,
                     details=updates_summarized,
@@ -2451,7 +2458,7 @@ class MainContent(QObject):
                         # Load JSON data
                         with open(file_full_path, encoding="utf-8") as f:
                             json_string = f.read()
-                            logger.debug(f"Reading info...")
+                            logger.debug("Reading info...")
                             database = json.loads(json_string)
                             logger.debug("Retrieved database...")
                         if database.get("version"):
@@ -2913,7 +2920,7 @@ class MainContent(QObject):
         if input_path_a and os.path.exists(input_path_a):
             with open(input_path_a, encoding="utf-8") as f:
                 json_string = f.read()
-                logger.debug(f"Reading info...")
+                logger.debug("Reading info...")
                 db_input_a = json.loads(json_string)
                 logger.debug("Retrieved database A...")
         else:
@@ -2931,7 +2938,7 @@ class MainContent(QObject):
         if input_path_b and os.path.exists(input_path_b):
             with open(input_path_b, encoding="utf-8") as f:
                 json_string = f.read()
-                logger.debug(f"Reading info...")
+                logger.debug("Reading info...")
                 db_input_b = json.loads(json_string)
                 logger.debug("Retrieved database B...")
         else:
@@ -2955,9 +2962,9 @@ class MainContent(QObject):
         database_b_total_deps = len(database_b_deps)
         report = (
             "\nSteam DB comparison report:\n"
-            + f"\nTotal # of deps from database A:\n"
+            + "\nTotal # of deps from database A:\n"
             + f"{database_a_total_deps}"
-            + f"\nTotal # of deps from database B:\n"
+            + "\nTotal # of deps from database B:\n"
             + f"{database_b_total_deps}"
             + f"\nTotal # of discrepancies:\n{len(discrepancies)}"
         )
@@ -3026,7 +3033,7 @@ class MainContent(QObject):
         if input_path_a and os.path.exists(input_path_a):
             with open(input_path_a, encoding="utf-8") as f:
                 json_string = f.read()
-                logger.debug(f"Reading info...")
+                logger.debug("Reading info...")
                 db_input_a = json.loads(json_string)
                 logger.debug("Retrieved database A...")
         else:
@@ -3044,7 +3051,7 @@ class MainContent(QObject):
         if input_path_b and os.path.exists(input_path_b):
             with open(input_path_b, encoding="utf-8") as f:
                 json_string = f.read()
-                logger.debug(f"Reading info...")
+                logger.debug("Reading info...")
                 db_input_b = json.loads(json_string)
                 logger.debug("Retrieved database B...")
         else:
@@ -3099,7 +3106,7 @@ class MainContent(QObject):
         try:
             with open(path, encoding="utf-8") as f:
                 json_string = f.read()
-                logger.debug(f"Reading info...")
+                logger.debug("Reading info...")
                 db_input_a = json.loads(json_string)
                 logger.debug(
                     f"Retrieved copy of existing {rules_source} database to update."
