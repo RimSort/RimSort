@@ -13,7 +13,7 @@ PySide6==6.7.1; sys_platform == 'linux'
 PySide6==6.7.1; sys_platform == 'win32'
 psutil==5.9.8
 pytz==2024.1
-requests==2.32.2
+requests==2.32.3
 steam==1.4.4
 toposort==1.10
 watchdog==4.0.1
