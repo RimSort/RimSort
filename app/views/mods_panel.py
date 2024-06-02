@@ -266,7 +266,7 @@ class ModListItemInner(QWidget):
             self.warning_icon_label.setToolTip(self.errors_warnings)
             self.warning_icon_label.setHidden(False)
 
-    def count_icons(self, widget) -> int:
+    def count_icons(self, widget: QObject) -> int:
         count = 0
         if isinstance(widget, QLabel):
             pixmap = widget.pixmap()
