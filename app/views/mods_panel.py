@@ -197,12 +197,8 @@ class ModListItemInner(QWidget):
         self.warning_icon_label.setPixmap(
             ModListIcons.warning_icon().pixmap(QSize(20, 20))
         )
-        # Set tooltip on warning icon if any, otherwise hide the icon
-        if not self.errors_warnings:
-            self.warning_icon_label.setHidden(True)
-        else:
-            self.warning_icon_label.setToolTip(self.errors_warnings)
-            self.warning_icon_label.setHidden(False)
+        # Default to hidden to avoid showing early
+        self.warning_icon_label.setHidden(True)
 
         # Icons by mod source
         self.mod_source_icon = None
@@ -264,6 +260,11 @@ class ModListItemInner(QWidget):
         )
         self.main_item_layout.addStretch()
         self.setLayout(self.main_item_layout)
+
+        # Reveal if errors or warnings exist
+        if self.errors_warnings:
+            self.warning_icon_label.setToolTip(self.errors_warnings)
+            self.warning_icon_label.setHidden(False)
 
     def count_icons(self, widget) -> int:
         count = 0
@@ -703,9 +704,7 @@ class ModListWidget(QListWidget):
                         "steam_uri"
                     ) and self.settings_controller.settings.instances[
                         self.settings_controller.settings.current_instance
-                    ].get(
-                        "steam_client_integration", False
-                    ):
+                    ].get("steam_client_integration", False):
                         open_mod_steam_action = QAction()
                         open_mod_steam_action.setText("Open mod in Steam")
                     # Conversion options (SteamCMD <-> local) + re-download (local mods found in SteamDB and SteamCMD)
@@ -1272,9 +1271,7 @@ class ModListWidget(QListWidget):
                                     "data_source"  # Disallow Official Expansions
                                 ] != "expansion" or not mod_metadata[
                                     "packageid"
-                                ].startswith(
-                                    "ludeon.rimworld"
-                                ):
+                                ].startswith("ludeon.rimworld"):
                                     try:
                                         rmtree(
                                             mod_metadata["path"],
@@ -1306,9 +1303,7 @@ class ModListWidget(QListWidget):
                                     "data_source"  # Disallow Official Expansions
                                 ] != "expansion" or not mod_metadata[
                                     "packageid"
-                                ].startswith(
-                                    "ludeon.rimworld"
-                                ):
+                                ].startswith("ludeon.rimworld"):
                                     data = source_item.data(Qt.ItemDataRole.UserRole)
                                     self.uuids.remove(data["uuid"])
                                     delete_files_except_extension(
@@ -1335,9 +1330,7 @@ class ModListWidget(QListWidget):
                                     "data_source"  # Disallow Official Expansions
                                 ] != "expansion" or not mod_metadata[
                                     "packageid"
-                                ].startswith(
-                                    "ludeon.rimworld"
-                                ):
+                                ].startswith("ludeon.rimworld"):
                                     data = source_item.data(Qt.ItemDataRole.UserRole)
                                     self.uuids.remove(data["uuid"])
                                     delete_files_only_extension(
