@@ -4,12 +4,6 @@
 name: Test Builds
 on:
   workflow_call: null
-  workflow_dispatch:
-    inputs:
-      run_id:
-        description: "Run ID to grab artifacts from if skipping build"
-        type: number
-        required: true
 
 permissions: {}
 

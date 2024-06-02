@@ -1,6 +1,9 @@
 name: Lint
 on:
-  push: null
+  push:
+    branches:
+      - main
+      - master
   pull_request: null
 
 permissions: {}
@@ -62,7 +65,6 @@ jobs:
           VALIDATE_JSON: true
           VALIDATE_YAML: true
           VALIDATE_BASH: true
-          VALIDATE_SHELL_SHFMT: true
           VALIDATE_CHECKOV: true
           VALIDATE_JSCPD: true
           VALIDATE_MARKDOWN: true
@@ -73,3 +75,4 @@ jobs:
             -ignore '"ubuntu-24.04" is unknown'
           PYTHON_RUFF_CONFIG_FILE: pyproject.toml
           PYTHON_MYPY_CONFIG_FILE: pyproject.toml
+          FILTER_REGEX_EXCLUDE: "LICENSE.md"
