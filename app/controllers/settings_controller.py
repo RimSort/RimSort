@@ -458,10 +458,12 @@ class SettingsController(QObject):
         self.settings_dialog.show_mod_updates_checkbox.setChecked(
             self.settings.steam_mods_update_check
         )
+        steam_client_integration = self.settings.instances[
+            self.settings.current_instance
+        ].get("steam_client_integration", False)
+        # Weird workaround since the return is a string sometimes apparently
         self.settings_dialog.steam_client_integration_checkbox.setChecked(
-            self.settings.instances[self.settings.current_instance].get(
-                "steam_client_integration", False
-            )
+            True if steam_client_integration is True else False
         )
         self.settings_dialog.download_missing_mods_checkbox.setChecked(
             self.settings.try_download_missing_mods
@@ -486,18 +488,18 @@ class SettingsController(QObject):
         """
 
         # Locations tab
-        self.settings.instances[self.settings.current_instance][
-            "game_folder"
-        ] = self.settings_dialog.game_location.text()
-        self.settings.instances[self.settings.current_instance][
-            "config_folder"
-        ] = self.settings_dialog.config_folder_location.text()
-        self.settings.instances[self.settings.current_instance][
-            "workshop_folder"
-        ] = self.settings_dialog.steam_mods_folder_location.text()
-        self.settings.instances[self.settings.current_instance][
-            "local_folder"
-        ] = self.settings_dialog.local_mods_folder_location.text()
+        self.settings.instances[self.settings.current_instance]["game_folder"] = (
+            self.settings_dialog.game_location.text()
+        )
+        self.settings.instances[self.settings.current_instance]["config_folder"] = (
+            self.settings_dialog.config_folder_location.text()
+        )
+        self.settings.instances[self.settings.current_instance]["workshop_folder"] = (
+            self.settings_dialog.steam_mods_folder_location.text()
+        )
+        self.settings.instances[self.settings.current_instance]["local_folder"] = (
+            self.settings_dialog.local_mods_folder_location.text()
+        )
 
         # Databases tab
         if self.settings_dialog.community_rules_db_none_radio.isChecked():
@@ -543,9 +545,7 @@ class SettingsController(QObject):
         self.settings.build_steam_database_dlc_data = (
             self.settings_dialog.db_builder_query_dlc_checkbox.isChecked()
         )
-        self.settings.build_steam_database_update_toggle = (
-            self.settings_dialog.db_builder_update_instead_of_overwriting_checkbox.isChecked()
-        )
+        self.settings.build_steam_database_update_toggle = self.settings_dialog.db_builder_update_instead_of_overwriting_checkbox.isChecked()
         self.settings.database_expiry = int(
             self.settings_dialog.db_builder_database_expiry.text()
         )
@@ -1180,7 +1180,7 @@ class SettingsController(QObject):
     @Slot(str)
     def _on_run_args_text_changed(self, text: str) -> None:
         run_args_list = text.split(",")
-        self.settings.instances[self.settings.current_instance][
-            "run_args"
-        ] = run_args_list
+        self.settings.instances[self.settings.current_instance]["run_args"] = (
+            run_args_list
+        )
         self.settings.save()
