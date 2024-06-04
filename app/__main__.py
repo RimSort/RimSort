@@ -31,7 +31,7 @@ import os
 import platform
 import sys
 import traceback
-from logging import getLogger, WARNING
+from logging import WARNING, getLogger
 from multiprocessing import freeze_support, set_start_method
 from types import TracebackType
 from typing import Optional, Type

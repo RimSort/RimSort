@@ -22,12 +22,10 @@ from watchdog.observers import Observer
 
 from app.utils.metadata import MetadataManager
 
-
 # WATCHDOG
 
 
 class WatchdogHandler(FileSystemEventHandler, QObject):
-
     mod_created = Signal(str, str, str)
     mod_deleted = Signal(str, str, str)
     mod_updated = Signal(bool, bool, str, str, str)
@@ -85,12 +83,15 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
         operation = callback["operation"]
         mod_directory = callback["path"]
         uuid = callback["uuid"]
-        data_source = callback.get(
-            "data_source"  # This is resolved upon new mod creation, or we use the existing value for
-        ) or self.metadata_manager.internal_local_metadata.get(
-            uuid, {}
-        ).get(  # an existing mod
-            "data_source"
+        data_source = (
+            callback.get(
+                "data_source"  # This is resolved upon new mod creation, or we use the existing value for
+            )
+            or self.metadata_manager.internal_local_metadata.get(
+                uuid, {}
+            ).get(  # an existing mod
+                "data_source"
+            )
         )
         # Cancel any existing timers for this key
         timer = self.cooldown_timers.get(uuid)

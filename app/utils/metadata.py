@@ -40,7 +40,6 @@ from app.utils.steam.webapi.wrapper import (
 )
 from app.utils.xml import json_to_xml_write, xml_path_to_json
 
-
 # Locally installed mod metadata
 
 
@@ -140,7 +139,6 @@ class MetadataManager(QObject):
                 )
 
     def __refresh_external_metadata(self) -> None:
-
         def get_configured_steam_db(
             self, life: int, path: str
         ) -> Tuple[Optional[Dict], Optional[str]]:
@@ -1138,13 +1136,15 @@ class MetadataManager(QObject):
         logger.debug(
             f'Processing creation of {data_source + " mod" if data_source != "expansion" else data_source} for {mod_directory}'
         )
-        self.process_update(
-            batch=False,
-            exists=uuid in self.internal_local_metadata.keys(),
-            data_source=data_source,
-            mod_directory=mod_directory,
-            uuid=uuid,
-        ),
+        (
+            self.process_update(
+                batch=False,
+                exists=uuid in self.internal_local_metadata.keys(),
+                data_source=data_source,
+                mod_directory=mod_directory,
+                uuid=uuid,
+            ),
+        )
         self.mod_created_signal.emit(uuid)
 
     def process_deletion(self, data_source: str, mod_directory: str, uuid: str) -> None:
@@ -1210,7 +1210,6 @@ class MetadataManager(QObject):
 
 
 class ModParser(QRunnable):
-
     mod_metadata_updated_signal = Signal(str)
 
     def __init__(
@@ -1411,9 +1410,9 @@ class ModParser(QRunnable):
                             ).get("packageId")
                         ):
                             mod_metadata["packageid"] = (
-                                self.metadata_manager.external_steam_metadata[pfid][
-                                    "packageId"
-                                ].lower()
+                                self.metadata_manager.external_steam_metadata[
+                                    pfid
+                                ]["packageId"].lower()
                             )
                         else:
                             mod_metadata.setdefault("packageid", "missing.packageid")
@@ -1602,8 +1601,8 @@ class ModParser(QRunnable):
                     )
                     data_malformed = True
         if (
-            invalid_about_file_path_found and not scenario_rsc_found
-        ) or data_malformed:  # ...finally, if we don't have any metadata parsed, populate invalid mod entry for visibility
+            (invalid_about_file_path_found and not scenario_rsc_found) or data_malformed
+        ):  # ...finally, if we don't have any metadata parsed, populate invalid mod entry for visibility
             logger.debug(
                 f"Invalid dir. Populating invalid mod for path: {mod_directory}"
             )
@@ -1766,9 +1765,7 @@ def add_incompatibility_to_mod(
         elif isinstance(dependency_or_dependency_ids, list):
             if isinstance(dependency_or_dependency_ids[0], str):
                 for dependency in dependency_or_dependency_ids:
-                    if (
-                        dependency
-                    ):  # Sometimes, this can be None or an empty string if XML syntax error/extra elements
+                    if dependency:  # Sometimes, this can be None or an empty string if XML syntax error/extra elements
                         dependency_id = dependency.lower()
                         if dependency_id in all_package_ids:
                             mod_data["incompatibilities"].add(dependency_id)

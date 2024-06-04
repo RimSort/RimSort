@@ -1,5 +1,5 @@
 import platform
-from enum import auto, Enum, unique
+from enum import Enum, auto, unique
 from typing import Optional
 
 

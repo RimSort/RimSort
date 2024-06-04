@@ -1,8 +1,8 @@
 import sys
 import traceback
-from logging import getLogger, WARNING
+from logging import WARNING, getLogger
 from math import ceil
-from multiprocessing import cpu_count, Pool
+from multiprocessing import Pool, cpu_count
 from time import time
 from typing import Any, Dict, Optional, Tuple
 
@@ -42,9 +42,9 @@ class CollectionImport:
             metadata_manager: The metadata manager instance.
         """
         self.metadata_manager = metadata_manager
-        self.package_ids: list[str] = (
-            []
-        )  # Initialize an empty list to store package IDs
+        self.package_ids: list[
+            str
+        ] = []  # Initialize an empty list to store package IDs
         self.publishedfileids: list[str] = []  # Initialize an empty list to store pfids
         self.input_dialog()  # Call the input_dialog method to set up the UI
 
@@ -359,7 +359,9 @@ class DynamicQuery(QObject):
                     # logger.debug(f"{publishedfileid}: {metadata}")
                     # If the mod is no longer published
                     if metadata["result"] != 1:
-                        if not result["database"].get(
+                        if not result[
+                            "database"
+                        ].get(
                             publishedfileid
                         ):  # If we don't already have a ["database"] entry for this pfid
                             result["database"][publishedfileid] = {}
@@ -373,7 +375,9 @@ class DynamicQuery(QObject):
                         # This case is mostly intended for any missing_children passed back thru
                         # If this is part of an AppIDQuery, then it is useful for population of
                         # child_name and/or child_url below as part of the dependency data being collected
-                        if not result["database"].get(
+                        if not result[
+                            "database"
+                        ].get(
                             publishedfileid
                         ):  # If we don't already have a ["database"] entry for this pfid
                             result["database"][
@@ -383,9 +387,9 @@ class DynamicQuery(QObject):
                         result["database"][publishedfileid]["steamName"] = metadata[
                             "title"
                         ]
-                        result["database"][publishedfileid][
-                            "url"
-                        ] = f"https://steamcommunity.com/sharedfiles/filedetails/?id={publishedfileid}"
+                        result["database"][publishedfileid]["url"] = (
+                            f"https://steamcommunity.com/sharedfiles/filedetails/?id={publishedfileid}"
+                        )
                         # Track time publishing created
                         # result["database"][publishedfileid][
                         #     "external_time_created"
