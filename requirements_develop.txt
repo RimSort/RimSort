@@ -1,4 +1,4 @@
-ruff
+ruff==0.4.7
 mypy
 #types-pyside6
 types-requests
