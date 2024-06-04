@@ -2851,9 +2851,11 @@ class MainContent(QObject):
             if "steamcmd" in action:
                 # Filter out existing SteamCMD mods
                 mod_pfid = None
-                for metadata in self.metadata_manager.internal_local_metadata.values():
-                    if metadata.get("steamcmd"):
-                        mod_pfid = metadata.get("publishedfileid")
+                for (
+                    metadata_values
+                ) in self.metadata_manager.internal_local_metadata.values():
+                    if metadata_values.get("steamcmd"):
+                        mod_pfid = metadata_values.get("publishedfileid")
                     if mod_pfid and mod_pfid in self.db_builder.publishedfileids:
                         logger.debug(
                             f"Skipping download of existing SteamCMD mod: {mod_pfid}"
@@ -2872,11 +2874,11 @@ class MainContent(QObject):
                 )
                 if answer == "&Yes":
                     for (
-                        metadata
+                        metadata_values
                     ) in self.metadata_manager.internal_local_metadata.values():
-                        mod_pfid = metadata.get("publishedfileid")
+                        mod_pfid = metadata_values.get("publishedfileid")
                         if (
-                            metadata["data_source"] == "workshop"
+                            metadata_values["data_source"] == "workshop"
                             and mod_pfid
                             and mod_pfid in self.db_builder.publishedfileids
                         ):
