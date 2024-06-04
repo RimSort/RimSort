@@ -100,7 +100,7 @@ class MainContent(QObject):
     status_signal = Signal(str)
     stop_watchdog_signal = Signal()
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args: Any, **kwargs: Any) -> "MainContent":
         if cls._instance is None:
             cls._instance = super(MainContent, cls).__new__(cls)
         return cls._instance
