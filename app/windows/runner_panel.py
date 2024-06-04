@@ -51,8 +51,9 @@ class RunnerPanel(QWidget):
         self.steam_db = steam_db
 
         # The "runner"
-        self.text = QPlainTextEdit(readOnly=True)
+        self.text = QPlainTextEdit()
         self.text.verticalScrollBar().setValue(self.text.verticalScrollBar().maximum())
+        self.text.setReadOnly(True)
         # Font cfg by platform
         if self.system == "Darwin":
             self.text.setFont(QFont("Monaco"))
