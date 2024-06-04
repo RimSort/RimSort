@@ -1314,6 +1314,7 @@ class ModParser(QRunnable):
                 )
                 data_malformed = True
             else:
+                assert(pfid is not None)
                 # Case-insensitive `ModMetaData` key.
                 mod_data = {k.lower(): v for k, v in mod_data.items()}
                 if mod_data.get("modmetadata"):
