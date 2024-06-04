@@ -1,7 +1,7 @@
 import os
 from platform import system
 from re import compile, search
-from typing import Any
+from typing import Any, Sequence
 
 import psutil
 from loguru import logger
@@ -35,7 +35,7 @@ class RunnerPanel(QWidget):
     def __init__(
         self,
         todds_dry_run_support: bool = False,
-        steamcmd_download_tracking: list = [],
+        steamcmd_download_tracking: list[str] = [],
         steam_db: dict[str, Any] = {},
     ):
         super().__init__()
@@ -67,8 +67,8 @@ class RunnerPanel(QWidget):
         self.process_killed = False
         self.process_last_output = ""
         self.process_last_command = ""
-        self.process_last_args = []
-        self.steamcmd_current_pfid = None
+        self.process_last_args: Sequence[str] = []
+        self.steamcmd_current_pfid: str | None = None
         self.todds_dry_run_support = todds_dry_run_support
 
         # SET STYLESHEET
@@ -200,7 +200,7 @@ class RunnerPanel(QWidget):
     def execute(
         self,
         command: str,
-        args: list,
+        args: Sequence[str],
         progress_bar: int | None = None,
         additional: None = None,
     ) -> None:
