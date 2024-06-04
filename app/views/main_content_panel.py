@@ -2917,10 +2917,9 @@ class MainContent(QObject):
         found between database and this file.
         """
         # TODO: Refactor this...
-        discrepancies = []
-        mods = self.metadata_manager.internal_local_metadata
-        database_a_deps = {}
-        database_b_deps = {}
+        discrepancies: list[str] = []
+        database_a_deps: dict[str, Any] = {}
+        database_b_deps: dict[str, Any] = {}
         # Notify user
         dialogue.show_information(
             title="Steam DB Builder",
