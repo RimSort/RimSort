@@ -514,7 +514,7 @@ class Settings(QObject):
                             )
                 elif (
                     not data.get("current_instance")
-                    or not data["current_instance"] in data["instances"]
+                    or data["current_instance"] not in data["instances"]
                 ):
                     logger.debug(
                         "Current instance not found in settings.json. Performing mitigation."

@@ -527,9 +527,9 @@ class RuleEditor(QWidget):
                     metadata[self.edit_packageid][mode[1]] = {}
                 if not metadata[self.edit_packageid][mode[1]].get(rule_data):
                     metadata[self.edit_packageid][mode[1]][rule_data] = {}
-                metadata[self.edit_packageid][mode[1]][rule_data][
-                    "name"
-                ] = item_label_text
+                metadata[self.edit_packageid][mode[1]][rule_data]["name"] = (
+                    item_label_text
+                )
                 metadata[self.edit_packageid][mode[1]][rule_data]["comment"] = comment
             else:
                 event.ignore()

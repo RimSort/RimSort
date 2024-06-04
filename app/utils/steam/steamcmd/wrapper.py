@@ -210,9 +210,10 @@ class SteamcmdInterface:
                     runner.message("Installation completed")
                     installed = True
                 elif ".tar.gz" in self.steamcmd_url:
-                    with requests.get(
-                        self.steamcmd_url, stream=True
-                    ) as rx, tarfile.open(fileobj=rx.raw, mode="r:gz") as tarobj:
+                    with (
+                        requests.get(self.steamcmd_url, stream=True) as rx,
+                        tarfile.open(fileobj=rx.raw, mode="r:gz") as tarobj,
+                    ):
                         tarobj.extractall(self.steamcmd_install_path)
                     runner.message("Installation completed")
                     installed = True
