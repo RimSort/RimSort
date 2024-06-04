@@ -1314,7 +1314,6 @@ class ModParser(QRunnable):
                 )
                 data_malformed = True
             else:
-                assert(pfid is not None)
                 # Case-insensitive `ModMetaData` key.
                 mod_data = {k.lower(): v for k, v in mod_data.items()}
                 if mod_data.get("modmetadata"):
@@ -1325,6 +1324,7 @@ class ModParser(QRunnable):
                     if (  # If we don't have a <name>
                         not mod_metadata.get("name")
                         and self.metadata_manager.external_steam_metadata  # ... try to find it in Steam DB
+                        and pfid
                         and self.metadata_manager.external_steam_metadata.get(
                             pfid, {}
                         ).get("steamName")
@@ -1402,7 +1402,8 @@ class ModParser(QRunnable):
                     else:  # ...otherwise, we don't have one from About.xml, and we can check Steam DB...
                         # ...this can be needed if a mod depends on a RW generated packageid via built-in hashing mechanism.
                         if (
-                            self.metadata_manager.external_steam_metadata
+                            pfid
+                            and self.metadata_manager.external_steam_metadata
                             and self.metadata_manager.external_steam_metadata.get(
                                 pfid, {}
                             ).get("packageId")
