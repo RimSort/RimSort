@@ -1948,7 +1948,7 @@ class MainContent(QObject):
                 information="Please configure local mods path in Settings before attempting to install.",
             )
 
-    def _do_download_mods_with_steamcmd(self, publishedfileids: list) -> None:
+    def _do_download_mods_with_steamcmd(self, publishedfileids: list[str]) -> None:
         logger.debug(
             f"Attempting to download {len(publishedfileids)} mods with SteamCMD"
         )
