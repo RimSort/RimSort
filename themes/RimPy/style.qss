@@ -547,7 +547,7 @@ QWidget#RunnerPanel {
     margin: 7px; /* Space between frame and app edge */
     background-color: #19232d;
 }
-QPlainTextEdit#RunnerPaneltext {
+QPlainTextEdit#RunnerPanelText {
     background-color: #22303d;
     color: #e6edf3;
 }

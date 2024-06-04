@@ -4,7 +4,7 @@ import traceback
 from pathlib import Path
 from re import match
 from time import localtime, strftime, time
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Iterable, Optional, Union
 from uuid import uuid4
 
 from loguru import logger
@@ -50,7 +50,7 @@ class MetadataManager(QObject):
     mod_metadata_updated_signal = Signal(str)
     show_warning_signal = Signal(str, str, str, str)
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args: Any, **kwargs: Any) -> "MetadataManager":
         if cls._instance is None:
             cls._instance = super(MetadataManager, cls).__new__(cls)
         return cls._instance
@@ -70,28 +70,28 @@ class MetadataManager(QObject):
             self.show_warning_signal.connect(show_warning)
 
             # Store parsed metadata & paths
-            self.external_steam_metadata: Optional[Dict[str, Any]] = None
+            self.external_steam_metadata: Optional[dict[str, Any]] = None
             self.external_steam_metadata_path: Optional[str] = None
-            self.external_community_rules: Optional[Dict[str, Any]] = None
+            self.external_community_rules: Optional[dict[str, Any]] = None
             self.external_community_rules_path: Optional[str] = None
-            self.external_user_rules: Optional[Dict[str, Any]] = None
-            self.external_user_rules_path: Optional[str] = str(
+            self.external_user_rules: dict[str, Any] | None = None
+            self.external_user_rules_path: str = str(
                 AppInfo().databases_folder / "userRules.json"
             )
             # Local metadata
-            self.internal_local_metadata: Dict[str, Any] = {}
+            self.internal_local_metadata: dict[str, Any] = {}
             # Mappers
-            self.mod_metadata_file_mapper: Dict[str, str] = {}
-            self.mod_metadata_dir_mapper: Dict[str, str] = {}
-            self.packageid_to_uuids: Dict[str, set[str]] = {}
-            self.steamdb_packageid_to_name: Dict[str, str] = {}
+            self.mod_metadata_file_mapper: dict[str, str] = {}
+            self.mod_metadata_dir_mapper: dict[str, str] = {}
+            self.packageid_to_uuids: dict[str, set[str]] = {}
+            self.steamdb_packageid_to_name: dict[str, str] = {}
             # Empty game version string unless the data is populated
             self.game_version: str = ""
             # SteamCMD .acf file data
-            self.steamcmd_acf_data: Dict[str, Any] = {}
+            self.steamcmd_acf_data: dict[str, Any] = {}
             # Steam .acf file path / data
             current_instance = self.settings_controller.settings.current_instance
-            self.workshop_acf_path: Optional[str] = str(
+            self.workshop_acf_path: str = str(
                 # This is just getting the path 2 directories up from content/294100,
                 # so that we can find workshop/appworkshop_294100.acf
                 Path(
@@ -101,7 +101,7 @@ class MetadataManager(QObject):
                 ).parent.parent
                 / "appworkshop_294100.acf",
             )
-            self.workshop_acf_data: Dict[str, Any] = {}
+            self.workshop_acf_data: dict[str, Any] = {}
 
     @classmethod
     def instance(cls, *args: Any, **kwargs: Any) -> "MetadataManager":
@@ -140,8 +140,8 @@ class MetadataManager(QObject):
 
     def __refresh_external_metadata(self) -> None:
         def get_configured_steam_db(
-            self, life: int, path: str
-        ) -> Tuple[Optional[Dict], Optional[str]]:
+            life: int, path: str
+        ) -> tuple[Optional[dict[str, Any]], Optional[str]]:
             logger.info(f"Checking for Steam DB at: {path}")
             if os.path.exists(
                 path
@@ -204,8 +204,8 @@ class MetadataManager(QObject):
                 return None, None
 
         def get_configured_community_rules_db(
-            self, path: str
-        ) -> Tuple[Optional[Dict], Optional[str]]:
+            path: str,
+        ) -> tuple[Optional[dict[str, Any]], Optional[str]]:
             logger.info(f"Checking for Community Rules DB at: {path}")
             if os.path.exists(
                 path
@@ -244,7 +244,6 @@ class MetadataManager(QObject):
                 self.external_steam_metadata,
                 self.external_steam_metadata_path,
             ) = get_configured_steam_db(
-                self,
                 life=self.settings_controller.settings.database_expiry,
                 path=self.settings_controller.settings.external_steam_metadata_file_path,
             )
@@ -256,7 +255,6 @@ class MetadataManager(QObject):
                 self.external_steam_metadata,
                 self.external_steam_metadata_path,
             ) = get_configured_steam_db(
-                self,
                 life=self.settings_controller.settings.database_expiry,
                 path=str(
                     (
@@ -284,7 +282,6 @@ class MetadataManager(QObject):
                 self.external_community_rules,
                 self.external_community_rules_path,
             ) = get_configured_community_rules_db(
-                self,
                 path=self.settings_controller.settings.external_community_rules_file_path,
             )
         elif (
@@ -295,7 +292,6 @@ class MetadataManager(QObject):
                 self.external_community_rules,
                 self.external_community_rules_path,
             ) = get_configured_community_rules_db(
-                self,
                 path=str(
                     (
                         Path(str(AppInfo().databases_folder))
@@ -318,7 +314,11 @@ class MetadataManager(QObject):
             with open(self.external_user_rules_path, encoding="utf-8") as f:
                 json_string = f.read()
                 self.external_user_rules = json.loads(json_string)["rules"]
-            total_entries = len(self.external_user_rules)
+            total_entries = 0
+            if self.external_user_rules is not None:
+                total_entries = len(self.external_user_rules)
+            else:
+                logger.warning("Unable to load userRules.json. 'rules' is None")
             logger.info(
                 f"Loaded {total_entries} additional sorting rules from User Rules"
             )
@@ -336,7 +336,7 @@ class MetadataManager(QObject):
 
     def __refresh_internal_metadata(self, is_initial: bool = False) -> None:
         def batch_by_data_source(
-            self, data_source: str, mod_directories: list[str]
+            data_source: str, mod_directories: list[str]
         ) -> dict[str, Any]:
             """
             Returns a batch of mod path <-> uuid mappings for a given data source.
@@ -350,9 +350,7 @@ class MetadataManager(QObject):
                 for path in mod_directories
             }
 
-        def purge_by_data_source(
-            self, data_source: str, batch: list[str] = None
-        ) -> None:
+        def purge_by_data_source(data_source: str, batch: list[str] = []) -> None:
             """
             Removes all metadata for a given data source.
 
@@ -362,7 +360,6 @@ class MetadataManager(QObject):
                 data_source (str): The data source to purge.
                 batch (list[str], optional): A list of uuids to use to filter items not in that batch.
             """
-            current_instance = self.settings_controller.settings.current_instance
             if not batch:  # Purge all metadata for a given data source
                 uuids_to_remove = [
                     uuid
@@ -406,7 +403,7 @@ class MetadataManager(QObject):
                     logger.info(
                         f"Retrieved game version from Version.txt: {self.game_version}"
                     )
-            except:
+            except Exception:
                 logger.error(
                     f"Unable to parse Version.txt from game folder: {version_file_path}"
                 )
@@ -430,11 +427,11 @@ class MetadataManager(QObject):
             # Scan our Official expansions directory
             expansion_subdirectories = directories(data_path)
             expansions_batch = batch_by_data_source(
-                self, "expansion", expansion_subdirectories
+                "expansion", expansion_subdirectories
             )
             if not is_initial:
                 # Pop any uuids from metadata that are not in the batch - these can be leftover from a previous directory
-                purge_by_data_source(self, "expansion", list(expansions_batch.values()))
+                purge_by_data_source("expansion", list(expansions_batch.values()))
             # Query the batch
             self.process_batch(
                 batch=expansions_batch,
@@ -478,7 +475,7 @@ class MetadataManager(QObject):
                 "Skipping parsing data from empty game data path. Is the game path configured?"
             )
             # Check for and purge any found expansion metadata from cache
-            purge_by_data_source(self, "expansion")
+            purge_by_data_source("expansion")
         # Get and cache installed local/SteamCMD Workshop mods
         current_instance = self.settings_controller.settings.current_instance
         local_folder = self.settings_controller.settings.instances[current_instance][
@@ -488,10 +485,10 @@ class MetadataManager(QObject):
             # Get mod data
             logger.info(f"Querying local mods from path: {local_folder}")
             local_subdirectories = directories(local_folder)
-            local_batch = batch_by_data_source(self, "local", local_subdirectories)
+            local_batch = batch_by_data_source("local", local_subdirectories)
             if not is_initial:
                 # Pop any uuids from metadata that are not in the batch - these can be leftover from a previous directory
-                purge_by_data_source(self, "local", list(local_batch.values()))
+                purge_by_data_source("local", list(local_batch.values()))
             # Query the batch
             self.process_batch(
                 batch=local_batch,
@@ -502,7 +499,7 @@ class MetadataManager(QObject):
                 "Skipping parsing data from empty local mods path. Is the local mods path configured?"
             )
             # Check for and purge any found local mod metadata from cache
-            purge_by_data_source(self, "local")
+            purge_by_data_source("local")
         # Get and cache installed Steam client Workshop mods
         current_instance = self.settings_controller.settings.current_instance
         workshop_folder = self.settings_controller.settings.instances[current_instance][
@@ -511,12 +508,10 @@ class MetadataManager(QObject):
         if workshop_folder and workshop_folder != "":
             logger.info(f"Querying workshop mods from path: {workshop_folder}")
             workshop_subdirectories = directories(workshop_folder)
-            workshop_batch = batch_by_data_source(
-                self, "workshop", workshop_subdirectories
-            )
+            workshop_batch = batch_by_data_source("workshop", workshop_subdirectories)
             if not is_initial:
                 # Pop any uuids from metadata that are not in the batch - these can be leftover from a previous directory
-                purge_by_data_source(self, "workshop", list(workshop_batch.values()))
+                purge_by_data_source("workshop", list(workshop_batch.values()))
             # Query the batch
             self.process_batch(
                 batch=workshop_batch,
@@ -527,7 +522,7 @@ class MetadataManager(QObject):
                 "Skipping parsing data from empty workshop mods path. Is the workshop mods path configured?"
             )
             # Check for and purge any found workshop mod metadata from cache
-            purge_by_data_source(self, "workshop")
+            purge_by_data_source("workshop")
         # Wait for pool to complete
         self.parser_threadpool.waitForDone()
         self.parser_threadpool.clear()
@@ -571,7 +566,7 @@ class MetadataManager(QObject):
         self.steamcmd_acf_path = self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
         self.user_rules_file_path = str(AppInfo().databases_folder / "userRules.json")
 
-    def compile_metadata(self, uuids: list[str] = None) -> None:
+    def compile_metadata(self, uuids: list[str] = []) -> None:
         """
         Iterate through each expansion or mod and add new key-values describing the
         dependencies, incompatibilities, and load order rules compiled from metadata.
@@ -943,7 +938,9 @@ class MetadataManager(QObject):
                 # if the mod doesn't exist self.internal_local_metadata, then either mod_data or dependency_id
                 # will be None, and then we don't insert a dependency
                 if package_id.lower() in self.packageid_to_uuids:
-                    potential_uuids = self.packageid_to_uuids.get(package_id.lower())
+                    potential_uuids = self.packageid_to_uuids.get(
+                        package_id.lower(), set()
+                    )
                     load_these_after = self.external_community_rules[package_id].get(
                         "loadBefore"
                     )
@@ -1009,7 +1006,9 @@ class MetadataManager(QObject):
                 # if the mod doesn't exist self.internal_local_metadata, then either mod_data or dependency_id
                 # will be None, and then we don't insert a dependency
                 if package_id.lower() in self.packageid_to_uuids:
-                    potential_uuids = self.packageid_to_uuids.get(package_id.lower())
+                    potential_uuids = self.packageid_to_uuids.get(
+                        package_id.lower(), set()
+                    )
                     load_these_after = self.external_user_rules[package_id].get(
                         "loadBefore"
                     )
@@ -1122,7 +1121,7 @@ class MetadataManager(QObject):
         self,
         batch: dict[str, str],  # Batch is a mapper of mod directory <-> UUID to parse
         data_source: str,
-    ) -> dict[str, Any]:
+    ) -> None:
         for directory, uuid in batch.items():
             self.process_update(
                 batch=True,
@@ -1136,14 +1135,12 @@ class MetadataManager(QObject):
         logger.debug(
             f'Processing creation of {data_source + " mod" if data_source != "expansion" else data_source} for {mod_directory}'
         )
-        (
-            self.process_update(
-                batch=False,
-                exists=uuid in self.internal_local_metadata.keys(),
-                data_source=data_source,
-                mod_directory=mod_directory,
-                uuid=uuid,
-            ),
+        self.process_update(
+            batch=False,
+            exists=uuid in self.internal_local_metadata.keys(),
+            data_source=data_source,
+            mod_directory=mod_directory,
+            uuid=uuid,
         )
         self.mod_created_signal.emit(uuid)
 
@@ -1183,7 +1180,7 @@ class MetadataManager(QObject):
             self.compile_metadata(uuids=[uuid])
             self.mod_metadata_updated_signal.emit(uuid)
 
-    def refresh_cache(self, is_initial=None) -> None:
+    def refresh_cache(self, is_initial: bool = False) -> None:
         """
         This function contains expensive calculations for getting workshop
         mods, known expansions, community rules, and most importantly, calculating
@@ -1217,7 +1214,7 @@ class ModParser(QRunnable):
         data_source: str,
         mod_directory: str,
         metadata_manager: MetadataManager,
-        uuid: str = None,
+        uuid: str = "",
     ):
         super(ModParser, self).__init__()
         self.data_source = data_source
@@ -1234,7 +1231,7 @@ class ModParser(QRunnable):
         mod_directory: str,
         metadata_manager: MetadataManager,
         uuid: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         logger.debug(f"Parsing [{data_source}] directory: {mod_directory}")
         metadata = {}
         # Populate a UUID for the directory we are populating - re-use the same UUID
@@ -1299,7 +1296,7 @@ class ModParser(QRunnable):
                         with open(pfid_path, encoding="utf-8-sig") as pfid_file:
                             pfid = pfid_file.read()
                             pfid = pfid.strip()
-                    except:
+                    except Exception:
                         logger.error(f"Failed to read pfid from {pfid_path}")
                     break
         # If we were able to find an About.xml, populate mod data...
@@ -1310,7 +1307,7 @@ class ModParser(QRunnable):
             try:
                 # Try to parse .xml
                 mod_data = xml_path_to_json(mod_data_path)
-            except:
+            except Exception:
                 # If there was an issue parsing the .xml, track and exit
                 logger.error(
                     f"Unable to parse {about_file_name} with the exception: {traceback.format_exc()}"
@@ -1327,6 +1324,7 @@ class ModParser(QRunnable):
                     if (  # If we don't have a <name>
                         not mod_metadata.get("name")
                         and self.metadata_manager.external_steam_metadata  # ... try to find it in Steam DB
+                        and pfid
                         and self.metadata_manager.external_steam_metadata.get(
                             pfid, {}
                         ).get("steamName")
@@ -1404,7 +1402,8 @@ class ModParser(QRunnable):
                     else:  # ...otherwise, we don't have one from About.xml, and we can check Steam DB...
                         # ...this can be needed if a mod depends on a RW generated packageid via built-in hashing mechanism.
                         if (
-                            self.metadata_manager.external_steam_metadata
+                            pfid
+                            and self.metadata_manager.external_steam_metadata
                             and self.metadata_manager.external_steam_metadata.get(
                                 pfid, {}
                             ).get("packageId")
@@ -1533,7 +1532,7 @@ class ModParser(QRunnable):
             try:
                 # Try to parse .rsc
                 scenario_data = xml_path_to_json(scenario_data_path)
-            except:
+            except Exception:
                 # If there was an issue parsing the .rsc, track and exit
                 logger.error(
                     f"Unable to parse {scenario_rsc_file} with the exception: {traceback.format_exc()}"
@@ -1639,7 +1638,7 @@ class ModParser(QRunnable):
                 local_mod_metadata["steamcmd"] = True
         return metadata
 
-    def run(self):
+    def run(self) -> None:
         try:
             mod_metadata = self.__parse_mod_metadata(
                 self.data_source, self.mod_directory, self.metadata_manager, self.uuid
@@ -1659,9 +1658,9 @@ class ModParser(QRunnable):
 
 
 def add_dependency_to_mod(
-    mod_data: Dict[str, Any],
+    mod_data: dict[str, Any],
     dependency_or_dependency_ids: Any,
-    all_mods: Dict[str, Any],
+    all_mods: dict[str, Any],
 ) -> None:
     """
     Dependency data is collected regardless of whether or not that dependency
@@ -1714,7 +1713,7 @@ def add_dependency_to_mod(
 
 
 def add_dependency_to_mod_from_steamdb(
-    mod_data: Dict[str, Any], dependency_id: Any, all_mods: Dict[str, Any]
+    mod_data: dict[str, Any], dependency_id: Any, all_mods: dict[str, Any]
 ) -> None:
     mod_name = mod_data.get("name")
     # Create a new key with empty set as value by default
@@ -1728,7 +1727,7 @@ def add_dependency_to_mod_from_steamdb(
     logger.debug(f"Added dependency to [{mod_name}] from SteamDB: [{dependency_id}]")
 
 
-def get_num_dependencies(all_mods: Dict[str, Any], key_name: str) -> int:
+def get_num_dependencies(all_mods: dict[str, Any], key_name: str) -> int:
     """Debug func for getting total number of dependencies"""
     counter = 0
     for mod_data in all_mods.values():
@@ -1738,9 +1737,9 @@ def get_num_dependencies(all_mods: Dict[str, Any], key_name: str) -> int:
 
 
 def add_incompatibility_to_mod(
-    mod_data: Dict[str, Any],
+    mod_data: dict[str, Any],
     dependency_or_dependency_ids: Any,
-    all_mods: Dict[str, Any],
+    all_mods: dict[str, Any],
 ) -> None:
     """
     Incompatibility data is collected only if that incompatibility is in `all_mods`.
@@ -1780,12 +1779,12 @@ def add_incompatibility_to_mod(
 
 
 def add_load_rule_to_mod(
-    mod_data: Dict[str, Any],
+    mod_data: dict[str, Any],
     dependency_or_dependency_ids: Any,
     explicit_key: str,
     indirect_key: str,
-    all_mods: Dict[str, Any],
-    packageid_to_uuids: Dict[str, Any],
+    all_mods: dict[str, Any],
+    packageid_to_uuids: dict[str, Any],
 ) -> None:
     """
     Load order data is collected only if the mod referenced is in `all_mods`, as
@@ -1843,7 +1842,7 @@ def add_load_rule_to_mod(
 
 def get_mods_from_list(
     mod_list: Union[str, list[str]],
-) -> Tuple[list[str], list[str], Dict[str, Any], list]:
+) -> tuple[list[str], list[str], dict[str, Any], list[str]]:
     """
     Given a RimWorld mods list containing a complete list of mods,
     including base game and DLC, as well as their dependencies in order,
@@ -1853,7 +1852,7 @@ def get_mods_from_list(
     :param mod_list:
         A path to an .rws/.xml style list, or a list of package ids
         OR a list of mod uuids
-    :return: a Tuple which contains the active mods dict, inactive mods dict,
+    :return: a tuple which contains the active mods dict, inactive mods dict,
     duplicate mods dict, and missing mods list
     """
     all_mods = MetadataManager.instance().internal_local_metadata
@@ -1922,7 +1921,6 @@ def get_mods_from_list(
         # Loop through all mods
         for uuid, metadata in all_mods.items():
             metadata_package_id = metadata["packageid"]
-            metadata_path = metadata["path"]
             if (
                 metadata_package_id
                 in [  # If we have a match with or without _steam present
@@ -1984,7 +1982,7 @@ def get_mods_from_list(
     return active_mods_uuids, inactive_mods_uuids, duplicate_mods, missing_mods
 
 
-def log_deps_order_info(all_mods) -> None:
+def log_deps_order_info(all_mods: dict[str, Any]) -> None:
     """This block is used quite a bit - deserves own function"""
     logger.info(
         f"Total number of loadTheseBefore rules: {get_num_dependencies(all_mods, 'loadTheseBefore')}"
@@ -2012,10 +2010,10 @@ class SteamDatabaseBuilder(QThread):
         appid: int,
         database_expiry: int,
         mode: str,
-        output_database_path=None,
-        get_appid_deps=None,
-        update=None,
-        mods=None,
+        output_database_path: str = "",
+        get_appid_deps: bool = False,
+        update: bool = False,
+        mods: dict[str, Any] = {},
     ):
         QThread.__init__(self)
         self.apikey = apikey
@@ -2025,10 +2023,10 @@ class SteamDatabaseBuilder(QThread):
         self.mode = mode
         self.mods = mods
         self.output_database_path = output_database_path
-        self.publishedfileids = []
+        self.publishedfileids: list[str] = []
         self.update = update
 
-    def run(self):
+    def run(self) -> None:
         self.db_builder_message_output_signal.emit(
             f"\nInitiating RimSort Steam Database Builder with mode : {self.mode}\n"
         )
@@ -2139,7 +2137,7 @@ class SteamDatabaseBuilder(QThread):
                 f"SteamDatabaseBuilder ({self.mode}): Exiting..."
             )
 
-    def _init_db_from_local_metadata(self) -> Dict[str, Any]:
+    def _init_db_from_local_metadata(self) -> dict[str, Any]:
         db_from_local_metadata = {
             "version": 0,
             "database": {
@@ -2200,7 +2198,11 @@ class SteamDatabaseBuilder(QThread):
                 },
             },
         }
-        total = len(db_from_local_metadata["database"].keys())
+        total = (
+            len(db_from_local_metadata["database"].keys())
+            if isinstance(db_from_local_metadata["database"], dict)
+            else 0
+        )
         self.db_builder_message_output_signal.emit(
             f"Populated {total} items from locally found metadata into initial database for "
             + f"{self.appid}"
@@ -2208,9 +2210,9 @@ class SteamDatabaseBuilder(QThread):
         return db_from_local_metadata
 
     def _init_empty_db_from_publishedfileids(
-        self, publishedfileids: list
-    ) -> Dict[str, Any]:
-        database = {
+        self, publishedfileids: list[str]
+    ) -> dict[str, Any]:
+        database: dict[str, int | dict[str, Any]] = {
             "version": 0,
             "database": {
                 **{
@@ -2230,13 +2232,17 @@ class SteamDatabaseBuilder(QThread):
                 },
             },
         }
-        total = len(database["database"].keys())
+        total = (
+            len(database["database"].keys())
+            if isinstance(database["database"], dict)
+            else 0
+        )
         self.db_builder_message_output_signal.emit(
             f"\nPopulated {total} items queried from Steam Workshop into initial database for AppId {self.appid}"
         )
         return database
 
-    def _output_database(self, database: Dict[str, Any]) -> None:
+    def _output_database(self, database: dict[str, Any]) -> None:
         # If user-configured `update` parameter, update old db with new query data recursively
         if self.update and os.path.exists(self.output_database_path):
             self.db_builder_message_output_signal.emit(
@@ -2250,7 +2256,7 @@ class SteamDatabaseBuilder(QThread):
                     )
                     db_to_update = json.loads(json_string)
                     self.db_builder_message_output_signal.emit(
-                        "Retreived cached database!\n"
+                        "Retrieved cached database!\n"
                     )
                 self.db_builder_message_output_signal.emit(
                     "Recursively updating previous database with new metadata...\n"
@@ -2287,7 +2293,9 @@ class SteamDatabaseBuilder(QThread):
 # Misc helper functions
 
 
-def check_if_pfids_blacklisted(publishedfileids: list, steamdb: Dict[str, Any]) -> list:
+def check_if_pfids_blacklisted(
+    publishedfileids: list[str], steamdb: dict[str, Any]
+) -> list[str]:
     # None-check for steamdb
     if not steamdb:
         show_warning(
@@ -2303,7 +2311,9 @@ def check_if_pfids_blacklisted(publishedfileids: list, steamdb: Dict[str, Any]) 
                 "name": steamdb[publishedfileid]["steamName"],
                 "comment": steamdb[publishedfileid]["blacklist"]["comment"],
             }
-        elif steamdb.get(str(publishedfileid), {}).get("blacklist"):
+        elif steamdb.get(str(publishedfileid), {}).get(
+            "blacklist"
+        ):  # TODO: Is this needed?
             blacklisted_mods[publishedfileid] = {
                 "name": steamdb[str(publishedfileid)]["steamName"],
                 "comment": steamdb[str(publishedfileid)]["blacklist"]["comment"],
@@ -2392,14 +2402,14 @@ def import_steamcmd_acf_data(
     dict_to_acf(data=steamcmd_appworkshop_acf, path=steamcmd_appworkshop_acf_path)
 
 
-def query_workshop_update_data(mods: Dict[str, Any]) -> Optional[str]:
+def query_workshop_update_data(mods: dict[str, Any]) -> str | None:
     """
     Query Steam WebAPI for update data, for any workshop mods that have a 'publishedfileid'
     attribute contained in their mod_data, and from there, populate mod_json_data with it.
 
     Append mod update data found for Steam Workshop mods to internal metadata
 
-    :param mods: A Dict equivalent to 'all_mods' or mod_list.get_list_items_by_dict() in
+    :param mods: A dict equivalent to 'all_mods' or mod_list.get_list_items_by_dict() in
     which contains possible Steam mods to lookup metadata for
     """
     logger.info("Querying Steam WebAPI for SteamCMD/Steam mod update metadata")
@@ -2428,10 +2438,16 @@ def query_workshop_update_data(mods: Dict[str, Any]) -> Optional[str]:
     else:
         return "failed"
 
+    return None
+
 
 def recursively_update_dict(
-    a_dict, b_dict, prune_exceptions=None, purge_keys=None, recurse_exceptions=None
-):
+    a_dict: dict[str, Any],
+    b_dict: dict[str, Any],
+    prune_exceptions: Iterable[str] = [],
+    purge_keys: Iterable[str] = [],
+    recurse_exceptions: Iterable[str] = [],
+) -> None:
     # Check for keys in recurse_exceptions in a_dict that are not in b_dict and remove them
     for key in set(a_dict.keys()) - set(b_dict.keys()):
         if recurse_exceptions and key in recurse_exceptions:

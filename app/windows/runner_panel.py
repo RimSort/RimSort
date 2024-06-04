@@ -1,11 +1,12 @@
 import os
 from platform import system
 from re import compile, search
+from typing import Any, Sequence
 
 import psutil
 from loguru import logger
-from PySide6.QtCore import QEvent, QProcess, Qt, Signal
-from PySide6.QtGui import QFont, QIcon, QTextCursor
+from PySide6.QtCore import QProcess, Qt, Signal
+from PySide6.QtGui import QCloseEvent, QFont, QIcon, QKeyEvent, QTextCursor
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QPlainTextEdit,
@@ -33,9 +34,9 @@ class RunnerPanel(QWidget):
 
     def __init__(
         self,
-        todds_dry_run_support=False,
-        steamcmd_download_tracking=None,
-        steam_db=None,
+        todds_dry_run_support: bool = False,
+        steamcmd_download_tracking: list[str] = [],
+        steam_db: dict[str, Any] = {},
     ):
         super().__init__()
 
@@ -50,8 +51,9 @@ class RunnerPanel(QWidget):
         self.steam_db = steam_db
 
         # The "runner"
-        self.text = QPlainTextEdit(readOnly=True)
+        self.text = QPlainTextEdit()
         self.text.verticalScrollBar().setValue(self.text.verticalScrollBar().maximum())
+        self.text.setReadOnly(True)
         # Font cfg by platform
         if self.system == "Darwin":
             self.text.setFont(QFont("Monaco"))
@@ -65,12 +67,12 @@ class RunnerPanel(QWidget):
         self.process_killed = False
         self.process_last_output = ""
         self.process_last_command = ""
-        self.process_last_args = []
-        self.steamcmd_current_pfid = None
+        self.process_last_args: Sequence[str] = []
+        self.steamcmd_current_pfid: str | None = None
         self.todds_dry_run_support = todds_dry_run_support
 
         # SET STYLESHEET
-        self.text.setObjectName("RunnerPaneltext")
+        self.text.setObjectName("RunnerPanelText")
         self.setObjectName("RunnerPanel")
 
         # CREATE WIDGETS
@@ -138,27 +140,20 @@ class RunnerPanel(QWidget):
 
         self._do_clear_runner()
 
-    def closeEvent(self, event):
+    def closeEvent(self, event: QCloseEvent) -> None:
         self.closing_signal.emit()
         self._do_kill_process()
         event.accept()
         self.destroy()
 
-    def eventFilter(self, obj, event):
-        if event.type() == QEvent.Type.KeyPress and event.type() == Qt.Key.Key_Escape:
-            self.close()
-            return True
-
-        return super().eventFilter(obj, event)
-
-    def keyPressEvent(self, event):
+    def keyPressEvent(self, event: QKeyEvent) -> None:
         if event.key() == Qt.Key.Key_Escape:
             self.close()
 
-    def _do_clear_runner(self):
+    def _do_clear_runner(self) -> None:
         self.text.clear()
 
-    def _do_kill_process(self):
+    def _do_kill_process(self) -> None:
         if self.process and self.process.state() == QProcess.ProcessState.Running:
             # Terminate the main process and its child processes
             parent_process = psutil.Process(self.process.processId())
@@ -169,12 +164,12 @@ class RunnerPanel(QWidget):
             self.process.waitForFinished()
             self.process_killed = True
 
-    def _do_restart_process(self):
+    def _do_restart_process(self) -> None:
         if self.process_last_command != "":
             self.message("\nRestarting last used process...\n")
             self.execute(self.process_last_command, self.process_last_args)
 
-    def _do_save_runner_output(self):
+    def _do_save_runner_output(self) -> None:
         """
         Export the current list of active mods to a user-designated
         file. The current list does not need to have been saved.
@@ -196,12 +191,19 @@ class RunnerPanel(QWidget):
                     logger.info("Writing to file")
                     outfile.write(self.text.toPlainText())
 
-    def change_progress_bar_color(self, state: str):
+    def change_progress_bar_color(self, state: str) -> None:
         self.progress_bar.setObjectName(state)
         self.progress_bar.style().unpolish(self.progress_bar)
         self.progress_bar.style().polish(self.progress_bar)
 
-    def execute(self, command: str, args: list, progress_bar=None, additional=None):
+    # TODO: Additional isn't used. Remove it?
+    def execute(
+        self,
+        command: str,
+        args: Sequence[str],
+        progress_bar: int | None = None,
+        additional: None = None,
+    ) -> None:
         """
         Execute the given command in a new terminal like gui
 
@@ -233,12 +235,12 @@ class RunnerPanel(QWidget):
             self.message(f"\nExecuting command:\n{command} {' '.join(args)}\n\n")
         self.process.start()
 
-    def handle_output(self):
+    def handle_output(self) -> None:
         data = self.process.readAll()
-        stdout = self.ansi_escape.sub("", bytes(data).decode("utf8"))
+        stdout = self.ansi_escape.sub("", bytes(data.data()).decode("utf8"))
         self.message(stdout)
 
-    def message(self, line: str):
+    def message(self, line: str) -> None:
         overwrite = False
         if self.process and self.process.state() == QProcess.ProcessState.Running:
             logger.debug(f"[{self.process.program().split('/')[-1]}]\n{line}")
@@ -325,7 +327,7 @@ class RunnerPanel(QWidget):
             self.text.appendPlainText(line)
         self.previous_line = line
 
-    def finished(self):
+    def finished(self) -> None:
         # Handle output filtering if todds dry run support is not enabled
         if not self.todds_dry_run_support:
             # Determine message based on whether the process was killed
@@ -401,4 +403,4 @@ class RunnerPanel(QWidget):
                 self.change_progress_bar_color("success")
 
         # Cleanup process
-        self.process = None
+        self.process.terminate()

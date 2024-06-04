@@ -1,16 +1,20 @@
 import datetime
+import json
+import os
 import platform
 import subprocess
 import sys
 import time
+import traceback
 import webbrowser
 from functools import partial
 from gc import collect
 from io import BytesIO
 from math import ceil
 from multiprocessing import Pool, cpu_count
+from pathlib import Path
 from tempfile import gettempdir
-from typing import Callable
+from typing import Any, Callable, Self
 from urllib.parse import urlparse
 from zipfile import ZipFile
 
@@ -29,19 +33,25 @@ except ImportError:
     GIT_EXISTS = False
 
 from github import Github
-from PySide6.QtCore import QEventLoop, QProcess, Qt, Slot
+from PySide6.QtCore import (
+    QEventLoop,
+    QObject,
+    QProcess,
+    Qt,
+    Signal,
+    Slot,
+)
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel
 from requests import get as requests_get
 
+import app.models.dialogue as dialogue
+import app.sort.alphabetical_sort as alpha_sort
+import app.sort.dependencies as deps_sort
+import app.sort.topo_sort as topo_sort
+import app.utils.constants as app_constants
+import app.utils.metadata as metadata
 from app.models.animations import LoadingAnimation
-from app.models.dialogue import (
-    show_dialogue_input,
-    show_fatal_error,
-    show_information,
-)
-from app.sort.alphabetical_sort import *
-from app.sort.dependencies import *
-from app.sort.topo_sort import *
+from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 from app.utils.generic import (
     chunks,
@@ -52,7 +62,7 @@ from app.utils.generic import (
     platform_specific_open,
     upload_data_to_0x0_st,
 )
-from app.utils.metadata import *
+from app.utils.metadata import MetadataManager, SettingsController
 from app.utils.rentry.wrapper import RentryImport, RentryUpload
 from app.utils.schema import generate_rimworld_mods_list
 from app.utils.steam.browser import SteamBrowser
@@ -61,11 +71,14 @@ from app.utils.steam.steamworks.wrapper import (
     SteamworksGameLaunch,
     SteamworksSubscriptionHandler,
 )
-from app.utils.steam.webapi.wrapper import CollectionImport
+from app.utils.steam.webapi.wrapper import (
+    CollectionImport,
+    ISteamRemoteStorage_GetPublishedFileDetails,
+)
 from app.utils.todds.wrapper import ToddsInterface
 from app.utils.xml import json_to_xml_write
 from app.views.mod_info_panel import ModInfo
-from app.views.mods_panel import ModsPanel, ModsPanelSortKey
+from app.views.mods_panel import ModListWidget, ModsPanel, ModsPanelSortKey
 from app.windows.missing_mods_panel import MissingModsPrompt
 from app.windows.rule_editor_panel import RuleEditor
 from app.windows.runner_panel import RunnerPanel
@@ -81,13 +94,13 @@ class MainContent(QObject):
     and their dependencies.
     """
 
-    _instance: Optional["MainContent"] = None
+    _instance: Self | None = None
 
     disable_enable_widgets_signal = Signal(bool)
     status_signal = Signal(str)
     stop_watchdog_signal = Signal()
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args: Any, **kwargs: Any) -> "MainContent":
         if cls._instance is None:
             cls._instance = super(MainContent, cls).__new__(cls)
         return cls._instance
@@ -192,13 +205,13 @@ class MainContent(QObject):
             )
 
             # INITIALIZE WIDGETS
-            # Initialize Steam(CMD) integraations
-            self.steam_browser = SteamcmdDownloader = None
-            self.steamcmd_runner = RunnerPanel = None
+            # Initialize Steam(CMD) integrations
+            self.steam_browser: SteamBrowser | None = None
+            self.steamcmd_runner: RunnerPanel | None = None
             self.steamcmd_wrapper = SteamcmdInterface.instance()
 
             # Initialize MetadataManager
-            self.metadata_manager = MetadataManager.instance()
+            self.metadata_manager = metadata.MetadataManager.instance()
 
             # BASE LAYOUT
             self.main_layout = QHBoxLayout()
@@ -291,13 +304,13 @@ class MainContent(QObject):
             self.duplicate_mods = {}
 
             # Instantiate query runner
-            self.query_runner = RunnerPanel = None
+            self.query_runner: RunnerPanel | None = None
 
             # Steamworks bool - use this to check any Steamworks processes you try to initialize
             self.steamworks_in_use = False
 
             # Instantiate todds runner
-            self.todds_runner = RunnerPanel = None
+            self.todds_runner: RunnerPanel | None = None
 
             logger.info("Finished MainContent initialization")
             self.initialized = True
@@ -336,7 +349,7 @@ class MainContent(QObject):
             return True
         else:
             logger.warning("Essential path(s) are invalid or not set!")
-            answer = show_dialogue_conditional(
+            answer = dialogue.show_dialogue_conditional(
                 title="Essential path(s)",
                 text="Essential path(s) are invalid or not set!\n",
                 information=(
@@ -350,17 +363,17 @@ class MainContent(QObject):
                 self.settings_controller.show_settings_dialog("Locations")
             return False
 
-    def ___get_relative_middle(self, some_list):
+    def ___get_relative_middle(self, some_list: ModListWidget) -> int:
         rect = some_list.contentsRect()
         top = some_list.indexAt(rect.topLeft())
         if top.isValid():
             bottom = some_list.indexAt(rect.bottomLeft())
             if not bottom.isValid():
-                bottom = some_list.model().index(some_list.count() - 1)
-            return (top.row() + bottom.row() + 1) / 2
+                bottom = some_list.model().index(some_list.count() - 1, 0)
+            return int((top.row() + bottom.row() + 1) / 2)
         return 0
 
-    def __handle_active_mod_key_press(self, key) -> None:
+    def __handle_active_mod_key_press(self, key: str) -> None:
         """
         If the Left Arrow key is pressed while the user is focused on the
         Active Mods List, the focus is shifted to the Inactive Mods List.
@@ -413,7 +426,7 @@ class MainContent(QObject):
             self.mods_panel.active_mods_list.recalculate_warnings_signal.emit()
             self.mods_panel.inactive_mods_list.recalculate_warnings_signal.emit()
 
-    def __handle_inactive_mod_key_press(self, key) -> None:
+    def __handle_inactive_mod_key_press(self, key: str) -> None:
         """
         If the Right Arrow key is pressed while the user is focused on the
         Inactive Mods List, the focus is shifted to the Active Mods List.
@@ -468,7 +481,7 @@ class MainContent(QObject):
             self.mods_panel.inactive_mods_list.recalculate_warnings_signal.emit()
 
     def __insert_data_into_lists(
-        self, active_mods_uuids: List[str], inactive_mods_uuids: List[str]
+        self, active_mods_uuids: list[str], inactive_mods_uuids: list[str]
     ) -> None:
         """
         Insert active mods and inactive mods into respective mod list widgets.
@@ -498,7 +511,7 @@ class MainContent(QObject):
         list_of_duplicate_mods = "\n".join(
             [f"* {mod}" for mod in self.duplicate_mods.keys()]
         )
-        show_warning(
+        dialogue.show_warning(
             title="Duplicate mod(s) found",
             text="Duplicate mods(s) found for package ID(s) in your ModsConfig.xml (active mods list)",
             information=(
@@ -533,7 +546,7 @@ class MainContent(QObject):
             self.missing_mods_prompt.show()
         else:
             list_of_missing_mods = "\n".join([f"* {mod}" for mod in self.missing_mods])
-            show_information(
+            dialogue.show_information(
                 text="Could not find data for some mods!",
                 information=(
                     "The following list of mods were set active in your mods list but "
@@ -568,7 +581,7 @@ class MainContent(QObject):
             inactive_mods_uuids,
             self.duplicate_mods,
             self.missing_mods,
-        ) = get_mods_from_list(
+        ) = metadata.get_mods_from_list(
             mod_list=str(
                 (
                     Path(
@@ -587,10 +600,6 @@ class MainContent(QObject):
             self.inactive_mods_uuids_restore_state = inactive_mods_uuids
 
         self.__insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
-
-    @property
-    def panel(self):
-        return self._panel
 
     #########
     # SLOTS # Can this be cleaned up & moved to own module...?
@@ -652,7 +661,7 @@ class MainContent(QObject):
         if action == "browse_workshop":
             self._do_browse_workshop()
         if action == "import_steamcmd_acf_data":
-            import_steamcmd_acf_data(
+            metadata.import_steamcmd_acf_data(
                 rimsort_storage_path=str(AppInfo().app_storage_folder),
                 steamcmd_appworkshop_acf_path=self.steamcmd_wrapper.steamcmd_appworkshop_acf_path,
             )
@@ -746,7 +755,7 @@ class MainContent(QObject):
             logger.debug(
                 "You are running from Python interpreter. Skipping update check..."
             )
-            show_warning(
+            dialogue.show_warning(
                 title="Update skipped",
                 text="You are running from Python interpreter.",
                 information="Skipping update check...",
@@ -768,7 +777,7 @@ class MainContent(QObject):
         logger.debug(f"Current RimSort release found: {tag_name}")
         logger.debug(f"Current RimSort version found: {current_version}")
         if current_version != tag_name:
-            answer = show_dialogue_conditional(
+            answer = dialogue.show_dialogue_conditional(
                 title="RimSort update found",
                 text=f"An update to RimSort has been released: {tag_name}",
                 information=f"You are running RimSort {current_version}\nDo you want to update now?",
@@ -824,7 +833,7 @@ class MainContent(QObject):
                         browser_download_url = asset["browser_download_url"]
                 # If we don't have it from our query...
                 if "browser_download_url" not in locals():
-                    show_warning(
+                    dialogue.show_warning(
                         title="Unable to complete update",
                         text=f"Failed to find valid RimSort release for {SYSTEM} {ARCH} {PROCESSOR}",
                     )
@@ -847,16 +856,16 @@ class MainContent(QObject):
                         text=f"RimSort update found. Downloading RimSort {tag_name_updated} release...",
                     )
                     temp_dir = "RimSort" if not SYSTEM == "Darwin" else "RimSort.app"
-                    answer = show_dialogue_conditional(
+                    answer = dialogue.show_dialogue_conditional(
                         title="Update downloaded",
                         text="Do you want to proceed with the update?",
                         information=f"\nSuccessfully retrieved latest release. The update will be installed from: {os.path.join(gettempdir(), temp_dir)}",
                     )
                     if not answer == "&Yes":
                         return
-                except:
+                except Exception:
                     stacktrace = traceback.format_exc()
-                    show_warning(
+                    dialogue.show_warning(
                         title="Failed to download update",
                         text="Failed to download latest RimSort release!",
                         information="Did the file/url change? "
@@ -910,7 +919,7 @@ class MainContent(QObject):
                 sys.exit()
         else:
             logger.debug("Up to date!")
-            show_information(
+            dialogue.show_information(
                 title="RimSort is up to date!",
                 text=f"You are already running the latest release: {tag_name}",
             )
@@ -922,7 +931,7 @@ class MainContent(QObject):
         with ZipFile(BytesIO(requests_get(url).content)) as zipobj:
             zipobj.extractall(gettempdir())
 
-    def __do_get_github_release_info(self) -> Dict[str, Any]:
+    def __do_get_github_release_info(self) -> dict[str, Any]:
         # Parse latest release
         raw = requests_get(
             "https://api.github.com/repos/RimSort/RimSort/releases/latest"
@@ -932,7 +941,7 @@ class MainContent(QObject):
     # INFO PANEL ANIMATIONS
 
     def do_threaded_loading_animation(
-        self, gif_path: str, target: Callable, text=None
+        self, gif_path: str, target: Callable[..., Any], text: str | None = None
     ) -> Any:
         loading_animation_text_label = None
         # Hide the info panel widgets
@@ -968,7 +977,7 @@ class MainContent(QObject):
 
     # ACTIONS PANEL
 
-    def _do_refresh(self, is_initial=None) -> None:
+    def _do_refresh(self, is_initial: bool = False) -> None:
         """
         Refresh expensive calculations & repopulate lists with that refreshed data
         """
@@ -1064,11 +1073,11 @@ class MainContent(QObject):
         logger.info("Clearing mods from active mod list")
         # Define the order of the DLC package IDs
         package_id_order = [
-            RIMWORLD_DLC_METADATA["294100"]["packageid"],
-            RIMWORLD_DLC_METADATA["1149640"]["packageid"],
-            RIMWORLD_DLC_METADATA["1392840"]["packageid"],
-            RIMWORLD_DLC_METADATA["1826140"]["packageid"],
-            RIMWORLD_DLC_METADATA["2380740"]["packageid"],
+            app_constants.RIMWORLD_DLC_METADATA["294100"]["packageid"],
+            app_constants.RIMWORLD_DLC_METADATA["1149640"]["packageid"],
+            app_constants.RIMWORLD_DLC_METADATA["1392840"]["packageid"],
+            app_constants.RIMWORLD_DLC_METADATA["1826140"]["packageid"],
+            app_constants.RIMWORLD_DLC_METADATA["2380740"]["packageid"],
         ]
         # Create a set of all package IDs from mod_data
         package_ids_set = set(
@@ -1126,29 +1135,31 @@ class MainContent(QObject):
         current_order = self.mods_panel.active_mods_list.uuids.copy()
 
         # Get all active mods and their dependencies (if also active mod)
-        dependencies_graph = gen_deps_graph(
+        dependencies_graph = deps_sort.gen_deps_graph(
             self.mods_panel.active_mods_list.uuids, active_mod_ids
         )
 
         # Get all active mods and their reverse dependencies
-        reverse_dependencies_graph = gen_rev_deps_graph(
+        reverse_dependencies_graph = deps_sort.gen_rev_deps_graph(
             self.mods_panel.active_mods_list.uuids, active_mod_ids
         )
 
         # Get dependencies graph for tier one mods (load at top mods)
-        tier_one_dependency_graph, tier_one_mods = gen_tier_one_deps_graph(
+        tier_one_dependency_graph, tier_one_mods = deps_sort.gen_tier_one_deps_graph(
             dependencies_graph
         )
 
         # Get dependencies graph for tier three mods (load at bottom mods)
-        tier_three_dependency_graph, tier_three_mods = gen_tier_three_deps_graph(
-            dependencies_graph,
-            reverse_dependencies_graph,
-            self.mods_panel.active_mods_list.uuids,
+        tier_three_dependency_graph, tier_three_mods = (
+            deps_sort.gen_tier_three_deps_graph(
+                dependencies_graph,
+                reverse_dependencies_graph,
+                self.mods_panel.active_mods_list.uuids,
+            )
         )
 
         # Get dependencies graph for tier two mods (load in middle)
-        tier_two_dependency_graph = gen_tier_two_deps_graph(
+        tier_two_dependency_graph = deps_sort.gen_tier_two_deps_graph(
             self.mods_panel.active_mods_list.uuids,
             active_mod_ids,
             tier_one_mods,
@@ -1161,29 +1172,29 @@ class MainContent(QObject):
 
         if sorting_algorithm == "Alphabetical":
             logger.info("Alphabetical sorting algorithm is selected")
-            reordered_tier_one_sorted = do_alphabetical_sort(
+            reordered_tier_one_sorted = alpha_sort.do_alphabetical_sort(
                 tier_one_dependency_graph, self.mods_panel.active_mods_list.uuids
             )
-            reordered_tier_three_sorted = do_alphabetical_sort(
+            reordered_tier_three_sorted = alpha_sort.do_alphabetical_sort(
                 tier_three_dependency_graph,
                 self.mods_panel.active_mods_list.uuids,
             )
-            reordered_tier_two_sorted = do_alphabetical_sort(
+            reordered_tier_two_sorted = alpha_sort.do_alphabetical_sort(
                 tier_two_dependency_graph, self.mods_panel.active_mods_list.uuids
             )
         else:
             logger.info("Topological sorting algorithm is selected")
             # Sort tier one mods
-            reordered_tier_one_sorted = do_topo_sort(
+            reordered_tier_one_sorted = topo_sort.do_topo_sort(
                 tier_one_dependency_graph, self.mods_panel.active_mods_list.uuids
             )
             # Sort tier three mods
-            reordered_tier_three_sorted = do_topo_sort(
+            reordered_tier_three_sorted = topo_sort.do_topo_sort(
                 tier_three_dependency_graph,
                 self.mods_panel.active_mods_list.uuids,
             )
             # Sort tier two mods
-            reordered_tier_two_sorted = do_topo_sort(
+            reordered_tier_two_sorted = topo_sort.do_topo_sort(
                 tier_two_dependency_graph, self.mods_panel.active_mods_list.uuids
             )
 
@@ -1236,7 +1247,7 @@ class MainContent(QObject):
         and display active and inactive lists based on this file.
         """
         logger.info("Opening file dialog to select input file")
-        file_path = show_dialogue_file(
+        file_path = dialogue.show_dialogue_file(
             mode="open",
             caption="Open RimWorld mod list",
             _dir=str(AppInfo().app_storage_folder),
@@ -1260,7 +1271,7 @@ class MainContent(QObject):
                 inactive_mods_uuids,
                 self.duplicate_mods,
                 self.missing_mods,
-            ) = get_mods_from_list(mod_list=file_path)
+            ) = metadata.get_mods_from_list(mod_list=file_path)
             logger.info("Got new mods according to imported XML")
             self.__insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
             # If we have duplicate mods, prompt user
@@ -1286,7 +1297,7 @@ class MainContent(QObject):
         file. The current list does not need to have been saved.
         """
         logger.info("Opening file dialog to specify output file")
-        file_path = show_dialogue_file(
+        file_path = dialogue.show_dialogue_file(
             mode="save",
             caption="Save mod list",
             _dir=str(AppInfo().app_storage_folder),
@@ -1330,8 +1341,8 @@ class MainContent(QObject):
                     json_to_xml_write(mods_config_data, file_path + ".xml")
                 else:
                     json_to_xml_write(mods_config_data, file_path)
-            except:
-                show_fatal_error(
+            except Exception:
+                dialogue.show_fatal_error(
                     title="Failed to export to file",
                     text="Failed to export active mods to file:",
                     information=f"{file_path}",
@@ -1372,7 +1383,7 @@ class MainContent(QObject):
             inactive_mods_uuids,
             self.duplicate_mods,
             self.missing_mods,
-        ) = get_mods_from_list(mod_list=rentry_import.package_ids)
+        ) = metadata.get_mods_from_list(mod_list=rentry_import.package_ids)
 
         # Insert data into lists
         self.__insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
@@ -1428,7 +1439,7 @@ class MainContent(QObject):
             inactive_mods_uuids,
             self.duplicate_mods,
             self.missing_mods,
-        ) = get_mods_from_list(mod_list=collection_import.package_ids)
+        ) = metadata.get_mods_from_list(mod_list=collection_import.package_ids)
 
         # Insert data into lists
         self.__insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
@@ -1498,7 +1509,7 @@ class MainContent(QObject):
                 + f"[{url}]"
             )
         # Copy report to clipboard
-        show_information(
+        dialogue.show_information(
             title="Export active mod list",
             text="Copied active mod list report to clipboard...",
             information='Click "Show Details" to see the full report!',
@@ -1648,14 +1659,14 @@ class MainContent(QObject):
         host = urlparse(rentry_uploader.url).hostname if successful else None
         if rentry_uploader.url and host and host.endswith("rentry.co"):  # type: ignore
             copy_to_clipboard_safely(rentry_uploader.url)
-            show_information(
+            dialogue.show_information(
                 title="Uploaded active mod list",
                 text=f"Uploaded active mod list report to Rentry.co! The URL has been copied to your clipboard:\n\n{rentry_uploader.url}",
                 information='Click "Show Details" to see the full report!',
                 details=f"{active_mods_rentry_report}",
             )
         else:
-            show_warning(
+            dialogue.show_warning(
                 title="Failed to upload",
                 text="Failed to upload exported active mod list to Rentry.co",
             )
@@ -1665,7 +1676,7 @@ class MainContent(QObject):
         ret = upload_data_to_0x0_st(str(AppInfo().user_log_folder / "RimSort.log"))
         if ret:
             copy_to_clipboard_safely(ret)
-            show_information(
+            dialogue.show_information(
                 title="Uploaded file",
                 text="Uploaded RimSort log to http://0x0.st/",
                 information=f"The URL has been copied to your clipboard:\n\n{ret}",
@@ -1677,7 +1688,7 @@ class MainContent(QObject):
         ret = upload_data_to_0x0_st(str(AppInfo().user_log_folder / "RimSort.old.log"))
         if ret:
             copy_to_clipboard_safely(ret)
-            show_information(
+            dialogue.show_information(
                 title="Uploaded file",
                 text="Uploaded RimSort log to http://0x0.st/",
                 information=f"The URL has been copied to your clipboard:\n\n{ret}",
@@ -1685,7 +1696,7 @@ class MainContent(QObject):
             webbrowser.open(ret)
 
     @Slot()
-    def _on_do_upload_rimworld_log(self):
+    def _on_do_upload_rimworld_log(self) -> None:
         player_log_path = str(
             (
                 Path(
@@ -1700,7 +1711,7 @@ class MainContent(QObject):
             ret = upload_data_to_0x0_st(player_log_path)
             if ret:
                 copy_to_clipboard_safely(ret)
-                show_information(
+                dialogue.show_information(
                     title="Uploaded file",
                     text="Uploaded RimWorld log to http://0x0.st/",
                     information=f"The URL has been copied to your clipboard:\n\n{ret}",
@@ -1750,9 +1761,9 @@ class MainContent(QObject):
         )
         try:
             json_to_xml_write(mods_config_data, mods_config_path)
-        except:
+        except Exception:
             logger.error("Could not save active mods")
-            show_fatal_error(
+            dialogue.show_fatal_error(
                 title="Could not save active mods",
                 text="Failed to save active mods to file:",
                 information=f"{mods_config_path}",
@@ -1803,7 +1814,7 @@ class MainContent(QObject):
         Opens a QDialogInput that allows the user to edit the run args
         that are configured to be passed to the Rimworld executable
         """
-        args, ok = show_dialogue_input(
+        args, ok = dialogue.show_dialogue_input(
             title="Edit run arguments",
             label="Enter a comma separated list of arguments to pass to the Rimworld executable\n\n"
             + "Example: \n-popupwindow,-logfile,/path/to/file.log",
@@ -1850,7 +1861,7 @@ class MainContent(QObject):
 
     # STEAM{CMD, WORKS} ACTIONS
 
-    def _do_browse_workshop(self):
+    def _do_browse_workshop(self) -> None:
         self.steam_browser = SteamBrowser(
             "https://steamcommunity.com/app/294100/workshop/"
         )
@@ -1869,14 +1880,14 @@ class MainContent(QObject):
                 AppInfo().theme_data_folder / "default-icons" / "steam_api.gif"
             ),
             target=partial(
-                query_workshop_update_data,
+                metadata.query_workshop_update_data,
                 mods=self.metadata_manager.internal_local_metadata,
             ),
             text="Checking Steam Workshop mods for updates...",
         )
         # If we failed to check for updates, skip the comparison(s) & UI prompt
         if updates_checked == "failed":
-            show_warning(
+            dialogue.show_warning(
                 title="Unable to check for updates",
                 text="RimSort was unable to query Steam WebAPI for update information!\n",
                 information="Are you connected to the Internet?",
@@ -1899,13 +1910,13 @@ class MainContent(QObject):
             self.status_signal.emit("All Workshop mods appear to be up to date!")
             self.workshop_mod_updater = None
 
-    def _do_setup_steamcmd(self):
+    def _do_setup_steamcmd(self) -> None:
         if (
             self.steamcmd_runner
             and self.steamcmd_runner.process
             and self.steamcmd_runner.process.state() == QProcess.ProcessState.Running
         ):
-            show_warning(
+            dialogue.show_warning(
                 title="RimSort - SteamCMD setup",
                 text="Unable to create SteamCMD runner!",
                 information="There is an active process already running!",
@@ -1927,25 +1938,25 @@ class MainContent(QObject):
                 self.steamcmd_runner,
             )
         else:
-            show_warning(
+            dialogue.show_warning(
                 title="RimSort - SteamCMD setup",
-                text="Unable to initiate SteamCMD installtion. Local mods path not set!",
+                text="Unable to initiate SteamCMD installation. Local mods path not set!",
                 information="Please configure local mods path in Settings before attempting to install.",
             )
 
-    def _do_download_mods_with_steamcmd(self, publishedfileids: list):
+    def _do_download_mods_with_steamcmd(self, publishedfileids: list[str]) -> None:
         logger.debug(
             f"Attempting to download {len(publishedfileids)} mods with SteamCMD"
         )
         # Check for blacklisted mods
         if self.metadata_manager.external_steam_metadata is not None:
-            publishedfileids = check_if_pfids_blacklisted(
+            publishedfileids = metadata.check_if_pfids_blacklisted(
                 publishedfileids=publishedfileids,
                 steamdb=self.metadata_manager.external_steam_metadata,
             )
         # No empty publishedfileids
         if not len(publishedfileids) > 0:
-            show_warning(
+            dialogue.show_warning(
                 title="RimSort",
                 text="No PublishedFileIds were supplied in operation.",
                 information="Please add mods to list before attempting to download.",
@@ -1957,7 +1968,7 @@ class MainContent(QObject):
             and self.steamcmd_runner.process
             and self.steamcmd_runner.process.state() == QProcess.ProcessState.Running
         ):
-            show_warning(
+            dialogue.show_warning(
                 title="RimSort",
                 text="Unable to create SteamCMD runner!",
                 information="There is an active process already running!",
@@ -1987,13 +1998,13 @@ class MainContent(QObject):
                 publishedfileids=publishedfileids, runner=self.steamcmd_runner
             )
         else:
-            show_warning(
+            dialogue.show_warning(
                 title="SteamCMD not found",
                 text="SteamCMD executable was not found.",
                 information='Please setup an existing SteamCMD prefix, or setup a new prefix with "Setup SteamCMD".',
             )
 
-    def _do_steamworks_api_call(self, instruction: list):
+    def _do_steamworks_api_call(self, instruction: list) -> None:
         """
         Create & launch Steamworks API process to handle instructions received from connected signals
 
@@ -2076,18 +2087,18 @@ class MainContent(QObject):
                 "Steamworks API is already initialized! We do NOT want multiple interactions. Skipping instruction..."
             )
 
-    def _do_steamworks_api_call_animated(self, instruction: list):
+    def _do_steamworks_api_call_animated(self, instruction: list) -> None:
         publishedfileids = instruction[1]
         logger.debug(f"Attempting to download {len(publishedfileids)} mods with Steam")
         # Check for blacklisted mods for subscription actions
         if instruction[0] == "subscribe":
-            publishedfileids = check_if_pfids_blacklisted(
+            publishedfileids = metadata.check_if_pfids_blacklisted(
                 publishedfileids=publishedfileids,
                 steamdb=self.metadata_manager.external_steam_metadata,
             )
         # No empty publishedfileids
         if not len(publishedfileids) > 0:
-            show_warning(
+            dialogue.show_warning(
                 title="RimSort",
                 text="No PublishedFileIds were supplied in operation.",
                 information="Please add mods to list before attempting to download.",
@@ -2111,7 +2122,7 @@ class MainContent(QObject):
         Opens a QDialogInput that allows the user to edit the run args
         that are configured to be passed to the Rimworld executable
         """
-        args, ok = show_dialogue_input(
+        args, ok = dialogue.show_dialogue_input(
             title="Enter git repo",
             label="Enter a git repository url (http/https) to clone to local mods:",
         )
@@ -2133,7 +2144,7 @@ class MainContent(QObject):
         This token is used for DB repo related actions, as well as any
         "Github mod" related actions
         """
-        args, ok = show_dialogue_input(
+        args, ok = dialogue.show_dialogue_input(
             title="Edit username",
             label="Enter your Github username:",
             text=self.settings_controller.settings.github_username,
@@ -2144,7 +2155,7 @@ class MainContent(QObject):
         else:
             logger.debug("USER ACTION: cancelled input!")
             return
-        args, ok = show_dialogue_input(
+        args, ok = dialogue.show_dialogue_input(
             title="Edit token",
             label="Enter your Github personal access token here (ghp_*):",
             text=self.settings_controller.settings.github_token,
@@ -2156,7 +2167,7 @@ class MainContent(QObject):
             logger.debug("USER ACTION: cancelled input!")
             return
 
-    def _do_cleanup_gitpython(self, repo) -> None:
+    def _do_cleanup_gitpython(self, repo: Repo) -> None:
         # Cleanup GitPython
         collect()
         repo.git.clear_cache()
@@ -2204,7 +2215,7 @@ class MainContent(QObject):
                             logger.info("The local repository is already up-to-date.")
                     except GitCommandError:
                         stacktrace = traceback.format_exc()
-                        show_warning(
+                        dialogue.show_warning(
                             title="Failed to update repo!",
                             text=f"The repository supplied at [{repo_path}] failed to update!\n"
                             + "Are you connected to the Internet? "
@@ -2233,11 +2244,16 @@ class MainContent(QObject):
                         for k, v in updates_summary.items()
                     ]
                 )
-                show_information(
+                dialogue.show_information(
                     title="Git repo(s) updated",
                     text="The following repo(s) had updates pulled from the remote:",
                     information=repos_updated,
                     details=updates_summarized,
+                )
+            else:
+                dialogue.show_information(
+                    title="Git repo(s) not updated",
+                    text="No updates were found.",
                 )
         else:
             self._do_notify_no_git()
@@ -2265,7 +2281,7 @@ class MainContent(QObject):
             repo_path = str((Path(base_path) / repo_folder_name))
             if os.path.exists(repo_path):  # If local repo does exist
                 # Prompt to user to handle
-                answer = show_dialogue_conditional(
+                answer = dialogue.show_dialogue_conditional(
                     title="Existing repository found",
                     text="An existing local repo that matches this repository was found:",
                     information=(
@@ -2296,7 +2312,7 @@ class MainContent(QObject):
             logger.info(f"Cloning {repo_url} to: {repo_path}")
             try:
                 Repo.clone_from(repo_url, repo_path)
-                show_information(
+                dialogue.show_information(
                     title="Repo retrieved",
                     text="The configured repository was cloned!",
                     information=f"{repo_url} ->\n" + f"{repo_path}",
@@ -2324,14 +2340,14 @@ class MainContent(QObject):
                     else:
                         # Handle the case when the target branch is not found
                         logger.warning("Target branch not found.")
-                    show_information(
+                    dialogue.show_information(
                         title="Repo retrieved",
                         text="The configured repository was reinitialized with existing files! (likely leftover .dds textures)",
                         information=f"{repo_url} ->\n" + f"{repo_path}",
                     )
                 except GitCommandError:
                     stacktrace = traceback.format_exc()
-                    show_warning(
+                    dialogue.show_warning(
                         title="Failed to clone repo!",
                         text="The configured repo failed to clone/initialize! "
                         + "Are you connected to the Internet? "
@@ -2341,7 +2357,7 @@ class MainContent(QObject):
                     )
         else:
             # Warn the user so they know to configure in settings
-            show_warning(
+            dialogue.show_warning(
                 title="Invalid repository",
                 text="An invalid repository was detected!",
                 information="Please reconfigure a repository in settings!\n"
@@ -2389,17 +2405,17 @@ class MainContent(QObject):
                     origin = repo.remotes.origin
                     origin.pull(rebase=True)
                     # Notify user
-                    show_information(
+                    dialogue.show_information(
                         title="Repo force updated",
                         text="The configured repository was updated!",
                         information=f"{repo_path} ->\n "
-                        + f"{repo.head.commit.message}",
+                        + f"{repo.head.commit.message.decode() if isinstance(repo.head.commit.message, bytes) else repo.head.commit.message}",
                     )
                     # Cleanup
                     self._do_cleanup_gitpython(repo=repo)
                 except GitCommandError:
                     stacktrace = traceback.format_exc()
-                    show_warning(
+                    dialogue.show_warning(
                         title="Failed to update repo!",
                         text="The configured repo failed to update! "
                         + "Are you connected to the Internet? "
@@ -2408,7 +2424,7 @@ class MainContent(QObject):
                         details=stacktrace,
                     )
             else:
-                answer = show_dialogue_conditional(
+                answer = dialogue.show_dialogue_conditional(
                     title="Repository does not exist",
                     text="Tried to update a git repository that does not exist!",
                     information="Would you like to clone a new copy of this repository?",
@@ -2423,7 +2439,7 @@ class MainContent(QObject):
                         self._do_notify_no_git()
         else:
             # Warn the user so they know to configure in settings
-            show_warning(
+            dialogue.show_warning(
                 title="Invalid repository",
                 text="An invalid repository was detected!",
                 information="Please reconfigure a repository in settings!\n"
@@ -2479,11 +2495,13 @@ class MainContent(QObject):
                             .tzinfo
                         )
                         database_version_human_readable = (
-                            strftime("%Y-%m-%d %H:%M:%S", localtime(database_version))
+                            time.strftime(
+                                "%Y-%m-%d %H:%M:%S", time.localtime(database_version)
+                            )
                             + f" {timezone_abbreviation}"
                         )
                     else:
-                        show_warning(
+                        dialogue.show_warning(
                             title="File does not exist",
                             text="Please ensure the file exists and then try to upload again!",
                             information=f"File not found:\n{file_full_path}\nRepository:\n{repo_url}",
@@ -2526,9 +2544,9 @@ class MainContent(QObject):
                         # Push the changes to the remote repository and create a pull request from new_branch
                         origin = local_repo.remote()
                         origin.push(new_branch)
-                    except:
+                    except Exception:
                         stacktrace = traceback.format_exc()
-                        show_warning(
+                        dialogue.show_warning(
                             title="Failed to push new branch to repo!",
                             text=f"Failed to push a new branch {new_branch_name} to {repo_folder_name}! Try to see "
                             + "if you can manually push + Pull Request. Otherwise, checkout main and try again!",
@@ -2544,9 +2562,9 @@ class MainContent(QObject):
                             head=f"{repo_user_or_org}:{new_branch_name}",
                         )
                         pull_request_url = pull_request.html_url
-                    except:
+                    except Exception:
                         stacktrace = traceback.format_exc()
-                        show_warning(
+                        dialogue.show_warning(
                             title="Failed to create pull request!",
                             text=f"Failed to create a pull request for branch {base_branch} <- {new_branch_name}!\n"
                             + "The branch should be pushed. Check on Github to see if you can manually"
@@ -2557,7 +2575,7 @@ class MainContent(QObject):
                     # Cleanup
                     self._do_cleanup_gitpython(repo=local_repo)
                     # Notify the pull request URL
-                    answer = show_dialogue_conditional(
+                    answer = dialogue.show_dialogue_conditional(
                         title="Pull request created",
                         text="Successfully created pull request!",
                         information="Do you want to try to open it in your web browser?\n\n"
@@ -2566,16 +2584,16 @@ class MainContent(QObject):
                     if answer == "&Yes":
                         # Open the url in user's web browser
                         open_url_browser(url=pull_request_url)
-                except:
+                except Exception:
                     stacktrace = traceback.format_exc()
-                    show_warning(
+                    dialogue.show_warning(
                         title="Failed to update repo!",
                         text=f"The configured repo failed to update!\nFile name: {file_name}",
                         information=f"Configured repository: {repo_url}",
                         details=stacktrace,
                     )
             else:
-                answer = show_dialogue_conditional(
+                answer = dialogue.show_dialogue_conditional(
                     title="Repository does not exist",
                     text="Tried to update a git repository that does not exist!",
                     information="Would you like to clone a new copy of this repository?",
@@ -2590,7 +2608,7 @@ class MainContent(QObject):
                         self._do_notify_no_git()
         else:
             # Warn the user so they know to configure in settings
-            show_warning(
+            dialogue.show_warning(
                 title="Invalid repository",
                 text="An invalid repository was detected!",
                 information="Please reconfigure a repository in settings!\n"
@@ -2598,7 +2616,7 @@ class MainContent(QObject):
             )
 
     def _do_notify_no_git(self) -> None:
-        answer = show_dialogue_conditional(  # We import last so we can use gui + utils
+        answer = dialogue.show_dialogue_conditional(  # We import last so we can use gui + utils
             title="git not found",
             text="git executable was not found in $PATH!",
             information=(
@@ -2610,7 +2628,7 @@ class MainContent(QObject):
             open_url_browser("https://git-scm.com/downloads")
 
     def _do_open_rule_editor(
-        self, compact: bool, initial_mode=str, packageid=None
+        self, compact: bool, initial_mode: str, packageid: Any | None = None
     ) -> None:
         self.rule_editor = RuleEditor(
             # Initialization options
@@ -2626,7 +2644,7 @@ class MainContent(QObject):
     def _do_configure_steam_db_file_path(self) -> None:
         # Input file
         logger.info("Opening file dialog to specify Steam DB")
-        input_path = show_dialogue_file(
+        input_path = dialogue.show_dialogue_file(
             mode="open",
             caption="Choose Steam Workshop Database",
             _dir=str(AppInfo().app_storage_folder),
@@ -2645,7 +2663,7 @@ class MainContent(QObject):
     def _do_configure_community_rules_db_file_path(self) -> None:
         # Input file
         logger.info("Opening file dialog to specify Community Rules DB")
-        input_path = show_dialogue_file(
+        input_path = dialogue.show_dialogue_file(
             mode="open",
             caption="Choose Community Rules DB",
             _dir=str(AppInfo().app_storage_folder),
@@ -2666,7 +2684,7 @@ class MainContent(QObject):
         Opens a QDialogInput that allows user to edit their Steam DB repo
         This URL is used for Steam DB repo related actions.
         """
-        args, ok = show_dialogue_input(
+        args, ok = dialogue.show_dialogue_input(
             title="Edit Steam DB repo",
             label="Enter URL (https://github.com/AccountName/RepositoryName):",
             text=self.settings_controller.settings.external_steam_metadata_repo,
@@ -2680,7 +2698,7 @@ class MainContent(QObject):
         Opens a QDialogInput that allows user to edit their Community Rules
         DB repo. This URL is used for Steam DB repo related actions.
         """
-        args, ok = show_dialogue_input(
+        args, ok = dialogue.show_dialogue_input(
             title="Edit Community Rules DB repo",
             label="Enter URL (https://github.com/AccountName/RepositoryName):",
             text=self.settings_controller.settings.external_community_rules_repo,
@@ -2692,7 +2710,7 @@ class MainContent(QObject):
     def _do_build_database_thread(self) -> None:
         # Prompt user file dialog to choose/create new DB
         logger.info("Opening file dialog to specify output file")
-        output_path = show_dialogue_file(
+        output_path = dialogue.show_dialogue_file(
             mode="save",
             caption="Designate output path",
             _dir=str(AppInfo().app_storage_folder),
@@ -2708,7 +2726,7 @@ class MainContent(QObject):
             # Queries ALL available PublishedFileIDs (mods) it can find via Steam WebAPI.
             # Does not use metadata from locally available mods. This means no packageids!
             if self.settings_controller.settings.db_builder_include == "no_local":
-                self.db_builder = SteamDatabaseBuilder(
+                self.db_builder = metadata.SteamDatabaseBuilder(
                     apikey=self.settings_controller.settings.steam_apikey,
                     appid=294100,
                     database_expiry=self.settings_controller.settings.database_expiry,
@@ -2721,7 +2739,7 @@ class MainContent(QObject):
             # CAN produce a complete DB! Only includes metadata parsed from mods you have downloaded.
             # Produces DB which contains metadata from locally available mods. Includes packageids!
             elif self.settings_controller.settings.db_builder_include == "all_mods":
-                self.db_builder = SteamDatabaseBuilder(
+                self.db_builder = metadata.SteamDatabaseBuilder(
                     apikey=self.settings_controller.settings.steam_apikey,
                     appid=294100,
                     database_expiry=self.settings_controller.settings.database_expiry,
@@ -2788,7 +2806,8 @@ class MainContent(QObject):
                 json.dump(
                     {
                         "version": int(
-                            time() + self.settings_controller.settings.database_expiry
+                            time.time()
+                            + self.settings_controller.settings.database_expiry
                         ),
                         "database": self.metadata_manager.external_steam_metadata,
                     },
@@ -2800,7 +2819,7 @@ class MainContent(QObject):
     def _do_download_entire_workshop(self, action: str) -> None:
         # DB Builder is used to run DQ and grab entirety of
         # any available Steam Workshop PublishedFileIDs
-        self.db_builder = SteamDatabaseBuilder(
+        self.db_builder = metadata.SteamDatabaseBuilder(
             apikey=self.settings_controller.settings.steam_apikey,
             appid=294100,
             database_expiry=self.settings_controller.settings.database_expiry,
@@ -2822,7 +2841,7 @@ class MainContent(QObject):
         self.db_builder.finished.connect(loop.quit)
         loop.exec_()
         if not len(self.db_builder.publishedfileids) > 0:
-            show_warning(
+            dialogue.show_warning(
                 title="No PublishedFileIDs",
                 text="DB Builder query did not return any PublishedFileIDs!",
                 information="This is typically caused by invalid/missing Steam WebAPI key, or a connectivity issue to the Steam WebAPI.\n"
@@ -2834,9 +2853,11 @@ class MainContent(QObject):
             if "steamcmd" in action:
                 # Filter out existing SteamCMD mods
                 mod_pfid = None
-                for metadata in self.metadata_manager.internal_local_metadata.values():
-                    if metadata.get("steamcmd"):
-                        mod_pfid = metadata.get("publishedfileid")
+                for (
+                    metadata_values
+                ) in self.metadata_manager.internal_local_metadata.values():
+                    if metadata_values.get("steamcmd"):
+                        mod_pfid = metadata_values.get("publishedfileid")
                     if mod_pfid and mod_pfid in self.db_builder.publishedfileids:
                         logger.debug(
                             f"Skipping download of existing SteamCMD mod: {mod_pfid}"
@@ -2844,7 +2865,7 @@ class MainContent(QObject):
                         self.db_builder.publishedfileids.remove(mod_pfid)
                 self._do_download_mods_with_steamcmd(self.db_builder.publishedfileids)
             elif "steamworks" in action:
-                answer = show_dialogue_conditional(
+                answer = dialogue.show_dialogue_conditional(
                     title="Are you sure?",
                     text="Here be dragons.",
                     information="WARNING: It is NOT recommended to subscribe to this many mods at once via Steam. "
@@ -2855,11 +2876,11 @@ class MainContent(QObject):
                 )
                 if answer == "&Yes":
                     for (
-                        metadata
+                        metadata_values
                     ) in self.metadata_manager.internal_local_metadata.values():
-                        mod_pfid = metadata.get("publishedfileid")
+                        mod_pfid = metadata_values.get("publishedfileid")
                         if (
-                            metadata["data_source"] == "workshop"
+                            metadata_values["data_source"] == "workshop"
                             and mod_pfid
                             and mod_pfid in self.db_builder.publishedfileids
                         ):
@@ -2883,7 +2904,7 @@ class MainContent(QObject):
         that are configured to be passed to the "Dynamic Query" feature for
         the Steam Workshop metadata needed for sorting
         """
-        args, ok = show_dialogue_input(
+        args, ok = dialogue.show_dialogue_input(
             title="Edit Steam WebAPI key",
             label="Enter your personal 32 character Steam WebAPI key here:",
             text=self.settings_controller.settings.steam_apikey,
@@ -2894,16 +2915,15 @@ class MainContent(QObject):
 
     def _do_generate_metadata_comparison_report(self) -> None:
         """
-        Open a user-selected JSON file. Calculate and display discrepencies
+        Open a user-selected JSON file. Calculate and display discrepancies
         found between database and this file.
         """
         # TODO: Refactor this...
-        discrepancies = []
-        mods = self.metadata_manager.internal_local_metadata
-        database_a_deps = {}
-        database_b_deps = {}
+        discrepancies: list[str] = []
+        database_a_deps: dict[str, Any] = {}
+        database_b_deps: dict[str, Any] = {}
         # Notify user
-        show_information(
+        dialogue.show_information(
             title="Steam DB Builder",
             text="This operation will compare 2 databases, A & B, by checking dependencies from A with dependencies from B.",
             information="- This will produce an accurate comparison of dependency data between 2 Steam DBs.\n"
@@ -2913,7 +2933,7 @@ class MainContent(QObject):
         )
         # Input A
         logger.info("Opening file dialog to specify input file A")
-        input_path_a = show_dialogue_file(
+        input_path_a = dialogue.show_dialogue_file(
             mode="open",
             caption='Input "to-be-updated" database, input A',
             _dir=str(AppInfo().app_storage_folder),
@@ -2931,7 +2951,7 @@ class MainContent(QObject):
             return
         # Input B
         logger.info("Opening file dialog to specify input file B")
-        input_path_b = show_dialogue_file(
+        input_path_b = dialogue.show_dialogue_file(
             mode="open",
             caption='Input "to-be-updated" database, input A',
             _dir=str(AppInfo().app_storage_folder),
@@ -3003,7 +3023,7 @@ class MainContent(QObject):
         logger.debug(
             f"Comparison skipped for {len(comparison_skipped)} unpublished mods: {comparison_skipped}"
         )
-        show_information(
+        dialogue.show_information(
             title="Steam DB Builder",
             text=f"Steam DB comparison report: {len(discrepancies)} found",
             information="Click 'Show Details' to see the full report!",
@@ -3012,13 +3032,13 @@ class MainContent(QObject):
 
     def _do_merge_databases(self) -> None:
         # Notify user
-        show_information(
+        dialogue.show_information(
             title="Steam DB Builder",
             text="This operation will merge 2 databases, A & B, by recursively updating A with B, barring exceptions.",
             information="- This will effectively recursively overwrite A's key/value with B's key/value to the resultant database.\n"
             + "- Exceptions will not be recursively updated. Instead, they will be overwritten with B's key entirely.\n"
             + "- The following exceptions will be made:\n"
-            + f"\n\t{DB_BUILDER_RECURSE_EXCEPTIONS}\n\n"
+            + f"\n\t{app_constants.DB_BUILDER_RECURSE_EXCEPTIONS}\n\n"
             + "The resultant database, C, is saved to a user-specified path. You will be prompted for these paths in order:\n"
             + "\n\t1) Select input A (db to-be-updated)"
             + "\n\t2) Select input B (update source)"
@@ -3026,7 +3046,7 @@ class MainContent(QObject):
         )
         # Input A
         logger.info("Opening file dialog to specify input file A")
-        input_path_a = show_dialogue_file(
+        input_path_a = dialogue.show_dialogue_file(
             mode="open",
             caption='Input "to-be-updated" database, input A',
             _dir=str(AppInfo().app_storage_folder),
@@ -3044,7 +3064,7 @@ class MainContent(QObject):
             return
         # Input B
         logger.info("Opening file dialog to specify input file B")
-        input_path_b = show_dialogue_file(
+        input_path_b = dialogue.show_dialogue_file(
             mode="open",
             caption='Input "to-be-updated" database, input A',
             _dir=str(AppInfo().app_storage_folder),
@@ -3062,16 +3082,16 @@ class MainContent(QObject):
             return
         # Output C
         db_output_c = db_input_a.copy()
-        recursively_update_dict(
+        metadata.recursively_update_dict(
             db_output_c,
             db_input_b,
-            prune_exceptions=DB_BUILDER_PRUNE_EXCEPTIONS,
-            recurse_exceptions=DB_BUILDER_RECURSE_EXCEPTIONS,
+            prune_exceptions=app_constants.DB_BUILDER_PRUNE_EXCEPTIONS,
+            recurse_exceptions=app_constants.DB_BUILDER_RECURSE_EXCEPTIONS,
         )
         logger.info("Updated DB A with DB B!")
         logger.debug(db_output_c)
         logger.info("Opening file dialog to specify output file")
-        output_path = show_dialogue_file(
+        output_path = dialogue.show_dialogue_file(
             mode="save",
             caption="Designate output path for resultant database:",
             _dir=str(AppInfo().app_storage_folder),
@@ -3080,7 +3100,7 @@ class MainContent(QObject):
         logger.info(f"Selected path: {output_path}")
         if output_path:
             if not output_path.endswith(".json"):
-                path += ".json"  # Handle file extension if needed
+                output_path += ".json"  # Handle file extension if needed
             with open(output_path, "w", encoding="utf-8") as output:
                 json.dump(db_output_c, output, indent=4)
         else:
@@ -3114,19 +3134,19 @@ class MainContent(QObject):
                 logger.debug(
                     f"Retrieved copy of existing {rules_source} database to update."
                 )
-        except:
+        except Exception:
             logger.error("Failed to read info from existing database")
-        db_input_b = {"timestamp": int(time()), "rules": rules_data}
+        db_input_b = {"timestamp": int(time.time()), "rules": rules_data}
         db_output_c = db_input_a.copy()
         # Update database in place
-        recursively_update_dict(
+        metadata.recursively_update_dict(
             db_output_c,
             db_input_b,
-            prune_exceptions=DB_BUILDER_PRUNE_EXCEPTIONS,
-            recurse_exceptions=DB_BUILDER_RECURSE_EXCEPTIONS,
+            prune_exceptions=app_constants.DB_BUILDER_PRUNE_EXCEPTIONS,
+            recurse_exceptions=app_constants.DB_BUILDER_RECURSE_EXCEPTIONS,
         )
         # Overwrite rules database
-        answer = show_dialogue_conditional(
+        answer = dialogue.show_dialogue_conditional(
             title="RimSort - DB Builder",
             text="Do you want to continue?",
             information=f"This operation will overwrite the {rules_source} database located at the following path:\n\n{path}",
@@ -3143,7 +3163,7 @@ class MainContent(QObject):
         Opens a QDialogInput that allows the user to edit their preferred
         WebAPI Query Expiry (in seconds)
         """
-        args, ok = show_dialogue_input(
+        args, ok = dialogue.show_dialogue_input(
             title="Edit SteamDB expiry:",
             label="Enter your preferred expiry duration in seconds (default 1 week/604800 sec):",
             text=str(self.settings_controller.settings.database_expiry),
@@ -3153,7 +3173,7 @@ class MainContent(QObject):
                 self.settings_controller.settings.database_expiry = int(args)
                 self.settings_controller.settings.save()
             except ValueError:
-                show_warning(
+                dialogue.show_warning(
                     "Tried configuring Dynamic Query with a value that is not an integer.",
                     "Please reconfigure the expiry value with an integer in terms of the seconds from epoch you would like your query to expire.",
                 )
@@ -3229,8 +3249,8 @@ class MainContent(QObject):
         game_install_path = Path(
             self.settings_controller.settings.instances[current_instance]["game_folder"]
         )
-        run_args = self.settings_controller.settings.instances[current_instance][
-            "run_args"
+        run_args = [
+            self.settings_controller.settings.instances[current_instance]["run_args"]
         ]
         steam_client_integration = self.settings_controller.settings.instances[
             current_instance
