@@ -8,7 +8,7 @@ from functools import partial
 from gc import collect
 from io import BytesIO
 from math import ceil
-from multiprocessing import Pool, cpu_count
+from multiprocessing import cpu_count, Pool
 from tempfile import gettempdir
 from typing import Callable
 from urllib.parse import urlparse
