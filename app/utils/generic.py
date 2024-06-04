@@ -124,7 +124,7 @@ def handle_remove_read_only(func, path: str, exc):
         raise
 
 
-def launch_game_process(game_install_path: Path, args: list) -> None:
+def launch_game_process(game_install_path: Path, args: list[str]) -> None:
     """
     This function starts the Rimworld game process in it's own Process,
     by launching the executable found in the configured game directory.
@@ -132,7 +132,7 @@ def launch_game_process(game_install_path: Path, args: list) -> None:
     This function initializes the Steamworks API to be used by the RimWorld game.
 
     :param game_install_path: is a string path to the game folder
-    :param args: is a string representing the args to pass to the generated executable path
+    :param args: is a list of strings representing the args to pass to the generated executable path
     """
     logger.info(f"Attempting to find the game in the game folder {game_install_path}")
     if game_install_path:

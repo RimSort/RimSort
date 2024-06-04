@@ -3246,8 +3246,8 @@ class MainContent(QObject):
         game_install_path = Path(
             self.settings_controller.settings.instances[current_instance]["game_folder"]
         )
-        run_args = self.settings_controller.settings.instances[current_instance][
-            "run_args"
+        run_args = [
+            self.settings_controller.settings.instances[current_instance]["run_args"]
         ]
         steam_client_integration = self.settings_controller.settings.instances[
             current_instance
