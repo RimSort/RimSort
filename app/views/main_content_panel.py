@@ -2805,7 +2805,7 @@ class MainContent(QObject):
                 json.dump(
                     {
                         "version": int(
-                            time() + self.settings_controller.settings.database_expiry
+                            time.time() + self.settings_controller.settings.database_expiry
                         ),
                         "database": self.metadata_manager.external_steam_metadata,
                     },
