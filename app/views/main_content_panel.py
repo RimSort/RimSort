@@ -2805,7 +2805,8 @@ class MainContent(QObject):
                 json.dump(
                     {
                         "version": int(
-                            time.time() + self.settings_controller.settings.database_expiry
+                            time.time()
+                            + self.settings_controller.settings.database_expiry
                         ),
                         "database": self.metadata_manager.external_steam_metadata,
                     },
@@ -3134,7 +3135,7 @@ class MainContent(QObject):
                 )
         except Exception:
             logger.error("Failed to read info from existing database")
-        db_input_b = {"timestamp": int(time()), "rules": rules_data}
+        db_input_b = {"timestamp": int(time.time()), "rules": rules_data}
         db_output_c = db_input_a.copy()
         # Update database in place
         metadata.recursively_update_dict(
