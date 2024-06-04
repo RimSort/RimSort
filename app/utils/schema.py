@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any
 
 from loguru import logger
 
@@ -32,8 +32,8 @@ def generate_rimworld_mods_list(
 
 
 def validate_rimworld_mods_list(
-    mods_config_data: Dict[str, Any]
-) -> Optional[list[str]]:
+    mods_config_data: dict[str, Any],
+) -> list[str]:
     """
     Validate format of RimWorld-supported mod lists
 
@@ -66,12 +66,12 @@ def validate_rimworld_mods_list(
     ):
         logger.info("Validated XML formatting (RimWorld .rml modlist)")
         return mods_config_data["savedModList"]["meta"]["modIds"]["li"]
-    else:
-        logger.error(f"Invalid format: {mods_config_data}")
-        show_warning(
-            title="Unable to read data",
-            text=(
-                "RimSort was unable to read the supplied mods list because it may be invalid or missing."
-            ),
-        )
-        return ["Ludeon.RimWorld"]
+
+    logger.error(f"Invalid format: {mods_config_data}")
+    show_warning(
+        title="Unable to read data",
+        text=(
+            "RimSort was unable to read the supplied mods list because it may be invalid or missing."
+        ),
+    )
+    return ["Ludeon.RimWorld"]
