@@ -72,7 +72,7 @@ class RunnerPanel(QWidget):
         self.todds_dry_run_support = todds_dry_run_support
 
         # SET STYLESHEET
-        self.text.setObjectName("RunnerPaneltext")
+        self.text.setObjectName("RunnerPanelText")
         self.setObjectName("RunnerPanel")
 
         # CREATE WIDGETS
@@ -237,7 +237,7 @@ class RunnerPanel(QWidget):
 
     def handle_output(self) -> None:
         data = self.process.readAll()
-        stdout = self.ansi_escape.sub("", bytes(data).decode("utf8"))
+        stdout = self.ansi_escape.sub("", bytes(data.data()).decode("utf8"))
         self.message(stdout)
 
     def message(self, line: str) -> None:
@@ -403,4 +403,4 @@ class RunnerPanel(QWidget):
                 self.change_progress_bar_color("success")
 
         # Cleanup process
-        self.process = None
+        self.process.terminate()
