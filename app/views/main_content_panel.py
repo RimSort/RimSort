@@ -205,7 +205,7 @@ class MainContent(QObject):
             )
 
             # INITIALIZE WIDGETS
-            # Initialize Steam(CMD) integraations
+            # Initialize Steam(CMD) integrations
             self.steam_browser = SteamcmdDownloader = None
             self.steamcmd_runner = RunnerPanel = None
             self.steamcmd_wrapper = SteamcmdInterface.instance()
@@ -1944,7 +1944,7 @@ class MainContent(QObject):
         else:
             dialogue.show_warning(
                 title="RimSort - SteamCMD setup",
-                text="Unable to initiate SteamCMD installtion. Local mods path not set!",
+                text="Unable to initiate SteamCMD installation. Local mods path not set!",
                 information="Please configure local mods path in Settings before attempting to install.",
             )
 
@@ -2911,7 +2911,7 @@ class MainContent(QObject):
 
     def _do_generate_metadata_comparison_report(self) -> None:
         """
-        Open a user-selected JSON file. Calculate and display discrepencies
+        Open a user-selected JSON file. Calculate and display discrepancies
         found between database and this file.
         """
         # TODO: Refactor this...
