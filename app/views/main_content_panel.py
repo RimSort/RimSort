@@ -8,7 +8,7 @@ from functools import partial
 from gc import collect
 from io import BytesIO
 from math import ceil
-from multiprocessing import cpu_count, Pool
+from multiprocessing import Pool, cpu_count
 from tempfile import gettempdir
 from typing import Callable
 from urllib.parse import urlparse
@@ -24,7 +24,7 @@ try:
     GIT_EXISTS = True
 except ImportError:
     logger.warning(
-        "git not detected in your PATH! Do you have git installed...? git integration will be disabled!"
+        "git not detected in your PATH! Do you have git installed...? git integration will be disabled! You may need to restart the app if you installed it."
     )
     GIT_EXISTS = False
 
@@ -878,9 +878,7 @@ class MainContent(QObject):
                 else:
                     try:
                         subprocess.CREATE_NEW_PROCESS_GROUP
-                    except (
-                        AttributeError
-                    ):  # not Windows, so assume POSIX; if not, we'll get a usable exception
+                    except AttributeError:  # not Windows, so assume POSIX; if not, we'll get a usable exception
                         popen_args = [
                             "/bin/bash",
                             str((AppInfo().application_folder / "update.sh")),
@@ -2603,7 +2601,10 @@ class MainContent(QObject):
         answer = show_dialogue_conditional(  # We import last so we can use gui + utils
             title="git not found",
             text="git executable was not found in $PATH!",
-            information="git integration will not work without git installed! Do you want to open download page for git?",
+            information=(
+                "Git integration will not work without Git installed! Do you want to open download page for Git?\n\n"
+                "If you just installed Git, please restart RimSort for the PATH changes to take effect."
+            ),
         )
         if answer == "&Yes":
             open_url_browser("https://git-scm.com/downloads")

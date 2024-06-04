@@ -27,3 +27,4 @@ indent-width = 4
 
 # Assume Python 3.11
 target-version = "py311"
+extend-select = ["I"]
