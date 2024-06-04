@@ -429,7 +429,6 @@ class MainWindow(QMainWindow):
             self.__switch_to_instance(instance_name)
 
     def __clone_existing_instance(self, existing_instance_name: str) -> None:
-
         def copy_game_folder(
             existing_instance_game_folder: str, target_game_folder: str
         ) -> None:
