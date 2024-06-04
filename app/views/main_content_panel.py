@@ -1700,7 +1700,7 @@ class MainContent(QObject):
             webbrowser.open(ret)
 
     @Slot()
-    def _on_do_upload_rimworld_log(self):
+    def _on_do_upload_rimworld_log(self) -> None:
         player_log_path = str(
             (
                 Path(
@@ -1865,7 +1865,7 @@ class MainContent(QObject):
 
     # STEAM{CMD, WORKS} ACTIONS
 
-    def _do_browse_workshop(self):
+    def _do_browse_workshop(self) -> None:
         self.steam_browser = SteamBrowser(
             "https://steamcommunity.com/app/294100/workshop/"
         )
@@ -1914,7 +1914,7 @@ class MainContent(QObject):
             self.status_signal.emit("All Workshop mods appear to be up to date!")
             self.workshop_mod_updater = None
 
-    def _do_setup_steamcmd(self):
+    def _do_setup_steamcmd(self) -> None:
         if (
             self.steamcmd_runner
             and self.steamcmd_runner.process
