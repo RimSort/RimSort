@@ -78,7 +78,7 @@ from app.utils.steam.webapi.wrapper import (
 from app.utils.todds.wrapper import ToddsInterface
 from app.utils.xml import json_to_xml_write
 from app.views.mod_info_panel import ModInfo
-from app.views.mods_panel import ModsPanel, ModsPanelSortKey
+from app.views.mods_panel import ModListWidget, ModsPanel, ModsPanelSortKey
 from app.windows.missing_mods_panel import MissingModsPrompt
 from app.windows.rule_editor_panel import RuleEditor
 from app.windows.runner_panel import RunnerPanel
@@ -206,8 +206,8 @@ class MainContent(QObject):
 
             # INITIALIZE WIDGETS
             # Initialize Steam(CMD) integrations
-            self.steam_browser = SteamcmdDownloader = None
-            self.steamcmd_runner = RunnerPanel = None
+            self.steam_browser: SteamBrowser | None = None
+            self.steamcmd_runner: RunnerPanel | None = None
             self.steamcmd_wrapper = SteamcmdInterface.instance()
 
             # Initialize MetadataManager
@@ -304,13 +304,13 @@ class MainContent(QObject):
             self.duplicate_mods = {}
 
             # Instantiate query runner
-            self.query_runner = RunnerPanel = None
+            self.query_runner: RunnerPanel | None = None
 
             # Steamworks bool - use this to check any Steamworks processes you try to initialize
             self.steamworks_in_use = False
 
             # Instantiate todds runner
-            self.todds_runner = RunnerPanel = None
+            self.todds_runner: RunnerPanel | None = None
 
             logger.info("Finished MainContent initialization")
             self.initialized = True
@@ -363,14 +363,14 @@ class MainContent(QObject):
                 self.settings_controller.show_settings_dialog("Locations")
             return False
 
-    def ___get_relative_middle(self, some_list):
+    def ___get_relative_middle(self, some_list: ModListWidget) -> int:
         rect = some_list.contentsRect()
         top = some_list.indexAt(rect.topLeft())
         if top.isValid():
             bottom = some_list.indexAt(rect.bottomLeft())
             if not bottom.isValid():
-                bottom = some_list.model().index(some_list.count() - 1)
-            return (top.row() + bottom.row() + 1) / 2
+                bottom = some_list.model().index(some_list.count() - 1, 0)
+            return int((top.row() + bottom.row() + 1) / 2)
         return 0
 
     def __handle_active_mod_key_press(self, key: str) -> None:
