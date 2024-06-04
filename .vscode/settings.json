@@ -24,6 +24,11 @@
   ],
   "isort.args": ["--profile", "black"],
   "[python]": {
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit",
+      "source.organizeImports": "explicit"
+    },
     "editor.defaultFormatter": "charliermarsh.ruff"
   },
   "languageToolLinter.languageTool.ignoredWordsInWorkspace": [

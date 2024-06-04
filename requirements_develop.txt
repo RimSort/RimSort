@@ -1,6 +1,7 @@
-ruff
+ruff==0.4.7
 mypy
 #types-pyside6
 types-requests
 types-toposort
 types-xmltodict
+lxml-stubs
