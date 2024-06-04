@@ -6,7 +6,7 @@ from typing import Any
 import psutil
 from loguru import logger
 from PySide6.QtCore import QProcess, Qt, Signal
-from PySide6.QtGui import QFont, QIcon, QKeyEvent, QTextCursor
+from PySide6.QtGui import QCloseEvent, QFont, QIcon, QKeyEvent, QTextCursor
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QPlainTextEdit,
@@ -139,7 +139,7 @@ class RunnerPanel(QWidget):
 
         self._do_clear_runner()
 
-    def closeEvent(self, event) -> None:
+    def closeEvent(self, event: QCloseEvent) -> None:
         self.closing_signal.emit()
         self._do_kill_process()
         event.accept()
@@ -234,12 +234,12 @@ class RunnerPanel(QWidget):
             self.message(f"\nExecuting command:\n{command} {' '.join(args)}\n\n")
         self.process.start()
 
-    def handle_output(self):
+    def handle_output(self) -> None:
         data = self.process.readAll()
         stdout = self.ansi_escape.sub("", bytes(data).decode("utf8"))
         self.message(stdout)
 
-    def message(self, line: str):
+    def message(self, line: str) -> None:
         overwrite = False
         if self.process and self.process.state() == QProcess.ProcessState.Running:
             logger.debug(f"[{self.process.program().split('/')[-1]}]\n{line}")
