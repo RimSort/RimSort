@@ -601,10 +601,6 @@ class MainContent(QObject):
 
         self.__insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
 
-    @property
-    def panel(self):
-        return self._panel
-
     #########
     # SLOTS # Can this be cleaned up & moved to own module...?
     #########
