@@ -4,3 +4,4 @@ mypy
 types-requests
 types-toposort
 types-xmltodict
+lxml-stubs
