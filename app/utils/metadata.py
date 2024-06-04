@@ -404,7 +404,7 @@ class MetadataManager(QObject):
                     logger.info(
                         f"Retrieved game version from Version.txt: {self.game_version}"
                     )
-            except:
+            except Exception:
                 logger.error(
                     f"Unable to parse Version.txt from game folder: {version_file_path}"
                 )
@@ -1297,7 +1297,7 @@ class ModParser(QRunnable):
                         with open(pfid_path, encoding="utf-8-sig") as pfid_file:
                             pfid = pfid_file.read()
                             pfid = pfid.strip()
-                    except:
+                    except Exception:
                         logger.error(f"Failed to read pfid from {pfid_path}")
                     break
         # If we were able to find an About.xml, populate mod data...
@@ -1308,7 +1308,7 @@ class ModParser(QRunnable):
             try:
                 # Try to parse .xml
                 mod_data = xml_path_to_json(mod_data_path)
-            except:
+            except Exception:
                 # If there was an issue parsing the .xml, track and exit
                 logger.error(
                     f"Unable to parse {about_file_name} with the exception: {traceback.format_exc()}"
@@ -1531,7 +1531,7 @@ class ModParser(QRunnable):
             try:
                 # Try to parse .rsc
                 scenario_data = xml_path_to_json(scenario_data_path)
-            except:
+            except Exception:
                 # If there was an issue parsing the .rsc, track and exit
                 logger.error(
                     f"Unable to parse {scenario_rsc_file} with the exception: {traceback.format_exc()}"
