@@ -867,7 +867,7 @@ class MainContent(QObject):
                     )
                     if not answer == "&Yes":
                         return
-                except:
+                except Exception:
                     stacktrace = traceback.format_exc()
                     dialogue.show_warning(
                         title="Failed to download update",
@@ -1345,7 +1345,7 @@ class MainContent(QObject):
                     json_to_xml_write(mods_config_data, file_path + ".xml")
                 else:
                     json_to_xml_write(mods_config_data, file_path)
-            except:
+            except Exception:
                 dialogue.show_fatal_error(
                     title="Failed to export to file",
                     text="Failed to export active mods to file:",
@@ -1765,7 +1765,7 @@ class MainContent(QObject):
         )
         try:
             json_to_xml_write(mods_config_data, mods_config_path)
-        except:
+        except Exception:
             logger.error("Could not save active mods")
             dialogue.show_fatal_error(
                 title="Could not save active mods",
@@ -2543,7 +2543,7 @@ class MainContent(QObject):
                         # Push the changes to the remote repository and create a pull request from new_branch
                         origin = local_repo.remote()
                         origin.push(new_branch)
-                    except:
+                    except Exception:
                         stacktrace = traceback.format_exc()
                         dialogue.show_warning(
                             title="Failed to push new branch to repo!",
@@ -2561,7 +2561,7 @@ class MainContent(QObject):
                             head=f"{repo_user_or_org}:{new_branch_name}",
                         )
                         pull_request_url = pull_request.html_url
-                    except:
+                    except Exception:
                         stacktrace = traceback.format_exc()
                         dialogue.show_warning(
                             title="Failed to create pull request!",
@@ -2583,7 +2583,7 @@ class MainContent(QObject):
                     if answer == "&Yes":
                         # Open the url in user's web browser
                         open_url_browser(url=pull_request_url)
-                except:
+                except Exception:
                     stacktrace = traceback.format_exc()
                     dialogue.show_warning(
                         title="Failed to update repo!",
@@ -3131,7 +3131,7 @@ class MainContent(QObject):
                 logger.debug(
                     f"Retrieved copy of existing {rules_source} database to update."
                 )
-        except:
+        except Exception:
             logger.error("Failed to read info from existing database")
         db_input_b = {"timestamp": int(time()), "rules": rules_data}
         db_output_c = db_input_a.copy()
