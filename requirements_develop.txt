@@ -1,5 +1,6 @@
 ruff==0.4.7
 mypy
+types-psutil
 #types-pyside6
 types-requests
 types-toposort
