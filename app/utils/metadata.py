@@ -350,7 +350,7 @@ class MetadataManager(QObject):
                 for path in mod_directories
             }
 
-        def purge_by_data_source(data_source: str, batch: list[str] = None) -> None:
+        def purge_by_data_source(data_source: str, batch: list[str] = []) -> None:
             """
             Removes all metadata for a given data source.
 
@@ -360,7 +360,6 @@ class MetadataManager(QObject):
                 data_source (str): The data source to purge.
                 batch (list[str], optional): A list of uuids to use to filter items not in that batch.
             """
-            current_instance = self.settings_controller.settings.current_instance
             if not batch:  # Purge all metadata for a given data source
                 uuids_to_remove = [
                     uuid
@@ -1215,7 +1214,7 @@ class ModParser(QRunnable):
         data_source: str,
         mod_directory: str,
         metadata_manager: MetadataManager,
-        uuid: str = None,
+        uuid: str = "",
     ):
         super(ModParser, self).__init__()
         self.data_source = data_source
@@ -1920,7 +1919,6 @@ def get_mods_from_list(
         # Loop through all mods
         for uuid, metadata in all_mods.items():
             metadata_package_id = metadata["packageid"]
-            metadata_path = metadata["path"]
             if (
                 metadata_package_id
                 in [  # If we have a match with or without _steam present
