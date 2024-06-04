@@ -2256,7 +2256,7 @@ class SteamDatabaseBuilder(QThread):
                     )
                     db_to_update = json.loads(json_string)
                     self.db_builder_message_output_signal.emit(
-                        "Retreived cached database!\n"
+                        "Retrieved cached database!\n"
                     )
                 self.db_builder_message_output_signal.emit(
                     "Recursively updating previous database with new metadata...\n"
