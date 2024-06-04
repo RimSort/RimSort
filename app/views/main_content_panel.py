@@ -2250,6 +2250,11 @@ class MainContent(QObject):
                     information=repos_updated,
                     details=updates_summarized,
                 )
+            else:
+                dialogue.show_information(
+                    title="Git repo(s) not updated",
+                    text="No updates were found.",
+                )
         else:
             self._do_notify_no_git()
 
