@@ -2408,7 +2408,7 @@ class MainContent(QObject):
                         title="Repo force updated",
                         text="The configured repository was updated!",
                         information=f"{repo_path} ->\n "
-                        + f"{repo.head.commit.message}",
+                        + f"{repo.head.commit.message.decode() if isinstance(repo.head.commit.message, bytes) else repo.head.commit.message}",
                     )
                     # Cleanup
                     self._do_cleanup_gitpython(repo=repo)
