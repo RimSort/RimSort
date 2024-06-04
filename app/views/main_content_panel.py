@@ -373,7 +373,7 @@ class MainContent(QObject):
             return (top.row() + bottom.row() + 1) / 2
         return 0
 
-    def __handle_active_mod_key_press(self, key) -> None:
+    def __handle_active_mod_key_press(self, key: str) -> None:
         """
         If the Left Arrow key is pressed while the user is focused on the
         Active Mods List, the focus is shifted to the Inactive Mods List.
@@ -426,7 +426,7 @@ class MainContent(QObject):
             self.mods_panel.active_mods_list.recalculate_warnings_signal.emit()
             self.mods_panel.inactive_mods_list.recalculate_warnings_signal.emit()
 
-    def __handle_inactive_mod_key_press(self, key) -> None:
+    def __handle_inactive_mod_key_press(self, key: str) -> None:
         """
         If the Right Arrow key is pressed while the user is focused on the
         Inactive Mods List, the focus is shifted to the Active Mods List.
@@ -945,7 +945,7 @@ class MainContent(QObject):
     # INFO PANEL ANIMATIONS
 
     def do_threaded_loading_animation(
-        self, gif_path: str, target: Callable, text=None
+        self, gif_path: str, target: Callable[..., Any], text: str | None = None
     ) -> Any:
         loading_animation_text_label = None
         # Hide the info panel widgets
@@ -981,7 +981,7 @@ class MainContent(QObject):
 
     # ACTIONS PANEL
 
-    def _do_refresh(self, is_initial=None) -> None:
+    def _do_refresh(self, is_initial: bool = False) -> None:
         """
         Refresh expensive calculations & repopulate lists with that refreshed data
         """
@@ -1948,7 +1948,7 @@ class MainContent(QObject):
                 information="Please configure local mods path in Settings before attempting to install.",
             )
 
-    def _do_download_mods_with_steamcmd(self, publishedfileids: list):
+    def _do_download_mods_with_steamcmd(self, publishedfileids: list) -> None:
         logger.debug(
             f"Attempting to download {len(publishedfileids)} mods with SteamCMD"
         )
@@ -2008,7 +2008,7 @@ class MainContent(QObject):
                 information='Please setup an existing SteamCMD prefix, or setup a new prefix with "Setup SteamCMD".',
             )
 
-    def _do_steamworks_api_call(self, instruction: list):
+    def _do_steamworks_api_call(self, instruction: list) -> None:
         """
         Create & launch Steamworks API process to handle instructions received from connected signals
 
@@ -2091,7 +2091,7 @@ class MainContent(QObject):
                 "Steamworks API is already initialized! We do NOT want multiple interactions. Skipping instruction..."
             )
 
-    def _do_steamworks_api_call_animated(self, instruction: list):
+    def _do_steamworks_api_call_animated(self, instruction: list) -> None:
         publishedfileids = instruction[1]
         logger.debug(f"Attempting to download {len(publishedfileids)} mods with Steam")
         # Check for blacklisted mods for subscription actions
@@ -2171,7 +2171,7 @@ class MainContent(QObject):
             logger.debug("USER ACTION: cancelled input!")
             return
 
-    def _do_cleanup_gitpython(self, repo) -> None:
+    def _do_cleanup_gitpython(self, repo: Repo) -> None:
         # Cleanup GitPython
         collect()
         repo.git.clear_cache()
@@ -2627,7 +2627,7 @@ class MainContent(QObject):
             open_url_browser("https://git-scm.com/downloads")
 
     def _do_open_rule_editor(
-        self, compact: bool, initial_mode=str, packageid=None
+        self, compact: bool, initial_mode: str, packageid: Any | None = None
     ) -> None:
         self.rule_editor = RuleEditor(
             # Initialization options
