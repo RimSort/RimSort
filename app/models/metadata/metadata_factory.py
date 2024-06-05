@@ -44,12 +44,12 @@ def value_extractor(
             )
 
 
-def create_listed_mod(mod_data: dict[str, Any]) -> tuple[bool, ListedMod]:
+def create_listed_mod(mod_data: dict[str, Any], target_version: str) -> tuple[bool, ListedMod]:
     """Factory method for creating a ListedMod object."""
     raise NotImplementedError
 
 
-def create_listed_mod_from_xml(mod_xml_path: str) -> tuple[bool, ListedMod]:
+def create_listed_mod_from_xml(mod_xml_path: str, target_version: str) -> tuple[bool, ListedMod]:
     try:
         mod_data = xml_path_to_json(mod_xml_path)
     except Exception:
@@ -58,4 +58,4 @@ def create_listed_mod_from_xml(mod_xml_path: str) -> tuple[bool, ListedMod]:
         )
         return False, ListedMod()
 
-    return create_listed_mod(mod_data)
+    return create_listed_mod(mod_data, target_version)
