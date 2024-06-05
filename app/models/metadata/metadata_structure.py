@@ -211,7 +211,7 @@ class SteamMod(RuledMod):
         return ModType.STEAM_WORKSHOP
 
     @property
-    def mod_path(self) -> Path:
+    def mod_path(self) -> Path | None:
         return self._mod_path
 
     @mod_path.setter
