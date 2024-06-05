@@ -1,6 +1,9 @@
+from pathlib import Path
+
 import pytest
 
 import app.models.metadata.metadata_structure as metadata_structure
+from app.models.metadata.metadata_structure import ListedMod, ModType
 
 
 def test_case_insensitive() -> None:
@@ -102,3 +105,43 @@ def test_case_insensitive_set_parametrize() -> None:
     assert package_id_set == metadata_structure.CaseInsensitiveSet(
         ["testpackage", "anotherpackage"]
     )
+
+
+def test_listed_mod_mod_path() -> None:
+    mod = ListedMod()
+    assert mod.mod_path is None
+
+    mod.mod_path = Path("path/to/mod")
+    assert mod.mod_path == Path("path/to/mod")
+
+    with pytest.raises(ValueError):
+        mod.mod_path = Path("another/path/to/mod")
+
+
+def test_listed_mod_mod_folder() -> None:
+    mod = ListedMod()
+    mod.mod_path = Path("path/to/mod")
+    assert mod.mod_folder == "mod"
+
+
+def test_listed_mod_internal_time_touched() -> None:
+    mod = ListedMod()
+    mod.mod_path = Path("path/to/mod")
+    assert mod.internal_time_touched == -1
+
+    mod = ListedMod()
+    mod.mod_path = Path(__file__)
+    assert mod.internal_time_touched != -1
+
+
+def test_listed_mod_mod_type() -> None:
+    mod = ListedMod()
+    assert mod.mod_type == ModType.UNKNOWN
+
+
+def test_listed_mod_uuid() -> None:
+    mod = ListedMod()
+    assert mod.uuid != ""
+
+    mod.mod_path = Path("path/to/mod")
+    assert mod.uuid == str(Path("path/to/mod"))
