@@ -107,10 +107,10 @@ class ListedMod(BaseMod):
     )
     valid: bool = False
 
-    _mod_path: Path = Path()
+    _mod_path: Path | None = None
 
     @property
-    def mod_path(self) -> Path:
+    def mod_path(self) -> Path | None:
         return self._mod_path
 
     @mod_path.setter
@@ -124,8 +124,19 @@ class ListedMod(BaseMod):
         self._mod_path = path
 
     @property
-    def mod_folder(self) -> str:
-        return self.mod_path.stem
+    def mod_folder(self) -> str | None:
+        """
+        Returns the folder name of the mod path.
+
+        If the mod path exists, the folder name is returned.
+        Otherwise, None is returned.
+
+        Returns:
+            str | None: The folder name of the mod path, or None if the mod path is not set.
+        """
+        if self.mod_path:
+            return self.mod_path.stem
+        return None
 
     @property
     def internal_time_touched(self) -> int:
