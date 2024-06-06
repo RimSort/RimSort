@@ -1,4 +1,4 @@
-ruff==0.4.7
+ruff==0.4.8
 mypy
 types-psutil
 #types-pyside6
