@@ -226,7 +226,9 @@ class SteamMod(RuledMod):
         self, expected_sub_path: Path = Path("About/PublishedFileId.txt")
     ) -> int:
         """Cached property to return the published file id from the mod's path. If the file does not exist, return -1."""
-        expected_path = self.mod_path / expected_sub_path
+        if self.mod_path is None:
+            return -1
+        expected_path = self.mod_path.joinpath(expected_sub_path)
         if expected_path.exists():
             with open(expected_path, "r") as file:
                 return int(file.read())
