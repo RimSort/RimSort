@@ -78,6 +78,14 @@ class CaseInsensitiveSet(MutableSet[CaseInsensitiveStr]):
 
 @dataclass
 class BaseMod:
+    """Base class for a mod.
+
+    Attributes:
+        package_id (CaseInsensitiveStr): The package id of the mod.
+        name (str): The name of the mod.
+        uuid (str): The internal unique identifier for the mod.
+    """
+
     package_id: CaseInsensitiveStr = CaseInsensitiveStr("")
     name: str = "Unknown Mod Name"
 
@@ -93,19 +101,34 @@ class BaseMod:
 
 @dataclass
 class DependencyMod(BaseMod):
+    """A mod which is a dependency of another mod."""
+
     workshop_url: str = ""
 
 
 @dataclass
 class ListedMod(BaseMod):
-    """A mod which can be displayed in a list."""
+    """A mod which can be displayed in a list.
+
+    Includes the minimum required fields for a mod to be displayed in a list.
+
+    Attributes:
+        valid (bool): Whether the mod is considered valid by RimSort.
+        description (str): A description of the mod.
+        mod_path (Path | None): The path to the mod on disk.
+        mod_folder (str | None): The folder name of the mod path.
+        internal_time_touched (int): The last modified time of the mod's path. If the path does not exist, -1 is returned.
+        mod_type (ModType): The type of the mod.
+        uuid (str): The internal unique identifier for the mod.
+    """
+
+    valid: bool = False
 
     description: str = (
         "This mod is considered invalid by RimSort (and the RimWorld game)."
         + "\n\nThis mod does NOT contain an ./About/About.xml and is likely leftover from previous usage."
         + "\n\nThis can happen sometimes with Steam mods if there are leftover .dds textures or unexpected data."
     )
-    valid: bool = False
 
     _mod_path: Path | None = None
 
@@ -183,6 +206,19 @@ class Rules(BaseRules):
 
 @dataclass
 class RuledMod(ListedMod):
+    """A listed mod with rules for load order and dependencies.
+
+    Attributes:
+        authors (list[str]): A list of authors for the mod.
+        description (str): A description of the mod.
+        supported_versions (set[str]): A set of supported RimWorld versions.
+        mod_version (str): The version of the mod.
+        url (str): A URL for the mod.
+        about_rules (BaseRules): The rules for the About section of the mod.
+        community_rules (Rules): The rules for the Community section of the mod.
+        user_rules (Rules): The rules for the User section of the mod.
+    """
+
     valid: bool = True
     authors: list[str] = field(default_factory=list)
     description: str = ""
@@ -198,12 +234,22 @@ class RuledMod(ListedMod):
 
 @dataclass
 class LudeonMod(RuledMod):
+    """A mod which made by Ludeon Studios."""
+
     mod_type = ModType.LUDEON
     steamAppId: int = -1
 
 
 @dataclass
 class SteamMod(RuledMod):
+    """A mod which is on the Steam Workshop.
+
+    Attributes:
+        mod_folder (str | None): The folder name of the mod path.
+        published_file_id (int): The published file id of the mod.
+        mod_type (ModType): The type of the mod.
+    """
+
     @property
     def mod_type(self) -> ModType:
         if self.published_file_id == self.mod_folder:
@@ -237,6 +283,12 @@ class SteamMod(RuledMod):
 
 @dataclass
 class LocalMod(RuledMod):
+    """A mod which is local to the user's machine.
+
+    Attributes:
+        mod_type (ModType): The type of the mod.
+    """
+
     @property
     def mod_type(self) -> ModType:
         return ModType.LOCAL
