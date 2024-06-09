@@ -18,12 +18,6 @@
 #   nuitka-project: --macos-create-app-bundle
 #   nuitka-project: --macos-app-icon={MAIN_DIRECTORY}/../themes/default-icons/AppIcon_a.icns
 
-# Updater (OS-specific) options
-# nuitka-project-if: {OS} in ("Windows"):
-#   nuitka-project: --include-data-file={MAIN_DIRECTORY}/../update.bat=update.bat
-# nuitka-project-else:
-#  nuitka-project: --include-data-file={MAIN_DIRECTORY}/../update.sh=update.sh
-
 # nuitka-project-if: os.path.exists("{MAIN_DIRECTORY}/../version.xml"):
 #   nuitka-project: --include-data-file={MAIN_DIRECTORY}/../version.xml=version.xml
 
