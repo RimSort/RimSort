@@ -377,7 +377,7 @@ class Settings(QObject):
         EventBus().settings_have_changed.emit()
 
     @property
-    def instances(self) -> Dict[str, Dict[str, str]]:
+    def instances(self) -> Dict[str, Dict[str, str | list[str]]]:
         return self._instances
 
     @instances.setter
