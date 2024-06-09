@@ -237,7 +237,11 @@ class LudeonMod(RuledMod):
     """A mod which made by Ludeon Studios."""
 
     mod_type = ModType.LUDEON
-    steamAppId: int = -1
+    steam_app_id: int = -1
+
+    def __init__(self, ruled_mod: RuledMod, steam_app_id: int = -1) -> None:
+        self.__dict__ = ruled_mod.__dict__
+        self.steam_app_id = steam_app_id
 
 
 @dataclass
@@ -249,6 +253,9 @@ class SteamMod(RuledMod):
         published_file_id (int): The published file id of the mod.
         mod_type (ModType): The type of the mod.
     """
+
+    def __init__(self, ruled_mod: RuledMod) -> None:
+        self.__dict__ = ruled_mod.__dict__
 
     @property
     def mod_type(self) -> ModType:
@@ -289,6 +296,9 @@ class LocalMod(RuledMod):
         mod_type (ModType): The type of the mod.
     """
 
+    def __init__(self, ruled_mod: RuledMod) -> None:
+        self.__dict__ = ruled_mod.__dict__
+
     @property
     def mod_type(self) -> ModType:
         return ModType.LOCAL
@@ -296,6 +306,11 @@ class LocalMod(RuledMod):
 
 @dataclass
 class GitMod(RuledMod):
+    """A mod which is hosted on Git."""
+
+    def __init__(self, ruled_mod: RuledMod) -> None:
+        self.__dict__ = ruled_mod.__dict__
+
     @property
     def mod_type(self) -> ModType:
         return ModType.GIT
