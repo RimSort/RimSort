@@ -86,7 +86,7 @@ class BaseMod:
         uuid (str): The internal unique identifier for the mod.
     """
 
-    package_id: CaseInsensitiveStr = CaseInsensitiveStr("")
+    package_id: CaseInsensitiveStr = CaseInsensitiveStr("invalid.mod")
     name: str = "Unknown Mod Name"
 
     _uuid: str = str(uuid4())
@@ -114,6 +114,9 @@ class ListedMod(BaseMod):
 
     Attributes:
         valid (bool): Whether the mod is considered valid by RimSort.
+        authors (list[str]): A list of authors for the mod.
+        description (str): A description of the mod.
+        supported_versions (set[str]): A set of supported RimWorld versions.
         description (str): A description of the mod.
         mod_path (Path | None): The path to the mod on disk.
         mod_folder (str | None): The folder name of the mod path.
@@ -124,6 +127,8 @@ class ListedMod(BaseMod):
 
     valid: bool = False
 
+    authors: list[str] = field(default_factory=list)
+    supported_versions: set[str] = field(default_factory=set)
     description: str = (
         "This mod is considered invalid by RimSort (and the RimWorld game)."
         + "\n\nThis mod does NOT contain an ./About/About.xml and is likely leftover from previous usage."
@@ -209,9 +214,6 @@ class RuledMod(ListedMod):
     """A listed mod with rules for load order and dependencies.
 
     Attributes:
-        authors (list[str]): A list of authors for the mod.
-        description (str): A description of the mod.
-        supported_versions (set[str]): A set of supported RimWorld versions.
         mod_version (str): The version of the mod.
         url (str): A URL for the mod.
         about_rules (BaseRules): The rules for the About section of the mod.
@@ -220,9 +222,6 @@ class RuledMod(ListedMod):
     """
 
     valid: bool = True
-    authors: list[str] = field(default_factory=list)
-    description: str = ""
-    supported_versions: set[str] = field(default_factory=set)
 
     mod_version: str = ""
     url: str = ""
