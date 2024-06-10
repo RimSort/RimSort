@@ -45,6 +45,8 @@ def value_extractor(
         # If only one key, recurse into the value
         if len(input) == 1:
             return value_extractor(next(iter(input.values())))
+        elif input.keys() == {'@IgnoreIfNoMatchingField', '#text'}:
+            return input['#text']
         else:
             raise MalformedDataException(
                 f"Could not extract value from {input}. More than one key found."
@@ -200,11 +202,11 @@ def create_listed_mod_from_xml(
         logger.error(
             f"Unable to parse {mod_xml_path} with the exception: {traceback.format_exc()}"
         )
-        return False, ListedMod()
+        return False, ListedMod(valid=False)
 
     if not mod_data:
         logger.error(f"Could not parse {mod_xml_path}.")
-        return False, ListedMod()
+        return False, ListedMod(valid=False)
 
     return create_listed_mod(mod_data, target_version)
 
