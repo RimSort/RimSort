@@ -3,6 +3,7 @@ from pathlib import Path
 from app.models.metadata.metadata_factory import (
     MalformedDataException,
     _parse_required,
+    match_version,
     value_extractor,
 )
 from app.models.metadata.metadata_structure import LudeonMod, RuledMod
@@ -42,11 +43,7 @@ def test_value_extractor_dict_string_value() -> None:
 def test_value_extractor_dict_multiple_keys() -> None:
     # Test case: input is a dictionary with multiple keys
     input_dict = {"li": "value", "key2": "value2"}
-    try:
-        value_extractor(input_dict)
-        assert False, "MalformedDataException not raised"
-    except MalformedDataException:
-        pass
+    assert value_extractor(input_dict) == input_dict
 
 
 def test_value_extractor_dict_li_one_value_list() -> None:
@@ -135,3 +132,34 @@ def test__parse_required_local_fishery() -> None:
 
 def test_parse_required_invalid() -> None:
     pass
+
+
+def test_match_version_found() -> None:
+    # Test case: matching key is found
+    input_dict = {"v1.2": "value1", "v1.3": "value2", "v1.4": "value3"}
+    target_version = "1.3"
+    assert match_version(input_dict, target_version) == (True, ["value2"])
+
+
+def test_match_version_not_found() -> None:
+    # Test case: matching key is not found
+    input_dict = {"v1.2": "value1", "v1.3": "value2", "v1.4": "value3"}
+    target_version = "1.5"
+    assert match_version(input_dict, target_version) == (False, None)
+
+
+def test_match_version_multiple_results() -> None:
+    # Test case: multiple matching keys are found
+    input_dict = {"v1.2": "value1", "v1.3": "value2", "v1.3.1": "value3"}
+    target_version = "1.3"
+    assert match_version(input_dict, target_version) == (True, ["value2", "value3"])
+
+
+def test_match_version_multiple_results_stop_at_first() -> None:
+    # Test case: stop_at_first parameter is set to True
+    input_dict = {"v1.2": "value1", "v1.3": "value2", "v1.3.1": "value3"}
+    target_version = "1.3"
+    assert match_version(input_dict, target_version, stop_at_first=True) == (
+        True,
+        ["value2"],
+    )

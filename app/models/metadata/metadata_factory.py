@@ -1,5 +1,7 @@
+import re
 import traceback
 from functools import cache
+from pathlib import Path
 from typing import Any, Sequence
 
 from loguru import logger
@@ -26,9 +28,11 @@ class MalformedDataException(Exception):
 
 def value_extractor(
     input: dict[str, str] | dict[str, list[str]] | Sequence[str] | str,
-) -> str | list[str]:
+) -> str | list[str] | dict[str, str] | dict[str, list[str]]:
     """
-    Extract the value from a mod_data entry. Stops at the outermost list or string.
+    Extract the value from a mod_data entry.
+    Stops at the outermost list or string.
+    Stops if more than one key other than #text and @IgnoreIfNoMatchingField is found.
 
     :param input: The dictionary or string or list of strings to extract the value from.
     :return: The extracted value or the input string.
@@ -45,12 +49,36 @@ def value_extractor(
         # If only one key, recurse into the value
         if len(input) == 1:
             return value_extractor(next(iter(input.values())))
-        elif input.keys() == {'@IgnoreIfNoMatchingField', '#text'}:
-            return input['#text']
+        elif input.keys() == {"@IgnoreIfNoMatchingField", "#text"}:
+            return input["#text"]
         else:
-            raise MalformedDataException(
-                f"Could not extract value from {input}. More than one key found."
-            )
+            return input
+
+
+def match_version(
+    input: dict[str, str], target_version: str, stop_at_first: bool = False
+) -> tuple[bool, None | list[Any]]:
+    """Attempts to match an input key with the target version using regex.
+
+    If the key is not found, the function returns None.
+    If the matching key(s) is found, the function returns the value of the key(s) in a list.
+
+    :param input: The dictionary to search for the key.
+    :param target_version: The version to match. Should be of the format 'major.minor'."""
+    major, minor = target_version.split(".")[:2]
+    version_regex = rf"v{major}\.{minor}"
+
+    results = []
+    for key, value in input.items():
+        if re.match(version_regex, key):
+            if stop_at_first:
+                return True, [value]
+            results.append(value)
+
+    if not results:
+        return False, None
+
+    return True, results
 
 
 def create_listed_mod(
@@ -189,6 +217,18 @@ def _parse_optional(
     """
     Parse the optional fields from the mod_data and set them on the mod object.
     """
+
+    mod_version = value_extractor(mod_data.get("modVersion", False))
+    if mod_version and isinstance(mod_version, str):
+        mod.mod_version = mod_version
+
+    mod_icon_path = value_extractor(mod_data.get("modIconPath", False))
+    if mod_icon_path and isinstance(mod_icon_path, str):
+        mod.mod_icon_path = Path(mod_icon_path)
+
+    url = value_extractor(mod_data.get("url", False))
+    if url and isinstance(url, str):
+        mod.url = url
 
     raise NotImplementedError
 
