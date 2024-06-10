@@ -1,8 +1,8 @@
 from pathlib import Path
 
 from app.models.metadata.metadata_factory import (
-    MalformedDataException,
     _parse_required,
+    create_mod_dependency,
     match_version,
     value_extractor,
 )
@@ -163,3 +163,28 @@ def test_match_version_multiple_results_stop_at_first() -> None:
         True,
         ["value2"],
     )
+
+
+def test_create_mod_dependency() -> None:
+    # Test case: valid input dictionary
+    input_dict = {
+        "packageId": "com.example.mod",
+        "displayName": "Example Mod",
+        "workshopUrl": "https://steamcommunity.com/sharedfiles/filedetails/?id=1234567890",
+    }
+    mod = create_mod_dependency(input_dict)
+    assert mod.package_id == "com.example.mod"
+    assert mod.name == "Example Mod"
+    assert (
+        mod.workshop_url
+        == "https://steamcommunity.com/sharedfiles/filedetails/?id=1234567890"
+    )
+
+
+def test_create_mod_dependency_missing_fields() -> None:
+    # Test case: missing fields in the input dictionary
+    input_dict = {"packageId": "com.example.mod"}
+    mod = create_mod_dependency(input_dict)
+    assert mod.package_id == "com.example.mod"
+    assert mod.name == "Unknown Mod Name"
+    assert mod.workshop_url == ""

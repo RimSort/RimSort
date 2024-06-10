@@ -8,6 +8,7 @@ from loguru import logger
 
 from app.models.metadata.metadata_structure import (
     CaseInsensitiveStr,
+    DependencyMod,
     ListedMod,
     LudeonMod,
     RuledMod,
@@ -231,7 +232,32 @@ def _parse_optional(
     if url and isinstance(url, str):
         mod.url = url
 
+    # Skip descriptionsByVersion
+
     raise NotImplementedError
+
+
+def create_mod_dependency(input_dict: dict[str, str]) -> DependencyMod:
+    """
+    Create a DependencyMod object from the input dictionary.
+
+    :param input_dict: The dictionary containing the mod data.
+    :return: The DependencyMod object.
+    """
+    mod = DependencyMod()
+    package_id = input_dict.get("packageId", False)
+    if isinstance(package_id, str):
+        mod.package_id = CaseInsensitiveStr(package_id)
+
+    name = input_dict.get("displayName", False)
+    if isinstance(name, str):
+        mod.name = name
+
+    workshop_url = input_dict.get("workshopUrl", False)
+    if isinstance(workshop_url, str):
+        mod.workshop_url = workshop_url
+
+    return mod
 
 
 def create_listed_mod_from_xml(
