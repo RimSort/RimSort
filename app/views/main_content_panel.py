@@ -2167,7 +2167,7 @@ class MainContent(QObject):
             logger.debug("USER ACTION: cancelled input!")
             return
 
-    def _do_cleanup_gitpython(self, repo: Repo) -> None:
+    def _do_cleanup_gitpython(self, repo: "Repo") -> None:
         # Cleanup GitPython
         collect()
         repo.git.clear_cache()
