@@ -238,9 +238,11 @@ class LudeonMod(RuledMod):
     mod_type = ModType.LUDEON
     steam_app_id: int = -1
 
-    def __init__(self, ruled_mod: RuledMod, steam_app_id: int = -1) -> None:
-        self.__dict__ = ruled_mod.__dict__
-        self.steam_app_id = steam_app_id
+    def __init__(self, listed_mod: ListedMod) -> None:
+        if isinstance(listed_mod, ListedMod):
+            self.__dict__ = listed_mod.__dict__
+        else:
+            raise ValueError("listed_mod must be a ListedMod object.")
 
 
 @dataclass
