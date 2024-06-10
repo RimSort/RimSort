@@ -64,7 +64,8 @@ def match_version(
     If the matching key(s) is found, the function returns the value of the key(s) in a list.
 
     :param input: The dictionary to search for the key.
-    :param target_version: The version to match. Should be of the format 'major.minor'."""
+    :param target_version: The version to match. Should be of the format 'major.minor'.
+    :param stop_at_first: If True, the function will return the first match found only."""
     major, minor = target_version.split(".")[:2]
     version_regex = rf"v{major}\.{minor}"
 
