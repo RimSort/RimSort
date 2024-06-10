@@ -46,6 +46,9 @@ def test_value_extractor() -> None:
     input_dict_8 = {"li": "apple"}
     assert value_extractor(input_dict_8) == input_dict_8["li"]
 
+    # Test case 9: Ignore if no matching field
+    input_dict_9 = {"@IgnoreIfNoMatchingField": "True", "#text": "input text"}
+    assert value_extractor(input_dict_9) == input_dict_9["#text"]
 
 def test_parse_required_ludeon() -> None:
     # Test parse required using data from data folder
@@ -96,7 +99,17 @@ def test_parse_required_ludeon() -> None:
 
 
 def test_parse_required_non_ludeon() -> None:
-    pass
+    # Test case: Fishery mod
+    path = Path("tests/data/mod_examples/Local/Fishery/About/About.xml")
+    mod_data = xml_path_to_json(str(path))["ModMetaData"]
+    mod = _parse_required(mod_data, RuledMod())
+
+    assert isinstance(mod, RuledMod)
+    assert mod.package_id == "bs.fishery"
+    assert mod.name == "Fishery - Modding Library"
+    assert mod.authors == ["bradson"]
+    assert mod.supported_versions == {"1.2", "1.3", "1.4", "1.5"}
+    assert mod.valid
 
 
 def test_parse_required_invalid() -> None:
