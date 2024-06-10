@@ -224,6 +224,7 @@ class RuledMod(ListedMod):
     valid: bool = True
 
     mod_version: str = ""
+    mod_icon_path: Path | None = None
     url: str = ""
 
     about_rules: BaseRules = field(default_factory=BaseRules)
