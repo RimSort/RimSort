@@ -96,8 +96,9 @@ def _parse_required(mod_data: dict[str, Any], mod: ListedMod) -> ListedMod:
     # Check if the package id is a known DLC package id
     if mod.package_id in get_dlc_packageid_appid_map():
         logger.info(f"Detected known Ludeon package id: {mod.package_id}.")
-        mod = LudeonMod(mod)
-        mod.steam_app_id = int(get_dlc_packageid_appid_map()[mod.package_id])
+        mod = LudeonMod(
+            **vars(mod), steam_app_id=int(get_dlc_packageid_appid_map()[mod.package_id])
+        )
 
         mod.name = RIMWORLD_DLC_METADATA[str(mod.steam_app_id)]["name"]
         mod.description = RIMWORLD_DLC_METADATA[str(mod.steam_app_id)]["description"]
@@ -123,8 +124,7 @@ def _parse_required(mod_data: dict[str, Any], mod: ListedMod) -> ListedMod:
                     f"Found steamAppId '{steam_app_id}' was not a valid integer. Treating {mod.package_id} as a normal mod."
                 )
         else:
-            mod = LudeonMod(mod)
-            mod.steam_app_id = steam_app_id_int
+            mod = LudeonMod(**vars(mod), steam_app_id=steam_app_id_int)
             logger.info(
                 f"Found steam app id '{mod.steam_app_id}' for suspected ludeon mod '{mod.package_id}'. Treating as Ludeon mod."
             )

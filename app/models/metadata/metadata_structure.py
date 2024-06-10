@@ -238,12 +238,6 @@ class LudeonMod(RuledMod):
     mod_type = ModType.LUDEON
     steam_app_id: int = -1
 
-    def __init__(self, listed_mod: ListedMod) -> None:
-        if isinstance(listed_mod, ListedMod):
-            self.__dict__ = listed_mod.__dict__
-        else:
-            raise ValueError("listed_mod must be a ListedMod object.")
-
 
 @dataclass
 class SteamMod(RuledMod):
@@ -254,9 +248,6 @@ class SteamMod(RuledMod):
         published_file_id (int): The published file id of the mod.
         mod_type (ModType): The type of the mod.
     """
-
-    def __init__(self, ruled_mod: RuledMod) -> None:
-        self.__dict__ = ruled_mod.__dict__
 
     @property
     def mod_type(self) -> ModType:
@@ -297,9 +288,6 @@ class LocalMod(RuledMod):
         mod_type (ModType): The type of the mod.
     """
 
-    def __init__(self, ruled_mod: RuledMod) -> None:
-        self.__dict__ = ruled_mod.__dict__
-
     @property
     def mod_type(self) -> ModType:
         return ModType.LOCAL
@@ -308,9 +296,6 @@ class LocalMod(RuledMod):
 @dataclass
 class GitMod(RuledMod):
     """A mod which is hosted on Git."""
-
-    def __init__(self, ruled_mod: RuledMod) -> None:
-        self.__dict__ = ruled_mod.__dict__
 
     @property
     def mod_type(self) -> ModType:
