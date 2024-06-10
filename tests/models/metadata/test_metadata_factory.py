@@ -9,51 +9,66 @@ from app.models.metadata.metadata_structure import LudeonMod, RuledMod
 from app.utils.xml import xml_path_to_json
 
 
-def test_value_extractor() -> None:
-    # Test case 1: input is a string
-    input_str_1 = "Hello, World!"
-    assert value_extractor(input_str_1) == input_str_1
+def test_value_extractor_string() -> None:
+    # Test case: input is a string
+    input_str = "Hello, World!"
+    assert value_extractor(input_str) == input_str
 
-    # Test case 2: input is a list
-    input_list_2 = ["apple", "banana", "cherry"]
-    assert value_extractor(input_list_2) == input_list_2
 
-    # Test case 3: input is a dictionary with "li" key
-    input_dict_3 = {"li": ["apple", "banana", "cherry"]}
-    assert value_extractor(input_dict_3) == input_dict_3["li"]
+def test_value_extractor_list() -> None:
+    # Test case: input is a list
+    input_list = ["apple", "banana", "cherry"]
+    assert value_extractor(input_list) == input_list
 
-    # Test case 4: input is a dictionary with single key
-    input_dict_4 = {"key": ["apple", "banana", "cherry"]}
-    assert value_extractor(input_dict_4) == input_dict_4["key"]
 
-    # Test case 5: input is a dictionary string value
-    input_dict_5 = {"key": "apple"}
-    assert value_extractor(input_dict_5) == input_dict_5["key"]
+def test_value_extractor_dict_li() -> None:
+    # Test case: input is a dictionary with "li" key
+    input_dict = {"li": ["apple", "banana", "cherry"]}
+    assert value_extractor(input_dict) == input_dict["li"]
 
-    # Test case 6: input is a dictionary with multiple keys
-    input_dict_6 = {"li": "value", "key2": "value2"}
+
+def test_value_extractor_dict_single_key() -> None:
+    # Test case: input is a dictionary with single key
+    input_dict = {"key": ["apple", "banana", "cherry"]}
+    assert value_extractor(input_dict) == input_dict["key"]
+
+
+def test_value_extractor_dict_string_value() -> None:
+    # Test case: input is a dictionary string value
+    input_dict = {"key": "apple"}
+    assert value_extractor(input_dict) == input_dict["key"]
+
+
+def test_value_extractor_dict_multiple_keys() -> None:
+    # Test case: input is a dictionary with multiple keys
+    input_dict = {"li": "value", "key2": "value2"}
     try:
-        value_extractor(input_dict_6)
+        value_extractor(input_dict)
         assert False, "MalformedDataException not raised"
     except MalformedDataException:
         pass
 
-    # Test case 7: input is a dictionary with "li" key. Only one value list
-    input_dict_7 = {"li": ["apple"]}
-    assert value_extractor(input_dict_7) == input_dict_7["li"]
 
-    # Test case 8: input is a dictionary with "li" key. Only one value
-    input_dict_8 = {"li": "apple"}
-    assert value_extractor(input_dict_8) == input_dict_8["li"]
+def test_value_extractor_dict_li_one_value_list() -> None:
+    # Test case: input is a dictionary with "li" key. Only one value list
+    input_dict = {"li": ["apple"]}
+    assert value_extractor(input_dict) == input_dict["li"]
 
-    # Test case 9: Ignore if no matching field
-    input_dict_9 = {"@IgnoreIfNoMatchingField": "True", "#text": "input text"}
-    assert value_extractor(input_dict_9) == input_dict_9["#text"]
 
-def test_parse_required_ludeon() -> None:
-    # Test parse required using data from data folder
+def test_value_extractor_dict_li_one_value() -> None:
+    # Test case: input is a dictionary with "li" key. Only one value
+    input_dict = {"li": "apple"}
+    assert value_extractor(input_dict) == input_dict["li"]
 
-    # Test case 1: Ludeon Core
+
+def test_value_extractor_ignore_if_no_matching_field() -> None:
+    # Test case: Ignore if no matching field
+    input_dict = {"@IgnoreIfNoMatchingField": "True", "#text": "input text"}
+    assert value_extractor(input_dict) == input_dict["#text"]
+
+
+def test__parse_required_ludeon_core() -> None:
+    # Test parse required using data from data folder - Ludeon Core
     path = Path("tests/data/mod_examples/Data/Core/About/About.xml")
     mod_data = xml_path_to_json(str(path))["ModMetaData"]
     mod = _parse_required(mod_data, RuledMod())
@@ -64,7 +79,9 @@ def test_parse_required_ludeon() -> None:
     assert mod.steam_app_id == 294100
     assert mod.valid
 
-    # Test case 2: Ludeon Royalty
+
+def test__parse_required_ludeon_royalty() -> None:
+    # Test parse required using data from data folder - Ludeon Royalty
     path = Path("tests/data/mod_examples/Data/Royalty/About/About.xml")
     mod_data = xml_path_to_json(str(path))["ModMetaData"]
     mod = _parse_required(mod_data, RuledMod())
@@ -76,7 +93,9 @@ def test_parse_required_ludeon() -> None:
     assert mod.supported_versions == {"1.5"}
     assert mod.valid
 
-    # Test case 3 Ludeon Biotech
+
+def test__parse_required_ludeon_biotech() -> None:
+    # Test parse required using data from data folder - Ludeon Biotech
     path = Path("tests/data/mod_examples/Data/Biotech/About/About.xml")
     mod_data = xml_path_to_json(str(path))["ModMetaData"]
     mod = _parse_required(mod_data, RuledMod())
@@ -88,7 +107,9 @@ def test_parse_required_ludeon() -> None:
     assert mod.supported_versions == {"1.5"}
     assert mod.valid
 
-    # Test case - Future DLC (Unknown dlc not in constants). Has valid steam app id
+
+def test__parse_required_future_dlc() -> None:
+    # Test parse required using data from data folder - Future DLC (Unknown dlc not in constants). Has valid steam app id
     path = Path("tests/data/mod_examples/Data/FutureDLC/About/About.xml")
     mod_data = xml_path_to_json(str(path))["ModMetaData"]
     mod = _parse_required(mod_data, RuledMod())
@@ -98,7 +119,7 @@ def test_parse_required_ludeon() -> None:
     assert mod.valid
 
 
-def test_parse_required_non_ludeon() -> None:
+def test__parse_required_local_fishery() -> None:
     # Test case: Fishery mod
     path = Path("tests/data/mod_examples/Local/Fishery/About/About.xml")
     mod_data = xml_path_to_json(str(path))["ModMetaData"]
