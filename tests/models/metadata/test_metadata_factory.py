@@ -2,11 +2,16 @@ from pathlib import Path
 
 from app.models.metadata.metadata_factory import (
     _parse_required,
+    create_base_rules,
     create_mod_dependency,
     match_version,
     value_extractor,
 )
-from app.models.metadata.metadata_structure import LudeonMod, RuledMod
+from app.models.metadata.metadata_structure import (
+    CaseInsensitiveSet,
+    LudeonMod,
+    RuledMod,
+)
 from app.utils.xml import xml_path_to_json
 
 
@@ -188,3 +193,16 @@ def test_create_mod_dependency_missing_fields() -> None:
     assert mod.package_id == "com.example.mod"
     assert mod.name == "Unknown Mod Name"
     assert mod.workshop_url == ""
+
+
+def test_create_base_rules_ludeon_core() -> None:
+    # Test case: Ludeon Core
+    path = Path("tests/data/mod_examples/Data/Core/About/About.xml")
+    mod_data = xml_path_to_json(str(path))["ModMetaData"]
+    rules = create_base_rules(mod_data, "1.5")
+
+    assert rules.dependencies == {}
+    assert rules.load_before == CaseInsensitiveSet(
+        {"ludeon.rimworld.ideology", "ludeon.rimworld.royalty"}
+    )
+    assert rules.load_after == CaseInsensitiveSet()

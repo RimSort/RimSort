@@ -7,11 +7,14 @@ from typing import Any, Sequence
 from loguru import logger
 
 from app.models.metadata.metadata_structure import (
+    BaseRules,
+    CaseInsensitiveSet,
     CaseInsensitiveStr,
     DependencyMod,
     ListedMod,
     LudeonMod,
     RuledMod,
+    Rules,
 )
 from app.utils.constants import RIMWORLD_DLC_METADATA
 from app.utils.xml import xml_path_to_json
@@ -29,7 +32,7 @@ class MalformedDataException(Exception):
 
 def value_extractor(
     input: dict[str, str] | dict[str, list[str]] | Sequence[str] | str,
-) -> str | list[str] | dict[str, str] | dict[str, list[str]]:
+) -> str | list[Any] | dict[str, str] | dict[str, list[str]]:
     """
     Extract the value from a mod_data entry.
     Stops at the outermost list or string.
@@ -57,7 +60,7 @@ def value_extractor(
 
 
 def match_version(
-    input: dict[str, str], target_version: str, stop_at_first: bool = False
+    input: dict[str, Any], target_version: str, stop_at_first: bool = False
 ) -> tuple[bool, None | list[Any]]:
     """Attempts to match an input key with the target version using regex.
 
@@ -235,6 +238,89 @@ def _parse_optional(
     # Skip descriptionsByVersion
 
     raise NotImplementedError
+
+
+def create_base_rules(
+    mod_data: dict[str, Any], target_version: str
+) -> BaseRules | Rules:
+    rules = BaseRules()
+
+    # Dependencies
+    mod_dependencies = value_extractor(mod_data.get("modDependencies", []))
+    mod_dependencies = (
+        mod_dependencies if isinstance(mod_dependencies, list) else [mod_dependencies]
+    )
+    versioned_mod_dependencies = value_extractor(
+        mod_data.get("modDependenciesByVersion", {})
+    )
+
+    if isinstance(versioned_mod_dependencies, dict):
+        _, dependencies = match_version(versioned_mod_dependencies, target_version)
+        if dependencies:
+            mod_dependencies.extend(dependencies)
+
+    for dependency in mod_dependencies:
+        if isinstance(dependency, dict):
+            dep = create_mod_dependency(dependency)
+
+            if dep.package_id in rules.dependencies:
+                logger.warning(
+                    f"Duplicate dependency found: {dep.package_id}. Skipping."
+                )
+            else:
+                rules.dependencies[dep.package_id] = dep
+        else:
+            logger.warning(
+                f"Skipping invalid dependency: {dependency}. This mod may be invalid."
+            )
+
+    def load_operations(
+        mod_data: dict[str, Any], key: str, force_key: str, target_version: str
+    ) -> CaseInsensitiveSet:
+        load = value_extractor(mod_data.get(key, []))
+        load = load if isinstance(load, list) else [load]
+
+        loadByVersion = value_extractor(mod_data.get(f"{key}ByVersion", {}))
+        if isinstance(loadByVersion, dict):
+            _, load_versioned = match_version(loadByVersion, target_version)
+            if load_versioned:
+                load.extend(load_versioned)
+
+        forceLoad = value_extractor(mod_data.get(force_key, []))
+        forceLoad = forceLoad if isinstance(forceLoad, list) else [forceLoad]
+        load.extend(forceLoad)
+
+        return CaseInsensitiveSet(load)
+
+    # Load Before
+    rules.load_before = load_operations(
+        mod_data, "loadBefore", "forceLoadBefore", target_version
+    )
+
+    # Load After
+    rules.load_after = load_operations(
+        mod_data, "loadAfter", "forceLoadAfter", target_version
+    )
+
+    # incompatibleWith
+    incompatible_with = value_extractor(mod_data.get("incompatibleWith", []))
+    incompatible_with = (
+        incompatible_with
+        if isinstance(incompatible_with, list)
+        else [incompatible_with]
+    )
+
+    incompatible_withByVersion = value_extractor(
+        mod_data.get("incompatibleWithByVersion", {})
+    )
+    if isinstance(incompatible_withByVersion, dict):
+        _, incompatibles = match_version(incompatible_withByVersion, target_version)
+        if incompatibles:
+            incompatible_with.extend(incompatibles)
+
+    rules.incompatible_with = CaseInsensitiveSet(incompatible_with)
+
+    return rules
 
 
 def create_mod_dependency(input_dict: dict[str, str]) -> DependencyMod:
