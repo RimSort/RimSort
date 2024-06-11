@@ -307,23 +307,23 @@ class GitMod(RuledMod):
     git_url: str = ""
 
 
-class SubExternalRule(msgspec.Struct):
+class SubExternalRule(msgspec.Struct, omit_defaults=True):
     name: list[str] | str
     comment: list[str] | str = ""
 
 
-class SubExternalBoolRule(msgspec.Struct):
+class SubExternalBoolRule(msgspec.Struct, omit_defaults=True):
     value: bool
     comment: list[str] | str = ""
 
 
-class ExternalRule(msgspec.Struct):
+class ExternalRule(msgspec.Struct, omit_defaults=True):
     loadAfter: dict[str, SubExternalRule] = {}
     loadBefore: dict[str, SubExternalRule] = {}
     loadTop: SubExternalBoolRule | None = None
     loadBottom: SubExternalBoolRule | None = None
 
 
-class ExternalRulesSchema(msgspec.Struct):
+class ExternalRulesSchema(msgspec.Struct, omit_defaults=True):
     timestamp: int
     rules: dict[str, ExternalRule]
