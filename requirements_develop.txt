@@ -1,6 +1,7 @@
 ruff==0.4.7
 pytest==8.2.2
 mypy
+types-beautifulsoup4
 types-psutil
 #types-pyside6
 types-requests
