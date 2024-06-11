@@ -4,13 +4,18 @@ from app.models.metadata.metadata_factory import (
     _parse_required,
     create_base_rules,
     create_mod_dependency,
+    get_rules_db,
     match_version,
     value_extractor,
 )
 from app.models.metadata.metadata_structure import (
     CaseInsensitiveSet,
+    ExternalRule,
+    ExternalRulesSchema,
     LudeonMod,
     RuledMod,
+    SubExternalBoolRule,
+    SubExternalRule,
 )
 from app.utils.xml import xml_path_to_json
 
@@ -206,3 +211,41 @@ def test_create_base_rules_ludeon_core() -> None:
         {"ludeon.rimworld.ideology", "ludeon.rimworld.royalty"}
     )
     assert rules.load_after == CaseInsensitiveSet()
+
+
+def test_get_rules_db_large_db() -> None:
+    path = Path("tests/data/dbs/large_rules.json")
+    _ = get_rules_db(path)
+
+
+def test_get_rules_db_values() -> None:
+    path = Path("tests/data/dbs/userRules.json")
+    rules = get_rules_db(path)
+
+    expected_value = ExternalRulesSchema(
+        timestamp=1715795801,
+        rules={
+            "test.test1": ExternalRule(
+                loadAfter={},
+                loadBefore={
+                    "a.a": SubExternalRule(name="AA", comment="test1 load before"),
+                    "b.b": SubExternalRule(name="aa", comment="test2 load before"),
+                    "c.c.core": SubExternalRule(name="test3", comment=""),
+                },
+                loadTop=None,
+                loadBottom=None,
+            ),
+            "test.test2": ExternalRule(
+                loadAfter={
+                    "a.a": SubExternalRule(name="AA", comment="test1 load before"),
+                    "b.b": SubExternalRule(name="aa", comment="test2 load before"),
+                    "c.c.core": SubExternalRule(name="test3", comment=""),
+                },
+                loadBefore={},
+                loadTop=None,
+                loadBottom=SubExternalBoolRule(value=True, comment="It is known."),
+            ),
+        },
+    )
+
+    assert rules == expected_value

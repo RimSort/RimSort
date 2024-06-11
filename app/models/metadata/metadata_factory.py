@@ -1,9 +1,11 @@
+import os
 import re
 import traceback
 from functools import cache
 from pathlib import Path
 from typing import Any, Sequence
 
+import msgspec
 from loguru import logger
 
 from app.models.metadata.metadata_structure import (
@@ -11,6 +13,7 @@ from app.models.metadata.metadata_structure import (
     CaseInsensitiveSet,
     CaseInsensitiveStr,
     DependencyMod,
+    ExternalRulesSchema,
     ListedMod,
     LudeonMod,
     RuledMod,
@@ -237,6 +240,8 @@ def _parse_optional(
 
     # Skip descriptionsByVersion
 
+    mod.about_rules = create_base_rules(mod_data, target_version)
+
     raise NotImplementedError
 
 
@@ -361,9 +366,35 @@ def create_listed_mod_from_xml(
         logger.error(f"Could not parse {mod_xml_path}.")
         return False, ListedMod(valid=False)
 
-    return create_listed_mod(mod_data, target_version)
+    valid, mod = create_listed_mod(mod_data, target_version)
+
+    mod.mod_path = Path(mod_xml_path)
+
+    return valid, mod
 
 
 @cache
 def get_dlc_packageid_appid_map() -> dict[str, str]:
     return {dlc["packageid"]: appid for appid, dlc in RIMWORLD_DLC_METADATA.items()}
+
+
+def get_rules_db(
+    path: Path,
+) -> ExternalRulesSchema | None:
+    logger.info(f"Checking Rules DB at: {path}")
+    if os.path.exists(
+        path
+    ):  # Look for cached data & load it if available
+        logger.info(
+            "DB exists!",
+        )
+        with open(path, encoding="utf-8") as f:
+            json_string = f.read()
+            logger.info("Reading info from rules DB")
+            rule_data = msgspec.json.decode(json_string, type=ExternalRulesSchema)
+            total_entries = len(rule_data.rules)
+            logger.info(f"Loaded {total_entries} additional rules")
+            return rule_data
+    else:  # Assume db_data_missing
+        logger.warning("Rules DB not found at specified path.")
+        return None

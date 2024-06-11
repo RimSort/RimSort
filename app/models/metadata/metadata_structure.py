@@ -7,6 +7,8 @@ from pathlib import Path
 from typing import AbstractSet, Any, Iterable, Iterator
 from uuid import uuid4
 
+import msgspec
+
 
 class ModType(Enum):
     LOCAL = "Local"
@@ -303,3 +305,25 @@ class GitMod(RuledMod):
         return ModType.GIT
 
     git_url: str = ""
+
+
+class SubExternalRule(msgspec.Struct):
+    name: list[str] | str
+    comment: list[str] | str = ""
+
+
+class SubExternalBoolRule(msgspec.Struct):
+    value: bool
+    comment: list[str] | str = ""
+
+
+class ExternalRule(msgspec.Struct):
+    loadAfter: dict[str, SubExternalRule] = {}
+    loadBefore: dict[str, SubExternalRule] = {}
+    loadTop: SubExternalBoolRule | None = None
+    loadBottom: SubExternalBoolRule | None = None
+
+
+class ExternalRulesSchema(msgspec.Struct):
+    timestamp: int
+    rules: dict[str, ExternalRule]
