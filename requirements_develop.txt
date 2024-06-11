@@ -1,5 +1,5 @@
-ruff==0.4.7
 pytest==8.2.2
+ruff==0.4.8
 mypy
 types-beautifulsoup4
 types-psutil
