@@ -4,7 +4,7 @@ from json import dumps, loads
 from pathlib import Path
 from shutil import copytree, rmtree
 from traceback import format_exc
-from typing import Optional
+from typing import Any, Optional
 from zipfile import ZipFile
 
 from loguru import logger
@@ -243,7 +243,7 @@ class MainWindow(QMainWindow):
 
     def __backup_existing_instance(self, instance_name: str) -> None:
         def compress_instance_folder_to_archive(
-            instance_data_to_save: dict, instance_path: str, output_path: str
+            instance_data_to_save: dict[str, Any], instance_path: str, output_path: str
         ) -> None:
             # Compress instance folder to archive.
             # Preserve folder structure.
@@ -285,14 +285,18 @@ class MainWindow(QMainWindow):
             instance_name = new_instance_name
 
         # Determine instance data to save
+        if instance_data is None:
+            logger.error(f"Instance [{instance_name}] not found in Settings")
+            return
+
         instance_data_to_save = {
             "name": instance_name,
-            "game_folder": instance_data.get("game_folder", ""),
-            "config_folder": instance_data.get("config_folder", ""),
-            "local_folder": instance_data.get("local_folder", ""),
-            "workshop_folder": instance_data.get("workshop_folder", ""),
-            "run_args": instance_data.get("run_args", []),
-            "steamcmd_install_path": instance_data.get("steamcmd_install_path", ""),
+            "game_folder": instance_data.game_folder,
+            "config_folder": instance_data.config_folder,
+            "local_folder": instance_data.local_folder,
+            "workshop_folder": instance_data.workshop_folder,
+            "run_args": instance_data.run_args,
+            "steamcmd_install_path": instance_data.steamcmd_install_path,
         }
         # Prompt user to select output path for instance archive
         output_path = show_dialogue_file(
@@ -325,7 +329,7 @@ class MainWindow(QMainWindow):
     def __restore_instance_from_archive(self) -> None:
         def extract_instance_folder_from_archive(
             instance_name: str, instances_path: str, archive_path: str
-        ) -> str:
+        ) -> None:
             logger.info(f"Extracting instance folder from archive: {archive_path}")
             # Extract instance folder from archive.
             # Parse the "instance.json" file to get the instance data.
@@ -358,6 +362,9 @@ class MainWindow(QMainWindow):
             _dir=str(AppInfo().app_storage_folder),
             _filter="Zip files (*.zip)",
         )
+
+        if input_path is None:
+            input_path = ""
         # Grab the instance name from the archive's "instance.json" file and extract archive
         try:
             with ZipFile(input_path, "r") as archive:
@@ -410,22 +417,15 @@ class MainWindow(QMainWindow):
         # Check that the instance folder exists. If it does, update Settings with the instance data
         instance_path = str(AppInfo().app_storage_folder / "instances" / instance_name)
         if os.path.exists(instance_path):
-            self.settings_controller.settings.instances[instance_name] = {
-                "game_folder": (instance_game_folder if instance_game_folder else ""),
-                "config_folder": (
-                    instance_config_folder if instance_config_folder else ""
-                ),
-                "local_folder": instance_local_folder if instance_local_folder else "",
-                "workshop_folder": (
-                    instance_workshop_folder if instance_workshop_folder else ""
-                ),
-                "run_args": instance_run_args if instance_run_args else [],
-                "steamcmd_install_path": (
-                    instance_steamcmd_install_path
-                    if instance_steamcmd_install_path
-                    else ""
-                ),
-            }
+            self.settings_controller.set_instance(
+                instance_name=instance_name,
+                game_folder=instance_game_folder,
+                config_folder=instance_config_folder,
+                local_folder=instance_local_folder,
+                workshop_folder=instance_workshop_folder,
+                run_args=instance_run_args,
+                steamcmd_install_path=instance_steamcmd_install_path,
+            )
             self.__switch_to_instance(instance_name)
 
     def __clone_existing_instance(self, existing_instance_name: str) -> None:
@@ -542,30 +542,30 @@ class MainWindow(QMainWindow):
         current_instances = list(self.settings_controller.settings.instances.keys())
         existing_instance_game_folder = self.settings_controller.settings.instances[
             existing_instance_name
-        ]["game_folder"]
+        ].game_folder
         game_folder_name = os.path.split(existing_instance_game_folder)[1]
         existing_instance_local_folder = self.settings_controller.settings.instances[
             existing_instance_name
-        ]["local_folder"]
+        ].local_folder
         local_folder_name = os.path.split(existing_instance_local_folder)[1]
         existing_instance_workshop_folder = self.settings_controller.settings.instances[
             existing_instance_name
-        ]["workshop_folder"]
+        ].workshop_folder
         existing_instance_config_folder = self.settings_controller.settings.instances[
             existing_instance_name
-        ]["config_folder"]
-        existing_instance_run_args = self.settings_controller.settings.instances.get(
-            existing_instance_name, {}
-        ).get("run_args", [])
+        ].config_folder
+        existing_instance_run_args = self.settings_controller.settings.instances[
+            existing_instance_name
+        ].run_args
         existing_instance_steamcmd_install_path = (
-            self.settings_controller.settings.instances[existing_instance_name][
-                "steamcmd_install_path"
-            ]
+            self.settings_controller.settings.instances[
+                existing_instance_name
+            ].steamcmd_install_path
         )
         existing_instance_steam_client_integration = (
-            self.settings_controller.settings.instances[existing_instance_name].get(
-                "steam_client_integration"
-            )
+            self.settings_controller.settings.instances[
+                existing_instance_name
+            ].steam_client_integration
         )
         # Sanitize the input so that it does not produce any KeyError down the road
         new_instance_name = self.__ask_for_new_instance_name()
@@ -660,7 +660,7 @@ class MainWindow(QMainWindow):
                                 text=f"Workshop mods folder at [{existing_instance_workshop_folder}] not found.",
                             )
                     elif answer == "Keep Workshop Folder":
-                        target_workshop_folder = existing_instance_workshop_folder
+                        target_workshop_folder = str(existing_instance_workshop_folder)
                 # If the instance has a 'steamcmd' folder, clone it to the new instance
                 steamcmd_install_path = str(
                     Path(existing_instance_steamcmd_install_path) / "steamcmd"
@@ -735,7 +735,7 @@ class MainWindow(QMainWindow):
                 )
 
     def __create_new_instance(
-        self, instance_name: str = None, instance_data: dict = None
+        self, instance_name: str = "", instance_data: dict[str, Any] = {}
     ) -> None:
         if not instance_name:
             # Sanitize the input so that it does not produce any KeyError down the road
@@ -774,17 +774,19 @@ class MainWindow(QMainWindow):
                 run_args.extend(generated_instance_run_args)
                 run_args.extend(instance_data.get("run_args", []))
             # Add new instance to Settings
-            self.settings_controller.settings.instances[instance_name] = {
-                "game_folder": instance_data.get("game_folder", ""),
-                "local_folder": instance_data.get("local_folder", ""),
-                "workshop_folder": instance_data.get("workshop_folder", ""),
-                "config_folder": instance_data.get("config_folder", ""),
-                "run_args": run_args,
-                "steamcmd_install_path": instance_path,
-                "steam_client_integration": instance_data.get(
-                    "steam_client_integration"
+            self.settings_controller.set_instance(
+                instance_name=instance_name,
+                game_folder=instance_data.get("game_folder", ""),
+                local_folder=instance_data.get("local_folder", ""),
+                workshop_folder=instance_data.get("workshop_folder", ""),
+                config_folder=instance_data.get("config_folder", ""),
+                run_args=run_args,
+                steamcmd_install_path=instance_path,
+                steam_client_integration=instance_data.get(
+                    "steam_client_integration", False
                 ),
-            }
+            )
+
             # Save settings
             self.settings_controller.settings.save()
             # Switch to new instance and initialize content
@@ -858,16 +860,18 @@ class MainWindow(QMainWindow):
             targets=[
                 str(
                     Path(
-                        self.settings_controller.settings.instances[current_instance][
-                            "game_folder"
-                        ]
+                        self.settings_controller.settings.instances[
+                            current_instance
+                        ].game_folder
                     )
                     / "Data"
                 ),
-                self.settings_controller.settings.instances[current_instance],
-                self.settings_controller.settings.instances[current_instance][
-                    "workshop_folder"
-                ],
+                self.settings_controller.settings.instances[
+                    current_instance
+                ].local_folder,
+                self.settings_controller.settings.instances[
+                    current_instance
+                ].workshop_folder,
             ],
         )
         # Connect watchdog to MetadataManager
