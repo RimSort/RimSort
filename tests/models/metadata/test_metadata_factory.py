@@ -232,8 +232,8 @@ def test_get_rules_db_values() -> None:
                     "b.b": SubExternalRule(name="aa", comment="test2 load before"),
                     "c.c.core": SubExternalRule(name="test3", comment=""),
                 },
-                loadTop=None,
-                loadBottom=None,
+                loadTop=SubExternalBoolRule(False),
+                loadBottom=SubExternalBoolRule(),
             ),
             "test.test2": ExternalRule(
                 loadAfter={
@@ -242,7 +242,7 @@ def test_get_rules_db_values() -> None:
                     "c.c.core": SubExternalRule(name="test3", comment=""),
                 },
                 loadBefore={},
-                loadTop=None,
+                loadTop=SubExternalBoolRule(False),
                 loadBottom=SubExternalBoolRule(value=True, comment="It is known."),
             ),
         },

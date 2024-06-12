@@ -309,19 +309,19 @@ class GitMod(RuledMod):
 
 class SubExternalRule(msgspec.Struct, omit_defaults=True):
     name: list[str] | str
-    comment: list[str] | str = ""
+    comment: list[str] | str = msgspec.field(default_factory=str)
 
 
 class SubExternalBoolRule(msgspec.Struct, omit_defaults=True):
-    value: bool
-    comment: list[str] | str = ""
+    value: bool = False
+    comment: list[str] | str = msgspec.field(default_factory=str)
 
 
 class ExternalRule(msgspec.Struct, omit_defaults=True):
     loadAfter: dict[str, SubExternalRule] = {}
     loadBefore: dict[str, SubExternalRule] = {}
-    loadTop: SubExternalBoolRule | None = None
-    loadBottom: SubExternalBoolRule | None = None
+    loadTop: SubExternalBoolRule = msgspec.field(default_factory=SubExternalBoolRule)
+    loadBottom: SubExternalBoolRule = msgspec.field(default_factory=SubExternalBoolRule)
 
 
 class ExternalRulesSchema(msgspec.Struct, omit_defaults=True):
