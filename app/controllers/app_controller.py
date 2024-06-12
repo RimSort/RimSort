@@ -16,7 +16,7 @@ from app.views.settings_dialog import SettingsDialog
 
 
 class AppController(QObject):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         self.app = QApplication(sys.argv)
@@ -47,7 +47,7 @@ class AppController(QObject):
         self.steamcmd_wrapper = SteamcmdInterface.instance(
             self.settings_controller.settings.instances[
                 self.settings_controller.settings.current_instance
-            ]["steamcmd_install_path"],
+            ].steamcmd_install_path,
             self.settings_controller.settings.steamcmd_validate_downloads,
         )
 
