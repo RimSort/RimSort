@@ -252,6 +252,10 @@ class MainWindow(QMainWindow):
                 logger.info(f"Compressing instance folder to archive: {output_path}")
                 with ZipFile(output_path, "w") as archive:
                     for root, dirs, files in os.walk(instance_path):
+                        # Skip windows junctions (and symlinks)
+                        if Path(root).absolute() != Path(root).resolve():
+                            logger.debug(f"Skipping symlinked directory: {root}")
+                            continue
                         for _dir in dirs:
                             dir_path = os.path.join(root, _dir)
                             archive.write(
