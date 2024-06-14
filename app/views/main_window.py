@@ -7,7 +7,6 @@ from traceback import format_exc
 from typing import Any, Optional
 from zipfile import ZipFile
 
-import debugpy
 from loguru import logger
 from lxml import etree, objectify
 from PySide6.QtCore import QSize, QTimer
@@ -246,7 +245,6 @@ class MainWindow(QMainWindow):
         def compress_instance_folder_to_archive(
             instance_data_to_save: dict[str, Any], instance_path: str, output_path: str
         ) -> None:
-            debugpy.debug_this_thread()
             # Compress instance folder to archive.
             # Preserve folder structure.
             # Overwrite if exists.
