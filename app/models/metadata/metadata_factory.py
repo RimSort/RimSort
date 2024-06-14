@@ -112,6 +112,10 @@ def create_listed_mod(
 def _set_mod_invalid(mod: ListedMod, message: str) -> ListedMod:
     """
     Set the mod to be invalid and log a warning message.
+
+    :param mod: ListedMod to be set as valid False.
+    :param message: The message to be logged as a warning
+    :return: The ListedMod now set as invalid.
     """
     mod.valid = False
     logger.warning(message)
@@ -121,6 +125,10 @@ def _set_mod_invalid(mod: ListedMod, message: str) -> ListedMod:
 def _parse_required(mod_data: dict[str, Any], mod: ListedMod) -> ListedMod:
     """
     Parse the required fields from the mod_data and set them on the mod object.
+
+    :param mod_data: Dictionary with string keys to be used as the data source.
+    :param mod: ListedMod the Listed mod that is the target of data being filled.
+    :return: The filled out ListedMod
     """
     package_id = value_extractor(mod_data.get("packageId", False))
     if isinstance(package_id, str):
