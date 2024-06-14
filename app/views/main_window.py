@@ -7,6 +7,7 @@ from traceback import format_exc
 from typing import Any, Optional
 from zipfile import ZipFile
 
+import debugpy
 from loguru import logger
 from lxml import etree, objectify
 from PySide6.QtCore import QSize, QTimer
@@ -245,16 +246,22 @@ class MainWindow(QMainWindow):
         def compress_instance_folder_to_archive(
             instance_data_to_save: dict[str, Any], instance_path: str, output_path: str
         ) -> None:
+            debugpy.debug_this_thread()
             # Compress instance folder to archive.
             # Preserve folder structure.
             # Overwrite if exists.
             try:
                 logger.info(f"Compressing instance folder to archive: {output_path}")
                 with ZipFile(output_path, "w") as archive:
-                    for root, dirs, files in os.walk(instance_path):
+                    for root, dirs, files in os.walk(
+                        instance_path, topdown=True, followlinks=False
+                    ):
                         # Skip windows junctions (and symlinks)
                         if Path(root).absolute() != Path(root).resolve():
                             logger.debug(f"Skipping symlinked directory: {root}")
+                            # Prune the search
+                            dirs.clear()
+                            files.clear()
                             continue
                         for _dir in dirs:
                             dir_path = os.path.join(root, _dir)
