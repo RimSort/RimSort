@@ -323,6 +323,20 @@ class MainWindow(QMainWindow):
             )
             return
 
+        if os.path.exists(instance_controller.instance_folder_path):
+            answer = show_dialogue_conditional(
+                title="Instance folder exists",
+                text=f"Instance folder already exists: {instance_controller.instance_folder_path}",
+                information="Do you want to continue and replace the existing instance folder?",
+                button_text_override=[
+                    "Replace",
+                ],
+            )
+
+            if answer != "Replace":
+                logger.info("User cancelled instance extraction.")
+                return
+
         self.main_content_panel.do_threaded_loading_animation(
             target=partial(
                 instance_controller.extract_from_archive,
@@ -335,9 +349,7 @@ class MainWindow(QMainWindow):
         # Check that the instance folder exists. If it does, update Settings with the instance data
         if os.path.exists(instance_controller.instance_folder_path):
             steamcmd_link_path = str(
-                AppInfo().app_storage_folder
-                / "instances"
-                / instance_controller.instance.name
+                instance_controller.instance_folder_path
                 / "steam"
                 / "steamapps"
                 / "workshop"
@@ -345,10 +357,22 @@ class MainWindow(QMainWindow):
                 / "294100"
             )
 
-            # Authenticate paths. If they do not exist, clear them.
-            if os.path.exists(os.path.dirname(steamcmd_link_path)):
+            if os.path.exists(steamcmd_link_path):
+                logger.debug("Restoring steamcmd symlink...")
                 self.steamcmd_wrapper.check_symlink(
                     steamcmd_link_path, instance_controller.instance.local_folder
+                )
+
+            cleared_paths = instance_controller.validate_paths()
+            if cleared_paths:
+                logger.warning(
+                    f"Instance folder paths not found: {', '.join(cleared_paths)}"
+                )
+                show_warning(
+                    title="Invalid instance folder paths",
+                    text="Invalid instance folder paths",
+                    information="Some folder paths from the restored instance are invalid and were cleared. Please reconfigure them in the settings",
+                    details=f"Invalid paths: {', '.join(cleared_paths)}",
                 )
 
             self.settings_controller.set_instance(instance_controller.instance)
