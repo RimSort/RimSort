@@ -101,16 +101,12 @@ def show_dialogue_conditional(
         dialogue.setStandardButtons(QMessageBox.StandardButton.Cancel)
 
         # Add custom buttons
-
-        # Custom 1
-        custom_btn_1 = QPushButton(button_text_override[0])
-        custom_btn_1.setFixedWidth(custom_btn_1.sizeHint().width())
-        dialogue.addButton(custom_btn_1, QMessageBox.ButtonRole.ActionRole)
-        # Custom 2
-        custom_btn_2 = QPushButton(button_text_override[1])
-        custom_btn_2.setFixedWidth(custom_btn_2.sizeHint().width())
-        dialogue.addButton(custom_btn_2, QMessageBox.ButtonRole.ActionRole)
-        dialogue.setEscapeButton(QMessageBox.StandardButton.Cancel)
+        custom_btns = []
+        for btn_text in button_text_override:
+            custom_btn = QPushButton(btn_text)
+            custom_btn.setFixedWidth(custom_btn.sizeHint().width())
+            custom_btns.append(custom_btn)
+            dialogue.addButton(custom_btn, QMessageBox.ButtonRole.ActionRole)
     else:
         # Configure buttons
         dialogue.setStandardButtons(

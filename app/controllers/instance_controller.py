@@ -1,14 +1,18 @@
 import os
+import shutil
 from pathlib import Path
 from traceback import format_exc
-from typing import Self
+from typing import Any, Callable, Self
 from zipfile import ZipFile
 
 import msgspec
 from loguru import logger
 from PySide6.QtCore import QObject
 
-from app.models.dialogue import show_fatal_error, show_warning
+from app.models.dialogue import (
+    show_fatal_error,
+    show_warning,
+)
 from app.models.instance import Instance
 from app.utils.app_info import AppInfo
 
@@ -58,9 +62,7 @@ class InstanceController(QObject):
         try:
             with ZipFile(archive_path, "r") as archive:
                 self.from_bytes(archive.read("instance.json"))
-                self.instance.steamcmd_install_path = str(
-                    Path(self.instance_folder_path) / self.instance.name
-                )
+                self.instance.steamcmd_install_path = str(self.instance_folder_path)
         except Exception as e:
             logger.error(f"An error occurred while reading instance archive: {e}")
             show_fatal_error(
@@ -94,32 +96,52 @@ class InstanceController(QObject):
             steam_client_integration=steam_client_integration,
         )
 
-    def extract_from_archive(self, archive_path: str) -> None:
-        # Extract archive to instance folder.
-        # Overwrite if exists.
+    def extract_from_archive(self, archive_path: str, delete_old: bool = True) -> None:
+        """Extract the instance folder from the provided archive
 
+        Will overwrite the instance folder if it already exists.
+
+        :param archive_path: The path to the archive to extract
+        :type archive_path: str
+        """
         logger.info(f"Extracting instance folder from archive: {archive_path}")
         # Extract instance folder from archive.
         # Parse the "instance.json" file to get the instance data.
         # Use the "name" key from the instance data to use as the instance folder.
         # Replace if exists.
-        instance_folder = str(Path(self.instance_folder_path) / self.instance.name)
+
+        if os.path.exists(self.instance_folder_path) and delete_old:
+            logger.info(
+                "Deleting existing instance folder: {self.instance_folder_path}"
+            )
+
+            def ignore_extended_attributes(
+                func: Callable[[Any], Any], filename: str, exc_info: Any
+            ) -> None:
+                is_meta_file = os.path.basename(filename).startswith("._")
+                if not (func is os.unlink and is_meta_file):
+                    raise
+
+            try:
+                shutil.rmtree(
+                    self.instance_folder_path, onerror=ignore_extended_attributes
+                )
+            except Exception as e:
+                logger.error(
+                    f"An error occurred while deleting existing instance folder: {e}"
+                )
+
         try:
             logger.info(f"Extracting instance folder from archive: {archive_path}")
-            logger.info(f"Destination instance folder: {instance_folder}")
+            logger.info(f"Destination instance folder: {self.instance_folder_path}")
             with ZipFile(archive_path, "r") as archive:
                 for info in archive.infolist():
                     if info.filename == "instance.json":
                         continue
                     logger.debug(f"Extracting file: {info.filename}")
-                    archive.extract(info, path=instance_folder)
+                    archive.extract(info, path=self.instance_folder_path)
         except Exception as e:
             logger.error(f"An error occurred while extracting instance folder: {e}")
-            show_warning(
-                title="Error extracting instance",
-                text=f"An error occurred while extracting instance folder: {e}",
-                information="Please check the logs for more information.",
-            )
 
     def compress_to_archive(self, output_path: str) -> None:
         # Compress instance folder to archive.
@@ -165,6 +187,14 @@ class InstanceController(QObject):
                 information="Please check the logs for more information.",
                 details=format_exc(),
             )
+
+    def validate_paths(self) -> list[str]:
+        """Verify the paths of the instance
+
+        :return: A list of invalid paths
+        :rtype: list[str]
+        """
+        return self.instance.validate_paths()
 
     @property
     def instance_folder_path(self) -> Path:
