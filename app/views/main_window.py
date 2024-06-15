@@ -516,7 +516,8 @@ class MainWindow(QMainWindow):
             # Prompt user with the existing instance configuration and confirm that they would like to clone it
             answer = show_dialogue_confirmation(
                 title=f"Clone instance [{existing_instance_name}]",
-                text=f"Would you like to clone instance [{existing_instance_name}] to create new instance [{new_instance_name}]?"
+                text=f"Would you like to clone instance [{existing_instance_name}] to create new instance [{new_instance_name}]?\n"
+                + "This will clone the instance's data!"
                 + "\n\n",
                 information=f"Game folder:\n{existing_instance_game_folder if existing_instance_game_folder else '<None>'}\n"
                 + f"\nLocal folder:\n{existing_instance_local_folder if existing_instance_local_folder else '<None>'}\n"
@@ -669,6 +670,14 @@ class MainWindow(QMainWindow):
                         "steam_client_integration": existing_instance_steam_client_integration,
                     },
                 )
+        elif new_instance_name:
+            show_warning(
+                title="Error cloning instance",
+                text="Unable to clone instance.",
+                information="Please enter a valid, unique instance name. It cannot be 'Default' or empty.",
+            )
+        else:
+            logger.debug("User cancelled clone operation")
 
     def __create_new_instance(
         self, instance_name: str = "", instance_data: dict[str, Any] = {}
