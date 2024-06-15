@@ -1,5 +1,4 @@
 import json
-from dataclasses import dataclass, field
 from json import JSONDecodeError
 from os import path, rename
 from pathlib import Path
@@ -10,22 +9,9 @@ from typing import Any, Dict
 from loguru import logger
 from PySide6.QtCore import QObject
 
+from app.models.instance import Instance
 from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
-
-
-@dataclass
-class Instance:
-    name: str = "Default"
-    game_folder: str = ""
-    config_folder: str = ""
-    local_folder: str = ""
-    workshop_folder: str = ""
-    run_args: list[str] = field(default_factory=list)
-    steamcmd_install_path: str = str(
-        Path(AppInfo().app_storage_folder / "instances" / "Default")
-    )
-    steam_client_integration: bool = False
 
 
 class Settings(QObject):
@@ -706,7 +692,7 @@ class Settings(QObject):
             "todds_overwrite": self.todds_overwrite,
             "current_instance": self.current_instance,
             "instances": {
-                name: instance.__dict__ for name, instance in self.instances.items()
+                name: instance.as_dict() for name, instance in self.instances.items()
             },
             "github_username": self.github_username,
             "github_token": self.github_token,

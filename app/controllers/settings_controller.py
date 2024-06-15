@@ -266,7 +266,7 @@ class SettingsController(QObject):
             self.settings_dialog.switch_to_tab(tab_name)
         self.settings_dialog.show()
 
-    def set_instance(
+    def create_instance(
         self,
         instance_name: str,
         game_folder: str = "",
@@ -278,9 +278,9 @@ class SettingsController(QObject):
         steam_client_integration: bool = False,
     ) -> None:
         """
-        Set the instance with the provided name and paths.
+        Create and set the instance.
         """
-        self.settings.instances[instance_name] = Instance(
+        instance = Instance(
             name=instance_name,
             game_folder=game_folder,
             config_folder=config_folder,
@@ -290,6 +290,14 @@ class SettingsController(QObject):
             steamcmd_install_path=steamcmd_install_path,
             steam_client_integration=steam_client_integration,
         )
+
+        self.set_instance(instance)
+
+    def set_instance(self, instance: Instance) -> None:
+        """
+        Set the instance with the provided instance.
+        """
+        self.settings.instances[instance.name] = instance
 
     def _update_view_from_model(self) -> None:
         """
