@@ -181,12 +181,6 @@ class InstanceController(QObject):
                 logger.debug(f"Added instance data to archive: {self.instance}")
         except Exception as e:
             logger.error(f"An error occurred while compressing instance folder: {e}")
-            show_fatal_error(
-                title="Error compressing instance",
-                text=f"An error occurred while compressing instance folder: {e}",
-                information="Please check the logs for more information.",
-                details=format_exc(),
-            )
 
     def validate_paths(self) -> list[str]:
         """Verify the paths of the instance

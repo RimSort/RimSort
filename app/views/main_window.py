@@ -272,16 +272,24 @@ class MainWindow(QMainWindow):
         )
         logger.info(f"Selected path: {output_path}")
         if output_path:
-            self.main_content_panel.do_threaded_loading_animation(
-                gif_path=str(
-                    AppInfo().theme_data_folder / "default-icons" / "rimsort.gif"
-                ),
-                target=partial(
-                    instance_controller.compress_to_archive,
-                    output_path,
-                ),
-                text=f"Compressing [{instance_name}] instance folder to archive...",
-            )
+            try:
+                self.main_content_panel.do_threaded_loading_animation(
+                    gif_path=str(
+                        AppInfo().theme_data_folder / "default-icons" / "rimsort.gif"
+                    ),
+                    target=partial(
+                        instance_controller.compress_to_archive,
+                        output_path,
+                    ),
+                    text=f"Compressing [{instance_name}] instance folder to archive...",
+                )
+            except Exception as e:
+                show_fatal_error(
+                    title="Error compressing instance",
+                    text=f"An error occurred while compressing instance folder: {e}",
+                    information="Please check the logs for more information.",
+                    details=format_exc(),
+                )
         else:
             logger.warning("Backup cancelled: User cancelled selection...")
             return
