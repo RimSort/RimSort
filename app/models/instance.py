@@ -9,6 +9,35 @@ from app.utils.event_bus import EventBus
 
 
 class Instance(msgspec.Struct):
+    """A msgspec.Struct class representing an instance.
+
+    When an attribute is set, the settings_have_changed event is emitted.
+
+    :param name: The name of the instance
+    :type name: str
+
+    :param game_folder: The path to the game folder
+    :type game_folder: str
+
+    :param config_folder: The path to the config folder
+    :type config_folder: str
+
+    :param local_folder: The path to the local folder
+    :type local_folder: str
+
+    :param workshop_folder: The path to the workshop folder
+    :type workshop_folder: str
+
+    :param run_args: The run arguments of the instance
+    :type run_args: list[str]
+
+    :param steamcmd_install_path: The path to the SteamCMD install folder
+    :type steamcmd_install_path: str
+
+    :param steam_client_integration: Whether to integrate the Steam client with the instance
+    :type steam_client_integration: bool
+    """
+
     name: str = "Default"
     game_folder: str = ""
     config_folder: str = ""
