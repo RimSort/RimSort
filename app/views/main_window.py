@@ -189,6 +189,8 @@ class MainWindow(QMainWindow):
         # IF CHECK FOR UPDATE ON STARTUP...
         if self.settings_controller.settings.check_for_update_startup:
             self.main_content_panel.actions_slot("check_for_update")
+        # REFRESH CONFIGURED METADATA
+        self.main_content_panel._do_refresh(is_initial=is_initial)
         # CHECK FOR STEAMCMD SETUP
         if not os.path.exists(
             self.steamcmd_wrapper.steamcmd_prefix
@@ -198,8 +200,6 @@ class MainWindow(QMainWindow):
             self.steamcmd_wrapper.on_steamcmd_not_found()
         else:
             self.steamcmd_wrapper.setup = True
-        # REFRESH CONFIGURED METADATA
-        self.main_content_panel._do_refresh(is_initial=is_initial)
         # CHECK USER PREFERENCE FOR WATCHDOG
         if self.settings_controller.settings.watchdog_toggle:
             # Setup watchdog

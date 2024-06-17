@@ -1049,9 +1049,17 @@ class MainContent(QObject):
                 )
         else:
             self.__insert_data_into_lists([], [])
-            logger.debug(
+            logger.warning(
                 "Essential paths have not been set. Passing refresh and resetting mod lists"
             )
+            # Wait for settings dialog to be closed before continuing.
+            # This is to ensure steamcmd check and other ops are done after the user has a chance to set paths
+            if not self.settings_controller.settings_dialog.isHidden():
+                loop = QEventLoop()
+                self.settings_controller.settings_dialog.finished.connect(loop.quit)
+                loop.exec_()
+                logger.debug("Settings dialog closed. Continuing with refresh...")
+
         EventBus().refresh_finished.emit()
 
     def _do_clear(self) -> None:
