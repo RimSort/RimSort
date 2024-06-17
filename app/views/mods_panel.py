@@ -16,6 +16,7 @@ from PySide6.QtGui import (
     QFocusEvent,
     QFontMetrics,
     QIcon,
+    QKeyEvent,
     QKeySequence,
     QResizeEvent,
 )
@@ -592,7 +593,7 @@ class ModListWidget(QListWidget):
         )
         self.list_update_signal.emit("drop")
 
-    def eventFilter(self, source_object: QObject, event: QEvent) -> None:
+    def eventFilter(self, source_object: QObject, event: QEvent) -> bool:
         """
         https://doc.qt.io/qtforpython/overviews/eventsandfilters.html
 
@@ -700,11 +701,12 @@ class ModListWidget(QListWidget):
                         copy_url_to_clipboard_action = QAction()
                         copy_url_to_clipboard_action.setText("Copy URL to clipboard")
                     # If we have a "steam_uri"
-                    if mod_metadata.get(
-                        "steam_uri"
-                    ) and self.settings_controller.settings.instances[
-                        self.settings_controller.settings.current_instance
-                    ].get("steam_client_integration", False):
+                    if (
+                        mod_metadata.get("steam_uri")
+                        and self.settings_controller.settings.instances[
+                            self.settings_controller.settings.current_instance
+                        ].steam_client_integration
+                    ):
                         open_mod_steam_action = QAction()
                         open_mod_steam_action.setText("Open mod in Steam")
                     # Conversion options (SteamCMD <-> local) + re-download (local mods found in SteamDB and SteamCMD)
@@ -762,7 +764,7 @@ class ModListWidget(QListWidget):
                         # Only enable subscription actions if user has enabled Steam client integration
                         if self.settings_controller.settings.instances[
                             self.settings_controller.settings.current_instance
-                        ].get("steam_client_integration"):
+                        ].steam_client_integration:
                             # Re-subscribe steam mods
                             re_steam_action = QAction()
                             re_steam_action.setText("Re-subscribe mod with Steam")
@@ -898,7 +900,7 @@ class ModListWidget(QListWidget):
                             # Only enable subscription actions if user has enabled Steam client integration
                             if self.settings_controller.settings.instances[
                                 self.settings_controller.settings.current_instance
-                            ]["steam_client_integration"]:
+                            ].steam_client_integration:
                                 # Re-subscribe steam mods
                                 if not re_steam_action:
                                     re_steam_action = QAction()
@@ -982,7 +984,7 @@ class ModListWidget(QListWidget):
             ):
                 local_folder = self.settings_controller.settings.instances[
                     self.settings_controller.settings.current_instance
-                ]
+                ].local_folder
                 workshop_actions_menu = QMenu(title="Workshop mods options")
                 if local_folder and convert_local_steamcmd_action:
                     workshop_actions_menu.addAction(convert_local_steamcmd_action)
@@ -1030,7 +1032,7 @@ class ModListWidget(QListWidget):
                 ):
                     local_folder = self.settings_controller.settings.instances[
                         self.settings_controller.settings.current_instance
-                    ]
+                    ].local_folder
                     for (
                         folder_name,
                         publishedfileid,
@@ -1062,7 +1064,7 @@ class ModListWidget(QListWidget):
                 ):
                     local_folder = self.settings_controller.settings.instances[
                         self.settings_controller.settings.current_instance
-                    ]
+                    ].local_folder
                     for (
                         publishedfileid,
                         mod_name,
@@ -1134,7 +1136,7 @@ class ModListWidget(QListWidget):
                                 Path(
                                     self.settings_controller.settings.instances[
                                         self.settings_controller.settings.current_instance
-                                    ]["local_folder"]
+                                    ].local_folder
                                 )
                                 / (
                                     mod_name
@@ -1434,7 +1436,7 @@ class ModListWidget(QListWidget):
         self.clearFocus()
         return super().focusOutEvent(e)
 
-    def keyPressEvent(self, e):
+    def keyPressEvent(self, e: QKeyEvent) -> None:
         """
         This event occurs when the user presses a key while the mod
         list is in focus.
@@ -1499,7 +1501,7 @@ class ModListWidget(QListWidget):
             item.setSizeHint(widget.sizeHint())
             self.setItemWidget(item, widget)
 
-    def check_widgets_visible(self):
+    def check_widgets_visible(self) -> None:
         # This function checks the visibility of each item and creates a widget if the item is visible and not already setup.
         for idx in range(self.count()):
             item = self.item(idx)
@@ -2195,7 +2197,7 @@ class ModsPanel(QWidget):
             filter_state = self.inactive_mods_search_filter_state
             source_filter = self.inactive_mods_data_source_filter
             uuids = self.inactive_mods_list.uuids
-        # Evalutate the search filter state for the list
+        # Evaluate the search filter state for the list
         search_filter = None
         if _filter.currentText() == "Name":
             search_filter = "name"
