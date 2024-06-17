@@ -28,3 +28,12 @@ indent-width = 4
 # Assume Python 3.11
 target-version = "py311"
 extend-select = ["I"]
+
+[tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib",
+]
+
+# exclude submodules from test discovery
+[tool.pytest]
+norecursedirs = ['submodules']
