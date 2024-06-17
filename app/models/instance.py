@@ -5,6 +5,7 @@ from typing import Any
 import msgspec
 
 from app.utils.app_info import AppInfo
+from app.utils.event_bus import EventBus
 
 
 class Instance(msgspec.Struct):
@@ -18,6 +19,13 @@ class Instance(msgspec.Struct):
         Path(AppInfo().app_storage_folder / "instances" / "Default")
     )
     steam_client_integration: bool = False
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        # If the value is the same as the current value, do nothing
+        if getattr(self, name) == value:
+            return
+        EventBus().settings_have_changed.emit()
+        return super().__setattr__(name, value)
 
     def as_dict(self) -> dict[str, Any]:
         return {
