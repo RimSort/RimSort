@@ -76,7 +76,8 @@ def validate_rimworld_mods_list(
         show_warning(
             title="Unable to read data",
             text=("RimSort was unable to read the supplied mods list."),
-            information="The supplied mods list may be missing or invalid.",
+            information="The supplied mods list may be missing or invalid. "
+            + "If you just (re)installed RimWorld, you may need to run it once to generate the mods list.",
             details=str(e),
         )
     else:
