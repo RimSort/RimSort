@@ -22,8 +22,9 @@ jobs:
     with:
       format_only: true
 
-  build:
+  attested-build:
     needs: pre-build
+    if: github.event_name != 'pull_request'
     permissions:
       id-token: write
       contents: read
@@ -32,3 +33,17 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       version_format: ${{ needs.pre-build.outputs.version_format }}
+      attest: true
+
+  non-attested-build:
+    needs: pre-build
+    if: github.event_name == 'pull_request'
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write
+      packages: write
+    uses: ./.github/workflows/build.yml
+    with:
+      version_format: ${{ needs.pre-build.outputs.version_format }}
+      attest: false
