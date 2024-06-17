@@ -24,8 +24,8 @@ class Instance(msgspec.Struct):
         # If the value is the same as the current value, do nothing
         if getattr(self, name) == value:
             return
+        super().__setattr__(name, value)
         EventBus().settings_have_changed.emit()
-        return super().__setattr__(name, value)
 
     def as_dict(self) -> dict[str, Any]:
         return {
