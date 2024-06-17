@@ -106,7 +106,7 @@ def delete_files_only_extension(directory, extension):
         logger.debug(f"Deleted: {directory}")
 
 
-def directories(mods_path: Path) -> list[str]:
+def directories(mods_path: Path | str) -> list[str]:
     try:
         with os.scandir(mods_path) as directories:
             return [directory.path for directory in directories if directory.is_dir()]
