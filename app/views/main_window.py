@@ -734,6 +734,7 @@ class MainWindow(QMainWindow):
             if not new_instance_name:
                 logger.info("User cancelled operation")
                 return
+            instance_name = new_instance_name
         current_instances = list(self.settings_controller.settings.instances.keys())
         if (
             instance_name
