@@ -62,7 +62,6 @@ class InstanceController(QObject):
         try:
             with ZipFile(archive_path, "r") as archive:
                 self.from_bytes(archive.read("instance.json"))
-                self.instance.steamcmd_install_path = str(self.instance_folder_path)
         except Exception as e:
             logger.error(f"An error occurred while reading instance archive: {e}")
             show_fatal_error(
@@ -188,7 +187,12 @@ class InstanceController(QObject):
         :return: A list of invalid paths
         :rtype: list[str]
         """
-        return self.instance.validate_paths()
+        cleared_paths = self.instance.validate_paths()
+        if "steamcmd_install_path" in cleared_paths:
+            if os.path.exists(self.instance_folder_path / "steamcmd"):
+                self.instance.steamcmd_install_path = str(self.instance_folder_path)
+
+        return cleared_paths
 
     @property
     def instance_folder_path(self) -> Path:

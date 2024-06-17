@@ -356,21 +356,6 @@ class MainWindow(QMainWindow):
 
         # Check that the instance folder exists. If it does, update Settings with the instance data
         if os.path.exists(instance_controller.instance_folder_path):
-            steamcmd_link_path = str(
-                instance_controller.instance_folder_path
-                / "steam"
-                / "steamapps"
-                / "workshop"
-                / "content"
-                / "294100"
-            )
-
-            if os.path.exists(steamcmd_link_path):
-                logger.debug("Restoring steamcmd symlink...")
-                self.steamcmd_wrapper.check_symlink(
-                    steamcmd_link_path, instance_controller.instance.local_folder
-                )
-
             cleared_paths = instance_controller.validate_paths()
             if cleared_paths:
                 logger.warning(
@@ -381,6 +366,35 @@ class MainWindow(QMainWindow):
                     text="Invalid instance folder paths",
                     information="Some folder paths from the restored instance are invalid and were cleared. Please reconfigure them in the settings",
                     details=f"Invalid paths: {', '.join(cleared_paths)}",
+                )
+
+            steamcmd_link_path = str(
+                Path(instance_controller.instance.steamcmd_install_path)
+                / "steam"
+                / "steamapps"
+                / "workshop"
+                / "content"
+                / "294100"
+            )
+
+            if (
+                os.path.exists(steamcmd_link_path)
+                and instance_controller.instance.local_folder != ""
+            ):
+                logger.info("Restoring steamcmd symlink...")
+                self.steamcmd_wrapper.check_symlink(
+                    steamcmd_link_path, instance_controller.instance.local_folder
+                )
+            elif not os.path.exists(steamcmd_link_path):
+                logger.info("Skipping steamcmd symlink restoration")
+            else:
+                show_warning(
+                    title="Couldn't restore steamcmd symlink/junction",
+                    text="Couldn't restore steamcmd symlink/junction",
+                    information="The steamcmd symlink/junction could not be restored as the local folder is not set or invalid. The symlink/junction will need to be manually recreated.",
+                )
+                logger.warning(
+                    "Skipping steamcmd symlink restoration: Local folder not set. The symlink will need to be manually updated."
                 )
 
             self.settings_controller.set_instance(instance_controller.instance)

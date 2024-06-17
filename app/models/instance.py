@@ -45,6 +45,7 @@ class Instance(msgspec.Struct):
             "config_folder",
             "local_folder",
             "workshop_folder",
+            "steamcmd_install_path",
         ]:
             if not path.exists(getattr(self, path_name)):
                 invalid_paths.append(path_name)
