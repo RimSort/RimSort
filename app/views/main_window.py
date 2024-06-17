@@ -730,7 +730,10 @@ class MainWindow(QMainWindow):
     ) -> None:
         if not instance_name:
             # Sanitize the input so that it does not produce any KeyError down the road
-            instance_name = self.__ask_for_new_instance_name()
+            new_instance_name = self.__ask_for_new_instance_name()
+            if not new_instance_name:
+                logger.info("User cancelled operation")
+                return
         current_instances = list(self.settings_controller.settings.instances.keys())
         if (
             instance_name
@@ -879,7 +882,10 @@ class MainWindow(QMainWindow):
         self.main_content_panel.stop_watchdog_signal.connect(self.shutdown_watchdog)
         # Start watchdog
         try:
-            self.watchdog_event_handler.watchdog_observer.start()
+            if self.watchdog_event_handler.watchdog_observer is not None:
+                self.watchdog_event_handler.watchdog_observer.start()  # type: ignore #Upstream not typed
+            else:
+                logger.warning("Watchdog Observer is None. Unable to start.")
         except Exception as e:
             logger.warning(
                 f"Unable to initialize watchdog Observer due to exception: {str(e)}"
@@ -900,7 +906,7 @@ class MainWindow(QMainWindow):
             and self.watchdog_event_handler.watchdog_observer
             and self.watchdog_event_handler.watchdog_observer.is_alive()
         ):
-            self.watchdog_event_handler.watchdog_observer.stop()
+            self.watchdog_event_handler.watchdog_observer.stop()  # type: ignore #Upstream not typed
             self.watchdog_event_handler.watchdog_observer.join()
             self.watchdog_event_handler.watchdog_observer = None
             for timer in self.watchdog_event_handler.cooldown_timers.values():
