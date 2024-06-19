@@ -8,7 +8,7 @@ platformdirs==4.2.2
 PyGithub==2.3.0
 pyperclip==1.8.2
 PySide6
-PySide6==6.7.1; sys_platform == 'darwin'
+PySide6==6.7.2; sys_platform == 'darwin'
 PySide6==6.7.1; sys_platform == 'linux'
 PySide6==6.7.1; sys_platform == 'win32'
 psutil==5.9.8
