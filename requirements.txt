@@ -6,7 +6,7 @@ lxml==5.2.2
 natsort==8.4.0
 platformdirs==4.2.2
 PyGithub==2.3.0
-pyperclip==1.8.2
+pyperclip==1.9.0
 PySide6
 PySide6==6.7.1; sys_platform == 'darwin'
 PySide6==6.7.1; sys_platform == 'linux'
