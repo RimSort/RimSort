@@ -654,7 +654,7 @@ class SettingsController(QObject):
         if answer == "Cancel":
             return
 
-        self.settings.apply_default_settings()
+        self.settings = Settings()
         self._update_view_from_model()
 
     @Slot()
