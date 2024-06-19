@@ -73,9 +73,9 @@ class Settings(QObject):
 
     def load(self) -> None:
         if self._debug_file.exists() and self._debug_file.is_file():
-            self._debug_logging_enabled = True
+            self.debug_logging_enabled = True
         else:
-            self._debug_logging_enabled = False
+            self.debug_logging_enabled = False
 
         try:
             with open(str(self._settings_file), "r") as file:
@@ -195,109 +195,14 @@ class Settings(QObject):
             json.dump(self._to_dict(), file, indent=4)
 
     def _from_dict(self, data: Dict[str, Any]) -> None:
-        if "show_folder_rows" in data:
-            self.show_folder_rows = data["show_folder_rows"]
-            del data["show_folder_rows"]
+        special_attributes = ["instances"]
 
-        if "check_for_update_startup" in data:
-            self.check_for_update_startup = data["check_for_update_startup"]
-            del data["check_for_update_startup"]
-
-        if "sorting_algorithm" in data:
-            self.sorting_algorithm = data["sorting_algorithm"]
-            del data["sorting_algorithm"]
-
-        if "external_steam_metadata_file_path" in data:
-            self.external_steam_metadata_file_path = data[
-                "external_steam_metadata_file_path"
-            ]
-            del data["external_steam_metadata_file_path"]
-
-        if "external_steam_metadata_repo" in data:
-            self.external_steam_metadata_repo = data["external_steam_metadata_repo"]
-            del data["external_steam_metadata_repo"]
-
-        if "external_steam_metadata_source" in data:
-            self.external_steam_metadata_source = data["external_steam_metadata_source"]
-            del data["external_steam_metadata_source"]
-
-        if "external_community_rules_file_path" in data:
-            self.external_community_rules_file_path = data[
-                "external_community_rules_file_path"
-            ]
-            del data["external_community_rules_file_path"]
-
-        if "external_community_rules_repo" in data:
-            self.external_community_rules_repo = data["external_community_rules_repo"]
-            del data["external_community_rules_repo"]
-
-        if "external_community_rules_metadata_source" in data:
-            self.external_community_rules_metadata_source = data[
-                "external_community_rules_metadata_source"
-            ]
-            del data["external_community_rules_metadata_source"]
-
-        if "db_builder_include" in data:
-            self.db_builder_include = data["db_builder_include"]
-            del data["db_builder_include"]
-
-        if "database_expiry" in data:
-            self.database_expiry = data["database_expiry"]
-            del data["database_expiry"]
-
-        if "build_steam_database_dlc_data" in data:
-            self.build_steam_database_dlc_data = data["build_steam_database_dlc_data"]
-            del data["build_steam_database_dlc_data"]
-
-        if "build_steam_database_update_toggle" in data:
-            self.build_steam_database_update_toggle = data[
-                "build_steam_database_update_toggle"
-            ]
-            del data["build_steam_database_update_toggle"]
-
-        if "watchdog_toggle" in data:
-            self.watchdog_toggle = data["watchdog_toggle"]
-            del data["watchdog_toggle"]
-
-        if "mod_type_filter_toggle" in data:
-            self.mod_type_filter_toggle = data["mod_type_filter_toggle"]
-            del data["mod_type_filter_toggle"]
-
-        if "duplicate_mods_warning" in data:
-            self.duplicate_mods_warning = data["duplicate_mods_warning"]
-            del data["duplicate_mods_warning"]
-
-        if "steam_mods_update_check" in data:
-            self.steam_mods_update_check = data["steam_mods_update_check"]
-            del data["steam_mods_update_check"]
-
-        if "try_download_missing_mods" in data:
-            self.try_download_missing_mods = data["try_download_missing_mods"]
-            del data["try_download_missing_mods"]
-
-        if "steamcmd_validate_downloads" in data:
-            self.steamcmd_validate_downloads = data["steamcmd_validate_downloads"]
-            del data["steamcmd_validate_downloads"]
-
-        if "todds_preset" in data:
-            self.todds_preset = data["todds_preset"]
-            del data["todds_preset"]
-
-        if "todds_active_mods_target" in data:
-            self.todds_active_mods_target = data["todds_active_mods_target"]
-            del data["todds_active_mods_target"]
-
-        if "todds_dry_run" in data:
-            self.todds_dry_run = data["todds_dry_run"]
-            del data["todds_dry_run"]
-
-        if "todds_overwrite" in data:
-            self.todds_overwrite = data["todds_overwrite"]
-            del data["todds_overwrite"]
-
-        if "current_instance" in data:
-            self.current_instance = data["current_instance"]
-            del data["current_instance"]
+        for key, value in data.items():
+            if key in special_attributes:
+                continue
+            if not hasattr(self, key):
+                continue
+            setattr(self, key, value)
 
         if "instances" in data:
             # Convert to Instance objects
@@ -312,19 +217,6 @@ class Settings(QObject):
                         f"Instance data for {instance_name} is not a valid type: {type(instance_data)}"
                     )
             self.instances = instances
-            del data["instances"]
-
-        if "github_username" in data:
-            self.github_username = data["github_username"]
-            del data["github_username"]
-
-        if "github_token" in data:
-            self.github_token = data["github_token"]
-            del data["github_token"]
-
-        if "steam_apikey" in data:
-            self.steam_apikey = data["steam_apikey"]
-            del data["steam_apikey"]
 
     def _to_dict(self) -> Dict[str, Any]:
         data = {
