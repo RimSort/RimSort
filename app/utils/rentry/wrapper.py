@@ -103,9 +103,9 @@ class RentryImport:
         """
         Initialize the Rentry Import instance.
         """
-        self.package_ids: list[str] = (
-            []
-        )  # Initialize an empty list to store package_ids
+        self.package_ids: list[
+            str
+        ] = []  # Initialize an empty list to store package_ids
         self.input_dialog()  # Call the input_dialog method to set up the UI
 
     def input_dialog(self):

@@ -179,9 +179,7 @@ class SteamworksAppDependenciesQuery:
             callbacks=True, callbacks_total=len(self.pfid_or_pfids), _libs=self._libs
         )
         if not steamworks_interface.steam_not_running:  # Skip if True
-            while (
-                not steamworks_interface.steamworks.loaded()
-            ):  # Ensure that Steamworks API is initialized before attempting any instruction
+            while not steamworks_interface.steamworks.loaded():  # Ensure that Steamworks API is initialized before attempting any instruction
                 break
             else:
                 for pfid in self.pfid_or_pfids:
@@ -276,9 +274,7 @@ class SteamworksSubscriptionHandler:
             callbacks=True, callbacks_total=callbacks_total, _libs=self._libs
         )
         if not steamworks_interface.steam_not_running:  # Skip if True
-            while (
-                not steamworks_interface.steamworks.loaded()
-            ):  # Ensure that Steamworks API is initialized before attempting any instruction
+            while not steamworks_interface.steamworks.loaded():  # Ensure that Steamworks API is initialized before attempting any instruction
                 break
             else:
                 if self.action == "resubscribe":

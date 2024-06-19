@@ -25,7 +25,7 @@ class AppController(QObject):
 
         self.app.setStyleSheet(  # Add style sheet for styling layouts and widgets
             (
-                (AppInfo().application_folder / "themes" / "RimPy" / "style.qss")
+                AppInfo().application_folder / "themes" / "RimPy" / "style.qss"
             ).read_text()
         )
 
