@@ -66,7 +66,7 @@ class Settings(QObject):
             super().__setattr__(key, value)
             return
 
-        if getattr(self, key) == value:
+        if hasattr(self, key) and getattr(self, key) == value:
             return
         super().__setattr__(key, value)
         EventBus().settings_have_changed.emit()
@@ -186,7 +186,7 @@ class Settings(QObject):
             raise
 
     def save(self) -> None:
-        if self._debug_logging_enabled:
+        if self.debug_logging_enabled:
             self._debug_file.touch(exist_ok=True)
         else:
             self._debug_file.unlink(missing_ok=True)
