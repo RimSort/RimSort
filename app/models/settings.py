@@ -218,37 +218,22 @@ class Settings(QObject):
                     )
             self.instances = instances
 
-    def _to_dict(self) -> Dict[str, Any]:
-        data = {
-            "check_for_update_startup": self.check_for_update_startup,
-            "show_folder_rows": self.show_folder_rows,
-            "sorting_algorithm": self.sorting_algorithm,
-            "external_steam_metadata_file_path": self.external_steam_metadata_file_path,
-            "external_steam_metadata_repo": self.external_steam_metadata_repo,
-            "external_steam_metadata_source": self.external_steam_metadata_source,
-            "external_community_rules_file_path": self.external_community_rules_file_path,
-            "external_community_rules_repo": self.external_community_rules_repo,
-            "external_community_rules_metadata_source": self.external_community_rules_metadata_source,
-            "db_builder_include": self.db_builder_include,
-            "database_expiry": self.database_expiry,
-            "build_steam_database_dlc_data": self.build_steam_database_dlc_data,
-            "build_steam_database_update_toggle": self.build_steam_database_update_toggle,
-            "watchdog_toggle": self.watchdog_toggle,
-            "mod_type_filter_toggle": self.mod_type_filter_toggle,
-            "duplicate_mods_warning": self.duplicate_mods_warning,
-            "steam_mods_update_check": self.steam_mods_update_check,
-            "try_download_missing_mods": self.try_download_missing_mods,
-            "steamcmd_validate_downloads": self.steamcmd_validate_downloads,
-            "todds_preset": self.todds_preset,
-            "todds_active_mods_target": self.todds_active_mods_target,
-            "todds_dry_run": self.todds_dry_run,
-            "todds_overwrite": self.todds_overwrite,
-            "current_instance": self.current_instance,
-            "instances": {
-                name: instance.as_dict() for name, instance in self.instances.items()
-            },
-            "github_username": self.github_username,
-            "github_token": self.github_token,
-            "steam_apikey": self.steam_apikey,
+    def _to_dict(self, skip_private: bool = True) -> Dict[str, Any]:
+        special_attributes = ["instances"]
+        skip_attributes = ["destroyed", "objectNameChanged"]
+
+        data = {}
+
+        for key, value in self.__dict__.items():
+            if key in special_attributes:
+                continue
+            if key in skip_attributes:
+                continue
+            if skip_private and key.startswith("_"):
+                continue
+            data[key] = value
+
+        data["instances"] = {
+            name: instance.as_dict() for name, instance in self.instances.items()
         }
         return data
