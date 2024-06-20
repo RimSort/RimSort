@@ -1781,7 +1781,9 @@ class ModListWidget(QListWidget):
                 total_error_text += "\n" + "=" * len(mod_data["name"])
                 total_error_text += tool_tip_text
             # Add to warning summary if any loadBefore or loadAfter violations, or version mismatch
-            if self.list_type == "Active" and any(
+            # Version mismatch is determined earlier without checking if the mod is in ignore_warning_list
+            # so we have to check it again here in order to not display a faulty, empty version warning
+            if self.list_type == "Active" and mod_data["packageid"] not in self.ignore_warning_list and any(
                 [
                     mod_errors[key]
                     for key in [
@@ -1856,6 +1858,7 @@ class ModListWidget(QListWidget):
         self.repaint()
 
     def toggle_warning(self, packageid: str) -> None:
+        logger.debug(f"Toggled warning icon for: {packageid}")
         if packageid not in self.ignore_warning_list:
             self.ignore_warning_list.append(packageid)
         else:
@@ -2154,8 +2157,12 @@ class ModsPanel(QWidget):
                 self.errors_text.setText(f"{num_errors} errors(s)")
                 if total_error_text:
                     self.errors_icon.setToolTip(total_error_text.lstrip())
+                else:
+                    self.errors_icon.setToolTip("")
                 if total_warning_text:
                     self.warnings_icon.setToolTip(total_warning_text.lstrip())
+                else:
+                    self.warnings_icon.setToolTip("")
             else:  # Hide the summary if there are no errors or warnings
                 self.errors_summary_frame.setHidden(True)
                 self.warnings_text.setText("0 warnings(s)")
