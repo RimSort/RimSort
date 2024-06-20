@@ -1481,6 +1481,9 @@ class ModListWidget(QListWidget):
 
     def create_widget_for_item(self, item: QListWidgetItem) -> None:
         data = item.data(Qt.ItemDataRole.UserRole)
+        if data is None:
+            logger.debug("Attempted to create widget for item with None data")
+            return
         errors_warnings = data["errors_warnings"]
         filtered = data["filtered"]
         invalid = data["invalid"]
@@ -1560,6 +1563,9 @@ class ModListWidget(QListWidget):
             item = self.item(idx)
             if item:
                 data = item.data(Qt.ItemDataRole.UserRole)
+                if data is None:
+                    logger.debug(f"Attempted to insert item with None data. Idx: {idx}")
+                    continue
                 uuid = data["uuid"]
                 self.uuids.insert(idx, uuid)
                 self.item_added_signal.emit(uuid)
@@ -1781,15 +1787,19 @@ class ModListWidget(QListWidget):
             # Add to warning summary if any loadBefore or loadAfter violations, or version mismatch
             # Version mismatch is determined earlier without checking if the mod is in ignore_warning_list
             # so we have to check it again here in order to not display a faulty, empty version warning
-            if self.list_type == "Active" and mod_data["packageid"] not in self.ignore_warning_list and any(
-                [
-                    mod_errors[key]
-                    for key in [
-                        "load_before_violations",
-                        "load_after_violations",
-                        "version_mismatch",
+            if (
+                self.list_type == "Active"
+                and mod_data["packageid"] not in self.ignore_warning_list
+                and any(
+                    [
+                        mod_errors[key]
+                        for key in [
+                            "load_before_violations",
+                            "load_after_violations",
+                            "version_mismatch",
+                        ]
                     ]
-                ]
+                )
             ):
                 num_warnings += 1
                 total_warning_text += f"\n\n{mod_data['name']}"
