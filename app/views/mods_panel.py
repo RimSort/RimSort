@@ -77,7 +77,8 @@ def uuid_to_mod_name(uuid: str) -> str:
     Returns:
         str: The name of the mod corresponding to the UUID.
     """
-    return MetadataManager.instance().internal_local_metadata[uuid]["name"].lower()
+    name = MetadataManager.instance().internal_local_metadata[uuid]["name"]
+    return name.lower() if name is not None else ""
 
 
 class ModsPanelSortKey(Enum):
