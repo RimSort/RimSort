@@ -41,7 +41,10 @@ from app.models.dialogue import (
     show_warning,
 )
 from app.utils.app_info import AppInfo
-from app.utils.constants import SEARCH_DATA_SOURCE_FILTER_INDEXES
+from app.utils.constants import (
+    KNOWN_MOD_REPLACEMENTS,
+    SEARCH_DATA_SOURCE_FILTER_INDEXES,
+)
 from app.utils.event_bus import EventBus
 from app.utils.generic import (
     copy_to_clipboard_safely,
@@ -1710,11 +1713,16 @@ class ModListWidget(QListWidget):
                 and mod_data.get("packageid")
                 and mod_data["packageid"] not in self.ignore_warning_list
             ):
-                # Check dependencies
+                # Check dependencies (and replacements for dependencies)
+                # Note: dependency replacements are NOT assumed to be subject
+                # to the same load order rules as the orignal mods!
                 mod_errors["missing_dependencies"] = {
                     dep
                     for dep in mod_data.get("dependencies", [])
                     if dep not in package_ids_set
+                    and not self._has_replacement(
+                        mod_data["packageid"], dep, package_ids_set
+                    )
                 }
 
                 # Check incompatibilities
@@ -1810,6 +1818,21 @@ class ModListWidget(QListWidget):
             current_item.setData(Qt.ItemDataRole.UserRole, current_item_data)
         logger.info(f"Finished recalculating {self.list_type} list errors")
         return total_error_text, total_warning_text, num_errors, num_warnings
+
+    def _has_replacement(
+        self, package_id: str, dep: str, package_ids_set: set[str]
+    ) -> bool:
+        # Get a list of mods that can replace this mod
+        replacements = KNOWN_MOD_REPLACEMENTS.get(dep, set())
+        # Return true if any of the above mods (replacements) are in the mod list
+        # If no replacements exist for dep, returns false
+        for replacement in replacements:
+            if replacement in package_ids_set:
+                logger.debug(
+                    f"Missing dependency [{dep}] for [{package_id}] replaced with [{replacement}]"
+                )
+                return True
+        return False
 
     def recreate_mod_list_and_sort(
         self,
