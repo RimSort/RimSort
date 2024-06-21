@@ -75,10 +75,10 @@ def uuid_to_mod_name(uuid: str) -> str:
     Args:
         uuid (str): The UUID of the mod.
     Returns:
-        str: The name of the mod corresponding to the UUID.
+        str: If mod name not None, returns mod name in lowercase. Otherwise, returns "# unnamed mod".
     """
     name = MetadataManager.instance().internal_local_metadata[uuid]["name"]
-    return name.lower() if name is not None else ""
+    return name.lower() if name is not None else "# unnamed mod"
 
 
 class ModsPanelSortKey(Enum):
