@@ -1286,6 +1286,15 @@ class ModListWidget(QListWidget):
                                             f"Unable to delete mod. Path does not exist: {mod_metadata['path']}"
                                         )
                                         pass
+                                    except OSError as e:
+                                        ERROR_DIR_NOT_EMPTY = 145
+                                        if e.winerror == ERROR_DIR_NOT_EMPTY:
+                                            logger.debug(
+                                                f"Unable to delete mod. Directory is not empty: {mod_metadata['path']}"
+                                            )
+                                            continue
+                                        else:
+                                            raise e
                     return True
                 elif action == delete_mod_keep_dds_action:  # ACTION: Delete mods action
                     answer = show_dialogue_conditional(
