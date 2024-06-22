@@ -71,7 +71,7 @@ def gen_rev_deps_graph(
 
 
 def gen_tier_one_deps_graph(
-    dependencies_graph: dict[str, set[str]]
+    dependencies_graph: dict[str, set[str]],
 ) -> tuple[dict[str, set[str]], set[str]]:
     # Below is a list of mods determined to be "tier one", in the sense that they
     # should be loaded first before any other regular mod. Tier one mods will have specific
