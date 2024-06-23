@@ -30,9 +30,11 @@ from multiprocessing import freeze_support, set_start_method
 from types import TracebackType
 from typing import Optional, Type
 
+import loguru
 from loguru import logger
 
 from app.utils.app_info import AppInfo
+from app.utils.obfuscate_message import obfuscate_message
 
 # One-time initialization of AppInfo class (this must be done in __main__ so we can use __file__)
 # Initialize as early as possible!
@@ -170,28 +172,33 @@ if __name__ == "__main__":
         log_file.rename(old_log_file)
 
     # Define the log format string
-    format_string = (
-        "[{level}]"
-        "[{time:YYYY-MM-DD HH:mm:ss}]"
-        "[{process.id}]"
-        "[{thread.name}]"
-        "[{module}]"
-        "[{function}][{line}]"
-        " : "
-        "{message}"
-    )
+
+    def formatter(record: "loguru.Record") -> str:
+        """Custom formatter for loguru logger"""
+        format_string = (
+            "[{level}]"
+            "[{time:YYYY-MM-DD HH:mm:ss}]"
+            "[{process.id}]"
+            "[{thread.name}]"
+            "[{module}]"
+            "[{function}][{line}]"
+            " : "
+        )
+
+        record["extra"]["obfuscated_message"] = obfuscate_message(record["message"])
+        return format_string + "{extra[obfuscated_message]}\n"
 
     # Remove the default stderr logger
     logger.remove()
 
     # Create the file logger
-    logger.add(log_file, level="DEBUG" if DEBUG_MODE else "INFO", format=format_string)
+    logger.add(log_file, level="DEBUG" if DEBUG_MODE else "INFO", format=formatter)
 
     # Add a "WARNING" or higher stderr logger
     logger.add(
         sys.stderr,
         level="WARNING",
-        format=format_string,
+        format=formatter,
         colorize=False,
     )
 
