@@ -42,7 +42,10 @@ from app.models.dialogue import (
     show_warning,
 )
 from app.utils.app_info import AppInfo
-from app.utils.constants import SEARCH_DATA_SOURCE_FILTER_INDEXES
+from app.utils.constants import (
+    KNOWN_MOD_REPLACEMENTS,
+    SEARCH_DATA_SOURCE_FILTER_INDEXES,
+)
 from app.utils.event_bus import EventBus
 from app.utils.generic import (
     copy_to_clipboard_safely,
@@ -1483,6 +1486,9 @@ class ModListWidget(QListWidget):
 
     def create_widget_for_item(self, item: QListWidgetItem) -> None:
         data = item.data(Qt.ItemDataRole.UserRole)
+        if data is None:
+            logger.debug("Attempted to create widget for item with None data")
+            return
         errors_warnings = data["errors_warnings"]
         filtered = data["filtered"]
         invalid = data["invalid"]
@@ -1562,6 +1568,9 @@ class ModListWidget(QListWidget):
             item = self.item(idx)
             if item:
                 data = item.data(Qt.ItemDataRole.UserRole)
+                if data is None:
+                    logger.debug(f"Attempted to insert item with None data. Idx: {idx}")
+                    continue
                 uuid = data["uuid"]
                 self.uuids.insert(idx, uuid)
                 self.item_added_signal.emit(uuid)
@@ -1706,11 +1715,16 @@ class ModListWidget(QListWidget):
                 and mod_data.get("packageid")
                 and mod_data["packageid"] not in self.ignore_warning_list
             ):
-                # Check dependencies
+                # Check dependencies (and replacements for dependencies)
+                # Note: dependency replacements are NOT assumed to be subject
+                # to the same load order rules as the orignal mods!
                 mod_errors["missing_dependencies"] = {
                     dep
                     for dep in mod_data.get("dependencies", [])
                     if dep not in package_ids_set
+                    and not self._has_replacement(
+                        mod_data["packageid"], dep, package_ids_set
+                    )
                 }
 
                 # Check incompatibilities
@@ -1781,15 +1795,21 @@ class ModListWidget(QListWidget):
                 total_error_text += "\n" + "=" * len(mod_data["name"])
                 total_error_text += tool_tip_text
             # Add to warning summary if any loadBefore or loadAfter violations, or version mismatch
-            if self.list_type == "Active" and any(
-                [
-                    mod_errors[key]
-                    for key in [
-                        "load_before_violations",
-                        "load_after_violations",
-                        "version_mismatch",
+            # Version mismatch is determined earlier without checking if the mod is in ignore_warning_list
+            # so we have to check it again here in order to not display a faulty, empty version warning
+            if (
+                self.list_type == "Active"
+                and mod_data["packageid"] not in self.ignore_warning_list
+                and any(
+                    [
+                        mod_errors[key]
+                        for key in [
+                            "load_before_violations",
+                            "load_after_violations",
+                            "version_mismatch",
+                        ]
                     ]
-                ]
+                )
             ):
                 num_warnings += 1
                 total_warning_text += f"\n\n{mod_data['name']}"
@@ -1800,6 +1820,21 @@ class ModListWidget(QListWidget):
             current_item.setData(Qt.ItemDataRole.UserRole, current_item_data)
         logger.info(f"Finished recalculating {self.list_type} list errors")
         return total_error_text, total_warning_text, num_errors, num_warnings
+
+    def _has_replacement(
+        self, package_id: str, dep: str, package_ids_set: set[str]
+    ) -> bool:
+        # Get a list of mods that can replace this mod
+        replacements = KNOWN_MOD_REPLACEMENTS.get(dep, set())
+        # Return true if any of the above mods (replacements) are in the mod list
+        # If no replacements exist for dep, returns false
+        for replacement in replacements:
+            if replacement in package_ids_set:
+                logger.debug(
+                    f"Missing dependency [{dep}] for [{package_id}] replaced with [{replacement}]"
+                )
+                return True
+        return False
 
     def recreate_mod_list_and_sort(
         self,
@@ -1856,6 +1891,7 @@ class ModListWidget(QListWidget):
         self.repaint()
 
     def toggle_warning(self, packageid: str) -> None:
+        logger.debug(f"Toggled warning icon for: {packageid}")
         if packageid not in self.ignore_warning_list:
             self.ignore_warning_list.append(packageid)
         else:
@@ -2154,8 +2190,12 @@ class ModsPanel(QWidget):
                 self.errors_text.setText(f"{num_errors} errors(s)")
                 if total_error_text:
                     self.errors_icon.setToolTip(total_error_text.lstrip())
+                else:
+                    self.errors_icon.setToolTip("")
                 if total_warning_text:
                     self.warnings_icon.setToolTip(total_warning_text.lstrip())
+                else:
+                    self.warnings_icon.setToolTip("")
             else:  # Hide the summary if there are no errors or warnings
                 self.errors_summary_frame.setHidden(True)
                 self.warnings_text.setText("0 warnings(s)")
