@@ -11,6 +11,7 @@ from PySide6.QtCore import QObject
 
 from app.models.instance import Instance
 from app.utils.app_info import AppInfo
+from app.utils.constants import SortMethod
 from app.utils.event_bus import EventBus
 
 
@@ -24,7 +25,7 @@ class Settings(QObject):
         self.debug_logging_enabled: bool = False
         self.check_for_update_startup: bool = False
         self.show_folder_rows: bool = True
-        self.sorting_algorithm: str = "Alphabetical"
+        self.sorting_algorithm: SortMethod = SortMethod.ALPHABETICAL
         self.external_steam_metadata_file_path: str = str(
             AppInfo().app_storage_folder / "steamDB.json"
         )

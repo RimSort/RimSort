@@ -45,11 +45,9 @@ from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel
 from requests import get as requests_get
 
 import app.models.dialogue as dialogue
-import app.sort.alphabetical_sort as alpha_sort
-import app.sort.dependencies as deps_sort
-import app.sort.topo_sort as topo_sort
 import app.utils.constants as app_constants
 import app.utils.metadata as metadata
+from app.controllers.sort_controller import Sorter
 from app.models.animations import LoadingAnimation
 from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
@@ -1133,93 +1131,22 @@ class MainContent(QObject):
             self.mods_panel.data_source_filter_icons
         )
         self.mods_panel.on_inactive_mods_search_data_source_filter()
-        active_mod_ids = list()
+        active_package_ids = set()
         for uuid in self.mods_panel.active_mods_list.uuids:
-            active_mod_ids.append(
+            active_package_ids.add(
                 self.metadata_manager.internal_local_metadata[uuid]["packageid"]
             )
 
         # Get the current order of active mods list
         current_order = self.mods_panel.active_mods_list.uuids.copy()
 
-        # Get all active mods and their dependencies (if also active mod)
-        dependencies_graph = deps_sort.gen_deps_graph(
-            self.mods_panel.active_mods_list.uuids, active_mod_ids
+        sorter = Sorter(
+            self.settings_controller.settings.sorting_algorithm,
+            active_package_ids=active_package_ids,
+            active_uuids=set(self.mods_panel.active_mods_list.uuids),
         )
 
-        # Get all active mods and their reverse dependencies
-        reverse_dependencies_graph = deps_sort.gen_rev_deps_graph(
-            self.mods_panel.active_mods_list.uuids, active_mod_ids
-        )
-
-        # Get dependencies graph for tier one mods (load at top mods)
-        tier_one_dependency_graph, tier_one_mods = deps_sort.gen_tier_one_deps_graph(
-            dependencies_graph
-        )
-
-        # Get dependencies graph for tier three mods (load at bottom mods)
-        tier_three_dependency_graph, tier_three_mods = (
-            deps_sort.gen_tier_three_deps_graph(
-                dependencies_graph,
-                reverse_dependencies_graph,
-                self.mods_panel.active_mods_list.uuids,
-            )
-        )
-
-        # Get dependencies graph for tier two mods (load in middle)
-        tier_two_dependency_graph = deps_sort.gen_tier_two_deps_graph(
-            self.mods_panel.active_mods_list.uuids,
-            active_mod_ids,
-            tier_one_mods,
-            tier_three_mods,
-        )
-
-        # Depending on the selected algorithm, sort all tiers with Alphabetical
-        # mimic algorithm or toposort
-        sorting_algorithm = self.settings_controller.settings.sorting_algorithm
-
-        if sorting_algorithm == "Alphabetical":
-            logger.info("Alphabetical sorting algorithm is selected")
-            reordered_tier_one_sorted = alpha_sort.do_alphabetical_sort(
-                tier_one_dependency_graph, self.mods_panel.active_mods_list.uuids
-            )
-            reordered_tier_three_sorted = alpha_sort.do_alphabetical_sort(
-                tier_three_dependency_graph,
-                self.mods_panel.active_mods_list.uuids,
-            )
-            reordered_tier_two_sorted = alpha_sort.do_alphabetical_sort(
-                tier_two_dependency_graph, self.mods_panel.active_mods_list.uuids
-            )
-        else:
-            logger.info("Topological sorting algorithm is selected")
-            # Sort tier one mods
-            reordered_tier_one_sorted = topo_sort.do_topo_sort(
-                tier_one_dependency_graph, self.mods_panel.active_mods_list.uuids
-            )
-            # Sort tier three mods
-            reordered_tier_three_sorted = topo_sort.do_topo_sort(
-                tier_three_dependency_graph,
-                self.mods_panel.active_mods_list.uuids,
-            )
-            # Sort tier two mods
-            reordered_tier_two_sorted = topo_sort.do_topo_sort(
-                tier_two_dependency_graph, self.mods_panel.active_mods_list.uuids
-            )
-
-        logger.info(f"Sorted tier one mods: {len(reordered_tier_one_sorted)}")
-        logger.info(f"Sorted tier two mods: {len(reordered_tier_two_sorted)}")
-        logger.info(f"Sorted tier three mods: {len(reordered_tier_three_sorted)}")
-
-        # Add Tier 1, 2, 3 in order
-        combined_mods = {}
-        for uuid in (
-            reordered_tier_one_sorted
-            + reordered_tier_two_sorted
-            + reordered_tier_three_sorted
-        ):
-            combined_mods[uuid] = self.metadata_manager.internal_local_metadata[uuid]
-
-        new_order = list(combined_mods.keys())
+        new_order = sorter.sort()
 
         # Check if the order has changed
         if new_order == current_order:
@@ -1234,17 +1161,12 @@ class MainContent(QObject):
             self.disable_enable_widgets_signal.emit(False)
             # Insert data into lists
             self.__insert_data_into_lists(
-                combined_mods,
-                {
-                    uuid: self.metadata_manager.internal_local_metadata[uuid]
+                new_order,
+                [
+                    uuid
                     for uuid in self.metadata_manager.internal_local_metadata
-                    if uuid
-                    not in set(
-                        reordered_tier_one_sorted
-                        + reordered_tier_two_sorted
-                        + reordered_tier_three_sorted
-                    )
-                },
+                    if uuid not in set(new_order)
+                ],
             )
             # Enable widgets again after inserting
             self.disable_enable_widgets_signal.emit(True)
