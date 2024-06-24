@@ -1681,50 +1681,54 @@ class MainContent(QObject):
 
     @Slot()
     def _on_do_upload_rimsort_log(self) -> None:
-        ret = upload_data_to_0x0_st(str(AppInfo().user_log_folder / "RimSort.log"))
-        if ret:
-            copy_to_clipboard_safely(ret)
-            dialogue.show_information(
-                title="Uploaded file",
-                text="Uploaded RimSort log to http://0x0.st/",
-                information=f"The URL has been copied to your clipboard:\n\n{ret}",
-            )
-            webbrowser.open(ret)
+        self._upload_log(AppInfo().user_log_folder / "RimSort.log")
 
     @Slot()
     def _on_do_upload_rimsort_old_log(self) -> None:
-        ret = upload_data_to_0x0_st(str(AppInfo().user_log_folder / "RimSort.old.log"))
-        if ret:
-            copy_to_clipboard_safely(ret)
-            dialogue.show_information(
-                title="Uploaded file",
-                text="Uploaded RimSort log to http://0x0.st/",
-                information=f"The URL has been copied to your clipboard:\n\n{ret}",
-            )
-            webbrowser.open(ret)
+        self._upload_log(AppInfo().user_log_folder / "RimSort.old.log")
 
     @Slot()
     def _on_do_upload_rimworld_log(self) -> None:
-        player_log_path = str(
-            (
-                Path(
-                    self.settings_controller.settings.instances[
-                        self.settings_controller.settings.current_instance
-                    ].config_folder
-                ).parent
-                / "Player.log"
-            )
+        player_log_path = (
+            Path(
+                self.settings_controller.settings.instances[
+                    self.settings_controller.settings.current_instance
+                ].config_folder
+            ).parent
+            / "Player.log"
         )
-        if os.path.exists(player_log_path):
-            ret = upload_data_to_0x0_st(player_log_path)
-            if ret:
-                copy_to_clipboard_safely(ret)
-                dialogue.show_information(
-                    title="Uploaded file",
-                    text="Uploaded RimWorld log to http://0x0.st/",
-                    information=f"The URL has been copied to your clipboard:\n\n{ret}",
-                )
-                webbrowser.open(ret)
+
+        self._upload_log(player_log_path)
+
+    def _upload_log(self, path: Path) -> None:
+        if not os.path.exists(path):
+            dialogue.show_warning(
+                title="File not found",
+                text="The file you are trying to upload does not exist.",
+                information=f"File: {path}",
+            )
+            return
+
+        success, ret = self.do_threaded_loading_animation(
+            gif_path=str(AppInfo().theme_data_folder / "default-icons" / "rimsort.gif"),
+            target=partial(upload_data_to_0x0_st, str(path)),
+            text=f"Uploading {path.name} to 0x0.st...",
+        )
+
+        if success:
+            copy_to_clipboard_safely(ret)
+            dialogue.show_information(
+                title="Uploaded file",
+                text=f"Uploaded {path.name} to http://0x0.st/",
+                information=f"The URL has been copied to your clipboard:\n\n{ret}",
+            )
+            webbrowser.open(ret)
+        else:
+            dialogue.show_warning(
+                title="Failed to upload file.",
+                text="Failed to upload the file to 0x0.st",
+                information=ret,
+            )
 
     def _do_save(self) -> None:
         """
@@ -3241,11 +3245,7 @@ class MainContent(QObject):
 
     @Slot()
     def _on_do_upload_log(self) -> None:
-        ret = upload_data_to_0x0_st(
-            str(AppInfo().user_log_folder / (AppInfo().app_name + ".log"))
-        )
-        if ret:
-            webbrowser.open(ret)
+        self._upload_log(AppInfo().user_log_folder / (AppInfo().app_name + ".log"))
 
     @Slot()
     def _on_do_download_all_mods_via_steamcmd(self) -> None:
