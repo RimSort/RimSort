@@ -1712,14 +1712,14 @@ class MainContent(QObject):
         success, ret = self.do_threaded_loading_animation(
             gif_path=str(AppInfo().theme_data_folder / "default-icons" / "rimsort.gif"),
             target=partial(upload_data_to_0x0_st, str(path)),
-            text="Uploading to 0x0.st...",
+            text=f"Uploading {path.name} to 0x0.st...",
         )
 
         if success:
             copy_to_clipboard_safely(ret)
             dialogue.show_information(
                 title="Uploaded file",
-                text="Uploaded log to http://0x0.st/",
+                text=f"Uploaded {path.name} to http://0x0.st/",
                 information=f"The URL has been copied to your clipboard:\n\n{ret}",
             )
             webbrowser.open(ret)
