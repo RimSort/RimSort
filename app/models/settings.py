@@ -54,11 +54,11 @@ class Settings(QObject):
         self.todds_active_mods_target: bool = True
         self.todds_dry_run: bool = False
         self.todds_overwrite: bool = False
-        self.current_instance: str = "Default"
-        self.instances: dict[str, Instance] = {"Default": Instance()}
         self.github_username: str = ""
         self.github_token: str = ""
         self.steam_apikey: str = ""
+        self.current_instance: str = "Default"
+        self.instances: dict[str, Instance] = {"Default": Instance()}
 
     def __setattr__(self, key: str, value: Any) -> None:
         # If private attribute, set it normally
