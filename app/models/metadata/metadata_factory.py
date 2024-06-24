@@ -18,6 +18,8 @@ from app.models.metadata.metadata_structure import (
     LudeonMod,
     RuledMod,
     Rules,
+    ScenarioMod,
+    StandardMod,
 )
 from app.utils.constants import RIMWORLD_DLC_METADATA
 from app.utils.xml import xml_path_to_json
@@ -89,9 +91,57 @@ def match_version(
     return True, results
 
 
-def create_listed_mod(
+def create_scenario_mod(scenario_data: dict[str, Any]) -> tuple[bool, ScenarioMod]:
+    mod = ScenarioMod()
+    if "meta" in scenario_data:
+        game_version = value_extractor(scenario_data["meta"].get("gameVersion", False))
+        if isinstance(game_version, str):
+            mod.supported_versions = {game_version}
+        elif isinstance(game_version, list):
+            mod.supported_versions = set(game_version)
+    else:
+        _set_mod_invalid(
+            mod, "No metadata found for scenario. This scenario may be invalid."
+        )
+        return False, mod
+
+    if "scenario" in scenario_data:
+        scenario_data = scenario_data["scenario"]
+
+        name = value_extractor(scenario_data.get("name", False))
+        summary = value_extractor(scenario_data.get("summary", ""))
+        description = value_extractor(scenario_data.get("description", ""))
+
+        if isinstance(name, str):
+            mod.name = name
+        else:
+            _set_mod_invalid(
+                mod, "Couldn't parse a valid name. This scenario may be invalid."
+            )
+
+        if isinstance(summary, str):
+            mod.summary = summary
+        else:
+            _set_mod_invalid(
+                mod, "Summary parsed seems invalid. This scenario may be invalid."
+            )
+
+        if isinstance(description, str):
+            mod.description = description
+        else:
+            _set_mod_invalid(
+                mod, "Description parsed seems invalid. This scenario may be invalid."
+            )
+    else:
+        _set_mod_invalid(mod, "No scenario data found. This scenario may be invalid.")
+        return False, mod
+
+    return mod.valid, mod
+
+
+def create_standard_mod(
     mod_data: dict[str, Any], target_version: str
-) -> tuple[bool, ListedMod]:
+) -> tuple[bool, StandardMod]:
     """Factory method for creating a ListedMod object.
 
     :param mod_data: The dictionary containing the mod data.
@@ -122,7 +172,7 @@ def _set_mod_invalid(mod: ListedMod, message: str) -> ListedMod:
     return mod
 
 
-def _parse_required(mod_data: dict[str, Any], mod: ListedMod) -> ListedMod:
+def _parse_required(mod_data: dict[str, Any], mod: StandardMod) -> StandardMod:
     """
     Parse the required fields from the mod_data and set them on the mod object.
 
@@ -359,26 +409,89 @@ def create_mod_dependency(input_dict: dict[str, str]) -> DependencyMod:
     return mod
 
 
-def create_listed_mod_from_xml(
-    mod_xml_path: str, target_version: str
-) -> tuple[bool, ListedMod]:
+def create_standard_mod_from_xml(
+    mod_xml_path: Path, target_version: str
+) -> tuple[bool, StandardMod]:
     try:
-        mod_data = xml_path_to_json(mod_xml_path)["ModMetaData"]
+        mod_data = xml_path_to_json(str(mod_xml_path))
     except Exception:
         logger.error(
             f"Unable to parse {mod_xml_path} with the exception: {traceback.format_exc()}"
         )
-        return False, ListedMod(valid=False)
+        return False, StandardMod(valid=False)
+
+    mod_data = {k.lower(): v for k, v in mod_data.items()}
+    mod_data = mod_data.get("modmetadata", {})
 
     if not mod_data:
         logger.error(f"Could not parse {mod_xml_path}.")
-        return False, ListedMod(valid=False)
+        return False, StandardMod(valid=False)
 
-    valid, mod = create_listed_mod(mod_data, target_version)
+    valid, mod = create_standard_mod(mod_data, target_version)
 
     mod.mod_path = Path(mod_xml_path)
 
     return valid, mod
+
+
+def create_scenario_mod_from_rsc(mod_rsc_path: Path) -> tuple[bool, ScenarioMod]:
+    try:
+        mod_data = xml_path_to_json(str(mod_rsc_path))
+    except Exception:
+        logger.error(
+            f"Unable to parse {mod_rsc_path} with the exception: {traceback.format_exc()}"
+        )
+        return False, ScenarioMod(valid=False)
+
+    mod_data = {k.lower(): v for k, v in mod_data.items()}
+    mod_data = mod_data.get("savedscenario", {})
+
+    if not mod_data:
+        logger.error(f"Could not parse {mod_rsc_path}.")
+        return False, ScenarioMod(valid=False)
+
+    valid, mod = create_scenario_mod(mod_data)
+
+    mod.mod_path = Path(mod_rsc_path)
+
+    return valid, mod
+
+
+def create_listed_mod_from_path(
+    path: Path, target_version: str
+) -> tuple[bool, ListedMod]:
+    # Check if path is a directory
+    if path.is_dir():
+        # Check if About.xml exists
+        about_xml_path = path / Path("About/About.xml")
+        if about_xml_path.exists():
+            return create_standard_mod_from_xml(about_xml_path, target_version)
+
+        # Check for any file with .rsc extension
+        rsc_files = list(path.glob("*.rsc"))
+
+        # Abort if multiple .rsc files are found
+        if len(rsc_files) > 1:
+            logger.warning(
+                f"Multiple .rsc files found in {path}. Cannot determine which file to use. Aborting parse of directory."
+            )
+            return False, ListedMod(valid=False)
+        elif len(rsc_files) == 1:
+            return create_scenario_mod_from_rsc(rsc_files[0])
+
+        logger.warning("No About.xml or .rsc file found in directory: {path}")
+        return False, ListedMod(valid=False)
+
+    # Check if file is About.xml
+    if path.name == "About.xml":
+        return create_standard_mod_from_xml(path, target_version)
+
+    # Check if file is .rsc
+    if path.suffix == ".rsc":
+        return create_scenario_mod_from_rsc(path)
+
+    logger.warning(f"Could not determine mod type for {path}.")
+    return False, ListedMod(valid=False)
 
 
 @cache
@@ -390,9 +503,7 @@ def get_rules_db(
     path: Path,
 ) -> ExternalRulesSchema | None:
     logger.info(f"Checking Rules DB at: {path}")
-    if os.path.exists(
-        path
-    ):  # Look for cached data & load it if available
+    if os.path.exists(path):  # Look for cached data & load it if available
         logger.info(
             "DB exists!",
         )

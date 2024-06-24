@@ -88,7 +88,6 @@ class BaseMod:
         uuid (str): The internal unique identifier for the mod.
     """
 
-    package_id: CaseInsensitiveStr = CaseInsensitiveStr("invalid.mod")
     name: str = "Unknown Mod Name"
 
     _uuid: str = str(uuid4())
@@ -102,7 +101,12 @@ class BaseMod:
 
 
 @dataclass
-class DependencyMod(BaseMod):
+class PackageIdMod:
+    package_id: CaseInsensitiveStr = CaseInsensitiveStr("invalid.mod")
+
+
+@dataclass
+class DependencyMod(BaseMod, PackageIdMod):
     """A mod which is a dependency of another mod."""
 
     workshop_url: str = ""
@@ -129,7 +133,6 @@ class ListedMod(BaseMod):
 
     valid: bool = False
 
-    authors: list[str] = field(default_factory=list)
     supported_versions: set[str] = field(default_factory=set)
     description: str = (
         "This mod is considered invalid by RimSort (and the RimWorld game)."
@@ -188,6 +191,17 @@ class ListedMod(BaseMod):
 
 
 @dataclass
+class StandardMod(ListedMod, PackageIdMod):
+    authors: list[str] = field(default_factory=list)
+
+
+@dataclass
+class ScenarioMod(ListedMod):
+    valid: bool = True
+    summary: str = ""
+
+
+@dataclass
 class BaseRules:
     """
     Represents the base rules for a mod.
@@ -212,7 +226,7 @@ class Rules(BaseRules):
 
 
 @dataclass
-class RuledMod(ListedMod):
+class RuledMod(StandardMod):
     """A listed mod with rules for load order and dependencies.
 
     Attributes:

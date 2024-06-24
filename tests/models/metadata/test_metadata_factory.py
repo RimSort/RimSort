@@ -3,7 +3,9 @@ from pathlib import Path
 from app.models.metadata.metadata_factory import (
     _parse_required,
     create_base_rules,
+    create_listed_mod_from_path,
     create_mod_dependency,
+    create_scenario_mod_from_rsc,
     get_rules_db,
     match_version,
     value_extractor,
@@ -249,3 +251,62 @@ def test_get_rules_db_values() -> None:
     )
 
     assert rules == expected_value
+
+
+def test_create_scenario_mod_from_rsc_invalid_meta() -> None:
+    path = Path(
+        "tests/data/mod_examples/local/invalid_scenario_mod_meta/scenario abc.rsc"
+    )
+
+    valid, mod = create_scenario_mod_from_rsc(path)
+
+    assert not valid
+    assert not mod.valid
+
+
+def test_create_scenario_mod_from_rsc_invalid_scenario() -> None:
+    path = Path(
+        "tests/data/mod_examples/local/invalid_scenario_mod_scenario/scenario abc.rsc"
+    )
+
+    valid, mod = create_scenario_mod_from_rsc(path)
+
+    assert not valid
+    assert not mod.valid
+
+
+def test_create_scenario_mod_from_rsc_valid() -> None:
+    path = Path("tests/data/mod_examples/local/scenario_mod_1/scenario abc.rsc")
+
+    valid, mod = create_scenario_mod_from_rsc(path)
+
+    assert valid
+    assert mod.valid
+
+    assert mod.supported_versions == {"1.2.2900 rev837"}
+    assert mod.name == "Name"
+    assert mod.summary == "Summary"
+    assert mod.description == "Description"
+
+
+def test_create_listed_mod_from_path_invalid_folder() -> None:
+    path = Path("tests/data/mod_examples/local/invalid folder")
+
+    valid, mod = create_listed_mod_from_path(path, "1.5")
+
+    assert not valid
+    assert not mod.valid
+
+def __test_create_listed_mod_from_path_fishery() -> None:
+    path = Path("tests/data/mod_examples/local/Fishery")
+
+    valid, mod = create_listed_mod_from_path(path, "1.5")
+
+    assert valid
+    assert mod.valid
+
+    assert isinstance(mod, RuledMod)
+    assert mod.package_id == "bs.fishery"
+    assert mod.name == "Fishery - Modding Library"
+    assert mod.authors == ["bradson"]
+    assert mod.supported_versions == {"1.2", "1.3", "1.4", "1.5"}
