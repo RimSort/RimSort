@@ -25,12 +25,17 @@ If applicable, add screenshots to help explain your problem.
 
 **Please complete the following information:**
 
-- OS: [e.g. iOS]
+- Operating System: [e.g. Windows 11]
+- Processor Architecture: [Arm/x86/Unknown]
 - RimSort version:
 - Please provide a `RimSort.log`:
-- Are you running from Python interpreter or from a compiled RimSort release?
+- Are you running from the Python interpreter or from a compiled RimSort release?
+- If this is a sorting issue, what sort mode are you using?: [Alphabetical/Topological]
 
 **Additional context:**
 Add any other context about the problem here.
 
-**Did you first check the wiki for a solution? (macOS Gatekeeper workaround is there)**
+**Checklist before opening issue:**
+
+- Did you check the wiki for a solution? (macOS Gatekeeper workaround is there)
+- Did you make sure this issue wasn't already reported?

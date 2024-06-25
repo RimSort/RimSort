@@ -1,11 +1,9 @@
 import os
 from functools import partial
-from json import dumps, loads
 from pathlib import Path
 from shutil import copytree, rmtree
 from traceback import format_exc
-from typing import Optional
-from zipfile import ZipFile
+from typing import Any, Optional
 
 from loguru import logger
 from lxml import etree, objectify
@@ -21,8 +19,14 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.controllers.instance_controller import (
+    InstanceController,
+    InvalidArchivePathError,
+)
 from app.controllers.menu_bar_controller import MenuBarController
-from app.controllers.settings_controller import SettingsController
+from app.controllers.settings_controller import (
+    SettingsController,
+)
 from app.models.dialogue import (
     show_dialogue_conditional,
     show_dialogue_confirmation,
@@ -167,7 +171,10 @@ class MainWindow(QMainWindow):
 
     def __disable_enable_widgets(self, enable: bool) -> None:
         # Disable widgets
-        for widget in QApplication.instance().allWidgets():
+        q_app = QApplication.instance()
+        if q_app is None:
+            return
+        for widget in q_app.allWidgets():  # type: ignore # Broken pyside stub
             widget.setEnabled(enable)
 
     def showEvent(self, event: QShowEvent) -> None:
@@ -185,6 +192,8 @@ class MainWindow(QMainWindow):
         # IF CHECK FOR UPDATE ON STARTUP...
         if self.settings_controller.settings.check_for_update_startup:
             self.main_content_panel.actions_slot("check_for_update")
+        # REFRESH CONFIGURED METADATA
+        self.main_content_panel._do_refresh(is_initial=is_initial)
         # CHECK FOR STEAMCMD SETUP
         if not os.path.exists(
             self.steamcmd_wrapper.steamcmd_prefix
@@ -194,8 +203,6 @@ class MainWindow(QMainWindow):
             self.steamcmd_wrapper.on_steamcmd_not_found()
         else:
             self.steamcmd_wrapper.setup = True
-        # REFRESH CONFIGURED METADATA
-        self.main_content_panel._do_refresh(is_initial=is_initial)
         # CHECK USER PREFERENCE FOR WATCHDOG
         if self.settings_controller.settings.watchdog_toggle:
             # Setup watchdog
@@ -242,39 +249,8 @@ class MainWindow(QMainWindow):
         return answer or "Cancelled"
 
     def __backup_existing_instance(self, instance_name: str) -> None:
-        def compress_instance_folder_to_archive(
-            instance_data_to_save: dict, instance_path: str, output_path: str
-        ) -> None:
-            # Compress instance folder to archive.
-            # Preserve folder structure.
-            # Overwrite if exists.
-            try:
-                logger.info(f"Compressing instance folder to archive: {output_path}")
-                with ZipFile(output_path, "w") as archive:
-                    for root, dirs, files in os.walk(instance_path):
-                        for _dir in dirs:
-                            dir_path = os.path.join(root, _dir)
-                            archive.write(
-                                dir_path, os.path.relpath(dir_path, instance_path)
-                            )
-                            logger.debug(f"Added directory to archive: {dir_path}")
-                        for file in files:
-                            file_path = os.path.join(root, file)
-                            archive.write(
-                                file_path, os.path.relpath(file_path, instance_path)
-                            )
-                            logger.debug(f"Added file to archive: {file_path}")
-                    archive.writestr(
-                        "instance.json", dumps(instance_data_to_save, indent=4)
-                    )
-                    logger.debug(f"Added instance data to archive: {instance_path}")
-            except Exception as e:
-                logger.error(
-                    f"An error occurred while compressing instance folder: {e}"
-                )
-
         # Get instance data from Settings
-        instance_data = self.settings_controller.settings.instances.get(instance_name)
+        instance = self.settings_controller.settings.instances.get(instance_name)
 
         # If the instance_name is "Default", prompt the user for a new instance name.
         if instance_name == "Default":
@@ -285,15 +261,11 @@ class MainWindow(QMainWindow):
             instance_name = new_instance_name
 
         # Determine instance data to save
-        instance_data_to_save = {
-            "name": instance_name,
-            "game_folder": instance_data.get("game_folder", ""),
-            "config_folder": instance_data.get("config_folder", ""),
-            "local_folder": instance_data.get("local_folder", ""),
-            "workshop_folder": instance_data.get("workshop_folder", ""),
-            "run_args": instance_data.get("run_args", []),
-            "steamcmd_install_path": instance_data.get("steamcmd_install_path", ""),
-        }
+        if instance is None:
+            logger.error(f"Instance [{instance_name}] not found in Settings")
+            return
+
+        instance_controller = InstanceController(instance)
         # Prompt user to select output path for instance archive
         output_path = show_dialogue_file(
             mode="save",
@@ -303,54 +275,29 @@ class MainWindow(QMainWindow):
         )
         logger.info(f"Selected path: {output_path}")
         if output_path:
-            if not output_path.endswith(".zip"):
-                output_path += ".zip"
-            instance_path = AppInfo().app_storage_folder / "instances" / instance_name
-            self.main_content_panel.do_threaded_loading_animation(
-                gif_path=str(
-                    AppInfo().theme_data_folder / "default-icons" / "rimsort.gif"
-                ),
-                target=partial(
-                    compress_instance_folder_to_archive,
-                    instance_data_to_save,
-                    instance_path,
-                    output_path,
-                ),
-                text=f"Compressing [{instance_name}] instance folder to archive...",
-            )
+            try:
+                self.main_content_panel.do_threaded_loading_animation(
+                    gif_path=str(
+                        AppInfo().theme_data_folder / "default-icons" / "rimsort.gif"
+                    ),
+                    target=partial(
+                        instance_controller.compress_to_archive,
+                        output_path,
+                    ),
+                    text=f"Compressing [{instance_name}] instance folder to archive...",
+                )
+            except Exception as e:
+                show_fatal_error(
+                    title="Error compressing instance",
+                    text=f"An error occurred while compressing instance folder: {e}",
+                    information="Please check the logs for more information.",
+                    details=format_exc(),
+                )
         else:
             logger.warning("Backup cancelled: User cancelled selection...")
             return
 
     def __restore_instance_from_archive(self) -> None:
-        def extract_instance_folder_from_archive(
-            instance_name: str, instances_path: str, archive_path: str
-        ) -> str:
-            logger.info(f"Extracting instance folder from archive: {archive_path}")
-            # Extract instance folder from archive.
-            # Parse the "instance.json" file to get the instance data.
-            # Use the "name" key from the instance data to use as the instance folder.
-            # Replace if exists.
-            instance_folder = str(Path(instances_path) / instance_name)
-            try:
-                logger.info(f"Extracting instance folder from archive: {archive_path}")
-                logger.info(f"Destination instance folder: {instance_folder}")
-                with ZipFile(archive_path, "r") as archive:
-                    for info in archive.infolist():
-                        if info.filename == "instance.json":
-                            continue
-                        logger.debug(f"Extracting file: {info.filename}")
-                        archive.extract(info, path=instance_folder)
-            except Exception as e:
-                logger.error(f"An error occurred while extracting instance folder: {e}")
-
-        # Initialize instance data variables
-        instances_path = str(AppInfo().app_storage_folder / "instances")
-        instance_game_folder = ""
-        instance_config_folder = ""
-        instance_local_folder = ""
-        instance_workshop_folder = ""
-        instance_run_args = []
         # Prompt user to select input path for instance archive
         input_path = show_dialogue_file(
             mode="open",
@@ -358,21 +305,26 @@ class MainWindow(QMainWindow):
             _dir=str(AppInfo().app_storage_folder),
             _filter="Zip files (*.zip)",
         )
+
+        if input_path is None:
+            logger.info("User cancelled operation. Input path was None")
+            return
+        logger.info(f"Selected path: {input_path}")
+
+        if not os.path.exists(input_path):
+            logger.error(f"Archive not found at path: {input_path}")
+            show_warning(
+                title="Error restoring instance",
+                text=f"Archive not found at path: {input_path}",
+            )
+            return
+
         # Grab the instance name from the archive's "instance.json" file and extract archive
         try:
-            with ZipFile(input_path, "r") as archive:
-                instance_data = loads(archive.read("instance.json"))
-                instance_name = instance_data.get("name")
-                if instance_name:
-                    instance_data.pop("name")
-                instance_game_folder = instance_data.get("game_folder", "")
-                instance_config_folder = instance_data.get("config_folder", "")
-                instance_local_folder = instance_data.get("local_folder", "")
-                instance_workshop_folder = instance_data.get("workshop_folder", "")
-                instance_run_args = instance_data.get("run_args", [])
-                instance_steamcmd_install_path = str(
-                    Path(instances_path) / instance_name
-                )
+            instance_controller = InstanceController(input_path)
+        except InvalidArchivePathError as _:
+            # Handled in controller. Gracefully fail.
+            return
         except Exception as e:
             logger.error(f"An error occurred while reading instance archive: {e}")
             show_fatal_error(
@@ -381,52 +333,85 @@ class MainWindow(QMainWindow):
                 details=format_exc(),
             )
             return
-        logger.info(f"Selected path: {input_path}")
-        if input_path and os.path.exists(input_path):
-            self.main_content_panel.do_threaded_loading_animation(
-                target=partial(
-                    extract_instance_folder_from_archive,
-                    instance_name,
-                    instances_path,
-                    input_path,
-                ),
-                gif_path=str(
-                    AppInfo().theme_data_folder / "default-icons" / "rimsort.gif"
-                ),
-                text=f"Restoring instance [{instance_name}] from archive...",
+
+        if os.path.exists(instance_controller.instance_folder_path):
+            answer = show_dialogue_conditional(
+                title="Instance folder exists",
+                text=f"Instance folder already exists: {instance_controller.instance_folder_path}",
+                information="Do you want to continue and replace the existing instance folder?",
+                button_text_override=[
+                    "Replace",
+                ],
             )
-        # Correct SteamCMD symlink if exists
-        steamcmd_link_path = str(
-            AppInfo().app_storage_folder
-            / "instances"
-            / instance_name
-            / "steam"
-            / "steamapps"
-            / "workshop"
-            / "content"
-            / "294100"
+
+            if answer != "Replace":
+                logger.info("User cancelled instance extraction.")
+                return
+
+        self.main_content_panel.do_threaded_loading_animation(
+            target=partial(
+                instance_controller.extract_from_archive,
+                input_path,
+            ),
+            gif_path=str(AppInfo().theme_data_folder / "default-icons" / "rimsort.gif"),
+            text=f"Restoring instance [{instance_controller.instance.name}] from archive...",
         )
-        self.steamcmd_wrapper.check_symlink(steamcmd_link_path, instance_local_folder)
+
         # Check that the instance folder exists. If it does, update Settings with the instance data
-        instance_path = str(AppInfo().app_storage_folder / "instances" / instance_name)
-        if os.path.exists(instance_path):
-            self.settings_controller.settings.instances[instance_name] = {
-                "game_folder": (instance_game_folder if instance_game_folder else ""),
-                "config_folder": (
-                    instance_config_folder if instance_config_folder else ""
-                ),
-                "local_folder": instance_local_folder if instance_local_folder else "",
-                "workshop_folder": (
-                    instance_workshop_folder if instance_workshop_folder else ""
-                ),
-                "run_args": instance_run_args if instance_run_args else [],
-                "steamcmd_install_path": (
-                    instance_steamcmd_install_path
-                    if instance_steamcmd_install_path
-                    else ""
-                ),
-            }
-            self.__switch_to_instance(instance_name)
+        if os.path.exists(instance_controller.instance_folder_path):
+            cleared_paths = instance_controller.validate_paths()
+            if cleared_paths:
+                logger.warning(
+                    f"Instance folder paths not found: {', '.join(cleared_paths)}"
+                )
+                show_warning(
+                    title="Invalid instance folder paths",
+                    text="Invalid instance folder paths",
+                    information="Some folder paths from the restored instance are invalid and were cleared. Please reconfigure them in the settings",
+                    details=f"Invalid paths: {', '.join(cleared_paths)}",
+                )
+
+            steamcmd_link_path = str(
+                Path(instance_controller.instance.steamcmd_install_path)
+                / "steam"
+                / "steamapps"
+                / "workshop"
+                / "content"
+                / "294100"
+            )
+
+            if (
+                os.path.exists(steamcmd_link_path)
+                and instance_controller.instance.local_folder != ""
+            ):
+                logger.info("Restoring steamcmd symlink...")
+                self.steamcmd_wrapper.check_symlink(
+                    steamcmd_link_path, instance_controller.instance.local_folder
+                )
+            elif not os.path.exists(steamcmd_link_path):
+                logger.info("Skipping steamcmd symlink restoration")
+            else:
+                show_warning(
+                    title="Couldn't restore steamcmd symlink/junction",
+                    text="Couldn't restore steamcmd symlink/junction",
+                    information="The steamcmd symlink/junction could not be restored as the local folder is not set or invalid. The symlink/junction will need to be manually recreated.",
+                )
+                logger.warning(
+                    "Skipping steamcmd symlink restoration: Local folder not set. The symlink will need to be manually updated."
+                )
+
+            self.settings_controller.set_instance(instance_controller.instance)
+            self.__switch_to_instance(instance_controller.instance.name)
+        else:
+            show_warning(
+                title="Error restoring instance",
+                text=f"An error occurred while restoring instance [{instance_controller.instance.name}].",
+                information="The instance folder was not found after extracting the archive. Perhaps the archive is corrupt or the instance name is invalid.",
+            )
+
+            logger.warning(
+                "Restore cancelled: Instance folder not found after extraction..."
+            )
 
     def __clone_existing_instance(self, existing_instance_name: str) -> None:
         def copy_game_folder(
@@ -542,30 +527,30 @@ class MainWindow(QMainWindow):
         current_instances = list(self.settings_controller.settings.instances.keys())
         existing_instance_game_folder = self.settings_controller.settings.instances[
             existing_instance_name
-        ]["game_folder"]
+        ].game_folder
         game_folder_name = os.path.split(existing_instance_game_folder)[1]
         existing_instance_local_folder = self.settings_controller.settings.instances[
             existing_instance_name
-        ]["local_folder"]
+        ].local_folder
         local_folder_name = os.path.split(existing_instance_local_folder)[1]
         existing_instance_workshop_folder = self.settings_controller.settings.instances[
             existing_instance_name
-        ]["workshop_folder"]
+        ].workshop_folder
         existing_instance_config_folder = self.settings_controller.settings.instances[
             existing_instance_name
-        ]["config_folder"]
-        existing_instance_run_args = self.settings_controller.settings.instances.get(
-            existing_instance_name, {}
-        ).get("run_args", [])
+        ].config_folder
+        existing_instance_run_args = self.settings_controller.settings.instances[
+            existing_instance_name
+        ].run_args
         existing_instance_steamcmd_install_path = (
-            self.settings_controller.settings.instances[existing_instance_name][
-                "steamcmd_install_path"
-            ]
+            self.settings_controller.settings.instances[
+                existing_instance_name
+            ].steamcmd_install_path
         )
         existing_instance_steam_client_integration = (
-            self.settings_controller.settings.instances[existing_instance_name].get(
-                "steam_client_integration"
-            )
+            self.settings_controller.settings.instances[
+                existing_instance_name
+            ].steam_client_integration
         )
         # Sanitize the input so that it does not produce any KeyError down the road
         new_instance_name = self.__ask_for_new_instance_name()
@@ -580,7 +565,8 @@ class MainWindow(QMainWindow):
             # Prompt user with the existing instance configuration and confirm that they would like to clone it
             answer = show_dialogue_confirmation(
                 title=f"Clone instance [{existing_instance_name}]",
-                text=f"Would you like to clone instance [{existing_instance_name}] to create new instance [{new_instance_name}]?"
+                text=f"Would you like to clone instance [{existing_instance_name}] to create new instance [{new_instance_name}]?\n"
+                + "This will clone the instance's data!"
                 + "\n\n",
                 information=f"Game folder:\n{existing_instance_game_folder if existing_instance_game_folder else '<None>'}\n"
                 + f"\nLocal folder:\n{existing_instance_local_folder if existing_instance_local_folder else '<None>'}\n"
@@ -660,7 +646,7 @@ class MainWindow(QMainWindow):
                                 text=f"Workshop mods folder at [{existing_instance_workshop_folder}] not found.",
                             )
                     elif answer == "Keep Workshop Folder":
-                        target_workshop_folder = existing_instance_workshop_folder
+                        target_workshop_folder = str(existing_instance_workshop_folder)
                 # If the instance has a 'steamcmd' folder, clone it to the new instance
                 steamcmd_install_path = str(
                     Path(existing_instance_steamcmd_install_path) / "steamcmd"
@@ -733,13 +719,25 @@ class MainWindow(QMainWindow):
                         "steam_client_integration": existing_instance_steam_client_integration,
                     },
                 )
+        elif new_instance_name:
+            show_warning(
+                title="Error cloning instance",
+                text="Unable to clone instance.",
+                information="Please enter a valid, unique instance name. It cannot be 'Default' or empty.",
+            )
+        else:
+            logger.debug("User cancelled clone operation")
 
     def __create_new_instance(
-        self, instance_name: str = None, instance_data: dict = None
+        self, instance_name: str = "", instance_data: dict[str, Any] = {}
     ) -> None:
         if not instance_name:
             # Sanitize the input so that it does not produce any KeyError down the road
-            instance_name = self.__ask_for_new_instance_name()
+            new_instance_name = self.__ask_for_new_instance_name()
+            if not new_instance_name:
+                logger.info("User cancelled operation")
+                return
+            instance_name = new_instance_name
         current_instances = list(self.settings_controller.settings.instances.keys())
         if (
             instance_name
@@ -774,17 +772,19 @@ class MainWindow(QMainWindow):
                 run_args.extend(generated_instance_run_args)
                 run_args.extend(instance_data.get("run_args", []))
             # Add new instance to Settings
-            self.settings_controller.settings.instances[instance_name] = {
-                "game_folder": instance_data.get("game_folder", ""),
-                "local_folder": instance_data.get("local_folder", ""),
-                "workshop_folder": instance_data.get("workshop_folder", ""),
-                "config_folder": instance_data.get("config_folder", ""),
-                "run_args": run_args,
-                "steamcmd_install_path": instance_path,
-                "steam_client_integration": instance_data.get(
-                    "steam_client_integration"
+            self.settings_controller.create_instance(
+                instance_name=instance_name,
+                game_folder=instance_data.get("game_folder", ""),
+                local_folder=instance_data.get("local_folder", ""),
+                workshop_folder=instance_data.get("workshop_folder", ""),
+                config_folder=instance_data.get("config_folder", ""),
+                run_args=run_args,
+                steamcmd_install_path=instance_path,
+                steam_client_integration=instance_data.get(
+                    "steam_client_integration", False
                 ),
-            }
+            )
+
             # Save settings
             self.settings_controller.settings.save()
             # Switch to new instance and initialize content
@@ -858,16 +858,18 @@ class MainWindow(QMainWindow):
             targets=[
                 str(
                     Path(
-                        self.settings_controller.settings.instances[current_instance][
-                            "game_folder"
-                        ]
+                        self.settings_controller.settings.instances[
+                            current_instance
+                        ].game_folder
                     )
                     / "Data"
                 ),
-                self.settings_controller.settings.instances[current_instance],
-                self.settings_controller.settings.instances[current_instance][
-                    "workshop_folder"
-                ],
+                self.settings_controller.settings.instances[
+                    current_instance
+                ].local_folder,
+                self.settings_controller.settings.instances[
+                    current_instance
+                ].workshop_folder,
             ],
         )
         # Connect watchdog to MetadataManager
@@ -884,7 +886,10 @@ class MainWindow(QMainWindow):
         self.main_content_panel.stop_watchdog_signal.connect(self.shutdown_watchdog)
         # Start watchdog
         try:
-            self.watchdog_event_handler.watchdog_observer.start()
+            if self.watchdog_event_handler.watchdog_observer is not None:
+                self.watchdog_event_handler.watchdog_observer.start()  # type: ignore #Upstream not typed
+            else:
+                logger.warning("Watchdog Observer is None. Unable to start.")
         except Exception as e:
             logger.warning(
                 f"Unable to initialize watchdog Observer due to exception: {str(e)}"
@@ -905,7 +910,7 @@ class MainWindow(QMainWindow):
             and self.watchdog_event_handler.watchdog_observer
             and self.watchdog_event_handler.watchdog_observer.is_alive()
         ):
-            self.watchdog_event_handler.watchdog_observer.stop()
+            self.watchdog_event_handler.watchdog_observer.stop()  # type: ignore #Upstream not typed
             self.watchdog_event_handler.watchdog_observer.join()
             self.watchdog_event_handler.watchdog_observer = None
             for timer in self.watchdog_event_handler.cooldown_timers.values():

@@ -4,11 +4,12 @@ from os import path, rename
 from pathlib import Path
 from shutil import copytree, rmtree
 from time import time
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from loguru import logger
 from PySide6.QtCore import QObject
 
+from app.models.instance import Instance
 from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 
@@ -44,8 +45,8 @@ class Settings(QObject):
         self._todds_active_mods_target: bool = False
         self._todds_dry_run: bool = False
         self._todds_overwrite: bool = False
-        self._current_instance: Optional[str] = None
-        self._instances: dict[str, dict[str, Any]] = {}
+        self._current_instance: str = "Default"
+        self._instances: dict[str, Instance] = {}
         self._github_username: str = ""
         self._github_token: str = ""
         self._steam_apikey: str = ""
@@ -85,18 +86,7 @@ class Settings(QObject):
         self._todds_dry_run = False
         self._todds_overwrite = False
         self._current_instance = "Default"
-        self._instances: Dict[str, Dict[str, str]] = {
-            "Default": {
-                "game_folder": "",
-                "config_folder": "",
-                "local_folder": "",
-                "workshop_folder": "",
-                "run_args": [],
-                "steamcmd_install_path": str(
-                    Path(AppInfo().app_storage_folder / "instances" / "Default")
-                ),
-            }
-        }
+        self._instances = {"Default": Instance()}
         self._github_username = ""
         self._github_token = ""
         self._steam_apikey = ""
@@ -377,11 +367,11 @@ class Settings(QObject):
         EventBus().settings_have_changed.emit()
 
     @property
-    def instances(self) -> Dict[str, Dict[str, str | list[str]]]:
+    def instances(self) -> dict[str, Instance]:
         return self._instances
 
     @instances.setter
-    def instances(self, value: Dict[str, Dict[str, str]]) -> None:
+    def instances(self, value: dict[str, Instance]) -> None:
         if value == self._instances:
             return
         self._instances = value
@@ -442,17 +432,18 @@ class Settings(QObject):
                     )
                     # Create Default instance
                     data["instances"] = {
-                        "Default": {
-                            "game_folder": data.get("game_folder", ""),
-                            "local_folder": data.get("local_folder", ""),
-                            "workshop_folder": data.get("workshop_folder", ""),
-                            "config_folder": data.get("config_folder", ""),
-                            "run_args": data.get("run_args", []),
-                            "steamcmd_install_path": steamcmd_prefix_default_instance_path,
-                            "steam_client_integration": False,
-                        }
+                        "Default": Instance(
+                            name="Default",
+                            game_folder=data.get("game_folder", ""),
+                            local_folder=data.get("local_folder", ""),
+                            workshop_folder=data.get("workshop_folder", ""),
+                            config_folder=data.get("config_folder", ""),
+                            run_args=data.get("run_args", []),
+                            steamcmd_install_path=steamcmd_prefix_default_instance_path,
+                            steam_client_integration=False,
+                        )
                     }
-                    steamcmd_prefix_to_mitigate = data.get("steamcmd_install_path")
+                    steamcmd_prefix_to_mitigate = data.get("steamcmd_install_path", "")
                     steamcmd_path_to_mitigate = str(
                         Path(steamcmd_prefix_to_mitigate) / "steamcmd"
                     )
@@ -648,7 +639,18 @@ class Settings(QObject):
             del data["current_instance"]
 
         if "instances" in data:
-            self.instances = data["instances"]
+            # Convert to Instance objects
+            instances = {}
+            for instance_name, instance_data in data["instances"].items():
+                if isinstance(instance_data, Instance):
+                    instances[instance_name] = instance_data
+                elif isinstance(instance_data, dict):
+                    instances[instance_name] = Instance(**instance_data)
+                else:
+                    logger.warning(
+                        f"Instance data for {instance_name} is not a valid type: {type(instance_data)}"
+                    )
+            self.instances = instances
             del data["instances"]
 
         if "github_username" in data:
@@ -689,7 +691,9 @@ class Settings(QObject):
             "todds_dry_run": self.todds_dry_run,
             "todds_overwrite": self.todds_overwrite,
             "current_instance": self.current_instance,
-            "instances": self.instances,
+            "instances": {
+                name: instance.as_dict() for name, instance in self.instances.items()
+            },
             "github_username": self.github_username,
             "github_token": self.github_token,
             "steam_apikey": self.steam_apikey,

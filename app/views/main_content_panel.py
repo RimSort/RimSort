@@ -333,10 +333,10 @@ class MainContent(QObject):
         current_instance = self.settings_controller.settings.current_instance
         game_folder_path = self.settings_controller.settings.instances[
             current_instance
-        ]["game_folder"]
+        ].game_folder
         config_folder_path = self.settings_controller.settings.instances[
             current_instance
-        ]["config_folder"]
+        ].config_folder
         logger.debug(f"Game folder: {game_folder_path}")
         logger.debug(f"Config folder: {config_folder_path}")
         if (
@@ -587,7 +587,7 @@ class MainContent(QObject):
                     Path(
                         self.settings_controller.settings.instances[
                             self.settings_controller.settings.current_instance
-                        ]["config_folder"]
+                        ].config_folder
                     )
                     / "ModsConfig.xml"
                 )
@@ -635,13 +635,13 @@ class MainContent(QObject):
             if not self.settings_controller.settings.todds_active_mods_target:
                 local_mods_target = self.settings_controller.settings.instances[
                     self.settings_controller.settings.current_instance
-                ]["local_folder"]
+                ].local_folder
                 if local_mods_target and local_mods_target != "":
                     with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
                         todds_txt_file.write(local_mods_target + "\n")
                 workshop_mods_target = self.settings_controller.settings.instances[
                     self.settings_controller.settings.current_instance
-                ]["workshop_folder"]
+                ].workshop_folder
                 if workshop_mods_target and workshop_mods_target != "":
                     with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
                         todds_txt_file.write(workshop_mods_target + "\n")
@@ -1049,9 +1049,17 @@ class MainContent(QObject):
                 )
         else:
             self.__insert_data_into_lists([], [])
-            logger.debug(
+            logger.warning(
                 "Essential paths have not been set. Passing refresh and resetting mod lists"
             )
+            # Wait for settings dialog to be closed before continuing.
+            # This is to ensure steamcmd check and other ops are done after the user has a chance to set paths
+            if not self.settings_controller.settings_dialog.isHidden():
+                loop = QEventLoop()
+                self.settings_controller.settings_dialog.finished.connect(loop.quit)
+                loop.exec_()
+                logger.debug("Settings dialog closed. Continuing with refresh...")
+
         EventBus().refresh_finished.emit()
 
     def _do_clear(self) -> None:
@@ -1673,50 +1681,54 @@ class MainContent(QObject):
 
     @Slot()
     def _on_do_upload_rimsort_log(self) -> None:
-        ret = upload_data_to_0x0_st(str(AppInfo().user_log_folder / "RimSort.log"))
-        if ret:
-            copy_to_clipboard_safely(ret)
-            dialogue.show_information(
-                title="Uploaded file",
-                text="Uploaded RimSort log to http://0x0.st/",
-                information=f"The URL has been copied to your clipboard:\n\n{ret}",
-            )
-            webbrowser.open(ret)
+        self._upload_log(AppInfo().user_log_folder / "RimSort.log")
 
     @Slot()
     def _on_do_upload_rimsort_old_log(self) -> None:
-        ret = upload_data_to_0x0_st(str(AppInfo().user_log_folder / "RimSort.old.log"))
-        if ret:
-            copy_to_clipboard_safely(ret)
-            dialogue.show_information(
-                title="Uploaded file",
-                text="Uploaded RimSort log to http://0x0.st/",
-                information=f"The URL has been copied to your clipboard:\n\n{ret}",
-            )
-            webbrowser.open(ret)
+        self._upload_log(AppInfo().user_log_folder / "RimSort.old.log")
 
     @Slot()
     def _on_do_upload_rimworld_log(self) -> None:
-        player_log_path = str(
-            (
-                Path(
-                    self.settings_controller.settings.instances[
-                        self.settings_controller.settings.current_instance
-                    ]["config_folder"]
-                ).parent
-                / "Player.log"
-            )
+        player_log_path = (
+            Path(
+                self.settings_controller.settings.instances[
+                    self.settings_controller.settings.current_instance
+                ].config_folder
+            ).parent
+            / "Player.log"
         )
-        if os.path.exists(player_log_path):
-            ret = upload_data_to_0x0_st(player_log_path)
-            if ret:
-                copy_to_clipboard_safely(ret)
-                dialogue.show_information(
-                    title="Uploaded file",
-                    text="Uploaded RimWorld log to http://0x0.st/",
-                    information=f"The URL has been copied to your clipboard:\n\n{ret}",
-                )
-                webbrowser.open(ret)
+
+        self._upload_log(player_log_path)
+
+    def _upload_log(self, path: Path) -> None:
+        if not os.path.exists(path):
+            dialogue.show_warning(
+                title="File not found",
+                text="The file you are trying to upload does not exist.",
+                information=f"File: {path}",
+            )
+            return
+
+        success, ret = self.do_threaded_loading_animation(
+            gif_path=str(AppInfo().theme_data_folder / "default-icons" / "rimsort.gif"),
+            target=partial(upload_data_to_0x0_st, str(path)),
+            text=f"Uploading {path.name} to 0x0.st...",
+        )
+
+        if success:
+            copy_to_clipboard_safely(ret)
+            dialogue.show_information(
+                title="Uploaded file",
+                text=f"Uploaded {path.name} to http://0x0.st/",
+                information=f"The URL has been copied to your clipboard:\n\n{ret}",
+            )
+            webbrowser.open(ret)
+        else:
+            dialogue.show_warning(
+                title="Failed to upload file.",
+                text="Failed to upload the file to 0x0.st",
+                information=ret,
+            )
 
     def _do_save(self) -> None:
         """
@@ -1755,7 +1767,7 @@ class MainContent(QObject):
             Path(
                 self.settings_controller.settings.instances[
                     self.settings_controller.settings.current_instance
-                ]["config_folder"]
+                ].config_folder
             )
             / "ModsConfig.xml"
         )
@@ -1926,7 +1938,7 @@ class MainContent(QObject):
             return
         local_mods_path = self.settings_controller.settings.instances[
             self.settings_controller.settings.current_instance
-        ]["local_folder"]
+        ].local_folder
         if local_mods_path and os.path.exists(local_mods_path):
             self.steamcmd_runner = RunnerPanel()
             self.steamcmd_runner.setWindowTitle("RimSort - SteamCMD setup")
@@ -2004,7 +2016,7 @@ class MainContent(QObject):
                 information='Please setup an existing SteamCMD prefix, or setup a new prefix with "Setup SteamCMD".',
             )
 
-    def _do_steamworks_api_call(self, instruction: list) -> None:
+    def _do_steamworks_api_call(self, instruction: list[Any]) -> None:
         """
         Create & launch Steamworks API process to handle instructions received from connected signals
 
@@ -2130,7 +2142,7 @@ class MainContent(QObject):
             self._do_clone_repo_to_path(
                 base_path=self.settings_controller.settings.instances[
                     self.settings_controller.settings.current_instance
-                ]["local_folder"],
+                ].local_folder,
                 repo_url=args,
             )
         else:
@@ -3180,12 +3192,20 @@ class MainContent(QObject):
 
     @Slot()
     def _on_settings_have_changed(self) -> None:
-        steamcmd_prefix = self.settings_controller.settings.instances.get(
-            self.settings_controller.settings.current_instance, {}
-        ).get("steamcmd_install_path", "")
+        instance = self.settings_controller.settings.instances.get(
+            self.settings_controller.settings.current_instance
+        )
+        if not instance:
+            logger.warning(
+                f"Tried to access instance {self.settings_controller.settings.current_instance} that does not exist!"
+            )
+            return None
+
+        steamcmd_prefix = instance.steamcmd_install_path
+
         if steamcmd_prefix:
             self.steamcmd_wrapper.initialize_prefix(
-                steamcmd_prefix=steamcmd_prefix,
+                steamcmd_prefix=str(steamcmd_prefix),
                 validate=self.settings_controller.settings.steamcmd_validate_downloads,
             )
         self.steamcmd_wrapper.validate_downloads = (
@@ -3225,11 +3245,7 @@ class MainContent(QObject):
 
     @Slot()
     def _on_do_upload_log(self) -> None:
-        ret = upload_data_to_0x0_st(
-            str(AppInfo().user_log_folder / (AppInfo().app_name + ".log"))
-        )
-        if ret:
-            webbrowser.open(ret)
+        self._upload_log(AppInfo().user_log_folder / (AppInfo().app_name + ".log"))
 
     @Slot()
     def _on_do_download_all_mods_via_steamcmd(self) -> None:
@@ -3247,18 +3263,18 @@ class MainContent(QObject):
     def _do_run_game(self) -> None:
         current_instance = self.settings_controller.settings.current_instance
         game_install_path = Path(
-            self.settings_controller.settings.instances[current_instance]["game_folder"]
+            self.settings_controller.settings.instances[current_instance].game_folder
         )
         # Run args is inconsistent and is sometimes a string and sometimes a list
         run_args: list[str] | str = self.settings_controller.settings.instances[
             current_instance
-        ]["run_args"]
+        ].run_args
 
         run_args = [run_args] if isinstance(run_args, str) else run_args
 
         steam_client_integration = self.settings_controller.settings.instances[
             current_instance
-        ].get("steam_client_integration", False)
+        ].steam_client_integration
 
         # If integration is enabled, check for file called "steam_appid.txt" in game folder.
         # in the game folder. If not, create one and add the Steam App ID to it.

@@ -79,7 +79,7 @@ def show_dialogue_conditional(
     :param text: text to pass to setText
     :param information: text to pass to setInformativeText
     :param details: text to pass to setDetailedText
-    :param button_text_override: list of strings to override the default button texts. [0] is the first button, [1] is the second
+    :param button_text_override: list of strings to override the default button texts
     """
     logger.info(
         f"Showing dialogue box with input: [{title}], [{text}], [{information}] [{details}] BTN OVERRIDES: [{button_text_override}]"
@@ -101,16 +101,12 @@ def show_dialogue_conditional(
         dialogue.setStandardButtons(QMessageBox.StandardButton.Cancel)
 
         # Add custom buttons
-
-        # Custom 1
-        custom_btn_1 = QPushButton(button_text_override[0])
-        custom_btn_1.setFixedWidth(custom_btn_1.sizeHint().width())
-        dialogue.addButton(custom_btn_1, QMessageBox.ButtonRole.ActionRole)
-        # Custom 2
-        custom_btn_2 = QPushButton(button_text_override[1])
-        custom_btn_2.setFixedWidth(custom_btn_2.sizeHint().width())
-        dialogue.addButton(custom_btn_2, QMessageBox.ButtonRole.ActionRole)
-        dialogue.setEscapeButton(QMessageBox.StandardButton.Cancel)
+        custom_btns = []
+        for btn_text in button_text_override:
+            custom_btn = QPushButton(btn_text)
+            custom_btn.setFixedWidth(custom_btn.sizeHint().width())
+            custom_btns.append(custom_btn)
+            dialogue.addButton(custom_btn, QMessageBox.ButtonRole.ActionRole)
     else:
         # Configure buttons
         dialogue.setStandardButtons(

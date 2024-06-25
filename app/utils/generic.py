@@ -9,6 +9,7 @@ from pathlib import Path
 from re import sub
 from stat import S_IRWXG, S_IRWXO, S_IRWXU
 
+import requests
 from loguru import logger
 from pyperclip import copy as copy_to_clipboard
 from requests import post as requests_post
@@ -106,7 +107,7 @@ def delete_files_only_extension(directory, extension):
         logger.debug(f"Deleted: {directory}")
 
 
-def directories(mods_path):
+def directories(mods_path: Path | str) -> list[str]:
     try:
         with os.scandir(mods_path) as directories:
             return [directory.path for directory in directories if directory.is_dir()]
@@ -262,7 +263,7 @@ def set_to_list(obj):
         return obj
 
 
-def upload_data_to_0x0_st(path: str) -> str | None:
+def upload_data_to_0x0_st(path: str) -> tuple[bool, str]:
     """
     Function to upload data to http://0x0.st/
 
@@ -270,13 +271,20 @@ def upload_data_to_0x0_st(path: str) -> str | None:
     :return: a string that is the URL returned from http://0x0.st/
     """
     logger.info(f"Uploading data to http://0x0.st/: {path}")
-    request = requests_post(
-        url="http://0x0.st/", files={"file": (path, open(path, "rb"))}
-    )
+    try:
+        request = requests_post(
+            url="http://0x0.st/", files={"file": (path, open(path, "rb"))}
+        )
+    except requests.exceptions.ConnectionError as e:
+        logger.error(f"Connection Error. Failed to upload data to http://0x0.st: {e}")
+        return False, str(e)
+
     if request.status_code == 200:
         url = request.text.strip()
         logger.info(f"Uploaded! Uploaded data can be found at: {url}")
-        return url
+        return True, url
     else:
-        logger.warning("Failed to upload data to http://0x0.st")
-        return None
+        logger.warning(
+            f"Failed to upload data to http://0x0.st. Status code: {request.status_code}"
+        )
+        return False, f"Status code: {request.status_code}"

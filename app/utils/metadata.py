@@ -95,9 +95,7 @@ class MetadataManager(QObject):
                 # This is just getting the path 2 directories up from content/294100,
                 # so that we can find workshop/appworkshop_294100.acf
                 Path(
-                    self.settings_controller.settings.instances[current_instance][
-                        "workshop_folder"
-                    ]
+                    self.settings_controller.settings.instances[current_instance].workshop_folder
                 ).parent.parent
                 / "appworkshop_294100.acf",
             )
@@ -394,8 +392,8 @@ class MetadataManager(QObject):
         # Get & set Rimworld version string
         game_folder = self.settings_controller.settings.instances[
             self.settings_controller.settings.current_instance
-        ]["game_folder"]
-        version_file_path = str((Path(game_folder) / "Version.txt"))
+        ].game_folder
+        version_file_path = str(game_folder / Path("Version.txt"))
         if os.path.exists(version_file_path):
             try:
                 with open(version_file_path, encoding="utf-8") as f:
@@ -414,13 +412,13 @@ class MetadataManager(QObject):
             self.show_warning_signal.emit(
                 "Missing Version.txt",
                 f"RimSort is unable to get the game version at the expected path: [{version_file_path}].",
-                f"\nIs your game path [{self.settings_controller.settings.instances[self.settings_controller.settings.current_instance]['game_folder']}] set correctly? There should be a Version.txt file in the game install directory.",
+                f"\nIs your game path [{self.settings_controller.settings.instances[self.settings_controller.settings.current_instance].game_folder}] set correctly? There should be a Version.txt file in the game install directory.",
                 "",
             )
         # Get and cache installed base game / DLC data
-        if game_folder and game_folder != "":
+        if game_folder and game_folder != Path():
             # Get mod data
-            data_path = str((Path(game_folder) / "Data"))
+            data_path = str(game_folder / Path("Data"))
             logger.info(
                 f"Querying Official expansions from RimWorld's Data folder: {data_path}"
             )
@@ -478,9 +476,7 @@ class MetadataManager(QObject):
             purge_by_data_source("expansion")
         # Get and cache installed local/SteamCMD Workshop mods
         current_instance = self.settings_controller.settings.current_instance
-        local_folder = self.settings_controller.settings.instances[current_instance][
-            "local_folder"
-        ]
+        local_folder = self.settings_controller.settings.instances[current_instance].local_folder
         if local_folder and local_folder != "":
             # Get mod data
             logger.info(f"Querying local mods from path: {local_folder}")
@@ -502,9 +498,7 @@ class MetadataManager(QObject):
             purge_by_data_source("local")
         # Get and cache installed Steam client Workshop mods
         current_instance = self.settings_controller.settings.current_instance
-        workshop_folder = self.settings_controller.settings.instances[current_instance][
-            "workshop_folder"
-        ]
+        workshop_folder = self.settings_controller.settings.instances[current_instance].workshop_folder
         if workshop_folder and workshop_folder != "":
             logger.info(f"Querying workshop mods from path: {workshop_folder}")
             workshop_subdirectories = directories(workshop_folder)
