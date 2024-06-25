@@ -6,6 +6,7 @@ from pathlib import Path
 from shutil import copy2, copytree, rmtree
 from traceback import format_exc
 from typing import List, Optional
+from errno import ENOTEMPTY
 
 from loguru import logger
 from PySide6.QtCore import QEvent, QModelIndex, QObject, QRectF, QSize, Qt, Signal
@@ -1289,14 +1290,24 @@ class ModListWidget(QListWidget):
                                         )
                                         pass
                                     except OSError as e:
-                                        ERROR_DIR_NOT_EMPTY = 145
-                                        if e.winerror == ERROR_DIR_NOT_EMPTY:
-                                            logger.debug(
+                                        if e.errno == ENOTEMPTY:
+                                            match os.name:
+                                                case 'nt':
+                                                    error_code = e.winerror
+                                                case _:
+                                                    error_code = e.errno
+
+                                            logger.warning(
                                                 f"Unable to delete mod. Directory is not empty: {mod_metadata['path']}"
                                             )
-                                            continue
+                                            show_warning(
+                                                title="Unable to delete mod",
+                                                text="Mod directory was not empty. Please close all programs accessing files or subfolders in the directory (including your file manager) and try again.",
+                                                information=f"{e.strerror} occurred at {e.filename} with error code {error_code}",
+                                            )
                                         else:
                                             raise e
+                                        continue
                     return True
                 elif action == delete_mod_keep_dds_action:  # ACTION: Delete mods action
                     answer = show_dialogue_conditional(
