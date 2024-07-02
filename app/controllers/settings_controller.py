@@ -6,6 +6,7 @@ from loguru import logger
 from PySide6.QtCore import QObject, Slot
 from PySide6.QtWidgets import QApplication
 
+from app.controllers.theme_controller import Themes
 from app.models.dialogue import show_dialogue_confirmation, show_dialogue_file
 from app.models.settings import Instance, Settings
 from app.utils.event_bus import EventBus
@@ -475,6 +476,22 @@ class SettingsController(QObject):
             self.settings.todds_overwrite
         )
 
+        # themes tab
+        if self.settings.enable_themes:
+            self.settings_dialog.enable_themes_checkbox.setChecked(True)
+        # get theme names
+        current_theme_name = self.settings.theme
+        current_index = self.settings_dialog.themes_combobox.findText(
+            current_theme_name
+        )
+        if current_index != -1:
+            self.settings_dialog.themes_combobox.setCurrentIndex(current_index)
+        else:
+            # Handle invalid index selection
+            logger.warning(f"Invalid theme selected: {current_theme_name}")
+            self.settings.theme = "RimPy"  # Set a default theme
+            self.settings.save()
+
         # Advanced tab
         self.settings_dialog.debug_logging_checkbox.setChecked(
             self.settings.debug_logging_enabled
@@ -610,6 +627,24 @@ class SettingsController(QObject):
         self.settings.todds_overwrite = (
             self.settings_dialog.todds_overwrite_checkbox.isChecked()
         )
+
+        # themes tab
+        if self.settings_dialog.enable_themes_checkbox.isChecked():
+            self.settings.enable_themes = True
+        else:
+            self.settings.enable_themes = False
+        # get theme names
+        selected_theme = self.settings_dialog.themes_combobox.currentText()
+        self.settings.theme = selected_theme
+        available_themes = [folder.name for folder in Themes.get_available_themes()]
+
+        if selected_theme in available_themes:
+            self.settings.theme = selected_theme
+        else:
+            # Handle invalid theme selection
+            logger.warning(f"Invalid theme selected: {selected_theme}")
+            self.settings.theme = "RimPy"  # Set a default theme
+            self.settings.save()
 
         # Advanced tab
         self.settings.debug_logging_enabled = (
