@@ -612,6 +612,29 @@ class MetadataManager(QObject):
                         dependencies,
                         self.internal_local_metadata,
                     )
+                    # Cleanup Dependencies so that it can be used as load order rules
+                    load_dependencies = (
+                        str(dependencies)
+                        .lower()
+                        .split(",")[0]
+                        .replace("{'packageid': '", "")
+                        .replace("[{'packageid' :", "")
+                        .replace("displayname': '", "")
+                        .replace("[", "")
+                        .replace("'", "")
+                        .replace("{", "")
+                        .replace("}", "")
+                        .replace("li:", "")
+                    )
+                    logger.debug(load_dependencies)
+                    add_load_rule_to_mod(
+                        self.internal_local_metadata[uuid],
+                        load_dependencies,
+                        "loadTheseBefore",
+                        "loadTheseAfter",
+                        self.internal_local_metadata,
+                        self.packageid_to_uuids,
+                    )
 
             if self.internal_local_metadata[uuid].get("moddependenciesbyversion"):
                 major, minor = self.game_version.split(".")[
@@ -634,6 +657,29 @@ class MetadataManager(QObject):
                                 self.internal_local_metadata[uuid],
                                 dependencies_by_ver["li"],
                                 self.internal_local_metadata,
+                            )
+                            # Cleanup Dependencies so that it can be used as load order rules
+                            load_dependencies_by_ver = (
+                                str(dependencies_by_ver["li"])
+                                .lower()
+                                .split(",")[0]
+                                .replace("{'packageid': '", "")
+                                .replace("[{'packageid' :", "")
+                                .replace("displayname': '", "")
+                                .replace("[", "")
+                                .replace("'", "")
+                                .replace("{", "")
+                                .replace("}", "")
+                                .replace("li:", "")
+                            )
+                            logger.debug(load_dependencies_by_ver)
+                            add_load_rule_to_mod(
+                                self.internal_local_metadata[uuid],
+                                load_dependencies_by_ver,
+                                "loadTheseBefore",
+                                "loadTheseAfter",
+                                self.internal_local_metadata,
+                                self.packageid_to_uuids,
                             )
                         else:
                             logger.warning(

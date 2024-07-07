@@ -32,19 +32,13 @@ def do_topo_sort(
         for uuid in active_mods_uuids
     )
     for level in sorted_dependencies:
-        temp_mod_set = set()
+        sorted_mod_set = set()
         for package_id in level:
             if package_id in active_mods_packageid_to_uuid:
                 mod_uuid = active_mods_packageid_to_uuid[package_id]
-                temp_mod_set.add(mod_uuid)
-        # Sort packages in this topological level by name
-        sorted_temp_mod_set = sorted(
-            temp_mod_set,
-            key=lambda uuid: metadata_manager.internal_local_metadata[uuid]["name"],
-            reverse=False,
-        )
+                sorted_mod_set.add(mod_uuid)
         # Add into reordered set
-        for sorted_mod_uuid in sorted_temp_mod_set:
+        for sorted_mod_uuid in sorted_mod_set:
             reordered.append(sorted_mod_uuid)
     logger.info(f"Finished Toposort sort with {len(reordered)} mods")
     return reordered
