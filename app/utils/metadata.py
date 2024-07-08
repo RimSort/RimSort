@@ -95,7 +95,9 @@ class MetadataManager(QObject):
                 # This is just getting the path 2 directories up from content/294100,
                 # so that we can find workshop/appworkshop_294100.acf
                 Path(
-                    self.settings_controller.settings.instances[current_instance].workshop_folder
+                    self.settings_controller.settings.instances[
+                        current_instance
+                    ].workshop_folder
                 ).parent.parent
                 / "appworkshop_294100.acf",
             )
@@ -476,7 +478,9 @@ class MetadataManager(QObject):
             purge_by_data_source("expansion")
         # Get and cache installed local/SteamCMD Workshop mods
         current_instance = self.settings_controller.settings.current_instance
-        local_folder = self.settings_controller.settings.instances[current_instance].local_folder
+        local_folder = self.settings_controller.settings.instances[
+            current_instance
+        ].local_folder
         if local_folder and local_folder != "":
             # Get mod data
             logger.info(f"Querying local mods from path: {local_folder}")
@@ -498,7 +502,9 @@ class MetadataManager(QObject):
             purge_by_data_source("local")
         # Get and cache installed Steam client Workshop mods
         current_instance = self.settings_controller.settings.current_instance
-        workshop_folder = self.settings_controller.settings.instances[current_instance].workshop_folder
+        workshop_folder = self.settings_controller.settings.instances[
+            current_instance
+        ].workshop_folder
         if workshop_folder and workshop_folder != "":
             logger.info(f"Querying workshop mods from path: {workshop_folder}")
             workshop_subdirectories = directories(workshop_folder)

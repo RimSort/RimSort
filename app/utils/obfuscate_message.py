@@ -37,5 +37,5 @@ def _anonymize_path(message: str) -> str:
     message = message = re.sub(r"([A-Z]:\\Users\\)[^\\]+\\", r"\1...\\", message)
     # Linux - Only remove the username
     message = re.sub(r"/home/[^/]+/", r"/home/.../", message)
-    
+
     return message
