@@ -103,7 +103,7 @@ class SteamcmdInterface:
 
     def check_symlink(self, link_path: str, target_local_folder: str) -> None:
         """Checks if the link path exists. If it does, recreate the link/junction to target_local_folder.
-        Otherwise, create the link/junction. 
+        Otherwise, create the link/junction.
 
         Requires the root of the link_path to exist.
 

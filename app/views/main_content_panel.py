@@ -7,6 +7,7 @@ import sys
 import time
 import traceback
 import webbrowser
+from toposort import CircularDependencyError
 from functools import partial
 from gc import collect
 from io import BytesIO
@@ -1192,19 +1193,25 @@ class MainContent(QObject):
             )
         else:
             logger.info("Topological sorting algorithm is selected")
-            # Sort tier one mods
-            reordered_tier_one_sorted = topo_sort.do_topo_sort(
-                tier_one_dependency_graph, self.mods_panel.active_mods_list.uuids
-            )
-            # Sort tier three mods
-            reordered_tier_three_sorted = topo_sort.do_topo_sort(
-                tier_three_dependency_graph,
-                self.mods_panel.active_mods_list.uuids,
-            )
-            # Sort tier two mods
-            reordered_tier_two_sorted = topo_sort.do_topo_sort(
-                tier_two_dependency_graph, self.mods_panel.active_mods_list.uuids
-            )
+            try:
+                # Sort tier one mods
+                reordered_tier_one_sorted = topo_sort.do_topo_sort(
+                    tier_one_dependency_graph, self.mods_panel.active_mods_list.uuids
+                )
+                # Sort tier three mods
+                reordered_tier_three_sorted = topo_sort.do_topo_sort(
+                    tier_three_dependency_graph,
+                    self.mods_panel.active_mods_list.uuids,
+                )
+                # Sort tier two mods
+                reordered_tier_two_sorted = topo_sort.do_topo_sort(
+                    tier_two_dependency_graph, self.mods_panel.active_mods_list.uuids
+                )
+            except CircularDependencyError:
+                # Propagated from topo_sort.py
+                # Indicates we should forego sorting altogther
+                logger.info("Circular dependency detected, abandoning sort")
+                return
 
         logger.info(f"Sorted tier one mods: {len(reordered_tier_one_sorted)}")
         logger.info(f"Sorted tier two mods: {len(reordered_tier_two_sorted)}")
