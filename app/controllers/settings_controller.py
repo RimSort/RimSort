@@ -422,6 +422,7 @@ class SettingsController(QObject):
             self.settings.external_steam_metadata_repo
         )
         self.settings_dialog.steam_workshop_db_github_url.setCursorPosition(0)
+        self.settings_dialog.database_expiry.setText(str(self.settings.database_expiry))
 
         # Sorting tab
         if self.settings.sorting_algorithm == SortMethod.ALPHABETICAL:
@@ -439,9 +440,6 @@ class SettingsController(QObject):
         )
         self.settings_dialog.db_builder_update_instead_of_overwriting_checkbox.setChecked(
             self.settings.build_steam_database_update_toggle
-        )
-        self.settings_dialog.db_builder_database_expiry.setText(
-            str(self.settings.database_expiry)
         )
         self.settings_dialog.db_builder_steam_api_key.setText(
             self.settings.steam_apikey
@@ -564,6 +562,7 @@ class SettingsController(QObject):
         self.settings.external_steam_metadata_file_path = (
             self.settings_dialog.steam_workshop_db_local_file.text()
         )
+        self.settings.database_expiry = int(self.settings_dialog.database_expiry.text())
 
         # Sorting tab
         if self.settings_dialog.sorting_alphabetical_radio.isChecked():
@@ -580,9 +579,6 @@ class SettingsController(QObject):
             self.settings_dialog.db_builder_query_dlc_checkbox.isChecked()
         )
         self.settings.build_steam_database_update_toggle = self.settings_dialog.db_builder_update_instead_of_overwriting_checkbox.isChecked()
-        self.settings.database_expiry = int(
-            self.settings_dialog.db_builder_database_expiry.text()
-        )
         self.settings.steam_apikey = (
             self.settings_dialog.db_builder_steam_api_key.text()
         )

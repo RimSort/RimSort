@@ -172,13 +172,14 @@ class MetadataManager(QObject):
                         )
                     else:  # If the cached db data is expired but NOT missing
                         # Fallback to the expired metadata
-                        self.show_warning_signal.emit(
-                            "Steam DB metadata expired",
-                            "Steam DB is expired! Consider updating!\n",
-                            f'Steam DB last updated: {strftime("%Y-%m-%d %H:%M:%S", localtime(db_data["version"] - life))}\n\n'
-                            + "Falling back to cached, but EXPIRED Steam Database...",
-                            "",
-                        )
+                        if life != 0:  # Disable Notification if value is 0
+                            self.show_warning_signal.emit(
+                                "Steam DB metadata expired",
+                                "Steam DB is expired! Consider updating!\n",
+                                f'Steam DB last updated: {strftime("%Y-%m-%d %H:%M:%S", localtime(db_data["version"] - life))}\n\n'
+                                + "Falling back to cached, but EXPIRED Steam Database...",
+                                "",
+                            )
                         db_json_data = db_data[
                             "database"
                         ]  # TODO: additional check to verify integrity of this data's schema
