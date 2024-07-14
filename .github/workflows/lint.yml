@@ -51,7 +51,7 @@ jobs:
         run: echo "python-version=$(cut -d '.' -f 1,2 .python-version)" >> "$GITHUB_OUTPUT"
 
       - name: Super-linter
-        uses: super-linter/super-linter/slim@v6.6.0 # x-release-please-version
+        uses: super-linter/super-linter/slim@v6.7.0 # x-release-please-version
         env:
           # To report GitHub Actions status checks
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
