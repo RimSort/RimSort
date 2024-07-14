@@ -23,7 +23,6 @@ class Settings(QObject):
 
         # Other
         self.check_for_update_startup: bool = False
-        self.show_folder_rows: bool = True
 
         # Databases
         self.external_steam_metadata_source: str = "None"
