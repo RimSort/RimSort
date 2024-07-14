@@ -2464,7 +2464,7 @@ class MainContent(QObject):
 
                     # Create our new branch and checkout
                     new_branch = local_repo.create_head(new_branch_name)
-                    local_repo.head.reference = new_branch
+                    local_repo.head.set_reference(ref=new_branch)
 
                     # Add the file to the index on our new branch
                     local_repo.index.add([file_full_path])
