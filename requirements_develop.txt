@@ -5,5 +5,6 @@ types-psutil
 types-requests
 types-toposort
 types-xmltodict
+networkx-stubs
 lxml-stubs
 pytest

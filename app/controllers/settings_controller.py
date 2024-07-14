@@ -8,9 +8,9 @@ from PySide6.QtWidgets import QApplication
 
 from app.models.dialogue import show_dialogue_confirmation, show_dialogue_file
 from app.models.settings import Instance, Settings
+from app.utils.constants import SortMethod
 from app.utils.event_bus import EventBus
 from app.utils.generic import platform_specific_open
-from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.system_info import SystemInfo
 from app.views.settings_dialog import SettingsDialog
 
@@ -424,9 +424,9 @@ class SettingsController(QObject):
         self.settings_dialog.steam_workshop_db_github_url.setCursorPosition(0)
 
         # Sorting tab
-        if self.settings.sorting_algorithm == "Alphabetical":
+        if self.settings.sorting_algorithm == SortMethod.ALPHABETICAL:
             self.settings_dialog.sorting_alphabetical_radio.setChecked(True)
-        elif self.settings.sorting_algorithm == "Topological":
+        elif self.settings.sorting_algorithm == SortMethod.TOPOLOGICAL:
             self.settings_dialog.sorting_topological_radio.setChecked(True)
 
         # Database Builder tab
@@ -567,9 +567,9 @@ class SettingsController(QObject):
 
         # Sorting tab
         if self.settings_dialog.sorting_alphabetical_radio.isChecked():
-            self.settings.sorting_algorithm = "Alphabetical"
+            self.settings.sorting_algorithm = SortMethod.ALPHABETICAL
         elif self.settings_dialog.sorting_topological_radio.isChecked():
-            self.settings.sorting_algorithm = "Topological"
+            self.settings.sorting_algorithm = SortMethod.TOPOLOGICAL
 
         # Database Builder tab
         if self.settings_dialog.db_builder_include_all_radio.isChecked():

@@ -11,6 +11,7 @@ from PySide6.QtCore import QObject
 
 from app.models.instance import Instance
 from app.utils.app_info import AppInfo
+from app.utils.constants import SortMethod
 from app.utils.event_bus import EventBus
 
 
@@ -42,7 +43,7 @@ class Settings(QObject):
         )
 
         # Sorting
-        self.sorting_algorithm: str = "Alphabetical"
+        self.sorting_algorithm: SortMethod = SortMethod.ALPHABETICAL
 
         # DB Builder
         self.db_builder_include: str = "all_mods"

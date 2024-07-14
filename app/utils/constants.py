@@ -1,3 +1,11 @@
+from enum import Enum
+
+
+class SortMethod(str, Enum):
+    ALPHABETICAL = "Alphabetical"
+    TOPOLOGICAL = "Topological"
+
+
 DB_BUILDER_PRUNE_EXCEPTIONS = [
     "database",
     "rules",

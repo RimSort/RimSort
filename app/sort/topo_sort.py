@@ -1,12 +1,11 @@
 from typing import List
 
-from loguru import logger
-from toposort import toposort, CircularDependencyError
 import networkx as nx
-
-from app.utils.metadata import MetadataManager
+from loguru import logger
+from toposort import CircularDependencyError, toposort
 
 from app.models.dialogue import show_warning
+from app.utils.metadata import MetadataManager
 
 
 def do_topo_sort(
@@ -50,7 +49,7 @@ def do_topo_sort(
     return reordered
 
 
-def find_circular_dependencies(dependency_graph):
+def find_circular_dependencies(dependency_graph: dict[str, set[str]]) -> None:
     G = nx.DiGraph(dependency_graph)
     cycles = list(nx.simple_cycles(G))
 
