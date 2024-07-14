@@ -299,7 +299,7 @@ class MainContent(QObject):
             self.inactive_mods_uuids_restore_state: list[str] = []
 
             # Store duplicate_mods for global access
-            self.duplicate_mods = {}
+            self.duplicate_mods: dict[str, Any] = {}
 
             # Instantiate query runner
             self.query_runner: RunnerPanel | None = None
@@ -941,7 +941,6 @@ class MainContent(QObject):
     def do_threaded_loading_animation(
         self, gif_path: str, target: Callable[..., Any], text: str | None = None
     ) -> Any:
-        loading_animation_text_label = None
         # Hide the info panel widgets
         self.mod_info_panel.info_panel_frame.hide()
         # Disable widgets while loading
@@ -983,7 +982,6 @@ class MainContent(QObject):
         EventBus().do_save_button_animation_stop.emit()
         # If we are refreshing cache from user action
         if not is_initial:
-            self.mods_panel.list_updated = False
             # Reset the data source filters to default and clear searches
             self.mods_panel.active_mods_filter_data_source_index = len(
                 self.mods_panel.data_source_filter_icons
@@ -1074,8 +1072,8 @@ class MainContent(QObject):
         )
         self.mods_panel.signal_clear_search(list_type="Inactive")
         # Metadata to insert
-        active_mods_uuids = []
-        inactive_mods_uuids = []
+        active_mods_uuids: list[str] = []
+        inactive_mods_uuids: list[str] = []
         logger.info("Clearing mods from active mod list")
         # Define the order of the DLC package IDs
         package_id_order = [
@@ -1495,18 +1493,19 @@ class MainContent(QObject):
             # Compile list of Steam Workshop publishing preview images that correspond
             # to a Steam mod in the active mod list
             webapi_response = ISteamRemoteStorage_GetPublishedFileDetails(pfids)
-            for metadata in webapi_response:
-                pfid = metadata["publishedfileid"]
-                if metadata["result"] != 1:
-                    logger.warning("Rentry.co export: Unable to get data for mod!")
-                    logger.warning(
-                        f"Invalid result returned from WebAPI for mod {pfid}"
-                    )
-                else:
-                    # Retrieve the preview image URL from the response
-                    active_steam_mods_pfid_to_preview_url[pfid] = metadata[
-                        "preview_url"
-                    ]
+            if webapi_response is not None:
+                for metadata in webapi_response:
+                    pfid = metadata["publishedfileid"]
+                    if metadata["result"] != 1:
+                        logger.warning("Rentry.co export: Unable to get data for mod!")
+                        logger.warning(
+                            f"Invalid result returned from WebAPI for mod {pfid}"
+                        )
+                    else:
+                        # Retrieve the preview image URL from the response
+                        active_steam_mods_pfid_to_preview_url[pfid] = metadata[
+                            "preview_url"
+                        ]
         # Build our report
         active_mods_rentry_report = (
             "# RimWorld mod list       ![](https://github.com/RimSort/RimSort/blob/main/docs/rentry_preview.png?raw=true)"
@@ -1752,15 +1751,20 @@ class MainContent(QObject):
         Opens a QDialogInput that allows the user to edit the run args
         that are configured to be passed to the Rimworld executable
         """
+        cur_instance = self.settings_controller.settings.current_instance
         args, ok = dialogue.show_dialogue_input(
             title="Edit run arguments",
             label="Enter a comma separated list of arguments to pass to the Rimworld executable\n\n"
             + "Example: \n-popupwindow,-logfile,/path/to/file.log",
-            text=",".join(self.settings_controller.settings.run_args),
+            text=",".join(
+                self.settings_controller.settings.instances[cur_instance].run_args
+            ),
         )
         if ok:
-            self.settings_controller.settings.run_args = args.split(",")
-            self.settings_controller.settings.save()
+            self.settings_controller.settings.instances[
+                cur_instance
+            ].run_args = args.split(",")
+            # self.settings_controller.settings.save()
 
     # TODDS ACTIONS
 
@@ -1831,22 +1835,21 @@ class MainContent(QObject):
                 information="Are you connected to the Internet?",
             )
             return
-        self.workshop_mod_updater = ModUpdaterPrompt(
+        workshop_mod_updater = ModUpdaterPrompt(
             internal_mod_metadata=self.metadata_manager.internal_local_metadata
         )
-        self.workshop_mod_updater._populate_from_metadata()
-        if self.workshop_mod_updater.updates_found:
+        workshop_mod_updater._populate_from_metadata()
+        if workshop_mod_updater.updates_found:
             logger.debug("Displaying potential Workshop mod updates")
-            self.workshop_mod_updater.steamcmd_downloader_signal.connect(
+            workshop_mod_updater.steamcmd_downloader_signal.connect(
                 self._do_download_mods_with_steamcmd
             )
-            self.workshop_mod_updater.steamworks_subscription_signal.connect(
+            workshop_mod_updater.steamworks_subscription_signal.connect(
                 self._do_steamworks_api_call_animated
             )
-            self.workshop_mod_updater.show()
+            workshop_mod_updater.show()
         else:
             self.status_signal.emit("All Workshop mods appear to be up to date!")
-            self.workshop_mod_updater = None
 
     def _do_setup_steamcmd(self) -> None:
         if (
@@ -1920,9 +1923,13 @@ class MainContent(QObject):
         ):
             if self.steam_browser:
                 self.steam_browser.close()
+            steam_db = self.metadata_manager.external_steam_metadata
+            if steam_db is None:
+                steam_db = {}
+
             self.steamcmd_runner = RunnerPanel(
                 steamcmd_download_tracking=publishedfileids,
-                steam_db=self.metadata_manager.external_steam_metadata,
+                steam_db=steam_db,
             )
             self.steamcmd_runner.steamcmd_downloader_signal.connect(
                 self._do_download_mods_with_steamcmd
@@ -2025,14 +2032,20 @@ class MainContent(QObject):
                 "Steamworks API is already initialized! We do NOT want multiple interactions. Skipping instruction..."
             )
 
-    def _do_steamworks_api_call_animated(self, instruction: list) -> None:
+    def _do_steamworks_api_call_animated(
+        self, instruction: list[list[str] | str]
+    ) -> None:
         publishedfileids = instruction[1]
         logger.debug(f"Attempting to download {len(publishedfileids)} mods with Steam")
+        steamdb = self.metadata_manager.external_steam_metadata
+        if steamdb is None:
+            steamdb = {}
         # Check for blacklisted mods for subscription actions
         if instruction[0] == "subscribe":
+            assert isinstance(publishedfileids, list)
             publishedfileids = metadata.check_if_pfids_blacklisted(
                 publishedfileids=publishedfileids,
-                steamdb=self.metadata_manager.external_steam_metadata,
+                steamdb=steamdb,
             )
         # No empty publishedfileids
         if not len(publishedfileids) > 0:
@@ -2111,7 +2124,7 @@ class MainContent(QObject):
         repo.git.clear_cache()
         del repo
 
-    def _check_git_repos_for_update(self, repo_paths: list) -> None:
+    def _check_git_repos_for_update(self, repo_paths: list[str]) -> None:
         if GIT_EXISTS:
             # Track summary of repo updates
             updates_summary = {}
@@ -2126,7 +2139,8 @@ class MainContent(QObject):
 
                         # Get the local and remote refs
                         local_ref = repo.head.reference
-                        remote_ref = repo.refs[f"origin/{local_ref.name}"]
+                        refs = repo.refs()
+                        remote_ref = refs[f"origin/{local_ref.name}"]
 
                         # Check if the local branch is behind the remote branch
                         if local_ref.commit != remote_ref.commit:
@@ -2704,7 +2718,7 @@ class MainContent(QObject):
         else:
             logger.debug("USER ACTION: cancelled selection...")
 
-    def _do_blacklist_action_steamdb(self, instruction: list) -> None:
+    def _do_blacklist_action_steamdb(self, instruction: list[Any]) -> None:
         if (
             self.metadata_manager.external_steam_metadata_path
             and self.metadata_manager.external_steam_metadata
@@ -3045,7 +3059,7 @@ class MainContent(QObject):
             logger.warning("Steam DB Builder: User cancelled selection...")
             return
 
-    def _do_update_rules_database(self, instruction: list) -> None:
+    def _do_update_rules_database(self, instruction: list[Any]) -> None:
         rules_source = instruction[0]
         rules_data = instruction[1]
         # Get path based on rules source
