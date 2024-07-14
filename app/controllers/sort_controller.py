@@ -68,7 +68,14 @@ class Sorter:
 
     def sort(
         self, dependency_graphs: list[dict[str, set[str]]] | None = None
-    ) -> list[str]:
+    ) -> tuple[bool, list[str]]:
+        """Sorts the given dependency graph using the controller's sort method.
+
+        :param dependency_graphs: The dependency graph to be sorted, defaults to None
+        :type dependency_graphs: list[dict[str, set[str]]] | None, optional
+        :return: True and the sorted list of UUIDs if the sort was successful, False and an empty list otherwise
+        :rtype: tuple[bool, list[str]]
+        """
         if dependency_graphs is None:
             dependency_graphs = self.generate_dependency_graphs()
 
@@ -81,6 +88,6 @@ class Sorter:
                 sorted_uuids += sorted_mods
         except CircularDependencyError:
             logger.info("Circular dependency detected, abandoning sort")
-            return []
+            return False, []
 
-        return list(dict.fromkeys(sorted_uuids))
+        return True, list(dict.fromkeys(sorted_uuids))

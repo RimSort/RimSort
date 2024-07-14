@@ -1146,14 +1146,14 @@ class MainContent(QObject):
             active_uuids=set(self.mods_panel.active_mods_list.uuids),
         )
 
-        new_order = sorter.sort()
+        success, new_order = sorter.sort()
 
         # Check if the order has changed
-        if new_order == current_order:
+        if success and new_order == current_order:
             logger.info(
                 "The order of mods in List has not changed. Skipping insertion."
             )
-        else:
+        elif success:
             logger.info(
                 "Finished combining all tiers of mods. Inserting into mod lists!"
             )
@@ -1170,6 +1170,10 @@ class MainContent(QObject):
             )
             # Enable widgets again after inserting
             self.disable_enable_widgets_signal.emit(True)
+        elif not success:
+            logger.warning("Failed to sort mods. Skipping insertion.")
+        else:
+            logger.warning("Unknown error occurred. Skipping insertion.")
 
     def _do_import_list_file_xml(self) -> None:
         """
