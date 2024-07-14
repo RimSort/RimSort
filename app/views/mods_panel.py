@@ -6,6 +6,7 @@ from pathlib import Path
 from shutil import copy2, copytree, rmtree
 from traceback import format_exc
 from typing import List, Optional
+from errno import ENOTEMPTY
 
 from loguru import logger
 from PySide6.QtCore import QEvent, QModelIndex, QObject, QRectF, QSize, Qt, Signal
@@ -74,9 +75,10 @@ def uuid_to_mod_name(uuid: str) -> str:
     Args:
         uuid (str): The UUID of the mod.
     Returns:
-        str: The name of the mod corresponding to the UUID.
+        str: If mod name not None, returns mod name in lowercase. Otherwise, returns "# unnamed mod".
     """
-    return MetadataManager.instance().internal_local_metadata[uuid]["name"].lower()
+    name = MetadataManager.instance().internal_local_metadata[uuid]["name"]
+    return name.lower() if name is not None else "# unnamed mod"
 
 
 class ModsPanelSortKey(Enum):
@@ -1288,6 +1290,25 @@ class ModListWidget(QListWidget):
                                             f"Unable to delete mod. Path does not exist: {mod_metadata['path']}"
                                         )
                                         pass
+                                    except OSError as e:
+                                        if os.name == 'nt':
+                                            error_code = e.winerror
+                                        else:
+                                            error_code = e.errno
+                                        if e.errno == ENOTEMPTY:
+                                            warning_text = "Mod directory was not empty. Please close all programs accessing files or subfolders in the directory (including your file manager) and try again."
+                                        else:
+                                            warning_text = "An OSError occurred while deleting mod."
+                                        
+                                        logger.warning(
+                                            f"Unable to delete mod located at the path: {mod_metadata['path']}"
+                                        )
+                                        show_warning(
+                                            title="Unable to delete mod",
+                                            text=warning_text,
+                                            information=f"{e.strerror} occurred at {e.filename} with error code {error_code}.",
+                                        )
+                                        continue
                     return True
                 elif action == delete_mod_keep_dds_action:  # ACTION: Delete mods action
                     answer = show_dialogue_conditional(

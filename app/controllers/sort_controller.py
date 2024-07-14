@@ -4,7 +4,7 @@ from loguru import logger
 
 import app.sort.dependencies as sort_deps
 from app.sort.alphabetical_sort import do_alphabetical_sort
-from app.sort.topo_sort import do_topo_sort
+from app.sort.topo_sort import CircularDependencyError, do_topo_sort
 from app.utils.constants import SortMethod
 
 
@@ -73,10 +73,14 @@ class Sorter:
             dependency_graphs = self.generate_dependency_graphs()
 
         sorted_uuids = []
-        for i, graph in enumerate(dependency_graphs):
-            logger.info(f"Sorting tier {i + 1}")
-            sorted_mods = self.sort_method(graph, self.active_uuids)
-            logger.info(f"Tier {i + 1} sorted: {len(sorted_mods)}")
-            sorted_uuids += sorted_mods
+        try:
+            for i, graph in enumerate(dependency_graphs):
+                logger.info(f"Sorting tier {i + 1}")
+                sorted_mods = self.sort_method(graph, self.active_uuids)
+                logger.info(f"Tier {i + 1} sorted: {len(sorted_mods)}")
+                sorted_uuids += sorted_mods
+        except CircularDependencyError:
+            logger.info("Circular dependency detected, abandoning sort")
+            return []
 
         return list(dict.fromkeys(sorted_uuids))

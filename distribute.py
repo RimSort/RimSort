@@ -9,7 +9,6 @@ For arguments and usage, run the script with the --help flag.
 Not meant to be imported as a module.
 """
 
-
 import argparse
 import os
 import platform

@@ -35,6 +35,7 @@ def test__anonymize_path_windows_mixed_message() -> None:
     expected = "Error!!! at: C:\\Users\\...\\Documents\\file.txt"
     assert _anonymize_path(message) == expected
 
+
 def test__anonymize_path_linux_mixed_message() -> None:
     message = "/home/user/Documents/file.txt: error"
     expected = "/home/.../Documents/file.txt: error"

@@ -1,9 +1,12 @@
 from typing import List
 
 from loguru import logger
-from toposort import toposort
+from toposort import toposort, CircularDependencyError
+import networkx as nx
 
 from app.utils.metadata import MetadataManager
+
+from app.models.dialogue import show_warning
 
 
 def do_topo_sort(
@@ -16,7 +19,13 @@ def do_topo_sort(
     logger.info(f"Initializing toposort for {len(dependency_graph)} mods")
     # Cache MetadataManager instance
     metadata_manager = MetadataManager.instance()
-    sorted_dependencies = toposort(dependency_graph)
+    try:
+        sorted_dependencies = list(toposort(dependency_graph))
+    except CircularDependencyError as e:
+        find_circular_dependencies(dependency_graph)
+        # Propagate the exception after handling
+        raise e
+
     reordered = list()
     active_mods_packageid_to_uuid = dict(
         (metadata_manager.internal_local_metadata[uuid]["packageid"], uuid)
@@ -39,3 +48,25 @@ def do_topo_sort(
             reordered.append(sorted_mod_uuid)
     logger.info(f"Finished Toposort sort with {len(reordered)} mods")
     return reordered
+
+
+def find_circular_dependencies(dependency_graph):
+    G = nx.DiGraph(dependency_graph)
+    cycles = list(nx.simple_cycles(G))
+
+    cycle_strings = []
+    if cycles:
+        logger.info("Circular dependencies detected:")
+        for cycle in cycles:
+            loop = " -> ".join(cycle)
+            logger.info(loop)
+            cycle_strings.append(loop)
+    else:
+        logger.info("No circular dependencies found.")
+
+    show_warning(
+        title="Unable to Sort",
+        text="Unable to Sort",
+        information="RimSort found circular dependencies in your mods list. Please see the details for dependency loops.",
+        details="\n\n".join(cycle_strings),
+    )

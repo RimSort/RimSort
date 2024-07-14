@@ -17,6 +17,11 @@ on:
 permissions: {}
 
 jobs:
+  pre-test:
+    permissions: 
+      contents: read
+    uses: ./.github/workflows/pytest.yml
+
   pre-build:
     uses: ./.github/workflows/get_version_info.yml
     with:

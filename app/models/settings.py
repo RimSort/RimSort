@@ -22,17 +22,19 @@ class Settings(QObject):
         self._settings_file = AppInfo().app_storage_folder / "settings.json"
         self._debug_file = AppInfo().app_storage_folder / "DEBUG"
 
-        self.debug_logging_enabled: bool = False
+        # Other
         self.check_for_update_startup: bool = False
-        self.show_folder_rows: bool = True
-        self.sorting_algorithm: SortMethod = SortMethod.ALPHABETICAL
+
+        # Databases
+        self.external_steam_metadata_source: str = "None"
         self.external_steam_metadata_file_path: str = str(
             AppInfo().app_storage_folder / "steamDB.json"
         )
         self.external_steam_metadata_repo: str = (
             "https://github.com/RimSort/Steam-Workshop-Database"
         )
-        self.external_steam_metadata_source: str = "None"
+
+        self.external_community_rules_metadata_source: str = "None"
         self.external_community_rules_file_path: str = str(
             AppInfo().app_storage_folder / "communityRules.json"
         )
@@ -40,26 +42,39 @@ class Settings(QObject):
             "https://github.com/RimSort/Community-Rules-Database"
         )
 
-        self.external_community_rules_metadata_source: str = "None"
+        # Sorting
+        self.sorting_algorithm: SortMethod = SortMethod.ALPHABETICAL
+
+        # DB Builder
         self.db_builder_include: str = "all_mods"
-        self.database_expiry: int = 604800
         self.build_steam_database_dlc_data: bool = True
         self.build_steam_database_update_toggle: bool = False
+        self.database_expiry: int = 604800
+        self.steam_apikey: str = ""
+
+        # SteamCMD
+        self.steamcmd_validate_downloads: bool = True
+
+        # todds
+        self.todds_preset: str = "optimized"
+        self.todds_active_mods_target: bool = True
+        self.todds_dry_run: bool = False
+        self.todds_overwrite: bool = False
+
+        # Advanced
+        self.debug_logging_enabled: bool = False
         self.watchdog_toggle: bool = True
         self.mod_type_filter_toggle: bool = True
         self.duplicate_mods_warning: bool = False
         self.steam_mods_update_check: bool = False
         self.try_download_missing_mods: bool = False
-        self.steamcmd_validate_downloads: bool = True
-        self.todds_preset: str = "optimized"
-        self.todds_active_mods_target: bool = True
-        self.todds_dry_run: bool = False
-        self.todds_overwrite: bool = False
-        self.current_instance: str = "Default"
-        self.instances: dict[str, Instance] = {"Default": Instance()}
+
         self.github_username: str = ""
         self.github_token: str = ""
-        self.steam_apikey: str = ""
+
+        # Instances
+        self.current_instance: str = "Default"
+        self.instances: dict[str, Instance] = {"Default": Instance()}
 
     def __setattr__(self, key: str, value: Any) -> None:
         # If private attribute, set it normally
