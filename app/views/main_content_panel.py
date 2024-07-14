@@ -3167,11 +3167,7 @@ class MainContent(QObject):
 
     @Slot()
     def _on_do_upload_log(self) -> None:
-        ret = upload_data_to_0x0_st(
-            str(AppInfo().user_log_folder / (AppInfo().app_name + ".log"))
-        )
-        if ret:
-            webbrowser.open(ret)
+        self._upload_log(AppInfo().user_log_folder / (AppInfo().app_name + ".log"))
 
     @Slot()
     def _on_do_download_all_mods_via_steamcmd(self) -> None:
