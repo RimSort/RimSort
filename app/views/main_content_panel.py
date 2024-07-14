@@ -1746,28 +1746,7 @@ class MainContent(QObject):
                 "Cached mod lists for restore function not set as client started improperly. Passing on restore"
             )
 
-    def _do_edit_run_args(self) -> None:
-        """
-        Opens a QDialogInput that allows the user to edit the run args
-        that are configured to be passed to the Rimworld executable
-        """
-        cur_instance = self.settings_controller.settings.current_instance
-        args, ok = dialogue.show_dialogue_input(
-            title="Edit run arguments",
-            label="Enter a comma separated list of arguments to pass to the Rimworld executable\n\n"
-            + "Example: \n-popupwindow,-logfile,/path/to/file.log",
-            text=",".join(
-                self.settings_controller.settings.instances[cur_instance].run_args
-            ),
-        )
-        if ok:
-            self.settings_controller.settings.instances[
-                cur_instance
-            ].run_args = args.split(",")
-            # self.settings_controller.settings.save()
-
     # TODDS ACTIONS
-
     def _do_optimize_textures(self, todds_txt_path: str) -> None:
         # Setup environment
         todds_interface = ToddsInterface(
