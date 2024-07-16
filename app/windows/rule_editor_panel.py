@@ -483,9 +483,9 @@ class RuleEditor(QWidget):
                     )  # Get the item in column 4 (index 3)
                     # Search table for rows that match.
                     if (
-                        (packageid_value and rule_data in packageid_value.text())
-                        and (rule_source_value and mode[0] in rule_source_value.text())
-                        and (rule_type_value and mode[1] in rule_type_value.text())
+                        (packageid_value and rule_data == packageid_value.text())
+                        and (rule_source_value and mode[0] == rule_source_value.text())
+                        and (rule_type_value and mode[1] == rule_type_value.text())
                     ):
                         show_warning(
                             title="Duplicate rule",
