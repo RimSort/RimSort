@@ -75,6 +75,22 @@ class MenuBarController(QObject):
             EventBus().do_upload_rimworld_log
         )
 
+        self.menu_bar.open_app_directory_action.triggered.connect(
+            EventBus().do_open_app_directory
+        )
+
+        self.menu_bar.open_settings_directory_action.triggered.connect(
+            EventBus().do_open_settings_directory
+        )
+
+        self.menu_bar.open_rimsort_logs_directory_action.triggered.connect(
+            EventBus().do_open_rimsort_logs_directory
+        )
+
+        self.menu_bar.open_rimworld_logs_directory_action.triggered.connect(
+            EventBus().do_open_rimworld_logs_directory
+        )
+
         # Edit menu
 
         self.menu_bar.cut_action.triggered.connect(self._on_menu_bar_cut_triggered)

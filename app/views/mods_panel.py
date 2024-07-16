@@ -1,12 +1,12 @@
 import json
 import os
 from enum import Enum
+from errno import ENOTEMPTY
 from functools import partial
 from pathlib import Path
 from shutil import copy2, copytree, rmtree
 from traceback import format_exc
 from typing import List, Optional
-from errno import ENOTEMPTY
 
 from loguru import logger
 from PySide6.QtCore import QEvent, QModelIndex, QObject, QRectF, QSize, Qt, Signal
@@ -1291,7 +1291,7 @@ class ModListWidget(QListWidget):
                                         )
                                         pass
                                     except OSError as e:
-                                        if os.name == 'nt':
+                                        if os.name == "nt":
                                             error_code = e.winerror
                                         else:
                                             error_code = e.errno
@@ -1299,7 +1299,7 @@ class ModListWidget(QListWidget):
                                             warning_text = "Mod directory was not empty. Please close all programs accessing files or subfolders in the directory (including your file manager) and try again."
                                         else:
                                             warning_text = "An OSError occurred while deleting mod."
-                                        
+
                                         logger.warning(
                                             f"Unable to delete mod located at the path: {mod_metadata['path']}"
                                         )

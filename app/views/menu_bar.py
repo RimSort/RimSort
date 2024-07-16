@@ -1,4 +1,5 @@
 from typing import Optional
+
 from PySide6.QtCore import QObject
 from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import QMenu, QMenuBar
@@ -31,6 +32,10 @@ class MenuBar(QObject):
         self.upload_rimsort_log_action: QAction
         self.upload_rimsort_old_log_action: QAction
         self.upload_rimworld_log_action: QAction
+        self.open_app_directory_action: QAction
+        self.open_settings_directory_action: QAction
+        self.open_rimsort_logs_directory_action: QAction
+        self.open_rimworld_logs_directory_action: QAction
         self.cut_action: QAction
         self.copy_action: QAction
         self.paste_action: QAction
@@ -53,6 +58,7 @@ class MenuBar(QObject):
         self.import_submenu: QMenu
         self.export_submenu: QMenu
         self.upload_submenu: QMenu
+        self.shortcuts_submenu: QMenu
         self.instances_submenu: QMenu
 
         self._create_menu_bar()
@@ -112,7 +118,6 @@ class MenuBar(QObject):
         self.import_from_workshop_collection_action = self._add_action(
             self.import_submenu, "From Workshop collection"
         )
-        file_menu.addSeparator()
         self.export_submenu = QMenu("Export")
         file_menu.addMenu(self.export_submenu)
         self.export_to_clipboard_action = self._add_action(
@@ -132,6 +137,21 @@ class MenuBar(QObject):
         )
         self.upload_rimworld_log_action = self._add_action(
             self.upload_submenu, "RimWorld Player.log"
+        )
+        file_menu.addSeparator()
+        self.shortcuts_submenu = QMenu("Shortcuts")
+        file_menu.addMenu(self.shortcuts_submenu)
+        self.open_app_directory_action = self._add_action(
+            self.shortcuts_submenu, "Open RimSort Directory"
+        )
+        self.open_settings_directory_action = self._add_action(
+            self.shortcuts_submenu, "Open RimSort User Files"
+        )
+        self.open_rimsort_logs_directory_action = self._add_action(
+            self.shortcuts_submenu, "Open RimSort Logs Directory"
+        )
+        self.open_rimworld_logs_directory_action = self._add_action(
+            self.shortcuts_submenu, "Open RimWorld Logs Directory"
         )
         if SystemInfo().operating_system != SystemInfo.OperatingSystem.MACOS:
             file_menu.addSeparator()
