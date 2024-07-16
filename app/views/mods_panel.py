@@ -1291,7 +1291,7 @@ class ModListWidget(QListWidget):
                                         )
                                         pass
                                     except OSError as e:
-                                        if os.name == 'nt':
+                                        if os.name == "nt":
                                             error_code = e.winerror
                                         else:
                                             error_code = e.errno
@@ -1299,7 +1299,7 @@ class ModListWidget(QListWidget):
                                             warning_text = "Mod directory was not empty. Please close all programs accessing files or subfolders in the directory (including your file manager) and try again."
                                         else:
                                             warning_text = "An OSError occurred while deleting mod."
-                                        
+
                                         logger.warning(
                                             f"Unable to delete mod located at the path: {mod_metadata['path']}"
                                         )
@@ -1960,6 +1960,14 @@ class ModsPanel(QWidget):
             ModListIcons.steamcmd_icon(),
             ModListIcons.steam_icon(),
         ]
+        self.data_source_filter_tooltips = [
+            "Showing All Mods",
+            "Showing Core and DLC",
+            "Showing Local Mods",
+            "Showing Git Mods",
+            "Showing SteamCMD Mods",
+            "Showing Steam Mods",
+        ]
 
         self.mode_filter_icon = QIcon(
             str(AppInfo().theme_data_folder / "default-icons" / "filter.png")
@@ -1985,6 +1993,9 @@ class ModsPanel(QWidget):
         self.active_mods_filter_data_source_button = QToolButton()
         self.active_mods_filter_data_source_button.setIcon(
             self.data_source_filter_icons[self.active_mods_filter_data_source_index]
+        )
+        self.active_mods_filter_data_source_button.setToolTip(
+            self.data_source_filter_tooltips[self.active_mods_filter_data_source_index]
         )
         self.active_mods_filter_data_source_button.clicked.connect(
             self.on_active_mods_search_data_source_filter
@@ -2069,6 +2080,11 @@ class ModsPanel(QWidget):
         self.inactive_mods_filter_data_source_button = QToolButton()
         self.inactive_mods_filter_data_source_button.setIcon(
             self.data_source_filter_icons[self.inactive_mods_filter_data_source_index]
+        )
+        self.inactive_mods_filter_data_source_button.setToolTip(
+            self.data_source_filter_tooltips[
+                self.inactive_mods_filter_data_source_index
+            ]
         )
         self.inactive_mods_filter_data_source_button.clicked.connect(
             self.on_inactive_mods_search_data_source_filter
@@ -2342,6 +2358,7 @@ class ModsPanel(QWidget):
         else:
             source_index = 0
         button.setIcon(self.data_source_filter_icons[source_index])
+        button.setToolTip(self.data_source_filter_tooltips[source_index])
         if list_type == "Active":
             self.active_mods_filter_data_source_index = source_index
             self.active_mods_data_source_filter = SEARCH_DATA_SOURCE_FILTER_INDEXES[
