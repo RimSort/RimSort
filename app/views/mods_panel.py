@@ -1,12 +1,12 @@
 import json
 import os
 from enum import Enum
+from errno import ENOTEMPTY
 from functools import partial
 from pathlib import Path
 from shutil import copy2, copytree, rmtree
 from traceback import format_exc
 from typing import List, Optional
-from errno import ENOTEMPTY
 
 from loguru import logger
 from PySide6.QtCore import QEvent, QModelIndex, QObject, QRectF, QSize, Qt, Signal

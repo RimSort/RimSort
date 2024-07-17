@@ -20,6 +20,9 @@ from zipfile import ZipFile
 
 from loguru import logger
 
+from app.utils.generic import platform_specific_open
+from app.utils.system_info import SystemInfo
+
 # GitPython depends on git executable being available in PATH
 try:
     from git import Repo
@@ -57,7 +60,6 @@ from app.utils.generic import (
     delete_files_except_extension,
     launch_game_process,
     open_url_browser,
-    platform_specific_open,
     upload_data_to_0x0_st,
 )
 from app.utils.metadata import MetadataManager, SettingsController
@@ -181,6 +183,18 @@ class MainContent(QObject):
             EventBus().do_sort_active_mods_list.connect(self._do_sort)
             EventBus().do_save_active_mods_list.connect(self._do_save)
             EventBus().do_run_game.connect(self._do_run_game)
+
+            # Shortcuts submenu Eventbus
+            EventBus().do_open_app_directory.connect(self._do_open_app_directory)
+            EventBus().do_open_settings_directory.connect(
+                self._do_open_settings_directory
+            )
+            EventBus().do_open_rimsort_logs_directory.connect(
+                self._do_open_rimsort_logs_directory
+            )
+            EventBus().do_open_rimworld_logs_directory.connect(
+                self._do_open_rimworld_logs_directory
+            )
 
             # Edit Menu bar Eventbus
             EventBus().do_rule_editor.connect(
@@ -1603,6 +1617,43 @@ class MainContent(QObject):
                 title="Failed to upload",
                 text="Failed to upload exported active mod list to Rentry.co",
             )
+
+    def _do_open_app_directory(self) -> None:
+        app_directory = os.getcwd()
+        logger.info(f"Opening app directory: {app_directory}")
+        platform_specific_open(os.getcwd())
+
+    def _do_open_settings_directory(self) -> None:
+        settings_directory = AppInfo().app_storage_folder
+        logger.info(f"Opening settings directory: {settings_directory}")
+        platform_specific_open(settings_directory)
+
+    def _do_open_rimsort_logs_directory(self) -> None:
+        logs_directory = AppInfo().user_log_folder
+        logger.info(f"Opening RimSort logs directory: {logs_directory}")
+        platform_specific_open(logs_directory)
+
+    def _do_open_rimworld_logs_directory(self) -> None:
+        user_home = Path.home()
+        logs_directory = None
+        if SystemInfo().operating_system == SystemInfo.OperatingSystem.MACOS:
+            logs_directory = (
+                f"/{user_home}/Library/Logs/Ludeon Studios/RimWorld by Ludeon Studios"
+            )
+            platform_specific_open(Path(logs_directory))
+        elif SystemInfo().operating_system == SystemInfo.OperatingSystem.LINUX:
+            logs_directory = (
+                f"{user_home}/.config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios"
+            )
+            platform_specific_open(Path(logs_directory))
+        elif SystemInfo().operating_system == SystemInfo.OperatingSystem.WINDOWS:
+            logs_directory = f"{user_home}/AppData/LocalLow/Ludeon Studios/RimWorld by Ludeon Studios"
+            platform_specific_open(Path(logs_directory).resolve())
+
+        if logs_directory:
+            logger.info(f"Opening RimWorld logs directory: {logs_directory}")
+        else:
+            logger.error("Could not open RimWorld logs directory on an unknown system")
 
     @Slot()
     def _on_do_upload_rimsort_log(self) -> None:
