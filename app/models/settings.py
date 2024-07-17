@@ -41,6 +41,7 @@ class Settings(QObject):
         self.external_community_rules_repo: str = (
             "https://github.com/RimSort/Community-Rules-Database"
         )
+        self.database_expiry: int = 604800  # 7 days
 
         # Sorting
         self.sorting_algorithm: SortMethod = SortMethod.ALPHABETICAL
@@ -49,7 +50,6 @@ class Settings(QObject):
         self.db_builder_include: str = "all_mods"
         self.build_steam_database_dlc_data: bool = True
         self.build_steam_database_update_toggle: bool = False
-        self.database_expiry: int = 604800
         self.steam_apikey: str = ""
 
         # SteamCMD
