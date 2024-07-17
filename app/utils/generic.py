@@ -8,16 +8,19 @@ from errno import EACCES
 from pathlib import Path
 from re import sub
 from stat import S_IRWXG, S_IRWXO, S_IRWXU
+from typing import Any, Callable, Generator
 
 import requests
 from loguru import logger
-from pyperclip import copy as copy_to_clipboard
+from pyperclip import (  # type: ignore # Stubs don't exist for pyperclip
+    copy as copy_to_clipboard,
+)
 from requests import post as requests_post
 
 from app.models.dialogue import show_fatal_error, show_warning
 
 
-def chunks(_list: list, limit: int):
+def chunks(_list: list[Any], limit: int) -> Generator[list[Any], None, None]:
     """
     Split list into chunks no larger than the configured limit
 
@@ -45,7 +48,7 @@ def copy_to_clipboard_safely(text: str) -> None:
         )
 
 
-def delete_files_except_extension(directory, extension):
+def delete_files_except_extension(directory: Path | str, extension: str) -> None:
     for root, dirs, files in os.walk(directory):
         for file in files:
             if not file.endswith(extension):
@@ -61,7 +64,7 @@ def delete_files_except_extension(directory, extension):
         for _dir in dirs:
             dir_path = str((Path(root) / _dir))
             if not os.listdir(dir_path):
-                shutil.rmtree(
+                shutil.rmtree(  # Note: Pylance may complain that onerror is deprecated, but this is only for 3.12 and above
                     dir_path,
                     ignore_errors=False,
                     onerror=handle_remove_read_only,
@@ -76,7 +79,7 @@ def delete_files_except_extension(directory, extension):
         logger.debug(f"Deleted: {directory}")
 
 
-def delete_files_only_extension(directory, extension):
+def delete_files_only_extension(directory: Path | str, extension: str) -> None:
     for root, dirs, files in os.walk(directory):
         for file in files:
             if file.endswith(extension):
@@ -116,13 +119,16 @@ def directories(mods_path: Path | str) -> list[str]:
         return []
 
 
-def handle_remove_read_only(func, path: str, exc):
+def handle_remove_read_only(
+    func: Callable[[str], Any], path: str, exc: tuple[type, BaseException, Any]
+) -> None:
     excvalue = exc[1]
-    if func in (os.rmdir, os.remove, os.unlink) and excvalue.errno == EACCES:
-        os.chmod(path, S_IRWXU | S_IRWXG | S_IRWXO)  # 0777
-        func(path)
-    else:
-        raise
+    if excvalue is not None and isinstance(excvalue, OSError):
+        if func in (os.rmdir, os.remove, os.unlink) and excvalue.errno == EACCES:
+            os.chmod(path, S_IRWXU | S_IRWXG | S_IRWXO)  # 0777
+            func(path)
+        else:
+            raise
 
 
 def launch_game_process(game_install_path: Path, args: list[str]) -> None:
@@ -252,13 +258,22 @@ def sanitize_filename(filename: str) -> str:
     return sanitized_filename
 
 
-def set_to_list(obj):
+def flatten_to_list(obj: Any) -> list[Any] | dict[Any, Any] | Any:
+    """Function to recursively flatten a nested object as much as possible.
+        Converts all sets to lists. If the object is a dictionary, it maintains the keys and
+        recurses on the values. If the object cannot be flattened further, the function returns the object as is.
+
+    :param obj: The object to be flattened
+    :type obj: Any
+    :return: The flattened object
+    :rtype: list[Any] | dict[Any, Any]
+    """
     if isinstance(obj, set):
         return list(obj)
     elif isinstance(obj, list):
-        return [set_to_list(e) for e in obj]
+        return [flatten_to_list(e) for e in obj]
     elif isinstance(obj, dict):
-        return {k: set_to_list(v) for k, v in obj.items()}
+        return {k: flatten_to_list(v) for k, v in obj.items()}
     else:
         return obj
 

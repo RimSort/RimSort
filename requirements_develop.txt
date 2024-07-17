@@ -1,5 +1,6 @@
 ruff==0.5.2
 mypy
+types-Deprecated
 types-psutil
 #types-pyside6
 types-requests

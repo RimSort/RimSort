@@ -1,6 +1,7 @@
 from functools import partial
 from typing import Dict, List, Union
 
+from deprecated import deprecated
 from PySide6.QtCore import Signal
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import (
@@ -15,15 +16,17 @@ from PySide6.QtWidgets import (
 from app.utils.app_info import AppInfo
 
 
+# TODO: Remove when confirmed that this class is not used
+@deprecated(reason="Broken and unused. Will be removed in the future.")
 class MultiButton(QWidget):
     def __init__(
         self,
         main_action: Union[str, List[str]],
         main_action_tooltip: str,
         context_menu_content: Union[Dict[str, str], List[QAction]],
-        actions_signal=None,
-        secondary_action_icon_path=None,
-    ):
+        actions_signal: Signal,
+        secondary_action_icon_path: str,
+    ) -> None:
         super().__init__()
 
         self.main_action: Union[QPushButton, QComboBox]

@@ -14,7 +14,7 @@ from loguru import logger
 if "__compiled__" not in globals():
     sys.path.append(str((Path(getcwd()) / "submodules" / "SteamworksPy")))
 
-from steamworks import STEAMWORKS
+from steamworks import STEAMWORKS  # type: ignore
 
 from app.utils.generic import launch_game_process
 
@@ -32,7 +32,7 @@ class SteamworksInterface:
     Thanks to Paladin for the example
     """
 
-    def __init__(self, callbacks: bool, callbacks_total=None, _libs=None):
+    def __init__(self, callbacks: bool, callbacks_total=None, _libs=None) -> None:
         logger.info("SteamworksInterface initializing...")
         self.callbacks = callbacks
         self.callbacks_count = 0
@@ -68,7 +68,7 @@ class SteamworksInterface:
                 self.steamworks_thread = self._daemon()
                 self.steamworks_thread.start()
 
-    def _callbacks(self):
+    def _callbacks(self) -> None:
         logger.debug("Starting _callbacks")
         while (
             not self.steamworks.loaded()
@@ -157,12 +157,12 @@ class SteamworksInterface:
 
 
 class SteamworksAppDependenciesQuery:
-    def __init__(self, pfid_or_pfids: Union[int, list], interval=1, _libs=None):
+    def __init__(self, pfid_or_pfids: Union[int, list], interval:int=1, _libs=None) -> None:
         self._libs = _libs
         self.interval = interval
         self.pfid_or_pfids = pfid_or_pfids
 
-    def run(self) -> dict:
+    def run(self) -> None:
         """
         Query PublishedFileIDs for AppID dependency data
         :param pfid_or_pfids: is an int that corresponds with a subscribed Steam mod's PublishedFileId
@@ -204,7 +204,6 @@ class SteamworksAppDependenciesQuery:
                 return steamworks_interface.get_app_deps_query_result
         else:
             steamworks_interface.steamworks.unload()
-            steamworks_interface = None
 
 
 class SteamworksGameLaunch(Process):
@@ -330,7 +329,6 @@ class SteamworksSubscriptionHandler:
                 steamworks_interface.steamworks.unload()
         else:
             steamworks_interface.steamworks.unload()
-            steamworks_interface = None
 
 
 if __name__ == "__main__":
