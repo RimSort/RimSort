@@ -48,41 +48,12 @@ def copy_to_clipboard_safely(text: str) -> None:
         )
 
 
-def delete_files_except_extension(directory: Path | str, extension: str) -> None:
+def delete_files_with_condition(
+    directory: Path | str, condition: Callable[[str], bool]
+) -> None:
     for root, dirs, files in os.walk(directory):
         for file in files:
-            if not file.endswith(extension):
-                file_path = str((Path(root) / file))
-                try:
-                    os.remove(file_path)
-                except OSError:
-                    handle_remove_read_only(os.remove, file_path, sys.exc_info())
-                finally:
-                    logger.debug(f"Deleted: {file_path}")
-
-    for root, dirs, _ in os.walk(directory, topdown=False):
-        for _dir in dirs:
-            dir_path = str((Path(root) / _dir))
-            if not os.listdir(dir_path):
-                shutil.rmtree(  # Note: Pylance may complain that onerror is deprecated, but this is only for 3.12 and above
-                    dir_path,
-                    ignore_errors=False,
-                    onerror=handle_remove_read_only,
-                )
-                logger.debug(f"Deleted: {dir_path}")
-    if not os.listdir(directory):
-        shutil.rmtree(
-            directory,
-            ignore_errors=False,
-            onerror=handle_remove_read_only,
-        )
-        logger.debug(f"Deleted: {directory}")
-
-
-def delete_files_only_extension(directory: Path | str, extension: str) -> None:
-    for root, dirs, files in os.walk(directory):
-        for file in files:
-            if file.endswith(extension):
+            if condition(file):
                 file_path = str((Path(root) / file))
                 try:
                     os.remove(file_path)
@@ -110,6 +81,14 @@ def delete_files_only_extension(directory: Path | str, extension: str) -> None:
         logger.debug(f"Deleted: {directory}")
 
 
+def delete_files_except_extension(directory: Path | str, extension: str) -> None:
+    delete_files_with_condition(directory, lambda file: not file.endswith(extension))
+
+
+def delete_files_only_extension(directory: Path | str, extension: str) -> None:
+    delete_files_with_condition(directory, lambda file: file.endswith(extension))
+
+
 def directories(mods_path: Path | str) -> list[str]:
     try:
         with os.scandir(mods_path) as directories:
@@ -120,7 +99,9 @@ def directories(mods_path: Path | str) -> list[str]:
 
 
 def handle_remove_read_only(
-    func: Callable[[str], Any], path: str, exc: tuple[type, BaseException, Any]
+    func: Callable[[str], Any],
+    path: str,
+    exc: tuple[type[BaseException], BaseException, Any] | tuple[None, None, None],
 ) -> None:
     excvalue = exc[1]
     if excvalue is not None and isinstance(excvalue, OSError):
