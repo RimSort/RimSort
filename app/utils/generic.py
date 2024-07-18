@@ -203,14 +203,15 @@ def open_url_browser(url: str) -> None:
     webbrowser.open(url)
 
 
-def platform_specific_open(path: str) -> None:
+def platform_specific_open(path: str | Path) -> None:
     """
     Function to open a file/folder in the platform-specific file-explorer app.
 
     :param path: path to open
     """
     logger.info(f"USER ACTION: opening {path}")
-    p = Path(path)
+    p = Path(path) if isinstance(path, str) else path
+    path = str(p)
     system_name = platform.system()
     if system_name == "Darwin":
         logger.info(f"Opening {path} with subprocess open on MacOS")
