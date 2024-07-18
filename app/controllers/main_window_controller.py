@@ -90,16 +90,7 @@ class MainWindowController(QObject):
                     500
                 )  # Blink every 500 milliseconds
         else:
-            if self.main_window.save_button_flashing_animation.isActive():
-                logger.debug("Stopping save button animation")
-                self.main_window.save_button_flashing_animation.stop()
-                self.main_window.save_button.setObjectName("")
-                self.main_window.save_button.style().unpolish(
-                    self.main_window.save_button
-                )
-                self.main_window.save_button.style().polish(
-                    self.main_window.save_button
-                )
+            self.on_save_button_animation_stop()
 
     @Slot()
     def on_save_button_animation_stop(self) -> None:
