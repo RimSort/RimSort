@@ -1,8 +1,8 @@
 import os
-import warnings
 from pathlib import Path
 from typing import List, Optional, Tuple
 
+from deprecated import deprecated
 from loguru import logger
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -128,20 +128,21 @@ def show_dialogue_conditional(
     return response.text()
 
 
+@deprecated(reason="Just use QInputDialog().getText() instead")
 def show_dialogue_input(
-    title: Optional[str] = None,
-    label: Optional[str] = None,
-    text: Optional[str] = None,
-    parent: Optional[QWidget] = None,
+    title: str = "",
+    label: str = "",
+    text: str = "",
+    parent: QWidget | None = None,
 ) -> Tuple[str, bool]:
-    warnings.warn(
-        "May deprecate show_dialogue_input. Currently it is just a wrapper around a single function"
-    )
-    return QInputDialog().getText(parent, title, label, text=text)
+    return QInputDialog().getText(parent, title, label, text=text)  # type: ignore # Is okay to set parent to None
 
 
 def show_dialogue_file(
-    mode: str, caption=None, _dir=None, _filter=None
+    mode: str,
+    caption: str = "",
+    _dir: str = "",
+    _filter: str = "",
 ) -> Optional[str]:
     path = None
     if mode == "open":
