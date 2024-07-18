@@ -36,14 +36,7 @@ def show_dialogue_confirmation(
     )
 
     # Set up the message box
-    dialogue = QMessageBox()
-    dialogue.setTextFormat(Qt.TextFormat.RichText)
-    dialogue.setIcon(QMessageBox.Icon.Question)
-    dialogue.setObjectName("dialogue")
-    if title:
-        dialogue.setWindowTitle(title)
-    else:
-        dialogue.setWindowTitle(DEFAULT_TITLE)
+    dialogue = _setup_messagebox(title)
 
     # Remove standard buttons
     dialogue.setStandardButtons(
@@ -86,14 +79,7 @@ def show_dialogue_conditional(
     )
 
     # Set up the message box
-    dialogue = QMessageBox()
-    dialogue.setTextFormat(Qt.TextFormat.RichText)
-    dialogue.setIcon(QMessageBox.Icon.Question)
-    dialogue.setObjectName("dialogue")
-    if title:
-        dialogue.setWindowTitle(title)
-    else:
-        dialogue.setWindowTitle(DEFAULT_TITLE)
+    dialogue = _setup_messagebox(title)
 
     # Create our buttons (accommodate any overrides passed)
     if button_text_override:
@@ -276,3 +262,23 @@ def show_fatal_error(
     # Show the message box
     logger.debug("Finished showing fatal error box")
     fatal_message_box.exec_()
+
+
+def _setup_messagebox(title: str | None) -> QMessageBox:
+    """Helper function to setup the message box
+
+    :param title: The title of the message box
+    :type title: str | None
+    :return: The message box object
+    :rtype: QMessageBox
+    """
+    dialogue = QMessageBox()
+    dialogue.setTextFormat(Qt.TextFormat.RichText)
+    dialogue.setIcon(QMessageBox.Icon.Question)
+    dialogue.setObjectName("dialogue")
+    if title:
+        dialogue.setWindowTitle(title)
+    else:
+        dialogue.setWindowTitle(DEFAULT_TITLE)
+
+    return dialogue
