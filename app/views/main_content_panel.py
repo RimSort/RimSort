@@ -105,9 +105,7 @@ class MainContent(QObject):
             cls._instance = super(MainContent, cls).__new__(cls)
         return cls._instance
 
-    def __init__(
-        self, settings_controller: SettingsController
-    ) -> None:
+    def __init__(self, settings_controller: SettingsController) -> None:
         """
         Initialize the main content panel.
 
@@ -2154,46 +2152,101 @@ class MainContent(QObject):
         del repo
 
     def _check_git_repos_for_update(self, repo_paths: list[str]) -> None:
-        if GIT_EXISTS:
-            # Track summary of repo updates
-            updates_summary = {}
+        if not GIT_EXISTS:
+            self._do_notify_no_git()
+            return
+        updates_summary: dict[str, dict[str, str]] = {}
+        try:
             for repo_path in repo_paths:
-                logger.info(f"Checking git repository for updates at: {repo_path}")
-                if os.path.exists(repo_path):
-                    repo = Repo(repo_path)
+                updates_summary.update(self._update_git_repository(repo_path))
+        except GitCommandError as e:
+            stacktrace = traceback.format_exc()
+            logger.error(f"Failed to update repo at path: {repo_path}. Error: {e}")
+            dialogue.show_warning(
+                title="Failed to update repo!",
+                text=f"The repository supplied at [{repo_path}] failed to update!\n"
+                + "Are you connected to the Internet? "
+                + "Is the repo valid?",
+                information=(
+                    f"Supplied repository: {Repo.remotes.origin.url}"
+                    if Repo
+                    and Repo.remotes
+                    and Repo.remotes.origin
+                    and Repo.remotes.origin.url
+                    else None
+                ),
+                details=stacktrace,
+            )
+        finally:
+            if updates_summary:
+                repos_updated = "\n".join(
+                    list(os.path.split(k)[1] for k in updates_summary.keys())
+                )
+                updates_summarized = "\n".join(
+                    [
+                        f"[{os.path.split(k)[1]}]: {v['HEAD~1'] + '...' + v['HEAD']}\n"
+                        + f"{v['message']}\n"
+                        for k, v in updates_summary.items()
+                    ]
+                )
+                dialogue.show_information(
+                    title="Git repo(s) updated",
+                    text="The following repo(s) have updates found:",
+                    information=repos_updated,
+                    details=updates_summarized,
+                )
+            else:
+                dialogue.show_information(
+                    title="Git repo(s) not updated", text="No updates were found."
+                )
+
+    def _update_git_repository(self, repo_path: str) -> dict:
+        updates_summary = {}
+        logger.info(f"Checking git repository for updates at: {repo_path}")
+        if os.path.exists(repo_path):
+            repo = Repo(repo_path)
+            try:
+                origin = repo.remote(name="origin")
+                origin.fetch()
+
+                local_ref = repo.head.reference
+                remote_ref = next(
+                    (
+                        ref
+                        for ref in repo.refs
+                        if f"origin/{local_ref.name}" in ref.path
+                    ),
+                    None,
+                )
+                if remote_ref is None:
+                    dialogue.show_warning(
+                        title="Refrence not found",
+                        text="Remote reference not found for the local branch '{local_ref.name}'. Please check Git repository or Delete andre-add the repository.",
+                    )
+                    logger.warning(
+                        f"Remote reference not found for the local branch '{local_ref.name}'."
+                    )
+                    return updates_summary
+
+                if local_ref.commit != remote_ref.commit:
+                    local_name = local_ref.name
+                    remote_name = remote_ref.name
+                    logger.info(
+                        f"Local branch {local_name} is not up-to-date with remote branch {remote_name}. Updating forcefully."
+                    )
+                    updates_summary[repo_path] = {
+                        "HEAD~1": local_ref.commit.hexsha[:7],
+                    }
                     try:
-                        # Fetch the latest changes from the remote
-                        origin = repo.remote(name="origin")
-                        origin.fetch()
-
-                        # Get the local and remote refs
-                        local_ref = repo.head.reference
-                        refs = repo.refs()
-                        remote_ref = refs[f"origin/{local_ref.name}"]
-
-                        # Check if the local branch is behind the remote branch
-                        if local_ref.commit != remote_ref.commit:
-                            local_name = local_ref.name
-                            remote_name = remote_ref.name
-                            logger.info(
-                                f"Local branch {local_name} is not up-to-date with remote branch {remote_name}. Updating forcefully."
-                            )
-                            # Create a summary of the changes that will be made for the repo to be updated
-                            updates_summary[repo_path] = {
-                                "HEAD~1": local_ref.commit.hexsha[:7],
+                        repo.git.reset("--hard", remote_ref.name)
+                        repo.git.clean("-fdx")
+                        origin.pull(local_ref.name, rebase=True)
+                        updates_summary[repo_path].update(
+                            {
+                                "HEAD": remote_ref.commit.hexsha[:7],
+                                "message": remote_ref.commit.message,
                             }
-                            # Force pull the latest changes
-                            repo.git.reset("--hard", remote_ref.name)
-                            repo.git.clean("-fdx")  # Remove untracked files
-                            origin.pull(local_ref.name, rebase=True)
-                            updates_summary[repo_path].update(
-                                {
-                                    "HEAD": remote_ref.commit.hexsha[:7],
-                                    "message": remote_ref.commit.message,
-                                }
-                            )
-                        else:
-                            logger.info("The local repository is already up-to-date.")
+                        )
                     except GitCommandError:
                         stacktrace = traceback.format_exc()
                         dialogue.show_warning(
@@ -2213,31 +2266,28 @@ class MainContent(QObject):
                         )
                     finally:
                         self._do_cleanup_gitpython(repo)
-            # If any updates were found, notify the user
-            if updates_summary:
-                repos_updated = "\n".join(
-                    list(os.path.split(k)[1] for k in updates_summary.keys())
+                else:
+                    logger.info("The local repository is already up-to-date.")
+            except GitCommandError:
+                stacktrace = traceback.format_exc()
+                dialogue.show_warning(
+                    title="Failed to update repo!",
+                    text=f"The repository supplied at [{repo_path}] failed to update!\n"
+                    + "Are you connected to the Internet? "
+                    + "Is the repo valid?",
+                    information=(
+                        f"Supplied repository: {repo.remotes.origin.url}"
+                        if repo
+                        and repo.remotes
+                        and repo.remotes.origin
+                        and repo.remotes.origin.url
+                        else None
+                    ),
+                    details=stacktrace,
                 )
-                updates_summarized = "\n".join(
-                    [
-                        f"[{os.path.split(k)[1]}]: {v['HEAD~1']  + '...' + v['HEAD']}\n"
-                        + f"{v['message']}\n"
-                        for k, v in updates_summary.items()
-                    ]
-                )
-                dialogue.show_information(
-                    title="Git repo(s) updated",
-                    text="The following repo(s) had updates pulled from the remote:",
-                    information=repos_updated,
-                    details=updates_summarized,
-                )
-            else:
-                dialogue.show_information(
-                    title="Git repo(s) not updated",
-                    text="No updates were found.",
-                )
-        else:
-            self._do_notify_no_git()
+            finally:
+                self._do_cleanup_gitpython(repo)
+        return updates_summary
 
     def _do_clone_repo_to_path(self, base_path: str, repo_url: str) -> None:
         """
