@@ -18,7 +18,7 @@ from PySide6.QtCore import (
 )
 
 from app.controllers.settings_controller import SettingsController
-from app.models.dialogue import (
+from app.views.dialogue import (
     show_dialogue_conditional,
     show_dialogue_file,
     show_warning,

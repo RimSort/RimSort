@@ -6,7 +6,7 @@ from typing import Any
 import requests
 from loguru import logger
 
-from app.models.dialogue import show_dialogue_input, show_fatal_error, show_warning
+from app.views.dialogue import show_dialogue_input, show_fatal_error, show_warning
 
 # Constants
 BASE_URL = "https://rentry.co"

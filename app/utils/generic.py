@@ -17,7 +17,7 @@ from pyperclip import (  # type: ignore # Stubs don't exist for pyperclip
 )
 from requests import post as requests_post
 
-from app.models.dialogue import show_fatal_error, show_warning
+from app.views.dialogue import show_fatal_error, show_warning
 
 
 def chunks(_list: list[Any], limit: int) -> Generator[list[Any], None, None]:

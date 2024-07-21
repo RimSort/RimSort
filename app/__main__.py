@@ -64,7 +64,7 @@ elif SYSTEM == "Windows":
     # getLogger("").setLevel(WARNING)
 
 # TODO: Fix this so that this cursed import order is not required
-from app.models.dialogue import show_fatal_error
+from app.views.dialogue import show_fatal_error
 
 
 def handle_exception(

@@ -9,7 +9,7 @@ import msgspec
 from loguru import logger
 from PySide6.QtCore import QObject
 
-from app.models.dialogue import (
+from app.views.dialogue import (
     show_fatal_error,
     show_warning,
 )
