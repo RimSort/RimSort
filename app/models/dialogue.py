@@ -1,8 +1,8 @@
 import os
-import warnings
 from pathlib import Path
 from typing import List, Optional, Tuple
 
+from deprecated import deprecated
 from loguru import logger
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -36,14 +36,7 @@ def show_dialogue_confirmation(
     )
 
     # Set up the message box
-    dialogue = QMessageBox()
-    dialogue.setTextFormat(Qt.TextFormat.RichText)
-    dialogue.setIcon(QMessageBox.Icon.Question)
-    dialogue.setObjectName("dialogue")
-    if title:
-        dialogue.setWindowTitle(title)
-    else:
-        dialogue.setWindowTitle(DEFAULT_TITLE)
+    dialogue = _setup_messagebox(title)
 
     # Remove standard buttons
     dialogue.setStandardButtons(
@@ -86,14 +79,7 @@ def show_dialogue_conditional(
     )
 
     # Set up the message box
-    dialogue = QMessageBox()
-    dialogue.setTextFormat(Qt.TextFormat.RichText)
-    dialogue.setIcon(QMessageBox.Icon.Question)
-    dialogue.setObjectName("dialogue")
-    if title:
-        dialogue.setWindowTitle(title)
-    else:
-        dialogue.setWindowTitle(DEFAULT_TITLE)
+    dialogue = _setup_messagebox(title)
 
     # Create our buttons (accommodate any overrides passed)
     if button_text_override:
@@ -128,20 +114,21 @@ def show_dialogue_conditional(
     return response.text()
 
 
+@deprecated(reason="Just use QInputDialog().getText() instead")
 def show_dialogue_input(
-    title: Optional[str] = None,
-    label: Optional[str] = None,
-    text: Optional[str] = None,
-    parent: Optional[QWidget] = None,
+    title: str = "",
+    label: str = "",
+    text: str = "",
+    parent: QWidget | None = None,
 ) -> Tuple[str, bool]:
-    warnings.warn(
-        "May deprecate show_dialogue_input. Currently it is just a wrapper around a single function"
-    )
-    return QInputDialog().getText(parent, title, label, text=text)
+    return QInputDialog().getText(parent, title, label, text=text)  # type: ignore # Is okay to set parent to None
 
 
 def show_dialogue_file(
-    mode: str, caption=None, _dir=None, _filter=None
+    mode: str,
+    caption: str = "",
+    _dir: str = "",
+    _filter: str = "",
 ) -> Optional[str]:
     path = None
     if mode == "open":
@@ -275,3 +262,23 @@ def show_fatal_error(
     # Show the message box
     logger.debug("Finished showing fatal error box")
     fatal_message_box.exec_()
+
+
+def _setup_messagebox(title: str | None) -> QMessageBox:
+    """Helper function to setup the message box
+
+    :param title: The title of the message box
+    :type title: str | None
+    :return: The message box object
+    :rtype: QMessageBox
+    """
+    dialogue = QMessageBox()
+    dialogue.setTextFormat(Qt.TextFormat.RichText)
+    dialogue.setIcon(QMessageBox.Icon.Question)
+    dialogue.setObjectName("dialogue")
+    if title:
+        dialogue.setWindowTitle(title)
+    else:
+        dialogue.setWindowTitle(DEFAULT_TITLE)
+
+    return dialogue

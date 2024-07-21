@@ -1,3 +1,5 @@
+from typing import Self
+
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QPushButton
 
@@ -19,7 +21,7 @@ class EventBus(QObject):
         Since this is a singleton class, multiple instantiations will return the same object.
     """
 
-    _instance = None
+    _instance: None | Self = None
 
     # Menu bar signals
     do_check_for_application_update = Signal()

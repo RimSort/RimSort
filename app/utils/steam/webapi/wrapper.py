@@ -4,7 +4,7 @@ from logging import WARNING, getLogger
 from math import ceil
 from multiprocessing import Pool, cpu_count
 from time import time
-from typing import Any, Dict, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from loguru import logger
 from PySide6.QtCore import QObject, Signal
@@ -17,6 +17,11 @@ from app.utils.app_info import AppInfo
 from app.utils.constants import RIMWORLD_DLC_METADATA
 from app.utils.generic import chunks
 from app.utils.steam.steamworks.wrapper import SteamworksAppDependenciesQuery
+
+# Prevent circular dependencies for type checking
+if TYPE_CHECKING:
+    from app.utils.metadata import MetadataManager
+
 
 # This is redundant since it is also done in `logger-tt` config,
 # however, it can't hurt, just in case!
@@ -34,7 +39,7 @@ class CollectionImport:
     Class to handle importing workshop collection links and extracting package IDs.
     """
 
-    def __init__(self, metadata_manager):
+    def __init__(self, metadata_manager: "MetadataManager") -> None:
         """
         Initialize the CollectionImport instance.
 
@@ -48,7 +53,7 @@ class CollectionImport:
         self.publishedfileids: list[str] = []  # Initialize an empty list to store pfids
         self.input_dialog()  # Call the input_dialog method to set up the UI
 
-    def input_dialog(self):
+    def input_dialog(self) -> None:
         # Initialize the UI for entering collection links
         self.link_input = show_dialogue_input(
             title="Add Workshop collection link",
@@ -57,7 +62,7 @@ class CollectionImport:
         self.import_collection_link()
         logger.info("Workshop collection link Input UI initialized successfully!")
 
-    def is_valid_collection_link(self, link):
+    def is_valid_collection_link(self, link: str) -> bool:
         """
         Check if the provided link is a valid workshop collection link.
 
@@ -71,7 +76,7 @@ class CollectionImport:
             BASE_URL_STEAMFILES in link or BASE_URL_WORKSHOP in link
         )
 
-    def import_collection_link(self):
+    def import_collection_link(self) -> None:
         # Handle the import button click event
         logger.info("Import Workshop collection clicked")
         collection_link = self.link_input[0]
@@ -113,7 +118,10 @@ class CollectionImport:
             collection_webapi_result = ISteamRemoteStorage_GetCollectionDetails(
                 [collection_link]
             )
-            if len(collection_webapi_result) > 0:
+            if (
+                collection_webapi_result is not None
+                and len(collection_webapi_result) > 0
+            ):
                 for mod in collection_webapi_result[0]["children"]:
                     if mod.get("publishedfileid"):
                         self.publishedfileids.append(mod["publishedfileid"])
@@ -148,9 +156,9 @@ class DynamicQuery(QObject):
         self,
         apikey: str,
         appid: int,
-        get_appid_deps=None,
-        life=None,
-    ):
+        get_appid_deps: bool = False,
+        life: int | None = None,
+    ) -> None:
         QObject.__init__(self)
 
         logger.info("Initializing DynamicQuery")
@@ -163,9 +171,9 @@ class DynamicQuery(QObject):
         self.next_cursor = "*"
         self.pagenum = 1
         self.pages = 1
-        self.publishedfileids = []
+        self.publishedfileids: list[str] = []
         self.total = 0
-        self.database = {}
+        self.database: dict[str, Any] = {}
 
     def __expires(self, life: int) -> int:
         return int(time() + life)  # current seconds since epoch + 30 minutes
@@ -201,7 +209,9 @@ class DynamicQuery(QObject):
                 + "\nAre you connected to the internet?\nIs your configured key invalid or revoked?\n",
             )
 
-    def create_steam_db(self, database: Dict[str, Any], publishedfileids: list) -> None:
+    def create_steam_db(
+        self, database: Dict[str, Any], publishedfileids: list[str]
+    ) -> None:
         """
         Builds a database using a chunked WebAPI query of all available
         PublishedFileIds supplied.
@@ -217,10 +227,17 @@ class DynamicQuery(QObject):
         query["database"] = database["database"]
         querying = True
         while querying:  # Begin initial query
-            (  # Returns WHAT we can get remotely, FROM what we have locally
-                query,
-                missing_children,
-            ) = self.IPublishedFileService_GetDetails(query, publishedfileids)
+            result = self.IPublishedFileService_GetDetails(query, publishedfileids)
+
+            if result is None:
+                logger.warning(
+                    f"Dynamic Query failed to initialize WebAPI query! Critical failure. Aborting steam_db creation. query: {query} publishedfileids: {publishedfileids}"
+                )
+                return
+
+            # Returns WHAT we can get remotely, FROM what we have locally
+            query, missing_children = result
+
             if (
                 missing_children and len(missing_children) > 0
             ):  # If we have missing data for any dependency...
@@ -241,10 +258,15 @@ class DynamicQuery(QObject):
                 #
                 # It is the only way to paint the full picture without already
                 # possessing the mod's metadata for the initial query.
-                (
-                    query,
-                    missing_children,
-                ) = self.IPublishedFileService_GetDetails(query, missing_children)
+                result = self.IPublishedFileService_GetDetails(query, missing_children)
+
+                if result is None:
+                    logger.warning(
+                        f"Dynamic Query failed to initialize WebAPI query! Critical failure. Aborting steam_db creation. Query: {query} Missing Children: {missing_children}"
+                    )
+                    return
+
+                query, missing_children = result
                 self.dq_messaging_signal.emit(
                     "\nLaunching addiitonal full query to complete dependency information for the missing children"
                 )
@@ -281,21 +303,20 @@ class DynamicQuery(QObject):
         self.__initialize_webapi()
 
         if self.api:
-            self.query = True
-            while self.query:
+            query = True
+            while query:
                 if self.pagenum > self.pages:
-                    self.query = False
+                    query = False
                     break
                 self.next_cursor = self.IPublishedFileService_QueryFiles(
                     self.next_cursor
                 )
         else:
-            self.query = False
             self.dq_messaging_signal.emit("AppIDQuery: WebAPI failed to initialize!")
 
     def IPublishedFileService_GetDetails(
-        self, json_to_update: Dict[Any, Any], publishedfileids: list
-    ) -> Optional[Tuple[Dict[Any, Any], list]]:
+        self, json_to_update: dict[Any, Any], publishedfileids: list[str]
+    ) -> Optional[tuple[dict[Any, Any], list[str]]]:
         """
         Given a list of PublishedFileIds, return a dict of json data queried
         from Steam WebAPI, containing data to be parsed during db update.
@@ -319,7 +340,7 @@ class DynamicQuery(QObject):
             f"IPublishedFileService/GetDetails chunk [0/{total}]"
         )
         if not self.api:  # If we don't have API initialized
-            return None, None  # Exit query
+            return None  # Exit query
         missing_children = []
         result = json_to_update
         # Uncomment to see the all pfids to be queried
@@ -485,6 +506,11 @@ class DynamicQuery(QObject):
         `cursor` parameter being returned to the FOLLOWING loop in our series of
         WebAPI.call() results that are being are parsing
         """
+        if self.api is None:
+            raise Exception(
+                "Tried to query files while API was not properly initialized."
+            )  # Exit query
+
         result = self.api.call(
             method_path="IPublishedFileService.QueryFiles",
             key=self.apikey,
@@ -550,7 +576,7 @@ class DynamicQuery(QObject):
         return result["response"]["next_cursor"]
 
     def ISteamUGC_GetAppDependencies(
-        self, publishedfileids: list, query: Dict[str, Any]
+        self, publishedfileids: list[str], query: Dict[str, Any]
     ) -> None:
         """
         Given a list of PublishedFileIds and a query, return the query after looking up
@@ -588,9 +614,10 @@ class DynamicQuery(QObject):
             results = pool.map(SteamworksAppDependenciesQuery.run, queries)
         # Merge the results from all processes into a single dictionary
         self.dq_messaging_signal.emit("Processes completed!\nCollecting results")
-        pfids_appid_deps = {}
+        pfids_appid_deps: dict[int, list[int]] = {}
         for result in results:
-            pfids_appid_deps.update(result)
+            if result is not None:
+                pfids_appid_deps.update(result)
         self.dq_messaging_signal.emit(f"\nTotal: {len(pfids_appid_deps.keys())}")
         # Uncomment to see the total metadata returned from all Processes
         # logger.debug(pfids_appid_deps)
@@ -613,8 +640,8 @@ class DynamicQuery(QObject):
 
 
 def ISteamRemoteStorage_GetCollectionDetails(
-    publishedfileids: list,
-) -> Optional[list]:
+    publishedfileids: list[str],
+) -> list[Any] | None:
     """
     Given a list of Steam Workshopmod collection PublishedFileIds, return a dict of
     json data queried from Steam WebAPI, containing data to be parsed.
@@ -659,8 +686,8 @@ def ISteamRemoteStorage_GetCollectionDetails(
 
 
 def ISteamRemoteStorage_GetPublishedFileDetails(
-    publishedfileids: list,
-) -> Optional[list]:
+    publishedfileids: list[str],
+) -> list[Any] | None:
     """
     Given a list of PublishedFileIds, return a dict of json data queried
     from Steam WebAPI, containing data to be parsed.

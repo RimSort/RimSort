@@ -165,20 +165,30 @@ class ModInfo:
             self.mod_info_path_label,
             self.mod_info_path_value,
         ]
-        self.mod_info_name_label.hide()
-        self.mod_info_name_value.hide()
-        self.mod_info_package_id_label.hide()
-        self.mod_info_package_id_value.hide()
-        self.mod_info_author_label.hide()
-        self.mod_info_author_value.hide()
-        self.mod_info_mod_version_label.hide()
-        self.mod_info_mod_version_value.hide()
-        self.mod_info_supported_versions_label.hide()
-        self.mod_info_supported_versions_value.hide()
-        self.mod_info_path_label.hide()
-        self.mod_info_path_value.hide()
-        self.scenario_info_summary_label.hide()
-        self.scenario_info_summary_value.hide()
+
+        self.base_mod_info_widgets = [
+            self.mod_info_package_id_label,
+            self.mod_info_package_id_value,
+            self.mod_info_author_label,
+            self.mod_info_author_value,
+            self.mod_info_mod_version_label,
+            self.mod_info_mod_version_value,
+            self.mod_info_supported_versions_label,
+            self.mod_info_supported_versions_value,
+        ]
+
+        self.scenario_info_widgets = [
+            self.scenario_info_summary_label,
+            self.scenario_info_summary_value,
+        ]
+
+        # Hide all widgets by default
+        for widget in (
+            self.essential_info_widgets
+            + self.base_mod_info_widgets
+            + self.scenario_info_widgets
+        ):
+            widget.hide()
 
         logger.debug("Finished ModInfo initialization")
 
@@ -223,16 +233,11 @@ class ModInfo:
         # If it's not invalid, and it's not a scenario, it must be a mod!
         if not mod_info.get("invalid") and not mod_info.get("scenario"):
             # Show valid-mod-specific fields, hide scenario summary
-            self.mod_info_package_id_label.show()
-            self.mod_info_package_id_value.show()
-            self.mod_info_author_label.show()
-            self.mod_info_author_value.show()
-            self.mod_info_mod_version_label.show()
-            self.mod_info_mod_version_value.show()
-            self.mod_info_supported_versions_label.show()
-            self.mod_info_supported_versions_value.show()
-            self.scenario_info_summary_label.hide()
-            self.scenario_info_summary_value.hide()
+            for widget in self.base_mod_info_widgets:
+                widget.show()
+
+            for widget in self.scenario_info_widgets:
+                widget.hide()
 
             # Populate values from metadata
 
@@ -274,30 +279,19 @@ class ModInfo:
                     else "Not specified"
                 )
         elif mod_info.get("scenario"):  # Hide mod-specific widgets, show scenario
-            self.mod_info_package_id_label.hide()
-            self.mod_info_package_id_value.hide()
-            self.mod_info_author_label.hide()
-            self.mod_info_author_value.hide()
-            self.mod_info_mod_version_label.hide()
-            self.mod_info_mod_version_value.hide()
-            self.mod_info_supported_versions_label.hide()
-            self.mod_info_supported_versions_value.hide()
-            self.scenario_info_summary_label.show()
-            self.scenario_info_summary_value.show()
+            for widget in self.base_mod_info_widgets:
+                widget.hide()
+
+            for widget in self.scenario_info_widgets:
+                widget.show()
+
             self.scenario_info_summary_value.setText(
                 mod_info.get("summary", "Not specified")
             )
         elif mod_info.get("invalid"):  # Hide all except bare minimum if invalid
-            self.mod_info_package_id_label.hide()
-            self.mod_info_package_id_value.hide()
-            self.mod_info_author_label.hide()
-            self.mod_info_author_value.hide()
-            self.mod_info_mod_version_label.hide()
-            self.mod_info_mod_version_value.hide()
-            self.mod_info_supported_versions_label.hide()
-            self.mod_info_supported_versions_value.hide()
-            self.scenario_info_summary_label.hide()
-            self.scenario_info_summary_value.hide()
+            for widget in self.base_mod_info_widgets + self.scenario_info_widgets:
+                widget.hide()
+
         self.mod_info_path_value.setText(mod_info.get("path"))
         # Set the scrolling description for the Mod Info Panel
         self.description.setText("")

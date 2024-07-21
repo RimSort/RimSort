@@ -1,7 +1,7 @@
 import os
 import platform
 from functools import partial
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from loguru import logger
 from PySide6.QtCore import QPoint, QSize, Qt, QUrl, Signal
@@ -55,8 +55,9 @@ class SteamBrowser(QWidget):
         self.current_title = "RimSort - Steam Browser"
         self.current_url = startpage
 
-        self.downloader_list_mods_tracking = []
-        self.downloader_list_dupe_tracking = {}
+        # TODO: Are these actually ever assigned?
+        self.downloader_list_mods_tracking: list[str] = []
+        self.downloader_list_dupe_tracking: dict[str, Any] = {}
         self.startpage = QUrl(startpage)
 
         self.searchtext_string = "&searchtext="
@@ -169,12 +170,12 @@ class SteamBrowser(QWidget):
         self.setLayout(self.window_layout)
         self.setMinimumSize(QSize(800, 600))
 
-    def __browse_to_location(self):
+    def __browse_to_location(self) -> None:
         url = QUrl(self.location.text())
         logger.debug(f"Browsing to: {url.url()}")
         self.web_view.load(url)
 
-    def _add_collection_or_mod_to_list(self):
+    def _add_collection_or_mod_to_list(self) -> None:
         # Ascertain the pfid depending on the url prefix
         if self.url_prefix_sharedfiles in self.current_url:
             publishedfileid = self.current_url.split(self.url_prefix_sharedfiles, 1)[1]
@@ -219,13 +220,14 @@ class SteamBrowser(QWidget):
             )
             self.downloader_list_dupe_tracking = {}
 
-    def __compile_collection_datas(self, publishedfileid: str) -> Dict[str, Any]:
-        collection_mods_pfid_to_title = {}
+    def __compile_collection_datas(self, publishedfileid: str) -> dict[str, Any]:
+        collection_mods_pfid_to_title: dict[str, Any] = {}
         collection_webapi_result = ISteamRemoteStorage_GetCollectionDetails(
             [publishedfileid]
         )
         collection_pfids = []
-        if len(collection_webapi_result) > 0:
+
+        if collection_webapi_result is not None and len(collection_webapi_result) > 0:
             for mod in collection_webapi_result[0]["children"]:
                 if mod.get("publishedfileid"):
                     collection_pfids.append(mod["publishedfileid"])
@@ -235,6 +237,10 @@ class SteamBrowser(QWidget):
                 )
             else:
                 return collection_mods_pfid_to_title
+
+            if collection_mods_webapi_response is None:
+                return collection_mods_pfid_to_title
+
             for metadata in collection_mods_webapi_response:
                 # Retrieve the published mod's title from the response
                 pfid = metadata["publishedfileid"]
@@ -248,7 +254,7 @@ class SteamBrowser(QWidget):
         self,
         publishedfileid: str,
         title: Optional[str] = None,
-    ):
+    ) -> None:
         # Get the name from the page title
         page_title = self.current_title.split("Steam Workshop::", 1)[1]
         if publishedfileid not in self.downloader_list_mods_tracking:
@@ -317,13 +323,13 @@ class SteamBrowser(QWidget):
             ]
         )
 
-    def _web_view_load_started(self):
+    def _web_view_load_started(self) -> None:
         # Progress bar start, placeholder start
         self.progress_bar.show()
         self.web_view.hide()
         self.web_view_loading_placeholder.show()
 
-    def _web_view_load_progress(self, progress: int):
+    def _web_view_load_progress(self, progress: int) -> None:
         # Progress bar progress
         self.progress_bar.setValue(progress)
         # Placeholder done after page begins to load
@@ -331,7 +337,7 @@ class SteamBrowser(QWidget):
             self.web_view_loading_placeholder.hide()
             self.web_view.show()
 
-    def _web_view_load_finished(self):
+    def _web_view_load_finished(self) -> None:
         # Progress bar done
         self.progress_bar.hide()
         self.progress_bar.setValue(0)
@@ -385,12 +391,13 @@ class SteamBrowser(QWidget):
                 change_target_a_script, 0, lambda result: None
             )
             # Remove "Login" button
-            login_button_removal_script = """
-            var elements = document.getElementsByClassName("global_action_link");
-            while (elements.length > 0) {
-                elements[0].parentNode.removeChild(elements[0]);
-            }
-            """
+            # login_button_removal_script = """
+            # var elements = document.getElementsByClassName("global_action_link");
+            # while (elements.length > 0) {
+            #     elements[0].parentNode.removeChild(elements[0]);
+            # }
+            # """
+
             if (
                 self.url_prefix_sharedfiles in self.current_url
                 or self.url_prefix_workshop in self.current_url

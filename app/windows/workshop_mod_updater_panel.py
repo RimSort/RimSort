@@ -3,7 +3,7 @@ from time import localtime, strftime
 from typing import Any, Dict
 
 from loguru import logger
-from PySide6.QtCore import QEvent, QSize, Qt, Signal
+from PySide6.QtCore import QEvent, QObject, QSize, Qt, Signal
 from PySide6.QtGui import QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -29,7 +29,7 @@ class ModUpdaterPrompt(QWidget):
     def __init__(self, internal_mod_metadata: Dict[str, Any]):
         super().__init__()
         logger.debug("Initializing ModUpdaterPrompt")
-        self.updates_found = None
+        self.updates_found = False
 
         self.installEventFilter(self)
 
@@ -44,7 +44,7 @@ class ModUpdaterPrompt(QWidget):
         # CONTAINER LAYOUTS
         self.upper_layout = QVBoxLayout()
         self.lower_layout = QVBoxLayout()
-        self.layout = QVBoxLayout()
+        layout = QVBoxLayout()
 
         # SUB LAYOUTS
         self.details_layout = QVBoxLayout()
@@ -137,16 +137,16 @@ class ModUpdaterPrompt(QWidget):
         self.lower_layout.addLayout(self.editor_layout)
 
         # Add our layouts to the main layout
-        self.layout.addWidget(self.updates_available_label)
-        self.layout.addLayout(self.upper_layout)
-        self.layout.addLayout(self.lower_layout)
+        layout.addWidget(self.updates_available_label)
+        layout.addLayout(self.upper_layout)
+        layout.addLayout(self.lower_layout)
 
         # Put it all together
         self.setWindowTitle("RimSort - Updates found for Workshop mods")
-        self.setLayout(self.layout)
+        self.setLayout(layout)
         self.setMinimumSize(QSize(900, 600))
 
-    def eventFilter(self, obj, event):
+    def eventFilter(self, obj: QObject, event: QEvent) -> bool:
         if event.type() == QEvent.Type.KeyPress and event.type() == Qt.Key.Key_Escape:
             self.close()
             return True
@@ -160,7 +160,7 @@ class ModUpdaterPrompt(QWidget):
         mod_source: str,
         internal_time_touched: str,
         external_time_updated: str,
-    ):
+    ) -> None:
         # Create a new row
         items = [
             QStandardItem(),
@@ -187,6 +187,7 @@ class ModUpdaterPrompt(QWidget):
                 checkbox = self.editor_table_view.indexWidget(
                     self.editor_model.item(row, 0).index()
                 )
+                assert isinstance(checkbox, QCheckBox)
                 checkbox.setChecked(value)
 
     def _update_mods_from_table(self) -> None:
@@ -199,6 +200,7 @@ class ModUpdaterPrompt(QWidget):
                 checkbox = self.editor_table_view.indexWidget(
                     self.editor_model.item(row, 0).index()
                 )
+                assert isinstance(checkbox, QCheckBox)
                 if checkbox.isChecked():
                     publishedfileid = self.editor_model.item(row, 2).text()
                     if self.editor_model.item(row, 3).text() == "SteamCMD":

@@ -13,7 +13,9 @@ class ToddsInterface:
     Create ToddsInterface object to provide an interface for todds functionality
     """
 
-    def __init__(self, preset="optimized", dry_run=False, overwrite=False) -> None:
+    def __init__(
+        self, preset: str = "optimized", dry_run: bool = False, overwrite: bool=False
+    ) -> None:
         logger.info("ToddsInterface initilizing...")
         if overwrite:
             overwrite_flag = "-o"
@@ -55,7 +57,7 @@ class ToddsInterface:
                 self.todds_presets[preset].append("-v")
                 self.todds_presets[preset].append("-dr")
 
-    def execute_todds_cmd(self, target_path: str, runner: RunnerPanel):
+    def execute_todds_cmd(self, target_path: str, runner: RunnerPanel) -> None:
         """
         This function launches a todds command using a RunnerPanel (uses QProcess)
 

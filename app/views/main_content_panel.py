@@ -2610,7 +2610,7 @@ class MainContent(QObject):
             open_url_browser("https://git-scm.com/downloads")
 
     def _do_open_rule_editor(
-        self, compact: bool, initial_mode: str, packageid: Any | None = None
+        self, compact: bool, initial_mode: str, packageid: str | None = None
     ) -> None:
         self.rule_editor = RuleEditor(
             # Initialization options

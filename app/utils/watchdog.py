@@ -1,28 +1,17 @@
 import os
 from functools import partial
 from threading import Timer
-from typing import Optional
+from typing import Any, Optional
 from uuid import uuid4
 
 from loguru import logger
 from PySide6.QtCore import QObject, Signal
 from watchdog.events import FileSystemEvent, FileSystemEventHandler
+from watchdog.observers import Observer
 from watchdog.observers.api import BaseObserver
 
-# Needed earlier for the following condition
 from app.controllers.settings_controller import SettingsController
-from app.utils.system_info import SystemInfo
-
-SYSTEM_INFO = SystemInfo()
-
-# if SYSTEM_INFO.operating_system == SystemInfo.OperatingSystem.WINDOWS:
-#     from watchdog.observers.polling import PollingObserver
-# else:
-from watchdog.observers import Observer
-
 from app.utils.metadata import MetadataManager
-
-# WATCHDOG
 
 
 class WatchdogHandler(FileSystemEventHandler, QObject):
@@ -45,15 +34,12 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
         self.metadata_manager: MetadataManager = MetadataManager.instance()
         self.settings_controller: SettingsController = settings_controller
         self.watchdog_observer: Optional[BaseObserver]
-        # if SYSTEM_INFO.operating_system == SystemInfo.OperatingSystem.WINDOWS:
-        #     self.watchdog_observer = PollingObserver()
-        # else:
         self.watchdog_observer = Observer()
         # Keep track of cooldowns for each uuid
-        self.cooldown_timers = {}
+        self.cooldown_timers: dict[str, Any] = {}
         self.__add_observers(self.settings_controller.get_mod_paths())
 
-    def __add_observers(self, targets: list[str]):
+    def __add_observers(self, targets: list[str]) -> None:
         """
         Add observers to the watchdog observer for all of our data source target paths.
 
@@ -62,11 +48,12 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
         """
         for path in targets:
             if path and os.path.exists(path) and os.path.isdir(path):
-                self.watchdog_observer.schedule(
-                    self,
-                    path,
-                    recursive=True,
-                )
+                if self.watchdog_observer is not None:
+                    self.watchdog_observer.schedule(  # type: ignore # Lib doesn't have proper return type
+                        self,
+                        path,
+                        recursive=True,
+                    )
 
     def __cooldown_uuid_change(self, callback: dict[str, str]) -> None:
         """
@@ -122,7 +109,7 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
             )
         self.cooldown_timers[uuid].start()
 
-    def on_created(self, event: FileSystemEvent):
+    def on_created(self, event: FileSystemEvent) -> None:
         """
         A callback function called when a file is created.
 
@@ -159,7 +146,7 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
                 }
             )
 
-    def on_deleted(self, event):
+    def on_deleted(self, event: FileSystemEvent) -> None:
         """
         A callback function called when a file is deleted.
 
@@ -190,7 +177,7 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
                 }
             )
 
-    def on_modified(self, event):
+    def on_modified(self, event: FileSystemEvent) -> None:
         """
         A callback function called when a file is modified.
 
@@ -201,22 +188,31 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
         """
         # Resolve an existing UUID from our mapper
         uuid = self.metadata_manager.mod_metadata_file_mapper.get(event.src_path)
+
+        if not uuid:
+            logger.debug(f"No UUID found for modification event: {event.src_path}")
+            return
+
         # Try to resolve a mod path from the from metadata
         mod_path = self.metadata_manager.internal_local_metadata.get(uuid, {}).get(
             "path"
         )
         # If we have a UUID and mod path resolved, proceed to update the mod
-        if uuid and mod_path:
-            logger.debug(f"Mod metadata modified: {event.src_path}")
-            self.__cooldown_uuid_change(
-                callback={
-                    "operation": "updated",
-                    "path": mod_path,
-                    "uuid": uuid,
-                }
+        if not mod_path:
+            logger.debug(
+                f"UUID found for modification event, but no mod path. Event src_path: {event.src_path} UUID: {uuid}"
             )
 
-    def on_moved(self, event: FileSystemEvent):
+        logger.debug(f"Mod metadata modified: {event.src_path}")
+        self.__cooldown_uuid_change(
+            callback={
+                "operation": "updated",
+                "path": mod_path,
+                "uuid": uuid,
+            }
+        )
+
+    def on_moved(self, event: FileSystemEvent) -> None:
         """
         A callback function called when a file is moved.
 
@@ -227,7 +223,7 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
         """
         # logger.debug(f"File moved: {event.src_path} to {event.dest_path}")
 
-    def on_closed(self, event: FileSystemEvent):
+    def on_closed(self, event: FileSystemEvent) -> None:
         """
         A callback function called when a file is closed.
 
@@ -238,7 +234,7 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
         """
         # logger.debug(f"File closed: {event.src_path}")
 
-    def on_opened(self, event: FileSystemEvent):
+    def on_opened(self, event: FileSystemEvent) -> None:
         """
         A callback function called when a file is opened.
 
