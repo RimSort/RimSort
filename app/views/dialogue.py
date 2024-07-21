@@ -4,14 +4,26 @@ from typing import List, Optional, Tuple
 
 from deprecated import deprecated
 from loguru import logger
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QRunnable, Qt, QThreadPool, Signal, Slot
 from PySide6.QtWidgets import (
+    QDialog,
     QFileDialog,
+    QHBoxLayout,
     QInputDialog,
+    QLabel,
     QMessageBox,
+    QPlainTextEdit,
+    QProgressBar,
     QPushButton,
+    QSizePolicy,
+    QSpacerItem,
+    QStyle,
+    QVBoxLayout,
     QWidget,
 )
+
+import app.utils.generic as generic
+from app.utils.app_info import AppInfo
 
 # Constants
 DEFAULT_TITLE = "RimSort"
@@ -149,6 +161,7 @@ def show_information(
     text: Optional[str] = None,
     information: Optional[str] = None,
     details: Optional[str] = None,
+    parent: QWidget | None = None,
 ) -> None:
     """
     Displays an info message box using the input parameters
@@ -161,7 +174,7 @@ def show_information(
         f"Showing information box with input: [{title}], [{text}], [{information}], [{details}]"
     )
     # Set up the message box
-    info_message_box = QMessageBox()
+    info_message_box = QMessageBox(parent=parent)
     info_message_box.setTextFormat(Qt.TextFormat.RichText)
     info_message_box.setIcon(QMessageBox.Icon.Information)
     info_message_box.setObjectName("dialogue")
@@ -188,6 +201,7 @@ def show_warning(
     text: Optional[str] = None,
     information: Optional[str] = None,
     details: Optional[str] = None,
+    parent: QWidget | None = None,
 ) -> None:
     """
     Displays a warning message box using the input parameters
@@ -200,7 +214,7 @@ def show_warning(
         f"Showing warning box with input: [{title}], [{text}], [{information}], [{details}]"
     )
     # Set up the message box
-    warning_message_box = QMessageBox()
+    warning_message_box = QMessageBox(parent=parent)
     warning_message_box.setTextFormat(Qt.TextFormat.RichText)
     warning_message_box.setIcon(QMessageBox.Icon.Warning)
     warning_message_box.setObjectName("dialogue")
@@ -223,10 +237,10 @@ def show_warning(
 
 
 def show_fatal_error(
-    title: Optional[str] = None,
-    text: Optional[str] = None,
-    information: Optional[str] = None,
-    details: Optional[str] = None,
+    title: str = "Fatal Error",
+    text: str = "A fatal error has occurred!",
+    information: str = "Please report the error to the developers.",
+    details: str = "",
 ) -> None:
     """
     Displays a critical error message box, containing text,
@@ -234,6 +248,7 @@ def show_fatal_error(
     are any hard exceptions that cause the main app exec
     loop to stop functioning.
 
+    :param title: text to pass to setWindowTitle
     :param text: text to pass to setText
     :param information: text to pass to setInformativeText
     :param details: text to pass to setDetailedText
@@ -241,27 +256,176 @@ def show_fatal_error(
     logger.info(
         f"Showing fatal error box with input: [{title}], [{text}], [{information}], [{details}]"
     )
-    # Set up the message box
-    fatal_message_box = QMessageBox()
-    fatal_message_box.setTextFormat(Qt.TextFormat.RichText)
-    fatal_message_box.setIcon(QMessageBox.Icon.Critical)
-    fatal_message_box.setObjectName("dialogue")
-    if title:
-        fatal_message_box.setWindowTitle(title)
-    else:
-        fatal_message_box.setWindowTitle(DEFAULT_TITLE)
+    diag = FatalErrorDialog(title, text, information, details)
+    diag.exec_()
 
-    # Add data
-    if text:
-        fatal_message_box.setText(text)
-    if information:
-        fatal_message_box.setInformativeText(information)
-    if details:
-        fatal_message_box.setDetailedText(details)
 
-    # Show the message box
-    logger.debug("Finished showing fatal error box")
-    fatal_message_box.exec_()
+class FatalErrorDialog(QDialog):
+    """Custom dialog to display fatal errors.
+
+    Has button to show more details, open the log directory, and upload the log file to 0x0.
+    """
+
+    def __init__(
+        self,
+        title: str = "Fatal Error",
+        text: str = "A fatal error has occurred!",
+        information: str = "Please report the error to the developers. Lorem ipsum asdlkfj asldkfj asd;lkj as;dlkfjlasdkjf asdlfkja sdflkasjdf sadl;kjas;ldf sa;dlkjslad fasl;dkfj as;dlfjasld;fjas",
+        details: str = "",
+    ) -> None:
+        super().__init__()
+
+        # Set up the message box
+        self.setWindowTitle(title)
+        self.setModal(True)
+        self.setObjectName("dialogue")
+
+        # Dynamic sizing
+        self.setSizePolicy(
+            QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        )
+
+        # Add data
+        self.text = text
+        self.information = information
+        self.details = details
+
+        # Buttons
+        self.details_btn = QPushButton("Show Details")
+        self.close_btn = QPushButton("Close")
+        self.open_log_btn = QPushButton("Open Log Directory")
+        self.upload_log_btn = QPushButton("Upload Log")
+        self.upload_log_btn.setToolTip("Upload the log file to 0x0.st")
+
+        btn_layout = QHBoxLayout()
+        btn_layout.addWidget(self.open_log_btn)
+        btn_layout.addWidget(self.upload_log_btn)
+        btn_layout.addWidget(self.close_btn)
+
+        # Details
+        self.details_edit = QPlainTextEdit()
+        self.details_edit.setPlainText(self.details)
+        self.details_edit.setMaximumHeight(150)
+        self.details_edit.setReadOnly(True)
+        self.details_edit.setHidden(True)
+
+        # Set up the layout
+        layout = QVBoxLayout()
+        main_layout = QHBoxLayout()
+        main_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+
+        # Left-side
+        l_layout = QVBoxLayout()
+        # Icon
+        piximap = getattr(QStyle, "SP_MessageBoxCritical")
+        icon = self.style().standardIcon(piximap)
+        label = QLabel()
+        label.setPixmap(icon.pixmap(64, 64))
+        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        l_layout.addWidget(label)
+
+        l_layout.addWidget(self.details_btn)
+        l_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        main_layout.addLayout(l_layout)
+
+        # Center spacer
+        main_layout.addItem(QSpacerItem(20, 20))
+
+        # Right-side
+        r_layout = QVBoxLayout()
+
+        txt = QLabel(self.text)
+        txt.setWordWrap(True)
+        r_layout.addWidget(QLabel(self.text))
+
+        info = QLabel(self.information)
+        info.setWordWrap(True)
+        r_layout.addWidget(info)
+
+        r_layout.addLayout(btn_layout)
+        main_layout.addLayout(r_layout)
+
+        layout.addLayout(main_layout)
+        layout.addWidget(self.details_edit)
+
+        self.setLayout(layout)
+        self.setFixedWidth(self.sizeHint().width())
+
+        # Connect buttons
+        def _toggle_details() -> None:
+            self.details_edit.setHidden(not self.details_edit.isHidden())
+            self.adjustSize()
+
+        self.close_btn.clicked.connect(self.close)
+        self.open_log_btn.clicked.connect(
+            lambda: generic.platform_specific_open(AppInfo().user_log_folder)
+        )
+
+        def _upload_log(parent: FatalErrorDialog) -> None:
+            """Helper function to upload the log file to 0x0. Displays a loading dialog while doing so. When finished, copy the URL to the clipboard and display the link."""
+            progress_diag = _UploadLogDialog(parent)
+            progress_diag.show()
+
+            task = UploadLogTask(progress_diag)
+            QThreadPool.globalInstance().start(task)
+
+        self.upload_log_btn.clicked.connect(lambda: _upload_log(self))
+        self.details_btn.clicked.connect(lambda: _toggle_details())
+
+
+class _UploadLogDialog(QDialog):
+    _upload_finished_signal = Signal(bool, str)
+
+    def __init__(self, parent: QWidget):
+        super().__init__(parent=parent)
+
+        self.setWindowTitle("Uploading Log...")
+        self.setObjectName("dialogue")
+
+        self.progress = QProgressBar()
+        self.progress.setRange(0, 0)
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.progress)
+        self.setLayout(layout)
+
+        def _on_upload_finished(result: bool, url: str) -> None:
+            self.close()
+
+            if result:
+                # Show the URL
+                generic.copy_to_clipboard_safely(url)
+                show_information(
+                    title="Log Upload Successful",
+                    text="Log file uploaded successfully! Copied URL to clipboard.",
+                    information=f"URL: <a href='{url}'>{url}</a>",
+                    parent=parent,
+                )
+            else:
+                show_warning(
+                    title="Log Upload Failed",
+                    text="Log file upload failed!",
+                    information="Please check your internet connection and try again.",
+                    parent=parent,
+                )
+
+        self._upload_finished_signal.connect(_on_upload_finished)
+
+
+class UploadLogTask(QRunnable):
+    def __init__(self, parent: _UploadLogDialog):
+        super().__init__()
+        self.parent = parent
+
+    @Slot()
+    def run(self) -> None:
+        # Perform the upload task
+        result, url = generic.upload_data_to_0x0_st(
+            str(AppInfo().user_log_folder / "RimSort.log")
+        )
+
+        # Emit signal on completion
+        self.parent._upload_finished_signal.emit(result, url)
 
 
 def _setup_messagebox(title: str | None) -> QMessageBox:
