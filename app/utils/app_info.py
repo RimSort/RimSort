@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 from typing import Optional
 
@@ -13,14 +14,13 @@ class AppInfo:
     using the `platformdirs` package, ensuring platform-specific conventions are adhered to.
 
     Examples:
-        >>> app_info = AppInfo(__file__)
         >>> print(app_info.app_name)
         >>> print(app_info.app_storage_folder)
     """
 
     _instance: Optional["AppInfo"] = None
 
-    def __new__(cls, main_file: Optional[str] = None) -> "AppInfo":
+    def __new__(cls) -> "AppInfo":
         """
         Create a new instance or return the existing singleton instance of the `AppInfo` class.
         """
@@ -28,21 +28,20 @@ class AppInfo:
             cls._instance = super(AppInfo, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self, main_file: Optional[str] = None) -> None:
+    def __init__(self) -> None:
         """
         Initialize the `AppInfo` instance, setting application metadata and determining important directories.
 
-        Args:
-            main_file (Optional[str]): Path to the main application file (i.e., __file__ from __main__).
-
         Raises:
-            ValueError: If `main_file` is not provided during the first initialization.
+            Exception: If the main file path cannot be determined.
         """
         if hasattr(self, "_is_initialized") and self._is_initialized:
             return
 
+        main_file = sys.modules["__main__"].__file__
+
         if main_file is None:
-            raise ValueError("AppInfo must be initialized once with __file__.")
+            raise Exception("Unable to get the main file path.")
 
         # Need to go one up if we are running from source
         self._application_folder = (
