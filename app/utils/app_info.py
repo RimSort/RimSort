@@ -1,5 +1,7 @@
 import sys
 from pathlib import Path
+import os
+from lxml import etree, objectify
 from typing import Optional
 
 from platformdirs import PlatformDirs
@@ -54,8 +56,17 @@ class AppInfo:
         # Application metadata
 
         self._app_name = "RimSort"
-        self._app_version = ""
         self._app_copyright = ""
+        
+        self._app_version = "Unknown version"
+        version_file = str(self._application_folder / "version.xml")
+        if os.path.exists(version_file):
+            root = objectify.parse(version_file, parser=etree.XMLParser(recover=True))
+            self._app_version = root.find("version").text
+
+            # If edge in version_string, append short sha
+            if "edge" in self._app_version.lower():
+                self._app_version += f"+{root.find('commit').text[:7]}"
 
         # Define important directories using platformdirs
 

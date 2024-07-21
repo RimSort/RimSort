@@ -106,7 +106,7 @@ class MainContent(QObject):
         return cls._instance
 
     def __init__(
-        self, settings_controller: SettingsController, version_string: str
+        self, settings_controller: SettingsController
     ) -> None:
         """
         Initialize the main content panel.
@@ -118,7 +118,6 @@ class MainContent(QObject):
             logger.debug("Initializing MainContent")
 
             self.settings_controller = settings_controller
-            self.version_string = version_string
 
             EventBus().settings_have_changed.connect(self._on_settings_have_changed)
             EventBus().do_check_for_application_update.connect(
@@ -1432,7 +1431,7 @@ class MainContent(QObject):
         logger.info(f"Collected {len(active_mods)} active mods for export")
         # Build our report
         active_mods_clipboard_report = (
-            f"Created with RimSort {self.version_string}"
+            f"Created with RimSort {AppInfo().app_version}"
             + f"\nRimWorld game version this list was created for: {self.metadata_manager.game_version}"
             + f"\nTotal # of mods: {len(active_mods)}\n"
         )
@@ -1523,7 +1522,7 @@ class MainContent(QObject):
         # Build our report
         active_mods_rentry_report = (
             "# RimWorld mod list       ![](https://github.com/RimSort/RimSort/blob/main/docs/rentry_preview.png?raw=true)"
-            + f"\nCreated with RimSort {self.version_string}"
+            + f"\nCreated with RimSort {AppInfo().app_version}"
             + f"\nMod list was created for game version: `{self.metadata_manager.game_version}`"
             + "\n!!! info Local mods are marked as yellow labels with packageid in brackets."
             + f"\n\n\n\n!!! note Mod list length: `{len(active_mods)}`\n"
