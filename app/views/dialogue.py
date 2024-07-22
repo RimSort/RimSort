@@ -164,11 +164,18 @@ def show_information(
     parent: QWidget | None = None,
 ) -> None:
     """
-    Displays an info message box using the input parameters
+    Creates a message box dialogue. Has no icon.
 
-    :param text: text to pass to setText
-    :param information: text to pass to setInformativeText
-    :param details: text to pass to setDetailedText
+    :param title: Window title, defaults to None
+    :type title: Optional[str], optional
+    :param text: Short text description, defaults to None
+    :type text: Optional[str], optional
+    :param information: Long form information, defaults to None
+    :type information: Optional[str], optional
+    :param details: Optional details that are hidden in a sub menu, defaults to None
+    :type details: Optional[str], optional
+    :param parent: The parent widget, defaults to None
+    :type parent: QWidget | None, optional
     """
     logger.info(
         f"Showing information box with input: [{title}], [{text}], [{information}], [{details}]"
@@ -203,12 +210,18 @@ def show_warning(
     details: Optional[str] = None,
     parent: QWidget | None = None,
 ) -> None:
-    """
-    Displays a warning message box using the input parameters
+    """Creates a warning dialogue. Utilizes the warning icon.
 
-    :param text: text to pass to setText
-    :param information: text to pass to setInformativeText
-    :param details: text to pass to setDetailedText
+    :param title: Window title, defaults to None
+    :type title: Optional[str], optional
+    :param text: Short text description, defaults to None
+    :type text: Optional[str], optional
+    :param information: Long form information, defaults to None
+    :type information: Optional[str], optional
+    :param details: Optional details that are hidden in a sub menu, defaults to None
+    :type details: Optional[str], optional
+    :param parent: The parent widget, defaults to None
+    :type parent: QWidget | None, optional
     """
     logger.info(
         f"Showing warning box with input: [{title}], [{text}], [{information}], [{details}]"
@@ -270,7 +283,7 @@ class FatalErrorDialog(QDialog):
         self,
         title: str = "Fatal Error",
         text: str = "A fatal error has occurred!",
-        information: str = "Please report the error to the developers. Lorem ipsum asdlkfj asldkfj asd;lkj as;dlkfjlasdkjf asdlfkja sdflkasjdf sadl;kjas;ldf sa;dlkjslad fasl;dkfj as;dlfjasld;fjas",
+        information: str = "Please report the error to the developers.",
         details: str = "",
     ) -> None:
         super().__init__()
