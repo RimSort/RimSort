@@ -44,7 +44,7 @@ class Settings(QObject):
         self.database_expiry: int = 604800  # 7 days
 
         # Sorting
-        self.sorting_algorithm: SortMethod = SortMethod.ALPHABETICAL
+        self.sorting_algorithm: SortMethod = SortMethod.TOPOLOGICAL
 
         # DB Builder
         self.db_builder_include: str = "all_mods"
