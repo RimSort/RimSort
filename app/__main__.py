@@ -33,19 +33,10 @@ from typing import Optional, Type
 import loguru
 from loguru import logger
 
+from app.controllers.app_controller import AppController
 from app.utils.app_info import AppInfo
 from app.utils.obfuscate_message import obfuscate_message
-
-# One-time initialization of AppInfo class (this must be done in __main__ so we can use __file__)
-# Initialize as early as possible!
-# When the application is frozen, __file__ should be the same when we are __process_main__.
-# This should be the same relative path as the initial __file__ in __main__, i.e. on Win11:
-# __file__ is [C:\Users\Tristin\RimSort\build\__MAIN~1.DIS\__main__.py] when __main__ and __process_main__
-
-# TODO: Fix this so that this cursed import order is not required.
-AppInfo(main_file=__file__)
-
-from app.controllers.app_controller import AppController
+from app.views.dialogue import show_fatal_error
 
 SYSTEM = platform.system()
 # Watchdog conditionals
@@ -62,9 +53,6 @@ elif SYSTEM == "Windows":
     # This is a stub if it's ever even needed...
     # I still can't figure out why it won't log at all on Windows...?
     # getLogger("").setLevel(WARNING)
-
-# TODO: Fix this so that this cursed import order is not required
-from app.views.dialogue import show_fatal_error
 
 
 def handle_exception(

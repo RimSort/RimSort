@@ -155,7 +155,7 @@ def show_dialogue_file(
         return None
     return str(Path(os.path.normpath(path)).resolve()) if path != "" else None
 
-
+# jscpd:ignore-start
 def show_information(
     title: Optional[str] = None,
     text: Optional[str] = None,
@@ -177,6 +177,7 @@ def show_information(
     :param parent: The parent widget, defaults to None
     :type parent: QWidget | None, optional
     """
+    # jscpd:ignore-end
     logger.info(
         f"Showing information box with input: [{title}], [{text}], [{information}], [{details}]"
     )
@@ -203,6 +204,7 @@ def show_information(
     info_message_box.exec_()
 
 
+# jscpd:ignore-start
 def show_warning(
     title: Optional[str] = None,
     text: Optional[str] = None,
@@ -223,6 +225,7 @@ def show_warning(
     :param parent: The parent widget, defaults to None
     :type parent: QWidget | None, optional
     """
+    # jscpd:ignore-end
     logger.info(
         f"Showing warning box with input: [{title}], [{text}], [{information}], [{details}]"
     )
