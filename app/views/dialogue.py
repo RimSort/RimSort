@@ -367,6 +367,10 @@ class FatalErrorDialog(QDialog):
         # Connect buttons
         def _toggle_details() -> None:
             self.details_edit.setHidden(not self.details_edit.isHidden())
+            if self.details_edit.isHidden():
+                self.details_btn.setText("Show Details")
+            else:
+                self.details_btn.setText("Hide Details")
             self.adjustSize()
 
         self.close_btn.clicked.connect(self.close)
