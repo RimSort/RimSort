@@ -3,7 +3,7 @@
 # nuitka-project: --assume-yes-for-downloads
 # nuitka-project: --output-filename=RimSort
 # nuitka-project: --output-dir={MAIN_DIRECTORY}/../build/
-# nuitka-project: --disable-console
+# nuitka-project: --windows-console-mode=force
 # nuitka-project: --noinclude-default-mode=error
 # nuitka-project: --include-package=steamworks
 # nuitka-project: --user-package-configuration-file={MAIN_DIRECTORY}/../rimsort.nuitka-package.config.yml
