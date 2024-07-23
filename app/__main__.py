@@ -3,12 +3,12 @@
 # nuitka-project: --assume-yes-for-downloads
 # nuitka-project: --output-filename=RimSort
 # nuitka-project: --output-dir={MAIN_DIRECTORY}/../build/
-# nuitka-project: --disable-console
+# nuitka-project: --windows-console-mode=disable
 # nuitka-project: --noinclude-default-mode=error
 # nuitka-project: --include-package=steamworks
 # nuitka-project: --user-package-configuration-file={MAIN_DIRECTORY}/../rimsort.nuitka-package.config.yml
 # nuitka-project: --include-data-file={MAIN_DIRECTORY}/../steam_appid.txt=steam_appid.txt
-# nuitka-project: --windows-icon-from-ico={MAIN_DIRECTORY}/../themes/default-icons/AppIcon_a.png
+# nuitka-project: --windows-icon-from-ico={MAIN_DIRECTORY}/../themes/default-icons/AppIcon.ico
 
 # The PySide6 plugin covers qt-plugins
 # nuitka-project: --enable-plugin=pyside6

@@ -9,6 +9,7 @@ from app.controllers.settings_controller import SettingsController
 from app.models.settings import Settings
 from app.utils.app_info import AppInfo
 from app.utils.constants import DEFAULT_USER_RULES
+from app.utils.gui_info import GUIInfo
 from app.utils.metadata import MetadataManager
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.views.main_window import MainWindow
@@ -28,6 +29,7 @@ class AppController(QObject):
                 AppInfo().application_folder / "themes" / "RimPy" / "style.qss"
             ).read_text()
         )
+        self.app.setWindowIcon(GUIInfo().app_icon)
 
         # One-time initialization of userRules.json
         user_rules_path = AppInfo().databases_folder / "userRules.json"
