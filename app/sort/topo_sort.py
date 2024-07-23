@@ -4,7 +4,7 @@ import networkx as nx
 from loguru import logger
 from toposort import CircularDependencyError, toposort
 
-from app.models.dialogue import show_warning
+from app.views.dialogue import show_warning
 from app.utils.metadata import MetadataManager
 
 

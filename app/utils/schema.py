@@ -2,7 +2,7 @@ from typing import Any
 
 from loguru import logger
 
-from app.models.dialogue import show_warning
+from app.views.dialogue import show_warning
 from app.utils.constants import RIMWORLD_PACKAGE_IDS
 
 

@@ -34,9 +34,9 @@ import loguru
 from loguru import logger
 
 from app.controllers.app_controller import AppController
-from app.models.dialogue import show_fatal_error
 from app.utils.app_info import AppInfo
 from app.utils.obfuscate_message import obfuscate_message
+from app.views.dialogue import show_fatal_error
 
 SYSTEM = platform.system()
 # Watchdog conditionals

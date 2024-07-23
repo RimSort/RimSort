@@ -12,7 +12,7 @@ from zipfile import ZipFile
 import requests
 from loguru import logger
 
-from app.models.dialogue import (
+from app.views.dialogue import (
     show_dialogue_conditional,
     show_fatal_error,
     show_warning,
