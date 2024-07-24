@@ -18,11 +18,6 @@ from PySide6.QtCore import (
 )
 
 from app.controllers.settings_controller import SettingsController
-from app.views.dialogue import (
-    show_dialogue_conditional,
-    show_dialogue_file,
-    show_warning,
-)
 from app.utils.app_info import AppInfo
 from app.utils.constants import (
     DB_BUILDER_PRUNE_EXCEPTIONS,
@@ -39,6 +34,11 @@ from app.utils.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetPublishedFileDetails,
 )
 from app.utils.xml import json_to_xml_write, xml_path_to_json
+from app.views.dialogue import (
+    show_dialogue_conditional,
+    show_dialogue_file,
+    show_warning,
+)
 
 # Locally installed mod metadata
 
@@ -333,7 +333,11 @@ class MetadataManager(QObject):
                 encoding="utf-8",
             ) as output:
                 json.dump(DEFAULT_USER_RULES, output, indent=4)
-            self.external_user_rules = DEFAULT_USER_RULES["rules"]
+            self.external_user_rules = (
+                DEFAULT_USER_RULES["rules"]
+                if isinstance(DEFAULT_USER_RULES["rules"], dict)
+                else {}
+            )
 
     def __refresh_internal_metadata(self, is_initial: bool = False) -> None:
         def batch_by_data_source(
@@ -1366,6 +1370,12 @@ class ModParser(QRunnable):
                             for mod_data["supportedversions"]["li"] in mod_data[
                                 "supportedversions"
                             ]["li"]:
+                                li = mod_data["supportedversions"]["li"]
+                                if not isinstance(
+                                    mod_data["supportedversions"]["li"], str
+                                ):
+                                    logger.error(f"Failed to parse {li} as a string")
+                                    continue
                                 mod_data["supportedversions"]["li"] = (
                                     ".".join(
                                         mod_data["supportedversions"]["li"].split(".")[
