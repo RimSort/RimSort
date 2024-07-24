@@ -1,10 +1,12 @@
-pytest==8.2.2
-ruff==0.4.8
+ruff==0.5.4
 mypy
 types-beautifulsoup4
+types-Deprecated
 types-psutil
 #types-pyside6
 types-requests
 types-toposort
 types-xmltodict
+networkx-stubs
 lxml-stubs
+pytest

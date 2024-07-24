@@ -21,17 +21,18 @@ class MenuBarController(QObject):
 
         self.menu_bar.quit_action.triggered.connect(QApplication.instance().quit)
 
-        self.menu_bar.check_for_updates_action.triggered.connect(
-            EventBus().do_check_for_application_update.emit
-        )
+        # TODO: updates not implemented yet
+        # self.menu_bar.check_for_updates_action.triggered.connect(
+        #     EventBus().do_check_for_application_update.emit
+        # )
 
-        self.menu_bar.check_for_updates_on_startup_action.toggled.connect(
-            self._on_menu_bar_check_for_updates_on_startup_triggered
-        )
+        # self.menu_bar.check_for_updates_on_startup_action.toggled.connect(
+        #     self._on_menu_bar_check_for_updates_on_startup_triggered
+        # )
 
-        self.menu_bar.check_for_updates_on_startup_action.setChecked(
-            self.settings_controller.settings.check_for_update_startup
-        )
+        # self.menu_bar.check_for_updates_on_startup_action.setChecked(
+        #     self.settings_controller.settings.check_for_update_startup
+        # )
 
         self.menu_bar.settings_action.triggered.connect(
             self.settings_controller.show_settings_dialog
@@ -72,6 +73,22 @@ class MenuBarController(QObject):
 
         self.menu_bar.upload_rimworld_log_action.triggered.connect(
             EventBus().do_upload_rimworld_log
+        )
+
+        self.menu_bar.open_app_directory_action.triggered.connect(
+            EventBus().do_open_app_directory
+        )
+
+        self.menu_bar.open_settings_directory_action.triggered.connect(
+            EventBus().do_open_settings_directory
+        )
+
+        self.menu_bar.open_rimsort_logs_directory_action.triggered.connect(
+            EventBus().do_open_rimsort_logs_directory
+        )
+
+        self.menu_bar.open_rimworld_logs_directory_action.triggered.connect(
+            EventBus().do_open_rimworld_logs_directory
         )
 
         # Edit menu

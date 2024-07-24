@@ -6,11 +6,11 @@ from loguru import logger
 from PySide6.QtCore import QObject, Slot
 from PySide6.QtWidgets import QApplication
 
-from app.models.dialogue import show_dialogue_confirmation, show_dialogue_file
-from app.models.settings import Settings
+from app.views.dialogue import show_dialogue_confirmation, show_dialogue_file
+from app.models.settings import Instance, Settings
+from app.utils.constants import SortMethod
 from app.utils.event_bus import EventBus
 from app.utils.generic import platform_specific_open
-from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.system_info import SystemInfo
 from app.views.settings_dialog import SettingsDialog
 
@@ -212,24 +212,20 @@ class SettingsController(QObject):
         return [
             str(
                 Path(
-                    self.settings.instances[self.settings.current_instance][
-                        "game_folder"
-                    ]
+                    self.settings.instances[self.settings.current_instance].game_folder
                 )
                 / "Data"
             ),
             str(
                 Path(
-                    self.settings.instances[self.settings.current_instance][
-                        "local_folder"
-                    ]
+                    self.settings.instances[self.settings.current_instance].local_folder
                 )
             ),
             str(
                 Path(
-                    self.settings.instances[self.settings.current_instance][
-                        "workshop_folder"
-                    ]
+                    self.settings.instances[
+                        self.settings.current_instance
+                    ].workshop_folder
                 )
             ),
         ]
@@ -239,29 +235,29 @@ class SettingsController(QObject):
         Resolve the data source for the provided path string.
         """
         # Pathlib the provided path string
-        path = Path(path)
+        sanitized_path = Path(path)
         # Grab paths from Settings
         expansions_path = (
-            Path(self.settings.instances[self.settings.current_instance]["game_folder"])
+            Path(self.settings.instances[self.settings.current_instance].game_folder)
             / "Data"
         )
         local_path = Path(
-            self.settings.instances[self.settings.current_instance]["local_folder"]
+            self.settings.instances[self.settings.current_instance].local_folder
         )
         workshop_path = Path(
-            self.settings.instances[self.settings.current_instance]["workshop_folder"]
+            self.settings.instances[self.settings.current_instance].workshop_folder
         )
         # Validate data source, then emit if path is valid and not mapped
-        if path.parent == expansions_path:
+        if sanitized_path.parent == expansions_path:
             return "expansion"
-        elif path.parent == local_path:
+        elif sanitized_path.parent == local_path:
             return "local"
-        elif path.parent == workshop_path:
+        elif sanitized_path.parent == workshop_path:
             return "workshop"
         else:
             return None
 
-    def show_settings_dialog(self, tab_name: str = None) -> None:
+    def show_settings_dialog(self, tab_name: str = "") -> None:
         """
         Update the view from the model and show the settings dialog.
         """
@@ -270,6 +266,39 @@ class SettingsController(QObject):
             self.settings_dialog.switch_to_tab(tab_name)
         self.settings_dialog.show()
 
+    def create_instance(
+        self,
+        instance_name: str,
+        game_folder: str = "",
+        config_folder: str = "",
+        local_folder: str = "",
+        workshop_folder: str = "",
+        run_args: list[str] = [],
+        steamcmd_install_path: str = "",
+        steam_client_integration: bool = False,
+    ) -> None:
+        """
+        Create and set the instance.
+        """
+        instance = Instance(
+            name=instance_name,
+            game_folder=game_folder,
+            config_folder=config_folder,
+            local_folder=local_folder,
+            workshop_folder=workshop_folder,
+            run_args=run_args,
+            steamcmd_install_path=steamcmd_install_path,
+            steam_client_integration=steam_client_integration,
+        )
+
+        self.set_instance(instance)
+
+    def set_instance(self, instance: Instance) -> None:
+        """
+        Set the instance with the provided instance.
+        """
+        self.settings.instances[instance.name] = instance
+
     def _update_view_from_model(self) -> None:
         """
         Update the view from the settings model.
@@ -277,7 +306,7 @@ class SettingsController(QObject):
 
         # Locations tab
         self.settings_dialog.game_location.setText(
-            self.settings.instances[self.settings.current_instance]["game_folder"]
+            str(self.settings.instances[self.settings.current_instance].game_folder)
         )
         self.settings_dialog.game_location.setCursorPosition(0)
         self.settings_dialog.game_location_open_button.setEnabled(
@@ -285,7 +314,7 @@ class SettingsController(QObject):
         )
 
         self.settings_dialog.config_folder_location.setText(
-            self.settings.instances[self.settings.current_instance]["config_folder"]
+            str(self.settings.instances[self.settings.current_instance].config_folder)
         )
         self.settings_dialog.config_folder_location.setCursorPosition(0)
         self.settings_dialog.config_folder_location_open_button.setEnabled(
@@ -293,7 +322,7 @@ class SettingsController(QObject):
         )
 
         self.settings_dialog.steam_mods_folder_location.setText(
-            self.settings.instances[self.settings.current_instance]["workshop_folder"]
+            str(self.settings.instances[self.settings.current_instance].workshop_folder)
         )
         self.settings_dialog.steam_mods_folder_location.setCursorPosition(0)
         self.settings_dialog.steam_mods_folder_location_open_button.setEnabled(
@@ -301,7 +330,7 @@ class SettingsController(QObject):
         )
 
         self.settings_dialog.local_mods_folder_location.setText(
-            self.settings.instances[self.settings.current_instance]["local_folder"]
+            str(self.settings.instances[self.settings.current_instance].local_folder)
         )
         self.settings_dialog.local_mods_folder_location.setCursorPosition(0)
         self.settings_dialog.local_mods_folder_location_open_button.setEnabled(
@@ -393,11 +422,12 @@ class SettingsController(QObject):
             self.settings.external_steam_metadata_repo
         )
         self.settings_dialog.steam_workshop_db_github_url.setCursorPosition(0)
+        self.settings_dialog.database_expiry.setText(str(self.settings.database_expiry))
 
         # Sorting tab
-        if self.settings.sorting_algorithm == "Alphabetical":
+        if self.settings.sorting_algorithm == SortMethod.ALPHABETICAL:
             self.settings_dialog.sorting_alphabetical_radio.setChecked(True)
-        elif self.settings.sorting_algorithm == "Topological":
+        elif self.settings.sorting_algorithm == SortMethod.TOPOLOGICAL:
             self.settings_dialog.sorting_topological_radio.setChecked(True)
 
         # Database Builder tab
@@ -411,9 +441,6 @@ class SettingsController(QObject):
         self.settings_dialog.db_builder_update_instead_of_overwriting_checkbox.setChecked(
             self.settings.build_steam_database_update_toggle
         )
-        self.settings_dialog.db_builder_database_expiry.setText(
-            str(self.settings.database_expiry)
-        )
         self.settings_dialog.db_builder_steam_api_key.setText(
             self.settings.steam_apikey
         )
@@ -423,9 +450,11 @@ class SettingsController(QObject):
             self.settings.steamcmd_validate_downloads
         )
         self.settings_dialog.steamcmd_install_location.setText(
-            self.settings.instances[self.settings.current_instance][
-                "steamcmd_install_path"
-            ]
+            str(
+                self.settings.instances[
+                    self.settings.current_instance
+                ].steamcmd_install_path
+            )
         )
 
         # todds tab
@@ -460,7 +489,7 @@ class SettingsController(QObject):
         )
         steam_client_integration = self.settings.instances[
             self.settings.current_instance
-        ].get("steam_client_integration", False)
+        ].steam_client_integration
         # Weird workaround since the return is a string sometimes apparently
         self.settings_dialog.steam_client_integration_checkbox.setChecked(
             True if steam_client_integration is True else False
@@ -474,7 +503,7 @@ class SettingsController(QObject):
         self.settings_dialog.github_token.setCursorPosition(0)
 
         run_args_str = ",".join(
-            self.settings.instances[self.settings.current_instance]["run_args"]
+            self.settings.instances[self.settings.current_instance].run_args
         )
         self.settings_dialog.run_args.setText(run_args_str)
         self.settings_dialog.run_args.setCursorPosition(0)
@@ -488,18 +517,21 @@ class SettingsController(QObject):
         """
 
         # Locations tab
-        self.settings.instances[self.settings.current_instance]["game_folder"] = (
-            self.settings_dialog.game_location.text()
-        )
-        self.settings.instances[self.settings.current_instance]["config_folder"] = (
-            self.settings_dialog.config_folder_location.text()
-        )
-        self.settings.instances[self.settings.current_instance]["workshop_folder"] = (
-            self.settings_dialog.steam_mods_folder_location.text()
-        )
-        self.settings.instances[self.settings.current_instance]["local_folder"] = (
-            self.settings_dialog.local_mods_folder_location.text()
-        )
+        self.settings.instances[
+            self.settings.current_instance
+        ].game_folder = self.settings_dialog.game_location.text()
+
+        self.settings.instances[
+            self.settings.current_instance
+        ].config_folder = self.settings_dialog.config_folder_location.text()
+
+        self.settings.instances[
+            self.settings.current_instance
+        ].workshop_folder = self.settings_dialog.steam_mods_folder_location.text()
+
+        self.settings.instances[
+            self.settings.current_instance
+        ].local_folder = self.settings_dialog.local_mods_folder_location.text()
 
         # Databases tab
         if self.settings_dialog.community_rules_db_none_radio.isChecked():
@@ -530,12 +562,13 @@ class SettingsController(QObject):
         self.settings.external_steam_metadata_file_path = (
             self.settings_dialog.steam_workshop_db_local_file.text()
         )
+        self.settings.database_expiry = int(self.settings_dialog.database_expiry.text())
 
         # Sorting tab
         if self.settings_dialog.sorting_alphabetical_radio.isChecked():
-            self.settings.sorting_algorithm = "Alphabetical"
+            self.settings.sorting_algorithm = SortMethod.ALPHABETICAL
         elif self.settings_dialog.sorting_topological_radio.isChecked():
-            self.settings.sorting_algorithm = "Topological"
+            self.settings.sorting_algorithm = SortMethod.TOPOLOGICAL
 
         # Database Builder tab
         if self.settings_dialog.db_builder_include_all_radio.isChecked():
@@ -546,9 +579,6 @@ class SettingsController(QObject):
             self.settings_dialog.db_builder_query_dlc_checkbox.isChecked()
         )
         self.settings.build_steam_database_update_toggle = self.settings_dialog.db_builder_update_instead_of_overwriting_checkbox.isChecked()
-        self.settings.database_expiry = int(
-            self.settings_dialog.db_builder_database_expiry.text()
-        )
         self.settings.steam_apikey = (
             self.settings_dialog.db_builder_steam_api_key.text()
         )
@@ -557,9 +587,9 @@ class SettingsController(QObject):
         self.settings.steamcmd_validate_downloads = (
             self.settings_dialog.steamcmd_validate_downloads_checkbox.isChecked()
         )
-        self.settings.instances[self.settings.current_instance][
-            "steamcmd_install_path"
-        ] = self.settings_dialog.steamcmd_install_location.text()
+        self.settings.instances[
+            self.settings.current_instance
+        ].steamcmd_install_path = self.settings_dialog.steamcmd_install_location.text()
 
         # todds tab
         if self.settings_dialog.todds_preset_combobox.currentIndex() == 0:
@@ -593,16 +623,18 @@ class SettingsController(QObject):
         self.settings.steam_mods_update_check = (
             self.settings_dialog.show_mod_updates_checkbox.isChecked()
         )
-        self.settings.instances[self.settings.current_instance][
-            "steam_client_integration"
-        ] = self.settings_dialog.steam_client_integration_checkbox.isChecked()
+        self.settings.instances[
+            self.settings.current_instance
+        ].steam_client_integration = (
+            self.settings_dialog.steam_client_integration_checkbox.isChecked()
+        )
         self.settings.try_download_missing_mods = (
             self.settings_dialog.download_missing_mods_checkbox.isChecked()
         )
         self.settings.github_username = self.settings_dialog.github_username.text()
         self.settings.github_token = self.settings_dialog.github_token.text()
         run_args_str = ",".join(
-            self.settings.instances[self.settings.current_instance]["run_args"]
+            self.settings.instances[self.settings.current_instance].run_args
         )
         self.settings_dialog.run_args.setText(run_args_str)
 
@@ -618,7 +650,7 @@ class SettingsController(QObject):
         if answer == "Cancel":
             return
 
-        self.settings.apply_default_settings()
+        self.settings = Settings()
         self._update_view_from_model()
 
     @Slot()
@@ -634,18 +666,8 @@ class SettingsController(QObject):
         """
         Close the settings dialog, update the model from the view, and save the settings.
         """
-        steamcmd_wrapper = SteamcmdInterface.instance()
         self.settings_dialog.close()
         self._update_model_from_view()
-        # Check for the steamcmd prefix + executable existence.
-        if not os.path.exists(
-            steamcmd_wrapper.steamcmd_prefix
-        ) or not steamcmd_wrapper.check_for_steamcmd(
-            prefix=steamcmd_wrapper.steamcmd_prefix
-        ):
-            steamcmd_wrapper.on_steamcmd_not_found()
-        else:
-            steamcmd_wrapper.setup = True
         self.settings.save()
 
     @Slot()
@@ -1180,7 +1202,5 @@ class SettingsController(QObject):
     @Slot(str)
     def _on_run_args_text_changed(self, text: str) -> None:
         run_args_list = text.split(",")
-        self.settings.instances[self.settings.current_instance]["run_args"] = (
-            run_args_list
-        )
+        self.settings.instances[self.settings.current_instance].run_args = run_args_list
         self.settings.save()

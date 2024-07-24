@@ -457,6 +457,16 @@ class SettingsDialog(QDialog):
         info_label.setWordWrap(True)
         item_layout.addWidget(info_label)
 
+        database_expiry_label = QLabel(
+            "Steam Workshop database expiry in Epoch Time (Use 0 to Disable Notificatiom, Default is 7 Days)"
+        )
+        group_layout.addWidget(database_expiry_label)
+
+        self.database_expiry = QLineEdit()
+        self.database_expiry.setTextMargins(GUIInfo().text_field_margins)
+        self.database_expiry.setFixedHeight(GUIInfo().default_font_line_height * 2)
+        group_layout.addWidget(self.database_expiry)
+
     def _do_sorting_tab(self) -> None:
         tab = QWidget()
         self.tab_widget.addTab(tab, "Sorting")
@@ -550,19 +560,6 @@ class SettingsDialog(QDialog):
 
         group_layout = QGridLayout()
         group_box.setLayout(group_layout)
-
-        database_expiry_label = QLabel("Database expiry:")
-        group_layout.addWidget(database_expiry_label, 0, 0)
-
-        self.db_builder_database_expiry = QLineEdit()
-        self.db_builder_database_expiry.setTextMargins(GUIInfo().text_field_margins)
-        self.db_builder_database_expiry.setFixedHeight(
-            GUIInfo().default_font_line_height * 2
-        )
-        self.db_builder_database_expiry.setFixedWidth(
-            GUIInfo().default_font_average_char_width * 10
-        )
-        group_layout.addWidget(self.db_builder_database_expiry, 0, 1)
 
         steam_api_key_label = QLabel("Steam API key:")
         group_layout.addWidget(steam_api_key_label, 1, 0)

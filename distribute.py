@@ -9,7 +9,6 @@ For arguments and usage, run the script with the --help flag.
 Not meant to be imported as a module.
 """
 
-
 import argparse
 import os
 import platform
@@ -415,7 +414,7 @@ def freeze_application() -> None:
     _execute(_NUITKA_CMD, env=os.environ)
 
 
-def _execute(cmd: list[str], env: os._Environ | None = None) -> None:
+def _execute(cmd: list[str], env: os._Environ[str] | None = None) -> None:
     print(f"\nExecuting command: {cmd}\n")
     p = subprocess.Popen(cmd, env=env)
     p.wait()
@@ -551,7 +550,7 @@ def main() -> None:
             )
         if args.dev:
             print("In dev mode, enabling console in build")
-            _NUITKA_CMD.append("--enable-console")
+            _NUITKA_CMD.append("--windows-console-mode=force")
 
         print("Building RimSort application with Nuitka...")
         freeze_application()

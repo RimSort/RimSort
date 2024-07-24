@@ -8,15 +8,19 @@ from errno import EACCES
 from pathlib import Path
 from re import sub
 from stat import S_IRWXG, S_IRWXO, S_IRWXU
+from typing import Any, Callable, Generator
 
+import requests
 from loguru import logger
-from pyperclip import copy as copy_to_clipboard
+from pyperclip import (  # type: ignore # Stubs don't exist for pyperclip
+    copy as copy_to_clipboard,
+)
 from requests import post as requests_post
 
-from app.models.dialogue import show_fatal_error, show_warning
+import app.views.dialogue as dialogue
 
 
-def chunks(_list: list, limit: int):
+def chunks(_list: list[Any], limit: int) -> Generator[list[Any], None, None]:
     """
     Split list into chunks no larger than the configured limit
 
@@ -37,17 +41,19 @@ def copy_to_clipboard_safely(text: str) -> None:
         copy_to_clipboard(text)
     except Exception as e:
         logger.error(f"Failed to copy to clipboard: {e}")
-        show_fatal_error(
+        dialogue.show_fatal_error(
             title="Failed to copy to clipboard.",
             text="RimSort failed to copy the text to your clipboard. Please copy it manually.",
             details=str(e),
         )
 
 
-def delete_files_except_extension(directory, extension):
+def delete_files_with_condition(
+    directory: Path | str, condition: Callable[[str], bool]
+) -> None:
     for root, dirs, files in os.walk(directory):
         for file in files:
-            if not file.endswith(extension):
+            if condition(file):
                 file_path = str((Path(root) / file))
                 try:
                     os.remove(file_path)
@@ -75,38 +81,15 @@ def delete_files_except_extension(directory, extension):
         logger.debug(f"Deleted: {directory}")
 
 
-def delete_files_only_extension(directory, extension):
-    for root, dirs, files in os.walk(directory):
-        for file in files:
-            if file.endswith(extension):
-                file_path = str((Path(root) / file))
-                try:
-                    os.remove(file_path)
-                except OSError:
-                    handle_remove_read_only(os.remove, file_path, sys.exc_info())
-                finally:
-                    logger.debug(f"Deleted: {file_path}")
-
-    for root, dirs, _ in os.walk(directory, topdown=False):
-        for _dir in dirs:
-            dir_path = str((Path(root) / _dir))
-            if not os.listdir(dir_path):
-                shutil.rmtree(
-                    dir_path,
-                    ignore_errors=False,
-                    onerror=handle_remove_read_only,
-                )
-                logger.debug(f"Deleted: {dir_path}")
-    if not os.listdir(directory):
-        shutil.rmtree(
-            directory,
-            ignore_errors=False,
-            onerror=handle_remove_read_only,
-        )
-        logger.debug(f"Deleted: {directory}")
+def delete_files_except_extension(directory: Path | str, extension: str) -> None:
+    delete_files_with_condition(directory, lambda file: not file.endswith(extension))
 
 
-def directories(mods_path):
+def delete_files_only_extension(directory: Path | str, extension: str) -> None:
+    delete_files_with_condition(directory, lambda file: file.endswith(extension))
+
+
+def directories(mods_path: Path | str) -> list[str]:
     try:
         with os.scandir(mods_path) as directories:
             return [directory.path for directory in directories if directory.is_dir()]
@@ -115,13 +98,18 @@ def directories(mods_path):
         return []
 
 
-def handle_remove_read_only(func, path: str, exc):
+def handle_remove_read_only(
+    func: Callable[[str], Any],
+    path: str,
+    exc: tuple[type[BaseException], BaseException, Any] | tuple[None, None, None],
+) -> None:
     excvalue = exc[1]
-    if func in (os.rmdir, os.remove, os.unlink) and excvalue.errno == EACCES:
-        os.chmod(path, S_IRWXU | S_IRWXG | S_IRWXO)  # 0777
-        func(path)
-    else:
-        raise
+    if excvalue is not None and isinstance(excvalue, OSError):
+        if func in (os.rmdir, os.remove, os.unlink) and excvalue.errno == EACCES:
+            os.chmod(path, S_IRWXU | S_IRWXG | S_IRWXO)  # 0777
+            func(path)
+        else:
+            raise
 
 
 def launch_game_process(game_install_path: Path, args: list[str]) -> None:
@@ -185,7 +173,7 @@ def launch_game_process(game_install_path: Path, args: list[str]) -> None:
             )
         else:
             logger.debug("The game executable path does not exist")
-            show_warning(
+            dialogue.show_warning(
                 title="File not found",
                 text="Unable to launch game process",
                 information=(
@@ -197,7 +185,7 @@ def launch_game_process(game_install_path: Path, args: list[str]) -> None:
             )
     else:
         logger.error("The path to the game folder is empty")
-        show_warning(
+        dialogue.show_warning(
             title="Game launch failed",
             text="Unable to launch RimWorld",
             information=(
@@ -215,14 +203,15 @@ def open_url_browser(url: str) -> None:
     webbrowser.open(url)
 
 
-def platform_specific_open(path: str) -> None:
+def platform_specific_open(path: str | Path) -> None:
     """
     Function to open a file/folder in the platform-specific file-explorer app.
 
     :param path: path to open
     """
     logger.info(f"USER ACTION: opening {path}")
-    p = Path(path)
+    p = Path(path) if isinstance(path, str) else path
+    path = str(p)
     system_name = platform.system()
     if system_name == "Darwin":
         logger.info(f"Opening {path} with subprocess open on MacOS")
@@ -251,18 +240,27 @@ def sanitize_filename(filename: str) -> str:
     return sanitized_filename
 
 
-def set_to_list(obj):
+def flatten_to_list(obj: Any) -> list[Any] | dict[Any, Any] | Any:
+    """Function to recursively flatten a nested object as much as possible.
+        Converts all sets to lists. If the object is a dictionary, it maintains the keys and
+        recurses on the values. If the object cannot be flattened further, the function returns the object as is.
+
+    :param obj: The object to be flattened
+    :type obj: Any
+    :return: The flattened object
+    :rtype: list[Any] | dict[Any, Any]
+    """
     if isinstance(obj, set):
         return list(obj)
     elif isinstance(obj, list):
-        return [set_to_list(e) for e in obj]
+        return [flatten_to_list(e) for e in obj]
     elif isinstance(obj, dict):
-        return {k: set_to_list(v) for k, v in obj.items()}
+        return {k: flatten_to_list(v) for k, v in obj.items()}
     else:
         return obj
 
 
-def upload_data_to_0x0_st(path: str) -> str | None:
+def upload_data_to_0x0_st(path: str) -> tuple[bool, str]:
     """
     Function to upload data to http://0x0.st/
 
@@ -270,13 +268,20 @@ def upload_data_to_0x0_st(path: str) -> str | None:
     :return: a string that is the URL returned from http://0x0.st/
     """
     logger.info(f"Uploading data to http://0x0.st/: {path}")
-    request = requests_post(
-        url="http://0x0.st/", files={"file": (path, open(path, "rb"))}
-    )
+    try:
+        request = requests_post(
+            url="http://0x0.st/", files={"file": (path, open(path, "rb"))}
+        )
+    except requests.exceptions.ConnectionError as e:
+        logger.error(f"Connection Error. Failed to upload data to http://0x0.st: {e}")
+        return False, str(e)
+
     if request.status_code == 200:
         url = request.text.strip()
         logger.info(f"Uploaded! Uploaded data can be found at: {url}")
-        return url
+        return True, url
     else:
-        logger.warning("Failed to upload data to http://0x0.st")
-        return None
+        logger.warning(
+            f"Failed to upload data to http://0x0.st. Status code: {request.status_code}"
+        )
+        return False, f"Status code: {request.status_code}"

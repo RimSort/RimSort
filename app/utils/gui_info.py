@@ -1,7 +1,8 @@
+from pathlib import Path
 from typing import Optional
 
 from PySide6.QtCore import QMargins
-from PySide6.QtGui import QFont, QFontMetrics
+from PySide6.QtGui import QFont, QFontMetrics, QPixmap
 from PySide6.QtWidgets import QApplication
 
 
@@ -56,6 +57,12 @@ class GUIInfo:
         self._text_field_margins: QMargins = QMargins(4, 4, 4, 4)
 
         self._is_initialized: bool = True
+
+        icon_path = "themes/default-icons/AppIcon_alt.ico"
+        if Path(icon_path).exists():
+            self._app_icon = QPixmap(icon_path)
+        else:
+            self._app_icon = QPixmap()
 
     @property
     def default_font(self) -> QFont:
@@ -116,3 +123,13 @@ class GUIInfo:
             QMargins: The margins for text fields.
         """
         return self._text_field_margins
+
+    @property
+    def app_icon(self) -> QPixmap:
+        """
+        Get the application icon.
+
+        Returns:
+            QPixmap: The application icon.
+        """
+        return self._app_icon

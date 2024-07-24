@@ -12,7 +12,7 @@ from zipfile import ZipFile
 import requests
 from loguru import logger
 
-from app.models.dialogue import (
+from app.views.dialogue import (
     show_dialogue_conditional,
     show_fatal_error,
     show_warning,
@@ -102,6 +102,16 @@ class SteamcmdInterface:
         return cls._instance
 
     def check_symlink(self, link_path: str, target_local_folder: str) -> None:
+        """Checks if the link path exists. If it does, recreate the link/junction to target_local_folder.
+        Otherwise, create the link/junction.
+
+        Requires the root of the link_path to exist.
+
+        :param link_path: Where the symlink should be created
+        :type link_path: str
+        :param target_local_folder: Where the symlink/junction should point to
+        :type target_local_folder: str
+        """
         logger.debug(
             "Checking for SteamCMD <-> Local mods symlink, and recreating if it exists"
         )

@@ -1,12 +1,12 @@
 import os
-from typing import Any, Dict
+from typing import Any
 
 import xmltodict
 from bs4 import BeautifulSoup
 from loguru import logger
 
 
-def xml_path_to_json(path: str) -> Dict[str, Any]:
+def xml_path_to_json(path: str) -> dict[str, Any]:
     """
     Return the contents of an XML file as JSON.
     If the file does not exist, return an empty dict.
@@ -14,7 +14,7 @@ def xml_path_to_json(path: str) -> Dict[str, Any]:
     :param path: Path to the XML file.
     :return: JSON dict of XML file contents.
     """
-    data = {}
+    data: dict[str, Any] = {}
     if not os.path.exists(path):
         logger.error(f"XML file does not exist at: {path}")
         return data
@@ -45,7 +45,7 @@ def xml_path_to_json(path: str) -> Dict[str, Any]:
         return data
 
 
-def json_to_xml_write(data: Dict[str, Any], path: str) -> None:
+def json_to_xml_write(data: dict[str, Any], path: str) -> None:
     """
     Write JSON data to an XML file.
 

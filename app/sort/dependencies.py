@@ -71,7 +71,7 @@ def gen_rev_deps_graph(
 
 
 def gen_tier_one_deps_graph(
-    dependencies_graph: dict[str, set[str]]
+    dependencies_graph: dict[str, set[str]],
 ) -> tuple[dict[str, set[str]], set[str]]:
     # Below is a list of mods determined to be "tier one", in the sense that they
     # should be loaded first before any other regular mod. Tier one mods will have specific
@@ -91,13 +91,17 @@ def gen_tier_one_deps_graph(
         "ludeon.rimworld.anomaly",
         "unlimitedhugs.hugslib",
     }
+    # Bug fix: if there are circular dependencies in tier one mods
+    # then an infinite loop happens here unless we keep track of what has
+    # already been processed.
+    processed_ids = set()
     tier_one_mods = set()
     for known_tier_one_mod in known_tier_one_mods:
         if known_tier_one_mod in dependencies_graph:
             # Some known tier one mods might not actually be active
             tier_one_mods.add(known_tier_one_mod)
             dependencies_set = get_dependencies_recursive(
-                known_tier_one_mod, dependencies_graph
+                known_tier_one_mod, dependencies_graph, processed_ids
             )
             tier_one_mods.update(dependencies_set)
     logger.info(
@@ -112,16 +116,24 @@ def gen_tier_one_deps_graph(
 
 
 def get_dependencies_recursive(
-    package_id: str, active_mods_dependencies: dict[str, set[str]]
+    package_id: str,
+    active_mods_dependencies: dict[str, set[str]],
+    processed_ids: set[str],
 ) -> set[str]:
     dependencies_set = set()
     # Should always be true since all active ids get initialized with a set()
     if package_id in active_mods_dependencies:
         for dependency_id in active_mods_dependencies[package_id]:
-            dependencies_set.add(dependency_id)  # Safe, as should refer to active id
-            dependencies_set.update(  # Safe, as should refer to active ids
-                get_dependencies_recursive(dependency_id, active_mods_dependencies)
-            )
+            if dependency_id not in processed_ids:
+                processed_ids.add(dependency_id)
+                dependencies_set.add(
+                    dependency_id
+                )  # Safe, as should refer to active id
+                dependencies_set.update(  # Safe, as should refer to active ids
+                    get_dependencies_recursive(
+                        dependency_id, active_mods_dependencies, processed_ids
+                    )
+                )
     return dependencies_set
 
 

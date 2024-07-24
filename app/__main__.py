@@ -3,12 +3,12 @@
 # nuitka-project: --assume-yes-for-downloads
 # nuitka-project: --output-filename=RimSort
 # nuitka-project: --output-dir={MAIN_DIRECTORY}/../build/
-# nuitka-project: --disable-console
+# nuitka-project: --windows-console-mode=force
 # nuitka-project: --noinclude-default-mode=error
 # nuitka-project: --include-package=steamworks
 # nuitka-project: --user-package-configuration-file={MAIN_DIRECTORY}/../rimsort.nuitka-package.config.yml
 # nuitka-project: --include-data-file={MAIN_DIRECTORY}/../steam_appid.txt=steam_appid.txt
-# nuitka-project: --windows-icon-from-ico={MAIN_DIRECTORY}/../themes/default-icons/AppIcon_a.png
+# nuitka-project: --windows-icon-from-ico={MAIN_DIRECTORY}/../themes/default-icons/AppIcon_alt.ico
 
 # The PySide6 plugin covers qt-plugins
 # nuitka-project: --enable-plugin=pyside6
@@ -30,20 +30,13 @@ from multiprocessing import freeze_support, set_start_method
 from types import TracebackType
 from typing import Optional, Type
 
+import loguru
 from loguru import logger
 
-from app.utils.app_info import AppInfo
-
-# One-time initialization of AppInfo class (this must be done in __main__ so we can use __file__)
-# Initialize as early as possible!
-# When the application is frozen, __file__ should be the same when we are __process_main__.
-# This should be the same relative path as the initial __file__ in __main__, i.e. on Win11:
-# __file__ is [C:\Users\Tristin\RimSort\build\__MAIN~1.DIS\__main__.py] when __main__ and __process_main__
-
-# TODO: Fix this so that this cursed import order is not required.
-AppInfo(main_file=__file__)
-
 from app.controllers.app_controller import AppController
+from app.utils.app_info import AppInfo
+from app.utils.obfuscate_message import obfuscate_message
+from app.views.dialogue import show_fatal_error
 
 SYSTEM = platform.system()
 # Watchdog conditionals
@@ -60,9 +53,6 @@ elif SYSTEM == "Windows":
     # This is a stub if it's ever even needed...
     # I still can't figure out why it won't log at all on Windows...?
     # getLogger("").setLevel(WARNING)
-
-# TODO: Fix this so that this cursed import order is not required
-from app.models.dialogue import show_fatal_error
 
 
 def handle_exception(
@@ -170,28 +160,33 @@ if __name__ == "__main__":
         log_file.rename(old_log_file)
 
     # Define the log format string
-    format_string = (
-        "[{level}]"
-        "[{time:YYYY-MM-DD HH:mm:ss}]"
-        "[{process.id}]"
-        "[{thread.name}]"
-        "[{module}]"
-        "[{function}][{line}]"
-        " : "
-        "{message}"
-    )
+
+    def formatter(record: "loguru.Record") -> str:
+        """Custom formatter for loguru logger"""
+        format_string = (
+            "[{level}]"
+            "[{time:YYYY-MM-DD HH:mm:ss}]"
+            "[{process.id}]"
+            "[{thread.name}]"
+            "[{module}]"
+            "[{function}][{line}]"
+            " : "
+        )
+
+        record["extra"]["obfuscated_message"] = obfuscate_message(record["message"])
+        return format_string + "{extra[obfuscated_message]}\n"
 
     # Remove the default stderr logger
     logger.remove()
 
     # Create the file logger
-    logger.add(log_file, level="DEBUG" if DEBUG_MODE else "INFO", format=format_string)
+    logger.add(log_file, level="DEBUG" if DEBUG_MODE else "INFO", format=formatter)
 
     # Add a "WARNING" or higher stderr logger
     logger.add(
         sys.stderr,
         level="WARNING",
-        format=format_string,
+        format=formatter,
         colorize=False,
     )
 

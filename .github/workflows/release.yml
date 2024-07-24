@@ -101,13 +101,13 @@ jobs:
 
       - name: Download artifacts - Current Flow
         if: ${{ inputs.skip_build == false }}
-        uses: actions/download-artifact@v4.1.7
+        uses: actions/download-artifact@v4.1.8
         with:
           path: artifacts
 
       - name: Download artifacts - Previous Flow
         if: ${{ inputs.skip_build == true}}
-        uses: actions/download-artifact@v4.1.7
+        uses: actions/download-artifact@v4.1.8
         with:
           path: artifacts
           run-id: ${{ github.event.inputs.run_id }}

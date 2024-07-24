@@ -9,6 +9,7 @@ from app.controllers.settings_controller import SettingsController
 from app.models.settings import Settings
 from app.utils.app_info import AppInfo
 from app.utils.constants import DEFAULT_USER_RULES
+from app.utils.gui_info import GUIInfo
 from app.utils.metadata import MetadataManager
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.views.main_window import MainWindow
@@ -16,7 +17,7 @@ from app.views.settings_dialog import SettingsDialog
 
 
 class AppController(QObject):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         self.app = QApplication(sys.argv)
@@ -25,9 +26,10 @@ class AppController(QObject):
 
         self.app.setStyleSheet(  # Add style sheet for styling layouts and widgets
             (
-                (AppInfo().application_folder / "themes" / "RimPy" / "style.qss")
+                AppInfo().application_folder / "themes" / "RimPy" / "style.qss"
             ).read_text()
         )
+        self.app.setWindowIcon(GUIInfo().app_icon)
 
         # One-time initialization of userRules.json
         user_rules_path = AppInfo().databases_folder / "userRules.json"
@@ -47,7 +49,7 @@ class AppController(QObject):
         self.steamcmd_wrapper = SteamcmdInterface.instance(
             self.settings_controller.settings.instances[
                 self.settings_controller.settings.current_instance
-            ]["steamcmd_install_path"],
+            ].steamcmd_install_path,
             self.settings_controller.settings.steamcmd_validate_downloads,
         )
 

@@ -7,6 +7,11 @@ on:
         required: false
         type: string
         default: "v${major}.${minor}.${patch}"
+      attest:
+        description: "Generate attestations"
+        required: false
+        type: boolean
+        default: true
   # checkov:skip=CKV_GHA_7
   workflow_dispatch:
     inputs:
@@ -15,6 +20,11 @@ on:
         required: false
         type: string
         default: "v${major}.${minor}.${patch}"
+      attest:
+        description: "Generate attestations"
+        required: false
+        type: boolean
+        default: true
 
 permissions: {}
 
@@ -140,7 +150,6 @@ jobs:
         with:
           nuitka-version: main
           script-name: app/__main__.py
-          disable-console: true
           onefile: false
           static-libpython: auto
           product-version: >-
@@ -171,7 +180,8 @@ jobs:
         shell: bash
 
       - name: Generate executable attestations
-        uses: actions/attest-build-provenance@v1.2.0
+        uses: actions/attest-build-provenance@v1.3.3
+        if: ${{ inputs.attest }}
         with:
           subject-path: ${{ steps.find_executable.outputs.EXECUTABLE }}
 
@@ -184,7 +194,8 @@ jobs:
         shell: bash
 
       - name: Generate artifact attestation
-        uses: actions/attest-build-provenance@v1.2.0
+        uses: actions/attest-build-provenance@v1.3.3
+        if: ${{ inputs.attest }}
         with:
           subject-path: ./build/${{ steps.filename.outputs.FILENAME }}.tar
 

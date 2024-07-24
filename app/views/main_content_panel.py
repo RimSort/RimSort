@@ -20,6 +20,9 @@ from zipfile import ZipFile
 
 from loguru import logger
 
+from app.utils.generic import platform_specific_open
+from app.utils.system_info import SystemInfo
+
 # GitPython depends on git executable being available in PATH
 try:
     from git import Repo
@@ -44,12 +47,10 @@ from PySide6.QtCore import (
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel
 from requests import get as requests_get
 
-import app.models.dialogue as dialogue
-import app.sort.alphabetical_sort as alpha_sort
-import app.sort.dependencies as deps_sort
-import app.sort.topo_sort as topo_sort
+import app.views.dialogue as dialogue
 import app.utils.constants as app_constants
 import app.utils.metadata as metadata
+from app.controllers.sort_controller import Sorter
 from app.models.animations import LoadingAnimation
 from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
@@ -59,7 +60,6 @@ from app.utils.generic import (
     delete_files_except_extension,
     launch_game_process,
     open_url_browser,
-    platform_specific_open,
     upload_data_to_0x0_st,
 )
 from app.utils.metadata import MetadataManager, SettingsController
@@ -106,7 +106,7 @@ class MainContent(QObject):
         return cls._instance
 
     def __init__(
-        self, settings_controller: SettingsController, version_string: str
+        self, settings_controller: SettingsController
     ) -> None:
         """
         Initialize the main content panel.
@@ -118,7 +118,6 @@ class MainContent(QObject):
             logger.debug("Initializing MainContent")
 
             self.settings_controller = settings_controller
-            self.version_string = version_string
 
             EventBus().settings_have_changed.connect(self._on_settings_have_changed)
             EventBus().do_check_for_application_update.connect(
@@ -183,6 +182,18 @@ class MainContent(QObject):
             EventBus().do_sort_active_mods_list.connect(self._do_sort)
             EventBus().do_save_active_mods_list.connect(self._do_save)
             EventBus().do_run_game.connect(self._do_run_game)
+
+            # Shortcuts submenu Eventbus
+            EventBus().do_open_app_directory.connect(self._do_open_app_directory)
+            EventBus().do_open_settings_directory.connect(
+                self._do_open_settings_directory
+            )
+            EventBus().do_open_rimsort_logs_directory.connect(
+                self._do_open_rimsort_logs_directory
+            )
+            EventBus().do_open_rimworld_logs_directory.connect(
+                self._do_open_rimworld_logs_directory
+            )
 
             # Edit Menu bar Eventbus
             EventBus().do_rule_editor.connect(
@@ -301,7 +312,7 @@ class MainContent(QObject):
             self.inactive_mods_uuids_restore_state: list[str] = []
 
             # Store duplicate_mods for global access
-            self.duplicate_mods = {}
+            self.duplicate_mods: dict[str, Any] = {}
 
             # Instantiate query runner
             self.query_runner: RunnerPanel | None = None
@@ -333,10 +344,10 @@ class MainContent(QObject):
         current_instance = self.settings_controller.settings.current_instance
         game_folder_path = self.settings_controller.settings.instances[
             current_instance
-        ]["game_folder"]
+        ].game_folder
         config_folder_path = self.settings_controller.settings.instances[
             current_instance
-        ]["config_folder"]
+        ].config_folder
         logger.debug(f"Game folder: {game_folder_path}")
         logger.debug(f"Config folder: {config_folder_path}")
         if (
@@ -587,7 +598,7 @@ class MainContent(QObject):
                     Path(
                         self.settings_controller.settings.instances[
                             self.settings_controller.settings.current_instance
-                        ]["config_folder"]
+                        ].config_folder
                     )
                     / "ModsConfig.xml"
                 )
@@ -635,13 +646,13 @@ class MainContent(QObject):
             if not self.settings_controller.settings.todds_active_mods_target:
                 local_mods_target = self.settings_controller.settings.instances[
                     self.settings_controller.settings.current_instance
-                ]["local_folder"]
+                ].local_folder
                 if local_mods_target and local_mods_target != "":
                     with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
                         todds_txt_file.write(local_mods_target + "\n")
                 workshop_mods_target = self.settings_controller.settings.instances[
                     self.settings_controller.settings.current_instance
-                ]["workshop_folder"]
+                ].workshop_folder
                 if workshop_mods_target and workshop_mods_target != "":
                     with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
                         todds_txt_file.write(workshop_mods_target + "\n")
@@ -943,7 +954,6 @@ class MainContent(QObject):
     def do_threaded_loading_animation(
         self, gif_path: str, target: Callable[..., Any], text: str | None = None
     ) -> Any:
-        loading_animation_text_label = None
         # Hide the info panel widgets
         self.mod_info_panel.info_panel_frame.hide()
         # Disable widgets while loading
@@ -985,7 +995,6 @@ class MainContent(QObject):
         EventBus().do_save_button_animation_stop.emit()
         # If we are refreshing cache from user action
         if not is_initial:
-            self.mods_panel.list_updated = False
             # Reset the data source filters to default and clear searches
             self.mods_panel.active_mods_filter_data_source_index = len(
                 self.mods_panel.data_source_filter_icons
@@ -1049,9 +1058,17 @@ class MainContent(QObject):
                 )
         else:
             self.__insert_data_into_lists([], [])
-            logger.debug(
+            logger.warning(
                 "Essential paths have not been set. Passing refresh and resetting mod lists"
             )
+            # Wait for settings dialog to be closed before continuing.
+            # This is to ensure steamcmd check and other ops are done after the user has a chance to set paths
+            if not self.settings_controller.settings_dialog.isHidden():
+                loop = QEventLoop()
+                self.settings_controller.settings_dialog.finished.connect(loop.quit)
+                loop.exec_()
+                logger.debug("Settings dialog closed. Continuing with refresh...")
+
         EventBus().refresh_finished.emit()
 
     def _do_clear(self) -> None:
@@ -1068,8 +1085,8 @@ class MainContent(QObject):
         )
         self.mods_panel.signal_clear_search(list_type="Inactive")
         # Metadata to insert
-        active_mods_uuids = []
-        inactive_mods_uuids = []
+        active_mods_uuids: list[str] = []
+        inactive_mods_uuids: list[str] = []
         logger.info("Clearing mods from active mod list")
         # Define the order of the DLC package IDs
         package_id_order = [
@@ -1125,100 +1142,29 @@ class MainContent(QObject):
             self.mods_panel.data_source_filter_icons
         )
         self.mods_panel.on_inactive_mods_search_data_source_filter()
-        active_mod_ids = list()
+        active_package_ids = set()
         for uuid in self.mods_panel.active_mods_list.uuids:
-            active_mod_ids.append(
+            active_package_ids.add(
                 self.metadata_manager.internal_local_metadata[uuid]["packageid"]
             )
 
         # Get the current order of active mods list
         current_order = self.mods_panel.active_mods_list.uuids.copy()
 
-        # Get all active mods and their dependencies (if also active mod)
-        dependencies_graph = deps_sort.gen_deps_graph(
-            self.mods_panel.active_mods_list.uuids, active_mod_ids
+        sorter = Sorter(
+            self.settings_controller.settings.sorting_algorithm,
+            active_package_ids=active_package_ids,
+            active_uuids=set(self.mods_panel.active_mods_list.uuids),
         )
 
-        # Get all active mods and their reverse dependencies
-        reverse_dependencies_graph = deps_sort.gen_rev_deps_graph(
-            self.mods_panel.active_mods_list.uuids, active_mod_ids
-        )
-
-        # Get dependencies graph for tier one mods (load at top mods)
-        tier_one_dependency_graph, tier_one_mods = deps_sort.gen_tier_one_deps_graph(
-            dependencies_graph
-        )
-
-        # Get dependencies graph for tier three mods (load at bottom mods)
-        tier_three_dependency_graph, tier_three_mods = (
-            deps_sort.gen_tier_three_deps_graph(
-                dependencies_graph,
-                reverse_dependencies_graph,
-                self.mods_panel.active_mods_list.uuids,
-            )
-        )
-
-        # Get dependencies graph for tier two mods (load in middle)
-        tier_two_dependency_graph = deps_sort.gen_tier_two_deps_graph(
-            self.mods_panel.active_mods_list.uuids,
-            active_mod_ids,
-            tier_one_mods,
-            tier_three_mods,
-        )
-
-        # Depending on the selected algorithm, sort all tiers with Alphabetical
-        # mimic algorithm or toposort
-        sorting_algorithm = self.settings_controller.settings.sorting_algorithm
-
-        if sorting_algorithm == "Alphabetical":
-            logger.info("Alphabetical sorting algorithm is selected")
-            reordered_tier_one_sorted = alpha_sort.do_alphabetical_sort(
-                tier_one_dependency_graph, self.mods_panel.active_mods_list.uuids
-            )
-            reordered_tier_three_sorted = alpha_sort.do_alphabetical_sort(
-                tier_three_dependency_graph,
-                self.mods_panel.active_mods_list.uuids,
-            )
-            reordered_tier_two_sorted = alpha_sort.do_alphabetical_sort(
-                tier_two_dependency_graph, self.mods_panel.active_mods_list.uuids
-            )
-        else:
-            logger.info("Topological sorting algorithm is selected")
-            # Sort tier one mods
-            reordered_tier_one_sorted = topo_sort.do_topo_sort(
-                tier_one_dependency_graph, self.mods_panel.active_mods_list.uuids
-            )
-            # Sort tier three mods
-            reordered_tier_three_sorted = topo_sort.do_topo_sort(
-                tier_three_dependency_graph,
-                self.mods_panel.active_mods_list.uuids,
-            )
-            # Sort tier two mods
-            reordered_tier_two_sorted = topo_sort.do_topo_sort(
-                tier_two_dependency_graph, self.mods_panel.active_mods_list.uuids
-            )
-
-        logger.info(f"Sorted tier one mods: {len(reordered_tier_one_sorted)}")
-        logger.info(f"Sorted tier two mods: {len(reordered_tier_two_sorted)}")
-        logger.info(f"Sorted tier three mods: {len(reordered_tier_three_sorted)}")
-
-        # Add Tier 1, 2, 3 in order
-        combined_mods = {}
-        for uuid in (
-            reordered_tier_one_sorted
-            + reordered_tier_two_sorted
-            + reordered_tier_three_sorted
-        ):
-            combined_mods[uuid] = self.metadata_manager.internal_local_metadata[uuid]
-
-        new_order = list(combined_mods.keys())
+        success, new_order = sorter.sort()
 
         # Check if the order has changed
-        if new_order == current_order:
+        if success and new_order == current_order:
             logger.info(
                 "The order of mods in List has not changed. Skipping insertion."
             )
-        else:
+        elif success:
             logger.info(
                 "Finished combining all tiers of mods. Inserting into mod lists!"
             )
@@ -1226,20 +1172,19 @@ class MainContent(QObject):
             self.disable_enable_widgets_signal.emit(False)
             # Insert data into lists
             self.__insert_data_into_lists(
-                combined_mods,
-                {
-                    uuid: self.metadata_manager.internal_local_metadata[uuid]
+                new_order,
+                [
+                    uuid
                     for uuid in self.metadata_manager.internal_local_metadata
-                    if uuid
-                    not in set(
-                        reordered_tier_one_sorted
-                        + reordered_tier_two_sorted
-                        + reordered_tier_three_sorted
-                    )
-                },
+                    if uuid not in set(new_order)
+                ],
             )
             # Enable widgets again after inserting
             self.disable_enable_widgets_signal.emit(True)
+        elif not success:
+            logger.warning("Failed to sort mods. Skipping insertion.")
+        else:
+            logger.warning("Unknown error occurred. Skipping insertion.")
 
     def _do_import_list_file_xml(self) -> None:
         """
@@ -1486,7 +1431,7 @@ class MainContent(QObject):
         logger.info(f"Collected {len(active_mods)} active mods for export")
         # Build our report
         active_mods_clipboard_report = (
-            f"Created with RimSort {self.version_string}"
+            f"Created with RimSort {AppInfo().app_version}"
             + f"\nRimWorld game version this list was created for: {self.metadata_manager.game_version}"
             + f"\nTotal # of mods: {len(active_mods)}\n"
         )
@@ -1561,22 +1506,23 @@ class MainContent(QObject):
             # Compile list of Steam Workshop publishing preview images that correspond
             # to a Steam mod in the active mod list
             webapi_response = ISteamRemoteStorage_GetPublishedFileDetails(pfids)
-            for metadata in webapi_response:
-                pfid = metadata["publishedfileid"]
-                if metadata["result"] != 1:
-                    logger.warning("Rentry.co export: Unable to get data for mod!")
-                    logger.warning(
-                        f"Invalid result returned from WebAPI for mod {pfid}"
-                    )
-                else:
-                    # Retrieve the preview image URL from the response
-                    active_steam_mods_pfid_to_preview_url[pfid] = metadata[
-                        "preview_url"
-                    ]
+            if webapi_response is not None:
+                for metadata in webapi_response:
+                    pfid = metadata["publishedfileid"]
+                    if metadata["result"] != 1:
+                        logger.warning("Rentry.co export: Unable to get data for mod!")
+                        logger.warning(
+                            f"Invalid result returned from WebAPI for mod {pfid}"
+                        )
+                    else:
+                        # Retrieve the preview image URL from the response
+                        active_steam_mods_pfid_to_preview_url[pfid] = metadata[
+                            "preview_url"
+                        ]
         # Build our report
         active_mods_rentry_report = (
             "# RimWorld mod list       ![](https://github.com/RimSort/RimSort/blob/main/docs/rentry_preview.png?raw=true)"
-            + f"\nCreated with RimSort {self.version_string}"
+            + f"\nCreated with RimSort {AppInfo().app_version}"
             + f"\nMod list was created for game version: `{self.metadata_manager.game_version}`"
             + "\n!!! info Local mods are marked as yellow labels with packageid in brackets."
             + f"\n\n\n\n!!! note Mod list length: `{len(active_mods)}`\n"
@@ -1671,52 +1617,93 @@ class MainContent(QObject):
                 text="Failed to upload exported active mod list to Rentry.co",
             )
 
+    def _do_open_app_directory(self) -> None:
+        app_directory = os.getcwd()
+        logger.info(f"Opening app directory: {app_directory}")
+        platform_specific_open(os.getcwd())
+
+    def _do_open_settings_directory(self) -> None:
+        settings_directory = AppInfo().app_storage_folder
+        logger.info(f"Opening settings directory: {settings_directory}")
+        platform_specific_open(settings_directory)
+
+    def _do_open_rimsort_logs_directory(self) -> None:
+        logs_directory = AppInfo().user_log_folder
+        logger.info(f"Opening RimSort logs directory: {logs_directory}")
+        platform_specific_open(logs_directory)
+
+    def _do_open_rimworld_logs_directory(self) -> None:
+        user_home = Path.home()
+        logs_directory = None
+        if SystemInfo().operating_system == SystemInfo.OperatingSystem.MACOS:
+            logs_directory = (
+                f"/{user_home}/Library/Logs/Ludeon Studios/RimWorld by Ludeon Studios"
+            )
+            platform_specific_open(Path(logs_directory))
+        elif SystemInfo().operating_system == SystemInfo.OperatingSystem.LINUX:
+            logs_directory = (
+                f"{user_home}/.config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios"
+            )
+            platform_specific_open(Path(logs_directory))
+        elif SystemInfo().operating_system == SystemInfo.OperatingSystem.WINDOWS:
+            logs_directory = f"{user_home}/AppData/LocalLow/Ludeon Studios/RimWorld by Ludeon Studios"
+            platform_specific_open(Path(logs_directory).resolve())
+
+        if logs_directory:
+            logger.info(f"Opening RimWorld logs directory: {logs_directory}")
+        else:
+            logger.error("Could not open RimWorld logs directory on an unknown system")
+
     @Slot()
     def _on_do_upload_rimsort_log(self) -> None:
-        ret = upload_data_to_0x0_st(str(AppInfo().user_log_folder / "RimSort.log"))
-        if ret:
-            copy_to_clipboard_safely(ret)
-            dialogue.show_information(
-                title="Uploaded file",
-                text="Uploaded RimSort log to http://0x0.st/",
-                information=f"The URL has been copied to your clipboard:\n\n{ret}",
-            )
-            webbrowser.open(ret)
+        self._upload_log(AppInfo().user_log_folder / "RimSort.log")
 
     @Slot()
     def _on_do_upload_rimsort_old_log(self) -> None:
-        ret = upload_data_to_0x0_st(str(AppInfo().user_log_folder / "RimSort.old.log"))
-        if ret:
-            copy_to_clipboard_safely(ret)
-            dialogue.show_information(
-                title="Uploaded file",
-                text="Uploaded RimSort log to http://0x0.st/",
-                information=f"The URL has been copied to your clipboard:\n\n{ret}",
-            )
-            webbrowser.open(ret)
+        self._upload_log(AppInfo().user_log_folder / "RimSort.old.log")
 
     @Slot()
     def _on_do_upload_rimworld_log(self) -> None:
-        player_log_path = str(
-            (
-                Path(
-                    self.settings_controller.settings.instances[
-                        self.settings_controller.settings.current_instance
-                    ]["config_folder"]
-                ).parent
-                / "Player.log"
-            )
+        player_log_path = (
+            Path(
+                self.settings_controller.settings.instances[
+                    self.settings_controller.settings.current_instance
+                ].config_folder
+            ).parent
+            / "Player.log"
         )
-        if os.path.exists(player_log_path):
-            ret = upload_data_to_0x0_st(player_log_path)
-            if ret:
-                copy_to_clipboard_safely(ret)
-                dialogue.show_information(
-                    title="Uploaded file",
-                    text="Uploaded RimWorld log to http://0x0.st/",
-                    information=f"The URL has been copied to your clipboard:\n\n{ret}",
-                )
-                webbrowser.open(ret)
+
+        self._upload_log(player_log_path)
+
+    def _upload_log(self, path: Path) -> None:
+        if not os.path.exists(path):
+            dialogue.show_warning(
+                title="File not found",
+                text="The file you are trying to upload does not exist.",
+                information=f"File: {path}",
+            )
+            return
+
+        success, ret = self.do_threaded_loading_animation(
+            gif_path=str(AppInfo().theme_data_folder / "default-icons" / "rimsort.gif"),
+            target=partial(upload_data_to_0x0_st, str(path)),
+            text=f"Uploading {path.name} to 0x0.st...",
+        )
+
+        if success:
+            copy_to_clipboard_safely(ret)
+            dialogue.show_information(
+                title="Uploaded file",
+                text=f"Uploaded {path.name} to http://0x0.st/",
+                information=f"The URL has been copied to your clipboard:\n\n{ret}",
+            )
+            webbrowser.open(ret)
+        else:
+            dialogue.show_warning(
+                title="Failed to upload file.",
+                text="Failed to upload the file to 0x0.st",
+                information=ret,
+            )
 
     def _do_save(self) -> None:
         """
@@ -1755,7 +1742,7 @@ class MainContent(QObject):
             Path(
                 self.settings_controller.settings.instances[
                     self.settings_controller.settings.current_instance
-                ]["config_folder"]
+                ].config_folder
             )
             / "ModsConfig.xml"
         )
@@ -1809,23 +1796,7 @@ class MainContent(QObject):
                 "Cached mod lists for restore function not set as client started improperly. Passing on restore"
             )
 
-    def _do_edit_run_args(self) -> None:
-        """
-        Opens a QDialogInput that allows the user to edit the run args
-        that are configured to be passed to the Rimworld executable
-        """
-        args, ok = dialogue.show_dialogue_input(
-            title="Edit run arguments",
-            label="Enter a comma separated list of arguments to pass to the Rimworld executable\n\n"
-            + "Example: \n-popupwindow,-logfile,/path/to/file.log",
-            text=",".join(self.settings_controller.settings.run_args),
-        )
-        if ok:
-            self.settings_controller.settings.run_args = args.split(",")
-            self.settings_controller.settings.save()
-
     # TODDS ACTIONS
-
     def _do_optimize_textures(self, todds_txt_path: str) -> None:
         # Setup environment
         todds_interface = ToddsInterface(
@@ -1893,22 +1864,21 @@ class MainContent(QObject):
                 information="Are you connected to the Internet?",
             )
             return
-        self.workshop_mod_updater = ModUpdaterPrompt(
+        workshop_mod_updater = ModUpdaterPrompt(
             internal_mod_metadata=self.metadata_manager.internal_local_metadata
         )
-        self.workshop_mod_updater._populate_from_metadata()
-        if self.workshop_mod_updater.updates_found:
+        workshop_mod_updater._populate_from_metadata()
+        if workshop_mod_updater.updates_found:
             logger.debug("Displaying potential Workshop mod updates")
-            self.workshop_mod_updater.steamcmd_downloader_signal.connect(
+            workshop_mod_updater.steamcmd_downloader_signal.connect(
                 self._do_download_mods_with_steamcmd
             )
-            self.workshop_mod_updater.steamworks_subscription_signal.connect(
+            workshop_mod_updater.steamworks_subscription_signal.connect(
                 self._do_steamworks_api_call_animated
             )
-            self.workshop_mod_updater.show()
+            workshop_mod_updater.show()
         else:
             self.status_signal.emit("All Workshop mods appear to be up to date!")
-            self.workshop_mod_updater = None
 
     def _do_setup_steamcmd(self) -> None:
         if (
@@ -1926,7 +1896,7 @@ class MainContent(QObject):
             return
         local_mods_path = self.settings_controller.settings.instances[
             self.settings_controller.settings.current_instance
-        ]["local_folder"]
+        ].local_folder
         if local_mods_path and os.path.exists(local_mods_path):
             self.steamcmd_runner = RunnerPanel()
             self.steamcmd_runner.setWindowTitle("RimSort - SteamCMD setup")
@@ -1982,9 +1952,13 @@ class MainContent(QObject):
         ):
             if self.steam_browser:
                 self.steam_browser.close()
+            steam_db = self.metadata_manager.external_steam_metadata
+            if steam_db is None:
+                steam_db = {}
+
             self.steamcmd_runner = RunnerPanel(
                 steamcmd_download_tracking=publishedfileids,
-                steam_db=self.metadata_manager.external_steam_metadata,
+                steam_db=steam_db,
             )
             self.steamcmd_runner.steamcmd_downloader_signal.connect(
                 self._do_download_mods_with_steamcmd
@@ -2004,7 +1978,7 @@ class MainContent(QObject):
                 information='Please setup an existing SteamCMD prefix, or setup a new prefix with "Setup SteamCMD".',
             )
 
-    def _do_steamworks_api_call(self, instruction: list) -> None:
+    def _do_steamworks_api_call(self, instruction: list[Any]) -> None:
         """
         Create & launch Steamworks API process to handle instructions received from connected signals
 
@@ -2087,14 +2061,20 @@ class MainContent(QObject):
                 "Steamworks API is already initialized! We do NOT want multiple interactions. Skipping instruction..."
             )
 
-    def _do_steamworks_api_call_animated(self, instruction: list) -> None:
+    def _do_steamworks_api_call_animated(
+        self, instruction: list[list[str] | str]
+    ) -> None:
         publishedfileids = instruction[1]
         logger.debug(f"Attempting to download {len(publishedfileids)} mods with Steam")
+        steamdb = self.metadata_manager.external_steam_metadata
+        if steamdb is None:
+            steamdb = {}
         # Check for blacklisted mods for subscription actions
         if instruction[0] == "subscribe":
+            assert isinstance(publishedfileids, list)
             publishedfileids = metadata.check_if_pfids_blacklisted(
                 publishedfileids=publishedfileids,
-                steamdb=self.metadata_manager.external_steam_metadata,
+                steamdb=steamdb,
             )
         # No empty publishedfileids
         if not len(publishedfileids) > 0:
@@ -2130,7 +2110,7 @@ class MainContent(QObject):
             self._do_clone_repo_to_path(
                 base_path=self.settings_controller.settings.instances[
                     self.settings_controller.settings.current_instance
-                ]["local_folder"],
+                ].local_folder,
                 repo_url=args,
             )
         else:
@@ -2173,7 +2153,7 @@ class MainContent(QObject):
         repo.git.clear_cache()
         del repo
 
-    def _check_git_repos_for_update(self, repo_paths: list) -> None:
+    def _check_git_repos_for_update(self, repo_paths: list[str]) -> None:
         if GIT_EXISTS:
             # Track summary of repo updates
             updates_summary = {}
@@ -2188,7 +2168,8 @@ class MainContent(QObject):
 
                         # Get the local and remote refs
                         local_ref = repo.head.reference
-                        remote_ref = repo.refs[f"origin/{local_ref.name}"]
+                        refs = repo.refs()
+                        remote_ref = refs[f"origin/{local_ref.name}"]
 
                         # Check if the local branch is behind the remote branch
                         if local_ref.commit != remote_ref.commit:
@@ -2533,7 +2514,7 @@ class MainContent(QObject):
 
                     # Create our new branch and checkout
                     new_branch = local_repo.create_head(new_branch_name)
-                    local_repo.head.reference = new_branch
+                    local_repo.head.set_reference(ref=new_branch)
 
                     # Add the file to the index on our new branch
                     local_repo.index.add([file_full_path])
@@ -2628,7 +2609,7 @@ class MainContent(QObject):
             open_url_browser("https://git-scm.com/downloads")
 
     def _do_open_rule_editor(
-        self, compact: bool, initial_mode: str, packageid: Any | None = None
+        self, compact: bool, initial_mode: str, packageid: str | None = None
     ) -> None:
         self.rule_editor = RuleEditor(
             # Initialization options
@@ -2766,7 +2747,7 @@ class MainContent(QObject):
         else:
             logger.debug("USER ACTION: cancelled selection...")
 
-    def _do_blacklist_action_steamdb(self, instruction: list) -> None:
+    def _do_blacklist_action_steamdb(self, instruction: list[Any]) -> None:
         if (
             self.metadata_manager.external_steam_metadata_path
             and self.metadata_manager.external_steam_metadata
@@ -3107,7 +3088,7 @@ class MainContent(QObject):
             logger.warning("Steam DB Builder: User cancelled selection...")
             return
 
-    def _do_update_rules_database(self, instruction: list) -> None:
+    def _do_update_rules_database(self, instruction: list[Any]) -> None:
         rules_source = instruction[0]
         rules_data = instruction[1]
         # Get path based on rules source
@@ -3180,12 +3161,20 @@ class MainContent(QObject):
 
     @Slot()
     def _on_settings_have_changed(self) -> None:
-        steamcmd_prefix = self.settings_controller.settings.instances.get(
-            self.settings_controller.settings.current_instance, {}
-        ).get("steamcmd_install_path", "")
+        instance = self.settings_controller.settings.instances.get(
+            self.settings_controller.settings.current_instance
+        )
+        if not instance:
+            logger.warning(
+                f"Tried to access instance {self.settings_controller.settings.current_instance} that does not exist!"
+            )
+            return None
+
+        steamcmd_prefix = instance.steamcmd_install_path
+
         if steamcmd_prefix:
             self.steamcmd_wrapper.initialize_prefix(
-                steamcmd_prefix=steamcmd_prefix,
+                steamcmd_prefix=str(steamcmd_prefix),
                 validate=self.settings_controller.settings.steamcmd_validate_downloads,
             )
         self.steamcmd_wrapper.validate_downloads = (
@@ -3225,11 +3214,7 @@ class MainContent(QObject):
 
     @Slot()
     def _on_do_upload_log(self) -> None:
-        ret = upload_data_to_0x0_st(
-            str(AppInfo().user_log_folder / (AppInfo().app_name + ".log"))
-        )
-        if ret:
-            webbrowser.open(ret)
+        self._upload_log(AppInfo().user_log_folder / (AppInfo().app_name + ".log"))
 
     @Slot()
     def _on_do_download_all_mods_via_steamcmd(self) -> None:
@@ -3247,14 +3232,18 @@ class MainContent(QObject):
     def _do_run_game(self) -> None:
         current_instance = self.settings_controller.settings.current_instance
         game_install_path = Path(
-            self.settings_controller.settings.instances[current_instance]["game_folder"]
+            self.settings_controller.settings.instances[current_instance].game_folder
         )
-        run_args = [
-            self.settings_controller.settings.instances[current_instance]["run_args"]
-        ]
+        # Run args is inconsistent and is sometimes a string and sometimes a list
+        run_args: list[str] | str = self.settings_controller.settings.instances[
+            current_instance
+        ].run_args
+
+        run_args = [run_args] if isinstance(run_args, str) else run_args
+
         steam_client_integration = self.settings_controller.settings.instances[
             current_instance
-        ].get("steam_client_integration", False)
+        ].steam_client_integration
 
         # If integration is enabled, check for file called "steam_appid.txt" in game folder.
         # in the game folder. If not, create one and add the Steam App ID to it.

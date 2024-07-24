@@ -1,8 +1,17 @@
 from functools import partial
+from typing import Callable
 
 from loguru import logger
-from PySide6.QtCore import QPoint, QSize, Qt, Signal
-from PySide6.QtGui import QIcon, QStandardItem, QStandardItemModel
+from PySide6.QtCore import (
+    QAbstractItemModel,
+    QModelIndex,
+    QPersistentModelIndex,
+    QPoint,
+    QSize,
+    Qt,
+    Signal,
+)
+from PySide6.QtGui import QDropEvent, QIcon, QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import (
     QCheckBox,
     QHBoxLayout,
@@ -14,13 +23,14 @@ from PySide6.QtWidgets import (
     QListWidgetItem,
     QMenu,
     QPushButton,
+    QStyleOptionViewItem,
     QTableView,
     QToolButton,
     QVBoxLayout,
     QWidget,
 )
 
-from app.models.dialogue import show_dialogue_input, show_warning
+from app.views.dialogue import show_dialogue_input, show_warning
 from app.utils.app_info import AppInfo
 from app.utils.metadata import MetadataManager
 
@@ -28,7 +38,12 @@ from app.utils.metadata import MetadataManager
 class EditableDelegate(QItemDelegate):
     comment_edited_signal = Signal(list)
 
-    def createEditor(self, parent, option, index):
+    def createEditor(
+        self,
+        parent: QWidget,
+        option: QStyleOptionViewItem,
+        index: QModelIndex | QPersistentModelIndex,
+    ) -> QWidget:
         if index.column() == 4:  # Check if it's the 5th column
             model = index.model()
             column3_value = model.index(
@@ -40,13 +55,25 @@ class EditableDelegate(QItemDelegate):
             ]:  # Only create an editor if the condition is met
                 editor = super().createEditor(parent, option, index)
                 return editor
-        return None
+        logger.critical(
+            "Editor creation failed! One or more of the conditions were not met."
+        )
+        raise Exception(
+            "Editor creation failed! One or more of the conditions were not met."
+        )
 
-    def setEditorData(self, editor, index):
+    def setEditorData(
+        self, editor: QWidget, index: QModelIndex | QPersistentModelIndex
+    ) -> None:
         if index.column() == 4:  # Only set data for the 5th column
             super().setEditorData(editor, index)
 
-    def setModelData(self, editor, model, index):
+    def setModelData(
+        self,
+        editor: QWidget,
+        model: QAbstractItemModel,
+        index: QModelIndex | QPersistentModelIndex,
+    ) -> None:
         if index.column() == 4:  # Only set data for the 5th column
             super().setModelData(editor, model, index)
             # Send the column data back to the editor so we can update the metadata
@@ -70,7 +97,12 @@ class RuleEditor(QWidget):
 
     update_database_signal = Signal(list)
 
-    def __init__(self, initial_mode: str, compact=None, edit_packageid=None):
+    def __init__(
+        self,
+        initial_mode: str,
+        compact: bool | None = None,
+        edit_packageid: str | None = None,
+    ) -> None:
         super().__init__()
         logger.debug("Initializing RuleEditor")
 
@@ -120,7 +152,7 @@ class RuleEditor(QWidget):
         # CONTAINER LAYOUTS
         self.upper_layout = QHBoxLayout()
         self.lower_layout = QVBoxLayout()
-        self.layout = QVBoxLayout()
+        layout = QVBoxLayout()
 
         # SUB LAYOUTS
         self.details_layout = QHBoxLayout()
@@ -396,9 +428,9 @@ class RuleEditor(QWidget):
         self.lower_layout.addLayout(self.editor_layout)
 
         # Add our layouts to the main layouts
-        self.layout.addWidget(self.mod_label)
-        self.layout.addLayout(self.upper_layout, 66)
-        self.layout.addLayout(self.lower_layout, 33)
+        layout.addWidget(self.mod_label)
+        layout.addLayout(self.upper_layout, 66)
+        layout.addLayout(self.lower_layout, 33)
 
         # Allow toggle layouts based on context
         if self.compact:
@@ -437,11 +469,13 @@ class RuleEditor(QWidget):
         )
         # Setup the window
         self.setWindowTitle("RimSort - Rule Editor")
-        self.setLayout(self.layout)
+        self.setLayout(layout)
         self.setMinimumSize(QSize(800, 600))
 
-    def createDropEvent(self, destination_list: QListWidget):
-        def dropEvent(event):
+    def createDropEvent(
+        self, destination_list: QListWidget
+    ) -> Callable[[QDropEvent], None]:
+        def dropEvent(event: QDropEvent) -> None:
             # If the item was sourced from mods list
             if event.source() == self.mods_list and self.edit_packageid:
                 logger.debug("DROP")
@@ -451,6 +485,7 @@ class RuleEditor(QWidget):
                 # Create new item for destination list & copy source item
                 source_item = self.mods_list.currentItem()
                 item_label = source_item.listWidget().itemWidget(source_item)
+                assert isinstance(item_label, QLabel)
                 item_label_text = item_label.text()
                 rule_data = source_item.data(Qt.ItemDataRole.UserRole)
                 copied_item = QListWidgetItem()
@@ -483,9 +518,9 @@ class RuleEditor(QWidget):
                     )  # Get the item in column 4 (index 3)
                     # Search table for rows that match.
                     if (
-                        (packageid_value and rule_data in packageid_value.text())
-                        and (rule_source_value and mode[0] in rule_source_value.text())
-                        and (rule_type_value and mode[1] in rule_type_value.text())
+                        (packageid_value and rule_data == packageid_value.text())
+                        and (rule_source_value and mode[0] == rule_source_value.text())
+                        and (rule_type_value and mode[1] == rule_type_value.text())
                     ):
                         show_warning(
                             title="Duplicate rule",
@@ -545,7 +580,7 @@ class RuleEditor(QWidget):
         rule_source: str,
         rule_type: str,
         comment: str,
-        hidden=None,
+        hidden: bool = False,
     ) -> None:
         if not self.edit_packageid:
             return
@@ -581,7 +616,7 @@ class RuleEditor(QWidget):
         self.external_user_rules_loadBefore_list.clear()
         self.editor_model.removeRows(0, self.editor_model.rowCount())
 
-    def _comment_edited(self, instruction: list) -> None:
+    def _comment_edited(self, instruction: list[str]) -> None:
         if self.edit_packageid:
             # Select metadata
             if instruction[2] == "Community Rules":
@@ -598,7 +633,9 @@ class RuleEditor(QWidget):
                     4
                 ]
 
-    def _create_list_item(self, _list: QListWidget, title: str, metadata=None) -> None:
+    def _create_list_item(
+        self, _list: QListWidget, title: str, metadata: str | None = None
+    ) -> None:
         # Create our list item
         item = QListWidgetItem()
         if metadata:

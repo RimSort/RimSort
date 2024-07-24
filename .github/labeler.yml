@@ -5,12 +5,7 @@ documentation 📚:
 DevOps 💻:
   - changed-files:
       - any-glob-to-any-file:
-          [
-            ".github/**",
-            "distribute.py",
-            "requirements*.txt",
-            "rimsort.nuitka-package.config.yml",
-          ]
+          [".github/**", "distribute.py", "rimsort.nuitka-package.config.yml"]
 
 macOS 🍏:
   - changed-files:
@@ -23,3 +18,7 @@ Linux🐧:
 Windows 🪟:
   - changed-files:
       - any-glob-to-any-file: ["**/*.dll"]
+
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file: ["requirements*.txt"]

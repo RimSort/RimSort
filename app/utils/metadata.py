@@ -18,7 +18,7 @@ from PySide6.QtCore import (
 )
 
 from app.controllers.settings_controller import SettingsController
-from app.models.dialogue import (
+from app.views.dialogue import (
     show_dialogue_conditional,
     show_dialogue_file,
     show_warning,
@@ -95,9 +95,9 @@ class MetadataManager(QObject):
                 # This is just getting the path 2 directories up from content/294100,
                 # so that we can find workshop/appworkshop_294100.acf
                 Path(
-                    self.settings_controller.settings.instances[current_instance][
-                        "workshop_folder"
-                    ]
+                    self.settings_controller.settings.instances[
+                        current_instance
+                    ].workshop_folder
                 ).parent.parent
                 / "appworkshop_294100.acf",
             )
@@ -172,13 +172,14 @@ class MetadataManager(QObject):
                         )
                     else:  # If the cached db data is expired but NOT missing
                         # Fallback to the expired metadata
-                        self.show_warning_signal.emit(
-                            "Steam DB metadata expired",
-                            "Steam DB is expired! Consider updating!\n",
-                            f'Steam DB last updated: {strftime("%Y-%m-%d %H:%M:%S", localtime(db_data["version"] - life))}\n\n'
-                            + "Falling back to cached, but EXPIRED Steam Database...",
-                            "",
-                        )
+                        if life != 0:  # Disable Notification if value is 0
+                            self.show_warning_signal.emit(
+                                "Steam DB metadata expired",
+                                "Steam DB is expired! Consider updating!\n",
+                                f'Steam DB last updated: {strftime("%Y-%m-%d %H:%M:%S", localtime(db_data["version"] - life))}\n\n'
+                                + "Falling back to cached, but EXPIRED Steam Database...",
+                                "",
+                            )
                         db_json_data = db_data[
                             "database"
                         ]  # TODO: additional check to verify integrity of this data's schema
@@ -394,8 +395,8 @@ class MetadataManager(QObject):
         # Get & set Rimworld version string
         game_folder = self.settings_controller.settings.instances[
             self.settings_controller.settings.current_instance
-        ]["game_folder"]
-        version_file_path = str((Path(game_folder) / "Version.txt"))
+        ].game_folder
+        version_file_path = str(game_folder / Path("Version.txt"))
         if os.path.exists(version_file_path):
             try:
                 with open(version_file_path, encoding="utf-8") as f:
@@ -414,13 +415,13 @@ class MetadataManager(QObject):
             self.show_warning_signal.emit(
                 "Missing Version.txt",
                 f"RimSort is unable to get the game version at the expected path: [{version_file_path}].",
-                f"\nIs your game path [{self.settings_controller.settings.instances[self.settings_controller.settings.current_instance]['game_folder']}] set correctly? There should be a Version.txt file in the game install directory.",
+                f"\nIs your game path [{self.settings_controller.settings.instances[self.settings_controller.settings.current_instance].game_folder}] set correctly? There should be a Version.txt file in the game install directory.",
                 "",
             )
         # Get and cache installed base game / DLC data
-        if game_folder and game_folder != "":
+        if game_folder and game_folder != Path():
             # Get mod data
-            data_path = str((Path(game_folder) / "Data"))
+            data_path = str(game_folder / Path("Data"))
             logger.info(
                 f"Querying Official expansions from RimWorld's Data folder: {data_path}"
             )
@@ -478,9 +479,9 @@ class MetadataManager(QObject):
             purge_by_data_source("expansion")
         # Get and cache installed local/SteamCMD Workshop mods
         current_instance = self.settings_controller.settings.current_instance
-        local_folder = self.settings_controller.settings.instances[current_instance][
-            "local_folder"
-        ]
+        local_folder = self.settings_controller.settings.instances[
+            current_instance
+        ].local_folder
         if local_folder and local_folder != "":
             # Get mod data
             logger.info(f"Querying local mods from path: {local_folder}")
@@ -502,9 +503,9 @@ class MetadataManager(QObject):
             purge_by_data_source("local")
         # Get and cache installed Steam client Workshop mods
         current_instance = self.settings_controller.settings.current_instance
-        workshop_folder = self.settings_controller.settings.instances[current_instance][
-            "workshop_folder"
-        ]
+        workshop_folder = self.settings_controller.settings.instances[
+            current_instance
+        ].workshop_folder
         if workshop_folder and workshop_folder != "":
             logger.info(f"Querying workshop mods from path: {workshop_folder}")
             workshop_subdirectories = directories(workshop_folder)

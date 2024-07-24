@@ -1,3 +1,5 @@
+from typing import Self
+
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QPushButton
 
@@ -19,7 +21,7 @@ class EventBus(QObject):
         Since this is a singleton class, multiple instantiations will return the same object.
     """
 
-    _instance = None
+    _instance: None | Self = None
 
     # Menu bar signals
     do_check_for_application_update = Signal()
@@ -30,6 +32,12 @@ class EventBus(QObject):
     do_import_mod_list_from_workshop_collection = Signal()
     do_export_mod_list_to_clipboard = Signal()
     do_export_mod_list_to_rentry = Signal()
+
+    # Shortcuts submenu signals
+    do_open_app_directory = Signal()
+    do_open_settings_directory = Signal()
+    do_open_rimsort_logs_directory = Signal()
+    do_open_rimworld_logs_directory = Signal()
 
     # Edit Menu bar signals
     do_rule_editor = Signal()

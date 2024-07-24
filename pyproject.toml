@@ -2,22 +2,18 @@
 
 [tool.mypy]
 disallow_any_generics = true
-# disallow_any_unimported = true
 disallow_incomplete_defs = true
-# disallow_subclassing_any = true
 disallow_untyped_calls = true
 disallow_untyped_decorators = true
 disallow_untyped_defs = true
 pretty = true
 warn_redundant_casts = true
-# warn_return_any = true
 warn_unused_configs = true
 warn_unused_ignores = true
 exclude = ['venv', '.venv', 'submodules']
-mypy_path = 'submodules/steamfiles'
 
 [[tool.mypy.overrides]]
-module = 'steam.*'
+module = ['steam.*', 'steamfiles.*']
 ignore_missing_imports = true
 
 [tool.ruff]
@@ -27,12 +23,14 @@ indent-width = 4
 
 # Assume Python 3.11
 target-version = "py311"
-extend-select = ["I"]
+lint.extend-select = ["I"]
 
 [tool.pytest.ini_options]
 addopts = [
     "--import-mode=importlib",
 ]
+pythonpath = '.'
+testpaths = ['tests']
 
 # exclude submodules from test discovery
 [tool.pytest]
