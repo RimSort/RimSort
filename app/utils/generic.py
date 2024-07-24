@@ -17,7 +17,7 @@ from pyperclip import (  # type: ignore # Stubs don't exist for pyperclip
 )
 from requests import post as requests_post
 
-from app.models.dialogue import show_fatal_error, show_warning
+import app.views.dialogue as dialogue
 
 
 def chunks(_list: list[Any], limit: int) -> Generator[list[Any], None, None]:
@@ -41,7 +41,7 @@ def copy_to_clipboard_safely(text: str) -> None:
         copy_to_clipboard(text)
     except Exception as e:
         logger.error(f"Failed to copy to clipboard: {e}")
-        show_fatal_error(
+        dialogue.show_fatal_error(
             title="Failed to copy to clipboard.",
             text="RimSort failed to copy the text to your clipboard. Please copy it manually.",
             details=str(e),
@@ -173,7 +173,7 @@ def launch_game_process(game_install_path: Path, args: list[str]) -> None:
             )
         else:
             logger.debug("The game executable path does not exist")
-            show_warning(
+            dialogue.show_warning(
                 title="File not found",
                 text="Unable to launch game process",
                 information=(
@@ -185,7 +185,7 @@ def launch_game_process(game_install_path: Path, args: list[str]) -> None:
             )
     else:
         logger.error("The path to the game folder is empty")
-        show_warning(
+        dialogue.show_warning(
             title="Game launch failed",
             text="Unable to launch RimWorld",
             information=(

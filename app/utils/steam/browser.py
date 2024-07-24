@@ -23,7 +23,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from app.models.dialogue import show_warning
+from app.views.dialogue import show_warning
 from app.models.image_label import ImageLabel
 from app.utils.app_info import AppInfo
 from app.utils.steam.webapi.wrapper import (

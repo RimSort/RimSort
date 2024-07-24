@@ -550,7 +550,7 @@ def main() -> None:
             )
         if args.dev:
             print("In dev mode, enabling console in build")
-            _NUITKA_CMD.append("--windows-console-mode=enable")
+            _NUITKA_CMD.append("--windows-console-mode=force")
 
         print("Building RimSort application with Nuitka...")
         freeze_application()

@@ -212,6 +212,9 @@ QMenuBar::item:pressed {
 QMessageBox#dialogue{
     background: #1B2838;
 }
+QWidget#dialogue {
+    background: #1B2838;
+}
 /* Styling for progress bars */
 QProgressBar {
     border: 1px solid #455364;
