@@ -48,6 +48,8 @@ class MissingModsPrompt(QWidget):
         )
         self.missing_mods_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
+        # TODO: Make base object shared between this and workshop_mod_updater_panel to avoid duplication
+        # jscpd:ignore-start
         # CONTAINER LAYOUTS
         self.upper_layout = QVBoxLayout()
         self.lower_layout = QVBoxLayout()
@@ -148,6 +150,8 @@ class MissingModsPrompt(QWidget):
             return True
 
         return super().eventFilter(obj, event)
+
+    # jscpd:ignore-end
 
     def _add_row(
         self,
