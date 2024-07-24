@@ -38,11 +38,6 @@ from PySide6.QtWidgets import (
 )
 
 from app.controllers.settings_controller import SettingsController
-from app.views.dialogue import (
-    show_dialogue_conditional,
-    show_dialogue_input,
-    show_warning,
-)
 from app.utils.app_info import AppInfo
 from app.utils.constants import (
     KNOWN_MOD_REPLACEMENTS,
@@ -60,6 +55,11 @@ from app.utils.generic import (
     sanitize_filename,
 )
 from app.utils.metadata import MetadataManager
+from app.views.dialogue import (
+    show_dialogue_conditional,
+    show_dialogue_input,
+    show_warning,
+)
 
 
 class ClickableQLabel(QLabel):
@@ -720,7 +720,7 @@ class ModListWidget(QListWidget):
                         mod_name = mod_metadata.get("name")
                         mod_folder_name = mod_metadata["folder"]
                         mod_folder_path = mod_metadata["path"]
-                        publishedfileid = mod_metadata.get("publishedfileid")
+                        publishedfileid: str = mod_metadata.get("publishedfileid")
                         if not mod_metadata.get("steamcmd") and (
                             self.metadata_manager.external_steam_metadata
                             and publishedfileid
@@ -967,7 +967,7 @@ class ModListWidget(QListWidget):
                 or re_git_action
             ):
                 misc_options_menu = QMenu(title="Miscellaneous options")
-                if copy_packageId_to_clipboard_action or copy_url_to_clipboard_action:
+                if copy_packageId_to_clipboard_action:
                     clipboard_options_menu = QMenu(title="Clipboard options")
                     clipboard_options_menu.addAction(copy_packageId_to_clipboard_action)
                     if copy_url_to_clipboard_action:
@@ -1230,6 +1230,21 @@ class ModListWidget(QListWidget):
                 elif (
                     action == add_to_steamdb_blacklist_action
                 ):  # ACTION: Blacklist workshop mod in SteamDB
+                    if (
+                        self.metadata_manager.external_steam_metadata is None
+                        or steamdb_add_blacklist is None
+                    ):
+                        logger.error(
+                            f"Unable to add mod to SteamDB blacklist: {steamdb_remove_blacklist}"
+                        )
+                        show_warning(
+                            "Warning",
+                            "Unable to add mod to SteamDB blacklist",
+                            "Metadata manager or steamdb_add_blacklist was None type",
+                            parent=self,
+                        )
+                        return False
+
                     args, ok = show_dialogue_input(
                         title="Add comment",
                         label="Enter a comment providing your reasoning for wanting to blacklist this mod: "
@@ -1248,6 +1263,21 @@ class ModListWidget(QListWidget):
                 elif (
                     action == remove_from_steamdb_blacklist_action
                 ):  # ACTION: Blacklist workshop mod in SteamDB
+                    if (
+                        self.metadata_manager.external_steam_metadata is None
+                        or steamdb_remove_blacklist is None
+                    ):
+                        logger.error(
+                            f"Unable to remove mod from SteamDB blacklist: {steamdb_remove_blacklist}"
+                        )
+                        show_warning(
+                            "Warning",
+                            "Unable to remove mod from SteamDB blacklist",
+                            "Metadata manager or steamdb_remove_blacklist was None type",
+                            parent=self,
+                        )
+                        return False
+
                     answer = show_dialogue_conditional(
                         title="Are you sure?",
                         text="This will remove the selected mod, "
@@ -1542,8 +1572,12 @@ class ModListWidget(QListWidget):
         This slot is called when an item's data changes
         """
         widget = self.itemWidget(item)
-        if widget:
+        if widget and isinstance(widget, ModListItemInner):
             widget.repolish(item)
+        else:
+            logger.debug(
+                "Attempted to repolish item with no widget or incorrect widget type"
+            )
 
     def handle_other_list_row_added(self, uuid: str) -> None:
         if uuid in self.uuids:
@@ -1629,7 +1663,7 @@ class ModListWidget(QListWidget):
             )
             self.list_update_signal.emit(str(self.count()))
 
-    def get_item_widget_at_index(self, idx: int) -> Optional[ModListItemInner]:
+    def get_item_widget_at_index(self, idx: int) -> QWidget | None:
         item = self.item(idx)
         if item:
             return self.itemWidget(item)
@@ -1763,6 +1797,7 @@ class ModListWidget(QListWidget):
                         and current_mod_index
                         <= self.uuids.index(packageid_to_uuid[load_this_before[0]])
                     ):
+                        assert isinstance(mod_errors["load_before_violations"], set)
                         mod_errors["load_before_violations"].add(load_this_before[0])
 
                 # Check loadTheseAfter
@@ -1773,6 +1808,7 @@ class ModListWidget(QListWidget):
                         and current_mod_index
                         >= self.uuids.index(packageid_to_uuid[load_this_after[0]])
                     ):
+                        assert isinstance(mod_errors["load_after_violations"], set)
                         mod_errors["load_after_violations"].add(load_this_after[0])
             # Calculate any needed string for errors / warnings
             tool_tip_text = ""
@@ -1784,9 +1820,11 @@ class ModListWidget(QListWidget):
             ]:
                 if mod_errors[error_type]:
                     tool_tip_text += tooltip_header
-                    for key in mod_errors[error_type]:
+                    errors = mod_errors[error_type]
+                    assert isinstance(errors, set)
+                    for key in errors:
                         name = internal_local_metadata.get(
-                            packageid_to_uuid.get(key), {}
+                            packageid_to_uuid.get(key, ""), {}
                         ).get(
                             "name",
                             self.metadata_manager.steamdb_packageid_to_name.get(
@@ -1871,9 +1909,10 @@ class ModListWidget(QListWidget):
         Returns:
             None
         """
+        # TODO: Fix this or just get rid of it
         sorted_uuids = uuids
-        if key != ModsPanelSortKey.NOKEY:
-            sorted_uuids = sorted(uuids, key=key)
+        # if key != ModsPanelSortKey.NOKEY:
+        #    sorted_uuids = sorted(uuids, key=key)
         self.recreate_mod_list(list_type, sorted_uuids)
 
     def recreate_mod_list(self, list_type: str, uuids: List[str]) -> None:
@@ -2014,6 +2053,8 @@ class ModsPanel(QWidget):
         self.active_mods_search_clear_button = self.active_mods_search.findChild(
             QToolButton
         )
+        if not isinstance(self.active_mods_search_clear_button, QToolButton):
+            raise TypeError("Could not find QToolButton in QLineEdit")
         self.active_mods_search_clear_button.setEnabled(True)
         self.active_mods_search_clear_button.clicked.connect(
             self.on_active_mods_search_clear
@@ -2105,6 +2146,8 @@ class ModsPanel(QWidget):
         self.inactive_mods_search_clear_button = self.inactive_mods_search.findChild(
             QToolButton
         )
+        if not isinstance(self.inactive_mods_search_clear_button, QToolButton):
+            raise TypeError("Could not find QToolButton in QLineEdit")
         self.inactive_mods_search_clear_button.setEnabled(True)
         self.inactive_mods_search_clear_button.clicked.connect(
             self.on_inactive_mods_search_clear
