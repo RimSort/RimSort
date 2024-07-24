@@ -1,9 +1,9 @@
+import os
 import sys
 from pathlib import Path
-import os
-from lxml import etree, objectify
 from typing import Optional
 
+from lxml import etree, objectify
 from platformdirs import PlatformDirs
 
 
@@ -57,7 +57,7 @@ class AppInfo:
 
         self._app_name = "RimSort"
         self._app_copyright = ""
-        
+
         self._app_version = "Unknown version"
         version_file = str(self._application_folder / "version.xml")
         if os.path.exists(version_file):

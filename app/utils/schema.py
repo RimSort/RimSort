@@ -2,8 +2,8 @@ from typing import Any
 
 from loguru import logger
 
-from app.views.dialogue import show_warning
 from app.utils.constants import RIMWORLD_PACKAGE_IDS
+from app.views.dialogue import show_warning
 
 
 def generate_rimworld_mods_list(
