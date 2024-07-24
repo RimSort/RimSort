@@ -150,7 +150,6 @@ jobs:
         with:
           nuitka-version: main
           script-name: app/__main__.py
-          disable-console: true
           onefile: false
           static-libpython: auto
           product-version: >-
