@@ -2,7 +2,7 @@
 name: Bug report
 about: Create a report to help us improve
 title: "FIXME: "
-labels: bug
+labels: "bugs 🪲"
 assignees: ""
 ---
 
