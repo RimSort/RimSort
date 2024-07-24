@@ -6,12 +6,12 @@ from loguru import logger
 from PySide6.QtCore import QObject, Slot
 from PySide6.QtWidgets import QApplication
 
-from app.views.dialogue import show_dialogue_confirmation, show_dialogue_file
 from app.models.settings import Instance, Settings
 from app.utils.constants import SortMethod
 from app.utils.event_bus import EventBus
 from app.utils.generic import platform_specific_open
 from app.utils.system_info import SystemInfo
+from app.views.dialogue import show_dialogue_confirmation, show_dialogue_file
 from app.views.settings_dialog import SettingsDialog
 
 
@@ -750,7 +750,7 @@ class SettingsController(QObject):
             return
 
         self.settings_dialog.config_folder_location.setText(config_folder_location)
-        self._last_file_dialog_path = Path(config_folder_location).parent
+        self._last_file_dialog_path = str(Path(config_folder_location).parent)
 
     @Slot()
     def _on_config_folder_location_clear_button_clicked(self) -> None:
@@ -782,7 +782,7 @@ class SettingsController(QObject):
         self.settings_dialog.steam_mods_folder_location.setText(
             steam_mods_folder_location
         )
-        self._last_file_dialog_path = Path(steam_mods_folder_location).parent
+        self._last_file_dialog_path = str(Path(steam_mods_folder_location).parent)
 
     @Slot()
     def _on_steam_mods_folder_location_clear_button_clicked(self) -> None:
@@ -814,7 +814,7 @@ class SettingsController(QObject):
         self.settings_dialog.local_mods_folder_location.setText(
             local_mods_folder_location
         )
-        self._last_file_dialog_path = Path(local_mods_folder_location).parent
+        self._last_file_dialog_path = str(Path(local_mods_folder_location).parent)
 
     @Slot()
     def _on_local_mods_folder_location_clear_button_clicked(self) -> None:
@@ -890,7 +890,7 @@ class SettingsController(QObject):
             ).resolve(),
         ]
 
-        os_paths = None  # Initialize os_paths
+        os_paths: list[Path] | list[str] = []  # Initialize os_paths
         if SystemInfo().operating_system == SystemInfo.OperatingSystem.MACOS:
             os_paths = darwin_paths
             logger.info(f"Running on MacOS with the following paths: {os_paths}")
@@ -1042,7 +1042,7 @@ class SettingsController(QObject):
         self.settings_dialog.community_rules_db_local_file.setText(
             community_rules_db_location
         )
-        self._last_file_dialog_path = Path(community_rules_db_location).parent
+        self._last_file_dialog_path = str(Path(community_rules_db_location).parent)
 
     @Slot()
     def _on_steam_workshop_db_radio_clicked(self, checked: bool) -> None:
@@ -1115,7 +1115,7 @@ class SettingsController(QObject):
         self.settings_dialog.steam_workshop_db_local_file.setText(
             steam_workshop_db_location
         )
-        self._last_file_dialog_path = Path(steam_workshop_db_location).parent
+        self._last_file_dialog_path = str(Path(steam_workshop_db_location).parent)
 
     @Slot()
     def _on_steamcmd_install_location_choose_button_clicked(self) -> None:
@@ -1133,7 +1133,7 @@ class SettingsController(QObject):
         self.settings_dialog.steamcmd_install_location.setText(
             steamcmd_install_location
         )
-        self._last_file_dialog_path = Path(steamcmd_install_location).parent
+        self._last_file_dialog_path = str(Path(steamcmd_install_location).parent)
 
     @Slot()
     def _on_steamcmd_import_acf_button_clicked(self) -> None:
