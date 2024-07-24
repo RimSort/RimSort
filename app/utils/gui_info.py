@@ -58,7 +58,7 @@ class GUIInfo:
 
         self._is_initialized: bool = True
 
-        icon_path = "themes/default-icons/AppIcon.ico"
+        icon_path = "themes/default-icons/AppIcon_alt.ico"
         if Path(icon_path).exists():
             self._app_icon = QPixmap(icon_path)
         else:

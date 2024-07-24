@@ -8,7 +8,7 @@
 # nuitka-project: --include-package=steamworks
 # nuitka-project: --user-package-configuration-file={MAIN_DIRECTORY}/../rimsort.nuitka-package.config.yml
 # nuitka-project: --include-data-file={MAIN_DIRECTORY}/../steam_appid.txt=steam_appid.txt
-# nuitka-project: --windows-icon-from-ico={MAIN_DIRECTORY}/../themes/default-icons/AppIcon.ico
+# nuitka-project: --windows-icon-from-ico={MAIN_DIRECTORY}/../themes/default-icons/AppIcon_alt.ico
 
 # The PySide6 plugin covers qt-plugins
 # nuitka-project: --enable-plugin=pyside6
