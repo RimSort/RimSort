@@ -558,11 +558,11 @@ class SettingsDialog(QDialog):
         group_box = QGroupBox()
         tab_layout.addWidget(group_box)
 
-        group_layout = QGridLayout()
+        grid_group_layout = QGridLayout()
         group_box.setLayout(group_layout)
 
         steam_api_key_label = QLabel("Steam API key:")
-        group_layout.addWidget(steam_api_key_label, 1, 0)
+        grid_group_layout.addWidget(steam_api_key_label, 1, 0)
 
         self.db_builder_steam_api_key = QLineEdit()
         self.db_builder_steam_api_key.setEchoMode(QLineEdit.EchoMode.Password)
@@ -570,10 +570,10 @@ class SettingsDialog(QDialog):
         self.db_builder_steam_api_key.setFixedHeight(
             GUIInfo().default_font_line_height * 2
         )
-        group_layout.addWidget(self.db_builder_steam_api_key, 1, 1)
+        grid_group_layout.addWidget(self.db_builder_steam_api_key, 1, 1)
 
-        group_layout.setColumnStretch(0, 0)
-        group_layout.setColumnStretch(1, 1)
+        grid_group_layout.setColumnStretch(0, 0)
+        grid_group_layout.setColumnStretch(1, 1)
 
         tab_layout.addStretch()
 
@@ -835,13 +835,13 @@ class SettingsDialog(QDialog):
 
         self.setTabOrder(self.run_args_info_label, self.run_args)
 
-    def _find_tab_index(self, tab_name):
+    def _find_tab_index(self, tab_name: str) -> int:
         for i in range(self.tab_widget.count()):
             if self.tab_widget.tabText(i) == tab_name:
                 return i
         return -1  # Return -1 if no tab found
 
-    def switch_to_tab(self, tab_name):
+    def switch_to_tab(self, tab_name: str) -> None:
         """
         Switch to the specified tab by name if it exists.
         """
