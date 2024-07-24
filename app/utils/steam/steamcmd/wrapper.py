@@ -12,13 +12,13 @@ from zipfile import ZipFile
 import requests
 from loguru import logger
 
+from app.utils.event_bus import EventBus
+from app.utils.system_info import SystemInfo
 from app.views.dialogue import (
     show_dialogue_conditional,
     show_fatal_error,
     show_warning,
 )
-from app.utils.event_bus import EventBus
-from app.utils.system_info import SystemInfo
 from app.windows.runner_panel import RunnerPanel
 
 
@@ -29,7 +29,7 @@ class SteamcmdInterface:
 
     _instance: Optional["SteamcmdInterface"] = None
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args: Any, **kwargs: Any) -> "SteamcmdInterface":
         if cls._instance is None:
             cls._instance = super(SteamcmdInterface, cls).__new__(cls)
         return cls._instance
@@ -139,7 +139,7 @@ class SteamcmdInterface:
 
             CreateJunction(target_local_folder, link_path)
 
-    def download_mods(self, publishedfileids: list, runner: RunnerPanel):
+    def download_mods(self, publishedfileids: list[str], runner: RunnerPanel) -> None:
         """
         This function downloads a list of mods from a list publishedfileids
 
@@ -182,9 +182,11 @@ class SteamcmdInterface:
 
     def check_for_steamcmd(self, prefix: str) -> bool:
         executable_name = os.path.split(self.steamcmd)[1] if self.steamcmd else None
+        if executable_name is None:
+            return False
         return os.path.exists(str(Path(prefix) / "steamcmd" / executable_name))
 
-    def on_steamcmd_not_found(self, runner: RunnerPanel = None) -> None:
+    def on_steamcmd_not_found(self, runner: RunnerPanel | None = None) -> None:
         answer = show_dialogue_conditional(
             title="RimSort - SteamCMD setup",
             text="RimSort was unable to find SteamCMD installed in the configured prefix:\n",
@@ -227,12 +229,13 @@ class SteamcmdInterface:
                         tarobj.extractall(self.steamcmd_install_path)
                     runner.message("Installation completed")
                     installed = True
-            except:
+            except Exception as e:
                 runner.message("Installation failed")
                 show_fatal_error(
                     "SteamcmdInterface",
                     f"Failed to download steamcmd for {self.system}",
                     "Did the file/url change?\nDoes your environment have access to the internet?",
+                    details=f"Error: {type(e).__name__}: {str(e)}",
                 )
         else:
             runner.message("SteamCMD already installed...")
