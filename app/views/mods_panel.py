@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 from enum import Enum
 from errno import ENOTEMPTY
 from functools import partial
@@ -1322,7 +1323,7 @@ class ModListWidget(QListWidget):
                                         )
                                         pass
                                     except OSError as e:
-                                        if os.name == "nt":
+                                        if sys.platform == "win32":
                                             error_code = e.winerror
                                         else:
                                             error_code = e.errno

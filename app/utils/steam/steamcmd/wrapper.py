@@ -134,7 +134,7 @@ class SteamcmdInterface:
                 link_path,
                 target_is_directory=True,
             )
-        else:
+        elif sys.platform == "win32":
             from _winapi import CreateJunction
 
             CreateJunction(target_local_folder, link_path)
@@ -296,7 +296,7 @@ class SteamcmdInterface:
                                 symlink_destination_path,
                                 target_is_directory=True,
                             )
-                        else:
+                        elif sys.platform == "win32":
                             from _winapi import CreateJunction
 
                             CreateJunction(
