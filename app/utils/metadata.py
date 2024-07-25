@@ -1371,23 +1371,13 @@ class ModParser(QRunnable):
                                 "supportedversions"
                             ]["li"]:
                                 li = mod_data["supportedversions"]["li"]
-                                if not isinstance(
-                                    mod_data["supportedversions"]["li"], str
-                                ):
+                                if not isinstance(li, str):
                                     logger.error(f"Failed to parse {li} as a string")
                                     continue
                                 mod_data["supportedversions"]["li"] = (
-                                    ".".join(
-                                        mod_data["supportedversions"]["li"].split(".")[
-                                            :2
-                                        ]
-                                    )
-                                    if mod_data["supportedversions"]["li"].count(".")
-                                    > 1
-                                    and isinstance(
-                                        mod_data["supportedversions"]["li"], str
-                                    )
-                                    else mod_data["supportedversions"]["li"]
+                                    ".".join(li.split(".")[:2])
+                                    if li.count(".") > 1 and isinstance(li, str)
+                                    else li
                                 )
                     if mod_metadata.get("targetversion"):
                         mod_metadata["targetversion"] = mod_metadata["targetversion"]

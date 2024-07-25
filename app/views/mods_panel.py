@@ -721,7 +721,13 @@ class ModListWidget(QListWidget):
                         mod_name = mod_metadata.get("name")
                         mod_folder_name = mod_metadata["folder"]
                         mod_folder_path = mod_metadata["path"]
-                        publishedfileid: str = mod_metadata.get("publishedfileid")
+                        publishedfileid = mod_metadata.get("publishedfileid", "")
+                        if not isinstance(publishedfileid, str):
+                            logger.error(
+                                f"Invalid publishedfileid type: {publishedfileid} for {mod_name}"
+                            )
+                            publishedfileid = ""
+
                         if not mod_metadata.get("steamcmd") and (
                             self.metadata_manager.external_steam_metadata
                             and publishedfileid
