@@ -133,7 +133,7 @@ class SettingsController(QObject):
         )
 
         # Wire up the Databases tab buttons
-
+        # Community Database Rules buttons
         self.settings_dialog.community_rules_db_none_radio.clicked.connect(
             self._on_community_rules_db_radio_clicked
         )
@@ -143,7 +143,6 @@ class SettingsController(QObject):
         self.settings_dialog.community_rules_db_local_file_radio.clicked.connect(
             self._on_community_rules_db_radio_clicked
         )
-
         self.settings_dialog.community_rules_db_local_file_choose_button.clicked.connect(
             self._on_community_rules_db_local_file_choose_button_clicked
         )
@@ -154,6 +153,7 @@ class SettingsController(QObject):
             EventBus().do_download_community_rules_db_from_github
         )
 
+        # Steam Workshop Database buttons
         self.settings_dialog.steam_workshop_db_none_radio.clicked.connect(
             self._on_steam_workshop_db_radio_clicked
         )
@@ -163,7 +163,6 @@ class SettingsController(QObject):
         self.settings_dialog.steam_workshop_db_local_file_radio.clicked.connect(
             self._on_steam_workshop_db_radio_clicked
         )
-
         self.settings_dialog.steam_workshop_db_local_file_choose_button.clicked.connect(
             self._on_steam_workshop_db_local_file_choose_button_clicked
         )
