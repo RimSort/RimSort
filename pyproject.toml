@@ -35,3 +35,6 @@ testpaths = ['tests']
 # exclude submodules from test discovery
 [tool.pytest]
 norecursedirs = ['submodules']
+
+[tool.pyright]
+pythonPlatform = "All"

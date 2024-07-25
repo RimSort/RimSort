@@ -57,7 +57,7 @@ class AppInfo:
 
         self._app_name = "RimSort"
         self._app_copyright = ""
-        
+
         self._app_version = "Unknown version"
         version_file = str(self._application_folder / "version.xml")
         if os.path.exists(version_file):

@@ -333,7 +333,11 @@ class MetadataManager(QObject):
                 encoding="utf-8",
             ) as output:
                 json.dump(DEFAULT_USER_RULES, output, indent=4)
-            self.external_user_rules = DEFAULT_USER_RULES["rules"]
+            self.external_user_rules = (
+                DEFAULT_USER_RULES["rules"]
+                if isinstance(DEFAULT_USER_RULES["rules"], dict)
+                else {}
+            )
 
     def __refresh_internal_metadata(self, is_initial: bool = False) -> None:
         def batch_by_data_source(
@@ -1366,18 +1370,14 @@ class ModParser(QRunnable):
                             for mod_data["supportedversions"]["li"] in mod_data[
                                 "supportedversions"
                             ]["li"]:
+                                li = mod_data["supportedversions"]["li"]
+                                if not isinstance(li, str):
+                                    logger.error(f"Failed to parse {li} as a string")
+                                    continue
                                 mod_data["supportedversions"]["li"] = (
-                                    ".".join(
-                                        mod_data["supportedversions"]["li"].split(".")[
-                                            :2
-                                        ]
-                                    )
-                                    if mod_data["supportedversions"]["li"].count(".")
-                                    > 1
-                                    and isinstance(
-                                        mod_data["supportedversions"]["li"], str
-                                    )
-                                    else mod_data["supportedversions"]["li"]
+                                    ".".join(li.split(".")[:2])
+                                    if li.count(".") > 1 and isinstance(li, str)
+                                    else li
                                 )
                     if mod_metadata.get("targetversion"):
                         mod_metadata["targetversion"] = mod_metadata["targetversion"]

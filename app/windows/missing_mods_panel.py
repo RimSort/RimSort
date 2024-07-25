@@ -2,7 +2,7 @@ from functools import partial
 from typing import Any, Dict
 
 from loguru import logger
-from PySide6.QtCore import QEvent, QSize, Qt, Signal
+from PySide6.QtCore import QEvent, QObject, QSize, Qt, Signal
 from PySide6.QtGui import QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -29,7 +29,7 @@ class MissingModsPrompt(QWidget):
 
     def __init__(
         self,
-        packageids: list,
+        packageids: list[str],
         steam_workshop_metadata: Dict[str, Any],
     ):
         super().__init__()
@@ -37,7 +37,7 @@ class MissingModsPrompt(QWidget):
 
         self.installEventFilter(self)
 
-        self.data_by_variants = {}
+        self.data_by_variants: dict[str, Any] = {}
         self.DEPENDENCY_TAG = "_-_DEPENDENCY_-_"
         self.packageids = packageids
         self.steam_workshop_metadata = steam_workshop_metadata
@@ -48,10 +48,12 @@ class MissingModsPrompt(QWidget):
         )
         self.missing_mods_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
+        # TODO: Make base object shared between this and workshop_mod_updater_panel to avoid duplication
+        # jscpd:ignore-start
         # CONTAINER LAYOUTS
         self.upper_layout = QVBoxLayout()
         self.lower_layout = QVBoxLayout()
-        self.layout = QVBoxLayout()
+        layout = QVBoxLayout()
 
         # SUB LAYOUTS
         self.details_layout = QVBoxLayout()
@@ -133,36 +135,41 @@ class MissingModsPrompt(QWidget):
         self.lower_layout.addLayout(self.editor_layout)
 
         # Add our layouts to the main layout
-        self.layout.addWidget(self.missing_mods_label)
-        self.layout.addLayout(self.upper_layout)
-        self.layout.addLayout(self.lower_layout)
+        layout.addWidget(self.missing_mods_label)
+        layout.addLayout(self.upper_layout)
+        layout.addLayout(self.lower_layout)
 
         # Put it all together
         self.setWindowTitle("RimSort - Missing mods found")
-        self.setLayout(self.layout)
+        self.setLayout(layout)
         self.setMinimumSize(QSize(900, 600))
 
-    def eventFilter(self, obj, event):
+    def eventFilter(self, obj: QObject, event: QEvent) -> bool:
         if event.type() == QEvent.Type.KeyPress and event.type() == Qt.Key.Key_Escape:
             self.close()
             return True
 
         return super().eventFilter(obj, event)
 
+    # jscpd:ignore-end
+
     def _add_row(
         self,
         name: str,
         packageid: str,
-        gameVersions: list,
+        gameVersions: list[str],
         mod_variants: str,
         publishedfileid: str,
-    ):
+    ) -> None:
         # Check if a row with the given packageid already exists
         for row in range(self.editor_model.rowCount()):
             if self.editor_model.item(row, 1).text() == packageid:
                 # If an existing row is found, add the new publishedfileid
                 existing_item = self.editor_model.item(row, 4)
                 combo_box = self.editor_table_view.indexWidget(existing_item.index())
+                if not isinstance(combo_box, QComboBox):
+                    raise Exception(f"Combo box is not a QComboBox!: {combo_box}")
+
                 combo_box.addItem(publishedfileid)
                 return  # Return here to exit function
         # If we're still here, we need to actually create a new row
@@ -194,8 +201,12 @@ class MissingModsPrompt(QWidget):
                 combo_box = self.editor_table_view.indexWidget(
                     self.editor_model.item(row, 4).index()
                 )
-                # Get the publishedfileid and append to our list
-                publishedfileid = combo_box.currentText()
+                if not isinstance(combo_box, QComboBox):
+                    logger.critical("Combo box is not a QComboBox! assuming empty text")
+                    publishedfileid = ""
+                else:
+                    publishedfileid = combo_box.currentText()
+
                 if publishedfileid != "":
                     publishedfileids.append(publishedfileid)
         self.close()
@@ -259,20 +270,22 @@ class MissingModsPrompt(QWidget):
                         publishedfileid=publishedfileid,
                     )
 
-    def _update_mod_info(self, publishedfileid: str):
+    def _update_mod_info(self, publishedfileid: str) -> None:
         combo_box = self.sender()
+        if not isinstance(combo_box, QComboBox):
+            raise ValueError(f"Sender is not a QComboBox!: {combo_box}")
         index = self.editor_table_view.indexAt(combo_box.pos())
         if index.isValid():
             row = index.row()
             packageid = self.editor_model.item(row, 1).text()
             self.editor_model.item(row, 0).setText(
-                self.data_by_variants.get(packageid)
+                self.data_by_variants.get(packageid, {})
                 .get(publishedfileid, {})
                 .get("name", "No variant found!")
             )
             self.editor_model.item(row, 2).setText(
                 str(
-                    self.data_by_variants.get(packageid)
+                    self.data_by_variants.get(packageid, {})
                     .get(publishedfileid, {})
                     .get("gameVersions", "No variant found!")
                 )
