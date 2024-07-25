@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Any
 
 
 class SortMethod(str, Enum):
@@ -23,7 +24,7 @@ MOD_RECURSE_EXCEPTIONS = [
     "loadbefore",
     "moddependencies",
 ]
-DEFAULT_USER_RULES = {"timestamp": 0, "rules": {}}
+DEFAULT_USER_RULES: dict[str, int | dict[str, Any]] = {"timestamp": 0, "rules": {}}
 RIMWORLD_DLC_METADATA = {
     "294100": {
         "packageid": "ludeon.rimworld",

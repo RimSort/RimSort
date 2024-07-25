@@ -47,9 +47,9 @@ from PySide6.QtCore import (
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel
 from requests import get as requests_get
 
-import app.views.dialogue as dialogue
 import app.utils.constants as app_constants
 import app.utils.metadata as metadata
+import app.views.dialogue as dialogue
 from app.controllers.sort_controller import Sorter
 from app.models.animations import LoadingAnimation
 from app.utils.app_info import AppInfo

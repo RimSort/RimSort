@@ -247,7 +247,19 @@ class SettingsDialog(QDialog):
         self._do_community_rules_db_group(tab_layout)
         self._do_steam_workshop_db_group(tab_layout)
 
-    def _do_community_rules_db_group(self, tab_layout: QBoxLayout) -> None:
+    def __create_db_group(
+        self, section_lbl: str, none_lbl: str, tab_layout: QBoxLayout
+    ) -> tuple[
+        QVBoxLayout,
+        QRadioButton,
+        QRadioButton,
+        QLineEdit,
+        QToolButton,
+        QToolButton,
+        QRadioButton,
+        QLineEdit,
+        QToolButton,
+    ]:
         group = QGroupBox()
         tab_layout.addWidget(group, stretch=1)
 
@@ -255,7 +267,7 @@ class SettingsDialog(QDialog):
         group_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         group.setLayout(group_layout)
 
-        section_label = QLabel("Community rules database")
+        section_label = QLabel(section_lbl)
         section_label.setFont(GUIInfo().emphasis_font)
         section_label.setSizePolicy(
             QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed
@@ -269,14 +281,12 @@ class SettingsDialog(QDialog):
         item_layout = QHBoxLayout()
         section_layout.addLayout(item_layout, stretch=1)
 
-        self.community_rules_db_none_radio = QRadioButton("None")
-        self.community_rules_db_none_radio.setMinimumSize(
-            0, GUIInfo().default_font_line_height * 2
-        )
-        self.community_rules_db_none_radio.setChecked(True)
-        item_layout.addWidget(self.community_rules_db_none_radio, stretch=2)
+        none_radio = QRadioButton("None")
+        none_radio.setMinimumSize(0, GUIInfo().default_font_line_height * 2)
+        none_radio.setChecked(True)
+        item_layout.addWidget(none_radio, stretch=2)
 
-        label = QLabel("No community rules database will be used.")
+        label = QLabel(f"No {none_lbl} will be used.")
         label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         label.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         label.setEnabled(False)
@@ -285,63 +295,55 @@ class SettingsDialog(QDialog):
         item_layout = QHBoxLayout()
         section_layout.addLayout(item_layout, stretch=1)
 
-        self.community_rules_db_github_radio = QRadioButton("GitHub")
-        self.community_rules_db_github_radio.setMinimumSize(
-            0, GUIInfo().default_font_line_height * 2
-        )
-        item_layout.addWidget(self.community_rules_db_github_radio, stretch=2)
+        github_radio = QRadioButton("GitHub")
+        github_radio.setMinimumSize(0, GUIInfo().default_font_line_height * 2)
+        item_layout.addWidget(github_radio, stretch=2)
 
         row_layout = QHBoxLayout()
         row_layout.setSpacing(8)
         item_layout.addLayout(row_layout, stretch=8)
 
-        self.community_rules_db_github_url = QLineEdit()
-        self.community_rules_db_github_url.setFixedHeight(
-            GUIInfo().default_font_line_height * 2
-        )
-        self.community_rules_db_github_url.setTextMargins(GUIInfo().text_field_margins)
-        self.community_rules_db_github_url.setClearButtonEnabled(True)
-        self.community_rules_db_github_url.setEnabled(False)
-        row_layout.addWidget(self.community_rules_db_github_url)
+        github_url = QLineEdit()
+        github_url.setFixedHeight(GUIInfo().default_font_line_height * 2)
+        github_url.setTextMargins(GUIInfo().text_field_margins)
+        github_url.setClearButtonEnabled(True)
+        github_url.setEnabled(False)
+        row_layout.addWidget(github_url)
 
-        self.community_rules_db_github_upload_button = QToolButton()
-        self.community_rules_db_github_upload_button.setText("Upload…")
-        self.community_rules_db_github_upload_button.setEnabled(False)
-        row_layout.addWidget(self.community_rules_db_github_upload_button)
+        github_upload_button = QToolButton()
+        github_upload_button.setText("Upload…")
+        github_upload_button.setEnabled(False)
+        row_layout.addWidget(github_upload_button)
 
-        self.community_rules_db_github_download_button = QToolButton()
-        self.community_rules_db_github_download_button.setText("Download…")
-        self.community_rules_db_github_download_button.setEnabled(False)
-        row_layout.addWidget(self.community_rules_db_github_download_button)
+        github_download_button = QToolButton()
+        github_download_button.setText("Download…")
+        github_download_button.setEnabled(False)
+        row_layout.addWidget(github_download_button)
 
         item_layout = QHBoxLayout()
         section_layout.addLayout(item_layout, stretch=1)
-        self.community_rules_db_local_file_radio = QRadioButton("Local File")
-        self.community_rules_db_local_file_radio.setMinimumSize(
-            0, GUIInfo().default_font_line_height * 2
-        )
-        item_layout.addWidget(self.community_rules_db_local_file_radio, stretch=2)
+        local_file_radio = QRadioButton("Local File")
+        local_file_radio.setMinimumSize(0, GUIInfo().default_font_line_height * 2)
+        item_layout.addWidget(local_file_radio, stretch=2)
 
         row_layout = QHBoxLayout()
         row_layout.setSpacing(8)
         item_layout.addLayout(row_layout, stretch=8)
 
-        self.community_rules_db_local_file = QLineEdit()
-        self.community_rules_db_local_file.setFixedHeight(
-            GUIInfo().default_font_line_height * 2
-        )
-        self.community_rules_db_local_file.setTextMargins(GUIInfo().text_field_margins)
-        self.community_rules_db_local_file.setClearButtonEnabled(True)
-        self.community_rules_db_local_file.setEnabled(False)
-        row_layout.addWidget(self.community_rules_db_local_file)
+        local_file = QLineEdit()
+        local_file.setFixedHeight(GUIInfo().default_font_line_height * 2)
+        local_file.setTextMargins(GUIInfo().text_field_margins)
+        local_file.setClearButtonEnabled(True)
+        local_file.setEnabled(False)
+        row_layout.addWidget(local_file)
 
-        self.community_rules_db_local_file_choose_button = QToolButton()
-        self.community_rules_db_local_file_choose_button.setText("Choose…")
-        self.community_rules_db_local_file_choose_button.setEnabled(False)
-        self.community_rules_db_local_file_choose_button.setFixedWidth(
-            self.community_rules_db_github_download_button.sizeHint().width()
+        local_file_choose_button = QToolButton()
+        local_file_choose_button.setText("Choose…")
+        local_file_choose_button.setEnabled(False)
+        local_file_choose_button.setFixedWidth(
+            github_download_button.sizeHint().width()
         )
-        row_layout.addWidget(self.community_rules_db_local_file_choose_button)
+        row_layout.addWidget(local_file_choose_button)
 
         section_layout.addStretch(1)
 
@@ -351,114 +353,53 @@ class SettingsDialog(QDialog):
         info_label = QLabel("")
         info_label.setWordWrap(True)
         item_layout.addWidget(info_label)
+
+        return (
+            group_layout,
+            none_radio,
+            github_radio,
+            github_url,
+            github_upload_button,
+            github_download_button,
+            local_file_radio,
+            local_file,
+            local_file_choose_button,
+        )
+
+    def _do_community_rules_db_group(self, tab_layout: QBoxLayout) -> None:
+        section_lbl = "Community Rules database"
+        none_lbl = "community rules database"
+
+        (
+            _,
+            self.community_rules_db_none_radio,
+            self.community_rules_db_github_radio,
+            self.community_rules_db_github_url,
+            self.community_rules_db_github_upload_button,
+            self.community_rules_db_github_download_button,
+            self.community_rules_db_local_file_radio,
+            self.community_rules_db_local_file,
+            self.community_rules_db_local_file_choose_button,
+        ) = self.__create_db_group(section_lbl, none_lbl, tab_layout)
 
     def _do_steam_workshop_db_group(self, tab_layout: QBoxLayout) -> None:
-        group = QGroupBox()
-        tab_layout.addWidget(group, stretch=1)
+        section_lbl = "Steam Workshop database"
+        none_lbl = "Steam Workshop database"
 
-        group_layout = QVBoxLayout()
-        group_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        group.setLayout(group_layout)
-
-        section_label = QLabel("Steam Workshop database")
-        section_label.setFont(GUIInfo().emphasis_font)
-        section_label.setSizePolicy(
-            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed
-        )
-        group_layout.addWidget(section_label)
-
-        section_layout = QVBoxLayout()
-        section_layout.setSpacing(0)
-        group_layout.addLayout(section_layout)
-
-        item_layout = QHBoxLayout()
-        section_layout.addLayout(item_layout, stretch=1)
-
-        self.steam_workshop_db_none_radio = QRadioButton("None")
-        self.steam_workshop_db_none_radio.setMinimumSize(
-            0, GUIInfo().default_font_line_height * 2
-        )
-        self.steam_workshop_db_none_radio.setChecked(True)
-        item_layout.addWidget(self.steam_workshop_db_none_radio, stretch=2)
-
-        label = QLabel("No Steam Workshop database will be used.")
-        label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-        label.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-        label.setEnabled(False)
-        item_layout.addWidget(label, stretch=8)
-
-        item_layout = QHBoxLayout()
-        section_layout.addLayout(item_layout, stretch=1)
-
-        self.steam_workshop_db_github_radio = QRadioButton("GitHub")
-        self.steam_workshop_db_github_radio.setMinimumSize(
-            0, GUIInfo().default_font_line_height * 2
-        )
-        item_layout.addWidget(self.steam_workshop_db_github_radio, stretch=2)
-
-        row_layout = QHBoxLayout()
-        row_layout.setSpacing(8)
-        item_layout.addLayout(row_layout, stretch=8)
-
-        self.steam_workshop_db_github_url = QLineEdit()
-        self.steam_workshop_db_github_url.setFixedHeight(
-            GUIInfo().default_font_line_height * 2
-        )
-        self.steam_workshop_db_github_url.setTextMargins(GUIInfo().text_field_margins)
-        self.steam_workshop_db_github_url.setClearButtonEnabled(True)
-        self.steam_workshop_db_github_url.setEnabled(False)
-        row_layout.addWidget(self.steam_workshop_db_github_url)
-
-        self.steam_workshop_db_github_upload_button = QToolButton()
-        self.steam_workshop_db_github_upload_button.setText("Upload…")
-        self.steam_workshop_db_github_upload_button.setEnabled(False)
-        row_layout.addWidget(self.steam_workshop_db_github_upload_button)
-
-        self.steam_workshop_db_github_download_button = QToolButton()
-        self.steam_workshop_db_github_download_button.setText("Download…")
-        self.steam_workshop_db_github_download_button.setEnabled(False)
-        row_layout.addWidget(self.steam_workshop_db_github_download_button)
-
-        item_layout = QHBoxLayout()
-        section_layout.addLayout(item_layout, stretch=1)
-        self.steam_workshop_db_local_file_radio = QRadioButton("Local File")
-        self.steam_workshop_db_local_file_radio.setMinimumSize(
-            0, GUIInfo().default_font_line_height * 2
-        )
-        item_layout.addWidget(self.steam_workshop_db_local_file_radio, stretch=2)
-
-        row_layout = QHBoxLayout()
-        row_layout.setSpacing(8)
-        item_layout.addLayout(row_layout, stretch=8)
-
-        self.steam_workshop_db_local_file = QLineEdit()
-        self.steam_workshop_db_local_file.setFixedHeight(
-            GUIInfo().default_font_line_height * 2
-        )
-        self.steam_workshop_db_local_file.setTextMargins(GUIInfo().text_field_margins)
-        self.steam_workshop_db_local_file.setClearButtonEnabled(True)
-        self.steam_workshop_db_local_file.setEnabled(False)
-        row_layout.addWidget(self.steam_workshop_db_local_file)
-
-        self.steam_workshop_db_local_file_choose_button = QToolButton()
-        self.steam_workshop_db_local_file_choose_button.setText("Choose…")
-        self.steam_workshop_db_local_file_choose_button.setEnabled(False)
-        self.steam_workshop_db_local_file_choose_button.setFixedWidth(
-            self.steam_workshop_db_github_download_button.sizeHint().width()
-        )
-        row_layout.addWidget(self.steam_workshop_db_local_file_choose_button)
-
-        section_layout.addStretch(1)
-
-        item_layout = QHBoxLayout()
-        section_layout.addLayout(item_layout, stretch=1)
-
-        info_label = QLabel("")
-        info_label.setWordWrap(True)
-        item_layout.addWidget(info_label)
+        (
+            group_layout,
+            self.steam_workshop_db_none_radio,
+            self.steam_workshop_db_github_radio,
+            self.steam_workshop_db_github_url,
+            self.steam_workshop_db_github_upload_button,
+            self.steam_workshop_db_github_download_button,
+            self.steam_workshop_db_local_file_radio,
+            self.steam_workshop_db_local_file,
+            self.steam_workshop_db_local_file_choose_button,
+        ) = self.__create_db_group(section_lbl, none_lbl, tab_layout)
 
         database_expiry_label = QLabel(
-            "Steam Workshop database expiry in Epoch Time (Use 0 to Disable Notificatiom, Default is 7 Days)"
+            "Steam Workshop database expiry in Epoch Time (Use 0 to Disable Notification. Default is 7 Days)"
         )
         group_layout.addWidget(database_expiry_label)
 
@@ -558,11 +499,11 @@ class SettingsDialog(QDialog):
         group_box = QGroupBox()
         tab_layout.addWidget(group_box)
 
-        group_layout = QGridLayout()
+        grid_group_layout = QGridLayout()
         group_box.setLayout(group_layout)
 
         steam_api_key_label = QLabel("Steam API key:")
-        group_layout.addWidget(steam_api_key_label, 1, 0)
+        grid_group_layout.addWidget(steam_api_key_label, 1, 0)
 
         self.db_builder_steam_api_key = QLineEdit()
         self.db_builder_steam_api_key.setEchoMode(QLineEdit.EchoMode.Password)
@@ -570,10 +511,10 @@ class SettingsDialog(QDialog):
         self.db_builder_steam_api_key.setFixedHeight(
             GUIInfo().default_font_line_height * 2
         )
-        group_layout.addWidget(self.db_builder_steam_api_key, 1, 1)
+        grid_group_layout.addWidget(self.db_builder_steam_api_key, 1, 1)
 
-        group_layout.setColumnStretch(0, 0)
-        group_layout.setColumnStretch(1, 1)
+        grid_group_layout.setColumnStretch(0, 0)
+        grid_group_layout.setColumnStretch(1, 1)
 
         tab_layout.addStretch()
 
@@ -835,13 +776,13 @@ class SettingsDialog(QDialog):
 
         self.setTabOrder(self.run_args_info_label, self.run_args)
 
-    def _find_tab_index(self, tab_name):
+    def _find_tab_index(self, tab_name: str) -> int:
         for i in range(self.tab_widget.count()):
             if self.tab_widget.tabText(i) == tab_name:
                 return i
         return -1  # Return -1 if no tab found
 
-    def switch_to_tab(self, tab_name):
+    def switch_to_tab(self, tab_name: str) -> None:
         """
         Switch to the specified tab by name if it exists.
         """

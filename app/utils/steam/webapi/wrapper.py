@@ -12,11 +12,11 @@ from requests import post as requests_post
 from requests.exceptions import JSONDecodeError
 from steam.webapi import WebAPI
 
-from app.views.dialogue import show_dialogue_input, show_warning
 from app.utils.app_info import AppInfo
 from app.utils.constants import RIMWORLD_DLC_METADATA
 from app.utils.generic import chunks
 from app.utils.steam.steamworks.wrapper import SteamworksAppDependenciesQuery
+from app.views.dialogue import show_dialogue_input, show_warning
 
 # Prevent circular dependencies for type checking
 if TYPE_CHECKING:

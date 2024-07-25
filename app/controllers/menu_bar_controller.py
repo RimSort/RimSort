@@ -18,8 +18,10 @@ class MenuBarController(QObject):
         self.settings_controller = settings_controller
 
         # Application menu
-
-        self.menu_bar.quit_action.triggered.connect(QApplication.instance().quit)
+        instance = QApplication.instance()
+        if instance is None:
+            raise RuntimeError("QApplication instance not found")
+        self.menu_bar.quit_action.triggered.connect(instance.quit)
 
         # TODO: updates not implemented yet
         # self.menu_bar.check_for_updates_action.triggered.connect(
@@ -177,7 +179,9 @@ class MenuBarController(QObject):
             )
         self.menu_bar.instances_submenu.addActions(actions)
 
-    def _on_set_current_instance(self, current_instance: str, initialize=False) -> None:
+    def _on_set_current_instance(
+        self, current_instance: str, initialize: bool = False
+    ) -> None:
         self.menu_bar.instances_submenu.setTitle(f"Current: {current_instance}")
         self.menu_bar.instances_submenu.setActiveAction(
             next(
@@ -185,8 +189,7 @@ class MenuBarController(QObject):
                     action
                     for action in self.menu_bar.instances_submenu.actions()
                     if action.text() == current_instance
-                ),
-                None,
+                )
             )
         )
         if initialize:
