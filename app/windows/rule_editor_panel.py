@@ -30,9 +30,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from app.views.dialogue import show_dialogue_input, show_warning
 from app.utils.app_info import AppInfo
 from app.utils.metadata import MetadataManager
+from app.views.dialogue import show_dialogue_input, show_warning
 
 
 class EditableDelegate(QItemDelegate):

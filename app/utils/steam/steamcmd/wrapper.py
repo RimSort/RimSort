@@ -12,13 +12,13 @@ from zipfile import ZipFile
 import requests
 from loguru import logger
 
+from app.utils.event_bus import EventBus
+from app.utils.system_info import SystemInfo
 from app.views.dialogue import (
     show_dialogue_conditional,
     show_fatal_error,
     show_warning,
 )
-from app.utils.event_bus import EventBus
-from app.utils.system_info import SystemInfo
 from app.windows.runner_panel import RunnerPanel
 
 

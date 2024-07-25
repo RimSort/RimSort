@@ -215,7 +215,7 @@ def platform_specific_open(path: str | Path) -> None:
     system_name = platform.system()
     if system_name == "Darwin":
         logger.info(f"Opening {path} with subprocess open on MacOS")
-        if p.is_file() or (p.is_dir() and p.suffix == ".app"):
+        if p.is_dir() and p.suffix == ".app":
             subprocess.Popen(["open", path, "-R"])
         else:
             subprocess.Popen(["open", path])

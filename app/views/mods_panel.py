@@ -38,11 +38,6 @@ from PySide6.QtWidgets import (
 )
 
 from app.controllers.settings_controller import SettingsController
-from app.views.dialogue import (
-    show_dialogue_conditional,
-    show_dialogue_input,
-    show_warning,
-)
 from app.utils.app_info import AppInfo
 from app.utils.constants import (
     KNOWN_MOD_REPLACEMENTS,
@@ -60,6 +55,11 @@ from app.utils.generic import (
     sanitize_filename,
 )
 from app.utils.metadata import MetadataManager
+from app.views.dialogue import (
+    show_dialogue_conditional,
+    show_dialogue_input,
+    show_warning,
+)
 
 
 class ClickableQLabel(QLabel):

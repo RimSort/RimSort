@@ -1,9 +1,9 @@
+import os
 import sys
 from pathlib import Path
-import os
-from lxml import etree, objectify
 from typing import Optional
 
+from lxml import etree, objectify
 from platformdirs import PlatformDirs
 
 

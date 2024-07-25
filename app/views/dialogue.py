@@ -1,10 +1,11 @@
 import os
+import sys
 from pathlib import Path
 from typing import List, Optional, Tuple
 
 from deprecated import deprecated
 from loguru import logger
-from PySide6.QtCore import QRunnable, Qt, QThreadPool, Signal, Slot
+from PySide6.QtCore import QEvent, QRunnable, Qt, QThreadPool, Signal, Slot
 from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
@@ -23,6 +24,7 @@ from PySide6.QtWidgets import (
 )
 
 import app.utils.generic as generic
+from app.models.settings import Settings
 from app.utils.app_info import AppInfo
 
 # Constants
@@ -466,3 +468,110 @@ def _setup_messagebox(title: str | None) -> QMessageBox:
         dialogue.setWindowTitle(DEFAULT_TITLE)
 
     return dialogue
+
+def show_settings_error(
+    settings: Settings
+) -> None:
+    """
+    Displays a fatal error box indicating the app was
+    unable to start due to corrupt settings. Called if unable
+    to parse the settings file.
+
+    :param settings: settings model to allow resetting settings
+    """
+    logger.info(
+        "Showing settings failure box"
+    )
+    diag = SettingsFailureDialog(settings)
+    diag.exec_()
+
+class SettingsFailureDialog(QDialog):
+    """Custom dialog to display fatal errors regarding settings parsing.
+
+    Has buttons to open the settings file, open the settings folder, or reset settings.
+    Exiting the dialog will terminate the application.
+    """
+
+    def __init__(
+        self,
+        settings: Settings
+    ) -> None:
+        super().__init__()
+
+        # Set up the message box
+        self.setWindowTitle("Unable to parse settings file!")
+        self.setModal(True)
+        self.setObjectName("dialogue")
+
+        # Dynamic sizing
+        self.setSizePolicy(
+            QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        )
+
+        # Add data
+        self.text = "Your RimSort settings file is corrupt.\nPlease choose one of the following options to proceed."
+
+        # Buttons
+        self.open_settings_file_btn = QPushButton("Open Settings File")
+        self.open_settings_folder_btn = QPushButton("Open Settings Folder")
+        self.reset_settings_btn = QPushButton("Reset Settings")
+
+        btn_layout = QHBoxLayout()
+        btn_layout.addWidget(self.open_settings_file_btn)
+        btn_layout.addWidget(self.open_settings_folder_btn)
+        btn_layout.addWidget(self.reset_settings_btn)
+
+        # Set up the layout
+        layout = QVBoxLayout()
+        main_layout = QHBoxLayout()
+        main_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+
+        # Left-side
+        l_layout = QVBoxLayout()
+        # Icon
+        piximap = getattr(QStyle, "SP_MessageBoxCritical")
+        icon = self.style().standardIcon(piximap)
+        label = QLabel()
+        label.setPixmap(icon.pixmap(64, 64))
+        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        l_layout.addWidget(label)
+
+        l_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        main_layout.addLayout(l_layout)
+
+        # Center spacer
+        main_layout.addItem(QSpacerItem(10, 0))
+
+        # Right-side
+        r_layout = QVBoxLayout()
+
+        txt = QLabel(self.text)
+        txt.setWordWrap(True)
+        r_layout.addWidget(QLabel(self.text))
+
+        r_layout.addItem(QSpacerItem(20, 20))
+
+        r_layout.addLayout(btn_layout)
+        main_layout.addLayout(r_layout)
+
+        layout.addLayout(main_layout)
+
+        self.setLayout(layout)
+        self.setFixedWidth(self.sizeHint().width())
+
+        def _open_settings_file() -> None:
+            generic.platform_specific_open(AppInfo().app_storage_folder / "settings.json")
+
+        def _open_settings_folder() -> None:
+            generic.platform_specific_open(AppInfo().app_storage_folder)
+        
+        def _reset_settings(settings: Settings) -> None:
+            settings.save() # Overwrite with a new settings file
+            self.accept() # 
+            
+        self.open_settings_file_btn.clicked.connect(lambda: _open_settings_file())
+        self.open_settings_folder_btn.clicked.connect(lambda: _open_settings_folder())
+        self.reset_settings_btn.clicked.connect(lambda: _reset_settings(settings))
+    
+    def closeEvent(self, event: QEvent) -> None:
+        sys.exit()

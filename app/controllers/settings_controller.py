@@ -6,12 +6,12 @@ from loguru import logger
 from PySide6.QtCore import QObject, Slot
 from PySide6.QtWidgets import QApplication
 
-from app.views.dialogue import show_dialogue_confirmation, show_dialogue_file
 from app.models.settings import Instance, Settings
 from app.utils.constants import SortMethod
 from app.utils.event_bus import EventBus
 from app.utils.generic import platform_specific_open
 from app.utils.system_info import SystemInfo
+from app.views.dialogue import show_dialogue_confirmation, show_dialogue_file
 from app.views.settings_dialog import SettingsDialog
 
 

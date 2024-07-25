@@ -16,11 +16,11 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from app.views.dialogue import show_dialogue_conditional, show_dialogue_file
 from app.utils.app_info import AppInfo
 from app.utils.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetPublishedFileDetails,
 )
+from app.views.dialogue import show_dialogue_conditional, show_dialogue_file
 
 
 class RunnerPanel(QWidget):
