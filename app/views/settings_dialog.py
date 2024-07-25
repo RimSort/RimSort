@@ -500,7 +500,7 @@ class SettingsDialog(QDialog):
         tab_layout.addWidget(group_box)
 
         grid_group_layout = QGridLayout()
-        group_box.setLayout(group_layout)
+        group_box.setLayout(grid_group_layout)
 
         steam_api_key_label = QLabel("Steam API key:")
         grid_group_layout.addWidget(steam_api_key_label, 1, 0)
