@@ -1,4 +1,4 @@
-ruff==0.5.4
+ruff==0.5.5
 mypy
 types-Deprecated
 types-psutil

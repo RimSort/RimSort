@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Callable
+from typing import Any, Callable
 
 from loguru import logger
 from PySide6.QtCore import (
@@ -114,25 +114,25 @@ class RuleEditor(QWidget):
 
         # LAUNCH OPTIONS
         self.block_comment_prompt = (
-            None  # Used to block comment prompt when metadata is being populated
+            False  # Used to block comment prompt when metadata is being populated
         )
         self.compact = compact
         self.edit_packageid = edit_packageid
         self.initial_mode = initial_mode
         # THE METADATA
-        self.local_rules_hidden = None
+        self.local_rules_hidden: bool = False
         self.community_rules = (
             self.metadata_manager.external_community_rules.copy()
             if self.metadata_manager.external_community_rules
             else {}
         )
-        self.community_rules_hidden = None
+        self.community_rules_hidden: bool = False
         self.user_rules = (
             self.metadata_manager.external_user_rules.copy()
             if self.metadata_manager.external_user_rules
             else {}
         )
-        self.user_rules_hidden = None
+        self.user_rules_hidden: bool = False
         # Can be used to get proper names for mods found in list
         # items that are not locally available
         self.steam_workshop_metadata_packageids_to_name = {}
@@ -194,7 +194,7 @@ class RuleEditor(QWidget):
         self.external_community_rules_loadAfter_list.setDragDropMode(
             QListWidget.DragDropMode.DropOnly
         )
-        self.external_community_rules_loadAfter_list.dropEvent = self.createDropEvent(
+        self.external_community_rules_loadAfter_list.dropEvent = self.createDropEvent(  # type: ignore
             self.external_community_rules_loadAfter_list
         )
         self.external_community_rules_loadBefore_list = QListWidget()
@@ -211,7 +211,7 @@ class RuleEditor(QWidget):
         self.external_community_rules_loadBefore_list.setDragDropMode(
             QListWidget.DragDropMode.DropOnly
         )
-        self.external_community_rules_loadBefore_list.dropEvent = self.createDropEvent(
+        self.external_community_rules_loadBefore_list.dropEvent = self.createDropEvent(  # type: ignore
             self.external_community_rules_loadBefore_list
         )
         self.external_community_rules_loadBottom_checkbox = QCheckBox(
@@ -235,7 +235,7 @@ class RuleEditor(QWidget):
         self.external_user_rules_loadAfter_list.setDragDropMode(
             QListWidget.DragDropMode.DropOnly
         )
-        self.external_user_rules_loadAfter_list.dropEvent = self.createDropEvent(
+        self.external_user_rules_loadAfter_list.dropEvent = self.createDropEvent(  # type: ignore
             self.external_user_rules_loadAfter_list
         )
         self.external_user_rules_loadBefore_list = QListWidget()
@@ -252,7 +252,7 @@ class RuleEditor(QWidget):
         self.external_user_rules_loadBefore_list.setDragDropMode(
             QListWidget.DragDropMode.DropOnly
         )
-        self.external_user_rules_loadBefore_list.dropEvent = self.createDropEvent(
+        self.external_user_rules_loadBefore_list.dropEvent = self.createDropEvent(  # type: ignore
             self.external_user_rules_loadBefore_list
         )
         self.external_user_rules_loadBottom_checkbox = QCheckBox(
@@ -332,6 +332,8 @@ class RuleEditor(QWidget):
         self.mods_search.textChanged.connect(self.signal_mods_search)
         self.mods_search.setPlaceholderText("Search mods by name")
         self.mods_search_clear_button = self.mods_search.findChild(QToolButton)
+        if type(self.mods_search_clear_button) is not QToolButton:
+            raise Exception("Failed to find clear button in QLineEdit")
         self.mods_search_clear_button.setEnabled(True)
         self.mods_search_clear_button.clicked.connect(self.clear_mods_search)
         # Mods list
@@ -713,7 +715,7 @@ class RuleEditor(QWidget):
                     )
 
         def _parse_rules(
-            rules: dict,
+            rules: dict[str, Any],
             loadAfter_list: QListWidget,
             loadBefore_list: QListWidget,
             loadBottom_checkbox: QCheckBox,
@@ -743,7 +745,7 @@ class RuleEditor(QWidget):
                 if self.edit_packageid.lower() != packageid.lower():
                     continue
 
-                def _get_first_item_or_value(data):
+                def _get_first_item_or_value(data: list[Any] | Any) -> Any:
                     return data[0] if isinstance(data, list) else data
 
                 # Snake Case!
@@ -862,7 +864,9 @@ class RuleEditor(QWidget):
             ):  # Remove row if criteria matches search
                 self.editor_model.removeRow(row)
         # Remove rule from the database
-        if metadata.get(self.edit_packageid, {}).get(mode[1], {}).get(rule_data):
+        if self.edit_packageid is not None and metadata.get(
+            self.edit_packageid, {}
+        ).get(mode[1], {}).get(rule_data):
             metadata[self.edit_packageid][mode[1]].pop(rule_data)
 
     def _save_editor_rules(self, rules_source: str) -> None:
@@ -875,7 +879,7 @@ class RuleEditor(QWidget):
         self.update_database_signal.emit([rules_source, metadata])
 
     def _toggle_details_layout_widgets(
-        self, layout: QVBoxLayout, override=None
+        self, layout: QVBoxLayout, override: bool = False
     ) -> None:
         # Iterate through all widgets in layout
         for i in range(layout.count()):
@@ -928,7 +932,7 @@ class RuleEditor(QWidget):
                     rule_type="User Rules", visibility=visibility
                 )
 
-    def _toggle_editor_table_rows(self, rule_type: str, visibility: bool):
+    def _toggle_editor_table_rows(self, rule_type: str, visibility: bool) -> None:
         for row in range(self.editor_model.rowCount()):
             item = self.editor_model.item(row, 2)  # Get the item in column 3 (index 2)
             if (
@@ -936,7 +940,7 @@ class RuleEditor(QWidget):
             ):  # Toggle row visibility based on the value
                 self.editor_table_view.setRowHidden(row, visibility)
 
-    def _toggle_loadBottom_rule(self, rule_source: str, state) -> None:
+    def _toggle_loadBottom_rule(self, rule_source: str, state: int) -> None:
         if self.edit_packageid:
             logger.debug(f"Toggle loadBottom for {self.edit_packageid}: {state}")
             # Select database for editing
@@ -945,7 +949,7 @@ class RuleEditor(QWidget):
             elif rule_source == "User Rules":
                 metadata = self.user_rules
             if state == 2:
-                comment = None
+                comment = ""
                 if not self.block_comment_prompt:
                     # Add a new row in the editor - prompt user to enter a comment for their rule addition
                     args, ok = show_dialogue_input(
@@ -1056,7 +1060,9 @@ class RuleEditor(QWidget):
         # Loop through the items
         for index in range(self.mods_list.count()):
             item = self.mods_list.item(index)
-            name = item.listWidget().itemWidget(item).text()
+            widget = item.listWidget().itemWidget(item)
+            if type(widget) is QLabel:
+                name = widget.text()
             name_lower = name.lower() if name else ""
 
             # Check if the pattern is not found in the name
