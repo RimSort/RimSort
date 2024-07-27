@@ -93,117 +93,113 @@ class Settings(QObject):
         else:
             self.debug_logging_enabled = False
 
-        while True:
-            try:
-                with open(str(self._settings_file), "r") as file:
-                    data = json.load(file)
-                    mitigations = (
-                        True  # Assume there are mitigations unless we reach else block
+        try:
+            with open(str(self._settings_file), "r") as file:
+                data = json.load(file)
+                mitigations = (
+                    True  # Assume there are mitigations unless we reach else block
+                )
+                # Mitigate issues when "instances" key is not parsed, but the old path attributes are present
+                if not data.get("instances"):
+                    logger.debug(
+                        "Instances key not found in settings.json. Performing mitigation."
                     )
-                    # Mitigate issues when "instances" key is not parsed, but the old path attributes are present
-                    if not data.get("instances"):
-                        logger.debug(
-                            "Instances key not found in settings.json. Performing mitigation."
+                    steamcmd_prefix_default_instance_path = str(
+                        Path(AppInfo().app_storage_folder / "instances" / "Default")
+                    )
+                    # Create Default instance
+                    data["instances"] = {
+                        "Default": Instance(
+                            name="Default",
+                            game_folder=data.get("game_folder", ""),
+                            local_folder=data.get("local_folder", ""),
+                            workshop_folder=data.get("workshop_folder", ""),
+                            config_folder=data.get("config_folder", ""),
+                            run_args=data.get("run_args", []),
+                            steamcmd_install_path=steamcmd_prefix_default_instance_path,
+                            steam_client_integration=False,
                         )
-                        steamcmd_prefix_default_instance_path = str(
-                            Path(AppInfo().app_storage_folder / "instances" / "Default")
-                        )
-                        # Create Default instance
-                        data["instances"] = {
-                            "Default": Instance(
-                                name="Default",
-                                game_folder=data.get("game_folder", ""),
-                                local_folder=data.get("local_folder", ""),
-                                workshop_folder=data.get("workshop_folder", ""),
-                                config_folder=data.get("config_folder", ""),
-                                run_args=data.get("run_args", []),
-                                steamcmd_install_path=steamcmd_prefix_default_instance_path,
-                                steam_client_integration=False,
-                            )
-                        }
-                        steamcmd_prefix_to_mitigate = data.get("steamcmd_install_path", "")
-                        steamcmd_path_to_mitigate = str(
-                            Path(steamcmd_prefix_to_mitigate) / "steamcmd"
-                        )
-                        steam_path_to_mitigate = str(
-                            Path(steamcmd_prefix_to_mitigate) / "steam"
-                        )
-                        if steamcmd_prefix_to_mitigate and path.exists(
-                            steamcmd_prefix_to_mitigate
-                        ):
-                            logger.debug(
-                                "Configured SteamCMD install path found. Attempting to migrate it to the Default instance path..."
-                            )
-                            steamcmd_prefix_steamcmd_path = str(
-                                Path(steamcmd_prefix_default_instance_path) / "steamcmd"
-                            )
-                            steamcmd_prefix_steam_path = str(
-                                Path(steamcmd_prefix_default_instance_path) / "steam"
-                            )
-                            try:
-                                if path.exists(steamcmd_prefix_steamcmd_path):
-                                    current_timestamp = int(time())
-                                    rename(
-                                        steamcmd_prefix_steamcmd_path,
-                                        f"{steamcmd_prefix_steamcmd_path}_{current_timestamp}",
-                                    )
-                                elif path.exists(steamcmd_prefix_steam_path):
-                                    current_timestamp = int(time())
-                                    rename(
-                                        steamcmd_prefix_steam_path,
-                                        f"{steamcmd_prefix_steam_path}_{current_timestamp}",
-                                    )
-                                logger.info(
-                                    f"Migrated SteamCMD install path from {steamcmd_prefix_to_mitigate} to {steamcmd_prefix_default_instance_path}"
-                                )
-                                copytree(
-                                    steamcmd_path_to_mitigate,
-                                    steamcmd_prefix_steamcmd_path,
-                                    symlinks=True,
-                                )
-                                logger.info(
-                                    f"Deleting old SteamCMD install path at {steamcmd_path_to_mitigate}..."
-                                )
-                                rmtree(steamcmd_path_to_mitigate)
-                                logger.info(
-                                    f"Migrated SteamCMD data path from {steam_path_to_mitigate} to {steamcmd_prefix_default_instance_path}"
-                                )
-                                copytree(
-                                    steam_path_to_mitigate,
-                                    steamcmd_prefix_steam_path,
-                                    symlinks=True,
-                                )
-                                logger.info(
-                                    f"Deleting old SteamCMD data path at {steam_path_to_mitigate}..."
-                                )
-                                rmtree(steam_path_to_mitigate)
-                            except Exception as e:
-                                logger.error(
-                                    f"Failed to migrate SteamCMD install path. Error: {e}"
-                                )
-                    elif (
-                        not data.get("current_instance")
-                        or data["current_instance"] not in data["instances"]
+                    }
+                    steamcmd_prefix_to_mitigate = data.get("steamcmd_install_path", "")
+                    steamcmd_path_to_mitigate = str(
+                        Path(steamcmd_prefix_to_mitigate) / "steamcmd"
+                    )
+                    steam_path_to_mitigate = str(
+                        Path(steamcmd_prefix_to_mitigate) / "steam"
+                    )
+                    if steamcmd_prefix_to_mitigate and path.exists(
+                        steamcmd_prefix_to_mitigate
                     ):
                         logger.debug(
-                            "Current instance not found in settings.json. Performing mitigation."
+                            "Configured SteamCMD install path found. Attempting to migrate it to the Default instance path..."
                         )
-                        data["current_instance"] = "Default"
-                    else:
-                        # There was nothing to mitigate, so don't save the model to the file
-                        mitigations = False
-                    # Parse data from settings.json into the model
-                    self._from_dict(data)
-                    # Save the model to the file if there were mitigations
-                    if mitigations:
-                        self.save()
-                break
-            except FileNotFoundError:
-                self.save()
-                break
-            except JSONDecodeError:
-                from app.views.dialogue import show_settings_error
-                show_settings_error(self)
+                        steamcmd_prefix_steamcmd_path = str(
+                            Path(steamcmd_prefix_default_instance_path) / "steamcmd"
+                        )
+                        steamcmd_prefix_steam_path = str(
+                            Path(steamcmd_prefix_default_instance_path) / "steam"
+                        )
+                        try:
+                            if path.exists(steamcmd_prefix_steamcmd_path):
+                                current_timestamp = int(time())
+                                rename(
+                                    steamcmd_prefix_steamcmd_path,
+                                    f"{steamcmd_prefix_steamcmd_path}_{current_timestamp}",
+                                )
+                            elif path.exists(steamcmd_prefix_steam_path):
+                                current_timestamp = int(time())
+                                rename(
+                                    steamcmd_prefix_steam_path,
+                                    f"{steamcmd_prefix_steam_path}_{current_timestamp}",
+                                )
+                            logger.info(
+                                f"Migrated SteamCMD install path from {steamcmd_prefix_to_mitigate} to {steamcmd_prefix_default_instance_path}"
+                            )
+                            copytree(
+                                steamcmd_path_to_mitigate,
+                                steamcmd_prefix_steamcmd_path,
+                                symlinks=True,
+                            )
+                            logger.info(
+                                f"Deleting old SteamCMD install path at {steamcmd_path_to_mitigate}..."
+                            )
+                            rmtree(steamcmd_path_to_mitigate)
+                            logger.info(
+                                f"Migrated SteamCMD data path from {steam_path_to_mitigate} to {steamcmd_prefix_default_instance_path}"
+                            )
+                            copytree(
+                                steam_path_to_mitigate,
+                                steamcmd_prefix_steam_path,
+                                symlinks=True,
+                            )
+                            logger.info(
+                                f"Deleting old SteamCMD data path at {steam_path_to_mitigate}..."
+                            )
+                            rmtree(steam_path_to_mitigate)
+                        except Exception as e:
+                            logger.error(
+                                f"Failed to migrate SteamCMD install path. Error: {e}"
+                            )
+                elif (
+                    not data.get("current_instance")
+                    or data["current_instance"] not in data["instances"]
+                ):
+                    logger.debug(
+                        "Current instance not found in settings.json. Performing mitigation."
+                    )
+                    data["current_instance"] = "Default"
+                else:
+                    # There was nothing to mitigate, so don't save the model to the file
+                    mitigations = False
+                # Parse data from settings.json into the model
+                self._from_dict(data)
+                # Save the model to the file if there were mitigations
+                if mitigations:
+                    self.save()
+        except FileNotFoundError:
+            self.save()
+        except JSONDecodeError:
+            raise
 
     def save(self) -> None:
         if self.debug_logging_enabled:

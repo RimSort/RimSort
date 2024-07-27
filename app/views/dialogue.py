@@ -24,8 +24,8 @@ from PySide6.QtWidgets import (
 )
 
 import app.utils.generic as generic
-from app.models.settings import Settings
 from app.utils.app_info import AppInfo
+from app.utils.event_bus import EventBus
 
 # Constants
 DEFAULT_TITLE = "RimSort"
@@ -156,6 +156,7 @@ def show_dialogue_file(
         logger.error("File dialogue mode not implemented.")
         return None
     return str(Path(os.path.normpath(path)).resolve()) if path != "" else None
+
 
 # jscpd:ignore-start
 def show_information(
@@ -469,9 +470,8 @@ def _setup_messagebox(title: str | None) -> QMessageBox:
 
     return dialogue
 
-def show_settings_error(
-    settings: Settings
-) -> None:
+
+def show_settings_error() -> None:
     """
     Displays a fatal error box indicating the app was
     unable to start due to corrupt settings. Called if unable
@@ -479,11 +479,10 @@ def show_settings_error(
 
     :param settings: settings model to allow resetting settings
     """
-    logger.info(
-        "Showing settings failure box"
-    )
-    diag = SettingsFailureDialog(settings)
+    logger.info("Showing settings failure box")
+    diag = SettingsFailureDialog()
     diag.exec_()
+
 
 class SettingsFailureDialog(QDialog):
     """Custom dialog to display fatal errors regarding settings parsing.
@@ -492,10 +491,7 @@ class SettingsFailureDialog(QDialog):
     Exiting the dialog will terminate the application.
     """
 
-    def __init__(
-        self,
-        settings: Settings
-    ) -> None:
+    def __init__(self) -> None:
         super().__init__()
 
         # Set up the message box
@@ -515,6 +511,7 @@ class SettingsFailureDialog(QDialog):
         self.open_settings_file_btn = QPushButton("Open Settings File")
         self.open_settings_folder_btn = QPushButton("Open Settings Folder")
         self.reset_settings_btn = QPushButton("Reset Settings")
+        self.close_application_btn = QPushButton("Exit RimSort")
 
         btn_layout = QHBoxLayout()
         btn_layout.addWidget(self.open_settings_file_btn)
@@ -552,6 +549,8 @@ class SettingsFailureDialog(QDialog):
         r_layout.addItem(QSpacerItem(20, 20))
 
         r_layout.addLayout(btn_layout)
+
+        r_layout.addWidget(self.close_application_btn)
         main_layout.addLayout(r_layout)
 
         layout.addLayout(main_layout)
@@ -560,18 +559,21 @@ class SettingsFailureDialog(QDialog):
         self.setFixedWidth(self.sizeHint().width())
 
         def _open_settings_file() -> None:
-            generic.platform_specific_open(AppInfo().app_storage_folder / "settings.json")
+            generic.platform_specific_open(
+                AppInfo().app_storage_folder / "settings.json"
+            )
 
         def _open_settings_folder() -> None:
             generic.platform_specific_open(AppInfo().app_storage_folder)
-        
-        def _reset_settings(settings: Settings) -> None:
-            settings.save() # Overwrite with a new settings file
-            self.accept() # 
-            
+
+        def _reset_settings_file() -> None:
+            EventBus().reset_settings_file.emit
+            self.accept()
+
         self.open_settings_file_btn.clicked.connect(lambda: _open_settings_file())
         self.open_settings_folder_btn.clicked.connect(lambda: _open_settings_folder())
-        self.reset_settings_btn.clicked.connect(lambda: _reset_settings(settings))
-    
+        self.reset_settings_btn.clicked.connect(lambda: _reset_settings_file())
+        self.close_application_btn.clicked.connect(lambda: sys.exit())
+
     def closeEvent(self, event: QEvent) -> None:
         sys.exit()

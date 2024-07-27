@@ -93,6 +93,9 @@ class EventBus(QObject):
     refresh_started = Signal()
     refresh_finished = Signal()
 
+    # Dialog signals
+    reset_settings_file = Signal()
+
     # ModsPanel signals
     list_updated_signal = Signal()  # count, list_type
 
