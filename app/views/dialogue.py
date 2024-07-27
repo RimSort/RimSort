@@ -334,17 +334,7 @@ class FatalErrorDialog(QDialog):
         main_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
         # Left-side
-        l_layout = QVBoxLayout()
-        # Icon
-        piximap = getattr(QStyle, "SP_MessageBoxCritical")
-        icon = self.style().standardIcon(piximap)
-        label = QLabel()
-        label.setPixmap(icon.pixmap(64, 64))
-        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        l_layout.addWidget(label)
-
-        l_layout.addWidget(self.details_btn)
-        l_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        l_layout = _setup_error_icon(self, self.details_btn)
         main_layout.addLayout(l_layout)
 
         # Center spacer
@@ -508,7 +498,7 @@ class SettingsFailureDialog(QDialog):
         self.text = "Your RimSort settings file is corrupt.\nPlease choose one of the following options to proceed."
 
         # Buttons
-        self.open_settings_file_btn = QPushButton("Open Settings File")
+        self.open_settings_file_btn = QPushButton("Open Settings")
         self.open_settings_folder_btn = QPushButton("Open Settings Folder")
         self.reset_settings_btn = QPushButton("Reset Settings")
         self.close_application_btn = QPushButton("Exit RimSort")
@@ -524,16 +514,7 @@ class SettingsFailureDialog(QDialog):
         main_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
         # Left-side
-        l_layout = QVBoxLayout()
-        # Icon
-        piximap = getattr(QStyle, "SP_MessageBoxCritical")
-        icon = self.style().standardIcon(piximap)
-        label = QLabel()
-        label.setPixmap(icon.pixmap(64, 64))
-        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        l_layout.addWidget(label)
-
-        l_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        l_layout = _setup_error_icon(self)
         main_layout.addLayout(l_layout)
 
         # Center spacer
@@ -559,9 +540,7 @@ class SettingsFailureDialog(QDialog):
         self.setFixedWidth(self.sizeHint().width())
 
         def _open_settings_file() -> None:
-            generic.platform_specific_open(
-                AppInfo().app_storage_folder / "settings.json"
-            )
+            generic.platform_specific_open(AppInfo().app_settings_file)
 
         def _open_settings_folder() -> None:
             generic.platform_specific_open(AppInfo().app_storage_folder)
@@ -577,3 +556,19 @@ class SettingsFailureDialog(QDialog):
 
     def closeEvent(self, event: QEvent) -> None:
         sys.exit()
+
+
+def _setup_error_icon(
+    diag: QDialog, details_btn: QPushButton | None = None
+) -> QVBoxLayout:
+    l_layout = QVBoxLayout()
+    piximap = getattr(QStyle, "SP_MessageBoxCritical")
+    icon = diag.style().standardIcon(piximap)
+    label = QLabel()
+    label.setPixmap(icon.pixmap(64, 64))
+    label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    l_layout.addWidget(label)
+    if details_btn is not None:
+        l_layout.addWidget(details_btn)
+    l_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    return l_layout

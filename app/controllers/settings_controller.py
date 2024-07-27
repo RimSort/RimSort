@@ -218,7 +218,7 @@ class SettingsController(QObject):
         try:
             self.settings.load()
         except JSONDecodeError:
-            logger.info("Unable to parse settings file")
+            logger.error("Unable to parse settings file")
             show_settings_error()
 
     def get_mod_paths(self) -> list[str]:
