@@ -8,6 +8,7 @@ from pathlib import Path
 from shutil import copy2, copytree, rmtree
 from traceback import format_exc
 from typing import List, Optional
+from app.utils.localization import translate
 
 from loguru import logger
 from PySide6.QtCore import QEvent, QModelIndex, QObject, QRectF, QSize, Qt, Signal
@@ -2069,8 +2070,11 @@ class ModsPanel(QWidget):
         self.active_mods_search_filter = QComboBox()
         self.active_mods_search_filter.setObjectName("MainUI")
         self.active_mods_search_filter.setMaximumWidth(125)
+        current_language : str = 'zh'
+        search_filter_name = ["name", "packageId", "authors", "publishedFileId"]
+        search_filter_name = [translate(field, current_language) for field in search_filter_name]
         self.active_mods_search_filter.addItems(
-            ["Name", "PackageId", "Author(s)", "PublishedFileId"]
+            search_filter_name
         )
         # Active mods search layouts
         self.active_mods_search_layout.addWidget(
@@ -2163,7 +2167,7 @@ class ModsPanel(QWidget):
         self.inactive_mods_search_filter.setObjectName("MainUI")
         self.inactive_mods_search_filter.setMaximumWidth(140)
         self.inactive_mods_search_filter.addItems(
-            ["Name", "PackageId", "Author(s)", "PublishedFileId"]
+            search_filter_name
         )
         # Inactive mods search layouts
         self.inactive_mods_search_layout.addWidget(
@@ -2328,13 +2332,13 @@ class ModsPanel(QWidget):
             raise NotImplementedError(f"Unknown list type: {list_type}")
         # Evaluate the search filter state for the list
         search_filter = None
-        if _filter.currentText() == "Name":
+        if _filter.currentText() == translate("name", 'zh'):
             search_filter = "name"
-        elif _filter.currentText() == "PackageId":
+        elif _filter.currentText() == translate("packageId", 'zh'):
             search_filter = "packageid"
-        elif _filter.currentText() == "Author(s)":
+        elif _filter.currentText() == translate("authors", 'zh'):
             search_filter = "authors"
-        elif _filter.currentText() == "PublishedFileId":
+        elif _filter.currentText() == translate("publishedFileId", 'zh'):
             search_filter = "publishedfileid"
         # Filter the list using any search and filter state
         for uuid in uuids:
