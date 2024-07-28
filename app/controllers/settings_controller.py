@@ -950,25 +950,30 @@ class SettingsController(QObject):
         Returns:
             tuple[Path, Path, Path]: game_folder, config_folder, steam_mods_folder
         """
-        user_home = Path.home()
-        steam_folder = "C:/Program Files (x86)/Steam"
-        from app.utils.win_find_steam import find_steam_folder
-
-        steam_folder, found = find_steam_folder()
-
-        if not found:
-            logger.error(
-                "[win32] Could not find Steam folder. Using fallback assumptions"
-            )
+        if sys.platform == "win32":
+            user_home = Path.home()
             steam_folder = "C:/Program Files (x86)/Steam"
+            from app.utils.win_find_steam import find_steam_folder
 
-        game_folder = Path(f"{steam_folder}/steamapps/common/Rimworld")
-        config_folder = Path(
-            f"{user_home}/AppData/LocalLow/Ludeon Studios/RimWorld by Ludeon Studios/Config"
-        )
-        steam_mods_folder = Path(f"{steam_folder}/steamapps/workshop/content/294100")
+            steam_folder, found = find_steam_folder()
 
-        return game_folder, config_folder, steam_mods_folder
+            if not found:
+                logger.error(
+                    "[win32] Could not find Steam folder. Using fallback assumptions"
+                )
+                steam_folder = "C:/Program Files (x86)/Steam"
+
+            game_folder = Path(f"{steam_folder}/steamapps/common/Rimworld")
+            config_folder = Path(
+                f"{user_home}/AppData/LocalLow/Ludeon Studios/RimWorld by Ludeon Studios/Config"
+            )
+            steam_mods_folder = Path(
+                f"{steam_folder}/steamapps/workshop/content/294100"
+            )
+
+            return game_folder, config_folder, steam_mods_folder
+        else:
+            raise ValueError("This function should only be called on Windows")
 
     @Slot()
     def _on_community_rules_db_radio_clicked(self, checked: bool) -> None:
