@@ -25,16 +25,16 @@ if sys.platform == "win32":
 
         for reg_key in candidate_reg_keys:
             try:
-                key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, reg_key)
-                value = winreg.QueryValueEx(key, "InstallPath")
-                candidate_path = os.path.join(value[0], "steam.exe")
+                with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, reg_key) as key:
+                    value = winreg.QueryValueEx(key, "InstallPath")
+                    candidate_path = os.path.join(value[0], "steam.exe")
 
-                if os.path.isfile(candidate_path):
-                    return value[0], True
+                    if os.path.isfile(candidate_path):
+                        return value[0], True
 
-                logger.warning(
-                    f"Steam executable not found at path defined by registry: {candidate_path}"
-                )
+                    logger.warning(
+                        f"Steam executable not found at path defined by registry: {candidate_path}"
+                    )
             except FileNotFoundError:
                 # Registry key not found. Continue to the next candidate key
                 continue
