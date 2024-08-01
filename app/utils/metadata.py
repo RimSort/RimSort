@@ -139,101 +139,107 @@ class MetadataManager(QObject):
                 )
 
     def __refresh_external_metadata(self) -> None:
+        def validate_db_path(path: str, db_type: str) -> bool:
+            if not os.path.exists(path):
+                self.show_warning_signal.emit(
+                    f"{db_type} DB is missing",
+                    f"Configured {db_type} DB not found!",
+                    f"Unable to initialize external metadata. There is no external {db_type} metadata being factored!\n"
+                    + "\nPlease make sure your Database location settings are correct.",
+                    f"{path}",
+                )
+                return False
+
+            if os.path.isdir(path):
+                self.show_warning_signal.emit(
+                    f"{db_type} DB is missing",
+                    f"Configured {db_type} DB path is a directory! Expected a file path.",
+                    f"Unable to initialize external metadata. There is no external {db_type} metadata being factored!\n"
+                    + "\nPlease make sure your Database location settings are correct.",
+                    f"{path}",
+                )
+                return False
+
+            return True
+
         def get_configured_steam_db(
             life: int, path: str
         ) -> tuple[Optional[dict[str, Any]], Optional[str]]:
             logger.info(f"Checking for Steam DB at: {path}")
-            if os.path.exists(
-                path
-            ):  # Look for cached data & load it if available & not expired
-                logger.info(
-                    "Steam DB exists!",
-                )
-                with open(path, encoding="utf-8") as f:
-                    json_string = f.read()
-                    logger.info("Checking metadata expiry against database...")
-                    db_data = json.loads(json_string)
-                    current_time = int(time())
-                    db_time = int(db_data["version"])
-                    elapsed = current_time - db_time
-                    if (
-                        elapsed <= life
-                    ):  # If the duration elapsed since db creation is less than expiry than expiry
-                        # The data is valid
-                        db_json_data = db_data[
-                            "database"
-                        ]  # TODO: additional check to verify integrity of this data's schema
-                        logger.info(
-                            "Cached Steam DB is valid! Returning data to RimSort..."
-                        )
-                        total_entries = len(db_json_data)
-                        logger.info(
-                            f"Loaded metadata for {total_entries} Steam Workshop mods from Steam DB"
-                        )
-                    else:  # If the cached db data is expired but NOT missing
-                        # Fallback to the expired metadata
-                        if life != 0:  # Disable Notification if value is 0
-                            self.show_warning_signal.emit(
-                                "Steam DB metadata expired",
-                                "Steam DB is expired! Consider updating!\n",
-                                f'Steam DB last updated: {strftime("%Y-%m-%d %H:%M:%S", localtime(db_data["version"] - life))}\n\n'
-                                + "Falling back to cached, but EXPIRED Steam Database...",
-                                "",
-                            )
-                        db_json_data = db_data[
-                            "database"
-                        ]  # TODO: additional check to verify integrity of this data's schema
-                        total_entries = len(db_json_data)
-                        logger.info(
-                            f"Loaded metadata for {total_entries} Steam Workshop mods from Steam DB"
-                        )
-                    self.steamdb_packageid_to_name = {
-                        metadata["packageid"]: metadata["name"]
-                        for metadata in db_data.get("database", {}).values()
-                        if metadata.get("packageid") and metadata.get("name")
-                    }
-                    return db_json_data, path
-
-            else:  # Assume db_data_missing
-                self.show_warning_signal.emit(
-                    "Steam DB is missing",
-                    "Configured Steam DB not found!",
-                    "Unable to initialize external metadata. There is no external Steam metadata being factored!\n"
-                    + "\nPlease use DB Builder to create a database, or update to the latest RimSort Steam Workshop Database.",
-                    "",
-                )
+            if not validate_db_path(path, "Steam"):
                 return None, None
+
+            # Look for cached data & load it if available & not expired
+            logger.info(
+                "Steam DB exists!",
+            )
+            with open(path, encoding="utf-8") as f:
+                json_string = f.read()
+                logger.info("Checking metadata expiry against database...")
+                db_data = json.loads(json_string)
+                current_time = int(time())
+                db_time = int(db_data["version"])
+                elapsed = current_time - db_time
+                if (
+                    elapsed <= life
+                ):  # If the duration elapsed since db creation is less than expiry than expiry
+                    # The data is valid
+                    db_json_data = db_data[
+                        "database"
+                    ]  # TODO: additional check to verify integrity of this data's schema
+                    logger.info(
+                        "Cached Steam DB is valid! Returning data to RimSort..."
+                    )
+                    total_entries = len(db_json_data)
+                    logger.info(
+                        f"Loaded metadata for {total_entries} Steam Workshop mods from Steam DB"
+                    )
+                else:  # If the cached db data is expired but NOT missing
+                    # Fallback to the expired metadata
+                    if life != 0:  # Disable Notification if value is 0
+                        self.show_warning_signal.emit(
+                            "Steam DB metadata expired",
+                            "Steam DB is expired! Consider updating!\n",
+                            f'Steam DB last updated: {strftime("%Y-%m-%d %H:%M:%S", localtime(db_data["version"] - life))}\n\n'
+                            + "Falling back to cached, but EXPIRED Steam Database...",
+                            "",
+                        )
+                    db_json_data = db_data[
+                        "database"
+                    ]  # TODO: additional check to verify integrity of this data's schema
+                    total_entries = len(db_json_data)
+                    logger.info(
+                        f"Loaded metadata for {total_entries} Steam Workshop mods from Steam DB"
+                    )
+                self.steamdb_packageid_to_name = {
+                    metadata["packageid"]: metadata["name"]
+                    for metadata in db_data.get("database", {}).values()
+                    if metadata.get("packageid") and metadata.get("name")
+                }
+                return db_json_data, path
 
         def get_configured_community_rules_db(
             path: str,
         ) -> tuple[Optional[dict[str, Any]], Optional[str]]:
             logger.info(f"Checking for Community Rules DB at: {path}")
-            if os.path.exists(
-                path
-            ):  # Look for cached data & load it if available & not expired
-                logger.info(
-                    "Community Rules DB exists!",
-                )
-                with open(path, encoding="utf-8") as f:
-                    json_string = f.read()
-                    logger.info("Reading info from communityRules.json")
-                    rule_data = json.loads(json_string)
-                    community_rules_json_data = rule_data["rules"]
-                    total_entries = len(community_rules_json_data)
-                    logger.info(
-                        f"Loaded {total_entries} additional sorting rules from Community Rules"
-                    )
-                    return community_rules_json_data, path
 
-            else:  # Assume db_data_missing
-                self.show_warning_signal.emit(
-                    "Community Rules DB is missing",
-                    "Configured Community Rules DB not found!",
-                    "Unable to initialize external metadata. There is no external Community Rules metadata being factored!\n"
-                    + "\nPlease use Rule Editor to create a database, or update to the latest RimSort Community Rules database.",
-                    "",
-                )
+            if not validate_db_path(path, "Community Rules"):
                 return None, None
+
+            # Look for cached data & load it if available & not expired
+            logger.info(
+                "Community Rules DB exists!",
+            )
+            with open(path, encoding="utf-8") as f:
+                json_string = f.read()
+                logger.info("Reading info from communityRules.json")
+                rule_data = json.loads(json_string)
+                community_rules_json_data = rule_data["rules"]
+                total_entries = len(community_rules_json_data)
+                logger.info(
+                    f"Loaded {total_entries} additional sorting rules from Community Rules"
+                )
+                return community_rules_json_data, path
 
         # Load external metadata
         # External Steam metadata
