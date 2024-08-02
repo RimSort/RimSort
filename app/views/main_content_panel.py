@@ -105,9 +105,7 @@ class MainContent(QObject):
             cls._instance = super(MainContent, cls).__new__(cls)
         return cls._instance
 
-    def __init__(
-        self, settings_controller: SettingsController
-    ) -> None:
+    def __init__(self, settings_controller: SettingsController) -> None:
         """
         Initialize the main content panel.
 

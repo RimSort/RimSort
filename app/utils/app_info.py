@@ -78,6 +78,7 @@ class AppInfo:
 
         self._databases_folder: Path = self._app_storage_folder / "dbs"
         self._theme_data_folder: Path = self._application_folder / "themes"
+        self._settings_file: Path = self._app_storage_folder / "settings.json"
 
         # Make sure important directories exist
 
@@ -139,6 +140,18 @@ class AppInfo:
             Path: The path to the user-specific data folder.
         """
         return self._app_storage_folder
+
+    @property
+    def app_settings_file(self) -> Path:
+        """
+        Get the path to the file where user-specific data for the application is stored.
+
+        This directory is determined using platform-specific conventions.
+
+        Returns:
+            Path: The path to the user-specific data file.
+        """
+        return self._settings_file
 
     @property
     def user_log_folder(self) -> Path:
