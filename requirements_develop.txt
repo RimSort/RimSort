@@ -1,5 +1,6 @@
 ruff==0.5.5
 mypy
+types-beautifulsoup4
 types-Deprecated
 types-psutil
 #types-pyside6
