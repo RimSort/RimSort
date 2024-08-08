@@ -29,55 +29,7 @@ from app.utils.app_info import AppInfo
 DEFAULT_TITLE = "RimSort"
 
 
-def show_binary_choice(
-    title: str = "",
-    text: str = "",
-    information: str = "",
-    positive_text: str = "Yes",
-    negative_text: str = "No",
-    icon: QMessageBox.Icon = QMessageBox.Icon.Question,
-    parent: QWidget | None = None,
-) -> bool:
-    """
-    Displays a confirmation dialogue binary buttons. Default action maps to negative. Returns True if the positive button is clicked, False otherwise.
-    :param title: text to pass to setWindowTitle
-    :param text: text to pass to setText
-    :param information: text to pass to setInformativeText
-    :param icon: icon to pass to setIcon
-    :param positive_text: text to display on the positive button
-    :param negative_text: text to display on the negative button
-    :return: True if positive is clicked, False otherwise.
-    """
-    logger.info(
-        f"Showing confirmation box with input: [{title}], [{text}], [{information}]"
-    )
-
-    # Set up the message box
-    dialogue = _setup_messagebox(title, icon, parent)
-
-    # Configure buttons
-    dialogue.setStandardButtons(
-        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-    )
-    dialogue.setDefaultButton(QMessageBox.StandardButton.No)
-
-    # Set button text where necessary
-    dialogue.button(QMessageBox.StandardButton.Yes).setText(positive_text)
-    dialogue.button(QMessageBox.StandardButton.No).setText(negative_text)
-
-    # Add data
-    if text:
-        dialogue.setText(text)
-    if information:
-        dialogue.setInformativeText(information)
-
-    # Show the message box & return response
-    dialogue.exec_()
-    response = dialogue.clickedButton()
-    return response == dialogue.button(QMessageBox.StandardButton.Yes)
-
-
-@deprecated("Use show_binary_choice() instead")
+@deprecated("Use BinaryChoiceDialog with exec() instead")
 def show_dialogue_confirmation(
     title: Optional[str] = None,
     text: Optional[str] = None,
