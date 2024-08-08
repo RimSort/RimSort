@@ -394,7 +394,7 @@ class BinaryChoiceDialog(_BaseMessageBox):
         positive_text: str | None = None,
         negative_text: str | None = None,
         positive_btn: QMessageBox.StandardButton = QMessageBox.StandardButton.Yes,
-        negative_btn: QMessageBox.StandardButton = QMessageBox.StandardButton.No,
+        negative_btn: QMessageBox.StandardButton = QMessageBox.StandardButton.Cancel,
         default_negative: bool = True,
         icon: QMessageBox.Icon = QMessageBox.Icon.Question,
         modal: bool = True,
