@@ -36,6 +36,7 @@ def show_binary_choice(
     positive_text: str = "Yes",
     negative_text: str = "No",
     icon: QMessageBox.Icon = QMessageBox.Icon.Question,
+    parent: QWidget | None = None,
 ) -> bool:
     """
     Displays a confirmation dialogue binary buttons. Default action maps to negative. Returns True if the positive button is clicked, False otherwise.
@@ -52,7 +53,7 @@ def show_binary_choice(
     )
 
     # Set up the message box
-    dialogue = _setup_messagebox(title, icon)
+    dialogue = _setup_messagebox(title, icon, parent)
 
     # Configure buttons
     dialogue.setStandardButtons(
@@ -498,7 +499,9 @@ class UploadLogTask(QRunnable):
 
 
 def _setup_messagebox(
-    title: str | None, icon: QMessageBox.Icon = QMessageBox.Icon.Question
+    title: str | None,
+    icon: QMessageBox.Icon = QMessageBox.Icon.Question,
+    parent: QWidget | None = None,
 ) -> QMessageBox:
     """Helper function to setup the message box
 
@@ -507,7 +510,7 @@ def _setup_messagebox(
     :return: The message box object
     :rtype: QMessageBox
     """
-    dialogue = QMessageBox()
+    dialogue = QMessageBox(parent)
     dialogue.setTextFormat(Qt.TextFormat.RichText)
     dialogue.setIcon(icon)
     dialogue.setObjectName("dialogue")
