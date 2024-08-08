@@ -29,6 +29,54 @@ from app.utils.app_info import AppInfo
 DEFAULT_TITLE = "RimSort"
 
 
+def show_binary_choice(
+    title: str = "",
+    text: str = "",
+    information: str = "",
+    positive_text: str = "Yes",
+    negative_text: str = "No",
+    icon: QMessageBox.Icon = QMessageBox.Icon.Question,
+) -> bool:
+    """
+    Displays a confirmation dialogue binary buttons. Default action maps to negative. Returns True if the positive button is clicked, False otherwise.
+    :param title: text to pass to setWindowTitle
+    :param text: text to pass to setText
+    :param information: text to pass to setInformativeText
+    :param icon: icon to pass to setIcon
+    :param positive_text: text to display on the positive button
+    :param negative_text: text to display on the negative button
+    :return: True if positive is clicked, False otherwise.
+    """
+    logger.info(
+        f"Showing confirmation box with input: [{title}], [{text}], [{information}]"
+    )
+
+    # Set up the message box
+    dialogue = _setup_messagebox(title, icon)
+
+    # Configure buttons
+    dialogue.setStandardButtons(
+        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+    )
+    dialogue.setDefaultButton(QMessageBox.StandardButton.No)
+
+    # Set button text where necessary
+    dialogue.button(QMessageBox.StandardButton.Yes).setText(positive_text)
+    dialogue.button(QMessageBox.StandardButton.No).setText(negative_text)
+
+    # Add data
+    if text:
+        dialogue.setText(text)
+    if information:
+        dialogue.setInformativeText(information)
+
+    # Show the message box & return response
+    dialogue.exec_()
+    response = dialogue.clickedButton()
+    return response == dialogue.button(QMessageBox.StandardButton.Yes)
+
+
+@deprecated(reason="Use show_binary_choice() instead")
 def show_dialogue_confirmation(
     title: Optional[str] = None,
     text: Optional[str] = None,
@@ -37,7 +85,7 @@ def show_dialogue_confirmation(
     button_text: Optional[str] = "Yes",
 ) -> str:
     """
-    Displays a dialogue with a single custom button (defaulting to "Yes").
+    Displays a dialogue with a standard Yes and Cancel button. The default button is Cancel. Returns the text of the button clicked (Yes or Cancel).
     :param title: text to pass to setWindowTitle
     :param text: text to pass to setText
     :param information: text to pass to setInformativeText
@@ -154,6 +202,7 @@ def show_dialogue_file(
         logger.error("File dialogue mode not implemented.")
         return None
     return str(Path(os.path.normpath(path)).resolve()) if path != "" else None
+
 
 # jscpd:ignore-start
 def show_information(
@@ -448,7 +497,9 @@ class UploadLogTask(QRunnable):
         self.parent._upload_finished_signal.emit(result, url)
 
 
-def _setup_messagebox(title: str | None) -> QMessageBox:
+def _setup_messagebox(
+    title: str | None, icon: QMessageBox.Icon = QMessageBox.Icon.Question
+) -> QMessageBox:
     """Helper function to setup the message box
 
     :param title: The title of the message box
@@ -458,7 +509,7 @@ def _setup_messagebox(title: str | None) -> QMessageBox:
     """
     dialogue = QMessageBox()
     dialogue.setTextFormat(Qt.TextFormat.RichText)
-    dialogue.setIcon(QMessageBox.Icon.Question)
+    dialogue.setIcon(icon)
     dialogue.setObjectName("dialogue")
     if title:
         dialogue.setWindowTitle(title)
