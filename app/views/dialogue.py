@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 from typing import List, Optional, Tuple
 
-from deprecated import deprecated
 from loguru import logger
 from PySide6.QtCore import QRunnable, Qt, QThreadPool, Signal, Slot
 from PySide6.QtWidgets import (
@@ -21,6 +20,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from typing_extensions import deprecated
 
 import app.utils.generic as generic
 from app.utils.app_info import AppInfo
@@ -76,7 +76,7 @@ def show_binary_choice(
     return response == dialogue.button(QMessageBox.StandardButton.Yes)
 
 
-@deprecated(reason="Use show_binary_choice() instead")
+@deprecated("Use show_binary_choice() instead")
 def show_dialogue_confirmation(
     title: Optional[str] = None,
     text: Optional[str] = None,
@@ -174,7 +174,7 @@ def show_dialogue_conditional(
     return response.text()
 
 
-@deprecated(reason="Just use QInputDialog().getText() instead")
+@deprecated("Just use QInputDialog().getText() instead")
 def show_dialogue_input(
     title: str = "",
     label: str = "",
