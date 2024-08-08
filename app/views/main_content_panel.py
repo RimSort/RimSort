@@ -105,9 +105,7 @@ class MainContent(QObject):
             cls._instance = super(MainContent, cls).__new__(cls)
         return cls._instance
 
-    def __init__(
-        self, settings_controller: SettingsController
-    ) -> None:
+    def __init__(self, settings_controller: SettingsController) -> None:
         """
         Initialize the main content panel.
 
@@ -2168,8 +2166,7 @@ class MainContent(QObject):
 
                         # Get the local and remote refs
                         local_ref = repo.head.reference
-                        refs = repo.refs()
-                        remote_ref = refs[f"origin/{local_ref.name}"]
+                        remote_ref = repo.refs[f"origin/{local_ref.name}"]  # type: ignore
 
                         # Check if the local branch is behind the remote branch
                         if local_ref.commit != remote_ref.commit:
