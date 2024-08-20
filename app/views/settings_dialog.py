@@ -709,6 +709,14 @@ class SettingsDialog(QDialog):
         )
         group_layout.addWidget(self.download_missing_mods_checkbox)
 
+        self.render_unity_rich_text_checkbox = QCheckBox(
+            "Render Unity Rich Text in mod descriptions"
+        )
+        self.render_unity_rich_text_checkbox.setToolTip(
+            "Enable this option to render Unity Rich Text in mod descriptions. Images will not be displayed."
+        )
+        group_layout.addWidget(self.render_unity_rich_text_checkbox)
+
         github_identity_group = QGroupBox()
         tab_layout.addWidget(github_identity_group)
 
