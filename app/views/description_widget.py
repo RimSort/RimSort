@@ -8,9 +8,8 @@ from PySide6.QtWidgets import (
 
 class DescriptionWidget(QTextBrowser):
     """
-    Subclass for QScrollArea. Creates a read-only
-    text box that scrolls. Used specifically for the description
-    part of the mod info panel.
+    Subclass for QTextBrowser. Creates a read-only
+    text box for the mod info description.
     """
 
     def __init__(self, parent: QWidget | None = None) -> None:
@@ -76,11 +75,14 @@ class DescriptionWidget(QTextBrowser):
         tag_mapping = {**tag_mapping_type1, **tag_mapping_type2}
 
         white_space = "pre-wrap"
+        html_text = unity_text
 
         # If any tags of mapping type2 are found, set white-space to pre-wrap
         for unity_tag, _ in tag_mapping_type1.items():
             if re.search(unity_tag, unity_text):
                 white_space = "normal"
+                # Convert double \n to <br>
+                html_text = html_text.replace("\n\n", "<br>")
                 break
 
         # Map h tags like [h1] to <h1>
@@ -89,7 +91,6 @@ class DescriptionWidget(QTextBrowser):
             tag_mapping[r"\[/h" + str(i) + r"\]"] = "</h" + str(i) + ">"
 
         # Replace Unity tags with HTML tags
-        html_text = unity_text
         for unity_tag, html_tag in tag_mapping.items():
             html_text = re.sub(unity_tag, html_tag, html_text)
 
@@ -102,9 +103,6 @@ class DescriptionWidget(QTextBrowser):
         html_text = re.sub(
             span_size_pattern, r'<span style="font-size:\1px">\2</span>', html_text
         )
-
-        # Convert double \n to <br>
-        # html_text = html_text.replace("\n\n", "<br>")
 
         # Convert explicit string \n to <br>
         html_text = html_text.replace("\\n", "<br>")
