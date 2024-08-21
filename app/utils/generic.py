@@ -204,7 +204,10 @@ def open_url_browser(url: str) -> None:
 
 def platform_specific_open(path: str | Path) -> None:
     """
-    Function to open a file/folder in the platform-specific file-explorer app.
+    Function to open a folder in the platform-specific file-explorer app
+    or a file in the relevant system default application. On mac, if the path
+    is a directory or an .app file, open the path in Finder using -R
+    (i.e. treat .app as directory).
 
     :param path: path to open
     :type path: str | Path
@@ -216,7 +219,7 @@ def platform_specific_open(path: str | Path) -> None:
     path = str(path)
     if sys.platform == "darwin":
         logger.info(f"Opening {path} with subprocess open on MacOS")
-        if p.is_file() or (p.is_dir() and p.suffix == ".app"):
+        if p.is_dir() and p.suffix == ".app":
             subprocess.Popen(["open", path, "-R"])
         else:
             subprocess.Popen(["open", path])

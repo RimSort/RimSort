@@ -1,4 +1,5 @@
 import os
+from json import JSONDecodeError
 from pathlib import Path
 from typing import Optional
 
@@ -15,6 +16,7 @@ from app.views.dialogue import (
     BinaryChoiceDialog,
     show_dialogue_confirmation,
     show_dialogue_file,
+    show_settings_error,
 )
 from app.views.settings_dialog import SettingsDialog
 
@@ -51,8 +53,6 @@ class SettingsController(QObject):
         super().__init__()
 
         self.settings = model
-        self.settings.load()
-
         self.settings_dialog = view
 
         self._last_file_dialog_path = str(Path.home())
@@ -207,6 +207,19 @@ class SettingsController(QObject):
         self.settings_dialog.steamcmd_install_button.clicked.connect(
             self._on_steamcmd_install_button_clicked
         )
+
+        # Connect signals from dialogs
+        EventBus().reset_settings_file.connect(self._do_reset_settings_file)
+
+        self._load_settings()
+
+    def _load_settings(self) -> None:
+        logger.info("Attempting to load settings from settings file")
+        try:
+            self.settings.load()
+        except JSONDecodeError:
+            logger.error("Unable to parse settings file")
+            show_settings_error()
 
     def get_mod_paths(self) -> list[str]:
         """
@@ -1250,3 +1263,8 @@ class SettingsController(QObject):
         run_args_list = text.split(",")
         self.settings.instances[self.settings.current_instance].run_args = run_args_list
         self.settings.save()
+
+    def _do_reset_settings_file(self) -> None:
+        logger.info("Resetting settings file and retrying load")
+        self.settings.save()
+        self._load_settings()
