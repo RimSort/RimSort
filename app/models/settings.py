@@ -19,7 +19,7 @@ class Settings(QObject):
     def __init__(self) -> None:
         super().__init__()
 
-        self._settings_file = AppInfo().app_storage_folder / "settings.json"
+        self._settings_file = AppInfo().app_settings_file
         self._debug_file = AppInfo().app_storage_folder / "DEBUG"
 
         # Other
