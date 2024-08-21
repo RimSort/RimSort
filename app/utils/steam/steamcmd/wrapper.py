@@ -13,8 +13,10 @@ import requests
 from loguru import logger
 
 from app.utils.event_bus import EventBus
+from app.utils.generic import rmtree as g_rmtree
 from app.utils.system_info import SystemInfo
 from app.views.dialogue import (
+    InformationBox,
     show_dialogue_conditional,
     show_fatal_error,
     show_warning,
@@ -42,6 +44,10 @@ class SteamcmdInterface:
             super(SteamcmdInterface, self).__init__()
             logger.debug("Initializing SteamcmdInterface")
             self.initialize_prefix(steamcmd_prefix, validate)
+
+            EventBus().do_clear_steamcmd_depot_cache.connect(
+                lambda: self.clear_depot_cache()
+            )
             logger.debug("Finished SteamcmdInterface initialization")
 
     def initialize_prefix(self, steamcmd_prefix: str, validate: bool) -> None:
@@ -139,7 +145,12 @@ class SteamcmdInterface:
 
             CreateJunction(target_local_folder, link_path)
 
-    def download_mods(self, publishedfileids: list[str], runner: RunnerPanel) -> None:
+    def download_mods(
+        self,
+        publishedfileids: list[str],
+        runner: RunnerPanel,
+        clear_cache: bool = False,
+    ) -> None:
         """
         This function downloads a list of mods from a list publishedfileids
 
@@ -148,6 +159,7 @@ class SteamcmdInterface:
         :param appid: a Steam AppID to pass to steamcmd
         :param publishedfileids: list of publishedfileids
         :param runner: a RimSort RunnerPanel to interact with
+        :param clear_cache: whether to clear the steamcmd depot cache before downloading
         """
         runner.message("Checking for steamcmd...")
         if self.setup:
@@ -156,6 +168,9 @@ class SteamcmdInterface:
                 + f"Downloading list of {str(len(publishedfileids))} "
                 + f"publishedfileids to: {self.steamcmd_steam_path}"
             )
+            if clear_cache:
+                self.clear_depot_cache(runner=runner)
+
             script = [
                 f'force_install_dir "{self.steamcmd_steam_path}"',
                 "login anonymous",
@@ -197,6 +212,58 @@ class SteamcmdInterface:
             EventBus().do_install_steamcmd.emit()
         if runner:
             runner.close()
+
+    def clear_depot_cache(self, runner: RunnerPanel | None = None) -> bool:
+        """Clears the steamCMD depot cache.
+        Potential workaround for certain weird steamCMD behavior and download failures.
+
+        :param runner: Runner panel if there is one., defaults to None
+        :type runner: RunnerPanel | None, optional
+        :exception Exception: If the depot cache cannot be cleared
+
+        """
+        logger.info("Attempting steamCMD depot cache clear")
+        if not self.setup:
+            if runner is not None:
+                runner.message(
+                    "Tried clearing depot cache but SteamCMD was not found. Please setup SteamCMD first!"
+                )
+
+            self.on_steamcmd_not_found(runner=runner)
+            return False
+
+        depot_cache = Path(self.steamcmd_install_path + "/depotcache")
+        if not os.path.exists(depot_cache):
+            logger.info(
+                f"Skipping depot cache clear. Could not find cache: {depot_cache}"
+            )
+            if runner is not None:
+                runner.message(
+                    f"Skipping depot cache clear. Could not find cache: {depot_cache}"
+                )
+            else:
+                InformationBox(
+                    title="Depot Cache Cleared",
+                    text="SteamCMD depot cache was already cleared.",
+                ).exec()
+            return False
+
+        if g_rmtree(depot_cache):
+            logger.info("Depot cache cleared")
+            if runner is not None:
+                runner.message("Depot cache cleared")
+            else:
+                InformationBox(
+                    title="Depot Cache Cleared",
+                    text="SteamCMD depot cache has been cleared.",
+                ).exec()
+            return True
+
+        logger.error("Failed to clear depot cache")
+        if runner is not None:
+            runner.message("Failed to clear depot cache")
+
+        return False
 
     def setup_steamcmd(
         self, symlink_source_path: str, reinstall: bool, runner: RunnerPanel

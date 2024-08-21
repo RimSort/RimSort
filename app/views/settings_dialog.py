@@ -397,7 +397,9 @@ class SettingsDialog(QDialog):
             self.steam_workshop_db_local_file_choose_button,
         ) = self.__create_db_group(section_lbl, none_lbl, tab_layout)
 
-        database_expiry_label = QLabel("Steam Workshop database expiry in Epoch Time (Default is 7 Days) To Disable Notification Use 0")
+        database_expiry_label = QLabel(
+            "Steam Workshop database expiry in Epoch Time (Default is 7 Days) To Disable Notification Use 0"
+        )
         database_expiry_label.setFont(GUIInfo().emphasis_font)
         group_layout.addWidget(database_expiry_label)
 
@@ -576,6 +578,17 @@ class SettingsDialog(QDialog):
         )
         group_layout.addWidget(self.steamcmd_validate_downloads_checkbox)
 
+        self.steamcmd_auto_clear_depot_cache_checkbox = QCheckBox(
+            "Automatically clear depot cache"
+        )
+        self.steamcmd_auto_clear_depot_cache_checkbox.setToolTip(
+            (
+                "Automatically clear the depot cache before downloading mods through SteamCMD.\n"
+                "This may potentially prevent some issues with downloading mods such as download failures and deleted mods repopulating."
+            )
+        )
+        group_layout.addWidget(self.steamcmd_auto_clear_depot_cache_checkbox)
+
         group_box = QGroupBox()
         tab_layout.addWidget(group_box)
 
@@ -602,6 +615,12 @@ class SettingsDialog(QDialog):
 
         button_layout = QHBoxLayout()
         tab_layout.addLayout(button_layout)
+
+        self.steamcmd_clear_depot_cache_button = QPushButton("Clear depot cache")
+        self.steamcmd_clear_depot_cache_button.setToolTip(
+            "Clear the depot cache manually. This may be useful if you encounter issues with downloading mods through SteamCMD."
+        )
+        button_layout.addWidget(self.steamcmd_clear_depot_cache_button)
 
         self.steamcmd_import_acf_button = QPushButton("Import .acf")
         button_layout.addWidget(self.steamcmd_import_acf_button)
