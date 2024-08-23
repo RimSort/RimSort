@@ -5,7 +5,7 @@ from typing import Optional
 
 from loguru import logger
 from PySide6.QtCore import QObject, Slot
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QMessageBox
 
 from app.models.settings import Instance, Settings
 from app.utils.constants import SortMethod
@@ -13,6 +13,7 @@ from app.utils.event_bus import EventBus
 from app.utils.generic import platform_specific_open
 from app.utils.system_info import SystemInfo
 from app.views.dialogue import (
+    BinaryChoiceDialog,
     show_dialogue_confirmation,
     show_dialogue_file,
     show_settings_error,
@@ -196,6 +197,9 @@ class SettingsController(QObject):
         # SteamCMD tab
         self.settings_dialog.steamcmd_install_location_choose_button.clicked.connect(
             self._on_steamcmd_install_location_choose_button_clicked
+        )
+        self.settings_dialog.steamcmd_clear_depot_cache_button.clicked.connect(
+            self._on_steamcmd_clear_depot_cache_button_clicked
         )
         self.settings_dialog.steamcmd_import_acf_button.clicked.connect(
             self._on_steamcmd_import_acf_button_clicked
@@ -464,6 +468,9 @@ class SettingsController(QObject):
         self.settings_dialog.steamcmd_validate_downloads_checkbox.setChecked(
             self.settings.steamcmd_validate_downloads
         )
+        self.settings_dialog.steamcmd_auto_clear_depot_cache_checkbox.setChecked(
+            self.settings.steamcmd_auto_clear_depot_cache
+        )
         self.settings_dialog.steamcmd_install_location.setText(
             str(
                 self.settings.instances[
@@ -601,6 +608,9 @@ class SettingsController(QObject):
         # SteamCMD tab
         self.settings.steamcmd_validate_downloads = (
             self.settings_dialog.steamcmd_validate_downloads_checkbox.isChecked()
+        )
+        self.settings.steamcmd_auto_clear_depot_cache = (
+            self.settings_dialog.steamcmd_auto_clear_depot_cache_checkbox.isChecked()
         )
         self.settings.instances[
             self.settings.current_instance
@@ -1151,6 +1161,10 @@ class SettingsController(QObject):
         self._last_file_dialog_path = str(Path(steamcmd_install_location).parent)
 
     @Slot()
+    def _on_steamcmd_clear_depot_cache_button_clicked(self) -> None:
+        EventBus().do_clear_steamcmd_depot_cache.emit()
+
+    @Slot()
     def _on_steamcmd_import_acf_button_clicked(self) -> None:
         """
         Handle the Steamcmd import ACF button click.
@@ -1179,6 +1193,20 @@ class SettingsController(QObject):
         """
         Build the Steam Workshop database of all mods using steamcmd.
         """
+        confirm_diag = BinaryChoiceDialog(
+            "Confirm Build Database (SteamCMD)",
+            "Are you sure you want to download all mods via SteamCMD and build the Steam Workshop database?",
+            (
+                "For most users this is not necessary as the GitHub SteamDB is adequate. Building the database may take a long time. "
+                "This process download all mods (not just your own) from the Steam Workshop. "
+                "This can be a large amount of data and take a long time. Are you sure you want to continue?"
+            ),
+            icon=QMessageBox.Icon.Warning,
+        )
+
+        if not confirm_diag.exec_is_positive():
+            return
+
         self.settings_dialog.global_ok_button.click()
         EventBus().do_download_all_mods_via_steamcmd.emit()
 
@@ -1187,6 +1215,21 @@ class SettingsController(QObject):
         """
         Build the Steam Workshop database of all mods using steam.
         """
+        confirm_diag = BinaryChoiceDialog(
+            "Confirm Build Database (Steam Download)",
+            "Are you sure you want to download all mods via Steam and build the Steam Workshop database?",
+            (
+                "For most users this is not necessary as the GitHub SteamDB is adequate. Building the database may take a long time. "
+                "This process will subscribe to and download all mods from the Steam Workshop (not just your own). "
+                "This can be a large amount of data and take a long time. Are you sure you want to continue?"
+                ""
+            ),
+            icon=QMessageBox.Icon.Warning,
+        )
+
+        if not confirm_diag.exec_is_positive():
+            return
+
         self.settings_dialog.global_ok_button.click()
         EventBus().do_download_all_mods_via_steam.emit()
 
@@ -1211,6 +1254,20 @@ class SettingsController(QObject):
         """
         Build the Steam Workshop database.
         """
+        confirm_diag = BinaryChoiceDialog(
+            "Confirm Build Database",
+            "Are you sure you want to build the Steam Workshop database?",
+            (
+                "For most users this is not necessary as the GitHub SteamDB is adequate. Building the database may take a long time. "
+                "Depending on your settings, it may also subscribe to and download all mods from the Steam Workshop (not just your own). "
+                "This can be a large amount of data and take a long time. Are you sure you want to continue?"
+            ),
+            icon=QMessageBox.Icon.Warning,
+        )
+
+        if not confirm_diag.exec_is_positive():
+            return
+
         self.settings_dialog.global_ok_button.click()
         EventBus().do_build_steam_workshop_database.emit()
 
