@@ -254,7 +254,11 @@ class SteamworksGameLaunch(Process):
 
 class SteamworksSubscriptionHandler:
     def __init__(
-        self, action: str, pfid_or_pfids: Union[int, list[int]], interval:int=1, _libs: str | None=None
+        self,
+        action: str,
+        pfid_or_pfids: Union[int, list[int]],
+        interval: int = 1,
+        _libs: str | None = None,
     ):
         # Optionally set _libs path for Steamworks
         self._libs = _libs
