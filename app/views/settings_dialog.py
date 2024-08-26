@@ -397,7 +397,7 @@ class SettingsDialog(QDialog):
             self.steam_workshop_db_local_file_choose_button,
         ) = self.__create_db_group(section_lbl, none_lbl, tab_layout)
 
-        database_expiry_label = QLabel("Steam Workshop database expiry in Epoch Time (Default is 7 Days) To Disable Notificatiom Use 0")
+        database_expiry_label = QLabel("Steam Workshop database expiry in Epoch Time (Default is 7 Days) To Disable Notification Use 0")
         database_expiry_label.setFont(GUIInfo().emphasis_font)
         group_layout.addWidget(database_expiry_label)
 
