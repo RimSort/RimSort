@@ -1148,12 +1148,25 @@ class MainContent(QObject):
 
         # Get the current order of active mods list
         current_order = self.mods_panel.active_mods_list.uuids.copy()
-
-        sorter = Sorter(
-            self.settings_controller.settings.sorting_algorithm,
-            active_package_ids=active_package_ids,
-            active_uuids=set(self.mods_panel.active_mods_list.uuids),
-        )
+        try:
+            sorter = Sorter(
+                self.settings_controller.settings.sorting_algorithm,
+                active_package_ids=active_package_ids,
+                active_uuids=set(self.mods_panel.active_mods_list.uuids),
+            )
+        except NotImplementedError as e:
+            dialogue.show_warning(
+                title="Sorting algorithm not implemented",
+                text="The selected sorting algorithm is not implemented",
+                information=(
+                    "This may be caused by malformed settings or improper migration between versions or different mod manager. "
+                    "Try resetting your settings, selecting a different sorting algorithm, or "
+                    "deleting your settings file. If the issue persists, please report it the developers."
+                ),
+                details=str(e),
+            )
+            logger.error(f"Sort failed. Sorting algorithm not implemented: {e}")
+            return
 
         success, new_order = sorter.sort()
 

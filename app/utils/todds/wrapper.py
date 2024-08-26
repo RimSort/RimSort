@@ -14,7 +14,7 @@ class ToddsInterface:
     """
 
     def __init__(
-        self, preset: str = "optimized", dry_run: bool = False, overwrite: bool=False
+        self, preset: str = "optimized", dry_run: bool = False, overwrite: bool = False
     ) -> None:
         logger.info("ToddsInterface initilizing...")
         if overwrite:

@@ -1,10 +1,11 @@
 import os
+import sys
 from pathlib import Path
 from typing import List, Optional, Tuple
 
 from deprecated import deprecated
 from loguru import logger
-from PySide6.QtCore import QRunnable, Qt, QThreadPool, Signal, Slot
+from PySide6.QtCore import QEvent, QRunnable, Qt, QThreadPool, Signal, Slot
 from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
@@ -24,6 +25,7 @@ from PySide6.QtWidgets import (
 
 import app.utils.generic as generic
 from app.utils.app_info import AppInfo
+from app.utils.event_bus import EventBus
 
 # Constants
 DEFAULT_TITLE = "RimSort"
@@ -154,6 +156,7 @@ def show_dialogue_file(
         logger.error("File dialogue mode not implemented.")
         return None
     return str(Path(os.path.normpath(path)).resolve()) if path != "" else None
+
 
 # jscpd:ignore-start
 def show_information(
@@ -331,17 +334,7 @@ class FatalErrorDialog(QDialog):
         main_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
         # Left-side
-        l_layout = QVBoxLayout()
-        # Icon
-        piximap = getattr(QStyle, "SP_MessageBoxCritical")
-        icon = self.style().standardIcon(piximap)
-        label = QLabel()
-        label.setPixmap(icon.pixmap(64, 64))
-        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        l_layout.addWidget(label)
-
-        l_layout.addWidget(self.details_btn)
-        l_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        l_layout = _setup_error_icon(self, self.details_btn)
         main_layout.addLayout(l_layout)
 
         # Center spacer
@@ -466,3 +459,116 @@ def _setup_messagebox(title: str | None) -> QMessageBox:
         dialogue.setWindowTitle(DEFAULT_TITLE)
 
     return dialogue
+
+
+def show_settings_error() -> None:
+    """
+    Displays a fatal error box indicating the app was
+    unable to start due to corrupt settings. Called if unable
+    to parse the settings file.
+
+    :param settings: settings model to allow resetting settings
+    """
+    logger.info("Showing settings failure box")
+    diag = SettingsFailureDialog()
+    diag.exec_()
+
+
+class SettingsFailureDialog(QDialog):
+    """Custom dialog to display fatal errors regarding settings parsing.
+
+    Has buttons to open the settings file, open the settings folder, or reset settings.
+    Exiting the dialog will terminate the application.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        # Set up the message box
+        self.setWindowTitle("Unable to parse settings file!")
+        self.setModal(True)
+        self.setObjectName("dialogue")
+
+        # Dynamic sizing
+        self.setSizePolicy(
+            QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        )
+
+        # Add data
+        self.text = "Your RimSort settings file is corrupt.\nPlease choose one of the following options to proceed."
+
+        # Buttons
+        self.open_settings_file_btn = QPushButton("Open Settings")
+        self.open_settings_folder_btn = QPushButton("Open Settings Folder")
+        self.reset_settings_btn = QPushButton("Reset Settings")
+        self.close_application_btn = QPushButton("Exit RimSort")
+
+        btn_layout = QHBoxLayout()
+        btn_layout.addWidget(self.open_settings_file_btn)
+        btn_layout.addWidget(self.open_settings_folder_btn)
+        btn_layout.addWidget(self.reset_settings_btn)
+
+        # Set up the layout
+        layout = QVBoxLayout()
+        main_layout = QHBoxLayout()
+        main_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+
+        # Left-side
+        l_layout = _setup_error_icon(self)
+        main_layout.addLayout(l_layout)
+
+        # Center spacer
+        main_layout.addItem(QSpacerItem(10, 0))
+
+        # Right-side
+        r_layout = QVBoxLayout()
+
+        txt = QLabel(self.text)
+        txt.setWordWrap(True)
+        r_layout.addWidget(QLabel(self.text))
+
+        r_layout.addItem(QSpacerItem(20, 20))
+
+        r_layout.addLayout(btn_layout)
+
+        r_layout.addWidget(self.close_application_btn)
+        main_layout.addLayout(r_layout)
+
+        layout.addLayout(main_layout)
+
+        self.setLayout(layout)
+        self.setFixedWidth(self.sizeHint().width())
+
+        def _open_settings_file() -> None:
+            generic.platform_specific_open(AppInfo().app_settings_file)
+
+        def _open_settings_folder() -> None:
+            generic.platform_specific_open(AppInfo().app_storage_folder)
+
+        def _reset_settings_file() -> None:
+            EventBus().reset_settings_file.emit
+            self.accept()
+
+        self.open_settings_file_btn.clicked.connect(lambda: _open_settings_file())
+        self.open_settings_folder_btn.clicked.connect(lambda: _open_settings_folder())
+        self.reset_settings_btn.clicked.connect(lambda: _reset_settings_file())
+        self.close_application_btn.clicked.connect(lambda: sys.exit())
+
+    def closeEvent(self, event: QEvent) -> None:
+        sys.exit()
+
+
+def _setup_error_icon(
+    diag: QDialog, details_btn: QPushButton | None = None
+) -> QVBoxLayout:
+    l_layout = QVBoxLayout()
+    piximap = getattr(QStyle, "SP_MessageBoxCritical")
+    icon = diag.style().standardIcon(piximap)
+    label = QLabel()
+    label.setPixmap(icon.pixmap(64, 64))
+    label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    l_layout.addWidget(label)
+    if details_btn is not None:
+        l_layout.addWidget(details_btn)
+    l_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    return l_layout
