@@ -61,7 +61,7 @@ body:
       placeholder: Additional context about the problem.
 
   - type: checkboxes
-    id: terms
+    id: coc_terms
     attributes:
       label: Code of Conduct
       description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/RimSort/RimSort/blob/main/CODE_OF_CONDUCT.md).
@@ -70,7 +70,7 @@ body:
           required: true
 
   - type: checkboxes
-    id: terms
+    id: dup_terms
     attributes:
       label: Duplicate Issue Check
       description: By submitting this issue, you attest that you've checked the issues for potential duplicates of this issue.
@@ -79,7 +79,7 @@ body:
           required: true
 
   - type: checkboxes
-    id: terms
+    id: wiki_terms
     attributes:
       label: Wiki/FAQ Check
       description: By submitting this issue, you attest that you've checked [the wiki](https://github.com/RimSort/RimSort/wiki) for potential solutions
