@@ -11,7 +11,7 @@ body:
     id: release_type
     attributes:
       label: Release Type
-      description: What Release Type are you using?
+      description: What release type(s) are you using?
       multiple: true
       options:
         - Compiled Windows x86 64-bit
@@ -19,7 +19,7 @@ body:
         - Compiled Darwin arm64
         - Compiled Ubuntu 22.04
         - Compiled Ubuntu 24.04
-        - Self Compiled
+        - Self-Compiled
         - Python Interpreter
     validations:
       required: true
@@ -59,7 +59,7 @@ body:
     id: extra_info
     attributes:
       label: Additional context
-      description: Add any other context about the problem here.
+      description: Add additional context about the problem here.
       placeholder: Additional context about the problem.
 
   - type: checkboxes
@@ -84,7 +84,7 @@ body:
     id: wiki_terms
     attributes:
       label: Wiki/FAQ Check
-      description: By submitting this issue, you attest that you've checked [the wiki](https://github.com/RimSort/RimSort/wiki) for potential solutions
+      description: By submitting this issue, you attest that you've checked [the Wiki](https://github.com/RimSort/RimSort/wiki) for potential solutions
       options:
-        - label: I've checked the wiki for a solution
+        - label: I've checked the Wiki for a solution
           required: true
