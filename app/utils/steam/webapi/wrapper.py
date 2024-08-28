@@ -12,11 +12,11 @@ from requests import post as requests_post
 from requests.exceptions import JSONDecodeError
 from steam.webapi import WebAPI
 
-from app.views.dialogue import show_dialogue_input, show_warning
 from app.utils.app_info import AppInfo
 from app.utils.constants import RIMWORLD_DLC_METADATA
 from app.utils.generic import chunks
 from app.utils.steam.steamworks.wrapper import SteamworksAppDependenciesQuery
+from app.views.dialogue import show_dialogue_input, show_warning
 
 # Prevent circular dependencies for type checking
 if TYPE_CHECKING:
@@ -157,7 +157,7 @@ class DynamicQuery(QObject):
         apikey: str,
         appid: int,
         get_appid_deps: bool = False,
-        life: int | None = None,
+        life: int = 0,
     ) -> None:
         QObject.__init__(self)
 
@@ -165,8 +165,7 @@ class DynamicQuery(QObject):
         self.api = None
         self.apikey = apikey
         self.appid = appid
-        if life:
-            self.expiry = self.__expires(life)
+        self.expiry = self.__expires(life)
         self.get_appid_deps = get_appid_deps
         self.next_cursor = "*"
         self.pagenum = 1
@@ -176,7 +175,14 @@ class DynamicQuery(QObject):
         self.database: dict[str, Any] = {}
 
     def __expires(self, life: int) -> int:
-        return int(time() + life)  # current seconds since epoch + 30 minutes
+        """Returns current epoch + life
+
+        :param life: The lifespan of the Query in terms of the seconds added to life
+        :type life: int
+        :return: current epoch + life
+        :rtype: int
+        """
+        return int(time() + life)
 
     def __initialize_webapi(self) -> None:
         if self.api:

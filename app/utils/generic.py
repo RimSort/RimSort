@@ -153,21 +153,20 @@ def launch_game_process(game_install_path: Path, args: list[str]) -> None:
             else:
                 popen_args = [executable_path]
                 popen_args.extend(args)
-                try:
-                    subprocess.CREATE_NEW_PROCESS_GROUP
-                except (
-                    AttributeError
-                ):  # not Windows, so assume POSIX; if not, we'll get a usable exception
-                    p = subprocess.Popen(
-                        popen_args,
-                        start_new_session=True,
-                    )
-                else:  # Windows
+
+                if sys.platform == "win32":
                     p = subprocess.Popen(
                         popen_args,
                         creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
                         shell=True,
                     )
+                else:
+                    # not Windows, so assume POSIX; if not, we'll get a usable exception
+                    p = subprocess.Popen(
+                        popen_args,
+                        start_new_session=True,
+                    )
+
             logger.info(
                 f"Launched independent RimWorld game process with PID {p.pid} using args {popen_args}"
             )
@@ -205,24 +204,29 @@ def open_url_browser(url: str) -> None:
 
 def platform_specific_open(path: str | Path) -> None:
     """
-    Function to open a file/folder in the platform-specific file-explorer app.
+    Function to open a folder in the platform-specific file-explorer app
+    or a file in the relevant system default application. On mac, if the path
+    is a directory or an .app file, open the path in Finder using -R
+    (i.e. treat .app as directory).
 
     :param path: path to open
+    :type path: str | Path
+    :param as_posix: if True, convert the path to a posix path regardless of the platform. This is useful for steam links.
+    :type as_posix: bool
     """
     logger.info(f"USER ACTION: opening {path}")
-    p = Path(path) if isinstance(path, str) else path
-    path = str(p)
-    system_name = platform.system()
-    if system_name == "Darwin":
+    p = Path(path)
+    path = str(path)
+    if sys.platform == "darwin":
         logger.info(f"Opening {path} with subprocess open on MacOS")
-        if p.is_file() or (p.is_dir() and p.suffix == ".app"):
+        if p.is_dir() and p.suffix == ".app":
             subprocess.Popen(["open", path, "-R"])
         else:
             subprocess.Popen(["open", path])
-    elif system_name == "Windows":
+    elif sys.platform == "win32":
         logger.info(f"Opening {path} with startfile on Windows")
-        os.startfile(path)  # type: ignore
-    elif system_name == "Linux":
+        os.startfile(path)
+    elif sys.platform == "linux":
         logger.info(f"Opening {path} with xdg-open on Linux")
         subprocess.Popen(["xdg-open", path])
     else:

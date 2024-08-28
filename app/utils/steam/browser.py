@@ -23,13 +23,13 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from app.views.dialogue import show_warning
 from app.models.image_label import ImageLabel
 from app.utils.app_info import AppInfo
 from app.utils.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetCollectionDetails,
     ISteamRemoteStorage_GetPublishedFileDetails,
 )
+from app.views.dialogue import show_warning
 
 
 class SteamBrowser(QWidget):
@@ -290,8 +290,8 @@ class SteamBrowser(QWidget):
 
     def _clear_downloader_list(self) -> None:
         self.downloader_list.clear()
-        self.downloader_list_mods_tracking = []
-        self.downloader_list_dupe_tracking = {}
+        self.downloader_list_mods_tracking.clear()
+        self.downloader_list_dupe_tracking.clear()
 
     def _downloader_item_ContextMenuEvent(self, point: QPoint) -> None:
         context_item = self.downloader_list.itemAt(point)

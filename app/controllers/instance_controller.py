@@ -9,12 +9,12 @@ import msgspec
 from loguru import logger
 from PySide6.QtCore import QObject
 
+from app.models.instance import Instance
+from app.utils.app_info import AppInfo
 from app.views.dialogue import (
     show_fatal_error,
     show_warning,
 )
-from app.models.instance import Instance
-from app.utils.app_info import AppInfo
 
 
 class InvalidArchivePathError(ValueError):

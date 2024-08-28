@@ -94,8 +94,8 @@ def gen_tier_one_deps_graph(
     # Bug fix: if there are circular dependencies in tier one mods
     # then an infinite loop happens here unless we keep track of what has
     # already been processed.
-    processed_ids = set()
-    tier_one_mods = set()
+    processed_ids: set[str] = set()
+    tier_one_mods: set[str] = set()
     for known_tier_one_mod in known_tier_one_mods:
         if known_tier_one_mod in dependencies_graph:
             # Some known tier one mods might not actually be active

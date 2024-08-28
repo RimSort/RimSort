@@ -26,6 +26,11 @@ from app.controllers.menu_bar_controller import MenuBarController
 from app.controllers.settings_controller import (
     SettingsController,
 )
+from app.utils.app_info import AppInfo
+from app.utils.event_bus import EventBus
+from app.utils.gui_info import GUIInfo
+from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
+from app.utils.watchdog import WatchdogHandler
 from app.views.dialogue import (
     show_dialogue_conditional,
     show_dialogue_confirmation,
@@ -34,11 +39,6 @@ from app.views.dialogue import (
     show_fatal_error,
     show_warning,
 )
-from app.utils.app_info import AppInfo
-from app.utils.event_bus import EventBus
-from app.utils.gui_info import GUIInfo
-from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
-from app.utils.watchdog import WatchdogHandler
 from app.views.main_content_panel import MainContent
 from app.views.menu_bar import MenuBar
 from app.views.status_panel import Status

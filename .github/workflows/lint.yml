@@ -41,6 +41,7 @@ jobs:
         run: |
           python3 -m venv .venv
           .venv/bin/pip install -r requirements.txt
+          .venv/bin/pip install -r requirements_develop.txt
           .venv/bin/pip install -e submodules/steamfiles
 
       - name: Move the dependencies
@@ -51,7 +52,7 @@ jobs:
         run: echo "python-version=$(cut -d '.' -f 1,2 .python-version)" >> "$GITHUB_OUTPUT"
 
       - name: Super-linter
-        uses: super-linter/super-linter/slim@v6.7.0 # x-release-please-version
+        uses: super-linter/super-linter/slim@v7.0.0 # x-release-please-version
         env:
           # To report GitHub Actions status checks
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

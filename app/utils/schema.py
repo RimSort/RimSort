@@ -2,13 +2,12 @@ from typing import Any
 
 from loguru import logger
 
-from app.views.dialogue import show_warning
 from app.utils.constants import RIMWORLD_PACKAGE_IDS
+from app.views.dialogue import show_warning
 
 
 def generate_rimworld_mods_list(
-    game_version: str,
-    packageids: list[str],
+    game_version: str, packageids: list[str], dlc_ids: list[str] = RIMWORLD_PACKAGE_IDS
 ) -> dict[str, Any]:
     """
     Generate the default Rimworld mods list
@@ -22,7 +21,7 @@ def generate_rimworld_mods_list(
             "knownExpansions": {
                 "li": [
                     packageid
-                    for packageid in packageids
+                    for packageid in dlc_ids
                     if packageid.lower() in RIMWORLD_PACKAGE_IDS
                     and packageid.lower() != "ludeon.rimworld"
                 ],
