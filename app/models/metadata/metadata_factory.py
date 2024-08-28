@@ -595,7 +595,7 @@ def get_dlc_packageid_appid_map() -> dict[str, str]:
     return {dlc["packageid"]: appid for appid, dlc in RIMWORLD_DLC_METADATA.items()}
 
 
-def get_rules_db(
+def read_rules_db(
     path: Path,
 ) -> ExternalRulesSchema | None:
     logger.info(f"Checking Rules DB at: {path}")
@@ -613,3 +613,25 @@ def get_rules_db(
     else:  # Assume db_data_missing
         logger.warning("Rules DB not found at specified path.")
         return None
+
+
+def write_rules_db(path: Path, external_rules: ExternalRulesSchema) -> None:
+    """Writes the ExternalRulesSchema to a file. Raises an IOError/OSError if the file cannot be written.
+
+    :param path:
+    :type path: Path
+    :param external_rules: _description_
+    :type external_rules: ExternalRulesSchema
+    :return: _description_
+    :rtype: bool
+    :raises: IOError, OSError
+    """
+    logger.info(f"Writing Rules DB to: {path}")
+    try:
+        with open(path, "wb") as f:
+            json_string = msgspec.json.encode(external_rules)
+            f.write(json_string)
+            logger.info("Rules DB written successfully")
+    except (IOError, OSError) as e:
+        logger.error(f"Error writing Rules DB: {e}")
+        raise e

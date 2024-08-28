@@ -9,11 +9,12 @@ from app.models.metadata.metadata_factory import (
     create_base_rules,
     create_listed_mod_from_path,
     create_mod_dependency,
-    get_rules_db,
     match_version,
     read_mods_config,
+    read_rules_db,
     value_extractor,
     write_mods_config,
+    write_rules_db,
 )
 from app.models.metadata.metadata_structure import (
     AboutXmlMod,
@@ -219,12 +220,12 @@ def test_create_base_rules_ludeon_core() -> None:
 
 def test_get_rules_db_large_db() -> None:
     path = Path("tests/data/dbs/large_rules.json")
-    _ = get_rules_db(path)
+    _ = read_rules_db(path)
 
 
 def test_get_rules_db_values() -> None:
     path = Path("tests/data/dbs/userRules.json")
-    rules = get_rules_db(path)
+    rules = read_rules_db(path)
 
     expected_value = ExternalRulesSchema(
         timestamp=1715795801,
@@ -253,6 +254,40 @@ def test_get_rules_db_values() -> None:
     )
 
     assert rules == expected_value
+
+
+def test_write_rules_db(tmp_path: Path) -> None:
+    path = tmp_path / "test.json"
+    rules = ExternalRulesSchema(
+        timestamp=1715795801,
+        rules={
+            "test.test1": ExternalRule(
+                loadAfter={},
+                loadBefore={
+                    "a.a": SubExternalRule(name="AA", comment="test1 load before"),
+                    "b.b": SubExternalRule(name="aa", comment="test2 load before"),
+                    "c.c.core": SubExternalRule(name="test3", comment=""),
+                },
+                loadTop=SubExternalBoolRule(False),
+                loadBottom=SubExternalBoolRule(),
+            ),
+            "test.test2": ExternalRule(
+                loadAfter={
+                    "a.a": SubExternalRule(name="AA", comment="test1 load before"),
+                    "b.b": SubExternalRule(name="aa", comment="test2 load before"),
+                    "c.c.core": SubExternalRule(name="test3", comment=""),
+                },
+                loadBefore={},
+                loadTop=SubExternalBoolRule(False),
+                loadBottom=SubExternalBoolRule(value=True, comment="It is known."),
+            ),
+        },
+    )
+
+    write_rules_db(path, rules)
+
+    new_rules = read_rules_db(path)
+    assert rules == new_rules
 
 
 def test_create_scenario_mod_from_rsc_invalid_meta() -> None:
