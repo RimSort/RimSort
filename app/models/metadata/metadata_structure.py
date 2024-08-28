@@ -13,7 +13,7 @@ import msgspec
 class ModType(Enum):
     LOCAL = "Local"
     STEAM_WORKSHOP = "Steam Workshop"
-    STEAM_WORKSHOP_CMD = "Steam Workshop (cmd support)"
+    STEAM_CMD = "Steam CMD"
     LUDEON = "Ludeon"
     GIT = "Git"
     UNKNOWN = "Unknown"
@@ -269,7 +269,7 @@ class SteamMod(RuledMod):
     @property
     def mod_type(self) -> ModType:
         if self.published_file_id == self.mod_folder:
-            return ModType.STEAM_WORKSHOP_CMD
+            return ModType.STEAM_CMD
         return ModType.STEAM_WORKSHOP
 
     @property
@@ -287,13 +287,21 @@ class SteamMod(RuledMod):
     def published_file_id(
         self, expected_sub_path: Path = Path("About/PublishedFileId.txt")
     ) -> int:
-        """Cached property to return the published file id from the mod's path. If the file does not exist, return -1."""
+        """Cached property to return the published file id from the mod's path. If the file does not exist, returns
+        the mod folder if it is a valid published file id (non-zero natural number). Otherwise return -1."""
         if self.mod_path is None:
             return -1
+
         expected_path = self.mod_path.joinpath(expected_sub_path)
         if expected_path.exists():
             with open(expected_path, "r") as file:
                 return int(file.read())
+
+        if self.mod_folder is not None and self.mod_folder.isnumeric():
+            candidate = int(self.mod_folder)
+            if candidate > 0:
+                return candidate
+
         return -1
 
 
