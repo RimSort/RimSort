@@ -23,7 +23,7 @@ body:
         - Python Interpreter
     validations:
       required: true
-  - type: textarea
+  - type: input
     id: version
     attributes:
       label: Version
@@ -39,6 +39,13 @@ body:
       placeholder: Windows 11, macOS (Arm64), Arch (KDE), etc.
     validations:
       required: true
+  - type: input
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Please provide a RimSort.log file. There may be circumstances where a log file is not generated but without logs, it is difficult to diagnose the issue.
+      placehold: Link to RimSort.log file
+  
   - type: textarea
     id: bug_description
     attributes:
@@ -47,12 +54,6 @@ body:
       placeholder: Tell us what you see!
     validations:
       required: true
-
-  - type: input
-    id: logs
-    attributes:
-      label: Relevant logs
-      description: Please provide a RimSort.log file. There may be circumstances where a log file is not generated but without logs, it is difficult to diagnose the issue.
 
   - type: textarea
     id: extra_info
@@ -74,7 +75,7 @@ body:
     id: dup_terms
     attributes:
       label: Duplicate Issue Check
-      description: By submitting this issue, you attest that you've checked the issues for potential duplicates of this issue.
+      description: By submitting this issue, you attest that you've checked the issues tab for potential duplicates of this issue.
       options:
         - label: I've checked for duplicate issues
           required: true
