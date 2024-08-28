@@ -1,3 +1,4 @@
+import itertools
 import os
 import re
 import traceback
@@ -6,20 +7,20 @@ from pathlib import Path
 from typing import Any, Sequence
 
 import msgspec
+import pygit2
 from loguru import logger
 
 from app.models.metadata.metadata_structure import (
+    AboutXmlMod,
     BaseRules,
     CaseInsensitiveSet,
     CaseInsensitiveStr,
     DependencyMod,
     ExternalRulesSchema,
     ListedMod,
-    LudeonMod,
-    RuledMod,
+    ModType,
     Rules,
     ScenarioMod,
-    StandardMod,
 )
 from app.utils.constants import RIMWORLD_DLC_METADATA
 from app.utils.xml import xml_path_to_json
@@ -139,18 +140,18 @@ def create_scenario_mod(scenario_data: dict[str, Any]) -> tuple[bool, ScenarioMo
     return mod.valid, mod
 
 
-def create_standard_mod(
+def create_about_mod(
     mod_data: dict[str, Any], target_version: str
-) -> tuple[bool, StandardMod]:
+) -> tuple[bool, AboutXmlMod]:
     """Factory method for creating a ListedMod object.
 
     :param mod_data: The dictionary containing the mod data.
     :param target_version: The version of RimWorld to target.
     :return: A tuple containing a boolean indicating if the mod is valid and the mod object."""
-    mod = _parse_required(mod_data, RuledMod())
+    mod = _parse_basic(mod_data, AboutXmlMod())
 
-    if not isinstance(mod, RuledMod):
-        ruled_mod = RuledMod()
+    if not isinstance(mod, AboutXmlMod):
+        ruled_mod = AboutXmlMod()
         ruled_mod.__dict__ = mod.__dict__
         mod = ruled_mod
 
@@ -172,9 +173,10 @@ def _set_mod_invalid(mod: ListedMod, message: str) -> ListedMod:
     return mod
 
 
-def _parse_required(mod_data: dict[str, Any], mod: StandardMod) -> StandardMod:
+def _parse_basic(mod_data: dict[str, Any], mod: AboutXmlMod) -> AboutXmlMod:
     """
-    Parse the required fields from the mod_data and set them on the mod object.
+    Parse the basic fields from the mod_data and set them on the mod object.
+    If package_id cannot be parsed correctly, the mod is considered invalid.
 
     :param mod_data: Dictionary with string keys to be used as the data source.
     :param mod: ListedMod the Listed mod that is the target of data being filled.
@@ -189,65 +191,22 @@ def _parse_required(mod_data: dict[str, Any], mod: StandardMod) -> StandardMod:
             f"packageId was not a string: {package_id}. This mod will be considered invalid by RimWorld.",
         )
 
-    # Check if the package id is a known DLC package id
-    if mod.package_id in get_dlc_packageid_appid_map():
-        logger.info(f"Detected known Ludeon package id: {mod.package_id}.")
-        mod = LudeonMod(
-            **vars(mod), steam_app_id=int(get_dlc_packageid_appid_map()[mod.package_id])
-        )
-
-        mod.name = RIMWORLD_DLC_METADATA[str(mod.steam_app_id)]["name"]
-        mod.description = RIMWORLD_DLC_METADATA[str(mod.steam_app_id)]["description"]
-    elif "ludeon." in mod.package_id:
-        logger.warning(
-            f"Detected mod that is possibly a Ludeon mod with package id: {mod.package_id}. Could not be matched with known DLC package ids. If this is a DLC, please report it to the RimSort developers."
-        )
-
-        # Check if steamAppId is reported
-        steam_app_id = value_extractor(mod_data.get("steamAppId", False))
-        try:
-            if isinstance(steam_app_id, str):
-                steam_app_id_int = int(steam_app_id)
-            else:
-                raise ValueError
-        except ValueError:
-            if not steam_app_id:
-                logger.warning(
-                    f"Could not find steamAppId in mod data. Treating {mod.package_id} as a normal mod."
-                )
-            else:
-                logger.warning(
-                    f"Found steamAppId '{steam_app_id}' was not a valid integer. Treating {mod.package_id} as a normal mod."
-                )
-        else:
-            mod = LudeonMod(**vars(mod), steam_app_id=steam_app_id_int)
-            logger.info(
-                f"Found steam app id '{mod.steam_app_id}' for suspected ludeon mod '{mod.package_id}'. Treating as Ludeon mod."
-            )
-
-            mod.description = "Unknown Ludeon mod"
-            mod.name = "Unknown Ludeon mod"
+    # Prioritize app id from about.xml over hardcoded DLC app id
+    steam_app_id = value_extractor(mod_data.get("steamAppId", False))
+    if isinstance(steam_app_id, str) and steam_app_id.isdigit():
+        mod.steam_app_id = int(steam_app_id)
+    elif mod.package_id in get_dlc_packageid_appid_map():
+        mod.steam_app_id = int(get_dlc_packageid_appid_map()[mod.package_id])
 
     name = value_extractor(mod_data.get("name", False))
     if isinstance(name, str):
         mod.name = name
-    elif not isinstance(mod, LudeonMod):
-        message = "Couldn't parse a valid name. This mod may be be considered invalid by RimWorld."
-        # If package id was valid string, default to that as name for display purposes
-        if isinstance(package_id, str):
-            mod.name = mod.package_id
-            message += f" Defaulting to packageId: {package_id}"
-
-        _set_mod_invalid(mod, message)
+    else:
+        mod.name = mod.package_id
 
     description = value_extractor(mod_data.get("description", False))
     if isinstance(description, str):
         mod.description = description
-    elif not isinstance(mod, LudeonMod):
-        _set_mod_invalid(
-            mod,
-            "Couldn't parse a valid description. This mod may be be considered invalid by RimWorld.",
-        )
 
     author = value_extractor(mod_data.get("author", False))
     authors = value_extractor(mod_data.get("authors", False))
@@ -258,28 +217,18 @@ def _parse_required(mod_data: dict[str, Any], mod: StandardMod) -> StandardMod:
     if authors:
         mod.authors.extend(authors)
 
-    if (not (author or authors)) and not isinstance(mod, LudeonMod):
-        _set_mod_invalid(
-            mod, "Couldn't parse valid author(s). This mod may be invalid."
-        )
-
     supported_versions = value_extractor(mod_data.get("supportedVersions", False))
     if isinstance(supported_versions, list):
         mod.supported_versions = set(supported_versions)
     elif isinstance(supported_versions, str):
         mod.supported_versions = {supported_versions}
-    elif not isinstance(mod, LudeonMod):
-        _set_mod_invalid(
-            mod,
-            "Couldn't parse valid supportedVersions. This mod may be invalid.",
-        )
 
     return mod
 
 
 def _parse_optional(
-    mod_data: dict[str, Any], mod: RuledMod, target_version: str
-) -> RuledMod:
+    mod_data: dict[str, Any], mod: AboutXmlMod, target_version: str
+) -> AboutXmlMod:
     """
     Parse the optional fields from the mod_data and set them on the mod object.
     """
@@ -296,11 +245,64 @@ def _parse_optional(
     if url and isinstance(url, str):
         mod.url = url
 
-    # Skip descriptionsByVersion
-
     mod.about_rules = create_base_rules(mod_data, target_version)
 
-    raise NotImplementedError
+    descriptions_by_version = value_extractor(
+        mod_data.get("descriptionsByVersion", False)
+    )
+    if isinstance(descriptions_by_version, dict):
+        _, description = match_version(descriptions_by_version, target_version)
+        if description and isinstance(description, str):
+            mod.description = description
+
+    return mod
+
+
+def _set_mod_type(
+    mod: ListedMod, local_path: Path, rimworld_path: Path, workshop_path: Path | None
+) -> ListedMod:
+    """
+    Set the mod type based on the paths given.
+
+    :param mod: The mod to set the type on.
+    :param local_path: The path to the local mod.
+    :param rimworld_path: The path to the RimWorld mods folder.
+    :param workshop_path: The path to the workshop folder.
+    :return: The mod with the type set.
+    """
+    if mod.mod_path is None:
+        mod.mod_type = ModType.UNKNOWN
+        return mod
+
+    parent_path = mod.mod_path.parent
+    rimworld_expansion_path = rimworld_path / Path("Data")
+    if parent_path == rimworld_expansion_path:
+        mod.mod_type = ModType.LUDEON
+    elif parent_path == workshop_path:
+        mod.mod_type = ModType.STEAM_WORKSHOP
+    elif parent_path == local_path:
+        try:
+            repo = pygit2.discover_repository(str(mod.mod_path))
+
+            if (
+                repo is not None
+                and Path(repo).exists()
+                and Path(repo).parent == mod.mod_path
+            ):
+                mod.mod_type = ModType.GIT
+                return mod
+        except pygit2.GitError as e:
+            logger.error(
+                f"Encountered git error while trying to discover git repository at: {mod.mod_path}"
+            )
+            logger.error(e)
+
+        if (parent_path / Path("About/PublishedFileId.txt")).exists():
+            mod.mod_type = ModType.STEAM_WORKSHOP
+        else:
+            mod.mod_type = ModType.LOCAL
+
+    return mod
 
 
 def create_base_rules(
@@ -409,32 +411,33 @@ def create_mod_dependency(input_dict: dict[str, str]) -> DependencyMod:
     return mod
 
 
-def create_standard_mod_from_xml(
-    mod_xml_path: Path, target_version: str
-) -> tuple[bool, StandardMod]:
+def _create_about_mod_from_xml(
+    base_path: Path, mod_xml_path: Path, target_version: str
+) -> tuple[bool, AboutXmlMod]:
     try:
         mod_data = xml_path_to_json(str(mod_xml_path))
     except Exception:
         logger.error(
             f"Unable to parse {mod_xml_path} with the exception: {traceback.format_exc()}"
         )
-        return False, StandardMod(valid=False)
+        return False, AboutXmlMod(valid=False)
 
     mod_data = {k.lower(): v for k, v in mod_data.items()}
     mod_data = mod_data.get("modmetadata", {})
 
     if not mod_data:
         logger.error(f"Could not parse {mod_xml_path}.")
-        return False, StandardMod(valid=False)
+        return False, AboutXmlMod(valid=False)
 
-    valid, mod = create_standard_mod(mod_data, target_version)
+    valid, mod = create_about_mod(mod_data, target_version)
 
-    mod.mod_path = Path(mod_xml_path)
-
+    mod.mod_path = base_path
     return valid, mod
 
 
-def create_scenario_mod_from_rsc(mod_rsc_path: Path) -> tuple[bool, ScenarioMod]:
+def _create_scenario_mod_from_rsc(
+    base_path: Path, mod_rsc_path: Path
+) -> tuple[bool, ScenarioMod]:
     try:
         mod_data = xml_path_to_json(str(mod_rsc_path))
     except Exception:
@@ -452,46 +455,65 @@ def create_scenario_mod_from_rsc(mod_rsc_path: Path) -> tuple[bool, ScenarioMod]
 
     valid, mod = create_scenario_mod(mod_data)
 
-    mod.mod_path = Path(mod_rsc_path)
+    mod.mod_path = base_path
 
     return valid, mod
 
 
 def create_listed_mod_from_path(
-    path: Path, target_version: str
+    path: Path,
+    target_version: str,
+    local_path: Path,
+    rimworld_path: Path,
+    workshop_path: Path | None,
 ) -> tuple[bool, ListedMod]:
     # Check if path is a directory
     if path.is_dir():
         # Check if About.xml exists
         about_xml_path = path / Path("About/About.xml")
         if about_xml_path.exists():
-            return create_standard_mod_from_xml(about_xml_path, target_version)
+            success, about_mod = _create_about_mod_from_xml(
+                path, about_xml_path, target_version
+            )
+            return success, _set_mod_type(
+                about_mod, local_path, rimworld_path, workshop_path
+            )
 
         # Check for any file with .rsc extension
+        generator = path.glob("*.rsc")
+        gen, _ = itertools.tee(generator, 2)
+
+        gen1 = next(gen, None)
+        gen2 = next(gen, None)
+
         rsc_files = list(path.glob("*.rsc"))
 
         # Abort if multiple .rsc files are found
-        if len(rsc_files) > 1:
+        if gen2 is not None:
             logger.warning(
                 f"Multiple .rsc files found in {path}. Cannot determine which file to use. Aborting parse of directory."
             )
-            return False, ListedMod(valid=False)
-        elif len(rsc_files) == 1:
-            return create_scenario_mod_from_rsc(rsc_files[0])
+            return False, _set_mod_type(
+                ListedMod(valid=False, _mod_path=path),
+                local_path,
+                rimworld_path,
+                workshop_path,
+            )
+        elif gen1 is not None:
+            success, scenario_mod = _create_scenario_mod_from_rsc(path, rsc_files[0])
+            return success, _set_mod_type(
+                scenario_mod, local_path, rimworld_path, workshop_path
+            )
 
-        logger.warning("No About.xml or .rsc file found in directory: {path}")
-        return False, ListedMod(valid=False)
+        logger.warning(f"No About.xml or .rsc file found in directory: {path}")
+        return False, _set_mod_type(
+            ListedMod(valid=False, _mod_path=path),
+            local_path,
+            rimworld_path,
+            workshop_path,
+        )
 
-    # Check if file is About.xml
-    if path.name == "About.xml":
-        return create_standard_mod_from_xml(path, target_version)
-
-    # Check if file is .rsc
-    if path.suffix == ".rsc":
-        return create_scenario_mod_from_rsc(path)
-
-    logger.warning(f"Could not determine mod type for {path}.")
-    return False, ListedMod(valid=False)
+    raise ValueError("Path must be a directory.")
 
 
 @cache

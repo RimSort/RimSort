@@ -4,6 +4,7 @@ types-beautifulsoup4
 types-Deprecated
 types-psutil
 #types-pyside6
+types-pygit2
 types-requests
 types-toposort
 types-xmltodict

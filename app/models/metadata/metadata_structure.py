@@ -120,7 +120,6 @@ class ListedMod(BaseMod):
 
     Attributes:
         valid (bool): Whether the mod is considered valid by RimSort.
-        authors (list[str]): A list of authors for the mod.
         description (str): A description of the mod.
         supported_versions (set[str]): A set of supported RimWorld versions.
         description (str): A description of the mod.
@@ -131,7 +130,7 @@ class ListedMod(BaseMod):
         uuid (str): The internal unique identifier for the mod.
     """
 
-    valid: bool = False
+    valid: bool = True
 
     supported_versions: set[str] = field(default_factory=set)
     description: str = (
@@ -141,6 +140,7 @@ class ListedMod(BaseMod):
     )
 
     _mod_path: Path | None = None
+    _mod_type: ModType = ModType.UNKNOWN
 
     @property
     def mod_path(self) -> Path | None:
@@ -155,6 +155,9 @@ class ListedMod(BaseMod):
         if self._mod_path:
             raise ValueError("Mod path already set. Cannot override.")
         self._mod_path = path
+
+        if hasattr(self, "published_file_id"):
+            del self.published_file_id
 
     @property
     def mod_folder(self) -> str | None:
@@ -180,7 +183,13 @@ class ListedMod(BaseMod):
 
     @property
     def mod_type(self) -> ModType:
-        return ModType.UNKNOWN
+        return self._mod_type
+
+    @mod_type.setter
+    def mod_type(self, value: ModType) -> None:
+        if self.mod_type != ModType.UNKNOWN:
+            raise ValueError("Mod type already set. Cannot override.")
+        self._mod_type = value
 
     @property
     def uuid(self) -> str:
@@ -189,15 +198,51 @@ class ListedMod(BaseMod):
             return str(self._mod_path)
         return self._uuid
 
+    @functools.cached_property
+    def published_file_id(
+        self, expected_sub_path: Path = Path("About/PublishedFileId.txt")
+    ) -> int:
+        """Cached property to return the published file id from the mod's path. If the file does not exist, returns
+        the mod folder if it is a valid published file id (non-zero natural number). Otherwise return -1."""
+        if self.mod_path is None:
+            return -1
 
-@dataclass
-class StandardMod(ListedMod, PackageIdMod):
-    authors: list[str] = field(default_factory=list)
+        expected_path = self.mod_path.joinpath(expected_sub_path)
+        if expected_path.exists():
+            with open(expected_path, "r") as file:
+                return int(file.read())
+
+        if self.mod_folder is not None and self.mod_folder.isnumeric():
+            candidate = int(self.mod_folder)
+            if candidate > 0:
+                return candidate
+
+        return -1
+
+    @property
+    def preview_img_path(self) -> Path | None:
+        """Return the path to the preview image for the mod.
+
+        Returns:
+            Path | None: The path to the preview image for the mod, or None if the path does not exist.
+        """
+        if self.mod_path is None:
+            return None
+
+        candidate_path = self.mod_path.joinpath("About/preview.png")
+        if candidate_path.exists():
+            return candidate_path
+        return None
 
 
 @dataclass
 class ScenarioMod(ListedMod):
-    valid: bool = True
+    """A mod which is a scenario.
+
+    Attributes:
+        summary (str): The scenario summary.
+    """
+
     summary: str = ""
 
 
@@ -226,107 +271,29 @@ class Rules(BaseRules):
 
 
 @dataclass
-class RuledMod(StandardMod):
+class AboutXmlMod(ListedMod, PackageIdMod):
     """A listed mod with rules for load order and dependencies.
 
     Attributes:
+        authors (list[str]): A list of authors for the mod.
         mod_version (str): The version of the mod.
+        mod_icon_path (Path | None): The path to the mod icon.
+        steam_app_id (int): The Steam app ID for the mod.
         url (str): A URL for the mod.
         about_rules (BaseRules): The rules for the About section of the mod.
         community_rules (Rules): The rules for the Community section of the mod.
         user_rules (Rules): The rules for the User section of the mod.
     """
 
-    valid: bool = True
-
+    authors: list[str] = field(default_factory=list)
     mod_version: str = ""
     mod_icon_path: Path | None = None
+    steam_app_id: int = -1
     url: str = ""
 
     about_rules: BaseRules = field(default_factory=BaseRules)
     community_rules: Rules = field(default_factory=Rules)
     user_rules: Rules = field(default_factory=Rules)
-
-
-@dataclass
-class LudeonMod(RuledMod):
-    """A mod which made by Ludeon Studios."""
-
-    mod_type = ModType.LUDEON
-    steam_app_id: int = -1
-
-
-@dataclass
-class SteamMod(RuledMod):
-    """A mod which is on the Steam Workshop.
-
-    Attributes:
-        mod_folder (str | None): The folder name of the mod path.
-        published_file_id (int): The published file id of the mod.
-        mod_type (ModType): The type of the mod.
-    """
-
-    @property
-    def mod_type(self) -> ModType:
-        if self.published_file_id == self.mod_folder:
-            return ModType.STEAM_CMD
-        return ModType.STEAM_WORKSHOP
-
-    @property
-    def mod_path(self) -> Path | None:
-        return self._mod_path
-
-    @mod_path.setter
-    def mod_path(self, path: Path) -> None:
-        self._mod_path = path
-
-        # Reset the dependent cached property
-        del self.published_file_id
-
-    @functools.cached_property
-    def published_file_id(
-        self, expected_sub_path: Path = Path("About/PublishedFileId.txt")
-    ) -> int:
-        """Cached property to return the published file id from the mod's path. If the file does not exist, returns
-        the mod folder if it is a valid published file id (non-zero natural number). Otherwise return -1."""
-        if self.mod_path is None:
-            return -1
-
-        expected_path = self.mod_path.joinpath(expected_sub_path)
-        if expected_path.exists():
-            with open(expected_path, "r") as file:
-                return int(file.read())
-
-        if self.mod_folder is not None and self.mod_folder.isnumeric():
-            candidate = int(self.mod_folder)
-            if candidate > 0:
-                return candidate
-
-        return -1
-
-
-@dataclass
-class LocalMod(RuledMod):
-    """A mod which is local to the user's machine.
-
-    Attributes:
-        mod_type (ModType): The type of the mod.
-    """
-
-    @property
-    def mod_type(self) -> ModType:
-        return ModType.LOCAL
-
-
-@dataclass
-class GitMod(RuledMod):
-    """A mod which is hosted on Git."""
-
-    @property
-    def mod_type(self) -> ModType:
-        return ModType.GIT
-
-    git_url: str = ""
 
 
 class SubExternalRule(msgspec.Struct, omit_defaults=True):

@@ -1,25 +1,32 @@
+import shutil
 from pathlib import Path
 
+import pygit2
+
 from app.models.metadata.metadata_factory import (
-    _parse_required,
+    _create_scenario_mod_from_rsc,
+    _parse_basic,
     create_base_rules,
     create_listed_mod_from_path,
     create_mod_dependency,
-    create_scenario_mod_from_rsc,
     get_rules_db,
     match_version,
     value_extractor,
 )
 from app.models.metadata.metadata_structure import (
+    AboutXmlMod,
     CaseInsensitiveSet,
     ExternalRule,
     ExternalRulesSchema,
-    LudeonMod,
-    RuledMod,
+    ModType,
     SubExternalBoolRule,
     SubExternalRule,
 )
 from app.utils.xml import xml_path_to_json
+
+RIMWORLD_PATH = Path("tests/data/mod_examples/RimWorld")
+LOCAL_MODS_PATH = Path("tests/data/mod_examples/Local")
+STEAM_WORKSHOP_PATH = Path("tests/data/mod_examples/Steam")
 
 
 def test_value_extractor_string() -> None:
@@ -78,11 +85,10 @@ def test_value_extractor_ignore_if_no_matching_field() -> None:
 
 def test__parse_required_ludeon_core() -> None:
     # Test parse required using data from data folder - Ludeon Core
-    path = Path("tests/data/mod_examples/Data/Core/About/About.xml")
+    path = Path("tests/data/mod_examples/RimWorld/Data/Core/About/About.xml")
     mod_data = xml_path_to_json(str(path))["ModMetaData"]
-    mod = _parse_required(mod_data, RuledMod())
+    mod = _parse_basic(mod_data, AboutXmlMod())
 
-    assert isinstance(mod, LudeonMod)
     assert mod.package_id == "ludeon.rimworld"
     assert mod.authors == ["Ludeon Studios"]
     assert mod.steam_app_id == 294100
@@ -91,11 +97,10 @@ def test__parse_required_ludeon_core() -> None:
 
 def test__parse_required_ludeon_royalty() -> None:
     # Test parse required using data from data folder - Ludeon Royalty
-    path = Path("tests/data/mod_examples/Data/Royalty/About/About.xml")
+    path = Path("tests/data/mod_examples/RimWorld/Data/Royalty/About/About.xml")
     mod_data = xml_path_to_json(str(path))["ModMetaData"]
-    mod = _parse_required(mod_data, RuledMod())
+    mod = _parse_basic(mod_data, AboutXmlMod())
 
-    assert isinstance(mod, LudeonMod)
     assert mod.package_id == "ludeon.rimworld.royalty"
     assert mod.authors == ["Ludeon Studios"]
     assert mod.steam_app_id == 1149640
@@ -105,11 +110,10 @@ def test__parse_required_ludeon_royalty() -> None:
 
 def test__parse_required_ludeon_biotech() -> None:
     # Test parse required using data from data folder - Ludeon Biotech
-    path = Path("tests/data/mod_examples/Data/Biotech/About/About.xml")
+    path = Path("tests/data/mod_examples/RimWorld/Data/Biotech/About/About.xml")
     mod_data = xml_path_to_json(str(path))["ModMetaData"]
-    mod = _parse_required(mod_data, RuledMod())
+    mod = _parse_basic(mod_data, AboutXmlMod())
 
-    assert isinstance(mod, LudeonMod)
     assert mod.package_id == "ludeon.rimworld.biotech"
     assert mod.authors == ["Ludeon Studios"]
     assert mod.steam_app_id == 1826140
@@ -119,11 +123,10 @@ def test__parse_required_ludeon_biotech() -> None:
 
 def test__parse_required_future_dlc() -> None:
     # Test parse required using data from data folder - Future DLC (Unknown dlc not in constants). Has valid steam app id
-    path = Path("tests/data/mod_examples/Data/FutureDLC/About/About.xml")
+    path = Path("tests/data/mod_examples/RimWorld/Data/FutureDLC/About/About.xml")
     mod_data = xml_path_to_json(str(path))["ModMetaData"]
-    mod = _parse_required(mod_data, RuledMod())
+    mod = _parse_basic(mod_data, AboutXmlMod())
 
-    assert isinstance(mod, LudeonMod)
     assert mod.supported_versions == {"1.999999", "3.141"}
     assert mod.valid
 
@@ -132,18 +135,14 @@ def test__parse_required_local_fishery() -> None:
     # Test case: Fishery mod
     path = Path("tests/data/mod_examples/Local/Fishery/About/About.xml")
     mod_data = xml_path_to_json(str(path))["ModMetaData"]
-    mod = _parse_required(mod_data, RuledMod())
+    mod = _parse_basic(mod_data, AboutXmlMod())
 
-    assert isinstance(mod, RuledMod)
+    assert isinstance(mod, AboutXmlMod)
     assert mod.package_id == "bs.fishery"
     assert mod.name == "Fishery - Modding Library"
     assert mod.authors == ["bradson"]
     assert mod.supported_versions == {"1.2", "1.3", "1.4", "1.5"}
     assert mod.valid
-
-
-def test_parse_required_invalid() -> None:
-    pass
 
 
 def test_match_version_found() -> None:
@@ -204,7 +203,7 @@ def test_create_mod_dependency_missing_fields() -> None:
 
 def test_create_base_rules_ludeon_core() -> None:
     # Test case: Ludeon Core
-    path = Path("tests/data/mod_examples/Data/Core/About/About.xml")
+    path = Path("tests/data/mod_examples/RimWorld/Data/Core/About/About.xml")
     mod_data = xml_path_to_json(str(path))["ModMetaData"]
     rules = create_base_rules(mod_data, "1.5")
 
@@ -258,7 +257,7 @@ def test_create_scenario_mod_from_rsc_invalid_meta() -> None:
         "tests/data/mod_examples/local/invalid_scenario_mod_meta/scenario abc.rsc"
     )
 
-    valid, mod = create_scenario_mod_from_rsc(path)
+    valid, mod = _create_scenario_mod_from_rsc(path.parent, path)
 
     assert not valid
     assert not mod.valid
@@ -269,7 +268,7 @@ def test_create_scenario_mod_from_rsc_invalid_scenario() -> None:
         "tests/data/mod_examples/local/invalid_scenario_mod_scenario/scenario abc.rsc"
     )
 
-    valid, mod = create_scenario_mod_from_rsc(path)
+    valid, mod = _create_scenario_mod_from_rsc(path.parent, path)
 
     assert not valid
     assert not mod.valid
@@ -278,7 +277,7 @@ def test_create_scenario_mod_from_rsc_invalid_scenario() -> None:
 def test_create_scenario_mod_from_rsc_valid() -> None:
     path = Path("tests/data/mod_examples/local/scenario_mod_1/scenario abc.rsc")
 
-    valid, mod = create_scenario_mod_from_rsc(path)
+    valid, mod = _create_scenario_mod_from_rsc(path.parent, path)
 
     assert valid
     assert mod.valid
@@ -292,21 +291,38 @@ def test_create_scenario_mod_from_rsc_valid() -> None:
 def test_create_listed_mod_from_path_invalid_folder() -> None:
     path = Path("tests/data/mod_examples/local/invalid folder")
 
-    valid, mod = create_listed_mod_from_path(path, "1.5")
+    valid, mod = create_listed_mod_from_path(
+        path, "1.5", LOCAL_MODS_PATH, RIMWORLD_PATH, STEAM_WORKSHOP_PATH
+    )
 
     assert not valid
     assert not mod.valid
+    assert mod.mod_type == ModType.LOCAL
 
-def __test_create_listed_mod_from_path_fishery() -> None:
-    path = Path("tests/data/mod_examples/local/Fishery")
 
-    valid, mod = create_listed_mod_from_path(path, "1.5")
+def test_create_listed_mod_from_path_fishery(tmp_path: Path) -> None:
+    path = Path("tests/data/mod_examples/Local/Fishery")
+    # Copy entierty of path to temporary folder
+    shutil.copytree(path, tmp_path / path)
 
+    # Init temp git repo
+    _ = pygit2.init_repository(str(tmp_path / path), False)
+
+    path = tmp_path / path
+
+    valid, mod = create_listed_mod_from_path(
+        path,
+        "1.5",
+        tmp_path / LOCAL_MODS_PATH,
+        tmp_path / RIMWORLD_PATH,
+        tmp_path / STEAM_WORKSHOP_PATH,
+    )
     assert valid
     assert mod.valid
 
-    assert isinstance(mod, RuledMod)
+    assert isinstance(mod, AboutXmlMod)
     assert mod.package_id == "bs.fishery"
     assert mod.name == "Fishery - Modding Library"
     assert mod.authors == ["bradson"]
     assert mod.supported_versions == {"1.2", "1.3", "1.4", "1.5"}
+    assert mod.mod_type == ModType.GIT

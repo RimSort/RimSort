@@ -13,6 +13,7 @@ PySide6
 PySide6==6.7.2; sys_platform == 'darwin'
 PySide6==6.7.2; sys_platform == 'linux'
 PySide6==6.7.2; sys_platform == 'win32'
+pygit2==1.15.1
 psutil==6.0.0
 pytz==2024.1
 requests==2.32.3
