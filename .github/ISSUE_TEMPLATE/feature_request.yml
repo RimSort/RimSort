@@ -18,6 +18,7 @@ body:
     attributes:
       label: Suggestion/proposed solution?
       description: Please provide a clear and concise description of what you want to happen.
+      placeholder: A clear and concise description what you want to happen.
     validations:
       required: true
 
@@ -48,7 +49,7 @@ body:
     id: dup_terms
     attributes:
       label: Duplicate Issue Check
-      description: By submitting this issue, you attest that you've checked the issues for potential duplicates of this issue.
+      description: By submitting this issue, you attest that you've checked the issues tab for potential duplicates of this issue.
       options:
         - label: I've checked for duplicate issues
           required: true
