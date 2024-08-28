@@ -12,6 +12,7 @@ body:
     attributes:
       label: Release Type
       description: What Release Type are you using?
+      multiple: true
       options:
         - Compiled Windows x86 64-bit
         - Compiled Darwin x86 64-bit
@@ -30,7 +31,7 @@ body:
       placeholder: Version number/Commit hash
     validations:
       required: true
-  - type: textarea
+  - type: input
     id: os
     attributes:
       label: Operating System
@@ -47,7 +48,7 @@ body:
     validations:
       required: true
 
-  - type: textarea
+  - type: input
     id: logs
     attributes:
       label: Relevant logs
@@ -84,5 +85,5 @@ body:
       label: Wiki/FAQ Check
       description: By submitting this issue, you attest that you've checked [the wiki](https://github.com/RimSort/RimSort/wiki) for potential solutions
       options:
-        - label: I've checked for duplicate issues
+        - label: I've checked the wiki for a solution
           required: true
