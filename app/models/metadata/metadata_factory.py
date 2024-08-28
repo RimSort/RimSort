@@ -18,12 +18,13 @@ from app.models.metadata.metadata_structure import (
     DependencyMod,
     ExternalRulesSchema,
     ListedMod,
+    ModsConfig,
     ModType,
     Rules,
     ScenarioMod,
 )
 from app.utils.constants import RIMWORLD_DLC_METADATA
-from app.utils.xml import xml_path_to_json
+from app.utils.xml import json_to_xml_write, xml_path_to_json
 
 
 class MalformedDataException(Exception):
@@ -63,6 +64,68 @@ def value_extractor(
             return input["#text"]
         else:
             return input
+
+
+def read_mods_config(path: Path) -> ModsConfig | None:
+    """
+    Read the mods config from the given path.
+
+    :param path: The path to the mods config.
+    :return: The ModsConfig object.
+    """
+    if not path.exists() or not path.is_file():
+        logger.warning(f"Mods config not found at path: {path}")
+        return None
+
+    try:
+        json_string = xml_path_to_json(str(path))
+
+        mods_config = json_string.get("ModsConfigData", None)
+        if mods_config is None:
+            logger.error("Error reading mods config: ModsConfigData not found.")
+            return None
+
+        version = mods_config.get("version", None)
+        activeMods = value_extractor(mods_config.get("activeMods", None))
+        knownExpansions = value_extractor(mods_config.get("knownExpansions", None))
+
+        if version is None or activeMods is None or knownExpansions is None:
+            logger.error("Error reading mods config: Required fields not found.")
+            return None
+
+        if (
+            not isinstance(version, str)
+            or not isinstance(activeMods, list)
+            or not isinstance(knownExpansions, list)
+        ):
+            logger.error(
+                "Error reading mods config: Required fields have invalid types."
+            )
+            return None
+
+        return ModsConfig(
+            version=version, activeMods=activeMods, knownExpansions=knownExpansions
+        )
+    except Exception as e:
+        logger.error(f"Failed to read mods config: {e}")
+        return None
+
+
+def write_mods_config(path: Path, mods_config: ModsConfig) -> bool:
+    """
+    Write the mods config to the given path.
+
+    :param path: The path to write the mods config to.
+    :param mods_config: The ModsConfig object.
+    """
+    try:
+        json_to_xml_write(
+            {"ModsConfigData": mods_config.to_dict()}, str(path), raise_errs=True
+        )
+        return True
+    except Exception as e:
+        logger.error(f"Failed to write mods config: {e}")
+        return False
 
 
 def match_version(
@@ -467,6 +530,17 @@ def create_listed_mod_from_path(
     rimworld_path: Path,
     workshop_path: Path | None,
 ) -> tuple[bool, ListedMod]:
+    """
+    Create a ListedMod object from the given path.
+
+    :param path: The path to the mod. Must be the mod's root directory.
+    :param target_version: The version of RimWorld to target.
+    :param local_path: The path to the local mod.
+    :param rimworld_path: The path to the RimWorld mods folder.
+    :param workshop_path: The path to the workshop folder.
+    :return: A tuple containing a boolean indicating if the mod is valid and the mod object.
+    """
+
     # Check if path is a directory
     if path.is_dir():
         # Check if About.xml exists
@@ -513,7 +587,7 @@ def create_listed_mod_from_path(
             workshop_path,
         )
 
-    raise ValueError("Path must be a directory.")
+    raise ValueError(f"Path must be a directory: {path}")
 
 
 @cache

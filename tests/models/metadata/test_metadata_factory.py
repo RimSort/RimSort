@@ -11,11 +11,14 @@ from app.models.metadata.metadata_factory import (
     create_mod_dependency,
     get_rules_db,
     match_version,
+    read_mods_config,
     value_extractor,
+    write_mods_config,
 )
 from app.models.metadata.metadata_structure import (
     AboutXmlMod,
     CaseInsensitiveSet,
+    CaseInsensitiveStr,
     ExternalRule,
     ExternalRulesSchema,
     ModType,
@@ -254,7 +257,7 @@ def test_get_rules_db_values() -> None:
 
 def test_create_scenario_mod_from_rsc_invalid_meta() -> None:
     path = Path(
-        "tests/data/mod_examples/local/invalid_scenario_mod_meta/scenario abc.rsc"
+        "tests/data/mod_examples/Local/invalid_scenario_mod_meta/scenario abc.rsc"
     )
 
     valid, mod = _create_scenario_mod_from_rsc(path.parent, path)
@@ -265,7 +268,7 @@ def test_create_scenario_mod_from_rsc_invalid_meta() -> None:
 
 def test_create_scenario_mod_from_rsc_invalid_scenario() -> None:
     path = Path(
-        "tests/data/mod_examples/local/invalid_scenario_mod_scenario/scenario abc.rsc"
+        "tests/data/mod_examples/Local/invalid_scenario_mod_scenario/scenario abc.rsc"
     )
 
     valid, mod = _create_scenario_mod_from_rsc(path.parent, path)
@@ -275,7 +278,7 @@ def test_create_scenario_mod_from_rsc_invalid_scenario() -> None:
 
 
 def test_create_scenario_mod_from_rsc_valid() -> None:
-    path = Path("tests/data/mod_examples/local/scenario_mod_1/scenario abc.rsc")
+    path = Path("tests/data/mod_examples/Local/scenario_mod_1/scenario abc.rsc")
 
     valid, mod = _create_scenario_mod_from_rsc(path.parent, path)
 
@@ -289,7 +292,7 @@ def test_create_scenario_mod_from_rsc_valid() -> None:
 
 
 def test_create_listed_mod_from_path_invalid_folder() -> None:
-    path = Path("tests/data/mod_examples/local/invalid folder")
+    path = Path("tests/data/mod_examples/Local/invalid folder")
 
     valid, mod = create_listed_mod_from_path(
         path, "1.5", LOCAL_MODS_PATH, RIMWORLD_PATH, STEAM_WORKSHOP_PATH
@@ -326,3 +329,80 @@ def test_create_listed_mod_from_path_fishery(tmp_path: Path) -> None:
     assert mod.authors == ["bradson"]
     assert mod.supported_versions == {"1.2", "1.3", "1.4", "1.5"}
     assert mod.mod_type == ModType.GIT
+
+
+def test_read_mod_config_valid_1(tmp_path: Path) -> None:
+    path = Path("tests/data/modconfigs/valid_1/ModConfig.xml")
+    shutil.copytree(path.parent, tmp_path / path.parent)
+    path = tmp_path / path
+
+    mods_config = read_mods_config(path)
+
+    assert mods_config is not None
+    assert len(mods_config.activeMods) == 7
+    assert len(mods_config.knownExpansions) == 4
+    assert mods_config.version == "1.5.4104 rev435"
+
+
+def test_read_write_mod_config_valid_1(tmp_path: Path) -> None:
+    path = Path("tests/data/modconfigs/valid_1/ModConfig.xml")
+    shutil.copytree(path.parent, tmp_path / path.parent)
+    path = tmp_path / path
+
+    mods_config = read_mods_config(path)
+
+    assert mods_config is not None
+    am = mods_config.activeMods
+    ke = mods_config.knownExpansions
+
+    am.append(CaseInsensitiveStr("test"))
+    ke.append(CaseInsensitiveStr("testke"))
+
+    write_mods_config(path, mods_config)
+    new_mods_config = read_mods_config(path)
+
+    assert new_mods_config is not None
+    assert len(new_mods_config.activeMods) == len(mods_config.activeMods)
+    assert len(new_mods_config.knownExpansions) == len(mods_config.knownExpansions)
+    assert new_mods_config.activeMods == mods_config.activeMods
+    assert new_mods_config.knownExpansions == mods_config.knownExpansions
+    assert new_mods_config.version == mods_config.version
+    assert am != new_mods_config.activeMods
+    assert ke != new_mods_config.knownExpansions
+    assert "test" not in new_mods_config.activeMods
+    assert "testke" not in new_mods_config.knownExpansions
+
+    mods_config.activeMods = am
+    mods_config.knownExpansions = ke
+
+    success = write_mods_config(path, mods_config)
+    assert success
+    new_mods_config_1 = read_mods_config(path)
+
+    assert new_mods_config_1 is not None
+    assert len(new_mods_config_1.activeMods) == len(mods_config.activeMods)
+    assert len(new_mods_config_1.knownExpansions) == len(mods_config.knownExpansions)
+    assert new_mods_config_1.activeMods == am
+    assert new_mods_config_1.knownExpansions == ke
+    assert new_mods_config_1.version == mods_config.version
+
+
+def test_read_mod_config_invalid_1() -> None:
+    path = Path("tests/data/modconfigs/invalid_1/ModConfig.xml")
+    mods_config = read_mods_config(path)
+
+    assert mods_config is None
+
+
+def test_read_mod_config_invalid_2() -> None:
+    path = Path("tests/data/modconfigs/invalid_2/ModConfig.xml")
+    mods_config = read_mods_config(path)
+
+    assert mods_config is None
+
+
+def test_read_mod_config_invalid_3() -> None:
+    path = Path("tests/data/modconfigs/invalid_3/ModConfig.xml")
+    mods_config = read_mods_config(path)
+
+    assert mods_config is None

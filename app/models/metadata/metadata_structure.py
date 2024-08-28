@@ -66,16 +66,110 @@ class CaseInsensitiveSet(MutableSet[CaseInsensitiveStr]):
     def discard(self, value: CaseInsensitiveStr | str) -> None:
         if not isinstance(value, CaseInsensitiveStr) and isinstance(value, str):
             value = CaseInsensitiveStr(value)
-        elif not isinstance(value, CaseInsensitiveStr):
-            raise TypeError(f"Expected PackageId or str, got {type(value)}")
         return self._data.discard(value)
 
     def add(self, value: CaseInsensitiveStr | str) -> None:
         if not isinstance(value, CaseInsensitiveStr) and isinstance(value, str):
             value = CaseInsensitiveStr(value)
-        elif not isinstance(value, CaseInsensitiveStr):
-            raise TypeError(f"Expected PackageId or str, got {type(value)}")
         return self._data.add(value)
+
+
+class ModsConfig:
+    """A class to store the mods configuration.
+
+    Note that activeMods and knownExpansions are set up such that they are NOT mutable.
+    To modify them, use the provided methods which will create a new list and set it.
+
+    This is more performance heavy but ensures that the lists are not modified outside of the class,
+    preventing weird issues with the lists being modified in place, especially with threading.
+
+    Attributes:
+        version (str): The version of the mods configuration.
+        activeMods (list[CaseInsensitiveStr]): A list of active mods.
+        knownExpansions (list[CaseInsensitiveStr]): A list of known expansions.
+    """
+
+    version: str
+    _activeMods: list[CaseInsensitiveStr]
+    _knownExpansions: list[CaseInsensitiveStr]
+
+    def __init__(
+        self,
+        version: str,
+        activeMods: list[CaseInsensitiveStr],
+        knownExpansions: list[CaseInsensitiveStr],
+    ):
+        self.version = version
+        self.activeMods = activeMods
+        self.knownExpansions = knownExpansions
+
+    def clear_active_mods(self) -> None:
+        """Clear the active mods list."""
+        self.activeMods.clear()
+
+    def clear_all(self) -> None:
+        """Clear the active mods and known expansions lists."""
+        self.clear_active_mods()
+        self.knownExpansions.clear()
+
+    @property
+    def activeMods(self) -> list[CaseInsensitiveStr]:
+        """Copy of the active mods list.
+
+        :return: A copy of the active mods list.
+        :rtype: list[CaseInsensitiveStr]
+        """
+        return self._activeMods[:]
+
+    @activeMods.setter
+    def activeMods(self, value: list[CaseInsensitiveStr] | list[str]) -> None:
+        """Sets the active mods list by copying the input list and converting all elements to CaseInsensitiveStr.
+
+        :param value: The list of active mods to set.
+        :type value: list[CaseInsensitiveStr] | list[str]
+        :raises TypeError: If the input value is not a list.
+        """
+        if isinstance(value, list):
+            self._activeMods = [CaseInsensitiveStr(i) for i in value]
+        else:
+            raise TypeError(f"Expected list, got {type(value)}")
+
+    @property
+    def knownExpansions(self) -> list[CaseInsensitiveStr]:
+        """Copy of the known expansions list.
+
+        :return: A copy of the known expansions list.
+        :rtype: list[CaseInsensitiveStr]
+        """
+        return self._knownExpansions[:]
+
+    @knownExpansions.setter
+    def knownExpansions(self, value: list[CaseInsensitiveStr] | list[str]) -> None:
+        """Set the known expansions list by copying the input list and converting all elements to CaseInsensitiveStr.
+
+        :param value: The list of known expansions to set.
+        :type value: list[CaseInsensitiveStr] | list[str]
+        :raises TypeError: If the input value is not a list.
+        """
+        if isinstance(value, list):
+            self._knownExpansions = [CaseInsensitiveStr(i) for i in value]
+        else:
+            raise TypeError(f"Expected list, got {type(value)}")
+
+    def check_active_duplicates(self) -> bool:
+        """Check for duplicates in the active mods list."""
+        return len(self.activeMods) != len(set(self.activeMods))
+
+    def check_expansions_duplicates(self) -> bool:
+        """Check for duplicates in the known expansions list."""
+        return len(self.knownExpansions) != len(set(self.knownExpansions))
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "version": self.version,
+            "activeMods": [str(i) for i in self.activeMods],
+            "knownExpansions": [str(i) for i in self.knownExpansions],
+        }
 
 
 @dataclass
