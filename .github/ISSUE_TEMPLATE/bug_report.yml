@@ -44,7 +44,7 @@ body:
     attributes:
       label: Relevant logs
       description: Please provide a RimSort.log file. There may be circumstances where a log file is not generated but without logs, it is difficult to diagnose the issue.
-      placehold: Link to RimSort.log file
+      placeholder: Link to RimSort.log file
   
   - type: textarea
     id: bug_description
