@@ -1,0 +1,88 @@
+name: Bug Report
+title: "[Bug]: "
+description: Create a bug report to help us improve
+labels: ["bugs 🪲"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Create a bug report to help us improve
+  - type: dropdown
+    id: release_type
+    attributes:
+      label: Release Type
+      description: What Release Type are you using?
+      options:
+        - Compiled Windows x86 64-bit
+        - Compiled Darwin x86 64-bit
+        - Compiled Darwin arm64
+        - Compiled Ubuntu 22.04
+        - Compiled Ubuntu 24.04
+        - Self Compiled
+        - Python Interpreter
+    validations:
+      required: true
+  - type: textarea
+    id: version
+    attributes:
+      label: Version
+      description: What version are you using?
+      placeholder: Version number/Commit hash
+    validations:
+      required: true
+  - type: textarea
+    id: os
+    attributes:
+      label: Operating System
+      description: What Operating System are you using? Please include your CPU architecture if on MacOS and desktop environment if on Linux.
+      placeholder: Windows 11, macOS (Arm64), Arch (KDE), etc.
+    validations:
+      required: true
+  - type: textarea
+    id: bug_description
+    attributes:
+      label: Describe the bug
+      description: Please clearly and concisely describe the bug you encountered. Also, provide steps to reproduce the bug.
+      placeholder: Tell us what you see!
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Please provide a RimSort.log file. There may be circumstances where a log file is not generated but without logs, it is difficult to diagnose the issue.
+
+  - type: textarea
+    id: extra_info
+    attributes:
+      label: Additional context
+      description: Add any other context about the problem here.
+      placeholder: Additional context about the problem.
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/RimSort/RimSort/blob/main/CODE_OF_CONDUCT.md).
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Duplicate Issue Check
+      description: By submitting this issue, you attest that you've checked the issues for potential duplicates of this issue.
+      options:
+        - label: I've checked for duplicate issues
+          required: true
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Wiki/FAQ Check
+      description: By submitting this issue, you attest that you've checked [the wiki](https://github.com/RimSort/RimSort/wiki) for potential solutions
+      options:
+        - label: I've checked for duplicate issues
+          required: true
