@@ -3,6 +3,7 @@
     "ignore": [
         "**/submodules/**",
         "**/.git/**",
-        "**/*.md"
+        "**/*.md",
+        ".github/ISSUE_TEMPLATE/**"
     ]
 }
