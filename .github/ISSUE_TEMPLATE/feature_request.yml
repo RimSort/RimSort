@@ -33,7 +33,7 @@ body:
     id: extra_info
     attributes:
       label: Additional context
-      description: Add any other context about your feature request here.
+      description: Add additional context about your feature request here.
       placeholder: Additional context about your feature request.
 
   - type: checkboxes
@@ -58,7 +58,7 @@ body:
     id: wiki_terms
     attributes:
       label: Wiki/FAQ Check
-      description: By submitting this issue, you attest that you've checked [the wiki](https://github.com/RimSort/RimSort/wiki) for potential solutions
+      description: By submitting this issue, you attest that you've checked [the Wiki](https://github.com/RimSort/RimSort/wiki) for potential solutions
       options:
-        - label: I've checked the wiki for a solution
+        - label: I've checked the Wiki for a solution
           required: true
