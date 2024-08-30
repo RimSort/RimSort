@@ -1587,6 +1587,7 @@ class ModListWidget(QListWidget):
                 uuid=uuid,
             )
             widget.toggle_warning_signal.connect(self.toggle_warning)
+            widget.toggle_error_signal.connect(self.toggle_warning)
             item.setSizeHint(widget.sizeHint())
             self.setItemWidget(item, widget)
 
@@ -1789,6 +1790,7 @@ class ModListWidget(QListWidget):
             current_item = self.item(current_mod_index)
             current_item_data = current_item.data(Qt.ItemDataRole.UserRole)
             current_item_data["invalid"] = False
+            current_item_data["mismatch"] = False
             current_item_data["errors"] = None
             current_item_data["warnings"] = None
             mod_data = internal_local_metadata[uuid]
@@ -1797,7 +1799,8 @@ class ModListWidget(QListWidget):
                 uuid
             )
             # Set an item's validity dynamically based on the version mismatch value
-            current_item_data["mismatch"] = mod_errors["version_mismatch"]
+            if mod_data["packageid"] not in self.ignore_warning_list:
+                current_item_data["mismatch"] = mod_errors["version_mismatch"]
             # Check for "Active" mod list specific errors and warnings
             if (
                 self.list_type == "Active"
