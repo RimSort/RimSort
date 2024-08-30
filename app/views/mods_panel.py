@@ -104,6 +104,8 @@ class ModListItemInner(QWidget):
     def __init__(
         self,
         errors_warnings: str,
+        errors: str,
+        warnings: str,
         filtered: bool,
         invalid: bool,
         mismatch: bool,
@@ -117,7 +119,9 @@ class ModListItemInner(QWidget):
         exists in the metadata dict. See tags:
         https://rimworldwiki.com/wiki/About.xml
 
-        :param errors_warnings: a string of errors and warnings for the notification tooltip
+        :param errors_warnings: a string of errors and warnings
+        :param errors: a string of errors for the notification tooltip
+        :param warnings: a string of warnings for the notification tooltip
         :param filtered: a bool representing whether the widget's item is filtered
         :param invalid: a bool representing whether the widget's item is an invalid mod
         :param settings_controller: an instance of SettingsController for accessing settings
@@ -128,8 +132,10 @@ class ModListItemInner(QWidget):
 
         # Cache MetadataManager instance
         self.metadata_manager = MetadataManager.instance()
-        # Cache errors and warnings string for tooltip
-        self.errors_warnings = errors_warnings
+        # Cache error and warning strings for tooltips
+        self.errors_warnings = errors_warnings.lstrip()
+        self.errors = errors.lstrip()
+        self.warnings = warnings.lstrip()
         # Cache filtered state of widget's item - used to determine styling of widget
         self.filtered = filtered
         # Cache invalid state of widget's item - used to determine styling of widget
@@ -286,9 +292,12 @@ class ModListItemInner(QWidget):
         self.setLayout(self.main_item_layout)
 
         # Reveal if errors or warnings exist
-        if self.errors_warnings:
-            self.warning_icon_label.setToolTip(self.errors_warnings)
+        if self.warnings:
+            self.warning_icon_label.setToolTip(self.warnings)
             self.warning_icon_label.setHidden(False)
+        if self.errors:
+            self.error_icon_label.setToolTip(self.errors)
+            self.error_icon_label.setHidden(False)
 
     def count_icons(self, widget: QObject) -> int:
         count = 0
@@ -1551,6 +1560,8 @@ class ModListWidget(QListWidget):
     def append_new_item(self, uuid: str) -> None:
         data = {
             "errors_warnings": "",
+            "errors": "",
+            "warnings": "",
             "filtered": False,
             "invalid": self.metadata_manager.internal_local_metadata[uuid].get(
                 "invalid"
@@ -1573,6 +1584,8 @@ class ModListWidget(QListWidget):
             logger.debug("Attempted to create widget for item with None data")
             return
         errors_warnings = data["errors_warnings"]
+        errors = data["errors"]
+        warnings = data["warnings"]
         filtered = data["filtered"]
         invalid = data["invalid"]
         mismatch = data["mismatch"]
@@ -1580,6 +1593,8 @@ class ModListWidget(QListWidget):
         if uuid:
             widget = ModListItemInner(
                 errors_warnings=errors_warnings,
+                errors=errors,
+                warnings=warnings,
                 filtered=filtered,
                 invalid=invalid,
                 mismatch=mismatch,
@@ -1993,6 +2008,8 @@ class ModListWidget(QListWidget):
                     Qt.ItemDataRole.UserRole,
                     {
                         "errors_warnings": "",
+                        "errors": "",
+                        "warnings": "",
                         "filtered": False,
                         "invalid": self.metadata_manager.internal_local_metadata[
                             uuid_key
