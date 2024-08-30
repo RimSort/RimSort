@@ -99,6 +99,7 @@ class ModListItemInner(QWidget):
     """
 
     toggle_warning_signal = Signal(str)
+    toggle_error_signal = Signal(str)
 
     def __init__(
         self,
@@ -207,7 +208,19 @@ class ModListItemInner(QWidget):
         )
         # Default to hidden to avoid showing early
         self.warning_icon_label.setHidden(True)
-
+        # Error icon hidden by default
+        self.error_icon_label = ClickableQLabel()
+        self.error_icon_label.clicked.connect(
+            partial(
+                self.toggle_error_signal.emit,
+                self.metadata_manager.internal_local_metadata[self.uuid]["packageid"],
+            )
+        )
+        self.error_icon_label.setPixmap(
+            ModListIcons.error_icon().pixmap(QSize(20, 20))
+        )
+        # Default to hidden to avoid showing early
+        self.error_icon_label.setHidden(True)
         # Icons by mod source
         self.mod_source_icon = None
         if not self.git_icon and not self.steamcmd_icon:
@@ -265,6 +278,9 @@ class ModListItemInner(QWidget):
         self.main_item_layout.addWidget(self.main_label, Qt.AlignmentFlag.AlignCenter)
         self.main_item_layout.addWidget(
             self.warning_icon_label, Qt.AlignmentFlag.AlignRight
+        )
+        self.main_item_layout.addWidget(
+            self.error_icon_label, Qt.AlignmentFlag.AlignRight
         )
         self.main_item_layout.addStretch()
         self.setLayout(self.main_item_layout)
@@ -391,12 +407,20 @@ class ModListItemInner(QWidget):
         Repolish the widget items
         """
         item_data = item.data(Qt.ItemDataRole.UserRole)
-        tooltip = item_data["errors_warnings"]
-        # Set the warning icon to be visible if necessary and set the tool tip
-        if tooltip:
+        error_tooltip = item_data["errors"]
+        warning_tooltip = item_data["warnings"]
+        # If an error exists we show an error icon with error tooltip
+        # If a warning exists we show a warning icon with warning tooltip
+        if error_tooltip:
+            self.error_icon_label.setHidden(False)
+            self.error_icon_label.setToolTip(error_tooltip.lstrip())
+        else:  # Hide the error icon if no error tool tip text
+            self.error_icon_label.setHidden(True)
+            self.error_icon_label.setToolTip("") 
+        if warning_tooltip:
             self.warning_icon_label.setHidden(False)
-            self.warning_icon_label.setToolTip(tooltip.lstrip())
-        else:  # Hide the warning icon if no tool tip text
+            self.warning_icon_label.setToolTip(warning_tooltip.lstrip())
+        else:  # Hide the warning icon if no warning tool tip text
             self.warning_icon_label.setHidden(True)
             self.warning_icon_label.setToolTip("")
         # Recalculate the widget label's styling based on item data
@@ -1764,6 +1788,9 @@ class ModListWidget(QListWidget):
             current_mod_index = self.uuids.index(uuid)
             current_item = self.item(current_mod_index)
             current_item_data = current_item.data(Qt.ItemDataRole.UserRole)
+            current_item_data["invalid"] = False
+            current_item_data["errors"] = None
+            current_item_data["warnings"] = None
             mod_data = internal_local_metadata[uuid]
             # Check mod supportedversions against currently loaded version of game
             mod_errors["version_mismatch"] = self.metadata_manager.is_version_mismatch(
@@ -1817,11 +1844,30 @@ class ModListWidget(QListWidget):
                     ):
                         assert isinstance(mod_errors["load_after_violations"], set)
                         mod_errors["load_after_violations"].add(load_this_after[0])
-            # Calculate any needed string for errors / warnings
+            # Calculate any needed string for errors
             tool_tip_text = ""
             for error_type, tooltip_header in [
                 ("missing_dependencies", "\nMissing Dependencies:"),
                 ("conflicting_incompatibilities", "\nIncompatibilities:"),
+            ]:
+                if mod_errors[error_type]:
+                    tool_tip_text += tooltip_header
+                    errors = mod_errors[error_type]
+                    assert isinstance(errors, set)
+                    for key in errors:
+                        name = internal_local_metadata.get(
+                            packageid_to_uuid.get(key, ""), {}
+                        ).get(
+                            "name",
+                            self.metadata_manager.steamdb_packageid_to_name.get(
+                                key, key
+                            ),
+                        )
+                        tool_tip_text += f"\n  * {name}"
+            # If missing dependency and/or incompatibility, add tooltip to errors
+            current_item_data["errors"] = tool_tip_text
+            # Calculate any needed string for warnings
+            for error_type, tooltip_header in [
                 ("load_before_violations", "\nShould be Loaded After:"),
                 ("load_after_violations", "\nShould be Loaded Before:"),
             ]:
@@ -1857,9 +1903,11 @@ class ModListWidget(QListWidget):
                 ]
             ):
                 num_errors += 1
+                current_item_data["invalid"] = True
                 total_error_text += f"\n\n{mod_data['name']}"
                 total_error_text += "\n" + "=" * len(mod_data["name"])
                 total_error_text += tool_tip_text
+                
             # Add to warning summary if any loadBefore or loadAfter violations, or version mismatch
             # Version mismatch is determined earlier without checking if the mod is in ignore_warning_list
             # so we have to check it again here in order to not display a faulty, empty version warning
@@ -1883,6 +1931,7 @@ class ModListWidget(QListWidget):
                 total_warning_text += tool_tip_text
             # Add tooltip to item data and set the data back to the item
             current_item_data["errors_warnings"] = tool_tip_text
+            current_item_data["warnings"] = tool_tip_text[len(current_item_data["errors"]):]
             current_item.setData(Qt.ItemDataRole.UserRole, current_item_data)
         logger.info(f"Finished recalculating {self.list_type} list errors")
         return total_error_text, total_warning_text, num_errors, num_warnings
