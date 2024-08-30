@@ -1251,7 +1251,7 @@ class SettingsController(QObject):
             "Are you sure you want to build the Steam Workshop database?",
             (
                 "For most users this is not necessary as the GitHub SteamDB is adequate. Building the database may take a long time. "
-                "Depending on your settings, it may also crawl through the entirety of the steam workshop via the webAPI (not just your own). "
+                "Depending on your settings, it may also crawl through the entirety of the steam workshop via the webAPI. "
                 "This can be a large amount of data and take a long time. Are you sure you want to continue?"
             ),
             icon=QMessageBox.Icon.Warning,
