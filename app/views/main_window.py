@@ -140,7 +140,7 @@ class MainWindow(QMainWindow):
 
         self.menu_bar = MenuBar(menu_bar=self.menuBar())
         self.menu_bar_controller = MenuBarController(
-            view=self.menu_bar, settings_controller=self.settings_controller
+            view=self.menu_bar, settings_controller=self.settings_controller, mods_panel=self.main_content_panel.mods_panel,
         )
         # Connect Instances Menu Bar signals
         EventBus().do_activate_current_instance.connect(self.__switch_to_instance)

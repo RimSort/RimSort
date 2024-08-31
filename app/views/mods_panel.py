@@ -98,6 +98,7 @@ class ModListItemInner(QWidget):
     mod and display relevant data on a mod list.
     """
 
+    reset_warning_signal = Signal(str)
     toggle_warning_signal = Signal(str)
     toggle_error_signal = Signal(str)
 
@@ -259,7 +260,7 @@ class ModListItemInner(QWidget):
         # Set label color if mod is invalid
         if self.filtered:
             self.main_label.setObjectName("ListItemLabelFiltered")
-        elif self.invalid or self.mismatch:
+        elif errors_warnings:
             self.main_label.setObjectName("ListItemLabelInvalid")
         else:
             self.main_label.setObjectName("ListItemLabel")
@@ -436,7 +437,7 @@ class ModListItemInner(QWidget):
         widget_object_name = self.main_label.objectName()
         if item_data["filtered"]:
             new_widget_object_name = "ListItemLabelFiltered"
-        elif item_data["invalid"] or item_data["mismatch"]:
+        elif error_tooltip or warning_tooltip:
             new_widget_object_name = "ListItemLabelInvalid"
         else:
             new_widget_object_name = "ListItemLabel"
@@ -1573,6 +1574,18 @@ class ModListWidget(QListWidget):
         item.setData(Qt.ItemDataRole.UserRole, data)
         self.addItem(item)
 
+    def get_all_mod_list_items(self) -> list[ModListItemInner]:
+        # This gets all modlist items as ModListItemInner
+        # Because of this, mods that have not been loaded
+        # or lazy loaded will not be returned
+        mod_list_items = []
+        for index in range(self.count()):
+            item = self.item(index)
+            widget = self.itemWidget(item)
+            if isinstance(widget, ModListItemInner):
+                mod_list_items.append(widget)
+        return mod_list_items
+
     def check_item_visible(self, item: QListWidgetItem) -> bool:
         # Determines if the item is currently visible in the viewport.
         rect = self.visualItemRect(item)
@@ -1603,6 +1616,7 @@ class ModListWidget(QListWidget):
             )
             widget.toggle_warning_signal.connect(self.toggle_warning)
             widget.toggle_error_signal.connect(self.toggle_warning)
+            widget.reset_warning_signal.connect(self.reset_warning)
             item.setSizeHint(widget.sizeHint())
             self.setItemWidget(item, widget)
 
@@ -2034,6 +2048,12 @@ class ModListWidget(QListWidget):
             self.ignore_warning_list.remove(packageid)
         self.recalculate_warnings_signal.emit()
 
+    def reset_warning(self, packageid: str) -> None:
+        # Resets the warning toggle
+        logger.debug(f"Reset warning toggle for: {packageid}")
+        if packageid in self.ignore_warning_list:
+            self.ignore_warning_list.remove(packageid)
+        self.recalculate_warnings_signal.emit()
 
 class ModsPanel(QWidget):
     """
@@ -2330,6 +2350,11 @@ class ModsPanel(QWidget):
             self.active_mods_list.rebuild_item_widget_from_uuid(uuid=uuid)
         elif uuid in self.inactive_mods_list.uuids:
             self.inactive_mods_list.rebuild_item_widget_from_uuid(uuid=uuid)
+
+    def collect_mod_list_items(self) -> tuple[list[ModListItemInner], list[ModListItemInner]]:
+        active_mods = self.active_mods_list.get_all_mod_list_items()
+        inactive_mods = self.inactive_mods_list.get_all_mod_list_items()
+        return active_mods, inactive_mods
 
     def recalculate_list_errors_warnings(self, list_type: str) -> None:
         if list_type == "Active":
