@@ -154,7 +154,7 @@ class SteamcmdInterface:
                 ) or os.path.ismount(symlink_destination_path):
                     os.unlink(symlink_destination_path)
                 elif os.path.isdir(symlink_destination_path):
-                    os.rmdir(symlink_destination_path)
+                    shutil.rmtree(symlink_destination_path)
                 else:
                     os.remove(symlink_destination_path)
             if self.system != "Windows":
