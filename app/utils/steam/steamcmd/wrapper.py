@@ -171,7 +171,7 @@ class SteamcmdInterface:
                 )
             self.setup = True
             runner.message(
-                f"Finished creating symlink\n"
+                "Finished creating symlink\n"
             )
         except Exception as e:
             runner.message(
