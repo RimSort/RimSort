@@ -199,7 +199,7 @@ class MenuBarController(QObject):
         if initialize:
             EventBus().do_activate_current_instance.emit(current_instance)
 
-    def _on_reset_warnings_triggered(self):
+    def _on_reset_warnings_triggered(self) -> None:
         self.mods_panel_controller.reset_warnings_signal.emit()
 
     @Slot()
