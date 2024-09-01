@@ -98,9 +98,9 @@ class ModListItemInner(QWidget):
     mod and display relevant data on a mod list.
     """
 
-    reset_warning_signal = Signal(str)
     toggle_warning_signal = Signal(str)
     toggle_error_signal = Signal(str)
+    reset_warning_signal = Signal(str)
 
     def __init__(
         self,
@@ -1574,16 +1574,30 @@ class ModListWidget(QListWidget):
         item.setData(Qt.ItemDataRole.UserRole, data)
         self.addItem(item)
 
-    def get_all_mod_list_items(self) -> list[ModListItemInner]:
-        # This gets all modlist items as ModListItemInner
-        # Because of this, mods that have not been loaded
-        # or lazy loaded will not be returned
+    def get_all_loaded_mod_list_items(self) -> list[ModListItemInner]:
+        # This gets all modlist items as ModListItemInner.
+        # Mods that have not been loaded
+        # or lazy loaded will not be returned.
         mod_list_items = []
         for index in range(self.count()):
             item = self.item(index)
             widget = self.itemWidget(item)
             if isinstance(widget, ModListItemInner):
                 mod_list_items.append(widget)
+        return mod_list_items
+
+    def get_all_loaded_and_toggled_mod_list_items(self) -> list[ModListItemInner]:
+        # This gets all modlist items that have their warnings toggled as ModListItemInner
+        # Mods that have not been loaded
+        # or lazy loaded will not be returned.
+        mod_list_items = []
+        for index in range(self.count()):
+            item = self.item(index)
+            widget = self.itemWidget(item)
+            if isinstance(widget, ModListItemInner):
+                packageid = self.metadata_manager.internal_local_metadata[widget.uuid].get('packageid')
+                if packageid in self.ignore_warning_list:
+                    mod_list_items.append(widget)
         return mod_list_items
 
     def check_item_visible(self, item: QListWidgetItem) -> bool:
@@ -2053,7 +2067,6 @@ class ModListWidget(QListWidget):
         logger.debug(f"Reset warning toggle for: {packageid}")
         if packageid in self.ignore_warning_list:
             self.ignore_warning_list.remove(packageid)
-        self.recalculate_warnings_signal.emit()
 
 class ModsPanel(QWidget):
     """
@@ -2350,11 +2363,6 @@ class ModsPanel(QWidget):
             self.active_mods_list.rebuild_item_widget_from_uuid(uuid=uuid)
         elif uuid in self.inactive_mods_list.uuids:
             self.inactive_mods_list.rebuild_item_widget_from_uuid(uuid=uuid)
-
-    def collect_mod_list_items(self) -> tuple[list[ModListItemInner], list[ModListItemInner]]:
-        active_mods = self.active_mods_list.get_all_mod_list_items()
-        inactive_mods = self.inactive_mods_list.get_all_mod_list_items()
-        return active_mods, inactive_mods
 
     def recalculate_list_errors_warnings(self, list_type: str) -> None:
         if list_type == "Active":
