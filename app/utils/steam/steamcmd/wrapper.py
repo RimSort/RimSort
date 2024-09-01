@@ -139,6 +139,50 @@ class SteamcmdInterface:
 
             CreateJunction(target_local_folder, link_path)
 
+    def create_symlink(self, runner: RunnerPanel, symlink_source_path: str, symlink_destination_path: str) -> None:
+        try:
+            runner.message(
+                f"[{symlink_source_path}] -> " + symlink_destination_path
+            )
+            if os.path.exists(symlink_destination_path):
+                logger.debug(
+                    f"Removing existing link at {symlink_destination_path} and recreating link to {symlink_source_path}"
+                )
+                # Remove by type
+                if os.path.islink(
+                    symlink_destination_path
+                ) or os.path.ismount(symlink_destination_path):
+                    os.unlink(symlink_destination_path)
+                elif os.path.isdir(symlink_destination_path):
+                    os.rmdir(symlink_destination_path)
+                else:
+                    os.remove(symlink_destination_path)
+            if self.system != "Windows":
+                os.symlink(
+                    symlink_source_path,
+                    symlink_destination_path,
+                    target_is_directory=True,
+                )
+            elif sys.platform == "win32":
+                from _winapi import CreateJunction
+
+                CreateJunction(
+                    symlink_source_path, symlink_destination_path
+                )
+            self.setup = True
+            runner.message(
+                f"Finished creating symlink\n"
+            )
+        except Exception as e:
+            runner.message(
+                f"Failed to create symlink. Error: {type(e).__name__}: {str(e)}"
+            )
+            show_fatal_error(
+                "SteamcmdInterface",
+                f"Failed to create symlink for {self.system}",
+                f"Error: {type(e).__name__}: {str(e)}",
+            )
+
     def download_mods(self, publishedfileids: list[str], runner: RunnerPanel) -> None:
         """
         This function downloads a list of mods from a list publishedfileids
@@ -262,56 +306,27 @@ class SteamcmdInterface:
             )
             runner.message(f"Symlink source : {symlink_source_path}")
             runner.message(f"Symlink destination: {symlink_destination_path}")
-            if os.path.exists(symlink_destination_path):
+            if os.path.exists(symlink_destination_path): # Symlink exists
                 runner.message(
                     f"Symlink destination already exists! Please remove existing destination:\n\n{symlink_destination_path}\n"
                 )
-            else:
+                answer = show_dialogue_conditional(
+                "Re-create Symlink?",
+                "An existing symlink already exists. Would you like to delete and re-create the symlink?",
+                f"Existing symlink: {symlink_destination_path}"
+            )
+                if answer == "&Yes": # Re-create symlink
+                    self.create_symlink(runner, symlink_source_path, symlink_destination_path)
+            else: # Symlink does not exist
                 answer = show_dialogue_conditional(
                     "Create symlink?",
-                    "Would you like to create a symlink as followed?",
-                    f"[{symlink_source_path}] -> " + symlink_destination_path,
+                    "Would you like to create a symlink as follows?",
+                    f"[{symlink_source_path}] -> " + symlink_destination_path
+                    + "\n\nThe symlink makes SteamCMD download mods to the local mods folder at: "
+                    + symlink_source_path,
                 )
                 if answer == "&Yes":
-                    try:
-                        runner.message(
-                            f"[{symlink_source_path}] -> " + symlink_destination_path
-                        )
-                        if os.path.exists(symlink_destination_path):
-                            logger.debug(
-                                f"Removing existing link at {symlink_destination_path} and recreating link to {symlink_source_path}"
-                            )
-                            # Remove by type
-                            if os.path.islink(
-                                symlink_destination_path
-                            ) or os.path.ismount(symlink_destination_path):
-                                os.unlink(symlink_destination_path)
-                            elif os.path.isdir(symlink_destination_path):
-                                os.rmdir(symlink_destination_path)
-                            else:
-                                os.remove(symlink_destination_path)
-                        if self.system != "Windows":
-                            os.symlink(
-                                symlink_source_path,
-                                symlink_destination_path,
-                                target_is_directory=True,
-                            )
-                        elif sys.platform == "win32":
-                            from _winapi import CreateJunction
-
-                            CreateJunction(
-                                symlink_source_path, symlink_destination_path
-                            )
-                        self.setup = True
-                    except Exception as e:
-                        runner.message(
-                            f"Failed to create symlink. Error: {type(e).__name__}: {str(e)}"
-                        )
-                        show_fatal_error(
-                            "SteamcmdInterface",
-                            f"Failed to create symlink for {self.system}",
-                            f"Error: {type(e).__name__}: {str(e)}",
-                        )
+                    self.create_symlink(runner, symlink_source_path, symlink_destination_path)
 
 
 if __name__ == "__main__":
