@@ -54,22 +54,20 @@ class SettingsDialog(QDialog):
         button_layout = QHBoxLayout()
         main_layout.addLayout(button_layout)
 
-        # OK button
-        self.global_ok_button = QPushButton("OK", self)
-        self.global_ok_button.setDefault(True)
-        button_layout.addWidget(self.global_ok_button)
-
-        button_layout.addStretch(1)
-
         # Reset to defaults button
         self.global_reset_to_defaults_button = QPushButton("Reset to Defaults", self)
         button_layout.addWidget(self.global_reset_to_defaults_button)
 
-        button_layout.addStretch(1)
+        button_layout.addStretch()
 
         # Cancel button
         self.global_cancel_button = QPushButton("Cancel", self)
         button_layout.addWidget(self.global_cancel_button)
+
+        # OK button
+        self.global_ok_button = QPushButton("OK", self)
+        self.global_ok_button.setDefault(True)
+        button_layout.addWidget(self.global_ok_button)
 
     def _do_locations_tab(self) -> None:
         tab = QWidget()
@@ -91,20 +89,23 @@ class SettingsDialog(QDialog):
             self.steam_mods_folder_location, self.local_mods_folder_location
         )
 
+        # Push the buttons to the bottom
+        tab_layout.addStretch()
+
         # Create a QHBoxLayout for the buttons
         buttons_layout = QHBoxLayout()
         tab_layout.addLayout(buttons_layout)
 
-        # Align the buttons to the Center
-        buttons_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        # "Autodetect" button
-        self.locations_autodetect_button = QPushButton("Autodetect", tab)
-        buttons_layout.addWidget(self.locations_autodetect_button)
+        # Push the buttons as far as possible to the right
+        buttons_layout.addStretch()
 
         # "Clear" button"
         self.locations_clear_button = QPushButton("Clear All Locations", tab)
         buttons_layout.addWidget(self.locations_clear_button)
+
+        # "Autodetect" button
+        self.locations_autodetect_button = QPushButton("Autodetect", tab)
+        buttons_layout.addWidget(self.locations_autodetect_button)
 
     def _do_game_location_area(self, tab_layout: QVBoxLayout) -> None:
         group_box = QGroupBox()
@@ -397,8 +398,9 @@ class SettingsDialog(QDialog):
             self.steam_workshop_db_local_file_choose_button,
         ) = self.__create_db_group(section_lbl, none_lbl, tab_layout)
 
-        database_expiry_label = QLabel("Steam Workshop database expiry in Epoch Time (Default is 7 Days) To Disable Notification Use 0")
-        database_expiry_label.setFont(GUIInfo().emphasis_font)
+        database_expiry_label = QLabel(
+            "Steam Workshop database expiry in Epoch Time (Use 0 to Disable Notification. Default is 7 Days)"
+        )
         group_layout.addWidget(database_expiry_label)
 
         self.database_expiry = QLineEdit()
@@ -501,7 +503,6 @@ class SettingsDialog(QDialog):
         group_box.setLayout(grid_group_layout)
 
         steam_api_key_label = QLabel("Steam API key:")
-        steam_api_key_label.setFont(GUIInfo().emphasis_font)
         grid_group_layout.addWidget(steam_api_key_label, 1, 0)
 
         self.db_builder_steam_api_key = QLineEdit()
@@ -515,47 +516,45 @@ class SettingsDialog(QDialog):
         grid_group_layout.setColumnStretch(0, 0)
         grid_group_layout.setColumnStretch(1, 1)
 
-        # "Warning note"
-        item_layout = QHBoxLayout()
-        tab_layout.addLayout(item_layout)
-
-        item_label = QLabel(
-            "WARNING \n Only Use If You Know What You Are Doing \n"
-            "Please Read User Guide For More Information Before Proceeding. \n"
-        )
-        item_layout.addWidget(item_label)
-        item_label.setFont(GUIInfo().emphasis_font)
-        item_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        tab_layout.addStretch()
 
         # "Download all workshop mods via" buttons
         item_layout = QHBoxLayout()
         tab_layout.addLayout(item_layout)
 
-        item_label = QLabel("Download all published Workshop mods via :")
+        item_layout.addStretch()
+
+        item_label = QLabel("Download all published Workshop mods via:")
         item_layout.addWidget(item_label)
-        item_label.setFont(GUIInfo().emphasis_font)
 
         self.db_builder_download_all_mods_via_steamcmd_button = QPushButton("SteamCMD")
         item_layout.addWidget(self.db_builder_download_all_mods_via_steamcmd_button)
 
         self.db_builder_download_all_mods_via_steam_button = QPushButton("Steam")
+        self.db_builder_download_all_mods_via_steam_button.setFixedWidth(
+            self.db_builder_download_all_mods_via_steamcmd_button.sizeHint().width()
+        )
         item_layout.addWidget(self.db_builder_download_all_mods_via_steam_button)
 
         # Compare/Merge/Build database buttons
         item_layout = QHBoxLayout()
         tab_layout.addLayout(item_layout)
 
-        item_label = QLabel("Database Operations :")
-        item_layout.addWidget(item_label)
-        item_label.setFont(GUIInfo().emphasis_font)
+        item_layout.addStretch()
 
         self.db_builder_compare_databases_button = QPushButton("Compare Databases")
         item_layout.addWidget(self.db_builder_compare_databases_button)
 
         self.db_builder_merge_databases_button = QPushButton("Merge Databases")
+        self.db_builder_merge_databases_button.setFixedWidth(
+            self.db_builder_compare_databases_button.sizeHint().width()
+        )
         item_layout.addWidget(self.db_builder_merge_databases_button)
 
         self.db_builder_build_database_button = QPushButton("Build Database")
+        self.db_builder_build_database_button.setFixedWidth(
+            self.db_builder_compare_databases_button.sizeHint().width()
+        )
         item_layout.addWidget(self.db_builder_build_database_button)
 
     def _do_steamcmd_tab(self) -> None:
@@ -600,8 +599,12 @@ class SettingsDialog(QDialog):
         )
         group_layout.addWidget(self.steamcmd_install_location)
 
+        tab_layout.addStretch()
+
         button_layout = QHBoxLayout()
         tab_layout.addLayout(button_layout)
+
+        button_layout.addStretch()
 
         self.steamcmd_import_acf_button = QPushButton("Import .acf")
         button_layout.addWidget(self.steamcmd_import_acf_button)
@@ -713,7 +716,6 @@ class SettingsDialog(QDialog):
         github_identity_group.setLayout(github_identity_layout)
 
         github_username_label = QLabel("GitHub username:")
-        github_username_label.setFont(GUIInfo().emphasis_font)
         github_identity_layout.addWidget(
             github_username_label, 0, 0, alignment=Qt.AlignmentFlag.AlignRight
         )
@@ -724,7 +726,6 @@ class SettingsDialog(QDialog):
         github_identity_layout.addWidget(self.github_username, 0, 1)
 
         github_token_label = QLabel("GitHub personal access token:")
-        github_token_label.setFont(GUIInfo().emphasis_font)
         github_identity_layout.addWidget(
             github_token_label, 1, 0, alignment=Qt.AlignmentFlag.AlignRight
         )
@@ -753,18 +754,17 @@ class SettingsDialog(QDialog):
         run_args_info_layout = QHBoxLayout()
 
         self.run_args_info_label = QLabel(
-            "Enter a comma separated list of arguments to pass to the Rimworld executable"
-            "\n Example \n"
-            "-logfile,/path/to/file.log,-savedatafolder=/path/to/savedata,-popupwindow"
+            "Enter a comma separated list of arguments to pass to the Rimworld executable \n"
+            "\n Examples : \n"
+            "\n -logfile,/path/to/file.log,-savedatafolder=/path/to/savedata,-popupwindow \n"
         )
         self.run_args_info_label.setFixedHeight(GUIInfo().default_font_line_height * 6)
         run_args_info_layout.addWidget(self.run_args_info_label, 0)
-        self.run_args_info_label.setFont(GUIInfo().emphasis_font)
-        self.run_args_info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.run_args_info_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
+
         run_args_layout.addLayout(run_args_info_layout, 0, 0, 1, 2)
 
         run_args_label = QLabel("Edit Game Run Arguments:")
-        run_args_label.setFont(GUIInfo().emphasis_font)
         run_args_layout.addWidget(
             run_args_label, 1, 0, alignment=Qt.AlignmentFlag.AlignRight
         )
@@ -772,7 +772,6 @@ class SettingsDialog(QDialog):
         self.run_args = QLineEdit()
         self.run_args.setTextMargins(GUIInfo().text_field_margins)
         self.run_args.setFixedHeight(GUIInfo().default_font_line_height * 2)
-        self.run_args.setFont(GUIInfo().emphasis_font)
         run_args_layout.addWidget(self.run_args, 1, 1)
 
         self.setTabOrder(self.run_args_info_label, self.run_args)
