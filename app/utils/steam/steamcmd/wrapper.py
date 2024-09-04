@@ -187,7 +187,7 @@ class SteamcmdInterface:
         """
         This checks if a path is a symlink.
         
-        Additionaly on Windows it checks if the path is a junction.
+        Additionally on Windows it checks if the path is a junction.
         
         If the path does not exist or is not a symlink/junction, 
         it will catch an OSError, and return false.
@@ -331,9 +331,9 @@ class SteamcmdInterface:
                 "Re-create Symlink?",
                 "An existing symlink already exists."
                 " Would you like to delete and re-create the symlink?",
-                f"Existing symlink: {symlink_destination_path}",
                 "The symlink makes SteamCMD download mods to the local mods folder"
-                + " and is required for SteamCMD mod downloads to work correctly."
+                + " and is required for SteamCMD mod downloads to work correctly.",
+                f"Existing symlink: {symlink_destination_path}"
                 "\n\nNew symlink:"
                 f"\n[{symlink_source_path}] -> " + symlink_destination_path,
             )
@@ -347,9 +347,9 @@ class SteamcmdInterface:
                 "Create Symlink?",
                 "The symlink destination path already exists."
                 " Would you like to remove the existing destination and create a new symlink in it's place?",
-                f"Existing destination: {symlink_destination_path}",
                 "The symlink makes SteamCMD download mods to the local mods folder"
-                + " and is required for SteamCMD mod downloads to work correctly."
+                + " and is required for SteamCMD mod downloads to work correctly.",
+                f"Existing destination: {symlink_destination_path}"
                 "\n\nNew symlink:"
                 f"\n[{symlink_source_path}] -> " + symlink_destination_path,
             )
