@@ -49,7 +49,7 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
         for path in targets:
             if path and os.path.exists(path) and os.path.isdir(path):
                 if self.watchdog_observer is not None:
-                    self.watchdog_observer.schedule(  # type: ignore # Lib doesn't have proper return type
+                    self.watchdog_observer.schedule(
                         self,
                         path,
                         recursive=True,
