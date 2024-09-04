@@ -329,8 +329,9 @@ class SteamcmdInterface:
                 )
                 answer = show_dialogue_conditional(
                 "Re-create Symlink?",
-                "An existing symlink already exists. Would you like to delete and re-create the symlink?",
-                f"Existing symlink: {symlink_destination_path}",
+                "The symlink destination path already exists."
+                " Would you like to delete the existing path and create a new symlink?",
+                f"Existing destination: {symlink_destination_path}",
                 "The symlink makes SteamCMD download mods to the local mods folder"
                 + " and is required for SteamCMD mod downloads to work correctly."
                 "\n\nNew symlink:"
