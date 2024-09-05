@@ -16,7 +16,7 @@ changelog:
         - "*"
       exclude:
         authors:
-          - dependabot[bot]
+          - dependabot
     - title: "Dependency Updates"
       labels:
         - dependencies
