@@ -358,7 +358,7 @@ class SteamcmdInterface:
             else: # Symlink/junction does not exist
                 answer = show_dialogue_conditional(
                     "Create Symlink?",
-                    "Create symlink?",
+                    "Do you want to create a symlink?",
                     "The symlink makes SteamCMD download mods to the local mods folder"
                     + " and is required for SteamCMD mod downloads to work correctly.",
                     "New symlink:"
