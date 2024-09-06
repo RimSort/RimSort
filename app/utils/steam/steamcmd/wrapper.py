@@ -357,10 +357,10 @@ class SteamcmdInterface:
                     self.create_symlink(runner, symlink_source_path, symlink_destination_path)
             else: # Symlink/junction does not exist
                 answer = show_dialogue_conditional(
+                    "Create Symlink?",
                     "Create symlink?",
                     "The symlink makes SteamCMD download mods to the local mods folder"
                     + " and is required for SteamCMD mod downloads to work correctly.",
-                    "",
                     "New symlink:"
                     f"\n[{symlink_source_path}] -> " + symlink_destination_path,
                 )
