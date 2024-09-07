@@ -371,8 +371,11 @@ class MainWindow(QMainWindow):
                 and instance_controller.instance.local_folder != ""
             ):
                 logger.info("Restoring steamcmd symlink...")
-                self.steamcmd_wrapper.check_symlink(
-                    steamcmd_link_path, instance_controller.instance.local_folder
+                self.steamcmd_wrapper.create_symlink(
+                    instance_controller.instance.local_folder,
+                    steamcmd_link_path,
+                    show_dialogues=False,
+                    force=True,
                 )
             elif not os.path.exists(steamcmd_link_path):
                 logger.info("Skipping steamcmd symlink restoration")
@@ -687,7 +690,9 @@ class MainWindow(QMainWindow):
                         / "content"
                         / "294100"
                     )
-                    self.steamcmd_wrapper.check_symlink(link_path, target_local_folder)
+                    self.steamcmd_wrapper.create_symlink(
+                        target_local_folder, link_path, show_dialogues=False, force=True
+                    )
                 # Create the new instance for our cloned instance
                 self.__create_new_instance(
                     instance_name=new_instance_name,
