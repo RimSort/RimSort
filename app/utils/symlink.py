@@ -82,10 +82,10 @@ def create_symlink(
     """
     if not os.path.exists(src_path):
         logger.warning(
-            f"Provided source path {src_path} either does not exist, abandoning symlink creation."
+            f"Provided source path {src_path} does not exist, abandoning symlink creation."
         )
         raise SymlinkSrcNotExistError(
-            f"Provided source path {src_path} either does not exist, abandoning symlink creation.",
+            f"Provided source path {src_path} does not exist, abandoning symlink creation.",
             src_path,
             dst_path,
         )
