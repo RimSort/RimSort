@@ -14,11 +14,7 @@ from loguru import logger
 
 from app.utils.event_bus import EventBus
 from app.utils.system_info import SystemInfo
-from app.views.dialogue import (
-    show_dialogue_conditional,
-    show_fatal_error,
-    show_warning,
-)
+from app.views.dialogue import show_dialogue_conditional, show_fatal_error, show_warning
 from app.windows.runner_panel import RunnerPanel
 
 
@@ -224,7 +220,9 @@ class SteamcmdInterface:
                 elif ".tar.gz" in self.steamcmd_url:
                     with (
                         requests.get(self.steamcmd_url, stream=True) as rx,
-                        tarfile.open(fileobj=rx.raw, mode="r:gz") as tarobj,
+                        tarfile.open(
+                            fileobj=BytesIO(rx.content), mode="r:gz"
+                        ) as tarobj,
                     ):
                         tarobj.extractall(self.steamcmd_install_path)
                     runner.message("Installation completed")
