@@ -26,8 +26,8 @@ body:
     id: version
     attributes:
       label: Version
-      description: What version are you using? Please include the commit hash if you're using a self-compiled version.
-      placeholder: Version number/Commit hash (e.g.,  v1.0.9, v1.0.10-edge49+b010fe5, b010fe5)
+      description: What version are you using? Please include the commit hash if you're not using a pre-compiled release.
+      placeholder: Version number/Commit hash (e.g., v1.0.9, b010fe5)
     validations:
       required: true
   - type: input
@@ -35,7 +35,7 @@ body:
     attributes:
       label: Operating System
       description: What Operating System are you using? Please include your CPU architecture if on MacOS and desktop environment if on Linux.
-      placeholder: Windows 11, macOS (Arm64), Arch (KDE), etc.
+      placeholder: Windows 11, macOS (ARM64), Arch (KDE), etc.
     validations:
       required: true
   - type: input
