@@ -2,7 +2,6 @@ mypy
 pytest
 pytest-qt
 ruff
-types-Deprecated
 types-lxml
 types-networkx
 types-psutil
