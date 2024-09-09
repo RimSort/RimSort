@@ -1,12 +1,11 @@
-ruff
 mypy
+pytest
+pytest-qt
+ruff
 types-Deprecated
+types-lxml
+types-networkx
 types-psutil
-#types-pyside6
 types-requests
 types-toposort
 types-xmltodict
-networkx-stubs
-lxml-stubs
-pytest
-pytest-qt
