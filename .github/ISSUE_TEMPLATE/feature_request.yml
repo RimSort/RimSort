@@ -36,29 +36,32 @@ body:
       description: Add additional context about your feature request here.
       placeholder: Additional context about your feature request.
 
-  - type: checkboxes
+  - type: dropdown
     id: coc_terms
     attributes:
       label: Code of Conduct
       description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/RimSort/RimSort/blob/main/CODE_OF_CONDUCT.md).
       options:
-        - label: I agree to follow this project's Code of Conduct
-          required: true
+        - I agree to follow this project's Code of Conduct
+    validations:
+      required: true
 
-  - type: checkboxes
+  - type: dropdown
     id: dup_terms
     attributes:
       label: Duplicate Issue Check
-      description: By submitting this issue, you attest that you've checked the issues tab for potential duplicates of this issue.
+      description: By submitting this issue, you attest that you've searched for similar [issues on GitHub](https://github.com/RimSort/RimSort/issues) and didn't find any.
       options:
-        - label: I've checked for duplicate issues
-          required: true
+        - I've checked for similar issues and didn't find anything
+    validations:
+      required: true
 
-  - type: checkboxes
+  - type: dropdown
     id: wiki_terms
     attributes:
       label: Wiki/FAQ Check
-      description: By submitting this issue, you attest that you've checked [the Wiki](https://github.com/RimSort/RimSort/wiki) for potential solutions
+      description: By submitting this issue, you attest that you've checked [the Wiki](https://github.com/RimSort/RimSort/wiki) for potential solutions and didn't find any.
       options:
-        - label: I've checked the Wiki for a solution
-          required: true
+        - I've checked the Wiki for a solution and didn't find a solution
+    validations:
+      required: true
