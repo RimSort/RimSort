@@ -14,11 +14,11 @@ body:
       description: What release type(s) are you using?
       multiple: true
       options:
-        - Compiled Windows x86 64-bit
-        - Compiled Darwin x86 64-bit
-        - Compiled Darwin arm64
-        - Compiled Ubuntu 22.04
-        - Compiled Ubuntu 24.04
+        - Compiled (Windows x86-64)
+        - Compiled (Darwin x86-64)
+        - Compiled (Darwin ARM64)
+        - Compiled (Ubuntu 22.04)
+        - Compiled (Ubuntu 24.04)
         - Self-Compiled
         - Python Interpreter
     validations:
@@ -27,8 +27,8 @@ body:
     id: version
     attributes:
       label: Version
-      description: What version are you using?
-      placeholder: Version number/Commit hash
+      description: What version are you using? Please include the commit hash if you're using a self-compiled version.
+      placeholder: Version number/Commit hash (e.g.,  v1.0.9, v1.0.10-edge49+b010fe5, b010fe5)
     validations:
       required: true
   - type: input
@@ -45,7 +45,7 @@ body:
       label: Relevant logs
       description: Please provide a RimSort.log file. There may be circumstances where a log file is not generated but without logs, it is difficult to diagnose the issue.
       placeholder: Link to RimSort.log file
-  
+
   - type: textarea
     id: bug_description
     attributes:
@@ -62,29 +62,32 @@ body:
       description: Add additional context about the problem here.
       placeholder: Additional context about the problem.
 
-  - type: checkboxes
+  - type: dropdown
     id: coc_terms
     attributes:
       label: Code of Conduct
       description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/RimSort/RimSort/blob/main/CODE_OF_CONDUCT.md).
       options:
-        - label: I agree to follow this project's Code of Conduct
-          required: true
+        - I agree to follow this project's Code of Conduct
+    validations:
+      required: true
 
-  - type: checkboxes
+  - type: dropdown
     id: dup_terms
     attributes:
       label: Duplicate Issue Check
-      description: By submitting this issue, you attest that you've checked the issues tab for potential duplicates of this issue.
+      description: By submitting this issue, you attest that you've searched for similar [issues on GitHub](https://github.com/RimSort/RimSort/issues) and didn't find any.
       options:
-        - label: I've checked for duplicate issues
-          required: true
+        - I've checked for similar issues and didn't find anything
+    validations:
+      required: true
 
-  - type: checkboxes
+  - type: dropdown
     id: wiki_terms
     attributes:
       label: Wiki/FAQ Check
-      description: By submitting this issue, you attest that you've checked [the Wiki](https://github.com/RimSort/RimSort/wiki) for potential solutions
+      description: By submitting this issue, you attest that you've checked [the Wiki](https://github.com/RimSort/RimSort/wiki) for potential solutions and didn't find any.
       options:
-        - label: I've checked the Wiki for a solution
-          required: true
+        - I've checked the Wiki for a solution and didn't find a solution
+    validations:
+      required: true
