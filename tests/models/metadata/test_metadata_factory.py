@@ -235,66 +235,45 @@ def test_get_rules_db_large_db(tmp_path: Path) -> None:
     assert read_rules_db(file) is not None
 
 
+EXAMPLE_EXT_RULES_1 = ExternalRulesSchema(
+    timestamp=1715795801,
+    rules={
+        "test.test1": ExternalRule(
+            loadAfter={},
+            loadBefore={
+                "a.a": SubExternalRule(name="AA", comment="test1 load before"),
+                "b.b": SubExternalRule(name="aa", comment="test2 load before"),
+                "c.c.core": SubExternalRule(name="test3", comment=""),
+            },
+            loadTop=SubExternalBoolRule(False),
+            loadBottom=SubExternalBoolRule(),
+        ),
+        "test.test2": ExternalRule(
+            loadAfter={
+                "a.a": SubExternalRule(name="AA", comment="test1 load before"),
+                "b.b": SubExternalRule(name="aa", comment="test2 load before"),
+                "c.c.core": SubExternalRule(name="test3", comment=""),
+            },
+            loadBefore={},
+            loadTop=SubExternalBoolRule(False),
+            loadBottom=SubExternalBoolRule(value=True, comment="It is known."),
+        ),
+    },
+)
+
+
 def test_get_rules_db_values() -> None:
     path = Path("tests/data/dbs/userRules.json")
     rules = read_rules_db(path)
 
-    expected_value = ExternalRulesSchema(
-        timestamp=1715795801,
-        rules={
-            "test.test1": ExternalRule(
-                loadAfter={},
-                loadBefore={
-                    "a.a": SubExternalRule(name="AA", comment="test1 load before"),
-                    "b.b": SubExternalRule(name="aa", comment="test2 load before"),
-                    "c.c.core": SubExternalRule(name="test3", comment=""),
-                },
-                loadTop=SubExternalBoolRule(False),
-                loadBottom=SubExternalBoolRule(),
-            ),
-            "test.test2": ExternalRule(
-                loadAfter={
-                    "a.a": SubExternalRule(name="AA", comment="test1 load before"),
-                    "b.b": SubExternalRule(name="aa", comment="test2 load before"),
-                    "c.c.core": SubExternalRule(name="test3", comment=""),
-                },
-                loadBefore={},
-                loadTop=SubExternalBoolRule(False),
-                loadBottom=SubExternalBoolRule(value=True, comment="It is known."),
-            ),
-        },
-    )
+    expected_value = EXAMPLE_EXT_RULES_1
 
     assert rules == expected_value
 
 
 def test_write_rules_db(tmp_path: Path) -> None:
     path = tmp_path / "test.json"
-    rules = ExternalRulesSchema(
-        timestamp=1715795801,
-        rules={
-            "test.test1": ExternalRule(
-                loadAfter={},
-                loadBefore={
-                    "a.a": SubExternalRule(name="AA", comment="test1 load before"),
-                    "b.b": SubExternalRule(name="aa", comment="test2 load before"),
-                    "c.c.core": SubExternalRule(name="test3", comment=""),
-                },
-                loadTop=SubExternalBoolRule(False),
-                loadBottom=SubExternalBoolRule(),
-            ),
-            "test.test2": ExternalRule(
-                loadAfter={
-                    "a.a": SubExternalRule(name="AA", comment="test1 load before"),
-                    "b.b": SubExternalRule(name="aa", comment="test2 load before"),
-                    "c.c.core": SubExternalRule(name="test3", comment=""),
-                },
-                loadBefore={},
-                loadTop=SubExternalBoolRule(False),
-                loadBottom=SubExternalBoolRule(value=True, comment="It is known."),
-            ),
-        },
-    )
+    rules = EXAMPLE_EXT_RULES_1
 
     write_rules_db(path, rules)
 
