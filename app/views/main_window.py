@@ -158,9 +158,9 @@ class MainWindow(QMainWindow):
     def __disable_enable_widgets(self, enable: bool) -> None:
         # Disable widgets
         q_app = QApplication.instance()
-        if q_app is None:
+        if not isinstance(q_app, QApplication):
             return
-        for widget in q_app.allWidgets():  # type: ignore # Broken pyside stub
+        for widget in q_app.allWidgets():
             widget.setEnabled(enable)
 
     def showEvent(self, event: QShowEvent) -> None:
