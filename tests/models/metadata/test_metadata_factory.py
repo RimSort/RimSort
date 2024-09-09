@@ -225,9 +225,14 @@ def test_create_base_rules_ludeon_core() -> None:
     assert rules.load_after == CaseInsensitiveSet()
 
 
-def test_get_rules_db_large_db() -> None:
-    path = Path("tests/data/dbs/large_rules.json")
-    assert read_rules_db(path) is not None
+def test_get_rules_db_large_db(tmp_path: Path) -> None:
+    repo = "https://github.com/RimSort/Community-Rules-Database.git"
+    _ = pygit2.clone_repository(repo, str(tmp_path), depth=1)
+    file = tmp_path / "communityRules.json"
+    if not file.exists():
+        warnings.warn("communityRules.json could not be found! Skipping test.")
+        return
+    assert read_rules_db(file) is not None
 
 
 def test_get_rules_db_values() -> None:
