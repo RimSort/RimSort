@@ -1,0 +1,102 @@
+{
+    "version": 12345,
+    "database": {
+        "basic_mod1-multiversion-multiauthor-nodependencies": {
+            "url": "example1.com",
+            "packageId": "packageId1",
+            "gameVersions": [
+                "v1",
+                "v2"
+            ],
+            "steamName": "steamName1",
+            "name": "name1",
+            "authors": [
+                "author1",
+                "author2"
+            ]
+        },
+        "basic_mod2-multiversion-multiauthor-basicdependencies": {
+            "url": "example2.com",
+            "packageId": "packageId2",
+            "gameVersions": [
+                "v1",
+                "v2"
+            ],
+            "steamName": "steamName2",
+            "name": "name2",
+            "authors": [
+                "author1",
+                "author2"
+            ],
+            "dependencies": {
+                "12345": [
+                    "basic_mod1-multiversion-multiauthor-nodependencies",
+                    "example1.com"
+                ]
+            }
+        },
+        "basic_mod3-multiversion-multiauthor-schemadependencies": {
+            "url": "example3.com",
+            "packageId": "packageId3",
+            "gameVersions": [
+                "v1",
+                "v2"
+            ],
+            "steamName": "steamName3",
+            "name": "name3",
+            "authors": [
+                "author1",
+                "author2"
+            ],
+            "dependencies": {
+                "12345": {
+                    "name": "basic_mod1-multiversion-multiauthor-nodependencies",
+                    "url": "example1.com"
+                }
+            }
+        },
+        "basic_mod4-multiversion-singleauthor-nodependencies": {
+            "url": "example4.com",
+            "packageId": "packageId4",
+            "gameVersions": [
+                "v1",
+                "v2"
+            ],
+            "steamName": "steamName4",
+            "name": "name4",
+            "authors": [
+                "author1"
+            ]
+        },
+        "basic_mod5-singleversion-singleauthor-nodependencies": {
+            "url": "example5.com",
+            "packageId": "packageId5",
+            "gameVersions": [
+                "v1"
+            ],
+            "steamName": "steamName5",
+            "name": "name5",
+            "authors": [
+                "author1"
+            ]
+        },
+        "unpublished_mod": {
+            "unpublished": true
+        },
+        "blacklisted_mod": {
+            "url": "blacklisted",
+            "packageId": "blacklisted",
+            "gameVersions": [
+                "v1",
+                "v2"
+            ],
+            "steamName": "blacklisted",
+            "name": "",
+            "authors": null,
+            "blacklist": {
+                "value": true,
+                "comment": "It is known."
+            }
+        }
+    }
+}

@@ -410,3 +410,34 @@ class ExternalRule(msgspec.Struct, omit_defaults=True):
 class ExternalRulesSchema(msgspec.Struct, omit_defaults=True):
     timestamp: int
     rules: dict[str, ExternalRule]
+
+
+class SteamDbEntryDependency(msgspec.Struct, omit_defaults=True):
+    name: str
+    url: str
+
+
+class SteamDbEntryBlacklist(msgspec.Struct, omit_defaults=True):
+    value: bool = False
+    comment: str = msgspec.field(default_factory=str)
+
+
+class SteamDbEntry(msgspec.Struct, omit_defaults=True):
+    unpublished: bool = False
+    url: str = msgspec.field(default_factory=str)
+    packageId: str = msgspec.field(default_factory=str)
+    gameVersions: list[str] | str = msgspec.field(default_factory=list)
+    steamName: str = msgspec.field(default_factory=str)
+    name: str = msgspec.field(default_factory=str)
+    authors: list[str] | str | None = msgspec.field(default_factory=str)
+    dependencies: dict[str, list[str] | SteamDbEntryDependency] = msgspec.field(
+        default_factory=dict
+    )
+    blacklist: SteamDbEntryBlacklist = msgspec.field(
+        default_factory=SteamDbEntryBlacklist
+    )
+
+
+class SteamDbSchema(msgspec.Struct):
+    version: int
+    database: dict[str, SteamDbEntry] = msgspec.field(default_factory=dict)

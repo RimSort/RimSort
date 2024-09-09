@@ -1,6 +1,10 @@
 from pathlib import Path
 
-from app.models.metadata.metadata_structure import ExternalRulesSchema, ListedMod
+from app.models.metadata.metadata_structure import (
+    ExternalRulesSchema,
+    ListedMod,
+    SteamDbSchema,
+)
 
 
 class MetadataMediator:
@@ -8,7 +12,7 @@ class MetadataMediator:
 
     _user_rules: ExternalRulesSchema
     _community_rules: ExternalRulesSchema
-    _steam_db: None
+    _steam_db: SteamDbSchema
     _mods_metadata: dict[str, ListedMod]
     _user_rules_path: Path
     _community_rules_path: Path
@@ -36,7 +40,7 @@ class MetadataMediator:
         raise ValueError("Community rules have not been initiated and loaded.")
 
     @property
-    def steam_db(self) -> None:
+    def steam_db(self) -> SteamDbSchema:
         return self._steam_db
 
     @property

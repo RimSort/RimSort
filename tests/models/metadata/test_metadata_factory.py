@@ -1,4 +1,5 @@
 import shutil
+import warnings
 from pathlib import Path
 
 import pygit2
@@ -12,9 +13,11 @@ from app.models.metadata.metadata_factory import (
     match_version,
     read_mods_config,
     read_rules_db,
+    read_steam_db,
     value_extractor,
     write_mods_config,
     write_rules_db,
+    write_steam_db,
 )
 from app.models.metadata.metadata_structure import (
     AboutXmlMod,
@@ -23,6 +26,10 @@ from app.models.metadata.metadata_structure import (
     ExternalRule,
     ExternalRulesSchema,
     ModType,
+    SteamDbEntry,
+    SteamDbEntryBlacklist,
+    SteamDbEntryDependency,
+    SteamDbSchema,
     SubExternalBoolRule,
     SubExternalRule,
 )
@@ -220,7 +227,7 @@ def test_create_base_rules_ludeon_core() -> None:
 
 def test_get_rules_db_large_db() -> None:
     path = Path("tests/data/dbs/large_rules.json")
-    _ = read_rules_db(path)
+    assert read_rules_db(path) is not None
 
 
 def test_get_rules_db_values() -> None:
@@ -288,6 +295,149 @@ def test_write_rules_db(tmp_path: Path) -> None:
 
     new_rules = read_rules_db(path)
     assert rules == new_rules
+
+
+def test_read_steam_db() -> None:
+    path = Path("tests/data/dbs/steamDB.json")
+    steam_db = read_steam_db(path)
+    expected_value = SteamDbSchema(
+        version=12345,
+        database={
+            "basic_mod1-multiversion-multiauthor-nodependencies": SteamDbEntry(
+                unpublished=False,
+                url="example1.com",
+                packageId="packageId1",
+                gameVersions=["v1", "v2"],
+                steamName="steamName1",
+                name="name1",
+                authors=["author1", "author2"],
+                dependencies={},
+                blacklist=SteamDbEntryBlacklist(value=False, comment=""),
+            ),
+            "basic_mod2-multiversion-multiauthor-basicdependencies": SteamDbEntry(
+                unpublished=False,
+                url="example2.com",
+                packageId="packageId2",
+                gameVersions=["v1", "v2"],
+                steamName="steamName2",
+                name="name2",
+                authors=["author1", "author2"],
+                dependencies={
+                    "12345": [
+                        "basic_mod1-multiversion-multiauthor-nodependencies",
+                        "example1.com",
+                    ]
+                },
+                blacklist=SteamDbEntryBlacklist(value=False, comment=""),
+            ),
+            "basic_mod3-multiversion-multiauthor-schemadependencies": SteamDbEntry(
+                unpublished=False,
+                url="example3.com",
+                packageId="packageId3",
+                gameVersions=["v1", "v2"],
+                steamName="steamName3",
+                name="name3",
+                authors=["author1", "author2"],
+                dependencies={
+                    "12345": SteamDbEntryDependency(
+                        name="basic_mod1-multiversion-multiauthor-nodependencies",
+                        url="example1.com",
+                    )
+                },
+                blacklist=SteamDbEntryBlacklist(value=False, comment=""),
+            ),
+            "basic_mod4-multiversion-singleauthor-nodependencies": SteamDbEntry(
+                unpublished=False,
+                url="example4.com",
+                packageId="packageId4",
+                gameVersions=["v1", "v2"],
+                steamName="steamName4",
+                name="name4",
+                authors=["author1"],
+                dependencies={},
+                blacklist=SteamDbEntryBlacklist(value=False, comment=""),
+            ),
+            "basic_mod5-singleversion-singleauthor-nodependencies": SteamDbEntry(
+                unpublished=False,
+                url="example5.com",
+                packageId="packageId5",
+                gameVersions=["v1"],
+                steamName="steamName5",
+                name="name5",
+                authors=["author1"],
+                dependencies={},
+                blacklist=SteamDbEntryBlacklist(value=False, comment=""),
+            ),
+            "unpublished_mod": SteamDbEntry(
+                unpublished=True,
+                url="",
+                packageId="",
+                gameVersions=[],
+                steamName="",
+                name="",
+                authors="",
+                dependencies={},
+                blacklist=SteamDbEntryBlacklist(value=False, comment=""),
+            ),
+            "blacklisted_mod": SteamDbEntry(
+                unpublished=False,
+                url="blacklisted",
+                packageId="blacklisted",
+                gameVersions=["v1", "v2"],
+                steamName="blacklisted",
+                name="",
+                authors=None,
+                dependencies={},
+                blacklist=SteamDbEntryBlacklist(value=True, comment="It is known."),
+            ),
+        },
+    )
+
+    assert steam_db is not None
+    assert steam_db == expected_value
+
+
+def test_read_steam_db_large(tmp_path: Path) -> None:
+    repo = "https://github.com/RimSort/Steam-Workshop-Database.git"
+    _ = pygit2.clone_repository(repo, str(tmp_path), depth=1)
+    file = tmp_path / "steamDB.json"
+    if not file.exists():
+        warnings.warn("steamDB.json could not be found! Skipping test.")
+        return
+    steam_db = read_steam_db(file)
+    assert steam_db is not None
+
+
+def test_write_steam_db(tmp_path: Path) -> None:
+    path = tmp_path / "test.json"
+    steam_db = SteamDbSchema(
+        version=12345,
+        database={
+            "a": SteamDbEntry(
+                unpublished=False,
+                url="example.com",
+                packageId="packageId",
+                gameVersions=["v1", "v2"],
+            )
+        },
+    )
+
+    write_steam_db(path, steam_db)
+
+    new_steam_db = read_steam_db(path)
+    assert steam_db == new_steam_db
+
+
+def test_read_write_steam_db(tmp_path: Path) -> None:
+    path = Path("tests/data/dbs/steamDB.json")
+    steam_db = read_steam_db(path)
+    assert steam_db is not None
+
+    new_path = tmp_path / "test.json"
+    write_steam_db(new_path, steam_db)
+
+    new_steam_db = read_steam_db(new_path)
+    assert steam_db == new_steam_db
 
 
 def test_create_scenario_mod_from_rsc_invalid_meta() -> None:
