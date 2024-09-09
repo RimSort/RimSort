@@ -11,3 +11,4 @@ types-xmltodict
 networkx-stubs
 lxml-stubs
 pytest
+pytest-qt

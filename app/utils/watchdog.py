@@ -49,7 +49,7 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
         for path in targets:
             if path and os.path.exists(path) and os.path.isdir(path):
                 if self.watchdog_observer is not None:
-                    self.watchdog_observer.schedule(  # type: ignore # Lib doesn't have proper return type
+                    self.watchdog_observer.schedule(
                         self,
                         path,
                         recursive=True,
@@ -120,28 +120,31 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
 
         Returns: None
         """
+        event_scr_path_str = str(event.src_path)
         # Resolve the data source from the path
-        data_source = self.settings_controller.resolve_data_source(event.src_path)
+        data_source = self.settings_controller.resolve_data_source(event_scr_path_str)
         # Generate a UUID after confirming we don't already have one for this path
         uuid = (
             str(uuid4())
             if event.is_directory
-            and not self.metadata_manager.mod_metadata_dir_mapper.get(event.src_path)
+            and not self.metadata_manager.mod_metadata_dir_mapper.get(
+                event_scr_path_str
+            )
             else None
         )
         # If we know the intent, and have a UUID generated, proceed to create the mod
         if data_source and uuid:
-            logger.debug(f"Mod directory created: {event.src_path}")
+            logger.debug(f"Mod directory created: {event_scr_path_str}")
             logger.debug(f"Mod UUID created: {uuid}")
             logger.debug(f"Mod data source created: {data_source}")
             # Add the mod directory to our mapper
-            self.metadata_manager.mod_metadata_dir_mapper[event.src_path] = uuid
+            self.metadata_manager.mod_metadata_dir_mapper[event_scr_path_str] = uuid
             # Signal mod creation
             self.__cooldown_uuid_change(
                 callback={
                     "operation": "created",
                     "data_source": data_source,
-                    "path": event.src_path,
+                    "path": event_scr_path_str,
                     "uuid": uuid,
                 }
             )
@@ -155,8 +158,9 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
 
         Returns: None
         """
+        event_scr_path_str = str(event.src_path)
         # Resolve an existing UUID from our mapper
-        uuid = self.metadata_manager.mod_metadata_dir_mapper.get(event.src_path)
+        uuid = self.metadata_manager.mod_metadata_dir_mapper.get(event_scr_path_str)
         # If we have a UUID resolved, proceed to delete the mod
         if uuid:
             # Remove the mod's metadata file from our mapper
@@ -167,12 +171,12 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
                 mod_metadata_file_path, None
             )
             # Remove the mod directory from our mapper
-            self.metadata_manager.mod_metadata_dir_mapper.pop(event.src_path, None)
-            logger.debug(f"Mod directory deleted: {event.src_path}")
+            self.metadata_manager.mod_metadata_dir_mapper.pop(event_scr_path_str, None)
+            logger.debug(f"Mod directory deleted: {event_scr_path_str}")
             self.__cooldown_uuid_change(
                 callback={
                     "operation": "deleted",
-                    "path": event.src_path,
+                    "path": event_scr_path_str,
                     "uuid": uuid,
                 }
             )
@@ -186,11 +190,12 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
 
         Returns: None
         """
+        event_scr_path_str = str(event.src_path)
         # Resolve an existing UUID from our mapper
-        uuid = self.metadata_manager.mod_metadata_file_mapper.get(event.src_path)
+        uuid = self.metadata_manager.mod_metadata_file_mapper.get(event_scr_path_str)
 
         if not uuid:
-            logger.debug(f"No UUID found for modification event: {event.src_path}")
+            logger.debug(f"No UUID found for modification event: {event_scr_path_str}")
             return
 
         # Try to resolve a mod path from the from metadata
@@ -200,10 +205,10 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
         # If we have a UUID and mod path resolved, proceed to update the mod
         if not mod_path:
             logger.debug(
-                f"UUID found for modification event, but no mod path. Event src_path: {event.src_path} UUID: {uuid}"
+                f"UUID found for modification event, but no mod path. Event src_path: {event_scr_path_str} UUID: {uuid}"
             )
 
-        logger.debug(f"Mod metadata modified: {event.src_path}")
+        logger.debug(f"Mod metadata modified: {event_scr_path_str}")
         self.__cooldown_uuid_change(
             callback={
                 "operation": "updated",
