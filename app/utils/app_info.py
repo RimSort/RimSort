@@ -77,6 +77,7 @@ class AppInfo:
         # Derive some secondary directory paths
 
         self._databases_folder: Path = self._app_storage_folder / "dbs"
+        self._aux_metadata_db: Path = self._databases_folder / "aux_metadata.db"
         self._theme_data_folder: Path = self._application_folder / "themes"
         self._settings_file: Path = self._app_storage_folder / "settings.json"
 
@@ -178,3 +179,10 @@ class AppInfo:
         Get the path to the folder where application databases are stored.
         """
         return self._databases_folder
+    
+    @property
+    def aux_metadata_db(self) -> Path:
+        """
+        Get the path to the auxiliary metadata database.
+        """
+        return self._aux_metadata_db
