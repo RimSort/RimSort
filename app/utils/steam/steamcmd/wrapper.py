@@ -12,6 +12,7 @@ from zipfile import ZipFile
 import requests
 from loguru import logger
 
+from app.controllers.settings_controller import SettingsController
 from app.utils.event_bus import EventBus
 from app.utils.system_info import SystemInfo
 from app.views.dialogue import show_dialogue_conditional, show_fatal_error, show_warning
@@ -135,11 +136,14 @@ class SteamcmdInterface:
 
             CreateJunction(target_local_folder, link_path)
 
-    def create_symlink(self, runner: RunnerPanel, symlink_source_path: str, symlink_destination_path: str) -> None:
+    def create_symlink(
+        self,
+        runner: RunnerPanel,
+        symlink_source_path: str,
+        symlink_destination_path: str,
+    ) -> None:
         try:
-            runner.message(
-                f"[{symlink_source_path}] -> " + symlink_destination_path
-            )
+            runner.message(f"[{symlink_source_path}] -> " + symlink_destination_path)
             if os.path.exists(symlink_destination_path):
                 logger.debug(
                     f"Removing existing link at {symlink_destination_path} and recreating link to {symlink_source_path}"
@@ -162,13 +166,9 @@ class SteamcmdInterface:
             elif sys.platform == "win32":
                 from _winapi import CreateJunction
 
-                CreateJunction(
-                    symlink_source_path, symlink_destination_path
-                )
+                CreateJunction(symlink_source_path, symlink_destination_path)
             self.setup = True
-            runner.message(
-                "Finished creating symlink\n"
-            )
+            runner.message("Finished creating symlink\n")
         except Exception as e:
             runner.message(
                 f"Failed to create symlink. Error: {type(e).__name__}: {str(e)}"
@@ -178,23 +178,22 @@ class SteamcmdInterface:
                 f"Failed to create symlink for {self.system}",
                 f"Error: {type(e).__name__}: {str(e)}",
             )
-            
+
     def is_junction_or_link(self, path: str) -> bool:
         """
         This checks if a path is a symlink.
-        
+
         Additionally on Windows it checks if the path is a junction.
-        
-        If the path does not exist or is not a symlink/junction, 
+
+        If the path does not exist or is not a symlink/junction,
         it will catch an OSError, and return false.
-        
+
         :param path: The path to check
         """
         try:
             return bool(os.readlink(path))
         except OSError:
             return False
-
 
     def download_mods(self, publishedfileids: list[str], runner: RunnerPanel) -> None:
         """
@@ -243,17 +242,47 @@ class SteamcmdInterface:
             return False
         return os.path.exists(str(Path(prefix) / "steamcmd" / executable_name))
 
-    def on_steamcmd_not_found(self, runner: RunnerPanel | None = None) -> None:
+    def on_steamcmd_not_found(
+        self,
+        runner: RunnerPanel | None = None,
+        ask_ignore: bool = False,
+        settings_controller: SettingsController | None = None,
+    ) -> bool:
+        """Asks if the user wants to setup SteamCMD. If the user chooses to ignore the dialogue, set the steamcmd ignore flag in the settings.
+
+        :param runner: The runner, defaults to None
+        :type runner: RunnerPanel | None, optional
+        :param ask_ignore: Whether to ask the user to ignore the dialogue, defaults to False
+        :type ask_ignore: bool, optional
+        :param settings_controller: The settings controller used to set steamcmd ignore flag, defaults to None
+        :type settings_controller: SettingsController | None, optional
+        :return: Whenever or not the user chose to ignore the dialogue
+        :rtype: bool
+        """
+        if ask_ignore:
+            btn_text = ["&Yes", "&No", "&Don't Ask Again"]
+        else:
+            btn_text = ["&Yes", "&No"]
+
         answer = show_dialogue_conditional(
             title="RimSort - SteamCMD setup",
             text="RimSort was unable to find SteamCMD installed in the configured prefix:\n",
             information=f"{self.steamcmd_prefix if self.steamcmd_prefix else '<None>'}\n\n"
             + "Do you want to setup SteamCMD?",
+            button_text_override=btn_text,
         )
         if answer == "&Yes":
             EventBus().do_install_steamcmd.emit()
         if runner:
             runner.close()
+
+        if ask_ignore and answer == "&Don't Ask Again":
+            if settings_controller is not None:
+                settings_controller.active_instance.steamcmd_ignore = True
+                settings_controller.settings.save()
+
+            return True
+        return False
 
     def setup_steamcmd(
         self, symlink_source_path: str, reinstall: bool, runner: RunnerPanel
@@ -321,39 +350,47 @@ class SteamcmdInterface:
             )
             runner.message(f"Symlink source : {symlink_source_path}")
             runner.message(f"Symlink destination: {symlink_destination_path}")
-            if self.is_junction_or_link(symlink_destination_path): # Symlink/junction exists
+            if self.is_junction_or_link(
+                symlink_destination_path
+            ):  # Symlink/junction exists
                 runner.message(
                     f"Symlink destination already exists! Please remove existing destination:\n\n{symlink_destination_path}\n"
                 )
                 answer = show_dialogue_conditional(
-                "Re-create Symlink?",
-                "An existing symlink already exists."
-                " Would you like to delete and re-create the symlink?",
-                "The symlink makes SteamCMD download mods to the local mods folder"
-                + " and is required for SteamCMD mod downloads to work correctly.",
-                f"Existing symlink: {symlink_destination_path}"
-                "\n\nNew symlink:"
-                f"\n[{symlink_source_path}] -> " + symlink_destination_path,
-            )
-                if answer == "&Yes": # Re-create symlink
-                    self.create_symlink(runner, symlink_source_path, symlink_destination_path)
-            elif os.path.exists(symlink_destination_path): # A dir exists (not a symlink/junction)
+                    "Re-create Symlink?",
+                    "An existing symlink already exists."
+                    " Would you like to delete and re-create the symlink?",
+                    "The symlink makes SteamCMD download mods to the local mods folder"
+                    + " and is required for SteamCMD mod downloads to work correctly.",
+                    f"Existing symlink: {symlink_destination_path}"
+                    "\n\nNew symlink:"
+                    f"\n[{symlink_source_path}] -> " + symlink_destination_path,
+                )
+                if answer == "&Yes":  # Re-create symlink
+                    self.create_symlink(
+                        runner, symlink_source_path, symlink_destination_path
+                    )
+            elif os.path.exists(
+                symlink_destination_path
+            ):  # A dir exists (not a symlink/junction)
                 runner.message(
                     f"Symlink destination already exists! Please remove existing destination:\n\n{symlink_destination_path}\n"
                 )
                 answer = show_dialogue_conditional(
-                "Create Symlink?",
-                "The symlink destination path already exists."
-                " Would you like to remove the existing destination and create a new symlink in it's place?",
-                "The symlink makes SteamCMD download mods to the local mods folder"
-                + " and is required for SteamCMD mod downloads to work correctly.",
-                f"Existing destination: {symlink_destination_path}"
-                "\n\nNew symlink:"
-                f"\n[{symlink_source_path}] -> " + symlink_destination_path,
-            )
-                if answer == "&Yes": # Re-create symlink/junction
-                    self.create_symlink(runner, symlink_source_path, symlink_destination_path)
-            else: # Symlink/junction does not exist
+                    "Create Symlink?",
+                    "The symlink destination path already exists."
+                    " Would you like to remove the existing destination and create a new symlink in it's place?",
+                    "The symlink makes SteamCMD download mods to the local mods folder"
+                    + " and is required for SteamCMD mod downloads to work correctly.",
+                    f"Existing destination: {symlink_destination_path}"
+                    "\n\nNew symlink:"
+                    f"\n[{symlink_source_path}] -> " + symlink_destination_path,
+                )
+                if answer == "&Yes":  # Re-create symlink/junction
+                    self.create_symlink(
+                        runner, symlink_source_path, symlink_destination_path
+                    )
+            else:  # Symlink/junction does not exist
                 answer = show_dialogue_conditional(
                     "Create Symlink?",
                     "Do you want to create a symlink?",
@@ -363,7 +400,9 @@ class SteamcmdInterface:
                     f"\n[{symlink_source_path}] -> " + symlink_destination_path,
                 )
                 if answer == "&Yes":
-                    self.create_symlink(runner, symlink_source_path, symlink_destination_path)
+                    self.create_symlink(
+                        runner, symlink_source_path, symlink_destination_path
+                    )
 
 
 if __name__ == "__main__":

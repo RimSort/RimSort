@@ -186,7 +186,10 @@ class MainWindow(QMainWindow):
         ) or not self.steamcmd_wrapper.check_for_steamcmd(
             prefix=self.steamcmd_wrapper.steamcmd_prefix
         ):
-            self.steamcmd_wrapper.on_steamcmd_not_found()
+            if not self.settings_controller.active_instance.steamcmd_ignore:
+                self.steamcmd_wrapper.on_steamcmd_not_found(
+                    ask_ignore=True, settings_controller=self.settings_controller
+                )
         else:
             self.steamcmd_wrapper.setup = True
         # CHECK USER PREFERENCE FOR WATCHDOG
