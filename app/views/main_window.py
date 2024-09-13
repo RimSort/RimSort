@@ -878,7 +878,7 @@ class MainWindow(QMainWindow):
         # Start watchdog
         try:
             if self.watchdog_event_handler.watchdog_observer is not None:
-                self.watchdog_event_handler.watchdog_observer.start()  # type: ignore #Upstream not typed
+                self.watchdog_event_handler.watchdog_observer.start()
             else:
                 logger.warning("Watchdog Observer is None. Unable to start.")
         except Exception as e:
@@ -901,7 +901,7 @@ class MainWindow(QMainWindow):
             and self.watchdog_event_handler.watchdog_observer
             and self.watchdog_event_handler.watchdog_observer.is_alive()
         ):
-            self.watchdog_event_handler.watchdog_observer.stop()  # type: ignore #Upstream not typed
+            self.watchdog_event_handler.watchdog_observer.stop()
             self.watchdog_event_handler.watchdog_observer.join()
             self.watchdog_event_handler.watchdog_observer = None
             for timer in self.watchdog_event_handler.cooldown_timers.values():

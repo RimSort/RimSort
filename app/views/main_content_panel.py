@@ -647,18 +647,22 @@ class MainContent(QObject):
                 ].local_folder
                 if local_mods_target and local_mods_target != "":
                     with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
-                        todds_txt_file.write(local_mods_target + "\n")
+                        todds_txt_file.write(os.path.abspath(local_mods_target) + "\n")
                 workshop_mods_target = self.settings_controller.settings.instances[
                     self.settings_controller.settings.current_instance
                 ].workshop_folder
                 if workshop_mods_target and workshop_mods_target != "":
                     with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
-                        todds_txt_file.write(workshop_mods_target + "\n")
+                        todds_txt_file.write(os.path.abspath(local_mods_target) + "\n")
             else:
                 with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
                     for uuid in self.mods_panel.active_mods_list.uuids:
                         todds_txt_file.write(
-                            self.metadata_manager.internal_local_metadata[uuid]["path"]
+                            os.path.abspath(
+                                self.metadata_manager.internal_local_metadata[uuid][
+                                    "path"
+                                ]
+                            )
                             + "\n"
                         )
             if action == "optimize_textures":

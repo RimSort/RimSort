@@ -119,7 +119,9 @@ def launch_game_process(game_install_path: Path, args: list[str]) -> None:
 
     This function initializes the Steamworks API to be used by the RimWorld game.
 
-    :param game_install_path: is a string path to the game folder
+    The game will be launched with the game install path being the working directory.
+
+    :param game_install_path: is a path to the game folder
     :param args: is a list of strings representing the args to pass to the generated executable path
     """
     logger.info(f"Attempting to find the game in the game folder {game_install_path}")
@@ -159,12 +161,12 @@ def launch_game_process(game_install_path: Path, args: list[str]) -> None:
                         popen_args,
                         creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
                         shell=True,
+                        cwd=game_install_path,
                     )
                 else:
                     # not Windows, so assume POSIX; if not, we'll get a usable exception
                     p = subprocess.Popen(
-                        popen_args,
-                        start_new_session=True,
+                        popen_args, start_new_session=True, cwd=game_install_path
                     )
 
             logger.info(

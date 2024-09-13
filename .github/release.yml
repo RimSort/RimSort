@@ -1,0 +1,22 @@
+changelog:
+  categories:
+    - title: "🚀 Features and Improvements"
+      labels:
+        - feature/improvement 🆕
+        - accessibility 👀 ℹ️🤓
+    - title: "🐛 Bug Fixes"
+      labels:
+        - bugs 🪲
+    - title: "🔧 Maintenance and Internal Changes"
+      labels:
+        - Code refactoring 🧹
+        - Code style ✨
+    - title: "Miscellaneous Changes"
+      labels:
+        - "*"
+      exclude:
+        authors:
+          - dependabot
+    - title: "Dependency Updates"
+      labels:
+        - dependencies

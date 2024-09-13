@@ -19,8 +19,8 @@ if sys.platform == "win32":
             tuple[str, bool]: The path to the steam folder and a boolean indicating if the path was found
         """
         candidate_reg_keys = [
-            "SOFTWARE\Wow6432Node\Valve\Steam",
-            "SOFTWARE\Valve\Steam",
+            r"SOFTWARE\Wow6432Node\Valve\Steam",
+            r"SOFTWARE\Valve\Steam",
         ]
 
         for reg_key in candidate_reg_keys:
