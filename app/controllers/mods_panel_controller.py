@@ -1,4 +1,4 @@
-from PySide6.QtCore import Qt, QObject, Signal, Slot
+from PySide6.QtCore import QObject, Qt, Signal, Slot
 
 from app.views.mods_panel import ModsPanel
 
