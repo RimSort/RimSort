@@ -1,6 +1,6 @@
 from PySide6.QtCore import QObject, Qt, Signal, Slot
 
-from app.views.mods_panel import ModsPanel
+from app.views.mods_panel import ModListWidget, ModsPanel
 
 
 class ModsPanelController(QObject):
@@ -26,7 +26,8 @@ class ModsPanelController(QObject):
                 mod_data["warning_toggled"] = False
                 mod.setData(Qt.ItemDataRole.UserRole, mod_data)
                 widget = mod.listWidget()
-                package_id = widget.metadata_manager.internal_local_metadata[mod_data["uuid"]]["packageid"]
-                widget.reset_warning_signal.emit(package_id)
+                if isinstance(widget, ModListWidget):
+                    package_id = widget.metadata_manager.internal_local_metadata[mod_data["uuid"]]["packageid"]
+                    widget.reset_warning_signal.emit(package_id)
         self.mods_panel.active_mods_list.recalculate_warnings_signal.emit()
         self.mods_panel.inactive_mods_list.recalculate_warnings_signal.emit()
