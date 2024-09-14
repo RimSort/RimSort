@@ -2086,7 +2086,6 @@ class ModListWidget(QListWidget):
             item_data["warning_toggled"] = True
         else:
             self.ignore_warning_list.remove(packageid)
-            item_data = item.data(Qt.ItemDataRole.UserRole)
             item_data["warning_toggled"] = False
         item.setData(Qt.ItemDataRole.UserRole, item_data)
         self.recalculate_warnings_signal.emit()
