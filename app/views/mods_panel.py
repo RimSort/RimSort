@@ -87,9 +87,24 @@ class ModsPanelSortKey(Enum):
     """
     Enum class representing different sorting keys for mods.
     """
+    NOKEY = 0
+    MODNAME = 1
 
-    NOKEY = None
-    MODNAME = uuid_to_mod_name
+
+def sort_uuids(uuids: List[str], key: ModsPanelSortKey) -> List[str]:
+    """
+    Sort the list of UUIDs based on the provided key.
+    Args:
+        key (ModsPanelSortKey): The key to sort the list by.
+    Returns:
+        None
+    """
+    # Sort the list of UUIDs based on the provided key
+    if key == ModsPanelSortKey.MODNAME:
+        sort_function = uuid_to_mod_name
+    else:
+        sort_function = lambda uuid: uuid
+    return sorted(uuids, key=sort_function)
 
 
 class ModListItemInner(QWidget):
@@ -2046,9 +2061,10 @@ class ModListWidget(QListWidget):
             None
         """
         # TODO: Fix this or just get rid of it
-        sorted_uuids = uuids
+        # sorted_uuids = uuids
         # if key != ModsPanelSortKey.NOKEY:
         #    sorted_uuids = sorted(uuids, key=key)
+        sorted_uuids = sort_uuids(uuids, key = key)
         self.recreate_mod_list(list_type, sorted_uuids)
 
     def recreate_mod_list(self, list_type: str, uuids: List[str]) -> None:
