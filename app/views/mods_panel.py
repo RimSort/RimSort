@@ -71,6 +71,17 @@ class ClickableQLabel(QLabel):
         super().mousePressEvent(event)
 
 
+def uuid_no_key(uuid: str) -> str:
+    """
+    Returns the UUID of the mod.
+    Args:
+        uuid (str): The UUID of the mod.
+    Returns:
+        str: The UUID of the mod.
+    """
+    return uuid
+
+
 def uuid_to_mod_name(uuid: str) -> str:
     """
     Converts a UUID to the corresponding mod name.
@@ -101,10 +112,10 @@ def sort_uuids(uuids: List[str], key: ModsPanelSortKey) -> List[str]:
     """
     # Sort the list of UUIDs based on the provided key
     if key == ModsPanelSortKey.MODNAME:
-        sort_function = uuid_to_mod_name
+        key_function = uuid_to_mod_name
     else:
-        sort_function = lambda uuid: uuid
-    return sorted(uuids, key=sort_function)
+        key_function = uuid_no_key
+    return sorted(uuids, key=key_function)
 
 
 class ModListItemInner(QWidget):
