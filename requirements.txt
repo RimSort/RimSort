@@ -7,7 +7,7 @@ msgspec==0.18.6
 natsort==8.4.0
 networkx==3.3
 platformdirs==4.3.6
-PyGithub==2.3.0
+PyGithub==2.4.0
 pyperclip==1.9.0
 PySide6
 PySide6==6.7.2; sys_platform == 'darwin'
