@@ -133,9 +133,9 @@ class ModListItemInner(QWidget):
         # Cache MetadataManager instance
         self.metadata_manager = MetadataManager.instance()
         # Cache error and warning strings for tooltips
-        self.errors_warnings = errors_warnings.lstrip()
-        self.errors = errors.lstrip()
-        self.warnings = warnings.lstrip()
+        self.errors_warnings = errors_warnings
+        self.errors = errors
+        self.warnings = warnings
         # Cache filtered state of widget's item - used to determine styling of widget
         self.filtered = filtered
         # Cache invalid state of widget's item - used to determine styling of widget
@@ -544,7 +544,6 @@ class ModListWidget(QListWidget):
     steamdb_blacklist_signal = Signal(list)
     steamcmd_downloader_signal = Signal(list)
     steamworks_subscription_signal = Signal(list)
-    reset_warning_signal = Signal(str)
 
     def __init__(self, list_type: str, settings_controller: SettingsController) -> None:
         """
@@ -1648,7 +1647,6 @@ class ModListWidget(QListWidget):
             )
             widget.toggle_warning_signal.connect(self.toggle_warning)
             widget.toggle_error_signal.connect(self.toggle_warning)
-            self.reset_warning_signal.connect(self.reset_warning)
             item.setSizeHint(widget.sizeHint())
             self.setItemWidget(item, widget)
 
@@ -1854,16 +1852,21 @@ class ModListWidget(QListWidget):
             current_item_data["mismatch"] = False
             current_item_data["errors"] = None
             current_item_data["warnings"] = None
-            current_item_data["warning_toggled"] = False
             mod_data = internal_local_metadata[uuid]
             # Check mod supportedversions against currently loaded version of game
             mod_errors["version_mismatch"] = self.metadata_manager.is_version_mismatch(
                 uuid
             )
             # Set an item's validity dynamically based on the version mismatch value
-            if mod_data["packageid"] not in self.ignore_warning_list:
+            # if not current_item_data["warning_toggled"]:
+            if (mod_data["packageid"] not in self.ignore_warning_list 
+                and not current_item_data["warning_toggled"]):
                 current_item_data["mismatch"] = mod_errors["version_mismatch"]
-            else: # If item is being ignored, it means toggle warning was used
+            else:
+                # If a mod has been moved for eg. inactive -> active. We keep ignoring the warnings.
+                # This makes sure to add the mod to the ignore list of the new modlist.
+                if mod_data.get("packageid") not in self.ignore_warning_list:
+                    self.ignore_warning_list.append(mod_data.get("packageid"))
                 current_item_data["warning_toggled"] = True
             # Check for "Active" mod list specific errors and warnings
             if (
@@ -1997,8 +2000,9 @@ class ModListWidget(QListWidget):
                 total_warning_text += "\n============================="
                 total_warning_text += tool_tip_text
             # Add tooltip to item data and set the data back to the item
-            current_item_data["errors_warnings"] = tool_tip_text
-            current_item_data["warnings"] = tool_tip_text[len(current_item_data["errors"]):]
+            current_item_data["errors_warnings"] = tool_tip_text.strip()
+            current_item_data["warnings"] = tool_tip_text[len(current_item_data["errors"]):].strip()
+            current_item_data["errors"] = current_item_data["errors"].strip()
             current_item.setData(Qt.ItemDataRole.UserRole, current_item_data)
         logger.info(f"Finished recalculating {self.list_type} list errors")
         return total_error_text, total_warning_text, num_errors, num_warnings
@@ -2089,12 +2093,6 @@ class ModListWidget(QListWidget):
             item_data["warning_toggled"] = False
         item.setData(Qt.ItemDataRole.UserRole, item_data)
         self.recalculate_warnings_signal.emit()
-
-    def reset_warning(self, packageid: str) -> None:
-        # Resets the warning toggle
-        logger.debug(f"Reset warning toggle for: {packageid}")
-        if packageid in self.ignore_warning_list:
-            self.ignore_warning_list.remove(packageid)
 
 class ModsPanel(QWidget):
     """
