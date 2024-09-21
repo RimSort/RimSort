@@ -612,6 +612,8 @@ class ModListWidget(QListWidget):
 
     def dropEvent(self, event: QDropEvent) -> None:
         super().dropEvent(event)
+        # Get source widget of dropEvent
+        source_widget = event.source()
         # Get the drop action
         drop_action = event.dropAction()
         # Check if the drop action is MoveAction
@@ -633,7 +635,9 @@ class ModListWidget(QListWidget):
         logger.debug(
             f"Emitting {self.list_type} list update signal after rows dropped [{self.count()}]"
         )
-        self.list_update_signal.emit("drop")
+        # Only emit "drop" signal if a mod was dragged and dropped within the same modlist 
+        if source_widget == self:
+            self.list_update_signal.emit("drop")
 
     def eventFilter(self, source_object: QObject, event: QEvent) -> bool:
         """
