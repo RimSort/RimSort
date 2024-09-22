@@ -20,7 +20,12 @@ from zipfile import ZipFile
 
 from loguru import logger
 
-from app.utils.generic import platform_specific_open
+from app.utils.generic import (
+    check_valid_http_git_url,
+    extract_git_dir_name,
+    extract_git_user_or_org,
+    platform_specific_open,
+)
 from app.utils.system_info import SystemInfo
 
 # GitPython depends on git executable being available in PATH
@@ -2264,15 +2269,10 @@ class MainContent(QObject):
             self._do_notify_no_git()
             return
 
-        if (
-            repo_url
-            and repo_url != ""
-            and repo_url.startswith("http://")
-            or repo_url.startswith("https://")
-        ):
-            # Calculate folder name from provided URL
-            repo_folder_name = os.path.split(repo_url)[1]
-            # Calculate path from generated folder name
+        repo_url = repo_url.strip()
+        if check_valid_http_git_url(repo_url):
+            repo_folder_name = extract_git_dir_name(repo_url)
+
             repo_path = str((Path(base_path) / repo_folder_name))
             if os.path.exists(repo_path):  # If local repo does exist
                 # Prompt to user to handle
@@ -2310,7 +2310,8 @@ class MainContent(QObject):
                 dialogue.show_information(
                     title="Repo retrieved",
                     text="The configured repository was cloned!",
-                    information=f"{repo_url} ->\n" + f"{repo_path}",
+                    information=f'<a href="{repo_url}">{repo_url}</a>  ->\n'
+                    + f"{repo_path}",
                 )
             except GitCommandError:
                 try:
@@ -2355,9 +2356,10 @@ class MainContent(QObject):
             dialogue.show_warning(
                 title="Invalid repository",
                 text="An invalid repository was detected!",
-                information="Please reconfigure a repository in settings!\n"
+                information="Please check your repository URL!\n"
                 + "A valid repository is a repository URL which is not\n"
                 + 'empty and is prefixed with "http://" or "https://"',
+                details=f"Invalid repository: {repo_url}",
             )
 
     def _do_force_update_existing_repo(self, base_path: str, repo_url: str) -> None:
@@ -2366,14 +2368,9 @@ class MainContent(QObject):
         Handles possible existing repo, and prompts (re)download of repo
         Otherwise it just clones the repo and notifies user
         """
-        if (
-            repo_url
-            and repo_url != ""
-            and repo_url.startswith("http://")
-            or repo_url.startswith("https://")
-        ):
+        if check_valid_http_git_url(repo_url):
             # Calculate folder name from provided URL
-            repo_folder_name = os.path.split(repo_url)[1]
+            repo_folder_name = extract_git_dir_name(repo_url)
             # Calculate path from generated folder name
             repo_path = str((Path(base_path) / repo_folder_name))
             if os.path.exists(repo_path):  # If local repo does exists
@@ -2453,8 +2450,8 @@ class MainContent(QObject):
             and (repo_url.startswith("http://") or repo_url.startswith("https://"))
         ):
             # Calculate folder name from provided URL
-            repo_user_or_org = os.path.split(os.path.split(repo_url)[0])[1]
-            repo_folder_name = os.path.split(repo_url)[1]
+            repo_user_or_org = extract_git_user_or_org(repo_url)
+            repo_folder_name = extract_git_dir_name(repo_url)
             # Calculate path from generated folder name
             repo_path = str((AppInfo().databases_folder / repo_folder_name))
             if os.path.exists(repo_path):  # If local repo exists
