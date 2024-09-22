@@ -23,6 +23,7 @@ from app.controllers.instance_controller import (
     InvalidArchivePathError,
 )
 from app.controllers.menu_bar_controller import MenuBarController
+from app.controllers.mods_panel_controller import ModsPanelController
 from app.controllers.settings_controller import (
     SettingsController,
 )
@@ -138,9 +139,13 @@ class MainWindow(QMainWindow):
         widget.setLayout(app_layout)
         self.setCentralWidget(widget)
 
+        self.mods_panel_controller = ModsPanelController(
+            view=self.main_content_panel.mods_panel,
+        )
+
         self.menu_bar = MenuBar(menu_bar=self.menuBar())
         self.menu_bar_controller = MenuBarController(
-            view=self.menu_bar, settings_controller=self.settings_controller
+            view=self.menu_bar, settings_controller=self.settings_controller, mods_panel_controller=self.mods_panel_controller,
         )
         # Connect Instances Menu Bar signals
         EventBus().do_activate_current_instance.connect(self.__switch_to_instance)
@@ -873,7 +878,7 @@ class MainWindow(QMainWindow):
         # Start watchdog
         try:
             if self.watchdog_event_handler.watchdog_observer is not None:
-                self.watchdog_event_handler.watchdog_observer.start()  # type: ignore #Upstream not typed
+                self.watchdog_event_handler.watchdog_observer.start()
             else:
                 logger.warning("Watchdog Observer is None. Unable to start.")
         except Exception as e:
@@ -896,7 +901,7 @@ class MainWindow(QMainWindow):
             and self.watchdog_event_handler.watchdog_observer
             and self.watchdog_event_handler.watchdog_observer.is_alive()
         ):
-            self.watchdog_event_handler.watchdog_observer.stop()  # type: ignore #Upstream not typed
+            self.watchdog_event_handler.watchdog_observer.stop()
             self.watchdog_event_handler.watchdog_observer.join()
             self.watchdog_event_handler.watchdog_observer = None
             for timer in self.watchdog_event_handler.cooldown_timers.values():

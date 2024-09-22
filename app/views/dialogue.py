@@ -1,10 +1,10 @@
 import os
+import sys
 from pathlib import Path
 from typing import List, Optional, Tuple
 
-from deprecated import deprecated
 from loguru import logger
-from PySide6.QtCore import QRunnable, Qt, QThreadPool, Signal, Slot
+from PySide6.QtCore import QEvent, QRunnable, Qt, QThreadPool, Signal, Slot
 from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
@@ -21,14 +21,17 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from typing_extensions import deprecated
 
 import app.utils.generic as generic
 from app.utils.app_info import AppInfo
+from app.utils.event_bus import EventBus
 
 # Constants
 DEFAULT_TITLE = "RimSort"
 
 
+@deprecated("Use BinaryChoiceDialog with exec() instead")
 def show_dialogue_confirmation(
     title: Optional[str] = None,
     text: Optional[str] = None,
@@ -37,7 +40,7 @@ def show_dialogue_confirmation(
     button_text: Optional[str] = "Yes",
 ) -> str:
     """
-    Displays a dialogue with a single custom button (defaulting to "Yes").
+    Displays a dialogue with a standard Yes and Cancel button. The default button is Cancel. Returns the text of the button clicked (Yes or Cancel).
     :param title: text to pass to setWindowTitle
     :param text: text to pass to setText
     :param information: text to pass to setInformativeText
@@ -126,7 +129,7 @@ def show_dialogue_conditional(
     return response.text()
 
 
-@deprecated(reason="Just use QInputDialog().getText() instead")
+@deprecated("Just use QInputDialog().getText() instead")
 def show_dialogue_input(
     title: str = "",
     label: str = "",
@@ -154,6 +157,7 @@ def show_dialogue_file(
         logger.error("File dialogue mode not implemented.")
         return None
     return str(Path(os.path.normpath(path)).resolve()) if path != "" else None
+
 
 # jscpd:ignore-start
 def show_information(
@@ -276,7 +280,201 @@ def show_fatal_error(
     diag.exec_()
 
 
-class FatalErrorDialog(QDialog):
+class _BaseDialogue(QDialog):
+    """Base dialogue class for all custom dialogues."""
+
+    _dialogue_type = "base dialogue box"
+
+    def __init__(
+        self,
+        title: str,
+        modal: bool = True,
+        parent: QWidget | None = None,
+    ):
+        super().__init__(parent=parent)
+
+        # Set up the message box
+        self.setWindowTitle(title)
+        self.setModal(modal)
+        self.setObjectName("dialogue")
+
+        # Dynamic sizing
+        self.setSizePolicy(
+            QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        )
+
+    def exec(self) -> int:
+        """Executes the message box and returns the result.
+
+        :return: The result of the message box
+        :rtype: int
+        """
+        logger.info(f"Showing {self._dialogue_type} with title: {self.windowTitle()}")
+        result = super().exec()
+        logger.info(
+            f"Finished showing {self._dialogue_type} [{self.windowTitle()}] with result: {result}"
+        )
+        return result
+
+    def exec_(self) -> int:
+        """Executes the message box and returns the result.
+
+        :return: The result of the message box
+        :rtype: int
+        """
+        return self.exec()
+
+
+class _BaseMessageBox(QMessageBox):
+    """Base message box class for all custom message boxes."""
+
+    _dialogue_type = "base message box"
+
+    def __init__(
+        self,
+        title: str,
+        text: str,
+        information: str,
+        icon: QMessageBox.Icon,
+        details: str | None = None,
+        text_format: Qt.TextFormat = Qt.TextFormat.RichText,
+        modal: bool = True,
+        parent: QWidget | None = None,
+    ):
+        super().__init__(parent)
+        self.setWindowTitle(title)
+        self.setModal(modal)
+        self.setObjectName("dialogue")
+        self.setTextFormat(text_format)
+        self.setIcon(icon)
+        # Set text to be bold via rich text
+        if text_format == Qt.TextFormat.RichText:
+            text = f"<b>{text}</b>"
+        self.setText(text)
+        self.setInformativeText(information)
+        if details is not None:
+            self.setDetailedText(details)
+
+        # Dynamic sizing
+        self.setSizePolicy(
+            QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        )
+
+    def exec(self) -> int:
+        """Executes the message box and returns the result.
+
+        :return: The result of the message box
+        :rtype: int
+        """
+        logger.info(
+            f"Showing {self._dialogue_type} with title: [{self.windowTitle()}], text: [{self.text()}], information: [{self.informativeText()}], details: [{self.detailedText()}]"
+        )
+        result = super().exec()
+        logger.info(
+            f"Finished showing {self._dialogue_type} [{self.windowTitle()}] with result: {result}"
+        )
+        return result
+
+    def exec_(self) -> int:
+        """Executes the message box and returns the result.
+
+        :return: The result of the message box
+        :rtype: int
+        """
+        return self.exec()
+
+
+class BinaryChoiceDialog(_BaseMessageBox):
+    """Custom message box to display a binary choice message box."""
+
+    def __init__(
+        self,
+        title: str = "",
+        text: str = "",
+        information: str = "",
+        details: str | None = None,
+        positive_text: str | None = None,
+        negative_text: str | None = None,
+        positive_btn: QMessageBox.StandardButton = QMessageBox.StandardButton.Yes,
+        negative_btn: QMessageBox.StandardButton = QMessageBox.StandardButton.Cancel,
+        default_negative: bool = True,
+        icon: QMessageBox.Icon = QMessageBox.Icon.Question,
+        modal: bool = True,
+        parent: QWidget | None = None,
+    ) -> None:
+        """Initializes the binary choice dialog.
+        Used to display a binary choice message box.
+        Always has two buttons, one positive and one negative.
+        These buttons cannot be the same type.
+
+        :param title: The title of the message box
+        :type title: str, optional
+        :param text: The main text of the message box
+        :type text: str, optional
+        :param information: The informative text of the message box
+        :type information: str, optional
+        :param details: The detailed text of the message box. If not None, a button will be displayed to show/hide this text.
+        :type details: str | None, optional
+        :param positive_text: The text to display on the positive button. If None, the default text of the positive button will be used.
+        :type positive_text: str | None, optional
+        :param negative_text: The text to display on the negative button. If None, the default text of the negative button will be used.
+        :type negative_text: str | None, optional
+        :param positive_btn: The type of the positive button
+        :type positive_btn: QMessageBox.StandardButton, optional
+        :param negative_btn: The type of the negative button
+        :type negative_btn: QMessageBox.StandardButton, optional
+        :param default_negative: Whether the default button is the negative button. If False, the positive button will be the default button.
+        :type default_negative: bool, optional
+        :param icon: The icon to display in the message box. Defaults to a question mark.
+        :type icon: QMessageBox.Icon, optional
+        :param parent: The parent widget
+        :type parent: QWidget | None, optional
+        :raises ValueError: If the positive and negative buttons are the same
+        """
+        super().__init__(
+            title, text, information, icon, details, modal=modal, parent=parent
+        )
+
+        if positive_btn == negative_btn:
+            raise ValueError("Positive and negative buttons cannot be the same")
+
+        # Configure buttons
+        self.__positive_btn = positive_btn
+        self.__negative_btn = negative_btn
+
+        self.setStandardButtons(self.positive_btn | self.negative_btn)
+
+        if default_negative:
+            self.setDefaultButton(self.negative_btn)
+        else:
+            self.setDefaultButton(self.positive_btn)
+
+        # Set button text where necessary
+        if positive_text is not None:
+            self.button(self.positive_btn).setText(positive_text)
+        if negative_text is not None:
+            self.button(self.negative_btn).setText(negative_text)
+
+    @property
+    def positive_btn(self) -> QMessageBox.StandardButton:
+        return self.__positive_btn
+
+    @property
+    def negative_btn(self) -> QMessageBox.StandardButton:
+        return self.__negative_btn
+
+    def exec_is_positive(self) -> bool:
+        """Executes the dialog and returns whether the positive button was clicked.
+
+        :return: True if the positive button was clicked, False otherwise.
+        :rtype: bool
+        """
+        self.exec()
+        response = self.clickedButton()
+        return response == self.button(self.positive_btn)
+
+
+class FatalErrorDialog(_BaseDialogue):
     """Custom dialog to display fatal errors.
 
     Has button to show more details, open the log directory, and upload the log file to 0x0.
@@ -288,18 +486,9 @@ class FatalErrorDialog(QDialog):
         text: str = "A fatal error has occurred!",
         information: str = "Please report the error to the developers.",
         details: str = "",
+        parent: QWidget | None = None,
     ) -> None:
-        super().__init__()
-
-        # Set up the message box
-        self.setWindowTitle(title)
-        self.setModal(True)
-        self.setObjectName("dialogue")
-
-        # Dynamic sizing
-        self.setSizePolicy(
-            QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        )
+        super().__init__(title, parent=parent)
 
         # Add data
         self.text = text
@@ -331,17 +520,7 @@ class FatalErrorDialog(QDialog):
         main_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
         # Left-side
-        l_layout = QVBoxLayout()
-        # Icon
-        piximap = getattr(QStyle, "SP_MessageBoxCritical")
-        icon = self.style().standardIcon(piximap)
-        label = QLabel()
-        label.setPixmap(icon.pixmap(64, 64))
-        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        l_layout.addWidget(label)
-
-        l_layout.addWidget(self.details_btn)
-        l_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        l_layout = _setup_error_icon(self, self.details_btn)
         main_layout.addLayout(l_layout)
 
         # Center spacer
@@ -448,7 +627,11 @@ class UploadLogTask(QRunnable):
         self.parent._upload_finished_signal.emit(result, url)
 
 
-def _setup_messagebox(title: str | None) -> QMessageBox:
+def _setup_messagebox(
+    title: str | None,
+    icon: QMessageBox.Icon = QMessageBox.Icon.Question,
+    parent: QWidget | None = None,
+) -> QMessageBox:
     """Helper function to setup the message box
 
     :param title: The title of the message box
@@ -456,9 +639,9 @@ def _setup_messagebox(title: str | None) -> QMessageBox:
     :return: The message box object
     :rtype: QMessageBox
     """
-    dialogue = QMessageBox()
+    dialogue = QMessageBox(parent)
     dialogue.setTextFormat(Qt.TextFormat.RichText)
-    dialogue.setIcon(QMessageBox.Icon.Question)
+    dialogue.setIcon(icon)
     dialogue.setObjectName("dialogue")
     if title:
         dialogue.setWindowTitle(title)
@@ -466,3 +649,116 @@ def _setup_messagebox(title: str | None) -> QMessageBox:
         dialogue.setWindowTitle(DEFAULT_TITLE)
 
     return dialogue
+
+
+def show_settings_error() -> None:
+    """
+    Displays a fatal error box indicating the app was
+    unable to start due to corrupt settings. Called if unable
+    to parse the settings file.
+
+    :param settings: settings model to allow resetting settings
+    """
+    logger.info("Showing settings failure box")
+    diag = SettingsFailureDialog()
+    diag.exec_()
+
+
+class SettingsFailureDialog(QDialog):
+    """Custom dialog to display fatal errors regarding settings parsing.
+
+    Has buttons to open the settings file, open the settings folder, or reset settings.
+    Exiting the dialog will terminate the application.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        # Set up the message box
+        self.setWindowTitle("Unable to parse settings file!")
+        self.setModal(True)
+        self.setObjectName("dialogue")
+
+        # Dynamic sizing
+        self.setSizePolicy(
+            QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        )
+
+        # Add data
+        self.text = "Your RimSort settings file is corrupt.\nPlease choose one of the following options to proceed."
+
+        # Buttons
+        self.open_settings_file_btn = QPushButton("Open Settings")
+        self.open_settings_folder_btn = QPushButton("Open Settings Folder")
+        self.reset_settings_btn = QPushButton("Reset Settings")
+        self.close_application_btn = QPushButton("Exit RimSort")
+
+        btn_layout = QHBoxLayout()
+        btn_layout.addWidget(self.open_settings_file_btn)
+        btn_layout.addWidget(self.open_settings_folder_btn)
+        btn_layout.addWidget(self.reset_settings_btn)
+
+        # Set up the layout
+        layout = QVBoxLayout()
+        main_layout = QHBoxLayout()
+        main_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+
+        # Left-side
+        l_layout = _setup_error_icon(self)
+        main_layout.addLayout(l_layout)
+
+        # Center spacer
+        main_layout.addItem(QSpacerItem(10, 0))
+
+        # Right-side
+        r_layout = QVBoxLayout()
+
+        txt = QLabel(self.text)
+        txt.setWordWrap(True)
+        r_layout.addWidget(QLabel(self.text))
+
+        r_layout.addItem(QSpacerItem(20, 20))
+
+        r_layout.addLayout(btn_layout)
+
+        r_layout.addWidget(self.close_application_btn)
+        main_layout.addLayout(r_layout)
+
+        layout.addLayout(main_layout)
+
+        self.setLayout(layout)
+        self.setFixedWidth(self.sizeHint().width())
+
+        def _open_settings_file() -> None:
+            generic.platform_specific_open(AppInfo().app_settings_file)
+
+        def _open_settings_folder() -> None:
+            generic.platform_specific_open(AppInfo().app_storage_folder)
+
+        def _reset_settings_file() -> None:
+            EventBus().reset_settings_file.emit
+            self.accept()
+
+        self.open_settings_file_btn.clicked.connect(lambda: _open_settings_file())
+        self.open_settings_folder_btn.clicked.connect(lambda: _open_settings_folder())
+        self.reset_settings_btn.clicked.connect(lambda: _reset_settings_file())
+        self.close_application_btn.clicked.connect(lambda: sys.exit())
+
+    def closeEvent(self, event: QEvent) -> None:
+        sys.exit()
+
+
+def _setup_error_icon(
+    diag: QDialog, details_btn: QPushButton | None = None
+) -> QVBoxLayout:
+    l_layout = QVBoxLayout()
+    piximap = getattr(QStyle, "SP_MessageBoxCritical")
+    icon = diag.style().standardIcon(piximap)
+    label = QLabel()
+    label.setPixmap(icon.pixmap(64, 64))
+    label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    l_layout.addWidget(label)
+    if details_btn is not None:
+        l_layout.addWidget(details_btn)
+    l_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    return l_layout

@@ -1,4 +1,4 @@
-ruff==0.5.5
+ruff
 mypy
 types-Deprecated
 types-psutil
@@ -9,3 +9,4 @@ types-xmltodict
 networkx-stubs
 lxml-stubs
 pytest
+pytest-qt

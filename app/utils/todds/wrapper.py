@@ -14,7 +14,7 @@ class ToddsInterface:
     """
 
     def __init__(
-        self, preset: str = "optimized", dry_run: bool = False, overwrite: bool=False
+        self, preset: str = "optimized", dry_run: bool = False, overwrite: bool = False
     ) -> None:
         logger.info("ToddsInterface initilizing...")
         if overwrite:
@@ -75,7 +75,7 @@ class ToddsInterface:
         if os.path.exists(todds_exe_path):
             logger.debug(f"Found todds executable at: {todds_exe_path}")
             args = self.todds_presets[self.preset]
-            args.append(target_path)
+            args.append(os.path.abspath(target_path))
             if not runner.todds_dry_run_support:
                 runner.message("Initiating todds...")
                 runner.message("Courtesy of joseasoler#1824")

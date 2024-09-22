@@ -105,9 +105,7 @@ class MainContent(QObject):
             cls._instance = super(MainContent, cls).__new__(cls)
         return cls._instance
 
-    def __init__(
-        self, settings_controller: SettingsController
-    ) -> None:
+    def __init__(self, settings_controller: SettingsController) -> None:
         """
         Initialize the main content panel.
 
@@ -649,18 +647,22 @@ class MainContent(QObject):
                 ].local_folder
                 if local_mods_target and local_mods_target != "":
                     with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
-                        todds_txt_file.write(local_mods_target + "\n")
+                        todds_txt_file.write(os.path.abspath(local_mods_target) + "\n")
                 workshop_mods_target = self.settings_controller.settings.instances[
                     self.settings_controller.settings.current_instance
                 ].workshop_folder
                 if workshop_mods_target and workshop_mods_target != "":
                     with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
-                        todds_txt_file.write(workshop_mods_target + "\n")
+                        todds_txt_file.write(os.path.abspath(local_mods_target) + "\n")
             else:
                 with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
                     for uuid in self.mods_panel.active_mods_list.uuids:
                         todds_txt_file.write(
-                            self.metadata_manager.internal_local_metadata[uuid]["path"]
+                            os.path.abspath(
+                                self.metadata_manager.internal_local_metadata[uuid][
+                                    "path"
+                                ]
+                            )
                             + "\n"
                         )
             if action == "optimize_textures":
@@ -1150,12 +1152,25 @@ class MainContent(QObject):
 
         # Get the current order of active mods list
         current_order = self.mods_panel.active_mods_list.uuids.copy()
-
-        sorter = Sorter(
-            self.settings_controller.settings.sorting_algorithm,
-            active_package_ids=active_package_ids,
-            active_uuids=set(self.mods_panel.active_mods_list.uuids),
-        )
+        try:
+            sorter = Sorter(
+                self.settings_controller.settings.sorting_algorithm,
+                active_package_ids=active_package_ids,
+                active_uuids=set(self.mods_panel.active_mods_list.uuids),
+            )
+        except NotImplementedError as e:
+            dialogue.show_warning(
+                title="Sorting algorithm not implemented",
+                text="The selected sorting algorithm is not implemented",
+                information=(
+                    "This may be caused by malformed settings or improper migration between versions or different mod manager. "
+                    "Try resetting your settings, selecting a different sorting algorithm, or "
+                    "deleting your settings file. If the issue persists, please report it the developers."
+                ),
+                details=str(e),
+            )
+            logger.error(f"Sort failed. Sorting algorithm not implemented: {e}")
+            return
 
         success, new_order = sorter.sort()
 
@@ -2168,8 +2183,7 @@ class MainContent(QObject):
 
                         # Get the local and remote refs
                         local_ref = repo.head.reference
-                        refs = repo.refs()
-                        remote_ref = refs[f"origin/{local_ref.name}"]
+                        remote_ref = repo.refs[f"origin/{local_ref.name}"]  # type: ignore
 
                         # Check if the local branch is behind the remote branch
                         if local_ref.commit != remote_ref.commit:

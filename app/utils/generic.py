@@ -119,7 +119,9 @@ def launch_game_process(game_install_path: Path, args: list[str]) -> None:
 
     This function initializes the Steamworks API to be used by the RimWorld game.
 
-    :param game_install_path: is a string path to the game folder
+    The game will be launched with the game install path being the working directory.
+
+    :param game_install_path: is a path to the game folder
     :param args: is a list of strings representing the args to pass to the generated executable path
     """
     logger.info(f"Attempting to find the game in the game folder {game_install_path}")
@@ -159,12 +161,12 @@ def launch_game_process(game_install_path: Path, args: list[str]) -> None:
                         popen_args,
                         creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
                         shell=True,
+                        cwd=game_install_path,
                     )
                 else:
                     # not Windows, so assume POSIX; if not, we'll get a usable exception
                     p = subprocess.Popen(
-                        popen_args,
-                        start_new_session=True,
+                        popen_args, start_new_session=True, cwd=game_install_path
                     )
 
             logger.info(
@@ -204,7 +206,10 @@ def open_url_browser(url: str) -> None:
 
 def platform_specific_open(path: str | Path) -> None:
     """
-    Function to open a file/folder in the platform-specific file-explorer app.
+    Function to open a folder in the platform-specific file-explorer app
+    or a file in the relevant system default application. On mac, if the path
+    is a directory or an .app file, open the path in Finder using -R
+    (i.e. treat .app as directory).
 
     :param path: path to open
     :type path: str | Path
@@ -216,7 +221,7 @@ def platform_specific_open(path: str | Path) -> None:
     path = str(path)
     if sys.platform == "darwin":
         logger.info(f"Opening {path} with subprocess open on MacOS")
-        if p.is_file() or (p.is_dir() and p.suffix == ".app"):
+        if p.is_dir() and p.suffix == ".app":
             subprocess.Popen(["open", path, "-R"])
         else:
             subprocess.Popen(["open", path])
