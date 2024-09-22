@@ -98,6 +98,7 @@ class ModsPanelSortKey(Enum):
     """
     Enum class representing different sorting keys for mods.
     """
+
     NOKEY = 0
     MODNAME = 1
 
@@ -1935,18 +1936,22 @@ class ModListWidget(QListWidget):
         key: ModsPanelSortKey = ModsPanelSortKey.NOKEY,
     ) -> None:
         """
-        Sort the provided list of UUIDs alphabetically based on the mod names and recreate the mod list.
+        Reconstructs and sorts a mod list based on provided UUIDs and a sorting key.
+
+        This method takes a list of mod UUIDs, sorts them according to the specified
+        sorting key, and then recreates the mod list of the given type with the sorted order.
+
         Args:
-            list_type (str): The type of mod list to recreate.
+            list_type (str): The type of mod list to recreate. ("Active", "Inactive")
             uuids (List[str]): The list of UUIDs representing the mods.
+            key (ModsPanelSortKey, optional): An enumeration value that determines the
+                                              sorting criterion for the mods. Defaults to
+                                              `ModsPanelSortKey.NOKEY`, which implies sorting by uuids.
+
         Returns:
             None
         """
-        # TODO: Fix this or just get rid of it
-        # sorted_uuids = uuids
-        # if key != ModsPanelSortKey.NOKEY:
-        #    sorted_uuids = sorted(uuids, key=key)
-        sorted_uuids = sort_uuids(uuids, key = key)
+        sorted_uuids = sort_uuids(uuids, key=key)
         self.recreate_mod_list(list_type, sorted_uuids)
 
     def recreate_mod_list(self, list_type: str, uuids: List[str]) -> None:
