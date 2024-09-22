@@ -424,13 +424,13 @@ class ModListItemInner(QWidget):
         # If a warning exists we show a warning icon with warning tooltip
         if error_tooltip:
             self.error_icon_label.setHidden(False)
-            self.error_icon_label.setToolTip(error_tooltip.lstrip())
+            self.error_icon_label.setToolTip(error_tooltip)
         else:  # Hide the error icon if no error tool tip text
             self.error_icon_label.setHidden(True)
             self.error_icon_label.setToolTip("") 
         if warning_tooltip:
             self.warning_icon_label.setHidden(False)
-            self.warning_icon_label.setToolTip(warning_tooltip.lstrip())
+            self.warning_icon_label.setToolTip(warning_tooltip)
         else:  # Hide the warning icon if no warning tool tip text
             self.warning_icon_label.setHidden(True)
             self.warning_icon_label.setToolTip("")
@@ -1862,16 +1862,19 @@ class ModListWidget(QListWidget):
                 uuid
             )
             # Set an item's validity dynamically based on the version mismatch value
-            # if not current_item_data["warning_toggled"]:
             if (mod_data["packageid"] not in self.ignore_warning_list 
                 and not current_item_data["warning_toggled"]):
                 current_item_data["mismatch"] = mod_errors["version_mismatch"]
             else:
                 # If a mod has been moved for eg. inactive -> active. We keep ignoring the warnings.
                 # This makes sure to add the mod to the ignore list of the new modlist.
-                if mod_data.get("packageid") not in self.ignore_warning_list:
+                # TODO: Check if toggle_warning method can add a mod to the ignore list
+                # of each ModListWidget. Then we can remove some of this confusing code...  
+                if not current_item_data["warning_toggled"]:
+                    if mod_data["packageid"] in self.ignore_warning_list:
+                        self.ignore_warning_list.remove(mod_data["packageid"])
+                elif mod_data["packageid"] not in self.ignore_warning_list:
                     self.ignore_warning_list.append(mod_data.get("packageid"))
-                current_item_data["warning_toggled"] = True
             # Check for "Active" mod list specific errors and warnings
             if (
                 self.list_type == "Active"
