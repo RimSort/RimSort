@@ -115,7 +115,7 @@ def sort_uuids(uuids: List[str], key: ModsPanelSortKey) -> List[str]:
     if key == ModsPanelSortKey.MODNAME:
         key_function = uuid_to_mod_name
     else:
-        key_function = uuid_no_key
+        return sorted(uuids, key=lambda x: x)
     return sorted(uuids, key=key_function)
 
 
