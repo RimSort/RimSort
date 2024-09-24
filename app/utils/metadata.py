@@ -391,12 +391,18 @@ class MetadataManager(QObject):
                 # Purge metadata from internal metadata
                 for uuid in uuids_to_remove:
                     logger.debug(
-                        f"Removing metadata for {uuid}: {self.internal_local_metadata[uuid]}"
+                        f"Removing metadata for {uuid}: {self.internal_local_metadata.get(uuid)}"
                     )
-                    deleted_mod_packageid = self.internal_local_metadata[uuid].get(
-                        "packageid"
-                    )
+                    deleted_mod = self.internal_local_metadata.get(uuid)
+                    if deleted_mod is None:
+                        logger.warning(
+                            f"Unable to find metadata for {uuid} in internal metadata, skipping removal. Possible race condition!"
+                        )
+                        continue
+
+                    deleted_mod_packageid = deleted_mod.get("packageid")
                     self.internal_local_metadata.pop(uuid)
+
                     if deleted_mod_packageid and self.packageid_to_uuids.get(
                         deleted_mod_packageid
                     ):
@@ -1159,7 +1165,14 @@ class MetadataManager(QObject):
         logger.debug(
             f"Processing deletion for {self.internal_local_metadata.get(uuid, {}).get('name', 'Unknown')}: {mod_directory}"
         )
-        deleted_mod_packageid = self.internal_local_metadata[uuid].get("packageid")
+        deleted_mod = self.internal_local_metadata.get(uuid)
+        if deleted_mod is None:
+            logger.debug(
+                f"Mod {uuid} not found in metadata, skipping deletion. Possible race condition!"
+            )
+            return
+
+        deleted_mod_packageid = deleted_mod.get("packageid")
         self.internal_local_metadata.pop(uuid, None)
         if deleted_mod_packageid and self.packageid_to_uuids.get(deleted_mod_packageid):
             self.packageid_to_uuids[deleted_mod_packageid].remove(uuid)
