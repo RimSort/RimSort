@@ -47,6 +47,7 @@ class Instance(msgspec.Struct):
     steamcmd_install_path: str = str(
         Path(AppInfo().app_storage_folder / "instances" / "Default")
     )
+    steamcmd_ignore: bool = False
     steam_client_integration: bool = False
 
     def __setattr__(self, name: str, value: Any) -> None:
@@ -65,6 +66,7 @@ class Instance(msgspec.Struct):
             "workshop_folder": self.workshop_folder,
             "run_args": self.run_args,
             "steamcmd_install_path": self.steamcmd_install_path,
+            "steamcmd_ignore": self.steamcmd_ignore,
             "steam_client_integration": self.steam_client_integration,
         }
 

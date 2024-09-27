@@ -317,6 +317,13 @@ class SettingsController(QObject):
         """
         self.settings.instances[instance.name] = instance
 
+    @property
+    def active_instance(self) -> Instance:
+        """
+        Get the active instance.
+        """
+        return self.settings.instances[self.settings.current_instance]
+
     def _update_view_from_model(self) -> None:
         """
         Update the view from the settings model.
