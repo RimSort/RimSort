@@ -40,6 +40,7 @@ class MenuBar(QObject):
         self.copy_action: QAction
         self.paste_action: QAction
         self.rule_editor_action: QAction
+        self.reset_all_warnings_action: QAction
         self.add_git_mod_action: QAction
         self.browse_workshop_action: QAction
         self.update_workshop_mods_action: QAction
@@ -173,6 +174,7 @@ class MenuBar(QObject):
         self.paste_action = self._add_action(edit_menu, "Paste", "Ctrl+V")
         edit_menu.addSeparator()
         self.rule_editor_action = self._add_action(edit_menu, "Rule Editor…")
+        self.reset_all_warnings_action = self._add_action(edit_menu, "Reset Warning Toggles")
         return edit_menu
 
     def _create_download_menu(self) -> QMenu:
