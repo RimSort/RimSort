@@ -1622,8 +1622,12 @@ class MainContent(QObject):
         # Upload the report to Rentry.co
         rentry_uploader = RentryUpload(active_mods_rentry_report)
         successful = rentry_uploader.upload_success
-        host = urlparse(rentry_uploader.url).hostname if successful else None
-        if rentry_uploader.url and host and host.endswith("rentry.co"):  # type: ignore
+        host = (
+            urlparse(rentry_uploader.url).hostname
+            if successful and (rentry_uploader.url is not None)
+            else None
+        )
+        if rentry_uploader.url and host and host.endswith("rentry.co"):
             copy_to_clipboard_safely(rentry_uploader.url)
             dialogue.show_information(
                 title="Uploaded active mod list",
