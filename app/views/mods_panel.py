@@ -71,6 +71,17 @@ class ClickableQLabel(QLabel):
         super().mousePressEvent(event)
 
 
+def uuid_no_key(uuid: str) -> str:
+    """
+    Returns the UUID of the mod.
+    Args:
+        uuid (str): The UUID of the mod.
+    Returns:
+        str: The UUID of the mod.
+    """
+    return uuid
+
+
 def uuid_to_mod_name(uuid: str) -> str:
     """
     Converts a UUID to the corresponding mod name.
@@ -88,8 +99,24 @@ class ModsPanelSortKey(Enum):
     Enum class representing different sorting keys for mods.
     """
 
-    NOKEY = None
-    MODNAME = uuid_to_mod_name
+    NOKEY = 0
+    MODNAME = 1
+
+
+def sort_uuids(uuids: List[str], key: ModsPanelSortKey) -> List[str]:
+    """
+    Sort the list of UUIDs based on the provided key.
+    Args:
+        key (ModsPanelSortKey): The key to sort the list by.
+    Returns:
+        None
+    """
+    # Sort the list of UUIDs based on the provided key
+    if key == ModsPanelSortKey.MODNAME:
+        key_function = uuid_to_mod_name
+    else:
+        return sorted(uuids, key=lambda x: x)
+    return sorted(uuids, key=key_function)
 
 
 class ModListItemInner(QWidget):
@@ -224,9 +251,7 @@ class ModListItemInner(QWidget):
                 self.uuid,
             )
         )
-        self.error_icon_label.setPixmap(
-            ModListIcons.error_icon().pixmap(QSize(20, 20))
-        )
+        self.error_icon_label.setPixmap(ModListIcons.error_icon().pixmap(QSize(20, 20)))
         # Default to hidden to avoid showing early
         self.error_icon_label.setHidden(True)
         # Icons by mod source
@@ -427,7 +452,7 @@ class ModListItemInner(QWidget):
             self.error_icon_label.setToolTip(error_tooltip)
         else:  # Hide the error icon if no error tool tip text
             self.error_icon_label.setHidden(True)
-            self.error_icon_label.setToolTip("") 
+            self.error_icon_label.setToolTip("")
         if warning_tooltip:
             self.warning_icon_label.setHidden(False)
             self.warning_icon_label.setToolTip(warning_tooltip)
@@ -635,7 +660,7 @@ class ModListWidget(QListWidget):
         logger.debug(
             f"Emitting {self.list_type} list update signal after rows dropped [{self.count()}]"
         )
-        # Only emit "drop" signal if a mod was dragged and dropped within the same modlist 
+        # Only emit "drop" signal if a mod was dragged and dropped within the same modlist
         if source_widget == self:
             self.list_update_signal.emit("drop")
 
@@ -1579,11 +1604,11 @@ class ModListWidget(QListWidget):
         item = QListWidgetItem(self)
         item.setData(Qt.ItemDataRole.UserRole, data)
         self.addItem(item)
-        
+
     def get_all_mod_list_items(self) -> list[QListWidgetItem]:
         """
         This gets all modlist items.
-        
+
         :return: List of all modlist items as QListWidgetItem
         """
         mod_list_items = []
@@ -1596,7 +1621,7 @@ class ModListWidget(QListWidget):
         """
         This gets all modlist items as ModListItemInner.
         Mods that have not been loaded or lazy loaded will not be returned.
-        
+
         :return: List of all modlist items as ModListItemInner
         """
         mod_list_items = []
@@ -1610,7 +1635,7 @@ class ModListWidget(QListWidget):
     def get_all_loaded_and_toggled_mod_list_items(self) -> list[QListWidgetItem]:
         """
         This returns all modlist items that have their warnings toggled.
-        
+
         :return: List of all toggled modlist items as QListWidgetItem
         """
         mod_list_items = []
@@ -1862,14 +1887,16 @@ class ModListWidget(QListWidget):
                 uuid
             )
             # Set an item's validity dynamically based on the version mismatch value
-            if (mod_data["packageid"] not in self.ignore_warning_list 
-                and not current_item_data["warning_toggled"]):
+            if (
+                mod_data["packageid"] not in self.ignore_warning_list
+                and not current_item_data["warning_toggled"]
+            ):
                 current_item_data["mismatch"] = mod_errors["version_mismatch"]
             else:
                 # If a mod has been moved for eg. inactive -> active. We keep ignoring the warnings.
                 # This makes sure to add the mod to the ignore list of the new modlist.
                 # TODO: Check if toggle_warning method can add a mod to the ignore list
-                # of each ModListWidget. Then we can remove some of this confusing code...  
+                # of each ModListWidget. Then we can remove some of this confusing code...
                 if not current_item_data["warning_toggled"]:
                     if mod_data["packageid"] in self.ignore_warning_list:
                         self.ignore_warning_list.remove(mod_data["packageid"])
@@ -1984,7 +2011,7 @@ class ModListWidget(QListWidget):
                 total_error_text += f"\n\n{mod_data['name']}"
                 total_error_text += "\n" + "=" * len(mod_data["name"])
                 total_error_text += tool_tip_text
-                
+
             # Add to warning summary if any loadBefore or loadAfter violations, or version mismatch
             # Version mismatch is determined earlier without checking if the mod is in ignore_warning_list
             # so we have to check it again here in order to not display a faulty, empty version warning
@@ -2008,7 +2035,9 @@ class ModListWidget(QListWidget):
                 total_warning_text += tool_tip_text
             # Add tooltip to item data and set the data back to the item
             current_item_data["errors_warnings"] = tool_tip_text.strip()
-            current_item_data["warnings"] = tool_tip_text[len(current_item_data["errors"]):].strip()
+            current_item_data["warnings"] = tool_tip_text[
+                len(current_item_data["errors"]) :
+            ].strip()
             current_item_data["errors"] = current_item_data["errors"].strip()
             current_item.setData(Qt.ItemDataRole.UserRole, current_item_data)
         logger.info(f"Finished recalculating {self.list_type} list errors")
@@ -2036,17 +2065,22 @@ class ModListWidget(QListWidget):
         key: ModsPanelSortKey = ModsPanelSortKey.NOKEY,
     ) -> None:
         """
-        Sort the provided list of UUIDs alphabetically based on the mod names and recreate the mod list.
+        Reconstructs and sorts a mod list based on provided UUIDs and a sorting key.
+
+        This method takes a list of mod UUIDs, sorts them according to the specified
+        sorting key, and then recreates the mod list of the given type with the sorted order.
+
         Args:
-            list_type (str): The type of mod list to recreate.
+            list_type (str): The type of mod list to recreate. ("Active", "Inactive")
             uuids (List[str]): The list of UUIDs representing the mods.
+            key (ModsPanelSortKey, optional): An enumeration value that determines the
+                                              sorting criterion for the mods. Defaults to
+                                              `ModsPanelSortKey.NOKEY`, which implies sorting by uuids.
+
         Returns:
             None
         """
-        # TODO: Fix this or just get rid of it
-        sorted_uuids = uuids
-        # if key != ModsPanelSortKey.NOKEY:
-        #    sorted_uuids = sorted(uuids, key=key)
+        sorted_uuids = sort_uuids(uuids, key=key)
         self.recreate_mod_list(list_type, sorted_uuids)
 
     def recreate_mod_list(self, list_type: str, uuids: List[str]) -> None:
@@ -2100,6 +2134,7 @@ class ModListWidget(QListWidget):
             item_data["warning_toggled"] = False
         item.setData(Qt.ItemDataRole.UserRole, item_data)
         self.recalculate_warnings_signal.emit()
+
 
 class ModsPanel(QWidget):
     """
