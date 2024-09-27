@@ -125,11 +125,14 @@ class ModListItemInner(QWidget):
     mod and display relevant data on a mod list.
     """
 
-    toggle_warning_signal = Signal(str)
+    toggle_warning_signal = Signal(str, str)
+    toggle_error_signal = Signal(str, str)
 
     def __init__(
         self,
         errors_warnings: str,
+        errors: str,
+        warnings: str,
         filtered: bool,
         invalid: bool,
         mismatch: bool,
@@ -143,7 +146,9 @@ class ModListItemInner(QWidget):
         exists in the metadata dict. See tags:
         https://rimworldwiki.com/wiki/About.xml
 
-        :param errors_warnings: a string of errors and warnings for the notification tooltip
+        :param errors_warnings: a string of errors and warnings
+        :param errors: a string of errors for the notification tooltip
+        :param warnings: a string of warnings for the notification tooltip
         :param filtered: a bool representing whether the widget's item is filtered
         :param invalid: a bool representing whether the widget's item is an invalid mod
         :param settings_controller: an instance of SettingsController for accessing settings
@@ -154,8 +159,10 @@ class ModListItemInner(QWidget):
 
         # Cache MetadataManager instance
         self.metadata_manager = MetadataManager.instance()
-        # Cache errors and warnings string for tooltip
+        # Cache error and warning strings for tooltips
         self.errors_warnings = errors_warnings
+        self.errors = errors
+        self.warnings = warnings
         # Cache filtered state of widget's item - used to determine styling of widget
         self.filtered = filtered
         # Cache invalid state of widget's item - used to determine styling of widget
@@ -227,6 +234,7 @@ class ModListItemInner(QWidget):
             partial(
                 self.toggle_warning_signal.emit,
                 self.metadata_manager.internal_local_metadata[self.uuid]["packageid"],
+                self.uuid,
             )
         )
         self.warning_icon_label.setPixmap(
@@ -234,7 +242,18 @@ class ModListItemInner(QWidget):
         )
         # Default to hidden to avoid showing early
         self.warning_icon_label.setHidden(True)
-
+        # Error icon hidden by default
+        self.error_icon_label = ClickableQLabel()
+        self.error_icon_label.clicked.connect(
+            partial(
+                self.toggle_error_signal.emit,
+                self.metadata_manager.internal_local_metadata[self.uuid]["packageid"],
+                self.uuid,
+            )
+        )
+        self.error_icon_label.setPixmap(ModListIcons.error_icon().pixmap(QSize(20, 20)))
+        # Default to hidden to avoid showing early
+        self.error_icon_label.setHidden(True)
         # Icons by mod source
         self.mod_source_icon = None
         if not self.git_icon and not self.steamcmd_icon:
@@ -267,7 +286,7 @@ class ModListItemInner(QWidget):
         # Set label color if mod is invalid
         if self.filtered:
             self.main_label.setObjectName("ListItemLabelFiltered")
-        elif self.invalid or self.mismatch:
+        elif errors_warnings:
             self.main_label.setObjectName("ListItemLabelInvalid")
         else:
             self.main_label.setObjectName("ListItemLabel")
@@ -293,13 +312,19 @@ class ModListItemInner(QWidget):
         self.main_item_layout.addWidget(
             self.warning_icon_label, Qt.AlignmentFlag.AlignRight
         )
+        self.main_item_layout.addWidget(
+            self.error_icon_label, Qt.AlignmentFlag.AlignRight
+        )
         self.main_item_layout.addStretch()
         self.setLayout(self.main_item_layout)
 
         # Reveal if errors or warnings exist
-        if self.errors_warnings:
-            self.warning_icon_label.setToolTip(self.errors_warnings)
+        if self.warnings:
+            self.warning_icon_label.setToolTip(self.warnings)
             self.warning_icon_label.setHidden(False)
+        if self.errors:
+            self.error_icon_label.setToolTip(self.errors)
+            self.error_icon_label.setHidden(False)
 
     def count_icons(self, widget: QObject) -> int:
         count = 0
@@ -418,19 +443,27 @@ class ModListItemInner(QWidget):
         Repolish the widget items
         """
         item_data = item.data(Qt.ItemDataRole.UserRole)
-        tooltip = item_data["errors_warnings"]
-        # Set the warning icon to be visible if necessary and set the tool tip
-        if tooltip:
+        error_tooltip = item_data["errors"]
+        warning_tooltip = item_data["warnings"]
+        # If an error exists we show an error icon with error tooltip
+        # If a warning exists we show a warning icon with warning tooltip
+        if error_tooltip:
+            self.error_icon_label.setHidden(False)
+            self.error_icon_label.setToolTip(error_tooltip)
+        else:  # Hide the error icon if no error tool tip text
+            self.error_icon_label.setHidden(True)
+            self.error_icon_label.setToolTip("")
+        if warning_tooltip:
             self.warning_icon_label.setHidden(False)
-            self.warning_icon_label.setToolTip(tooltip.lstrip())
-        else:  # Hide the warning icon if no tool tip text
+            self.warning_icon_label.setToolTip(warning_tooltip)
+        else:  # Hide the warning icon if no warning tool tip text
             self.warning_icon_label.setHidden(True)
             self.warning_icon_label.setToolTip("")
         # Recalculate the widget label's styling based on item data
         widget_object_name = self.main_label.objectName()
         if item_data["filtered"]:
             new_widget_object_name = "ListItemLabelFiltered"
-        elif item_data["invalid"] or item_data["mismatch"]:
+        elif error_tooltip or warning_tooltip:
             new_widget_object_name = "ListItemLabelInvalid"
         else:
             new_widget_object_name = "ListItemLabel"
@@ -604,6 +637,8 @@ class ModListWidget(QListWidget):
 
     def dropEvent(self, event: QDropEvent) -> None:
         super().dropEvent(event)
+        # Get source widget of dropEvent
+        source_widget = event.source()
         # Get the drop action
         drop_action = event.dropAction()
         # Check if the drop action is MoveAction
@@ -625,7 +660,9 @@ class ModListWidget(QListWidget):
         logger.debug(
             f"Emitting {self.list_type} list update signal after rows dropped [{self.count()}]"
         )
-        self.list_update_signal.emit("drop")
+        # Only emit "drop" signal if a mod was dragged and dropped within the same modlist
+        if source_widget == self:
+            self.list_update_signal.emit("drop")
 
     def eventFilter(self, source_object: QObject, event: QEvent) -> bool:
         """
@@ -1442,7 +1479,7 @@ class ModListWidget(QListWidget):
                         mod_path = mod_metadata["path"]
                         # Toggle warning action
                         if action == toggle_warning_action:
-                            self.toggle_warning(mod_metadata["packageid"])
+                            self.toggle_warning(mod_metadata["packageid"], uuid)
                         # Open folder action
                         elif action == open_folder_action:  # ACTION: Open folder
                             if os.path.exists(mod_path):  # If the path actually exists
@@ -1554,6 +1591,9 @@ class ModListWidget(QListWidget):
     def append_new_item(self, uuid: str) -> None:
         data = {
             "errors_warnings": "",
+            "errors": "",
+            "warnings": "",
+            "warning_toggled": False,
             "filtered": False,
             "invalid": self.metadata_manager.internal_local_metadata[uuid].get(
                 "invalid"
@@ -1564,6 +1604,47 @@ class ModListWidget(QListWidget):
         item = QListWidgetItem(self)
         item.setData(Qt.ItemDataRole.UserRole, data)
         self.addItem(item)
+
+    def get_all_mod_list_items(self) -> list[QListWidgetItem]:
+        """
+        This gets all modlist items.
+
+        :return: List of all modlist items as QListWidgetItem
+        """
+        mod_list_items = []
+        for index in range(self.count()):
+            item = self.item(index)
+            mod_list_items.append(item)
+        return mod_list_items
+
+    def get_all_loaded_mod_list_items(self) -> list[ModListItemInner]:
+        """
+        This gets all modlist items as ModListItemInner.
+        Mods that have not been loaded or lazy loaded will not be returned.
+
+        :return: List of all modlist items as ModListItemInner
+        """
+        mod_list_items = []
+        for index in range(self.count()):
+            item = self.item(index)
+            widget = self.itemWidget(item)
+            if isinstance(widget, ModListItemInner):
+                mod_list_items.append(widget)
+        return mod_list_items
+
+    def get_all_loaded_and_toggled_mod_list_items(self) -> list[QListWidgetItem]:
+        """
+        This returns all modlist items that have their warnings toggled.
+
+        :return: List of all toggled modlist items as QListWidgetItem
+        """
+        mod_list_items = []
+        for index in range(self.count()):
+            item = self.item(index)
+            item_data = item.data(Qt.ItemDataRole.UserRole)
+            if item_data["warning_toggled"]:
+                mod_list_items.append(item)
+        return mod_list_items
 
     def check_item_visible(self, item: QListWidgetItem) -> bool:
         # Determines if the item is currently visible in the viewport.
@@ -1576,6 +1657,8 @@ class ModListWidget(QListWidget):
             logger.debug("Attempted to create widget for item with None data")
             return
         errors_warnings = data["errors_warnings"]
+        errors = data["errors"]
+        warnings = data["warnings"]
         filtered = data["filtered"]
         invalid = data["invalid"]
         mismatch = data["mismatch"]
@@ -1583,6 +1666,8 @@ class ModListWidget(QListWidget):
         if uuid:
             widget = ModListItemInner(
                 errors_warnings=errors_warnings,
+                errors=errors,
+                warnings=warnings,
                 filtered=filtered,
                 invalid=invalid,
                 mismatch=mismatch,
@@ -1590,6 +1675,7 @@ class ModListWidget(QListWidget):
                 uuid=uuid,
             )
             widget.toggle_warning_signal.connect(self.toggle_warning)
+            widget.toggle_error_signal.connect(self.toggle_warning)
             item.setSizeHint(widget.sizeHint())
             self.setItemWidget(item, widget)
 
@@ -1791,13 +1877,31 @@ class ModListWidget(QListWidget):
             current_mod_index = self.uuids.index(uuid)
             current_item = self.item(current_mod_index)
             current_item_data = current_item.data(Qt.ItemDataRole.UserRole)
+            current_item_data["invalid"] = False
+            current_item_data["mismatch"] = False
+            current_item_data["errors"] = None
+            current_item_data["warnings"] = None
             mod_data = internal_local_metadata[uuid]
             # Check mod supportedversions against currently loaded version of game
             mod_errors["version_mismatch"] = self.metadata_manager.is_version_mismatch(
                 uuid
             )
             # Set an item's validity dynamically based on the version mismatch value
-            current_item_data["mismatch"] = mod_errors["version_mismatch"]
+            if (
+                mod_data["packageid"] not in self.ignore_warning_list
+                and not current_item_data["warning_toggled"]
+            ):
+                current_item_data["mismatch"] = mod_errors["version_mismatch"]
+            else:
+                # If a mod has been moved for eg. inactive -> active. We keep ignoring the warnings.
+                # This makes sure to add the mod to the ignore list of the new modlist.
+                # TODO: Check if toggle_warning method can add a mod to the ignore list
+                # of each ModListWidget. Then we can remove some of this confusing code...
+                if not current_item_data["warning_toggled"]:
+                    if mod_data["packageid"] in self.ignore_warning_list:
+                        self.ignore_warning_list.remove(mod_data["packageid"])
+                elif mod_data["packageid"] not in self.ignore_warning_list:
+                    self.ignore_warning_list.append(mod_data.get("packageid"))
             # Check for "Active" mod list specific errors and warnings
             if (
                 self.list_type == "Active"
@@ -1844,11 +1948,30 @@ class ModListWidget(QListWidget):
                     ):
                         assert isinstance(mod_errors["load_after_violations"], set)
                         mod_errors["load_after_violations"].add(load_this_after[0])
-            # Calculate any needed string for errors / warnings
+            # Calculate any needed string for errors
             tool_tip_text = ""
             for error_type, tooltip_header in [
                 ("missing_dependencies", "\nMissing Dependencies:"),
                 ("conflicting_incompatibilities", "\nIncompatibilities:"),
+            ]:
+                if mod_errors[error_type]:
+                    tool_tip_text += tooltip_header
+                    errors = mod_errors[error_type]
+                    assert isinstance(errors, set)
+                    for key in errors:
+                        name = internal_local_metadata.get(
+                            packageid_to_uuid.get(key, ""), {}
+                        ).get(
+                            "name",
+                            self.metadata_manager.steamdb_packageid_to_name.get(
+                                key, key
+                            ),
+                        )
+                        tool_tip_text += f"\n  * {name}"
+            # If missing dependency and/or incompatibility, add tooltip to errors
+            current_item_data["errors"] = tool_tip_text
+            # Calculate any needed string for warnings
+            for error_type, tooltip_header in [
                 ("load_before_violations", "\nShould be Loaded After:"),
                 ("load_after_violations", "\nShould be Loaded Before:"),
             ]:
@@ -1884,9 +2007,11 @@ class ModListWidget(QListWidget):
                 ]
             ):
                 num_errors += 1
+                current_item_data["invalid"] = True
                 total_error_text += f"\n\n{mod_data['name']}"
                 total_error_text += "\n" + "=" * len(mod_data["name"])
                 total_error_text += tool_tip_text
+
             # Add to warning summary if any loadBefore or loadAfter violations, or version mismatch
             # Version mismatch is determined earlier without checking if the mod is in ignore_warning_list
             # so we have to check it again here in order to not display a faulty, empty version warning
@@ -1909,7 +2034,11 @@ class ModListWidget(QListWidget):
                 total_warning_text += "\n============================="
                 total_warning_text += tool_tip_text
             # Add tooltip to item data and set the data back to the item
-            current_item_data["errors_warnings"] = tool_tip_text
+            current_item_data["errors_warnings"] = tool_tip_text.strip()
+            current_item_data["warnings"] = tool_tip_text[
+                len(current_item_data["errors"]) :
+            ].strip()
+            current_item_data["errors"] = current_item_data["errors"].strip()
             current_item.setData(Qt.ItemDataRole.UserRole, current_item_data)
         logger.info(f"Finished recalculating {self.list_type} list errors")
         return total_error_text, total_warning_text, num_errors, num_warnings
@@ -1973,6 +2102,9 @@ class ModListWidget(QListWidget):
                     Qt.ItemDataRole.UserRole,
                     {
                         "errors_warnings": "",
+                        "errors": "",
+                        "warnings": "",
+                        "warning_toggled": False,
                         "filtered": False,
                         "invalid": self.metadata_manager.internal_local_metadata[
                             uuid_key
@@ -1989,12 +2121,18 @@ class ModListWidget(QListWidget):
         self.setUpdatesEnabled(True)
         self.repaint()
 
-    def toggle_warning(self, packageid: str) -> None:
+    def toggle_warning(self, packageid: str, uuid: str) -> None:
         logger.debug(f"Toggled warning icon for: {packageid}")
+        current_mod_index = self.uuids.index(uuid)
+        item = self.item(current_mod_index)
+        item_data = item.data(Qt.ItemDataRole.UserRole)
         if packageid not in self.ignore_warning_list:
             self.ignore_warning_list.append(packageid)
+            item_data["warning_toggled"] = True
         else:
             self.ignore_warning_list.remove(packageid)
+            item_data["warning_toggled"] = False
+        item.setData(Qt.ItemDataRole.UserRole, item_data)
         self.recalculate_warnings_signal.emit()
 
 
