@@ -1387,6 +1387,10 @@ class ModListWidget(QListWidget):
                                             ignore_errors=False,
                                             onerror=handle_remove_read_only,
                                         )
+                                        if mod_metadata.get("steamcmd"):
+                                            self.metadata_manager.steamcmd_purge_mod(
+                                                mod_metadata=mod_metadata
+                                            )
                                     except FileNotFoundError:
                                         logger.debug(
                                             f"Unable to delete mod. Path does not exist: {mod_metadata['path']}"
@@ -1438,6 +1442,10 @@ class ModListWidget(QListWidget):
                                         directory=mod_metadata["path"],
                                         extension=".dds",
                                     )
+                                    if mod_metadata.get("steamcmd"):
+                                        self.metadata_manager.steamcmd_purge_mod(
+                                            mod_metadata=mod_metadata
+                                        )
                     return True
                 elif action == delete_mod_dds_only_action:  # ACTION: Delete mods action
                     answer = show_dialogue_conditional(
@@ -1465,6 +1473,10 @@ class ModListWidget(QListWidget):
                                         directory=mod_metadata["path"],
                                         extension=".dds",
                                     )
+                                    if mod_metadata.get("steamcmd"):
+                                        self.metadata_manager.steamcmd_purge_mod(
+                                            mod_metadata=mod_metadata
+                                        )
                     return True
                 # Execute action for each selected mod
                 for source_item in selected_items:
