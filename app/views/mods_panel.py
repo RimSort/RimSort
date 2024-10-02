@@ -697,6 +697,8 @@ class ModListWidget(QListWidget):
             local_steamcmd_name_to_publishedfileid = {}
 
             # STEAMCMD MOD PFIDS
+            # A set to track any SteamCMD pfids to purge from acf data
+            steamcmd_acf_pfid_purge: set[str] = set()
             # A list to track any SteamCMD mod paths
             steamcmd_mod_paths = []
             # A dict to track any SteamCMD mod publishedfileids -> name
@@ -1388,8 +1390,8 @@ class ModListWidget(QListWidget):
                                             onerror=handle_remove_read_only,
                                         )
                                         if mod_metadata.get("steamcmd"):
-                                            self.metadata_manager.steamcmd_purge_mod(
-                                                mod_metadata=mod_metadata
+                                            steamcmd_acf_pfid_purge.add(
+                                                mod_metadata["publishedfileid"]
                                             )
                                     except FileNotFoundError:
                                         logger.debug(
@@ -1415,6 +1417,11 @@ class ModListWidget(QListWidget):
                                             information=f"{e.strerror} occurred at {e.filename} with error code {error_code}.",
                                         )
                                         continue
+                    # Purge any deleted SteamCMD mods from acf metadata
+                    if steamcmd_acf_pfid_purge:
+                        self.metadata_manager.steamcmd_purge_mods(
+                            publishedfileids=steamcmd_acf_pfid_purge
+                        )
                     return True
                 elif action == delete_mod_keep_dds_action:  # ACTION: Delete mods action
                     answer = show_dialogue_conditional(
@@ -1443,9 +1450,14 @@ class ModListWidget(QListWidget):
                                         extension=".dds",
                                     )
                                     if mod_metadata.get("steamcmd"):
-                                        self.metadata_manager.steamcmd_purge_mod(
-                                            mod_metadata=mod_metadata
+                                        steamcmd_acf_pfid_purge.add(
+                                            mod_metadata["publishedfileid"]
                                         )
+                    # Purge any deleted SteamCMD mods from acf metadata
+                    if steamcmd_acf_pfid_purge:
+                        self.metadata_manager.steamcmd_purge_mods(
+                            publishedfileids=steamcmd_acf_pfid_purge
+                        )
                     return True
                 elif action == delete_mod_dds_only_action:  # ACTION: Delete mods action
                     answer = show_dialogue_conditional(
@@ -1474,9 +1486,14 @@ class ModListWidget(QListWidget):
                                         extension=".dds",
                                     )
                                     if mod_metadata.get("steamcmd"):
-                                        self.metadata_manager.steamcmd_purge_mod(
-                                            mod_metadata=mod_metadata
+                                        steamcmd_acf_pfid_purge.add(
+                                            mod_metadata["publishedfileid"]
                                         )
+                    # Purge any deleted SteamCMD mods from acf metadata
+                    if steamcmd_acf_pfid_purge:
+                        self.metadata_manager.steamcmd_purge_mods(
+                            publishedfileids=steamcmd_acf_pfid_purge
+                        )
                     return True
                 # Execute action for each selected mod
                 for source_item in selected_items:

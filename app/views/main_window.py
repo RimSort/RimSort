@@ -24,9 +24,7 @@ from app.controllers.instance_controller import (
 )
 from app.controllers.menu_bar_controller import MenuBarController
 from app.controllers.mods_panel_controller import ModsPanelController
-from app.controllers.settings_controller import (
-    SettingsController,
-)
+from app.controllers.settings_controller import SettingsController
 from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 from app.utils.gui_info import GUIInfo
@@ -145,7 +143,9 @@ class MainWindow(QMainWindow):
 
         self.menu_bar = MenuBar(menu_bar=self.menuBar())
         self.menu_bar_controller = MenuBarController(
-            view=self.menu_bar, settings_controller=self.settings_controller, mods_panel_controller=self.mods_panel_controller,
+            view=self.menu_bar,
+            settings_controller=self.settings_controller,
+            mods_panel_controller=self.mods_panel_controller,
         )
         # Connect Instances Menu Bar signals
         EventBus().do_activate_current_instance.connect(self.__switch_to_instance)
@@ -869,6 +869,9 @@ class MainWindow(QMainWindow):
             ],
         )
         # Connect watchdog to MetadataManager
+        self.watchdog_event_handler.acf_changed.connect(
+            self.main_content_panel.metadata_manager.refresh_acf_metadata
+        )
         self.watchdog_event_handler.mod_created.connect(
             self.main_content_panel.metadata_manager.process_creation
         )
