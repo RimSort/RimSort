@@ -106,8 +106,8 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
         ).resolve()
         # Explicitly check if the file created is an .acf file that we track metadata from
         if (
-            # not event.is_directory
-            event_scr_path.suffix == ".acf"
+            not event.is_directory
+            and event_scr_path.suffix == ".acf"
             and event_scr_path == workshop_acf_path
             or event_scr_path == steamcmd_appworkshop_acf_path
         ):
