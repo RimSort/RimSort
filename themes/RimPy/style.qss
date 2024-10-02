@@ -503,6 +503,7 @@ QWidget#descriptionWidget {
     border-radius: 3px;
     padding: 2px; /* The sharp corner of the text box clips out */
     padding-right: 5px;
+    color: #e6edf3;
 }
 /* Text, minus scroll bar */
 QWidget#descriptionContent { 
