@@ -10,6 +10,7 @@ from PySide6.QtCore import QObject, Signal
 from watchdog.events import FileSystemEvent, FileSystemEventHandler
 from watchdog.observers import Observer
 from watchdog.observers.api import BaseObserver
+from watchdog.observers.polling import PollingObserver
 
 from app.controllers.settings_controller import SettingsController
 from app.utils.metadata import MetadataManager
@@ -39,8 +40,12 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
             self.metadata_manager.steamcmd_wrapper.steamcmd_appworkshop_acf_path
         )
         self.settings_controller: SettingsController = settings_controller
-        self.watchdog_observer: Optional[BaseObserver]
-        self.watchdog_observer = Observer()
+        # Steam .acf file monitoring
+        self.watchdog_acf_observer: Optional[BaseObserver]
+        self.watchdog_acf_observer = PollingObserver()
+        # Mod directory monitoring
+        self.watchdog_mods_observer: Optional[BaseObserver]
+        self.watchdog_mods_observer = Observer()
         # Keep track of cooldowns for each uuid
         self.cooldown_timers: dict[str, Any] = {}
         self.__add_acf_observers()
@@ -62,10 +67,10 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
             if path and os.path.exists(path)
         }
         # Loop through applicable targets and schedule observers for them
-        if self.watchdog_observer is not None:
+        if self.watchdog_acf_observer is not None:
             for target in acf_targets:
                 logger.debug(f"Scheduling observer for Steam .acf metadata: {target}")
-                self.watchdog_observer.schedule(self, target, recursive=False)
+                self.watchdog_acf_observer.schedule(self, target, recursive=False)
 
     def __add_mod_observers(self, targets: list[str]) -> None:
         """
@@ -75,9 +80,9 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
         """
         for path in targets:
             if path and os.path.exists(path) and os.path.isdir(path):
-                if self.watchdog_observer is not None:
+                if self.watchdog_mods_observer is not None:
                     logger.debug(f"Scheduling observer for mod source: {path}")
-                    self.watchdog_observer.schedule(
+                    self.watchdog_mods_observer.schedule(
                         self,
                         path,
                         recursive=True,

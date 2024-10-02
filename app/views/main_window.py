@@ -885,33 +885,52 @@ class MainWindow(QMainWindow):
         self.main_content_panel.stop_watchdog_signal.connect(self.shutdown_watchdog)
         # Start watchdog
         try:
-            if self.watchdog_event_handler.watchdog_observer is not None:
-                self.watchdog_event_handler.watchdog_observer.start()
+            if self.watchdog_event_handler.watchdog_acf_observer is not None:
+                self.watchdog_event_handler.watchdog_acf_observer.start()
             else:
-                logger.warning("Watchdog Observer is None. Unable to start.")
+                logger.warning("Watchdog Steam .acf Observer is None. Unable to start.")
+            if self.watchdog_event_handler.watchdog_mods_observer is not None:
+                self.watchdog_event_handler.watchdog_mods_observer.start()
+            else:
+                logger.warning("Watchdog Mods Observer is None. Unable to start.")
         except Exception as e:
             logger.warning(
-                f"Unable to initialize watchdog Observer due to exception: {str(e)}"
+                f"Unable to initialize Watchdog Observer(s) due to exception: {str(e)}"
             )
 
     def stop_watchdog_if_running(self) -> None:
         # STOP WATCHDOG IF IT IS ALREADY RUNNING
         if (
             self.watchdog_event_handler
-            and self.watchdog_event_handler.watchdog_observer
-            and self.watchdog_event_handler.watchdog_observer.is_alive()
+            and (
+                self.watchdog_event_handler.watchdog_acf_observer
+                and self.watchdog_event_handler.watchdog_acf_observer.is_alive()
+            )
+            or (
+                self.watchdog_event_handler.watchdog_mods_observer
+                and self.watchdog_event_handler.watchdog_mods_observer.is_alive()
+            )
         ):
             self.shutdown_watchdog()
 
     def shutdown_watchdog(self) -> None:
         if (
             self.watchdog_event_handler
-            and self.watchdog_event_handler.watchdog_observer
-            and self.watchdog_event_handler.watchdog_observer.is_alive()
+            and (
+                self.watchdog_event_handler.watchdog_acf_observer
+                and self.watchdog_event_handler.watchdog_acf_observer.is_alive()
+            )
+            or (
+                self.watchdog_event_handler.watchdog_mods_observer
+                and self.watchdog_event_handler.watchdog_mods_observer.is_alive()
+            )
         ):
-            self.watchdog_event_handler.watchdog_observer.stop()
-            self.watchdog_event_handler.watchdog_observer.join()
-            self.watchdog_event_handler.watchdog_observer = None
+            self.watchdog_event_handler.watchdog_acf_observer.stop()
+            self.watchdog_event_handler.watchdog_acf_observer.join()
+            self.watchdog_event_handler.watchdog_acf_observer = None
+            self.watchdog_event_handler.watchdog_mods_observer.stop()
+            self.watchdog_event_handler.watchdog_mods_observer.join()
+            self.watchdog_event_handler.watchdog_mods_observer = None
             for timer in self.watchdog_event_handler.cooldown_timers.values():
                 timer.cancel()
             self.watchdog_event_handler = None
