@@ -7,9 +7,9 @@ from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout
 
 from app.models.image_label import ImageLabel
-from app.models.scroll_label import ScrollLabel
 from app.utils.app_info import AppInfo
 from app.utils.metadata import MetadataManager
+from app.views.description_widget import DescriptionWidget
 
 
 class ModInfo:
@@ -127,8 +127,8 @@ class ModInfo:
             Qt.TextInteractionFlag.TextSelectableByMouse
         )
         self.mod_info_path_value.setWordWrap(True)
-        self.description = ScrollLabel()
-        self.description.setText("\n\n\n\n\t\t\tWelcome to RimSort!")
+        self.description = DescriptionWidget()
+        self.description.setText("<br><br><br><center><h3>Welcome to RimSort!</h3></center>", convert=False)
         # Add widgets to child layouts
         self.image_layout.addWidget(self.preview_picture)
         self.mod_info_name.addWidget(self.mod_info_name_label, 20)
@@ -192,7 +192,7 @@ class ModInfo:
 
         logger.debug("Finished ModInfo initialization")
 
-    def display_mod_info(self, uuid: str) -> None:
+    def display_mod_info(self, uuid: str, render_unity_rt: bool) -> None:
         """
         This slot receives a the complete mod data json for
         the mod that was just clicked on. It will set the relevant
@@ -298,7 +298,7 @@ class ModInfo:
         if "description" in mod_info:
             if mod_info["description"] is not None:
                 if isinstance(mod_info["description"], str):
-                    self.description.setText(mod_info["description"])
+                    self.description.setText(mod_info["description"], render_unity_rt)
                 else:
                     logger.error(
                         f"[description] tag is not a string: {mod_info['description']}"
