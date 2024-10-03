@@ -579,7 +579,10 @@ class MainContent(QObject):
 
         :param uuid: uuid of mod
         """
-        self.mod_info_panel.display_mod_info(uuid=uuid)
+        self.mod_info_panel.display_mod_info(
+            uuid=uuid,
+            render_unity_rt=self.settings_controller.settings.render_unity_rich_text,
+        )
 
     def __repopulate_lists(self, is_initial: bool = False) -> None:
         """
