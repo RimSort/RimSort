@@ -22,15 +22,23 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
     mod_deleted = Signal(str, str, str)
     mod_updated = Signal(bool, bool, str, str, str)
 
-    def __init__(self, settings_controller: SettingsController, targets: list[str]):
-        """
-        Initialize the WatchdogHandler.
+    def __init__(
+        self, settings_controller: SettingsController, targets: list[str]
+    ) -> None:
+        """Initialize the WatchdogHandler.
 
-        Parameters:
-            targets (list[str]): The list of target paths to monitor.
+        The WatchdogHandler is a subclass of :class:`watchdog.events.FileSystemEventHandler`
+        and :class:`PySide6.QtCore.QObject`. It is used to monitor relevant mod files for changes.
 
-        Returns:
-            None
+        The :meth:`__init__` method initializes the WatchdogHandler by setting up the
+        :class:`watchdog.observers.Observer` and :class:`watchdog.observers.PollingObserver`
+        instances. It also sets up the signals that are emitted when a change is detected.
+
+        :param settings_controller: The settings controller for the application
+        :param targets: The list of target paths to monitor
+        :type targets: list[str]
+
+        :return: None
         """
         super().__init__()
         logger.info("Initializing WatchdogHandler")
@@ -52,10 +60,11 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
         self.__add_mod_observers(self.settings_controller.get_mod_paths())
 
     def __add_acf_observers(self) -> None:
-        """
-        Add observers to the watchdog observer for applicable Steam .acf files.
+        """Add observers to the watchdog observer for applicable Steam .acf files.
 
-        Parameters: None
+        :param None:
+
+        :return: None
         """
         # Get all applicable Steam .acf paths if set and existing
         acf_targets: set[str] = {
@@ -73,10 +82,12 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
                 self.watchdog_acf_observer.schedule(self, target, recursive=False)
 
     def __add_mod_observers(self, targets: list[str]) -> None:
-        """
-        Add observers to the watchdog observer for all of our data source target paths.
+        """Add observers to the watchdog observer for all of our data source target paths.
 
-        Parameters: targets (list[str]): The list of target paths to monitor.
+        :param targets: The list of target paths to monitor.
+        :type targets: list[str]
+
+        :return: None
         """
         for path in targets:
             if path and os.path.exists(path) and os.path.isdir(path):
@@ -89,15 +100,17 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
                     )
 
     def __check_acf_file(self, event: FileSystemEvent, event_scr_path: Path) -> bool:
-        """
-        Check if the file created is an .acf file that we track metadata from.
+        """Check if the file created is an .acf file that we track metadata from.
 
-        Parameters:
-            event_scr_path (Path): The path of the file created.
+        :param event: The event object representing the file event.
+        :type event: FileSystemEvent
+        :param event_scr_path: The path of the file created.
+        :type event_scr_path: Path
 
-        Returns:
-            bool: True if the file is an .acf file that we track metadata from.
+        :return: True if the file is an .acf file that we track metadata from.
+        :rtype: bool
         """
+
         # Normalize the paths that are being compared
         event_scr_path = event_scr_path.resolve()
         workshop_acf_path = Path(self.workshop_acf_path).resolve()
@@ -121,16 +134,13 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
         return False
 
     def __cooldown_uuid_change(self, callback: dict[str, str]) -> None:
-        """
-        Start the cooldown timer for the given value.
+        """Execute a callback after a cooldown period. A cooldown period is used
+        to prevent rapid-fire events from triggering multiple callbacks.
 
-        Parameters:
-            operation (str): The operation that triggered the cooldown.
-            value (str): The string value related to the file operation.
-                         This is either path or UUID depending on the op.
+        :param callback: A dictionary containing the operation, mod directory, and UUID to be passed to the callback.
+        :type callback: dict[str, str]
 
-        Returns:
-            None
+        :return: None
         """
         operation = callback["operation"]
         mod_directory = callback["path"]
@@ -175,15 +185,12 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
         self.cooldown_timers[uuid].start()
 
     def on_created(self, event: FileSystemEvent) -> None:
-        """
-        A callback function called when a file is created.
+        """A function called when a file or directory is created.
 
-        We want to signal any changes to a mods' About.xml file.
+        :param event: The event object representing the file or directory creation event.
+        :type event: FileSystemEvent
 
-        Parameters:
-        event: The event object representing the file deletion event.
-
-        Returns: None
+        :return: None
         """
         event_scr_path_str = str(event.src_path)
         # Explicitly check if the file created is an .acf file that we track metadata from
@@ -201,7 +208,7 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
             else None
         )
         # If we know the intent, and have a UUID generated, proceed to create the mod
-        if data_source and uuid:
+        if data_source is not None and uuid is not None:
             logger.debug(f"Mod directory created: {event_scr_path_str}")
             logger.debug(f"Mod UUID created: {uuid}")
             logger.debug(f"Mod data source created: {data_source}")
@@ -218,13 +225,12 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
             )
 
     def on_deleted(self, event: FileSystemEvent) -> None:
-        """
-        A callback function called when a file is deleted.
+        """A function called when a file or directory is deleted.
 
-        Parameters:
-        event: The event object representing the file deletion event.
+        :param event: The event object representing the file or directory deletion event.
+        :type event: FileSystemEvent
 
-        Returns: None
+        :return: None
         """
         event_scr_path_str = str(event.src_path)
         # Explicitly check if the file created is an .acf file that we track metadata from
@@ -233,7 +239,7 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
         # If we are still here, assume we need to try to resolve an existing UUID from our mod path -> UUID mapper
         uuid = self.metadata_manager.mod_metadata_dir_mapper.get(event_scr_path_str)
         # If we have a UUID resolved, proceed to delete the mod
-        if uuid:
+        if uuid is not None:
             # Remove the mod's metadata file from our mapper
             mod_metadata_file_path = self.metadata_manager.internal_local_metadata.get(
                 uuid, {}
@@ -251,15 +257,20 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
                     "uuid": uuid,
                 }
             )
+        else:
+            # logger.debug(
+            #     "UUID resolution failed for mod deletion event: "
+            #     f"[event_scr_path_str: {event_scr_path_str}, uuid: {uuid}"
+            # )
+            return
 
     def on_modified(self, event: FileSystemEvent) -> None:
-        """
-        A callback function called when a file is modified.
+        """A function called when a file or directory is modified.
 
-        Parameters:
-        event: The event object representing the file modified event.
+        :param event: The event object representing the file or directory modification event.
+        :type event: FileSystemEvent
 
-        Returns: None
+        :return: None
         """
         event_scr_path_str = str(event.src_path)
         # Explicitly check if the file created is an .acf file that we track metadata from
@@ -267,59 +278,53 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
             return
         # If we are still here, assume we need to try to resolve an existing UUID from our mod path -> UUID mapper
         uuid = self.metadata_manager.mod_metadata_file_mapper.get(event_scr_path_str)
-
-        if not uuid:
-            logger.debug(f"No UUID found for modification event: {event_scr_path_str}")
+        if uuid is not None:
+            # Try to resolve a mod path from the from metadata
+            mod_path = self.metadata_manager.internal_local_metadata.get(uuid, {}).get(
+                "path"
+            )
+            # If we have a UUID and mod path resolved, proceed to update the mod
+            logger.debug(f"Mod metadata modified: {event_scr_path_str}")
+            self.__cooldown_uuid_change(
+                callback={
+                    "operation": "updated",
+                    "path": mod_path,
+                    "uuid": uuid,
+                }
+            )
+        else:
+            # logger.debug(
+            #     "UUID resolution failed for mod modified event: "
+            #     f"[event_scr_path_str: {event_scr_path_str}, uuid: {uuid}"
+            # )
             return
 
-        # Try to resolve a mod path from the from metadata
-        mod_path = self.metadata_manager.internal_local_metadata.get(uuid, {}).get(
-            "path"
-        )
-        # If we have a UUID and mod path resolved, proceed to update the mod
-        if not mod_path:
-            logger.debug(
-                f"UUID found for modification event, but no mod path. Event src_path: {event_scr_path_str} UUID: {uuid}"
-            )
-
-        logger.debug(f"Mod metadata modified: {event_scr_path_str}")
-        self.__cooldown_uuid_change(
-            callback={
-                "operation": "updated",
-                "path": mod_path,
-                "uuid": uuid,
-            }
-        )
-
     def on_moved(self, event: FileSystemEvent) -> None:
-        """
-        A callback function called when a file is moved.
+        """A function called when a file or directory is moved or renamed.
 
-        Parameters:
-        event: The event object representing the file moved event.
+        :param event: The event object representing the file or directory move event.
+        :type event: FileSystemEvent
 
-        Returns: None
+        :return: None
         """
         # logger.debug(f"File moved: {event.src_path} to {event.dest_path}")
 
     def on_closed(self, event: FileSystemEvent) -> None:
-        """
-        A callback function called when a file is closed.
+        """A function called when a file or directory is closed.
 
-        Parameters:
-            event: The event object associated with the file closed event.
+        :param event: The event object representing the file or directory close event.
+        :type event: FileSystemEvent
 
-        Returns: None
+        :return: None
         """
         # logger.debug(f"File closed: {event.src_path}")
 
     def on_opened(self, event: FileSystemEvent) -> None:
-        """
-        A callback function called when a file is opened.
+        """A function called when a file or directory is opened.
 
-        Parameters:
-            event: The event object associated with the file opened event.
+        :param event: The event object representing the file or directory open event.
+        :type event: FileSystemEvent
 
-        Returns: None
+        :return: None
         """
         # logger.debug(f"File opened: {event.src_path}")
