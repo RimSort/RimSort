@@ -7,7 +7,7 @@ from functools import partial
 from pathlib import Path
 from shutil import copy2, copytree, rmtree
 from traceback import format_exc
-from typing import List, Optional
+from typing import List
 
 from loguru import logger
 from PySide6.QtCore import QEvent, QModelIndex, QObject, QRectF, QSize, Qt, Signal
@@ -486,15 +486,15 @@ class ModListIcons:
     _warning_icon_path: str = str(_data_path / "warning.png")
     _error_icon_path: str = str(_data_path / "error.png")
 
-    _ludeon_icon: Optional[QIcon] = None
-    _local_icon: Optional[QIcon] = None
-    _steam_icon: Optional[QIcon] = None
-    _csharp_icon: Optional[QIcon] = None
-    _xml_icon: Optional[QIcon] = None
-    _git_icon: Optional[QIcon] = None
-    _steamcmd_icon: Optional[QIcon] = None
-    _warning_icon: Optional[QIcon] = None
-    _error_icon: Optional[QIcon] = None
+    _ludeon_icon: QIcon | None = None
+    _local_icon: QIcon | None = None
+    _steam_icon: QIcon | None = None
+    _csharp_icon: QIcon | None = None
+    _xml_icon: QIcon | None = None
+    _git_icon: QIcon | None = None
+    _steamcmd_icon: QIcon | None = None
+    _warning_icon: QIcon | None = None
+    _error_icon: QIcon | None = None
 
     @classmethod
     def ludeon_icon(cls) -> QIcon:

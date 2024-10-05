@@ -2,7 +2,7 @@ import os
 from functools import partial
 from pathlib import Path
 from threading import Timer
-from typing import Any, Optional
+from typing import Any
 from uuid import uuid4
 
 from loguru import logger
@@ -41,10 +41,10 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
         )
         self.settings_controller: SettingsController = settings_controller
         # Steam .acf file monitoring
-        self.watchdog_acf_observer: Optional[BaseObserver]
+        self.watchdog_acf_observer: BaseObserver | None
         self.watchdog_acf_observer = PollingObserver()
         # Mod directory monitoring
-        self.watchdog_mods_observer: Optional[BaseObserver]
+        self.watchdog_mods_observer: BaseObserver | None
         self.watchdog_mods_observer = Observer()
         # Keep track of cooldowns for each uuid
         self.cooldown_timers: dict[str, Any] = {}

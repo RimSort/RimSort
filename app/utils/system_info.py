@@ -1,6 +1,5 @@
 import platform
 from enum import Enum, auto, unique
-from typing import Optional
 
 
 class SystemInfo:
@@ -18,9 +17,9 @@ class SystemInfo:
         >>> print(info.architecture)
     """
 
-    _instance: Optional["SystemInfo"] = None
-    _operating_system: Optional["SystemInfo.OperatingSystem"] = None
-    _architecture: Optional["SystemInfo.Architecture"] = None
+    _instance = None  # type: SystemInfo | None
+    _operating_system = None  # type: SystemInfo.OperatingSystem | None
+    _architecture = None  # type: SystemInfo.Architecture | None
 
     @unique
     class OperatingSystem(Enum):
@@ -90,7 +89,7 @@ class SystemInfo:
         self._is_initialized: bool = True
 
     @property
-    def operating_system(self) -> Optional["SystemInfo.OperatingSystem"]:
+    def operating_system(self) -> OperatingSystem | None:
         """
         Get the detected operating system.
 
@@ -100,7 +99,7 @@ class SystemInfo:
         return self._operating_system
 
     @property
-    def architecture(self) -> Optional["SystemInfo.Architecture"]:
+    def architecture(self) -> Architecture | None:
         """
         Get the detected system architecture.
 

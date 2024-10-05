@@ -6,7 +6,7 @@ import tarfile
 from io import BytesIO
 from pathlib import Path
 from tempfile import gettempdir
-from typing import Any, Optional
+from typing import Any
 from zipfile import ZipFile
 
 import requests
@@ -28,7 +28,7 @@ class SteamcmdInterface:
     Create SteamcmdInterface object to provide an interface for SteamCMD functionality
     """
 
-    _instance: Optional["SteamcmdInterface"] = None
+    _instance = None  # type: SteamcmdInterface
 
     def __new__(cls, *args: Any, **kwargs: Any) -> "SteamcmdInterface":
         if cls._instance is None:

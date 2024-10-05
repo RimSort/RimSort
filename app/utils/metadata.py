@@ -4,7 +4,7 @@ import traceback
 from pathlib import Path
 from re import match
 from time import localtime, strftime, time
-from typing import Any, Iterable, Optional, Union
+from typing import Any, Iterable, Union
 from uuid import uuid4
 
 from loguru import logger
@@ -38,7 +38,7 @@ from app.views.dialogue import (
 
 
 class MetadataManager(QObject):
-    _instance: Optional["MetadataManager"] = None
+    _instance = None  # type: MetadataManager
     mod_created_signal = Signal(str)
     mod_deleted_signal = Signal(str)
     mod_metadata_updated_signal = Signal(str)
@@ -64,10 +64,10 @@ class MetadataManager(QObject):
             self.show_warning_signal.connect(show_warning)
 
             # Store parsed metadata & paths
-            self.external_steam_metadata: Optional[dict[str, Any]] = None
-            self.external_steam_metadata_path: Optional[str] = None
-            self.external_community_rules: Optional[dict[str, Any]] = None
-            self.external_community_rules_path: Optional[str] = None
+            self.external_steam_metadata: dict[str, Any] | None = None
+            self.external_steam_metadata_path: str | None = None
+            self.external_community_rules: dict[str, Any] | None = None
+            self.external_community_rules_path: str | None = None
             self.external_user_rules: dict[str, Any] | None = None
             self.external_user_rules_path: str = str(
                 AppInfo().databases_folder / "userRules.json"
@@ -131,7 +131,7 @@ class MetadataManager(QObject):
 
         def get_configured_steam_db(
             life: int, path: str
-        ) -> tuple[Optional[dict[str, Any]], Optional[str]]:
+        ) -> tuple[dict[str, Any] | None, str | None]:
             logger.info(f"Checking for Steam DB at: {path}")
             if not validate_db_path(path, "Steam"):
                 return None, None
@@ -187,7 +187,7 @@ class MetadataManager(QObject):
 
         def get_configured_community_rules_db(
             path: str,
-        ) -> tuple[Optional[dict[str, Any]], Optional[str]]:
+        ) -> tuple[dict[str, Any] | None, str | None]:
             logger.info(f"Checking for Community Rules DB at: {path}")
 
             if not validate_db_path(path, "Community Rules"):

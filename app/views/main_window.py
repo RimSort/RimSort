@@ -3,7 +3,7 @@ from functools import partial
 from pathlib import Path
 from shutil import copytree, rmtree
 from traceback import format_exc
-from typing import Any, Optional
+from typing import Any
 
 from loguru import logger
 from PySide6.QtCore import QSize, QTimer
@@ -67,8 +67,7 @@ class MainWindow(QMainWindow):
         # Content initialization should only fire on startup. Otherwise, this is handled by Refresh button
 
         # Watchdog
-        self.watchdog_event_handler: Optional[WatchdogHandler] = None
-
+        self.watchdog_event_handler: WatchdogHandler | None = None
         # Set up the window
         self.setWindowTitle(f"RimSort {AppInfo().app_version}")
         self.setMinimumSize(QSize(1024, 768))
@@ -900,37 +899,33 @@ class MainWindow(QMainWindow):
 
     def stop_watchdog_if_running(self) -> None:
         # STOP WATCHDOG IF IT IS ALREADY RUNNING
-        if (
-            self.watchdog_event_handler
-            and (
-                self.watchdog_event_handler.watchdog_acf_observer
+        if self.watchdog_event_handler is not None:
+            if (
+                self.watchdog_event_handler.watchdog_acf_observer is not None
                 and self.watchdog_event_handler.watchdog_acf_observer.is_alive()
-            )
-            or (
-                self.watchdog_event_handler.watchdog_mods_observer
-                and self.watchdog_event_handler.watchdog_mods_observer.is_alive()
-            )
-        ):
-            self.shutdown_watchdog()
+                or (
+                    self.watchdog_event_handler.watchdog_mods_observer is not None
+                    and self.watchdog_event_handler.watchdog_mods_observer.is_alive()
+                )
+            ):
+                self.shutdown_watchdog()
 
     def shutdown_watchdog(self) -> None:
         if (
-            self.watchdog_event_handler
-            and (
-                self.watchdog_event_handler.watchdog_acf_observer
-                and self.watchdog_event_handler.watchdog_acf_observer.is_alive()
-            )
-            or (
-                self.watchdog_event_handler.watchdog_mods_observer
-                and self.watchdog_event_handler.watchdog_mods_observer.is_alive()
-            )
+            self.watchdog_event_handler is not None
+            and self.watchdog_event_handler.watchdog_acf_observer is not None
+            and self.watchdog_event_handler.watchdog_mods_observer is not None
         ):
-            self.watchdog_event_handler.watchdog_acf_observer.stop()
-            self.watchdog_event_handler.watchdog_acf_observer.join()
-            self.watchdog_event_handler.watchdog_acf_observer = None
-            self.watchdog_event_handler.watchdog_mods_observer.stop()
-            self.watchdog_event_handler.watchdog_mods_observer.join()
-            self.watchdog_event_handler.watchdog_mods_observer = None
-            for timer in self.watchdog_event_handler.cooldown_timers.values():
-                timer.cancel()
+            # Handle Steam .acf Observer shutdown
+            if self.watchdog_event_handler.watchdog_acf_observer.is_alive():
+                self.watchdog_event_handler.watchdog_acf_observer.stop()
+                self.watchdog_event_handler.watchdog_acf_observer.join()
+                self.watchdog_event_handler.watchdog_acf_observer = None
+            # Handle Mod Directory Observer shutdown
+            elif self.watchdog_event_handler.watchdog_mods_observer.is_alive():
+                self.watchdog_event_handler.watchdog_mods_observer.stop()
+                self.watchdog_event_handler.watchdog_mods_observer.join()
+                self.watchdog_event_handler.watchdog_mods_observer = None
+                for timer in self.watchdog_event_handler.cooldown_timers.values():
+                    timer.cancel()
             self.watchdog_event_handler = None
