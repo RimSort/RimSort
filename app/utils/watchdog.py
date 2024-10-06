@@ -133,12 +133,16 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
             return True
         return False
 
-    def __cooldown_uuid_change(self, callback: dict[str, str]) -> None:
+    def __cooldown_uuid_change(
+        self, callback: dict[str, str], delay: float = 3.0
+    ) -> None:
         """Execute a callback after a cooldown period. A cooldown period is used
         to prevent rapid-fire events from triggering multiple callbacks.
 
         :param callback: A dictionary containing the operation, mod directory, and UUID to be passed to the callback.
         :type callback: dict[str, str]
+        :param delay: The number of seconds to wait before executing the callback. Defaults to 3.0.
+        :type delay: float
 
         :return: None
         """
@@ -162,7 +166,7 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
         # Construct cooldown timer for the given operation from the callback and start it
         if operation == "updated":
             self.cooldown_timers[uuid] = Timer(
-                1.0,
+                delay,
                 partial(
                     self.mod_updated.emit,
                     False,
@@ -174,7 +178,7 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
             )
         else:
             self.cooldown_timers[uuid] = Timer(
-                1.0,
+                delay,
                 partial(
                     getattr(self, f"mod_{operation}").emit,
                     data_source,
@@ -237,7 +241,11 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
         if self.__check_acf_file(event, Path(event_scr_path_str)):
             return
         # If we are still here, assume we need to try to resolve an existing UUID from our mod path -> UUID mapper
-        uuid = self.metadata_manager.mod_metadata_dir_mapper.get(event_scr_path_str)
+        uuid = (
+            self.metadata_manager.mod_metadata_dir_mapper.get(event_scr_path_str)
+            if event.is_directory
+            else None
+        )
         # If we have a UUID resolved, proceed to delete the mod
         if uuid is not None:
             # Remove the mod's metadata file from our mapper
@@ -247,7 +255,7 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
             self.metadata_manager.mod_metadata_file_mapper.pop(
                 mod_metadata_file_path, None
             )
-            # Remove the mod directory from our mapper
+            # Remove the mod directory from our mod mapper
             self.metadata_manager.mod_metadata_dir_mapper.pop(event_scr_path_str, None)
             logger.debug(f"Mod directory deleted: {event_scr_path_str}")
             self.__cooldown_uuid_change(
@@ -277,7 +285,11 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
         if self.__check_acf_file(event, Path(event_scr_path_str)):
             return
         # If we are still here, assume we need to try to resolve an existing UUID from our mod path -> UUID mapper
-        uuid = self.metadata_manager.mod_metadata_file_mapper.get(event_scr_path_str)
+        uuid = (
+            self.metadata_manager.mod_metadata_file_mapper.get(event_scr_path_str)
+            if not event.is_directory
+            else None
+        )
         if uuid is not None:
             # Try to resolve a mod path from the from metadata
             mod_path = self.metadata_manager.internal_local_metadata.get(uuid, {}).get(

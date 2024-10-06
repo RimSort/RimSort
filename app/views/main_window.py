@@ -929,13 +929,8 @@ class MainWindow(QMainWindow):
     def stop_watchdog_if_running(self) -> None:
         # STOP WATCHDOG IF IT IS ALREADY RUNNING
         if self.watchdog_event_handler is not None:
-            if (
-                self.watchdog_event_handler.watchdog_acf_observer is not None
-                and self.watchdog_event_handler.watchdog_acf_observer.is_alive()
-                or (
-                    self.watchdog_event_handler.watchdog_mods_observer is not None
-                    and self.watchdog_event_handler.watchdog_mods_observer.is_alive()
-                )
+            if self.watchdog_event_handler.watchdog_acf_observer is not None or (
+                self.watchdog_event_handler.watchdog_mods_observer is not None
             ):
                 self.shutdown_watchdog()
 
