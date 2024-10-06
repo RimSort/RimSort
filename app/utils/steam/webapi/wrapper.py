@@ -352,8 +352,8 @@ class DynamicQuery(QObject):
         # Uncomment to see the all pfids to be queried
         # logger.debug(f"PublishedFileIds being queried: {publishedfileids}")
         for chunk in chunks(
-            _list=publishedfileids, limit=215
-        ):  # Chunk limit appears to be 215 PublishedFileIds at a time - this appears to be a WebAPI limitation
+            _list=publishedfileids, limit=213
+        ):  # Chunk limit appears to be 213 PublishedFileIds at a time - this appears to be a WebAPI limitation
             chunk_total = len(chunk)
             chunks_processed += chunk_total
             # Uncomment to see the pfids from each chunk
