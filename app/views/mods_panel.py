@@ -66,9 +66,9 @@ from app.views.dialogue import (
 class ClickableQLabel(QLabel):
     clicked = Signal()
 
-    def mousePressEvent(self, event: QMouseEvent) -> None:
+    def mousePressEvent(self, ev: QMouseEvent) -> None:
         self.clicked.emit()
-        super().mousePressEvent(event)
+        super().mousePressEvent(ev)
 
 
 def uuid_no_key(uuid: str) -> str:
@@ -669,7 +669,7 @@ class ModListWidget(QListWidget):
         if source_widget == self:
             self.list_update_signal.emit("drop")
 
-    def eventFilter(self, source_object: QObject, event: QEvent) -> bool:
+    def eventFilter(self, object: QObject, event: QEvent) -> bool:
         """
         https://doc.qt.io/qtforpython/overviews/eventsandfilters.html
 
@@ -679,7 +679,7 @@ class ModListWidget(QListWidget):
         :param object: the source object returned from the event
         :param event: the QEvent type
         """
-        if event.type() == QEvent.Type.ContextMenu and source_object is self:
+        if event.type() == QEvent.Type.ContextMenu and object is self:
             # Get the position of the right-click event
             pos = QCursor.pos()
             # Convert the global position to the list widget's coordinate system
@@ -688,7 +688,7 @@ class ModListWidget(QListWidget):
             item = self.itemAt(pos_local)
             if not isinstance(item, QListWidgetItem):
                 logger.debug("Mod list right-click non-QListWidgetItem")
-                return super().eventFilter(source_object, event)
+                return super().eventFilter(object, event)
 
             # Otherwise, begin calculation
             logger.info("USER ACTION: Open right-click mod_list_item contextMenu")
@@ -1586,22 +1586,22 @@ class ModListWidget(QListWidget):
                                 True, "user_rules", mod_metadata["packageid"]
                             )
             return True
-        return super().eventFilter(source_object, event)
+        return super().eventFilter(object, event)
 
-    def focusOutEvent(self, e: QFocusEvent) -> None:
+    def focusOutEvent(self, event: QFocusEvent) -> None:
         """
         Slot to handle unhighlighting any items in the
         previous list when clicking out of that list.
         """
         self.clearFocus()
-        return super().focusOutEvent(e)
+        return super().focusOutEvent(event)
 
-    def keyPressEvent(self, e: QKeyEvent) -> None:
+    def keyPressEvent(self, event: QKeyEvent) -> None:
         """
         This event occurs when the user presses a key while the mod
         list is in focus.
         """
-        key_pressed = QKeySequence(e.key()).toString()
+        key_pressed = QKeySequence(event.key()).toString()
         if (
             key_pressed == "Left"
             or key_pressed == "Right"
@@ -1610,9 +1610,9 @@ class ModListWidget(QListWidget):
         ):
             self.key_press_signal.emit(key_pressed)
         else:
-            return super().keyPressEvent(e)
+            return super().keyPressEvent(event)
 
-    def resizeEvent(self, event: QResizeEvent) -> None:
+    def resizeEvent(self, e: QResizeEvent) -> None:
         """
         When the list widget is resized (as the window is resized),
         ensure that all visible items have widgets loaded.
@@ -1620,7 +1620,7 @@ class ModListWidget(QListWidget):
         :param event: the resize event
         """
         self.check_widgets_visible()
-        return super().resizeEvent(event)
+        return super().resizeEvent(e)
 
     def append_new_item(self, uuid: str) -> None:
         data = {
@@ -2266,7 +2266,7 @@ class ModsPanel(QWidget):
         self.active_mods_search_clear_button.clicked.connect(
             self.on_active_mods_search_clear
         )
-        self.active_mods_search_filter = QComboBox()
+        self.active_mods_search_filter: QComboBox = QComboBox()
         self.active_mods_search_filter.setObjectName("MainUI")
         self.active_mods_search_filter.setMaximumWidth(125)
         self.active_mods_search_filter.addItems(
@@ -2282,18 +2282,18 @@ class ModsPanel(QWidget):
         self.active_mods_search_layout.addWidget(self.active_mods_search, 45)
         self.active_mods_search_layout.addWidget(self.active_mods_search_filter, 70)
         # Active mods list Errors/warnings widgets
-        self.errors_summary_frame = QFrame()
+        self.errors_summary_frame: QFrame = QFrame()
         self.errors_summary_frame.setObjectName("errorFrame")
         self.errors_summary_layout = QHBoxLayout()
         self.errors_summary_layout.setContentsMargins(0, 0, 0, 0)
         self.errors_summary_layout.setSpacing(2)
-        self.warnings_icon = QLabel()
+        self.warnings_icon: QLabel = QLabel()
         self.warnings_icon.setPixmap(ModListIcons.warning_icon().pixmap(QSize(20, 20)))
-        self.warnings_text = QLabel("0 warnings(s)")
+        self.warnings_text: QLabel = QLabel("0 warnings(s)")
         self.warnings_text.setObjectName("summaryValue")
-        self.errors_icon = QLabel()
+        self.errors_icon: QLabel = QLabel()
         self.errors_icon.setPixmap(ModListIcons.error_icon().pixmap(QSize(20, 20)))
-        self.errors_text = QLabel("0 error(s)")
+        self.errors_text: QLabel = QLabel("0 error(s)")
         self.errors_text.setObjectName("summaryValue")
         self.warnings_layout = QHBoxLayout()
         self.warnings_layout.addWidget(self.warnings_icon, 1)
@@ -2312,20 +2312,20 @@ class ModsPanel(QWidget):
         self.active_panel.addWidget(self.errors_summary_frame, 1)
 
         # INACTIVE mod list widgets
-        self.inactive_mods_label = QLabel("Inactive [0]")
+        self.inactive_mods_label: QLabel = QLabel("Inactive [0]")
         self.inactive_mods_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.inactive_mods_label.setObjectName("summaryValue")
-        self.inactive_mods_list = ModListWidget(
+        self.inactive_mods_list: ModListWidget = ModListWidget(
             list_type="Inactive",
             settings_controller=self.settings_controller,
         )
         # Inactive mods search widgets
         self.inactive_mods_search_layout = QHBoxLayout()
-        self.inactive_mods_filter_data_source_index = 0
-        self.inactive_mods_data_source_filter = SEARCH_DATA_SOURCE_FILTER_INDEXES[
+        self.inactive_mods_filter_data_source_index: int = 0
+        self.inactive_mods_data_source_filter: str = SEARCH_DATA_SOURCE_FILTER_INDEXES[
             self.inactive_mods_filter_data_source_index
         ]
-        self.inactive_mods_filter_data_source_button = QToolButton()
+        self.inactive_mods_filter_data_source_button: QToolButton = QToolButton()
         self.inactive_mods_filter_data_source_button.setIcon(
             self.data_source_filter_icons[self.inactive_mods_filter_data_source_index]
         )
@@ -2337,13 +2337,13 @@ class ModsPanel(QWidget):
         self.inactive_mods_filter_data_source_button.clicked.connect(
             self.on_inactive_mods_search_data_source_filter
         )
-        self.inactive_mods_search_filter_state = True
-        self.inactive_mods_search_mode_filter_button = QToolButton()
+        self.inactive_mods_search_filter_state: bool = True
+        self.inactive_mods_search_mode_filter_button: QToolButton = QToolButton()
         self.inactive_mods_search_mode_filter_button.setIcon(self.mode_filter_icon)
         self.inactive_mods_search_mode_filter_button.clicked.connect(
             self.on_inactive_mods_mode_filter_toggle
         )
-        self.inactive_mods_search = QLineEdit()
+        self.inactive_mods_search: QLineEdit = QLineEdit()
         self.inactive_mods_search.setClearButtonEnabled(True)
         self.inactive_mods_search.textChanged.connect(self.on_inactive_mods_search)
         self.inactive_mods_search.inputRejected.connect(
@@ -2359,7 +2359,7 @@ class ModsPanel(QWidget):
         self.inactive_mods_search_clear_button.clicked.connect(
             self.on_inactive_mods_search_clear
         )
-        self.inactive_mods_search_filter = QComboBox()
+        self.inactive_mods_search_filter: QComboBox = QComboBox()
         self.inactive_mods_search_filter.setObjectName("MainUI")
         self.inactive_mods_search_filter.setMaximumWidth(140)
         self.inactive_mods_search_filter.addItems(
@@ -2592,6 +2592,8 @@ class ModsPanel(QWidget):
             self.inactive_mods_search_filter_state = not filter_state
             self.inactive_mods_search_mode_filter_button.setIcon(self.mode_filter_icon)
             pattern = self.inactive_mods_search.text()
+        else:
+            raise NotImplementedError(f"Unknown list type: {list_type}")
 
         self.signal_search_and_filters(list_type=list_type, pattern=pattern)
 
@@ -2599,11 +2601,13 @@ class ModsPanel(QWidget):
         if list_type == "Active":
             button = self.active_mods_filter_data_source_button
             search = self.active_mods_search
-            source_index = self.active_mods_filter_data_source_index
+            source_index: int = self.active_mods_filter_data_source_index
         elif list_type == "Inactive":
             button = self.inactive_mods_filter_data_source_button
             search = self.inactive_mods_search
             source_index = self.inactive_mods_filter_data_source_index
+        else:
+            raise NotImplementedError(f"Unknown list type: {list_type}")
         # Indexes by the icon
         if source_index < (len(self.data_source_filter_icons) - 1):
             source_index += 1
