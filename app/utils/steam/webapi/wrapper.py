@@ -596,7 +596,7 @@ class DynamicQuery(QObject):
         :return: Dict containing the updated json data from PublishedFileIds query
         """
         self.dq_messaging_signal.emit(
-            f"\nSteamworks API: ISteamUGC/GetAppDependencies initializing for {len(publishedfileids)} mods\n"
+            f"\nSteamworks API: ISteamUGC/GetAppDependencies initializing for {len(publishedfileids)} mods\n\nThis may take a while. Please wait..."
         )
         # Maximum processes
         num_processes = cpu_count()
