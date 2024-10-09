@@ -3,7 +3,7 @@ from functools import partial
 from pathlib import Path
 from shutil import copytree, rmtree
 from traceback import format_exc
-from typing import Any, Optional
+from typing import Any
 
 from loguru import logger
 from PySide6.QtCore import QSize, QTimer
@@ -24,9 +24,7 @@ from app.controllers.instance_controller import (
 )
 from app.controllers.menu_bar_controller import MenuBarController
 from app.controllers.mods_panel_controller import ModsPanelController
-from app.controllers.settings_controller import (
-    SettingsController,
-)
+from app.controllers.settings_controller import SettingsController
 from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 from app.utils.gui_info import GUIInfo
@@ -69,8 +67,7 @@ class MainWindow(QMainWindow):
         # Content initialization should only fire on startup. Otherwise, this is handled by Refresh button
 
         # Watchdog
-        self.watchdog_event_handler: Optional[WatchdogHandler] = None
-
+        self.watchdog_event_handler: WatchdogHandler | None = None
         # Set up the window
         self.setWindowTitle(f"RimSort {AppInfo().app_version}")
         self.setMinimumSize(QSize(1024, 768))
@@ -145,7 +142,9 @@ class MainWindow(QMainWindow):
 
         self.menu_bar = MenuBar(menu_bar=self.menuBar())
         self.menu_bar_controller = MenuBarController(
-            view=self.menu_bar, settings_controller=self.settings_controller, mods_panel_controller=self.mods_panel_controller,
+            view=self.menu_bar,
+            settings_controller=self.settings_controller,
+            mods_panel_controller=self.mods_panel_controller,
         )
         # Connect Instances Menu Bar signals
         EventBus().do_activate_current_instance.connect(self.__switch_to_instance)
@@ -869,6 +868,9 @@ class MainWindow(QMainWindow):
             ],
         )
         # Connect watchdog to MetadataManager
+        self.watchdog_event_handler.acf_changed.connect(
+            self.main_content_panel.metadata_manager.refresh_acf_metadata
+        )
         self.watchdog_event_handler.mod_created.connect(
             self.main_content_panel.metadata_manager.process_creation
         )
@@ -882,33 +884,48 @@ class MainWindow(QMainWindow):
         self.main_content_panel.stop_watchdog_signal.connect(self.shutdown_watchdog)
         # Start watchdog
         try:
-            if self.watchdog_event_handler.watchdog_observer is not None:
-                self.watchdog_event_handler.watchdog_observer.start()
+            if self.watchdog_event_handler.watchdog_acf_observer is not None:
+                self.watchdog_event_handler.watchdog_acf_observer.start()
             else:
-                logger.warning("Watchdog Observer is None. Unable to start.")
+                logger.warning("Watchdog Steam .acf Observer is None. Unable to start.")
+            if self.watchdog_event_handler.watchdog_mods_observer is not None:
+                self.watchdog_event_handler.watchdog_mods_observer.start()
+            else:
+                logger.warning("Watchdog Mods Observer is None. Unable to start.")
         except Exception as e:
             logger.warning(
-                f"Unable to initialize watchdog Observer due to exception: {str(e)}"
+                f"Unable to initialize Watchdog Observer(s) due to exception: {str(e)}"
             )
 
     def stop_watchdog_if_running(self) -> None:
         # STOP WATCHDOG IF IT IS ALREADY RUNNING
-        if (
-            self.watchdog_event_handler
-            and self.watchdog_event_handler.watchdog_observer
-            and self.watchdog_event_handler.watchdog_observer.is_alive()
-        ):
-            self.shutdown_watchdog()
+        if self.watchdog_event_handler is not None:
+            if (
+                self.watchdog_event_handler.watchdog_acf_observer is not None
+                and self.watchdog_event_handler.watchdog_acf_observer.is_alive()
+                or (
+                    self.watchdog_event_handler.watchdog_mods_observer is not None
+                    and self.watchdog_event_handler.watchdog_mods_observer.is_alive()
+                )
+            ):
+                self.shutdown_watchdog()
 
     def shutdown_watchdog(self) -> None:
         if (
-            self.watchdog_event_handler
-            and self.watchdog_event_handler.watchdog_observer
-            and self.watchdog_event_handler.watchdog_observer.is_alive()
+            self.watchdog_event_handler is not None
+            and self.watchdog_event_handler.watchdog_acf_observer is not None
+            and self.watchdog_event_handler.watchdog_mods_observer is not None
         ):
-            self.watchdog_event_handler.watchdog_observer.stop()
-            self.watchdog_event_handler.watchdog_observer.join()
-            self.watchdog_event_handler.watchdog_observer = None
-            for timer in self.watchdog_event_handler.cooldown_timers.values():
-                timer.cancel()
+            # Handle Steam .acf Observer shutdown
+            if self.watchdog_event_handler.watchdog_acf_observer.is_alive():
+                self.watchdog_event_handler.watchdog_acf_observer.stop()
+                self.watchdog_event_handler.watchdog_acf_observer.join()
+                self.watchdog_event_handler.watchdog_acf_observer = None
+            # Handle Mod Directory Observer shutdown
+            elif self.watchdog_event_handler.watchdog_mods_observer.is_alive():
+                self.watchdog_event_handler.watchdog_mods_observer.stop()
+                self.watchdog_event_handler.watchdog_mods_observer.join()
+                self.watchdog_event_handler.watchdog_mods_observer = None
+                for timer in self.watchdog_event_handler.cooldown_timers.values():
+                    timer.cancel()
             self.watchdog_event_handler = None

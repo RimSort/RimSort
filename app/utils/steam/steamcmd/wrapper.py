@@ -6,7 +6,7 @@ import tarfile
 from io import BytesIO
 from pathlib import Path
 from tempfile import gettempdir
-from typing import Any, Optional
+from typing import Any
 from zipfile import ZipFile
 
 import requests
@@ -28,7 +28,7 @@ class SteamcmdInterface:
     Create SteamcmdInterface object to provide an interface for SteamCMD functionality
     """
 
-    _instance: Optional["SteamcmdInterface"] = None
+    _instance = None  # type: SteamcmdInterface
 
     def __new__(cls, *args: Any, **kwargs: Any) -> "SteamcmdInterface":
         if cls._instance is None:
@@ -48,6 +48,9 @@ class SteamcmdInterface:
     def initialize_prefix(self, steamcmd_prefix: str, validate: bool) -> None:
         self.steamcmd_prefix = steamcmd_prefix
         self.steamcmd_install_path = str(Path(self.steamcmd_prefix) / "steamcmd")
+        self.steamcmd_depotcache_path = str(
+            Path(self.steamcmd_install_path) / "depotcache"
+        )
         self.steamcmd_steam_path = str(Path(self.steamcmd_prefix) / "steam")
         self.system = platform.system()
         self.validate_downloads = validate

@@ -4,7 +4,7 @@ from logging import WARNING, getLogger
 from math import ceil
 from multiprocessing import Pool, cpu_count
 from time import time
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict
 
 from loguru import logger
 from PySide6.QtCore import QObject, Signal
@@ -322,8 +322,9 @@ class DynamicQuery(QObject):
 
     def IPublishedFileService_GetDetails(
         self, json_to_update: dict[Any, Any], publishedfileids: list[str]
-    ) -> Optional[tuple[dict[Any, Any], list[str]]]:
+    ) -> tuple[dict[Any, Any], list[str]] | None:
         """
+
         Given a list of PublishedFileIds, return a dict of json data queried
         from Steam WebAPI, containing data to be parsed during db update.
 

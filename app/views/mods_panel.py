@@ -7,7 +7,7 @@ from functools import partial
 from pathlib import Path
 from shutil import copy2, copytree, rmtree
 from traceback import format_exc
-from typing import List, Optional
+from typing import List
 
 from loguru import logger
 from PySide6.QtCore import QEvent, QModelIndex, QObject, QRectF, QSize, Qt, Signal
@@ -486,15 +486,15 @@ class ModListIcons:
     _warning_icon_path: str = str(_data_path / "warning.png")
     _error_icon_path: str = str(_data_path / "error.png")
 
-    _ludeon_icon: Optional[QIcon] = None
-    _local_icon: Optional[QIcon] = None
-    _steam_icon: Optional[QIcon] = None
-    _csharp_icon: Optional[QIcon] = None
-    _xml_icon: Optional[QIcon] = None
-    _git_icon: Optional[QIcon] = None
-    _steamcmd_icon: Optional[QIcon] = None
-    _warning_icon: Optional[QIcon] = None
-    _error_icon: Optional[QIcon] = None
+    _ludeon_icon: QIcon | None = None
+    _local_icon: QIcon | None = None
+    _steam_icon: QIcon | None = None
+    _csharp_icon: QIcon | None = None
+    _xml_icon: QIcon | None = None
+    _git_icon: QIcon | None = None
+    _steamcmd_icon: QIcon | None = None
+    _warning_icon: QIcon | None = None
+    _error_icon: QIcon | None = None
 
     @classmethod
     def ludeon_icon(cls) -> QIcon:
@@ -697,6 +697,8 @@ class ModListWidget(QListWidget):
             local_steamcmd_name_to_publishedfileid = {}
 
             # STEAMCMD MOD PFIDS
+            # A set to track any SteamCMD pfids to purge from acf data
+            steamcmd_acf_pfid_purge: set[str] = set()
             # A list to track any SteamCMD mod paths
             steamcmd_mod_paths = []
             # A dict to track any SteamCMD mod publishedfileids -> name
@@ -1387,6 +1389,10 @@ class ModListWidget(QListWidget):
                                             ignore_errors=False,
                                             onerror=handle_remove_read_only,
                                         )
+                                        if mod_metadata.get("steamcmd"):
+                                            steamcmd_acf_pfid_purge.add(
+                                                mod_metadata["publishedfileid"]
+                                            )
                                     except FileNotFoundError:
                                         logger.debug(
                                             f"Unable to delete mod. Path does not exist: {mod_metadata['path']}"
@@ -1411,6 +1417,11 @@ class ModListWidget(QListWidget):
                                             information=f"{e.strerror} occurred at {e.filename} with error code {error_code}.",
                                         )
                                         continue
+                    # Purge any deleted SteamCMD mods from acf metadata
+                    if steamcmd_acf_pfid_purge:
+                        self.metadata_manager.steamcmd_purge_mods(
+                            publishedfileids=steamcmd_acf_pfid_purge
+                        )
                     return True
                 elif action == delete_mod_keep_dds_action:  # ACTION: Delete mods action
                     answer = show_dialogue_conditional(
@@ -1438,6 +1449,15 @@ class ModListWidget(QListWidget):
                                         directory=mod_metadata["path"],
                                         extension=".dds",
                                     )
+                                    if mod_metadata.get("steamcmd"):
+                                        steamcmd_acf_pfid_purge.add(
+                                            mod_metadata["publishedfileid"]
+                                        )
+                    # Purge any deleted SteamCMD mods from acf metadata
+                    if steamcmd_acf_pfid_purge:
+                        self.metadata_manager.steamcmd_purge_mods(
+                            publishedfileids=steamcmd_acf_pfid_purge
+                        )
                     return True
                 elif action == delete_mod_dds_only_action:  # ACTION: Delete mods action
                     answer = show_dialogue_conditional(
@@ -1465,6 +1485,15 @@ class ModListWidget(QListWidget):
                                         directory=mod_metadata["path"],
                                         extension=".dds",
                                     )
+                                    if mod_metadata.get("steamcmd"):
+                                        steamcmd_acf_pfid_purge.add(
+                                            mod_metadata["publishedfileid"]
+                                        )
+                    # Purge any deleted SteamCMD mods from acf metadata
+                    if steamcmd_acf_pfid_purge:
+                        self.metadata_manager.steamcmd_purge_mods(
+                            publishedfileids=steamcmd_acf_pfid_purge
+                        )
                     return True
                 # Execute action for each selected mod
                 for source_item in selected_items:

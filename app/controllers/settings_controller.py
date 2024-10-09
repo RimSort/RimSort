@@ -2,7 +2,6 @@ import sys
 from dataclasses import dataclass
 from json import JSONDecodeError
 from pathlib import Path
-from typing import Optional
 
 from loguru import logger
 from PySide6.QtCore import QObject, Slot
@@ -718,7 +717,7 @@ class SettingsController(QObject):
         self.settings_dialog.game_location.setText(str(game_location))
         self._last_file_dialog_path = str(game_location)
 
-    def _on_game_location_choose_button_clicked_macos(self) -> Optional[Path]:
+    def _on_game_location_choose_button_clicked_macos(self) -> Path | None:
         """
         Open a directory dialog to select the game location for macOS and handle the result.
         """
@@ -732,7 +731,7 @@ class SettingsController(QObject):
 
         return Path(game_location)
 
-    def _on_game_location_choose_button_clicked_non_macos(self) -> Optional[Path]:
+    def _on_game_location_choose_button_clicked_non_macos(self) -> Path | None:
         """
         Open a directory dialog to select the game location and handle the result.
         """
