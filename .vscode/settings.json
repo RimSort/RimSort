@@ -97,4 +97,7 @@
   "python.testing.pytestArgs": ["tests"],
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true
+  "yaml.schemas": {
+    "https://json.schemastore.org/github-issue-config.json": "file:///c%3A/Code%20Repos/RimSort/.github/ISSUE_TEMPLATE/config.yml"
+  }
 }
