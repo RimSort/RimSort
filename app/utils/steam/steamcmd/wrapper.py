@@ -12,8 +12,8 @@ from zipfile import ZipFile
 import requests
 from loguru import logger
 
-from app.controllers.settings_controller import SettingsController
 import app.utils.symlink as symlink
+from app.controllers.settings_controller import SettingsController
 from app.utils.event_bus import EventBus
 from app.views.dialogue import (
     BinaryChoiceDialog,
