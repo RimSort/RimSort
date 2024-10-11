@@ -975,6 +975,7 @@ class MainContent(QObject):
         )
         self.mod_info_panel.panel.addWidget(loading_animation)
         # If any text message specified, pass it to the info panel as well
+        loading_animation_text_label = None
         if text:
             loading_animation_text_label = QLabel(text)
             loading_animation_text_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -985,7 +986,7 @@ class MainContent(QObject):
         loop.exec_()
         data = loading_animation.data
         # Remove text label if it was passed
-        if text:
+        if text and loading_animation_text_label is not None:
             self.mod_info_panel.panel.removeWidget(loading_animation_text_label)
             loading_animation_text_label.close()
         # Enable widgets again after loading
@@ -1578,7 +1579,7 @@ class MainContent(QObject):
                 elif self.metadata_manager.internal_local_metadata[uuid].get("url"):
                     url = self.metadata_manager.internal_local_metadata[uuid]["url"]
                 else:
-                    url is None
+                    url = None
                 if url is None:
                     if package_id in active_steam_mods_packageid_to_pfid.keys():
                         active_mods_rentry_report = (
@@ -2487,6 +2488,12 @@ class MainContent(QObject):
                             logger.error(
                                 "Unable to parse version or timestamp from database. Cancelling upload."
                             )
+                            dialogue.show_warning(
+                                title="Failed to upload database!",
+                                text="The database file does not contain a version or timestamp!",
+                                information=f"File: {file_full_path}",
+                            )
+                            return
                         # Get the abbreviated timezone
                         timezone_abbreviation = (
                             datetime.datetime.now(datetime.timezone.utc)
@@ -2571,6 +2578,8 @@ class MainContent(QObject):
                             information=f"Configured repository: {repo_url}",
                             details=stacktrace,
                         )
+                        self._do_cleanup_gitpython(repo=local_repo)
+                        return
                     # Cleanup
                     self._do_cleanup_gitpython(repo=local_repo)
                     # Notify the pull request URL
@@ -3135,6 +3144,12 @@ class MainContent(QObject):
                 )
         except Exception:
             logger.error("Failed to read info from existing database")
+            dialogue.show_warning(
+                title="Failed to read existing database",
+                text="Failed to read the existing database!",
+                information=f"Path: {path}",
+            )
+            return
         db_input_b = {"timestamp": int(time.time()), "rules": rules_data}
         db_output_c = db_input_a.copy()
         # Update database in place
