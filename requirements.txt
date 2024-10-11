@@ -11,7 +11,7 @@ psutil==6.0.0
 PyGithub==2.3.0
 pyperclip==1.9.0
 PySide6
-PySide6==6.7.3; sys_platform == 'darwin'
+PySide6==6.8.0; sys_platform == 'darwin'
 PySide6==6.7.3; sys_platform == 'linux'
 PySide6==6.7.3; sys_platform == 'win32'
 requests==2.32.3
