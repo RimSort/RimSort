@@ -1,0 +1,69 @@
+name: Feature request
+description: Suggest an idea for this project
+labels: ["feature/improvement 🆕"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Suggest an idea for this project
+  - type: textarea
+    id: problem
+    attributes:
+      label: Origin of idea
+      description: Is your feature request related to a problem? Please describe.
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggestion/proposed solution?
+      description: Please provide a clear and concise description of what you want to happen.
+      placeholder: A clear and concise description what you want to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Have you considered any alternative solutions or workarounds?
+      placeholder: A clear and concise description of any alternative solutions or features you've considered.
+
+  - type: textarea
+    id: extra_info
+    attributes:
+      label: Additional context
+      description: Add additional context about your feature request here.
+      placeholder: Additional context about your feature request.
+
+  - type: dropdown
+    id: coc_terms
+    attributes:
+      multiple: true
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/RimSort/RimSort/blob/main/CODE_OF_CONDUCT.md).
+      options:
+        - I agree to follow this project's Code of Conduct
+    validations:
+      required: true
+
+  - type: dropdown
+    id: dup_terms
+    attributes:
+      multiple: true
+      label: Duplicate Issue Check
+      description: By submitting this issue, you attest that you've searched for similar [issues on GitHub](https://github.com/RimSort/RimSort/issues) and didn't find any.
+      options:
+        - I've checked for similar issues and didn't find anything
+    validations:
+      required: true
+
+  - type: dropdown
+    id: wiki_terms
+    attributes:
+      multiple: true
+      label: Wiki/FAQ Check
+      description: By submitting this issue, you attest that you've checked [the Wiki](https://github.com/RimSort/RimSort/wiki) for potential solutions and didn't find any.
+      options:
+        - I've checked the Wiki for a solution and didn't find a solution
+    validations:
+      required: true

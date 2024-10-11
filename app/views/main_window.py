@@ -23,6 +23,7 @@ from app.controllers.instance_controller import (
     InvalidArchivePathError,
 )
 from app.controllers.menu_bar_controller import MenuBarController
+from app.controllers.mods_panel_controller import ModsPanelController
 from app.controllers.settings_controller import (
     SettingsController,
 )
@@ -138,9 +139,13 @@ class MainWindow(QMainWindow):
         widget.setLayout(app_layout)
         self.setCentralWidget(widget)
 
+        self.mods_panel_controller = ModsPanelController(
+            view=self.main_content_panel.mods_panel,
+        )
+
         self.menu_bar = MenuBar(menu_bar=self.menuBar())
         self.menu_bar_controller = MenuBarController(
-            view=self.menu_bar, settings_controller=self.settings_controller
+            view=self.menu_bar, settings_controller=self.settings_controller, mods_panel_controller=self.mods_panel_controller,
         )
         # Connect Instances Menu Bar signals
         EventBus().do_activate_current_instance.connect(self.__switch_to_instance)
@@ -158,9 +163,9 @@ class MainWindow(QMainWindow):
     def __disable_enable_widgets(self, enable: bool) -> None:
         # Disable widgets
         q_app = QApplication.instance()
-        if q_app is None:
+        if not isinstance(q_app, QApplication):
             return
-        for widget in q_app.allWidgets():  # type: ignore # Broken pyside stub
+        for widget in q_app.allWidgets():
             widget.setEnabled(enable)
 
     def showEvent(self, event: QShowEvent) -> None:
@@ -371,8 +376,11 @@ class MainWindow(QMainWindow):
                 and instance_controller.instance.local_folder != ""
             ):
                 logger.info("Restoring steamcmd symlink...")
-                self.steamcmd_wrapper.check_symlink(
-                    steamcmd_link_path, instance_controller.instance.local_folder
+                self.steamcmd_wrapper.create_symlink(
+                    instance_controller.instance.local_folder,
+                    steamcmd_link_path,
+                    show_dialogues=False,
+                    force=True,
                 )
             elif not os.path.exists(steamcmd_link_path):
                 logger.info("Skipping steamcmd symlink restoration")
@@ -687,7 +695,9 @@ class MainWindow(QMainWindow):
                         / "content"
                         / "294100"
                     )
-                    self.steamcmd_wrapper.check_symlink(link_path, target_local_folder)
+                    self.steamcmd_wrapper.create_symlink(
+                        target_local_folder, link_path, show_dialogues=False, force=True
+                    )
                 # Create the new instance for our cloned instance
                 self.__create_new_instance(
                     instance_name=new_instance_name,
@@ -873,7 +883,7 @@ class MainWindow(QMainWindow):
         # Start watchdog
         try:
             if self.watchdog_event_handler.watchdog_observer is not None:
-                self.watchdog_event_handler.watchdog_observer.start()  # type: ignore #Upstream not typed
+                self.watchdog_event_handler.watchdog_observer.start()
             else:
                 logger.warning("Watchdog Observer is None. Unable to start.")
         except Exception as e:
@@ -896,7 +906,7 @@ class MainWindow(QMainWindow):
             and self.watchdog_event_handler.watchdog_observer
             and self.watchdog_event_handler.watchdog_observer.is_alive()
         ):
-            self.watchdog_event_handler.watchdog_observer.stop()  # type: ignore #Upstream not typed
+            self.watchdog_event_handler.watchdog_observer.stop()
             self.watchdog_event_handler.watchdog_observer.join()
             self.watchdog_event_handler.watchdog_observer = None
             for timer in self.watchdog_event_handler.cooldown_timers.values():

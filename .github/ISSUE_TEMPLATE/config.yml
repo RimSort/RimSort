@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Wiki
+    url: https://github.com/RimSort/RimSort/wiki
+    about: Please check the Wiki for usage/contribution instructions, as well as solutions to common issues.
+  - name: Discord
+    url: https://discord.gg/ErTaTRwrTm
+    about: Visit our Discord server for discussions, extra support, and community interaction.
