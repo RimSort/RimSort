@@ -613,11 +613,11 @@ class MainWindow(QMainWindow):
                 # Clone the existing workshop_folder to the new instance's local mods folder
                 if existing_instance_workshop_folder:
                     # Prompt user to confirm before initiating the procedure
-                    answer = self.__ask_how_to_workshop_mods(
+                    answer_workshop_mods: str = self.__ask_how_to_workshop_mods(
                         existing_instance_name=existing_instance_name,
                         existing_instance_workshop_folder=existing_instance_workshop_folder,
                     )
-                    if answer == "Convert to SteamCMD":
+                    if answer_workshop_mods == "Convert to SteamCMD":
                         if os.path.exists(
                             existing_instance_workshop_folder
                         ) and os.path.isdir(existing_instance_workshop_folder):
