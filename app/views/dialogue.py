@@ -31,48 +31,6 @@ from app.utils.event_bus import EventBus
 DEFAULT_TITLE = "RimSort"
 
 
-@deprecated("Use BinaryChoiceDialog with exec() instead")
-def show_dialogue_confirmation(
-    title: str | None = None,
-    text: str | None = None,
-    information: str | None = None,
-    details: str | None = None,
-    button_text: str | None = None,
-) -> str:
-    """
-    Displays a dialogue with a standard Yes and Cancel button. The default button is Cancel. Returns the text of the button clicked (Yes or Cancel).
-    :param title: text to pass to setWindowTitle
-    :param text: text to pass to setText
-    :param information: text to pass to setInformativeText
-    :param details: text to pass to setDetailedText
-    """
-    logger.info(
-        f"Showing dialogue box with input: [{title}], [{text}], [{information}] [{details}]"
-    )
-
-    # Set up the message box
-    dialogue = _setup_messagebox(title)
-
-    # Remove standard buttons
-    dialogue.setStandardButtons(
-        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel
-    )
-    dialogue.setDefaultButton(QMessageBox.StandardButton.Cancel)
-
-    # Add data
-    if text:
-        dialogue.setText(text)
-    if information:
-        dialogue.setInformativeText(information)
-    if details:
-        dialogue.setDetailedText(details)
-
-    # Show the message box & return response
-    dialogue.exec_()
-    response = dialogue.clickedButton()
-    return response.text()
-
-
 def show_dialogue_conditional(
     title: str | None = None,
     text: str | None = None,

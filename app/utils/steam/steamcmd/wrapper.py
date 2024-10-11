@@ -246,11 +246,11 @@ class SteamcmdInterface:
             return False
 
         diag = BinaryChoiceDialog(
-            "Symlink Creation Failed",
-            choice_text,
-            choice_info,
-            msg,
-            choice_postive_text,
+            title="Symlink Creation Failed",
+            text=choice_text,
+            information=choice_info,
+            details=msg,
+            positive_text=choice_postive_text,
         )
 
         if diag.exec_is_positive():

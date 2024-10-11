@@ -31,8 +31,8 @@ from app.utils.gui_info import GUIInfo
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.watchdog import WatchdogHandler
 from app.views.dialogue import (
+    BinaryChoiceDialog,
     show_dialogue_conditional,
-    show_dialogue_confirmation,
     show_dialogue_file,
     show_dialogue_input,
     show_fatal_error,
@@ -556,7 +556,7 @@ class MainWindow(QMainWindow):
                 Path(AppInfo().app_storage_folder) / "instances" / new_instance_name
             )
             # Prompt user with the existing instance configuration and confirm that they would like to clone it
-            answer = show_dialogue_confirmation(
+            answer = BinaryChoiceDialog(
                 title=f"Clone instance [{existing_instance_name}]",
                 text=f"Would you like to clone instance [{existing_instance_name}] to create new instance [{new_instance_name}]?\n"
                 + "This will clone the instance's data!"
@@ -569,7 +569,8 @@ class MainWindow(QMainWindow):
                 + "\nSteamCMD install path (steamcmd + steam folders will be cloned):"
                 + f"\n{existing_instance_steamcmd_install_path if existing_instance_steamcmd_install_path else '<None>'}\n",
             )
-            if answer == "&Yes":
+            if answer.exec_is_positive():
+                # Clone the RimWorld game_folder to the new instance
                 target_game_folder = str(Path(new_instance_path) / game_folder_name)
                 target_local_folder = str(
                     Path(new_instance_path) / game_folder_name / local_folder_name
@@ -809,12 +810,12 @@ class MainWindow(QMainWindow):
             )
             return
         else:
-            answer = show_dialogue_confirmation(
+            answer = BinaryChoiceDialog(
                 title=f"Delete instance {self.settings_controller.settings.current_instance}",
                 text="Are you sure you want to delete the selected instance and all of its data?",
                 information="This action cannot be undone.",
             )
-            if answer == "&Yes":
+            if answer.exec_is_positive():
                 try:
                     rmtree(
                         str(
