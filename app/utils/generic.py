@@ -291,3 +291,33 @@ def upload_data_to_0x0_st(path: str) -> tuple[bool, str]:
             f"Failed to upload data to http://0x0.st. Status code: {request.status_code}"
         )
         return False, f"Status code: {request.status_code}"
+
+
+def extract_git_dir_name(url: str) -> str:
+    """
+    Function to extract the directory name from a git url
+
+    :param url: a string url to a git repository
+    :return: a string that is the directory name of the git repository
+    """
+    return url.rstrip("/").rsplit("/", maxsplit=1)[-1].removesuffix(".git")
+
+
+def extract_git_user_or_org(url: str) -> str:
+    """
+    Function to extract the organization or user name from a git url
+
+    :param url: a string url to a git repository
+    :return: a string that is the organization name of the git repository
+    """
+    return url.rstrip("/").rsplit("/", maxsplit=2)[-2].removesuffix(".git")
+
+
+def check_valid_http_git_url(url: str) -> bool:
+    """
+    Function to check if a given url is a valid http/s git url
+
+    :param url: a string url to a git repository
+    :return: a boolean indicating whether the url is a valid git url
+    """
+    return url and url != "" and url.startswith("http://") or url.startswith("https://")

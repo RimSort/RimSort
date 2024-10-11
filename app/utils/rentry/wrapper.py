@@ -62,7 +62,8 @@ class RentryUpload:
                 self.handle_upload_failure(response)
             else:
                 self.upload_success = True
-                self.url = response["url"]
+                url = response.get("url")
+                self.url = url if isinstance(url, str) else None
         finally:
             if self.upload_success:
                 logger.debug(
