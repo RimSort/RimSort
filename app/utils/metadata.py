@@ -38,7 +38,7 @@ from app.views.dialogue import (
 
 
 class MetadataManager(QObject):
-    _instance = None  # type: MetadataManager
+    _instance: "None | MetadataManager" = None
     mod_created_signal = Signal(str)
     mod_deleted_signal = Signal(str)
     mod_metadata_updated_signal = Signal(str)

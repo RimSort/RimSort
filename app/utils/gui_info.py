@@ -15,7 +15,7 @@ class GUIInfo:
     of the class exists throughout the application.
     """
 
-    _instance = None  # type: GUIInfo | None
+    _instance: "None | GUIInfo" = None
 
     def __new__(cls) -> "GUIInfo":
         """

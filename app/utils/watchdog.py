@@ -257,12 +257,6 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
                     "uuid": uuid,
                 }
             )
-        else:
-            # logger.debug(
-            #     "UUID resolution failed for mod deletion event: "
-            #     f"[event_scr_path_str: {event_scr_path_str}, uuid: {uuid}"
-            # )
-            return
 
     def on_modified(self, event: FileSystemEvent) -> None:
         """A function called when a file or directory is modified.

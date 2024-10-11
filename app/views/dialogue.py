@@ -37,7 +37,7 @@ def show_dialogue_confirmation(
     text: str | None = None,
     information: str | None = None,
     details: str | None = None,
-    button_text: str | None = "Yes",
+    button_text: str | None = None,
 ) -> str:
     """
     Displays a dialogue with a standard Yes and Cancel button. The default button is Cancel. Returns the text of the button clicked (Yes or Cancel).

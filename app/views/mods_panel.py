@@ -7,7 +7,6 @@ from functools import partial
 from pathlib import Path
 from shutil import copy2, copytree, rmtree
 from traceback import format_exc
-from typing import List
 
 from loguru import logger
 from PySide6.QtCore import QEvent, QModelIndex, QObject, QRectF, QSize, Qt, Signal
@@ -103,7 +102,7 @@ class ModsPanelSortKey(Enum):
     MODNAME = 1
 
 
-def sort_uuids(uuids: List[str], key: ModsPanelSortKey) -> List[str]:
+def sort_uuids(uuids: list[str], key: ModsPanelSortKey) -> list[str]:
     """
     Sort the list of UUIDs based on the provided key.
     Args:
@@ -2090,7 +2089,7 @@ class ModListWidget(QListWidget):
     def recreate_mod_list_and_sort(
         self,
         list_type: str,
-        uuids: List[str],
+        uuids: list[str],
         key: ModsPanelSortKey = ModsPanelSortKey.NOKEY,
     ) -> None:
         """
@@ -2112,7 +2111,7 @@ class ModListWidget(QListWidget):
         sorted_uuids = sort_uuids(uuids, key=key)
         self.recreate_mod_list(list_type, sorted_uuids)
 
-    def recreate_mod_list(self, list_type: str, uuids: List[str]) -> None:
+    def recreate_mod_list(self, list_type: str, uuids: list[str]) -> None:
         """
         Clear all mod items and add new ones from a dict.
 

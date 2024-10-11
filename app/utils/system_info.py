@@ -17,9 +17,9 @@ class SystemInfo:
         >>> print(info.architecture)
     """
 
-    _instance = None  # type: SystemInfo | None
-    _operating_system = None  # type: SystemInfo.OperatingSystem | None
-    _architecture = None  # type: SystemInfo.Architecture | None
+    _instance: "None | SystemInfo" = None
+    _operating_system: "None | SystemInfo.OperatingSystem" = None
+    _architecture: "None | SystemInfo.Architecture" = None
 
     @unique
     class OperatingSystem(Enum):

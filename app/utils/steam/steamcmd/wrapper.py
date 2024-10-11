@@ -28,7 +28,7 @@ class SteamcmdInterface:
     Create SteamcmdInterface object to provide an interface for SteamCMD functionality
     """
 
-    _instance = None  # type: SteamcmdInterface
+    _instance: "None | SteamcmdInterface" = None
 
     def __new__(cls, *args: Any, **kwargs: Any) -> "SteamcmdInterface":
         if cls._instance is None:

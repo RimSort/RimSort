@@ -19,7 +19,7 @@ class AppInfo:
         >>> print(app_info.app_storage_folder)
     """
 
-    _instance = None  # type: "AppInfo" | None
+    _instance: "None | AppInfo" = None
 
     def __new__(cls) -> "AppInfo":
         """
