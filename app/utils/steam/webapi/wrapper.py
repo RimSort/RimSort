@@ -352,8 +352,8 @@ class DynamicQuery(QObject):
         # Uncomment to see the all pfids to be queried
         # logger.debug(f"PublishedFileIds being queried: {publishedfileids}")
         for chunk in chunks(
-            _list=publishedfileids, limit=215
-        ):  # Chunk limit appears to be 215 PublishedFileIds at a time - this appears to be a WebAPI limitation
+            _list=publishedfileids, limit=213
+        ):  # Chunk limit appears to be 213 PublishedFileIds at a time - this appears to be a WebAPI limitation
             chunk_total = len(chunk)
             chunks_processed += chunk_total
             # Uncomment to see the pfids from each chunk
@@ -596,7 +596,7 @@ class DynamicQuery(QObject):
         :return: Dict containing the updated json data from PublishedFileIds query
         """
         self.dq_messaging_signal.emit(
-            f"\nSteamworks API: ISteamUGC/GetAppDependencies initializing for {len(publishedfileids)} mods\n"
+            f"\nSteamworks API: ISteamUGC/GetAppDependencies initializing for {len(publishedfileids)} mods\n\nThis may take a while. Please wait..."
         )
         # Maximum processes
         num_processes = cpu_count()
