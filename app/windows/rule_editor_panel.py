@@ -331,8 +331,8 @@ class RuleEditor(QWidget):
         self.mods_search.setClearButtonEnabled(True)
         self.mods_search.textChanged.connect(self.signal_mods_search)
         self.mods_search.setPlaceholderText("Search mods by name")
-        self.mods_search_clear_button: QToolButton | None = self.mods_search.findChild(
-            QToolButton
+        self.mods_search_clear_button: object | QToolButton | None = (
+            self.mods_search.findChild(QToolButton)
         )
         if type(self.mods_search_clear_button) is not QToolButton:
             raise Exception("Failed to find clear button in QLineEdit")
