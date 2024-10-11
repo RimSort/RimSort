@@ -64,7 +64,10 @@
     "virtualenv",
     "webapi"
   ],
-  "isort.args": ["--profile", "black"],
+  "isort.args": [
+    "--profile",
+    "black"
+  ],
   "[python]": {
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
@@ -92,5 +95,8 @@
     "steamworkspy",
     "todds",
     "virtualenv"
-  ]
+  ],
+  "yaml.schemas": {
+    "https://json.schemastore.org/github-issue-config.json": "file:///c%3A/Code%20Repos/RimSort/.github/ISSUE_TEMPLATE/config.yml"
+  }
 }
