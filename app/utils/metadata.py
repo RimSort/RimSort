@@ -657,7 +657,11 @@ class MetadataManager(QObject):
                                 f"About.xml syntax error. Unable to read <moddependenciesbyversion> tag from XML for version [{version}]: {self.internal_local_metadata[uuid]['metadata_file_path']}"
                             )
                             logger.debug(dependencies_by_ver)
-            if self.internal_local_metadata[uuid].get("incompatiblewith"):
+            if self.internal_local_metadata[uuid].get(
+                "incompatiblewith"
+            ) and isinstance(
+                self.internal_local_metadata[uuid].get("incompatiblewith"), dict
+            ):
                 incompatibilities = self.internal_local_metadata[uuid][
                     "incompatiblewith"
                 ].get("li")
