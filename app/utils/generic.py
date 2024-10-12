@@ -48,6 +48,56 @@ def copy_to_clipboard_safely(text: str) -> None:
         )
 
 
+def rmtree(path: str | Path, **kwargs: Any) -> bool:
+    """Wrapper for improved rmtree error handling.
+    Checks if the path exists and is a directory before attempting to delete it.
+    If any OSErrors occur, a warning dialog is shown to the user.
+
+    :param path: Path to directory to be deleted.
+    :type path: str | Path
+    :param kwargs: Additional keyword arguments to pass to shutil.rmtree.
+    :return: True if the directory was successfully deleted, False otherwise.
+    """
+    if isinstance(path, str):
+        path = Path(path)
+
+    if not path.exists():
+        logger.error(f"Tried to delete directory that does not exist: {path}")
+        dialogue.show_warning(
+            title="Failed to remove directory",
+            text="RimSort tried to remove a directory that does not exist.",
+            details=f"Directory does not exist: {path}",
+        )
+        return False
+
+    if not path.is_dir():
+        logger.error(f"rmtree path is not a directory: {path}")
+        dialogue.show_warning(
+            title="Failed to remove directory",
+            text="RimSort tried to remove a directory that is not a directory.",
+            details=f"Path is not a directory: {path}",
+        )
+        return False
+
+    try:
+        shutil.rmtree(path, **kwargs)
+    except OSError as e:
+        if sys.platform == "win32":
+            error_code = e.winerror
+        else:
+            error_code = e.errno
+        logger.error(f"Failed to remove directory: {e}")
+        dialogue.show_warning(
+            title="Failed to remove directory",
+            text="An OSError occurred while trying to remove a directory.",
+            information=f"{e.strerror} occurred at {e.filename} with error code {error_code}.",
+            details=str(e),
+        )
+        return False
+
+    return True
+
+
 def delete_files_with_condition(
     directory: Path | str, condition: Callable[[str], bool]
 ) -> None:
