@@ -128,7 +128,9 @@ class ModInfo:
         )
         self.mod_info_path_value.setWordWrap(True)
         self.description = DescriptionWidget()
-        self.description.setText("<br><br><br><center><h3>Welcome to RimSort!</h3></center>", convert=False)
+        self.description.setText(
+            "<br><br><br><center><h3>Welcome to RimSort!</h3></center>", convert=False
+        )
         # Add widgets to child layouts
         self.image_layout.addWidget(self.preview_picture)
         self.mod_info_name.addWidget(self.mod_info_name_label, 20)
@@ -252,10 +254,12 @@ class ModInfo:
                 list_of_authors = authors_tag["li"]
                 authors_text = ", ".join(list_of_authors)
                 self.mod_info_author_value.setText(authors_text)
-            else:
+            elif isinstance(authors_tag, str):
                 self.mod_info_author_value.setText(
                     authors_tag if authors_tag else "Not specified"
                 )
+            else:
+                self.mod_info_author_value.setText("Not specified")
 
             # Set mod version
             mod_version = mod_info.get("modversion", {})
