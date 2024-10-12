@@ -8,6 +8,7 @@ natsort==8.4.0
 networkx==3.4
 platformdirs==4.3.6
 psutil==6.0.0
+pygit2==1.16.0
 PyGithub==2.4.0
 pyperclip==1.9.0
 PySide6
