@@ -45,17 +45,26 @@ def test_value_extractor_string() -> None:
     input_str = "Hello, World!"
     assert value_extractor(input_str) == input_str
 
+    input_str = " Hello, World!\n"
+    assert value_extractor(input_str) == input_str.strip()
+
 
 def test_value_extractor_list() -> None:
     # Test case: input is a list
     input_list = ["apple", "banana", "cherry"]
     assert value_extractor(input_list) == input_list
 
+    input_list = ["apple", "\nbanana", " cherry\n"]
+    assert value_extractor(input_list) == ["apple", "banana", "cherry"]
+
 
 def test_value_extractor_dict_li() -> None:
     # Test case: input is a dictionary with "li" key
     input_dict = {"li": ["apple", "banana", "cherry"]}
     assert value_extractor(input_dict) == input_dict["li"]
+
+    input_dict = {"li": ["apple", "\nbanana", " cherry\n"]}
+    assert value_extractor(input_dict) == ["apple", "banana", "cherry"]
 
 
 def test_value_extractor_dict_single_key() -> None:
@@ -153,6 +162,19 @@ def test__parse_required_local_fishery() -> None:
     assert mod.name == "Fishery - Modding Library"
     assert mod.authors == ["bradson"]
     assert mod.supported_versions == {"1.2", "1.3", "1.4", "1.5"}
+    assert mod.valid
+
+
+def test__parse_steam_mod_1() -> None:
+    # Test case: Steam mod 1
+    path = Path("tests/data/mod_examples/Steam/steam_mod_1/About/About.xml")
+    mod_data = xml_path_to_json(str(path))["ModMetaData"]
+    mod = _parse_basic(mod_data, AboutXmlMod())
+
+    assert mod.package_id == "steam.mod1"
+    assert mod.name == "steam mod 1"
+    assert mod.authors == ["steam mod 1 author"]
+    assert mod.supported_versions == {"1.3", "1.4", "1.5"}
     assert mod.valid
 
 

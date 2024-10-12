@@ -39,24 +39,25 @@ class MalformedDataException(Exception):
 
 
 def value_extractor(
-    input: dict[str, str] | dict[str, list[str]] | Sequence[str] | str,
+    input: dict[str, str] | dict[str, list[str]] | Sequence[str] | str, strip_str: bool = True
 ) -> str | list[Any] | dict[str, str] | dict[str, list[str]]:
     """
     Extract the value from a mod_data entry.
-    Stops at the outermost list or string.
+    Stops at the outermost string.
     Stops if more than one key other than #text and @IgnoreIfNoMatchingField is found.
 
     :param input: The dictionary or string or list of strings to extract the value from.
+    :param strip_str: If True, strip the string of leading and trailing whitespace.
     :return: The extracted value or the input string.
     :raises:
 
     """
 
     if isinstance(input, str):
-        return input
+        return input.strip() if strip_str else input
     elif isinstance(input, Sequence):
         # Convert sequence to list
-        return list(input)
+        return [value_extractor(item) for item in input]
     elif isinstance(input, dict):
         # If only one key, recurse into the value
         if len(input) == 1:
