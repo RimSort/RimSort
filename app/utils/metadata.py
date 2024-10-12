@@ -657,7 +657,11 @@ class MetadataManager(QObject):
                                 f"About.xml syntax error. Unable to read <moddependenciesbyversion> tag from XML for version [{version}]: {self.internal_local_metadata[uuid]['metadata_file_path']}"
                             )
                             logger.debug(dependencies_by_ver)
-            if self.internal_local_metadata[uuid].get("incompatiblewith"):
+            if self.internal_local_metadata[uuid].get(
+                "incompatiblewith"
+            ) and isinstance(
+                self.internal_local_metadata[uuid].get("incompatiblewith"), dict
+            ):
                 incompatibilities = self.internal_local_metadata[uuid][
                     "incompatiblewith"
                 ].get("li")
@@ -1398,6 +1402,20 @@ class ModParser(QRunnable):
                                     if li.count(".") > 1 and isinstance(li, str)
                                     else li
                                 )
+
+                    if mod_metadata.get("supportedversions", {}).get("li"):
+                        li = mod_metadata["supportedversions"]["li"]
+                        if isinstance(li, str):
+                            mod_metadata["supportedversions"]["li"] = li.strip()
+                        elif isinstance(li, list):
+                            for i, version in enumerate(li):
+                                if not isinstance(version, str):
+                                    logger.error(
+                                        f"Failed to parse {version} as a string"
+                                    )
+                                    continue
+                                li[i] = version.strip()
+
                     if mod_metadata.get("targetversion"):
                         mod_metadata["targetversion"] = mod_metadata["targetversion"]
                         mod_metadata["targetversion"] = (
