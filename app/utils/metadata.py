@@ -585,351 +585,227 @@ class MetadataManager(QObject):
 
     def compile_metadata(self, uuids: list[str] = []) -> None:
         """
-        Iterate through each expansion or mod and add new key-values describing the
-        dependencies, incompatibilities, and load order rules compiled from metadata.
+        Compile metadata for each expansion or mod, adding new key-values
+        describing dependencies, incompatibilities, and load order rules
+        compiled from metadata.
         """
-        # Compile metadata for all mods if uuids is None
         uuids = uuids or list(self.internal_local_metadata.keys())
         logger.info(f"Started compiling metadata for {len(uuids)} mods")
 
-        # Add dependencies to installed mods based on dependencies listed in About.xml TODO manifest.xml
-        logger.info("Started compiling metadata from About.xml")
-        for uuid in uuids:
-            logger.debug(
-                f"UUID: {uuid} packageid: "
-                + self.internal_local_metadata[uuid].get("packageid")
-            )
-            # moddependencies are not equal to mod load order rules
-            if self.internal_local_metadata[uuid].get("moddependencies"):
-                if isinstance(
-                    self.internal_local_metadata[uuid]["moddependencies"], dict
-                ):
-                    dependencies = self.internal_local_metadata[uuid][
-                        "moddependencies"
-                    ].get("li")
-                elif isinstance(
-                    self.internal_local_metadata[uuid]["moddependencies"], list
-                ):
-                    # Loop through the list and try to find dictionary. If we find one, use it.
-                    for potential_dependencies in self.internal_local_metadata[uuid][
-                        "moddependencies"
-                    ]:
-                        if (
-                            potential_dependencies
-                            and isinstance(potential_dependencies, dict)
-                            and potential_dependencies.get("li")
-                        ):
-                            dependencies = potential_dependencies["li"]
-                if dependencies:
-                    logger.debug(
-                        f"Current mod requires these mods to work: {dependencies}"
-                    )
-                    add_dependency_to_mod(
-                        self.internal_local_metadata[uuid],
-                        dependencies,
-                        self.internal_local_metadata,
-                    )
-
-            if self.internal_local_metadata[uuid].get("moddependenciesbyversion"):
-                major, minor = self.game_version.split(".")[
-                    :2
-                ]  # Split the version and take the first two parts
-                version_regex = rf"v{major}\.{minor}"  # Construct the regex to match both major and minor versions
-                for version, dependencies_by_ver in self.internal_local_metadata[uuid][
-                    "moddependenciesbyversion"
-                ].items():
-                    if match(version_regex, version):
-                        if (
-                            dependencies_by_ver
-                            and isinstance(dependencies_by_ver, dict)
-                            and dependencies_by_ver.get("li")
-                        ):
-                            logger.debug(
-                                f"Current mod requires these mods by version to work: {dependencies_by_ver['li']}"
-                            )
+        def process_dependencies(uuid, dependencies) -> None:
+            """
+            Process dependencies for a given mod UUID.
+            """
+            if isinstance(dependencies, list):
+                for dependency in dependencies:
+                    if isinstance(dependency, dict) and "packageId" in dependency:
+                        package_id = dependency.get("packageId")
+                        if package_id:
                             add_dependency_to_mod(
                                 self.internal_local_metadata[uuid],
-                                dependencies_by_ver["li"],
+                                package_id,
                                 self.internal_local_metadata,
                             )
+                            if self.settings_controller.settings.dependency_for_sorting:
+                                add_load_rule_to_mod(
+                                    self.internal_local_metadata[uuid],
+                                    package_id,
+                                    "loadTheseBefore",
+                                    "loadTheseAfter",
+                                    self.internal_local_metadata,
+                                    self.packageid_to_uuids,
+                                )
                         else:
                             logger.warning(
-                                f"About.xml syntax error. Unable to read <moddependenciesbyversion> tag from XML for version [{version}]: {self.internal_local_metadata[uuid]['metadata_file_path']}"
+                                f"Missing packageId in dependency for mod {uuid}: {dependency}"
                             )
-                            logger.debug(dependencies_by_ver)
-            if self.internal_local_metadata[uuid].get("incompatiblewith"):
-                incompatibilities = self.internal_local_metadata[uuid][
-                    "incompatiblewith"
-                ].get("li")
-                if incompatibilities:
-                    logger.debug(
-                        f"Current mod is incompatible with these mods: {incompatibilities}"
-                    )
-                    add_incompatibility_to_mod(
+                    else:
+                        logger.warning(
+                            f"Illegal dependency format for mod {uuid}: {dependency}"
+                        )
+
+        def process_incompatibilities(uuid, incompatibilities) -> None:
+            """
+            Process incompatibilities for a given mod UUID.
+            """
+            if isinstance(incompatibilities, list):
+                for incompatibility in incompatibilities:
+                    if isinstance(incompatibility, str):
+                        add_incompatibility_to_mod(
+                            self.internal_local_metadata[uuid],
+                            incompatibility,
+                            self.internal_local_metadata,
+                        )
+                    else:
+                        logger.warning(
+                            f"Illegal incompatibility format for mod {uuid}: {incompatibility}"
+                        )
+
+        def process_load_order(uuid, load_these, rule_type, opposite_rule_type) -> None:
+            """
+            Process load order rules for a given mod UUID.
+            """
+            if isinstance(load_these, list):
+                for load_this in load_these:
+                    add_load_rule_to_mod(
                         self.internal_local_metadata[uuid],
-                        incompatibilities,
+                        load_this,
+                        rule_type,
+                        opposite_rule_type,
                         self.internal_local_metadata,
+                        self.packageid_to_uuids,
                     )
 
-            if self.internal_local_metadata[uuid].get("incompatiblewithbyversion"):
-                major, minor = self.game_version.split(".")[
-                    :2
-                ]  # Split the version and take the first two parts
-                version_regex = rf"v{major}\.{minor}"  # Construct the regex to match both major and minor versions
-                for version, incompatibilities_by_ver in self.internal_local_metadata[
-                    uuid
-                ]["incompatiblewithbyversion"].items():
+        for uuid in uuids:
+            mod_metadata = self.internal_local_metadata.get(uuid)
+            if not mod_metadata:
+                logger.warning(f"Metadata not found for UUID: {uuid}")
+                continue
+
+            logger.debug(f"UUID: {uuid} packageId: {mod_metadata.get('packageId')}")
+
+            # Process moddependencies
+            mod_dependencies = mod_metadata.get("moddependencies", {})
+            dependencies = mod_dependencies.get("li") if mod_dependencies else None
+            process_dependencies(uuid, dependencies)
+
+            # Process moddependenciesbyversion
+            dependencies_by_version = mod_metadata.get("moddependenciesbyversion", {})
+            major, minor = self.game_version.split(".")[:2]
+            version_regex = rf"v{major}\.{minor}"
+            for version, deps in dependencies_by_version.items():
+                if match(version_regex, version):
+                    dependencies = deps.get("li") if deps else None
+                    process_dependencies(uuid, dependencies)
+
+            # Process incompatiblewith
+            incompatible_with = mod_metadata.get("incompatiblewith", {})
+            incompatibilities = (
+                incompatible_with.get("li") if incompatible_with else None
+            )
+            process_incompatibilities(uuid, incompatibilities)
+
+            # Process incompatiblewithbyversion
+            incompatibilities_by_version = mod_metadata.get(
+                "incompatiblewithbyversion", {}
+            )
+            for version, incs in incompatibilities_by_version.items():
+                if match(version_regex, version):
+                    incompatibilities = incs.get("li") if incs else None
+                    process_incompatibilities(uuid, incompatibilities)
+
+            # Process loadafter
+            load_after = mod_metadata.get("loadafter", {})
+            load_after_list = load_after.get("li") if load_after else None
+            process_load_order(
+                uuid, load_after_list, "loadTheseBefore", "loadTheseAfter"
+            )
+
+            # Process forceloadafter
+            force_load_after = mod_metadata.get("forceloadafter", {})
+            force_load_after_list = (
+                force_load_after.get("li") if force_load_after else None
+            )
+            process_load_order(
+                uuid, force_load_after_list, "loadTheseBefore", "loadTheseAfter"
+            )
+
+            # Process loadafterbyversion
+            load_after_by_version = mod_metadata.get("loadafterbyversion", {})
+            if load_after_by_version and isinstance(load_after_by_version, dict):
+                for version, load_before_by_ver in load_after_by_version.items():
                     if match(version_regex, version):
-                        if (
-                            incompatibilities_by_ver
-                            and isinstance(incompatibilities_by_ver, dict)
-                            and incompatibilities_by_ver.get("li")
-                        ):
-                            logger.debug(
-                                f"Current mod is incompatible by version with these mods: {incompatibilities_by_ver['li']}"
+                        if isinstance(load_before_by_ver, dict):
+                            load_before_by_ver_list = (
+                                load_before_by_ver.get("li")
+                                if load_before_by_ver
+                                else None
                             )
-                            add_incompatibility_to_mod(
-                                self.internal_local_metadata[uuid],
-                                incompatibilities_by_ver["li"],
-                                self.internal_local_metadata,
+                            process_load_order(
+                                uuid,
+                                load_before_by_ver_list,
+                                "loadTheseBefore",
+                                "loadTheseAfter",
                             )
                         else:
                             logger.warning(
-                                f"About.xml syntax error. Unable to read <incompatiblewithbyversion> tag from XML for version [{version}]: {self.internal_local_metadata[uuid]['metadata_file_path']}"
+                                f"Invalid format for 'loadafterbyversion' data for mod {uuid}: {load_before_by_ver}"
                             )
-                            logger.debug(incompatibilities_by_ver)
-            # Current mod should be loaded AFTER these mods. These mods can be thought
-            # of as "load these before". These are not necessarily dependencies in the sense
-            # that they "depend" on them. But, if they exist in the same mod list, they
-            # should be loaded before.
-            if self.internal_local_metadata[uuid].get("loadafter"):
-                try:
-                    load_these_before = self.internal_local_metadata[uuid][
-                        "loadafter"
-                    ].get("li")
-                    if load_these_before:
-                        logger.debug(
-                            f"Current mod should load after these mods: {load_these_before}"
-                        )
-                        add_load_rule_to_mod(
-                            self.internal_local_metadata[uuid],
-                            load_these_before,
-                            "loadTheseBefore",
-                            "loadTheseAfter",
-                            self.internal_local_metadata,
-                            self.packageid_to_uuids,
-                        )
-                except Exception as e:
-                    mod_metadata_path = self.internal_local_metadata[uuid][
-                        "metadata_file_path"
-                    ]
-                    logger.warning(
-                        f"About.xml syntax error. Unable to read <loadafter> tag from XML: {mod_metadata_path}"
-                    )
-                    logger.debug(e)
 
-            if self.internal_local_metadata[uuid].get("forceloadafter"):
-                try:
-                    force_load_these_before = self.internal_local_metadata[uuid][
-                        "forceloadafter"
-                    ].get("li")
-                    if force_load_these_before:
-                        logger.debug(
-                            f"Current mod should force load after these mods: {force_load_these_before}"
-                        )
-                        add_load_rule_to_mod(
-                            self.internal_local_metadata[uuid],
-                            force_load_these_before,
-                            "loadTheseBefore",
-                            "loadTheseAfter",
-                            self.internal_local_metadata,
-                            self.packageid_to_uuids,
-                        )
-                except Exception as e:
-                    mod_metadata_path = self.internal_local_metadata[uuid][
-                        "mod_metadata_path"
-                    ]
-                    logger.warning(
-                        f"About.xml syntax error. Unable to read <forceloadafter> tag from XML: {mod_metadata_path}"
-                    )
-                    logger.debug(e)
+            # Process loadbefore
+            load_before = mod_metadata.get("loadbefore", {})
+            load_before_list = load_before.get("li") if load_before else None
+            process_load_order(
+                uuid, load_before_list, "loadTheseAfter", "loadTheseBefore"
+            )
 
-            if self.internal_local_metadata[uuid].get("loadafterbyversion"):
-                major, minor = self.game_version.split(".")[:2]
-                version_regex = rf"v{major}\.{minor}"
-                for version, load_these_before_by_ver in self.internal_local_metadata[
-                    uuid
-                ]["loadafterbyversion"].items():
+            # Process forceloadbefore
+            force_load_before = mod_metadata.get("forceloadbefore", {})
+            force_load_before_list = (
+                force_load_before.get("li") if force_load_before else None
+            )
+            process_load_order(
+                uuid, force_load_before_list, "loadTheseAfter", "loadTheseBefore"
+            )
+
+            # Process loadbeforebyversion
+            load_before_by_version = mod_metadata.get("loadbeforebyversion", {})
+            if isinstance(load_before_by_version, dict):
+                for version, load_after_by_ver in load_before_by_version.items():
                     if match(version_regex, version):
-                        try:
-                            if (
-                                load_these_before_by_ver
-                                and isinstance(load_these_before_by_ver, dict)
-                                and load_these_before_by_ver.get("li")
-                            ):
-                                logger.debug(
-                                    f"Current mod should load before these mods for {version}: {load_these_before_by_ver['li']}"
-                                )
-                                add_load_rule_to_mod(
-                                    self.internal_local_metadata[uuid],
-                                    load_these_before_by_ver["li"],
-                                    "loadTheseBefore",
-                                    "loadTheseAfter",
-                                    self.internal_local_metadata,
-                                    self.packageid_to_uuids,
-                                )
-                            else:
-                                logger.warning(
-                                    f"About.xml syntax error. Unable to read <loadafterbyversion> tag from XML for version [{version}]: {self.internal_local_metadata[uuid]['metadata_file_path']}"
-                                )
-                                logger.debug(load_these_before_by_ver)
-                        except Exception as e:
-                            mod_metadata_path = self.internal_local_metadata[uuid].get(
-                                "metadata_file_path"
+                        if isinstance(load_after_by_ver, dict):
+                            load_after_by_ver_list = (
+                                load_after_by_ver.get("li")
+                                if load_after_by_ver
+                                else None
                             )
+                            process_load_order(
+                                uuid,
+                                load_after_by_ver_list,
+                                "loadTheseAfter",
+                                "loadTheseBefore",
+                            )
+                        else:
                             logger.warning(
-                                f"Error processing <loadafterbyversion> tag for {version} from XML: {mod_metadata_path}"
+                                f"Invalid format for 'loadbeforebyversion' data for mod {uuid}: {load_after_by_ver}"
                             )
-                            logger.debug(e)
 
-            # Current mod should be loaded BEFORE these mods
-            # The current mod is a dependency for all these mods
-            if self.internal_local_metadata[uuid].get("loadbefore"):
-                try:
-                    load_these_after = self.internal_local_metadata[uuid][
-                        "loadbefore"
-                    ].get("li")
-                    if load_these_after:
-                        logger.debug(
-                            f"Current mod should load before these mods: {load_these_after}"
-                        )
-                        add_load_rule_to_mod(
-                            self.internal_local_metadata[uuid],
-                            load_these_after,
-                            "loadTheseAfter",
-                            "loadTheseBefore",
-                            self.internal_local_metadata,
-                            self.packageid_to_uuids,
-                        )
-                except Exception as e:
-                    mod_metadata_path = self.internal_local_metadata[uuid][
-                        "metadata_file_path"
-                    ]
-                    logger.warning(
-                        f"About.xml syntax error. Unable to read <loadbefore> tag from XML: {mod_metadata_path}"
-                    )
-                    logger.debug(e)
-
-            if self.internal_local_metadata[uuid].get("forceloadbefore"):
-                try:
-                    force_load_these_after = self.internal_local_metadata[uuid][
-                        "forceloadbefore"
-                    ].get("li")
-                    if force_load_these_after:
-                        logger.debug(
-                            f"Current mod should force load before these mods: {force_load_these_after}"
-                        )
-                        add_load_rule_to_mod(
-                            self.internal_local_metadata[uuid],
-                            force_load_these_after,
-                            "loadTheseAfter",
-                            "loadTheseBefore",
-                            self.internal_local_metadata,
-                            self.packageid_to_uuids,
-                        )
-                except Exception as e:
-                    mod_metadata_path = self.internal_local_metadata[uuid][
-                        "metadata_file_path"
-                    ]
-                    logger.warning(
-                        f"About.xml syntax error. Unable to read <forceloadbefore> tag from XML: {mod_metadata_path}"
-                    )
-                    logger.debug(e)
-
-            if self.internal_local_metadata[uuid].get("loadbeforebyversion"):
-                major, minor = self.game_version.split(".")[:2]
-                version_regex = rf"v{major}\.{minor}"
-                for version, load_these_after_by_ver in self.internal_local_metadata[
-                    uuid
-                ]["loadbeforebyversion"].items():
-                    if match(version_regex, version):
-                        try:
-                            if (
-                                load_these_after_by_ver
-                                and isinstance(load_these_after_by_ver, dict)
-                                and load_these_after_by_ver.get("li")
-                            ):
-                                logger.debug(
-                                    f"Current mod should load after these mods for {version}: {load_these_after_by_ver['li']}"
-                                )
-                                add_load_rule_to_mod(
-                                    self.internal_local_metadata[uuid],
-                                    load_these_after_by_ver["li"],
-                                    "loadTheseAfter",
-                                    "loadTheseBefore",
-                                    self.internal_local_metadata,
-                                    self.packageid_to_uuids,
-                                )
-                            else:
-                                logger.warning(
-                                    f"About.xml syntax error. Unable to read <loadbeforebyversion> tag from XML for version [{version}]: {self.internal_local_metadata[uuid]['metadata_file_path']}"
-                                )
-                                logger.debug(load_these_after_by_ver)
-                        except Exception as e:
-                            mod_metadata_path = self.internal_local_metadata[uuid].get(
-                                "metadata_file_path"
-                            )
-                            logger.warning(
-                                f"Error processing <loadbeforebyversion> tag for {version} from XML: {mod_metadata_path}"
-                            )
-                            logger.debug(e)
-
-        logger.info("Finished adding dependencies through About.xml information")
+        logger.info("Finished compiling metadata")
         log_deps_order_info(self.internal_local_metadata)
 
-        # Steam references dependencies based on PublishedFileID, not package ID
         if self.external_steam_metadata:
             logger.info("Started compiling metadata from configured SteamDB")
             tracking_dict: dict[str, set[str]] = {}
             steam_id_to_package_id: dict[str, str] = {}
+
             for publishedfileid, mod_data in self.external_steam_metadata.items():
-                db_packageid = mod_data.get("packageid")
-                # If our DB has a packageid for this
+                db_packageid = mod_data.get("packageId")
                 if db_packageid:
-                    db_packageid = db_packageid.lower()  # Normalize packageid
+                    db_packageid = db_packageid.lower()
                     steam_id_to_package_id[publishedfileid] = db_packageid
                     self.steamdb_packageid_to_name[db_packageid] = mod_data.get("name")
                     potential_uuids = self.packageid_to_uuids.get(db_packageid)
-                    if potential_uuids:  # Potential uuids is a set
+                    if potential_uuids:
                         for uuid in potential_uuids:
-                            if (
-                                uuid
-                                and self.internal_local_metadata[uuid].get(
-                                    "publishedfileid"
-                                )
-                                == publishedfileid
-                            ):
+                            if mod_metadata.get("publishedfileid") == publishedfileid:
                                 dependencies = mod_data.get("dependencies")
                                 if dependencies:
                                     tracking_dict.setdefault(uuid, set()).update(
                                         dependencies.keys()
                                     )
+
             logger.debug(
-                f"Tracking {len(steam_id_to_package_id)} SteamDB packageids for lookup"
+                f"Tracking {len(steam_id_to_package_id)} SteamDB packageIds for lookup"
             )
             logger.debug(
                 f"Tracking Steam dependency data for {len(tracking_dict)} installed mods"
             )
-            # For each mod that exists in self.internal_local_metadata -> dependencies (in Steam ID form)
+
             for (
                 installed_mod_uuid,
                 set_of_dependency_publishedfileids,
             ) in tracking_dict.items():
                 for dependency_steam_id in set_of_dependency_publishedfileids:
-                    # Dependencies are added as package_ids. We should be able to
-                    # resolve the package_id from the Steam ID for any mod, unless
-                    # the metadata actually references a Steam ID that itself does not
-                    # wire to a package_id defined in an installed & valid mod.
                     if dependency_steam_id in steam_id_to_package_id:
                         add_dependency_to_mod_from_steamdb(
                             self.internal_local_metadata[installed_mod_uuid],
@@ -937,154 +813,81 @@ class MetadataManager(QObject):
                             self.internal_local_metadata,
                         )
                     else:
-                        # This should only happen with RimPy Mod Manager Database, since it does not contain
-                        # keyed information for Core + DLCs in it's ["database"] - this is only referenced by
-                        # RPMMDB with the ["database"][pfid]["children"] values.
                         logger.debug(
                             f"Unable to lookup Steam AppID/PublishedFileID in Steam metadata: {dependency_steam_id}"
                         )
+
             logger.info("Finished adding dependencies from SteamDB")
             log_deps_order_info(self.internal_local_metadata)
         else:
             logger.info("No Steam database supplied from external metadata. skipping.")
-        # Add load order to installed mods based on dependencies from community rules
-        if self.external_community_rules:
-            logger.info("Started compiling metadata from configured Community Rules")
-            for package_id in self.external_community_rules:
-                # Note: requiring the package be in self.internal_local_metadata should be fine, as
-                # if the mod doesn't exist self.internal_local_metadata, then either mod_data or dependency_id
-                # will be None, and then we don't insert a dependency
+
+        def process_external_rules(rules, rule_type, opposite_rule_type) -> None:
+            for package_id, rule_data in rules.items():
                 if package_id.lower() in self.packageid_to_uuids:
                     potential_uuids = self.packageid_to_uuids.get(
                         package_id.lower(), set()
                     )
-                    load_these_after = self.external_community_rules[package_id].get(
-                        "loadBefore"
-                    )
-                    if load_these_after:
-                        logger.debug(
-                            f"Current mod should load before these mods: {load_these_after}"
-                        )
-                        # In Alphabetical, load_these_after is at least an empty dict
-                        # Cannot call add_load_rule_to_mod outside of this for loop,
-                        # as that expects a list
-                        for load_this_after in load_these_after:
+                    load_these = rule_data.get(rule_type)
+                    if load_these and isinstance(load_these, list):
+                        for load_this in load_these:
                             for uuid in potential_uuids:
                                 add_load_rule_to_mod(
-                                    self.internal_local_metadata[
-                                        uuid
-                                    ],  # Already checked above
-                                    load_this_after,  # Lower() done in call
-                                    "loadTheseAfter",
-                                    "loadTheseBefore",
+                                    self.internal_local_metadata[uuid],
+                                    load_this,
+                                    rule_type,
+                                    opposite_rule_type,
                                     self.internal_local_metadata,
                                     self.packageid_to_uuids,
                                 )
-                    load_these_before = self.external_community_rules[package_id].get(
-                        "loadAfter"
-                    )
-                    if load_these_before:
-                        logger.debug(
-                            f"Current mod should load after these mods: {load_these_before}"
-                        )
-                        # In Alphabetical, load_these_before is at least an empty dict
-                        for load_this_before in load_these_before:
-                            for uuid in potential_uuids:
-                                add_load_rule_to_mod(
-                                    self.internal_local_metadata[
-                                        uuid
-                                    ],  # Already checked above
-                                    load_this_before,  # lower() done in call
-                                    "loadTheseBefore",
-                                    "loadTheseAfter",
-                                    self.internal_local_metadata,
-                                    self.packageid_to_uuids,
-                                )
-                    load_this_bottom = self.external_community_rules[package_id].get(
-                        "loadBottom"
-                    )
+                    load_this_bottom = rule_data.get("loadBottom", {})
                     if load_this_bottom:
-                        logger.debug(
-                            'Current mod should load at the bottom of a mods list, and will be considered a "tier 3" mod'
-                        )
                         for uuid in potential_uuids:
-                            self.internal_local_metadata[uuid]["loadBottom"] = True
+                            add_load_rule_to_mod(
+                                self.internal_local_metadata[uuid],
+                                rule_data.get("loadBottom"),
+                                rule_type,
+                                opposite_rule_type,
+                                self.internal_local_metadata,
+                                self.packageid_to_uuids,
+                            )
+                    load_this_top = rule_data.get("loadTop", {})
+                    if load_this_top:
+                        for uuid in potential_uuids:
+                            add_load_rule_to_mod(
+                                self.internal_local_metadata[uuid],
+                                rule_data.get("loadTop"),
+                                rule_type,
+                                opposite_rule_type,
+                                self.internal_local_metadata,
+                                self.packageid_to_uuids,
+                            )
+
+        if self.external_community_rules:
+            logger.info("Started compiling metadata from configured Community Rules")
+            process_external_rules(
+                self.external_community_rules, "loadBefore", "loadAfter"
+            )
+            process_external_rules(
+                self.external_community_rules, "loadAfter", "loadBefore"
+            )
             logger.info("Finished adding dependencies from Community Rules")
             log_deps_order_info(self.internal_local_metadata)
         else:
             logger.info(
                 "No Community Rules database supplied from external metadata. skipping."
             )
-        # Add load order rules to installed mods based on rules from user rules
-        if self.external_user_rules:
-            logger.info("Started compiling metadata from User Rules")
-            for package_id in self.external_user_rules:
-                # Note: requiring the package be in self.internal_local_metadata should be fine, as
-                # if the mod doesn't exist self.internal_local_metadata, then either mod_data or dependency_id
-                # will be None, and then we don't insert a dependency
-                if package_id.lower() in self.packageid_to_uuids:
-                    potential_uuids = self.packageid_to_uuids.get(
-                        package_id.lower(), set()
-                    )
-                    load_these_after = self.external_user_rules[package_id].get(
-                        "loadBefore"
-                    )
-                    if load_these_after:
-                        logger.debug(
-                            f"Current mod should load before these mods: {load_these_after}"
-                        )
-                        # In Alphabetical, load_these_after is at least an empty dict
-                        # Cannot call add_load_rule_to_mod outside of this for loop,
-                        # as that expects a list
-                        for load_this_after in load_these_after:
-                            for uuid in potential_uuids:
-                                add_load_rule_to_mod(
-                                    self.internal_local_metadata[
-                                        uuid
-                                    ],  # Already checked above
-                                    load_this_after,  # lower() done in call
-                                    "loadTheseAfter",
-                                    "loadTheseBefore",
-                                    self.internal_local_metadata,
-                                    self.packageid_to_uuids,
-                                )
 
-                    load_these_before = self.external_user_rules[package_id].get(
-                        "loadAfter"
-                    )
-                    if load_these_before:
-                        logger.debug(
-                            f"Current mod should load after these mods: {load_these_before}"
-                        )
-                        # In Alphabetical, load_these_before is at least an empty dict
-                        for load_this_before in load_these_before:
-                            for uuid in potential_uuids:
-                                add_load_rule_to_mod(
-                                    self.internal_local_metadata[
-                                        uuid
-                                    ],  # Already checked above
-                                    load_this_before,  # lower() done in call
-                                    "loadTheseBefore",
-                                    "loadTheseAfter",
-                                    self.internal_local_metadata,
-                                    self.packageid_to_uuids,
-                                )
-                    load_this_bottom = self.external_user_rules[package_id].get(
-                        "loadBottom"
-                    )
-                    if load_this_bottom:
-                        logger.debug(
-                            'Current mod should load at the bottom of a mods list, and will be considered a "tier 3" mod'
-                        )
-                        for uuid in potential_uuids:
-                            self.internal_local_metadata[uuid]["loadBottom"] = True
+        if self.external_user_rules:
+            logger.info("Started compiling metadata from configured User Rules")
+            process_external_rules(self.external_user_rules, "loadBefore", "loadAfter")
+            process_external_rules(self.external_user_rules, "loadAfter", "loadBefore")
             logger.info("Finished adding dependencies from User Rules")
             log_deps_order_info(self.internal_local_metadata)
         else:
             logger.info(
                 "No User Rules database supplied from external metadata. skipping."
             )
-        logger.info("Finished compiling internal metadata with external metadata")
 
     def is_version_mismatch(self, uuid: str) -> bool:
         """
@@ -1726,10 +1529,6 @@ def add_dependency_to_mod(
                 logger.error(
                     f"List of dependencies does not contain dicts: [{dependency_or_dependency_ids}]"
                 )
-        else:
-            logger.error(
-                f"Dependencies is not a single dict or a list of dicts: [{dependency_or_dependency_ids}]"
-            )
 
 
 def add_dependency_to_mod_from_steamdb(
