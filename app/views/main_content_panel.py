@@ -1997,7 +1997,9 @@ class MainContent(QObject):
                 f"Downloading {len(publishedfileids)} mods with SteamCMD..."
             )
             self.steamcmd_wrapper.download_mods(
-                publishedfileids=publishedfileids, runner=self.steamcmd_runner
+                publishedfileids=publishedfileids,
+                runner=self.steamcmd_runner,
+                clear_cache=self.settings_controller.settings.steamcmd_auto_clear_depot_cache,
             )
         else:
             dialogue.show_warning(

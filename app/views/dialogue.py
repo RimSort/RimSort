@@ -359,6 +359,7 @@ class _BaseMessageBox(QMessageBox):
         self.setSizePolicy(
             QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         )
+        self.setMinimumWidth(400)
 
     def exec(self) -> int:
         """Executes the message box and returns the result.
@@ -382,6 +383,46 @@ class _BaseMessageBox(QMessageBox):
         :rtype: int
         """
         return self.exec()
+
+
+class InformationBox(_BaseMessageBox):
+    """Custom message box to display an information message box. Only has an OK button."""
+
+    def __init__(
+        self,
+        title: str = "",
+        text: str = "",
+        information: str = "",
+        details: str | None = None,
+        icon: QMessageBox.Icon = QMessageBox.Icon.Information,
+        modal: bool = True,
+        parent: QWidget | None = None,
+    ) -> None:
+        """Initializes the information box.
+        Used to display an information message box.
+        Only has an OK button.
+
+        :param title: The title of the message box
+        :type title: str, optional
+        :param text: The main text of the message box
+        :type text: str, optional
+        :param information: The informative text of the message box
+        :type information: str, optional
+        :param details: The detailed text of the message box. If not None, a button will be displayed to show/hide this text.
+        :type details: str | None, optional
+        :param icon: The icon to display in the message box. Defaults to an information icon.
+        :type icon: QMessageBox.Icon, optional
+        :param modal: Whether the message box is modal. Defaults to True.
+        :type modal: bool, optional
+        :param parent: The parent widget
+        :type parent: QWidget | None, optional
+        """
+        super().__init__(
+            title, text, information, icon, details, modal=modal, parent=parent
+        )
+
+        self.setStandardButtons(QMessageBox.StandardButton.Ok)
+        self.setDefaultButton(QMessageBox.StandardButton.Ok)
 
 
 class BinaryChoiceDialog(_BaseMessageBox):

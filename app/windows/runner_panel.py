@@ -303,11 +303,11 @@ class RunnerPanel(QWidget):
         # Hardcoded query progress output support
         # -------QUERY-------
         match = search(
-            r"IPublishedFileService/(QueryFiles|GetDetails) page \[(\d+)\/(\d+)\]",
+            r"IPublishedFileService/(QueryFiles|GetDetails) (page|chunk) \[(\d+)\/(\d+)\]",
             line,
         )
         if match:
-            operation, start, end = match.groups()
+            operation, pagination, start, end = match.groups()
             self.progress_bar.setRange(0, int(end))
             self.progress_bar.setValue(int(start))
             overwrite = True

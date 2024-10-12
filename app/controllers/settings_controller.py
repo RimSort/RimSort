@@ -200,6 +200,9 @@ class SettingsController(QObject):
         self.settings_dialog.steamcmd_install_location_choose_button.clicked.connect(
             self._on_steamcmd_install_location_choose_button_clicked
         )
+        self.settings_dialog.steamcmd_clear_depot_cache_button.clicked.connect(
+            self._on_steamcmd_clear_depot_cache_button_clicked
+        )
         self.settings_dialog.steamcmd_import_acf_button.clicked.connect(
             self._on_steamcmd_import_acf_button_clicked
         )
@@ -316,6 +319,13 @@ class SettingsController(QObject):
         Set the instance with the provided instance.
         """
         self.settings.instances[instance.name] = instance
+
+    @property
+    def active_instance(self) -> Instance:
+        """
+        Get the active instance.
+        """
+        return self.settings.instances[self.settings.current_instance]
 
     def _update_view_from_model(self) -> None:
         """
@@ -467,6 +477,9 @@ class SettingsController(QObject):
         self.settings_dialog.steamcmd_validate_downloads_checkbox.setChecked(
             self.settings.steamcmd_validate_downloads
         )
+        self.settings_dialog.steamcmd_auto_clear_depot_cache_checkbox.setChecked(
+            self.settings.steamcmd_auto_clear_depot_cache
+        )
         self.settings_dialog.steamcmd_install_location.setText(
             str(
                 self.settings.instances[
@@ -607,6 +620,9 @@ class SettingsController(QObject):
         # SteamCMD tab
         self.settings.steamcmd_validate_downloads = (
             self.settings_dialog.steamcmd_validate_downloads_checkbox.isChecked()
+        )
+        self.settings.steamcmd_auto_clear_depot_cache = (
+            self.settings_dialog.steamcmd_auto_clear_depot_cache_checkbox.isChecked()
         )
         self.settings.instances[
             self.settings.current_instance
@@ -1162,6 +1178,10 @@ class SettingsController(QObject):
             steamcmd_install_location
         )
         self._last_file_dialog_path = str(Path(steamcmd_install_location).parent)
+
+    @Slot()
+    def _on_steamcmd_clear_depot_cache_button_clicked(self) -> None:
+        EventBus().do_clear_steamcmd_depot_cache.emit()
 
     @Slot()
     def _on_steamcmd_import_acf_button_clicked(self) -> None:
