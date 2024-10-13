@@ -1195,9 +1195,20 @@ class ModListWidget(QListWidget):
                             f"Deleting + redownloading {len(steamcmd_publishedfileid_to_name.keys())} SteamCMD mod(s)"
                         )
                         for path in steamcmd_mod_paths:
+                            # Delete all files except .dds
                             delete_files_except_extension(
                                 directory=path, extension=".dds"
                             )
+                            # Calculate SteamCMD mod publishedfileids to purge from acf metadata
+                            steamcmd_acf_pfid_purge = set(
+                                steamcmd_publishedfileid_to_name.keys()
+                            )
+                        # Purge any deleted SteamCMD mods from acf metadata
+                        if steamcmd_acf_pfid_purge:
+                            self.metadata_manager.steamcmd_purge_mods(
+                                publishedfileids=steamcmd_acf_pfid_purge
+                            )
+                        # Emit signal to steamcmd downloader to re-download
                         self.steamcmd_downloader_signal.emit(
                             list(steamcmd_publishedfileid_to_name.keys())
                         )
