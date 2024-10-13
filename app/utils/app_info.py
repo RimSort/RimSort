@@ -1,7 +1,6 @@
 import os
 import sys
 from pathlib import Path
-from typing import Optional
 
 from lxml import etree, objectify
 from platformdirs import PlatformDirs
@@ -20,7 +19,7 @@ class AppInfo:
         >>> print(app_info.app_storage_folder)
     """
 
-    _instance: Optional["AppInfo"] = None
+    _instance: "None | AppInfo" = None
 
     def __new__(cls) -> "AppInfo":
         """

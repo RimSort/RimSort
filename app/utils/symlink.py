@@ -5,6 +5,8 @@ from pathlib import Path
 
 from loguru import logger
 
+from app.utils.generic import handle_remove_read_only
+
 
 class SymlinkCreationError(Exception):
     """Exception related to creating a symlink/junction."""
@@ -114,7 +116,11 @@ def create_symlink(
 
             if force:
                 logger.debug(msg + " Forcing deletion of non-empty directory.")
-                shutil.rmtree(dst_path)
+                shutil.rmtree(
+                    dst_path,
+                    ignore_errors=False,
+                    onerror=handle_remove_read_only,
+                )
             else:
                 logger.warning(msg)
                 raise SymlinkDstNotEmptyError(

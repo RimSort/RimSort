@@ -1999,7 +1999,9 @@ class MainContent(QObject):
             self.steamcmd_wrapper.download_mods(
                 publishedfileids=publishedfileids,
                 runner=self.steamcmd_runner,
-                clear_cache=self.settings_controller.settings.steamcmd_auto_clear_depot_cache,
+                clear_cache=self.settings_controller.settings.instances[
+                    self.settings_controller.settings.current_instance
+                ].steamcmd_auto_clear_depot_cache,
             )
         else:
             dialogue.show_warning(
