@@ -55,7 +55,6 @@ class Settings(QObject):
 
         # SteamCMD
         self.steamcmd_validate_downloads: bool = True
-        self.steamcmd_auto_clear_depot_cache: bool = True
 
         # todds
         self.todds_preset: str = "optimized"

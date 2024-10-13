@@ -476,7 +476,9 @@ class SettingsController(QObject):
             self.settings.steamcmd_validate_downloads
         )
         self.settings_dialog.steamcmd_auto_clear_depot_cache_checkbox.setChecked(
-            self.settings.steamcmd_auto_clear_depot_cache
+            self.settings.instances[
+                self.settings.current_instance
+            ].steamcmd_auto_clear_depot_cache
         )
         self.settings_dialog.steamcmd_install_location.setText(
             str(
@@ -619,7 +621,9 @@ class SettingsController(QObject):
         self.settings.steamcmd_validate_downloads = (
             self.settings_dialog.steamcmd_validate_downloads_checkbox.isChecked()
         )
-        self.settings.steamcmd_auto_clear_depot_cache = (
+        self.settings.instances[
+            self.settings.current_instance
+        ].steamcmd_auto_clear_depot_cache = (
             self.settings_dialog.steamcmd_auto_clear_depot_cache_checkbox.isChecked()
         )
         self.settings.instances[
