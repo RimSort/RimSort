@@ -27,6 +27,7 @@ from app.controllers.mods_panel_controller import ModsPanelController
 from app.controllers.settings_controller import SettingsController
 from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
+from app.utils.generic import handle_remove_read_only
 from app.utils.gui_info import GUIInfo
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.watchdog import WatchdogHandler
@@ -420,7 +421,11 @@ class MainWindow(QMainWindow):
                     logger.info(
                         f"Replacing existing game folder at {target_game_folder}"
                     )
-                    rmtree(target_game_folder)
+                    rmtree(
+                        target_game_folder,
+                        ignore_errors=False,
+                        onerror=handle_remove_read_only,
+                    )
                 logger.info(
                     f"Copying game folder from {existing_instance_game_folder} to {target_game_folder}"
                 )
@@ -440,7 +445,11 @@ class MainWindow(QMainWindow):
                     logger.info(
                         f"Replacing existing config folder at {target_config_folder}"
                     )
-                    rmtree(target_config_folder)
+                    rmtree(
+                        target_config_folder,
+                        ignore_errors=False,
+                        onerror=handle_remove_read_only,
+                    )
                 logger.info(
                     f"Copying config folder from {existing_instance_config_folder} to {target_config_folder}"
                 )
@@ -462,7 +471,11 @@ class MainWindow(QMainWindow):
                     logger.info(
                         f"Replacing existing local folder at {target_local_folder}"
                     )
-                    rmtree(target_local_folder)
+                    rmtree(
+                        target_local_folder,
+                        ignore_errors=False,
+                        onerror=handle_remove_read_only,
+                    )
                 logger.info(
                     f"Copying local folder from {existing_instance_local_folder} to {target_local_folder}"
                 )
@@ -660,7 +673,11 @@ class MainWindow(QMainWindow):
                         logger.info(
                             f"Replacing existing steamcmd folder at {target_steamcmd_install_path}"
                         )
-                        rmtree(target_steamcmd_install_path)
+                        rmtree(
+                            target_steamcmd_install_path,
+                            ignore_errors=False,
+                            onerror=handle_remove_read_only,
+                        )
                     logger.info(
                         f"Copying steamcmd folder from {steamcmd_install_path} to {target_steamcmd_install_path}"
                     )
@@ -683,12 +700,22 @@ class MainWindow(QMainWindow):
                         logger.info(
                             f"Replacing existing steam folder at {target_steam_install_path}"
                         )
-                        rmtree(target_steam_install_path)
+                        rmtree(
+                            target_steam_install_path,
+                            ignore_errors=False,
+                            onerror=handle_remove_read_only,
+                        )
                     logger.info(
                         f"Copying steam folder from {steam_install_path} to {target_steam_install_path}"
                     )
+                    # Copy the directory, but omit the symlink path
                     copytree(
-                        steam_install_path, target_steam_install_path, symlinks=True
+                        steam_install_path,
+                        target_steam_install_path,
+                        symlinks=True,
+                        ignore=lambda d, names: ["steamapps/workshop/content/294100"]
+                        if d == steam_install_path
+                        else [],
                     )
                     # Unlink steam/workshop/content/294100 symlink if it exists, and relink it to our new target local mods folder
                     link_path = str(
@@ -827,7 +854,9 @@ class MainWindow(QMainWindow):
                                 / "instances"
                                 / self.settings_controller.settings.current_instance
                             )
-                        )
+                        ),
+                        ignore_errors=False,
+                        onerror=handle_remove_read_only,
                     )
                 except Exception as e:
                     logger.error(f"Error deleting instance: {e}")
@@ -904,13 +933,8 @@ class MainWindow(QMainWindow):
     def stop_watchdog_if_running(self) -> None:
         # STOP WATCHDOG IF IT IS ALREADY RUNNING
         if self.watchdog_event_handler is not None:
-            if (
-                self.watchdog_event_handler.watchdog_acf_observer is not None
-                and self.watchdog_event_handler.watchdog_acf_observer.is_alive()
-                or (
-                    self.watchdog_event_handler.watchdog_mods_observer is not None
-                    and self.watchdog_event_handler.watchdog_mods_observer.is_alive()
-                )
+            if self.watchdog_event_handler.watchdog_acf_observer is not None or (
+                self.watchdog_event_handler.watchdog_mods_observer is not None
             ):
                 self.shutdown_watchdog()
 

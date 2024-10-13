@@ -176,9 +176,10 @@ class ModListItemInner(QWidget):
         # in this variable. This is exactly equal to the dict value of a
         # single all_mods key-value
         self.uuid = uuid
-        self.list_item_name = self.metadata_manager.internal_local_metadata[
-            self.uuid
-        ].get("name")
+        self.list_item_name = (
+            self.metadata_manager.internal_local_metadata.get(self.uuid, {}).get("name")
+            or "METADATA ERROR"
+        )
         self.main_label = QLabel()
 
         # Visuals
@@ -192,7 +193,11 @@ class ModListItemInner(QWidget):
         self.csharp_icon = None
         self.xml_icon = None
         if self.settings_controller.settings.mod_type_filter_toggle:
-            if self.metadata_manager.internal_local_metadata[self.uuid].get("csharp"):
+            if (
+                self.metadata_manager.internal_local_metadata.get(self.uuid, {}).get(
+                    "csharp"
+                )
+            ) is not None:
                 self.csharp_icon = QLabel()
                 self.csharp_icon.setPixmap(
                     ModListIcons.csharp_icon().pixmap(QSize(20, 20))
@@ -1720,12 +1725,8 @@ class ModListWidget(QListWidget):
         This slot is called when an item's data changes
         """
         widget = self.itemWidget(item)
-        if widget and isinstance(widget, ModListItemInner):
+        if widget is not None and isinstance(widget, ModListItemInner):
             widget.repolish(item)
-        else:
-            logger.debug(
-                "Attempted to repolish item with no widget or incorrect widget type"
-            )
 
     def handle_other_list_row_added(self, uuid: str) -> None:
         if uuid in self.uuids:

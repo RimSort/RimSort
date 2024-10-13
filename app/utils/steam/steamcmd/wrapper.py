@@ -15,6 +15,7 @@ from loguru import logger
 import app.utils.symlink as symlink
 from app.controllers.settings_controller import SettingsController
 from app.utils.event_bus import EventBus
+from app.utils.generic import handle_remove_read_only
 from app.utils.generic import rmtree as g_rmtree
 from app.views.dialogue import (
     BinaryChoiceDialog,
@@ -430,7 +431,11 @@ class SteamcmdInterface:
             runner.message(
                 f"Deleting existing installation from: {self.steamcmd_install_path}"
             )
-            shutil.rmtree(self.steamcmd_install_path)
+            shutil.rmtree(
+                self.steamcmd_install_path,
+                ignore_errors=False,
+                onerror=handle_remove_read_only,
+            )
             os.makedirs(self.steamcmd_install_path)
         if not self.check_for_steamcmd(prefix=self.steamcmd_prefix):
             try:
