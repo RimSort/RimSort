@@ -1,7 +1,7 @@
 import os
 import sys
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Tuple
 
 from loguru import logger
 from PySide6.QtCore import QEvent, QRunnable, Qt, QThreadPool, Signal, Slot
@@ -31,54 +31,12 @@ from app.utils.event_bus import EventBus
 DEFAULT_TITLE = "RimSort"
 
 
-@deprecated("Use BinaryChoiceDialog with exec() instead")
-def show_dialogue_confirmation(
-    title: Optional[str] = None,
-    text: Optional[str] = None,
-    information: Optional[str] = None,
-    details: Optional[str] = None,
-    button_text: Optional[str] = "Yes",
-) -> str:
-    """
-    Displays a dialogue with a standard Yes and Cancel button. The default button is Cancel. Returns the text of the button clicked (Yes or Cancel).
-    :param title: text to pass to setWindowTitle
-    :param text: text to pass to setText
-    :param information: text to pass to setInformativeText
-    :param details: text to pass to setDetailedText
-    """
-    logger.info(
-        f"Showing dialogue box with input: [{title}], [{text}], [{information}] [{details}]"
-    )
-
-    # Set up the message box
-    dialogue = _setup_messagebox(title)
-
-    # Remove standard buttons
-    dialogue.setStandardButtons(
-        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel
-    )
-    dialogue.setDefaultButton(QMessageBox.StandardButton.Cancel)
-
-    # Add data
-    if text:
-        dialogue.setText(text)
-    if information:
-        dialogue.setInformativeText(information)
-    if details:
-        dialogue.setDetailedText(details)
-
-    # Show the message box & return response
-    dialogue.exec_()
-    response = dialogue.clickedButton()
-    return response.text()
-
-
 def show_dialogue_conditional(
-    title: Optional[str] = None,
-    text: Optional[str] = None,
-    information: Optional[str] = None,
-    details: Optional[str] = None,
-    button_text_override: Optional[List[str]] = None,
+    title: str | None = None,
+    text: str | None = None,
+    information: str | None = None,
+    details: str | None = None,
+    button_text_override: list[str] | None = None,
 ) -> str:
     """
     Displays a dialogue, prompting the user for input
@@ -144,7 +102,7 @@ def show_dialogue_file(
     caption: str = "",
     _dir: str = "",
     _filter: str = "",
-) -> Optional[str]:
+) -> str | None:
     path = None
     if mode == "open":
         path, _ = QFileDialog.getOpenFileName(caption=caption, dir=_dir, filter=_filter)
@@ -161,25 +119,25 @@ def show_dialogue_file(
 
 # jscpd:ignore-start
 def show_information(
-    title: Optional[str] = None,
-    text: Optional[str] = None,
-    information: Optional[str] = None,
-    details: Optional[str] = None,
+    title: str | None = None,
+    text: str | None = None,
+    information: str | None = None,
+    details: str | None = None,
     parent: QWidget | None = None,
 ) -> None:
     """
     Creates a message box dialogue. Has no icon.
 
-    :param title: Window title, defaults to None
-    :type title: Optional[str], optional
-    :param text: Short text description, defaults to None
-    :type text: Optional[str], optional
-    :param information: Long form information, defaults to None
-    :type information: Optional[str], optional
-    :param details: Optional details that are hidden in a sub menu, defaults to None
-    :type details: Optional[str], optional
-    :param parent: The parent widget, defaults to None
-    :type parent: QWidget | None, optional
+    :param title: Window title
+    :type title: str | None
+    :param text: Short text description
+    :type text: str | None
+    :param information: Long form information
+    :type information: str | None
+    :param details: Optional details that are hidden in a sub menu
+    :type details: str | None
+    :param parent: The parent widget
+    :type parent: QWidget | None
     """
     # jscpd:ignore-end
     logger.info(
@@ -210,24 +168,24 @@ def show_information(
 
 # jscpd:ignore-start
 def show_warning(
-    title: Optional[str] = None,
-    text: Optional[str] = None,
-    information: Optional[str] = None,
-    details: Optional[str] = None,
+    title: str | None = None,
+    text: str | None = None,
+    information: str | None = None,
+    details: str | None = None,
     parent: QWidget | None = None,
 ) -> None:
     """Creates a warning dialogue. Utilizes the warning icon.
 
-    :param title: Window title, defaults to None
-    :type title: Optional[str], optional
-    :param text: Short text description, defaults to None
-    :type text: Optional[str], optional
-    :param information: Long form information, defaults to None
-    :type information: Optional[str], optional
-    :param details: Optional details that are hidden in a sub menu, defaults to None
-    :type details: Optional[str], optional
-    :param parent: The parent widget, defaults to None
-    :type parent: QWidget | None, optional
+    :param title: Window title
+    :type title: str | None
+    :param text: Short text description
+    :type text: str | None
+    :param information: Long form information
+    :type information: str | None
+    :param details: Optional details that are hidden in a sub menu
+    :type details: str | None
+    :param parent: The parent widget
+    :type parent: QWidget | None
     """
     # jscpd:ignore-end
     logger.info(

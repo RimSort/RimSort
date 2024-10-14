@@ -2,7 +2,6 @@ import sys
 from dataclasses import dataclass
 from json import JSONDecodeError
 from pathlib import Path
-from typing import Optional
 
 from loguru import logger
 from PySide6.QtCore import QObject, Slot
@@ -15,7 +14,6 @@ from app.utils.generic import platform_specific_open
 from app.utils.system_info import SystemInfo
 from app.views.dialogue import (
     BinaryChoiceDialog,
-    show_dialogue_confirmation,
     show_dialogue_file,
     show_settings_error,
 )
@@ -478,7 +476,9 @@ class SettingsController(QObject):
             self.settings.steamcmd_validate_downloads
         )
         self.settings_dialog.steamcmd_auto_clear_depot_cache_checkbox.setChecked(
-            self.settings.steamcmd_auto_clear_depot_cache
+            self.settings.instances[
+                self.settings.current_instance
+            ].steamcmd_auto_clear_depot_cache
         )
         self.settings_dialog.steamcmd_install_location.setText(
             str(
@@ -621,7 +621,9 @@ class SettingsController(QObject):
         self.settings.steamcmd_validate_downloads = (
             self.settings_dialog.steamcmd_validate_downloads_checkbox.isChecked()
         )
-        self.settings.steamcmd_auto_clear_depot_cache = (
+        self.settings.instances[
+            self.settings.current_instance
+        ].steamcmd_auto_clear_depot_cache = (
             self.settings_dialog.steamcmd_auto_clear_depot_cache_checkbox.isChecked()
         )
         self.settings.instances[
@@ -683,11 +685,11 @@ class SettingsController(QObject):
         """
         Reset the settings to their default values.
         """
-        answer = show_dialogue_confirmation(
+        answer = BinaryChoiceDialog(
             title="Reset to defaults",
             text="Are you sure you want to reset all settings to their default values?",
         )
-        if answer == "Cancel":
+        if not answer.exec_is_positive():
             return
 
         self.settings = Settings()
@@ -734,7 +736,7 @@ class SettingsController(QObject):
         self.settings_dialog.game_location.setText(str(game_location))
         self._last_file_dialog_path = str(game_location)
 
-    def _on_game_location_choose_button_clicked_macos(self) -> Optional[Path]:
+    def _on_game_location_choose_button_clicked_macos(self) -> Path | None:
         """
         Open a directory dialog to select the game location for macOS and handle the result.
         """
@@ -748,7 +750,7 @@ class SettingsController(QObject):
 
         return Path(game_location)
 
-    def _on_game_location_choose_button_clicked_non_macos(self) -> Optional[Path]:
+    def _on_game_location_choose_button_clicked_non_macos(self) -> Path | None:
         """
         Open a directory dialog to select the game location and handle the result.
         """
@@ -868,11 +870,11 @@ class SettingsController(QObject):
         Clear the settings dialog's location fields.
         """
         if not skip_confirmation:
-            answer = show_dialogue_confirmation(
+            answer = BinaryChoiceDialog(
                 title="Clear all locations",
                 text="Are you sure you want to clear all locations?",
             )
-            if answer == "Cancel":
+            if not answer.exec_is_positive():
                 return
 
         self.settings_dialog.game_location.setText("")
@@ -1274,9 +1276,9 @@ class SettingsController(QObject):
         Build the Steam Workshop database.
         """
         confirm_diag = BinaryChoiceDialog(
-            "Confirm Build Database",
-            "Are you sure you want to build the Steam Workshop database?",
-            (
+            title="Confirm Build Database",
+            text="Are you sure you want to build the Steam Workshop database?",
+            information=(
                 "For most users this is not necessary as the GitHub SteamDB is adequate. Building the database may take a long time. "
                 "Depending on your settings, it may also crawl through the entirety of the steam workshop via the webAPI. "
                 "This can be a large amount of data and take a long time. Are you sure you want to continue?"
