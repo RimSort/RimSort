@@ -720,7 +720,7 @@ class ModListWidget(QListWidget):
             steamdb_remove_blacklist = None
 
             # Define our QMenu & QActions
-            contextMenu = QMenu()
+            context_menu = QMenu()
             # Open folder action
             open_folder_action = None
             # Open URL in browser action
@@ -728,7 +728,7 @@ class ModListWidget(QListWidget):
             # Open URL in Steam
             open_mod_steam_action = None
             # Copy to clipboard actions
-            copy_packageId_to_clipboard_action = None
+            copy_packageid_to_clipboard_action = None
             copy_url_to_clipboard_action = None
             # Edit mod rules
             edit_mod_rules_action = None
@@ -877,8 +877,8 @@ class ModListWidget(QListWidget):
                                 "Add mod to SteamDB blacklist"
                             )
                     # Copy packageId to clipboard
-                    copy_packageId_to_clipboard_action = QAction()
-                    copy_packageId_to_clipboard_action.setText(
+                    copy_packageid_to_clipboard_action = QAction()
+                    copy_packageid_to_clipboard_action.setText(
                         "Copy packageId to clipboard"
                     )
                     # Edit mod rules with Rule Editor (only for individual mods)
@@ -1016,13 +1016,13 @@ class ModListWidget(QListWidget):
                             )
             # Put together our contextMenu
             if open_folder_action:
-                contextMenu.addAction(open_folder_action)
+                context_menu.addAction(open_folder_action)
             if open_url_browser_action:
-                contextMenu.addAction(open_url_browser_action)
+                context_menu.addAction(open_url_browser_action)
             if open_mod_steam_action:
-                contextMenu.addAction(open_mod_steam_action)
+                context_menu.addAction(open_mod_steam_action)
             if toggle_warning_action:
-                contextMenu.addAction(toggle_warning_action)
+                context_menu.addAction(toggle_warning_action)
             if (
                 delete_mod_action
                 or delete_mod_keep_dds_action
@@ -1035,18 +1035,18 @@ class ModListWidget(QListWidget):
                     deletion_options_menu.addAction(delete_mod_keep_dds_action)
                 if delete_mod_dds_only_action:
                     deletion_options_menu.addAction(delete_mod_dds_only_action)
-                contextMenu.addMenu(deletion_options_menu)
-            contextMenu.addSeparator()
+                context_menu.addMenu(deletion_options_menu)
+            context_menu.addSeparator()
             if (
-                copy_packageId_to_clipboard_action
+                copy_packageid_to_clipboard_action
                 or copy_url_to_clipboard_action
                 or edit_mod_rules_action
                 or re_git_action
             ):
                 misc_options_menu = QMenu(title="Miscellaneous options")
-                if copy_packageId_to_clipboard_action:
+                if copy_packageid_to_clipboard_action:
                     clipboard_options_menu = QMenu(title="Clipboard options")
-                    clipboard_options_menu.addAction(copy_packageId_to_clipboard_action)
+                    clipboard_options_menu.addAction(copy_packageid_to_clipboard_action)
                     if copy_url_to_clipboard_action:
                         clipboard_options_menu.addAction(copy_url_to_clipboard_action)
                     misc_options_menu.addMenu(clipboard_options_menu)
@@ -1054,7 +1054,7 @@ class ModListWidget(QListWidget):
                     misc_options_menu.addAction(edit_mod_rules_action)
                 if re_git_action:
                     misc_options_menu.addAction(re_git_action)
-                contextMenu.addMenu(misc_options_menu)
+                context_menu.addMenu(misc_options_menu)
             if (
                 convert_local_steamcmd_action
                 or convert_steamcmd_local_action
@@ -1092,9 +1092,9 @@ class ModListWidget(QListWidget):
                     workshop_actions_menu.addAction(
                         remove_from_steamdb_blacklist_action
                     )
-                contextMenu.addMenu(workshop_actions_menu)
+                context_menu.addMenu(workshop_actions_menu)
             # Execute QMenu and return it's ACTION
-            action = contextMenu.exec_(self.mapToGlobal(pos_local))
+            action = context_menu.exec_(self.mapToGlobal(pos_local))
             if action:  # Handle the action for all selected items
                 if (  # ACTION: Update git mod(s)
                     action == re_git_action and len(git_paths) > 0
@@ -1563,7 +1563,7 @@ class ModListWidget(QListWidget):
                                 platform_specific_open(mod_metadata["steam_uri"])
                         # Copy to clipboard actions
                         elif (
-                            action == copy_packageId_to_clipboard_action
+                            action == copy_packageid_to_clipboard_action
                         ):  # ACTION: Copy packageId to clipboard
                             copy_to_clipboard_safely(mod_metadata["packageid"])
                         elif (
