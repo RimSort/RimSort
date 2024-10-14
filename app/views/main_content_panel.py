@@ -2251,7 +2251,7 @@ class MainContent(QObject):
                 )
                 updates_summarized = "\n".join(
                     [
-                        f"[{os.path.split(k)[1]}]: {v['HEAD~1']  + '...' + v['HEAD']}\n"
+                        f"[{os.path.split(k)[1]}]: {v['HEAD~1'] + '...' + v['HEAD']}\n"
                         + f"{v['message']}\n"
                         for k, v in updates_summary.items()
                     ]
