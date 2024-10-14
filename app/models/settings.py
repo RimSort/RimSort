@@ -218,7 +218,7 @@ class Settings(QObject):
             self._debug_file.unlink(missing_ok=True)
 
         with open(str(self._settings_file), "w") as file:
-            json.dump(self._to_dict(), file, indent=4)
+            file.write(json.dumps(self._to_dict(), indent=4))
 
     def _from_dict(self, data: Dict[str, Any]) -> None:
         special_attributes = ["instances"]

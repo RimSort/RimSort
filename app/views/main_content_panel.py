@@ -2815,16 +2815,17 @@ class MainContent(QObject):
                 "w",
                 encoding="utf-8",
             ) as output:
-                json.dump(
-                    {
-                        "version": int(
-                            time.time()
-                            + self.settings_controller.settings.database_expiry
-                        ),
-                        "database": self.metadata_manager.external_steam_metadata,
-                    },
-                    output,
-                    indent=4,
+                output.write(
+                    json.dumps(
+                        {
+                            "version": int(
+                                time.time()
+                                + self.settings_controller.settings.database_expiry
+                            ),
+                            "database": self.metadata_manager.external_steam_metadata,
+                        },
+                        indent=4,
+                    )
                 )
             self._do_refresh()
 
@@ -3114,7 +3115,7 @@ class MainContent(QObject):
             if not output_path.endswith(".json"):
                 output_path += ".json"  # Handle file extension if needed
             with open(output_path, "w", encoding="utf-8") as output:
-                json.dump(db_output_c, output, indent=4)
+                output.write(json.dumps(db_output_c, indent=4))
         else:
             logger.warning("Steam DB Builder: User cancelled selection...")
             return
@@ -3171,7 +3172,7 @@ class MainContent(QObject):
         )
         if answer == "&Yes":
             with open(path, "w", encoding="utf-8") as output:
-                json.dump(db_output_c, output, indent=4)
+                output.write(json.dumps(db_output_c, indent=4))
             self._do_refresh()
         else:
             logger.debug("USER ACTION: declined to continue rules database update.")

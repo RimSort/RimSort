@@ -305,7 +305,7 @@ class MetadataManager(QObject):
                 "w",
                 encoding="utf-8",
             ) as output:
-                json.dump(DEFAULT_USER_RULES, output, indent=4)
+                output.write(json.dumps(DEFAULT_USER_RULES, indent=4))
             self.external_user_rules = (
                 DEFAULT_USER_RULES["rules"]
                 if isinstance(DEFAULT_USER_RULES["rules"], dict)
@@ -2355,7 +2355,7 @@ class SteamDatabaseBuilder(QThread):
                     recurse_exceptions=DB_BUILDER_RECURSE_EXCEPTIONS,
                 )
                 with open(self.output_database_path, "w", encoding="utf-8") as output:
-                    json.dump(db_to_update, output, indent=4)
+                    output.write(json.dumps(db_to_update, indent=4))
             else:
                 self.db_builder_message_output_signal.emit(
                     "Unable to load database from specified path! Does the file exist...?"
@@ -2368,13 +2368,13 @@ class SteamDatabaseBuilder(QThread):
                     f"\nCaching DynamicQuery result:\n\n{appended_path}"
                 )
                 with open(appended_path, "w", encoding="utf-8") as output:
-                    json.dump(database, output, indent=4)
+                    output.write(json.dumps(database, indent=4))
         else:  # Dump new db to specified path, effectively "overwriting" the db with fresh data
             self.db_builder_message_output_signal.emit(
                 f"\nCaching DynamicQuery result:\n{self.output_database_path}"
             )
             with open(self.output_database_path, "w", encoding="utf-8") as output:
-                json.dump(database, output, indent=4)
+                output.write(json.dumps(database, indent=4))
 
 
 # Misc helper functions

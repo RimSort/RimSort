@@ -36,7 +36,7 @@ class AppController(QObject):
         if not user_rules_path.exists():
             initial_rules_db = DEFAULT_USER_RULES
             with open(user_rules_path, "w", encoding="utf-8") as output:
-                json.dump(initial_rules_db, output, indent=4)
+                output.write(json.dumps(initial_rules_db, indent=4))
 
         # Instantiate the settings model, view and controller
         self.settings = Settings()
