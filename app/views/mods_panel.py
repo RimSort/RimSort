@@ -682,7 +682,7 @@ class ModListWidget(QListWidget):
             # Get the position of the right-click event
             pos = QCursor.pos()
             # Convert the global position to the list widget's coordinate system
-            pos_local = self.mapFromGlobal(pos)
+            pos_local = self.mapFromGlobal(pos).toPoint()
             # Get the item at the local position
             item = self.itemAt(pos_local)
             if not isinstance(item, QListWidgetItem):
@@ -1094,7 +1094,7 @@ class ModListWidget(QListWidget):
                     )
                 contextMenu.addMenu(workshop_actions_menu)
             # Execute QMenu and return it's ACTION
-            action = contextMenu.exec_(self.mapToGlobal(pos_local))
+            action = contextMenu.exec_(self.mapToGlobal(pos_local).toPoint())
             if action:  # Handle the action for all selected items
                 if (  # ACTION: Update git mod(s)
                     action == re_git_action and len(git_paths) > 0

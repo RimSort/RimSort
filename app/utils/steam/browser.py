@@ -183,6 +183,7 @@ class SteamBrowser(QWidget):
             publishedfileid = self.current_url.split(self.url_prefix_workshop, 1)[1]
         else:
             logger.error(f"Unable to parse pfid from url: {self.current_url}")
+            return
         # If there is extra data after the PFID, strip it
         if self.searchtext_string in publishedfileid:
             publishedfileid = publishedfileid.split(self.searchtext_string)[0]
@@ -302,7 +303,7 @@ class SteamBrowser(QWidget):
             remove_item.triggered.connect(
                 partial(self._remove_mod_from_list, context_item)
             )
-            context_menu.exec_(self.downloader_list.mapToGlobal(point))
+            context_menu.exec_(self.downloader_list.mapToGlobal(point).toPoint())
 
     def _remove_mod_from_list(self, context_item: QListWidgetItem) -> None:
         publishedfileid = context_item.data(Qt.ItemDataRole.UserRole)

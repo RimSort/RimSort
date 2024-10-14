@@ -1064,7 +1064,7 @@ class RuleEditor(QWidget):
         open_mod.triggered.connect(
             partial(self._open_mod_in_editor, context_item=context_item)
         )
-        _ = context_menu.exec_(self.mods_list.mapToGlobal(point))
+        _ = context_menu.exec_(self.mods_list.mapToGlobal(point).toPoint())
 
     def ruleItemContextMenuEvent(self, point: QPoint, _list: QListWidget) -> None:
         context_menu = QMenu(self)  # Rule item context menu event
@@ -1077,7 +1077,7 @@ class RuleEditor(QWidget):
                 _list=_list,
             )
         )
-        _ = context_menu.exec_(_list.mapToGlobal(point))
+        _ = context_menu.exec_(_list.mapToGlobal(point).toPoint())
 
     def clear_mods_search(self) -> None:
         self.mods_search.setText("")
