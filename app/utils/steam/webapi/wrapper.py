@@ -4,7 +4,7 @@ from logging import WARNING, getLogger
 from math import ceil
 from multiprocessing import Pool, cpu_count
 from time import time
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict
 
 from loguru import logger
 from PySide6.QtCore import QObject, Signal
@@ -157,7 +157,7 @@ class DynamicQuery(QObject):
         apikey: str,
         appid: int,
         get_appid_deps: bool = False,
-        life: int | None = None,
+        life: int = 0,
     ) -> None:
         QObject.__init__(self)
 
@@ -165,8 +165,7 @@ class DynamicQuery(QObject):
         self.api = None
         self.apikey = apikey
         self.appid = appid
-        if life:
-            self.expiry = self.__expires(life)
+        self.expiry = self.__expires(life)
         self.get_appid_deps = get_appid_deps
         self.next_cursor = "*"
         self.pagenum = 1
@@ -176,7 +175,14 @@ class DynamicQuery(QObject):
         self.database: dict[str, Any] = {}
 
     def __expires(self, life: int) -> int:
-        return int(time() + life)  # current seconds since epoch + 30 minutes
+        """Returns current epoch + life
+
+        :param life: The lifespan of the Query in terms of the seconds added to life
+        :type life: int
+        :return: current epoch + life
+        :rtype: int
+        """
+        return int(time() + life)
 
     def __initialize_webapi(self) -> None:
         if self.api:
@@ -316,8 +322,9 @@ class DynamicQuery(QObject):
 
     def IPublishedFileService_GetDetails(
         self, json_to_update: dict[Any, Any], publishedfileids: list[str]
-    ) -> Optional[tuple[dict[Any, Any], list[str]]]:
+    ) -> tuple[dict[Any, Any], list[str]] | None:
         """
+
         Given a list of PublishedFileIds, return a dict of json data queried
         from Steam WebAPI, containing data to be parsed during db update.
 
@@ -346,8 +353,8 @@ class DynamicQuery(QObject):
         # Uncomment to see the all pfids to be queried
         # logger.debug(f"PublishedFileIds being queried: {publishedfileids}")
         for chunk in chunks(
-            _list=publishedfileids, limit=215
-        ):  # Chunk limit appears to be 215 PublishedFileIds at a time - this appears to be a WebAPI limitation
+            _list=publishedfileids, limit=213
+        ):  # Chunk limit appears to be 213 PublishedFileIds at a time - this appears to be a WebAPI limitation
             chunk_total = len(chunk)
             chunks_processed += chunk_total
             # Uncomment to see the pfids from each chunk
@@ -590,7 +597,7 @@ class DynamicQuery(QObject):
         :return: Dict containing the updated json data from PublishedFileIds query
         """
         self.dq_messaging_signal.emit(
-            f"\nSteamworks API: ISteamUGC/GetAppDependencies initializing for {len(publishedfileids)} mods\n"
+            f"\nSteamworks API: ISteamUGC/GetAppDependencies initializing for {len(publishedfileids)} mods\n\nThis may take a while. Please wait..."
         )
         # Maximum processes
         num_processes = cpu_count()

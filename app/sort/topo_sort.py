@@ -1,5 +1,3 @@
-from typing import List
-
 import networkx as nx
 from loguru import logger
 from toposort import CircularDependencyError, toposort
@@ -10,7 +8,7 @@ from app.views.dialogue import show_warning
 
 def do_topo_sort(
     dependency_graph: dict[str, set[str]], active_mods_uuids: set[str]
-) -> List[str]:
+) -> list[str]:
     """
     Sort mods using the topological sort algorithm. For each
     topological level, sort the mods alphabetically.
@@ -50,7 +48,7 @@ def do_topo_sort(
 
 
 def find_circular_dependencies(dependency_graph: dict[str, set[str]]) -> None:
-    G = nx.DiGraph(dependency_graph)
+    G = nx.DiGraph(dependency_graph)  # type: ignore # Stubs seem to be broken for args
     cycles = list(nx.simple_cycles(G))
 
     cycle_strings = []

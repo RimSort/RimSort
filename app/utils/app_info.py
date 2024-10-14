@@ -1,7 +1,6 @@
 import os
 import sys
 from pathlib import Path
-from typing import Optional
 
 from lxml import etree, objectify
 from platformdirs import PlatformDirs
@@ -20,7 +19,7 @@ class AppInfo:
         >>> print(app_info.app_storage_folder)
     """
 
-    _instance: Optional["AppInfo"] = None
+    _instance: "None | AppInfo" = None
 
     def __new__(cls) -> "AppInfo":
         """
@@ -62,11 +61,15 @@ class AppInfo:
         version_file = str(self._application_folder / "version.xml")
         if os.path.exists(version_file):
             root = objectify.parse(version_file, parser=etree.XMLParser(recover=True))
-            self._app_version = root.find("version").text
+            ver = root.find("version")
+            if ver is not None and ver.text is not None:
+                self._app_version = ver.text
 
             # If edge in version_string, append short sha
             if "edge" in self._app_version.lower():
-                self._app_version += f"+{root.find('commit').text[:7]}"
+                commit = root.find("commit")
+                if commit is not None and commit.text is not None:
+                    self._app_version += f"+{commit[:7]}"
 
         # Define important directories using platformdirs
 

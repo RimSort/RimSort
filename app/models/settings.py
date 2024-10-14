@@ -13,6 +13,7 @@ from app.models.instance import Instance
 from app.utils.app_info import AppInfo
 from app.utils.constants import SortMethod
 from app.utils.event_bus import EventBus
+from app.utils.generic import handle_remove_read_only
 
 
 class Settings(QObject):
@@ -69,6 +70,7 @@ class Settings(QObject):
         self.duplicate_mods_warning: bool = False
         self.steam_mods_update_check: bool = False
         self.try_download_missing_mods: bool = False
+        self.render_unity_rich_text: bool = True
 
         self.github_username: str = ""
         self.github_token: str = ""
@@ -164,7 +166,11 @@ class Settings(QObject):
                             logger.info(
                                 f"Deleting old SteamCMD install path at {steamcmd_path_to_mitigate}..."
                             )
-                            rmtree(steamcmd_path_to_mitigate)
+                            rmtree(
+                                steamcmd_path_to_mitigate,
+                                ignore_errors=False,
+                                onerror=handle_remove_read_only,
+                            )
                             logger.info(
                                 f"Migrated SteamCMD data path from {steam_path_to_mitigate} to {steamcmd_prefix_default_instance_path}"
                             )
@@ -176,7 +182,11 @@ class Settings(QObject):
                             logger.info(
                                 f"Deleting old SteamCMD data path at {steam_path_to_mitigate}..."
                             )
-                            rmtree(steam_path_to_mitigate)
+                            rmtree(
+                                steam_path_to_mitigate,
+                                ignore_errors=False,
+                                onerror=handle_remove_read_only,
+                            )
                         except Exception as e:
                             logger.error(
                                 f"Failed to migrate SteamCMD install path. Error: {e}"

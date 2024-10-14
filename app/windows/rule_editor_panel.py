@@ -331,11 +331,14 @@ class RuleEditor(QWidget):
         self.mods_search.setClearButtonEnabled(True)
         self.mods_search.textChanged.connect(self.signal_mods_search)
         self.mods_search.setPlaceholderText("Search mods by name")
-        self.mods_search_clear_button = self.mods_search.findChild(QToolButton)
+        self.mods_search_clear_button: object | QToolButton | None = (
+            self.mods_search.findChild(QToolButton)
+        )
         if type(self.mods_search_clear_button) is not QToolButton:
             raise Exception("Failed to find clear button in QLineEdit")
-        self.mods_search_clear_button.setEnabled(True)
-        self.mods_search_clear_button.clicked.connect(self.clear_mods_search)
+        if self.mods_search_clear_button is not None:
+            self.mods_search_clear_button.setEnabled(True)
+            self.mods_search_clear_button.clicked.connect(self.clear_mods_search)
         # Mods list
         self.mods_list = QListWidget()
         self.mods_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
@@ -505,6 +508,10 @@ class RuleEditor(QWidget):
 
                 elif destination_list is self.external_user_rules_loadBefore_list:
                     mode = ["User Rules", "loadBefore"]
+                else:
+                    logger.error(f"Invalid destination list!: {destination_list}")
+                    event.ignore()
+                    return
                 # Append row
                 # Search for & remove the rule's row entry from the editor table
                 for row in range(self.editor_model.rowCount()):
@@ -557,6 +564,10 @@ class RuleEditor(QWidget):
                     metadata = self.community_rules
                 elif mode[0] == "User Rules":
                     metadata = self.user_rules
+                else:
+                    logger.error(f"Invalid mode!: {mode[0]}")
+                    event.ignore()
+                    return
                 # Add rule to the database if it doesn't already exist
                 if not metadata.get(self.edit_packageid):
                     metadata[self.edit_packageid] = {}
@@ -625,6 +636,9 @@ class RuleEditor(QWidget):
                 metadata = self.community_rules
             elif instruction[2] == "User Rules":
                 metadata = self.user_rules
+            else:
+                logger.error(f"Invalid rule source!: {instruction[2]}")
+                return
             # Edit based on type of rule
             if instruction[3] == "loadAfter" or instruction[3] == "loadBefore":
                 metadata[self.edit_packageid][instruction[3]][instruction[1]][
@@ -839,11 +853,18 @@ class RuleEditor(QWidget):
 
         elif _list is self.external_user_rules_loadBefore_list:
             mode = ["User Rules", "loadBefore"]
+        else:
+            logger.error(f"Invalid list!: {_list}")
+            return
         # Select database for editing
         if mode[0] == "Community Rules":
             metadata = self.community_rules
         elif mode[0] == "User Rules":
             metadata = self.user_rules
+        else:
+            logger.error(f"Invalid mode!: {mode[0]}")
+            return
+
         # Search for & remove the rule's row entry from the editor table
         for row in range(self.editor_model.rowCount()):
             # Define criteria
@@ -876,15 +897,18 @@ class RuleEditor(QWidget):
             metadata = self.community_rules
         elif rules_source == "User Rules":
             metadata = self.user_rules
+        else:
+            raise ValueError(f"Invalid rule source: {rules_source}")
         self.update_database_signal.emit([rules_source, metadata])
 
     def _toggle_details_layout_widgets(
         self, layout: QVBoxLayout, override: bool = False
     ) -> None:
+        visibility = None
         # Iterate through all widgets in layout
         for i in range(layout.count()):
             item = layout.itemAt(i)
-            if "visibility" not in locals():  # We only need to set this once per pass
+            if visibility is None:  # We only need to set this once per pass
                 visibility = item.widget().isVisible()
                 # Override so we can toggle this upon initialization if we want to
                 if override:
@@ -893,6 +917,9 @@ class RuleEditor(QWidget):
             item.widget().setVisible(not visibility)
         # Change button text based on the layout we are toggling
         # If this is True, it means the widgets are hidden. Edit btn text + hide rules to reflect.
+        if visibility is None:
+            logger.error("Visibility was not set and is None!")
+            return
         if visibility:
             if layout is self.internal_local_metadata_layout:
                 self.local_rules_hidden = True
@@ -948,6 +975,9 @@ class RuleEditor(QWidget):
                 metadata = self.community_rules
             elif rule_source == "User Rules":
                 metadata = self.user_rules
+            else:
+                raise ValueError(f"Invalid rule source: {rule_source}")
+
             if state == 2:
                 comment = ""
                 if not self.block_comment_prompt:
@@ -1061,6 +1091,7 @@ class RuleEditor(QWidget):
         for index in range(self.mods_list.count()):
             item = self.mods_list.item(index)
             widget = item.listWidget().itemWidget(item)
+            name = None
             if type(widget) is QLabel:
                 name = widget.text()
             name_lower = name.lower() if name else ""

@@ -4,18 +4,12 @@ import traceback
 from pathlib import Path
 from re import match
 from time import localtime, strftime, time
-from typing import Any, Iterable, Optional, Union
+from typing import Any, Iterable, Union
 from uuid import uuid4
 
 from loguru import logger
 from natsort import natsorted
-from PySide6.QtCore import (
-    QObject,
-    QRunnable,
-    QThread,
-    QThreadPool,
-    Signal,
-)
+from PySide6.QtCore import QObject, QRunnable, QThread, QThreadPool, Signal
 
 from app.controllers.settings_controller import SettingsController
 from app.utils.app_info import AppInfo
@@ -44,7 +38,7 @@ from app.views.dialogue import (
 
 
 class MetadataManager(QObject):
-    _instance: Optional["MetadataManager"] = None
+    _instance: "None | MetadataManager" = None
     mod_created_signal = Signal(str)
     mod_deleted_signal = Signal(str)
     mod_metadata_updated_signal = Signal(str)
@@ -70,10 +64,10 @@ class MetadataManager(QObject):
             self.show_warning_signal.connect(show_warning)
 
             # Store parsed metadata & paths
-            self.external_steam_metadata: Optional[dict[str, Any]] = None
-            self.external_steam_metadata_path: Optional[str] = None
-            self.external_community_rules: Optional[dict[str, Any]] = None
-            self.external_community_rules_path: Optional[str] = None
+            self.external_steam_metadata: dict[str, Any] | None = None
+            self.external_steam_metadata_path: str | None = None
+            self.external_community_rules: dict[str, Any] | None = None
+            self.external_community_rules_path: str | None = None
             self.external_user_rules: dict[str, Any] | None = None
             self.external_user_rules_path: str = str(
                 AppInfo().databases_folder / "userRules.json"
@@ -111,129 +105,108 @@ class MetadataManager(QObject):
             raise ValueError("MetadataManager instance has already been initialized.")
         return cls._instance
 
-    def __refresh_acf_metadata(self) -> None:
-        # If we can find the appworkshop_294100.acf files from...
-        # ...SteamCMD
-        if os.path.exists(SteamcmdInterface.instance().steamcmd_appworkshop_acf_path):
-            try:
-                self.steamcmd_acf_data = acf_to_dict(
-                    SteamcmdInterface.instance().steamcmd_appworkshop_acf_path
-                )
-                logger.info(
-                    f"Successfully parsed SteamCMD appworkshop.acf metadata from: {SteamcmdInterface.instance().steamcmd_appworkshop_acf_path}"
-                )
-            except Exception as e:
-                logger.error(
-                    f"Failed to parse SteamCMD appworkshop.acf metadata from: {SteamcmdInterface.instance().steamcmd_appworkshop_acf_path}. Error: {e}"
-                )
-        # ...Steam client
-        if os.path.exists(self.workshop_acf_path):
-            try:
-                self.workshop_acf_data = acf_to_dict(self.workshop_acf_path)
-                logger.info(
-                    f"Successfully parsed Steam client appworkshop.acf metadata from: {self.workshop_acf_path}"
-                )
-            except Exception as e:
-                logger.error(
-                    f"Failed to parse Steam client appworkshop.acf metadata from: {self.workshop_acf_path}. Error: {e}"
-                )
-
     def __refresh_external_metadata(self) -> None:
+        def validate_db_path(path: str, db_type: str) -> bool:
+            if not os.path.exists(path):
+                self.show_warning_signal.emit(
+                    f"{db_type} DB is missing",
+                    f"Configured {db_type} DB not found!",
+                    f"Unable to initialize external metadata. There is no external {db_type} metadata being factored!\n"
+                    + "\nPlease make sure your Database location settings are correct.",
+                    f"{path}",
+                )
+                return False
+
+            if os.path.isdir(path):
+                self.show_warning_signal.emit(
+                    f"{db_type} DB is missing",
+                    f"Configured {db_type} DB path is a directory! Expected a file path.",
+                    f"Unable to initialize external metadata. There is no external {db_type} metadata being factored!\n"
+                    + "\nPlease make sure your Database location settings are correct.",
+                    f"{path}",
+                )
+                return False
+
+            return True
+
         def get_configured_steam_db(
             life: int, path: str
-        ) -> tuple[Optional[dict[str, Any]], Optional[str]]:
+        ) -> tuple[dict[str, Any] | None, str | None]:
             logger.info(f"Checking for Steam DB at: {path}")
-            if os.path.exists(
-                path
-            ):  # Look for cached data & load it if available & not expired
-                logger.info(
-                    "Steam DB exists!",
-                )
-                with open(path, encoding="utf-8") as f:
-                    json_string = f.read()
-                    logger.info("Checking metadata expiry against database...")
-                    db_data = json.loads(json_string)
-                    current_time = int(time())
-                    db_time = int(db_data["version"])
-                    elapsed = current_time - db_time
-                    if (
-                        elapsed <= life
-                    ):  # If the duration elapsed since db creation is less than expiry than expiry
-                        # The data is valid
-                        db_json_data = db_data[
-                            "database"
-                        ]  # TODO: additional check to verify integrity of this data's schema
-                        logger.info(
-                            "Cached Steam DB is valid! Returning data to RimSort..."
-                        )
-                        total_entries = len(db_json_data)
-                        logger.info(
-                            f"Loaded metadata for {total_entries} Steam Workshop mods from Steam DB"
-                        )
-                    else:  # If the cached db data is expired but NOT missing
-                        # Fallback to the expired metadata
-                        if life != 0:  # Disable Notification if value is 0
-                            self.show_warning_signal.emit(
-                                "Steam DB metadata expired",
-                                "Steam DB is expired! Consider updating!\n",
-                                f'Steam DB last updated: {strftime("%Y-%m-%d %H:%M:%S", localtime(db_data["version"] - life))}\n\n'
-                                + "Falling back to cached, but EXPIRED Steam Database...",
-                                "",
-                            )
-                        db_json_data = db_data[
-                            "database"
-                        ]  # TODO: additional check to verify integrity of this data's schema
-                        total_entries = len(db_json_data)
-                        logger.info(
-                            f"Loaded metadata for {total_entries} Steam Workshop mods from Steam DB"
-                        )
-                    self.steamdb_packageid_to_name = {
-                        metadata["packageid"]: metadata["name"]
-                        for metadata in db_data.get("database", {}).values()
-                        if metadata.get("packageid") and metadata.get("name")
-                    }
-                    return db_json_data, path
-
-            else:  # Assume db_data_missing
-                self.show_warning_signal.emit(
-                    "Steam DB is missing",
-                    "Configured Steam DB not found!",
-                    "Unable to initialize external metadata. There is no external Steam metadata being factored!\n"
-                    + "\nPlease use DB Builder to create a database, or update to the latest RimSort Steam Workshop Database.",
-                    "",
-                )
+            if not validate_db_path(path, "Steam"):
                 return None, None
+
+            # Look for cached data & load it if available & not expired
+            logger.info(
+                "Steam DB exists!",
+            )
+            with open(path, encoding="utf-8") as f:
+                json_string = f.read()
+                logger.info("Checking metadata expiry against database...")
+                db_data = json.loads(json_string)
+                current_time = int(time())
+                db_time = int(db_data["version"])
+                elapsed = current_time - db_time
+                if (
+                    elapsed <= life
+                ):  # If the duration elapsed since db creation is less than expiry than expiry
+                    # The data is valid
+                    db_json_data = db_data[
+                        "database"
+                    ]  # TODO: additional check to verify integrity of this data's schema
+                    logger.info(
+                        "Cached Steam DB is valid! Returning data to RimSort..."
+                    )
+                    total_entries = len(db_json_data)
+                    logger.info(
+                        f"Loaded metadata for {total_entries} Steam Workshop mods from Steam DB"
+                    )
+                else:  # If the cached db data is expired but NOT missing
+                    # Fallback to the expired metadata
+                    if life != 0:  # Disable Notification if value is 0
+                        self.show_warning_signal.emit(
+                            "Steam DB metadata expired",
+                            "Steam DB is expired! Consider updating!\n",
+                            f'Steam DB last updated: {strftime("%Y-%m-%d %H:%M:%S", localtime(db_data["version"] - life))}\n\n'
+                            + "Falling back to cached, but EXPIRED Steam Database...",
+                            "",
+                        )
+                    db_json_data = db_data[
+                        "database"
+                    ]  # TODO: additional check to verify integrity of this data's schema
+                    total_entries = len(db_json_data)
+                    logger.info(
+                        f"Loaded metadata for {total_entries} Steam Workshop mods from Steam DB"
+                    )
+                self.steamdb_packageid_to_name = {
+                    metadata["packageid"]: metadata["name"]
+                    for metadata in db_data.get("database", {}).values()
+                    if metadata.get("packageid") and metadata.get("name")
+                }
+                return db_json_data, path
 
         def get_configured_community_rules_db(
             path: str,
-        ) -> tuple[Optional[dict[str, Any]], Optional[str]]:
+        ) -> tuple[dict[str, Any] | None, str | None]:
             logger.info(f"Checking for Community Rules DB at: {path}")
-            if os.path.exists(
-                path
-            ):  # Look for cached data & load it if available & not expired
-                logger.info(
-                    "Community Rules DB exists!",
-                )
-                with open(path, encoding="utf-8") as f:
-                    json_string = f.read()
-                    logger.info("Reading info from communityRules.json")
-                    rule_data = json.loads(json_string)
-                    community_rules_json_data = rule_data["rules"]
-                    total_entries = len(community_rules_json_data)
-                    logger.info(
-                        f"Loaded {total_entries} additional sorting rules from Community Rules"
-                    )
-                    return community_rules_json_data, path
 
-            else:  # Assume db_data_missing
-                self.show_warning_signal.emit(
-                    "Community Rules DB is missing",
-                    "Configured Community Rules DB not found!",
-                    "Unable to initialize external metadata. There is no external Community Rules metadata being factored!\n"
-                    + "\nPlease use Rule Editor to create a database, or update to the latest RimSort Community Rules database.",
-                    "",
-                )
+            if not validate_db_path(path, "Community Rules"):
                 return None, None
+
+            # Look for cached data & load it if available & not expired
+            logger.info(
+                "Community Rules DB exists!",
+            )
+            with open(path, encoding="utf-8") as f:
+                json_string = f.read()
+                logger.info("Reading info from communityRules.json")
+                rule_data = json.loads(json_string)
+                community_rules_json_data = rule_data["rules"]
+                total_entries = len(community_rules_json_data)
+                logger.info(
+                    f"Loaded {total_entries} additional sorting rules from Community Rules"
+                )
+                return community_rules_json_data, path
 
         # Load external metadata
         # External Steam metadata
@@ -385,12 +358,18 @@ class MetadataManager(QObject):
                 # Purge metadata from internal metadata
                 for uuid in uuids_to_remove:
                     logger.debug(
-                        f"Removing metadata for {uuid}: {self.internal_local_metadata[uuid]}"
+                        f"Removing metadata for {uuid}: {self.internal_local_metadata.get(uuid)}"
                     )
-                    deleted_mod_packageid = self.internal_local_metadata[uuid].get(
-                        "packageid"
-                    )
+                    deleted_mod = self.internal_local_metadata.get(uuid)
+                    if deleted_mod is None:
+                        logger.warning(
+                            f"Unable to find metadata for {uuid} in internal metadata, skipping removal. Possible race condition!"
+                        )
+                        continue
+
+                    deleted_mod_packageid = deleted_mod.get("packageid")
                     self.internal_local_metadata.pop(uuid)
+
                     if deleted_mod_packageid and self.packageid_to_uuids.get(
                         deleted_mod_packageid
                     ):
@@ -645,7 +624,11 @@ class MetadataManager(QObject):
                                 f"About.xml syntax error. Unable to read <moddependenciesbyversion> tag from XML for version [{version}]: {self.internal_local_metadata[uuid]['metadata_file_path']}"
                             )
                             logger.debug(dependencies_by_ver)
-            if self.internal_local_metadata[uuid].get("incompatiblewith"):
+            if self.internal_local_metadata[uuid].get(
+                "incompatiblewith"
+            ) and isinstance(
+                self.internal_local_metadata[uuid].get("incompatiblewith"), dict
+            ):
                 incompatibilities = self.internal_local_metadata[uuid][
                     "incompatiblewith"
                 ].get("li")
@@ -1153,7 +1136,14 @@ class MetadataManager(QObject):
         logger.debug(
             f"Processing deletion for {self.internal_local_metadata.get(uuid, {}).get('name', 'Unknown')}: {mod_directory}"
         )
-        deleted_mod_packageid = self.internal_local_metadata[uuid].get("packageid")
+        deleted_mod = self.internal_local_metadata.get(uuid)
+        if deleted_mod is None:
+            logger.debug(
+                f"Mod {uuid} not found in metadata, skipping deletion. Possible race condition!"
+            )
+            return
+
+        deleted_mod_packageid = deleted_mod.get("packageid")
         self.internal_local_metadata.pop(uuid, None)
         if deleted_mod_packageid and self.packageid_to_uuids.get(deleted_mod_packageid):
             self.packageid_to_uuids[deleted_mod_packageid].remove(uuid)
@@ -1185,6 +1175,37 @@ class MetadataManager(QObject):
             self.compile_metadata(uuids=[uuid])
             self.mod_metadata_updated_signal.emit(uuid)
 
+    def refresh_acf_metadata(
+        self, steamclient: bool = True, steamcmd: bool = True
+    ) -> None:
+        # If we can find the appworkshop_294100.acf files from...
+        # ...Steam client
+        if steamclient and os.path.exists(self.workshop_acf_path):
+            try:
+                self.workshop_acf_data = acf_to_dict(self.workshop_acf_path)
+                logger.info(
+                    f"Successfully parsed Steam client appworkshop.acf metadata from: {self.workshop_acf_path}"
+                )
+            except Exception as e:
+                logger.error(
+                    f"Failed to parse Steam client appworkshop.acf metadata from: {self.workshop_acf_path}. Error: {e}"
+                )
+        # ...SteamCMD
+        if steamcmd and os.path.exists(
+            self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
+        ):
+            try:
+                self.steamcmd_acf_data = acf_to_dict(
+                    self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
+                )
+                logger.info(
+                    f"Successfully parsed SteamCMD appworkshop.acf metadata from: {self.steamcmd_wrapper.steamcmd_appworkshop_acf_path}"
+                )
+            except Exception as e:
+                logger.error(
+                    f"Failed to parse SteamCMD appworkshop.acf metadata from: {self.steamcmd_wrapper.steamcmd_appworkshop_acf_path}. Error: {e}"
+                )
+
     def refresh_cache(self, is_initial: bool = False) -> None:
         """
         This function contains expensive calculations for getting workshop
@@ -1205,10 +1226,61 @@ class MetadataManager(QObject):
         # Update paths from game configuration
 
         # Populate metadata
-        self.__refresh_acf_metadata()
+        self.refresh_acf_metadata(steamclient=True, steamcmd=True)
         self.__refresh_external_metadata()
         self.__refresh_internal_metadata(is_initial=is_initial)
         self.compile_metadata(uuids=list(self.internal_local_metadata.keys()))
+
+    def steamcmd_purge_mods(self, publishedfileids: set[str]) -> None:
+        """
+        Removes a mod from SteamCMD install
+        """
+        # Parse the SteamCMD workshop .acf metadata file
+        acf_path = self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
+        acf_metadata = acf_to_dict(path=acf_path)
+        depotcache_path = self.steamcmd_wrapper.steamcmd_depotcache_path
+        # WorkshopItemsInstalled
+        workshop_items_installed = acf_metadata.get("AppWorkshop", {}).get(
+            "WorkshopItemsInstalled"
+        )
+        # WorkshopItemDetails
+        workshop_item_details = acf_metadata.get("AppWorkshop", {}).get(
+            "WorkshopItemDetails"
+        )
+        # List of mod manifest ids to remove afterward
+        mod_manifest_ids = set()
+        # Loop through the supplied PublishedFileID's
+        for delete_pfid in publishedfileids:
+            # Parse the mod manifest id from acf metadata
+            if workshop_items_installed is not None:
+                mod_manifest_id = workshop_items_installed.get(delete_pfid, {}).get(
+                    "manifest"
+                )
+                if mod_manifest_id is not None:
+                    mod_manifest_ids.add(mod_manifest_id)
+                workshop_items_installed.pop(delete_pfid, None)
+
+            if workshop_item_details is not None:
+                mod_manifest_id = workshop_item_details.get(delete_pfid, {}).get(
+                    "manifest"
+                )
+                if (
+                    mod_manifest_id is not None
+                    and mod_manifest_id not in mod_manifest_ids
+                ):
+                    mod_manifest_ids.add(mod_manifest_id)
+                workshop_item_details.pop(delete_pfid, None)
+        # Save the updated .acf metadata
+        dict_to_acf(data=acf_metadata, path=acf_path)
+        # Remove the depotcache files if we have manifest id and file(s) exist
+        for mod_manifest_id in mod_manifest_ids:
+            manifest_path = Path(depotcache_path) / f"294100_{mod_manifest_id}.manifest"
+            if manifest_path.exists():
+                logger.debug(f"Removing mod manifest file: {manifest_path}")
+                try:
+                    os.remove(manifest_path)
+                except Exception as e:
+                    logger.error(e)
 
 
 class ModParser(QRunnable):
@@ -1379,6 +1451,20 @@ class ModParser(QRunnable):
                                     if li.count(".") > 1 and isinstance(li, str)
                                     else li
                                 )
+
+                    if mod_metadata.get("supportedversions", {}).get("li"):
+                        li = mod_metadata["supportedversions"]["li"]
+                        if isinstance(li, str):
+                            mod_metadata["supportedversions"]["li"] = li.strip()
+                        elif isinstance(li, list):
+                            for i, version in enumerate(li):
+                                if not isinstance(version, str):
+                                    logger.error(
+                                        f"Failed to parse {version} as a string"
+                                    )
+                                    continue
+                                li[i] = version.strip()
+
                     if mod_metadata.get("targetversion"):
                         mod_metadata["targetversion"] = mod_metadata["targetversion"]
                         mod_metadata["targetversion"] = (

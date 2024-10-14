@@ -28,7 +28,7 @@ import traceback
 from logging import WARNING, getLogger
 from multiprocessing import freeze_support, set_start_method
 from types import TracebackType
-from typing import Optional, Type
+from typing import Type
 
 import loguru
 from loguru import logger
@@ -58,7 +58,7 @@ elif SYSTEM == "Windows":
 def handle_exception(
     exc_type: Type[BaseException],
     exc_value: BaseException,
-    exc_traceback: Optional[TracebackType],
+    exc_traceback: TracebackType | None,
 ) -> None:
     """
     This function is called (through excepthook) when the main application

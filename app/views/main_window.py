@@ -3,7 +3,7 @@ from functools import partial
 from pathlib import Path
 from shutil import copytree, rmtree
 from traceback import format_exc
-from typing import Any, Optional
+from typing import Any
 
 from loguru import logger
 from PySide6.QtCore import QSize, QTimer
@@ -23,17 +23,17 @@ from app.controllers.instance_controller import (
     InvalidArchivePathError,
 )
 from app.controllers.menu_bar_controller import MenuBarController
-from app.controllers.settings_controller import (
-    SettingsController,
-)
+from app.controllers.mods_panel_controller import ModsPanelController
+from app.controllers.settings_controller import SettingsController
 from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
+from app.utils.generic import handle_remove_read_only
 from app.utils.gui_info import GUIInfo
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.watchdog import WatchdogHandler
 from app.views.dialogue import (
+    BinaryChoiceDialog,
     show_dialogue_conditional,
-    show_dialogue_confirmation,
     show_dialogue_file,
     show_dialogue_input,
     show_fatal_error,
@@ -68,8 +68,7 @@ class MainWindow(QMainWindow):
         # Content initialization should only fire on startup. Otherwise, this is handled by Refresh button
 
         # Watchdog
-        self.watchdog_event_handler: Optional[WatchdogHandler] = None
-
+        self.watchdog_event_handler: WatchdogHandler | None = None
         # Set up the window
         self.setWindowTitle(f"RimSort {AppInfo().app_version}")
         self.setMinimumSize(QSize(1024, 768))
@@ -138,9 +137,15 @@ class MainWindow(QMainWindow):
         widget.setLayout(app_layout)
         self.setCentralWidget(widget)
 
+        self.mods_panel_controller = ModsPanelController(
+            view=self.main_content_panel.mods_panel,
+        )
+
         self.menu_bar = MenuBar(menu_bar=self.menuBar())
         self.menu_bar_controller = MenuBarController(
-            view=self.menu_bar, settings_controller=self.settings_controller
+            view=self.menu_bar,
+            settings_controller=self.settings_controller,
+            mods_panel_controller=self.mods_panel_controller,
         )
         # Connect Instances Menu Bar signals
         EventBus().do_activate_current_instance.connect(self.__switch_to_instance)
@@ -158,9 +163,9 @@ class MainWindow(QMainWindow):
     def __disable_enable_widgets(self, enable: bool) -> None:
         # Disable widgets
         q_app = QApplication.instance()
-        if q_app is None:
+        if not isinstance(q_app, QApplication):
             return
-        for widget in q_app.allWidgets():  # type: ignore # Broken pyside stub
+        for widget in q_app.allWidgets():
             widget.setEnabled(enable)
 
     def showEvent(self, event: QShowEvent) -> None:
@@ -186,7 +191,10 @@ class MainWindow(QMainWindow):
         ) or not self.steamcmd_wrapper.check_for_steamcmd(
             prefix=self.steamcmd_wrapper.steamcmd_prefix
         ):
-            self.steamcmd_wrapper.on_steamcmd_not_found()
+            if not self.settings_controller.active_instance.steamcmd_ignore:
+                self.steamcmd_wrapper.on_steamcmd_not_found(
+                    ask_ignore=True, settings_controller=self.settings_controller
+                )
         else:
             self.steamcmd_wrapper.setup = True
         # CHECK USER PREFERENCE FOR WATCHDOG
@@ -371,8 +379,11 @@ class MainWindow(QMainWindow):
                 and instance_controller.instance.local_folder != ""
             ):
                 logger.info("Restoring steamcmd symlink...")
-                self.steamcmd_wrapper.check_symlink(
-                    steamcmd_link_path, instance_controller.instance.local_folder
+                self.steamcmd_wrapper.create_symlink(
+                    instance_controller.instance.local_folder,
+                    steamcmd_link_path,
+                    show_dialogues=False,
+                    force=True,
                 )
             elif not os.path.exists(steamcmd_link_path):
                 logger.info("Skipping steamcmd symlink restoration")
@@ -410,7 +421,11 @@ class MainWindow(QMainWindow):
                     logger.info(
                         f"Replacing existing game folder at {target_game_folder}"
                     )
-                    rmtree(target_game_folder)
+                    rmtree(
+                        target_game_folder,
+                        ignore_errors=False,
+                        onerror=handle_remove_read_only,
+                    )
                 logger.info(
                     f"Copying game folder from {existing_instance_game_folder} to {target_game_folder}"
                 )
@@ -430,7 +445,11 @@ class MainWindow(QMainWindow):
                     logger.info(
                         f"Replacing existing config folder at {target_config_folder}"
                     )
-                    rmtree(target_config_folder)
+                    rmtree(
+                        target_config_folder,
+                        ignore_errors=False,
+                        onerror=handle_remove_read_only,
+                    )
                 logger.info(
                     f"Copying config folder from {existing_instance_config_folder} to {target_config_folder}"
                 )
@@ -452,7 +471,11 @@ class MainWindow(QMainWindow):
                     logger.info(
                         f"Replacing existing local folder at {target_local_folder}"
                     )
-                    rmtree(target_local_folder)
+                    rmtree(
+                        target_local_folder,
+                        ignore_errors=False,
+                        onerror=handle_remove_read_only,
+                    )
                 logger.info(
                     f"Copying local folder from {existing_instance_local_folder} to {target_local_folder}"
                 )
@@ -549,7 +572,7 @@ class MainWindow(QMainWindow):
                 Path(AppInfo().app_storage_folder) / "instances" / new_instance_name
             )
             # Prompt user with the existing instance configuration and confirm that they would like to clone it
-            answer = show_dialogue_confirmation(
+            answer = BinaryChoiceDialog(
                 title=f"Clone instance [{existing_instance_name}]",
                 text=f"Would you like to clone instance [{existing_instance_name}] to create new instance [{new_instance_name}]?\n"
                 + "This will clone the instance's data!"
@@ -562,7 +585,8 @@ class MainWindow(QMainWindow):
                 + "\nSteamCMD install path (steamcmd + steam folders will be cloned):"
                 + f"\n{existing_instance_steamcmd_install_path if existing_instance_steamcmd_install_path else '<None>'}\n",
             )
-            if answer == "&Yes":
+            if answer.exec_is_positive():
+                # Clone the RimWorld game_folder to the new instance
                 target_game_folder = str(Path(new_instance_path) / game_folder_name)
                 target_local_folder = str(
                     Path(new_instance_path) / game_folder_name / local_folder_name
@@ -605,11 +629,11 @@ class MainWindow(QMainWindow):
                 # Clone the existing workshop_folder to the new instance's local mods folder
                 if existing_instance_workshop_folder:
                     # Prompt user to confirm before initiating the procedure
-                    answer = self.__ask_how_to_workshop_mods(
+                    answer_workshop_mods: str = self.__ask_how_to_workshop_mods(
                         existing_instance_name=existing_instance_name,
                         existing_instance_workshop_folder=existing_instance_workshop_folder,
                     )
-                    if answer == "Convert to SteamCMD":
+                    if answer_workshop_mods == "Convert to SteamCMD":
                         if os.path.exists(
                             existing_instance_workshop_folder
                         ) and os.path.isdir(existing_instance_workshop_folder):
@@ -649,7 +673,11 @@ class MainWindow(QMainWindow):
                         logger.info(
                             f"Replacing existing steamcmd folder at {target_steamcmd_install_path}"
                         )
-                        rmtree(target_steamcmd_install_path)
+                        rmtree(
+                            target_steamcmd_install_path,
+                            ignore_errors=False,
+                            onerror=handle_remove_read_only,
+                        )
                     logger.info(
                         f"Copying steamcmd folder from {steamcmd_install_path} to {target_steamcmd_install_path}"
                     )
@@ -672,12 +700,22 @@ class MainWindow(QMainWindow):
                         logger.info(
                             f"Replacing existing steam folder at {target_steam_install_path}"
                         )
-                        rmtree(target_steam_install_path)
+                        rmtree(
+                            target_steam_install_path,
+                            ignore_errors=False,
+                            onerror=handle_remove_read_only,
+                        )
                     logger.info(
                         f"Copying steam folder from {steam_install_path} to {target_steam_install_path}"
                     )
+                    # Copy the directory, but omit the symlink path
                     copytree(
-                        steam_install_path, target_steam_install_path, symlinks=True
+                        steam_install_path,
+                        target_steam_install_path,
+                        symlinks=True,
+                        ignore=lambda d, names: ["steamapps/workshop/content/294100"]
+                        if d == steam_install_path
+                        else [],
                     )
                     # Unlink steam/workshop/content/294100 symlink if it exists, and relink it to our new target local mods folder
                     link_path = str(
@@ -687,7 +725,9 @@ class MainWindow(QMainWindow):
                         / "content"
                         / "294100"
                     )
-                    self.steamcmd_wrapper.check_symlink(link_path, target_local_folder)
+                    self.steamcmd_wrapper.create_symlink(
+                        target_local_folder, link_path, show_dialogues=False, force=True
+                    )
                 # Create the new instance for our cloned instance
                 self.__create_new_instance(
                     instance_name=new_instance_name,
@@ -800,12 +840,12 @@ class MainWindow(QMainWindow):
             )
             return
         else:
-            answer = show_dialogue_confirmation(
+            answer = BinaryChoiceDialog(
                 title=f"Delete instance {self.settings_controller.settings.current_instance}",
                 text="Are you sure you want to delete the selected instance and all of its data?",
                 information="This action cannot be undone.",
             )
-            if answer == "&Yes":
+            if answer.exec_is_positive():
                 try:
                     rmtree(
                         str(
@@ -814,7 +854,9 @@ class MainWindow(QMainWindow):
                                 / "instances"
                                 / self.settings_controller.settings.current_instance
                             )
-                        )
+                        ),
+                        ignore_errors=False,
+                        onerror=handle_remove_read_only,
                     )
                 except Exception as e:
                     logger.error(f"Error deleting instance: {e}")
@@ -859,6 +901,9 @@ class MainWindow(QMainWindow):
             ],
         )
         # Connect watchdog to MetadataManager
+        self.watchdog_event_handler.acf_changed.connect(
+            self.main_content_panel.metadata_manager.refresh_acf_metadata
+        )
         self.watchdog_event_handler.mod_created.connect(
             self.main_content_panel.metadata_manager.process_creation
         )
@@ -872,33 +917,43 @@ class MainWindow(QMainWindow):
         self.main_content_panel.stop_watchdog_signal.connect(self.shutdown_watchdog)
         # Start watchdog
         try:
-            if self.watchdog_event_handler.watchdog_observer is not None:
-                self.watchdog_event_handler.watchdog_observer.start()  # type: ignore #Upstream not typed
+            if self.watchdog_event_handler.watchdog_acf_observer is not None:
+                self.watchdog_event_handler.watchdog_acf_observer.start()
             else:
-                logger.warning("Watchdog Observer is None. Unable to start.")
+                logger.warning("Watchdog Steam .acf Observer is None. Unable to start.")
+            if self.watchdog_event_handler.watchdog_mods_observer is not None:
+                self.watchdog_event_handler.watchdog_mods_observer.start()
+            else:
+                logger.warning("Watchdog Mods Observer is None. Unable to start.")
         except Exception as e:
             logger.warning(
-                f"Unable to initialize watchdog Observer due to exception: {str(e)}"
+                f"Unable to initialize Watchdog Observer(s) due to exception: {str(e)}"
             )
 
     def stop_watchdog_if_running(self) -> None:
         # STOP WATCHDOG IF IT IS ALREADY RUNNING
-        if (
-            self.watchdog_event_handler
-            and self.watchdog_event_handler.watchdog_observer
-            and self.watchdog_event_handler.watchdog_observer.is_alive()
-        ):
-            self.shutdown_watchdog()
+        if self.watchdog_event_handler is not None:
+            if self.watchdog_event_handler.watchdog_acf_observer is not None or (
+                self.watchdog_event_handler.watchdog_mods_observer is not None
+            ):
+                self.shutdown_watchdog()
 
     def shutdown_watchdog(self) -> None:
         if (
-            self.watchdog_event_handler
-            and self.watchdog_event_handler.watchdog_observer
-            and self.watchdog_event_handler.watchdog_observer.is_alive()
+            self.watchdog_event_handler is not None
+            and self.watchdog_event_handler.watchdog_acf_observer is not None
+            and self.watchdog_event_handler.watchdog_mods_observer is not None
         ):
-            self.watchdog_event_handler.watchdog_observer.stop()  # type: ignore #Upstream not typed
-            self.watchdog_event_handler.watchdog_observer.join()
-            self.watchdog_event_handler.watchdog_observer = None
-            for timer in self.watchdog_event_handler.cooldown_timers.values():
-                timer.cancel()
+            # Handle Steam .acf Observer shutdown
+            if self.watchdog_event_handler.watchdog_acf_observer.is_alive():
+                self.watchdog_event_handler.watchdog_acf_observer.stop()
+                self.watchdog_event_handler.watchdog_acf_observer.join()
+                self.watchdog_event_handler.watchdog_acf_observer = None
+            # Handle Mod Directory Observer shutdown
+            elif self.watchdog_event_handler.watchdog_mods_observer.is_alive():
+                self.watchdog_event_handler.watchdog_mods_observer.stop()
+                self.watchdog_event_handler.watchdog_mods_observer.join()
+                self.watchdog_event_handler.watchdog_mods_observer = None
+                for timer in self.watchdog_event_handler.cooldown_timers.values():
+                    timer.cancel()
             self.watchdog_event_handler = None

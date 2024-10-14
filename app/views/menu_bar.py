@@ -1,5 +1,3 @@
-from typing import Optional
-
 from PySide6.QtCore import QObject
 from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import QMenu, QMenuBar
@@ -40,6 +38,7 @@ class MenuBar(QObject):
         self.copy_action: QAction
         self.paste_action: QAction
         self.rule_editor_action: QAction
+        self.reset_all_warnings_action: QAction
         self.add_git_mod_action: QAction
         self.browse_workshop_action: QAction
         self.update_workshop_mods_action: QAction
@@ -67,9 +66,9 @@ class MenuBar(QObject):
         self,
         menu: QMenu,
         title: str,
-        shortcut: Optional[str] = None,
+        shortcut: str | None = None,
         checkable: bool = False,
-        role: Optional[QAction.MenuRole] = None,
+        role: QAction.MenuRole | None = None,
     ) -> QAction:
         """
         Add an action to a menu.
@@ -77,10 +76,9 @@ class MenuBar(QObject):
         Args:
             menu (QMenu): The menu to which the action will be added.
             title (str): The title of the action.
-            shortcut (Optional[str], optional): The keyboard shortcut for the action. Defaults to None.
-            checkable (bool, optional): Whether the action is checkable. Defaults to False.
-            role (Optional[QAction.MenuRole], optional): The menu role of the action. Defaults to None.
-
+            shortcut (str | None = None): The keyboard shortcut for the action.
+            checkable (bool = False): Whether the action is checkable.
+            role (QAction.MenuRole | None, optional): The menu role of the action. Defaults to None.
         Returns:
             QAction: The created action.
         """
@@ -173,6 +171,9 @@ class MenuBar(QObject):
         self.paste_action = self._add_action(edit_menu, "Paste", "Ctrl+V")
         edit_menu.addSeparator()
         self.rule_editor_action = self._add_action(edit_menu, "Rule Editor…")
+        self.reset_all_warnings_action = self._add_action(
+            edit_menu, "Reset Warning Toggles"
+        )
         return edit_menu
 
     def _create_download_menu(self) -> QMenu:

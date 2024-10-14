@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from re import match
 
 from loguru import logger
 from PySide6.QtCore import Qt
@@ -7,9 +8,9 @@ from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout
 
 from app.models.image_label import ImageLabel
-from app.models.scroll_label import ScrollLabel
 from app.utils.app_info import AppInfo
 from app.utils.metadata import MetadataManager
+from app.views.description_widget import DescriptionWidget
 
 
 class ModInfo:
@@ -127,8 +128,10 @@ class ModInfo:
             Qt.TextInteractionFlag.TextSelectableByMouse
         )
         self.mod_info_path_value.setWordWrap(True)
-        self.description = ScrollLabel()
-        self.description.setText("\n\n\n\n\t\t\tWelcome to RimSort!")
+        self.description = DescriptionWidget()
+        self.description.setText(
+            "<br><br><br><center><h3>Welcome to RimSort!</h3></center>", convert=False
+        )
         # Add widgets to child layouts
         self.image_layout.addWidget(self.preview_picture)
         self.mod_info_name.addWidget(self.mod_info_name_label, 20)
@@ -192,7 +195,7 @@ class ModInfo:
 
         logger.debug("Finished ModInfo initialization")
 
-    def display_mod_info(self, uuid: str) -> None:
+    def display_mod_info(self, uuid: str, render_unity_rt: bool) -> None:
         """
         This slot receives a the complete mod data json for
         the mod that was just clicked on. It will set the relevant
@@ -252,10 +255,12 @@ class ModInfo:
                 list_of_authors = authors_tag["li"]
                 authors_text = ", ".join(list_of_authors)
                 self.mod_info_author_value.setText(authors_text)
-            else:
+            elif isinstance(authors_tag, str):
                 self.mod_info_author_value.setText(
                     authors_tag if authors_tag else "Not specified"
                 )
+            else:
+                self.mod_info_author_value.setText("Not specified")
 
             # Set mod version
             mod_version = mod_info.get("modversion", {})
@@ -298,11 +303,28 @@ class ModInfo:
         if "description" in mod_info:
             if mod_info["description"] is not None:
                 if isinstance(mod_info["description"], str):
-                    self.description.setText(mod_info["description"])
+                    self.description.setText(mod_info["description"], render_unity_rt)
                 else:
                     logger.error(
                         f"[description] tag is not a string: {mod_info['description']}"
                     )
+        elif "descriptionsbyversion" in mod_info and isinstance(
+            mod_info["descriptionsbyversion"], dict
+        ):
+            major, minor = self.metadata_manager.game_version.split(".")[
+                :2
+            ]  # Split the version and take the first two parts
+            version_regex = rf"v{major}\.{minor}"  # Construct the regex to match both major and minor versions
+            for version, description_by_ver in mod_info[
+                "descriptionsbyversion"
+            ].items():
+                if match(version_regex, version):
+                    if isinstance(description_by_ver, str):
+                        self.description.setText(description_by_ver, render_unity_rt)
+                    else:
+                        logger.error(
+                            f"[descriptionbyversion] value for {version} is not a string: {description_by_ver}"
+                        )
         # It is OK for the description value to be None (was not provided)
         # It is OK for the description key to not be in mod_info
         if mod_info.get("scenario"):

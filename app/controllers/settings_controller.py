@@ -1,11 +1,11 @@
-import os
+import sys
+from dataclasses import dataclass
 from json import JSONDecodeError
 from pathlib import Path
-from typing import Optional
 
 from loguru import logger
 from PySide6.QtCore import QObject, Slot
-from PySide6.QtWidgets import QApplication, QMessageBox
+from PySide6.QtWidgets import QApplication, QLineEdit, QMessageBox
 
 from app.models.settings import Instance, Settings
 from app.utils.constants import SortMethod
@@ -14,7 +14,6 @@ from app.utils.generic import platform_specific_open
 from app.utils.system_info import SystemInfo
 from app.views.dialogue import (
     BinaryChoiceDialog,
-    show_dialogue_confirmation,
     show_dialogue_file,
     show_settings_error,
 )
@@ -137,7 +136,7 @@ class SettingsController(QObject):
         )
 
         # Wire up the Databases tab buttons
-        # Community Database Rules buttons
+
         self.settings_dialog.community_rules_db_none_radio.clicked.connect(
             self._on_community_rules_db_radio_clicked
         )
@@ -147,6 +146,7 @@ class SettingsController(QObject):
         self.settings_dialog.community_rules_db_local_file_radio.clicked.connect(
             self._on_community_rules_db_radio_clicked
         )
+
         self.settings_dialog.community_rules_db_local_file_choose_button.clicked.connect(
             self._on_community_rules_db_local_file_choose_button_clicked
         )
@@ -157,7 +157,6 @@ class SettingsController(QObject):
             EventBus().do_download_community_rules_db_from_github
         )
 
-        # Steam Workshop Database buttons
         self.settings_dialog.steam_workshop_db_none_radio.clicked.connect(
             self._on_steam_workshop_db_radio_clicked
         )
@@ -167,6 +166,7 @@ class SettingsController(QObject):
         self.settings_dialog.steam_workshop_db_local_file_radio.clicked.connect(
             self._on_steam_workshop_db_radio_clicked
         )
+
         self.settings_dialog.steam_workshop_db_local_file_choose_button.clicked.connect(
             self._on_steam_workshop_db_local_file_choose_button_clicked
         )
@@ -317,6 +317,13 @@ class SettingsController(QObject):
         Set the instance with the provided instance.
         """
         self.settings.instances[instance.name] = instance
+
+    @property
+    def active_instance(self) -> Instance:
+        """
+        Get the active instance.
+        """
+        return self.settings.instances[self.settings.current_instance]
 
     def _update_view_from_model(self) -> None:
         """
@@ -469,7 +476,9 @@ class SettingsController(QObject):
             self.settings.steamcmd_validate_downloads
         )
         self.settings_dialog.steamcmd_auto_clear_depot_cache_checkbox.setChecked(
-            self.settings.steamcmd_auto_clear_depot_cache
+            self.settings.instances[
+                self.settings.current_instance
+            ].steamcmd_auto_clear_depot_cache
         )
         self.settings_dialog.steamcmd_install_location.setText(
             str(
@@ -518,6 +527,9 @@ class SettingsController(QObject):
         )
         self.settings_dialog.download_missing_mods_checkbox.setChecked(
             self.settings.try_download_missing_mods
+        )
+        self.settings_dialog.render_unity_rich_text_checkbox.setChecked(
+            self.settings.render_unity_rich_text
         )
         self.settings_dialog.github_username.setText(self.settings.github_username)
         self.settings_dialog.github_username.setCursorPosition(0)
@@ -609,7 +621,9 @@ class SettingsController(QObject):
         self.settings.steamcmd_validate_downloads = (
             self.settings_dialog.steamcmd_validate_downloads_checkbox.isChecked()
         )
-        self.settings.steamcmd_auto_clear_depot_cache = (
+        self.settings.instances[
+            self.settings.current_instance
+        ].steamcmd_auto_clear_depot_cache = (
             self.settings_dialog.steamcmd_auto_clear_depot_cache_checkbox.isChecked()
         )
         self.settings.instances[
@@ -656,6 +670,9 @@ class SettingsController(QObject):
         self.settings.try_download_missing_mods = (
             self.settings_dialog.download_missing_mods_checkbox.isChecked()
         )
+        self.settings.render_unity_rich_text = (
+            self.settings_dialog.render_unity_rich_text_checkbox.isChecked()
+        )
         self.settings.github_username = self.settings_dialog.github_username.text()
         self.settings.github_token = self.settings_dialog.github_token.text()
         run_args_str = ",".join(
@@ -668,11 +685,11 @@ class SettingsController(QObject):
         """
         Reset the settings to their default values.
         """
-        answer = show_dialogue_confirmation(
+        answer = BinaryChoiceDialog(
             title="Reset to defaults",
             text="Are you sure you want to reset all settings to their default values?",
         )
-        if answer == "Cancel":
+        if not answer.exec_is_positive():
             return
 
         self.settings = Settings()
@@ -719,7 +736,7 @@ class SettingsController(QObject):
         self.settings_dialog.game_location.setText(str(game_location))
         self._last_file_dialog_path = str(game_location)
 
-    def _on_game_location_choose_button_clicked_macos(self) -> Optional[Path]:
+    def _on_game_location_choose_button_clicked_macos(self) -> Path | None:
         """
         Open a directory dialog to select the game location for macOS and handle the result.
         """
@@ -733,7 +750,7 @@ class SettingsController(QObject):
 
         return Path(game_location)
 
-    def _on_game_location_choose_button_clicked_non_macos(self) -> Optional[Path]:
+    def _on_game_location_choose_button_clicked_non_macos(self) -> Path | None:
         """
         Open a directory dialog to select the game location and handle the result.
         """
@@ -853,11 +870,11 @@ class SettingsController(QObject):
         Clear the settings dialog's location fields.
         """
         if not skip_confirmation:
-            answer = show_dialogue_confirmation(
+            answer = BinaryChoiceDialog(
                 title="Clear all locations",
                 text="Are you sure you want to clear all locations?",
             )
-            if answer == "Cancel":
+            if not answer.exec_is_positive():
                 return
 
         self.settings_dialog.game_location.setText("")
@@ -872,129 +889,133 @@ class SettingsController(QObject):
         defaults typically found per-platform, and set them in the client.
         """
         logger.info("USER ACTION: starting autodetect paths")
-        user_home = Path.home()
 
-        darwin_paths = [
-            Path(
-                f"/{user_home}/Library/Application Support/Steam/steamapps/common/Rimworld/RimworldMac.app"
-            ),
-            Path(f"/{user_home}/Library/Application Support/Rimworld/Config"),
-            Path(
-                f"/{user_home}/Library/Application Support/Steam/steamapps/workshop/content/294100"
-            ),
-        ]
-
-        # If on Mac and the steam path doesn't exist, try the default path
-        if not darwin_paths[0].exists():
-            darwin_paths[0] = Path("/Applications/RimWorld.app")
-
-        debian_path = user_home / ".steam/debian-installation"
-        linux_paths = [
-            debian_path / "steamapps/common/RimWorld",
-            user_home
-            / ".config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios/Config",
-            debian_path / "steamapps/workshop/content/294100",
-        ]
-
-        if not debian_path.exists():
-            steam_path = user_home / ".steam/steam"
-            linux_paths = [
-                steam_path / "steamapps/common/RimWorld",
-                user_home
-                / ".config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios/Config",
-                steam_path / "steamapps/workshop/content/294100",
-            ]
-
-        windows_paths = [
-            Path("C:/Program Files (x86)/Steam/steamapps/common/Rimworld").resolve(),
-            Path(
-                f"{user_home}/AppData/LocalLow/Ludeon Studios/RimWorld by Ludeon Studios/Config"
-            ).resolve(),
-            Path(
-                "C:/Program Files (x86)/Steam/steamapps/workshop/content/294100"
-            ).resolve(),
-        ]
-
-        os_paths: list[Path] | list[str] = []  # Initialize os_paths
+        os_paths: tuple[Path, Path, Path]  # Initialize os_paths
         if SystemInfo().operating_system == SystemInfo.OperatingSystem.MACOS:
-            os_paths = darwin_paths
+            os_paths = self.__get_darwin_paths()
             logger.info(f"Running on MacOS with the following paths: {os_paths}")
         elif SystemInfo().operating_system == SystemInfo.OperatingSystem.LINUX:
-            os_paths = linux_paths
+            os_paths = self.__get_debian_paths()
             logger.info(f"Running on Linux with the following paths: {os_paths}")
-        elif SystemInfo().operating_system == SystemInfo.OperatingSystem.WINDOWS:
-            os_paths = windows_paths
+        elif sys.platform == "win32":
+            os_paths = self.__get_windows_paths()
             logger.info(f"Running on Windows with the following paths: {os_paths}")
         else:
             logger.error("Attempting to autodetect paths on an unknown system")
+            return
 
-        # Convert our paths to str
-        os_paths = [str(path) for path in os_paths]
+        @dataclass
+        class _PathGroup:
+            folder: Path
+            settings_line: QLineEdit
+            name: str
 
-        # If the game folder exists...
-        if os.path.exists(os_paths[0]):
-            logger.info(f"Autodetected game folder path exists: {os_paths[0]}")
-            if not self.settings_dialog.game_location.text():
+        path_groups = [
+            _PathGroup(os_paths[0], self.settings_dialog.game_location, "game"),
+            _PathGroup(
+                os_paths[1], self.settings_dialog.config_folder_location, "config"
+            ),
+            _PathGroup(
+                os_paths[2],
+                self.settings_dialog.steam_mods_folder_location,
+                "workshop mods",
+            ),
+            _PathGroup(
+                os_paths[0] / "Mods",
+                self.settings_dialog.local_mods_folder_location,
+                "local mods",
+            ),
+        ]
+
+        for group in path_groups:
+            if group.folder.exists():
                 logger.info(
-                    "No value set currently for game folder. Overwriting with autodetected path"
+                    f"Auto-detected {group.name} folder path exists: {group.folder}"
                 )
-                self.settings_dialog.game_location.setText(os_paths[0])
+                if not group.settings_line.text():
+                    logger.info(
+                        f"No value set currently for {group.name} folder. Overwriting with auto-detected path"
+                    )
+                    group.settings_line.setText(str(group.folder))
+                else:
+                    logger.info(f"Value already set for {group.name} folder. Passing")
             else:
-                logger.info("Value already set for game folder. Passing")
-        else:
-            logger.warning(
-                f"Autodetected game folder path does not exist: {os_paths[0]}"
+                logger.warning(
+                    f"Auto-detected {group.name} folder path does not exist: {group.folder}"
+                )
+
+    def __get_darwin_paths(self) -> tuple[Path, Path, Path]:
+        """
+        Get the default paths for macOS.
+
+        Returns:
+            tuple[Path, Path, Path]: game_folder, config_folder, steam_mods_folder
+        """
+        user_home = Path.home()
+        game_folder = Path(
+            f"/{user_home}/Library/Application Support/Steam/steamapps/common/Rimworld/RimworldMac.app"
+        )
+        config_folder = Path(
+            f"/{user_home}/Library/Application Support/Rimworld/Config"
+        )
+        steam_mods_folder = Path(
+            f"/{user_home}/Library/Application Support/Steam/steamapps/workshop/content/294100"
+        )
+
+        return game_folder, config_folder, steam_mods_folder
+
+    def __get_debian_paths(self) -> tuple[Path, Path, Path]:
+        """
+        Get the default paths for Debian-based Linux distributions.
+
+        Returns:
+            tuple[Path, Path, Path]: game_folder, config_folder, steam_mods_folder
+        """
+        user_home = Path.home()
+        debian_path = user_home / ".steam/debian-installation"
+        if not debian_path.exists():
+            steam_path = user_home / ".steam/steam"
+            debian_path = steam_path / "steamapps/common/RimWorld"
+        game_folder = debian_path / "steamapps/common/RimWorld"
+        config_folder = (
+            user_home
+            / ".config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios/Config"
+        )
+        steam_mods_folder = debian_path / "steamapps/workshop/content/294100"
+
+        return game_folder, config_folder, steam_mods_folder
+
+    def __get_windows_paths(self) -> tuple[Path, Path, Path]:
+        """
+        Get the default paths for Windows.
+
+        Returns:
+            tuple[Path, Path, Path]: game_folder, config_folder, steam_mods_folder
+        """
+        if sys.platform == "win32":
+            user_home = Path.home()
+            steam_folder = "C:/Program Files (x86)/Steam"
+            from app.utils.win_find_steam import find_steam_folder
+
+            steam_folder, found = find_steam_folder()
+
+            if not found:
+                logger.error(
+                    "[win32] Could not find Steam folder. Using fallback assumptions"
+                )
+                steam_folder = "C:/Program Files (x86)/Steam"
+
+            game_folder = Path(f"{steam_folder}/steamapps/common/Rimworld")
+            config_folder = Path(
+                f"{user_home}/AppData/LocalLow/Ludeon Studios/RimWorld by Ludeon Studios/Config"
+            )
+            steam_mods_folder = Path(
+                f"{steam_folder}/steamapps/workshop/content/294100"
             )
 
-        # If the config folder exists...
-        if os.path.exists(os_paths[1]):
-            logger.info(f"Autodetected config folder path exists: {os_paths[1]}")
-            if not self.settings_dialog.config_folder_location.text():
-                logger.info(
-                    "No value set currently for config folder. Overwriting with autodetected path"
-                )
-                self.settings_dialog.config_folder_location.setText(os_paths[1])
-            else:
-                logger.info("Value already set for config folder. Passing")
+            return game_folder, config_folder, steam_mods_folder
         else:
-            logger.warning(
-                f"Autodetected config folder path does not exist: {os_paths[1]}"
-            )
-
-        # If the workshop folder exists
-        if os.path.exists(os_paths[2]):
-            logger.info(f"Autodetected workshop folder path exists: {os_paths[2]}")
-            if not self.settings_dialog.steam_mods_folder_location.text():
-                logger.info(
-                    "No value set currently for workshop folder. Overwriting with autodetected path"
-                )
-                self.settings_dialog.steam_mods_folder_location.setText(os_paths[2])
-            else:
-                logger.info("Value already set for workshop folder. Passing")
-        else:
-            logger.warning(
-                f"Autodetected workshop folder path does not exist: {os_paths[2]}"
-            )
-
-        # Checking for an existing Rimworld/Mods folder
-        rimworld_mods_path = (Path(os_paths[0]) / "Mods").resolve()
-        if os.path.exists(rimworld_mods_path):
-            logger.info(
-                f"Autodetected local mods folder path exists: {rimworld_mods_path}"
-            )
-            if not self.settings_dialog.local_mods_folder_location.text():
-                logger.info(
-                    "No value set currently for local mods folder. Overwriting with autodetected path"
-                )
-                self.settings_dialog.local_mods_folder_location.setText(
-                    str(rimworld_mods_path)
-                )
-            else:
-                logger.info("Value already set for local mods folder. Passing")
-        else:
-            logger.warning(
-                f"Autodetected game folder path does not exist: {rimworld_mods_path}"
-            )
+            raise ValueError("This function should only be called on Windows")
 
     @Slot()
     def _on_community_rules_db_radio_clicked(self, checked: bool) -> None:
@@ -1198,7 +1219,7 @@ class SettingsController(QObject):
             "Are you sure you want to download all mods via SteamCMD and build the Steam Workshop database?",
             (
                 "For most users this is not necessary as the GitHub SteamDB is adequate. Building the database may take a long time. "
-                "This process download all mods (not just your own) from the Steam Workshop. "
+                "This process downloads all mods (not just your own) from the Steam Workshop. "
                 "This can be a large amount of data and take a long time. Are you sure you want to continue?"
             ),
             icon=QMessageBox.Icon.Warning,
@@ -1255,11 +1276,11 @@ class SettingsController(QObject):
         Build the Steam Workshop database.
         """
         confirm_diag = BinaryChoiceDialog(
-            "Confirm Build Database",
-            "Are you sure you want to build the Steam Workshop database?",
-            (
+            title="Confirm Build Database",
+            text="Are you sure you want to build the Steam Workshop database?",
+            information=(
                 "For most users this is not necessary as the GitHub SteamDB is adequate. Building the database may take a long time. "
-                "Depending on your settings, it may also subscribe to and download all mods from the Steam Workshop (not just your own). "
+                "Depending on your settings, it may also crawl through the entirety of the steam workshop via the webAPI. "
                 "This can be a large amount of data and take a long time. Are you sure you want to continue?"
             ),
             icon=QMessageBox.Icon.Warning,

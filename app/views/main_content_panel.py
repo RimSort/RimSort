@@ -20,7 +20,12 @@ from zipfile import ZipFile
 
 from loguru import logger
 
-from app.utils.generic import platform_specific_open
+from app.utils.generic import (
+    check_valid_http_git_url,
+    extract_git_dir_name,
+    extract_git_user_or_org,
+    platform_specific_open,
+)
 from app.utils.system_info import SystemInfo
 
 # GitPython depends on git executable being available in PATH
@@ -574,7 +579,10 @@ class MainContent(QObject):
 
         :param uuid: uuid of mod
         """
-        self.mod_info_panel.display_mod_info(uuid=uuid)
+        self.mod_info_panel.display_mod_info(
+            uuid=uuid,
+            render_unity_rt=self.settings_controller.settings.render_unity_rich_text,
+        )
 
     def __repopulate_lists(self, is_initial: bool = False) -> None:
         """
@@ -647,18 +655,22 @@ class MainContent(QObject):
                 ].local_folder
                 if local_mods_target and local_mods_target != "":
                     with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
-                        todds_txt_file.write(local_mods_target + "\n")
+                        todds_txt_file.write(os.path.abspath(local_mods_target) + "\n")
                 workshop_mods_target = self.settings_controller.settings.instances[
                     self.settings_controller.settings.current_instance
                 ].workshop_folder
                 if workshop_mods_target and workshop_mods_target != "":
                     with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
-                        todds_txt_file.write(workshop_mods_target + "\n")
+                        todds_txt_file.write(os.path.abspath(local_mods_target) + "\n")
             else:
                 with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
                     for uuid in self.mods_panel.active_mods_list.uuids:
                         todds_txt_file.write(
-                            self.metadata_manager.internal_local_metadata[uuid]["path"]
+                            os.path.abspath(
+                                self.metadata_manager.internal_local_metadata[uuid][
+                                    "path"
+                                ]
+                            )
                             + "\n"
                         )
             if action == "optimize_textures":
@@ -963,6 +975,7 @@ class MainContent(QObject):
         )
         self.mod_info_panel.panel.addWidget(loading_animation)
         # If any text message specified, pass it to the info panel as well
+        loading_animation_text_label = None
         if text:
             loading_animation_text_label = QLabel(text)
             loading_animation_text_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -973,7 +986,7 @@ class MainContent(QObject):
         loop.exec_()
         data = loading_animation.data
         # Remove text label if it was passed
-        if text:
+        if text and loading_animation_text_label is not None:
             self.mod_info_panel.panel.removeWidget(loading_animation_text_label)
             loading_animation_text_label.close()
         # Enable widgets again after loading
@@ -1566,7 +1579,7 @@ class MainContent(QObject):
                 elif self.metadata_manager.internal_local_metadata[uuid].get("url"):
                     url = self.metadata_manager.internal_local_metadata[uuid]["url"]
                 else:
-                    url is None
+                    url = None
                 if url is None:
                     if package_id in active_steam_mods_packageid_to_pfid.keys():
                         active_mods_rentry_report = (
@@ -1613,8 +1626,12 @@ class MainContent(QObject):
         # Upload the report to Rentry.co
         rentry_uploader = RentryUpload(active_mods_rentry_report)
         successful = rentry_uploader.upload_success
-        host = urlparse(rentry_uploader.url).hostname if successful else None
-        if rentry_uploader.url and host and host.endswith("rentry.co"):  # type: ignore
+        host = (
+            urlparse(rentry_uploader.url).hostname
+            if successful and (rentry_uploader.url is not None)
+            else None
+        )
+        if rentry_uploader.url and host and host.endswith("rentry.co"):
             copy_to_clipboard_safely(rentry_uploader.url)
             dialogue.show_information(
                 title="Uploaded active mod list",
@@ -1982,7 +1999,9 @@ class MainContent(QObject):
             self.steamcmd_wrapper.download_mods(
                 publishedfileids=publishedfileids,
                 runner=self.steamcmd_runner,
-                clear_cache=self.settings_controller.settings.steamcmd_auto_clear_depot_cache,
+                clear_cache=self.settings_controller.settings.instances[
+                    self.settings_controller.settings.current_instance
+                ].steamcmd_auto_clear_depot_cache,
             )
         else:
             dialogue.show_warning(
@@ -2262,15 +2281,10 @@ class MainContent(QObject):
             self._do_notify_no_git()
             return
 
-        if (
-            repo_url
-            and repo_url != ""
-            and repo_url.startswith("http://")
-            or repo_url.startswith("https://")
-        ):
-            # Calculate folder name from provided URL
-            repo_folder_name = os.path.split(repo_url)[1]
-            # Calculate path from generated folder name
+        repo_url = repo_url.strip()
+        if check_valid_http_git_url(repo_url):
+            repo_folder_name = extract_git_dir_name(repo_url)
+
             repo_path = str((Path(base_path) / repo_folder_name))
             if os.path.exists(repo_path):  # If local repo does exist
                 # Prompt to user to handle
@@ -2308,7 +2322,8 @@ class MainContent(QObject):
                 dialogue.show_information(
                     title="Repo retrieved",
                     text="The configured repository was cloned!",
-                    information=f"{repo_url} ->\n" + f"{repo_path}",
+                    information=f'<a href="{repo_url}">{repo_url}</a>  ->\n'
+                    + f"{repo_path}",
                 )
             except GitCommandError:
                 try:
@@ -2353,9 +2368,10 @@ class MainContent(QObject):
             dialogue.show_warning(
                 title="Invalid repository",
                 text="An invalid repository was detected!",
-                information="Please reconfigure a repository in settings!\n"
+                information="Please check your repository URL!\n"
                 + "A valid repository is a repository URL which is not\n"
                 + 'empty and is prefixed with "http://" or "https://"',
+                details=f"Invalid repository: {repo_url}",
             )
 
     def _do_force_update_existing_repo(self, base_path: str, repo_url: str) -> None:
@@ -2364,14 +2380,9 @@ class MainContent(QObject):
         Handles possible existing repo, and prompts (re)download of repo
         Otherwise it just clones the repo and notifies user
         """
-        if (
-            repo_url
-            and repo_url != ""
-            and repo_url.startswith("http://")
-            or repo_url.startswith("https://")
-        ):
+        if check_valid_http_git_url(repo_url):
             # Calculate folder name from provided URL
-            repo_folder_name = os.path.split(repo_url)[1]
+            repo_folder_name = extract_git_dir_name(repo_url)
             # Calculate path from generated folder name
             repo_path = str((Path(base_path) / repo_folder_name))
             if os.path.exists(repo_path):  # If local repo does exists
@@ -2402,7 +2413,7 @@ class MainContent(QObject):
                         title="Repo force updated",
                         text="The configured repository was updated!",
                         information=f"{repo_path} ->\n "
-                        + f"{repo.head.commit.message.decode() if isinstance(repo.head.commit.message, bytes) else repo.head.commit.message}",
+                        + f"Latest Commit: {repo.head.commit.message.decode() if isinstance(repo.head.commit.message, bytes) else repo.head.commit.message}",
                     )
                     # Cleanup
                     self._do_cleanup_gitpython(repo=repo)
@@ -2451,8 +2462,8 @@ class MainContent(QObject):
             and (repo_url.startswith("http://") or repo_url.startswith("https://"))
         ):
             # Calculate folder name from provided URL
-            repo_user_or_org = os.path.split(os.path.split(repo_url)[0])[1]
-            repo_folder_name = os.path.split(repo_url)[1]
+            repo_user_or_org = extract_git_user_or_org(repo_url)
+            repo_folder_name = extract_git_dir_name(repo_url)
             # Calculate path from generated folder name
             repo_path = str((AppInfo().databases_folder / repo_folder_name))
             if os.path.exists(repo_path):  # If local repo exists
@@ -2481,6 +2492,12 @@ class MainContent(QObject):
                             logger.error(
                                 "Unable to parse version or timestamp from database. Cancelling upload."
                             )
+                            dialogue.show_warning(
+                                title="Failed to upload database!",
+                                text="The database file does not contain a version or timestamp!",
+                                information=f"File: {file_full_path}",
+                            )
+                            return
                         # Get the abbreviated timezone
                         timezone_abbreviation = (
                             datetime.datetime.now(datetime.timezone.utc)
@@ -2565,6 +2582,8 @@ class MainContent(QObject):
                             information=f"Configured repository: {repo_url}",
                             details=stacktrace,
                         )
+                        self._do_cleanup_gitpython(repo=local_repo)
+                        return
                     # Cleanup
                     self._do_cleanup_gitpython(repo=local_repo)
                     # Notify the pull request URL
@@ -3129,6 +3148,12 @@ class MainContent(QObject):
                 )
         except Exception:
             logger.error("Failed to read info from existing database")
+            dialogue.show_warning(
+                title="Failed to read existing database",
+                text="Failed to read the existing database!",
+                information=f"Path: {path}",
+            )
+            return
         db_input_b = {"timestamp": int(time.time()), "rules": rules_data}
         db_output_c = db_input_a.copy()
         # Update database in place

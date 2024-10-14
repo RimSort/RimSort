@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 
 from PySide6.QtCore import QMargins
 from PySide6.QtGui import QFont, QFontMetrics, QPixmap
@@ -16,7 +15,7 @@ class GUIInfo:
     of the class exists throughout the application.
     """
 
-    _instance: Optional["GUIInfo"] = None
+    _instance: "None | GUIInfo" = None
 
     def __new__(cls) -> "GUIInfo":
         """
