@@ -876,13 +876,13 @@ class MainContent(QObject):
                         ),
                         text=f"RimSort update found. Downloading RimSort {tag_name_updated} release...",
                     )
-                    temp_dir = "RimSort" if not SYSTEM == "Darwin" else "RimSort.app"
+                    temp_dir = "RimSort" if SYSTEM != "Darwin" else "RimSort.app"
                     answer = dialogue.show_dialogue_conditional(
                         title="Update downloaded",
                         text="Do you want to proceed with the update?",
                         information=f"\nSuccessfully retrieved latest release. The update will be installed from: {os.path.join(gettempdir(), temp_dir)}",
                     )
-                    if not answer == "&Yes":
+                    if answer != "&Yes":
                         return
                 except Exception:
                     stacktrace = traceback.format_exc()
@@ -1953,7 +1953,7 @@ class MainContent(QObject):
                 steamdb=self.metadata_manager.external_steam_metadata,
             )
         # No empty publishedfileids
-        if not len(publishedfileids) > 0:
+        if len(publishedfileids) == 0:
             dialogue.show_warning(
                 title="RimSort",
                 text="No PublishedFileIds were supplied in operation.",
@@ -2051,7 +2051,7 @@ class MainContent(QObject):
                     self.steamworks_in_use = False
                 elif (
                     instruction[0] in subscription_actions
-                    and not len(instruction[1]) < 1
+                    and len(instruction[1]) >= 1
                 ):  # ISteamUGC/{SubscribeItem/UnsubscribeItem}
                     logger.info(
                         f"Creating Steamworks API process with instruction {instruction}"
@@ -2109,7 +2109,7 @@ class MainContent(QObject):
                 steamdb=steamdb,
             )
         # No empty publishedfileids
-        if not len(publishedfileids) > 0:
+        if len(publishedfileids) == 0:
             dialogue.show_warning(
                 title="RimSort",
                 text="No PublishedFileIds were supplied in operation.",
@@ -2852,7 +2852,7 @@ class MainContent(QObject):
         loop = QEventLoop()
         self.db_builder.finished.connect(loop.quit)
         loop.exec_()
-        if not len(self.db_builder.publishedfileids) > 0:
+        if len(self.db_builder.publishedfileids) == 0:
             dialogue.show_warning(
                 title="No PublishedFileIDs",
                 text="DB Builder query did not return any PublishedFileIDs!",
