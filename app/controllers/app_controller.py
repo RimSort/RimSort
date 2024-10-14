@@ -6,12 +6,12 @@ from PySide6.QtWidgets import QApplication
 
 from app.controllers.main_window_controller import MainWindowController
 from app.controllers.settings_controller import SettingsController
+from app.controllers.steamcmd_controller import SteamCmdController
 from app.models.settings import Settings
 from app.utils.app_info import AppInfo
 from app.utils.constants import DEFAULT_USER_RULES
 from app.utils.gui_info import GUIInfo
 from app.utils.metadata import MetadataManager
-from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.views.main_window import MainWindow
 from app.views.settings_dialog import SettingsDialog
 
@@ -45,8 +45,8 @@ class AppController(QObject):
             model=self.settings, view=self.settings_dialog
         )
 
-        # Initialize SteamcmdInterface
-        self.steamcmd_wrapper = SteamcmdInterface.instance(
+        # Initialize SteamCmdController
+        self.steamcmd_wrapper = SteamCmdController.instance(
             self.settings_controller.settings.instances[
                 self.settings_controller.settings.current_instance
             ].steamcmd_install_path,

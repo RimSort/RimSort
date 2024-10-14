@@ -27,16 +27,16 @@ from app.views.dialogue import (
 from app.windows.runner_panel import RunnerPanel
 
 
-class SteamcmdInterface:
+class SteamCmdController:
     """
-    Create SteamcmdInterface object to provide an interface for SteamCMD functionality
+    Create SteamCmdController object to provide an interface for SteamCMD functionality
     """
 
-    _instance: "None | SteamcmdInterface" = None
+    _instance: "None | SteamCmdController" = None
 
-    def __new__(cls, *args: Any, **kwargs: Any) -> "SteamcmdInterface":
+    def __new__(cls, *args: Any, **kwargs: Any) -> "SteamCmdController":
         if cls._instance is None:
-            cls._instance = super(SteamcmdInterface, cls).__new__(cls)
+            cls._instance = super(SteamCmdController, cls).__new__(cls)
         return cls._instance
 
     def __init__(self, steamcmd_prefix: str, validate: bool) -> None:
@@ -44,14 +44,14 @@ class SteamcmdInterface:
             self.initialized = True
             self.setup = False
             self.steamcmd_prefix = steamcmd_prefix
-            super(SteamcmdInterface, self).__init__()
-            logger.debug("Initializing SteamcmdInterface")
+            super(SteamCmdController, self).__init__()
+            logger.debug("Initializing SteamCmdController")
             self.initialize_prefix(steamcmd_prefix, validate)
 
             EventBus().do_clear_steamcmd_depot_cache.connect(
                 lambda: self.clear_depot_cache()
             )
-            logger.debug("Finished SteamcmdInterface initialization")
+            logger.debug("Finished SteamCmdController initialization")
 
     def initialize_prefix(self, steamcmd_prefix: str, validate: bool) -> None:
         self.steamcmd_prefix = steamcmd_prefix
@@ -80,7 +80,7 @@ class SteamcmdInterface:
             self.steamcmd = str((Path(self.steamcmd_install_path) / "steamcmd.exe"))
         else:
             show_fatal_error(
-                "SteamcmdInterface",
+                "SteamCmdController",
                 f"Found platform {self.system}. steamcmd is not supported on this platform.",
             )
             return
@@ -106,11 +106,13 @@ class SteamcmdInterface:
         )
 
     @classmethod
-    def instance(cls, *args: Any, **kwargs: Any) -> "SteamcmdInterface":
+    def instance(cls, *args: Any, **kwargs: Any) -> "SteamCmdController":
         if cls._instance is None:
             cls._instance = cls(*args, **kwargs)
         elif args or kwargs:
-            raise ValueError("SteamcmdInterface instance has already been initialized.")
+            raise ValueError(
+                "SteamCmdController instance has already been initialized."
+            )
         return cls._instance
 
     @staticmethod
@@ -154,7 +156,7 @@ class SteamcmdInterface:
             symlink.create_symlink(src_path, dst_path, force=force)
             return True
         except symlink.SymlinkDstNotEmptyError as e:
-            return SteamcmdInterface._create_symlink_retry(
+            return SteamCmdController._create_symlink_retry(
                 src_path,
                 dst_path,
                 show_dialogues,
@@ -167,7 +169,7 @@ class SteamcmdInterface:
             )
 
         except symlink.SymlinkDstIsFileError as e:
-            return SteamcmdInterface._create_symlink_retry(
+            return SteamCmdController._create_symlink_retry(
                 src_path,
                 dst_path,
                 show_dialogues,
@@ -180,7 +182,7 @@ class SteamcmdInterface:
             )
 
         except symlink.SymlinkDstParentNotExistError as e:
-            return SteamcmdInterface._create_symlink_retry(
+            return SteamCmdController._create_symlink_retry(
                 src_path,
                 dst_path,
                 show_dialogues,
@@ -262,7 +264,7 @@ class SteamcmdInterface:
         )
 
         if diag.exec_is_positive():
-            return SteamcmdInterface.create_symlink(
+            return SteamCmdController.create_symlink(
                 src_path,
                 dst_path,
                 force=True,
@@ -462,7 +464,7 @@ class SteamcmdInterface:
             except Exception as e:
                 runner.message("Installation failed")
                 show_fatal_error(
-                    "SteamcmdInterface",
+                    "SteamCmdController",
                     f"Failed to download steamcmd for {self.system}",
                     "Did the file/url change?\nDoes your environment have access to the internet?",
                     details=f"Error: {type(e).__name__}: {str(e)}",
@@ -470,7 +472,7 @@ class SteamcmdInterface:
         else:
             runner.message("SteamCMD already installed...")
             show_warning(
-                "SteamcmdInterface",
+                "SteamCmdController",
                 f"A steamcmd runner already exists at: {self.steamcmd}",
             )
             answer = show_dialogue_conditional(

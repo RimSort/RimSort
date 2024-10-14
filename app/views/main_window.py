@@ -25,11 +25,11 @@ from app.controllers.instance_controller import (
 from app.controllers.menu_bar_controller import MenuBarController
 from app.controllers.mods_panel_controller import ModsPanelController
 from app.controllers.settings_controller import SettingsController
+from app.controllers.steamcmd_controller import SteamCmdController
 from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 from app.utils.generic import handle_remove_read_only
 from app.utils.gui_info import GUIInfo
-from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.watchdog import WatchdogHandler
 from app.views.dialogue import (
     BinaryChoiceDialog,
@@ -63,8 +63,8 @@ class MainWindow(QMainWindow):
 
         # Create the main application window
         self.DEBUG_MODE = debug_mode
-        # SteamCMDInterface
-        self.steamcmd_wrapper = SteamcmdInterface.instance()
+        # SteamCmdController
+        self.steamcmd_wrapper = SteamCmdController.instance()
         # Content initialization should only fire on startup. Otherwise, this is handled by Refresh button
 
         # Watchdog

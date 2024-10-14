@@ -12,6 +12,7 @@ from natsort import natsorted
 from PySide6.QtCore import QObject, QRunnable, QThread, QThreadPool, Signal
 
 from app.controllers.settings_controller import SettingsController
+from app.controllers.steamcmd_controller import SteamCmdController
 from app.utils.app_info import AppInfo
 from app.utils.constants import (
     DB_BUILDER_PRUNE_EXCEPTIONS,
@@ -21,7 +22,6 @@ from app.utils.constants import (
 )
 from app.utils.generic import directories
 from app.utils.schema import generate_rimworld_mods_list, validate_rimworld_mods_list
-from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.steam.steamfiles.wrapper import acf_to_dict, dict_to_acf
 from app.utils.steam.webapi.wrapper import (
     DynamicQuery,
@@ -55,7 +55,7 @@ class MetadataManager(QObject):
             logger.info("Initializing MetadataManager")
 
             self.settings_controller = settings_controller
-            self.steamcmd_wrapper = SteamcmdInterface.instance()
+            self.steamcmd_wrapper = SteamCmdController.instance()
 
             # Initialize our threadpool for multithreaded parsing
             self.parser_threadpool = QThreadPool.globalInstance()

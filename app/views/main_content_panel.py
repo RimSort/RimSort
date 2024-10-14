@@ -56,6 +56,7 @@ import app.utils.constants as app_constants
 import app.utils.metadata as metadata
 import app.views.dialogue as dialogue
 from app.controllers.sort_controller import Sorter
+from app.controllers.steamcmd_controller import SteamCmdController
 from app.models.animations import LoadingAnimation
 from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
@@ -71,7 +72,6 @@ from app.utils.metadata import MetadataManager, SettingsController
 from app.utils.rentry.wrapper import RentryImport, RentryUpload
 from app.utils.schema import generate_rimworld_mods_list
 from app.utils.steam.browser import SteamBrowser
-from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.steam.steamworks.wrapper import (
     SteamworksGameLaunch,
     SteamworksSubscriptionHandler,
@@ -222,7 +222,7 @@ class MainContent(QObject):
             # Initialize Steam(CMD) integrations
             self.steam_browser: SteamBrowser | None = None
             self.steamcmd_runner: RunnerPanel | None = None
-            self.steamcmd_wrapper = SteamcmdInterface.instance()
+            self.steamcmd_wrapper = SteamCmdController.instance()
 
             # Initialize MetadataManager
             self.metadata_manager = metadata.MetadataManager.instance()
