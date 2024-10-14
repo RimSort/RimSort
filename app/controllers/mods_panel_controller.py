@@ -30,8 +30,8 @@ class ModsPanelController(QObject):
                 # Widget should always be of type ModListWidget
                 if isinstance(widget, ModListWidget):
                     package_id = widget.metadata_manager.internal_local_metadata[mod_data["uuid"]]["packageid"]
-                self._remove_from_all_ignore_lists(package_id)
-                logger.debug(f"Reset warning toggle for: {package_id}")
+                    self._remove_from_all_ignore_lists(package_id)
+                    logger.debug(f"Reset warning toggle for: {package_id}")
         self.mods_panel.active_mods_list.recalculate_warnings_signal.emit()
         self.mods_panel.inactive_mods_list.recalculate_warnings_signal.emit()
         
