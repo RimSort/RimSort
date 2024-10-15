@@ -3,7 +3,7 @@ from typing import Iterable
 
 from loguru import logger
 from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session, sessionmaker
 
 from app.models.metadata.metadata_db import AuxMetadataEntry, Base
 from app.utils.app_info import AppInfo
@@ -20,47 +20,49 @@ class AuxMetadataController(MetadataDbController):
         super().__init__(AppInfo().aux_metadata_db)
         Base.metadata.create_all(self.engine)
 
-    def get(self, item_path: Path) -> AuxMetadataEntry | None:
-        with self.Session() as session:
-            return (
-                session.query(AuxMetadataEntry)
-                .filter(AuxMetadataEntry.path == item_path)
-                .first()
-            )
+    @staticmethod
+    def get(session: Session, item_path: Path | str) -> AuxMetadataEntry | None:
+        if isinstance(item_path, Path):
+            item_path = str(item_path)
 
-    def get_or_create(self, item_path: Path) -> AuxMetadataEntry:
-        with self.Session() as session:
-            entry = (
-                session.query(AuxMetadataEntry)
-                .filter(AuxMetadataEntry.path == item_path)
-                .first()
-            )
+        return (
+            session.query(AuxMetadataEntry)
+            .filter(AuxMetadataEntry.path == item_path)
+            .first()
+        )
 
-            if entry is None:
-                entry = AuxMetadataEntry(path=item_path)
-                try:
+    @staticmethod
+    def get_or_create(session: Session, item_path: Path | str) -> AuxMetadataEntry:
+        if isinstance(item_path, Path):
+            item_path = str(item_path)
+
+        entry = AuxMetadataController.get(session, item_path)
+
+        if entry is None:
+            entry = AuxMetadataEntry(path=item_path)
+            try:
+                with session.begin_nested():
                     session.add(entry)
-                    session.commit()
-                except Exception as e:
-                    session.rollback()
-                    session.close()
-                    logger.exception(f"Failed to create new aux metadata entry: {e}")
-                    raise e
+                    session.flush()
+            except Exception as e:
+                session.rollback()
+                logger.exception(f"Failed to create new aux metadata entry: {e}")
+                raise e
 
-            return entry
+        return entry
 
-    def get_value_equals(self, key: str, value: str) -> list[AuxMetadataEntry]:
-        with self.Session() as session:
-            return (
-                session.query(AuxMetadataEntry)
-                .filter(getattr(AuxMetadataEntry, key) == value)
-                .all()
-            )
+    @staticmethod
+    def get_value_equals(session: Session, key: str, value: str) -> list[AuxMetadataEntry]:
+        return (
+            session.query(AuxMetadataEntry)
+            .filter(getattr(AuxMetadataEntry, key) == value)
+            .all()
+        )
 
-    def query(self, query: str) -> list[AuxMetadataEntry]:
-        with self.Session() as session:
-            result = session.execute(text(query)).all()
-            return [AuxMetadataEntry(**row._mapping) for row in result]
+    @staticmethod
+    def query(session: Session, query: str) -> list[AuxMetadataEntry]:
+        result = session.execute(text(query)).all()
+        return [AuxMetadataEntry(**row._mapping) for row in result]
 
     def add(self, item: AuxMetadataEntry | Iterable[AuxMetadataEntry]) -> None:
         with self.Session() as session:

@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from sqlalchemy import Boolean, Integer, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -11,7 +9,7 @@ class Base(DeclarativeBase):
 class AuxMetadataEntry(Base):
     __tablename__ = "Auxiliary Metadata"
 
-    path: Mapped[Path] = mapped_column(primary_key=True)
+    path: Mapped[str] = mapped_column(primary_key=True)
 
     acf_time_touched: Mapped[int] = mapped_column(Integer, default=-1)
     acf_time_updated: Mapped[int] = mapped_column(Integer, default=-1)
