@@ -98,6 +98,75 @@ def rmtree(path: str | Path, **kwargs: Any) -> bool:
     return True
 
 
+def remove(path: str | Path, **kwargs: Any) -> bool:
+    """Wrapper for improved remove error handling. Used for removing files at the specified path.
+    Checks if the path exists and is a file before attempting to delete it.
+    If any OSErrors occur, a warning dialog is shown to the user.
+
+    :param path: Path to file to be deleted.
+    :type path: str | Path
+    :param kwargs: Additional keyword arguments to pass to os.remove.
+    :return: True if the file was successfully deleted, False otherwise.
+    """
+
+    if isinstance(path, str):
+        path = Path(path)
+
+    if not path.exists():
+        logger.error(f"Tried to delete file that does not exist: {path}")
+        dialogue.show_warning(
+            title="Failed to remove file",
+            text="RimSort tried to remove a file that does not exist.",
+            details=f"File does not exist: {path}",
+        )
+        return False
+
+    if not path.is_file():
+        logger.error(f"remove path is not a file: {path}")
+        dialogue.show_warning(
+            title="Failed to remove file",
+            text="RimSort tried to remove a file that is not a file.",
+            details=f"Path is not a file: {path}",
+        )
+        return False
+
+    try:
+        os.remove(path, **kwargs)
+    except OSError as e:
+        if sys.platform == "win32":
+            error_code = e.winerror
+        else:
+            error_code = e.errno
+        logger.error(f"Failed to remove file: {e}")
+        dialogue.show_warning(
+            title="Failed to remove file",
+            text="An OSError occurred while trying to remove a file.",
+            information=f"{e.strerror} occurred at {e.filename} with error code {error_code}.",
+            details=str(e),
+        )
+        return False
+
+    return True
+
+
+def delete_file_dir(path: Path | str) -> bool:
+    """
+    Function to delete a file or directory at the specified path.
+    If the path is a directory, it will be deleted recursively.
+
+    :param path: path to the file or directory to be deleted
+    :type path: Path | str
+    :return: True if the file or directory was successfully deleted, False otherwise
+    """
+    if isinstance(path, str):
+        path = Path(path)
+
+    if path.is_dir():
+        return rmtree(path)
+    else:
+        return remove(path)
+
+
 def delete_files_with_condition(
     directory: Path | str, condition: Callable[[str], bool]
 ) -> None:
@@ -188,6 +257,8 @@ def launch_game_process(game_install_path: Path, args: list[str]) -> None:
             executable_path = str((game_install_path / "RimWorldWin64.exe"))
         else:
             logger.error("Unable to launch the game on an unknown system")
+            return
+
         logger.info(f"Path to game executable generated: {executable_path}")
         if os.path.exists(executable_path):
             logger.info(
