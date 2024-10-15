@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <ModMetaData>
-    <name>steam mod 1</name>
-    <author>steam mod 1 author</author>
-    <packageId>steam.mod1</packageId>
+    <name>local mod 1</name>
+    <author>local mod 1 author</author>
+    <packageId>local.mod1</packageId>
     <supportedVersions>
         <li>
             1.3
@@ -16,7 +16,7 @@
         </li>
     </supportedVersions>
     <description>
-        This is steammod 1 description
+        This is localmod 1 description
     </description>
     <modDependencies>
         <li>

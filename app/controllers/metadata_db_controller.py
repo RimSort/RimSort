@@ -22,6 +22,15 @@ class AuxMetadataController(MetadataDbController):
 
     @staticmethod
     def get(session: Session, item_path: Path | str) -> AuxMetadataEntry | None:
+        """Get an aux metadata entry by the key path.
+
+        :param session: The database session.
+        :type session: Session
+        :param item_path: The key path.
+        :type item_path: Path | str
+        :return: The aux metadata entry if found, otherwise None.
+        :rtype: AuxMetadataEntry | None
+        """
         if isinstance(item_path, Path):
             item_path = str(item_path)
 
@@ -33,6 +42,16 @@ class AuxMetadataController(MetadataDbController):
 
     @staticmethod
     def get_or_create(session: Session, item_path: Path | str) -> AuxMetadataEntry:
+        """Get or create an aux metadata entry by the key path.
+
+        :param session: The database session.
+        :type session: Session
+        :param item_path: The key path.
+        :type item_path: Path | str
+        :return: The aux metadata entry.
+        :rtype: AuxMetadataEntry
+        """
+
         if isinstance(item_path, Path):
             item_path = str(item_path)
 
@@ -52,7 +71,9 @@ class AuxMetadataController(MetadataDbController):
         return entry
 
     @staticmethod
-    def get_value_equals(session: Session, key: str, value: str) -> list[AuxMetadataEntry]:
+    def get_value_equals(
+        session: Session, key: str, value: str
+    ) -> list[AuxMetadataEntry]:
         return (
             session.query(AuxMetadataEntry)
             .filter(getattr(AuxMetadataEntry, key) == value)
