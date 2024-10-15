@@ -48,8 +48,8 @@ def do_topo_sort(
 
 
 def find_circular_dependencies(dependency_graph: dict[str, set[str]]) -> None:
-    G = nx.DiGraph(dependency_graph)  # type: ignore # Stubs seem to be broken for args
-    cycles = list(nx.simple_cycles(G))
+    graph = nx.DiGraph(dependency_graph)  # type: ignore # Stubs seem to be broken for args
+    cycles = list(nx.simple_cycles(graph))
 
     cycle_strings = []
     if cycles:
