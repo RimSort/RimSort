@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from PySide6.QtCore import QObject, Slot
+from PySide6.QtCore import QObject, QThreadPool, Slot
 
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
@@ -87,3 +87,12 @@ class MetadataController(QObject):
             entry = self.metadata_db_controller.get_or_create(session, path)
 
         return mod_data, entry
+
+    @Slot(str)
+    def delete_mod(self, uuid: str) -> None:
+        """Delete a mod from the metadata.
+
+        :param uuid: The UUID of the mod to delete.
+        :type uuid: str | list[str]
+        """
+        pass

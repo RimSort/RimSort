@@ -3,6 +3,7 @@ from functools import partial
 from pathlib import Path
 
 from loguru import logger
+from PySide6.QtCore import QObject, QRunnable, QThreadPool, Signal
 
 from app.models.metadata.metadata_factory import (
     create_listed_mod_from_path,
@@ -40,6 +41,8 @@ class MetadataMediator:
         self.workshop_mods_path = workshop_mods_path
         self.local_mods_path = local_mods_path
         self.game_path = game_path
+
+        self.parser_threadpool = QThreadPool.globalInstance()
 
         self.refresh_metadata()
 
@@ -123,16 +126,53 @@ class MetadataMediator:
             else:
                 mod_paths += list(self.game_modules_path.iterdir())
 
-        for mod_path in mod_paths:
-            success, mod = create_listed_mod(
+        # Create equal sized batches of mod_paths for threadpool processing
+        """ threads = QThread.idealThreadCount()
+        batch_size = len(mod_paths) // threads
+        logger.debug(
+            f"Creating {threads} threads for metadata parsing with batch size of {batch_size}"
+        )
+        mod_paths_batches = [
+            mod_paths[i : i + batch_size] for i in range(0, len(mod_paths), batch_size)
+        ] """
+        parsers = [
+            self._ParserWorker(
                 mod_path,
+                self.game_version,
+                self.local_mods_path,
+                self.game_path,
+                self.workshop_mods_path,
             )
-            if success:
-                self._mods_metadata[mod.uuid] = mod
-            else:
-                logger.warning(f"Failed to read mod metadata for {mod_path}")
+            for mod_path in mod_paths
+        ]
 
+        for parser in parsers:
+            parser.signals.result.connect(self._process_results)
+            parser.signals.error.connect(self._process_errors)
+            parser.signals.finished.connect(
+                lambda: logger.info("Finished processing mod")
+            )
+            self.parser_threadpool.start(parser)
+
+        # log how many threads are running
+        logger.info(f"Started {self.parser_threadpool.activeThreadCount()} threads")
+        self.parser_threadpool.waitForDone()
+        logger.info(f"Metadata refresh complete, found {len(self._mods_metadata)} mods")
         return
+
+    def _process_results(self, result: tuple[bool, ListedMod]) -> None:
+        success, mod = result
+        logger.info(f"Processed mod: {mod.name}")
+        if success:
+            self._mods_metadata[mod.uuid] = mod
+
+    def _process_errors(self, error: tuple[Path, Exception]) -> None:
+        mod_path, e = error
+        logger.error(f"Error parsing mod at path: {mod_path}")
+        logger.error(e)
+
+    def _process_finished(self) -> None:
+        logger.info("Finished processing mod")
 
     def _refresh_game_version(self) -> bool:
         # Get & set Rimworld version string
@@ -157,3 +197,44 @@ class MetadataMediator:
             )
             self._game_version = "Unknown"
             return False
+
+    class _WorkerSignals(QObject):
+        result = Signal(tuple)
+        error = Signal(tuple)
+        finished = Signal()
+
+    class _ParserWorker(QRunnable):
+        def __init__(
+            self,
+            mod_path: Path | str,
+            target_version: str,
+            local_path: Path,
+            rimworld_path: Path,
+            workshop_path: Path | None,
+        ):
+            super().__init__()
+            self.mod_path = mod_path
+            self.target_version = target_version
+            self.local_path = local_path
+            self.rimworld_path = rimworld_path
+            self.workshop_path = workshop_path
+
+            self.signals = MetadataMediator._WorkerSignals()
+
+        def run(self) -> None:
+            self.signals.finished.emit()
+            try:
+                if isinstance(self.mod_path, str):
+                    self.mod_path = Path(self.mod_path)
+                success, mod = create_listed_mod_from_path(
+                    self.mod_path,
+                    self.target_version,
+                    self.local_path,
+                    self.rimworld_path,
+                    self.workshop_path,
+                )
+                self.signals.result.emit((success, mod))
+            except Exception as e:
+                self.signals.error.emit((self.mod_path, e))
+
+            self.signals.finished.emit()
