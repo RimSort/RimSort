@@ -49,10 +49,16 @@ class MetadataController(QObject):
 
     @Slot()
     def refresh_metadata(self) -> None:
+        """Refresh the metadata."""
         self.metadata_mediator.refresh_metadata()
 
     @Slot()
     def reset_paths(self) -> None:
+        """Reset the paths.
+        This is used when the paths are changed in the settings.
+
+        Does not refresh the metadata.
+        """
         active_instance = self.settings_controller.active_instance
         active_settings = self.settings_controller.settings
 
