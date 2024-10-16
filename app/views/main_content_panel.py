@@ -194,8 +194,20 @@ class MainContent(QObject):
             EventBus().do_open_rimsort_logs_directory.connect(
                 self._do_open_rimsort_logs_directory
             )
+            EventBus().do_open_rimworld_directory.connect(
+                self._do_open_rimworld_directory
+            )
+            EventBus().do_open_rimworld_config_directory.connect(
+                self._do_open_rimworld_config_directory
+            )
             EventBus().do_open_rimworld_logs_directory.connect(
                 self._do_open_rimworld_logs_directory
+            )
+            EventBus().do_open_local_mods_directory.connect(
+                self._do_open_local_mods_directory
+            )
+            EventBus().do_open_steam_mods_directory.connect(
+                self._do_open_steam_mods_directory
             )
 
             # Edit Menu bar Eventbus
@@ -1660,6 +1672,24 @@ class MainContent(QObject):
         logger.info(f"Opening RimSort logs directory: {logs_directory}")
         platform_specific_open(logs_directory)
 
+    def _do_open_rimworld_directory(self) -> None:
+        current_instance = self.settings_controller.settings.current_instance
+        rimworld_directory = self.settings_controller.settings.instances[current_instance].game_folder
+        if rimworld_directory and os.path.exists(rimworld_directory):
+            logger.info(f"Opening RimWorld directory: {rimworld_directory}")
+            platform_specific_open(rimworld_directory)
+        else:
+            logger.error("Could not open RimWorld directory")
+
+    def _do_open_rimworld_config_directory(self) -> None:
+        current_instance = self.settings_controller.settings.current_instance
+        config_directory = self.settings_controller.settings.instances[current_instance].config_folder
+        if config_directory and os.path.exists(config_directory):
+            logger.info(f"Opening RimWorld config directory: {config_directory}")
+            platform_specific_open(config_directory)
+        else:
+            logger.error("Could not open RimWorld config directory")
+
     def _do_open_rimworld_logs_directory(self) -> None:
         user_home = Path.home()
         logs_directory = None
@@ -1681,6 +1711,24 @@ class MainContent(QObject):
             logger.info(f"Opening RimWorld logs directory: {logs_directory}")
         else:
             logger.error("Could not open RimWorld logs directory on an unknown system")
+
+    def _do_open_local_mods_directory(self) -> None:
+        current_instance = self.settings_controller.settings.current_instance
+        local_mods_directory = self.settings_controller.settings.instances[current_instance].local_folder
+        if local_mods_directory and os.path.exists(local_mods_directory):
+            logger.info(f"Opening local mods directory: {local_mods_directory}")
+            platform_specific_open(local_mods_directory)
+        else:
+            logger.error("Could not open local mods directory")
+
+    def _do_open_steam_mods_directory(self) -> None:
+        current_instance = self.settings_controller.settings.current_instance
+        steam_mods_directory = self.settings_controller.settings.instances[current_instance].workshop_folder
+        if steam_mods_directory and os.path.exists(steam_mods_directory):
+            logger.info(f"Opening steam mods directory: {steam_mods_directory}")
+            platform_specific_open(steam_mods_directory)
+        else:
+            logger.error("Could not open steam mods directory")
 
     @Slot()
     def _on_do_upload_rimsort_log(self) -> None:
@@ -2050,8 +2098,7 @@ class MainContent(QObject):
                     )
                     self.steamworks_in_use = False
                 elif (
-                    instruction[0] in subscription_actions
-                    and len(instruction[1]) >= 1
+                    instruction[0] in subscription_actions and len(instruction[1]) >= 1
                 ):  # ISteamUGC/{SubscribeItem/UnsubscribeItem}
                     logger.info(
                         f"Creating Steamworks API process with instruction {instruction}"
