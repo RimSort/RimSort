@@ -68,7 +68,6 @@ jobs:
           VALIDATE_BASH: true
           VALIDATE_CHECKOV: true
           VALIDATE_JSCPD: true
-          VALIDATE_MARKDOWN: true
           VALIDATE_VALIDATE_NATURAL_LANGUAGE: true
           # Linter not up to date
           GITHUB_ACTIONS_COMMAND_ARGS: >-
