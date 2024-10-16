@@ -12,7 +12,7 @@ from app.utils.app_info import AppInfo
 class MetadataDbController:
     def __init__(self, db: Path | str) -> None:
         self.engine = create_engine(f"sqlite+pysqlite:///{db}")
-        self.Session = sessionmaker(bind=self.engine)
+        self.Session = sessionmaker(bind=self.engine, expire_on_commit=False)
 
 
 class AuxMetadataController(MetadataDbController):
@@ -85,10 +85,12 @@ class AuxMetadataController(MetadataDbController):
         result = session.execute(text(query)).all()
         return [AuxMetadataEntry(**row._mapping) for row in result]
 
-    def add(self, item: AuxMetadataEntry | Iterable[AuxMetadataEntry]) -> None:
-        with self.Session() as session:
-            if isinstance(item, AuxMetadataEntry):
-                session.add(item)
-            else:
-                session.add_all(item)
-            session.commit()
+    @staticmethod
+    def add(
+        session: Session, item: AuxMetadataEntry | Iterable[AuxMetadataEntry]
+    ) -> None:
+        if isinstance(item, AuxMetadataEntry):
+            session.add(item)
+        else:
+            session.add_all(item)
+        session.commit()

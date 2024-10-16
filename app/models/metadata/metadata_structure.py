@@ -35,7 +35,7 @@ class CaseInsensitiveSet(MutableSet[CaseInsensitiveStr]):
     """
 
     def __init__(
-        self, s: Iterable[CaseInsensitiveStr | str] | CaseInsensitiveStr | str = ()
+        self, s: Iterable[CaseInsensitiveStr | str] | CaseInsensitiveStr | str | None = ()
     ):
         if isinstance(s, str):
             data = {CaseInsensitiveStr(s)}

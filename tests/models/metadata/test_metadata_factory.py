@@ -182,7 +182,7 @@ def test_match_version_found() -> None:
     # Test case: matching key is found
     input_dict = {"v1.2": "value1", "v1.3": "value2", "v1.4": "value3"}
     target_version = "1.3"
-    assert match_version(input_dict, target_version) == (True, ["value2"])
+    assert match_version(input_dict, target_version) == (True, "value2")
 
 
 def test_match_version_not_found() -> None:
@@ -196,7 +196,10 @@ def test_match_version_multiple_results() -> None:
     # Test case: multiple matching keys are found
     input_dict = {"v1.2": "value1", "v1.3": "value2", "v1.3.1": "value3"}
     target_version = "1.3"
-    assert match_version(input_dict, target_version) == (True, ["value2", "value3"])
+    assert match_version(input_dict, target_version, stop_at_first=False) == (
+        True,
+        ["value2", "value3"],
+    )
 
 
 def test_match_version_multiple_results_stop_at_first() -> None:
@@ -205,7 +208,7 @@ def test_match_version_multiple_results_stop_at_first() -> None:
     target_version = "1.3"
     assert match_version(input_dict, target_version, stop_at_first=True) == (
         True,
-        ["value2"],
+        "value2",
     )
 
 
@@ -492,6 +495,32 @@ def test_create_listed_mod_from_path_invalid_folder() -> None:
     assert not valid
     assert not mod.valid
     assert mod.mod_type == ModType.LOCAL
+
+
+def test_create_listed_mod_from_path_local_mod_1() -> None:
+    path = Path("tests/data/mod_examples/Local/local_mod_1")
+    valid, mod = create_listed_mod_from_path(
+        path, "1.5", LOCAL_MODS_PATH, RIMWORLD_PATH, STEAM_WORKSHOP_PATH
+    )
+
+    assert valid
+    assert mod.valid
+    assert mod.mod_type == ModType.LOCAL
+
+    assert mod.description == "Description 1.5"
+
+
+def test_create_listed_mod_from_path_local_mod_2() -> None:
+    path = Path("tests/data/mod_examples/Local/local_mod_2")
+    valid, mod = create_listed_mod_from_path(
+        path, "1.5", LOCAL_MODS_PATH, RIMWORLD_PATH, STEAM_WORKSHOP_PATH
+    )
+
+    assert valid
+    assert mod.valid
+    assert mod.mod_type == ModType.LOCAL
+
+    assert mod.description == "This is localmod 2 description"
 
 
 def test_create_listed_mod_from_path_fishery(tmp_path: Path) -> None:

@@ -39,7 +39,8 @@ class MalformedDataException(Exception):
 
 
 def value_extractor(
-    input: dict[str, str] | dict[str, list[str]] | Sequence[str] | str, strip_str: bool = True
+    input: dict[str, str] | dict[str, list[str]] | Sequence[str] | str,
+    strip_str: bool = True,
 ) -> str | list[Any] | dict[str, str] | dict[str, list[str]]:
     """
     Extract the value from a mod_data entry.
@@ -131,25 +132,41 @@ def write_mods_config(path: Path, mods_config: ModsConfig) -> bool:
 
 
 def match_version(
-    input: dict[str, Any], target_version: str, stop_at_first: bool = False
-) -> tuple[bool, None | list[Any]]:
+    input: dict[str, str] | dict[str, list[str]],
+    target_version: str,
+    stop_at_first: bool = True,
+) -> tuple[bool, None | list[str] | list[str] | str]:
     """Attempts to match an input key with the target version using regex.
 
     If the key is not found, the function returns None.
     If the matching key(s) is found, the function returns the value of the key(s) in a list.
 
+    If the input target_version cannot be parsed, the function returns None.
+
     :param input: The dictionary to search for the key.
     :param target_version: The version to match. Should be of the format 'major.minor'.
     :param stop_at_first: If True, the function will return the first match found only."""
-    major, minor = target_version.split(".")[:2]
-    version_regex = rf"v{major}\.{minor}"
+    try:
+        major, minor = target_version.split(".")[:2]
+        version_regex = f"v{major}.{minor}"
+    except ValueError:
+        return False, None
+
+    if stop_at_first:
+        if (result := input.get(version_regex, None)) and result is not None:
+            return True, result
+        elif (result := input.get(f"{major}.{minor}", None)) and result is not None:
+            return True, result
 
     results = []
     for key, value in input.items():
         if re.match(version_regex, key):
             if stop_at_first:
-                return True, [value]
-            results.append(value)
+                return True, value
+            if isinstance(value, list):
+                results.extend(value)
+            else:
+                results.append(value)
 
     if not results:
         return False, None
@@ -312,8 +329,8 @@ def _parse_optional(
 
     mod.about_rules = create_base_rules(mod_data, target_version)
 
-    descriptions_by_version = value_extractor(
-        mod_data.get("descriptionsByVersion", False)
+    descriptions_by_version: bool | dict[str, str] = mod_data.get(
+        "descriptionsByVersion", False
     )
     if isinstance(descriptions_by_version, dict):
         _, description = match_version(descriptions_by_version, target_version)
@@ -391,8 +408,17 @@ def create_base_rules(
 
     for dependency in mod_dependencies:
         if isinstance(dependency, dict):
-            dep = create_mod_dependency(dependency)
+            deps = dict()
+            for key, value in dependency.items():
+                if isinstance(value, str):
+                    deps[key] = value
+                else:
+                    logger.warning(
+                        f"Skipping invalid dependency value: {value}. This mod's about.xml may be invalid."
+                    )
 
+            dep = create_mod_dependency(deps)
+            
             if dep.package_id in rules.dependencies:
                 logger.warning(
                     f"Duplicate dependency found: {dep.package_id}. Skipping."
@@ -419,6 +445,8 @@ def create_base_rules(
         forceLoad = value_extractor(mod_data.get(force_key, []))
         forceLoad = forceLoad if isinstance(forceLoad, list) else [forceLoad]
         load.extend(forceLoad)
+
+        load = [item for item in load if isinstance(item, (str, CaseInsensitiveStr))]
 
         return CaseInsensitiveSet(load)
 
@@ -448,6 +476,11 @@ def create_base_rules(
         if incompatibles:
             incompatible_with.extend(incompatibles)
 
+    incompatible_with = [
+        item
+        for item in incompatible_with
+        if isinstance(item, (str, CaseInsensitiveStr))
+    ]
     rules.incompatible_with = CaseInsensitiveSet(incompatible_with)
 
     return rules

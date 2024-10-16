@@ -1,4 +1,3 @@
-import tempfile
 from pathlib import Path
 from typing import Generator
 from unittest.mock import patch
@@ -10,13 +9,12 @@ from app.models.metadata.metadata_db import AuxMetadataEntry
 from app.utils.app_info import AppInfo
 
 
-@pytest.fixture
-def temp_db() -> Generator[AuxMetadataController, None, None]:
-    with tempfile.TemporaryDirectory() as temp_dir:
-        db_path = Path(temp_dir) / "test_metadata.db"
-        with patch.object(AppInfo, "aux_metadata_db", db_path):
-            controller = AuxMetadataController()
-            yield controller
+@pytest.fixture()
+def temp_db(tmp_path: Path) -> Generator[AuxMetadataController, None, None]:
+    db_path = tmp_path / "test_metadata.db"
+    with patch.object(AppInfo, "aux_metadata_db", db_path):
+        controller = AuxMetadataController()
+        yield controller
 
 
 def test_get_or_create(temp_db: AuxMetadataController) -> None:
@@ -62,7 +60,6 @@ def test_get_value_equals(temp_db: AuxMetadataController) -> None:
         entry1 = temp_db.get_or_create(session, item_path1)
         entry2 = temp_db.get_or_create(session, item_path2)
         _ = temp_db.get_or_create(session, item_path3)
-
 
         assert entry1 is not None
         assert entry2 is not None
