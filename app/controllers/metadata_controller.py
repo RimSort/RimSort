@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from PySide6.QtCore import QObject, QThreadPool, Slot
+from PySide6.QtCore import QObject, Slot
 
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController

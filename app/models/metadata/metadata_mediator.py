@@ -1,9 +1,8 @@
 import os
-from functools import partial
 from pathlib import Path
 
 from loguru import logger
-from PySide6.QtCore import QObject, QRunnable, QThreadPool, Signal
+from PySide6.QtCore import QMutex, QRunnable, QThread, QThreadPool
 
 from app.models.metadata.metadata_factory import (
     create_listed_mod_from_path,
@@ -90,16 +89,6 @@ class MetadataMediator:
             else None
         )
 
-        create_listed_mod = partial(
-            create_listed_mod_from_path,
-            target_version=self.game_version,
-            local_path=self.local_mods_path,
-            workshop_path=self.workshop_mods_path,
-            rimworld_path=self.game_path,
-        )
-
-        self._mods_metadata = dict()
-
         # Get all folders in the workshop and local mods paths
         mod_paths = list()
         if self.workshop_mods_path is not None:
@@ -127,52 +116,38 @@ class MetadataMediator:
                 mod_paths += list(self.game_modules_path.iterdir())
 
         # Create equal sized batches of mod_paths for threadpool processing
-        """ threads = QThread.idealThreadCount()
-        batch_size = len(mod_paths) // threads
+        threads = QThread.idealThreadCount()
+        batch_size = max(len(mod_paths) // threads, 1)
+
         logger.debug(
             f"Creating {threads} threads for metadata parsing with batch size of {batch_size}"
         )
         mod_paths_batches = [
             mod_paths[i : i + batch_size] for i in range(0, len(mod_paths), batch_size)
-        ] """
+        ]
+
+        metadata_mutex = QMutex()
+        self._mods_metadata = dict()
         parsers = [
             self._ParserWorker(
-                mod_path,
+                mod_path_batch,
                 self.game_version,
                 self.local_mods_path,
                 self.game_path,
                 self.workshop_mods_path,
+                metadata_mutex,
+                self._mods_metadata,
             )
-            for mod_path in mod_paths
+            for mod_path_batch in mod_paths_batches
         ]
 
         for parser in parsers:
-            parser.signals.result.connect(self._process_results)
-            parser.signals.error.connect(self._process_errors)
-            parser.signals.finished.connect(
-                lambda: logger.info("Finished processing mod")
-            )
             self.parser_threadpool.start(parser)
 
-        # log how many threads are running
-        logger.info(f"Started {self.parser_threadpool.activeThreadCount()} threads")
+        logger.debug(f"Started {self.parser_threadpool.activeThreadCount()} threads")
         self.parser_threadpool.waitForDone()
         logger.info(f"Metadata refresh complete, found {len(self._mods_metadata)} mods")
         return
-
-    def _process_results(self, result: tuple[bool, ListedMod]) -> None:
-        success, mod = result
-        logger.info(f"Processed mod: {mod.name}")
-        if success:
-            self._mods_metadata[mod.uuid] = mod
-
-    def _process_errors(self, error: tuple[Path, Exception]) -> None:
-        mod_path, e = error
-        logger.error(f"Error parsing mod at path: {mod_path}")
-        logger.error(e)
-
-    def _process_finished(self) -> None:
-        logger.info("Finished processing mod")
 
     def _refresh_game_version(self) -> bool:
         # Get & set Rimworld version string
@@ -198,19 +173,16 @@ class MetadataMediator:
             self._game_version = "Unknown"
             return False
 
-    class _WorkerSignals(QObject):
-        result = Signal(tuple)
-        error = Signal(tuple)
-        finished = Signal()
-
     class _ParserWorker(QRunnable):
         def __init__(
             self,
-            mod_path: Path | str,
+            mod_path: Path | str | list[Path] | list[str],
             target_version: str,
             local_path: Path,
             rimworld_path: Path,
             workshop_path: Path | None,
+            mutex: QMutex,
+            mods_metadata: dict[str, ListedMod],
         ):
             super().__init__()
             self.mod_path = mod_path
@@ -219,22 +191,35 @@ class MetadataMediator:
             self.rimworld_path = rimworld_path
             self.workshop_path = workshop_path
 
-            self.signals = MetadataMediator._WorkerSignals()
+            self.mutex = mutex
+            self.mods_metadata = mods_metadata
 
         def run(self) -> None:
-            self.signals.finished.emit()
-            try:
-                if isinstance(self.mod_path, str):
-                    self.mod_path = Path(self.mod_path)
-                success, mod = create_listed_mod_from_path(
-                    self.mod_path,
-                    self.target_version,
-                    self.local_path,
-                    self.rimworld_path,
-                    self.workshop_path,
-                )
-                self.signals.result.emit((success, mod))
-            except Exception as e:
-                self.signals.error.emit((self.mod_path, e))
+            paths = (
+                self.mod_path if isinstance(self.mod_path, list) else [self.mod_path]
+            )
 
-            self.signals.finished.emit()
+            results: dict[str, ListedMod] = {}
+            for path in paths:
+                try:
+                    if isinstance(path, str):
+                        path = Path(path)
+                    valid, mod = create_listed_mod_from_path(
+                        path,
+                        self.target_version,
+                        self.local_path,
+                        self.rimworld_path,
+                        self.workshop_path,
+                    )
+
+                    if not valid:
+                        logger.warning(f"Mod at path {self.mod_path} is not valid")
+
+                    results[mod.uuid] = mod
+                except Exception as e:
+                    logger.error(f"Error parsing mod at path: {self.mod_path}")
+                    logger.error(e)
+
+            self.mutex.lock()
+            self.mods_metadata.update(results)
+            self.mutex.unlock()
