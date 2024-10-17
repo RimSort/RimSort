@@ -167,7 +167,7 @@ class AuxMetadataController(MetadataDbController):
         )
 
         for entry in entries:
-            data = workshop_items.get(entry.published_file_id, None)
+            data = workshop_items.get(str(entry.published_file_id), None)
             if data is None:
                 continue
 

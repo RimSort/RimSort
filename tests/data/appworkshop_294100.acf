@@ -9,7 +9,7 @@
 	"LastBuildID"		"0"
 	"WorkshopItemsInstalled"
 	{
-		"1111"
+		"123456789"
 		{
 			"size"		"374239"
 			"timeupdated"		"1713655641"
@@ -18,7 +18,7 @@
 	}
 	"WorkshopItemDetails"
 	{
-		"1111"
+		"123456789"
 		{
 			"manifest"		"1510674945210668253"
 			"timeupdated"		"1713655641"

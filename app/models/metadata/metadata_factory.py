@@ -379,8 +379,8 @@ def _set_mod_type(
             )
             logger.error(e)
 
-        if (parent_path / Path("About/PublishedFileId.txt")).exists():
-            mod.mod_type = ModType.STEAM_WORKSHOP
+        if (mod.mod_path / Path("About/PublishedFileId.txt")).exists():
+            mod.mod_type = ModType.STEAM_CMD
         else:
             mod.mod_type = ModType.LOCAL
 

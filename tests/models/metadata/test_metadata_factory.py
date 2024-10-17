@@ -523,6 +523,19 @@ def test_create_listed_mod_from_path_local_mod_2() -> None:
     assert mod.description == "This is localmod 2 description"
 
 
+def test_create_listed_mod_from_path_steamcmd_mod_1() -> None:
+    path = Path("tests/data/mod_examples/Local/steamcmd_mod_1")
+    valid, mod = create_listed_mod_from_path(
+        path, "1.5", LOCAL_MODS_PATH, RIMWORLD_PATH, STEAM_WORKSHOP_PATH
+    )
+
+    assert valid
+    assert mod.valid
+    assert mod.mod_type == ModType.STEAM_CMD
+
+    assert mod.description == "This is steamcmd mod 1 description"
+
+
 def test_create_listed_mod_from_path_fishery(tmp_path: Path) -> None:
     path = Path("tests/data/mod_examples/Local/Fishery")
     # Copy entierty of path to temporary folder

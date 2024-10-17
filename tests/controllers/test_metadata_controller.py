@@ -117,6 +117,8 @@ def test_metadata_controller_get_metadata_with_path(
     assert aux_metadata is not None
     assert aux_metadata.type == "ModType.STEAM_WORKSHOP"
     assert aux_metadata.published_file_id == 123456789
+    assert aux_metadata.acf_time_updated > 0
+    assert aux_metadata.acf_time_touched > 0
 
     rimworld_core_path = Path("tests/data/mod_examples/RimWorld/Data/Core")
     mod, aux_metadata = metadata_controller_p.get_metadata_with_path(rimworld_core_path)
@@ -128,3 +130,13 @@ def test_metadata_controller_get_metadata_with_path(
     assert mod.preview_img_path is not None
     assert mod.preview_img_path.exists()
     assert mod.steam_app_id == 294100
+
+    steamcmd_mod_1_path = Path("tests/data/mod_examples/Local/steamcmd_mod_1")
+    mod, aux_metadata = metadata_controller_p.get_metadata_with_path(steamcmd_mod_1_path)
+
+    assert mod is not None
+    assert aux_metadata is not None
+    assert aux_metadata.type == "ModType.STEAM_CMD"
+    assert aux_metadata.published_file_id == 1111
+    assert aux_metadata.acf_time_updated > 0
+    assert aux_metadata.acf_time_touched > 0
