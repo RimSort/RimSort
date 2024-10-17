@@ -31,8 +31,8 @@ class MetadataMediator:
         community_rules_path: Path | None,
         steam_db_path: Path | None,
         workshop_mods_path: Path | None,
-        local_mods_path: Path,
-        game_path: Path,
+        local_mods_path: Path | None,
+        game_path: Path | None,
     ):
         self.user_rules_path = user_rules_path
         self.community_rules_path = community_rules_path
@@ -43,30 +43,37 @@ class MetadataMediator:
 
         self.parser_threadpool = QThreadPool.globalInstance()
 
-        self.refresh_metadata()
-
     @property
     def user_rules(self) -> ExternalRulesSchema | None:
+        if hasattr(self, "_user_rules") is False:
+            return None
         return self._user_rules
 
     @property
     def community_rules(self) -> ExternalRulesSchema | None:
+        if hasattr(self, "_community_rules") is False:
+            return None
         return self._community_rules
 
     @property
     def steam_db(self) -> SteamDbSchema | None:
+        if hasattr(self, "_steam_db") is False:
+            return None
         return self._steam_db
 
     @property
     def mods_metadata(self) -> dict[str, ListedMod]:
-        if self._mods_metadata is not None:
-            return self._mods_metadata
+        if hasattr(self, "_mods_metadata") is False or self._mods_metadata is None:
+            raise ValueError("Mods metadata have not been initiated")
 
-        raise ValueError("Mods metadata have not been initiated")
+        return self._mods_metadata
 
     @property
     def game_modules_path(self) -> Path:
-        return self.game_path / "Data"
+        if self.game_path is not None:
+            return self.game_path / "Data"
+
+        raise ValueError("Game path is not set")
 
     @property
     def game_version(self) -> str:
@@ -74,6 +81,13 @@ class MetadataMediator:
 
     def refresh_metadata(self) -> None:
         """Force refreshes the internal metadata."""
+
+        for path in {self.local_mods_path, self.game_path}:
+            if path is None or not path.exists() or not path.is_dir():
+                raise ValueError(
+                    "Essential paths are missing, invalid, or not directories"
+                )
+
         self._refresh_game_version()
 
         self._user_rules = read_rules_db(self.user_rules_path)
@@ -126,6 +140,9 @@ class MetadataMediator:
             mod_paths[i : i + batch_size] for i in range(0, len(mod_paths), batch_size)
         ]
 
+        assert self.local_mods_path is not None
+        assert self.game_path is not None
+
         metadata_mutex = QMutex()
         self._mods_metadata = dict()
         parsers = [
@@ -151,6 +168,10 @@ class MetadataMediator:
 
     def _refresh_game_version(self) -> bool:
         # Get & set Rimworld version string
+        if self.game_path is None:
+            self._game_version = "Unknown"
+            return False
+
         version_file_path = str(self.game_path / "Version.txt")
         if os.path.exists(version_file_path):
             try:

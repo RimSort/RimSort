@@ -10,7 +10,9 @@ class AuxMetadataEntry(Base):
     __tablename__ = "Auxiliary Metadata"
 
     path: Mapped[str] = mapped_column(primary_key=True)
+    type: Mapped[str] = mapped_column(String, default="Unknown")
 
+    published_file_id: Mapped[int] = mapped_column(Integer, default=-1)
     acf_time_touched: Mapped[int] = mapped_column(Integer, default=-1)
     acf_time_updated: Mapped[int] = mapped_column(Integer, default=-1)
 

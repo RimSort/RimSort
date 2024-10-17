@@ -18,12 +18,17 @@ def mediator() -> MetadataMediator:
 
 
 def test_initial_state(mediator: MetadataMediator) -> None:
-    assert mediator.user_rules is not None
+    assert mediator.user_rules is None
     assert mediator.community_rules is None
     assert mediator.steam_db is None
-    assert mediator.mods_metadata is not None
-    assert len(mediator.mods_metadata) > 0
-    assert mediator.game_version != "Unknown"
+    assert mediator.game_version == "Unknown"
+
+    try:
+        assert mediator.mods_metadata is None
+    except ValueError:
+        pass
+    else:
+        assert False
 
 
 def test_refresh_metadata(mediator: MetadataMediator) -> None:
