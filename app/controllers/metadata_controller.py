@@ -1,16 +1,14 @@
 from pathlib import Path
 
-from loguru import logger
 from PySide6.QtCore import QObject, Slot
 
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
 from app.models.metadata.metadata_db import AuxMetadataEntry
 from app.models.metadata.metadata_mediator import MetadataMediator
-from app.models.metadata.metadata_structure import ListedMod
+from app.models.metadata.metadata_structure import ListedMod, ModType
 from app.utils.app_info import AppInfo
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
-from app.utils.steam.steamfiles.wrapper import acf_to_dict
 
 
 class MetadataController(QObject):
@@ -44,6 +42,21 @@ class MetadataController(QObject):
         self.metadata_mediator.refresh_metadata()
         self._refresh_metadata_db()
 
+        with self.metadata_db_controller.Session() as session:
+            self.metadata_db_controller.update_from_acf(
+                session,
+                Path(self.steamcmd_wrapper.steamcmd_appworkshop_acf_path),
+                ModType.STEAM_CMD,
+            )
+
+            if self.metadata_mediator.workshop_mods_path is not None:
+                self.metadata_db_controller.update_from_acf(
+                    session,
+                    self.metadata_mediator.workshop_mods_path.parent.parent
+                    / "appworkshop_294100.acf",
+                    ModType.STEAM_WORKSHOP,
+                )
+
     def _refresh_metadata_db(self) -> None:
         """Refresh the metadata database."""
         with self.metadata_db_controller.Session() as session:
@@ -54,26 +67,6 @@ class MetadataController(QObject):
                 entry.published_file_id = mod_data.published_file_id
 
             session.commit()
-
-    def _refresh_acf(self) -> None:
-        """Read and refresh data relating to the .acf file if it exists."""
-        acf_path = Path(self.steamcmd_wrapper.steamcmd_appworkshop_acf_path)
-        if not acf_path.exists():
-            logger.warning("SteamCMD .acf file not found.")
-            return
-
-        try:
-            acf_data = acf_to_dict(str(acf_path))
-        except Exception as e:
-            logger.error(f"Error reading .acf file at {acf_path}: {e}")
-            return
-
-        workshop_items = {
-            published_file_id: data
-            for published_file_id, data in acf_data.get("AppWorkshop", {}).get(
-                "WorkshopItemsInstalled", {}
-            )
-        }
 
     @Slot()
     def reset_paths(self) -> None:

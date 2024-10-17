@@ -6,7 +6,9 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.models.metadata.metadata_db import AuxMetadataEntry, Base
+from app.models.metadata.metadata_structure import ModType
 from app.utils.app_info import AppInfo
+from app.utils.steam.steamfiles.wrapper import acf_to_dict
 
 
 class MetadataDbController:
@@ -126,3 +128,50 @@ class AuxMetadataController(MetadataDbController):
         """Reset the database by dropping all tables and recreating them."""
         Base.metadata.drop_all(self.engine)
         Base.metadata.create_all(self.engine)
+
+    @staticmethod
+    def update_from_acf(session: Session, acf_path: Path, mod_type: ModType) -> None:
+        """Update the aux metadata from an ACF file.
+
+        :param session: The database session.
+        :type session: Session
+        :param acf_path: The path to the ACF file.
+        :type acf_path: Path
+        :param mod_type: The mod type.
+        :type mod_type: ModType
+        """
+        if not acf_path.exists():
+            logger.warning(f".acf file not found at {acf_path}.")
+            return
+
+        try:
+            acf_data = acf_to_dict(str(acf_path))
+        except Exception as e:
+            logger.error(f"Error reading .acf file at {acf_path}: {e}")
+            return
+
+        workshop_items = {
+            published_file_id: data
+            for published_file_id, data in acf_data.get("AppWorkshop", {}).get(
+                "WorkshopItemDetails", {}
+            ).items()
+        }
+
+        entries = (
+            session.query(AuxMetadataEntry)
+            .filter(
+                AuxMetadataEntry.published_file_id.in_(workshop_items.keys()),
+                AuxMetadataEntry.type == str(mod_type),
+            )
+            .all()
+        )
+
+        for entry in entries:
+            data = workshop_items.get(entry.published_file_id, None)
+            if data is None:
+                continue
+
+            entry.acf_time_updated = data.get("timeupdated", -1)
+            entry.acf_time_touched = data.get("timetouched", -1)
+
+        session.commit()
