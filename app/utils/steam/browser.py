@@ -1,6 +1,7 @@
 import os
 import platform
 from functools import partial
+from re import search
 from typing import Any
 
 from loguru import logger
@@ -255,8 +256,11 @@ class SteamBrowser(QWidget):
         publishedfileid: str,
         title: str | None = None,
     ) -> None:
-        # Get the name from the page title
-        page_title = self.current_title.split("Steam Workshop::", 1)[1]
+        # Get the mod name from the page title
+        page_title = self.current_title
+        if match := search(r"Steam (?:Community|Workshop)::(.*)", self.current_title):
+            page_title = match.group(1)
+        # Check if the mod is already in the list
         if publishedfileid not in self.downloader_list_mods_tracking:
             # Add pfid to tracking list
             logger.debug(f"Tracking PublishedFileId for download: {publishedfileid}")
