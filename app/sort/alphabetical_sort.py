@@ -1,5 +1,3 @@
-from typing import List
-
 from loguru import logger
 
 from app.utils.metadata import MetadataManager
@@ -7,7 +5,7 @@ from app.utils.metadata import MetadataManager
 
 def do_alphabetical_sort(
     dependency_graph: dict[str, set[str]], active_mods_uuids: set[str]
-) -> List[str]:
+) -> list[str]:
     logger.info(f"Starting Alphabetical sort for {len(dependency_graph)} mods")
     # Cache MetadataManager instance
     metadata_manager = MetadataManager.instance()

@@ -1,7 +1,7 @@
 import os
 import platform
 from functools import partial
-from typing import Any, Optional
+from typing import Any
 
 from loguru import logger
 from PySide6.QtCore import QPoint, QSize, Qt, QUrl, Signal
@@ -84,7 +84,7 @@ class SteamBrowser(QWidget):
             Qt.ContextMenuPolicy.CustomContextMenu
         )
         self.downloader_list.customContextMenuRequested.connect(
-            self._downloader_item_ContextMenuEvent
+            self._downloader_item_contextmenu_event
         )
         self.clear_list_button = QPushButton("Clear List")
         self.clear_list_button.setObjectName("browserPanelClearList")
@@ -253,7 +253,7 @@ class SteamBrowser(QWidget):
     def _add_mod_to_list(
         self,
         publishedfileid: str,
-        title: Optional[str] = None,
+        title: str | None = None,
     ) -> None:
         # Get the name from the page title
         page_title = self.current_title.split("Steam Workshop::", 1)[1]
@@ -293,7 +293,7 @@ class SteamBrowser(QWidget):
         self.downloader_list_mods_tracking.clear()
         self.downloader_list_dupe_tracking.clear()
 
-    def _downloader_item_ContextMenuEvent(self, point: QPoint) -> None:
+    def _downloader_item_contextmenu_event(self, point: QPoint) -> None:
         context_item = self.downloader_list.itemAt(point)
 
         if context_item:  # Check if the right-clicked point corresponds to an item

@@ -157,7 +157,7 @@ class MissingModsPrompt(QWidget):
         self,
         name: str,
         packageid: str,
-        gameVersions: list[str],
+        game_versions: list[str],
         mod_variants: str,
         publishedfileid: str,
     ) -> None:
@@ -176,7 +176,7 @@ class MissingModsPrompt(QWidget):
         items = [
             QStandardItem(name),
             QStandardItem(packageid),
-            QStandardItem(str(gameVersions)),
+            QStandardItem(str(game_versions)),
             QStandardItem(mod_variants if publishedfileid != "" else "0"),
             QStandardItem(),
         ]
@@ -231,7 +231,7 @@ class MissingModsPrompt(QWidget):
             for publishedfileid, metadata in self.steam_workshop_metadata.items():
                 name = metadata.get("steamName", metadata.get("name", "Not found"))
                 packageid = metadata.get("packageId", "None").lower()
-                gameVersions = metadata.get("gameVersions", ["None listed"])
+                game_versions = metadata.get("gameVersions", ["None listed"])
 
                 # Remove AppId dependencies from this dict. They cannot be subscribed like mods.
                 dependencies = {
@@ -245,7 +245,7 @@ class MissingModsPrompt(QWidget):
                     variants = self.data_by_variants.setdefault(packageid, {})
                     variants[publishedfileid] = {
                         "name": name,
-                        "gameVersions": gameVersions,
+                        "gameVersions": game_versions,
                         "dependencies": dependencies,
                     }
 
@@ -265,7 +265,7 @@ class MissingModsPrompt(QWidget):
                     self._add_row(
                         name=variant_data["name"],
                         packageid=packageid,
-                        gameVersions=variant_data["gameVersions"],
+                        game_versions=variant_data["gameVersions"],
                         mod_variants=str(len(variants.keys())),
                         publishedfileid=publishedfileid,
                     )

@@ -6,7 +6,7 @@ import tarfile
 from io import BytesIO
 from pathlib import Path
 from tempfile import gettempdir
-from typing import Any, Optional
+from typing import Any
 from zipfile import ZipFile
 
 import requests
@@ -15,6 +15,7 @@ from loguru import logger
 import app.utils.symlink as symlink
 from app.controllers.settings_controller import SettingsController
 from app.utils.event_bus import EventBus
+from app.utils.generic import handle_remove_read_only
 from app.utils.generic import rmtree as g_rmtree
 from app.views.dialogue import (
     BinaryChoiceDialog,
@@ -31,7 +32,7 @@ class SteamcmdInterface:
     Create SteamcmdInterface object to provide an interface for SteamCMD functionality
     """
 
-    _instance: Optional["SteamcmdInterface"] = None
+    _instance: "None | SteamcmdInterface" = None
 
     def __new__(cls, *args: Any, **kwargs: Any) -> "SteamcmdInterface":
         if cls._instance is None:
@@ -55,6 +56,9 @@ class SteamcmdInterface:
     def initialize_prefix(self, steamcmd_prefix: str, validate: bool) -> None:
         self.steamcmd_prefix = steamcmd_prefix
         self.steamcmd_install_path = str(Path(self.steamcmd_prefix) / "steamcmd")
+        self.steamcmd_depotcache_path = str(
+            Path(self.steamcmd_install_path) / "depotcache"
+        )
         self.steamcmd_steam_path = str(Path(self.steamcmd_prefix) / "steam")
         self.system = platform.system()
         self.validate_downloads = validate
@@ -250,11 +254,11 @@ class SteamcmdInterface:
             return False
 
         diag = BinaryChoiceDialog(
-            "Symlink Creation Failed",
-            choice_text,
-            choice_info,
-            msg,
-            choice_postive_text,
+            title="Symlink Creation Failed",
+            text=choice_text,
+            information=choice_info,
+            details=msg,
+            positive_text=choice_postive_text,
         )
 
         if diag.exec_is_positive():
@@ -427,7 +431,11 @@ class SteamcmdInterface:
             runner.message(
                 f"Deleting existing installation from: {self.steamcmd_install_path}"
             )
-            shutil.rmtree(self.steamcmd_install_path)
+            shutil.rmtree(
+                self.steamcmd_install_path,
+                ignore_errors=False,
+                onerror=handle_remove_read_only,
+            )
             os.makedirs(self.steamcmd_install_path)
         if not self.check_for_steamcmd(prefix=self.steamcmd_prefix):
             try:

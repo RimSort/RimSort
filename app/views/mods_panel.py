@@ -7,7 +7,6 @@ from functools import partial
 from pathlib import Path
 from shutil import copy2, copytree, rmtree
 from traceback import format_exc
-from typing import List, Optional
 
 from loguru import logger
 from PySide6.QtCore import QEvent, QModelIndex, QObject, QRectF, QSize, Qt, Signal
@@ -103,7 +102,7 @@ class ModsPanelSortKey(Enum):
     MODNAME = 1
 
 
-def sort_uuids(uuids: List[str], key: ModsPanelSortKey) -> List[str]:
+def sort_uuids(uuids: list[str], key: ModsPanelSortKey) -> list[str]:
     """
     Sort the list of UUIDs based on the provided key.
     Args:
@@ -177,9 +176,10 @@ class ModListItemInner(QWidget):
         # in this variable. This is exactly equal to the dict value of a
         # single all_mods key-value
         self.uuid = uuid
-        self.list_item_name = self.metadata_manager.internal_local_metadata[
-            self.uuid
-        ].get("name")
+        self.list_item_name = (
+            self.metadata_manager.internal_local_metadata.get(self.uuid, {}).get("name")
+            or "METADATA ERROR"
+        )
         self.main_label = QLabel()
 
         # Visuals
@@ -193,7 +193,11 @@ class ModListItemInner(QWidget):
         self.csharp_icon = None
         self.xml_icon = None
         if self.settings_controller.settings.mod_type_filter_toggle:
-            if self.metadata_manager.internal_local_metadata[self.uuid].get("csharp"):
+            if (
+                self.metadata_manager.internal_local_metadata.get(self.uuid, {}).get(
+                    "csharp"
+                )
+            ) is not None:
                 self.csharp_icon = QLabel()
                 self.csharp_icon.setPixmap(
                     ModListIcons.csharp_icon().pixmap(QSize(20, 20))
@@ -486,15 +490,15 @@ class ModListIcons:
     _warning_icon_path: str = str(_data_path / "warning.png")
     _error_icon_path: str = str(_data_path / "error.png")
 
-    _ludeon_icon: Optional[QIcon] = None
-    _local_icon: Optional[QIcon] = None
-    _steam_icon: Optional[QIcon] = None
-    _csharp_icon: Optional[QIcon] = None
-    _xml_icon: Optional[QIcon] = None
-    _git_icon: Optional[QIcon] = None
-    _steamcmd_icon: Optional[QIcon] = None
-    _warning_icon: Optional[QIcon] = None
-    _error_icon: Optional[QIcon] = None
+    _ludeon_icon: QIcon | None = None
+    _local_icon: QIcon | None = None
+    _steam_icon: QIcon | None = None
+    _csharp_icon: QIcon | None = None
+    _xml_icon: QIcon | None = None
+    _git_icon: QIcon | None = None
+    _steamcmd_icon: QIcon | None = None
+    _warning_icon: QIcon | None = None
+    _error_icon: QIcon | None = None
 
     @classmethod
     def ludeon_icon(cls) -> QIcon:
@@ -697,6 +701,8 @@ class ModListWidget(QListWidget):
             local_steamcmd_name_to_publishedfileid = {}
 
             # STEAMCMD MOD PFIDS
+            # A set to track any SteamCMD pfids to purge from acf data
+            steamcmd_acf_pfid_purge: set[str] = set()
             # A list to track any SteamCMD mod paths
             steamcmd_mod_paths = []
             # A dict to track any SteamCMD mod publishedfileids -> name
@@ -714,7 +720,7 @@ class ModListWidget(QListWidget):
             steamdb_remove_blacklist = None
 
             # Define our QMenu & QActions
-            contextMenu = QMenu()
+            context_menu = QMenu()
             # Open folder action
             open_folder_action = None
             # Open URL in browser action
@@ -722,7 +728,7 @@ class ModListWidget(QListWidget):
             # Open URL in Steam
             open_mod_steam_action = None
             # Copy to clipboard actions
-            copy_packageId_to_clipboard_action = None
+            copy_packageid_to_clipboard_action = None
             copy_url_to_clipboard_action = None
             # Edit mod rules
             edit_mod_rules_action = None
@@ -871,8 +877,8 @@ class ModListWidget(QListWidget):
                                 "Add mod to SteamDB blacklist"
                             )
                     # Copy packageId to clipboard
-                    copy_packageId_to_clipboard_action = QAction()
-                    copy_packageId_to_clipboard_action.setText(
+                    copy_packageid_to_clipboard_action = QAction()
+                    copy_packageid_to_clipboard_action.setText(
                         "Copy packageId to clipboard"
                     )
                     # Edit mod rules with Rule Editor (only for individual mods)
@@ -1010,13 +1016,13 @@ class ModListWidget(QListWidget):
                             )
             # Put together our contextMenu
             if open_folder_action:
-                contextMenu.addAction(open_folder_action)
+                context_menu.addAction(open_folder_action)
             if open_url_browser_action:
-                contextMenu.addAction(open_url_browser_action)
+                context_menu.addAction(open_url_browser_action)
             if open_mod_steam_action:
-                contextMenu.addAction(open_mod_steam_action)
+                context_menu.addAction(open_mod_steam_action)
             if toggle_warning_action:
-                contextMenu.addAction(toggle_warning_action)
+                context_menu.addAction(toggle_warning_action)
             if (
                 delete_mod_action
                 or delete_mod_keep_dds_action
@@ -1029,18 +1035,18 @@ class ModListWidget(QListWidget):
                     deletion_options_menu.addAction(delete_mod_keep_dds_action)
                 if delete_mod_dds_only_action:
                     deletion_options_menu.addAction(delete_mod_dds_only_action)
-                contextMenu.addMenu(deletion_options_menu)
-            contextMenu.addSeparator()
+                context_menu.addMenu(deletion_options_menu)
+            context_menu.addSeparator()
             if (
-                copy_packageId_to_clipboard_action
+                copy_packageid_to_clipboard_action
                 or copy_url_to_clipboard_action
                 or edit_mod_rules_action
                 or re_git_action
             ):
                 misc_options_menu = QMenu(title="Miscellaneous options")
-                if copy_packageId_to_clipboard_action:
+                if copy_packageid_to_clipboard_action:
                     clipboard_options_menu = QMenu(title="Clipboard options")
-                    clipboard_options_menu.addAction(copy_packageId_to_clipboard_action)
+                    clipboard_options_menu.addAction(copy_packageid_to_clipboard_action)
                     if copy_url_to_clipboard_action:
                         clipboard_options_menu.addAction(copy_url_to_clipboard_action)
                     misc_options_menu.addMenu(clipboard_options_menu)
@@ -1048,7 +1054,7 @@ class ModListWidget(QListWidget):
                     misc_options_menu.addAction(edit_mod_rules_action)
                 if re_git_action:
                     misc_options_menu.addAction(re_git_action)
-                contextMenu.addMenu(misc_options_menu)
+                context_menu.addMenu(misc_options_menu)
             if (
                 convert_local_steamcmd_action
                 or convert_steamcmd_local_action
@@ -1086,9 +1092,9 @@ class ModListWidget(QListWidget):
                     workshop_actions_menu.addAction(
                         remove_from_steamdb_blacklist_action
                     )
-                contextMenu.addMenu(workshop_actions_menu)
+                context_menu.addMenu(workshop_actions_menu)
             # Execute QMenu and return it's ACTION
-            action = contextMenu.exec_(self.mapToGlobal(pos_local))
+            action = context_menu.exec_(self.mapToGlobal(pos_local))
             if action:  # Handle the action for all selected items
                 if (  # ACTION: Update git mod(s)
                     action == re_git_action and len(git_paths) > 0
@@ -1189,9 +1195,20 @@ class ModListWidget(QListWidget):
                             f"Deleting + redownloading {len(steamcmd_publishedfileid_to_name.keys())} SteamCMD mod(s)"
                         )
                         for path in steamcmd_mod_paths:
+                            # Delete all files except .dds
                             delete_files_except_extension(
                                 directory=path, extension=".dds"
                             )
+                            # Calculate SteamCMD mod publishedfileids to purge from acf metadata
+                            steamcmd_acf_pfid_purge = set(
+                                steamcmd_publishedfileid_to_name.keys()
+                            )
+                        # Purge any deleted SteamCMD mods from acf metadata
+                        if steamcmd_acf_pfid_purge:
+                            self.metadata_manager.steamcmd_purge_mods(
+                                publishedfileids=steamcmd_acf_pfid_purge
+                            )
+                        # Emit signal to steamcmd downloader to re-download
                         self.steamcmd_downloader_signal.emit(
                             list(steamcmd_publishedfileid_to_name.keys())
                         )
@@ -1387,6 +1404,10 @@ class ModListWidget(QListWidget):
                                             ignore_errors=False,
                                             onerror=handle_remove_read_only,
                                         )
+                                        if mod_metadata.get("steamcmd"):
+                                            steamcmd_acf_pfid_purge.add(
+                                                mod_metadata["publishedfileid"]
+                                            )
                                     except FileNotFoundError:
                                         logger.debug(
                                             f"Unable to delete mod. Path does not exist: {mod_metadata['path']}"
@@ -1411,6 +1432,11 @@ class ModListWidget(QListWidget):
                                             information=f"{e.strerror} occurred at {e.filename} with error code {error_code}.",
                                         )
                                         continue
+                    # Purge any deleted SteamCMD mods from acf metadata
+                    if steamcmd_acf_pfid_purge:
+                        self.metadata_manager.steamcmd_purge_mods(
+                            publishedfileids=steamcmd_acf_pfid_purge
+                        )
                     return True
                 elif action == delete_mod_keep_dds_action:  # ACTION: Delete mods action
                     answer = show_dialogue_conditional(
@@ -1438,6 +1464,15 @@ class ModListWidget(QListWidget):
                                         directory=mod_metadata["path"],
                                         extension=".dds",
                                     )
+                                    if mod_metadata.get("steamcmd"):
+                                        steamcmd_acf_pfid_purge.add(
+                                            mod_metadata["publishedfileid"]
+                                        )
+                    # Purge any deleted SteamCMD mods from acf metadata
+                    if steamcmd_acf_pfid_purge:
+                        self.metadata_manager.steamcmd_purge_mods(
+                            publishedfileids=steamcmd_acf_pfid_purge
+                        )
                     return True
                 elif action == delete_mod_dds_only_action:  # ACTION: Delete mods action
                     answer = show_dialogue_conditional(
@@ -1465,6 +1500,15 @@ class ModListWidget(QListWidget):
                                         directory=mod_metadata["path"],
                                         extension=".dds",
                                     )
+                                    if mod_metadata.get("steamcmd"):
+                                        steamcmd_acf_pfid_purge.add(
+                                            mod_metadata["publishedfileid"]
+                                        )
+                    # Purge any deleted SteamCMD mods from acf metadata
+                    if steamcmd_acf_pfid_purge:
+                        self.metadata_manager.steamcmd_purge_mods(
+                            publishedfileids=steamcmd_acf_pfid_purge
+                        )
                     return True
                 # Execute action for each selected mod
                 for source_item in selected_items:
@@ -1519,7 +1563,7 @@ class ModListWidget(QListWidget):
                                 platform_specific_open(mod_metadata["steam_uri"])
                         # Copy to clipboard actions
                         elif (
-                            action == copy_packageId_to_clipboard_action
+                            action == copy_packageid_to_clipboard_action
                         ):  # ACTION: Copy packageId to clipboard
                             copy_to_clipboard_safely(mod_metadata["packageid"])
                         elif (
@@ -1692,12 +1736,8 @@ class ModListWidget(QListWidget):
         This slot is called when an item's data changes
         """
         widget = self.itemWidget(item)
-        if widget and isinstance(widget, ModListItemInner):
+        if widget is not None and isinstance(widget, ModListItemInner):
             widget.repolish(item)
-        else:
-            logger.debug(
-                "Attempted to repolish item with no widget or incorrect widget type"
-            )
 
     def handle_other_list_row_added(self, uuid: str) -> None:
         if uuid in self.uuids:
@@ -2061,7 +2101,7 @@ class ModListWidget(QListWidget):
     def recreate_mod_list_and_sort(
         self,
         list_type: str,
-        uuids: List[str],
+        uuids: list[str],
         key: ModsPanelSortKey = ModsPanelSortKey.NOKEY,
     ) -> None:
         """
@@ -2083,7 +2123,7 @@ class ModListWidget(QListWidget):
         sorted_uuids = sort_uuids(uuids, key=key)
         self.recreate_mod_list(list_type, sorted_uuids)
 
-    def recreate_mod_list(self, list_type: str, uuids: List[str]) -> None:
+    def recreate_mod_list(self, list_type: str, uuids: list[str]) -> None:
         """
         Clear all mod items and add new ones from a dict.
 

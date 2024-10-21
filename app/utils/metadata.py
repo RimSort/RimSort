@@ -4,18 +4,12 @@ import traceback
 from pathlib import Path
 from re import match
 from time import localtime, strftime, time
-from typing import Any, Iterable, Optional, Union
+from typing import Any, Iterable, Union
 from uuid import uuid4
 
 from loguru import logger
 from natsort import natsorted
-from PySide6.QtCore import (
-    QObject,
-    QRunnable,
-    QThread,
-    QThreadPool,
-    Signal,
-)
+from PySide6.QtCore import QObject, QRunnable, QThread, QThreadPool, Signal
 
 from app.controllers.settings_controller import SettingsController
 from app.utils.app_info import AppInfo
@@ -44,7 +38,7 @@ from app.views.dialogue import (
 
 
 class MetadataManager(QObject):
-    _instance: Optional["MetadataManager"] = None
+    _instance: "None | MetadataManager" = None
     mod_created_signal = Signal(str)
     mod_deleted_signal = Signal(str)
     mod_metadata_updated_signal = Signal(str)
@@ -70,10 +64,10 @@ class MetadataManager(QObject):
             self.show_warning_signal.connect(show_warning)
 
             # Store parsed metadata & paths
-            self.external_steam_metadata: Optional[dict[str, Any]] = None
-            self.external_steam_metadata_path: Optional[str] = None
-            self.external_community_rules: Optional[dict[str, Any]] = None
-            self.external_community_rules_path: Optional[str] = None
+            self.external_steam_metadata: dict[str, Any] | None = None
+            self.external_steam_metadata_path: str | None = None
+            self.external_community_rules: dict[str, Any] | None = None
+            self.external_community_rules_path: str | None = None
             self.external_user_rules: dict[str, Any] | None = None
             self.external_user_rules_path: str = str(
                 AppInfo().databases_folder / "userRules.json"
@@ -111,33 +105,6 @@ class MetadataManager(QObject):
             raise ValueError("MetadataManager instance has already been initialized.")
         return cls._instance
 
-    def __refresh_acf_metadata(self) -> None:
-        # If we can find the appworkshop_294100.acf files from...
-        # ...SteamCMD
-        if os.path.exists(SteamcmdInterface.instance().steamcmd_appworkshop_acf_path):
-            try:
-                self.steamcmd_acf_data = acf_to_dict(
-                    SteamcmdInterface.instance().steamcmd_appworkshop_acf_path
-                )
-                logger.info(
-                    f"Successfully parsed SteamCMD appworkshop.acf metadata from: {SteamcmdInterface.instance().steamcmd_appworkshop_acf_path}"
-                )
-            except Exception as e:
-                logger.error(
-                    f"Failed to parse SteamCMD appworkshop.acf metadata from: {SteamcmdInterface.instance().steamcmd_appworkshop_acf_path}. Error: {e}"
-                )
-        # ...Steam client
-        if os.path.exists(self.workshop_acf_path):
-            try:
-                self.workshop_acf_data = acf_to_dict(self.workshop_acf_path)
-                logger.info(
-                    f"Successfully parsed Steam client appworkshop.acf metadata from: {self.workshop_acf_path}"
-                )
-            except Exception as e:
-                logger.error(
-                    f"Failed to parse Steam client appworkshop.acf metadata from: {self.workshop_acf_path}. Error: {e}"
-                )
-
     def __refresh_external_metadata(self) -> None:
         def validate_db_path(path: str, db_type: str) -> bool:
             if not os.path.exists(path):
@@ -164,7 +131,7 @@ class MetadataManager(QObject):
 
         def get_configured_steam_db(
             life: int, path: str
-        ) -> tuple[Optional[dict[str, Any]], Optional[str]]:
+        ) -> tuple[dict[str, Any] | None, str | None]:
             logger.info(f"Checking for Steam DB at: {path}")
             if not validate_db_path(path, "Steam"):
                 return None, None
@@ -220,7 +187,7 @@ class MetadataManager(QObject):
 
         def get_configured_community_rules_db(
             path: str,
-        ) -> tuple[Optional[dict[str, Any]], Optional[str]]:
+        ) -> tuple[dict[str, Any] | None, str | None]:
             logger.info(f"Checking for Community Rules DB at: {path}")
 
             if not validate_db_path(path, "Community Rules"):
@@ -657,7 +624,11 @@ class MetadataManager(QObject):
                                 f"About.xml syntax error. Unable to read <moddependenciesbyversion> tag from XML for version [{version}]: {self.internal_local_metadata[uuid]['metadata_file_path']}"
                             )
                             logger.debug(dependencies_by_ver)
-            if self.internal_local_metadata[uuid].get("incompatiblewith"):
+            if self.internal_local_metadata[uuid].get(
+                "incompatiblewith"
+            ) and isinstance(
+                self.internal_local_metadata[uuid].get("incompatiblewith"), dict
+            ):
                 incompatibilities = self.internal_local_metadata[uuid][
                     "incompatiblewith"
                 ].get("li")
@@ -1204,6 +1175,37 @@ class MetadataManager(QObject):
             self.compile_metadata(uuids=[uuid])
             self.mod_metadata_updated_signal.emit(uuid)
 
+    def refresh_acf_metadata(
+        self, steamclient: bool = True, steamcmd: bool = True
+    ) -> None:
+        # If we can find the appworkshop_294100.acf files from...
+        # ...Steam client
+        if steamclient and os.path.exists(self.workshop_acf_path):
+            try:
+                self.workshop_acf_data = acf_to_dict(self.workshop_acf_path)
+                logger.info(
+                    f"Successfully parsed Steam client appworkshop.acf metadata from: {self.workshop_acf_path}"
+                )
+            except Exception as e:
+                logger.error(
+                    f"Failed to parse Steam client appworkshop.acf metadata from: {self.workshop_acf_path}. Error: {e}"
+                )
+        # ...SteamCMD
+        if steamcmd and os.path.exists(
+            self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
+        ):
+            try:
+                self.steamcmd_acf_data = acf_to_dict(
+                    self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
+                )
+                logger.info(
+                    f"Successfully parsed SteamCMD appworkshop.acf metadata from: {self.steamcmd_wrapper.steamcmd_appworkshop_acf_path}"
+                )
+            except Exception as e:
+                logger.error(
+                    f"Failed to parse SteamCMD appworkshop.acf metadata from: {self.steamcmd_wrapper.steamcmd_appworkshop_acf_path}. Error: {e}"
+                )
+
     def refresh_cache(self, is_initial: bool = False) -> None:
         """
         This function contains expensive calculations for getting workshop
@@ -1224,10 +1226,61 @@ class MetadataManager(QObject):
         # Update paths from game configuration
 
         # Populate metadata
-        self.__refresh_acf_metadata()
+        self.refresh_acf_metadata(steamclient=True, steamcmd=True)
         self.__refresh_external_metadata()
         self.__refresh_internal_metadata(is_initial=is_initial)
         self.compile_metadata(uuids=list(self.internal_local_metadata.keys()))
+
+    def steamcmd_purge_mods(self, publishedfileids: set[str]) -> None:
+        """
+        Removes a mod from SteamCMD install
+        """
+        # Parse the SteamCMD workshop .acf metadata file
+        acf_path = self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
+        acf_metadata = acf_to_dict(path=acf_path)
+        depotcache_path = self.steamcmd_wrapper.steamcmd_depotcache_path
+        # WorkshopItemsInstalled
+        workshop_items_installed = acf_metadata.get("AppWorkshop", {}).get(
+            "WorkshopItemsInstalled"
+        )
+        # WorkshopItemDetails
+        workshop_item_details = acf_metadata.get("AppWorkshop", {}).get(
+            "WorkshopItemDetails"
+        )
+        # List of mod manifest ids to remove afterward
+        mod_manifest_ids = set()
+        # Loop through the supplied PublishedFileID's
+        for delete_pfid in publishedfileids:
+            # Parse the mod manifest id from acf metadata
+            if workshop_items_installed is not None:
+                mod_manifest_id = workshop_items_installed.get(delete_pfid, {}).get(
+                    "manifest"
+                )
+                if mod_manifest_id is not None:
+                    mod_manifest_ids.add(mod_manifest_id)
+                workshop_items_installed.pop(delete_pfid, None)
+
+            if workshop_item_details is not None:
+                mod_manifest_id = workshop_item_details.get(delete_pfid, {}).get(
+                    "manifest"
+                )
+                if (
+                    mod_manifest_id is not None
+                    and mod_manifest_id not in mod_manifest_ids
+                ):
+                    mod_manifest_ids.add(mod_manifest_id)
+                workshop_item_details.pop(delete_pfid, None)
+        # Save the updated .acf metadata
+        dict_to_acf(data=acf_metadata, path=acf_path)
+        # Remove the depotcache files if we have manifest id and file(s) exist
+        for mod_manifest_id in mod_manifest_ids:
+            manifest_path = Path(depotcache_path) / f"294100_{mod_manifest_id}.manifest"
+            if manifest_path.exists():
+                logger.debug(f"Removing mod manifest file: {manifest_path}")
+                try:
+                    os.remove(manifest_path)
+                except Exception as e:
+                    logger.error(e)
 
 
 class ModParser(QRunnable):
@@ -1398,6 +1451,20 @@ class ModParser(QRunnable):
                                     if li.count(".") > 1 and isinstance(li, str)
                                     else li
                                 )
+
+                    if mod_metadata.get("supportedversions", {}).get("li"):
+                        li = mod_metadata["supportedversions"]["li"]
+                        if isinstance(li, str):
+                            mod_metadata["supportedversions"]["li"] = li.strip()
+                        elif isinstance(li, list):
+                            for i, version in enumerate(li):
+                                if not isinstance(version, str):
+                                    logger.error(
+                                        f"Failed to parse {version} as a string"
+                                    )
+                                    continue
+                                li[i] = version.strip()
+
                     if mod_metadata.get("targetversion"):
                         mod_metadata["targetversion"] = mod_metadata["targetversion"]
                         mod_metadata["targetversion"] = (
@@ -2074,7 +2141,7 @@ class SteamDatabaseBuilder(QThread):
                 dynamic_query.pfids_by_appid()
                 # Make sure we have PublishedFileIds to work with...
                 if (
-                    not len(dynamic_query.publishedfileids) > 0
+                    len(dynamic_query.publishedfileids) == 0
                 ):  # If we didn't get any pfids
                     self.db_builder_message_output_signal.emit(
                         "Did not receive any PublishedFileIds from IPublishedFileService/QueryFiles! Cannot continue!"

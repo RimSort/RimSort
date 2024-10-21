@@ -31,6 +31,9 @@ class Instance(msgspec.Struct):
     :param run_args: The run arguments of the instance
     :type run_args: list[str]
 
+    :param steamcmd_auto_clear_depot_cache: Whether to automatically clear the depot cache
+    :type steamcmd_auto_clear_depot_cache: bool
+
     :param steamcmd_install_path: The path to the SteamCMD install folder
     :type steamcmd_install_path: str
 
@@ -44,6 +47,7 @@ class Instance(msgspec.Struct):
     local_folder: str = ""
     workshop_folder: str = ""
     run_args: list[str] = msgspec.field(default_factory=list)
+    steamcmd_auto_clear_depot_cache: bool = False
     steamcmd_install_path: str = str(
         Path(AppInfo().app_storage_folder / "instances" / "Default")
     )
@@ -65,6 +69,7 @@ class Instance(msgspec.Struct):
             "local_folder": self.local_folder,
             "workshop_folder": self.workshop_folder,
             "run_args": self.run_args,
+            "steamcmd_auto_clear_depot_cache": self.steamcmd_auto_clear_depot_cache,
             "steamcmd_install_path": self.steamcmd_install_path,
             "steamcmd_ignore": self.steamcmd_ignore,
             "steam_client_integration": self.steam_client_integration,
