@@ -283,6 +283,14 @@ EXAMPLE_EXT_RULES_1 = ExternalRulesSchema(
             loadTop=SubExternalBoolRule(False),
             loadBottom=SubExternalBoolRule(value=True, comment="It is known."),
         ),
+        "local.mod1": ExternalRule(
+            loadAfter={
+                "a.a": SubExternalRule(name="AA", comment="test1 load before"),
+                "b.b": SubExternalRule(name="aa", comment="test2 load before"),
+                "c.c.core": SubExternalRule(name="test3", comment=""),
+            },
+            loadBottom=SubExternalBoolRule(value=True, comment="It is known."),
+        ),
     },
 )
 
