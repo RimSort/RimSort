@@ -36,6 +36,26 @@
                 "comment": "It is known.",
                 "value": true
             }
+        },
+        "local.mod1": {
+            "loadAfter": {
+                "a.a": {
+                    "comment": "test1 load before",
+                    "name": "AA"
+                },
+                "b.b": {
+                    "comment": "test2 load before",
+                    "name": "aa"
+                },
+                "c.c.core": {
+                    "comment": "",
+                    "name": "test3"
+                }
+            },
+            "loadBottom": {
+                "comment": "It is known.",
+                "value": true
+            }
         }
     }
 }

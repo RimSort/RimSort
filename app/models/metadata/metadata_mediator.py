@@ -6,10 +6,12 @@ from PySide6.QtCore import QMutex, QRunnable, QThread, QThreadPool
 
 from app.models.metadata.metadata_factory import (
     create_listed_mod_from_path,
+    create_rules_from_external_rules,
     read_rules_db,
     read_steam_db,
 )
 from app.models.metadata.metadata_structure import (
+    AboutXmlMod,
     ExternalRulesSchema,
     ListedMod,
     SteamDbSchema,
@@ -152,6 +154,9 @@ class MetadataMediator:
                 self.local_mods_path,
                 self.game_path,
                 self.workshop_mods_path,
+                self.user_rules,
+                self.community_rules,
+                self.steam_db,
                 metadata_mutex,
                 self._mods_metadata,
             )
@@ -202,15 +207,45 @@ class MetadataMediator:
             local_path: Path,
             rimworld_path: Path,
             workshop_path: Path | None,
+            user_rules: ExternalRulesSchema | None,
+            community_rules: ExternalRulesSchema | None,
+            steam_db: SteamDbSchema | None,
             mutex: QMutex,
             mods_metadata: dict[str, ListedMod],
         ):
+            """Creates a worker to parse mods in a separate thread. Mutates the mods_metadata dict.
+
+            :param mod_path: Path to the mod folder or a list of paths to mod folders
+            :type mod_path: Path | str | list[Path] | list[str]
+            :param target_version: Target version for version specific rules
+            :type target_version: str
+            :param local_path: Path to the local mods folder
+            :type local_path: Path
+            :param rimworld_path: Path to the rimworld game folder
+            :type rimworld_path: Path
+            :param workshop_path: Path to the workshop mods folder if used
+            :type workshop_path: Path | None
+            :param user_rules: User rules if used
+            :type user_rules: ExternalRulesSchema | None
+            :param community_rules: Community rules if used
+            :type community_rules: ExternalRulesSchema | None
+            :param steam_db: steam db if used
+            :type steam_db: SteamDbSchema | None
+            :param mutex: Mutex to lock the mods_metadata dict
+            :type mutex: QMutex
+            :param mods_metadata: Dict of mods metadata
+            :type mods_metadata: dict[str, ListedMod]
+            """
             super().__init__()
             self.mod_path = mod_path
             self.target_version = target_version
             self.local_path = local_path
             self.rimworld_path = rimworld_path
             self.workshop_path = workshop_path
+
+            self.user_rules = user_rules
+            self.community_rules = community_rules
+            self.steam_db = steam_db
 
             self.mutex = mutex
             self.mods_metadata = mods_metadata
@@ -235,6 +270,23 @@ class MetadataMediator:
 
                     if not valid:
                         logger.warning(f"Mod at path {self.mod_path} is not valid")
+
+                    if isinstance(mod, AboutXmlMod):
+                        if (
+                            self.user_rules is not None
+                            and mod.package_id in self.user_rules.rules
+                        ):
+                            mod.user_rules = create_rules_from_external_rules(
+                                external_rule=self.user_rules.rules[mod.package_id]
+                            )
+
+                        if (
+                            self.community_rules is not None
+                            and mod.package_id in self.community_rules.rules
+                        ):
+                            mod.community_rules = create_rules_from_external_rules(
+                                external_rule=self.community_rules.rules[mod.package_id]
+                            )
 
                     results[mod.uuid] = mod
                 except Exception as e:

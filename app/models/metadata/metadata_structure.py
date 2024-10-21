@@ -35,7 +35,8 @@ class CaseInsensitiveSet(MutableSet[CaseInsensitiveStr]):
     """
 
     def __init__(
-        self, s: Iterable[CaseInsensitiveStr | str] | CaseInsensitiveStr | str | None = ()
+        self,
+        s: Iterable[CaseInsensitiveStr | str] | CaseInsensitiveStr | str | None = (),
     ):
         if isinstance(s, str):
             data = {CaseInsensitiveStr(s)}
@@ -62,6 +63,27 @@ class CaseInsensitiveSet(MutableSet[CaseInsensitiveStr]):
 
     def __len__(self) -> int:
         return len(self._data)
+
+    def __or__(self, other: AbstractSet[Any]) -> "CaseInsensitiveSet":
+        return CaseInsensitiveSet(self._data | {CaseInsensitiveStr(i) for i in other})
+
+    def __ror__(self, other: AbstractSet[Any]) -> "CaseInsensitiveSet":
+        return self.__or__(other)
+
+    def __hash__(self) -> int:
+        return hash(self._data)
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, AbstractSet):
+            # Check empty state
+            if not self._data and not other:
+                return True
+            return False
+
+        if isinstance(other, CaseInsensitiveSet):
+            return self._data == other._data
+
+        return self._data == other
 
     def discard(self, value: CaseInsensitiveStr | str) -> None:
         if not isinstance(value, CaseInsensitiveStr) and isinstance(value, str):
@@ -388,6 +410,57 @@ class AboutXmlMod(ListedMod, PackageIdMod):
     about_rules: BaseRules = field(default_factory=BaseRules)
     community_rules: Rules = field(default_factory=Rules)
     user_rules: Rules = field(default_factory=Rules)
+
+    @property
+    def overall_rules(self) -> Rules:
+        """Return the overall rules for the mod which properly merges the rules from the About, Community, and User sections.
+
+        About has lowest priority, followed by Community, and User has the highest priority.
+        Conflicting order rules are not resolved and may cause issue at sort.
+        Load top and bottom rules will be true of any one of the rules type has it set to true.
+
+        Returns:
+            BaseRules: The overall rules for the mod.
+        """
+        overall_rules = Rules()
+
+        # Load before
+        overall_rules.load_before = (
+            self.about_rules.load_before
+            | self.community_rules.load_before
+            | self.user_rules.load_before
+        )
+
+        # Load after
+        overall_rules.load_after = (
+            self.about_rules.load_after
+            | self.community_rules.load_after
+            | self.user_rules.load_after
+        )
+
+        # Incompatible with
+        overall_rules.incompatible_with = (
+            self.about_rules.incompatible_with
+            | self.community_rules.incompatible_with
+            | self.user_rules.incompatible_with
+        )
+
+        # Dependencies
+        overall_rules.dependencies = {
+            **self.about_rules.dependencies,
+            **self.community_rules.dependencies,
+            **self.user_rules.dependencies,
+        }
+
+        # Load first / last
+        overall_rules.load_first = (
+            self.community_rules.load_first or self.user_rules.load_first
+        )
+        overall_rules.load_last = (
+            self.community_rules.load_last or self.user_rules.load_last
+        )
+
+        return overall_rules
 
 
 class SubExternalRule(msgspec.Struct, omit_defaults=True):

@@ -16,6 +16,7 @@ from app.models.metadata.metadata_structure import (
     CaseInsensitiveSet,
     CaseInsensitiveStr,
     DependencyMod,
+    ExternalRule,
     ExternalRulesSchema,
     ListedMod,
     ModsConfig,
@@ -53,7 +54,6 @@ def value_extractor(
     :raises:
 
     """
-
     if isinstance(input, str):
         return input.strip() if strip_str else input
     elif isinstance(input, Sequence):
@@ -418,7 +418,7 @@ def create_base_rules(
                     )
 
             dep = create_mod_dependency(deps)
-            
+
             if dep.package_id in rules.dependencies:
                 logger.warning(
                     f"Duplicate dependency found: {dep.package_id}. Skipping."
@@ -556,6 +556,18 @@ def _create_scenario_mod_from_rsc(
     mod.mod_path = base_path
 
     return valid, mod
+
+
+def create_rules_from_external_rules(external_rule: ExternalRule) -> Rules:
+    rules = Rules()
+
+    rules.load_before = CaseInsensitiveSet(external_rule.loadBefore.keys())
+    rules.load_after = CaseInsensitiveSet(external_rule.loadAfter.keys())
+
+    rules.load_first = external_rule.loadTop.value
+    rules.load_last = external_rule.loadBottom.value
+
+    return rules
 
 
 def create_listed_mod_from_path(
