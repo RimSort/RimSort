@@ -345,7 +345,7 @@ class ListedMod(BaseMod):
         if self.mod_path is None:
             return None
 
-        candidate_path = self.mod_path.joinpath("About/preview.png")
+        candidate_path = self.mod_path.joinpath("About/Preview.png")
         if candidate_path.exists():
             return candidate_path
         return None
