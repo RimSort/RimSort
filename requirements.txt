@@ -1,4 +1,5 @@
 beautifulsoup4==4.12.3
+git+https://github.com/RimSort/steamfiles
 GitPython==3.1.43
 imageio==2.35.1
 loguru==0.7.2

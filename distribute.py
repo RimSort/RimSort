@@ -81,10 +81,6 @@ def get_rimsort_submodules() -> None:
     print("Ensuring we have all submodules initiated & up-to-date...")
     _execute(SUBMODULE_UPDATE_INIT_CMD)
 
-    print("pip install steamfiles from submodule")
-    path = os.path.join(_CWD, "submodules", "steamfiles")
-    _execute([PY_CMD, "-m", "pip", "install", "-e", path])
-
 
 def build_steamworkspy() -> None:
     # Setup environment
