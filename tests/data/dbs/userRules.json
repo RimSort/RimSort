@@ -20,12 +20,12 @@
         "test.test2": {
             "loadAfter": {
                 "a.a": {
-                    "comment": "test1 load before",
-                    "name": "AA"
+                    "comment": "test21 load before",
+                    "name": "BB"
                 },
                 "b.b": {
-                    "comment": "test2 load before",
-                    "name": "aa"
+                    "comment": "test22 load before",
+                    "name": "bb"
                 },
                 "c.c.core": {
                     "comment": "",
@@ -33,7 +33,7 @@
                 }
             },
             "loadBottom": {
-                "comment": "It is known.",
+                "comment": "It is not known.",
                 "value": true
             }
         },
