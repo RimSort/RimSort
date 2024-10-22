@@ -21,4 +21,4 @@ SQLAlchemy==2.0.35
 steam==1.4.4
 toposort==1.10
 watchdog==5.0.3
-xmltodict==0.14.1
+xmltodict==0.14.2

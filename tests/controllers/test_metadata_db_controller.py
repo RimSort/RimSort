@@ -1,5 +1,4 @@
 from pathlib import Path
-from sqlite3 import IntegrityError
 from typing import Generator
 from unittest.mock import patch
 
@@ -121,6 +120,4 @@ def test_tags(temp_db: AuxMetadataController) -> None:
     with temp_db.Session() as session:
         entry = temp_db.get(session, item_path)
         assert entry is not None
-        assert len(entry.tags) == 2
-        assert entry.tags[0] == "tag1"
-        assert entry.tags[1] == "tag3"
+        assert entry.tags == ["tag1", "tag3"]
