@@ -167,6 +167,8 @@ def test_about_xml_mod_overall_rules() -> None:
     assert not mod.overall_rules.load_last
 
     mod.about_rules.load_after = metadata_structure.CaseInsensitiveSet(["TestPackage"])
+    assert mod.overall_rules.load_after == {}
+    mod.clear_cache()
     assert mod.overall_rules.load_after == metadata_structure.CaseInsensitiveSet(
         ["TestPackage"]
     )
@@ -174,12 +176,14 @@ def test_about_xml_mod_overall_rules() -> None:
     mod.about_rules.load_after = metadata_structure.CaseInsensitiveSet(
         ["AnotherPackage", "testpackage"]
     )
+    mod.clear_cache()
     assert mod.overall_rules.load_after == {"testpackage", "anotherpackage"}
-
     assert mod.overall_rules.load_before == set()
+
     mod.about_rules.load_before = metadata_structure.CaseInsensitiveSet(
         ["TestPackage1"]
     )
+    mod.clear_cache()
     assert mod.overall_rules.load_before == metadata_structure.CaseInsensitiveSet(
         ["TestPackage1"]
     )
@@ -190,7 +194,7 @@ def test_about_xml_mod_overall_rules() -> None:
     mod.community_rules.load_before = metadata_structure.CaseInsensitiveSet(
         ["AnotherPackage2", "testpackage2"]
     )
-
+    mod.clear_cache()
     assert mod.overall_rules.load_before == {
         "testpackage1",
         "anotherpackage1",
@@ -199,11 +203,11 @@ def test_about_xml_mod_overall_rules() -> None:
     }
 
     mod.user_rules.load_first = True
-
+    mod.clear_cache()
     assert mod.overall_rules.load_first
     assert not mod.overall_rules.load_last
 
     mod.community_rules.load_last = True
-
+    mod.clear_cache()
     assert mod.overall_rules.load_first
     assert mod.overall_rules.load_last

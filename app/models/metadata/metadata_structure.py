@@ -411,13 +411,15 @@ class AboutXmlMod(ListedMod, PackageIdMod):
     community_rules: Rules = field(default_factory=Rules)
     user_rules: Rules = field(default_factory=Rules)
 
-    @property
+    @functools.cached_property
     def overall_rules(self) -> Rules:
         """Return the overall rules for the mod which properly merges the rules from the About, Community, and User sections.
 
         About has lowest priority, followed by Community, and User has the highest priority.
         Conflicting order rules are not resolved and may cause issue at sort.
         Load top and bottom rules will be true of any one of the rules type has it set to true.
+
+        Cached property
 
         Returns:
             BaseRules: The overall rules for the mod.
@@ -461,6 +463,35 @@ class AboutXmlMod(ListedMod, PackageIdMod):
         )
 
         return overall_rules
+
+    @functools.cached_property
+    def overall_rules_with_deps(self) -> Rules:
+        """Returns the overall rules while applying the dependencies as load after rules.
+
+        Cached property
+
+        :return: The overall rules with dependencies applied.
+        :rtype: Rules
+        """
+        overall_rules = self.overall_rules
+
+        # Apply dependencies as load after
+        for dep in overall_rules.dependencies.values():
+            overall_rules.load_after.add(dep.package_id)
+
+        return overall_rules
+
+    def clear_cache(self) -> None:
+        """Clear the cached properties."""
+        try:
+            del self.overall_rules
+        except AttributeError:
+            pass
+
+        try:
+            del self.overall_rules_with_deps
+        except AttributeError:
+            pass
 
 
 class SubExternalRule(msgspec.Struct, omit_defaults=True):
