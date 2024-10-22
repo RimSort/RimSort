@@ -1,11 +1,12 @@
 from pathlib import Path
+from sqlite3 import IntegrityError
 from typing import Generator
 from unittest.mock import patch
 
 import pytest
 
 from app.controllers.metadata_db_controller import AuxMetadataController
-from app.models.metadata.metadata_db import AuxMetadataEntry
+from app.models.metadata.metadata_db import AuxMetadataEntry, TagsEntry
 from app.utils.app_info import AppInfo
 
 
@@ -75,3 +76,51 @@ def test_get_value_equals(temp_db: AuxMetadataController) -> None:
         assert len(entries) == 2
         assert Path(entries[0].path) in [item_path1, item_path2]
         assert Path(entries[1].path) in [item_path1, item_path2]
+
+
+def test_tags(temp_db: AuxMetadataController) -> None:
+    item_path = Path("/test/path")
+    with temp_db.Session() as session:
+        entry: AuxMetadataEntry | None = temp_db.get_or_create(session, item_path)
+        assert entry is not None
+        assert len(entry.tags) == 0
+
+        entry.tags = [TagsEntry(tag="tag1"), TagsEntry(tag="tag2")]
+        session.commit()
+
+    with temp_db.Session() as session:
+        entry = temp_db.get(session, item_path)
+        assert entry is not None
+        assert len(entry.tags) == 2
+        assert entry.tags[0] == "tag1"
+        assert entry.tags[1] == TagsEntry(tag="tag2")
+
+        entry.tags.append(TagsEntry(tag="tag2"))
+        entry.tags.append(TagsEntry(tag="tag3"))
+        # Ensure unique constraint is enforced
+        try:
+            session.commit()
+        except Exception:
+            session.rollback()
+        else:
+            assert False
+
+        entry.tags.append(TagsEntry(tag="tag3"))
+        session.commit()
+
+    with temp_db.Session() as session:
+        entry = temp_db.get(session, item_path)
+        assert entry is not None
+        assert len(entry.tags) == 3
+        assert entry.tags[2] == "tag3"
+
+        # Remove a tag
+        entry.tags.remove(TagsEntry(tag="tag2"))
+        session.commit()
+
+    with temp_db.Session() as session:
+        entry = temp_db.get(session, item_path)
+        assert entry is not None
+        assert len(entry.tags) == 2
+        assert entry.tags[0] == "tag1"
+        assert entry.tags[1] == "tag3"
