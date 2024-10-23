@@ -7,6 +7,7 @@ from loguru import logger
 from PySide6.QtCore import QObject, Slot
 from PySide6.QtWidgets import QApplication, QLineEdit, QMessageBox
 
+from app.controllers.theme_controller import Themes
 from app.models.settings import Instance, Settings
 from app.utils.constants import SortMethod
 from app.utils.event_bus import EventBus
@@ -209,6 +210,11 @@ class SettingsController(QObject):
         )
         self.settings_dialog.steamcmd_install_button.clicked.connect(
             self._on_steamcmd_install_button_clicked
+        )
+
+        # Theme tab
+        self.settings_dialog.theme_location_open_button.clicked.connect(
+            self._on_theme_location_open_button_clicked
         )
 
         # Connect signals from dialogs
@@ -504,6 +510,28 @@ class SettingsController(QObject):
             self.settings.todds_overwrite
         )
 
+        # Themes tab
+        if self.settings.enable_themes:
+            self.settings_dialog.enable_themes_checkbox.setChecked(True)
+        else:
+            self.settings_dialog.enable_themes_checkbox.setChecked(False)
+        # get theme names
+        current_theme_name = self.settings.theme_name
+        current_index = self.settings_dialog.themes_combobox.findText(
+            current_theme_name
+        )
+        if current_index != -1:
+            self.settings_dialog.themes_combobox.setCurrentIndex(current_index)
+        else:  # Handle invalid index selection
+            logger.warning(
+                f"Resetting to 'RimPy' theme due to Missing or Invalid Theme: {current_theme_name}"
+            )
+            self.settings.theme_name = "RimPy"  # Set a default theme
+            self.settings_dialog.themes_combobox.setCurrentIndex(
+                self.settings_dialog.themes_combobox.findText("RimPy")
+            )
+            self.settings.save()
+
         # Advanced tab
         self.settings_dialog.debug_logging_checkbox.setChecked(
             self.settings.debug_logging_enabled
@@ -645,6 +673,28 @@ class SettingsController(QObject):
         self.settings.todds_overwrite = (
             self.settings_dialog.todds_overwrite_checkbox.isChecked()
         )
+
+        # Themes tab
+        if self.settings_dialog.enable_themes_checkbox.isChecked():
+            self.settings.enable_themes = True
+        else:
+            self.settings.enable_themes = False
+        # get theme names
+        selected_theme = self.settings_dialog.themes_combobox.currentText()
+        self.settings.theme_name = selected_theme
+        available_themes = [folder.name for folder in Themes.get_available_themes()]
+
+        if selected_theme in available_themes:
+            self.settings.theme_name = selected_theme
+        else:  # Handle invalid theme selection
+            logger.warning(
+                f"Resetting to 'RimPy' theme due to Missing or Invalid Theme: {selected_theme}"
+            )
+            self.settings.theme_name = "RimPy"  # Set a default theme
+            self.settings_dialog.themes_combobox.setCurrentIndex(
+                self.settings_dialog.themes_combobox.findText("RimPy")
+            )
+            self.settings.save()
 
         # Advanced tab
         self.settings.debug_logging_enabled = (
@@ -1291,6 +1341,12 @@ class SettingsController(QObject):
 
         self.settings_dialog.global_ok_button.click()
         EventBus().do_build_steam_workshop_database.emit()
+
+    @Slot()
+    def _on_theme_location_open_button_clicked(self) -> None:
+        theme_storage_location = Themes.get_theme_storage_location_path(self)
+        logger.info(f"Opening RimSort theme directory: {theme_storage_location}")
+        platform_specific_open(Path(theme_storage_location))
 
     @Slot(str)
     def _on_run_args_text_changed(self, text: str) -> None:
