@@ -208,5 +208,5 @@ if __name__ == "__main__":
 
         logger.debug("Running using Nuitka bundle")
 
-    logger.debug("Initializing RimSort application")
+    logger.info(f"Initializing RimSort application: {AppInfo().app_version}")
     main_thread()
