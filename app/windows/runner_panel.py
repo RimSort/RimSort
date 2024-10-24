@@ -404,3 +404,9 @@ class RunnerPanel(QWidget):
 
         # Cleanup process
         self.process.terminate()
+        answer = show_dialogue_conditional(
+            text="Operation complete, you can close the window.",
+            button_text_override=["Close Window"],
+        )
+        if answer == "Close Window":
+            self.close()
