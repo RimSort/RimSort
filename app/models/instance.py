@@ -39,6 +39,9 @@ class Instance(msgspec.Struct):
 
     :param steam_client_integration: Whether to integrate the Steam client with the instance
     :type steam_client_integration: bool
+
+    :param initial_setup: Whether the instance is in the initial setup state
+    :type initial_setup: bool
     """
 
     name: str = "Default"
@@ -54,6 +57,8 @@ class Instance(msgspec.Struct):
     steamcmd_ignore: bool = False
     steam_client_integration: bool = False
 
+    initial_setup: bool = True
+
     def __setattr__(self, name: str, value: Any) -> None:
         # If the value is the same as the current value, do nothing
         if getattr(self, name) == value:
@@ -61,19 +66,19 @@ class Instance(msgspec.Struct):
         super().__setattr__(name, value)
         EventBus().settings_have_changed.emit()
 
-    def as_dict(self) -> dict[str, Any]:
-        return {
-            "name": self.name,
-            "game_folder": self.game_folder,
-            "config_folder": self.config_folder,
-            "local_folder": self.local_folder,
-            "workshop_folder": self.workshop_folder,
-            "run_args": self.run_args,
-            "steamcmd_auto_clear_depot_cache": self.steamcmd_auto_clear_depot_cache,
-            "steamcmd_install_path": self.steamcmd_install_path,
-            "steamcmd_ignore": self.steamcmd_ignore,
-            "steam_client_integration": self.steam_client_integration,
-        }
+    def as_dict(self, skip_private: bool = True) -> dict[str, Any]:
+        skip_attributes: list[str] = []
+
+        data = {}
+
+        for key in self.__struct_fields__:
+            if key in skip_attributes:
+                continue
+            if skip_private and key.startswith("_"):
+                continue
+            data[key] = getattr(self, key)
+
+        return data
 
     def validate_paths(self, clear: bool = True) -> list[str]:
         """Validates the paths of the instance. If clear is True, invalid paths are set to an empty string.
