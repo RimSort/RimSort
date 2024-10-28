@@ -202,6 +202,30 @@ class MainWindow(QMainWindow):
             # Setup watchdog
             self.initialize_watchdog()
 
+        self.__check_steam_integration()
+
+        # Force initial setup to False and save settings
+        if self.settings_controller.active_instance.initial_setup:
+            self.settings_controller.active_instance.initial_setup = False
+            self.settings_controller.settings.save()
+
+    def __check_steam_integration(self) -> None:
+        """Ask the user if they would like to enable Steam Client Integration for the active instance if it is the first time they are setting up RimSort."""
+        instance = self.settings_controller.active_instance
+
+        if instance.initial_setup and not instance.steam_client_integration:
+            diag = BinaryChoiceDialog(
+                title="Steam Client Integration",
+                text="<h2>Would you like to enable Steam Client Integration for this instance?</h2>",
+                information="This will allow you to use RimSort features that require the Steam Client.",
+                negative_text="No",
+            )
+            if diag.exec_is_positive():
+                instance.steam_client_integration = True
+                self.settings_controller.set_instance(instance)
+
+        return
+
     def __ask_for_new_instance_name(self) -> str | None:
         instance_name, ok = show_dialogue_input(
             title="Create new instance",
