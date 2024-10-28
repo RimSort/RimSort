@@ -216,7 +216,7 @@ class MainWindow(QMainWindow):
         if instance.initial_setup and not instance.steam_client_integration:
             diag = BinaryChoiceDialog(
                 title="Steam Client Integration",
-                text="<h3>Would you like to enable Steam Client Integration for this instance?</h3>",
+                text="Would you like to enable Steam Client Integration for this instance?",
                 information="""This will allow you to use RimSort features that require the Steam Client. This includes, among other things, unsubscribing from workshop mods and opening workshop links via the Steam Client. 
                 <br><br>
                 You can change this in the settings under the Advanced tab.""",

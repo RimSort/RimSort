@@ -307,7 +307,7 @@ class _BaseMessageBox(QMessageBox):
         self.setIcon(icon)
         # Set text to be bold via rich text
         if text_format == Qt.TextFormat.RichText:
-            text = f"<b>{text}</b>"
+            text = f"<h3>{text}</h3>"
         self.setText(text)
         self.setInformativeText(information)
         if details is not None:
