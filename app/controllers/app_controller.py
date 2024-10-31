@@ -32,7 +32,7 @@ class AppController(QObject):
         self.app.setWindowIcon(GUIInfo().app_icon)
 
         # One-time initialization of userRules.json
-        user_rules_path = AppInfo().databases_folder / "userRules.json"
+        user_rules_path = AppInfo().user_rules_file
         if not user_rules_path.exists():
             initial_rules_db = DEFAULT_USER_RULES
             with open(user_rules_path, "w", encoding="utf-8") as output:
