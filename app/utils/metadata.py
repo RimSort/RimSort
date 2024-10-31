@@ -2141,7 +2141,7 @@ class SteamDatabaseBuilder(QThread):
                 dynamic_query.pfids_by_appid()
                 # Make sure we have PublishedFileIds to work with...
                 if (
-                    not len(dynamic_query.publishedfileids) > 0
+                    len(dynamic_query.publishedfileids) == 0
                 ):  # If we didn't get any pfids
                     self.db_builder_message_output_signal.emit(
                         "Did not receive any PublishedFileIds from IPublishedFileService/QueryFiles! Cannot continue!"
