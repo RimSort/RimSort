@@ -59,11 +59,11 @@ class Instance(msgspec.Struct):
 
     initial_setup: bool = True
 
-    def __setattr__(self, name: str, value: Any) -> None:
+    def __setattr__(self, key: str, value: Any) -> None:
         # If the value is the same as the current value, do nothing
-        if getattr(self, name) == value:
+        if hasattr(self, key) and getattr(self, key) == value:
             return
-        super().__setattr__(name, value)
+        super().__setattr__(key, value)
         EventBus().settings_have_changed.emit()
 
     def as_dict(self, skip_private: bool = True) -> dict[str, Any]:
