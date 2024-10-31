@@ -211,3 +211,8 @@ def test_about_xml_mod_overall_rules() -> None:
     mod.clear_cache()
     assert mod.overall_rules.load_first
     assert mod.overall_rules.load_last
+
+
+def test_listed_mod_c_sharp_mod_default() -> None:
+    mod = ListedMod()
+    assert not mod.c_sharp_mod

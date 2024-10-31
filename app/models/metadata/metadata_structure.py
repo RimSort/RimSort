@@ -335,6 +335,32 @@ class ListedMod(BaseMod):
 
         return -1
 
+    @functools.cached_property
+    def c_sharp_mod(self) -> bool:
+        """Return whether the mod is a C# mod based on the contents of the mod path. Looks for binaries in the Assemblies folder."""
+        if self.mod_path is None:
+            return False
+
+        subfolder_paths = [self.mod_path]
+        subfolder_paths.extend(
+            [
+                self.mod_path / folder
+                for folder in os.listdir(self.mod_path)
+                if os.path.isdir(str(self.mod_path / folder))
+            ]
+        )
+
+        for subfolder_path in subfolder_paths:
+            candidate_path = subfolder_path / "Assemblies"
+            if candidate_path.exists():
+                # Check for .dll or .DLL files in the Assemblies folder using glob
+                if any(candidate_path.glob("*.dll")) or any(
+                    candidate_path.glob("*.DLL")
+                ):
+                    return True
+
+        return False
+
     @property
     def preview_img_path(self) -> Path | None:
         """Return the path to the preview image for the mod.

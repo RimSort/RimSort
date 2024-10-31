@@ -516,6 +516,7 @@ def test_create_listed_mod_from_path_local_mod_1() -> None:
     assert mod.mod_type == ModType.LOCAL
 
     assert mod.description == "Description 1.5"
+    assert mod.c_sharp_mod
 
 
 def test_create_listed_mod_from_path_local_mod_2() -> None:
@@ -529,6 +530,7 @@ def test_create_listed_mod_from_path_local_mod_2() -> None:
     assert mod.mod_type == ModType.LOCAL
 
     assert mod.description == "This is localmod 2 description"
+    assert mod.c_sharp_mod
 
 
 def test_create_listed_mod_from_path_steamcmd_mod_1() -> None:
@@ -542,6 +544,7 @@ def test_create_listed_mod_from_path_steamcmd_mod_1() -> None:
     assert mod.mod_type == ModType.STEAM_CMD
 
     assert mod.description == "This is steamcmd mod 1 description"
+    assert not mod.c_sharp_mod
 
 
 def test_create_listed_mod_from_path_fishery(tmp_path: Path) -> None:
