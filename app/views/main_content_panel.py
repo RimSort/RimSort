@@ -692,8 +692,18 @@ class MainContent(QObject):
                     f"Deleting SteamCMD ACF data: {self.steamcmd_wrapper.steamcmd_appworkshop_acf_path}"
                 )
                 os.remove(self.steamcmd_wrapper.steamcmd_appworkshop_acf_path)
+                dialogue.show_information(
+                    title="acf file deleted",
+                    text="acf file deleted, Mods window will be refreshed.",
+                )
+
+                self._do_refresh()
             else:
                 logger.debug("SteamCMD ACF data does not exist. Skipping action.")
+                dialogue.show_information(
+                    title="acf file not found",
+                    text="acf file does not exist or is already deleted..",
+                )
         if action == "update_workshop_mods":
             self._do_check_for_workshop_updates()
         if action == "import_list_file_xml":
