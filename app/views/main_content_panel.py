@@ -1735,7 +1735,7 @@ class MainContent(QObject):
 
     def _do_save(self) -> None:
         """
-        Method save the current list of active mods to the selected ModsConfig.xml
+        Method to save the current list of active mods to the selected ModsConfig.xml
         """
         logger.info("Saving current active mods to ModsConfig.xml")
         active_mods = []
@@ -1761,6 +1761,8 @@ class MainContent(QObject):
                         active_mods.append(package_id + "_steam")
                         continue  # Append `_steam` suffix if Steam mod, continue to next mod
                 active_mods.append(package_id)
+        active_mods_uuids = metadata.get_mods_from_list(mod_list=[mod for mod in active_mods])[0]
+        self.active_mods_uuids_last_save = active_mods_uuids
         logger.info(f"Collected {len(active_mods)} active mods for saving")
 
         mods_config_data = generate_rimworld_mods_list(
