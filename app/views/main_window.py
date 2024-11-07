@@ -897,6 +897,8 @@ class MainWindow(QMainWindow):
         self.stop_watchdog_if_running()
         # Set current instance
         self.settings_controller.settings.current_instance = instance
+        # Change current instance in window title
+        self.setWindowTitle(f"RimSort {AppInfo().app_version}: {instance} Instance")
         # Save settings
         self.settings_controller.settings.save()
         # Initialize content
