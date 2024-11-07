@@ -70,7 +70,8 @@ class MainWindow(QMainWindow):
         # Watchdog
         self.watchdog_event_handler: WatchdogHandler | None = None
         # Set up the window
-        self.setWindowTitle(f"RimSort {AppInfo().app_version}")
+        current_instance = self.settings_controller.settings.current_instance
+        self.setWindowTitle(f"RimSort {AppInfo().app_version}: {current_instance} Instance")
         self.setMinimumSize(QSize(1024, 768))
 
         # Create the window layout
