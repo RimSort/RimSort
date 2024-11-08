@@ -71,7 +71,7 @@ class MainWindow(QMainWindow):
         self.watchdog_event_handler: WatchdogHandler | None = None
         # Set up the window
         current_instance = self.settings_controller.settings.current_instance
-        self.setWindowTitle(f"RimSort {AppInfo().app_version}: {current_instance} Instance")
+        self.__set_window_title(current_instance)
         self.setMinimumSize(QSize(1024, 768))
 
         # Create the window layout
@@ -897,12 +897,20 @@ class MainWindow(QMainWindow):
         self.stop_watchdog_if_running()
         # Set current instance
         self.settings_controller.settings.current_instance = instance
-        # Change current instance in window title
-        self.setWindowTitle(f"RimSort {AppInfo().app_version}: {instance} Instance")
+        # Update window title with current instance
+        self.__set_window_title(instance)
         # Save settings
         self.settings_controller.settings.save()
         # Initialize content
         self.initialize_content(is_initial=False)
+        
+    def __set_window_title(self, instance: str) -> None:
+        """
+        Sets the window title with the name of the instance being used.
+        
+        :param instance: Name of the instance currently being used.
+        """
+        self.setWindowTitle(f"RimSort {AppInfo().app_version}: {instance} Instance")
 
     def initialize_watchdog(self) -> None:
         logger.info("Initializing watchdog FS Observer")
