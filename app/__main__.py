@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Compilation mode
 # nuitka-project: --standalone
 # nuitka-project: --assume-yes-for-downloads
