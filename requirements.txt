@@ -17,5 +17,5 @@ PySide6==6.8.0.2; sys_platform == 'win32'
 requests==2.32.3
 steam==1.4.4
 toposort==1.10
-watchdog==5.0.3
+watchdog==6.0.0
 xmltodict==0.14.2
