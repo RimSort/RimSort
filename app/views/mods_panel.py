@@ -2554,11 +2554,7 @@ class ModsPanel(QWidget):
                 else self.inactive_mods_list.item(uuids.index(uuid))
             )
             item_data = item.data(Qt.ItemDataRole.UserRole)
-            # Check if the item is valid
             metadata = self.metadata_manager.internal_local_metadata[uuid]
-            invalid = item_data["invalid"]
-            if invalid:
-                continue
             # Check if the item is filtered
             item_filtered = item_data["filtered"]
             # Check if the item should be filtered or not based on search filter
