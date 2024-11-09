@@ -80,6 +80,7 @@ class AppInfo:
         # Derive some secondary directory paths
 
         self._databases_folder: Path = self._app_storage_folder / "dbs"
+        self._saved_modlists_folder: Path = self._app_storage_folder / "modlists"
         self._theme_data_folder: Path = self._application_folder / "themes"
         self._settings_file: Path = self._app_storage_folder / "settings.json"
 
@@ -87,6 +88,7 @@ class AppInfo:
 
         self._app_storage_folder.mkdir(parents=True, exist_ok=True)
         self._user_log_folder.mkdir(parents=True, exist_ok=True)
+        self._saved_modlists_folder.mkdir(parents=True, exist_ok=True)
 
         self._databases_folder.mkdir(parents=True, exist_ok=True)
 
