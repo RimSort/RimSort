@@ -151,6 +151,8 @@ class AppInfo:
         """
         Get the path to the folder where user modlists are saved.
 
+        This directory is determined using platform-specific conventions.
+
         Returns:
             Path: The path to the saved modlists folder.
         """
