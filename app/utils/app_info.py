@@ -147,6 +147,16 @@ class AppInfo:
         return self._app_storage_folder
 
     @property
+    def saved_modlists_folder(self) -> Path:
+        """
+        Get the path to the folder where user modlists are saved.
+
+        Returns:
+            Path: The path to the saved modlists folder.
+        """
+        return self._saved_modlists_folder
+
+    @property
     def app_settings_file(self) -> Path:
         """
         Get the path to the file where user-specific data for the application is stored.

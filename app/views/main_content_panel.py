@@ -1219,7 +1219,7 @@ class MainContent(QObject):
         file_path = dialogue.show_dialogue_file(
             mode="open",
             caption="Open RimWorld mod list",
-            _dir=str(AppInfo()._saved_modlists_folder),
+            _dir=str(AppInfo().saved_modlists_folder),
             _filter="RimWorld mod list (*.rml *.rws *.xml)",
         )
         logger.info(f"Selected path: {file_path}")
@@ -1269,7 +1269,7 @@ class MainContent(QObject):
         file_path = dialogue.show_dialogue_file(
             mode="save",
             caption="Save mod list",
-            _dir=str(AppInfo()._saved_modlists_folder),
+            _dir=str(AppInfo().saved_modlists_folder),
             _filter="XML (*.xml)",
         )
         logger.info(f"Selected path: {file_path}")
