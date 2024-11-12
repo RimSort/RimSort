@@ -1917,7 +1917,6 @@ class ModListWidget(QListWidget):
             current_mod_index = self.uuids.index(uuid)
             current_item = self.item(current_mod_index)
             current_item_data = current_item.data(Qt.ItemDataRole.UserRole)
-            current_item_data["invalid"] = False
             current_item_data["mismatch"] = False
             current_item_data["errors"] = None
             current_item_data["warnings"] = None
@@ -2047,7 +2046,6 @@ class ModListWidget(QListWidget):
                 ]
             ):
                 num_errors += 1
-                current_item_data["invalid"] = True
                 total_error_text += f"\n\n{mod_data['name']}"
                 total_error_text += "\n" + "=" * len(mod_data["name"])
                 total_error_text += tool_tip_text
