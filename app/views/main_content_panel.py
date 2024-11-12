@@ -1761,7 +1761,7 @@ class MainContent(QObject):
                         active_mods.append(package_id + "_steam")
                         continue  # Append `_steam` suffix if Steam mod, continue to next mod
                 active_mods.append(package_id)
-        active_mods_uuids, inactive_mods_uuids, _, _ = metadata.get_mods_from_list(mod_list=[mod for mod in active_mods])
+        active_mods_uuids, inactive_mods_uuids, _, _ = metadata.get_mods_from_list(mod_list=active_mods)
         self.active_mods_uuids_last_save = active_mods_uuids
         logger.info(f"Collected {len(active_mods)} active mods for saving")
 
