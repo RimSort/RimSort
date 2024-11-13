@@ -77,6 +77,8 @@ Linux
 {: .warning }
 
 > Certain Linux distros/flavors may not have all the required shared libraries for QT, the graphics library that RimSort uses. Namely, `xcb/libxcb`. If you get an error about loading these when attempting to launch RimSort, you will need to install one or the other. Even after installing the library, there may be additional files that are missing that need to be downloaded separately. For example, `libxcb-cursor-dev`
+> 
+> The easiest way to find what package has the library you need is the command `apt-file`.
 >
 > A mismatch of kernel versions may lead to version errors for shared libraries such as `glibc`
 
