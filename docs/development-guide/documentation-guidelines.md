@@ -38,11 +38,33 @@ Where possible, all assets should be hosted within the repository itself and not
 
 ### Navigation Order
 
-Navigation order should be determined by importance, and by similarity between the names of the page titles. For example, `Documentation Guidelines` and `Contributer Guidelines` should be next to each other in the navigation order as they share a similar structure and word. This is for the sake of usability and asthetics.
+Navigation order should be determined by importance, and by similarity between the names of the page titles. For example, `Documentation Guidelines` and `Contributer Guidelines` should be next to each other in the navigation order as they share a similar structure and word. This is for the sake of usability and aesthetics.
 
 ### Style
 
 Navigation info such as `File > Settings` and filenames such as `About.xml` should always be code blocked.
+
+### Page Contents
+
+#### Table of Contents (TOC)
+
+{: .note}
+> Parent pages will automatically generate and include a table of contents consisting of its children pages. Do not disable this.
+
+Most content pages should include a table of contents (TOC). The TOC should be the first second level header item after the primary page header and any contents belonging to that. 
+
+Both the page header and the table of contents header should not be a part of the table of contents, and should just be marked with `.not_toc`. All other headers within the page should be a part of the table of contents.
+
+The table of contents header should be marked with `.text-delta` such that it is set as delta text.
+
+To generate the table of contents, include the following code (markdown):
+```markdown{% raw %}
+## Table of Contents
+{: .no_toc .text-delta }
+
+1. TOC
+{:toc}
+{% endraw %}```
 
 ---
 
