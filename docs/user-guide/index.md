@@ -1,6 +1,7 @@
 ---
 title: User Guide
 nav_order: 3
+has_toc: false
 ---
 
 # User Guide
