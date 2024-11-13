@@ -34,17 +34,17 @@ _**NOTE:**_ DB Builder has some "soft requirements". If you are not a RimWorld S
 
 3. _**Keep your new Steam key private and do not share with anyone.**_ After clicking the Register button, you will be shown your new Steam API key. To obtain a new Steam API key, it is as easy as clicking the Revoke button and then registering a new key.
 
-4. You can add this to RimSort by right-clicking the "Build Database" button:
-
-[add key demo](https://github.com/RimSort/RimSort/assets/2766946/57398ade-93fb-465c-95e8-3330df61fb8a)
+4. You can add this to RimSort by putting the key in the `Steam API Key` field under the `DB Builder` page of the settings panel.
 
 DB Builder has 2 "Include" modes available. These modes can be used to create, manage, maintain, and update a SteamDB for use with RimSort. You can even interface with RimPy db.json as the formats are compatible.
 
 Please review the following sections describing each mode, and why it is useful:
 
-## Overview of DB Builder modes
+## Options
 
-### All mods "Include" mode
+### DB Builder Modes (`When building the database:`)
+
+#### All mods "Include" mode
 
 - Can optionally look up & append DLC dependency data via SteamWorks API calls, after DB creation & WebAPI passes.
 - Produces accurate, possibly "semi-incomplete" DB without looking up all PublishedFileIds via WebAPI, and instead needs to be supplied PublishedFileIds. Uses additional queries to lookup WebAPI metadata for the supplied PublishedFileIds.
@@ -52,7 +52,7 @@ Please review the following sections describing each mode, and why it is useful:
   - This mode _can_ produce a complete DB from scratch, but requires you to download the entire workshop to do so!
   - This mode can also produce partial DB updates _without_ downloading the entire workshop, but in doing so will only provide a _partial_ update to a SteamDB.
 
-### No local data "Include" mode
+#### No local data "Include" mode
 
 - Can optionally look up & append DLC dependency data via SteamWorks API calls, subsequent to DB creation & WebAPI passes.
 - Produces accurate, "semi-complete" DB by looking up all available PublishedFileIds via WebAPI, instead of being supplied PublishedFileIds. Uses additional queries to lookup WebAPI metadata for a complete list of PublishedFileIds supplied from ALL available PublishedFileIDs (mods) it can find via Steam WebAPI.
@@ -60,32 +60,35 @@ Please review the following sections describing each mode, and why it is useful:
   - Does not use metadata from locally available mods, and instead looks up PublishedFileIds by scraping Steam WebAPI.
   - You can create DB this way without any mods downloaded, and update local metadata to entries in the list via subsequent "All Mods" queries.
 
+### Query DLC dependency data with Steamworks API
+{: .d-inline-block}
+Recommended Option
+{: .label .label-green }
+
+If you wish to include DLC dependency data in your database, ensure that you have the Steam client running & authenticated. Also, enable `Query DLC dependency data with Steamworks API` setting under `DB Builder`.
+
+### Update database instead of overwriting
+{: .d-inline-block}
+Recommended Option
+{: .label .label-green }
+
+Optionally choose whether you want to overwrite, or update the selected database in-place when running DB Builder by configuring the `Update database instead of overwriting` setting under `DB Builder`.
+
+If you choose to update, the existing database will be loaded into memory and updated with the new data before being written back to disk.
+
 ## Process for creating your own SteamDB
 
-1. Open RimSort Settings panel
-
-[settings panel](https://github.com/RimSort/RimSort/assets/2766946/77351f44-613c-40cc-89ba-7bfae857e717)
+1. Open the DB Builder page within the RimSort Settings panel (`File > Settings > DB Builder`).
 
 2. Ensure you have followed the steps above to configure your Steam WebAPI key!
 
-3. Optionally configure your database expiry in seconds. This is the expiry in seconds used for the "version" key in your database. This is an epoch timestamp set at the current time of your database creation + the expiry duration. Default is 1 week.
+3. Optionally configure your database expiry in seconds. This is the expiry in seconds used for the "version" key in your database. This is an epoch timestamp set at the current time of your database creation + the expiry duration. This will have an effect on when RimSort will warn you about the database being out of date. Default is 1 week. Note, this setting is under the `Databases` page.
 
-[database expiry](https://github.com/RimSort/RimSort/assets/2766946/e767eb36-2ec9-45a0-b35f-9d7a155875bc)
+4. Select the settings you prefer. See the previous section [Options](#options) for more details and recommendations.
 
-4. Choose an "Include" mode - "All mods" or "No local data"
+5. Click "Build Database" to begin DB Builder process. DB Builder will prompt you to enter or select a JSON file path. This is where DB Builder will output your database when it is completed.
 
-[include mode](https://github.com/RimSort/RimSort/assets/2766946/0b5bb952-b867-43f8-a94f-4dfdc9646284)
+{: .warning}
+> This video is outdated and may not be accurate for the latest versions of RimSort.
 
-5. _**Recommended:**_ If you wish to include DLC dependency data in your database, ensure that you have Steam client authenticated to & running.
-   - You will also need to enable this option in Settings:
-
-[dlc dependency data](https://github.com/RimSort/RimSort/assets/2766946/135425de-40da-413f-9a0e-d44664f29a8d)
-
-6. _**Recommended:**_ Optionally choose whether you want to overwrite, or update the selected database in-place when running DB Builder:
-   - If you choose to update, the existing database will be loaded into memory and updated with the new data before being written back to disk.
-
-[update database](https://github.com/RimSort/RimSort/assets/2766946/36593ca7-d2a8-4f19-a5dc-62afb9124418)
-
-7. Click "Build Database" to begin DB Builder process. DB Builder will prompt you to enter or select a JSON file path. This is where DB Builder will output your database when it is completed.
-
-[build database](https://github.com/RimSort/RimSort/assets/2766946/bfdc5115-e349-4c92-86bc-96a6fcd1e9c6)
+<iframe width="420" height="300" src="https://github.com/RimSort/RimSort/assets/2766946/bfdc5115-e349-4c92-86bc-96a6fcd1e9c6"  allowfullscreen="true" alt="Build Database Demo Video"></iframe>
