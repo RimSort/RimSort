@@ -6,7 +6,6 @@ parent: Development Guide
 ---
 
 # Documentation Guidelines
-
 {: .no_toc}
 
 User documentation is hosted via [GitHub Pages](https://pages.github.com/) using the [Jekyll][Jekyll] theme, [Just the Docs](https://github.com/just-the-docs/just-the-docs). It is deployed via a GitHub action automatically whenever a change to documentation under the folder `docs` is merged into the main branch.
@@ -14,11 +13,10 @@ User documentation is hosted via [GitHub Pages](https://pages.github.com/) using
 Contributions should follow the [Contributor Guidelines]({% link development-guide/contributor-guidelines.md %}) and be submitted via a pull request.
 
 ## Table of Contents
-
 {: .no_toc .text-delta }
 
 1. TOC
-   {:toc}
+{:toc}
 
 ## Building Locally
 
