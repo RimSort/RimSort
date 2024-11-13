@@ -23,14 +23,14 @@ The community rules database is a collection of load order rules compiled by the
 
 ## Steam Workshop Database
 
-{: .info}
+{: .note}
 > For information on how to build or update the Steam Workshop Database, see [this page]({% link user-guide/db-builder.md %})
 
 The Steam Workshop Database (Steam DB) is primarily used to provide additional dependency data. This information can only be gathered by crawling the Steam Workshop and downloading the workshop mods to parse mod data. By having a static database, users do not need to have these mods downloaded in order to access this information.
 
 ## Working with databases via RimSort git integration
 
-_**Prerequisite:**_ Install [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) for your respective platform.
+### _**Prerequisite:**_ Install [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) for your respective platform.
 
 This is used to download/upload a Steam Workshop Database (steamDB.json) or a Community Rules Database (communityRules.json) so that it may be collaborated on and shared.
 
@@ -46,10 +46,16 @@ This is used to download/upload a Steam Workshop Database (steamDB.json) or a Co
 
 4. Once you are satisfied with the changes you made to your database, you can share it via the built-in functions for your respective database.
 
-- Cloning a database for use with RimSort:
+### Cloning a database for use with RimSort:
 
-[download database](https://github.com/RimSort/RimSort/assets/2766946/2c236e00-d963-4831-93e7-3effb10c6b5e)
+{: .warning}
+> This video is outdated and may not be accurate for the latest versions of RimSort.
 
-- Uploading a database (Write access to a repository is required for you to be able to upload):
+<iframe width="420" height="315" src="https://github.com/RimSort/RimSort/assets/2766946/2c236e00-d963-4831-93e7-3effb10c6b5e" frameborder="0" allowfullscreen="true" alt="Download Database Demo Video"></iframe>
 
-[upload database](https://github.com/RimSort/RimSort/assets/2766946/60ced0ef-adba-436f-8fbc-e593a236e389)
+### Uploading a database (Write access to a repository is required for you to be able to upload):
+
+{: .warning}
+> This video is outdated and may not be accurate for the latest versions of RimSort.
+
+<iframe width="420" height="315" src="https://github.com/RimSort/RimSort/assets/2766946/60ced0ef-adba-436f-8fbc-e593a236e389" frameborder="0" allowfullscreen="true" alt="Upload Database Demo Video"></iframe>

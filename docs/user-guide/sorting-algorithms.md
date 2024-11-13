@@ -48,6 +48,10 @@ Assuming there are no conflicting load order rules, this algorithm guarantees th
 ---
 
 ## Topological sorting
+{: .d-inline-block}
+
+Default (v1.0.10)
+{: .label .label-green }
 
 The second algorithm, "Topological", sorts mods with [Topological sorting](https://en.wikipedia.org/wiki/Topological_sorting).
 
