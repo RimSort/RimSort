@@ -6,6 +6,7 @@ parent: Development Guide
 ---
 
 # Documentation Guidelines
+
 {: .no_toc}
 
 User documentation is hosted via [GitHub Pages](https://pages.github.com/) using the [Jekyll][Jekyll] theme, [Just the Docs](https://github.com/just-the-docs/just-the-docs). It is deployed via a GitHub action automatically whenever a change to documentation under the folder `docs` is merged into the main branch.
@@ -13,10 +14,11 @@ User documentation is hosted via [GitHub Pages](https://pages.github.com/) using
 Contributions should follow the [Contributor Guidelines]({% link development-guide/contributor-guidelines.md %}) and be submitted via a pull request.
 
 ## Table of Contents
+
 {: .no_toc .text-delta }
 
 1. TOC
-{:toc}
+   {:toc}
 
 ## Building Locally
 
@@ -40,7 +42,12 @@ Where possible, all assets should be hosted within the repository itself and not
 
 Navigation order should be determined by importance, and by similarity between the names of the page titles. For example, `Documentation Guidelines` and `Contributer Guidelines` should be next to each other in the navigation order as they share a similar structure and word. This is for the sake of usability and asthetics.
 
+### Style
+
+Navigation info such as `File > Settings` and filenames such as `About.xml` should always be code blocked.
+
 ---
 
 [^1]: Some assets from the old wiki are grandfathered in and not hosted within the repository itself.
+
 [Jekyll]: https://jekyllrb.com/
