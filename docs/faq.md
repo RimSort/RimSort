@@ -30,7 +30,7 @@ For **_macOS_,** we'd require a similar yet separate yearly fee to sign apps on 
 
 ## Where are game paths located?
 
-We recently moved the game paths to the application settings.
+Game paths and other location settings are located in the settings panel under `Locations`.
 
 ## What is todds?
 
@@ -47,3 +47,12 @@ The Community Rules Database (Community Rules DB / CR DB) is used for getting Ri
 ## How do I enable Steam client integration features like `Open mod in Steam` if I have Steam installed?
 
 Go to `Settings > Advanced > Enable Steam client integration` and check the checkbox.
+
+## Why do I get a `Could not initialize Steam API` error when starting RimWorld from RimSort?
+
+{: .note}
+> This is a known common issue on macOS. As a workaround, launch RimWorld directly via Steam.
+
+First, make sure you have `Steam client integration` enabled in RimSort's settings. Additionally, ensure that Steam is running and authenticated with the user that owns RimWorld.
+
+If the previous steps did not work, then try launching RimWorld from Steam instead of RimSort as a workaround. Unless you are using special run arguments, the mod list you created in RimSort should be the one used by RimWorld even if launched via Steam directly. If you use custom run arguments, you may need to pass them via Steam if launching from Steam. 
