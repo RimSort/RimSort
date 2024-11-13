@@ -28,21 +28,20 @@ The community rules database is a collection of load order rules compiled by the
 
 The Steam Workshop Database (Steam DB) is primarily used to provide additional dependency data. This information can only be gathered by crawling the Steam Workshop and downloading the workshop mods to parse mod data. By having a static database, users do not need to have these mods downloaded in order to access this information.
 
-## Working with databases via RimSort git integration
+## Working with databases via RimSort Git integration
 
-### _**Prerequisite:**_ Install [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) for your respective platform.
+### _**Prerequisite:**_ Install [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) for your respective platform.
 
-This is used to download/upload a Steam Workshop Database (steamDB.json) or a Community Rules Database (communityRules.json) so that it may be collaborated on and shared.
+This is used to download/upload a Steam Workshop Database (`steamDB.json`) or a Community Rules Database (`communityRules.json`) so that it may be collaborated on and shared.
 
-1. Using GitHub, [create a repository](https://docs.github.com/en/get-started/quickstart/create-a-repo), or use an existing repository.
+{: .important}
+> Step 3, setting up a GitHub identity is only required if you wish to upload your database directly to a configured GitHub repository via a pull request through RimSort. It is *not* required for simply downloading the database via Git from a public repository or for modifying the database locally. You can also just make a pull request yourself on GitHub without configuring GitHub within RimSort.
 
-2. Configure the repository URL in RimSort via the Settings panel:
+1. [Create a remote repository](https://docs.github.com/en/get-started/quickstart/create-a-repo), or use an existing repository. GitHub repositories have additional optional integration within RimSort.
 
-[configure repo](https://github.com/RimSort/RimSort/assets/2766946/7897f2f8-fbc4-4671-8e9a-551203ebb844)
+2. Configure the repository URL in RimSort via the Settings panel under `Databases`.
 
-3. Configure your GitHub identity in RimSort. You will need to know your GitHub username, as well as have a personal access token created for RimSort with `Repo` permission granted.
-
-[configure identity](https://github.com/RimSort/RimSort/assets/2766946/fa05b3ad-b29e-4284-a27c-430599f865fd)
+3. **Optional!** Configure your GitHub identity in RimSort under `Advanced`. You will need to know your GitHub username, as well as have a personal access token created for RimSort with `Repo` permission granted.
 
 4. Once you are satisfied with the changes you made to your database, you can share it via the built-in functions for your respective database.
 
