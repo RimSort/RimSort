@@ -6,6 +6,7 @@ from shutil import copytree, rmtree
 from time import time
 from typing import Any, Dict
 
+import msgspec
 from loguru import logger
 from PySide6.QtCore import QObject
 
@@ -237,7 +238,7 @@ class Settings(QObject):
                 if isinstance(instance_data, Instance):
                     instances[instance_name] = instance_data
                 elif isinstance(instance_data, dict):
-                    instances[instance_name] = Instance(**instance_data)
+                    instances[instance_name] = msgspec.convert(instance_data, Instance)
                 else:
                     logger.warning(
                         f"Instance data for {instance_name} is not a valid type: {type(instance_data)}"
