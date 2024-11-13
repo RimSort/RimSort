@@ -181,7 +181,9 @@ class RentryImport:
                 ]
                 logger.info("Parsed package_ids successfully.")
             else:
-                logger.warning(f"Rentry returned status code: {response.status_code}. Reason: {response.reason}")
+                logger.warning(
+                    f"Rentry returned status code: {response.status_code}. Reason: {response.reason}"
+                )
                 InformationBox(
                     title="Failed to fetch Rentry Content",
                     text=f"Rentry returned status code: {response.status_code}",
