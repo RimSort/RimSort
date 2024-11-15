@@ -33,7 +33,15 @@ class HttpClient:
         data: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
     ) -> requests.Response:
-        # Perform a HTTP request and return the response
+        """
+        Perform an HTTP request and return the response.
+
+        :param method: HTTP method (GET, POST, etc.)
+        :param url: URL for the request
+        :param data: Optional data to send with the request
+        :param headers: Optional headers to include in the request
+        :return: Response object from the request
+        """
         headers = headers or {}
         request_method = getattr(self.session, method.lower())
         response = request_method(url, data=data, headers=headers)
@@ -64,7 +72,7 @@ class RentryUpload:
 
         try:
             response = self.new(text)
-            if response.get("status") != "200":
+            if response is None or response.get("status") != "200":
                 self.handle_upload_failure(response)
             else:
                 self.upload_success = True
@@ -79,38 +87,68 @@ class RentryUpload:
     def handle_upload_failure(self, response: dict[str, Any]) -> None:
         """
         Log and handle upload failure details.
+
+        :param response: A dictionary containing the response details from the upload attempt.
         """
-        error_content = response.get("content", "Unknown")
-        errors = response.get("errors", "").split(".")
-        logger.error(f"Error: {error_content}")
-        for error in errors:
-            error and logger.warning(error)
-        show_fatal_error(
-            title="Rentry Upload Error",
-            text=f"Rentry.co upload failed! Error: {error_content}",
+
+        # Extract error content and default to a more descriptive message if not present
+        error_content = response.get("content", "Unknown error occurred")
+
+        # Split errors by period, filter out empty strings, and strip whitespace
+        errors = [
+            error.strip()
+            for error in response.get("errors", "").split(".")
+            if error.strip()
+        ]
+
+        # Log the main error message
+        logger.error(f"Rentry upload process failed with Error: {error_content}")
+
+        # Log each individual error, if any
+        if errors:
+            for error in errors:
+                logger.error(f"Detail: {error}")
+                show_fatal_error(
+                    title="Rentry Upload Error",
+                    text=f"Rentry.co upload failed! Error: {error_content}",
+                )
+        # Log main and individual error
+        logger.error(
+            f"Rentry.co upload failed! Error: {error_content}. Details: {', '.join(errors) if errors else 'None'}"
         )
-        logger.error("RentryUpload failed!")
 
     def new(self, text: str) -> Any:
         """
         Upload new entry to Rentry.co.
+
+        :param text: The text content to upload
+        :return: Parsed response from the upload attempt
         """
         # Initialize an HttpClient for making HTTP requests
         client = HttpClient()
 
-        # Get CSRF token for authentication
-        csrf_token = client.get_csrf_token()
+        try:
+            # Get CSRF token for authentication
+            csrf_token = client.get_csrf_token()
 
-        # Prepare payload for the POST request
-        payload = {
-            "csrfmiddlewaretoken": csrf_token,
-            "text": text,
-        }
+            # Prepare payload for the POST request
+            payload = {
+                "csrfmiddlewaretoken": csrf_token,
+                "text": text,
+            }
 
-        # Perform the POST request to create a new entry
-        return json_loads(
-            client.post(API_NEW_ENDPOINT, data=payload, headers=_HEADERS).text
-        )
+            # Perform the POST request to create a new entry
+            response = client.post(API_NEW_ENDPOINT, data=payload, headers=_HEADERS)
+            return json_loads(response.text)
+
+        except Exception as e:
+            logger.error(
+                f"An error occurred while Uploading rentry.co content: {str(e)}"
+            )
+            show_fatal_error(
+                title="Error",
+                text=f"An error occurred: {str(e)}",
+            )
 
 
 class RentryImport:
