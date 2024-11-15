@@ -1,17 +1,38 @@
-# RimSort
+<p align="center">
+    <h1 align="center">RimSort</h1>
+    <p align="center">A free and open source multi-platform mod manager for the video game RimWorld.<br>
+    Built from the ground up to be reliable and community managed.<br>
+    Includes support for Linux, Mac, and Windows.</p>
+    <p align="center"><strong><a href="https://github.com/RimSort/RimSort/releases">Releases</a> | <a href="https://rimsort.github.io">Wiki</a> | <a href="https://discord.gg/aV7g69JmR2">Discord</a></strong> </p>
+    <br><br><br>
+</p>
 
 ![RimSort Preview](./docs/rimsort_preview.png)
 
-RimSort is an **open source** mod manager for the video game [RimWorld](https://store.steampowered.com/app/294100/RimWorld/). There is support for Linux, Mac, and Windows, built from the ground up to be a reliable, community-managed alternative to [RimPy Mod Manager](https://github.com/rimpy-custom/RimPy/releases).
+## Installation
 
-To run RimSort, visit the [Releases](https://github.com/oceancabbage/RimSort/releases) page and download the latest zipped release for your operating system.
+To install RimSort, visit the [Releases][Releases] page and download the latest zipped release for your operating system.
 
 For Windows and Linux, unzip the download and run the `RimSort` executable inside the unzipped folder.
 
-For MacOS, make sure you grab the appropriate release per your CPU (i386 is for an Intel CPU Mac, arm is for an Apple M1/M2 CPU Mac). You may need to follow [special instructions](https://github.com/RimSort/RimSort/wiki/User-Guide) to get around Gatekeeper errors.
+For macOS, make sure you grab the appropriate release per your CPU (i386 is for an Intel CPU Mac, ARM is for an Apple M1/M2 CPU Mac). You may need to follow [special instructions](https://github.com/RimSort/RimSort/wiki/User-Guide) to get around Gatekeeper errors.
 
-Bugs and feature requests are tracked in the [Issues](https://github.com/oceancabbage/RimSort/issues) section of this repo. If you run into a bug or have a feature suggestion, feel free to create an Issue here yourself!
+Check the [wiki][Wiki] for more detailed instructions.
 
-If you have an issue, make sure you **checked the [wiki](https://github.com/RimSort/RimSort/wiki)** for a solution.
+## Contributing
 
-[![Join us on Discord](https://github-production-user-asset-6210df.s3.amazonaws.com/2766946/248529301-486f4f8c-fed5-4fe1-832f-6461b7ce3a55.png)](https://discord.gg/aV7g69JmR2)
+Bugs and feature requests are tracked in the [Issues][Issues] section of this repo. If you run into a bug or have a feature suggestion, feel free to create an Issue here yourself!
+
+See the [wiki][Wiki] for detailed instructions on building RimSort yourself as well as guidelines for making pull requests.
+## FAQ and Issues
+
+If you have an issue, make sure you **checked the [wiki][Wiki]** for a solution.
+
+[![Join us on Discord](https://github-production-user-asset-6210df.s3.amazonaws.com/2766946/248529301-486f4f8c-fed5-4fe1-832f-6461b7ce3a55.png)][Discord]
+
+
+[Wiki]: https://rimsort.github.io
+[Repo]: https://github.com/RimSort/RimSort
+[Issues]: https://github.com/RimSort/RimSort/issues
+[Releases]: https://github.com/oceancabbage/RimSort/releases
+[Discord]: https://discord.gg/aV7g69JmR2
