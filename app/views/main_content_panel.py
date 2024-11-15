@@ -1323,8 +1323,6 @@ class MainContent(QObject):
     def _do_import_list_rentry(self) -> None:
         # Create an instance of RentryImport
         rentry_import = RentryImport()
-        # Open the RentryImport dialogue
-        rentry_import.import_rentry_link()
         # Exit if user cancels or no package IDs
         if not rentry_import.package_ids:
             logger.debug("USER ACTION: pressed cancel or no package IDs, passing")
@@ -1761,7 +1759,9 @@ class MainContent(QObject):
                         active_mods.append(package_id + "_steam")
                         continue  # Append `_steam` suffix if Steam mod, continue to next mod
                 active_mods.append(package_id)
-        active_mods_uuids, inactive_mods_uuids, _, _ = metadata.get_mods_from_list(mod_list=active_mods)
+        active_mods_uuids, inactive_mods_uuids, _, _ = metadata.get_mods_from_list(
+            mod_list=active_mods
+        )
         self.active_mods_uuids_last_save = active_mods_uuids
         logger.info(f"Collected {len(active_mods)} active mods for saving")
 
@@ -2055,8 +2055,7 @@ class MainContent(QObject):
                     )
                     self.steamworks_in_use = False
                 elif (
-                    instruction[0] in subscription_actions
-                    and len(instruction[1]) >= 1
+                    instruction[0] in subscription_actions and len(instruction[1]) >= 1
                 ):  # ISteamUGC/{SubscribeItem/UnsubscribeItem}
                     logger.info(
                         f"Creating Steamworks API process with instruction {instruction}"

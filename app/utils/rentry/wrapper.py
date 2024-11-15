@@ -5,8 +5,14 @@ from typing import Any
 
 import requests
 from loguru import logger
+from PySide6.QtWidgets import QMessageBox
 
-from app.views.dialogue import show_dialogue_input, show_fatal_error, show_warning
+from app.views.dialogue import (
+    InformationBox,
+    show_dialogue_input,
+    show_fatal_error,
+    show_warning,
+)
 
 # Constants
 BASE_URL = "https://rentry.co"
@@ -174,6 +180,18 @@ class RentryImport:
                     if match[0] or match[1]
                 ]
                 logger.info("Parsed package_ids successfully.")
+            else:
+                logger.warning(
+                    f"Rentry returned status code: {response.status_code}. Reason: {response.reason}"
+                )
+                InformationBox(
+                    title="Failed to fetch Rentry Content",
+                    text=f"Rentry returned status code: {response.status_code}",
+                    information="RimSort failed to fetch the content from the provided Rentry link. This may be due to an invalid link, your internet connection, or Rentry.co being down. It may also be the result of a captcha. Please try again later.",
+                    details=response.reason,
+                    icon=QMessageBox.Icon.Warning,
+                ).exec()
+
         except Exception as e:
             logger.error(
                 f"An error occurred while fetching rentry.co content: {str(e)}"
