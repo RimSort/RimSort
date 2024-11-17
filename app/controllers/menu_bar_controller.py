@@ -234,7 +234,7 @@ class MenuBarController(QObject):
 
     @Slot()
     def _on_menu_bar_wiki_triggered(self) -> None:
-        open_url_browser("https://github.com/RimSort/RimSort/wiki")
+        open_url_browser("https://rimsort.github.io/RimSort/")
 
     @Slot()
     def _on_refresh_started(self) -> None:
