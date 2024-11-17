@@ -150,7 +150,6 @@ jobs:
         with:
           nuitka-version: main
           script-name: app/__main__.py
-          onefile: false
           static-libpython: auto
           product-version: >-
             ${{ steps.sem_version.outputs.major }}.
