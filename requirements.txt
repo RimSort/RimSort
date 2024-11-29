@@ -1,6 +1,6 @@
 beautifulsoup4==4.12.3
 GitPython==3.1.43
-imageio==2.36.0
+imageio==2.36.1
 loguru==0.7.2
 lxml==5.3.0
 msgspec==0.18.6 
