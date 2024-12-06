@@ -2206,8 +2206,7 @@ class ModsPanel(QWidget):
         self.panel.addLayout(self.inactive_panel)
         self.panel.addLayout(self.active_panel)
 
-        # Instantiate WIDGETS
-
+        # Filter icons and tooltips
         self.data_source_filter_icons = [
             QIcon(str(AppInfo().theme_data_folder / "default-icons" / "AppIcon_b.png")),
             ModListIcons.ludeon_icon(),
@@ -2224,13 +2223,25 @@ class ModsPanel(QWidget):
             "Showing SteamCMD Mods",
             "Showing Steam Mods",
         ]
+        self.data_source_filter_type_icons = [
+            QIcon(str(AppInfo().theme_data_folder / "default-icons" / "AppIcon_b.png")),
+            ModListIcons.csharp_icon(),
+            ModListIcons.xml_icon(),
+        ]
+        self.data_source_filter_type_tooltips = [
+            "Showing All Mod Types",
+            "Showing C# Mods",
+            "Showing XML Mods",
+        ]
 
         self.mode_filter_icon = QIcon(
             str(AppInfo().theme_data_folder / "default-icons" / "filter.png")
         )
+        self.mode_filter_tooltip = "Hide Filter Disabled"
         self.mode_nofilter_icon = QIcon(
             str(AppInfo().theme_data_folder / "default-icons" / "nofilter.png")
         )
+        self.mode_nofilter_tooltip = "Hide Filter Enabled"
 
         # ACTIVE mod list widget
         self.active_mods_label = QLabel("Active [0]")
@@ -2242,6 +2253,41 @@ class ModsPanel(QWidget):
         )
         # Active mods search widgets
         self.active_mods_search_layout = QHBoxLayout()
+        self.initialize_active_mods_search_widgets()
+
+        # Add active mods widgets to layout
+        self.active_panel.addWidget(self.active_mods_label)
+        self.active_panel.addLayout(self.active_mods_search_layout)
+        self.active_panel.addWidget(self.active_mods_list)
+
+        # Add the errors summary frame below the active mods list
+        self.active_panel.addWidget(self.errors_summary_frame)
+
+        # Initialize inactive mods widgets
+        self.inactive_mods_label = QLabel("Inactive [0]")
+        self.inactive_mods_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.inactive_mods_label.setObjectName("summaryValue")
+        self.inactive_mods_list = ModListWidget(
+            list_type="Inactive",
+            settings_controller=self.settings_controller,
+        )
+
+        # Inactive mods search layout
+        self.inactive_mods_search_layout = QHBoxLayout()
+        self.initialize_inactive_mods_search_widgets()
+
+        # Add inactive mods widgets to layout
+        self.inactive_panel.addWidget(self.inactive_mods_label)
+        self.inactive_panel.addLayout(self.inactive_mods_search_layout)
+        self.inactive_panel.addWidget(self.inactive_mods_list)
+
+        # Connect signals and slots
+        self.connect_signals()
+
+        logger.debug("Finished ModsPanel initialization")
+
+    def initialize_active_mods_search_widgets(self) -> None:
+        """Initialize widgets for active mods search layout."""
         self.active_mods_filter_data_source_index = 0
         self.active_mods_data_source_filter = SEARCH_DATA_SOURCE_FILTER_INDEXES[
             self.active_mods_filter_data_source_index
@@ -2256,9 +2302,28 @@ class ModsPanel(QWidget):
         self.active_mods_filter_data_source_button.clicked.connect(
             self.on_active_mods_search_data_source_filter
         )
+        self.active_data_source_filter_type_index = 0
+        self.active_mods_data_source_filter_type = SEARCH_DATA_SOURCE_FILTER_INDEXES[
+            self.active_data_source_filter_type_index
+        ]
+        self.active_data_source_filter_type_button = QToolButton()
+        self.active_data_source_filter_type_button.setIcon(
+            self.data_source_filter_type_icons[
+                self.active_data_source_filter_type_index
+            ]
+        )
+        self.active_data_source_filter_type_button.setToolTip(
+            self.data_source_filter_type_tooltips[
+                self.active_data_source_filter_type_index
+            ]
+        )
+        self.active_data_source_filter_type_button.clicked.connect(
+            self.on_active_mods_search_data_source_filter_type
+        )
         self.active_mods_search_filter_state = True
         self.active_mods_search_mode_filter_button = QToolButton()
         self.active_mods_search_mode_filter_button.setIcon(self.mode_filter_icon)
+        self.active_mods_search_mode_filter_button.setToolTip(self.mode_filter_tooltip)
         self.active_mods_search_mode_filter_button.clicked.connect(
             self.on_active_mods_mode_filter_toggle
         )
@@ -2285,6 +2350,9 @@ class ModsPanel(QWidget):
         # Active mods search layouts
         self.active_mods_search_layout.addWidget(
             self.active_mods_filter_data_source_button
+        )
+        self.active_mods_search_layout.addWidget(
+            self.active_data_source_filter_type_button
         )
         self.active_mods_search_layout.addWidget(
             self.active_mods_search_mode_filter_button
@@ -2315,27 +2383,14 @@ class ModsPanel(QWidget):
         self.errors_summary_layout.addLayout(self.errors_layout, 50)
         self.errors_summary_frame.setLayout(self.errors_summary_layout)
         self.errors_summary_frame.setHidden(True)
-        # Add active mods widgets to layouts
-        self.active_panel.addWidget(self.active_mods_label, 1)
-        self.active_panel.addLayout(self.active_mods_search_layout, 1)
-        self.active_panel.addWidget(self.active_mods_list, 97)
-        self.active_panel.addWidget(self.errors_summary_frame, 1)
 
-        # INACTIVE mod list widgets
-        self.inactive_mods_label: QLabel = QLabel("Inactive [0]")
-        self.inactive_mods_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.inactive_mods_label.setObjectName("summaryValue")
-        self.inactive_mods_list: ModListWidget = ModListWidget(
-            list_type="Inactive",
-            settings_controller=self.settings_controller,
-        )
-        # Inactive mods search widgets
-        self.inactive_mods_search_layout = QHBoxLayout()
-        self.inactive_mods_filter_data_source_index: int = 0
-        self.inactive_mods_data_source_filter: str = SEARCH_DATA_SOURCE_FILTER_INDEXES[
+    def initialize_inactive_mods_search_widgets(self) -> None:
+        """Initialize widgets for inactive mods search layout."""
+        self.inactive_mods_filter_data_source_index = 0
+        self.inactive_mods_data_source_filter = SEARCH_DATA_SOURCE_FILTER_INDEXES[
             self.inactive_mods_filter_data_source_index
         ]
-        self.inactive_mods_filter_data_source_button: QToolButton = QToolButton()
+        self.inactive_mods_filter_data_source_button = QToolButton()
         self.inactive_mods_filter_data_source_button.setIcon(
             self.data_source_filter_icons[self.inactive_mods_filter_data_source_index]
         )
@@ -2347,13 +2402,34 @@ class ModsPanel(QWidget):
         self.inactive_mods_filter_data_source_button.clicked.connect(
             self.on_inactive_mods_search_data_source_filter
         )
-        self.inactive_mods_search_filter_state: bool = True
-        self.inactive_mods_search_mode_filter_button: QToolButton = QToolButton()
+        self.inactive_data_source_filter_type_index = 0
+        self.inactive_mods_data_source_filter_type = SEARCH_DATA_SOURCE_FILTER_INDEXES[
+            self.inactive_data_source_filter_type_index
+        ]
+        self.inactive_data_source_filter_type_button = QToolButton()
+        self.inactive_data_source_filter_type_button.setIcon(
+            self.data_source_filter_type_icons[
+                self.inactive_data_source_filter_type_index
+            ]
+        )
+        self.inactive_data_source_filter_type_button.setToolTip(
+            self.data_source_filter_type_tooltips[
+                self.inactive_data_source_filter_type_index
+            ]
+        )
+        self.inactive_data_source_filter_type_button.clicked.connect(
+            self.on_inactive_mods_search_data_source_filter_type
+        )
+        self.inactive_mods_search_filter_state = True
+        self.inactive_mods_search_mode_filter_button = QToolButton()
         self.inactive_mods_search_mode_filter_button.setIcon(self.mode_filter_icon)
+        self.inactive_mods_search_mode_filter_button.setToolTip(
+            self.mode_filter_tooltip
+        )
         self.inactive_mods_search_mode_filter_button.clicked.connect(
             self.on_inactive_mods_mode_filter_toggle
         )
-        self.inactive_mods_search: QLineEdit = QLineEdit()
+        self.inactive_mods_search = QLineEdit()
         self.inactive_mods_search.setClearButtonEnabled(True)
         self.inactive_mods_search.textChanged.connect(self.on_inactive_mods_search)
         self.inactive_mods_search.inputRejected.connect(
@@ -2375,19 +2451,17 @@ class ModsPanel(QWidget):
         self.inactive_mods_search_filter.addItems(
             ["Name", "PackageId", "Author(s)", "PublishedFileId"]
         )
-        # Inactive mods search layouts
         self.inactive_mods_search_layout.addWidget(
             self.inactive_mods_filter_data_source_button
+        )
+        self.inactive_mods_search_layout.addWidget(
+            self.inactive_data_source_filter_type_button
         )
         self.inactive_mods_search_layout.addWidget(
             self.inactive_mods_search_mode_filter_button
         )
         self.inactive_mods_search_layout.addWidget(self.inactive_mods_search, 45)
         self.inactive_mods_search_layout.addWidget(self.inactive_mods_search_filter, 70)
-        # Add inactive mods widgets to layout
-        self.inactive_panel.addWidget(self.inactive_mods_label)
-        self.inactive_panel.addLayout(self.inactive_mods_search_layout)
-        self.inactive_panel.addWidget(self.inactive_mods_list)
 
         # Adding Completer.
         # self.completer = QCompleter(self.active_mods_list.get_list_items())
@@ -2396,6 +2470,8 @@ class ModsPanel(QWidget):
         # self.inactive_mods_search.setCompleter(self.completer)
 
         # Connect signals and slots
+
+    def connect_signals(self) -> None:
         self.active_mods_list.list_update_signal.connect(
             self.on_active_mods_list_updated
         )
@@ -2433,6 +2509,9 @@ class ModsPanel(QWidget):
     def on_active_mods_search_data_source_filter(self) -> None:
         self.signal_search_source_filter(list_type="Active")
 
+    def on_active_mods_search_data_source_filter_type(self) -> None:
+        self.apply_mods_filter_type(list_type="Active")
+
     def on_active_mods_mode_filter_toggle(self) -> None:
         self.signal_search_mode_filter(list_type="Active")
 
@@ -2448,11 +2527,75 @@ class ModsPanel(QWidget):
     def on_inactive_mods_search_data_source_filter(self) -> None:
         self.signal_search_source_filter(list_type="Inactive")
 
+    def on_inactive_mods_search_data_source_filter_type(self) -> None:
+        self.apply_mods_filter_type(list_type="Inactive")
+
     def on_inactive_mods_mode_filter_toggle(self) -> None:
         self.signal_search_mode_filter(list_type="Inactive")
 
     def on_mod_created(self, uuid: str) -> None:
         self.inactive_mods_list.append_new_item(uuid)
+
+    def apply_mods_filter_type(self, list_type: str) -> None:
+        # Define the mod types
+        mod_types = ["csharp", "xml"]
+
+        if list_type == "Active":
+            button = self.active_data_source_filter_type_button
+            search = self.active_mods_search
+            source_index: int = self.active_data_source_filter_type_index
+        elif list_type == "Inactive":
+            button = self.inactive_data_source_filter_type_button
+            search = self.inactive_mods_search
+            source_index = self.inactive_data_source_filter_type_index
+        else:
+            raise NotImplementedError(f"Unknown list type: {list_type}")
+
+        # Update the filter index
+        if source_index < (len(self.data_source_filter_type_icons) - 1):
+            source_index += 1
+        else:
+            source_index = 0
+
+        button.setIcon(self.data_source_filter_type_icons[source_index])
+        button.setToolTip(self.data_source_filter_type_tooltips[source_index])
+
+        # Update the relevant index for the list type
+        if list_type == "Active":
+            self.active_data_source_filter_type_index = source_index
+            self.active_mods_data_source_filter_type = (
+                SEARCH_DATA_SOURCE_FILTER_INDEXES[source_index]
+            )
+        elif list_type == "Inactive":
+            self.inactive_data_source_filter_type_index = source_index
+            self.inactive_mods_data_source_filter_type = (
+                SEARCH_DATA_SOURCE_FILTER_INDEXES[source_index]
+            )
+
+        mod_list = (
+            self.active_mods_list if list_type == "Active" else self.inactive_mods_list
+        )
+
+        # Apply filtering based on the selected type
+        for uuid in mod_list.uuids:
+            item = mod_list.item(mod_list.uuids.index(uuid))
+            item_data = item.data(Qt.ItemDataRole.UserRole)
+
+            # Determine the mod type
+            mod_type = (
+                "csharp"
+                if self.metadata_manager.internal_local_metadata.get(uuid, {}).get(
+                    "csharp"
+                )
+                else "xml"
+            )
+            type_filtered = source_index == 0 or mod_types[source_index - 1] == mod_type
+
+            item_data["type_filtered"] = not type_filtered
+            item.setData(Qt.ItemDataRole.UserRole, item_data)
+
+        # Trigger search and filters
+        self.signal_search_and_filters(list_type=list_type, pattern=search.text())
 
     def on_mod_deleted(self, uuid: str) -> None:
         if uuid in self.active_mods_list.uuids:
@@ -2483,20 +2626,18 @@ class ModsPanel(QWidget):
             # Calculate total errors and warnings and set the text and tool tip for the summary
             if total_error_text or total_warning_text or num_errors or num_warnings:
                 self.errors_summary_frame.setHidden(False)
-                self.warnings_text.setText(f"{num_warnings} warnings(s)")
-                self.errors_text.setText(f"{num_errors} errors(s)")
-                if total_error_text:
-                    self.errors_icon.setToolTip(total_error_text.lstrip())
-                else:
-                    self.errors_icon.setToolTip("")
-                if total_warning_text:
-                    self.warnings_icon.setToolTip(total_warning_text.lstrip())
-                else:
-                    self.warnings_icon.setToolTip("")
+                self.warnings_text.setText(f"{num_warnings} warning(s)")
+                self.errors_text.setText(f"{num_errors} error(s)")
+                self.errors_icon.setToolTip(
+                    total_error_text.lstrip() if total_error_text else ""
+                )
+                self.warnings_icon.setToolTip(
+                    total_warning_text.lstrip() if total_warning_text else ""
+                )
             else:  # Hide the summary if there are no errors or warnings
                 self.errors_summary_frame.setHidden(True)
-                self.warnings_text.setText("0 warnings(s)")
-                self.errors_text.setText("0 errors(s)")
+                self.warnings_text.setText("0 warning(s)")
+                self.errors_text.setText("0 error(s)")
                 self.errors_icon.setToolTip("")
                 self.warnings_icon.setToolTip("")
             # First time, and when Refreshing, the slot will evaluate false and do nothing.
@@ -2576,6 +2717,18 @@ class ModsPanel(QWidget):
                 item_filtered = not metadata.get("steamcmd")
             elif source_filter != metadata.get("data_source"):
                 item_filtered = True
+
+            type_filter_index = (
+                self.active_data_source_filter_type_index
+                if list_type == "Active"
+                else self.inactive_data_source_filter_type_index
+            )
+
+            if type_filter_index == 1 and not metadata.get("csharp"):
+                item_filtered = True
+            elif type_filter_index == 2 and metadata.get("csharp"):
+                item_filtered = True
+
             # Check if the item should be filtered or hidden based on filter state
             if filter_state:
                 item.setHidden(item_filtered)
@@ -2590,17 +2743,41 @@ class ModsPanel(QWidget):
         self.mod_list_updated(str(len(uuids)), list_type)
 
     def signal_search_mode_filter(self, list_type: str) -> None:
-        filter_state = False
-
         if list_type == "Active":
-            filter_state = self.active_mods_search_filter_state
-            self.active_mods_search_filter_state = not filter_state
-            self.active_mods_search_mode_filter_button.setIcon(self.mode_filter_icon)
+            # Toggle the mode filter state
+            self.active_mods_search_filter_state = (
+                not self.active_mods_search_filter_state
+            )
+            # Update the icon based on the current state
+            if self.active_mods_search_filter_state:
+                self.active_mods_search_mode_filter_button.setIcon(
+                    self.mode_filter_icon
+                )  # Active state icon
+            else:
+                self.active_mods_search_mode_filter_button.setIcon(
+                    self.mode_nofilter_icon
+                )  # Inactive state icon
             pattern = self.active_mods_search.text()
         elif list_type == "Inactive":
-            filter_state = self.inactive_mods_search_filter_state
-            self.inactive_mods_search_filter_state = not filter_state
-            self.inactive_mods_search_mode_filter_button.setIcon(self.mode_filter_icon)
+            # Toggle the mode filter state
+            self.inactive_mods_search_filter_state = (
+                not self.inactive_mods_search_filter_state
+            )
+            # Update the icon based on the current state
+            if self.inactive_mods_search_filter_state:
+                self.inactive_mods_search_mode_filter_button.setIcon(
+                    self.mode_filter_icon
+                )  # Active state icon
+                self.active_mods_search_mode_filter_button.setToolTip(
+                    self.mode_filter_tooltip
+                )  # Active state tooltip
+            else:
+                self.inactive_mods_search_mode_filter_button.setIcon(
+                    self.mode_nofilter_icon
+                )  # Inactive state icon
+                self.inactive_mods_search_mode_filter_button.setToolTip(
+                    self.mode_nofilter_tooltip
+                )  # Inactive state tooltip
             pattern = self.inactive_mods_search.text()
         else:
             raise NotImplementedError(f"Unknown list type: {list_type}")
