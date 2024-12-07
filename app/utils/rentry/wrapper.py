@@ -34,6 +34,15 @@ class HttpClient:
         headers: dict[str, str] | None = None,
     ) -> requests.Response:
         # Perform a HTTP request and return the response
+        """
+        Perform an HTTP request and return the response.
+
+        :param method: HTTP method (GET, POST, etc.)
+        :param url: URL for the request
+        :param data: Optional data to send with the request
+        :param headers: Optional headers to include in the request
+        :return: Response object from the request
+        """
         headers = headers or {}
         request_method = getattr(self.session, method.lower())
         response = request_method(url, data=data, headers=headers)
@@ -64,53 +73,95 @@ class RentryUpload:
 
         try:
             response = self.new(text)
+            self.response = response
+
+            # show warning and exit if response is None
+            if response is None:
+                logger.error(
+                    "Upload failed due to no server response or network error, response is None."
+                )
+                show_warning(
+                    title="Upload Failed",
+                    text="Upload failed due to no server response or network error. Please check your internet connection and try again.",
+                )
+                return  # Exit the constructor if response is None
+
             if response.get("status") != "200":
                 self.handle_upload_failure(response)
             else:
                 self.upload_success = True
                 url = response.get("url")
                 self.url = url if isinstance(url, str) else None
+
         finally:
             if self.upload_success:
                 logger.debug(
-                    f"RentryUpload successfully uploaded data! Url: {self.url}, Edit code: {response['edit_code']}"
+                    f"RentryUpload successfully uploaded data! Url: {self.url}, Edit code: {self.response['edit_code']}"
                 )
 
     def handle_upload_failure(self, response: dict[str, Any]) -> None:
         """
         Log and handle upload failure details.
+
+        :param response: A dictionary containing the response details from the upload attempt.
         """
-        error_content = response.get("content", "Unknown")
-        errors = response.get("errors", "").split(".")
-        logger.error(f"Error: {error_content}")
-        for error in errors:
-            error and logger.warning(error)
-        show_fatal_error(
-            title="Rentry Upload Error",
-            text=f"Rentry.co upload failed! Error: {error_content}",
+
+        # Extract error content and default to a more descriptive message if not present
+        error_content = response.get("content", "Unknown error occurred")
+
+        # Split errors by period, filter out empty strings, and strip whitespace
+        errors = [
+            error.strip()
+            for error in response.get("errors", "").split(".")
+            if error.strip()
+        ]
+
+        # Log the main error message
+        logger.error(f"Rentry upload process failed with Error: {error_content}")
+
+        # Log each individual error, if any
+        if errors:
+            for error in errors:
+                logger.error(f"Detail: {error}")
+        else:
+            logger.error("No specific error details available.")
+
+        # Log main and individual error
+        logger.error(
+            f"Rentry.co upload failed! Error: {error_content}. Details: {', '.join(errors) if errors else 'None'}"
         )
-        logger.error("RentryUpload failed!")
 
     def new(self, text: str) -> Any:
         """
         Upload new entry to Rentry.co.
+
+        :param text: The text content to upload
+        :return: Parsed response from the upload attempt
         """
         # Initialize an HttpClient for making HTTP requests
         client = HttpClient()
 
-        # Get CSRF token for authentication
-        csrf_token = client.get_csrf_token()
+        try:
+            # Get CSRF token for authentication
+            csrf_token = client.get_csrf_token()
 
-        # Prepare payload for the POST request
-        payload = {
-            "csrfmiddlewaretoken": csrf_token,
-            "text": text,
-        }
+            # Prepare payload for the POST request
+            payload = {
+                "csrfmiddlewaretoken": csrf_token,
+                "text": text,
+            }
 
-        # Perform the POST request to create a new entry
-        return json_loads(
-            client.post(API_NEW_ENDPOINT, data=payload, headers=_HEADERS).text
-        )
+            # Perform the POST request to create a new entry
+            response = client.post(API_NEW_ENDPOINT, data=payload, headers=_HEADERS)
+            return json_loads(response.text)
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Network error occurred during upload: {str(e)}")
+            show_warning(
+                title="Network Error",
+                text="A network error occurred while uploading. Please check your internet connection and try again.",
+            )
+            return None  # Return None to indicate failure
 
 
 class RentryImport:
@@ -157,7 +208,8 @@ class RentryImport:
                 title="Invalid Link",
                 text="Invalid Rentry link. Please enter a valid Rentry link.",
             )
-            return
+            # Re-call the input_dialog method to re-initialize the UI
+            return self.input_dialog()
 
         try:
             if rentry_link.endswith("/raw"):
@@ -191,6 +243,13 @@ class RentryImport:
                     details=response.reason,
                     icon=QMessageBox.Icon.Warning,
                 ).exec()
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Network error occurred: {str(e)}")
+            show_warning(
+                title="Network Error",
+                text="A network error occurred. Please check your internet connection and try again.",
+            )
 
         except Exception as e:
             logger.error(
