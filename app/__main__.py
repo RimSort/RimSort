@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # Compilation mode
-# nuitka-project: --mode=standalone
 # nuitka-project: --assume-yes-for-downloads
 # nuitka-project: --output-filename=RimSort
 # nuitka-project: --output-dir={MAIN_DIRECTORY}/../build/
