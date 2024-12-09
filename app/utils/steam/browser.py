@@ -182,7 +182,13 @@ class SteamBrowser(QWidget):
         elif self.url_prefix_workshop in self.current_url:
             publishedfileid = self.current_url.split(self.url_prefix_workshop, 1)[1]
         else:
-            logger.error(f"Unable to parse pfid from url: {self.current_url}")
+            logger.warning(f"Unable to parse pfid from url: {self.current_url}")
+            show_warning(
+                title="SteamCMD downloader",
+                text="Unable to parse pfid from URL: {self.current_url} Please check the URL and try again",
+                information="Please reach out to us on Github Issues page or discord",
+            )
+            return
         # If there is extra data after the PFID, strip it
         if self.searchtext_string in publishedfileid:
             publishedfileid = publishedfileid.split(self.searchtext_string)[0]
@@ -204,7 +210,7 @@ class SteamBrowser(QWidget):
                 show_warning(
                     title="SteamCMD downloader",
                     text="Empty list of mods returned, unable to add collection to list!",
-                    information="Please reach out to us on Github Issues page or\n#rimsort-testing on the Rocketman/CAI discord",
+                    information="Please reach out to us on Github Issues page or discord",
                 )
         if len(self.downloader_list_dupe_tracking.keys()) > 0:
             # Build a report from our dict
