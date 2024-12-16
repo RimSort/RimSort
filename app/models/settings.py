@@ -63,6 +63,10 @@ class Settings(QObject):
         self.todds_dry_run: bool = False
         self.todds_overwrite: bool = False
 
+        # Theme
+        self.enable_themes: bool = True
+        self.theme_name: str = "RimPy"
+
         # Advanced
         self.debug_logging_enabled: bool = False
         self.watchdog_toggle: bool = True
