@@ -9,7 +9,7 @@ jobs:
   pytest:
     permissions:
       contents: read
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@main
       - name: Set up Python
