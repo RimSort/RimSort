@@ -1017,8 +1017,8 @@ class SettingsController(QObject):
         else:
             raise ValueError("This function should only be called on Windows")
 
-    @Slot()
-    def _on_community_rules_db_radio_clicked(self, checked: bool) -> None:
+    @Slot(bool)
+    def _on_community_rules_db_radio_clicked(self, checked: bool = True) -> None:
         """
         This function handles the community rules db radio buttons. Clicking one button
         enables the associated widgets and disables the other widgets.
@@ -1090,8 +1090,8 @@ class SettingsController(QObject):
         )
         self._last_file_dialog_path = str(Path(community_rules_db_location).parent)
 
-    @Slot()
-    def _on_steam_workshop_db_radio_clicked(self, checked: bool) -> None:
+    @Slot(bool)
+    def _on_steam_workshop_db_radio_clicked(self, checked: bool = True) -> None:
         """
         This function handles the Steam workshop db radio buttons. Clicking one button
         enables the associated widgets and disables the other widgets.
@@ -1293,7 +1293,7 @@ class SettingsController(QObject):
         EventBus().do_build_steam_workshop_database.emit()
 
     @Slot(str)
-    def _on_run_args_text_changed(self, text: str) -> None:
+    def _on_run_args_text_changed(self, text: str = "") -> None:
         run_args_list = text.split(",")
         self.settings.instances[self.settings.current_instance].run_args = run_args_list
         self.settings.save()
