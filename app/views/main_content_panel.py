@@ -1374,11 +1374,8 @@ class MainContent(QObject):
 
     def _do_import_list_workshop_collection(self) -> None:
         # Create an instance of collection_import
+        # This also triggers the import dialogue and gets result
         collection_import = CollectionImport(metadata_manager=self.metadata_manager)
-
-        # Trigger the import dialogue and get the result
-        collection_import.import_collection_link()
-
         # Exit if user cancels or no package IDs
         if not collection_import.package_ids:
             logger.debug("USER ACTION: pressed cancel or no package IDs, passing")

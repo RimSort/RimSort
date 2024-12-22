@@ -129,14 +129,16 @@ class RentryImport:
 
     def input_dialog(self) -> None:
         # Initialize the UI for entering Rentry.co links
-        link_input = show_dialogue_input(
+        self.link_input = show_dialogue_input(
             title="Enter Rentry.co link",
             label="Enter the Rentry.co link:",
         )
-
-        self.link_input = link_input
-        self.import_rentry_link()
         logger.info("Rentry link Input UI initialized successfully!")
+        if self.link_input[1]:
+            self.import_rentry_link()
+        else:
+            logger.info("User exited rentry import window.")
+            return
 
     def is_valid_rentry_link(self, link: str) -> bool:
         """
