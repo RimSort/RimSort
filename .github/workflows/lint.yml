@@ -31,7 +31,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@main
         with:
-          python-version: "3.11"
+          python-version: "3.12"
           architecture: "x64" # optional x64 or x86. Defaults to x64 if not specified
           cache: "pip"
           cache-dependency-path: |
@@ -58,7 +58,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LINTER_RULES_PATH: .
           PYTHONPATH: "/github/workspace/:\
-            /github/workflow/.venv/lib/python3.11/site-packages"
+            /github/workflow/.venv/lib/python3.12/site-packages"
           VALIDATE_PYTHON_MYPY: true
           VALIDATE_PYTHON_RUFF: true
           VALIDATE_GITHUB_ACTIONS: true

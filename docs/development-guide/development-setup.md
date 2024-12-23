@@ -32,7 +32,7 @@ RimSort is built in Python using the [PySide6](https://pypi.org/project/PySide6/
         - i386 utilizes GitHub's macos-13 runner
         - arm utilizes GitHub's macos-latest (macos-14 at the time of writing) runner
       - For Windows, we utilize GitHub's windows-latest (Windows 2022 at the time of writing) runner
-  - Install the latest version of [Python](https://python.org/) 3.11 for your platform. (CPython recommended)
+  - Install the latest version of [Python](https://python.org/) 3.12 for your platform. (CPython recommended)
 - For a (mostly automated) experience building RimSort, please execute the provided script:
   - Run `python distribute.py`
     - This will build RimSort for your platform and output a build for your platform (Including all requirements and submodules)

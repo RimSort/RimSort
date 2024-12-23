@@ -121,7 +121,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@main
         with:
-          python-version: "3.11"
+          python-version: "3.12"
           architecture: "x64" # optional x64 or x86. Defaults to x64 if not specified
           cache: "pip"
           cache-dependency-path: |
