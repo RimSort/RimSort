@@ -186,7 +186,15 @@ class SteamBrowser(QWidget):
         elif self.url_prefix_workshop in self.current_url:
             publishedfileid = self.current_url.split(self.url_prefix_workshop, 1)[1]
         else:
-            logger.error(f"Unable to parse pfid from url: {self.current_url}")
+            logger.error(
+                f"Unable to parse publishedfileid from url: {self.current_url}"
+            )
+            show_warning(
+                title="No publishedfileid found",
+                text="Unable to parse publishedfileid from url, Please check if url is in the correct format",
+                information=f"Url: {self.current_url}",
+            )
+            return None
         # If there is extra data after the PFID, strip it
         if self.searchtext_string in publishedfileid:
             publishedfileid = publishedfileid.split(self.searchtext_string)[0]
