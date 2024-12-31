@@ -319,14 +319,34 @@ class FileSearchController(QObject):
         """handle filter text changes"""
         # hide rows that don't match the filter
         filter_text = text.lower()
+        print("\n=== Filtering results ===")
+        print(f"Filter text: {filter_text}")
+        print(f"Total rows: {self.dialog.results_table.rowCount()}")
+
+        visible_rows = 0
         for row in range(self.dialog.results_table.rowCount()):
             show_row = False
+            row_content = []
             for col in range(self.dialog.results_table.columnCount()):
                 item = self.dialog.results_table.item(row, col)
-                if item is not None and filter_text in item.text().lower():
-                    show_row = True
-                    break
+                if item is not None:
+                    item_text = item.text().lower()
+                    row_content.append(f"col {col}: {item_text}")
+                    if filter_text in item_text:
+                        show_row = True
+                        print(f"Match found in row {row}, column {col}: {item_text}")
+                        break
+
+            print(f"\nRow {row} content: {', '.join(row_content)}")
+            print(f"Row {row} visible: {show_row}")
+
             self.dialog.results_table.setRowHidden(row, not show_row)
+            if show_row:
+                visible_rows += 1
+
+        print(
+            f"\nFilter complete - Visible rows: {visible_rows}/{self.dialog.results_table.rowCount()}"
+        )
 
     def set_active_mod_ids(self, active_mod_ids: set[str]) -> None:
         """update the list of active mod IDs"""
