@@ -2442,7 +2442,11 @@ class ModsPanel(QWidget):
         self.mod_list_updated(count=count, list_type="Inactive")
 
     def on_inactive_mods_search(self, pattern: str) -> None:
-        self.signal_search_and_filters(list_type="Inactive", pattern=pattern)
+        if pattern == '':
+            filters_active = False
+        else:
+            filters_active = True
+        self.signal_search_and_filters(list_type="Inactive", pattern=pattern, filters_active=filters_active)
 
     def on_inactive_mods_search_clear(self) -> None:
         self.signal_clear_search(list_type="Inactive")
@@ -2620,12 +2624,10 @@ class ModsPanel(QWidget):
             button = self.active_mods_filter_data_source_button
             search = self.active_mods_search
             source_index: int = self.active_mods_filter_data_source_index
-            active_filter = True
         elif list_type == "Inactive":
             button = self.inactive_mods_filter_data_source_button
             search = self.inactive_mods_search
             source_index = self.inactive_mods_filter_data_source_index
-            active_filter = True
         else:
             raise NotImplementedError(f"Unknown list type: {list_type}")
         # Indexes by the icon
@@ -2645,8 +2647,12 @@ class ModsPanel(QWidget):
             self.inactive_mods_data_source_filter = SEARCH_DATA_SOURCE_FILTER_INDEXES[
                 source_index
             ]
+        if source_index == 0:
+            filters_active = False
+        else:
+            filters_active = True
         # Filter widgets by data source, while preserving any active search pattern
-        self.signal_search_and_filters(list_type=list_type, pattern=search.text(), filters_active=active_filter)
+        self.signal_search_and_filters(list_type=list_type, pattern=search.text(), filters_active=filters_active)
 
     def update_count(self, list_type: str) -> None:
         # Calculate filtered items
