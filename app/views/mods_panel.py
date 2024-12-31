@@ -2423,11 +2423,7 @@ class ModsPanel(QWidget):
         self.mod_list_updated(count=count, list_type="Active")
 
     def on_active_mods_search(self, pattern: str) -> None:
-        if pattern == '':
-            filters_active = False
-        else:
-            filters_active = True
-        self.signal_search_and_filters(list_type="Active", pattern=pattern, filters_active=filters_active)
+        self.signal_search_and_filters(list_type="Active", pattern=pattern)
 
     def on_active_mods_search_clear(self) -> None:
         self.signal_clear_search(list_type="Active")
@@ -2442,11 +2438,7 @@ class ModsPanel(QWidget):
         self.mod_list_updated(count=count, list_type="Inactive")
 
     def on_inactive_mods_search(self, pattern: str) -> None:
-        if pattern == '':
-            filters_active = False
-        else:
-            filters_active = True
-        self.signal_search_and_filters(list_type="Inactive", pattern=pattern, filters_active=filters_active)
+        self.signal_search_and_filters(list_type="Inactive", pattern=pattern)
 
     def on_inactive_mods_search_clear(self) -> None:
         self.signal_clear_search(list_type="Inactive")
@@ -2561,6 +2553,8 @@ class ModsPanel(QWidget):
             )
             item_data = item.data(Qt.ItemDataRole.UserRole)
             metadata = self.metadata_manager.internal_local_metadata[uuid]
+            if pattern != '':
+                filters_active = True
             # Hide invalid items
             invalid = item_data["invalid"]
             if invalid and filters_active:
@@ -2570,7 +2564,6 @@ class ModsPanel(QWidget):
             elif invalid and not filters_active:
                 item_data["filtered"] = False
                 item.setHidden(False)
-                
             # Check if the item is filtered
             item_filtered = item_data["filtered"]
             # Check if the item should be filtered or not based on search filter
