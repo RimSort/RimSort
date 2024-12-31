@@ -274,14 +274,41 @@ class TroubleshootingController:
         # read current mod list
         content = mods_config.read_text()
         tree = ElementTree.fromstring(content)
-        active_mods = [mod.text for mod in tree.findall(".//activeMods/li")]
-        known_expansions = [exp.text for exp in tree.findall(".//knownExpansions/li")]
+        active_mod_list = [mod.text for mod in tree.findall(".//activeMods/li")]
+        known_expansions_list = [
+            exp.text for exp in tree.findall(".//knownExpansions/li")
+        ]
+
+        # create new ModsConfig.xml content
+        root = ElementTree.Element("ModsConfigData")
+        version_elem = tree.find("version")
+        if version_elem is not None and version_elem.text is not None:
+            version = ElementTree.SubElement(root, "version")
+            version.text = version_elem.text
+        else:
+            version = ElementTree.SubElement(root, "version")
+            version.text = "1.4"  # default version if not found
+
+        active_mods_elem = ElementTree.SubElement(root, "activeMods")
+        for mod in active_mod_list:
+            if mod is not None:
+                mod_elem = ElementTree.SubElement(active_mods_elem, "li")
+                mod_elem.text = mod
+
+        known_expansions_elem = ElementTree.SubElement(root, "knownExpansions")
+        for exp in known_expansions_list:
+            if exp is not None:
+                exp_elem = ElementTree.SubElement(known_expansions_elem, "li")
+                exp_elem.text = exp
+
+        xml_tree = ElementTree.ElementTree(root)
+        xml_tree.write(mods_config, encoding="utf-8", xml_declaration=True)
 
         # export as JSON
         export_data = {
-            "version": tree.find("version").text,
-            "activeMods": active_mods,
-            "knownExpansions": known_expansions,
+            "version": version.text,
+            "activeMods": active_mod_list,
+            "knownExpansions": known_expansions_list,
         }
 
         with open(save_path, "w") as f:

@@ -87,7 +87,7 @@ class TroubleshootingDialog(QDialog):
         group_layout.addWidget(note_label)
 
         # buttons layout
-        button_layout = QHBoxLayout()
+        button_layout: QHBoxLayout = QHBoxLayout()
         group_layout.addLayout(button_layout)
 
         button_layout.addStretch()
@@ -248,15 +248,15 @@ class TroubleshootingDialog(QDialog):
         """
 
         for button, description in steam_buttons:
-            button_layout = QVBoxLayout()
+            button_container = QVBoxLayout()
             button.setStyleSheet(button_style)
             desc_label = QLabel(description)
             desc_label.setStyleSheet(
                 "color: #666666; font-size: 11px; padding: 5px 8px;"
             )
-            button_layout.addWidget(button)
-            button_layout.addWidget(desc_label)
-            steam_layout.addLayout(button_layout)
+            button_container.addWidget(button)
+            button_container.addWidget(desc_label)
+            steam_layout.addLayout(button_container)
 
         button_layout = QHBoxLayout()
         main_layout.addLayout(button_layout)
