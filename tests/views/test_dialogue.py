@@ -11,7 +11,9 @@ from app.views.dialogue import BinaryChoiceDialog
 
 @pytest.fixture(scope="module")
 def app() -> Generator[QApplication, None, None]:
-    app = QApplication([])
+    app = QApplication.instance()
+    if app is None:
+        app = QApplication([])
     yield app
     app.quit()
 

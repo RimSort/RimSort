@@ -1,8 +1,9 @@
 from pathlib import Path
+from typing import List, Optional
 
 from PySide6.QtCore import QMargins
 from PySide6.QtGui import QFont, QFontMetrics, QPixmap
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QFileDialog, QMessageBox
 
 
 class GUIInfo:
@@ -132,3 +133,77 @@ class GUIInfo:
             QPixmap: The application icon.
         """
         return self._app_icon
+
+
+def show_dialogue_conditional(
+    title: str,
+    text: str,
+    icon: str = "question",
+    buttons: Optional[List[str]] = None,
+    default_button: Optional[str] = None,
+) -> bool:
+    """Show a dialog with Yes/No buttons and return True if Yes was clicked"""
+    msg_box = QMessageBox()
+    msg_box.setWindowTitle(title)
+    msg_box.setText(text)
+
+    # Set icon
+    if icon == "warning":
+        msg_box.setIcon(QMessageBox.Icon.Warning)
+    elif icon == "error":
+        msg_box.setIcon(QMessageBox.Icon.Critical)
+    elif icon == "info":
+        msg_box.setIcon(QMessageBox.Icon.Information)
+    else:
+        msg_box.setIcon(QMessageBox.Icon.Question)
+
+    # Set buttons
+    if not buttons:
+        buttons = ["Yes", "No"]
+    button_map = {
+        "Yes": QMessageBox.StandardButton.Yes,
+        "No": QMessageBox.StandardButton.No,
+        "Ok": QMessageBox.StandardButton.Ok,
+        "Cancel": QMessageBox.StandardButton.Cancel,
+    }
+    for button in buttons:
+        msg_box.addButton(button_map[button])
+
+    # Set default button
+    if default_button:
+        msg_box.setDefaultButton(button_map[default_button])
+
+    return msg_box.exec() == QMessageBox.StandardButton.Yes
+
+
+def show_dialogue_file(
+    title: str,
+    directory: str,
+    file_type: str = "File",
+    file_filter: str = "",
+    is_save: bool = False,
+) -> Optional[str]:
+    """Show a file dialog and return the selected path"""
+    dialog = QFileDialog()
+    dialog.setWindowTitle(title)
+    dialog.setDirectory(directory)
+
+    if file_type == "Directory":
+        dialog.setFileMode(QFileDialog.FileMode.Directory)
+        dialog.setOption(QFileDialog.Option.ShowDirsOnly, True)
+        if dialog.exec():
+            return dialog.selectedFiles()[0]
+    else:
+        if is_save:
+            file_path, _ = QFileDialog.getSaveFileName(
+                parent=None, caption=title, dir=directory, filter=file_filter
+            )
+            return file_path if file_path else None
+        else:
+            dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
+            if file_filter:
+                dialog.setNameFilter(file_filter)
+            if dialog.exec():
+                return dialog.selectedFiles()[0]
+
+    return None
