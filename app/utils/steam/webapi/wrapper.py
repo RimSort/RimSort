@@ -59,8 +59,12 @@ class CollectionImport:
             title="Add Workshop collection link",
             label="Add Workshop collection link",
         )
-        self.import_collection_link()
         logger.info("Workshop collection link Input UI initialized successfully!")
+        if self.link_input[1]:
+            self.import_collection_link()
+        else:
+            logger.info("User exited workshop collection import window.")
+            return
 
     def is_valid_collection_link(self, link: str) -> bool:
         """

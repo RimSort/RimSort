@@ -1219,7 +1219,7 @@ class MainContent(QObject):
         file_path = dialogue.show_dialogue_file(
             mode="open",
             caption="Open RimWorld mod list",
-            _dir=str(AppInfo().app_storage_folder),
+            _dir=str(AppInfo().saved_modlists_folder),
             _filter="RimWorld mod list (*.rml *.rws *.xml)",
         )
         logger.info(f"Selected path: {file_path}")
@@ -1269,7 +1269,7 @@ class MainContent(QObject):
         file_path = dialogue.show_dialogue_file(
             mode="save",
             caption="Save mod list",
-            _dir=str(AppInfo().app_storage_folder),
+            _dir=str(AppInfo().saved_modlists_folder),
             _filter="XML (*.xml)",
         )
         logger.info(f"Selected path: {file_path}")
@@ -1323,8 +1323,6 @@ class MainContent(QObject):
     def _do_import_list_rentry(self) -> None:
         # Create an instance of RentryImport
         rentry_import = RentryImport()
-        # Open the RentryImport dialogue
-        rentry_import.import_rentry_link()
         # Exit if user cancels or no package IDs
         if not rentry_import.package_ids:
             logger.debug("USER ACTION: pressed cancel or no package IDs, passing")
@@ -1376,11 +1374,8 @@ class MainContent(QObject):
 
     def _do_import_list_workshop_collection(self) -> None:
         # Create an instance of collection_import
+        # This also triggers the import dialogue and gets result
         collection_import = CollectionImport(metadata_manager=self.metadata_manager)
-
-        # Trigger the import dialogue and get the result
-        collection_import.import_collection_link()
-
         # Exit if user cancels or no package IDs
         if not collection_import.package_ids:
             logger.debug("USER ACTION: pressed cancel or no package IDs, passing")
@@ -1735,7 +1730,7 @@ class MainContent(QObject):
 
     def _do_save(self) -> None:
         """
-        Method save the current list of active mods to the selected ModsConfig.xml
+        Method to save the current list of active mods to the selected ModsConfig.xml
         """
         logger.info("Saving current active mods to ModsConfig.xml")
         active_mods = []
@@ -1761,6 +1756,10 @@ class MainContent(QObject):
                         active_mods.append(package_id + "_steam")
                         continue  # Append `_steam` suffix if Steam mod, continue to next mod
                 active_mods.append(package_id)
+        active_mods_uuids, inactive_mods_uuids, _, _ = metadata.get_mods_from_list(
+            mod_list=active_mods
+        )
+        self.active_mods_uuids_last_save = active_mods_uuids
         logger.info(f"Collected {len(active_mods)} active mods for saving")
 
         mods_config_data = generate_rimworld_mods_list(
@@ -1785,6 +1784,9 @@ class MainContent(QObject):
                 details=traceback.format_exc(),
             )
         EventBus().do_save_button_animation_stop.emit()
+        # Save current modlists to their respective restore states
+        self.active_mods_uuids_restore_state = active_mods_uuids
+        self.inactive_mods_uuids_restore_state = inactive_mods_uuids
         logger.info("Finished saving active mods")
 
     def _do_restore(self) -> None:
@@ -1862,7 +1864,7 @@ class MainContent(QObject):
 
     def _do_browse_workshop(self) -> None:
         self.steam_browser = SteamBrowser(
-            "https://steamcommunity.com/app/294100/workshop/"
+            "https://steamcommunity.com/app/294100/workshop/", self.metadata_manager
         )
         self.steam_browser.steamcmd_downloader_signal.connect(
             self._do_download_mods_with_steamcmd
@@ -2050,8 +2052,7 @@ class MainContent(QObject):
                     )
                     self.steamworks_in_use = False
                 elif (
-                    instruction[0] in subscription_actions
-                    and len(instruction[1]) >= 1
+                    instruction[0] in subscription_actions and len(instruction[1]) >= 1
                 ):  # ISteamUGC/{SubscribeItem/UnsubscribeItem}
                     logger.info(
                         f"Creating Steamworks API process with instruction {instruction}"

@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
 
 from app.models.image_label import ImageLabel
 from app.utils.app_info import AppInfo
+from app.utils.metadata import MetadataManager
 from app.utils.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetCollectionDetails,
     ISteamRemoteStorage_GetPublishedFileDetails,
@@ -40,9 +41,12 @@ class SteamBrowser(QWidget):
     steamcmd_downloader_signal = Signal(list)
     steamworks_subscription_signal = Signal(list)
 
-    def __init__(self, startpage: str):
+    def __init__(self, startpage: str, metadata_manager: MetadataManager):
         super().__init__()
         logger.debug("Initializing SteamBrowser")
+
+        # store metadata manager reference so we can use it to check if mods are installed
+        self.metadata_manager = metadata_manager
 
         # This is used to fix issue described here on non-Windows platform:
         # https://doc.qt.io/qt-6/qtwebengine-platform-notes.html#sandboxing-support
@@ -182,7 +186,15 @@ class SteamBrowser(QWidget):
         elif self.url_prefix_workshop in self.current_url:
             publishedfileid = self.current_url.split(self.url_prefix_workshop, 1)[1]
         else:
-            logger.error(f"Unable to parse pfid from url: {self.current_url}")
+            logger.error(
+                f"Unable to parse publishedfileid from url: {self.current_url}"
+            )
+            show_warning(
+                title="No publishedfileid found",
+                text="Unable to parse publishedfileid from url, Please check if url is in the correct format",
+                information=f"Url: {self.current_url}",
+            )
+            return None
         # If there is extra data after the PFID, strip it
         if self.searchtext_string in publishedfileid:
             publishedfileid = publishedfileid.split(self.searchtext_string)[0]
@@ -195,8 +207,25 @@ class SteamBrowser(QWidget):
                 publishedfileid
             )
             if len(collection_mods_pfid_to_title) > 0:
-                for pfid, title in collection_mods_pfid_to_title.items():
-                    self._add_mod_to_list(publishedfileid=pfid, title=title)
+                # ask user whether to add all mods or only missing ones
+                from app.views.dialogue import show_dialogue_conditional
+
+                answer = show_dialogue_conditional(
+                    title="Add Collection",
+                    text="How would you like to add the collection?",
+                    information="You can choose to add all mods from the collection or only the ones you don't have installed.",
+                    button_text_override=["Add All Mods", "Add Missing Mods"],
+                )
+
+                if answer == "Add All Mods":
+                    # add all mods
+                    for pfid, title in collection_mods_pfid_to_title.items():
+                        self._add_mod_to_list(publishedfileid=pfid, title=title)
+                elif answer == "Add Missing Mods":
+                    # add only mods that aren't installed
+                    for pfid, title in collection_mods_pfid_to_title.items():
+                        if not self._is_mod_installed(pfid):
+                            self._add_mod_to_list(publishedfileid=pfid, title=title)
             else:
                 logger.warning(
                     "Empty list of mods returned, unable to add collection to list!"
@@ -440,3 +469,11 @@ class SteamBrowser(QWidget):
     def __set_current_html(self, html: str) -> None:
         # Update cached html with html from current page
         self.current_html = html
+
+    def _is_mod_installed(self, publishedfileid: str) -> bool:
+        """Check if a mod is installed by looking through local and workshop folders"""
+        # check all mods in internal metadata
+        for metadata in self.metadata_manager.internal_local_metadata.values():
+            if metadata.get("publishedfileid") == publishedfileid:
+                return True
+        return False

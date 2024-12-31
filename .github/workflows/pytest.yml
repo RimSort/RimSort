@@ -15,7 +15,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@main
         with:
-          python-version: "3.11"
+          python-version: "3.12"
           cache: "pip"
       - name: Install dependencies
         run: |
@@ -24,7 +24,7 @@ jobs:
       - name: Install missing Linux libs for gui tests
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential libegl-dev libgl1-mesa-glx libglib2.0-0 xvfb libxcb-cursor-dev 
+          sudo apt-get install -y build-essential libegl-dev libgl1 libglx-mesa0 libglib2.0-0 xvfb libxcb-cursor-dev
           sudo apt-get install -y libxkbcommon-x11-0 libxcb-icccm4 libxcb-keysyms1 libxcb-shape0
         shell: bash
       - name: Test with pytest
@@ -33,7 +33,7 @@ jobs:
           export QT_DEBUG_PLUGINS=1
           pytest --doctest-modules --junitxml=junit/test-results.xml --cov=app --cov-report=xml --cov-report=html -s --no-qt-log
       - name: Upload pytest test results
-        uses: actions/upload-artifact@v4.4.3
+        uses: actions/upload-artifact@v4.5.0
         with:
           name: pytest-results
           path: junit/test-results.xml
