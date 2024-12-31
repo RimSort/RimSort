@@ -24,6 +24,8 @@ class MenuBarController(QObject):
         self.menu_bar = view
         self.settings_controller = settings_controller
         self.mods_panel_controller = mods_panel_controller
+        self._troubleshooting_controller = None  # store controller instance
+        self._file_search_controller = None  # store controller instance
 
         # Application menu
         instance = QApplication.instance()
@@ -242,7 +244,7 @@ class MenuBarController(QObject):
         from app.views.troubleshooting_dialog import TroubleshootingDialog
 
         dialog = TroubleshootingDialog()
-        controller = TroubleshootingController(
+        self._troubleshooting_controller = TroubleshootingController(
             self.settings_controller.settings, dialog
         )
         dialog.exec()
@@ -269,5 +271,7 @@ class MenuBarController(QObject):
         from app.views.file_search_dialog import FileSearchDialog
 
         dialog = FileSearchDialog()
-        controller = FileSearchController(self.settings_controller.settings, dialog)
+        self._file_search_controller = FileSearchController(
+            self.settings_controller.settings, dialog
+        )
         dialog.exec()

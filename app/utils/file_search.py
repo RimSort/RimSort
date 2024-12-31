@@ -43,10 +43,13 @@ class FileSearch:
     def _should_process_file(self, file_path: str, options: Dict[str, Any]) -> bool:
         """check if file should be processed based on options"""
         if self.stop_requested:
+            print(f"Search stopped, skipping: {file_path}")
             return False
 
         # get file extension
         _, ext = os.path.splitext(file_path.lower())
+        print(f"\nChecking if should process: {file_path}")
+        print(f"File extension: {ext}")
 
         # list of text file extensions we want to search
         text_extensions = {
@@ -107,32 +110,38 @@ class FileSearch:
 
         # if it's a known binary format, skip it
         if ext in skip_extensions:
-            print(f"Skipping binary file: {file_path}")
+            print(f"Skipping known binary extension: {ext}")
             return False
 
         # if xml_only is set, only process .xml files
         if options.get("xml_only") and ext != ".xml":
+            print(f"XML only mode and not XML file, skipping: {file_path}")
             return False
 
         # if it's not a known text format, try to detect if it's text
         if ext not in text_extensions:
+            print(f"Unknown extension {ext}, checking content type")
             try:
                 # try to read first few bytes to check if it's text
                 with open(file_path, "rb") as f:
                     chunk = f.read(1024)
                     # if it contains null bytes, it's probably binary
                     if b"\x00" in chunk:
-                        print(f"Skipping likely binary file: {file_path}")
+                        print(f"Found null bytes, likely binary file: {file_path}")
                         return False
-            except Exception:
+            except Exception as e:
+                print(f"Error checking file type: {e}")
                 return False
 
         # normalize path for consistent comparison
         norm_path = os.path.normpath(file_path)
+        print(f"Normalized path: {norm_path}")
+
         if (
             options.get("skip_translations")
             and os.path.join("Languages", "") in norm_path
         ):
+            print(f"Skipping translation file: {norm_path}")
             return False
 
         # check active/inactive status if searching in specific scope
@@ -140,16 +149,18 @@ class FileSearch:
             mod_name = self._get_mod_name(file_path)
             is_active = mod_name in self.active_mod_ids
 
-            # For debugging
             print(
-                f"Checking mod {mod_name} - active: {is_active}, scope: {self.search_scope}"
+                f"Checking mod status - Name: {mod_name}, Active: {is_active}, Scope: {self.search_scope}"
             )
 
-            if self.search_scope == "active mods":
-                return is_active
-            elif self.search_scope == "not active mods":
-                return not is_active
+            if self.search_scope == "active mods" and not is_active:
+                print(f"Skipping inactive mod in active mods scope: {mod_name}")
+                return False
+            elif self.search_scope == "not active mods" and is_active:
+                print(f"Skipping active mod in inactive mods scope: {mod_name}")
+                return False
 
+        print(f"File will be processed: {file_path}")
         return True
 
     def _build_file_index(
@@ -202,18 +213,32 @@ class FileSearch:
         scope = options.get("scope", "all mods")
         self.set_active_mods(active_mod_ids, scope)
 
-        print(f"Starting simple search with scope: {scope}")
-        print(f"Active mods: {len(active_mod_ids)}")
-        print(f"Search paths: {root_paths}")
+        print("\n=== Starting simple search ===")
+        print(f"Search text: {search_text}")
+        print(f"Search scope: {scope}")
+        print(f"Active mods: {active_mod_ids}")
+        print(f"Options: {options}")
+        print(f"Root paths: {root_paths}")
+
+        total_files = 0
+        processed_files = 0
+        matched_files = 0
 
         for root_path in root_paths:
+            print(f"\nSearching in root path: {root_path}")
             for root, _, files in os.walk(root_path):
                 if self.stop_requested:
                     return
 
                 for file in files:
                     full_path = os.path.join(root, file)
+                    processed_files += 1
+                    print(f"\nChecking file {processed_files}: {full_path}")
+
                     if not self._should_process_file(full_path, options):
+                        print(
+                            f"Skipping file (failed _should_process_file): {full_path}"
+                        )
                         continue
 
                     try:
@@ -227,17 +252,29 @@ class FileSearch:
                             found_match = search_text.lower() in content.lower()
 
                         if found_match:
+                            matched_files += 1
+                            print(f"Found match in file: {full_path}")
                             mod_name = self._get_mod_name(full_path)
+                            print(f"Mod name extracted: {mod_name}")
                             result = (mod_name, file, full_path)
                             if result_callback:
                                 result_callback(*result, content)
                             yield result
-                        elif result_callback:
-                            result_callback(self._get_mod_name(full_path), file, "", "")
-                    except (UnicodeDecodeError, IOError):
+                        else:
+                            print(f"No match found in file: {full_path}")
+                            if result_callback:
+                                result_callback(
+                                    self._get_mod_name(full_path), file, "", ""
+                                )
+                    except (UnicodeDecodeError, IOError) as e:
+                        print(f"Error reading file {full_path}: {str(e)}")
                         if result_callback:
                             result_callback(self._get_mod_name(full_path), file, "", "")
                         continue
+
+        print("\n=== Search complete ===")
+        print(f"Total files processed: {processed_files}")
+        print(f"Files with matches: {matched_files}")
 
     def pattern_search(
         self,
