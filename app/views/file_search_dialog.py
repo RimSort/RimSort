@@ -1,3 +1,5 @@
+from typing import Any, Dict, Optional
+
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QApplication,
@@ -26,7 +28,7 @@ class FileSearchDialog(QDialog):
     search_stopped = Signal()
     result_found = Signal(str, str, str)  # mod_name, file_name, path
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
         self.setWindowTitle("file search")
         self.setWindowFlags(Qt.WindowType.Window)
@@ -167,7 +169,7 @@ class FileSearchDialog(QDialog):
         layout.setContentsMargins(10, 10, 10, 10)
         layout.setSpacing(5)  # reduce overall spacing
 
-    def _show_context_menu(self, pos):
+    def _show_context_menu(self, pos: Any) -> None:
         """show context menu for results table"""
         menu = QMenu()
 
@@ -181,7 +183,11 @@ class FileSearchDialog(QDialog):
             return
 
         row = item.row()
-        path = self.results_table.item(row, 2).text()
+        path_item = self.results_table.item(row, 2)
+        if path_item is None:
+            return
+
+        path = path_item.text()
 
         # connect actions
         open_file.triggered.connect(lambda: self._open_file(path))
@@ -190,13 +196,13 @@ class FileSearchDialog(QDialog):
 
         menu.exec(self.results_table.viewport().mapToGlobal(pos))
 
-    def _open_file(self, path):
+    def _open_file(self, path: str) -> None:
         """open file in default application"""
         from app.utils.generic import platform_specific_open
 
         platform_specific_open(path)
 
-    def _open_folder(self, path):
+    def _open_folder(self, path: str) -> None:
         """open containing folder"""
         import os
 
@@ -204,11 +210,11 @@ class FileSearchDialog(QDialog):
 
         platform_specific_open(os.path.dirname(path))
 
-    def _copy_path(self, path):
+    def _copy_path(self, path: str) -> None:
         """copy path to clipboard"""
         QApplication.clipboard().setText(path)
 
-    def get_search_options(self) -> dict:
+    def get_search_options(self) -> Dict[str, Any]:
         """get current search options as a dictionary"""
         return {
             "scope": self.search_scope.currentText(),
@@ -242,3 +248,15 @@ class FileSearchDialog(QDialog):
     def update_stats(self, stats: str) -> None:
         """update statistics label"""
         self.stats_label.setText(stats)
+
+    def _on_filter_changed(self, text: str) -> None:
+        """handle filter text changes"""
+        filter_text = text.lower()
+        for row in range(self.results_table.rowCount()):
+            show_row = False
+            for col in range(self.results_table.columnCount()):
+                item = self.results_table.item(row, col)
+                if item is not None and filter_text in item.text().lower():
+                    show_row = True
+                    break
+            self.results_table.setRowHidden(row, not show_row)
