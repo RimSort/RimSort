@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import Any, Dict, List, Optional, Set
 
 from PySide6.QtCore import QObject, QThread, Signal
 from PySide6.QtWidgets import QMessageBox
@@ -23,18 +24,21 @@ class SearchWorker(QThread):
 
     def __init__(
         self,
-        searcher: FileSearch,
-        search_text: str,
-        root_paths: list[str],
-        options: dict,
-        active_mod_ids: set[str] = None,
-    ):
+        root_paths: List[str],
+        pattern: str,
+        options: Dict[str, Any],
+        active_mod_ids: Optional[Set[str]] = None,
+        scope: str = "all mods",
+    ) -> None:
         super().__init__()
-        self.searcher = searcher
-        self.search_text = search_text
         self.root_paths = root_paths
+        self.pattern = pattern
         self.options = options
-        self.active_mod_ids = active_mod_ids or set()  # set of active mod IDs
+        self.active_mod_ids = active_mod_ids
+        self.scope = scope
+        self.searcher = FileSearch()
+        if active_mod_ids is not None:
+            self.searcher.set_active_mods(active_mod_ids, scope)
         self.total_files = 0
         self.processed_files = 0
         self.found_files = 0
@@ -50,9 +54,9 @@ class SearchWorker(QThread):
 
             # find the position of the search term
             search_term = (
-                self.search_text.lower()
+                self.pattern.lower()
                 if not self.options.get("case_sensitive")
-                else self.search_text
+                else self.pattern
             )
             content_to_search = (
                 content.lower() if not self.options.get("case_sensitive") else content
@@ -82,15 +86,17 @@ class SearchWorker(QThread):
 
         # get mod ID from folder name
         mod_id = os.path.basename(mod_path)
+        if self.active_mod_ids is None:
+            return False
         is_active = mod_id in self.active_mod_ids
 
         return (scope == "active mods" and is_active) or (
             scope == "not active mods" and not is_active
         )
 
-    def run(self):
+    def run(self) -> None:
         try:
-            logger.info(f"Starting search with text: {self.search_text}")
+            logger.info(f"Starting search with text: {self.pattern}")
             logger.info(f"Search options: {self.options}")
             logger.info(f"Search paths: {self.root_paths}")
 
@@ -141,7 +147,7 @@ class SearchWorker(QThread):
 
             def progress_callback(
                 mod_name: str, file_name: str, path: str, content: str = ""
-            ):
+            ) -> None:
                 self.processed_files += 1
                 self.progress.emit(self.processed_files, self.total_files)
 
@@ -164,7 +170,7 @@ class SearchWorker(QThread):
             # perform search
             try:
                 for mod_name, file_name, path in search_method(
-                    self.search_text,
+                    self.pattern,
                     self.root_paths,
                     self.options,
                     lambda *args: progress_callback(*args),
@@ -193,13 +199,13 @@ class FileSearchController(QObject):
         self,
         settings: Settings,
         dialog: FileSearchDialog,
-        active_mod_ids: set[str] = None,
+        active_mod_ids: Optional[Set[str]] = None,
     ) -> None:
         super().__init__()
         self.settings = settings
         self.dialog = dialog
         self.active_mod_ids = active_mod_ids or set()
-        self.search_worker = None
+        self.search_worker: Optional[SearchWorker] = None
         self.searcher = FileSearch()
 
         # connect signals
@@ -281,15 +287,14 @@ class FileSearchController(QObject):
         options["scope"] = self.dialog.search_scope.currentText().lower()
 
         # create and start search worker
-        self.search_worker = SearchWorker(
-            self.searcher, search_text, root_paths, options
-        )
-        self.search_worker.result_found.connect(self.dialog.add_result)
-        self.search_worker.progress.connect(self.dialog.update_progress)
-        self.search_worker.stats.connect(self.dialog.update_stats)
-        self.search_worker.finished.connect(self._on_search_finished)
-        self.search_worker.error.connect(self._on_search_error)
-        self.search_worker.start()
+        worker = SearchWorker(root_paths, search_text, options, self.active_mod_ids)
+        worker.result_found.connect(self.dialog.add_result)
+        worker.progress.connect(self.dialog.update_progress)
+        worker.stats.connect(self.dialog.update_stats)
+        worker.finished.connect(self._on_search_finished)
+        worker.error.connect(self._on_search_error)
+        worker.start()
+        self.search_worker = worker
 
     def _on_stop_clicked(self) -> None:
         """handle stop button click"""
@@ -315,12 +320,42 @@ class FileSearchController(QObject):
         # hide rows that don't match the filter
         filter_text = text.lower()
         for row in range(self.dialog.results_table.rowCount()):
-            show_row = any(
-                filter_text in self.dialog.results_table.item(row, col).text().lower()
-                for col in range(self.dialog.results_table.columnCount())
-            )
+            show_row = False
+            for col in range(self.dialog.results_table.columnCount()):
+                item = self.dialog.results_table.item(row, col)
+                if item is not None and filter_text in item.text().lower():
+                    show_row = True
+                    break
             self.dialog.results_table.setRowHidden(row, not show_row)
 
     def set_active_mod_ids(self, active_mod_ids: set[str]) -> None:
         """update the list of active mod IDs"""
         self.active_mod_ids = active_mod_ids
+
+    def start_search(
+        self,
+        root_paths: List[str],
+        pattern: str,
+        options: Dict[str, Any],
+        active_mod_ids: Optional[Set[str]] = None,
+        scope: str = "all mods",
+    ) -> None:
+        """Start a new search operation"""
+        if self.search_worker is not None:
+            self.search_worker.quit()
+            self.search_worker.wait()
+
+        self.searcher = FileSearch()
+        if active_mod_ids is not None:
+            self.searcher.set_active_mods(active_mod_ids, scope)
+
+        self.dialog.clear_results()
+
+        worker = SearchWorker(root_paths, pattern, options, active_mod_ids, scope)
+        worker.result_found.connect(self.dialog.add_result)
+        worker.progress.connect(self.dialog.update_progress)
+        worker.stats.connect(self.dialog.update_stats)
+        worker.finished.connect(self._on_search_finished)
+        worker.error.connect(self._on_search_error)
+        worker.start()
+        self.search_worker = worker

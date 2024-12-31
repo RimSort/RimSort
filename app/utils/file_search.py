@@ -1,34 +1,32 @@
 import os
 import re
 from concurrent.futures import ThreadPoolExecutor
-from typing import Callable, Generator, List, Optional
+from typing import Any, Callable, Dict, Generator, List, Optional, Tuple
 
 
 class FileSearch:
     """utility class for file searching"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """initialize file search"""
-        self._stop_search = False
-        self._file_index = {}  # for indexed search
-        self._active_mod_ids = set()  # store active mod IDs
-        self._current_scope = "all mods"  # store current search scope
+        self.active_mod_ids: set[str] = set()
+        self.search_scope: str = ""
+        self.stop_requested: bool = False
 
-    def stop_search(self):
+    def stop_search(self) -> None:
         """stop current search operation"""
-        self._stop_search = True
+        self.stop_requested = True
 
-    def reset(self):
+    def reset(self) -> None:
         """reset searcher state"""
-        self._stop_search = False
-        self._file_index = {}
-        self._active_mod_ids = set()
-        self._current_scope = "all mods"
+        self.stop_requested = False
+        self.active_mod_ids = set()
+        self.search_scope = ""
 
-    def set_active_mods(self, active_mod_ids: set[str], scope: str):
+    def set_active_mods(self, active_mod_ids: set[str], scope: str) -> None:
         """set active mod IDs and search scope"""
-        self._active_mod_ids = active_mod_ids
-        self._current_scope = scope.lower()
+        self.active_mod_ids = active_mod_ids
+        self.search_scope = scope
 
     def _get_mod_name(self, file_path: str) -> str:
         """extract mod name from file path"""
@@ -42,9 +40,9 @@ class FileSearch:
             pass
         return os.path.basename(os.path.dirname(file_path))
 
-    def _should_process_file(self, file_path: str, options: dict) -> bool:
+    def _should_process_file(self, file_path: str, options: Dict[str, Any]) -> bool:
         """check if file should be processed based on options"""
-        if self._stop_search:
+        if self.stop_requested:
             return False
 
         # get file extension
@@ -138,24 +136,26 @@ class FileSearch:
             return False
 
         # check active/inactive status if searching in specific scope
-        if self._current_scope in ["active mods", "not active mods"]:
+        if self.search_scope in ["active mods", "not active mods"]:
             mod_name = self._get_mod_name(file_path)
-            is_active = mod_name in self._active_mod_ids
+            is_active = mod_name in self.active_mod_ids
 
             # For debugging
             print(
-                f"Checking mod {mod_name} - active: {is_active}, scope: {self._current_scope}"
+                f"Checking mod {mod_name} - active: {is_active}, scope: {self.search_scope}"
             )
 
-            if self._current_scope == "active mods":
+            if self.search_scope == "active mods":
                 return is_active
-            elif self._current_scope == "not active mods":
+            elif self.search_scope == "not active mods":
                 return not is_active
 
         return True
 
     def _build_file_index(
-        self, root_paths: List[str], result_callback: Optional[Callable] = None
+        self,
+        root_paths: List[str],
+        result_callback: Optional[Callable[[str, str, str, str], None]] = None,
     ) -> None:
         """build index of files for faster searching"""
         self._file_index = {}
@@ -164,14 +164,14 @@ class FileSearch:
         # first count total files
         for root_path in root_paths:
             for root, _, files in os.walk(root_path):
-                if self._stop_search:
+                if self.stop_requested:
                     return
                 total_files += len(files)
 
         processed = 0
         for root_path in root_paths:
             for root, _, files in os.walk(root_path):
-                if self._stop_search:
+                if self.stop_requested:
                     return
                 for file in files:
                     processed += 1
@@ -193,9 +193,9 @@ class FileSearch:
         self,
         search_text: str,
         root_paths: List[str],
-        options: dict,
-        result_callback: Optional[Callable] = None,
-    ) -> Generator[tuple[str, str, str], None, None]:
+        options: Dict[str, Any],
+        result_callback: Optional[Callable[[str, str, str, str], None]] = None,
+    ) -> Generator[Tuple[str, str, str], None, None]:
         """simple linear search through files"""
         # Set active mods and scope before starting search
         active_mod_ids = options.get("active_mod_ids", set())
@@ -208,7 +208,7 @@ class FileSearch:
 
         for root_path in root_paths:
             for root, _, files in os.walk(root_path):
-                if self._stop_search:
+                if self.stop_requested:
                     return
 
                 for file in files:
@@ -243,9 +243,9 @@ class FileSearch:
         self,
         search_text: str,
         root_paths: List[str],
-        options: dict,
-        result_callback: Optional[Callable] = None,
-    ) -> Generator[tuple[str, str, str], None, None]:
+        options: Dict[str, Any],
+        result_callback: Optional[Callable[[str, str, str, str], None]] = None,
+    ) -> Generator[Tuple[str, str, str], None, None]:
         """search using regex pattern matching"""
         # Set active mods and scope before starting search
         active_mod_ids = options.get("active_mod_ids", set())
@@ -259,7 +259,7 @@ class FileSearch:
             for root_path in root_paths:
                 mod_name = os.path.basename(root_path)
                 for root, _, files in os.walk(root_path):
-                    if self._stop_search:
+                    if self.stop_requested:
                         return
 
                     for file in files:
@@ -292,16 +292,16 @@ class FileSearch:
         self,
         search_text: str,
         root_paths: List[str],
-        options: dict,
-        result_callback: Optional[Callable] = None,
-    ) -> Generator[tuple[str, str, str], None, None]:
+        options: Dict[str, Any],
+        result_callback: Optional[Callable[[str, str, str, str], None]] = None,
+    ) -> Generator[Tuple[str, str, str], None, None]:
         """search files in parallel using thread pool"""
         # Set active mods and scope before starting search
         active_mod_ids = options.get("active_mod_ids", set())
         scope = options.get("scope", "all mods")
         self.set_active_mods(active_mod_ids, scope)
 
-        def search_file(args):
+        def search_file(args: Tuple[str, str]) -> Optional[Tuple[str, str, str, str]]:
             full_path, _ = args  # ignore the passed mod_name, calculate it from path
             file_name = os.path.basename(full_path)
             mod_name = self._get_mod_name(full_path)
@@ -345,7 +345,7 @@ class FileSearch:
         # search in parallel
         with ThreadPoolExecutor() as executor:
             for result in executor.map(search_file, all_files):
-                if self._stop_search:
+                if self.stop_requested:
                     return
                 if result:
                     mod_name, file_name, path, content = result
