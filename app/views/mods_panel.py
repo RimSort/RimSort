@@ -287,7 +287,7 @@ class ModListItemInner(QWidget):
             elif data_source == "workshop":
                 self.mod_source_icon.setObjectName("workshop")
                 self.mod_source_icon.setToolTip("Subscribed via Steam")
-        # Set label color if mod is invalid
+        # Set label color if mod has errors/warnings
         if self.filtered:
             self.main_label.setObjectName("ListItemLabelFiltered")
         elif errors_warnings:
