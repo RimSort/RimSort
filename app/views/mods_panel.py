@@ -287,7 +287,7 @@ class ModListItemInner(QWidget):
             elif data_source == "workshop":
                 self.mod_source_icon.setObjectName("workshop")
                 self.mod_source_icon.setToolTip("Subscribed via Steam")
-        # Set label color if mod is invalid
+        # Set label color if mod has errors/warnings
         if self.filtered:
             self.main_label.setObjectName("ListItemLabelFiltered")
         elif errors_warnings:
@@ -1917,7 +1917,6 @@ class ModListWidget(QListWidget):
             current_mod_index = self.uuids.index(uuid)
             current_item = self.item(current_mod_index)
             current_item_data = current_item.data(Qt.ItemDataRole.UserRole)
-            current_item_data["invalid"] = False
             current_item_data["mismatch"] = False
             current_item_data["errors"] = None
             current_item_data["warnings"] = None
@@ -2047,7 +2046,6 @@ class ModListWidget(QListWidget):
                 ]
             ):
                 num_errors += 1
-                current_item_data["invalid"] = True
                 total_error_text += f"\n\n{mod_data['name']}"
                 total_error_text += "\n" + "=" * len(mod_data["name"])
                 total_error_text += tool_tip_text
@@ -2518,7 +2516,7 @@ class ModsPanel(QWidget):
             self.signal_search_and_filters(list_type=list_type, pattern="")
             self.inactive_mods_search.clearFocus()
 
-    def signal_search_and_filters(self, list_type: str, pattern: str) -> None:
+    def signal_search_and_filters(self, list_type: str, pattern: str, filters_active: bool = False) -> None:
         _filter = None
         filter_state = None
         source_filter = None
@@ -2554,11 +2552,18 @@ class ModsPanel(QWidget):
                 else self.inactive_mods_list.item(uuids.index(uuid))
             )
             item_data = item.data(Qt.ItemDataRole.UserRole)
-            # Check if the item is valid
             metadata = self.metadata_manager.internal_local_metadata[uuid]
+            if pattern != '':
+                filters_active = True
+            # Hide invalid items
             invalid = item_data["invalid"]
-            if invalid:
+            if invalid and filters_active:
+                item_data["filtered"] = True
+                item.setHidden(True)
                 continue
+            elif invalid and not filters_active:
+                item_data["filtered"] = False
+                item.setHidden(False)
             # Check if the item is filtered
             item_filtered = item_data["filtered"]
             # Check if the item should be filtered or not based on search filter
@@ -2635,8 +2640,12 @@ class ModsPanel(QWidget):
             self.inactive_mods_data_source_filter = SEARCH_DATA_SOURCE_FILTER_INDEXES[
                 source_index
             ]
+        if source_index == 0:
+            filters_active = False
+        else:
+            filters_active = True
         # Filter widgets by data source, while preserving any active search pattern
-        self.signal_search_and_filters(list_type=list_type, pattern=search.text())
+        self.signal_search_and_filters(list_type=list_type, pattern=search.text(), filters_active=filters_active)
 
     def update_count(self, list_type: str) -> None:
         # Calculate filtered items
