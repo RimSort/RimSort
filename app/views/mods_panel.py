@@ -19,7 +19,6 @@ from PySide6.QtGui import (
     QIcon,
     QKeyEvent,
     QKeySequence,
-    QMouseEvent,
     QResizeEvent,
 )
 from PySide6.QtWidgets import (

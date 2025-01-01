@@ -9,11 +9,16 @@ class ModsPanelController(QObject):
     
     def __init__(self, view: ModsPanel) -> None:
         super().__init__()
-        
+
         self.mods_panel = view
-        
+
+        self.show_warnings = False
+        self.show_errors = False
+        self.mods_panel.warnings_text.clicked.connect(self._show_mods_with_warnings)
+        self.mods_panel.errors_text.clicked.connect(self._show_mods_with_errors)
+
         self.reset_warnings_signal.connect(self._on_menu_bar_reset_warnings_triggered)
-        
+
     @Slot()
     def _on_menu_bar_reset_warnings_triggered(self) -> None:
         """
@@ -42,3 +47,37 @@ class ModsPanelController(QObject):
         inactive_mods_list = self.mods_panel.inactive_mods_list.ignore_warning_list
         if package_id in inactive_mods_list:
             inactive_mods_list.remove(package_id)
+
+    @Slot()
+    def _show_mods_with_warnings(self) -> None:
+        """
+        Dynamically shows/hides all mods that have warnings.
+        """
+        self.show_warnings = not self.show_warnings
+        
+        active_mods = self.mods_panel.active_mods_list.get_all_mod_list_items()
+        for mod in active_mods:
+            mod_data = mod.data(Qt.ItemDataRole.UserRole)
+            if mod_data["warnings"] == '':
+                # Hide mod unless it has an error and show_errors is true
+                if self.show_warnings and not self.show_errors:
+                    mod.setHidden(True)
+                else:
+                    mod.setHidden(False)
+
+    @Slot()
+    def _show_mods_with_errors(self) -> None:
+        """
+        Dynamically shows/hides all mods that have errors.
+        """
+        self.show_errors = not self.show_errors
+        
+        active_mods = self.mods_panel.active_mods_list.get_all_mod_list_items()
+        for mod in active_mods:
+            mod_data = mod.data(Qt.ItemDataRole.UserRole)
+            if mod_data["errors"] == '':
+                # Hide mod unless it has a warning and show_warnings is true
+                if self.show_errors and not self.show_warnings:
+                    mod.setHidden(True)
+                else:
+                    mod.setHidden(False)
