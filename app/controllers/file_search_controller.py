@@ -3,11 +3,10 @@ import os
 from typing import Any, Dict, List, Optional, Set
 
 from PySide6.QtCore import QObject, QThread, Signal
-from PySide6.QtWidgets import QMessageBox
 
+from app.models.search_result import SearchResult
 from app.models.settings import Settings
 from app.utils.file_search import FileSearch
-from app.utils.gui_info import show_dialogue_conditional
 from app.views.file_search_dialog import FileSearchDialog
 
 logger = logging.getLogger(__name__)
@@ -193,7 +192,10 @@ class SearchWorker(QThread):
 
 
 class FileSearchController(QObject):
-    """controller for file search dialog"""
+    """controller for file search functionality"""
+
+    # define signals
+    search_results_updated = Signal()
 
     def __init__(
         self,
@@ -201,10 +203,12 @@ class FileSearchController(QObject):
         dialog: FileSearchDialog,
         active_mod_ids: Optional[Set[str]] = None,
     ) -> None:
+        """initialize controller"""
         super().__init__()
         self.settings = settings
         self.dialog = dialog
         self.active_mod_ids = active_mod_ids or set()
+        self.search_results: List[SearchResult] = []
         self.search_worker: Optional[SearchWorker] = None
         self.searcher = FileSearch()
 
@@ -214,87 +218,84 @@ class FileSearchController(QObject):
         self.dialog.search_input.returnPressed.connect(self._on_search_clicked)
         self.dialog.filter_input.textChanged.connect(self._on_filter_changed)
 
-    def _get_search_paths(self) -> list[str]:
-        """get paths to search based on selected scope"""
-        scope = self.dialog.search_scope.currentText()
+        # set initial paths
         instance = self.settings.instances[self.settings.current_instance]
+        if instance.local_folder:
+            self.dialog.set_search_paths([instance.local_folder])
 
-        # check if both local and steam mods are available
-        local_mods = instance.local_folder
-        steam_mods = instance.workshop_folder
+    def set_active_mod_ids(self, active_mod_ids: Set[str]) -> None:
+        """update the list of active mod IDs"""
+        self.active_mod_ids = active_mod_ids
 
-        paths = []
-        if scope in ["active mods", "not active mods", "all mods"]:
-            if local_mods and steam_mods:
-                # ask user which locations to search
-                msg = QMessageBox()
-                msg.setWindowTitle("Select Search Location")
-                msg.setText("Where would you like to search?")
-                msg.addButton("Local Mods", QMessageBox.ButtonRole.AcceptRole)
-                msg.addButton("Steam Mods", QMessageBox.ButtonRole.AcceptRole)
-                msg.addButton("Both", QMessageBox.ButtonRole.AcceptRole)
-                msg.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
+    def get_search_paths(self) -> List[str]:
+        """get search paths from dialog"""
+        return self.dialog.get_search_options().get("paths", [])
 
-                choice = msg.exec()
-                if choice == 3:  # Cancel
-                    return []
-                elif choice == 0:  # Local Mods
-                    paths.append(local_mods)
-                elif choice == 1:  # Steam Mods
-                    paths.append(steam_mods)
-                else:  # Both
-                    paths.extend([local_mods, steam_mods])
-            else:
-                # use whichever is available
-                if local_mods:
-                    paths.append(local_mods)
-                if steam_mods:
-                    paths.append(steam_mods)
-        elif scope == "configs folder":
-            if instance.config_folder:
-                paths.append(instance.config_folder)
+    def get_search_text(self) -> str:
+        """get search text from dialog"""
+        return self.dialog.search_input.text()
 
-        logger.info(f"Search paths: {paths}")
-        return paths
+    def clear_results(self) -> None:
+        """clear search results"""
+        self.search_results.clear()
+        self.search_results_updated.emit()
 
-    def _on_search_clicked(self) -> None:
-        """handle search button click"""
-        # get search parameters
-        search_text = self.dialog.search_input.text()
-        if not search_text:
-            return
+    def update_results(self) -> None:
+        """notify that results have been updated"""
+        self.search_results_updated.emit()
 
-        # prepare for new search
-        self.dialog.clear_results()
-        self.dialog.search_button.setEnabled(False)
-        self.dialog.stop_button.setEnabled(True)
-        self.searcher.reset()
+    def _setup_search_worker(
+        self,
+        root_paths: List[str],
+        pattern: str,
+        options: Dict[str, Any],
+        active_mod_ids: Optional[Set[str]] = None,
+        scope: str = "all mods",
+    ) -> SearchWorker:
+        """Set up and configure a new search worker"""
+        if self.search_worker is not None:
+            self.search_worker.quit()
+            self.search_worker.wait()
 
-        # get search paths and options
-        root_paths = self._get_search_paths()
-        if not root_paths:
-            show_dialogue_conditional(
-                "No Search Paths",
-                "No valid paths to search in were found.",
-                "Please check your settings and try again.",
-            )
-            self._on_search_finished()
-            return
-
-        # get search options and add active mod IDs
-        options = self.dialog.get_search_options()
-        options["active_mod_ids"] = self.active_mod_ids
-        options["scope"] = self.dialog.search_scope.currentText().lower()
-
-        # create and start search worker
-        worker = SearchWorker(root_paths, search_text, options, self.active_mod_ids)
+        worker = SearchWorker(root_paths, pattern, options, active_mod_ids, scope)
         worker.result_found.connect(self.dialog.add_result)
         worker.progress.connect(self.dialog.update_progress)
         worker.stats.connect(self.dialog.update_stats)
         worker.finished.connect(self._on_search_finished)
         worker.error.connect(self._on_search_error)
+        return worker
+
+    def _start_search_worker(
+        self,
+        root_paths: List[str],
+        search_text: str,
+        options: Dict[str, Any],
+        active_mod_ids: Optional[Set[str]] = None,
+        scope: str = "all mods",
+    ) -> None:
+        """Start a new search worker"""
+        self.searcher = FileSearch()
+        if active_mod_ids is not None:
+            self.searcher.set_active_mods(active_mod_ids, scope)
+
+        self.dialog.clear_results()
+
+        worker = self._setup_search_worker(
+            root_paths, search_text, options, active_mod_ids, scope
+        )
         worker.start()
         self.search_worker = worker
+
+    def _on_search_clicked(self) -> None:
+        """handle search button click"""
+        self.dialog.search_button.setEnabled(False)
+        self.dialog.stop_button.setEnabled(True)
+
+        options = self.dialog.get_search_options()
+        root_paths = options.get("paths", [])
+        search_text = self.dialog.search_input.text()
+
+        self._start_search_worker(root_paths, search_text, options, self.active_mod_ids)
 
     def _on_stop_clicked(self) -> None:
         """handle stop button click"""
@@ -310,6 +311,8 @@ class FileSearchController(QObject):
 
     def _on_search_error(self, error_msg: str) -> None:
         """handle search errors"""
+        from app.utils.gui_info import show_dialogue_conditional
+
         show_dialogue_conditional(
             "Search Error", error_msg, "Please check your settings and try again."
         )
@@ -347,35 +350,3 @@ class FileSearchController(QObject):
         print(
             f"\nFilter complete - Visible rows: {visible_rows}/{self.dialog.results_table.rowCount()}"
         )
-
-    def set_active_mod_ids(self, active_mod_ids: set[str]) -> None:
-        """update the list of active mod IDs"""
-        self.active_mod_ids = active_mod_ids
-
-    def start_search(
-        self,
-        root_paths: List[str],
-        pattern: str,
-        options: Dict[str, Any],
-        active_mod_ids: Optional[Set[str]] = None,
-        scope: str = "all mods",
-    ) -> None:
-        """Start a new search operation"""
-        if self.search_worker is not None:
-            self.search_worker.quit()
-            self.search_worker.wait()
-
-        self.searcher = FileSearch()
-        if active_mod_ids is not None:
-            self.searcher.set_active_mods(active_mod_ids, scope)
-
-        self.dialog.clear_results()
-
-        worker = SearchWorker(root_paths, pattern, options, active_mod_ids, scope)
-        worker.result_found.connect(self.dialog.add_result)
-        worker.progress.connect(self.dialog.update_progress)
-        worker.stats.connect(self.dialog.update_stats)
-        worker.finished.connect(self._on_search_finished)
-        worker.error.connect(self._on_search_error)
-        worker.start()
-        self.search_worker = worker
