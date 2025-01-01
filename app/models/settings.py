@@ -67,6 +67,7 @@ class Settings(QObject):
         self.debug_logging_enabled: bool = False
         self.watchdog_toggle: bool = True
         self.mod_type_filter_toggle: bool = True
+        self.hide_invalid_mods_when_filtering_toggle: bool = True
         self.duplicate_mods_warning: bool = False
         self.steam_mods_update_check: bool = False
         self.try_download_missing_mods: bool = False

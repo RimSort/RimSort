@@ -708,6 +708,9 @@ class SettingsDialog(QDialog):
         self.mod_type_filter_checkbox = QCheckBox("Enable mod type filter")
         group_layout.addWidget(self.mod_type_filter_checkbox)
 
+        self.hide_invalid_mods_when_filtering_checkbox = QCheckBox("Hide invalid mods when filtering")
+        group_layout.addWidget(self.hide_invalid_mods_when_filtering_checkbox)
+
         self.show_duplicate_mods_warning_checkbox = QCheckBox(
             "Show duplicate mods warning"
         )
