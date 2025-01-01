@@ -455,6 +455,12 @@ class SettingsController(QObject):
             self.settings_dialog.sorting_alphabetical_radio.setChecked(True)
         elif self.settings.sorting_algorithm == SortMethod.TOPOLOGICAL:
             self.settings_dialog.sorting_topological_radio.setChecked(True)
+        if self.settings.dependency_for_sorting:
+            (
+                self.settings_dialog.db_use_dependency_for_sorting_checkbox.setChecked(
+                    True
+                )
+            )
 
         # Database Builder tab
         if self.settings.db_builder_include == "all_mods":
@@ -603,6 +609,9 @@ class SettingsController(QObject):
             self.settings.sorting_algorithm = SortMethod.ALPHABETICAL
         elif self.settings_dialog.sorting_topological_radio.isChecked():
             self.settings.sorting_algorithm = SortMethod.TOPOLOGICAL
+        self.settings.dependency_for_sorting = (
+            self.settings_dialog.db_use_dependency_for_sorting_checkbox.isChecked()
+        )
 
         # Database Builder tab
         if self.settings_dialog.db_builder_include_all_radio.isChecked():
