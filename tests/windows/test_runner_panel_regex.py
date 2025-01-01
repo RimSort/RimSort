@@ -1,45 +1,46 @@
 import re
 import pytest
 
+
 @pytest.mark.parametrize(
     "test_string",
     [
         "IPublishedFileService/QueryFiles page [40/100]",
         "IPublishedFileService/GetDetails chunk [40/100]",
-    ]
+    ],
 )
 def test_dbbuilder_progress_regex(test_string: str) -> None:
     """
-    Verify that the runner panel lines for IPublishedFileService can be parsed
-    by a regular expression. The pattern should match:
-      - A service name: 'IPublishedFileService/(QueryFiles|GetDetails)'
-      - A label: 'page' or 'chunk'
-      - A bracketed fraction like '[40/100]'
+    Verify that lines related to IPublishedFileService/QueryFiles and
+    IPublishedFileService/GetDetails in the DB Builder runner panel output
+    can be parsed by a consistent regular expression.
 
     This ensures lines of the form:
-      "IPublishedFileService/<Method> <Label> [<Current>/<Total>]"
+        "IPublishedFileService/<Method> <Label> [<Current>/<Total>]"
     can be properly recognized and captured.
-    """
 
+    Example:
+        "IPublishedFileService/QueryFiles page [40/100]"
+        "IPublishedFileService/GetDetails chunk [40/100]"
+
+    The regex will capture:
+      - <Method>: 'QueryFiles' or 'GetDetails'
+      - <Label>: 'page' or 'chunk'
+      - <Current>: '40'
+      - <Total>: '100'
+    """
     pattern = re.compile(
         r"^IPublishedFileService/(QueryFiles|GetDetails)\s+(page|chunk)\s+\[(\d+)/(\d+)\]$"
     )
 
     match = pattern.search(test_string)
-    assert match, f"Regex did not match the expected format in: '{test_string}'"
+    assert match is not None, f"Regex did not match the expected format: '{test_string}'"
 
-    # Optionally, confirm the expected groups
-    # match.group(1) => 'QueryFiles' or 'GetDetails'
-    # match.group(2) => 'page' or 'chunk'
-    # match.group(3) => '40'
-    # match.group(4) => '100'
-    method = match.group(1)
-    label = match.group(2)
-    current = match.group(3)
-    total = match.group(4)
+    method, label, current, total = match.group(1), match.group(2), match.group(3), match.group(4)
 
-    # Example: You might want to ensure '40' < '100', or that 'page' is not 'chunk'
-    # We'll just confirm they're not empty for demonstration:
-    assert method in ("QueryFiles", "GetDetails")
-    assert label in ("page", "chunk")
-    assert current.isdigit() and total.isdigit()
+    # Validate the captured subgroups
+    assert method in ("QueryFiles", "GetDetails"), f"Invalid method: {method}"
+    assert label in ("page", "chunk"), f"Invalid label: {label}"
+    assert current.isdigit(), f"'current' not a digit: {current}"
+    assert total.isdigit(), f"'total' not a digit: {total}"
+
