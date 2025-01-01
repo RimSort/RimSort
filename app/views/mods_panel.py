@@ -39,6 +39,7 @@ from PySide6.QtWidgets import (
 
 from app.controllers.settings_controller import SettingsController
 from app.utils.app_info import AppInfo
+from app.utils.clickable_qlabels import AdvancedClickableQLabel
 from app.utils.constants import (
     KNOWN_MOD_REPLACEMENTS,
     SEARCH_DATA_SOURCE_FILTER_INDEXES,
@@ -2365,11 +2366,11 @@ class ModsPanel(QWidget):
         self.errors_summary_layout.setSpacing(2)
         self.warnings_icon: QLabel = QLabel()
         self.warnings_icon.setPixmap(ModListIcons.warning_icon().pixmap(QSize(20, 20)))
-        self.warnings_text: QLabel = QLabel("0 warnings(s)")
+        self.warnings_text: AdvancedClickableQLabel = AdvancedClickableQLabel("0 warning(s)")
         self.warnings_text.setObjectName("summaryValue")
         self.errors_icon: QLabel = QLabel()
         self.errors_icon.setPixmap(ModListIcons.error_icon().pixmap(QSize(20, 20)))
-        self.errors_text: QLabel = QLabel("0 error(s)")
+        self.errors_text: AdvancedClickableQLabel = AdvancedClickableQLabel("0 error(s)")
         self.errors_text.setObjectName("summaryValue")
         self.warnings_layout = QHBoxLayout()
         self.warnings_layout.addWidget(self.warnings_icon, 1)
