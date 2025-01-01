@@ -910,7 +910,7 @@ class MainWindow(QMainWindow):
         
         :param instance: Name of the instance currently being used.
         """
-        self.setWindowTitle(f"RimSort {AppInfo().app_version}: {instance} Instance")
+        self.setWindowTitle(f"RimSort {AppInfo().app_version} | {instance} Instance")
 
     def initialize_watchdog(self) -> None:
         logger.info("Initializing watchdog FS Observer")
