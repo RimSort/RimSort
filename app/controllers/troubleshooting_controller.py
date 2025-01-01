@@ -1,4 +1,5 @@
 import json
+import re
 import xml.etree.ElementTree as ElementTree
 from pathlib import Path
 from shutil import copy2, rmtree
@@ -401,26 +402,32 @@ class TroubleshootingController:
             pass
         return None
 
+    def _find_steam_path(self) -> Path:
+        """Find Steam installation path"""
+        # First try to get from workshop
+        steam_path = self._get_steam_root_from_workshop()
+
+        # If not found, try common locations
+        if not steam_path:
+            steam_paths = [
+                Path("C:/Program Files (x86)/Steam"),
+                Path("C:/Program Files/Steam"),
+                Path(str(Path.home()) + "/Steam"),
+            ]
+            for path in steam_paths:
+                if path.exists():
+                    steam_path = path
+                    break
+
+        if not steam_path:
+            raise Exception("Steam installation not found")
+
+        return steam_path
+
     def _on_steam_clear_cache_clicked(self) -> None:
-        """Clear Steam's download cache by deleting the downloading folder."""
+        """Clear Steam download cache."""
         try:
-            # try to get steam path from workshop folder first
-            steam_path = self._get_steam_root_from_workshop()
-
-            # if not found, try common installation paths
-            if not steam_path:
-                steam_paths = [
-                    Path("C:/Program Files (x86)/Steam"),
-                    Path("C:/Program Files/Steam"),
-                    Path(str(Path.home()) + "/Steam"),
-                ]
-                for path in steam_paths:
-                    if path.exists():
-                        steam_path = path
-                        break
-
-            if not steam_path:
-                raise Exception("Steam installation not found")
+            steam_path = self._find_steam_path()
 
             # delete downloading folder
             downloading_folder = steam_path / "steamapps" / "downloading"
@@ -461,34 +468,19 @@ class TroubleshootingController:
                 buttons=["Ok"],
             )
 
+    def _get_steam_library_file(self) -> Path:
+        """Get Steam library file path"""
+        steam_path = self._find_steam_path()
+        library_file = steam_path / "steamapps" / "libraryfolders.vdf"
+        if not library_file.exists():
+            raise Exception("Steam library file not found")
+        return library_file
+
     def _on_steam_repair_library_clicked(self) -> None:
         """Repair Steam library by validating all installed games."""
         try:
-            steam_path = self._get_steam_root_from_workshop()
-
-            if not steam_path:
-                steam_paths = [
-                    Path("C:/Program Files (x86)/Steam"),
-                    Path("C:/Program Files/Steam"),
-                    Path(str(Path.home()) + "/Steam"),
-                ]
-                for path in steam_paths:
-                    if path.exists():
-                        steam_path = path
-                        break
-
-            if not steam_path:
-                raise Exception("Steam installation not found")
-
-            # read libraryfolders.vdf to get all library paths and installed games
-            library_file = steam_path / "steamapps" / "libraryfolders.vdf"
-            if not library_file.exists():
-                raise Exception("Steam library file not found")
-
-            # parse libraryfolders.vdf to get app IDs
-            # libraryfolders.vdf is a (valve structured) key-value pair file
-            import re
-
+            # get library file and parse app IDs
+            library_file = self._get_steam_library_file()
             content = library_file.read_text(encoding="utf-8")
             app_ids = re.findall(r'"appid"\s+"(\d+)"', content)
 

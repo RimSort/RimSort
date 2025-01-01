@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
@@ -32,6 +32,7 @@ class FileSearchDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle("file search")
         self.setWindowFlags(Qt.WindowType.Window)
+        self._search_paths: List[str] = []
 
         # create main layout
         layout = QVBoxLayout()
@@ -223,7 +224,12 @@ class FileSearchDialog(QDialog):
             "skip_translations": self.skip_translations.isChecked(),
             "xml_only": self.xml_only.isChecked(),
             "filter_text": self.filter_input.text(),
+            "paths": self._search_paths,
         }
+
+    def set_search_paths(self, paths: List[str]) -> None:
+        """set the search paths"""
+        self._search_paths = paths
 
     def add_result(
         self, mod_name: str, file_name: str, path: str, preview: str = ""
