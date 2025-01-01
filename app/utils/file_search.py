@@ -1,17 +1,83 @@
 import os
 import re
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any, Callable, Dict, Generator, List, Optional, Tuple
+from dataclasses import dataclass
+from functools import wraps
+from pathlib import Path
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generator,
+    List,
+    Optional,
+    Tuple,
+    TypeAlias,
+    cast,
+)
+
+
+@dataclass
+class SearchParams:
+    """common parameters for all search operations"""
+
+    search_text: str
+    root_paths: List[str]
+    options: Dict[str, Any]
+    result_callback: Optional[Callable[[str, str, str, str], None]] = None
+    is_pattern_search: bool = False
+    search_type: str = "text"
+
+
+SearchResult: TypeAlias = Generator[Tuple[str, str, str], None, None]
+SearchCallback: TypeAlias = Optional[Callable[[str, str, str, str], None]]
+SearchMethod: TypeAlias = Callable[
+    ["FileSearch", str, List[str], Dict[str, Any], SearchCallback], SearchResult
+]
+
+
+def search_method(
+    is_pattern: bool = False, search_type: str = "text", parallel: bool = False
+) -> Callable[[SearchMethod], SearchMethod]:
+    """decorator for search methods to handle common parameters"""
+
+    def decorator(func: SearchMethod) -> SearchMethod:
+        @wraps(func)
+        def wrapper(
+            self: "FileSearch",
+            text: str,
+            paths: List[str],
+            opts: Dict[str, Any],
+            callback: SearchCallback = None,
+        ) -> SearchResult:
+            params = SearchParams(
+                text,
+                paths,
+                opts,
+                callback,
+                is_pattern_search=is_pattern,
+                search_type=search_type,
+            )
+            yield from self._search_files(params, parallel)
+
+        return cast(SearchMethod, wrapper)
+
+    return decorator
 
 
 class FileSearch:
     """utility class for file searching"""
+
+    # maximum file size to process (10MB)
+    MAX_FILE_SIZE: int = 10 * 1024 * 1024
 
     def __init__(self) -> None:
         """initialize file search"""
         self.active_mod_ids: set[str] = set()
         self.search_scope: str = ""
         self.stop_requested: bool = False
+        self._file_index: Dict[str, str] = {}
+        self.file_paths: List[Path] = []
 
     def stop_search(self) -> None:
         """stop current search operation"""
@@ -200,174 +266,20 @@ class FileSearch:
                     except (UnicodeDecodeError, IOError):
                         continue
 
-    def simple_search(
-        self,
-        search_text: str,
-        root_paths: List[str],
-        options: Dict[str, Any],
-        result_callback: Optional[Callable[[str, str, str, str], None]] = None,
-    ) -> Generator[Tuple[str, str, str], None, None]:
-        """simple linear search through files"""
-        # Set active mods and scope before starting search
+    def _init_search(
+        self, search_text: str, root_paths: List[str], options: Dict[str, Any]
+    ) -> List[Tuple[str, str]]:
+        """initialize search parameters and logging"""
         active_mod_ids = options.get("active_mod_ids", set())
         scope = options.get("scope", "all mods")
         self.set_active_mods(active_mod_ids, scope)
 
-        print("\n=== Starting simple search ===")
+        print("\n=== Starting search ===")
         print(f"Search text: {search_text}")
         print(f"Search scope: {scope}")
         print(f"Active mods: {active_mod_ids}")
         print(f"Options: {options}")
         print(f"Root paths: {root_paths}")
-
-        total_files = 0
-        processed_files = 0
-        matched_files = 0
-
-        for root_path in root_paths:
-            print(f"\nSearching in root path: {root_path}")
-            for root, _, files in os.walk(root_path):
-                if self.stop_requested:
-                    return
-
-                for file in files:
-                    full_path = os.path.join(root, file)
-                    processed_files += 1
-                    print(f"\nChecking file {processed_files}: {full_path}")
-
-                    if not self._should_process_file(full_path, options):
-                        print(
-                            f"Skipping file (failed _should_process_file): {full_path}"
-                        )
-                        continue
-
-                    try:
-                        with open(full_path, "r", encoding="utf-8") as f:
-                            content = f.read()
-
-                        found_match = False
-                        if options.get("case_sensitive"):
-                            found_match = search_text in content
-                        else:
-                            found_match = search_text.lower() in content.lower()
-
-                        if found_match:
-                            matched_files += 1
-                            print(f"Found match in file: {full_path}")
-                            mod_name = self._get_mod_name(full_path)
-                            print(f"Mod name extracted: {mod_name}")
-                            result = (mod_name, file, full_path)
-                            if result_callback:
-                                result_callback(*result, content)
-                            yield result
-                        else:
-                            print(f"No match found in file: {full_path}")
-                            if result_callback:
-                                result_callback(
-                                    self._get_mod_name(full_path), file, "", ""
-                                )
-                    except (UnicodeDecodeError, IOError) as e:
-                        print(f"Error reading file {full_path}: {str(e)}")
-                        if result_callback:
-                            result_callback(self._get_mod_name(full_path), file, "", "")
-                        continue
-
-        print("\n=== Search complete ===")
-        print(f"Total files processed: {processed_files}")
-        print(f"Files with matches: {matched_files}")
-
-    def pattern_search(
-        self,
-        search_text: str,
-        root_paths: List[str],
-        options: Dict[str, Any],
-        result_callback: Optional[Callable[[str, str, str, str], None]] = None,
-    ) -> Generator[Tuple[str, str, str], None, None]:
-        """search using regex pattern matching"""
-        # Set active mods and scope before starting search
-        active_mod_ids = options.get("active_mod_ids", set())
-        scope = options.get("scope", "all mods")
-        self.set_active_mods(active_mod_ids, scope)
-
-        try:
-            flags = 0 if options.get("case_sensitive") else re.IGNORECASE
-            pattern = re.compile(search_text, flags)
-
-            for root_path in root_paths:
-                mod_name = os.path.basename(root_path)
-                for root, _, files in os.walk(root_path):
-                    if self.stop_requested:
-                        return
-
-                    for file in files:
-                        if not self._should_process_file(file, options):
-                            continue
-
-                        full_path = os.path.join(root, file)
-                        try:
-                            with open(full_path, "r", encoding="utf-8") as f:
-                                content = f.read()
-
-                            if pattern.search(content):
-                                result = (mod_name, file, full_path)
-                                if result_callback:
-                                    result_callback(*result, content)
-                                yield result
-                            elif result_callback:
-                                result_callback(mod_name, file, "", "")  # no match
-                        except (UnicodeDecodeError, IOError):
-                            if result_callback:
-                                result_callback(mod_name, file, "", "")  # failed file
-                            continue
-        except re.error:
-            # if regex is invalid, fall back to simple search
-            yield from self.simple_search(
-                search_text, root_paths, options, result_callback
-            )
-
-    def parallel_search(
-        self,
-        search_text: str,
-        root_paths: List[str],
-        options: Dict[str, Any],
-        result_callback: Optional[Callable[[str, str, str, str], None]] = None,
-    ) -> Generator[Tuple[str, str, str], None, None]:
-        """search files in parallel using thread pool"""
-        # Set active mods and scope before starting search
-        active_mod_ids = options.get("active_mod_ids", set())
-        scope = options.get("scope", "all mods")
-        self.set_active_mods(active_mod_ids, scope)
-
-        def search_file(args: Tuple[str, str]) -> Optional[Tuple[str, str, str, str]]:
-            full_path, _ = args  # ignore the passed mod_name, calculate it from path
-            file_name = os.path.basename(full_path)
-            mod_name = self._get_mod_name(full_path)
-
-            if not self._should_process_file(full_path, options):
-                if result_callback:
-                    result_callback(mod_name, file_name, "", "")  # skipped file
-                return None
-
-            try:
-                with open(full_path, "r", encoding="utf-8") as f:
-                    content = f.read()
-
-                found_match = False
-                if options.get("case_sensitive"):
-                    found_match = search_text in content
-                else:
-                    found_match = search_text.lower() in content.lower()
-
-                if found_match:
-                    return (mod_name, file_name, full_path, content)
-                else:
-                    if result_callback:
-                        result_callback(mod_name, file_name, "", "")  # no match
-            except (UnicodeDecodeError, IOError):
-                if result_callback:
-                    result_callback(mod_name, file_name, "", "")  # failed file
-                pass
-            return None
 
         # collect all files first
         all_files = []
@@ -379,13 +291,210 @@ class FileSearch:
                         (full_path, "")
                     )  # empty mod_name, will be calculated in search_file
 
-        # search in parallel
-        with ThreadPoolExecutor() as executor:
-            for result in executor.map(search_file, all_files):
+        return all_files
+
+    def _process_search_result(
+        self,
+        mod_name: str,
+        file_name: str,
+        full_path: str,
+        content: str,
+        result_callback: Optional[Callable[[str, str, str, str], None]],
+        matched: bool = True,
+    ) -> Optional[Tuple[str, str, str]]:
+        """process search result and handle callback"""
+        if matched:
+            if result_callback:
+                result_callback(mod_name, file_name, full_path, content)
+            return (mod_name, file_name, full_path)
+        else:
+            if result_callback:
+                result_callback(mod_name, file_name, "", "")
+            return None
+
+    def _check_content_match(
+        self, search_text: str, content: str, case_sensitive: bool
+    ) -> bool:
+        """check if content matches search text"""
+        if case_sensitive:
+            return search_text in content
+        return search_text.lower() in content.lower()
+
+    def _read_file_content(self, file_path: str) -> Optional[str]:
+        """Read file content with error handling"""
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                return f.read()
+        except (UnicodeDecodeError, IOError) as e:
+            print(f"Error reading file {file_path}: {e}")
+            return None
+
+    def _handle_file_check(
+        self,
+        full_path: str,
+        mod_name: str,
+        file_name: str,
+        options: Dict[str, Any],
+        result_callback: Optional[Callable[[str, str, str, str], None]] = None,
+    ) -> Optional[str]:
+        """Handle common file checking logic"""
+        if not self._should_process_file(full_path, options):
+            self._process_search_result(
+                mod_name, file_name, "", "", result_callback, False
+            )
+            return None
+
+        content = self._read_file_content(full_path)
+        if content is None:
+            self._process_search_result(
+                mod_name, file_name, "", "", result_callback, False
+            )
+            return None
+
+        return content
+
+    def _handle_match_result(
+        self,
+        mod_name: str,
+        file_name: str,
+        full_path: str,
+        content: str,
+        result_callback: Optional[Callable[[str, str, str, str], None]] = None,
+    ) -> Optional[Tuple[str, str, str]]:
+        """Handle common result processing logic"""
+        result = self._process_search_result(
+            mod_name, file_name, full_path, content, result_callback
+        )
+        return result
+
+    def _process_single_file(
+        self,
+        full_path: str,
+        search_text: str,
+        options: Dict[str, Any],
+        result_callback: Optional[Callable[[str, str, str, str], None]] = None,
+        is_pattern_search: bool = False,
+    ) -> Optional[Tuple[str, str, str, str]]:
+        """Process a single file for searching"""
+        file_name = os.path.basename(full_path)
+        mod_name = self._get_mod_name(full_path)
+
+        content = self._handle_file_check(
+            full_path, mod_name, file_name, options, result_callback
+        )
+        if content is None:
+            return None
+
+        # check for match based on search type
+        if is_pattern_search:
+            if re.search(
+                search_text,
+                content,
+                re.IGNORECASE if not options.get("case_sensitive") else 0,
+            ):
+                return (mod_name, file_name, full_path, content)
+        else:
+            if self._check_content_match(
+                search_text, content, options.get("case_sensitive", False)
+            ):
+                return (mod_name, file_name, full_path, content)
+
+        self._process_search_result(mod_name, file_name, "", "", result_callback, False)
+        return None
+
+    def _handle_search_result(
+        self,
+        result: Optional[Tuple[str, str, str, str]],
+        result_callback: Optional[Callable[[str, str, str, str], None]] = None,
+    ) -> Optional[Tuple[str, str, str]]:
+        """Handle search result processing"""
+        if result:
+            processed = self._handle_match_result(*result, result_callback)
+            if processed:
+                return processed
+        return None
+
+    def _process_files(
+        self, params: SearchParams, files: List[Tuple[str, str]], parallel: bool = False
+    ) -> Generator[Tuple[str, str, str], None, None]:
+        """process files either sequentially or in parallel"""
+        if parallel:
+
+            def search_file(
+                args: Tuple[str, str],
+            ) -> Optional[Tuple[str, str, str, str]]:
+                full_path, _ = args
+                return self._process_single_file(
+                    full_path,
+                    params.search_text,
+                    params.options,
+                    params.result_callback,
+                    params.is_pattern_search,
+                )
+
+            with ThreadPoolExecutor() as executor:
+                for result in executor.map(search_file, files):
+                    if self.stop_requested:
+                        return
+                    processed = self._handle_search_result(
+                        result, params.result_callback
+                    )
+                    if processed:
+                        yield processed
+        else:
+            for full_path, _ in files:
                 if self.stop_requested:
                     return
-                if result:
-                    mod_name, file_name, path, content = result
-                    if result_callback:
-                        result_callback(mod_name, file_name, path, content)
-                    yield (mod_name, file_name, path)
+                result = self._process_single_file(
+                    full_path,
+                    params.search_text,
+                    params.options,
+                    params.result_callback,
+                    params.is_pattern_search,
+                )
+                processed = self._handle_search_result(result, params.result_callback)
+                if processed:
+                    yield processed
+
+    def _search_files(
+        self, params: SearchParams, parallel: bool = False
+    ) -> Generator[Tuple[str, str, str], None, None]:
+        """common search logic for all search types"""
+        print(f"searching for {params.search_type}: {params.search_text}")
+        all_files = self._init_search(
+            params.search_text, params.root_paths, params.options
+        )
+        yield from self._process_files(params, all_files, parallel)
+
+    @search_method()
+    def simple_search(
+        self,
+        text: str,
+        paths: List[str],
+        opts: Dict[str, Any],
+        callback: SearchCallback = None,
+    ) -> SearchResult:
+        """search for files containing text"""
+        yield from ()  # implementation provided by decorator
+
+    @search_method(is_pattern=True, search_type="pattern")
+    def pattern_search(
+        self,
+        text: str,
+        paths: List[str],
+        opts: Dict[str, Any],
+        callback: SearchCallback = None,
+    ) -> SearchResult:
+        """search for files matching regex pattern"""
+        yield from ()  # implementation provided by decorator
+
+    @search_method(parallel=True)
+    def parallel_search(
+        self,
+        text: str,
+        paths: List[str],
+        opts: Dict[str, Any],
+        callback: SearchCallback = None,
+    ) -> SearchResult:
+        """search files in parallel using thread pool"""
+        yield from ()  # implementation provided by decorator
