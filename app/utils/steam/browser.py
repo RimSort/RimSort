@@ -186,7 +186,15 @@ class SteamBrowser(QWidget):
         elif self.url_prefix_workshop in self.current_url:
             publishedfileid = self.current_url.split(self.url_prefix_workshop, 1)[1]
         else:
-            logger.error(f"Unable to parse pfid from url: {self.current_url}")
+            logger.error(
+                f"Unable to parse publishedfileid from url: {self.current_url}"
+            )
+            show_warning(
+                title="No publishedfileid found",
+                text="Unable to parse publishedfileid from url, Please check if url is in the correct format",
+                information=f"Url: {self.current_url}",
+            )
+            return None
         # If there is extra data after the PFID, strip it
         if self.searchtext_string in publishedfileid:
             publishedfileid = publishedfileid.split(self.searchtext_string)[0]
@@ -199,8 +207,25 @@ class SteamBrowser(QWidget):
                 publishedfileid
             )
             if len(collection_mods_pfid_to_title) > 0:
-                for pfid, title in collection_mods_pfid_to_title.items():
-                    self._add_mod_to_list(publishedfileid=pfid, title=title)
+                # ask user whether to add all mods or only missing ones
+                from app.views.dialogue import show_dialogue_conditional
+
+                answer = show_dialogue_conditional(
+                    title="Add Collection",
+                    text="How would you like to add the collection?",
+                    information="You can choose to add all mods from the collection or only the ones you don't have installed.",
+                    button_text_override=["Add All Mods", "Add Missing Mods"],
+                )
+
+                if answer == "Add All Mods":
+                    # add all mods
+                    for pfid, title in collection_mods_pfid_to_title.items():
+                        self._add_mod_to_list(publishedfileid=pfid, title=title)
+                elif answer == "Add Missing Mods":
+                    # add only mods that aren't installed
+                    for pfid, title in collection_mods_pfid_to_title.items():
+                        if not self._is_mod_installed(pfid):
+                            self._add_mod_to_list(publishedfileid=pfid, title=title)
             else:
                 logger.warning(
                     "Empty list of mods returned, unable to add collection to list!"
