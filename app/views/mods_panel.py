@@ -39,7 +39,7 @@ from PySide6.QtWidgets import (
 
 from app.controllers.settings_controller import SettingsController
 from app.utils.app_info import AppInfo
-from app.utils.clickable_qlabels import AdvancedClickableQLabel
+from app.utils.clickable_qlabels import AdvancedClickableQLabel, ClickableQLabel
 from app.utils.constants import (
     KNOWN_MOD_REPLACEMENTS,
     SEARCH_DATA_SOURCE_FILTER_INDEXES,
@@ -61,14 +61,6 @@ from app.views.dialogue import (
     show_dialogue_input,
     show_warning,
 )
-
-
-class ClickableQLabel(QLabel):
-    clicked = Signal()
-
-    def mousePressEvent(self, ev: QMouseEvent) -> None:
-        self.clicked.emit()
-        super().mousePressEvent(ev)
 
 
 def uuid_no_key(uuid: str) -> str:

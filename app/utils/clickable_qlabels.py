@@ -3,7 +3,26 @@ from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QLabel
 
 
+class ClickableQLabel(QLabel):
+    """
+    Basic implementation of a clickable QLabel.
+    
+    Emits clicked signal when clicked on.
+    """
+    clicked = Signal()
+
+    def mousePressEvent(self, ev: QMouseEvent) -> None:
+        self.clicked.emit()
+        super().mousePressEvent(ev)
+
+
 class AdvancedClickableQLabel(QLabel):
+    """
+    Advanced implementation of a clickable QLabel.
+    
+    Emits clicked signal when clicked on.
+    Changes background to indicate the label is currently active/clicked.
+    """
     clicked = Signal()
 
     def __init__(self, text="", parent=None):
