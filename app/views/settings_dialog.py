@@ -699,6 +699,11 @@ class SettingsDialog(QDialog):
         group_layout = QVBoxLayout()
         group_box.setLayout(group_layout)
 
+        user_note = QLabel("RimSort restart required for some settings")
+        user_note.setFont(GUIInfo().emphasis_font)
+        user_note.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        group_layout.addWidget(user_note)
+
         self.debug_logging_checkbox = QCheckBox("Enable debug logging")
         group_layout.addWidget(self.debug_logging_checkbox)
 
