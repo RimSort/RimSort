@@ -1917,6 +1917,8 @@ class ModListWidget(QListWidget):
         for uuid, mod_errors in package_id_to_errors.items():
             current_mod_index = self.uuids.index(uuid)
             current_item = self.item(current_mod_index)
+            if current_item is None:
+                continue
             current_item_data = current_item.data(Qt.ItemDataRole.UserRole)
             current_item_data["mismatch"] = False
             current_item_data["errors"] = None
