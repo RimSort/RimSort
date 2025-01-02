@@ -2349,9 +2349,10 @@ class ModsPanel(QWidget):
         self.active_mods_search_layout.addWidget(
             self.active_mods_filter_data_source_button
         )
-        self.active_mods_search_layout.addWidget(
-            self.active_data_source_filter_type_button
-        )
+        if self.settings_controller.settings.mod_type_filter_toggle:
+            self.active_mods_search_layout.addWidget(
+                self.active_data_source_filter_type_button
+            )
         self.active_mods_search_layout.addWidget(
             self.active_mods_search_mode_filter_button
         )
@@ -2452,9 +2453,10 @@ class ModsPanel(QWidget):
         self.inactive_mods_search_layout.addWidget(
             self.inactive_mods_filter_data_source_button
         )
-        self.inactive_mods_search_layout.addWidget(
-            self.inactive_data_source_filter_type_button
-        )
+        if self.settings_controller.settings.mod_type_filter_toggle:
+            self.inactive_mods_search_layout.addWidget(
+                self.inactive_data_source_filter_type_button
+            )
         self.inactive_mods_search_layout.addWidget(
             self.inactive_mods_search_mode_filter_button
         )
@@ -2599,7 +2601,9 @@ class ModsPanel(QWidget):
             filters_active = True
         # Trigger search and filters
         self.signal_search_and_filters(
-            list_type=list_type, pattern=search.text(), filters_active=filters_active
+            list_type=list_type,
+            pattern=search.text(),
+            filters_active=filters_active,
         )
 
     def on_mod_deleted(self, uuid: str) -> None:
