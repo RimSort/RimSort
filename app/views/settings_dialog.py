@@ -815,6 +815,6 @@ class SettingsDialog(QDialog):
         if index and index != -1:
             self.tab_widget.setCurrentIndex(index)
 
-    def showEvent(self, event: QShowEvent) -> None:
-        super().showEvent(event)
+    def showEvent(self, arg__1: QShowEvent) -> None:
+        super().showEvent(arg__1)
         self.global_ok_button.setFocus()
