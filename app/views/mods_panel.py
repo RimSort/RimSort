@@ -2398,7 +2398,7 @@ class ModsPanel(QWidget):
         self.errors_summary_layout.addLayout(self.warnings_errors_layout)
 
         # Create and add Check Dependencies button
-        self.check_dependencies_button = QPushButton("Check Dependencies")
+        self.check_dependencies_button: QPushButton = QPushButton("Check Dependencies")
         self.check_dependencies_button.setObjectName("MainUI")
         self.errors_summary_layout.addWidget(self.check_dependencies_button)
 

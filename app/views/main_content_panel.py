@@ -14,7 +14,7 @@ from math import ceil
 from multiprocessing import Pool, cpu_count
 from pathlib import Path
 from tempfile import gettempdir
-from typing import Any, Callable, Self
+from typing import TYPE_CHECKING, Any, Callable, Self
 from urllib.parse import urlparse
 from zipfile import ZipFile
 
@@ -89,6 +89,9 @@ from app.windows.missing_mods_panel import MissingModsPrompt
 from app.windows.rule_editor_panel import RuleEditor
 from app.windows.runner_panel import RunnerPanel
 from app.windows.workshop_mod_updater_panel import ModUpdaterPrompt
+
+if TYPE_CHECKING:
+    from app.views.main_window import MainWindow
 
 
 class MainContent(QObject):
@@ -3325,6 +3328,10 @@ class MainContent(QObject):
         # Launch independent game process without Steamworks API
         launch_game_process(game_install_path=game_install_path, args=run_args)
 
-    def set_main_window(self, main_window) -> None:
-        """Set the main window reference."""
+    def set_main_window(self, main_window: "MainWindow") -> None:
+        """Set the main window reference for this content panel.
+
+        Args:
+            main_window: The main window instance to set
+        """
         self.main_window = main_window

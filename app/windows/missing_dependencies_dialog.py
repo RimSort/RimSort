@@ -14,13 +14,13 @@ from app.utils.metadata import MetadataManager
 
 
 class MissingDependenciesDialog(QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.metadata_manager = MetadataManager.instance()
-        self.selected_mods = set()
+        self.selected_mods: set[str] = set()
         self.init_ui()
 
-    def init_ui(self):
+    def init_ui(self) -> None:
         # set window title and size
         self.setWindowTitle("Dependency Manager")
         self.resize(700, 500)
@@ -70,7 +70,7 @@ class MissingDependenciesDialog(QDialog):
         layout.addLayout(button_layout)
         self.setLayout(layout)
 
-    def show_missing_dependencies(self, missing_deps: dict[str, set[str]]):
+    def show_missing_dependencies(self, missing_deps: dict[str, set[str]]) -> None:
         """
         Display missing dependencies in the dialog
         missing_deps: dict mapping mod package IDs to sets of missing dependency package IDs
@@ -83,7 +83,7 @@ class MissingDependenciesDialog(QDialog):
 
         if not missing_deps:
             label = QLabel("All dependencies are satisfied!")
-            label.setAlignment(Qt.AlignCenter)
+            label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.scroll_layout.addWidget(label)
             return
 
@@ -110,19 +110,12 @@ class MissingDependenciesDialog(QDialog):
 
         # log the mod IDs
         if local_deps:
-            print("\nlocal mods (available but not active):")
             for dep_id in local_deps.keys():
                 mod_name = self.metadata_manager.get_mod_name_from_package_id(dep_id)
-                print(f"- {mod_name} (id: {dep_id})")
-                print("  required by: " + ", ".join(local_deps[dep_id]))
 
         if download_deps:
-            print("\nmods that need to be downloaded:")
             for dep_id in download_deps.keys():
                 mod_name = self.metadata_manager.get_mod_name_from_package_id(dep_id)
-                print(f"- {mod_name} (id: {dep_id})")
-                print("  required by: " + ", ".join(download_deps[dep_id]))
-        print()  # empty line for readability
 
         # add section for local mods
         if local_deps:
@@ -148,7 +141,7 @@ class MissingDependenciesDialog(QDialog):
         # add spacer at the bottom
         self.scroll_layout.addStretch()
 
-    def _add_dependency_group(self, dep_id: str, requiring_mods: list[str]):
+    def _add_dependency_group(self, dep_id: str, requiring_mods: list[str]) -> None:
         """Helper method to add a dependency group to the dialog"""
         # create group for this dependency
         dep_group = QWidget()
@@ -174,18 +167,18 @@ class MissingDependenciesDialog(QDialog):
 
         self.scroll_layout.addWidget(dep_group)
 
-    def select_all(self):
+    def select_all(self) -> None:
         """Select all dependency checkboxes"""
         for i in range(self.scroll_layout.count()):
             item = self.scroll_layout.itemAt(i)
             if item and item.widget():
                 mod_group = item.widget()
-                for child in mod_group.findChildren(QCheckBox):
+                for child in mod_group.findChildren(QCheckBox):  # type: QCheckBox
                     child.setChecked(True)
 
-    def toggle_mod_selection(self, state: int, mod_id: str):
+    def toggle_mod_selection(self, state: int, mod_id: str) -> None:
         """Toggle a mod's selection state"""
-        if state == Qt.Checked.value:
+        if state == Qt.CheckState.Checked.value:
             self.selected_mods.add(mod_id)
         else:
             self.selected_mods.discard(mod_id)

@@ -1,8 +1,7 @@
 import os
 
-from loguru import logger
 from PySide6.QtCore import QObject, Slot
-from PySide6.QtWidgets import QPushButton
+from PySide6.QtWidgets import QDialog, QPushButton
 
 from app.utils.event_bus import EventBus
 from app.utils.metadata import MetadataManager
@@ -62,153 +61,170 @@ class MainWindowController(QObject):
         EventBus().refresh_finished.connect(self.on_refresh_finished)
 
     def check_dependencies(self) -> None:
-        """Check for missing dependencies and show dialog if needed"""
-        # Get active mods from the mods panel
+        # Get the active mods list
         active_mods = set(
             self.main_window.main_content_panel.mods_panel.active_mods_list.uuids
         )
 
-        # Check for missing dependencies
-        missing_deps = self.metadata_manager.get_missing_dependencies(active_mods)
+        # Create a dictionary to store missing dependencies
+        missing_deps: dict[str, set[str]] = {}
 
-        # Show dialog if there are missing dependencies
+        # Check each active mod's dependencies
+        for uuid in active_mods:
+            mod_data = self.metadata_manager.internal_local_metadata[uuid]
+            mod_id = mod_data.get("packageid", "")
+            if not mod_id:
+                continue
+
+            # Get the mod's dependencies
+            dependencies = mod_data.get("dependencies", [])
+            if not dependencies:
+                continue
+
+            # Check each dependency
+            missing = set()
+            for dep in dependencies:
+                # Check if the dependency is in the active mods list
+                found = False
+                for active_uuid in active_mods:
+                    active_mod_data = self.metadata_manager.internal_local_metadata[
+                        active_uuid
+                    ]
+                    if active_mod_data.get("packageid") == dep:
+                        found = True
+                        break
+                if not found:
+                    missing.add(dep)
+
+            if missing:
+                missing_deps[mod_id] = missing
+
         if missing_deps:
+            # Show the missing dependencies dialog
             dialog = MissingDependenciesDialog(self.main_window)
             dialog.show_missing_dependencies(missing_deps)
 
-            result = dialog.exec()
-            if result:  # Dialog accepted
+            if dialog.exec() == QDialog.DialogCode.Accepted:
                 # User clicked "Add Selected & Sort"
-                selected_mods = dialog.get_selected_mods()
-                if selected_mods:
-                    print("\nselected mods to add:")
-                    # Track which mods need to be downloaded
-                    mods_to_download = []
-                    # Track which mods are local
+                selected_deps = dialog.get_selected_mods()
+                if selected_deps:
+                    # Create lists to track local mods and mods that need to be downloaded
                     local_mods = []
+                    mods_to_download = []
 
-                    for mod_id in selected_mods:
-                        mod_name = self.metadata_manager.get_mod_name_from_package_id(
-                            mod_id
-                        )
-
-                        # Check if mod exists locally
-                        exists_locally = False
+                    # Check each selected dependency
+                    for dep_id in selected_deps:
+                        # First check if it exists locally
+                        found_locally = False
                         for (
                             mod_data
                         ) in self.metadata_manager.internal_local_metadata.values():
-                            if mod_data.get("packageid") == mod_id:
-                                exists_locally = True
+                            if mod_data.get("packageid") == dep_id:
+                                local_mods.append(dep_id)
+                                found_locally = True
                                 break
 
-                        if exists_locally:
-                            print(f"- {mod_name} (id: {mod_id}) [local]")
-                            local_mods.append(mod_id)
-                        else:
-                            print(f"- {mod_name} (id: {mod_id}) [needs download]")
-                            # Get the list of mods that list this as a dependency
-                            requiring_mods = []
-                            # Look in active mods first
-                            for (
-                                uuid,
-                                mod_data,
-                            ) in self.metadata_manager.internal_local_metadata.items():
-                                if uuid in active_mods:
-                                    requiring_mods.append(mod_data["path"])
-                            print(
-                                f"checking {len(requiring_mods)} active mods for {mod_id}"
-                            )
-
-                            # Try each mod's About.xml until we find the workshop ID
+                        if not found_locally:
+                            # If not found locally, we need to find its Workshop ID
+                            # First check if we have it in our Steam metadata
                             workshop_id = None
-                            for mod_path in requiring_mods:
-                                about_path = os.path.join(
-                                    mod_path, "About", "About.xml"
-                                )
-                                print(f"checking About.xml at: {about_path}")
-                                if os.path.exists(about_path):
-                                    try:
-                                        import xml.etree.ElementTree as ET
+                            if self.metadata_manager.external_steam_metadata:
+                                for (
+                                    pfid,
+                                    metadata,
+                                ) in self.metadata_manager.external_steam_metadata.items():
+                                    if (
+                                        metadata.get("packageId", "").lower()
+                                        == dep_id.lower()
+                                    ):
+                                        workshop_id = pfid
+                                        break
 
-                                        tree = ET.parse(about_path)
-                                        root = tree.getroot()
-                                        deps = root.find("modDependencies")
-                                        if deps is not None:
-                                            print(
-                                                f"found modDependencies in {about_path}"
-                                            )
+                            if workshop_id:
+                                mods_to_download.append(workshop_id)
+                            else:
+                                # If not in Steam metadata, try to find it in the mod's About.xml
+                                mod_name = (
+                                    self.metadata_manager.get_mod_name_from_package_id(
+                                        dep_id
+                                    )
+                                )
+
+                                # Search through all active mods' About.xml files
+                                for active_uuid in active_mods:
+                                    active_mod_data = (
+                                        self.metadata_manager.internal_local_metadata[
+                                            active_uuid
+                                        ]
+                                    )
+                                    mod_path = active_mod_data.get("path")
+                                    if not mod_path:
+                                        continue
+
+                                    about_path = os.path.join(
+                                        mod_path, "About", "About.xml"
+                                    )
+                                    if os.path.exists(about_path):
+                                        try:
+                                            import xml.etree.ElementTree as ET
+
+                                            tree = ET.parse(about_path)
+                                            root = tree.getroot()
+
+                                            # Look for modDependencies
+                                            deps = root.find("modDependencies")
+                                            if deps is None:
+                                                continue
+
                                             for dep in deps.findall("li"):
                                                 package_id = dep.find("packageId")
                                                 if package_id is not None:
-                                                    print(
-                                                        f"checking dependency: {package_id.text}"
-                                                    )
-                                                if (
-                                                    package_id is not None
-                                                    and package_id.text.lower()
-                                                    == mod_id.lower()
-                                                ):
-                                                    print(
-                                                        f"found matching dependency: {package_id.text}"
-                                                    )
-                                                    workshop_url = dep.find(
-                                                        "steamWorkshopUrl"
-                                                    )
-                                                    if workshop_url is not None:
-                                                        url = workshop_url.text
-                                                        print(
-                                                            f"found workshop url: {url}"
+                                                    if (
+                                                        package_id is not None
+                                                        and package_id.text is not None
+                                                        and package_id.text.lower()
+                                                        == dep_id.lower()
+                                                    ):
+                                                        workshop_url = dep.find(
+                                                            "steamWorkshopUrl"
                                                         )
-                                                        # Extract workshop ID from URL
-                                                        if "?id=" in url:
-                                                            workshop_id = url.split(
-                                                                "?id="
-                                                            )[1]
-                                                        elif (
-                                                            "CommunityFilePage/" in url
+                                                        if (
+                                                            workshop_url is not None
+                                                            and workshop_url.text
+                                                            is not None
                                                         ):
-                                                            workshop_id = url.split(
+                                                            url = workshop_url.text
+                                                            # Extract workshop ID from URL
+                                                            if "?id=" in url:
+                                                                workshop_id = url.split(
+                                                                    "?id="
+                                                                )[1]
+                                                            elif (
                                                                 "CommunityFilePage/"
-                                                            )[1]
+                                                                in url
+                                                            ):
+                                                                workshop_id = url.split(
+                                                                    "CommunityFilePage/"
+                                                                )[1]
 
-                                                        if workshop_id:
-                                                            # Clean up workshop ID
-                                                            if "?" in workshop_id:
-                                                                workshop_id = (
-                                                                    workshop_id.split(
+                                                            if workshop_id:
+                                                                # Clean up workshop ID
+                                                                if "?" in workshop_id:
+                                                                    workshop_id = workshop_id.split(
                                                                         "?"
                                                                     )[0]
-                                                                )
-                                                            if "/" in workshop_id:
-                                                                workshop_id = (
-                                                                    workshop_id.split(
+                                                                if "/" in workshop_id:
+                                                                    workshop_id = workshop_id.split(
                                                                         "/"
                                                                     )[0]
+                                                                mods_to_download.append(
+                                                                    workshop_id
                                                                 )
-                                                            print(
-                                                                f"found workshop id: {workshop_id}"
-                                                            )
-                                                            mods_to_download.append(
-                                                                workshop_id
-                                                            )
-                                                            # Update the needs download message with the workshop ID
-                                                            print(
-                                                                f"- {mod_name} (id: {mod_id}, workshop id: {workshop_id}) [needs download]"
-                                                            )
-                                                            break
+                                                                break
                                             if workshop_id:
                                                 break  # Found the workshop ID, no need to check other mods
-                                        else:
-                                            print(
-                                                f"no modDependencies found in {about_path}"
-                                            )
-                                    except Exception as e:
-                                        print(f"warning: error reading About.xml: {e}")
-                                        continue
-                                else:
-                                    print(f"About.xml not found at: {about_path}")
-
-                    print()  # empty line for readability
+                                        except Exception:
+                                            continue
 
                     # First add any local mods to the active list
                     if local_mods:
@@ -231,44 +247,28 @@ class MainWindowController(QObject):
 
                     # If there are mods to download, check SteamCMD setup first
                     if mods_to_download:
-                        print("downloading mods:", mods_to_download)
                         # Check if SteamCMD is set up
                         steamcmd_wrapper = (
                             self.main_window.main_content_panel.steamcmd_wrapper
                         )
-                        print("steamcmd wrapper:", steamcmd_wrapper)
-                        print("steamcmd setup:", steamcmd_wrapper.setup)
 
                         if not steamcmd_wrapper.setup:
                             # Set up SteamCMD first
-                            print("steamcmd not set up, setting up now...")
                             self.main_window.main_content_panel._do_setup_steamcmd()
-                            print(
-                                "steamcmd setup complete, setup status:",
-                                steamcmd_wrapper.setup,
-                            )
                             # After setup, try downloading again if setup was successful
                             if steamcmd_wrapper.setup:
-                                print("starting download with steamcmd...")
                                 self.main_window.main_content_panel._do_download_mods_with_steamcmd(
                                     mods_to_download
                                 )
                                 # Don't sort yet - let the download completion handler do it
                                 return
                             else:
-                                print(
-                                    "warning: steamcmd setup failed, cannot download mods"
-                                )
-                                print(
-                                    "please use the Workshop Browser to download mods instead"
-                                )
                                 # Sort what we have so far
                                 self.main_window.main_content_panel._do_sort(
                                     check_deps=False
                                 )
                         else:
                             # SteamCMD is already set up, proceed with download
-                            print("steamcmd already set up, starting download...")
                             self.main_window.main_content_panel._do_download_mods_with_steamcmd(
                                 mods_to_download
                             )
@@ -308,16 +308,12 @@ class MainWindowController(QObject):
 
     @Slot()
     def on_save_button_animation_start(self) -> None:
-        logger.debug(
-            "Active mods list has been updated. Managing save button animation state."
-        )
         if (
             # Compare current active list with last save to see if the list has changed
             self.main_window.main_content_panel.mods_panel.active_mods_list.uuids
             != self.main_window.main_content_panel.active_mods_uuids_last_save
         ):
             if not self.main_window.save_button_flashing_animation.isActive():
-                logger.debug("Starting save button animation")
                 self.main_window.save_button_flashing_animation.start(
                     500
                 )  # Blink every 500 milliseconds
