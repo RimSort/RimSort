@@ -20,7 +20,6 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QListWidget,
-    QListWidgetItem,
     QMenu,
     QPushButton,
     QStyleOptionViewItem,
@@ -33,6 +32,7 @@ from PySide6.QtWidgets import (
 from app.utils.app_info import AppInfo
 from app.utils.metadata import MetadataManager
 from app.views.dialogue import show_dialogue_input, show_warning
+from app.utils.custom_list_widget_item import CustomListWidgetItem
 
 
 class EditableDelegate(QItemDelegate):
@@ -493,7 +493,7 @@ class RuleEditor(QWidget):
                 assert isinstance(item_label, QLabel)
                 item_label_text = item_label.text()
                 rule_data = source_item.data(Qt.ItemDataRole.UserRole)
-                copied_item = QListWidgetItem()
+                copied_item = CustomListWidgetItem()
                 copied_item.setData(Qt.ItemDataRole.UserRole, rule_data)
                 # Create editor row & append rule to metadata after item is populated into the destination list
                 # Determine action mode
@@ -653,7 +653,7 @@ class RuleEditor(QWidget):
         self, _list: QListWidget, title: str, metadata: str | None = None
     ) -> None:
         # Create our list item
-        item = QListWidgetItem()
+        item = CustomListWidgetItem()
         if metadata:
             item.setData(Qt.ItemDataRole.UserRole, metadata)
             if _list == self.mods_list:
@@ -669,7 +669,7 @@ class RuleEditor(QWidget):
         _list.addItem(item)
         _list.setItemWidget(item, label)
 
-    def _open_mod_in_editor(self, context_item: QListWidgetItem) -> None:
+    def _open_mod_in_editor(self, context_item: CustomListWidgetItem) -> None:
         logger.debug(f"Opening mod in editor: {self.edit_packageid}")
         self.edit_packageid = context_item.data(Qt.ItemDataRole.UserRole)
         if self.edit_packageid:
@@ -837,7 +837,7 @@ class RuleEditor(QWidget):
             rule_source="User Rules",
         )
 
-    def _remove_rule(self, context_item: QListWidgetItem, _list: QListWidget) -> None:
+    def _remove_rule(self, context_item: CustomListWidgetItem, _list: QListWidget) -> None:
         logger.debug(f"Removing rule from mod: {self.edit_packageid}")
         _list.takeItem(_list.row(context_item))
         rule_data = context_item.data(Qt.ItemDataRole.UserRole)

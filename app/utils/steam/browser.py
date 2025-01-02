@@ -13,7 +13,6 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QListWidget,
-    QListWidgetItem,
     QMenu,
     QProgressBar,
     QPushButton,
@@ -31,6 +30,7 @@ from app.utils.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetPublishedFileDetails,
 )
 from app.views.dialogue import show_warning
+from app.utils.custom_list_widget_item import CustomListWidgetItem
 
 
 class SteamBrowser(QWidget):
@@ -291,7 +291,7 @@ class SteamBrowser(QWidget):
             logger.debug(f"Tracking PublishedFileId for download: {publishedfileid}")
             self.downloader_list_mods_tracking.append(publishedfileid)
             # Create our list item
-            item = QListWidgetItem()
+            item = CustomListWidgetItem()
             item.setData(Qt.ItemDataRole.UserRole, publishedfileid)
             # Set list item label
             if not title:  # If title wasn't passed, get it from the web_view title
@@ -333,7 +333,7 @@ class SteamBrowser(QWidget):
             )
             context_menu.exec_(self.downloader_list.mapToGlobal(point))
 
-    def _remove_mod_from_list(self, context_item: QListWidgetItem) -> None:
+    def _remove_mod_from_list(self, context_item: CustomListWidgetItem) -> None:
         publishedfileid = context_item.data(Qt.ItemDataRole.UserRole)
         if publishedfileid in self.downloader_list_mods_tracking:
             self.downloader_list.takeItem(self.downloader_list.row(context_item))

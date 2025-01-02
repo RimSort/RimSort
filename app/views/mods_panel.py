@@ -30,7 +30,6 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QListWidget,
-    QListWidgetItem,
     QMenu,
     QToolButton,
     QVBoxLayout,
@@ -43,6 +42,7 @@ from app.utils.constants import (
     KNOWN_MOD_REPLACEMENTS,
     SEARCH_DATA_SOURCE_FILTER_INDEXES,
 )
+from app.utils.custom_list_widget_item import CustomListWidgetItem
 from app.utils.event_bus import EventBus
 from app.utils.generic import (
     copy_to_clipboard_safely,
@@ -442,7 +442,7 @@ class ModListItemInner(QWidget):
             self.main_label.setText(self.list_item_name)
         return super().resizeEvent(event)
 
-    def repolish(self, item: QListWidgetItem) -> None:
+    def repolish(self, item: CustomListWidgetItem) -> None:
         """
         Repolish the widget items
         """
@@ -685,7 +685,7 @@ class ModListWidget(QListWidget):
             pos_local = self.mapFromGlobal(pos)
             # Get the item at the local position
             item = self.itemAt(pos_local)
-            if not isinstance(item, QListWidgetItem):
+            if not isinstance(item, CustomListWidgetItem):
                 logger.debug("Mod list right-click non-QListWidgetItem")
                 return super().eventFilter(object, event)
 
@@ -756,13 +756,13 @@ class ModListWidget(QListWidget):
             # Delete optimized textures (.dds files only)
             delete_mod_dds_only_action = None
 
-            # Get all selected QListWidgetItems
+            # Get all selected CustomListWidgetItems
             selected_items = self.selectedItems()
             # Single item selected
             if len(selected_items) == 1:
                 logger.debug(f"{len(selected_items)} items selected")
                 source_item = selected_items[0]
-                if type(source_item) is QListWidgetItem:
+                if type(source_item) is CustomListWidgetItem:
                     item_data = source_item.data(Qt.ItemDataRole.UserRole)
                     uuid = item_data["uuid"]
                     # Retrieve metadata
@@ -899,7 +899,7 @@ class ModListWidget(QListWidget):
             # Multiple items selected
             elif len(selected_items) > 1:  # Multiple items selected
                 for source_item in selected_items:
-                    if type(source_item) is QListWidgetItem:
+                    if type(source_item) is CustomListWidgetItem:
                         item_data = source_item.data(Qt.ItemDataRole.UserRole)
                         uuid = item_data["uuid"]
                         # Retrieve metadata
@@ -1387,7 +1387,7 @@ class ModListWidget(QListWidget):
                     )
                     if answer == "&Yes":
                         for source_item in selected_items:
-                            if type(source_item) is QListWidgetItem:
+                            if type(source_item) is CustomListWidgetItem:
                                 item_data = source_item.data(Qt.ItemDataRole.UserRole)
                                 uuid = item_data["uuid"]
                                 mod_metadata = (
@@ -1447,7 +1447,7 @@ class ModListWidget(QListWidget):
                     )
                     if answer == "&Yes":
                         for source_item in selected_items:
-                            if type(source_item) is QListWidgetItem:
+                            if type(source_item) is CustomListWidgetItem:
                                 item_data = source_item.data(Qt.ItemDataRole.UserRole)
                                 uuid = item_data["uuid"]
                                 mod_metadata = (
@@ -1483,7 +1483,7 @@ class ModListWidget(QListWidget):
                     )
                     if answer == "&Yes":
                         for source_item in selected_items:
-                            if type(source_item) is QListWidgetItem:
+                            if type(source_item) is CustomListWidgetItem:
                                 item_data = source_item.data(Qt.ItemDataRole.UserRole)
                                 uuid = item_data["uuid"]
                                 mod_metadata = (
@@ -1512,7 +1512,7 @@ class ModListWidget(QListWidget):
                     return True
                 # Execute action for each selected mod
                 for source_item in selected_items:
-                    if type(source_item) is QListWidgetItem:
+                    if type(source_item) is CustomListWidgetItem:
                         item_data = source_item.data(Qt.ItemDataRole.UserRole)
                         uuid = item_data["uuid"]
                         # Retrieve metadata
@@ -1645,15 +1645,15 @@ class ModListWidget(QListWidget):
             "mismatch": self.metadata_manager.is_version_mismatch(uuid),
             "uuid": uuid,
         }
-        item = QListWidgetItem(self)
+        item = CustomListWidgetItem(self)
         item.setData(Qt.ItemDataRole.UserRole, data)
         self.addItem(item)
 
-    def get_all_mod_list_items(self) -> list[QListWidgetItem]:
+    def get_all_mod_list_items(self) -> list[CustomListWidgetItem]:
         """
         This gets all modlist items.
 
-        :return: List of all modlist items as QListWidgetItem
+        :return: List of all modlist items as CustomListWidgetItem
         """
         mod_list_items = []
         for index in range(self.count()):
@@ -1676,11 +1676,11 @@ class ModListWidget(QListWidget):
                 mod_list_items.append(widget)
         return mod_list_items
 
-    def get_all_loaded_and_toggled_mod_list_items(self) -> list[QListWidgetItem]:
+    def get_all_loaded_and_toggled_mod_list_items(self) -> list[CustomListWidgetItem]:
         """
         This returns all modlist items that have their warnings toggled.
 
-        :return: List of all toggled modlist items as QListWidgetItem
+        :return: List of all toggled modlist items as CustomListWidgetItem
         """
         mod_list_items = []
         for index in range(self.count()):
@@ -1690,12 +1690,12 @@ class ModListWidget(QListWidget):
                 mod_list_items.append(item)
         return mod_list_items
 
-    def check_item_visible(self, item: QListWidgetItem) -> bool:
+    def check_item_visible(self, item: CustomListWidgetItem) -> bool:
         # Determines if the item is currently visible in the viewport.
         rect = self.visualItemRect(item)
         return rect.top() < self.viewport().height() and rect.bottom() > 0
 
-    def create_widget_for_item(self, item: QListWidgetItem) -> None:
+    def create_widget_for_item(self, item: CustomListWidgetItem) -> None:
         data = item.data(Qt.ItemDataRole.UserRole)
         if data is None:
             logger.debug("Attempted to create widget for item with None data")
@@ -1731,7 +1731,7 @@ class ModListWidget(QListWidget):
             if item and self.check_item_visible(item) and self.itemWidget(item) is None:
                 self.create_widget_for_item(item)
 
-    def handle_item_data_changed(self, item: QListWidgetItem) -> None:
+    def handle_item_data_changed(self, item: CustomListWidgetItem) -> None:
         """
         This slot is called when an item's data changes
         """
@@ -1830,7 +1830,7 @@ class ModListWidget(QListWidget):
         return None
 
     def mod_changed_to(
-        self, current: QListWidgetItem, previous: QListWidgetItem
+        self, current: CustomListWidgetItem, previous: CustomListWidgetItem
     ) -> None:
         """
         Method to handle clicking on a row or navigating between rows with
@@ -1840,7 +1840,7 @@ class ModListWidget(QListWidget):
             data = current.data(Qt.ItemDataRole.UserRole)
             self.mod_info_signal.emit(data["uuid"])
 
-    def mod_clicked(self, current: QListWidgetItem) -> None:
+    def mod_clicked(self, current: CustomListWidgetItem) -> None:
         """
         Method to handle clicking on a row. Necessary because `mod_changed_to` does not
         properly handle clicking on a previous selected item after clicking on an item
@@ -1858,7 +1858,7 @@ class ModListWidget(QListWidget):
                 f"USER ACTION: mod was clicked: [{data['uuid']}] {mod_info_pretty}"
             )
 
-    def mod_double_clicked(self, item: QListWidgetItem) -> None:
+    def mod_double_clicked(self, item: CustomListWidgetItem) -> None:
         """
         Method to handle double clicking on a row.
         """
@@ -2135,7 +2135,7 @@ class ModListWidget(QListWidget):
         self.uuids = list()
         if uuids:  # Insert data...
             for uuid_key in uuids:
-                list_item = QListWidgetItem(self)
+                list_item = CustomListWidgetItem(self)
                 list_item.setData(
                     Qt.ItemDataRole.UserRole,
                     {
