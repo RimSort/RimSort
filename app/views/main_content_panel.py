@@ -437,8 +437,7 @@ class MainContent(QObject):
                 for item in items_to_move:
                     iml.insertItem(count, item)
                     count += 1
-            self.mods_panel.active_mods_list.recalculate_warnings_signal.emit()
-            self.mods_panel.inactive_mods_list.recalculate_warnings_signal.emit()
+        # List error/warnings are automatically recalculated when a mod is inserted/removed from a list
 
     def __handle_inactive_mod_key_press(self, key: str) -> None:
         """
@@ -491,8 +490,7 @@ class MainContent(QObject):
                 for item in items_to_move:
                     aml.insertItem(count, item)
                     count += 1
-            self.mods_panel.active_mods_list.recalculate_warnings_signal.emit()
-            self.mods_panel.inactive_mods_list.recalculate_warnings_signal.emit()
+        # List error/warnings are automatically recalculated when a mod is inserted/removed from a list
 
     def __insert_data_into_lists(
         self, active_mods_uuids: list[str], inactive_mods_uuids: list[str]
@@ -1007,22 +1005,19 @@ class MainContent(QObject):
         # If we are refreshing cache from user action
         if not is_initial:
             # Reset the data source filters to default and clear searches
+            # Avoid recalculating warnings/errors when clearing search
+            # Recalculation for each list will be triggered by mods being reinserted into inactive and active list automatically
             self.mods_panel.active_mods_filter_data_source_index = len(
                 self.mods_panel.data_source_filter_icons
             )
-            self.mods_panel.signal_clear_search(list_type="Active")
+            self.mods_panel.signal_clear_search(list_type="Active", avoid_recalculate=True)
             self.mods_panel.inactive_mods_filter_data_source_index = len(
                 self.mods_panel.data_source_filter_icons
             )
-            self.mods_panel.signal_clear_search(list_type="Inactive")
+            self.mods_panel.signal_clear_search(list_type="Inactive", avoid_recalculate=True)
             self.mods_panel.active_mods_filter_data_source_index = len(
                 self.mods_panel.data_source_filter_icons
             )
-            self.mods_panel.signal_clear_search(list_type="Active")
-            self.mods_panel.inactive_mods_filter_data_source_index = len(
-                self.mods_panel.data_source_filter_icons
-            )
-            self.mods_panel.signal_clear_search(list_type="Inactive")
         # Check if paths are set
         if self.check_if_essential_paths_are_set(prompt=is_initial):
             # Run expensive calculations to set cache data
