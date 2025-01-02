@@ -83,6 +83,7 @@ class MainWindow(QMainWindow):
         self.main_content_panel = MainContent(
             settings_controller=self.settings_controller
         )
+        self.main_content_panel.set_main_window(self)
         self.main_content_panel.disable_enable_widgets_signal.connect(
             self.__disable_enable_widgets
         )
@@ -107,6 +108,7 @@ class MainWindow(QMainWindow):
         self.refresh_button = QPushButton("Refresh")
         self.clear_button = QPushButton("Clear")
         self.restore_button = QPushButton("Restore")
+        self.check_deps_button = QPushButton("Check Dependencies")
         self.sort_button = QPushButton("Sort")
         self.save_button = QPushButton("Save")
         self.run_button = QPushButton("Run")
@@ -115,6 +117,7 @@ class MainWindow(QMainWindow):
             self.refresh_button,
             self.clear_button,
             self.restore_button,
+            self.check_deps_button,
             self.sort_button,
             self.save_button,
             self.run_button,
@@ -903,11 +906,11 @@ class MainWindow(QMainWindow):
         self.settings_controller.settings.save()
         # Initialize content
         self.initialize_content(is_initial=False)
-        
+
     def __set_window_title(self, instance: str) -> None:
         """
         Sets the window title with the name of the instance being used.
-        
+
         :param instance: Name of the instance currently being used.
         """
         self.setWindowTitle(f"RimSort {AppInfo().app_version} | {instance} Instance")

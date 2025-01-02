@@ -84,6 +84,7 @@ from app.utils.todds.wrapper import ToddsInterface
 from app.utils.xml import json_to_xml_write
 from app.views.mod_info_panel import ModInfo
 from app.views.mods_panel import ModListWidget, ModsPanel, ModsPanelSortKey
+from app.windows.missing_dependencies_dialog import MissingDependenciesDialog
 from app.windows.missing_mods_panel import MissingModsPrompt
 from app.windows.rule_editor_panel import RuleEditor
 from app.windows.runner_panel import RunnerPanel
@@ -121,6 +122,7 @@ class MainContent(QObject):
             logger.debug("Initializing MainContent")
 
             self.settings_controller = settings_controller
+            self.main_window = None  # Will be set by set_main_window
 
             EventBus().settings_have_changed.connect(self._on_settings_have_changed)
             EventBus().do_check_for_application_update.connect(
@@ -1006,23 +1008,20 @@ class MainContent(QObject):
         EventBus().do_save_button_animation_stop.emit()
         # If we are refreshing cache from user action
         if not is_initial:
-            # Reset the data source filters to default and clear searches
-            self.mods_panel.active_mods_filter_data_source_index = len(
-                self.mods_panel.data_source_filter_icons
-            )
-            self.mods_panel.signal_clear_search(list_type="Active")
-            self.mods_panel.inactive_mods_filter_data_source_index = len(
-                self.mods_panel.data_source_filter_icons
-            )
-            self.mods_panel.signal_clear_search(list_type="Inactive")
-            self.mods_panel.active_mods_filter_data_source_index = len(
-                self.mods_panel.data_source_filter_icons
-            )
-            self.mods_panel.signal_clear_search(list_type="Active")
-            self.mods_panel.inactive_mods_filter_data_source_index = len(
-                self.mods_panel.data_source_filter_icons
-            )
-            self.mods_panel.signal_clear_search(list_type="Inactive")
+            try:
+                # Reset the data source filters to default and clear searches
+                self.mods_panel.active_mods_filter_data_source_index = len(
+                    self.mods_panel.data_source_filter_icons
+                )
+                self.mods_panel.signal_clear_search(list_type="Active")
+                self.mods_panel.inactive_mods_filter_data_source_index = len(
+                    self.mods_panel.data_source_filter_icons
+                )
+                self.mods_panel.signal_clear_search(list_type="Inactive")
+            except Exception as e:
+                logger.warning(f"Error clearing search filters: {str(e)}")
+                # Continue with refresh even if filter clear fails
+
         # Check if paths are set
         if self.check_if_essential_paths_are_set(prompt=is_initial):
             # Run expensive calculations to set cache data
@@ -1135,7 +1134,7 @@ class MainContent(QObject):
         # Re-enable widgets after inserting
         self.disable_enable_widgets_signal.emit(True)
 
-    def _do_sort(self) -> None:
+    def _do_sort(self, check_deps: bool = True) -> None:
         """
         Trigger sorting of all active mods using user-configured algorithm
         & all available & configured metadata
@@ -1153,19 +1152,47 @@ class MainContent(QObject):
             self.mods_panel.data_source_filter_icons
         )
         self.mods_panel.on_inactive_mods_search_data_source_filter()
+
+        # Get active mods
+        active_mods = set(self.mods_panel.active_mods_list.uuids)
+
+        # Check for missing dependencies if enabled in settings and check_deps is True
+        if check_deps and self.settings_controller.settings.check_dependencies_on_sort:
+            missing_deps = self.metadata_manager.get_missing_dependencies(active_mods)
+            if missing_deps:
+                dialog = MissingDependenciesDialog(self.main_window)
+                dialog.show_missing_dependencies(missing_deps)
+
+                result = dialog.exec()
+                if result:  # Dialog accepted
+                    # User clicked "Add Selected & Sort"
+                    selected_mods = dialog.get_selected_mods()
+                    if selected_mods:
+                        # Add selected mods to active mods
+                        for mod_id in selected_mods:
+                            # Find the UUID for this package ID
+                            for (
+                                uuid,
+                                mod_data,
+                            ) in self.metadata_manager.internal_local_metadata.items():
+                                if mod_data.get("packageid") == mod_id:
+                                    active_mods.add(uuid)
+                                    break
+
+        # Get package IDs for active mods
         active_package_ids = set()
-        for uuid in self.mods_panel.active_mods_list.uuids:
+        for uuid in active_mods:
             active_package_ids.add(
                 self.metadata_manager.internal_local_metadata[uuid]["packageid"]
             )
 
         # Get the current order of active mods list
-        current_order = self.mods_panel.active_mods_list.uuids.copy()
+        current_order = list(active_mods)
         try:
             sorter = Sorter(
                 self.settings_controller.settings.sorting_algorithm,
                 active_package_ids=active_package_ids,
-                active_uuids=set(self.mods_panel.active_mods_list.uuids),
+                active_uuids=active_mods,
             )
         except NotImplementedError as e:
             dialogue.show_warning(
@@ -3297,3 +3324,7 @@ class MainContent(QObject):
 
         # Launch independent game process without Steamworks API
         launch_game_process(game_install_path=game_install_path, args=run_args)
+
+    def set_main_window(self, main_window) -> None:
+        """Set the main window reference."""
+        self.main_window = main_window

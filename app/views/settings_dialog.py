@@ -415,21 +415,34 @@ class SettingsDialog(QDialog):
         tab_layout = QVBoxLayout(tab)
         tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        group_box = QGroupBox()
-        tab_layout.addWidget(group_box)
+        # Sort mods group
+        sort_group_box = QGroupBox()
+        tab_layout.addWidget(sort_group_box)
 
-        group_box_layout = QVBoxLayout()
-        group_box.setLayout(group_box_layout)
+        sort_group_box_layout = QVBoxLayout()
+        sort_group_box.setLayout(sort_group_box_layout)
 
         sorting_label = QLabel("Sort mods")
         sorting_label.setFont(GUIInfo().emphasis_font)
-        group_box_layout.addWidget(sorting_label)
+        sort_group_box_layout.addWidget(sorting_label)
 
         self.sorting_alphabetical_radio = QRadioButton("Alphabetically")
-        group_box_layout.addWidget(self.sorting_alphabetical_radio)
+        sort_group_box_layout.addWidget(self.sorting_alphabetical_radio)
 
         self.sorting_topological_radio = QRadioButton("Topologically")
-        group_box_layout.addWidget(self.sorting_topological_radio)
+        sort_group_box_layout.addWidget(self.sorting_topological_radio)
+
+        # Dependencies group
+        deps_group_box = QGroupBox("Sort Dependencies")
+        tab_layout.addWidget(deps_group_box)
+
+        deps_group_box_layout = QVBoxLayout()
+        deps_group_box.setLayout(deps_group_box_layout)
+
+        self.check_deps_checkbox = QCheckBox(
+            "Prompt user to download dependencies when click in Sort"
+        )
+        deps_group_box_layout.addWidget(self.check_deps_checkbox)
 
         tab_layout.addStretch()
 
