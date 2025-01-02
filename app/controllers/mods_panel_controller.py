@@ -12,11 +12,12 @@ class ModsPanelController(QObject):
 
         self.mods_panel = view
 
-        self.show_warnings = False
-        self.show_errors = False
+        # Only one label can be active at a time
+        self.warnings_label_active = False
+        self.errors_label_active = False
+
         self.mods_panel.warnings_text.clicked.connect(self._show_mods_with_warnings)
         self.mods_panel.errors_text.clicked.connect(self._show_mods_with_errors)
-
         self.reset_warnings_signal.connect(self._on_menu_bar_reset_warnings_triggered)
 
     @Slot()
@@ -53,31 +54,38 @@ class ModsPanelController(QObject):
         """
         Dynamically shows/hides all mods that have warnings.
         """
-        self.show_warnings = not self.show_warnings
-        
+        # If the other label is active, disable it
+        if self.errors_label_active:
+            self.mods_panel.errors_text.clicked.emit()
+
+        self.warnings_label_active = not self.warnings_label_active
+
         active_mods = self.mods_panel.active_mods_list.get_all_mod_list_items()
         for mod in active_mods:
             mod_data = mod.data(Qt.ItemDataRole.UserRole)
             if mod_data["warnings"] == '':
-                # Hide mod unless it has an error and show_errors is true
-                if self.show_warnings and not self.show_errors:
+                if self.warnings_label_active:
                     mod.setHidden(True)
                 else:
                     mod.setHidden(False)
+
 
     @Slot()
     def _show_mods_with_errors(self) -> None:
         """
         Dynamically shows/hides all mods that have errors.
         """
-        self.show_errors = not self.show_errors
-        
+        # If the other label is active, disable it
+        if self.warnings_label_active:
+            self.mods_panel.warnings_text.clicked.emit()
+
+        self.errors_label_active = not self.errors_label_active
+
         active_mods = self.mods_panel.active_mods_list.get_all_mod_list_items()
         for mod in active_mods:
             mod_data = mod.data(Qt.ItemDataRole.UserRole)
             if mod_data["errors"] == '':
-                # Hide mod unless it has a warning and show_warnings is true
-                if self.show_errors and not self.show_warnings:
+                if self.errors_label_active:
                     mod.setHidden(True)
                 else:
                     mod.setHidden(False)
