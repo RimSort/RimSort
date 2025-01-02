@@ -144,13 +144,7 @@ class MainWindowController(QObject):
                                 mods_to_download.append(workshop_id)
                             else:
                                 # If not in Steam metadata, try to find it in the mod's About.xml
-                                mod_name = (
-                                    self.metadata_manager.get_mod_name_from_package_id(
-                                        dep_id
-                                    )
-                                )
-
-                                # Search through all active mods' About.xml files
+                                # search through all active mods' About.xml files
                                 for active_uuid in active_mods:
                                     active_mod_data = (
                                         self.metadata_manager.internal_local_metadata[
