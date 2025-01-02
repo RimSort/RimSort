@@ -32,6 +32,7 @@ from PySide6.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QMenu,
+    QPushButton,
     QToolButton,
     QVBoxLayout,
     QWidget,
@@ -2182,6 +2183,7 @@ class ModsPanel(QWidget):
 
     list_updated_signal = Signal()
     save_btn_animation_signal = Signal()
+    check_dependencies_signal = Signal()  # Add new signal
 
     def __init__(self, settings_controller: SettingsController) -> None:
         """
@@ -2284,6 +2286,11 @@ class ModsPanel(QWidget):
 
         logger.debug("Finished ModsPanel initialization")
 
+        # Connect check dependencies button
+        self.check_dependencies_button.clicked.connect(
+            self.check_dependencies_signal.emit
+        )
+
     def initialize_active_mods_search_widgets(self) -> None:
         """Initialize widgets for active mods search layout."""
         self.active_mods_filter_data_source_index = 0
@@ -2360,9 +2367,14 @@ class ModsPanel(QWidget):
         # Active mods list Errors/warnings widgets
         self.errors_summary_frame: QFrame = QFrame()
         self.errors_summary_frame.setObjectName("errorFrame")
-        self.errors_summary_layout = QHBoxLayout()
+        self.errors_summary_layout = QVBoxLayout()  # Change to vertical layout
         self.errors_summary_layout.setContentsMargins(0, 0, 0, 0)
         self.errors_summary_layout.setSpacing(2)
+
+        # Create horizontal layout for warnings and errors
+        self.warnings_errors_layout = QHBoxLayout()
+        self.warnings_errors_layout.setSpacing(2)
+
         self.warnings_icon: QLabel = QLabel()
         self.warnings_icon.setPixmap(ModListIcons.warning_icon().pixmap(QSize(20, 20)))
         self.warnings_text: QLabel = QLabel("0 warnings(s)")
@@ -2371,14 +2383,25 @@ class ModsPanel(QWidget):
         self.errors_icon.setPixmap(ModListIcons.error_icon().pixmap(QSize(20, 20)))
         self.errors_text: QLabel = QLabel("0 error(s)")
         self.errors_text.setObjectName("summaryValue")
+
         self.warnings_layout = QHBoxLayout()
         self.warnings_layout.addWidget(self.warnings_icon, 1)
         self.warnings_layout.addWidget(self.warnings_text, 99)
         self.errors_layout = QHBoxLayout()
         self.errors_layout.addWidget(self.errors_icon, 1)
         self.errors_layout.addWidget(self.errors_text, 99)
-        self.errors_summary_layout.addLayout(self.warnings_layout, 50)
-        self.errors_summary_layout.addLayout(self.errors_layout, 50)
+
+        self.warnings_errors_layout.addLayout(self.warnings_layout, 50)
+        self.warnings_errors_layout.addLayout(self.errors_layout, 50)
+
+        # Add warnings/errors layout to main vertical layout
+        self.errors_summary_layout.addLayout(self.warnings_errors_layout)
+
+        # Create and add Check Dependencies button
+        self.check_dependencies_button = QPushButton("Check Dependencies")
+        self.check_dependencies_button.setObjectName("MainUI")
+        self.errors_summary_layout.addWidget(self.check_dependencies_button)
+
         self.errors_summary_frame.setLayout(self.errors_summary_layout)
         self.errors_summary_frame.setHidden(True)
 

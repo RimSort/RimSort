@@ -22,7 +22,6 @@ class MainWindowController(QObject):
             self.main_window.refresh_button,
             self.main_window.clear_button,
             self.main_window.restore_button,
-            self.main_window.check_deps_button,
             self.main_window.sort_button,
             self.main_window.save_button,
             self.main_window.run_button,
@@ -34,7 +33,7 @@ class MainWindowController(QObject):
     def connect_signals(self) -> None:
         # Connect buttons to EventBus signals
         for button, signal in zip(
-            [b for b in self.buttons if b != self.main_window.check_deps_button],
+            self.buttons,
             [
                 EventBus().do_refresh_mods_lists,
                 EventBus().do_clear_active_mods_list,
@@ -46,8 +45,10 @@ class MainWindowController(QObject):
         ):
             button.clicked.connect(signal.emit)
 
-        # Connect check dependencies button
-        self.main_window.check_deps_button.clicked.connect(self.check_dependencies)
+        # Connect check dependencies signal from mods panel
+        self.main_window.main_content_panel.mods_panel.check_dependencies_signal.connect(
+            self.check_dependencies
+        )
 
         # Connect EventBus signals to slots
         EventBus().do_button_animation.connect(self.on_button_animation)
