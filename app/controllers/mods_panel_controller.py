@@ -11,7 +11,7 @@ class ModsPanelController(QObject):
         super().__init__()
 
         self.mods_panel = view
-
+        #TODO: Probably wanna make it activate filters_active variable... or somehow integrate with other filters?? Look into it
         # Only one label can be active at a time
         self.warnings_label_active = False
         self.errors_label_active = False
