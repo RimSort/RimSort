@@ -19,7 +19,6 @@ from PySide6.QtGui import (
     QIcon,
     QKeyEvent,
     QKeySequence,
-    QMouseEvent,
     QResizeEvent,
 )
 from PySide6.QtWidgets import (
@@ -39,6 +38,7 @@ from PySide6.QtWidgets import (
 
 from app.controllers.settings_controller import SettingsController
 from app.utils.app_info import AppInfo
+from app.utils.clickable_qlabels import AdvancedClickableQLabel, ClickableQLabel
 from app.utils.constants import (
     KNOWN_MOD_REPLACEMENTS,
     SEARCH_DATA_SOURCE_FILTER_INDEXES,
@@ -60,14 +60,6 @@ from app.views.dialogue import (
     show_dialogue_input,
     show_warning,
 )
-
-
-class ClickableQLabel(QLabel):
-    clicked = Signal()
-
-    def mousePressEvent(self, ev: QMouseEvent) -> None:
-        self.clicked.emit()
-        super().mousePressEvent(ev)
 
 
 def uuid_no_key(uuid: str) -> str:
@@ -2366,11 +2358,11 @@ class ModsPanel(QWidget):
         self.errors_summary_layout.setSpacing(2)
         self.warnings_icon: QLabel = QLabel()
         self.warnings_icon.setPixmap(ModListIcons.warning_icon().pixmap(QSize(20, 20)))
-        self.warnings_text: QLabel = QLabel("0 warnings(s)")
+        self.warnings_text: AdvancedClickableQLabel = AdvancedClickableQLabel("0 warning(s)")
         self.warnings_text.setObjectName("summaryValue")
         self.errors_icon: QLabel = QLabel()
         self.errors_icon.setPixmap(ModListIcons.error_icon().pixmap(QSize(20, 20)))
-        self.errors_text: QLabel = QLabel("0 error(s)")
+        self.errors_text: AdvancedClickableQLabel = AdvancedClickableQLabel("0 error(s)")
         self.errors_text.setObjectName("summaryValue")
         self.warnings_layout = QHBoxLayout()
         self.warnings_layout.addWidget(self.warnings_icon, 1)
