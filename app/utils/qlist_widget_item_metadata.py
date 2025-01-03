@@ -1,8 +1,11 @@
+from loguru import logger
+
 from app.utils.metadata import MetadataManager
+
 
 class QListWidgetItemMetadata():
     """
-    
+    A class to store metadata for CustomListWidgetItem.
     """
 
     def __init__(
@@ -20,6 +23,14 @@ class QListWidgetItemMetadata():
         Must provide a uuid, the rest is optional.
         
         Unless explicitly provided, invalid and mismatch are automatically set based on the uuid using metadata manager.
+        
+        :param uuid: str, the uuid of the mod which corresponds to a mod's metadata
+        :param errors_warnings: a string of errors and warnings
+        :param errors: a string of errors for the notification tooltip
+        :param warnings: a string of warnings for the notification tooltip
+        :param warning_toggled: a bool representing if the warning/error icons are toggled off
+        :param filtered: a bool representing whether the widget's item is filtered
+        :param invalid: a bool representing whether the widget's item is an invalid mod
         """
         # Do not cache the metadata manager, it will cause freezes/crashes when dragging mods.
         # self.metatadata_manager = MetadataManager.instance()  
@@ -32,6 +43,8 @@ class QListWidgetItemMetadata():
         self.warning_toggled = warning_toggled
         self.invalid = invalid if invalid is not None else self.get_invalid_by_uuid(uuid)
         self.mismatch = mismatch if mismatch is not None else self.get_mismatch_by_uuid(uuid)
+        
+        logger.debug(f"Finished initializing QListWidgetItemMetadata for {uuid}")
 
     def get_invalid_by_uuid(self, uuid: str) -> bool:
         metadata_manager = MetadataManager.instance()

@@ -1,10 +1,11 @@
+from loguru import logger
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QListWidgetItem
-from loguru import logger
+
 
 class CustomListWidgetItem(QListWidgetItem, QObject):
     """
-    
+    A custom QListWidgetItem. To be always used in place of QListWidgetItem.
     """
 
     reset_warning_signal = Signal(str)
@@ -19,6 +20,9 @@ class CustomListWidgetItem(QListWidgetItem, QObject):
         .setData does not cause the itemChanged signal to be emitted by ModListWidget like it usually would if using a dict.
         
         Here we manually emit this signal.
+        
+        :param role: int, the role of the data
+        :param value: object, the data to set
         """
         super().setData(role, value)
         # Emit signal
