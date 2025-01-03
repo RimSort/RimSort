@@ -642,6 +642,15 @@ class ModListWidget(QListWidget):
 
     def dropEvent(self, event: QDropEvent) -> None:
         super().dropEvent(event)
+        # Find the newly dropped items and convert to CustomListWidgetItem
+        # TODO: Optimize this by only converting the dropped items (Figure out how to get their indexes)
+        for i in range(self.count()):
+            item = self.item(i)
+            if not isinstance(item, CustomListWidgetItem):
+                # Convert to CustomListWidgetItem
+                item = CustomListWidgetItem(item)
+                self.takeItem(i)
+                self.insertItem(i, item)
         # Get source widget of dropEvent
         source_widget = event.source()
         # Get the drop action
