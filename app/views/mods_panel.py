@@ -1642,18 +1642,7 @@ class ModListWidget(QListWidget):
         return super().resizeEvent(e)
 
     def append_new_item(self, uuid: str) -> None:
-        data = QListWidgetItemMetadata(
-            errors_warnings="",
-            errors="",
-            warnings="",
-            warning_toggled=False,
-            filtered=False,
-            invalid=self.metadata_manager.internal_local_metadata[uuid].get(
-                "invalid"
-            ),
-            mismatch=self.metadata_manager.is_version_mismatch(uuid),
-            uuid=uuid,
-        )
+        data = QListWidgetItemMetadata(uuid=uuid)
         item = CustomListWidgetItem(self)
         item.setData(Qt.ItemDataRole.UserRole, data)
         self.addItem(item)
@@ -2150,18 +2139,7 @@ class ModListWidget(QListWidget):
         if uuids:  # Insert data...
             for uuid_key in uuids:
                 list_item = CustomListWidgetItem(self)
-                data = QListWidgetItemMetadata(
-                    errors_warnings="",
-                    errors="",
-                    warnings="",
-                    warning_toggled=False,
-                    filtered=False,
-                    invalid=self.metadata_manager.internal_local_metadata[uuid_key].get(
-                        "invalid"
-                    ),
-                    mismatch=self.metadata_manager.is_version_mismatch(uuid_key),
-                    uuid=uuid_key,
-                )
+                data = QListWidgetItemMetadata(uuid=uuid_key)
                 list_item.setData(Qt.ItemDataRole.UserRole, data)
                 self.addItem(list_item)
         else:  # ...unless we don't have mods, at which point reenable updates and exit
