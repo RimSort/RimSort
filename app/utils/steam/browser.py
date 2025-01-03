@@ -24,13 +24,13 @@ from PySide6.QtWidgets import (
 
 from app.models.image_label import ImageLabel
 from app.utils.app_info import AppInfo
+from app.utils.custom_list_widget_item import CustomListWidgetItem
 from app.utils.metadata import MetadataManager
 from app.utils.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetCollectionDetails,
     ISteamRemoteStorage_GetPublishedFileDetails,
 )
 from app.views.dialogue import show_warning
-from app.utils.custom_list_widget_item import CustomListWidgetItem
 
 
 class SteamBrowser(QWidget):
