@@ -47,7 +47,7 @@ class CustomListWidgetItemMetadata():
         self.invalid = invalid if invalid is not None else self.get_invalid_by_uuid(uuid)
         self.mismatch = mismatch if mismatch is not None else self.get_mismatch_by_uuid(uuid)
         
-        logger.debug(f"Finished initializing CustomListWidgetItemMetadata for {uuid}")
+        logger.debug(f"Finished initializing CustomListWidgetItemMetadata for uuid: {uuid}")
 
     def get_invalid_by_uuid(self, uuid: str) -> bool:
         metadata_manager = MetadataManager.instance()
@@ -56,12 +56,6 @@ class CustomListWidgetItemMetadata():
     def get_mismatch_by_uuid(self, uuid: str) -> bool:
         metadata_manager = MetadataManager.instance()
         return metadata_manager.is_version_mismatch(uuid)
-
-    def toggle_warning(self) -> None:
-        if self.warning_toggled:
-            self.warning_toggled = False
-        else:
-            self.warning_toggled = True
 
     def __getitem__(self, key: str) -> Any:
         return getattr(self, key)

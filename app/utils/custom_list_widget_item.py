@@ -1,7 +1,7 @@
 from typing import Any
 
 from loguru import logger
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QObject
 from PySide6.QtWidgets import QListWidgetItem
 
 
@@ -9,8 +9,6 @@ class CustomListWidgetItem(QListWidgetItem, QObject):
     """
     A custom QListWidgetItem. To be always used in place of QListWidgetItem.
     """
-
-    reset_warning_signal = Signal(str)
 
     def __init__(self, *args: Any) -> None:
         QObject.__init__(self)
