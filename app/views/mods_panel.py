@@ -649,8 +649,7 @@ class ModListWidget(QListWidget):
             if not isinstance(item, CustomListWidgetItem):
                 # Convert to CustomListWidgetItem
                 item = CustomListWidgetItem(item)
-                self.takeItem(i)
-                self.insertItem(i, item)
+                self.replaceItemAtIndex(i, item)
         # Get source widget of dropEvent
         source_widget = event.source()
         # Get the drop action
@@ -2186,6 +2185,25 @@ class ModListWidget(QListWidget):
         item.setData(Qt.ItemDataRole.UserRole, item_data)
         self.recalculate_warnings_signal.emit()
 
+    def replaceItemAtIndex(self, index: int, item: CustomListWidgetItem) -> None:
+        """
+        IMPORTANT: This is used to replace an item without triggering the rowsInserted signal.
+        
+        :param index: The index of the item to replace.
+        :param item: The new item that will replace the old one.
+        """
+        # The rowsInserted signal should be removed from ALL slots and then reconnected to ALL slots.
+        # This will have to be manually done below, unless we start tracking which slots that signal is connected to.
+        
+        # Remove from ALL slots
+        self.model().rowsInserted.disconnect(self.handle_rows_inserted)
+        # Perform the replacement
+        self.takeItem(index)
+        self.insertItem(index, item)
+        # Reconnect to ALL slots
+        self.model().rowsInserted.connect(
+                self.handle_rows_inserted, Qt.ConnectionType.QueuedConnection
+            )
 
 class ModsPanel(QWidget):
     """
