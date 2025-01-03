@@ -55,6 +55,7 @@ from app.utils.generic import (
     sanitize_filename,
 )
 from app.utils.metadata import MetadataManager
+from app.utils.qlist_widget_item_metadata import QListWidgetItemMetadata
 from app.views.dialogue import (
     show_dialogue_conditional,
     show_dialogue_input,
@@ -1633,18 +1634,18 @@ class ModListWidget(QListWidget):
         return super().resizeEvent(e)
 
     def append_new_item(self, uuid: str) -> None:
-        data = {
-            "errors_warnings": "",
-            "errors": "",
-            "warnings": "",
-            "warning_toggled": False,
-            "filtered": False,
-            "invalid": self.metadata_manager.internal_local_metadata[uuid].get(
+        data = QListWidgetItemMetadata(
+            errors_warnings="",
+            errors="",
+            warnings="",
+            warning_toggled=False,
+            filtered=False,
+            invalid=self.metadata_manager.internal_local_metadata[uuid].get(
                 "invalid"
             ),
-            "mismatch": self.metadata_manager.is_version_mismatch(uuid),
-            "uuid": uuid,
-        }
+            mismatch=self.metadata_manager.is_version_mismatch(uuid),
+            uuid=uuid,
+        )
         item = CustomListWidgetItem(self)
         item.setData(Qt.ItemDataRole.UserRole, data)
         self.addItem(item)
@@ -1740,6 +1741,11 @@ class ModListWidget(QListWidget):
             widget.repolish(item)
 
     def handle_other_list_row_added(self, uuid: str) -> None:
+        """
+        When a mod is moved from Inactive->Active, the uuid is removed from the Inactive list.
+        
+        When a mod is moved from Active->Inactive, the uuid is removed from the Active list.
+        """
         if uuid in self.uuids:
             self.uuids.remove(uuid)
 
@@ -1918,8 +1924,8 @@ class ModListWidget(QListWidget):
             current_item = self.item(current_mod_index)
             current_item_data = current_item.data(Qt.ItemDataRole.UserRole)
             current_item_data["mismatch"] = False
-            current_item_data["errors"] = None
-            current_item_data["warnings"] = None
+            current_item_data["errors"] = ""
+            current_item_data["warnings"] = ""
             mod_data = internal_local_metadata[uuid]
             # Check mod supportedversions against currently loaded version of game
             mod_errors["version_mismatch"] = self.metadata_manager.is_version_mismatch(
@@ -2136,21 +2142,19 @@ class ModListWidget(QListWidget):
         if uuids:  # Insert data...
             for uuid_key in uuids:
                 list_item = CustomListWidgetItem(self)
-                list_item.setData(
-                    Qt.ItemDataRole.UserRole,
-                    {
-                        "errors_warnings": "",
-                        "errors": "",
-                        "warnings": "",
-                        "warning_toggled": False,
-                        "filtered": False,
-                        "invalid": self.metadata_manager.internal_local_metadata[
-                            uuid_key
-                        ].get("invalid"),
-                        "mismatch": self.metadata_manager.is_version_mismatch(uuid_key),
-                        "uuid": uuid_key,
-                    },
+                data = QListWidgetItemMetadata(
+                    errors_warnings="",
+                    errors="",
+                    warnings="",
+                    warning_toggled=False,
+                    filtered=False,
+                    invalid=self.metadata_manager.internal_local_metadata[uuid_key].get(
+                        "invalid"
+                    ),
+                    mismatch=self.metadata_manager.is_version_mismatch(uuid_key),
+                    uuid=uuid_key,
                 )
+                list_item.setData(Qt.ItemDataRole.UserRole, data)
                 self.addItem(list_item)
         else:  # ...unless we don't have mods, at which point reenable updates and exit
             self.setUpdatesEnabled(True)
@@ -2640,8 +2644,8 @@ class ModsPanel(QWidget):
                 )
             else:  # Hide the summary if there are no errors or warnings
                 self.errors_summary_frame.setHidden(True)
-                self.warnings_text.setText("0 warning(s)")
-                self.errors_text.setText("0 error(s)")
+                self.warnings_text.setText("0 warnings")
+                self.errors_text.setText("0 errors")
                 self.errors_icon.setToolTip("")
                 self.warnings_icon.setToolTip("")
             # First time, and when Refreshing, the slot will evaluate false and do nothing.

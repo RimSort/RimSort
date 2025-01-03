@@ -1,4 +1,3 @@
-from PySide6.QtCore import Signal
 
 class QListWidgetItemMetadata():
     """
@@ -10,6 +9,7 @@ class QListWidgetItemMetadata():
         errors_warnings: str,
         errors: str,
         warnings: str,
+        warning_toggled: bool,
         filtered: bool,
         invalid: bool,
         mismatch: bool,
@@ -23,8 +23,7 @@ class QListWidgetItemMetadata():
         self.invalid = invalid
         self.mismatch = mismatch
         self.uuid = uuid
-        
-        self.warning_toggled = False
+        self.warning_toggled = warning_toggled
         self.test_var = None
         
     def toggle_warning(self) -> None:
