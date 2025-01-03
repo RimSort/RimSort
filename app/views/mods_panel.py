@@ -2079,7 +2079,6 @@ class ModListWidget(QListWidget):
             current_item_data["errors"] = current_item_data["errors"].strip()
             current_item.setData(Qt.ItemDataRole.UserRole, current_item_data)
         logger.info(f"Finished recalculating {self.list_type} list errors and warnings")
-        print("Finished recalculating", self.list_type, "list errors and warnings")
         return total_error_text, total_warning_text, num_errors, num_warnings
 
     def _has_replacement(
