@@ -2671,8 +2671,17 @@ class ModsPanel(QWidget):
     def signal_search_and_filters(
         self, list_type: str, pattern: str, filters_active: bool = False, recalculate_list_errors_warnings: bool = True
     ) -> None:
+        """
+        Performs a search and/or applies filters based on the given parameters.
+
+        Args:
+            list_type (str): The type of list to search within (Active or Inactive).
+            pattern (str): The pattern to search for.
+            filters_active (bool): If any filter is active (inc. pattern search).
+        """
+
         _filter = None
-        filter_state = None
+        filter_state = None # The 'Hide Filter' state
         source_filter = None
         uuids = None
         # Determine which list to filter
@@ -2709,15 +2718,16 @@ class ModsPanel(QWidget):
             metadata = self.metadata_manager.internal_local_metadata[uuid]
             if pattern != "":
                 filters_active = True
-            # Hide invalid items
-            invalid = item_data["invalid"]
-            if invalid and filters_active:
-                item_data["filtered"] = True
-                item.setHidden(True)
-                continue
-            elif invalid and not filters_active:
-                item_data["filtered"] = False
-                item.setHidden(False)
+            # Hide invalid items if enabled in settings
+            if self.settings_controller.settings.hide_invalid_mods_when_filtering_toggle:
+                invalid = item_data["invalid"]
+                if invalid and filters_active:
+                    item_data["filtered"] = True
+                    item.setHidden(True)
+                    continue
+                elif invalid and not filters_active:
+                    item_data["filtered"] = False
+                    item.setHidden(False)
             # Check if the item is filtered
             item_filtered = item_data["filtered"]
             # Check if the item should be filtered or not based on search filter
