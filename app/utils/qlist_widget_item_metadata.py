@@ -60,8 +60,8 @@ class QListWidgetItemMetadata():
         else:
             self.warning_toggled = True
 
-    def __getitem__(self, key) -> any:
+    def __getitem__(self, key: str) -> any:
         return getattr(self, key)
 
-    def __setitem__(self, key, value) -> None:
+    def __setitem__(self, key: str, value: any) -> None:
         setattr(self, key, value)
