@@ -4,6 +4,7 @@ from PySide6.QtCore import QObject, Slot
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QApplication, QLineEdit, QPlainTextEdit, QTextEdit
 
+from app.controllers.file_search_controller import FileSearchController
 from app.controllers.mods_panel_controller import ModsPanelController
 from app.controllers.settings_controller import SettingsController
 from app.utils.event_bus import EventBus
@@ -12,12 +13,19 @@ from app.views.menu_bar import MenuBar
 
 
 class MenuBarController(QObject):
-    def __init__(self, view: MenuBar, settings_controller: SettingsController, mods_panel_controller: ModsPanelController) -> None:
+    def __init__(
+        self,
+        view: MenuBar,
+        settings_controller: SettingsController,
+        mods_panel_controller: ModsPanelController,
+    ) -> None:
         super().__init__()
 
         self.menu_bar = view
         self.settings_controller = settings_controller
         self.mods_panel_controller = mods_panel_controller
+        self._troubleshooting_controller = None  # store controller instance
+        self._file_search_controller = None  # store controller instance
 
         # Application menu
         instance = QApplication.instance()
@@ -105,7 +113,9 @@ class MenuBarController(QObject):
 
         self.menu_bar.rule_editor_action.triggered.connect(EventBus().do_rule_editor)
 
-        self.menu_bar.reset_all_warnings_action.triggered.connect(self._on_reset_warnings_triggered)
+        self.menu_bar.reset_all_warnings_action.triggered.connect(
+            self._on_reset_warnings_triggered
+        )
 
         # Download menu
 
@@ -151,8 +161,11 @@ class MenuBarController(QObject):
         # Help menu
 
         self.menu_bar.wiki_action.triggered.connect(self._on_menu_bar_wiki_triggered)
-        self.menu_bar.validate_steam_client_action.triggered.connect(
-            EventBus().do_validate_steam_client
+        self.menu_bar.troubleshooting_action.triggered.connect(
+            self._on_menu_bar_troubleshooting_triggered
+        )
+        self.menu_bar.file_search_action.triggered.connect(
+            self._on_menu_bar_file_search_triggered
         )
 
         # External signals
@@ -237,6 +250,17 @@ class MenuBarController(QObject):
         open_url_browser("https://rimsort.github.io/RimSort/")
 
     @Slot()
+    def _on_menu_bar_troubleshooting_triggered(self) -> None:
+        from app.controllers.troubleshooting_controller import TroubleshootingController
+        from app.views.troubleshooting_dialog import TroubleshootingDialog
+
+        dialog = TroubleshootingDialog()
+        self._troubleshooting_controller = TroubleshootingController(
+            self.settings_controller.settings, dialog
+        )
+        dialog.exec()
+
+    @Slot()
     def _on_refresh_started(self) -> None:
         """
         Disable all menus in the menu bar.
@@ -251,3 +275,14 @@ class MenuBarController(QObject):
         """
         for action in self.menu_bar.menu_bar.actions():
             action.setEnabled(True)
+
+    @Slot()
+    def _on_menu_bar_file_search_triggered(self) -> None:
+        """handle file search action"""
+        from app.views.file_search_dialog import FileSearchDialog
+
+        dialog = FileSearchDialog()
+        self._file_search_controller = FileSearchController(
+            self.settings_controller.settings, dialog
+        )
+        dialog.exec()
