@@ -2483,14 +2483,14 @@ class ModsPanel(QWidget):
             partial(self.recalculate_list_errors_warnings, list_type="Inactive")
         )
 
-    def mod_list_updated(self, count: str, list_type: str, avoid_recalculate: bool = False) -> None:
+    def mod_list_updated(self, count: str, list_type: str, recalculate_list_errors_warning: bool = True) -> None:
         # If count is 'drop', it indicates that the update was just a drag and drop within the list
         if count != "drop":
             logger.info(f"{list_type} mod count changed to: {count}")
             self.update_count(list_type=list_type)
         # Signal save button animation
         self.save_btn_animation_signal.emit()
-        if not avoid_recalculate:
+        if recalculate_list_errors_warning:
             # Update the mod list widget errors and warnings
             self.recalculate_list_errors_warnings(list_type=list_type)
 
@@ -2654,18 +2654,18 @@ class ModsPanel(QWidget):
             # Calculate internal errors and warnings for all mods in the respective mod list
             self.inactive_mods_list.recalculate_internal_errors_warnings()
 
-    def signal_clear_search(self, list_type: str, avoid_recalculate: bool = False) -> None:
+    def signal_clear_search(self, list_type: str, recalculate_list_errors_warning: bool = True) -> None:
         if list_type == "Active":
             self.active_mods_search.clear()
-            self.signal_search_and_filters(list_type=list_type, pattern="", avoid_recalculate=avoid_recalculate)
+            self.signal_search_and_filters(list_type=list_type, pattern="", recalculate_list_errors_warning=recalculate_list_errors_warning)
             self.active_mods_search.clearFocus()
         elif list_type == "Inactive":
             self.inactive_mods_search.clear()
-            self.signal_search_and_filters(list_type=list_type, pattern="", avoid_recalculate=avoid_recalculate)
+            self.signal_search_and_filters(list_type=list_type, pattern="", recalculate_list_errors_warning=recalculate_list_errors_warning)
             self.inactive_mods_search.clearFocus()
 
     def signal_search_and_filters(
-        self, list_type: str, pattern: str, filters_active: bool = False, avoid_recalculate: bool = False
+        self, list_type: str, pattern: str, filters_active: bool = False, recalculate_list_errors_warning: bool = True
     ) -> None:
         _filter = None
         filter_state = None
@@ -2754,7 +2754,7 @@ class ModsPanel(QWidget):
             # Update item data
             item_data["filtered"] = item_filtered
             item.setData(Qt.ItemDataRole.UserRole, item_data)
-        self.mod_list_updated(str(len(uuids)), list_type, avoid_recalculate=avoid_recalculate)
+        self.mod_list_updated(str(len(uuids)), list_type, recalculate_list_errors_warning=recalculate_list_errors_warning)
 
     def signal_search_mode_filter(self, list_type: str) -> None:
         if list_type == "Active":
