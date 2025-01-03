@@ -1006,7 +1006,7 @@ class MainContent(QObject):
         if not is_initial:
             # Reset the data source filters to default and clear searches
             # Avoid recalculating warnings/errors when clearing search
-            # Recalculation for each list will be triggered by mods being reinserted into inactive and active list automatically
+            # Recalculation for each list will be triggered by mods being reinserted into inactive and active lists automatically
             self.mods_panel.active_mods_filter_data_source_index = len(
                 self.mods_panel.data_source_filter_icons
             )
