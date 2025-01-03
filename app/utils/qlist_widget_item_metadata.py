@@ -1,3 +1,5 @@
+from typing import Any
+
 from loguru import logger
 
 from app.utils.metadata import MetadataManager
@@ -16,8 +18,8 @@ class QListWidgetItemMetadata():
         warnings: str = "",
         warning_toggled: bool = False,
         filtered: bool = False,
-        invalid: bool = None,
-        mismatch: bool = None,
+        invalid: bool | None = None,
+        mismatch: bool | None = None,
     ) -> None:
         """
         Must provide a uuid, the rest is optional.
@@ -60,8 +62,8 @@ class QListWidgetItemMetadata():
         else:
             self.warning_toggled = True
 
-    def __getitem__(self, key: str) -> any:
+    def __getitem__(self, key: str) -> Any:
         return getattr(self, key)
 
-    def __setitem__(self, key: str, value: any) -> None:
+    def __setitem__(self, key: str, value: Any) -> None:
         setattr(self, key, value)

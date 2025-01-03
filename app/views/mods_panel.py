@@ -7,6 +7,7 @@ from functools import partial
 from pathlib import Path
 from shutil import copy2, copytree, rmtree
 from traceback import format_exc
+from typing import cast
 
 from loguru import logger
 from PySide6.QtCore import QEvent, QModelIndex, QObject, QRectF, QSize, Qt, Signal
@@ -639,6 +640,18 @@ class ModListWidget(QListWidget):
         self.uuids: list[str] = []
         self.ignore_warning_list: list[str] = []
         logger.debug("Finished ModListWidget initialization")
+
+    def item(self, row: int) -> CustomListWidgetItem:
+        """
+        Return the currently selected item.
+        
+        It should always be a CustomListWidgetItem.*
+        """
+        widget = super().item(row)
+        # This fixes mypy linter errors
+        # * The only scenario of where the item is QListWidgetItem is in dropEvent, where it's dropped from one list to another.
+        # * This is handled in dropEvent directly and it converts this item to CustomListWidgetItem.
+        return cast(CustomListWidgetItem, widget)
 
     def dropEvent(self, event: QDropEvent) -> None:
         super().dropEvent(event)
