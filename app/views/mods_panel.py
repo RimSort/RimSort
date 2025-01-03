@@ -1951,7 +1951,7 @@ class ModListWidget(QListWidget):
                 # If a mod has been moved for eg. inactive -> active. We keep ignoring the warnings.
                 # This makes sure to add the mod to the ignore list of the new modlist.
                 # TODO: Check if toggle_warning method can add a mod to the ignore list
-                # of each ModListWidget. Then we can remove some of this confusing code...
+                # of both ModListWidgets (Active and Inactive) at the same time. Then we can remove some of this confusing code...
                 if not current_item_data["warning_toggled"]:
                     if mod_data["packageid"] in self.ignore_warning_list:
                         self.ignore_warning_list.remove(mod_data["packageid"])
