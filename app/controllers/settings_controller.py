@@ -7,6 +7,7 @@ from loguru import logger
 from PySide6.QtCore import QObject, Slot
 from PySide6.QtWidgets import QApplication, QLineEdit, QMessageBox
 
+from app.controllers.theme_controller import ThemeController
 from app.models.settings import Instance, Settings
 from app.utils.constants import SortMethod
 from app.utils.event_bus import EventBus
@@ -209,6 +210,11 @@ class SettingsController(QObject):
         )
         self.settings_dialog.steamcmd_install_button.clicked.connect(
             self._on_steamcmd_install_button_clicked
+        )
+
+        # Theme tab
+        self.settings_dialog.theme_location_open_button.clicked.connect(
+            self._on_theme_location_open_button_clicked
         )
 
         # Connect signals from dialogs
@@ -504,6 +510,12 @@ class SettingsController(QObject):
             self.settings.todds_overwrite
         )
 
+        # Themes tab
+        self.settings_dialog.enable_themes_checkbox.setChecked(
+            self.settings.enable_themes
+        )
+        self._on_theme_setup_dialog()
+
         # Advanced tab
         self.settings_dialog.debug_logging_checkbox.setChecked(
             self.settings.debug_logging_enabled
@@ -645,6 +657,13 @@ class SettingsController(QObject):
         self.settings.todds_overwrite = (
             self.settings_dialog.todds_overwrite_checkbox.isChecked()
         )
+
+        # Themes tab
+        self.settings.enable_themes = (
+            self.settings_dialog.enable_themes_checkbox.isChecked()
+        )
+        # get theme names from theme combobox and set theme name in settings
+        self.settings.theme_name = self.settings_dialog.themes_combobox.currentText()
 
         # Advanced tab
         self.settings.debug_logging_enabled = (
@@ -1298,7 +1317,50 @@ class SettingsController(QObject):
         self.settings.instances[self.settings.current_instance].run_args = run_args_list
         self.settings.save()
 
+    @Slot()
     def _do_reset_settings_file(self) -> None:
         logger.info("Resetting settings file and retrying load")
         self.settings.save()
         self._load_settings()
+
+    @Slot()
+    def _on_theme_setup_dialog(self) -> None:
+        """
+        Set up the settings dialog with current settings.
+        Reloading settings is required since ThemeController will resets to RimPy, if theme is invalid
+        """
+        self._load_settings()  # Required to detect theme change
+        self.settings_dialog.enable_themes_checkbox.setChecked(
+            self.settings.enable_themes
+        )
+        # Set the current theme in the combobox
+        current_theme_name = self.settings.theme_name
+        current_index = self.settings_dialog.themes_combobox.findText(
+            current_theme_name
+        )
+        if current_index != -1:
+            current_index = self.settings_dialog.themes_combobox.findText(
+                current_theme_name
+            )
+            self.settings_dialog.themes_combobox.setCurrentIndex(current_index)
+        else:
+            logger.warning(
+                f"Resetting to 'RimPy' theme due to missing or invalid theme: {current_theme_name}"
+            )
+            # If ThemeController fails resetting to RimPy
+            self.settings.theme_name = "RimPy"
+            self.settings.save()
+
+    @Slot()
+    def _on_theme_location_open_button_clicked(self) -> None:
+        # Retrieve the selected theme name from the combobox
+        selected_theme_name = self.settings_dialog.themes_combobox.currentText()
+        logger.info(f"Opening theme location: {selected_theme_name}")
+        # Initialize the ThemeController with the selected theme name
+        theme_controller = ThemeController(selected_theme_name)
+        # Retrieve the stylesheet path for the selected theme
+        stylesheet_path = theme_controller.get_theme_stylesheet_path(
+            selected_theme_name
+        )
+        if stylesheet_path is not None:
+            platform_specific_open(stylesheet_path.parent)
