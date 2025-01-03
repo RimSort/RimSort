@@ -44,6 +44,7 @@ from app.utils.constants import (
     SEARCH_DATA_SOURCE_FILTER_INDEXES,
 )
 from app.utils.custom_list_widget_item import CustomListWidgetItem
+from app.utils.custom_list_widget_item_metadata import CustomListWidgetItemMetadata
 from app.utils.event_bus import EventBus
 from app.utils.generic import (
     copy_to_clipboard_safely,
@@ -56,7 +57,6 @@ from app.utils.generic import (
     sanitize_filename,
 )
 from app.utils.metadata import MetadataManager
-from app.utils.qlist_widget_item_metadata import QListWidgetItemMetadata
 from app.views.dialogue import (
     show_dialogue_conditional,
     show_dialogue_input,
@@ -1655,7 +1655,7 @@ class ModListWidget(QListWidget):
         return super().resizeEvent(e)
 
     def append_new_item(self, uuid: str) -> None:
-        data = QListWidgetItemMetadata(uuid=uuid)
+        data = CustomListWidgetItemMetadata(uuid=uuid)
         item = CustomListWidgetItem(self)
         item.setData(Qt.ItemDataRole.UserRole, data)
         self.addItem(item)
@@ -2152,7 +2152,7 @@ class ModListWidget(QListWidget):
         if uuids:  # Insert data...
             for uuid_key in uuids:
                 list_item = CustomListWidgetItem(self)
-                data = QListWidgetItemMetadata(uuid=uuid_key)
+                data = CustomListWidgetItemMetadata(uuid=uuid_key)
                 list_item.setData(Qt.ItemDataRole.UserRole, data)
                 self.addItem(list_item)
         else:  # ...unless we don't have mods, at which point reenable updates and exit
@@ -2700,6 +2700,7 @@ class ModsPanel(QWidget):
             list_type (str): The type of list to search within (Active or Inactive).
             pattern (str): The pattern to search for.
             filters_active (bool): If any filter is active (inc. pattern search).
+            recalculate_list_errors_warnings (bool): If the list errors and warnings should be recalculated, defaults to True.
         """
 
         _filter = None

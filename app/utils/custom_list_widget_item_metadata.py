@@ -5,7 +5,7 @@ from loguru import logger
 from app.utils.metadata import MetadataManager
 
 
-class QListWidgetItemMetadata():
+class CustomListWidgetItemMetadata():
     """
     A class to store metadata for CustomListWidgetItem.
     """
@@ -37,6 +37,7 @@ class QListWidgetItemMetadata():
         # Do not cache the metadata manager, it will cause freezes/crashes when dragging mods.
         # self.metatadata_manager = MetadataManager.instance()  
         
+        # Metadata
         self.uuid = uuid
         self.errors_warnings = errors_warnings
         self.errors = errors
@@ -46,7 +47,7 @@ class QListWidgetItemMetadata():
         self.invalid = invalid if invalid is not None else self.get_invalid_by_uuid(uuid)
         self.mismatch = mismatch if mismatch is not None else self.get_mismatch_by_uuid(uuid)
         
-        logger.debug(f"Finished initializing QListWidgetItemMetadata for {uuid}")
+        logger.debug(f"Finished initializing CustomListWidgetItemMetadata for {uuid}")
 
     def get_invalid_by_uuid(self, uuid: str) -> bool:
         metadata_manager = MetadataManager.instance()
