@@ -2201,7 +2201,7 @@ class MainContent(QObject):
 
                         # Get the local and remote refs
                         local_ref = repo.head.reference
-                        remote_ref = repo.refs[f"origin/{local_ref.name}"]  # type: ignore
+                        remote_ref = repo.refs[f"origin/{local_ref.name}"]
 
                         # Check if the local branch is behind the remote branch
                         if local_ref.commit != remote_ref.commit:
