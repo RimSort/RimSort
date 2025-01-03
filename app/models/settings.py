@@ -47,6 +47,9 @@ class Settings(QObject):
 
         # Sorting
         self.sorting_algorithm: SortMethod = SortMethod.TOPOLOGICAL
+        self.check_dependencies_on_sort: bool = (
+            True  # Whether to check for missing dependencies when sorting
+        )
 
         # DB Builder
         self.db_builder_include: str = "all_mods"

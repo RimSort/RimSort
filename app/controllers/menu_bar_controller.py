@@ -12,7 +12,12 @@ from app.views.menu_bar import MenuBar
 
 
 class MenuBarController(QObject):
-    def __init__(self, view: MenuBar, settings_controller: SettingsController, mods_panel_controller: ModsPanelController) -> None:
+    def __init__(
+        self,
+        view: MenuBar,
+        settings_controller: SettingsController,
+        mods_panel_controller: ModsPanelController,
+    ) -> None:
         super().__init__()
 
         self.menu_bar = view
@@ -105,7 +110,9 @@ class MenuBarController(QObject):
 
         self.menu_bar.rule_editor_action.triggered.connect(EventBus().do_rule_editor)
 
-        self.menu_bar.reset_all_warnings_action.triggered.connect(self._on_reset_warnings_triggered)
+        self.menu_bar.reset_all_warnings_action.triggered.connect(
+            self._on_reset_warnings_triggered
+        )
 
         # Download menu
 

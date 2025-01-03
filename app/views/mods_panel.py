@@ -32,6 +32,7 @@ from PySide6.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QMenu,
+    QPushButton,
     QToolButton,
     QVBoxLayout,
     QWidget,
@@ -1916,6 +1917,8 @@ class ModListWidget(QListWidget):
         for uuid, mod_errors in package_id_to_errors.items():
             current_mod_index = self.uuids.index(uuid)
             current_item = self.item(current_mod_index)
+            if current_item is None:
+                continue
             current_item_data = current_item.data(Qt.ItemDataRole.UserRole)
             current_item_data["mismatch"] = False
             current_item_data["errors"] = None
@@ -2182,6 +2185,7 @@ class ModsPanel(QWidget):
 
     list_updated_signal = Signal()
     save_btn_animation_signal = Signal()
+    check_dependencies_signal = Signal()  # Add new signal
 
     def __init__(self, settings_controller: SettingsController) -> None:
         """
@@ -2284,6 +2288,11 @@ class ModsPanel(QWidget):
 
         logger.debug("Finished ModsPanel initialization")
 
+        # Connect check dependencies button
+        self.check_dependencies_button.clicked.connect(
+            self.check_dependencies_signal.emit
+        )
+
     def initialize_active_mods_search_widgets(self) -> None:
         """Initialize widgets for active mods search layout."""
         self.active_mods_filter_data_source_index = 0
@@ -2360,9 +2369,14 @@ class ModsPanel(QWidget):
         # Active mods list Errors/warnings widgets
         self.errors_summary_frame: QFrame = QFrame()
         self.errors_summary_frame.setObjectName("errorFrame")
-        self.errors_summary_layout = QHBoxLayout()
+        self.errors_summary_layout = QVBoxLayout()  # Change to vertical layout
         self.errors_summary_layout.setContentsMargins(0, 0, 0, 0)
         self.errors_summary_layout.setSpacing(2)
+
+        # Create horizontal layout for warnings and errors
+        self.warnings_errors_layout = QHBoxLayout()
+        self.warnings_errors_layout.setSpacing(2)
+
         self.warnings_icon: QLabel = QLabel()
         self.warnings_icon.setPixmap(ModListIcons.warning_icon().pixmap(QSize(20, 20)))
         self.warnings_text: QLabel = QLabel("0 warnings(s)")
@@ -2371,14 +2385,25 @@ class ModsPanel(QWidget):
         self.errors_icon.setPixmap(ModListIcons.error_icon().pixmap(QSize(20, 20)))
         self.errors_text: QLabel = QLabel("0 error(s)")
         self.errors_text.setObjectName("summaryValue")
+
         self.warnings_layout = QHBoxLayout()
         self.warnings_layout.addWidget(self.warnings_icon, 1)
         self.warnings_layout.addWidget(self.warnings_text, 99)
         self.errors_layout = QHBoxLayout()
         self.errors_layout.addWidget(self.errors_icon, 1)
         self.errors_layout.addWidget(self.errors_text, 99)
-        self.errors_summary_layout.addLayout(self.warnings_layout, 50)
-        self.errors_summary_layout.addLayout(self.errors_layout, 50)
+
+        self.warnings_errors_layout.addLayout(self.warnings_layout, 50)
+        self.warnings_errors_layout.addLayout(self.errors_layout, 50)
+
+        # Add warnings/errors layout to main vertical layout
+        self.errors_summary_layout.addLayout(self.warnings_errors_layout)
+
+        # Create and add Check Dependencies button
+        self.check_dependencies_button: QPushButton = QPushButton("Check Dependencies")
+        self.check_dependencies_button.setObjectName("MainUI")
+        self.errors_summary_layout.addWidget(self.check_dependencies_button)
+
         self.errors_summary_frame.setLayout(self.errors_summary_layout)
         self.errors_summary_frame.setHidden(True)
 
@@ -2664,44 +2689,28 @@ class ModsPanel(QWidget):
             self.inactive_mods_search.clearFocus()
 
     def signal_search_and_filters(
-        self, list_type: str, pattern: str, filters_active: bool = False
+        self,
+        list_type: str,
+        pattern: str,
+        filters_active: bool = False,  # fixes crash when delete a mod and try to sort
     ) -> None:
-        _filter = None
-        filter_state = None
-        source_filter = None
-        uuids = None
-        # Determine which list to filter
+        """
+        Signal to filter both lists based on search pattern and data source filter
+        """
         if list_type == "Active":
-            _filter = self.active_mods_search_filter
-            filter_state = self.active_mods_search_filter_state
-            source_filter = self.active_mods_data_source_filter
-            uuids = self.active_mods_list.uuids
-        elif list_type == "Inactive":
-            _filter = self.inactive_mods_search_filter
-            filter_state = self.inactive_mods_search_filter_state
-            source_filter = self.inactive_mods_data_source_filter
-            uuids = self.inactive_mods_list.uuids
+            mod_list = self.active_mods_list
+            data_source_filter = self.active_mods_filter_data_source_index
         else:
-            raise NotImplementedError(f"Unknown list type: {list_type}")
-        # Evaluate the search filter state for the list
-        search_filter = None
-        if _filter.currentText() == "Name":
-            search_filter = "name"
-        elif _filter.currentText() == "PackageId":
-            search_filter = "packageid"
-        elif _filter.currentText() == "Author(s)":
-            search_filter = "authors"
-        elif _filter.currentText() == "PublishedFileId":
-            search_filter = "publishedfileid"
-        # Filter the list using any search and filter state
-        for uuid in uuids:
-            item = (
-                self.active_mods_list.item(uuids.index(uuid))
-                if list_type == "Active"
-                else self.inactive_mods_list.item(uuids.index(uuid))
-            )
+            mod_list = self.inactive_mods_list
+            data_source_filter = self.inactive_mods_filter_data_source_index
+
+        # Hide items that don't match the search pattern or data source filter
+        for i in range(mod_list.count()):
+            item = mod_list.item(i)
+            if item is None:  # skip if item is None
+                continue
             item_data = item.data(Qt.ItemDataRole.UserRole)
-            metadata = self.metadata_manager.internal_local_metadata[uuid]
+            metadata = self.metadata_manager.internal_local_metadata[item_data["uuid"]]
             if pattern != "":
                 filters_active = True
             # Hide invalid items
@@ -2718,17 +2727,24 @@ class ModsPanel(QWidget):
             # Check if the item should be filtered or not based on search filter
             if (
                 pattern
-                and metadata.get(search_filter)
-                and pattern.lower() not in str(metadata.get(search_filter)).lower()
+                and metadata.get(SEARCH_DATA_SOURCE_FILTER_INDEXES[data_source_filter])
+                and pattern.lower()
+                not in str(
+                    metadata.get(SEARCH_DATA_SOURCE_FILTER_INDEXES[data_source_filter])
+                ).lower()
             ):
                 item_filtered = True
-            elif source_filter == "all":  # or data source
+            elif (
+                SEARCH_DATA_SOURCE_FILTER_INDEXES[data_source_filter] == "all"
+            ):  # or data source
                 item_filtered = False
-            elif source_filter == "git_repo":
+            elif SEARCH_DATA_SOURCE_FILTER_INDEXES[data_source_filter] == "git_repo":
                 item_filtered = not metadata.get("git_repo")
-            elif source_filter == "steamcmd":
+            elif SEARCH_DATA_SOURCE_FILTER_INDEXES[data_source_filter] == "steamcmd":
                 item_filtered = not metadata.get("steamcmd")
-            elif source_filter != metadata.get("data_source"):
+            elif SEARCH_DATA_SOURCE_FILTER_INDEXES[data_source_filter] != metadata.get(
+                "data_source"
+            ):
                 item_filtered = True
 
             type_filter_index = (
@@ -2743,7 +2759,7 @@ class ModsPanel(QWidget):
                 item_filtered = True
 
             # Check if the item should be filtered or hidden based on filter state
-            if filter_state:
+            if self.active_mods_search_filter_state:
                 item.setHidden(item_filtered)
                 if item_filtered:
                     item_filtered = False
@@ -2753,7 +2769,7 @@ class ModsPanel(QWidget):
             # Update item data
             item_data["filtered"] = item_filtered
             item.setData(Qt.ItemDataRole.UserRole, item_data)
-        self.mod_list_updated(str(len(uuids)), list_type)
+        self.mod_list_updated(str(len(mod_list.uuids)), list_type)
 
     def signal_search_mode_filter(self, list_type: str) -> None:
         if list_type == "Active":
@@ -2831,14 +2847,8 @@ class ModsPanel(QWidget):
             self.inactive_mods_data_source_filter = SEARCH_DATA_SOURCE_FILTER_INDEXES[
                 source_index
             ]
-        if source_index == 0:
-            filters_active = False
-        else:
-            filters_active = True
         # Filter widgets by data source, while preserving any active search pattern
-        self.signal_search_and_filters(
-            list_type=list_type, pattern=search.text(), filters_active=filters_active
-        )
+        self.signal_search_and_filters(list_type=list_type, pattern=search.text())
 
     def update_count(self, list_type: str) -> None:
         # Calculate filtered items
@@ -2865,6 +2875,10 @@ class ModsPanel(QWidget):
                 if list_type == "Active"
                 else self.inactive_mods_list.item(uuids.index(uuid))
             )
+            # add null check for item
+            if item is None:
+                continue
+
             item_data = item.data(Qt.ItemDataRole.UserRole)
             item_filtered = item_data["filtered"]
 
