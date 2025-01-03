@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QListWidget,
+    QListWidgetItem,
     QMenu,
     QProgressBar,
     QPushButton,
@@ -24,7 +25,6 @@ from PySide6.QtWidgets import (
 
 from app.models.image_label import ImageLabel
 from app.utils.app_info import AppInfo
-from app.utils.custom_list_widget_item import CustomListWidgetItem
 from app.utils.metadata import MetadataManager
 from app.utils.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetCollectionDetails,
@@ -291,7 +291,7 @@ class SteamBrowser(QWidget):
             logger.debug(f"Tracking PublishedFileId for download: {publishedfileid}")
             self.downloader_list_mods_tracking.append(publishedfileid)
             # Create our list item
-            item = CustomListWidgetItem()
+            item = QListWidgetItem()
             item.setData(Qt.ItemDataRole.UserRole, publishedfileid)
             # Set list item label
             if not title:  # If title wasn't passed, get it from the web_view title
@@ -323,7 +323,7 @@ class SteamBrowser(QWidget):
         self.downloader_list_dupe_tracking.clear()
 
     def _downloader_item_contextmenu_event(self, point: QPoint) -> None:
-        context_item: CustomListWidgetItem = self.downloader_list.itemAt(point)
+        context_item = self.downloader_list.itemAt(point)
 
         if context_item:  # Check if the right-clicked point corresponds to an item
             context_menu = QMenu(self)  # Downloader item context menu event
@@ -333,7 +333,7 @@ class SteamBrowser(QWidget):
             )
             context_menu.exec_(self.downloader_list.mapToGlobal(point))
 
-    def _remove_mod_from_list(self, context_item: CustomListWidgetItem) -> None:
+    def _remove_mod_from_list(self, context_item: QListWidgetItem) -> None:
         publishedfileid = context_item.data(Qt.ItemDataRole.UserRole)
         if publishedfileid in self.downloader_list_mods_tracking:
             self.downloader_list.takeItem(self.downloader_list.row(context_item))
