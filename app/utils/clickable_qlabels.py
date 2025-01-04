@@ -30,7 +30,7 @@ class AdvancedClickableQLabel(QLabel):
 
     def __init__(self, *args: Any) -> None:
         super().__init__(*args)
-        self.setCursor(Qt.PointingHandCursor)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.is_clicked = False
         self.clicked.connect(
             self.handle_label_clicked
@@ -46,6 +46,13 @@ class AdvancedClickableQLabel(QLabel):
         self.update_style()
 
     def update_style(self) -> None:
+        """
+        Updates the label's style based on the 'is_clicked' attribute.
+        
+        If the label is clicked, the backround color is changed to indicate it's active.
+        
+        If the label is not clicked, the background color is transparent(Default).
+        """
         if self.is_clicked:
             self.setStyleSheet("""
                 QLabel {

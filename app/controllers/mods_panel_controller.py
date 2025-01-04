@@ -16,8 +16,8 @@ class ModsPanelController(QObject):
         self.warnings_label_active = False
         self.errors_label_active = False
 
-        self.mods_panel.warnings_text.clicked.connect(self._show_mods_with_warnings)
-        self.mods_panel.errors_text.clicked.connect(self._show_mods_with_errors)
+        self.mods_panel.warnings_text.clicked.connect(self._change_visibility_of_mods_with_warnings)
+        self.mods_panel.errors_text.clicked.connect(self._change_visibility_of_mods_with_errors)
         self.reset_warnings_signal.connect(self._on_menu_bar_reset_warnings_triggered)
 
     @Slot()
@@ -50,9 +50,13 @@ class ModsPanelController(QObject):
             inactive_mods_list.remove(package_id)
 
     @Slot()
-    def _show_mods_with_warnings(self) -> None:
+    def _change_visibility_of_mods_with_warnings(self) -> None:
         """
-        Dynamically shows/hides all mods that have warnings.
+        When on, shows only mods that have warnings.
+
+        When off, shows all mods.
+
+        Works with filters, meaning it wont show mods with warnings if they don't match the filters. etc.
         """
         # If the other label is active, disable it
         if self.errors_label_active:
@@ -69,11 +73,16 @@ class ModsPanelController(QObject):
                     mod.setHidden(True)
                 elif not mod_data["hidden_by_filter"]:
                     mod.setHidden(False)
+        logger.debug("Finished hiding mods without warnings.")
 
     @Slot()
-    def _show_mods_with_errors(self) -> None:
+    def _change_visibility_of_mods_with_errors(self) -> None:
         """
-        Dynamically shows/hides all mods that have errors.
+        When on, shows only mods that have errors.
+
+        When off, shows all mods.
+
+        Works with filters, meaning it wont show mods with errors if they don't match the filters. etc.
         """
         # If the other label is active, disable it
         if self.warnings_label_active:
@@ -90,3 +99,4 @@ class ModsPanelController(QObject):
                     mod.setHidden(True)
                 elif not mod_data["hidden_by_filter"]:
                     mod.setHidden(False)
+        logger.debug("Finished hiding mods without errors.")
