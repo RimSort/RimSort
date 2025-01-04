@@ -33,7 +33,11 @@ class MenuBar(QObject):
         self.open_app_directory_action: QAction
         self.open_settings_directory_action: QAction
         self.open_rimsort_logs_directory_action: QAction
+        self.open_rimworld_directory_action: QAction
+        self.open_rimworld_config_directory_action: QAction
         self.open_rimworld_logs_directory_action: QAction
+        self.open_local_mods_directory_action: QAction
+        self.open_steam_mods_directory_action: QAction
         self.cut_action: QAction
         self.copy_action: QAction
         self.paste_action: QAction
@@ -137,20 +141,40 @@ class MenuBar(QObject):
             self.upload_submenu, "RimWorld Player.log"
         )
         file_menu.addSeparator()
-        self.shortcuts_submenu = QMenu("Shortcuts")
+        self.shortcuts_submenu = QMenu("Open...")
         file_menu.addMenu(self.shortcuts_submenu)
+        # Add submenu under Shortcuts
+        self.rimsort_shortcuts_submenu = QMenu("RimSort")
+        self.shortcuts_submenu.addMenu(self.rimsort_shortcuts_submenu)
+        self.rimworld_shortcuts_submenu = QMenu("RimWorld")
+        self.shortcuts_submenu.addMenu(self.rimworld_shortcuts_submenu)
+        # Add actions to RimSort submenu
         self.open_app_directory_action = self._add_action(
-            self.shortcuts_submenu, "Open RimSort Directory"
+            self.rimsort_shortcuts_submenu, "Root Directory"
         )
         self.open_settings_directory_action = self._add_action(
-            self.shortcuts_submenu, "Open RimSort User Files"
+            self.rimsort_shortcuts_submenu, "Config Directory"
         )
         self.open_rimsort_logs_directory_action = self._add_action(
-            self.shortcuts_submenu, "Open RimSort Logs Directory"
+            self.rimsort_shortcuts_submenu, "Logs Directory"
+        )
+        # Add action to RimWorld submenu
+        self.open_rimworld_directory_action = self._add_action(
+            self.rimworld_shortcuts_submenu, "Root Directory"
+        )
+        self.open_rimworld_config_directory_action = self._add_action(
+            self.rimworld_shortcuts_submenu, "Config Directory"
         )
         self.open_rimworld_logs_directory_action = self._add_action(
-            self.shortcuts_submenu, "Open RimWorld Logs Directory"
+            self.rimworld_shortcuts_submenu, "Logs Directory"
         )
+        self.open_local_mods_directory_action = self._add_action(
+            self.rimworld_shortcuts_submenu, "Local Mods Directory"
+        )
+        self.open_steam_mods_directory_action = self._add_action(
+            self.rimworld_shortcuts_submenu, "Steam Mods Directory"
+        )
+
         if SystemInfo().operating_system != SystemInfo.OperatingSystem.MACOS:
             file_menu.addSeparator()
             self.settings_action = self._add_action(file_menu, "Settings…", "Ctrl+,")
