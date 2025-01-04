@@ -162,9 +162,9 @@ class RentryImport:
             str
         ] = []  # Initialize an empty list to store package IDs
         if RENTRY_RAW_AUTH == "":
-            logger.info("Rentry Raw Auth is blank.")
+            logger.debug("Rentry Raw Auth is blank.")
         else:
-            logger.info("Rentry Raw Auth is set.")
+            logger.debug("Rentry Raw Auth is set.")
         self.input_dialog()  # Call the input_dialog method to set up the UI
 
     def input_dialog(self) -> None:
@@ -227,7 +227,7 @@ class RentryImport:
                     if match[0] or match[1]
                 ]
                 logger.info("Parsed package_ids successfully.")
-                logger.info(f"Number of package_ids found: {str(len(self.package_ids))}")
+                logger.debug(f"Number of package_ids found: {str(len(self.package_ids))}")
             else:
                 # Handle non-200 responses
                 RentryError().show_response_error(response)
