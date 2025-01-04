@@ -86,7 +86,11 @@ class CustomListWidgetItemMetadata:
         :return: bool, the version mismatch status of the mod
         """
         metadata_manager = MetadataManager.instance()
-        return bool(metadata_manager.is_version_mismatch(uuid))
+        try:
+            return metadata_manager.is_version_mismatch(uuid)
+        except KeyError:
+            logger.error(f"UUID {uuid} not found in metadata")
+            return False
 
     def __getitem__(self, key: str) -> Any:
         """

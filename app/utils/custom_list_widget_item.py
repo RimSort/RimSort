@@ -16,11 +16,12 @@ class CustomListWidgetItem(QListWidgetItem):
 
     def setData(self, role: int, value: Any, avoid_emit: bool = False) -> None:
         """
+        Sets the data for the given role and emits the itemChanged signal if avoid_emit is False.
+
         Because we are using a custom class to store data for our QListWidgetItem,
         .setData does not cause the itemChanged signal to be emitted by ModListWidget like it usually would if using a dict.
         Here we manually emit this signal.
 
-        Sets the data for the given role and emits the itemChanged signal if avoid_emit is False.
         :param role: int, the role of the data
         :param value: Any, the data to set
         :param avoid_emit: bool, whether to avoid emitting the itemChanged signal
@@ -40,4 +41,3 @@ class CustomListWidgetItem(QListWidgetItem):
             logger.warning(
                 "Could not emit itemChanged signal from CustomListWidgetItem, listWidget is None."
             )
-            logger.warning("Could not emit itemChanged signal, listWidget is None.")
