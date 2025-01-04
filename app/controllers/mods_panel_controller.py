@@ -63,7 +63,7 @@ class ModsPanelController(QObject):
         active_mods = self.mods_panel.active_mods_list.get_all_mod_list_items()
         for mod in active_mods:
             mod_data = mod.data(Qt.ItemDataRole.UserRole)
-            # If a mod is already hidden becasue of filters, dont touch it
+            # If a mod is already hidden becasue of filters, dont unhide it
             if mod_data["warnings"] == '':
                 if self.warnings_label_active:
                     mod.setHidden(True)
@@ -84,7 +84,7 @@ class ModsPanelController(QObject):
         active_mods = self.mods_panel.active_mods_list.get_all_mod_list_items()
         for mod in active_mods:
             mod_data = mod.data(Qt.ItemDataRole.UserRole)
-            # If a mod is already hidden because of filters, dont touch it
+            # If a mod is already hidden because of filters, dont unhide it
             if mod_data["errors"] == '':
                 if self.errors_label_active:
                     mod.setHidden(True)
