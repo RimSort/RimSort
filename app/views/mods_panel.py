@@ -2710,6 +2710,8 @@ class ModsPanel(QWidget):
         """
         Performs a search and/or applies filters based on the given parameters.
 
+        Called anytime the search bar text changes or the filters change.
+
         Args:
             list_type (str): The type of list to search within (Active or Inactive).
             pattern (str): The pattern to search for.
@@ -2721,6 +2723,11 @@ class ModsPanel(QWidget):
         filter_state = None  # The 'Hide Filter' state
         source_filter = None
         uuids = None
+        # Notify controller when search bar text or any filters change
+        if list_type == "Active":
+            EventBus().filters_changed_in_active_modlist.emit()
+        elif list_type == "Inactive":
+            EventBus().filters_changed_in_inactive_modlist.emit()
         # Determine which list to filter
         if list_type == "Active":
             _filter = self.active_mods_search_filter

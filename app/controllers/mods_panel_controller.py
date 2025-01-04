@@ -1,6 +1,7 @@
 from loguru import logger
 from PySide6.QtCore import QObject, Qt, Signal, Slot
 
+from app.utils.event_bus import EventBus
 from app.views.mods_panel import ModListWidget, ModsPanel
 
 
@@ -12,13 +13,32 @@ class ModsPanelController(QObject):
 
         self.mods_panel = view
 
-        # Only one label can be active at a time, these indicate which label is active
+        # Only one label can be active at a time, these are used only in the active modlist
         self.warnings_label_active = False
         self.errors_label_active = False
 
         self.mods_panel.warnings_text.clicked.connect(self._change_visibility_of_mods_with_warnings)
         self.mods_panel.errors_text.clicked.connect(self._change_visibility_of_mods_with_errors)
         self.reset_warnings_signal.connect(self._on_menu_bar_reset_warnings_triggered)
+        EventBus().filters_changed_in_active_modlist.connect(self._on_filters_changed_in_active_modlist)
+        EventBus().filters_changed_in_inactive_modlist.connect(self._on_filters_changed_in_inactive_modlist)
+
+    @Slot()
+    def _on_filters_changed_in_active_modlist(self) -> None:
+        """
+        When filters are changed in the active modlist.
+        """
+        # On filter change, disable warning/error label if active
+        if self.warnings_label_active:
+            self.mods_panel.warnings_text.clicked.emit()
+        elif self.errors_label_active:
+            self.mods_panel.errors_text.clicked.emit()
+
+    @Slot()
+    def _on_filters_changed_in_inactive_modlist(self) -> None:
+        """
+        When filters are changed in the inactive modlist.
+        """
 
     @Slot()
     def _on_menu_bar_reset_warnings_triggered(self) -> None:
