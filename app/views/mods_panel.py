@@ -2806,6 +2806,7 @@ class ModsPanel(QWidget):
             else:
                 if item_filtered and item.isHidden():
                     item.setHidden(False)
+                    item_data["hidden_by_filter"] = False
             # Update item data
             item_data["filtered"] = item_filtered
             item.setData(Qt.ItemDataRole.UserRole, item_data)

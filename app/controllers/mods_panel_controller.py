@@ -12,7 +12,7 @@ class ModsPanelController(QObject):
 
         self.mods_panel = view
 
-        # Only one label can be active at a time
+        # Only one label can be active at a time, these indicate which label is active
         self.warnings_label_active = False
         self.errors_label_active = False
 
@@ -70,7 +70,6 @@ class ModsPanelController(QObject):
                 elif not mod_data["hidden_by_filter"]:
                     mod.setHidden(False)
 
-
     @Slot()
     def _show_mods_with_errors(self) -> None:
         """
@@ -85,7 +84,7 @@ class ModsPanelController(QObject):
         active_mods = self.mods_panel.active_mods_list.get_all_mod_list_items()
         for mod in active_mods:
             mod_data = mod.data(Qt.ItemDataRole.UserRole)
-            # If a mod is already hidden becasue of filters, dont touch it
+            # If a mod is already hidden because of filters, dont touch it
             if mod_data["errors"] == '':
                 if self.errors_label_active:
                     mod.setHidden(True)
