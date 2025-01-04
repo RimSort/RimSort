@@ -699,6 +699,11 @@ class SettingsDialog(QDialog):
         group_layout = QVBoxLayout()
         group_box.setLayout(group_layout)
 
+        user_note = QLabel("RimSort restart required for some settings")
+        user_note.setFont(GUIInfo().emphasis_font)
+        user_note.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        group_layout.addWidget(user_note)
+
         self.debug_logging_checkbox = QCheckBox("Enable debug logging")
         group_layout.addWidget(self.debug_logging_checkbox)
 
@@ -707,6 +712,9 @@ class SettingsDialog(QDialog):
 
         self.mod_type_filter_checkbox = QCheckBox("Enable mod type filter")
         group_layout.addWidget(self.mod_type_filter_checkbox)
+
+        self.hide_invalid_mods_when_filtering_checkbox = QCheckBox("Hide invalid mods when filtering")
+        group_layout.addWidget(self.hide_invalid_mods_when_filtering_checkbox)
 
         self.show_duplicate_mods_warning_checkbox = QCheckBox(
             "Show duplicate mods warning"

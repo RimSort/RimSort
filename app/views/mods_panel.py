@@ -7,6 +7,7 @@ from functools import partial
 from pathlib import Path
 from shutil import copy2, copytree, rmtree
 from traceback import format_exc
+from typing import cast
 
 from loguru import logger
 from PySide6.QtCore import QEvent, QModelIndex, QObject, QRectF, QSize, Qt, Signal
@@ -29,7 +30,6 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QListWidget,
-    QListWidgetItem,
     QMenu,
     QToolButton,
     QVBoxLayout,
@@ -43,6 +43,8 @@ from app.utils.constants import (
     KNOWN_MOD_REPLACEMENTS,
     SEARCH_DATA_SOURCE_FILTER_INDEXES,
 )
+from app.utils.custom_list_widget_item import CustomListWidgetItem
+from app.utils.custom_list_widget_item_metadata import CustomListWidgetItemMetadata
 from app.utils.event_bus import EventBus
 from app.utils.generic import (
     copy_to_clipboard_safely,
@@ -434,7 +436,7 @@ class ModListItemInner(QWidget):
             self.main_label.setText(self.list_item_name)
         return super().resizeEvent(event)
 
-    def repolish(self, item: QListWidgetItem) -> None:
+    def repolish(self, item: CustomListWidgetItem) -> None:
         """
         Repolish the widget items
         """
@@ -631,8 +633,28 @@ class ModListWidget(QListWidget):
         self.ignore_warning_list: list[str] = []
         logger.debug("Finished ModListWidget initialization")
 
+    def item(self, row: int) -> CustomListWidgetItem:
+        """
+        Return the currently selected item.
+
+        It should always be a CustomListWidgetItem.*
+        """
+        widget = super().item(row)
+        # This fixes mypy linter errors
+        # * The only scenario of where the item is QListWidgetItem is in dropEvent, where it's dropped from one list to another.
+        # * This is handled in dropEvent directly and it converts this item to CustomListWidgetItem.
+        return cast(CustomListWidgetItem, widget)
+
     def dropEvent(self, event: QDropEvent) -> None:
         super().dropEvent(event)
+        # Find the newly dropped items and convert to CustomListWidgetItem
+        # TODO: Optimize this by only converting the dropped items (Figure out how to get their indexes)
+        for i in range(self.count()):
+            item = self.item(i)
+            if not isinstance(item, CustomListWidgetItem):
+                # Convert to CustomListWidgetItem
+                item = CustomListWidgetItem(item)
+                self.replaceItemAtIndex(i, item)
         # Get source widget of dropEvent
         source_widget = event.source()
         # Get the drop action
@@ -677,7 +699,7 @@ class ModListWidget(QListWidget):
             pos_local = self.mapFromGlobal(pos)
             # Get the item at the local position
             item = self.itemAt(pos_local)
-            if not isinstance(item, QListWidgetItem):
+            if not isinstance(item, CustomListWidgetItem):
                 logger.debug("Mod list right-click non-QListWidgetItem")
                 return super().eventFilter(object, event)
 
@@ -748,13 +770,13 @@ class ModListWidget(QListWidget):
             # Delete optimized textures (.dds files only)
             delete_mod_dds_only_action = None
 
-            # Get all selected QListWidgetItems
+            # Get all selected CustomListWidgetItems
             selected_items = self.selectedItems()
             # Single item selected
             if len(selected_items) == 1:
                 logger.debug(f"{len(selected_items)} items selected")
                 source_item = selected_items[0]
-                if type(source_item) is QListWidgetItem:
+                if type(source_item) is CustomListWidgetItem:
                     item_data = source_item.data(Qt.ItemDataRole.UserRole)
                     uuid = item_data["uuid"]
                     # Retrieve metadata
@@ -891,7 +913,7 @@ class ModListWidget(QListWidget):
             # Multiple items selected
             elif len(selected_items) > 1:  # Multiple items selected
                 for source_item in selected_items:
-                    if type(source_item) is QListWidgetItem:
+                    if type(source_item) is CustomListWidgetItem:
                         item_data = source_item.data(Qt.ItemDataRole.UserRole)
                         uuid = item_data["uuid"]
                         # Retrieve metadata
@@ -1379,7 +1401,7 @@ class ModListWidget(QListWidget):
                     )
                     if answer == "&Yes":
                         for source_item in selected_items:
-                            if type(source_item) is QListWidgetItem:
+                            if type(source_item) is CustomListWidgetItem:
                                 item_data = source_item.data(Qt.ItemDataRole.UserRole)
                                 uuid = item_data["uuid"]
                                 mod_metadata = (
@@ -1439,7 +1461,7 @@ class ModListWidget(QListWidget):
                     )
                     if answer == "&Yes":
                         for source_item in selected_items:
-                            if type(source_item) is QListWidgetItem:
+                            if type(source_item) is CustomListWidgetItem:
                                 item_data = source_item.data(Qt.ItemDataRole.UserRole)
                                 uuid = item_data["uuid"]
                                 mod_metadata = (
@@ -1475,7 +1497,7 @@ class ModListWidget(QListWidget):
                     )
                     if answer == "&Yes":
                         for source_item in selected_items:
-                            if type(source_item) is QListWidgetItem:
+                            if type(source_item) is CustomListWidgetItem:
                                 item_data = source_item.data(Qt.ItemDataRole.UserRole)
                                 uuid = item_data["uuid"]
                                 mod_metadata = (
@@ -1504,7 +1526,7 @@ class ModListWidget(QListWidget):
                     return True
                 # Execute action for each selected mod
                 for source_item in selected_items:
-                    if type(source_item) is QListWidgetItem:
+                    if type(source_item) is CustomListWidgetItem:
                         item_data = source_item.data(Qt.ItemDataRole.UserRole)
                         uuid = item_data["uuid"]
                         # Retrieve metadata
@@ -1625,27 +1647,16 @@ class ModListWidget(QListWidget):
         return super().resizeEvent(e)
 
     def append_new_item(self, uuid: str) -> None:
-        data = {
-            "errors_warnings": "",
-            "errors": "",
-            "warnings": "",
-            "warning_toggled": False,
-            "filtered": False,
-            "invalid": self.metadata_manager.internal_local_metadata[uuid].get(
-                "invalid"
-            ),
-            "mismatch": self.metadata_manager.is_version_mismatch(uuid),
-            "uuid": uuid,
-        }
-        item = QListWidgetItem(self)
+        data = CustomListWidgetItemMetadata(uuid=uuid)
+        item = CustomListWidgetItem(self)
         item.setData(Qt.ItemDataRole.UserRole, data)
         self.addItem(item)
 
-    def get_all_mod_list_items(self) -> list[QListWidgetItem]:
+    def get_all_mod_list_items(self) -> list[CustomListWidgetItem]:
         """
         This gets all modlist items.
 
-        :return: List of all modlist items as QListWidgetItem
+        :return: List of all modlist items as CustomListWidgetItem
         """
         mod_list_items = []
         for index in range(self.count()):
@@ -1668,11 +1679,11 @@ class ModListWidget(QListWidget):
                 mod_list_items.append(widget)
         return mod_list_items
 
-    def get_all_loaded_and_toggled_mod_list_items(self) -> list[QListWidgetItem]:
+    def get_all_loaded_and_toggled_mod_list_items(self) -> list[CustomListWidgetItem]:
         """
         This returns all modlist items that have their warnings toggled.
 
-        :return: List of all toggled modlist items as QListWidgetItem
+        :return: List of all toggled modlist items as CustomListWidgetItem
         """
         mod_list_items = []
         for index in range(self.count()):
@@ -1682,12 +1693,12 @@ class ModListWidget(QListWidget):
                 mod_list_items.append(item)
         return mod_list_items
 
-    def check_item_visible(self, item: QListWidgetItem) -> bool:
+    def check_item_visible(self, item: CustomListWidgetItem) -> bool:
         # Determines if the item is currently visible in the viewport.
         rect = self.visualItemRect(item)
         return rect.top() < self.viewport().height() and rect.bottom() > 0
 
-    def create_widget_for_item(self, item: QListWidgetItem) -> None:
+    def create_widget_for_item(self, item: CustomListWidgetItem) -> None:
         data = item.data(Qt.ItemDataRole.UserRole)
         if data is None:
             logger.debug("Attempted to create widget for item with None data")
@@ -1723,7 +1734,7 @@ class ModListWidget(QListWidget):
             if item and self.check_item_visible(item) and self.itemWidget(item) is None:
                 self.create_widget_for_item(item)
 
-    def handle_item_data_changed(self, item: QListWidgetItem) -> None:
+    def handle_item_data_changed(self, item: CustomListWidgetItem) -> None:
         """
         This slot is called when an item's data changes
         """
@@ -1732,6 +1743,11 @@ class ModListWidget(QListWidget):
             widget.repolish(item)
 
     def handle_other_list_row_added(self, uuid: str) -> None:
+        """
+        When a mod is moved from Inactive->Active, the uuid is removed from the Inactive list.
+
+        When a mod is moved from Active->Inactive, the uuid is removed from the Active list.
+        """
         if uuid in self.uuids:
             self.uuids.remove(uuid)
 
@@ -1822,7 +1838,7 @@ class ModListWidget(QListWidget):
         return None
 
     def mod_changed_to(
-        self, current: QListWidgetItem, previous: QListWidgetItem
+        self, current: CustomListWidgetItem, previous: CustomListWidgetItem
     ) -> None:
         """
         Method to handle clicking on a row or navigating between rows with
@@ -1832,7 +1848,7 @@ class ModListWidget(QListWidget):
             data = current.data(Qt.ItemDataRole.UserRole)
             self.mod_info_signal.emit(data["uuid"])
 
-    def mod_clicked(self, current: QListWidgetItem) -> None:
+    def mod_clicked(self, current: CustomListWidgetItem) -> None:
         """
         Method to handle clicking on a row. Necessary because `mod_changed_to` does not
         properly handle clicking on a previous selected item after clicking on an item
@@ -1850,7 +1866,7 @@ class ModListWidget(QListWidget):
                 f"USER ACTION: mod was clicked: [{data['uuid']}] {mod_info_pretty}"
             )
 
-    def mod_double_clicked(self, item: QListWidgetItem) -> None:
+    def mod_double_clicked(self, item: CustomListWidgetItem) -> None:
         """
         Method to handle double clicking on a row.
         """
@@ -1910,8 +1926,8 @@ class ModListWidget(QListWidget):
             current_item = self.item(current_mod_index)
             current_item_data = current_item.data(Qt.ItemDataRole.UserRole)
             current_item_data["mismatch"] = False
-            current_item_data["errors"] = None
-            current_item_data["warnings"] = None
+            current_item_data["errors"] = ""
+            current_item_data["warnings"] = ""
             mod_data = internal_local_metadata[uuid]
             # Check mod supportedversions against currently loaded version of game
             mod_errors["version_mismatch"] = self.metadata_manager.is_version_mismatch(
@@ -1927,7 +1943,7 @@ class ModListWidget(QListWidget):
                 # If a mod has been moved for eg. inactive -> active. We keep ignoring the warnings.
                 # This makes sure to add the mod to the ignore list of the new modlist.
                 # TODO: Check if toggle_warning method can add a mod to the ignore list
-                # of each ModListWidget. Then we can remove some of this confusing code...
+                # of both ModListWidgets (Active and Inactive) at the same time. Then we can remove some of this confusing code...
                 if not current_item_data["warning_toggled"]:
                     if mod_data["packageid"] in self.ignore_warning_list:
                         self.ignore_warning_list.remove(mod_data["packageid"])
@@ -2070,7 +2086,7 @@ class ModListWidget(QListWidget):
             ].strip()
             current_item_data["errors"] = current_item_data["errors"].strip()
             current_item.setData(Qt.ItemDataRole.UserRole, current_item_data)
-        logger.info(f"Finished recalculating {self.list_type} list errors")
+        logger.info(f"Finished recalculating {self.list_type} list errors and warnings")
         return total_error_text, total_warning_text, num_errors, num_warnings
 
     def _has_replacement(
@@ -2127,22 +2143,9 @@ class ModListWidget(QListWidget):
         self.uuids = list()
         if uuids:  # Insert data...
             for uuid_key in uuids:
-                list_item = QListWidgetItem(self)
-                list_item.setData(
-                    Qt.ItemDataRole.UserRole,
-                    {
-                        "errors_warnings": "",
-                        "errors": "",
-                        "warnings": "",
-                        "warning_toggled": False,
-                        "filtered": False,
-                        "invalid": self.metadata_manager.internal_local_metadata[
-                            uuid_key
-                        ].get("invalid"),
-                        "mismatch": self.metadata_manager.is_version_mismatch(uuid_key),
-                        "uuid": uuid_key,
-                    },
-                )
+                list_item = CustomListWidgetItem(self)
+                data = CustomListWidgetItemMetadata(uuid=uuid_key)
+                list_item.setData(Qt.ItemDataRole.UserRole, data)
                 self.addItem(list_item)
         else:  # ...unless we don't have mods, at which point reenable updates and exit
             self.setUpdatesEnabled(True)
@@ -2164,6 +2167,31 @@ class ModListWidget(QListWidget):
             item_data["warning_toggled"] = False
         item.setData(Qt.ItemDataRole.UserRole, item_data)
         self.recalculate_warnings_signal.emit()
+
+    def replaceItemAtIndex(self, index: int, item: CustomListWidgetItem) -> None:
+        """
+        IMPORTANT: This is used to replace an item without triggering the rowsInserted signal.
+
+        :param index: The index of the item to replace.
+        :param item: The new item that will replace the old one.
+        """
+        # The rowsInserted signal should be removed from ALL slots and then reconnected to ALL slots.
+        # This will have to be manually done below, unless we start tracking which slots that signal is connected to.
+
+        # Check if the signal is connected before disconnecting
+        try:
+            self.model().rowsInserted.disconnect(self.handle_rows_inserted)
+        except TypeError:
+            pass  # Signal was not connected
+
+        # Perform the replacement
+        self.takeItem(index)
+        self.insertItem(index, item)
+
+        # Reconnect to ALL slots
+        self.model().rowsInserted.connect(
+            self.handle_rows_inserted, Qt.ConnectionType.QueuedConnection
+        )
 
 
 class ModsPanel(QWidget):
@@ -2341,9 +2369,10 @@ class ModsPanel(QWidget):
         self.active_mods_search_layout.addWidget(
             self.active_mods_filter_data_source_button
         )
-        self.active_mods_search_layout.addWidget(
-            self.active_data_source_filter_type_button
-        )
+        if self.settings_controller.settings.mod_type_filter_toggle:
+            self.active_mods_search_layout.addWidget(
+                self.active_data_source_filter_type_button
+            )
         self.active_mods_search_layout.addWidget(
             self.active_mods_search_mode_filter_button
         )
@@ -2444,9 +2473,10 @@ class ModsPanel(QWidget):
         self.inactive_mods_search_layout.addWidget(
             self.inactive_mods_filter_data_source_button
         )
-        self.inactive_mods_search_layout.addWidget(
-            self.inactive_data_source_filter_type_button
-        )
+        if self.settings_controller.settings.mod_type_filter_toggle:
+            self.inactive_mods_search_layout.addWidget(
+                self.inactive_data_source_filter_type_button
+            )
         self.inactive_mods_search_layout.addWidget(
             self.inactive_mods_search_mode_filter_button
         )
@@ -2475,15 +2505,18 @@ class ModsPanel(QWidget):
             partial(self.recalculate_list_errors_warnings, list_type="Inactive")
         )
 
-    def mod_list_updated(self, count: str, list_type: str) -> None:
+    def mod_list_updated(
+        self, count: str, list_type: str, recalculate_list_errors_warnings: bool = True
+    ) -> None:
         # If count is 'drop', it indicates that the update was just a drag and drop within the list
         if count != "drop":
             logger.info(f"{list_type} mod count changed to: {count}")
             self.update_count(list_type=list_type)
         # Signal save button animation
         self.save_btn_animation_signal.emit()
-        # Update the mod list widget errors and warnings
-        self.recalculate_list_errors_warnings(list_type=list_type)
+        if recalculate_list_errors_warnings:
+            # Update the mod list widget errors and warnings
+            self.recalculate_list_errors_warnings(list_type=list_type)
 
     def on_active_mods_list_updated(self, count: str) -> None:
         self.mod_list_updated(count=count, list_type="Active")
@@ -2590,7 +2623,9 @@ class ModsPanel(QWidget):
             filters_active = True
         # Trigger search and filters
         self.signal_search_and_filters(
-            list_type=list_type, pattern=search.text(), filters_active=filters_active
+            list_type=list_type,
+            pattern=search.text(),
+            filters_active=filters_active,
         )
 
     def on_mod_deleted(self, uuid: str) -> None:
@@ -2632,8 +2667,8 @@ class ModsPanel(QWidget):
                 )
             else:  # Hide the summary if there are no errors or warnings
                 self.errors_summary_frame.setHidden(True)
-                self.warnings_text.setText("0 warning(s)")
-                self.errors_text.setText("0 error(s)")
+                self.warnings_text.setText("0 warnings")
+                self.errors_text.setText("0 errors")
                 self.errors_icon.setToolTip("")
                 self.warnings_icon.setToolTip("")
             # First time, and when Refreshing, the slot will evaluate false and do nothing.
@@ -2645,21 +2680,45 @@ class ModsPanel(QWidget):
             # Calculate internal errors and warnings for all mods in the respective mod list
             self.inactive_mods_list.recalculate_internal_errors_warnings()
 
-    def signal_clear_search(self, list_type: str) -> None:
+    def signal_clear_search(
+        self, list_type: str, recalculate_list_errors_warnings: bool = True
+    ) -> None:
         if list_type == "Active":
             self.active_mods_search.clear()
-            self.signal_search_and_filters(list_type=list_type, pattern="")
+            self.signal_search_and_filters(
+                list_type=list_type,
+                pattern="",
+                recalculate_list_errors_warnings=recalculate_list_errors_warnings,
+            )
             self.active_mods_search.clearFocus()
         elif list_type == "Inactive":
             self.inactive_mods_search.clear()
-            self.signal_search_and_filters(list_type=list_type, pattern="")
+            self.signal_search_and_filters(
+                list_type=list_type,
+                pattern="",
+                recalculate_list_errors_warnings=recalculate_list_errors_warnings,
+            )
             self.inactive_mods_search.clearFocus()
 
     def signal_search_and_filters(
-        self, list_type: str, pattern: str, filters_active: bool = False
+        self,
+        list_type: str,
+        pattern: str,
+        filters_active: bool = False,
+        recalculate_list_errors_warnings: bool = True,
     ) -> None:
+        """
+        Performs a search and/or applies filters based on the given parameters.
+
+        Args:
+            list_type (str): The type of list to search within (Active or Inactive).
+            pattern (str): The pattern to search for.
+            filters_active (bool): If any filter is active (inc. pattern search).
+            recalculate_list_errors_warnings (bool): If the list errors and warnings should be recalculated, defaults to True.
+        """
+
         _filter = None
-        filter_state = None
+        filter_state = None  # The 'Hide Filter' state
         source_filter = None
         uuids = None
         # Determine which list to filter
@@ -2696,15 +2755,16 @@ class ModsPanel(QWidget):
             metadata = self.metadata_manager.internal_local_metadata[uuid]
             if pattern != "":
                 filters_active = True
-            # Hide invalid items
-            invalid = item_data["invalid"]
-            if invalid and filters_active:
-                item_data["filtered"] = True
-                item.setHidden(True)
-                continue
-            elif invalid and not filters_active:
-                item_data["filtered"] = False
-                item.setHidden(False)
+            # Hide invalid items if enabled in settings
+            if self.settings_controller.settings.hide_invalid_mods_when_filtering_toggle:
+                invalid = item_data["invalid"]
+                if invalid and filters_active:
+                    item_data["filtered"] = True
+                    item.setHidden(True)
+                    continue
+                elif invalid and not filters_active:
+                    item_data["filtered"] = False
+                    item.setHidden(False)
             # Check if the item is filtered
             item_filtered = item_data["filtered"]
             # Check if the item should be filtered or not based on search filter
@@ -2745,7 +2805,11 @@ class ModsPanel(QWidget):
             # Update item data
             item_data["filtered"] = item_filtered
             item.setData(Qt.ItemDataRole.UserRole, item_data)
-        self.mod_list_updated(str(len(uuids)), list_type)
+        self.mod_list_updated(
+            str(len(uuids)),
+            list_type,
+            recalculate_list_errors_warnings=recalculate_list_errors_warnings,
+        )
 
     def signal_search_mode_filter(self, list_type: str) -> None:
         if list_type == "Active":
