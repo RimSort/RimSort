@@ -2758,6 +2758,7 @@ class ModsPanel(QWidget):
             # Hide invalid items if enabled in settings
             if self.settings_controller.settings.hide_invalid_mods_when_filtering_toggle:
                 invalid = item_data["invalid"]
+                # TODO: I dont think filtered should be set at all for invalid items... I misunderstood what it represents
                 if invalid and filters_active:
                     item_data["filtered"] = True
                     item.setHidden(True)
@@ -2798,7 +2799,10 @@ class ModsPanel(QWidget):
             if filter_state:
                 item.setHidden(item_filtered)
                 if item_filtered:
+                    item_data["hidden_by_filter"] = True
                     item_filtered = False
+                else:
+                    item_data["hidden_by_filter"] = False
             else:
                 if item_filtered and item.isHidden():
                     item.setHidden(False)

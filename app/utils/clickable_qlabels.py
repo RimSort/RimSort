@@ -1,3 +1,5 @@
+from typing import Any
+
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QLabel
@@ -26,8 +28,8 @@ class AdvancedClickableQLabel(QLabel):
     """
     clicked = Signal()
 
-    def __init__(self, text="", parent=None) -> None:
-        super().__init__(text, parent)
+    def __init__(self, *args: Any) -> None:
+        super().__init__(*args)
         self.setCursor(Qt.PointingHandCursor)
         self.is_clicked = False
         self.clicked.connect(
