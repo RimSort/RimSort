@@ -644,7 +644,7 @@ class ModListWidget(QListWidget):
     def item(self, row: int) -> CustomListWidgetItem:
         """
         Return the currently selected item.
-        
+
         It should always be a CustomListWidgetItem.*
         """
         widget = super().item(row)
@@ -1753,7 +1753,7 @@ class ModListWidget(QListWidget):
     def handle_other_list_row_added(self, uuid: str) -> None:
         """
         When a mod is moved from Inactive->Active, the uuid is removed from the Inactive list.
-        
+
         When a mod is moved from Active->Inactive, the uuid is removed from the Active list.
         """
         if uuid in self.uuids:
@@ -2179,22 +2179,28 @@ class ModListWidget(QListWidget):
     def replaceItemAtIndex(self, index: int, item: CustomListWidgetItem) -> None:
         """
         IMPORTANT: This is used to replace an item without triggering the rowsInserted signal.
-        
+
         :param index: The index of the item to replace.
         :param item: The new item that will replace the old one.
         """
         # The rowsInserted signal should be removed from ALL slots and then reconnected to ALL slots.
         # This will have to be manually done below, unless we start tracking which slots that signal is connected to.
-        
-        # Remove from ALL slots
-        self.model().rowsInserted.disconnect(self.handle_rows_inserted)
+
+        # Check if the signal is connected before disconnecting
+        try:
+            self.model().rowsInserted.disconnect(self.handle_rows_inserted)
+        except TypeError:
+            pass  # Signal was not connected
+
         # Perform the replacement
         self.takeItem(index)
         self.insertItem(index, item)
+
         # Reconnect to ALL slots
         self.model().rowsInserted.connect(
-                self.handle_rows_inserted, Qt.ConnectionType.QueuedConnection
-            )
+            self.handle_rows_inserted, Qt.ConnectionType.QueuedConnection
+        )
+
 
 class ModsPanel(QWidget):
     """
@@ -2507,7 +2513,9 @@ class ModsPanel(QWidget):
             partial(self.recalculate_list_errors_warnings, list_type="Inactive")
         )
 
-    def mod_list_updated(self, count: str, list_type: str, recalculate_list_errors_warnings: bool = True) -> None:
+    def mod_list_updated(
+        self, count: str, list_type: str, recalculate_list_errors_warnings: bool = True
+    ) -> None:
         # If count is 'drop', it indicates that the update was just a drag and drop within the list
         if count != "drop":
             logger.info(f"{list_type} mod count changed to: {count}")
@@ -2680,18 +2688,32 @@ class ModsPanel(QWidget):
             # Calculate internal errors and warnings for all mods in the respective mod list
             self.inactive_mods_list.recalculate_internal_errors_warnings()
 
-    def signal_clear_search(self, list_type: str, recalculate_list_errors_warnings: bool = True) -> None:
+    def signal_clear_search(
+        self, list_type: str, recalculate_list_errors_warnings: bool = True
+    ) -> None:
         if list_type == "Active":
             self.active_mods_search.clear()
-            self.signal_search_and_filters(list_type=list_type, pattern="", recalculate_list_errors_warnings=recalculate_list_errors_warnings)
+            self.signal_search_and_filters(
+                list_type=list_type,
+                pattern="",
+                recalculate_list_errors_warnings=recalculate_list_errors_warnings,
+            )
             self.active_mods_search.clearFocus()
         elif list_type == "Inactive":
             self.inactive_mods_search.clear()
-            self.signal_search_and_filters(list_type=list_type, pattern="", recalculate_list_errors_warnings=recalculate_list_errors_warnings)
+            self.signal_search_and_filters(
+                list_type=list_type,
+                pattern="",
+                recalculate_list_errors_warnings=recalculate_list_errors_warnings,
+            )
             self.inactive_mods_search.clearFocus()
 
     def signal_search_and_filters(
-        self, list_type: str, pattern: str, filters_active: bool = False, recalculate_list_errors_warnings: bool = True
+        self,
+        list_type: str,
+        pattern: str,
+        filters_active: bool = False,
+        recalculate_list_errors_warnings: bool = True,
     ) -> None:
         """
         Performs a search and/or applies filters based on the given parameters.
@@ -2704,7 +2726,7 @@ class ModsPanel(QWidget):
         """
 
         _filter = None
-        filter_state = None # The 'Hide Filter' state
+        filter_state = None  # The 'Hide Filter' state
         source_filter = None
         uuids = None
         # Determine which list to filter
@@ -2791,7 +2813,11 @@ class ModsPanel(QWidget):
             # Update item data
             item_data["filtered"] = item_filtered
             item.setData(Qt.ItemDataRole.UserRole, item_data)
-        self.mod_list_updated(str(len(uuids)), list_type, recalculate_list_errors_warnings=recalculate_list_errors_warnings)
+        self.mod_list_updated(
+            str(len(uuids)),
+            list_type,
+            recalculate_list_errors_warnings=recalculate_list_errors_warnings,
+        )
 
     def signal_search_mode_filter(self, list_type: str) -> None:
         if list_type == "Active":
