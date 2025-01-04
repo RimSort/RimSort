@@ -143,6 +143,7 @@ jobs:
           --skip-build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RENTRY_RAW_AUTH: ${{ secrets.RENTRY_RAW_AUTH }}
 
       - name: Build
         uses: Nuitka/Nuitka-Action@main

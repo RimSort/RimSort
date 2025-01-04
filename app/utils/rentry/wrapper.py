@@ -1,3 +1,4 @@
+import os
 import re
 import sys
 from json import loads as json_loads
@@ -17,14 +18,11 @@ from app.views.dialogue import (
 # Constants for Rentry API endpoints
 BASE_URL = "https://rentry.co"
 API_NEW_ENDPOINT = f"{BASE_URL}/api/new"
-_HEADERS = {"Referer": BASE_URL}
-# TODO: rentry-auth code
-"""
-Contact (support@rentry.co) for auth code to use here.
-This header then gives access to all posts at /raw)
-Need this auth code for rentry import to work
-Info about the issue https://github.com/radude/rentry/issues/34
-"""
+RENTRY_RAW_AUTH = os.getenv("RENTRY_RAW_AUTH", "")  # Provided with every build, if using interpreter set it manually using your own auth code
+_HEADERS = {
+    "Referer": BASE_URL,
+    "rentry-auth": RENTRY_RAW_AUTH,  # This header allows access to /raw endpoint
+}
 
 
 class HttpClient:
@@ -163,6 +161,10 @@ class RentryImport:
         self.package_ids: list[
             str
         ] = []  # Initialize an empty list to store package IDs
+        if RENTRY_RAW_AUTH == "":
+            logger.info("Rentry Raw Auth is blank.")
+        else:
+            logger.info("Rentry Raw Auth is set.")
         self.input_dialog()  # Call the input_dialog method to set up the UI
 
     def input_dialog(self) -> None:
@@ -209,15 +211,9 @@ class RentryImport:
             raw_url = (
                 rentry_link if rentry_link.endswith("/raw") else f"{rentry_link}/raw"
             )
-            response = requests.get(raw_url)  # Fetch the content from the raw URL
+            response = requests.get(raw_url, headers=_HEADERS)  # Fetch the content from the raw URL
 
             if response.status_code == 200:
-                # TODO: Remove this warning when rentry-authorization is fixed
-                show_warning(
-                    title="Rentry Error",
-                    text="Rentry Import is currently broken due to rentry authorization issue.",
-                    details=f"Info about the issue {("https://github.com/radude/rentry/issues/34")}",
-                )
                 # Decode the content using UTF-8
                 page_content = response.content.decode("utf-8")
 
@@ -231,6 +227,7 @@ class RentryImport:
                     if match[0] or match[1]
                 ]
                 logger.info("Parsed package_ids successfully.")
+                logger.info(f"Number of package_ids found: {str(len(self.package_ids))}")
             else:
                 # Handle non-200 responses
                 RentryError().show_response_error(response)
