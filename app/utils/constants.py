@@ -1,6 +1,8 @@
 from enum import Enum
 from typing import Any
 
+from PySide6.QtGui import QColor
+
 
 class SortMethod(str, Enum):
     ALPHABETICAL = "Alphabetical"
@@ -72,3 +74,5 @@ KNOWN_MOD_REPLACEMENTS = {
  "brrainz.harmony": {"zetrith.prepatcher"},
  "aoba.motorization.engine": {"rimthunder.core"}
 }
+
+MOD_DEFAULT_COLOR = QColor("#e6edf3")

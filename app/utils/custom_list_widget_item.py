@@ -2,7 +2,8 @@ from typing import Any
 
 from loguru import logger
 from PySide6.QtCore import QObject
-from PySide6.QtWidgets import QListWidgetItem
+from PySide6.QtGui import QAction
+from PySide6.QtWidgets import QListWidgetItem, QMenu
 
 
 class CustomListWidgetItem(QListWidgetItem):

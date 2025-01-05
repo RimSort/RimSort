@@ -1,6 +1,7 @@
 from typing import Any, Optional
 
 from loguru import logger
+from PySide6.QtGui import QColor
 
 from app.utils.metadata import MetadataManager
 
@@ -30,6 +31,7 @@ class CustomListWidgetItemMetadata:
         filtered: bool = False,
         invalid: Optional[bool] = None,
         mismatch: Optional[bool] = None,
+        mod_color: QColor = QColor("#e6edf3"),
     ) -> None:
         """
         Must provide a uuid, the rest is optional.
@@ -60,6 +62,7 @@ class CustomListWidgetItemMetadata:
         self.mismatch = (
             mismatch if mismatch is not None else self.get_mismatch_by_uuid(uuid)
         )
+        self.mod_color = mod_color
         logger.debug(
             f"Finished initializing CustomListWidgetItemMetadata for uuid: {uuid}"
         )
