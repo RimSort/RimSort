@@ -4,6 +4,9 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QLabel
 
+"""
+All types of custom QLabels are implemented here.
+"""
 
 class ClickableQLabel(QLabel):
     """
@@ -44,6 +47,12 @@ class AdvancedClickableQLabel(QLabel):
     def handle_label_clicked(self) -> None:
         self.is_clicked = not self.is_clicked
         self.update_style()
+
+    def get_clicked(self) -> bool:
+        """
+        Returns the current state of the label.
+        """
+        return self.is_clicked
 
     def update_style(self) -> None:
         """
