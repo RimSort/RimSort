@@ -3,6 +3,7 @@ from typing import Any, Optional
 from loguru import logger
 from PySide6.QtGui import QColor
 
+from app.utils.constants import MOD_DEFAULT_COLOR
 from app.utils.metadata import MetadataManager
 
 
@@ -31,7 +32,7 @@ class CustomListWidgetItemMetadata:
         filtered: bool = False,
         invalid: Optional[bool] = None,
         mismatch: Optional[bool] = None,
-        mod_color: QColor = QColor("#e6edf3"),
+        mod_color: QColor = MOD_DEFAULT_COLOR,
     ) -> None:
         """
         Must provide a uuid, the rest is optional.

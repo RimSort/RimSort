@@ -489,6 +489,10 @@ class ModListItemInner(QWidget):
             new_widget_object_name = "ListItemLabelInvalid"
         else:
             new_widget_object_name = "ListItemLabel"
+        if item_data["mod_color"] == MOD_DEFAULT_COLOR:
+            # Need to reset custom colors this way because the color is set using setStyleSheet
+            # After reseting, the behavior for unpolish() and polish() works as expected
+            self.main_label.setStyleSheet("")
         if widget_object_name != new_widget_object_name:
             logger.debug("Repolishing: " + new_widget_object_name)
             self.main_label.setObjectName(new_widget_object_name)
@@ -795,6 +799,8 @@ class ModListWidget(QListWidget):
             delete_mod_dds_only_action = None
             # Change mod name color
             change_mod_name_color_action = None
+            # Reset mod name color
+            reset_mod_name_color_action = None
 
             # Get all selected CustomListWidgetItems
             selected_items = self.selectedItems()
@@ -814,6 +820,8 @@ class ModListWidget(QListWidget):
                     # Change mod name color action
                     change_mod_name_color_action = QAction()
                     change_mod_name_color_action.setText("Change mod color")
+                    reset_mod_name_color_action = QAction()
+                    reset_mod_name_color_action.setText("Reset mod color")
                     # If we have a "url" or "steam_url"
                     if mod_metadata.get("url") or mod_metadata.get("steam_url"):
                         open_url_browser_action = QAction()
@@ -956,6 +964,8 @@ class ModListWidget(QListWidget):
                         # Change mod name color action
                         change_mod_name_color_action = QAction()
                         change_mod_name_color_action.setText("Change mod color(s)")
+                        reset_mod_name_color_action = QAction()
+                        reset_mod_name_color_action.setText("Reset mod color(s)")
                         # If we have a "url" or "steam_url"
                         if mod_metadata.get("url") or mod_metadata.get("steam_url"):
                             open_url_browser_action = QAction()
@@ -1065,6 +1075,8 @@ class ModListWidget(QListWidget):
                 context_menu.addAction(open_folder_action)
             if change_mod_name_color_action:
                 context_menu.addAction(change_mod_name_color_action)
+            if reset_mod_name_color_action:
+                context_menu.addAction(reset_mod_name_color_action)
             if open_url_browser_action:
                 context_menu.addAction(open_url_browser_action)
             if open_mod_steam_action:
@@ -1574,6 +1586,8 @@ class ModListWidget(QListWidget):
                             self.toggle_warning(mod_metadata["packageid"], uuid)
                         elif action == change_mod_name_color_action:
                             self.change_mod_name_color(uuid)
+                        elif action == reset_mod_name_color_action:
+                            self.reset_mod_name_color(uuid)
                         # Open folder action
                         elif action == open_folder_action:  # ACTION: Open folder
                             if os.path.exists(mod_path):  # If the path actually exists
@@ -2205,7 +2219,7 @@ class ModListWidget(QListWidget):
             item_data["warning_toggled"] = False
         item.setData(Qt.ItemDataRole.UserRole, item_data)
         self.recalculate_warnings_signal.emit()
-        
+
     def change_mod_name_color(self, uuid: str) -> None:
         current_mod_index = self.uuids.index(uuid)
         item = self.item(current_mod_index)
@@ -2213,6 +2227,13 @@ class ModListWidget(QListWidget):
         # Show window to change color
         color = QColorDialog.getColor()
         item_data["mod_color"] = color
+        item.setData(Qt.ItemDataRole.UserRole, item_data)
+
+    def reset_mod_name_color(self, uuid: str) -> None:
+        current_mod_index = self.uuids.index(uuid)
+        item = self.item(current_mod_index)
+        item_data = item.data(Qt.ItemDataRole.UserRole)
+        item_data["mod_color"] = MOD_DEFAULT_COLOR
         item.setData(Qt.ItemDataRole.UserRole, item_data)
 
     def replaceItemAtIndex(self, index: int, item: CustomListWidgetItem) -> None:
