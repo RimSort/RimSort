@@ -300,12 +300,17 @@ class ModListItemInner(QWidget):
             self.main_label.setStyleSheet(
                 f"color: {self.mod_color.name()};"
             )
+            self.main_label.setObjectName("ListItemLabelCustomColor")
         elif self.filtered:
             self.main_label.setObjectName("ListItemLabelFiltered")
         elif errors_warnings:
             self.main_label.setObjectName("ListItemLabelInvalid")
         else:
             self.main_label.setObjectName("ListItemLabel")
+        if self.mod_color == MOD_DEFAULT_COLOR:
+            # Need to reset custom colors this way because the color is set using setStyleSheet
+            # After reseting, the behavior for unpolish() and polish() works as expected
+            self.main_label.setStyleSheet("")
         # Add icons
         if self.git_icon:
             self.main_item_layout.addWidget(self.git_icon, Qt.AlignmentFlag.AlignRight)
