@@ -177,7 +177,7 @@ class ModListItemInner(QWidget):
         self.mismatch = mismatch
         # Cache SettingsManager instance
         self.settings_controller = settings_controller
-        # Cache the mod color
+        # Cache the mod text color
         self.mod_text_color = mod_text_color
 
         # All data, including name, author, package id, dependencies,
