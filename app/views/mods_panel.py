@@ -2386,11 +2386,11 @@ class ModsPanel(QWidget):
         self.errors_summary_layout.setSpacing(2)
         self.warnings_icon: QLabel = QLabel()
         self.warnings_icon.setPixmap(ModListIcons.warning_icon().pixmap(QSize(20, 20)))
-        self.warnings_text: AdvancedClickableQLabel = AdvancedClickableQLabel("0 warning(s)")
+        self.warnings_text: AdvancedClickableQLabel = AdvancedClickableQLabel("0 warnings")
         self.warnings_text.setObjectName("summaryValue")
         self.errors_icon: QLabel = QLabel()
         self.errors_icon.setPixmap(ModListIcons.error_icon().pixmap(QSize(20, 20)))
-        self.errors_text: AdvancedClickableQLabel = AdvancedClickableQLabel("0 error(s)")
+        self.errors_text: AdvancedClickableQLabel = AdvancedClickableQLabel("0 errors")
         self.errors_text.setObjectName("summaryValue")
         self.warnings_layout = QHBoxLayout()
         self.warnings_layout.addWidget(self.warnings_icon, 1)
@@ -2657,8 +2657,9 @@ class ModsPanel(QWidget):
             # Calculate total errors and warnings and set the text and tool tip for the summary
             if total_error_text or total_warning_text or num_errors or num_warnings:
                 self.errors_summary_frame.setHidden(False)
-                self.warnings_text.setText(f"{num_warnings} warning(s)")
-                self.errors_text.setText(f"{num_errors} error(s)")
+                padding = " "
+                self.warnings_text.setText(f"{padding}{num_warnings} warning(s)")
+                self.errors_text.setText(f"{padding}{num_errors} error(s)")
                 self.errors_icon.setToolTip(
                     total_error_text.lstrip() if total_error_text else ""
                 )
