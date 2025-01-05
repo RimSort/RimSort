@@ -45,6 +45,7 @@ class EventBus(QObject):
 
     # Edit Menu bar signals
     do_rule_editor = Signal()
+    reset_mod_colors_signal = Signal()
 
     # Download Menu bar signals
     do_add_git_mod = Signal()
