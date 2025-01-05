@@ -512,6 +512,9 @@ class SettingsController(QObject):
         self.settings_dialog.mod_type_filter_checkbox.setChecked(
             self.settings.mod_type_filter_toggle
         )
+        self.settings_dialog.hide_invalid_mods_when_filtering_checkbox.setChecked(
+            self.settings.hide_invalid_mods_when_filtering_toggle
+        )
         self.settings_dialog.show_duplicate_mods_warning_checkbox.setChecked(
             self.settings.duplicate_mods_warning
         )
