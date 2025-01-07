@@ -4,6 +4,8 @@ import sys
 from enum import Enum
 from errno import ENOTEMPTY
 from functools import partial
+from os import makedirs
+from os.path import exists
 from pathlib import Path
 from shutil import copy2, copytree, rmtree
 from traceback import format_exc
@@ -371,6 +373,8 @@ class ModListItemInner(QWidget):
         supported_versions_line = f"Supported Versions: {supported_versions_text}\n"
 
         path = metadata.get("path", "Not specified")
+        if not exists(path):
+            makedirs(path, exist_ok=True)
         path_line = f"Path: {path}"
 
         return "".join(
