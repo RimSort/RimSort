@@ -76,7 +76,7 @@ RimSort is built in Python using the [PySide6](https://pypi.org/project/PySide6/
   - You can circumvent this issue by using `xattr` command to manually whitelist:
     - `xattr -d com.apple.quarantine /path/to/RimSort.app`
     - `xattr -d com.apple.quarantine /path/to/libsteam_api.dylib`
-  - Replace `/path/to/` with the actual path where the file/folder is, Example:
+  - Replace `/path/to/` with the actual path where the file/folder is, example:
     - `xattr -d com.apple.quarantine /Users/John/Downloads/RimSort.app`
 
 ### Setting up steamfiles module
