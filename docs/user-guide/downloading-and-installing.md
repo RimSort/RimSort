@@ -53,9 +53,13 @@ macOS
 > Apple has it's own Runtime Protection called [Gatekeeper](https://support.apple.com/guide/security/gatekeeper-and-runtime-protection-sec5599b66df/web) that can cause issues when trying to run RimSort (or execute dependent libs)!
 > You can circumvent this issue by using `xattr` command to manually whitelist:
 >
->     xattr -d com.apple.quarantine RimSort.app
->     xattr -d com.apple.quarantine libsteam_api.dylib
-> 
+>     xattr -d com.apple.quarantine /path/to/RimSort.app
+>     xattr -d com.apple.quarantine /path/to/libsteam_api.dylib
+>
+> Replace `/path/to/` with the actual path where the file/folder is, example:
+>
+>     xattr -d com.apple.quarantine /Users/John/Downloads/RimSort.app
+>
 > If you are for some reason trying to run the `i386` build on Apple silicon, don't enable watchdog when running the build through Rosetta
 
 {: .note }
