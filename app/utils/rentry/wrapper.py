@@ -161,6 +161,7 @@ class RentryImport:
             str
         ] = []  # Initialize an empty list to store package IDs
         self.settings_controller = settings_controller
+        # If user does not have an auth code, show a warning and do not proceed
         if settings_controller.settings.rentry_auth_code == "":
             logger.warning("Rentry Auth code not found in user settings.")
             show_warning(
