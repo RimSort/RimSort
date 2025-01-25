@@ -161,6 +161,13 @@ class RentryImport:
             str
         ] = []  # Initialize an empty list to store package IDs
         self.settings_controller = settings_controller
+        if settings_controller.settings.rentry_auth_code == "":
+            logger.warning("Rentry Auth code not found in user settings.")
+            show_warning(
+                title="Rentry Auth Code Not Found",
+                text="You need to email support@rentry.co and request an auth code. Then paste it into Settings -> Advanced -> Rentry Auth.",
+            )
+            return
         # Retrieve auth code from user settings
         _HEADERS.update({"rentry-auth": settings_controller.settings.rentry_auth_code})
         self.input_dialog()  # Call the input_dialog method to set up the UI
