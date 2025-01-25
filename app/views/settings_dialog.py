@@ -745,13 +745,13 @@ class SettingsDialog(QDialog):
         auth_group = QGroupBox()
         tab_layout.addWidget(auth_group)
 
-        group_layout = QGridLayout()
-        auth_group.setLayout(group_layout)
+        auth_group_layout = QGridLayout()
+        auth_group.setLayout(auth_group_layout)
 
         rentry_auth_label = QLabel("Rentry Auth:")
-        group_layout.addWidget(
+        auth_group_layout.addWidget(
             rentry_auth_label, 0, 0, alignment=Qt.AlignmentFlag.AlignRight
-            )
+        )
 
         self.rentry_auth_code = QLineEdit()
         self.rentry_auth_code.setTextMargins(GUIInfo().text_field_margins)
@@ -760,7 +760,7 @@ class SettingsDialog(QDialog):
             "Obtain rentry auth code by emailing: support@rentry.co"
         )
         # TODO: If we add a rentry auth code with builds, we should change placeholder to clarify this code will be used instead of the provided one
-        group_layout.addWidget(self.rentry_auth_code, 0, 1)
+        auth_group_layout.addWidget(self.rentry_auth_code, 0, 1)
 
         github_identity_group = QGroupBox()
         tab_layout.addWidget(github_identity_group)
