@@ -20,6 +20,7 @@ BASE_URL = "https://rentry.co"
 API_NEW_ENDPOINT = f"{BASE_URL}/api/new"
 _HEADERS = {
     "Referer": BASE_URL,
+    "rentry-auth": "",  # This header allows access to /raw endpoint. Updated with auth code from user settings
 }
 
 
@@ -161,7 +162,7 @@ class RentryImport:
         ] = []  # Initialize an empty list to store package IDs
         self.settings_controller = settings_controller
         # Retrieve auth code from user settings
-        _HEADERS.update({"rentry-auth": settings_controller.settings.rentry_auth_code})  # This header allows access to /raw endpoint
+        _HEADERS.update({"rentry-auth": settings_controller.settings.rentry_auth_code})
         self.input_dialog()  # Call the input_dialog method to set up the UI
 
     def input_dialog(self) -> None:
