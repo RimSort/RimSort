@@ -2171,8 +2171,6 @@ class ModListWidget(QListWidget):
 
         Also purge any deleted SteamCMD mods from acf metadata.
 
-        If deletion is made on active modlist, the modlist is saved.
-
         Refresh modlists when done.
 
         :param selected_items: List of items to delete.
