@@ -1325,7 +1325,7 @@ class ModListWidget(QListWidget):
                     # Prompt user
                     answer = show_dialogue_conditional(
                         title="Are you sure?",
-                        text=f"You have selected {len(publishedfileids)} mods for unsubscribe.",
+                        text=f"You have selected {len(publishedfileids)} mods for unsubscribe and delete.",
                         information="\nDo you want to proceed?",
                     )
                     if answer == "&Yes":
@@ -1338,6 +1338,7 @@ class ModListWidget(QListWidget):
                                 [eval(str_pfid) for str_pfid in publishedfileids],
                             ]
                         )
+                        self.delete_mods(selected_items, steamcmd_acf_pfid_purge)
                     return True
                 elif (
                     action == add_to_steamdb_blacklist_action
@@ -1412,7 +1413,7 @@ class ModListWidget(QListWidget):
                     if answer == "&Yes":
                         self.delete_mods(selected_items, steamcmd_acf_pfid_purge)
                         return True
-                elif action == delete_mod_keep_dds_action:  # ACTION: Delete mods action
+                elif action == delete_mod_keep_dds_action:  # ACTION: Delete mods, keep dds action
                     answer = show_dialogue_conditional(
                         title="Are you sure?",
                         text=f"You have selected {len(selected_items)} mods for deletion.",
@@ -1448,7 +1449,7 @@ class ModListWidget(QListWidget):
                             publishedfileids=steamcmd_acf_pfid_purge
                         )
                     return True
-                elif action == delete_mod_dds_only_action:  # ACTION: Delete mods action
+                elif action == delete_mod_dds_only_action:  # ACTION: Delete mod dds only action
                     answer = show_dialogue_conditional(
                         title="Are you sure?",
                         text=f"You have selected {len(selected_items)} mods to Delete optimized textures (.dds files only)",
@@ -2175,6 +2176,7 @@ class ModListWidget(QListWidget):
         :param selected_items: List of items to delete.
         :param steam_acf_pfid_purge: Set that tracks SteamCMD pfids to purge from acf data
         """
+        # TODO: If deleting from active modlist, save before refresh to prevent pop up about missing mods (the ones which were just deleted...)
         for source_item in selected_items:
             if type(source_item) is CustomListWidgetItem:
                 item_data = source_item.data(Qt.ItemDataRole.UserRole)
