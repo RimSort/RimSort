@@ -1333,7 +1333,7 @@ class MainContent(QObject):
 
     def _do_import_list_rentry(self) -> None:
         # Create an instance of RentryImport
-        rentry_import = RentryImport()
+        rentry_import = RentryImport(self.settings_controller)
         # Exit if user cancels or no package IDs
         if not rentry_import.package_ids:
             logger.debug("USER ACTION: pressed cancel or no package IDs, passing")

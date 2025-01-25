@@ -1,4 +1,3 @@
-import os
 import re
 import sys
 from json import loads as json_loads
@@ -8,6 +7,7 @@ import requests
 from loguru import logger
 from PySide6.QtWidgets import QMessageBox
 
+from app.controllers.settings_controller import SettingsController
 from app.views.dialogue import (
     InformationBox,
     show_dialogue_input,
@@ -18,10 +18,8 @@ from app.views.dialogue import (
 # Constants for Rentry API endpoints
 BASE_URL = "https://rentry.co"
 API_NEW_ENDPOINT = f"{BASE_URL}/api/new"
-RENTRY_RAW_AUTH = os.getenv("RENTRY_RAW_AUTH", "")  # Provided with every build, if using interpreter set it manually using your own auth code
 _HEADERS = {
     "Referer": BASE_URL,
-    "rentry-auth": RENTRY_RAW_AUTH,  # This header allows access to /raw endpoint
 }
 
 
@@ -156,15 +154,14 @@ class RentryUpload:
 class RentryImport:
     """Class to handle importing Rentry.co links and extracting package IDs."""
 
-    def __init__(self) -> None:
+    def __init__(self, settings_controller: SettingsController) -> None:
         """Initialize the Rentry Import instance and prompt for a link."""
         self.package_ids: list[
             str
         ] = []  # Initialize an empty list to store package IDs
-        if RENTRY_RAW_AUTH == "":
-            logger.debug("Rentry Raw Auth is blank.")
-        else:
-            logger.debug("Rentry Raw Auth is set.")
+        self.settings_controller = settings_controller
+        # Retrieve auth code from user settings
+        _HEADERS.update({"rentry-auth": settings_controller.settings.rentry_auth_code})  # This header allows access to /raw endpoint
         self.input_dialog()  # Call the input_dialog method to set up the UI
 
     def input_dialog(self) -> None:
