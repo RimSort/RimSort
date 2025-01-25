@@ -7,7 +7,7 @@ from functools import partial
 from pathlib import Path
 from shutil import copy2, copytree, rmtree
 from traceback import format_exc
-from typing import cast
+from typing import List, Set, cast
 
 from loguru import logger
 from PySide6.QtCore import QEvent, QModelIndex, QObject, QRectF, QSize, Qt, Signal
@@ -644,6 +644,16 @@ class ModListWidget(QListWidget):
         # * The only scenario of where the item is QListWidgetItem is in dropEvent, where it's dropped from one list to another.
         # * This is handled in dropEvent directly and it converts this item to CustomListWidgetItem.
         return cast(CustomListWidgetItem, widget)
+
+    def selectedItems(self) -> List[CustomListWidgetItem]:  # type: ignore  # Ignore mypy type error for this line
+        """
+        Return the currently selected items.
+
+        It should always be a list of CustomListWidgetItem.
+        """
+        # TODO: Not sure why mypy kept complaining about this method overriding the return type...?
+        widgets = super().selectedItems()
+        return cast(List[CustomListWidgetItem], widgets)
 
     def dropEvent(self, event: QDropEvent) -> None:
         super().dropEvent(event)
@@ -1400,58 +1410,8 @@ class ModListWidget(QListWidget):
                         + "\nDo you want to proceed?",
                     )
                     if answer == "&Yes":
-                        for source_item in selected_items:
-                            if type(source_item) is CustomListWidgetItem:
-                                item_data = source_item.data(Qt.ItemDataRole.UserRole)
-                                uuid = item_data["uuid"]
-                                mod_metadata = (
-                                    self.metadata_manager.internal_local_metadata[uuid]
-                                )
-                                if mod_metadata[
-                                    "data_source"  # Disallow Official Expansions
-                                ] != "expansion" or not mod_metadata[
-                                    "packageid"
-                                ].startswith("ludeon.rimworld"):
-                                    try:
-                                        rmtree(
-                                            mod_metadata["path"],
-                                            ignore_errors=False,
-                                            onerror=handle_remove_read_only,
-                                        )
-                                        if mod_metadata.get("steamcmd"):
-                                            steamcmd_acf_pfid_purge.add(
-                                                mod_metadata["publishedfileid"]
-                                            )
-                                    except FileNotFoundError:
-                                        logger.debug(
-                                            f"Unable to delete mod. Path does not exist: {mod_metadata['path']}"
-                                        )
-                                        pass
-                                    except OSError as e:
-                                        if sys.platform == "win32":
-                                            error_code = e.winerror
-                                        else:
-                                            error_code = e.errno
-                                        if e.errno == ENOTEMPTY:
-                                            warning_text = "Mod directory was not empty. Please close all programs accessing files or subfolders in the directory (including your file manager) and try again."
-                                        else:
-                                            warning_text = "An OSError occurred while deleting mod."
-
-                                        logger.warning(
-                                            f"Unable to delete mod located at the path: {mod_metadata['path']}"
-                                        )
-                                        show_warning(
-                                            title="Unable to delete mod",
-                                            text=warning_text,
-                                            information=f"{e.strerror} occurred at {e.filename} with error code {error_code}.",
-                                        )
-                                        continue
-                    # Purge any deleted SteamCMD mods from acf metadata
-                    if steamcmd_acf_pfid_purge:
-                        self.metadata_manager.steamcmd_purge_mods(
-                            publishedfileids=steamcmd_acf_pfid_purge
-                        )
-                    return True
+                        self.delete_mods(selected_items, steamcmd_acf_pfid_purge)
+                        return True
                 elif action == delete_mod_keep_dds_action:  # ACTION: Delete mods action
                     answer = show_dialogue_conditional(
                         title="Are you sure?",
@@ -2193,6 +2153,73 @@ class ModListWidget(QListWidget):
             self.handle_rows_inserted, Qt.ConnectionType.QueuedConnection
         )
 
+    def purge_steamcmd_mods_from_acf(self, steamcmd_acf_pfid_purge: Set[str]) -> None:
+        """ Purge any deleted SteamCMD mods from acf metadata """
+        if steamcmd_acf_pfid_purge:
+            self.metadata_manager.steamcmd_purge_mods(
+                publishedfileids=steamcmd_acf_pfid_purge
+            )
+
+    def delete_mods(
+        self,
+        selected_items: List[CustomListWidgetItem],
+        steamcmd_acf_pfid_purge: Set[str],
+    ) -> None:
+        """
+        Given a list of mods, delete them locally.
+
+        Also purge any deleted SteamCMD mods from acf metadata.
+
+        Refresh modlists when done.
+
+        :param selected_items: List of items to delete.
+        :param steam_acf_pfid_purge: Set that tracks SteamCMD pfids to purge from acf data
+        """
+        for source_item in selected_items:
+            if type(source_item) is CustomListWidgetItem:
+                item_data = source_item.data(Qt.ItemDataRole.UserRole)
+                uuid = item_data["uuid"]
+                mod_metadata = self.metadata_manager.internal_local_metadata[uuid]
+                if mod_metadata[
+                    "data_source"  # Disallow Official Expansions
+                ] != "expansion" or not mod_metadata["packageid"].startswith(
+                    "ludeon.rimworld"
+                ):
+                    try:
+                        rmtree(
+                            mod_metadata["path"],
+                            ignore_errors=False,
+                            onerror=handle_remove_read_only,
+                        )
+                        if mod_metadata.get("steamcmd"):
+                            steamcmd_acf_pfid_purge.add(mod_metadata["publishedfileid"])
+                    except FileNotFoundError:
+                        logger.debug(
+                            f"Unable to delete mod. Path does not exist: {mod_metadata['path']}"
+                        )
+                        pass
+                    except OSError as e:
+                        if sys.platform == "win32":
+                            error_code = e.winerror
+                        else:
+                            error_code = e.errno
+                        if e.errno == ENOTEMPTY:
+                            warning_text = "Mod directory was not empty. Please close all programs accessing files or subfolders in the directory (including your file manager) and try again."
+                        else:
+                            warning_text = "An OSError occurred while deleting mod."
+
+                        logger.warning(
+                            f"Unable to delete mod located at the path: {mod_metadata['path']}"
+                        )
+                        show_warning(
+                            title="Unable to delete mod",
+                            text=warning_text,
+                            information=f"{e.strerror} occurred at {e.filename} with error code {error_code}.",
+                        )
+                        continue
+
+        self.purge_steamcmd_mods_from_acf(steamcmd_acf_pfid_purge)
+        self.refresh_signal.emit()
 
 class ModsPanel(QWidget):
     """
