@@ -21,7 +21,6 @@ from PySide6.QtGui import (
     QIcon,
     QKeyEvent,
     QKeySequence,
-    QMouseEvent,
     QResizeEvent,
 )
 from PySide6.QtWidgets import (
@@ -48,6 +47,7 @@ from app.utils.constants import (
 )
 from app.utils.custom_list_widget_item import CustomListWidgetItem
 from app.utils.custom_list_widget_item_metadata import CustomListWidgetItemMetadata
+from app.utils.custom_qlabels import AdvancedClickableQLabel, ClickableQLabel
 from app.utils.event_bus import EventBus
 from app.utils.generic import (
     copy_to_clipboard_safely,
@@ -65,14 +65,6 @@ from app.views.dialogue import (
     show_dialogue_input,
     show_warning,
 )
-
-
-class ClickableQLabel(QLabel):
-    clicked = Signal()
-
-    def mousePressEvent(self, ev: QMouseEvent) -> None:
-        self.clicked.emit()
-        super().mousePressEvent(ev)
 
 
 def uuid_no_key(uuid: str) -> str:
@@ -2458,12 +2450,14 @@ class ModsPanel(QWidget):
         self.errors_summary_layout.setSpacing(2)
         self.warnings_icon: QLabel = QLabel()
         self.warnings_icon.setPixmap(ModListIcons.warning_icon().pixmap(QSize(20, 20)))
-        self.warnings_text: QLabel = QLabel("0 warnings(s)")
+        self.warnings_text: AdvancedClickableQLabel = AdvancedClickableQLabel("0 warnings")
         self.warnings_text.setObjectName("summaryValue")
+        self.warnings_text.setToolTip("Click to only show mods with warnings")
         self.errors_icon: QLabel = QLabel()
         self.errors_icon.setPixmap(ModListIcons.error_icon().pixmap(QSize(20, 20)))
-        self.errors_text: QLabel = QLabel("0 error(s)")
+        self.errors_text: AdvancedClickableQLabel = AdvancedClickableQLabel("0 errors")
         self.errors_text.setObjectName("summaryValue")
+        self.errors_text.setToolTip("Click to only show mods with errors")
         self.warnings_layout = QHBoxLayout()
         self.warnings_layout.addWidget(self.warnings_icon, 1)
         self.warnings_layout.addWidget(self.warnings_text, 99)
@@ -2729,8 +2723,9 @@ class ModsPanel(QWidget):
             # Calculate total errors and warnings and set the text and tool tip for the summary
             if total_error_text or total_warning_text or num_errors or num_warnings:
                 self.errors_summary_frame.setHidden(False)
-                self.warnings_text.setText(f"{num_warnings} warning(s)")
-                self.errors_text.setText(f"{num_errors} error(s)")
+                padding = " "
+                self.warnings_text.setText(f"{padding}{num_warnings} warning(s)")
+                self.errors_text.setText(f"{padding}{num_errors} error(s)")
                 self.errors_icon.setToolTip(
                     total_error_text.lstrip() if total_error_text else ""
                 )
@@ -2782,6 +2777,8 @@ class ModsPanel(QWidget):
         """
         Performs a search and/or applies filters based on the given parameters.
 
+        Called anytime the search bar text changes or the filters change.
+
         Args:
             list_type (str): The type of list to search within (Active or Inactive).
             pattern (str): The pattern to search for.
@@ -2793,6 +2790,11 @@ class ModsPanel(QWidget):
         filter_state = None  # The 'Hide Filter' state
         source_filter = None
         uuids = None
+        # Notify controller when search bar text or any filters change
+        if list_type == "Active":
+            EventBus().filters_changed_in_active_modlist.emit()
+        elif list_type == "Inactive":
+            EventBus().filters_changed_in_inactive_modlist.emit()
         # Determine which list to filter
         if list_type == "Active":
             _filter = self.active_mods_search_filter
@@ -2830,6 +2832,7 @@ class ModsPanel(QWidget):
             # Hide invalid items if enabled in settings
             if self.settings_controller.settings.hide_invalid_mods_when_filtering_toggle:
                 invalid = item_data["invalid"]
+                # TODO: I dont think filtered should be set at all for invalid items... I misunderstood what it represents
                 if invalid and filters_active:
                     item_data["filtered"] = True
                     item.setHidden(True)
@@ -2870,10 +2873,14 @@ class ModsPanel(QWidget):
             if filter_state:
                 item.setHidden(item_filtered)
                 if item_filtered:
+                    item_data["hidden_by_filter"] = True
                     item_filtered = False
+                else:
+                    item_data["hidden_by_filter"] = False
             else:
                 if item_filtered and item.isHidden():
                     item.setHidden(False)
+                    item_data["hidden_by_filter"] = False
             # Update item data
             item_data["filtered"] = item_filtered
             item.setData(Qt.ItemDataRole.UserRole, item_data)
