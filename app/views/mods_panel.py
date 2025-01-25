@@ -2171,12 +2171,14 @@ class ModListWidget(QListWidget):
 
         Also purge any deleted SteamCMD mods from acf metadata.
 
+        If deletion is made on active modlist, the modlist is saved.
+
         Refresh modlists when done.
 
         :param selected_items: List of items to delete.
         :param steam_acf_pfid_purge: Set that tracks SteamCMD pfids to purge from acf data
         """
-        # TODO: If deleting from active modlist, save before refresh to prevent pop up about missing mods (the ones which were just deleted...)
+        # TODO: Find out if we can delete mod(s) and update everything WITHOUT refreshing. Alternatively find a way to avoid 'missing mods' warning.
         for source_item in selected_items:
             if type(source_item) is CustomListWidgetItem:
                 item_data = source_item.data(Qt.ItemDataRole.UserRole)
@@ -2221,6 +2223,11 @@ class ModListWidget(QListWidget):
                         continue
 
         self.purge_steamcmd_mods_from_acf(steamcmd_acf_pfid_purge)
+
+        # If deleting from active modlist, save the modlist
+        # This will still show an error for 'missing mods' once
+        if self.list_type == "Active":
+            EventBus().do_save_active_mods_list.emit()
         self.refresh_signal.emit()
 
 class ModsPanel(QWidget):
