@@ -2249,11 +2249,16 @@ class MainContent(QObject):
                         Eg. I download repo on 'D' hard drive on old laptop. Then I put the 'D' drive in new laptop.
                         When trying to perform an operation on that repo from the new laptop, you get the dubious ownership error.
 
-                        TODO: Check if owner is different, otherwise no need to add to safe directories.
+                        TODO: Include in PyGit2 migration.
+                        NOTE: Try-Except needed because GitPython does not handle it well when no safe directories exist... PyGit2 might be better at it.
                         """
-                        safe_directories = repo.git.config(
-                            "--global", "--get-all", "safe.directory"
-                        ).splitlines()
+                        try:
+                            safe_directories = repo.git.config(
+                                "--global", "--get-all", "safe.directory"
+                            ).splitlines()
+                        except GitCommandError:
+                            logger.debug("No safe directories present")
+                            safe_directories = []  # Allows code below to execute
 
                         # If not, add it to safe directories
                         if repo_path not in safe_directories:
