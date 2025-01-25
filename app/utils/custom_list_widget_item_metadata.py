@@ -28,6 +28,7 @@ class CustomListWidgetItemMetadata:
         warnings: str = "",
         warning_toggled: bool = False,
         filtered: bool = False,
+        hidden_by_filter: bool = False,
         invalid: Optional[bool] = None,
         mismatch: Optional[bool] = None,
     ) -> None:
@@ -42,6 +43,7 @@ class CustomListWidgetItemMetadata:
         :param warnings: a string of warnings for the notification tooltip
         :param warning_toggled: a bool representing if the warning/error icons are toggled off
         :param filtered: a bool representing whether the widget's item is filtered
+        :param hidden_by_filter: a bool representing whether the widget's item is hidden because of a filter (Search, or Mod Type (C#, Xml, Local Mod, Steam Mod etc.)
         :param invalid: a bool representing whether the widget's item is an invalid mod
         """
         # Do not cache the metadata manager, it will cause freezes/crashes when dragging mods.
@@ -53,6 +55,7 @@ class CustomListWidgetItemMetadata:
         self.errors = errors
         self.warnings = warnings
         self.filtered = filtered
+        self.hidden_by_filter = hidden_by_filter
         self.warning_toggled = warning_toggled
         self.invalid = (
             invalid if invalid is not None else self.get_invalid_by_uuid(uuid)

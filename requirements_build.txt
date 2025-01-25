@@ -1,1 +1,1 @@
-nuitka==2.5.9
+nuitka==2.6

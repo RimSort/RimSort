@@ -74,8 +74,10 @@ RimSort is built in Python using the [PySide6](https://pypi.org/project/PySide6/
 - Mac users should also keep in mind that Apple has its own Runtime Protection called [Gatekeeper](https://support.apple.com/guide/security/gatekeeper-and-runtime-protection-sec5599b66df/web)
   - This can cause issues when trying to run RimSort (or execute dependent libs)!
   - You can circumvent this issue by using `xattr` command to manually whitelist:
-    - `xattr -d com.apple.quarantine RimSort.app`
-    - `xattr -d com.apple.quarantine libsteam_api.dylib`
+    - `xattr -d com.apple.quarantine /path/to/RimSort.app`
+    - `xattr -d com.apple.quarantine /path/to/libsteam_api.dylib`
+  - Replace `/path/to/` with the actual path where the file/folder is, example:
+    - `xattr -d com.apple.quarantine /Users/John/Downloads/RimSort.app`
 
 ### Setting up steamfiles module
 
