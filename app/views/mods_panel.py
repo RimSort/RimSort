@@ -1239,55 +1239,7 @@ class ModListWidget(QListWidget):
                     and len(steam_mod_paths) > 0
                     and len(steam_publishedfileid_to_name) > 0
                 ):
-                    for path in steam_mod_paths:
-                        publishedfileid_from_folder_name = os.path.split(path)[1]
-                        mod_name = steam_publishedfileid_to_name.get(
-                            publishedfileid_from_folder_name
-                        )
-                        if mod_name:
-                            mod_name = sanitize_filename(mod_name)
-                        renamed_mod_path = str(
-                            (
-                                Path(
-                                    self.settings_controller.settings.instances[
-                                        self.settings_controller.settings.current_instance
-                                    ].local_folder
-                                )
-                                / (
-                                    mod_name
-                                    if mod_name
-                                    else publishedfileid_from_folder_name
-                                )
-                            )
-                        )
-                        if os.path.exists(path):
-                            try:
-                                if os.path.exists(renamed_mod_path):
-                                    logger.warning(
-                                        "Destination exists. Removing all files except for .dds textures first..."
-                                    )
-                                    delete_files_except_extension(
-                                        directory=renamed_mod_path, extension=".dds"
-                                    )
-                                try:
-                                    copytree(path, renamed_mod_path)
-                                except FileExistsError:
-                                    for root, dirs, files in os.walk(path):
-                                        dest_dir = root.replace(path, renamed_mod_path)
-                                        if not os.path.isdir(dest_dir):
-                                            os.makedirs(dest_dir)
-                                        for file in files:
-                                            src_file = os.path.join(root, file)
-                                            dst_file = os.path.join(dest_dir, file)
-                                            copy2(src_file, dst_file)
-                                logger.debug(
-                                    f'Successfully "converted" Steam mod by copying {publishedfileid_from_folder_name} -> {mod_name} and migrating mod to local mods directory'
-                                )
-                            except Exception as e:
-                                stacktrace = format_exc()
-                                logger.error(f"Failed to convert mod: {path} - {e}")
-                                logger.error(stacktrace)
-                    self.refresh_signal.emit()
+                    self.convert_steam_mods_to_local(steam_mod_paths, steam_publishedfileid_to_name)
                     return True
                 elif (  # ACTION: Re-subscribe to mod(s) with Steam
                     action == re_steam_action and len(steam_publishedfileid_to_name) > 0
@@ -2156,7 +2108,7 @@ class ModListWidget(QListWidget):
         self,
         selected_items: list[CustomListWidgetItem],
         steamcmd_acf_pfid_purge: set[str],
-    ) -> None:
+        ) -> None:
         """
         Given a list of mods, delete them locally.
 
@@ -2214,6 +2166,63 @@ class ModListWidget(QListWidget):
         self.purge_steamcmd_mods_from_acf(steamcmd_acf_pfid_purge)
         # TODO: Find out if we can delete mod(s) and update everything WITHOUT refreshing. 
         # Alternatively find a way to avoid 'missing mods' warning.
+        self.refresh_signal.emit()
+
+    def convert_steam_mods_to_local(
+            self, 
+            steam_mod_paths: list[str], 
+            steam_publishedfileid_to_name: dict[str, str],
+        ) -> None:
+        
+        for path in steam_mod_paths:
+            publishedfileid_from_folder_name = os.path.split(path)[1]
+            mod_name = steam_publishedfileid_to_name.get(
+                publishedfileid_from_folder_name
+            )
+            if mod_name:
+                mod_name = sanitize_filename(mod_name)
+            renamed_mod_path = str(
+                (
+                    Path(
+                        self.settings_controller.settings.instances[
+                            self.settings_controller.settings.current_instance
+                        ].local_folder
+                    )
+                    / (
+                        mod_name
+                        if mod_name
+                        else publishedfileid_from_folder_name
+                    )
+                )
+            )
+            if os.path.exists(path):
+                try:
+                    if os.path.exists(renamed_mod_path):
+                        logger.warning(
+                            "Destination exists. Removing all files except for .dds textures first..."
+                        )
+                        delete_files_except_extension(
+                            directory=renamed_mod_path, extension=".dds"
+                        )
+                    try:
+                        copytree(path, renamed_mod_path)
+                    except FileExistsError:
+                        for root, dirs, files in os.walk(path):
+                            dest_dir = root.replace(path, renamed_mod_path)
+                            if not os.path.isdir(dest_dir):
+                                os.makedirs(dest_dir)
+                            for file in files:
+                                src_file = os.path.join(root, file)
+                                dst_file = os.path.join(dest_dir, file)
+                                copy2(src_file, dst_file)
+                    logger.debug(
+                        f'Successfully "converted" Steam mod by copying {publishedfileid_from_folder_name} -> {mod_name} and migrating mod to local mods directory'
+                    )
+                except Exception as e:
+                    stacktrace = format_exc()
+                    logger.error(f"Failed to convert mod: {path} - {e}")
+                    logger.error(stacktrace)
+
         self.refresh_signal.emit()
 
 class ModsPanel(QWidget):
