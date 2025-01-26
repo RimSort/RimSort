@@ -1228,10 +1228,7 @@ class ModListWidget(QListWidget):
                                 steamcmd_publishedfileid_to_name.keys()
                             )
                         # Purge any deleted SteamCMD mods from acf metadata
-                        if steamcmd_acf_pfid_purge:
-                            self.metadata_manager.steamcmd_purge_mods(
-                                publishedfileids=steamcmd_acf_pfid_purge
-                            )
+                        self.purge_steamcmd_mods_from_acf(steamcmd_acf_pfid_purge)
                         # Emit signal to steamcmd downloader to re-download
                         self.steamcmd_downloader_signal.emit(
                             list(steamcmd_publishedfileid_to_name.keys())
@@ -1444,10 +1441,7 @@ class ModListWidget(QListWidget):
                                             mod_metadata["publishedfileid"]
                                         )
                     # Purge any deleted SteamCMD mods from acf metadata
-                    if steamcmd_acf_pfid_purge:
-                        self.metadata_manager.steamcmd_purge_mods(
-                            publishedfileids=steamcmd_acf_pfid_purge
-                        )
+                    self.purge_steamcmd_mods_from_acf(steamcmd_acf_pfid_purge)
                     return True
                 elif action == delete_mod_dds_only_action:  # ACTION: Delete mod dds only action
                     answer = show_dialogue_conditional(
@@ -1480,10 +1474,7 @@ class ModListWidget(QListWidget):
                                             mod_metadata["publishedfileid"]
                                         )
                     # Purge any deleted SteamCMD mods from acf metadata
-                    if steamcmd_acf_pfid_purge:
-                        self.metadata_manager.steamcmd_purge_mods(
-                            publishedfileids=steamcmd_acf_pfid_purge
-                        )
+                    self.purge_steamcmd_mods_from_acf(steamcmd_acf_pfid_purge)
                     return True
                 # Execute action for each selected mod
                 for source_item in selected_items:
@@ -2219,6 +2210,7 @@ class ModListWidget(QListWidget):
                         )
                         continue
 
+        # Purge any deleted SteamCMD mods from acf metadata
         self.purge_steamcmd_mods_from_acf(steamcmd_acf_pfid_purge)
         # TODO: Find out if we can delete mod(s) and update everything WITHOUT refreshing. 
         # Alternatively find a way to avoid 'missing mods' warning.
