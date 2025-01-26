@@ -7,7 +7,7 @@ from functools import partial
 from pathlib import Path
 from shutil import copy2, copytree, rmtree
 from traceback import format_exc
-from typing import List, Set, cast
+from typing import cast
 
 from loguru import logger
 from PySide6.QtCore import QEvent, QModelIndex, QObject, QRectF, QSize, Qt, Signal
@@ -645,7 +645,7 @@ class ModListWidget(QListWidget):
         # * This is handled in dropEvent directly and it converts this item to CustomListWidgetItem.
         return cast(CustomListWidgetItem, widget)
 
-    def selectedItems(self) -> List[CustomListWidgetItem]:  # type: ignore  # Ignore mypy type error for this line
+    def selectedItems(self) -> list[CustomListWidgetItem]:  # type: ignore  # Ignore mypy type error for this line
         """
         Return the currently selected items.
 
@@ -653,7 +653,7 @@ class ModListWidget(QListWidget):
         """
         # TODO: Not sure why mypy kept complaining about this method overriding the return type...?
         widgets = super().selectedItems()
-        return cast(List[CustomListWidgetItem], widgets)
+        return cast(list[CustomListWidgetItem], widgets)
 
     def dropEvent(self, event: QDropEvent) -> None:
         super().dropEvent(event)
@@ -2154,7 +2154,7 @@ class ModListWidget(QListWidget):
             self.handle_rows_inserted, Qt.ConnectionType.QueuedConnection
         )
 
-    def purge_steamcmd_mods_from_acf(self, steamcmd_acf_pfid_purge: Set[str]) -> None:
+    def purge_steamcmd_mods_from_acf(self, steamcmd_acf_pfid_purge: set[str]) -> None:
         """ Purge any deleted SteamCMD mods from acf metadata """
         if steamcmd_acf_pfid_purge:
             self.metadata_manager.steamcmd_purge_mods(
@@ -2163,8 +2163,8 @@ class ModListWidget(QListWidget):
 
     def delete_mods(
         self,
-        selected_items: List[CustomListWidgetItem],
-        steamcmd_acf_pfid_purge: Set[str],
+        selected_items: list[CustomListWidgetItem],
+        steamcmd_acf_pfid_purge: set[str],
     ) -> None:
         """
         Given a list of mods, delete them locally.
