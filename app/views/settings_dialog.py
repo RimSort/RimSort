@@ -438,6 +438,15 @@ class SettingsDialog(QDialog):
         explanatory_label.setWordWrap(True)
         tab_layout.addWidget(explanatory_label)
 
+        # Checkboxes
+        self.db_use_dependency_for_sorting_checkbox = QCheckBox(
+            "Use dependency rules for sorting."
+        )
+        self.db_use_dependency_for_sorting_checkbox.setToolTip(
+            "If enabled, Mods will be sorted such that dependencies are loaded before the dependent mod."
+        )
+        group_box_layout.addWidget(self.db_use_dependency_for_sorting_checkbox)
+
     def _do_db_builder_tab(self) -> None:
         tab = QWidget()
         self.tab_widget.addTab(tab, "DB Builder")
