@@ -773,6 +773,8 @@ class ModListWidget(QListWidget):
             re_steam_action = None
             # Unsubscribe + delete mod
             unsubscribe_mod_steam_action = None
+            # Convert Workshop -> local + Unsubscribe
+            convert_workshop_local_and_unsubscribe_action = None
             # Delete mod
             delete_mod_action = None
             # Delete mod (keep .dds)
@@ -1278,16 +1280,24 @@ class ModListWidget(QListWidget):
                         information="\nDo you want to proceed?",
                     )
                     if answer == "&Yes":
-                        logger.debug(
-                            f"Unsubscribing from {len(publishedfileids)} mod(s)"
-                        )
-                        self.steamworks_subscription_signal.emit(
-                            [
-                                "unsubscribe",
-                                [eval(str_pfid) for str_pfid in publishedfileids],
-                            ]
-                        )
+                        self.unsubscribe_from_steam_mods(publishedfileids)
                         self.delete_mods(selected_items, steamcmd_acf_pfid_purge)
+                    return True
+                elif (  # ACTION: Unsubscribe & make local copy of mod
+                    action == convert_workshop_local_and_unsubscribe_action
+                    and len(steam_mod_paths) > 0
+                    and len(steam_publishedfileid_to_name) > 0
+                ):
+                    publishedfileids = steam_publishedfileid_to_name.keys()
+                    # Prompt user
+                    answer = show_dialogue_conditional(
+                        title="Are you sure?",
+                        text=f"You have selected {len(publishedfileids)} mods for make local copy and unsubscribe on Steam.",
+                        information="\nDo you want to proceed?",
+                    )
+                    if answer == "&Yes":
+                        self.convert_steam_mods_to_local(steam_mod_paths, steam_publishedfileid_to_name)
+                        self.unsubscribe_from_steam_mods(publishedfileids)
                     return True
                 elif (
                     action == add_to_steamdb_blacklist_action
@@ -2173,7 +2183,12 @@ class ModListWidget(QListWidget):
             steam_mod_paths: list[str], 
             steam_publishedfileid_to_name: dict[str, str],
         ) -> None:
-        
+        """
+        Convert Steam mods to local mods.
+
+        :param steam_mod_paths: List of paths to Steam mods.
+        :param steam_publishedfileid_to_name: Dict of Steam publishedfileid to mod name.
+        """
         for path in steam_mod_paths:
             publishedfileid_from_folder_name = os.path.split(path)[1]
             mod_name = steam_publishedfileid_to_name.get(
@@ -2224,6 +2239,24 @@ class ModListWidget(QListWidget):
                     logger.error(stacktrace)
 
         self.refresh_signal.emit()
+
+    def unsubscribe_from_steam_mods(self, publishedfileids: list[str]) -> None:
+        """ 
+        Unsubscribe from Steam mods.
+
+        Does NOT delete the mods.
+
+        :param publishedfileids: List of publishedfileids to unsubscribe from.
+        """
+        logger.debug(
+            f"Unsubscribing from {len(publishedfileids)} mod(s)"
+        )
+        self.steamworks_subscription_signal.emit(
+            [
+                "unsubscribe",
+                [eval(str_pfid) for str_pfid in publishedfileids],
+            ]
+        )
 
 class ModsPanel(QWidget):
     """
