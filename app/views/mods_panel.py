@@ -2272,7 +2272,7 @@ class ModListWidget(QListWidget):
             logger.warning("Steam is not running. Cannot unsubscribe from Steam mods.")
             show_warning(
                 title="Steam not running",
-                text="Unable to unsubscribe from Steam mods. Ensure steam is running and try again.",
+                text="Unable to unsubscribe from Steam mods. Ensure Steam is running and try again.",
             )
             return False
 
@@ -2302,7 +2302,7 @@ class ModListWidget(QListWidget):
             logger.warning("Steam is not running. Cannot unsubscribe from Steam mods.")
             show_warning(
                 title="Steam not running",
-                text="Unable to resubscribe to Steam mods. Ensure steam is running and try again.",
+                text="Unable to resubscribe to Steam mods. Ensure Steam is running and try again.",
             )
             return False
 
