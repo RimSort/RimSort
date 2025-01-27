@@ -1275,19 +1275,7 @@ class ModListWidget(QListWidget):
                         information="\nThis operation will potentially delete .dds textures leftover. Steam is unreliable for this. Do you want to proceed?",
                     )
                     if answer == "&Yes":
-                        logger.debug(
-                            f"Unsubscribing + re-subscribing to {len(publishedfileids)} mod(s)"
-                        )
-                        for path in steam_mod_paths:
-                            delete_files_except_extension(
-                                directory=path, extension=".dds"
-                            )
-                        self.steamworks_subscription_signal.emit(
-                            [
-                                "resubscribe",
-                                [eval(str_pfid) for str_pfid in publishedfileids],
-                            ]
-                        )
+                        self.resubscribe_to_steam_mods(publishedfileids, steam_mod_paths)
                     return True
                 elif (  # ACTION: Unsubscribe & delete mod(s) with steam
                     action == unsubscribe_mod_steam_action
@@ -2298,6 +2286,40 @@ class ModListWidget(QListWidget):
             ]
         )
         # TODO: Find a way to catch any exception/failure to unsubscribe and return False...
+        return True
+
+    def resubscribe_to_steam_mods(self, publishedfileids: KeysView[Any], steam_mod_paths: list[str]) -> bool:
+        """
+        Resubscribe to Steam mods.
+
+        :param publishedfileids: List of publishedfileids to resubscribe to.
+        :param steam_mod_paths: List of paths to Steam mods.
+
+        :return: True if successful, False otherwise.
+        """
+        # Check if steam is running
+        if not check_if_steam_running():
+            logger.warning("Steam is not running. Cannot unsubscribe from Steam mods.")
+            show_warning(
+                title="Steam not running",
+                text="Unable to resubscribe to Steam mods. Ensure steam is running and try again.",
+            )
+            return False
+
+        logger.debug(
+            f"Unsubscribing + re-subscribing to {len(publishedfileids)} mod(s)"
+        )
+        for path in steam_mod_paths:
+            delete_files_except_extension(
+                directory=path, extension=".dds"
+            )
+        self.steamworks_subscription_signal.emit(
+            [
+                "resubscribe",
+                [eval(str_pfid) for str_pfid in publishedfileids],
+            ]
+        )
+        # TODO: Find a way to catch any exception/failure to resubscribe and return False...
         return True
 
 class ModsPanel(QWidget):
