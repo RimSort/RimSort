@@ -7,10 +7,19 @@ from functools import partial
 from pathlib import Path
 from shutil import copy2, copytree, rmtree
 from traceback import format_exc
-from typing import cast
+from typing import Any, KeysView, cast
 
 from loguru import logger
-from PySide6.QtCore import QEvent, QModelIndex, QObject, QRectF, QSize, Qt, Signal
+from PySide6.QtCore import (
+    QEvent,
+    QEventLoop,
+    QModelIndex,
+    QObject,
+    QRectF,
+    QSize,
+    Qt,
+    Signal,
+)
 from PySide6.QtGui import (
     QAction,
     QCursor,
@@ -47,6 +56,7 @@ from app.utils.custom_list_widget_item_metadata import CustomListWidgetItemMetad
 from app.utils.custom_qlabels import AdvancedClickableQLabel, ClickableQLabel
 from app.utils.event_bus import EventBus
 from app.utils.generic import (
+    check_if_steam_running,
     copy_to_clipboard_safely,
     delete_files_except_extension,
     delete_files_only_extension,
@@ -882,6 +892,11 @@ class ModListWidget(QListWidget):
                             unsubscribe_mod_steam_action.setText(
                                 "Unsubscribe mod with Steam"
                             )
+                            # Convert steam mods -> local + Unsubscribe
+                            convert_workshop_local_and_unsubscribe_action = QAction()
+                            convert_workshop_local_and_unsubscribe_action.setText(
+                                "Convert Steam mod to local + Unsubscribe"
+                            )
                     # SteamDB blacklist options
                     if (
                         self.metadata_manager.external_steam_metadata
@@ -1022,6 +1037,12 @@ class ModListWidget(QListWidget):
                                     unsubscribe_mod_steam_action.setText(
                                         "Unsubscribe mod(s) with Steam"
                                     )
+                                # Convert steam mods -> local + Unsubscribe
+                                if not convert_workshop_local_and_unsubscribe_action:
+                                    convert_workshop_local_and_unsubscribe_action = QAction()
+                                    convert_workshop_local_and_unsubscribe_action.setText(
+                                        "Convert Steam mod(s) to local + Unsubscribe"
+                                    )
                         # No SteamDB blacklist options when multiple selected
                         # Prohibit deletion of game files
                         if not delete_mod_action:
@@ -1107,6 +1128,8 @@ class ModListWidget(QListWidget):
                     workshop_actions_menu.addAction(re_steam_action)
                 if unsubscribe_mod_steam_action:
                     workshop_actions_menu.addAction(unsubscribe_mod_steam_action)
+                if convert_workshop_local_and_unsubscribe_action:
+                    workshop_actions_menu.addAction(convert_workshop_local_and_unsubscribe_action)
                 if (
                     add_to_steamdb_blacklist_action
                     or remove_from_steamdb_blacklist_action
@@ -1115,9 +1138,7 @@ class ModListWidget(QListWidget):
                 if add_to_steamdb_blacklist_action:
                     workshop_actions_menu.addAction(add_to_steamdb_blacklist_action)
                 if remove_from_steamdb_blacklist_action:
-                    workshop_actions_menu.addAction(
-                        remove_from_steamdb_blacklist_action
-                    )
+                    workshop_actions_menu.addAction(remove_from_steamdb_blacklist_action)
                 context_menu.addMenu(workshop_actions_menu)
             # Execute QMenu and return it's ACTION
             action = context_menu.exec_(self.mapToGlobal(pos_local))
@@ -1280,8 +1301,9 @@ class ModListWidget(QListWidget):
                         information="\nDo you want to proceed?",
                     )
                     if answer == "&Yes":
-                        self.unsubscribe_from_steam_mods(publishedfileids)
-                        self.delete_mods(selected_items, steamcmd_acf_pfid_purge)
+                        unsubscribed = self.unsubscribe_from_steam_mods(publishedfileids)
+                        if unsubscribed:
+                            self.delete_mods(selected_items, steamcmd_acf_pfid_purge)
                     return True
                 elif (  # ACTION: Unsubscribe & make local copy of mod
                     action == convert_workshop_local_and_unsubscribe_action
@@ -1297,7 +1319,9 @@ class ModListWidget(QListWidget):
                     )
                     if answer == "&Yes":
                         self.convert_steam_mods_to_local(steam_mod_paths, steam_publishedfileid_to_name)
-                        self.unsubscribe_from_steam_mods(publishedfileids)
+                        unsubscribed = self.unsubscribe_from_steam_mods(publishedfileids)
+                        if unsubscribed:
+                            self.delete_mods(selected_items, steamcmd_acf_pfid_purge)
                     return True
                 elif (
                     action == add_to_steamdb_blacklist_action
@@ -2145,10 +2169,11 @@ class ModListWidget(QListWidget):
                             ignore_errors=False,
                             onerror=handle_remove_read_only,
                         )
+                        logger.debug("Deleted mod: " + mod_metadata["name"] + ", uuid: " + str(uuid))
                         if mod_metadata.get("steamcmd"):
                             steamcmd_acf_pfid_purge.add(mod_metadata["publishedfileid"])
                     except FileNotFoundError:
-                        logger.debug(
+                        logger.warning(
                             f"Unable to delete mod. Path does not exist: {mod_metadata['path']}"
                         )
                         pass
@@ -2233,21 +2258,36 @@ class ModListWidget(QListWidget):
                     logger.debug(
                         f'Successfully "converted" Steam mod by copying {publishedfileid_from_folder_name} -> {mod_name} and migrating mod to local mods directory'
                     )
+                    # Wait until handle_rows_inserted is triggered through rowsInserted signal
+                    # This makes sure lists have all uuids up to date and prevents any crashes/weirdness when executing other actions immediately after converting a mod
+                    loop = QEventLoop()
+                    self.model().rowsInserted.connect(loop.quit)
+                    loop.exec_()
+                    self.model().rowsInserted.disconnect(loop.quit)
                 except Exception as e:
                     stacktrace = format_exc()
                     logger.error(f"Failed to convert mod: {path} - {e}")
                     logger.error(stacktrace)
 
-        self.refresh_signal.emit()
-
-    def unsubscribe_from_steam_mods(self, publishedfileids: list[str]) -> None:
+    def unsubscribe_from_steam_mods(self, publishedfileids: KeysView[Any]) -> bool:
         """ 
         Unsubscribe from Steam mods.
 
-        Does NOT delete the mods.
+        Does *NOT* delete the mods.
 
         :param publishedfileids: List of publishedfileids to unsubscribe from.
+
+        :return: True if successful, False otherwise.
         """
+        # Check if steam is running
+        if not check_if_steam_running():
+            logger.warning("Steam is not running. Cannot unsubscribe from Steam mods.")
+            show_warning(
+                title="Steam not running",
+                text="Unable to unsubscribe from Steam mods. Ensure steam is running and try again.",
+            )
+            return False
+
         logger.debug(
             f"Unsubscribing from {len(publishedfileids)} mod(s)"
         )
@@ -2257,6 +2297,8 @@ class ModListWidget(QListWidget):
                 [eval(str_pfid) for str_pfid in publishedfileids],
             ]
         )
+        # TODO: Find a way to catch any exception/failure to unsubscribe and return False...
+        return True
 
 class ModsPanel(QWidget):
     """
