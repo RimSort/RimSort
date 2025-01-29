@@ -1834,6 +1834,9 @@ class MainContent(QObject):
         # Save current modlists to their respective restore states
         self.active_mods_uuids_restore_state = active_mods_uuids
         self.inactive_mods_uuids_restore_state = inactive_mods_uuids
+        # TODO: Save modlist metadata to file for current instance
+        # instance_name = self.settings_controller.settings.current_instance
+        # instance = self.settings_controller.settings.instances.get(instance_name)                
         logger.info("Finished saving active mods")
 
     def _do_restore(self) -> None:
