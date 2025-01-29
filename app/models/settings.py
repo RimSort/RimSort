@@ -73,6 +73,8 @@ class Settings(QObject):
         self.try_download_missing_mods: bool = False
         self.render_unity_rich_text: bool = True
 
+        self.rentry_auth_code: str = ""
+
         self.github_username: str = ""
         self.github_token: str = ""
 

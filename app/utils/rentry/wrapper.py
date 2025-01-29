@@ -7,6 +7,7 @@ import requests
 from loguru import logger
 from PySide6.QtWidgets import QMessageBox
 
+from app.controllers.settings_controller import SettingsController
 from app.views.dialogue import (
     InformationBox,
     show_dialogue_input,
@@ -17,14 +18,10 @@ from app.views.dialogue import (
 # Constants for Rentry API endpoints
 BASE_URL = "https://rentry.co"
 API_NEW_ENDPOINT = f"{BASE_URL}/api/new"
-_HEADERS = {"Referer": BASE_URL}
-# TODO: rentry-auth code
-"""
-Contact (support@rentry.co) for auth code to use here.
-This header then gives access to all posts at /raw)
-Need this auth code for rentry import to work
-Info about the issue https://github.com/radude/rentry/issues/34
-"""
+_HEADERS = {
+    "Referer": BASE_URL,
+    "rentry-auth": "",  # This header allows access to /raw endpoint. Updated with auth code from user settings
+}
 
 
 class HttpClient:
@@ -158,11 +155,18 @@ class RentryUpload:
 class RentryImport:
     """Class to handle importing Rentry.co links and extracting package IDs."""
 
-    def __init__(self) -> None:
+    def __init__(self, settings_controller: SettingsController) -> None:
         """Initialize the Rentry Import instance and prompt for a link."""
         self.package_ids: list[
             str
         ] = []  # Initialize an empty list to store package IDs
+        self.settings_controller = settings_controller
+        # If user does not have an auth code, show a warning and do not proceed
+        if settings_controller.settings.rentry_auth_code == "":
+            RentryError().show_missing_rentry_auth_warning()
+            return
+        # Retrieve auth code from user settings
+        _HEADERS.update({"rentry-auth": settings_controller.settings.rentry_auth_code})
         self.input_dialog()  # Call the input_dialog method to set up the UI
 
     def input_dialog(self) -> None:
@@ -209,15 +213,9 @@ class RentryImport:
             raw_url = (
                 rentry_link if rentry_link.endswith("/raw") else f"{rentry_link}/raw"
             )
-            response = requests.get(raw_url)  # Fetch the content from the raw URL
+            response = requests.get(raw_url, headers=_HEADERS)  # Fetch the content from the raw URL
 
             if response.status_code == 200:
-                # TODO: Remove this warning when rentry-authorization is fixed
-                show_warning(
-                    title="Rentry Error",
-                    text="Rentry Import is currently broken due to rentry authorization issue.",
-                    details=f"Info about the issue {("https://github.com/radude/rentry/issues/34")}",
-                )
                 # Decode the content using UTF-8
                 page_content = response.content.decode("utf-8")
 
@@ -231,6 +229,7 @@ class RentryImport:
                     if match[0] or match[1]
                 ]
                 logger.info("Parsed package_ids successfully.")
+                logger.debug(f"Number of package_ids found: {str(len(self.package_ids))}")
             else:
                 # Handle non-200 responses
                 RentryError().show_response_error(response)
@@ -250,7 +249,7 @@ class RentryImport:
 
 
 class RentryError:
-    """Class to handle errors related to Rentry operations."""
+    """Class to handle errors and warnings related to Rentry operations."""
 
     def handle_upload_failure(self, response: dict[str, Any]) -> None:
         """
@@ -312,6 +311,14 @@ class RentryError:
             details=f"{str(e)}",
         )
         return None  # Return None to indicate failure
+    
+    def show_missing_rentry_auth_warning(self) -> None:
+        """Show a warning for missing Rentry Auth code."""
+        logger.warning("Rentry Auth code not found in user settings.")
+        show_warning(
+            title="Rentry Auth Code Not Found",
+            text="You need to email support@rentry.co and request an auth code. Then paste it into Settings -> Advanced -> Rentry Auth.",
+        )
 
 
 if __name__ == "__main__":
