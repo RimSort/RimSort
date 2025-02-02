@@ -2,8 +2,6 @@ lxml-stubs
 mypy
 networkx-stubs
 pytest
-pytest
-pytest-qt
 pytest-qt
 ruff
 types-lxml

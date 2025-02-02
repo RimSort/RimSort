@@ -37,7 +37,11 @@ class EventBus(QObject):
     do_open_app_directory = Signal()
     do_open_settings_directory = Signal()
     do_open_rimsort_logs_directory = Signal()
+    do_open_rimworld_directory = Signal()
+    do_open_rimworld_config_directory = Signal()
     do_open_rimworld_logs_directory = Signal()
+    do_open_local_mods_directory = Signal()
+    do_open_steam_mods_directory = Signal()
 
     # Edit Menu bar signals
     do_rule_editor = Signal()
@@ -99,6 +103,9 @@ class EventBus(QObject):
 
     # ModsPanel signals
     list_updated_signal = Signal()  # count, list_type
+    filters_changed_in_active_modlist = Signal()
+    filters_changed_in_inactive_modlist = Signal()    
+    
 
     def __new__(cls) -> "EventBus":
         """
