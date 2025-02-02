@@ -68,8 +68,8 @@ class MetadataManager(QObject):
             self.external_steam_metadata_path: str | None = None
             self.external_community_rules: dict[str, Any] | None = None
             self.external_community_rules_path: str | None = None
-            self.external_no_version_update: list[str] | None = None
-            self.external_no_version_update_path: str | None = None
+            self.external_no_version_warning: list[str] | None = None
+            self.external_no_version_warning_path: str | None = None
             self.external_user_rules: dict[str, Any] | None = None
             self.external_user_rules_path: str = str(
                 AppInfo().databases_folder / "userRules.json"
@@ -210,19 +210,19 @@ class MetadataManager(QObject):
                 )
                 return community_rules_json_data, path
 
-        def get_configured_no_version_update_db(
+        def get_configured_no_version_warning_db(
             path: str,
         ) -> tuple[list[str] | None, str | None]:
-            logger.info(f"Checking for \"No Version Update\" DB at: {path}")
-            if not validate_db_path(path, "No Version Update"):
+            logger.info(f"Checking for \"No Version Warning\" DB at: {path}")
+            if not validate_db_path(path, "No Version Warning"):
                 return None, None
-            logger.info("No Version Update DB exists, loading")
-            no_version_update_json_data = xml_path_to_json(path)
-            total_entries = len(no_version_update_json_data)
+            logger.info("No Version Warning DB exists, loading")
+            no_version_warning_json_data = xml_path_to_json(path)
+            total_entries = len(no_version_warning_json_data)
             logger.info(
-                f"Loaded {total_entries} compatibility version overrides from \"No Version Update\""
+                f"Loaded {total_entries} compatibility version overrides from \"No Version Warning\""
             )
-            return list(map(str.lower, no_version_update_json_data["ModIdsToFix"]["li"])), path
+            return list(map(str.lower, no_version_warning_json_data["ModIdsToFix"]["li"])), path
                 
         
         # Load external metadata
@@ -331,27 +331,37 @@ class MetadataManager(QObject):
                 else {}
             )
         
-        # "No Version Update" overrides
-        if (self.settings_controller.settings.external_no_version_update_metadata_source
-            == "Configured local file path"
+        # "No Version Warning" overrides
+        if (self.settings_controller.settings.external_no_version_warning_metadata_source
+            == "Configured file path"
         ):
             (
-                self.external_no_version_update,
-                self.external_no_version_update_path,
-            ) = get_configured_no_version_update_db(
-                path=self.settings_controller.settings.external_no_version_update_file_path,
+                self.external_no_version_warning,
+                self.external_no_version_warning_path,
+            ) = get_configured_no_version_warning_db(
+                path=self.settings_controller.settings.external_no_version_warning_file_path,
             )
-        elif (self.settings_controller.settings.external_no_version_update_metadata_source
-            == "Configured remote file path"
+        elif (self.settings_controller.settings.external_no_version_warning_metadata_source
+            == "Configured git repository"
         ):
             (
-                self.external_no_version_update,
-                self.external_no_version_update_path,
-            ) = get_configured_no_version_update_db(
-                path=os.path.join(AppInfo().databases_folder, "noVersionUpdate.xml"),
+                self.external_no_version_warning,
+                self.external_no_version_warning_path,
+            ) = get_configured_no_version_warning_db(
+                path=str(
+                    (
+                        Path(str(AppInfo().databases_folder))
+                        / Path(
+                            os.path.split(
+                                self.settings_controller.settings.external_no_version_warning_repo_path
+                            )[1]
+                        )
+                        / self.game_version[:3] / "ModIdsToFix.xml"
+                    )
+                )
             )
         else:
-            logger.info("\"No Version Update\" override disabled by user. Please choose a metadata source in settings.")
+            logger.info("\"No Version Warning\" override disabled by user. Please choose a metadata source in settings.")
         
 
     def __refresh_internal_metadata(self, is_initial: bool = False) -> None:
@@ -1112,9 +1122,9 @@ class MetadataManager(QObject):
         # Get mod data
         mod_data = self.internal_local_metadata.get(uuid, {})
 
-        # check if mod_data exists and packageid is included in the external "No Version Update" list
-        if (mod_data and self.external_no_version_update and mod_data["packageid"] in self.external_no_version_update):
-            logger.info(f"mod with id \"{mod_data["packageid"]}\" was found on the \"No Version Update\" list. Skipping version mismatch check!")
+        # check if mod_data exists and packageid is included in the external "No Version Warning" list
+        if (mod_data and self.external_no_version_warning and mod_data["packageid"] in self.external_no_version_warning):
+            logger.info(f"mod with id \"{mod_data["packageid"]}\" was found on the \"No Version Warning\" list. Skipping version mismatch check!")
             return False
         elif (      # Check if game_version exists and mod_data exists and mod_data contains 'supportedversions' with 'li' key
             self.game_version

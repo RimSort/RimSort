@@ -157,24 +157,24 @@ class SettingsController(QObject):
             EventBus().do_download_community_rules_db_from_github
         )
 
-        self.settings_dialog.no_version_update_db_none_radio.clicked.connect(
-            self._on_no_version_update_db_radio_clicked
+        self.settings_dialog.no_version_warning_db_none_radio.clicked.connect(
+            self._on_no_version_warning_db_radio_clicked
         )
-        self.settings_dialog.no_version_update_db_github_radio.clicked.connect(
-            self._on_no_version_update_db_radio_clicked
+        self.settings_dialog.no_version_warning_db_github_radio.clicked.connect(
+            self._on_no_version_warning_db_radio_clicked
         )
-        self.settings_dialog.no_version_update_db_local_file_radio.clicked.connect(
-            self._on_no_version_update_db_radio_clicked
+        self.settings_dialog.no_version_warning_db_local_file_radio.clicked.connect(
+            self._on_no_version_warning_db_radio_clicked
         )
 
-        self.settings_dialog.no_version_update_db_local_file_choose_button.clicked.connect(
-            self._on_no_version_update_db_local_file_choose_button_clicked
+        self.settings_dialog.no_version_warning_db_local_file_choose_button.clicked.connect(
+            self._on_no_version_warning_db_local_file_choose_button_clicked
         )
-        self.settings_dialog.no_version_update_db_github_upload_button.clicked.connect(
-            EventBus().do_upload_no_version_update_db_to_github
+        self.settings_dialog.no_version_warning_db_github_upload_button.clicked.connect(
+            EventBus().do_upload_no_version_warning_db_to_github
         )
-        self.settings_dialog.no_version_update_db_github_download_button.clicked.connect(
-            EventBus().do_download_no_version_update_db_from_github
+        self.settings_dialog.no_version_warning_db_github_download_button.clicked.connect(
+            EventBus().do_download_no_version_warning_db_from_github
         )
 
         self.settings_dialog.steam_workshop_db_none_radio.clicked.connect(
@@ -427,50 +427,50 @@ class SettingsController(QObject):
         self.settings_dialog.community_rules_db_github_url.setText(
             self.settings.external_community_rules_repo
         )
-        if self.settings.external_no_version_update_metadata_source == "None":
-            self.settings_dialog.no_version_update_db_none_radio.setChecked(True)
-            self.settings_dialog.no_version_update_db_github_url.setEnabled(False)
-            self.settings_dialog.no_version_update_db_github_download_button.setEnabled(
+        if self.settings.external_no_version_warning_metadata_source == "None":
+            self.settings_dialog.no_version_warning_db_none_radio.setChecked(True)
+            self.settings_dialog.no_version_warning_db_github_url.setEnabled(False)
+            self.settings_dialog.no_version_warning_db_github_download_button.setEnabled(
                 False
             )
-            self.settings_dialog.no_version_update_db_local_file.setEnabled(False)
-            self.settings_dialog.no_version_update_db_local_file_choose_button.setEnabled(
-                False
-            )
-        elif (
-            self.settings.external_no_version_update_metadata_source
-            == "Configured remote file path"
-        ):
-            self.settings_dialog.no_version_update_db_github_radio.setChecked(True)
-            self.settings_dialog.no_version_update_db_github_url.setEnabled(True)
-            self.settings_dialog.no_version_update_db_github_download_button.setEnabled(
-                True
-            )
-            self.settings_dialog.no_version_update_db_local_file.setEnabled(False)
-            self.settings_dialog.no_version_update_db_local_file_choose_button.setEnabled(
+            self.settings_dialog.no_version_warning_db_local_file.setEnabled(False)
+            self.settings_dialog.no_version_warning_db_local_file_choose_button.setEnabled(
                 False
             )
         elif (
-            self.settings.external_no_version_update_metadata_source
-            == "Configured local file path"
+            self.settings.external_no_version_warning_metadata_source
+            == "Configured git repository"
         ):
-            self.settings_dialog.no_version_update_db_local_file_radio.setChecked(True)
-            self.settings_dialog.no_version_update_db_github_url.setEnabled(False)
-            self.settings_dialog.no_version_update_db_github_download_button.setEnabled(
-                False
-            )
-            self.settings_dialog.no_version_update_db_local_file.setEnabled(True)
-            self.settings_dialog.no_version_update_db_local_file_choose_button.setEnabled(
+            self.settings_dialog.no_version_warning_db_github_radio.setChecked(True)
+            self.settings_dialog.no_version_warning_db_github_url.setEnabled(True)
+            self.settings_dialog.no_version_warning_db_github_download_button.setEnabled(
                 True
             )
-        self.settings_dialog.no_version_update_db_local_file.setText(
-            self.settings.external_no_version_update_file_path
+            self.settings_dialog.no_version_warning_db_local_file.setEnabled(False)
+            self.settings_dialog.no_version_warning_db_local_file_choose_button.setEnabled(
+                False
+            )
+        elif (
+            self.settings.external_no_version_warning_metadata_source
+            == "Configured file path"
+        ):
+            self.settings_dialog.no_version_warning_db_local_file_radio.setChecked(True)
+            self.settings_dialog.no_version_warning_db_github_url.setEnabled(False)
+            self.settings_dialog.no_version_warning_db_github_download_button.setEnabled(
+                False
+            )
+            self.settings_dialog.no_version_warning_db_local_file.setEnabled(True)
+            self.settings_dialog.no_version_warning_db_local_file_choose_button.setEnabled(
+                True
+            )
+        self.settings_dialog.no_version_warning_db_local_file.setText(
+            self.settings.external_no_version_warning_file_path
         )
-        self.settings_dialog.no_version_update_db_local_file.setCursorPosition(0)
-        self.settings_dialog.no_version_update_db_github_url.setText(
-            self.settings.external_no_version_update_repo_path
+        self.settings_dialog.no_version_warning_db_local_file.setCursorPosition(0)
+        self.settings_dialog.no_version_warning_db_github_url.setText(
+            self.settings.external_no_version_warning_repo_path
         )
-        self.settings_dialog.no_version_update_db_github_url.setCursorPosition(0)
+        self.settings_dialog.no_version_warning_db_github_url.setCursorPosition(0)
         if self.settings.external_steam_metadata_source == "None":
             self.settings_dialog.steam_workshop_db_none_radio.setChecked(True)
             self.settings_dialog.steam_workshop_db_github_url.setEnabled(False)
@@ -652,21 +652,21 @@ class SettingsController(QObject):
         self.settings.external_community_rules_repo = (
             self.settings_dialog.community_rules_db_github_url.text()
         )
-        if self.settings_dialog.no_version_update_db_none_radio.isChecked():
-            self.settings.external_no_version_update_metadata_source = "None"
-        elif self.settings_dialog.no_version_update_db_local_file_radio.isChecked():
-            self.settings.external_no_version_update_metadata_source = (
-                "Configured local file path"
+        if self.settings_dialog.no_version_warning_db_none_radio.isChecked():
+            self.settings.external_no_version_warning_metadata_source = "None"
+        elif self.settings_dialog.no_version_warning_db_local_file_radio.isChecked():
+            self.settings.external_no_version_warning_metadata_source = (
+                "Configured file path"
             )
-        elif self.settings_dialog.no_version_update_db_github_radio.isChecked():
-            self.settings.external_no_version_update_metadata_source = (
-                "Configured remote file path"
+        elif self.settings_dialog.no_version_warning_db_github_radio.isChecked():
+            self.settings.external_no_version_warning_metadata_source = (
+                "Configured git repository"
             )
-        self.settings.external_no_version_update_file_path = (
-            self.settings_dialog.no_version_update_db_local_file.text()
+        self.settings.external_no_version_warning_file_path = (
+            self.settings_dialog.no_version_warning_db_local_file.text()
         )
-        self.settings.external_no_version_update_repo_path = (
-            self.settings_dialog.no_version_update_db_github_url.text()
+        self.settings.external_no_version_warning_repo_path = (
+            self.settings_dialog.no_version_warning_db_github_url.text()
         )
         if self.settings_dialog.steam_workshop_db_none_radio.isChecked():
             self.settings.external_steam_metadata_source = "None"
@@ -1179,21 +1179,21 @@ class SettingsController(QObject):
         self._last_file_dialog_path = str(Path(community_rules_db_location).parent)
 
     @Slot(bool)
-    def _on_no_version_update_db_radio_clicked(self, checked: bool = True) -> None:
+    def _on_no_version_warning_db_radio_clicked(self, checked: bool = True) -> None:
         """
-        This function handles the "no version update" db radio buttons. Clicking one button
+        This function handles the "No Version Warning" db radio buttons. Clicking one button
         enables the associated widgets and disables the other widgets.
         """
         if (
-            self.sender() == self.settings_dialog.no_version_update_db_none_radio
+            self.sender() == self.settings_dialog.no_version_warning_db_none_radio
             and checked
         ):
-            self.settings_dialog.no_version_update_db_github_url.setEnabled(False)
-            self.settings_dialog.no_version_update_db_github_download_button.setEnabled(
+            self.settings_dialog.no_version_warning_db_github_url.setEnabled(False)
+            self.settings_dialog.no_version_warning_db_github_download_button.setEnabled(
                 False
             )
-            self.settings_dialog.no_version_update_db_local_file.setEnabled(False)
-            self.settings_dialog.no_version_update_db_local_file_choose_button.setEnabled(
+            self.settings_dialog.no_version_warning_db_local_file.setEnabled(False)
+            self.settings_dialog.no_version_warning_db_local_file_choose_button.setEnabled(
                 False
             )
             app_instance = QApplication.instance()
@@ -1204,52 +1204,52 @@ class SettingsController(QObject):
             return
 
         if (
-            self.sender() == self.settings_dialog.no_version_update_db_github_radio
+            self.sender() == self.settings_dialog.no_version_warning_db_github_radio
             and checked
         ):
-            self.settings_dialog.no_version_update_db_github_url.setEnabled(True)
-            self.settings_dialog.no_version_update_db_github_download_button.setEnabled(
+            self.settings_dialog.no_version_warning_db_github_url.setEnabled(True)
+            self.settings_dialog.no_version_warning_db_github_download_button.setEnabled(
                 True
             )
-            self.settings_dialog.no_version_update_db_local_file.setEnabled(False)
-            self.settings_dialog.no_version_update_db_local_file_choose_button.setEnabled(
+            self.settings_dialog.no_version_warning_db_local_file.setEnabled(False)
+            self.settings_dialog.no_version_warning_db_local_file_choose_button.setEnabled(
                 False
             )
-            self.settings_dialog.no_version_update_db_github_url.setFocus()
+            self.settings_dialog.no_version_warning_db_github_url.setFocus()
             return
 
         if (
-            self.sender() == self.settings_dialog.no_version_update_db_local_file_radio
+            self.sender() == self.settings_dialog.no_version_warning_db_local_file_radio
             and checked
         ):
-            self.settings_dialog.no_version_update_db_github_url.setEnabled(False)
-            self.settings_dialog.no_version_update_db_github_download_button.setEnabled(
+            self.settings_dialog.no_version_warning_db_github_url.setEnabled(False)
+            self.settings_dialog.no_version_warning_db_github_download_button.setEnabled(
                 False
             )
-            self.settings_dialog.no_version_update_db_local_file.setEnabled(True)
-            self.settings_dialog.no_version_update_db_local_file_choose_button.setEnabled(
+            self.settings_dialog.no_version_warning_db_local_file.setEnabled(True)
+            self.settings_dialog.no_version_warning_db_local_file_choose_button.setEnabled(
                 True
             )
-            self.settings_dialog.no_version_update_db_local_file.setFocus()
+            self.settings_dialog.no_version_warning_db_local_file.setFocus()
             return
 
     @Slot()
-    def _on_no_version_update_db_local_file_choose_button_clicked(self) -> None:
+    def _on_no_version_warning_db_local_file_choose_button_clicked(self) -> None:
         """
-        Open a file dialog to select the "no version update" xml file and handle the result.
+        Open a file dialog to select the "No Version Warning" xml file and handle the result.
         """
-        no_version_update_db_location = show_dialogue_file(
+        no_version_warning_db_location = show_dialogue_file(
             mode="open",
-            caption="Select No Version Update XML File",
+            caption="Select No Version Warning XML File",
             _dir=str(self._last_file_dialog_path),
         )
-        if not no_version_update_db_location:
+        if not no_version_warning_db_location:
             return
 
-        self.settings_dialog.no_version_update_db_local_file.setText(
-            no_version_update_db_location
+        self.settings_dialog.no_version_warning_db_local_file.setText(
+            no_version_warning_db_location
         )
-        self._last_file_dialog_path = str(Path(no_version_update_db_location).parent)
+        self._last_file_dialog_path = str(Path(no_version_warning_db_location).parent)
 
 
 
