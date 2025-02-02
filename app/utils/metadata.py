@@ -68,6 +68,8 @@ class MetadataManager(QObject):
             self.external_steam_metadata_path: str | None = None
             self.external_community_rules: dict[str, Any] | None = None
             self.external_community_rules_path: str | None = None
+            self.external_no_version_update: list[str] | None = None
+            self.external_no_version_update_path: str | None = None
             self.external_user_rules: dict[str, Any] | None = None
             self.external_user_rules_path: str = str(
                 AppInfo().databases_folder / "userRules.json"
@@ -208,7 +210,23 @@ class MetadataManager(QObject):
                 )
                 return community_rules_json_data, path
 
+        def get_configured_no_version_update_db(
+            path: str,
+        ) -> tuple[list[str] | None, str | None]:
+            logger.info(f"Checking for \"No Version Update\" DB at: {path}")
+            if not validate_db_path(path, "No Version Update"):
+                return None, None
+            logger.info("No Version Update DB exists, loading")
+            no_version_update_json_data = xml_path_to_json(path)
+            total_entries = len(no_version_update_json_data)
+            logger.info(
+                f"Loaded {total_entries} compatibility version overrides from \"No Version Update\""
+            )
+            return list(map(str.lower, no_version_update_json_data["ModIdsToFix"]["li"])), path
+                
+        
         # Load external metadata
+
         # External Steam metadata
         if (
             self.settings_controller.settings.external_steam_metadata_source
@@ -246,7 +264,7 @@ class MetadataManager(QObject):
             logger.info(
                 "External Steam metadata disabled by user. Please choose a metadata source in settings."
             )
-
+        
         # External Community Rules metadata
         if (
             self.settings_controller.settings.external_community_rules_metadata_source
@@ -282,6 +300,7 @@ class MetadataManager(QObject):
             logger.info(
                 "External Community Rules metadata disabled by user. Please choose a metadata source in settings."
             )
+        
         # External User Rules metadata
         if os.path.exists(self.external_user_rules_path):
             logger.info("Loading userRules.json")
@@ -311,6 +330,29 @@ class MetadataManager(QObject):
                 if isinstance(DEFAULT_USER_RULES["rules"], dict)
                 else {}
             )
+        
+        # "No Version Update" overrides
+        if (self.settings_controller.settings.external_no_version_update_metadata_source
+            == "Configured local file path"
+        ):
+            (
+                self.external_no_version_update,
+                self.external_no_version_update_path,
+            ) = get_configured_no_version_update_db(
+                path=self.settings_controller.settings.external_no_version_update_file_path,
+            )
+        elif (self.settings_controller.settings.external_no_version_update_metadata_source
+            == "Configured remote file path"
+        ):
+            (
+                self.external_no_version_update,
+                self.external_no_version_update_path,
+            ) = get_configured_no_version_update_db(
+                path=os.path.join(AppInfo().databases_folder, "noVersionUpdate.xml"),
+            )
+        else:
+            logger.info("\"No Version Update\" override disabled by user. Please choose a metadata source in settings.")
+        
 
     def __refresh_internal_metadata(self, is_initial: bool = False) -> None:
         def batch_by_data_source(
@@ -1070,8 +1112,11 @@ class MetadataManager(QObject):
         # Get mod data
         mod_data = self.internal_local_metadata.get(uuid, {})
 
-        # Check if game_version exists and mod_data exists and mod_data contains 'supportedversions' with 'li' key
-        if (
+        # check if mod_data exists and packageid is included in the external "No Version Update" list
+        if (mod_data and self.external_no_version_update and mod_data["packageid"] in self.external_no_version_update):
+            logger.info(f"mod with id \"{mod_data["packageid"]}\" was found on the \"No Version Update\" list. Skipping version mismatch check!")
+            return False
+        elif (      # Check if game_version exists and mod_data exists and mod_data contains 'supportedversions' with 'li' key
             self.game_version
             and mod_data
             and mod_data.get("supportedversions", {}).get("li")

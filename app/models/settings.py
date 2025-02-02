@@ -43,6 +43,15 @@ class Settings(QObject):
         self.external_community_rules_repo: str = (
             "https://github.com/RimSort/Community-Rules-Database"
         )
+
+        self.external_no_version_update_metadata_source: str = "None"
+        self.external_no_version_update_file_path: str = str(
+            AppInfo().app_storage_folder / "noVersionUpdate.xml"
+        )
+        self.external_no_version_update_repo_path: str = (
+            "https://raw.githubusercontent.com/emipa606/NoVersionWarning/refs/heads/main/1.5/ModIdsToFix.xml"
+        )
+
         self.database_expiry: int = 604800  # 7 days
 
         # Sorting

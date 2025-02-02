@@ -245,6 +245,7 @@ class SettingsDialog(QDialog):
         tab.setLayout(tab_layout)
 
         self._do_community_rules_db_group(tab_layout)
+        self._do_no_version_update_db_group(tab_layout)
         self._do_steam_workshop_db_group(tab_layout)
 
     def __create_db_group(
@@ -407,6 +408,22 @@ class SettingsDialog(QDialog):
         self.database_expiry.setTextMargins(GUIInfo().text_field_margins)
         self.database_expiry.setFixedHeight(GUIInfo().default_font_line_height * 2)
         group_layout.addWidget(self.database_expiry)
+
+    def _do_no_version_update_db_group(self, tab_layout: QBoxLayout) -> None:
+        section_lbl = "\"No Version Update\" XML file"
+        none_lbl = "\"No Version Update\" XML file"
+
+        (
+            _,
+            self.no_version_update_db_none_radio,
+            self.no_version_update_db_github_radio,
+            self.no_version_update_db_github_url,
+            self.no_version_update_db_github_upload_button,
+            self.no_version_update_db_github_download_button,
+            self.no_version_update_db_local_file_radio,
+            self.no_version_update_db_local_file,
+            self.no_version_update_db_local_file_choose_button,
+        ) = self.__create_db_group(section_lbl, none_lbl, tab_layout)
 
     def _do_sorting_tab(self) -> None:
         tab = QWidget()

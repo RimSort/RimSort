@@ -145,6 +145,12 @@ class MainContent(QObject):
             EventBus().do_download_community_rules_db_from_github.connect(
                 self._on_do_download_community_db_from_github
             )
+            EventBus().do_upload_no_version_update_db_to_github.connect(
+                self._on_do_upload_no_version_update_db_to_github
+            )
+            EventBus().do_download_no_version_update_db_from_github.connect(
+                self._on_do_download_no_version_update_db_from_github
+            )
             EventBus().do_upload_steam_workshop_db_to_github.connect(
                 self._on_do_upload_steam_workshop_db_to_github
             )
@@ -2318,6 +2324,32 @@ class MainContent(QObject):
         else:
             self._do_notify_no_git()
 
+
+    def _do_download_single_file_to_path(self, output_file_path: str, file_url: str, silent: bool = False) -> None:
+        """
+        Downloads a single file from a URL to a specified path
+        The name of the file is extracted from the URL and appended to the base_path
+        """
+        try:
+            response = requests_get(file_url)
+            response.raise_for_status()
+            with open(output_file_path, "wb") as file:
+                file.write(response.content)
+            logger.info(f"Downloaded file to: {output_file_path}")
+            if not silent:
+                dialogue.show_information(
+                    title="File downloaded",
+                    text="The file was successfully downloaded",
+                    information=f"from {file_url} to {output_file_path}",
+                )
+        except Exception as e:
+            logger.error(f"Failed to download file from {file_url}: {e}")
+            dialogue.show_warning(
+                title="Failed to download file",
+                text=f"Failed to download file from {file_url}",
+                information=str(e),
+            )
+
     def _do_clone_repo_to_path(self, base_path: str, repo_url: str) -> None:
         """
         Checks validity of configured git repo, as well as if it exists
@@ -2686,6 +2718,13 @@ class MainContent(QObject):
         )
         if answer == "&Yes":
             open_url_browser("https://git-scm.com/downloads")
+
+    def _do_notify_not_yet_implemented(self) -> None:
+        dialogue.show_warning(
+            title="Not yet implemented",
+            text="This feature is not yet implemented!",
+            information="This feature may or may not planned for a future release.",
+        )
 
     def _do_open_rule_editor(
         self, compact: bool, initial_mode: str, packageid: str | None = None
@@ -3282,6 +3321,17 @@ class MainContent(QObject):
             )
         else:
             self._do_notify_no_git()
+
+    @Slot()
+    def _on_do_upload_no_version_update_db_to_github(self) -> None:
+        self._do_notify_not_yet_implemented()
+
+    @Slot()
+    def _on_do_download_no_version_update_db_from_github(self) -> None:
+        self._do_download_single_file_to_path(
+            output_file_path=str(os.path.join(AppInfo().databases_folder, "noVersionUpdate.xml")),
+            file_url=self.settings_controller.settings.external_no_version_update_repo_path,
+        )
 
     @Slot()
     def _on_do_upload_steam_workshop_db_to_github(self) -> None:

@@ -69,6 +69,8 @@ class EventBus(QObject):
     # SettingsDialog signals
     do_upload_community_rules_db_to_github = Signal()
     do_download_community_rules_db_from_github = Signal()
+    do_upload_no_version_update_db_to_github = Signal()
+    do_download_no_version_update_db_from_github = Signal()
     do_upload_steam_workshop_db_to_github = Signal()
     do_download_steam_workshop_db_from_github = Signal()
     do_upload_rimsort_log = Signal()
