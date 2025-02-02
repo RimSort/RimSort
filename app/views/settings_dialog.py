@@ -44,6 +44,7 @@ class SettingsDialog(QDialog):
         # Initialize the tabs
         self._do_locations_tab()
         self._do_databases_tab()
+        self._do_cross_version_databases_tab()
         self._do_sorting_tab()
         self._do_db_builder_tab()
         self._do_steamcmd_tab()
@@ -245,7 +246,6 @@ class SettingsDialog(QDialog):
         tab.setLayout(tab_layout)
 
         self._do_community_rules_db_group(tab_layout)
-        self._do_no_version_warning_db_group(tab_layout)
         self._do_steam_workshop_db_group(tab_layout)
 
     def __create_db_group(
@@ -398,7 +398,6 @@ class SettingsDialog(QDialog):
             self.steam_workshop_db_local_file,
             self.steam_workshop_db_local_file_choose_button,
         ) = self.__create_db_group(section_lbl, none_lbl, tab_layout)
-
         database_expiry_label = QLabel(
             "Steam Workshop database expiry in Epoch Time (Use 0 to Disable Notification. Default is 7 Days)"
         )
@@ -408,6 +407,15 @@ class SettingsDialog(QDialog):
         self.database_expiry.setTextMargins(GUIInfo().text_field_margins)
         self.database_expiry.setFixedHeight(GUIInfo().default_font_line_height * 2)
         group_layout.addWidget(self.database_expiry)
+
+    def _do_cross_version_databases_tab(self) -> None:
+        tab = QWidget()
+        self.tab_widget.addTab(tab, "Cross Version Databases")
+
+        tab_layout = QVBoxLayout()
+        tab.setLayout(tab_layout)
+
+        self._do_no_version_warning_db_group(tab_layout)
 
     def _do_no_version_warning_db_group(self, tab_layout: QBoxLayout) -> None:
         section_lbl = "\"No Version Warning\" XML file"

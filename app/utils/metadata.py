@@ -1282,8 +1282,8 @@ class MetadataManager(QObject):
 
         # Populate metadata
         self.refresh_acf_metadata(steamclient=True, steamcmd=True)
-        self.__refresh_external_metadata()
         self.__refresh_internal_metadata(is_initial=is_initial)
+        self.__refresh_external_metadata()
         self.compile_metadata(uuids=list(self.internal_local_metadata.keys()))
 
     def steamcmd_purge_mods(self, publishedfileids: set[str]) -> None:
