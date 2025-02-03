@@ -416,10 +416,11 @@ class SettingsDialog(QDialog):
         tab.setLayout(tab_layout)
 
         self._do_no_version_warning_db_group(tab_layout)
+        self._do_use_this_instead_db_group(tab_layout)
 
     def _do_no_version_warning_db_group(self, tab_layout: QBoxLayout) -> None:
-        section_lbl = "\"No Version Warning\" XML file"
-        none_lbl = "\"No Version Warning\" XML file"
+        section_lbl = "\"No Version Warning\" Database"
+        none_lbl = "\"No Version Warning\" Database"
         (
             _,
             self.no_version_warning_db_none_radio,
@@ -430,6 +431,21 @@ class SettingsDialog(QDialog):
             self.no_version_warning_db_local_file_radio,
             self.no_version_warning_db_local_file,
             self.no_version_warning_db_local_file_choose_button,
+        ) = self.__create_db_group(section_lbl, none_lbl, tab_layout)
+
+    def _do_use_this_instead_db_group(self, tab_layout: QBoxLayout) -> None:
+        section_lbl = "\"Use This Instead\" Database"
+        none_lbl = "\"No Version Warning\" Database"
+        (
+            _,
+            self.use_this_instead_db_none_radio,
+            self.use_this_instead_db_github_radio,
+            self.use_this_instead_db_github_url,
+            self.use_this_instead_db_github_upload_button,
+            self.use_this_instead_db_github_download_button,
+            self.use_this_instead_db_local_file_radio,
+            self.use_this_instead_db_local_file,
+            self.use_this_instead_db_local_file_choose_button,
         ) = self.__create_db_group(section_lbl, none_lbl, tab_layout)
 
     def _do_sorting_tab(self) -> None:

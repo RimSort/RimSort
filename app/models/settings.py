@@ -44,6 +44,8 @@ class Settings(QObject):
             "https://github.com/RimSort/Community-Rules-Database"
         )
 
+        self.database_expiry: int = 604800  # 7 days
+
         self.external_no_version_warning_metadata_source: str = "None"
         self.external_no_version_warning_file_path: str = str(
             AppInfo().app_storage_folder / "ModIdsToFix.xml"
@@ -52,7 +54,13 @@ class Settings(QObject):
             "https://github.com/emipa606/NoVersionWarning"
         )
 
-        self.database_expiry: int = 604800  # 7 days
+        self.external_use_this_instead_metadata_source: str = "None"
+        self.external_use_this_instead_file_path: str = str(
+            AppInfo().app_storage_folder / "UseThisInstead"
+        )
+        self.external_use_this_instead_repo_path: str = (
+            "https://github.com/emipa606/UseThisInstead"
+        )
 
         # Sorting
         self.sorting_algorithm: SortMethod = SortMethod.TOPOLOGICAL

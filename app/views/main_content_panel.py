@@ -145,17 +145,23 @@ class MainContent(QObject):
             EventBus().do_download_community_rules_db_from_github.connect(
                 self._on_do_download_community_db_from_github
             )
+            EventBus().do_upload_steam_workshop_db_to_github.connect(
+                self._on_do_upload_steam_workshop_db_to_github
+            )
+            EventBus().do_download_steam_workshop_db_from_github.connect(
+                self._on_do_download_steam_workshop_db_from_github
+            )
             EventBus().do_upload_no_version_warning_db_to_github.connect(
                 self._on_do_upload_no_version_warning_db_to_github
             )
             EventBus().do_download_no_version_warning_db_from_github.connect(
                 self._on_do_download_no_version_warning_db_from_github
             )
-            EventBus().do_upload_steam_workshop_db_to_github.connect(
-                self._on_do_upload_steam_workshop_db_to_github
+            EventBus().do_upload_use_this_instead_db_to_github.connect(
+                self._on_do_upload_use_this_instead_db_to_github
             )
-            EventBus().do_download_steam_workshop_db_from_github.connect(
-                self._on_do_download_steam_workshop_db_from_github
+            EventBus().do_download_use_this_instead_db_from_github.connect(
+                self._on_do_download_use_this_instead_db_from_github
             )
             EventBus().do_upload_rimsort_log.connect(self._on_do_upload_rimsort_log)
             EventBus().do_upload_rimsort_old_log.connect(
@@ -3312,6 +3318,21 @@ class MainContent(QObject):
             self._do_notify_no_git()
 
     @Slot()
+    def _on_do_upload_steam_workshop_db_to_github(self) -> None:
+        self._do_upload_db_to_repo(
+            repo_url=self.settings_controller.settings.external_steam_metadata_repo,
+            file_name="steamDB.json",
+        )
+
+    @Slot()
+    def _on_do_download_steam_workshop_db_from_github(self) -> None:
+        logger.warning("HIT AT ALL")
+        self._do_clone_repo_to_path(
+            base_path=str(AppInfo().databases_folder),
+            repo_url=self.settings_controller.settings.external_steam_metadata_repo,
+        )
+
+    @Slot()
     def _on_do_upload_no_version_warning_db_to_github(self) -> None:
         self._do_upload_db_to_repo(
             repo_url=self.settings_controller.settings.external_no_version_warning_repo_path,
@@ -3329,18 +3350,21 @@ class MainContent(QObject):
             self._do_notify_no_git()
 
     @Slot()
-    def _on_do_upload_steam_workshop_db_to_github(self) -> None:
+    def _on_do_upload_use_this_instead_db_to_github(self) -> None:
         self._do_upload_db_to_repo(
-            repo_url=self.settings_controller.settings.external_steam_metadata_repo,
-            file_name="steamDB.json",
+            repo_url=self.settings_controller.settings.external_use_this_instead_repo_path,
+            file_name= "*",
         )
 
     @Slot()
-    def _on_do_download_steam_workshop_db_from_github(self) -> None:
-        self._do_clone_repo_to_path(
-            base_path=str(AppInfo().databases_folder),
-            repo_url=self.settings_controller.settings.external_steam_metadata_repo,
-        )
+    def _on_do_download_use_this_instead_db_from_github(self) -> None:
+        if GIT_EXISTS:
+            self._do_clone_repo_to_path(
+                base_path=str(AppInfo().databases_folder),
+                repo_url=self.settings_controller.settings.external_use_this_instead_repo_path,
+            )
+        else:
+            self._do_notify_no_git()
 
     @Slot()
     def _on_do_upload_log(self) -> None:
