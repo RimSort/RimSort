@@ -1160,6 +1160,42 @@ class MetadataManager(QObject):
         # Return result
         return result
 
+    def has_alternative_mod(self, uuid: str) -> str | None:
+        """
+        If the use has configured a "Use This Instead" database, this function checks if a given mod has
+        a recommended alternative.
+
+        If the user does not, it always returns false
+        """
+
+        if self.settings_controller.settings.external_use_this_instead_metadata_source == "None":
+            return None
+        
+        path = ""
+        if self.settings_controller.settings.external_use_this_instead_metadata_source == "Configured file path":
+            path = Path(self.settings_controller.settings.external_use_this_instead_file_path)
+        elif self.settings_controller.settings.external_use_this_instead_metadata_source == "Configured git repository":
+            path = AppInfo().databases_folder / Path(
+                os.path.split(
+                    self.settings_controller.settings.external_use_this_instead_repo_path
+                )[1]
+            ) / "Replacements"
+        else:
+            return None
+        
+        # At this point, path points to a directory of xml files, each named for a mod.
+        mod_data = self.internal_local_metadata.get(uuid, False)
+        if not mod_data:
+            return None
+        
+        check_path = path / Path(mod_data["publishedfileid"] + ".xml")
+        if not check_path.exists():
+            return None
+        replacement_data = xml_path_to_json(str(check_path))['ModReplacement']
+        replacement_tt = f"{replacement_data['ReplacementName']} ({replacement_data['ReplacementSteamId']}) by {replacement_data['ReplacementAuthor']}"
+
+        return replacement_tt
+        
     def process_batch(
         self,
         batch: dict[str, str],  # Batch is a mapper of mod directory <-> UUID to parse

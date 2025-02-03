@@ -129,6 +129,7 @@ class ModListItemInner(QWidget):
         filtered: bool,
         invalid: bool,
         mismatch: bool,
+        alternative: bool,
         settings_controller: SettingsController,
         uuid: str,
     ) -> None:
@@ -144,6 +145,8 @@ class ModListItemInner(QWidget):
         :param warnings: a string of warnings for the notification tooltip
         :param filtered: a bool representing whether the widget's item is filtered
         :param invalid: a bool representing whether the widget's item is an invalid mod
+        :param mismatch: a bool representing whether the widget's item has a version mismatch
+        :param alternative: a bool representing whether the widget's item has a recommended alternative mod
         :param settings_controller: an instance of SettingsController for accessing settings
         :param uuid: str, the uuid of the mod which corresponds to a mod's metadata
         """
@@ -162,6 +165,8 @@ class ModListItemInner(QWidget):
         self.invalid = invalid
         # Cache mismatch state of widget's item - used to determine warning icon visibility
         self.mismatch = mismatch
+        # Cache alternative state of widget's item - used to determine warning icon visibility
+        self.alternative = alternative
         # Cache SettingsManager instance
         self.settings_controller = settings_controller
 
@@ -1709,6 +1714,7 @@ class ModListWidget(QListWidget):
         filtered = data["filtered"]
         invalid = data["invalid"]
         mismatch = data["mismatch"]
+        alternative = data["alternative"]
         uuid = data["uuid"]
         if uuid:
             widget = ModListItemInner(
@@ -1718,6 +1724,7 @@ class ModListWidget(QListWidget):
                 filtered=filtered,
                 invalid=invalid,
                 mismatch=mismatch,
+                alternative=alternative,
                 settings_controller=self.settings_controller,
                 uuid=uuid,
             )
@@ -1912,6 +1919,7 @@ class ModListWidget(QListWidget):
                 "load_before_violations": set() if self.list_type == "Active" else None,
                 "load_after_violations": set() if self.list_type == "Active" else None,
                 "version_mismatch": True,
+                "use_this_instead": set() if self.settings_controller.settings.external_use_this_instead_metadata_source != "None" else None,
             }
             for uuid in self.uuids
         }
@@ -2043,6 +2051,12 @@ class ModListWidget(QListWidget):
             ):
                 # Add tool tip to indicate mod and game version mismatch
                 tool_tip_text += "\nMod and Game Version Mismatch"
+            # Handle "use this instead" behavior
+            if (
+                current_item_data["alternative"] 
+                and mod_data["packageid"] not in self.ignore_warning_list
+            ):
+                tool_tip_text += f"\nAn alternative updated mod is recommended:\n{current_item_data["alternative"]}"
             # Add to error summary if any missing dependencies or incompatibilities
             if self.list_type == "Active" and any(
                 [
@@ -2071,6 +2085,7 @@ class ModListWidget(QListWidget):
                             "load_before_violations",
                             "load_after_violations",
                             "version_mismatch",
+                            "use_this_instead",
                         ]
                     ]
                 )

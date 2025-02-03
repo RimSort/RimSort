@@ -31,6 +31,7 @@ class CustomListWidgetItemMetadata:
         hidden_by_filter: bool = False,
         invalid: Optional[bool] = None,
         mismatch: Optional[bool] = None,
+        alternative: Optional[str] = None,
     ) -> None:
         """
         Must provide a uuid, the rest is optional.
@@ -45,6 +46,8 @@ class CustomListWidgetItemMetadata:
         :param filtered: a bool representing whether the widget's item is filtered
         :param hidden_by_filter: a bool representing whether the widget's item is hidden because of a filter (Search, or Mod Type (C#, Xml, Local Mod, Steam Mod etc.)
         :param invalid: a bool representing whether the widget's item is an invalid mod
+        :param mismatch: a bool representing whether the widget's item has a version mismatch
+        :param alternative: a bool representing whether the widget's item has an alternative mod in the "Use This Instead" database
         """
         # Do not cache the metadata manager, it will cause freezes/crashes when dragging mods.
         # self.metatadata_manager = MetadataManager.instance()
@@ -62,6 +65,9 @@ class CustomListWidgetItemMetadata:
         )
         self.mismatch = (
             mismatch if mismatch is not None else self.get_mismatch_by_uuid(uuid)
+        )
+        self.alternative = (
+            alternative if alternative is not None else self.get_alternative_by_uuid(uuid)
         )
         logger.debug(
             f"Finished initializing CustomListWidgetItemMetadata for uuid: {uuid}"
@@ -94,6 +100,20 @@ class CustomListWidgetItemMetadata:
         except KeyError:
             logger.error(f"UUID {uuid} not found in metadata")
             return False
+        
+    def get_alternative_by_uuid(self, uuid: str) -> str | None:
+        """
+        Get the "has alternative" status of the mod by its uuid.
+
+        :param uuid: str, the uuid of the mod
+        :return: None if there is no mismatch, otherwise the replacement string.
+        """
+        metadata_manager = MetadataManager.instance()
+        try:
+            return metadata_manager.has_alternative_mod(uuid)
+        except KeyError:
+            logger.info(f"UUID {uuid} not found in metadata - probably non-steam mod")
+            return None
 
     def __getitem__(self, key: str) -> Any:
         """
