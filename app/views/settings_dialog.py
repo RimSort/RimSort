@@ -435,7 +435,7 @@ class SettingsDialog(QDialog):
 
     def _do_use_this_instead_db_group(self, tab_layout: QBoxLayout) -> None:
         section_lbl = '"Use This Instead" Database'
-        none_lbl = '"No Version Warning" Database'
+        none_lbl = '"Use This Instead" Database'
         (
             _,
             self.use_this_instead_db_none_radio,

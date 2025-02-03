@@ -1185,7 +1185,8 @@ class MetadataManager(QObject):
         ):
             return None
 
-        path = ""
+        path: Path
+
         if (
             self.settings_controller.settings.external_use_this_instead_metadata_source
             == "Configured file path"
