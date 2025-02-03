@@ -108,8 +108,7 @@ class EventBus(QObject):
     # ModsPanel signals
     list_updated_signal = Signal()  # count, list_type
     filters_changed_in_active_modlist = Signal()
-    filters_changed_in_inactive_modlist = Signal()    
-    
+    filters_changed_in_inactive_modlist = Signal()
 
     def __new__(cls) -> "EventBus":
         """

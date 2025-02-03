@@ -1355,7 +1355,7 @@ class ModListWidget(QListWidget):
                     args, ok = show_dialogue_input(
                         title="Add comment",
                         label="Enter a comment providing your reasoning for wanting to blacklist this mod: "
-                        + f'{self.metadata_manager.external_steam_metadata.get(steamdb_add_blacklist, {}).get("steamName", steamdb_add_blacklist)}',
+                        + f"{self.metadata_manager.external_steam_metadata.get(steamdb_add_blacklist, {}).get('steamName', steamdb_add_blacklist)}",
                     )
                     if ok:
                         self.steamdb_blacklist_signal.emit(
@@ -1388,7 +1388,7 @@ class ModListWidget(QListWidget):
                     answer = show_dialogue_conditional(
                         title="Are you sure?",
                         text="This will remove the selected mod, "
-                        + f'{self.metadata_manager.external_steam_metadata.get(steamdb_remove_blacklist, {}).get("steamName", steamdb_remove_blacklist)}, '
+                        + f"{self.metadata_manager.external_steam_metadata.get(steamdb_remove_blacklist, {}).get('steamName', steamdb_remove_blacklist)}, "
                         + "from your configured Steam DB blacklist."
                         + "\nDo you want to proceed?",
                     )
@@ -1919,7 +1919,10 @@ class ModListWidget(QListWidget):
                 "load_before_violations": set() if self.list_type == "Active" else None,
                 "load_after_violations": set() if self.list_type == "Active" else None,
                 "version_mismatch": True,
-                "use_this_instead": set() if self.settings_controller.settings.external_use_this_instead_metadata_source != "None" else None,
+                "use_this_instead": set()
+                if self.settings_controller.settings.external_use_this_instead_metadata_source
+                != "None"
+                else None,
             }
             for uuid in self.uuids
         }
@@ -2053,10 +2056,10 @@ class ModListWidget(QListWidget):
                 tool_tip_text += "\nMod and Game Version Mismatch"
             # Handle "use this instead" behavior
             if (
-                current_item_data["alternative"] 
+                current_item_data["alternative"]
                 and mod_data["packageid"] not in self.ignore_warning_list
             ):
-                tool_tip_text += f"\nAn alternative updated mod is recommended:\n{current_item_data["alternative"]}"
+                tool_tip_text += f"\nAn alternative updated mod is recommended:\n{current_item_data['alternative']}"
             # Add to error summary if any missing dependencies or incompatibilities
             if self.list_type == "Active" and any(
                 [
@@ -2401,7 +2404,9 @@ class ModsPanel(QWidget):
         self.errors_summary_layout.setSpacing(2)
         self.warnings_icon: QLabel = QLabel()
         self.warnings_icon.setPixmap(ModListIcons.warning_icon().pixmap(QSize(20, 20)))
-        self.warnings_text: AdvancedClickableQLabel = AdvancedClickableQLabel("0 warnings")
+        self.warnings_text: AdvancedClickableQLabel = AdvancedClickableQLabel(
+            "0 warnings"
+        )
         self.warnings_text.setObjectName("summaryValue")
         self.warnings_text.setToolTip("Click to only show mods with warnings")
         self.errors_icon: QLabel = QLabel()

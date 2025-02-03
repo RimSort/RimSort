@@ -448,7 +448,7 @@ class SettingsController(QObject):
         self.settings_dialog.community_rules_db_github_url.setText(
             self.settings.external_community_rules_repo
         )
-        
+
         if self.settings.external_steam_metadata_source == "None":
             self.settings_dialog.steam_workshop_db_none_radio.setChecked(True)
             self.settings_dialog.steam_workshop_db_github_url.setEnabled(False)
@@ -536,7 +536,6 @@ class SettingsController(QObject):
             self.settings.external_no_version_warning_repo_path
         )
         self.settings_dialog.no_version_warning_db_github_url.setCursorPosition(0)
-
 
         if self.settings.external_use_this_instead_metadata_source == "None":
             self.settings_dialog.use_this_instead_db_none_radio.setChecked(True)
@@ -1413,7 +1412,6 @@ class SettingsController(QObject):
         )
         self._last_file_dialog_path = str(Path(no_version_warning_db_location).parent)
 
-
     @Slot(bool)
     def _on_use_this_instead_db_radio_clicked(self, checked: bool = True) -> None:
         """
@@ -1476,7 +1474,7 @@ class SettingsController(QObject):
         """
         use_this_instead_db_location = show_dialogue_file(
             mode="open",
-            caption="Select \"Use This Instead\" Folder",
+            caption='Select "Use This Instead" Folder',
             _dir=str(self._last_file_dialog_path),
         )
         if not use_this_instead_db_location:
@@ -1486,7 +1484,6 @@ class SettingsController(QObject):
             use_this_instead_db_location
         )
         self._last_file_dialog_path = str(Path(use_this_instead_db_location).parent)
-
 
     @Slot()
     def _on_steamcmd_install_location_choose_button_clicked(self) -> None:

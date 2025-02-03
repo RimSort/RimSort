@@ -67,7 +67,9 @@ class CustomListWidgetItemMetadata:
             mismatch if mismatch is not None else self.get_mismatch_by_uuid(uuid)
         )
         self.alternative = (
-            alternative if alternative is not None else self.get_alternative_by_uuid(uuid)
+            alternative
+            if alternative is not None
+            else self.get_alternative_by_uuid(uuid)
         )
         logger.debug(
             f"Finished initializing CustomListWidgetItemMetadata for uuid: {uuid}"
@@ -100,7 +102,7 @@ class CustomListWidgetItemMetadata:
         except KeyError:
             logger.error(f"UUID {uuid} not found in metadata")
             return False
-        
+
     def get_alternative_by_uuid(self, uuid: str) -> str | None:
         """
         Get the "has alternative" status of the mod by its uuid.

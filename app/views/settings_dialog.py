@@ -419,8 +419,8 @@ class SettingsDialog(QDialog):
         self._do_use_this_instead_db_group(tab_layout)
 
     def _do_no_version_warning_db_group(self, tab_layout: QBoxLayout) -> None:
-        section_lbl = "\"No Version Warning\" Database"
-        none_lbl = "\"No Version Warning\" Database"
+        section_lbl = '"No Version Warning" Database'
+        none_lbl = '"No Version Warning" Database'
         (
             _,
             self.no_version_warning_db_none_radio,
@@ -434,8 +434,8 @@ class SettingsDialog(QDialog):
         ) = self.__create_db_group(section_lbl, none_lbl, tab_layout)
 
     def _do_use_this_instead_db_group(self, tab_layout: QBoxLayout) -> None:
-        section_lbl = "\"Use This Instead\" Database"
-        none_lbl = "\"No Version Warning\" Database"
+        section_lbl = '"Use This Instead" Database'
+        none_lbl = '"No Version Warning" Database'
         (
             _,
             self.use_this_instead_db_none_radio,
@@ -753,7 +753,9 @@ class SettingsDialog(QDialog):
         self.mod_type_filter_checkbox = QCheckBox("Enable mod type filter")
         group_layout.addWidget(self.mod_type_filter_checkbox)
 
-        self.hide_invalid_mods_when_filtering_checkbox = QCheckBox("Hide invalid mods when filtering")
+        self.hide_invalid_mods_when_filtering_checkbox = QCheckBox(
+            "Hide invalid mods when filtering"
+        )
         group_layout.addWidget(self.hide_invalid_mods_when_filtering_checkbox)
 
         self.show_duplicate_mods_warning_checkbox = QCheckBox(
