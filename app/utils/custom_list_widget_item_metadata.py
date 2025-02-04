@@ -1,7 +1,9 @@
 from typing import Any, Optional
 
 from loguru import logger
+from PySide6.QtGui import QColor
 
+from app.utils.constants import MOD_TEXT_DEFAULT_COLOR
 from app.utils.metadata import MetadataManager
 
 
@@ -18,6 +20,7 @@ class CustomListWidgetItemMetadata:
         filtered: bool, representing whether the widget's item is filtered
         invalid: bool, representing whether the widget's item is an invalid mod
         mismatch: bool, representing whether the widget's item has a version mismatch
+        mod_text_color: QColor, the color of the mod's text in the list widget item
     """
 
     def __init__(
@@ -31,6 +34,7 @@ class CustomListWidgetItemMetadata:
         hidden_by_filter: bool = False,
         invalid: Optional[bool] = None,
         mismatch: Optional[bool] = None,
+        mod_text_color: QColor = MOD_TEXT_DEFAULT_COLOR,
     ) -> None:
         """
         Must provide a uuid, the rest is optional.
@@ -45,6 +49,7 @@ class CustomListWidgetItemMetadata:
         :param filtered: a bool representing whether the widget's item is filtered
         :param hidden_by_filter: a bool representing whether the widget's item is hidden because of a filter (Search, or Mod Type (C#, Xml, Local Mod, Steam Mod etc.)
         :param invalid: a bool representing whether the widget's item is an invalid mod
+        mod_text_color: QColor, the color of the mod's text in the list widget item
         """
         # Do not cache the metadata manager, it will cause freezes/crashes when dragging mods.
         # self.metatadata_manager = MetadataManager.instance()
@@ -63,6 +68,7 @@ class CustomListWidgetItemMetadata:
         self.mismatch = (
             mismatch if mismatch is not None else self.get_mismatch_by_uuid(uuid)
         )
+        self.mod_text_color = mod_text_color
         logger.debug(
             f"Finished initializing CustomListWidgetItemMetadata for uuid: {uuid}"
         )
