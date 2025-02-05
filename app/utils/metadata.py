@@ -68,6 +68,8 @@ class MetadataManager(QObject):
             self.external_steam_metadata_path: str | None = None
             self.external_community_rules: dict[str, Any] | None = None
             self.external_community_rules_path: str | None = None
+            self.external_no_version_warning: list[str] | None = None
+            self.external_no_version_warning_path: str | None = None
             self.external_user_rules: dict[str, Any] | None = None
             self.external_user_rules_path: str = str(
                 AppInfo().databases_folder / "userRules.json"
@@ -167,7 +169,7 @@ class MetadataManager(QObject):
                         self.show_warning_signal.emit(
                             "Steam DB metadata expired",
                             "Steam DB is expired! Consider updating!\n",
-                            f'Steam DB last updated: {strftime("%Y-%m-%d %H:%M:%S", localtime(db_data["version"] - life))}\n\n'
+                            f"Steam DB last updated: {strftime('%Y-%m-%d %H:%M:%S', localtime(db_data['version'] - life))}\n\n"
                             + "Falling back to cached, but EXPIRED Steam Database...",
                             "",
                         )
@@ -208,7 +210,24 @@ class MetadataManager(QObject):
                 )
                 return community_rules_json_data, path
 
+        def get_configured_no_version_warning_db(
+            path: str,
+        ) -> tuple[list[str] | None, str | None]:
+            logger.info(f'Checking for "No Version Warning" DB at: {path}')
+            if not validate_db_path(path, "No Version Warning"):
+                return None, None
+            logger.info("No Version Warning DB exists, loading")
+            no_version_warning_json_data = xml_path_to_json(path)
+            total_entries = len(no_version_warning_json_data)
+            logger.info(
+                f'Loaded {total_entries} compatibility version overrides from "No Version Warning"'
+            )
+            return list(
+                map(str.lower, no_version_warning_json_data["ModIdsToFix"]["li"])
+            ), path
+
         # Load external metadata
+
         # External Steam metadata
         if (
             self.settings_controller.settings.external_steam_metadata_source
@@ -282,6 +301,7 @@ class MetadataManager(QObject):
             logger.info(
                 "External Community Rules metadata disabled by user. Please choose a metadata source in settings."
             )
+
         # External User Rules metadata
         if os.path.exists(self.external_user_rules_path):
             logger.info("Loading userRules.json")
@@ -310,6 +330,43 @@ class MetadataManager(QObject):
                 DEFAULT_USER_RULES["rules"]
                 if isinstance(DEFAULT_USER_RULES["rules"], dict)
                 else {}
+            )
+
+        # "No Version Warning" overrides
+        if (
+            self.settings_controller.settings.external_no_version_warning_metadata_source
+            == "Configured file path"
+        ):
+            (
+                self.external_no_version_warning,
+                self.external_no_version_warning_path,
+            ) = get_configured_no_version_warning_db(
+                path=self.settings_controller.settings.external_no_version_warning_file_path,
+            )
+        elif (
+            self.settings_controller.settings.external_no_version_warning_metadata_source
+            == "Configured git repository"
+        ):
+            (
+                self.external_no_version_warning,
+                self.external_no_version_warning_path,
+            ) = get_configured_no_version_warning_db(
+                path=str(
+                    (
+                        Path(str(AppInfo().databases_folder))
+                        / Path(
+                            os.path.split(
+                                self.settings_controller.settings.external_no_version_warning_repo_path
+                            )[1]
+                        )
+                        / self.game_version[:3]
+                        / "ModIdsToFix.xml"
+                    )
+                )
+            )
+        else:
+            logger.info(
+                '"No Version Warning" override disabled by user. Please choose a metadata source in settings.'
             )
 
     def __refresh_internal_metadata(self, is_initial: bool = False) -> None:
@@ -1070,8 +1127,17 @@ class MetadataManager(QObject):
         # Get mod data
         mod_data = self.internal_local_metadata.get(uuid, {})
 
-        # Check if game_version exists and mod_data exists and mod_data contains 'supportedversions' with 'li' key
+        # check if mod_data exists and packageid is included in the external "No Version Warning" list
         if (
+            mod_data
+            and self.external_no_version_warning
+            and mod_data["packageid"] in self.external_no_version_warning
+        ):
+            logger.info(
+                f'mod with id "{mod_data["packageid"]}" was found on the "No Version Warning" list. Skipping version mismatch check!'
+            )
+            return False
+        elif (  # Check if game_version exists and mod_data exists and mod_data contains 'supportedversions' with 'li' key
             self.game_version
             and mod_data
             and mod_data.get("supportedversions", {}).get("li")
@@ -1105,6 +1171,58 @@ class MetadataManager(QObject):
         # Return result
         return result
 
+    def has_alternative_mod(self, uuid: str) -> str | None:
+        """
+        If the use has configured a "Use This Instead" database, this function checks if a given mod has
+        a recommended alternative.
+
+        If the user does not, it always returns false
+        """
+
+        if (
+            self.settings_controller.settings.external_use_this_instead_metadata_source
+            == "None"
+        ):
+            return None
+
+        path: Path
+
+        if (
+            self.settings_controller.settings.external_use_this_instead_metadata_source
+            == "Configured file path"
+        ):
+            path = Path(
+                self.settings_controller.settings.external_use_this_instead_file_path
+            )
+        elif (
+            self.settings_controller.settings.external_use_this_instead_metadata_source
+            == "Configured git repository"
+        ):
+            path = (
+                AppInfo().databases_folder
+                / Path(
+                    os.path.split(
+                        self.settings_controller.settings.external_use_this_instead_repo_path
+                    )[1]
+                )
+                / "Replacements"
+            )
+        else:
+            return None
+
+        # At this point, path points to a directory of xml files, each named for a mod.
+        mod_data = self.internal_local_metadata.get(uuid, False)
+        if not mod_data:
+            return None
+
+        check_path = path / Path(mod_data["publishedfileid"] + ".xml")
+        if not check_path.exists():
+            return None
+        replacement_data = xml_path_to_json(str(check_path))["ModReplacement"]
+        replacement_tt = f"{replacement_data['ReplacementName']} ({replacement_data['ReplacementSteamId']}) by {replacement_data['ReplacementAuthor']}"
+
+        return replacement_tt
+
     def process_batch(
         self,
         batch: dict[str, str],  # Batch is a mapper of mod directory <-> UUID to parse
@@ -1121,7 +1239,7 @@ class MetadataManager(QObject):
 
     def process_creation(self, data_source: str, mod_directory: str, uuid: str) -> None:
         logger.debug(
-            f'Processing creation of {data_source + " mod" if data_source != "expansion" else data_source} for {mod_directory}'
+            f"Processing creation of {data_source + ' mod' if data_source != 'expansion' else data_source} for {mod_directory}"
         )
         self.process_update(
             batch=False,
@@ -1227,8 +1345,8 @@ class MetadataManager(QObject):
 
         # Populate metadata
         self.refresh_acf_metadata(steamclient=True, steamcmd=True)
-        self.__refresh_external_metadata()
         self.__refresh_internal_metadata(is_initial=is_initial)
+        self.__refresh_external_metadata()
         self.compile_metadata(uuids=list(self.internal_local_metadata.keys()))
 
     def steamcmd_purge_mods(self, publishedfileids: set[str]) -> None:
@@ -1496,9 +1614,9 @@ class ModParser(QRunnable):
                             ).get("packageId")
                         ):
                             mod_metadata["packageid"] = (
-                                self.metadata_manager.external_steam_metadata[
-                                    pfid
-                                ]["packageId"].lower()
+                                self.metadata_manager.external_steam_metadata[pfid][
+                                    "packageId"
+                                ].lower()
                             )
                         else:
                             mod_metadata.setdefault("packageid", "missing.packageid")
@@ -2231,7 +2349,7 @@ class SteamDatabaseBuilder(QThread):
                 **{
                     v["appid"]: {
                         "appid": True,
-                        "url": f'https://store.steampowered.com/app/{v["appid"]}',
+                        "url": f"https://store.steampowered.com/app/{v['appid']}",
                         "packageId": v.get("packageid"),
                         "name": v.get("name"),
                         "authors": (
@@ -2247,7 +2365,7 @@ class SteamDatabaseBuilder(QThread):
                 },
                 **{
                     v["publishedfileid"]: {
-                        "url": f'https://steamcommunity.com/sharedfiles/filedetails/?id={v["publishedfileid"]}',
+                        "url": f"https://steamcommunity.com/sharedfiles/filedetails/?id={v['publishedfileid']}",
                         "packageId": v.get("packageid"),
                         "name": (
                             v.get("name")
@@ -2410,9 +2528,9 @@ def check_if_pfids_blacklisted(
         blacklisted_mods_report = ""
         for publishedfileid in blacklisted_mods:
             blacklisted_mods_report += (
-                f'{blacklisted_mods[publishedfileid]["name"]} ({publishedfileid})\n'
+                f"{blacklisted_mods[publishedfileid]['name']} ({publishedfileid})\n"
             )
-            blacklisted_mods_report += f'Reason for blacklisting: {blacklisted_mods[publishedfileid]["comment"]}'
+            blacklisted_mods_report += f"Reason for blacklisting: {blacklisted_mods[publishedfileid]['comment']}"
         answer = show_dialogue_conditional(
             title="Blacklisted mods found",
             text="Some mods are blacklisted in your SteamDB",
