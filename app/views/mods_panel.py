@@ -485,7 +485,7 @@ class ModListItemInner(QWidget):
             self.main_label.style().unpolish(self.main_label)
             self.main_label.style().polish(self.main_label)
 
-    def handle_mod_color_change(self, item: CustomListWidgetItem = None, init: bool = False) -> None:
+    def handle_mod_color_change(self, item: CustomListWidgetItem | None = None, init: bool = False) -> None:
         """
         Handle mod color change (Background or Text).
 
