@@ -671,7 +671,9 @@ class MainContent(QObject):
                 ].workshop_folder
                 if workshop_mods_target and workshop_mods_target != "":
                     with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
-                        todds_txt_file.write(os.path.abspath(local_mods_target) + "\n")
+                        todds_txt_file.write(
+                            os.path.abspath(workshop_mods_target) + "\n"
+                        )
             else:
                 with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
                     for uuid in self.mods_panel.active_mods_list.uuids:
@@ -2262,7 +2264,9 @@ class MainContent(QObject):
 
                         # If not, add it to safe directories
                         if repo_path not in safe_directories:
-                            repo.git.config("--global", "--add", "safe.directory", repo_path)
+                            repo.git.config(
+                                "--global", "--add", "safe.directory", repo_path
+                            )
 
                         # Fetch the latest changes from the remote
                         origin = repo.remote(name="origin")
