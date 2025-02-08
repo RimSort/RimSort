@@ -75,5 +75,4 @@ KNOWN_MOD_REPLACEMENTS = {
  "aoba.motorization.engine": {"rimthunder.core"}
 }
 
-MOD_TEXT_DEFAULT_COLOR = QColor("#e6edf3")
 MOD_BACKGROUND_DEFAULT_COLOR = QColor("transparent")

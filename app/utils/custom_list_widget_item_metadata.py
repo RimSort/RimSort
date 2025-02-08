@@ -3,7 +3,6 @@ from typing import Any, Optional
 from loguru import logger
 from PySide6.QtGui import QColor
 
-from app.utils.constants import MOD_TEXT_DEFAULT_COLOR
 from app.utils.metadata import MetadataManager
 
 

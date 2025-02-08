@@ -42,7 +42,6 @@ from app.controllers.settings_controller import SettingsController
 from app.utils.app_info import AppInfo
 from app.utils.constants import (
     KNOWN_MOD_REPLACEMENTS,
-    MOD_TEXT_DEFAULT_COLOR,
     SEARCH_DATA_SOURCE_FILTER_INDEXES,
 )
 from app.utils.custom_list_widget_item import CustomListWidgetItem
@@ -812,10 +811,10 @@ class ModListWidget(QListWidget):
             delete_mod_keep_dds_action = None
             # Delete optimized textures (.dds files only)
             delete_mod_dds_only_action = None
-            # Change mod name color
-            change_mod_name_color_action = None
-            # Reset mod name color
-            reset_mod_name_color_action = None
+            # Change mod color
+            change_mod_color_action = None
+            # Reset mod color
+            reset_mod_color_action = None
 
             # Get all selected CustomListWidgetItems
             selected_items = self.selectedItems()
@@ -832,11 +831,11 @@ class ModListWidget(QListWidget):
                     # Open folder action text
                     open_folder_action = QAction()
                     open_folder_action.setText("Open folder")
-                    # Change mod name color action
-                    change_mod_name_color_action = QAction()
-                    change_mod_name_color_action.setText("Change mod color")
-                    reset_mod_name_color_action = QAction()
-                    reset_mod_name_color_action.setText("Reset mod color")
+                    # Change mod color action
+                    change_mod_color_action = QAction()
+                    change_mod_color_action.setText("Change mod color")
+                    reset_mod_color_action = QAction()
+                    reset_mod_color_action.setText("Reset mod color")
                     # If we have a "url" or "steam_url"
                     if mod_metadata.get("url") or mod_metadata.get("steam_url"):
                         open_url_browser_action = QAction()
@@ -976,11 +975,11 @@ class ModListWidget(QListWidget):
                         # Open folder action text
                         open_folder_action = QAction()
                         open_folder_action.setText("Open folder(s)")
-                        # Change mod name color action
-                        change_mod_name_color_action = QAction()
-                        change_mod_name_color_action.setText("Change mod color(s)")
-                        reset_mod_name_color_action = QAction()
-                        reset_mod_name_color_action.setText("Reset mod color(s)")
+                        # Change mod color action
+                        change_mod_color_action = QAction()
+                        change_mod_color_action.setText("Change mod color(s)")
+                        reset_mod_color_action = QAction()
+                        reset_mod_color_action.setText("Reset mod color(s)")
                         # If we have a "url" or "steam_url"
                         if mod_metadata.get("url") or mod_metadata.get("steam_url"):
                             open_url_browser_action = QAction()
@@ -1088,10 +1087,10 @@ class ModListWidget(QListWidget):
             # Put together our contextMenu
             if open_folder_action:
                 context_menu.addAction(open_folder_action)
-            if change_mod_name_color_action:
-                context_menu.addAction(change_mod_name_color_action)
-            if reset_mod_name_color_action:
-                context_menu.addAction(reset_mod_name_color_action)
+            if change_mod_color_action:
+                context_menu.addAction(change_mod_color_action)
+            if reset_mod_color_action:
+                context_menu.addAction(reset_mod_color_action)
             if open_url_browser_action:
                 context_menu.addAction(open_url_browser_action)
             if open_mod_steam_action:
@@ -1586,7 +1585,7 @@ class ModListWidget(QListWidget):
                         )
                     return True
                 # If user is changing mod color, display color picker once no matter how many mods are selected
-                if action == change_mod_name_color_action:
+                if action == change_mod_color_action:
                     new_color = QColorDialog().getColor()
                 # Execute action for each selected mod
                 for source_item in selected_items:
@@ -1602,10 +1601,10 @@ class ModListWidget(QListWidget):
                         # Toggle warning action
                         if action == toggle_warning_action:
                             self.toggle_warning(mod_metadata["packageid"], uuid)
-                        elif action == change_mod_name_color_action:
+                        elif action == change_mod_color_action:
                             self.change_mod_name_color(uuid, new_color)
-                        elif action == reset_mod_name_color_action:
-                            self.reset_mod_name_color(uuid)
+                        elif action == reset_mod_color_action:
+                            self.reset_mod_color(uuid)
                         # Open folder action
                         elif action == open_folder_action:  # ACTION: Open folder
                             if os.path.exists(mod_path):  # If the path actually exists
@@ -2245,11 +2244,11 @@ class ModListWidget(QListWidget):
         item_data["mod_color"] = new_color
         item.setData(Qt.ItemDataRole.UserRole, item_data)
 
-    def reset_mod_name_color(self, uuid: str) -> None:
+    def reset_mod_color(self, uuid: str) -> None:
         current_mod_index = self.uuids.index(uuid)
         item = self.item(current_mod_index)
         item_data = item.data(Qt.ItemDataRole.UserRole)
-        item_data["mod_color"] = MOD_TEXT_DEFAULT_COLOR
+        item_data["mod_color"] = None
         item.setData(Qt.ItemDataRole.UserRole, item_data)
 
     def replaceItemAtIndex(self, index: int, item: CustomListWidgetItem) -> None:

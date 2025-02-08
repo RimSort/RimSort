@@ -80,11 +80,11 @@ class ModsPanelController(QObject):
         for mod in active_mods :
             mod_data = mod.data(Qt.ItemDataRole.UserRole)
             uuid = mod_data["uuid"]
-            self.mods_panel.active_mods_list.reset_mod_name_color(uuid)
+            self.mods_panel.active_mods_list.reset_mod_color(uuid)
         for mod in inactive_mods:
             mod_data = mod.data(Qt.ItemDataRole.UserRole)
             uuid = mod_data["uuid"]
-            self.mods_panel.inactive_mods_list.reset_mod_name_color(uuid)
+            self.mods_panel.inactive_mods_list.reset_mod_color(uuid)
 
     @Slot()
     def _change_visibility_of_mods_with_warnings(self) -> None:
