@@ -290,7 +290,7 @@ class ModListItemInner(QWidget):
                 self.mod_source_icon.setToolTip("Subscribed via Steam")
         # Set label color if mod has errors/warnings
         if self.mod_text_color != MOD_TEXT_DEFAULT_COLOR:
-            self.main_label.setStyleSheet(f"color: {self.mod_text_color.name()};")
+            self.handle_mod_color_change(init=True)
             self.main_label.setObjectName("ListItemLabelCustomColor")
         elif self.filtered:
             self.main_label.setObjectName("ListItemLabelFiltered")
@@ -474,9 +474,7 @@ class ModListItemInner(QWidget):
         # Recalculate the widget label's styling based on item data
         widget_object_name = self.main_label.objectName()
         if item_data["mod_text_color"] != MOD_TEXT_DEFAULT_COLOR:
-            self.main_label.setStyleSheet(
-                f"color: {item_data['mod_text_color'].name()};"
-            )
+            self.handle_mod_color_change(item)
             new_widget_object_name = "ListItemLabelCustomColor"
         elif item_data["filtered"]:
             new_widget_object_name = "ListItemLabelFiltered"
@@ -493,6 +491,23 @@ class ModListItemInner(QWidget):
             self.main_label.setObjectName(new_widget_object_name)
             self.main_label.style().unpolish(self.main_label)
             self.main_label.style().polish(self.main_label)
+
+    def handle_mod_color_change(self, item: CustomListWidgetItem = None, init: bool = False) -> None:
+        """
+        Handle mod color change (Background or Text).
+
+        :param item: CustomListWidgetItem, instance of CustomListWidgetItem.
+        :param init: bool, if running inside __init__ method, uses class attribute.
+        """
+        # TODO: check if coloring text or background.
+        
+        if init:  # Running in ModListItemInner __init__ method
+            self.main_label.setStyleSheet(f"color: {self.mod_text_color.name()};")
+        elif item:
+            item_data = item.data(Qt.ItemDataRole.UserRole)
+            self.main_label.setStyleSheet(f"color: {item_data['mod_text_color'].name()};")
+            self.main_label.setStyleSheet(f"background: {item_data['mod_text_color'].name()};")
+            self.main_label.setStyleSheet("background: {MOD_BACKGROUND_DEFAULT_COLOR};")
 
 
 class ModListIcons:
