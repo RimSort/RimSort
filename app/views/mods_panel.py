@@ -134,7 +134,7 @@ class ModListItemInner(QWidget):
         mismatch: bool,
         settings_controller: SettingsController,
         uuid: str,
-        mod_text_color: QColor,
+        mod_color: QColor,
     ) -> None:
         """
         Initialize the QWidget with mod uuid. Metadata can be accessed via MetadataManager.
@@ -150,7 +150,7 @@ class ModListItemInner(QWidget):
         :param invalid: a bool representing whether the widget's item is an invalid mod
         :param settings_controller: an instance of SettingsController for accessing settings
         :param uuid: str, the uuid of the mod which corresponds to a mod's metadata
-        mod_text_color: QColor, the color of the mod's text in the list widget item
+        mod_color: QColor, the color of the mod's text/background in the modlist
         """
 
         super(ModListItemInner, self).__init__()
@@ -169,8 +169,8 @@ class ModListItemInner(QWidget):
         self.mismatch = mismatch
         # Cache SettingsManager instance
         self.settings_controller = settings_controller
-        # Cache the mod text color
-        self.mod_text_color = mod_text_color
+        # Cache the mod color
+        self.mod_color = mod_color
 
         # All data, including name, author, package id, dependencies,
         # whether the mod is a workshop mod or expansion, etc is encapsulated
@@ -289,7 +289,7 @@ class ModListItemInner(QWidget):
                 self.mod_source_icon.setObjectName("workshop")
                 self.mod_source_icon.setToolTip("Subscribed via Steam")
         # Set label color if mod has errors/warnings
-        if self.mod_text_color != MOD_TEXT_DEFAULT_COLOR:
+        if self.mod_color is not None:
             self.handle_mod_color_change(init=True)
             self.main_label.setObjectName("ListItemLabelCustomColor")
         elif self.filtered:
@@ -298,7 +298,6 @@ class ModListItemInner(QWidget):
             self.main_label.setObjectName("ListItemLabelInvalid")
         else:
             self.main_label.setObjectName("ListItemLabel")
-        if self.mod_text_color == MOD_TEXT_DEFAULT_COLOR:
             self.handle_mod_color_reset()
         # Add icons
         if self.git_icon:
@@ -471,7 +470,7 @@ class ModListItemInner(QWidget):
             self.warning_icon_label.setToolTip("")
         # Recalculate the widget label's styling based on item data
         widget_object_name = self.main_label.objectName()
-        if item_data["mod_text_color"] != MOD_TEXT_DEFAULT_COLOR:
+        if item_data["mod_color"] is not None:
             self.handle_mod_color_change(item)
             new_widget_object_name = "ListItemLabelCustomColor"
         elif item_data["filtered"]:
@@ -480,7 +479,6 @@ class ModListItemInner(QWidget):
             new_widget_object_name = "ListItemLabelInvalid"
         else:
             new_widget_object_name = "ListItemLabel"
-        if item_data["mod_text_color"] == MOD_TEXT_DEFAULT_COLOR:
             self.handle_mod_color_reset()
         if widget_object_name != new_widget_object_name:
             logger.debug("Repolishing: " + new_widget_object_name)
@@ -498,18 +496,18 @@ class ModListItemInner(QWidget):
         if self.settings_controller.settings.color_background_instead_of_text_toggle:
             # Color background
             if init:  # Running in ModListItemInner __init__ method
-                self.main_label.setStyleSheet(f"background: {self.mod_text_color.name()};")
+                self.main_label.setStyleSheet(f"background: {self.mod_color.name()};")
             elif item:
                 item_data = item.data(Qt.ItemDataRole.UserRole)
-                self.main_label.setStyleSheet(f"background: {item_data['mod_text_color'].name()};")
+                self.main_label.setStyleSheet(f"background: {item_data['mod_color'].name()};")
             return
 
         # Color text
         if init:  # Running in ModListItemInner __init__ method
-            self.main_label.setStyleSheet(f"color: {self.mod_text_color.name()};")
+            self.main_label.setStyleSheet(f"color: {self.mod_color.name()};")
         elif item:
             item_data = item.data(Qt.ItemDataRole.UserRole)
-            self.main_label.setStyleSheet(f"color: {item_data['mod_text_color'].name()};")
+            self.main_label.setStyleSheet(f"color: {item_data['mod_color'].name()};")
 
     def handle_mod_color_reset(self) -> None:
         # Need to reset custom colors this way because the color is set using setStyleSheet
@@ -1780,7 +1778,7 @@ class ModListWidget(QListWidget):
         invalid = data["invalid"]
         mismatch = data["mismatch"]
         uuid = data["uuid"]
-        mod_text_color = data["mod_text_color"]
+        mod_color = data["mod_color"]
         if uuid:
             widget = ModListItemInner(
                 errors_warnings=errors_warnings,
@@ -1791,7 +1789,7 @@ class ModListWidget(QListWidget):
                 mismatch=mismatch,
                 settings_controller=self.settings_controller,
                 uuid=uuid,
-                mod_text_color=mod_text_color,
+                mod_color=mod_color,
             )
             widget.toggle_warning_signal.connect(self.toggle_warning)
             widget.toggle_error_signal.connect(self.toggle_warning)
@@ -2244,14 +2242,14 @@ class ModListWidget(QListWidget):
         current_mod_index = self.uuids.index(uuid)
         item = self.item(current_mod_index)
         item_data = item.data(Qt.ItemDataRole.UserRole)
-        item_data["mod_text_color"] = new_color
+        item_data["mod_color"] = new_color
         item.setData(Qt.ItemDataRole.UserRole, item_data)
 
     def reset_mod_name_color(self, uuid: str) -> None:
         current_mod_index = self.uuids.index(uuid)
         item = self.item(current_mod_index)
         item_data = item.data(Qt.ItemDataRole.UserRole)
-        item_data["mod_text_color"] = MOD_TEXT_DEFAULT_COLOR
+        item_data["mod_color"] = MOD_TEXT_DEFAULT_COLOR
         item.setData(Qt.ItemDataRole.UserRole, item_data)
 
     def replaceItemAtIndex(self, index: int, item: CustomListWidgetItem) -> None:
