@@ -63,6 +63,10 @@ class Settings(QObject):
         self.todds_dry_run: bool = False
         self.todds_overwrite: bool = False
 
+        # Theme
+        self.enable_themes: bool = True
+        self.theme_name: str = "RimPy"
+
         # Advanced
         self.debug_logging_enabled: bool = False
         self.watchdog_toggle: bool = True
@@ -72,6 +76,8 @@ class Settings(QObject):
         self.steam_mods_update_check: bool = False
         self.try_download_missing_mods: bool = False
         self.render_unity_rich_text: bool = True
+
+        self.rentry_auth_code: str = ""
 
         self.github_username: str = ""
         self.github_token: str = ""
