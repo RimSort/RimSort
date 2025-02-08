@@ -299,9 +299,7 @@ class ModListItemInner(QWidget):
         else:
             self.main_label.setObjectName("ListItemLabel")
         if self.mod_text_color == MOD_TEXT_DEFAULT_COLOR:
-            # Need to reset custom colors this way because the color is set using setStyleSheet
-            # After reseting, the behavior for unpolish() and polish() works as expected
-            self.main_label.setStyleSheet("")
+            self.handle_mod_color_reset()
         # Add icons
         if self.git_icon:
             self.main_item_layout.addWidget(self.git_icon, Qt.AlignmentFlag.AlignRight)
@@ -483,9 +481,7 @@ class ModListItemInner(QWidget):
         else:
             new_widget_object_name = "ListItemLabel"
         if item_data["mod_text_color"] == MOD_TEXT_DEFAULT_COLOR:
-            # Need to reset custom colors this way because the color is set using setStyleSheet
-            # After reseting, the behavior for unpolish() and polish() works as expected
-            self.main_label.setStyleSheet("")
+            self.handle_mod_color_reset()
         if widget_object_name != new_widget_object_name:
             logger.debug("Repolishing: " + new_widget_object_name)
             self.main_label.setObjectName(new_widget_object_name)
@@ -499,15 +495,26 @@ class ModListItemInner(QWidget):
         :param item: CustomListWidgetItem, instance of CustomListWidgetItem.
         :param init: bool, if running inside __init__ method, uses class attribute.
         """
-        # TODO: check if coloring text or background.
-        
+        if self.settings_controller.settings.color_background_instead_of_text_toggle:
+            # Color background
+            if init:  # Running in ModListItemInner __init__ method
+                self.main_label.setStyleSheet(f"background: {self.mod_text_color.name()};")
+            elif item:
+                item_data = item.data(Qt.ItemDataRole.UserRole)
+                self.main_label.setStyleSheet(f"background: {item_data['mod_text_color'].name()};")
+            return
+
+        # Color text
         if init:  # Running in ModListItemInner __init__ method
             self.main_label.setStyleSheet(f"color: {self.mod_text_color.name()};")
         elif item:
             item_data = item.data(Qt.ItemDataRole.UserRole)
             self.main_label.setStyleSheet(f"color: {item_data['mod_text_color'].name()};")
-            self.main_label.setStyleSheet(f"background: {item_data['mod_text_color'].name()};")
-            self.main_label.setStyleSheet("background: {MOD_BACKGROUND_DEFAULT_COLOR};")
+
+    def handle_mod_color_reset(self) -> None:
+        # Need to reset custom colors this way because the color is set using setStyleSheet
+        # After reseting, the behavior for unpolish() and polish() works as expected
+        self.main_label.setStyleSheet("")
 
 
 class ModListIcons:
