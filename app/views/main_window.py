@@ -70,7 +70,8 @@ class MainWindow(QMainWindow):
         # Watchdog
         self.watchdog_event_handler: WatchdogHandler | None = None
         # Set up the window
-        self.setWindowTitle(f"RimSort {AppInfo().app_version}")
+        current_instance = self.settings_controller.settings.current_instance
+        self.__set_window_title(current_instance)
         self.setMinimumSize(QSize(1024, 768))
 
         # Create the window layout
@@ -201,6 +202,32 @@ class MainWindow(QMainWindow):
         if self.settings_controller.settings.watchdog_toggle:
             # Setup watchdog
             self.initialize_watchdog()
+
+        self.__check_steam_integration()
+
+        # Force initial setup to False and save settings
+        if self.settings_controller.active_instance.initial_setup:
+            self.settings_controller.active_instance.initial_setup = False
+            self.settings_controller.settings.save()
+
+    def __check_steam_integration(self) -> None:
+        """Ask the user if they would like to enable Steam Client Integration for the active instance if it is the first time they are setting up RimSort."""
+        instance = self.settings_controller.active_instance
+
+        if instance.initial_setup and not instance.steam_client_integration:
+            diag = BinaryChoiceDialog(
+                title="Steam Client Integration",
+                text="<h3>Would you like to enable Steam Client Integration for this instance?</h3>",
+                information="""This will allow you to use RimSort features that require the Steam Client. This includes, among other things, unsubscribing from workshop mods and opening workshop links via the Steam Client. 
+                <br><br>
+                You can change this in the settings under the Advanced tab.""",
+                negative_text="No",
+            )
+            if diag.exec_is_positive():
+                instance.steam_client_integration = True
+                self.settings_controller.set_instance(instance)
+
+        return
 
     def __ask_for_new_instance_name(self) -> str | None:
         instance_name, ok = show_dialogue_input(
@@ -870,10 +897,20 @@ class MainWindow(QMainWindow):
         self.stop_watchdog_if_running()
         # Set current instance
         self.settings_controller.settings.current_instance = instance
+        # Update window title with current instance
+        self.__set_window_title(instance)
         # Save settings
         self.settings_controller.settings.save()
         # Initialize content
         self.initialize_content(is_initial=False)
+        
+    def __set_window_title(self, instance: str) -> None:
+        """
+        Sets the window title with the name of the instance being used.
+        
+        :param instance: Name of the instance currently being used.
+        """
+        self.setWindowTitle(f"RimSort {AppInfo().app_version} | {instance} Instance")
 
     def initialize_watchdog(self) -> None:
         logger.info("Initializing watchdog FS Observer")
