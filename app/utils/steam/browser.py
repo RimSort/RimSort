@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
 
 from app.models.image_label import ImageLabel
 from app.utils.app_info import AppInfo
+from app.utils.generic import extract_page_title_steam_browser
 from app.utils.metadata import MetadataManager
 from app.utils.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetCollectionDetails,
@@ -284,8 +285,12 @@ class SteamBrowser(QWidget):
         publishedfileid: str,
         title: str | None = None,
     ) -> None:
-        # Get the name from the page title
-        page_title = self.current_title.split("Steam Workshop::", 1)[1]
+        # Try to extract the mod name from the page title, fallback to current_title
+        extracted_page_title = extract_page_title_steam_browser(self.current_title)
+        page_title = (
+            extracted_page_title if extracted_page_title else self.current_title
+        )
+        # Check if the mod is already in the list
         if publishedfileid not in self.downloader_list_mods_tracking:
             # Add pfid to tracking list
             logger.debug(f"Tracking PublishedFileId for download: {publishedfileid}")
