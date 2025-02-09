@@ -3,6 +3,10 @@ description: A collection of guides, tutorials, and documentation for RimSort, a
 theme: just-the-docs
 repository: RimSort/RimSort
 
+languages: ["en", "zh"]
+default_lang: "en"
+exclude_from_localization: ["javascript", "images", "css", "public", "sitemap"]
+parallel_localization: true
 url: https://rimsort.github.io
 
 # Makes Aux links open in a new tab. Default is false
@@ -116,6 +120,7 @@ plugins:
   - jekyll-github-metadata
   - jekyll-include-cache
   - jekyll-sitemap
+  - jekyll-polyglot
 
 compress_html:
   clippings: all
@@ -124,3 +129,5 @@ compress_html:
   startings: []
   blanklines: false
   profile: false
+
+langsep: "•"
