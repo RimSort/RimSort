@@ -671,7 +671,9 @@ class MainContent(QObject):
                 ].workshop_folder
                 if workshop_mods_target and workshop_mods_target != "":
                     with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
-                        todds_txt_file.write(os.path.abspath(local_mods_target) + "\n")
+                        todds_txt_file.write(
+                            os.path.abspath(workshop_mods_target) + "\n"
+                        )
             else:
                 with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
                     for uuid in self.mods_panel.active_mods_list.uuids:
@@ -2242,6 +2244,30 @@ class MainContent(QObject):
                 if os.path.exists(repo_path):
                     repo = Repo(repo_path)
                     try:
+                        # Check if directory has been added to safe directories
+                        """
+                        This is only necessary when a git repo was cloned by a different user.
+
+                        Eg. I download repo on 'D' hard drive on old laptop. Then I put the 'D' drive in new laptop.
+                        When trying to perform an operation on that repo from the new laptop, you get the dubious ownership error.
+
+                        TODO: Include in PyGit2 migration.
+                        NOTE: Try-Except needed because GitPython does not handle it well when no safe directories exist... PyGit2 might be better at it.
+                        """
+                        try:
+                            safe_directories = repo.git.config(
+                                "--global", "--get-all", "safe.directory"
+                            ).splitlines()
+                        except GitCommandError:
+                            logger.debug("No safe directories present")
+                            safe_directories = []  # Allows code below to execute
+
+                        # If not, add it to safe directories
+                        if repo_path not in safe_directories:
+                            repo.git.config(
+                                "--global", "--add", "safe.directory", repo_path
+                            )
+
                         # Fetch the latest changes from the remote
                         origin = repo.remote(name="origin")
                         origin.fetch()
