@@ -1,8 +1,6 @@
 from enum import Enum
 from typing import Any
 
-from PySide6.QtGui import QColor
-
 
 class SortMethod(str, Enum):
     ALPHABETICAL = "Alphabetical"
