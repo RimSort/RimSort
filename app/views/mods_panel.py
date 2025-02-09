@@ -2947,5 +2947,8 @@ class ModsPanel(QWidget):
             label.setText(
                 f"{list_type} [{num_unfiltered}/{num_filtered + num_unfiltered}]"
             )
+        elif  num_filtered > 0:
+            # If any filter is active, show how many mods are displayed out of total
+            label.setText(f"{list_type} [{num_unfiltered}/{num_filtered + num_unfiltered}]")
         else:
             label.setText(f"{list_type} [{num_filtered + num_unfiltered}]")
