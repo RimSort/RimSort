@@ -74,5 +74,3 @@ KNOWN_MOD_REPLACEMENTS = {
  "brrainz.harmony": {"zetrith.prepatcher"},
  "aoba.motorization.engine": {"rimthunder.core"}
 }
-
-MOD_BACKGROUND_DEFAULT_COLOR = QColor("transparent")

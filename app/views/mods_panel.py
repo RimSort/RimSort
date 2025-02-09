@@ -1602,7 +1602,7 @@ class ModListWidget(QListWidget):
                         if action == toggle_warning_action:
                             self.toggle_warning(mod_metadata["packageid"], uuid)
                         elif action == change_mod_color_action:
-                            self.change_mod_name_color(uuid, new_color)
+                            self.change_mod_color(uuid, new_color)
                         elif action == reset_mod_color_action:
                             self.reset_mod_color(uuid)
                         # Open folder action
@@ -2237,7 +2237,7 @@ class ModListWidget(QListWidget):
         item.setData(Qt.ItemDataRole.UserRole, item_data)
         self.recalculate_warnings_signal.emit()
 
-    def change_mod_name_color(self, uuid: str, new_color: QColor) -> None:
+    def change_mod_color(self, uuid: str, new_color: QColor) -> None:
         current_mod_index = self.uuids.index(uuid)
         item = self.item(current_mod_index)
         item_data = item.data(Qt.ItemDataRole.UserRole)
