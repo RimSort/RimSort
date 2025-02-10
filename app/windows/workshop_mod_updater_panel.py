@@ -17,6 +17,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.utils.generic import check_if_steam_running
+from app.views.dialogue import show_information, show_warning
+
 
 class ModUpdaterPrompt(QWidget):
     """
@@ -37,7 +40,7 @@ class ModUpdaterPrompt(QWidget):
         self.setObjectName("missingModsPanel")
         # MOD LABEL
         self.updates_available_label = QLabel(
-            "There updates available for Workshop mods!"
+            "There are updates available for Workshop mods!"
         )
         self.updates_available_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -212,11 +215,24 @@ class ModUpdaterPrompt(QWidget):
             self.steamcmd_downloader_signal.emit(steamcmd_publishedfileids)
         # If we have any Steam mods designated to be updated
         if len(steam_publishedfileids) > 0:
+            # First check if steam is running
+            if not check_if_steam_running():
+                logger.warning("Steam is not running. Cannot unsubscribe from Steam mods.")
+                show_warning(
+                    title="Steam not running",
+                    text="Unable to update Steam mods. Ensure Steam is running and try again.",
+                )
+                return
+
             self.steamworks_subscription_signal.emit(
                 [
                     "resubscribe",
                     [eval(str_pfid) for str_pfid in steam_publishedfileids],
                 ]
+            )
+            show_information(
+                title="Finished Updating Steam Mods",
+                text="Updates may require a Steam and RimSort restart or running Steam Validation to be reflected.",
             )
         self.close()
 

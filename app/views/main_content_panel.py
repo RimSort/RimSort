@@ -102,7 +102,6 @@ class MainContent(QObject):
     _instance: Self | None = None
 
     disable_enable_widgets_signal = Signal(bool)
-    status_signal = Signal(str)
     stop_watchdog_signal = Signal()
 
     def __new__(cls, *args: Any, **kwargs: Any) -> "MainContent":
@@ -1957,7 +1956,10 @@ class MainContent(QObject):
             )
             workshop_mod_updater.show()
         else:
-            self.status_signal.emit("All Workshop mods appear to be up to date!")
+            dialogue.show_information(
+                title="Finished Checking Updates",
+                text="All Workshop mods appear to be up to date!",
+            )
 
     def _do_setup_steamcmd(self) -> None:
         if (
