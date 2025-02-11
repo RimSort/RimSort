@@ -62,7 +62,7 @@ body:
     attributes:
       multiple: true
       label: Wiki/FAQ Check
-      description: By submitting this issue, you attest that you've checked [the Wiki](https://github.com/RimSort/RimSort/wiki) for potential solutions and didn't find any.
+      description: By submitting this issue, you attest that you've checked [the Wiki](https://rimsort.github.io/RimSort/) for potential solutions and didn't find any.
       options:
         - I've checked the Wiki for a solution and didn't find a solution
     validations:

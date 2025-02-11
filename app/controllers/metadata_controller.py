@@ -94,7 +94,7 @@ class MetadataController(QObject):
         self.metadata_mediator.local_mods_path = local_mods_path
         self.metadata_mediator.game_path = game_path
 
-    @Slot(str)
+    @Slot()
     def get_metadata_with_path(
         self, path: str | Path
     ) -> tuple[ListedMod, AuxMetadataEntry] | tuple[None, None]:

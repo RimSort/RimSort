@@ -25,6 +25,8 @@ from PySide6.QtWidgets import (
 
 from app.models.image_label import ImageLabel
 from app.utils.app_info import AppInfo
+from app.utils.generic import extract_page_title_steam_browser
+from app.utils.metadata import MetadataManager
 from app.utils.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetCollectionDetails,
     ISteamRemoteStorage_GetPublishedFileDetails,
@@ -40,9 +42,12 @@ class SteamBrowser(QWidget):
     steamcmd_downloader_signal = Signal(list)
     steamworks_subscription_signal = Signal(list)
 
-    def __init__(self, startpage: str):
+    def __init__(self, startpage: str, metadata_manager: MetadataManager):
         super().__init__()
         logger.debug("Initializing SteamBrowser")
+
+        # store metadata manager reference so we can use it to check if mods are installed
+        self.metadata_manager = metadata_manager
 
         # This is used to fix issue described here on non-Windows platform:
         # https://doc.qt.io/qt-6/qtwebengine-platform-notes.html#sandboxing-support
@@ -182,7 +187,15 @@ class SteamBrowser(QWidget):
         elif self.url_prefix_workshop in self.current_url:
             publishedfileid = self.current_url.split(self.url_prefix_workshop, 1)[1]
         else:
-            logger.error(f"Unable to parse pfid from url: {self.current_url}")
+            logger.error(
+                f"Unable to parse publishedfileid from url: {self.current_url}"
+            )
+            show_warning(
+                title="No publishedfileid found",
+                text="Unable to parse publishedfileid from url, Please check if url is in the correct format",
+                information=f"Url: {self.current_url}",
+            )
+            return None
         # If there is extra data after the PFID, strip it
         if self.searchtext_string in publishedfileid:
             publishedfileid = publishedfileid.split(self.searchtext_string)[0]
@@ -195,8 +208,25 @@ class SteamBrowser(QWidget):
                 publishedfileid
             )
             if len(collection_mods_pfid_to_title) > 0:
-                for pfid, title in collection_mods_pfid_to_title.items():
-                    self._add_mod_to_list(publishedfileid=pfid, title=title)
+                # ask user whether to add all mods or only missing ones
+                from app.views.dialogue import show_dialogue_conditional
+
+                answer = show_dialogue_conditional(
+                    title="Add Collection",
+                    text="How would you like to add the collection?",
+                    information="You can choose to add all mods from the collection or only the ones you don't have installed.",
+                    button_text_override=["Add All Mods", "Add Missing Mods"],
+                )
+
+                if answer == "Add All Mods":
+                    # add all mods
+                    for pfid, title in collection_mods_pfid_to_title.items():
+                        self._add_mod_to_list(publishedfileid=pfid, title=title)
+                elif answer == "Add Missing Mods":
+                    # add only mods that aren't installed
+                    for pfid, title in collection_mods_pfid_to_title.items():
+                        if not self._is_mod_installed(pfid):
+                            self._add_mod_to_list(publishedfileid=pfid, title=title)
             else:
                 logger.warning(
                     "Empty list of mods returned, unable to add collection to list!"
@@ -255,8 +285,12 @@ class SteamBrowser(QWidget):
         publishedfileid: str,
         title: str | None = None,
     ) -> None:
-        # Get the name from the page title
-        page_title = self.current_title.split("Steam Workshop::", 1)[1]
+        # Try to extract the mod name from the page title, fallback to current_title
+        extracted_page_title = extract_page_title_steam_browser(self.current_title)
+        page_title = (
+            extracted_page_title if extracted_page_title else self.current_title
+        )
+        # Check if the mod is already in the list
         if publishedfileid not in self.downloader_list_mods_tracking:
             # Add pfid to tracking list
             logger.debug(f"Tracking PublishedFileId for download: {publishedfileid}")
@@ -402,6 +436,19 @@ class SteamBrowser(QWidget):
                 self.url_prefix_sharedfiles in self.current_url
                 or self.url_prefix_workshop in self.current_url
             ):
+                # get mod id from steam workshop url
+                if self.url_prefix_sharedfiles in self.current_url:
+                    publishedfileid = self.current_url.split(
+                        self.url_prefix_sharedfiles, 1
+                    )[1]
+                else:
+                    publishedfileid = self.current_url.split(
+                        self.url_prefix_workshop, 1
+                    )[1]
+                if self.searchtext_string in publishedfileid:
+                    publishedfileid = publishedfileid.split(self.searchtext_string)[0]
+                # check if mod is installed
+                is_installed = self._is_mod_installed(publishedfileid)
                 # Remove area that shows "Subscribe to download" and "Subscribe"/"Unsubscribe" button for mods
                 mod_subscribe_area_removal_script = """
                 var elements = document.getElementsByClassName("game_area_purchase_game");
@@ -432,6 +479,104 @@ class SteamBrowser(QWidget):
                 self.web_view.page().runJavaScript(
                     subscribe_buttons_removal_script, 0, lambda result: None
                 )
+                # add buttons for collection items
+                add_collection_buttons_script = """
+                // find all collection items
+                var collectionItems = document.getElementsByClassName('collectionItem');
+                
+                for (var i = 0; i < collectionItems.length; i++) {
+                    var item = collectionItems[i];
+                    
+                    // get the mod id from the item
+                    var modId = item.id.replace('sharedfile_', '');
+                    
+                    // find the subscription controls div
+                    var subscriptionControls = item.querySelector('.subscriptionControls');
+                    if (!subscriptionControls) {
+                        continue;
+                    }
+                    
+                    // check if mod is installed
+                    var isInstalled = window.installedMods && window.installedMods.includes(modId);
+                    
+                    if (isInstalled) {
+                        // create installed indicator
+                        var installedIndicator = document.createElement('div');
+                        installedIndicator.innerHTML = '✓';
+                        installedIndicator.style.backgroundColor = '#4CAF50';
+                        installedIndicator.style.color = 'white';
+                        installedIndicator.style.width = '24px';
+                        installedIndicator.style.height = '24px';
+                        installedIndicator.style.borderRadius = '4px';
+                        installedIndicator.style.display = 'flex';
+                        installedIndicator.style.alignItems = 'center';
+                        installedIndicator.style.justifyContent = 'center';
+                        installedIndicator.style.fontWeight = 'bold';
+                        installedIndicator.style.fontSize = '16px';
+                        
+                        // Replace subscription controls with our indicator
+                        subscriptionControls.innerHTML = '';
+                        subscriptionControls.appendChild(installedIndicator);
+                    } else {
+                        // create link button
+                        var linkButton = document.createElement('a');
+                        linkButton.innerHTML = '→';
+                        linkButton.href = 'https://steamcommunity.com/sharedfiles/filedetails/?id=' + modId;
+                        linkButton.style.backgroundColor = '#2196F3';
+                        linkButton.style.color = 'white';
+                        linkButton.style.width = '24px';
+                        linkButton.style.height = '24px';
+                        linkButton.style.borderRadius = '4px';
+                        linkButton.style.display = 'flex';
+                        linkButton.style.alignItems = 'center';
+                        linkButton.style.justifyContent = 'center';
+                        linkButton.style.cursor = 'pointer';
+                        linkButton.style.fontWeight = 'bold';
+                        linkButton.style.fontSize = '20px';
+                        linkButton.style.textDecoration = 'none';
+                        
+                        // Replace subscription controls with our button
+                        subscriptionControls.innerHTML = '';
+                        subscriptionControls.appendChild(linkButton);
+                    }
+                }
+                """
+                # Get list of installed mod IDs and inject into page
+                installed_mods = []
+                for metadata in self.metadata_manager.internal_local_metadata.values():
+                    if metadata.get("publishedfileid"):
+                        installed_mods.append(metadata["publishedfileid"])
+                inject_installed_mods_script = f"""
+                window.installedMods = {installed_mods};
+                """
+                self.web_view.page().runJavaScript(
+                    inject_installed_mods_script, 0, lambda result: None
+                )
+                self.web_view.page().runJavaScript(
+                    add_collection_buttons_script, 0, lambda result: None
+                )
+                # add installed indicator if mod is installed
+                if is_installed:
+                    add_installed_indicator_script = """
+                    // Create a new div for the installed indicator
+                    var installedDiv = document.createElement('div');
+                    installedDiv.style.backgroundColor = '#4CAF50';  // Green background
+                    installedDiv.style.color = 'white';
+                    installedDiv.style.padding = '10px';
+                    installedDiv.style.borderRadius = '5px';
+                    installedDiv.style.marginBottom = '10px';
+                    installedDiv.style.textAlign = 'center';
+                    installedDiv.style.fontWeight = 'bold';
+                    installedDiv.innerHTML = '✓ Already Installed';
+                    // Insert it at the top of the page content
+                    var contentDiv = document.querySelector('.workshopItemDetailsHeader');
+                    if (contentDiv) {
+                        contentDiv.parentNode.insertBefore(installedDiv, contentDiv);
+                    }
+                    """
+                    self.web_view.page().runJavaScript(
+                        add_installed_indicator_script, 0, lambda result: None
+                    )
                 # Show the add_to_list_button
                 self.nav_bar.addAction(self.add_to_list_button)
             else:
@@ -440,3 +585,11 @@ class SteamBrowser(QWidget):
     def __set_current_html(self, html: str) -> None:
         # Update cached html with html from current page
         self.current_html = html
+
+    def _is_mod_installed(self, publishedfileid: str) -> bool:
+        """Check if a mod is installed by looking through local and workshop folders"""
+        # check all mods in internal metadata
+        for metadata in self.metadata_manager.internal_local_metadata.values():
+            if metadata.get("publishedfileid") == publishedfileid:
+                return True
+        return False

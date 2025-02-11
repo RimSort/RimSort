@@ -194,8 +194,20 @@ class MainContent(QObject):
             EventBus().do_open_rimsort_logs_directory.connect(
                 self._do_open_rimsort_logs_directory
             )
+            EventBus().do_open_rimworld_directory.connect(
+                self._do_open_rimworld_directory
+            )
+            EventBus().do_open_rimworld_config_directory.connect(
+                self._do_open_rimworld_config_directory
+            )
             EventBus().do_open_rimworld_logs_directory.connect(
                 self._do_open_rimworld_logs_directory
+            )
+            EventBus().do_open_local_mods_directory.connect(
+                self._do_open_local_mods_directory
+            )
+            EventBus().do_open_steam_mods_directory.connect(
+                self._do_open_steam_mods_directory
             )
 
             # Edit Menu bar Eventbus
@@ -437,8 +449,7 @@ class MainContent(QObject):
                 for item in items_to_move:
                     iml.insertItem(count, item)
                     count += 1
-            self.mods_panel.active_mods_list.recalculate_warnings_signal.emit()
-            self.mods_panel.inactive_mods_list.recalculate_warnings_signal.emit()
+        # List error/warnings are automatically recalculated when a mod is inserted/removed from a list
 
     def __handle_inactive_mod_key_press(self, key: str) -> None:
         """
@@ -491,8 +502,7 @@ class MainContent(QObject):
                 for item in items_to_move:
                     aml.insertItem(count, item)
                     count += 1
-            self.mods_panel.active_mods_list.recalculate_warnings_signal.emit()
-            self.mods_panel.inactive_mods_list.recalculate_warnings_signal.emit()
+        # List error/warnings are automatically recalculated when a mod is inserted/removed from a list
 
     def __insert_data_into_lists(
         self, active_mods_uuids: list[str], inactive_mods_uuids: list[str]
@@ -661,7 +671,9 @@ class MainContent(QObject):
                 ].workshop_folder
                 if workshop_mods_target and workshop_mods_target != "":
                     with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
-                        todds_txt_file.write(os.path.abspath(local_mods_target) + "\n")
+                        todds_txt_file.write(
+                            os.path.abspath(workshop_mods_target) + "\n"
+                        )
             else:
                 with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
                     for uuid in self.mods_panel.active_mods_list.uuids:
@@ -1007,22 +1019,23 @@ class MainContent(QObject):
         # If we are refreshing cache from user action
         if not is_initial:
             # Reset the data source filters to default and clear searches
+            # Avoid recalculating warnings/errors when clearing search
+            # Recalculation for each list will be triggered by mods being reinserted into inactive and active lists automatically
             self.mods_panel.active_mods_filter_data_source_index = len(
                 self.mods_panel.data_source_filter_icons
             )
-            self.mods_panel.signal_clear_search(list_type="Active")
+            self.mods_panel.signal_clear_search(
+                list_type="Active", recalculate_list_errors_warnings=False
+            )
             self.mods_panel.inactive_mods_filter_data_source_index = len(
                 self.mods_panel.data_source_filter_icons
             )
-            self.mods_panel.signal_clear_search(list_type="Inactive")
+            self.mods_panel.signal_clear_search(
+                list_type="Inactive", recalculate_list_errors_warnings=False
+            )
             self.mods_panel.active_mods_filter_data_source_index = len(
                 self.mods_panel.data_source_filter_icons
             )
-            self.mods_panel.signal_clear_search(list_type="Active")
-            self.mods_panel.inactive_mods_filter_data_source_index = len(
-                self.mods_panel.data_source_filter_icons
-            )
-            self.mods_panel.signal_clear_search(list_type="Inactive")
         # Check if paths are set
         if self.check_if_essential_paths_are_set(prompt=is_initial):
             # Run expensive calculations to set cache data
@@ -1219,7 +1232,7 @@ class MainContent(QObject):
         file_path = dialogue.show_dialogue_file(
             mode="open",
             caption="Open RimWorld mod list",
-            _dir=str(AppInfo().app_storage_folder),
+            _dir=str(AppInfo().saved_modlists_folder),
             _filter="RimWorld mod list (*.rml *.rws *.xml)",
         )
         logger.info(f"Selected path: {file_path}")
@@ -1269,7 +1282,7 @@ class MainContent(QObject):
         file_path = dialogue.show_dialogue_file(
             mode="save",
             caption="Save mod list",
-            _dir=str(AppInfo().app_storage_folder),
+            _dir=str(AppInfo().saved_modlists_folder),
             _filter="XML (*.xml)",
         )
         logger.info(f"Selected path: {file_path}")
@@ -1322,9 +1335,7 @@ class MainContent(QObject):
 
     def _do_import_list_rentry(self) -> None:
         # Create an instance of RentryImport
-        rentry_import = RentryImport()
-        # Open the RentryImport dialogue
-        rentry_import.import_rentry_link()
+        rentry_import = RentryImport(self.settings_controller)
         # Exit if user cancels or no package IDs
         if not rentry_import.package_ids:
             logger.debug("USER ACTION: pressed cancel or no package IDs, passing")
@@ -1376,11 +1387,8 @@ class MainContent(QObject):
 
     def _do_import_list_workshop_collection(self) -> None:
         # Create an instance of collection_import
+        # This also triggers the import dialogue and gets result
         collection_import = CollectionImport(metadata_manager=self.metadata_manager)
-
-        # Trigger the import dialogue and get the result
-        collection_import.import_collection_link()
-
         # Exit if user cancels or no package IDs
         if not collection_import.package_ids:
             logger.debug("USER ACTION: pressed cancel or no package IDs, passing")
@@ -1648,7 +1656,7 @@ class MainContent(QObject):
     def _do_open_app_directory(self) -> None:
         app_directory = os.getcwd()
         logger.info(f"Opening app directory: {app_directory}")
-        platform_specific_open(os.getcwd())
+        platform_specific_open(app_directory)
 
     def _do_open_settings_directory(self) -> None:
         settings_directory = AppInfo().app_storage_folder
@@ -1660,27 +1668,63 @@ class MainContent(QObject):
         logger.info(f"Opening RimSort logs directory: {logs_directory}")
         platform_specific_open(logs_directory)
 
+    def _do_open_rimworld_directory(self) -> None:
+        self._open_directory("RimWorld game", "game_folder")
+
+    def _do_open_rimworld_config_directory(self) -> None:
+        self._open_directory("RimWorld config", "config_folder")
+
     def _do_open_rimworld_logs_directory(self) -> None:
         user_home = Path.home()
         logs_directory = None
         if SystemInfo().operating_system == SystemInfo.OperatingSystem.MACOS:
             logs_directory = (
-                f"/{user_home}/Library/Logs/Ludeon Studios/RimWorld by Ludeon Studios"
+                user_home / "Library/Logs/Ludeon Studios/RimWorld by Ludeon Studios"
             )
-            platform_specific_open(Path(logs_directory))
         elif SystemInfo().operating_system == SystemInfo.OperatingSystem.LINUX:
             logs_directory = (
-                f"{user_home}/.config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios"
+                user_home / ".config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios"
             )
-            platform_specific_open(Path(logs_directory))
         elif SystemInfo().operating_system == SystemInfo.OperatingSystem.WINDOWS:
-            logs_directory = f"{user_home}/AppData/LocalLow/Ludeon Studios/RimWorld by Ludeon Studios"
-            platform_specific_open(Path(logs_directory).resolve())
+            logs_directory = (
+                user_home / "AppData/LocalLow/Ludeon Studios/RimWorld by Ludeon Studios"
+            )
 
-        if logs_directory:
+        if logs_directory and logs_directory.exists():
             logger.info(f"Opening RimWorld logs directory: {logs_directory}")
+            platform_specific_open(logs_directory)
         else:
-            logger.error("Could not open RimWorld logs directory on an unknown system")
+            self.show_dialog_specify_paths("RimWorld logs")
+
+    def _do_open_local_mods_directory(self) -> None:
+        self._open_directory("Local mods", "local_folder")
+
+    def _do_open_steam_mods_directory(self) -> None:
+        self._open_directory("Steam mods", "workshop_folder")
+
+    def _open_directory(self, directory_name: str, attribute: str) -> None:
+        current_instance = self.settings_controller.settings.current_instance
+        directory = getattr(
+            self.settings_controller.settings.instances[current_instance],
+            attribute,
+            None,
+        )
+        if directory and os.path.exists(directory):
+            logger.info(f"Opening {directory_name} directory: {directory}")
+            platform_specific_open(directory)
+        else:
+            self.show_dialog_specify_paths(directory_name)
+
+    def show_dialog_specify_paths(self, directory_name: str) -> None:
+        logger.error(f"Could not open {directory_name} directory")
+        answer = dialogue.show_dialogue_conditional(
+            title="Could not open directory",
+            text=f"{directory_name} path does not exist or is not set.",
+            information="Would you like to set the path now?",
+            button_text_override=["Open settings"],
+        )
+        if "settings" in answer:
+            self.settings_controller.show_settings_dialog()
 
     @Slot()
     def _on_do_upload_rimsort_log(self) -> None:
@@ -1735,7 +1779,7 @@ class MainContent(QObject):
 
     def _do_save(self) -> None:
         """
-        Method save the current list of active mods to the selected ModsConfig.xml
+        Method to save the current list of active mods to the selected ModsConfig.xml
         """
         logger.info("Saving current active mods to ModsConfig.xml")
         active_mods = []
@@ -1761,6 +1805,10 @@ class MainContent(QObject):
                         active_mods.append(package_id + "_steam")
                         continue  # Append `_steam` suffix if Steam mod, continue to next mod
                 active_mods.append(package_id)
+        active_mods_uuids, inactive_mods_uuids, _, _ = metadata.get_mods_from_list(
+            mod_list=active_mods
+        )
+        self.active_mods_uuids_last_save = active_mods_uuids
         logger.info(f"Collected {len(active_mods)} active mods for saving")
 
         mods_config_data = generate_rimworld_mods_list(
@@ -1785,6 +1833,9 @@ class MainContent(QObject):
                 details=traceback.format_exc(),
             )
         EventBus().do_save_button_animation_stop.emit()
+        # Save current modlists to their respective restore states
+        self.active_mods_uuids_restore_state = active_mods_uuids
+        self.inactive_mods_uuids_restore_state = inactive_mods_uuids
         logger.info("Finished saving active mods")
 
     def _do_restore(self) -> None:
@@ -1862,7 +1913,7 @@ class MainContent(QObject):
 
     def _do_browse_workshop(self) -> None:
         self.steam_browser = SteamBrowser(
-            "https://steamcommunity.com/app/294100/workshop/"
+            "https://steamcommunity.com/app/294100/workshop/", self.metadata_manager
         )
         self.steam_browser.steamcmd_downloader_signal.connect(
             self._do_download_mods_with_steamcmd
@@ -2050,8 +2101,7 @@ class MainContent(QObject):
                     )
                     self.steamworks_in_use = False
                 elif (
-                    instruction[0] in subscription_actions
-                    and len(instruction[1]) >= 1
+                    instruction[0] in subscription_actions and len(instruction[1]) >= 1
                 ):  # ISteamUGC/{SubscribeItem/UnsubscribeItem}
                     logger.info(
                         f"Creating Steamworks API process with instruction {instruction}"
@@ -2194,13 +2244,37 @@ class MainContent(QObject):
                 if os.path.exists(repo_path):
                     repo = Repo(repo_path)
                     try:
+                        # Check if directory has been added to safe directories
+                        """
+                        This is only necessary when a git repo was cloned by a different user.
+
+                        Eg. I download repo on 'D' hard drive on old laptop. Then I put the 'D' drive in new laptop.
+                        When trying to perform an operation on that repo from the new laptop, you get the dubious ownership error.
+
+                        TODO: Include in PyGit2 migration.
+                        NOTE: Try-Except needed because GitPython does not handle it well when no safe directories exist... PyGit2 might be better at it.
+                        """
+                        try:
+                            safe_directories = repo.git.config(
+                                "--global", "--get-all", "safe.directory"
+                            ).splitlines()
+                        except GitCommandError:
+                            logger.debug("No safe directories present")
+                            safe_directories = []  # Allows code below to execute
+
+                        # If not, add it to safe directories
+                        if repo_path not in safe_directories:
+                            repo.git.config(
+                                "--global", "--add", "safe.directory", repo_path
+                            )
+
                         # Fetch the latest changes from the remote
                         origin = repo.remote(name="origin")
                         origin.fetch()
 
                         # Get the local and remote refs
                         local_ref = repo.head.reference
-                        remote_ref = repo.refs[f"origin/{local_ref.name}"]  # type: ignore
+                        remote_ref = repo.refs[f"origin/{local_ref.name}"]
 
                         # Check if the local branch is behind the remote branch
                         if local_ref.commit != remote_ref.commit:

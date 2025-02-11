@@ -21,8 +21,8 @@ ignore_missing_imports = true
 line-length = 88
 indent-width = 4
 
-# Assume Python 3.11
-target-version = "py311"
+# Assume Python 3.12
+target-version = "py312"
 lint.extend-select = ["I"]
 
 [tool.pytest.ini_options]

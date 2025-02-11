@@ -7,6 +7,7 @@ from loguru import logger
 from PySide6.QtCore import QObject, Slot
 from PySide6.QtWidgets import QApplication, QLineEdit, QMessageBox
 
+from app.controllers.theme_controller import ThemeController
 from app.models.settings import Instance, Settings
 from app.utils.constants import SortMethod
 from app.utils.event_bus import EventBus
@@ -55,6 +56,10 @@ class SettingsController(QObject):
         self.settings_dialog = view
 
         self._last_file_dialog_path = str(Path.home())
+
+        self.theme_controller = ThemeController()
+
+        self.app_instance = QApplication.instance()
 
         # Initialize the settings dialog from the settings model
 
@@ -209,6 +214,11 @@ class SettingsController(QObject):
         )
         self.settings_dialog.steamcmd_install_button.clicked.connect(
             self._on_steamcmd_install_button_clicked
+        )
+
+        # Theme tab
+        self.settings_dialog.theme_location_open_button.clicked.connect(
+            self._on_theme_location_open_button_clicked
         )
 
         # Connect signals from dialogs
@@ -504,6 +514,15 @@ class SettingsController(QObject):
             self.settings.todds_overwrite
         )
 
+        # Themes tab
+        self.settings_dialog.enable_themes_checkbox.setChecked(
+            self.settings.enable_themes
+        )
+        self.theme_controller.populate_themes_combobox(
+            self.settings_dialog.themes_combobox
+        )
+        self.theme_controller.setup_theme_dialog(self.settings_dialog, self.settings)
+
         # Advanced tab
         self.settings_dialog.debug_logging_checkbox.setChecked(
             self.settings.debug_logging_enabled
@@ -511,6 +530,9 @@ class SettingsController(QObject):
         self.settings_dialog.watchdog_checkbox.setChecked(self.settings.watchdog_toggle)
         self.settings_dialog.mod_type_filter_checkbox.setChecked(
             self.settings.mod_type_filter_toggle
+        )
+        self.settings_dialog.hide_invalid_mods_when_filtering_checkbox.setChecked(
+            self.settings.hide_invalid_mods_when_filtering_toggle
         )
         self.settings_dialog.show_duplicate_mods_warning_checkbox.setChecked(
             self.settings.duplicate_mods_warning
@@ -531,6 +553,8 @@ class SettingsController(QObject):
         self.settings_dialog.render_unity_rich_text_checkbox.setChecked(
             self.settings.render_unity_rich_text
         )
+        self.settings_dialog.rentry_auth_code.setText(self.settings.rentry_auth_code)
+        self.settings_dialog.rentry_auth_code.setCursorPosition(0)
         self.settings_dialog.github_username.setText(self.settings.github_username)
         self.settings_dialog.github_username.setCursorPosition(0)
         self.settings_dialog.github_token.setText(self.settings.github_token)
@@ -646,6 +670,12 @@ class SettingsController(QObject):
             self.settings_dialog.todds_overwrite_checkbox.isChecked()
         )
 
+        # Themes tab
+        self.settings.enable_themes = (
+            self.settings_dialog.enable_themes_checkbox.isChecked()
+        )
+        self.settings.theme_name = self.settings_dialog.themes_combobox.currentText()
+
         # Advanced tab
         self.settings.debug_logging_enabled = (
             self.settings_dialog.debug_logging_checkbox.isChecked()
@@ -655,6 +685,9 @@ class SettingsController(QObject):
         )
         self.settings.mod_type_filter_toggle = (
             self.settings_dialog.mod_type_filter_checkbox.isChecked()
+        )
+        self.settings.hide_invalid_mods_when_filtering_toggle = (
+            self.settings_dialog.hide_invalid_mods_when_filtering_checkbox.isChecked()
         )
         self.settings.duplicate_mods_warning = (
             self.settings_dialog.show_duplicate_mods_warning_checkbox.isChecked()
@@ -673,6 +706,7 @@ class SettingsController(QObject):
         self.settings.render_unity_rich_text = (
             self.settings_dialog.render_unity_rich_text_checkbox.isChecked()
         )
+        self.settings.rentry_auth_code = self.settings_dialog.rentry_auth_code.text()
         self.settings.github_username = self.settings_dialog.github_username.text()
         self.settings.github_token = self.settings_dialog.github_token.text()
         run_args_str = ",".join(
@@ -711,6 +745,10 @@ class SettingsController(QObject):
         self.settings_dialog.close()
         self._update_model_from_view()
         self.settings.save()
+        self.theme_controller.apply_selected_theme(
+            self.settings.enable_themes,
+            self.settings.theme_name,
+        )
 
     @Slot()
     def _on_game_location_text_changed(self) -> None:
@@ -1017,8 +1055,8 @@ class SettingsController(QObject):
         else:
             raise ValueError("This function should only be called on Windows")
 
-    @Slot()
-    def _on_community_rules_db_radio_clicked(self, checked: bool) -> None:
+    @Slot(bool)
+    def _on_community_rules_db_radio_clicked(self, checked: bool = True) -> None:
         """
         This function handles the community rules db radio buttons. Clicking one button
         enables the associated widgets and disables the other widgets.
@@ -1035,9 +1073,8 @@ class SettingsController(QObject):
             self.settings_dialog.community_rules_db_local_file_choose_button.setEnabled(
                 False
             )
-            app_instance = QApplication.instance()
-            if isinstance(app_instance, QApplication):
-                focused_widget = app_instance.focusWidget()
+            if isinstance(self.app_instance, QApplication):
+                focused_widget = self.app_instance.focusWidget()
                 if focused_widget is not None:
                     focused_widget.clearFocus()
             return
@@ -1090,8 +1127,8 @@ class SettingsController(QObject):
         )
         self._last_file_dialog_path = str(Path(community_rules_db_location).parent)
 
-    @Slot()
-    def _on_steam_workshop_db_radio_clicked(self, checked: bool) -> None:
+    @Slot(bool)
+    def _on_steam_workshop_db_radio_clicked(self, checked: bool = True) -> None:
         """
         This function handles the Steam workshop db radio buttons. Clicking one button
         enables the associated widgets and disables the other widgets.
@@ -1108,9 +1145,8 @@ class SettingsController(QObject):
             self.settings_dialog.steam_workshop_db_local_file_choose_button.setEnabled(
                 False
             )
-            app_instance = QApplication.instance()
-            if isinstance(app_instance, QApplication):
-                focused_widget = app_instance.focusWidget()
+            if isinstance(self.app_instance, QApplication):
+                focused_widget = self.app_instance.focusWidget()
                 if focused_widget is not None:
                     focused_widget.clearFocus()
             return
@@ -1293,12 +1329,31 @@ class SettingsController(QObject):
         EventBus().do_build_steam_workshop_database.emit()
 
     @Slot(str)
-    def _on_run_args_text_changed(self, text: str) -> None:
+    def _on_run_args_text_changed(self, text: str = "") -> None:
         run_args_list = text.split(",")
         self.settings.instances[self.settings.current_instance].run_args = run_args_list
         self.settings.save()
 
+    @Slot()
     def _do_reset_settings_file(self) -> None:
         logger.info("Resetting settings file and retrying load")
         self.settings.save()
         self._load_settings()
+
+    @Slot()
+    def _on_theme_location_open_button_clicked(self) -> None:
+        """
+        Open the location of the selected theme.
+        """
+        selected_theme_name = self.settings_dialog.themes_combobox.currentText()
+        logger.info(f"Opening theme location: {selected_theme_name}")
+        stylesheet_path = self.theme_controller.get_theme_stylesheet_path(
+            selected_theme_name
+        )
+
+        if stylesheet_path and stylesheet_path.exists():
+            platform_specific_open(stylesheet_path.parent)
+        else:
+            logger.warning(
+                f"Failed to open theme location: {stylesheet_path} not found or does not exist"
+            )

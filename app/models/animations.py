@@ -2,7 +2,15 @@ import traceback
 from typing import Any, Callable
 
 from loguru import logger
-from PySide6.QtCore import QEasingCurve, QPropertyAnimation, Qt, QThread, QTimer, Signal
+from PySide6.QtCore import (
+    QByteArray,
+    QEasingCurve,
+    QPropertyAnimation,
+    Qt,
+    QThread,
+    QTimer,
+    Signal,
+)
 from PySide6.QtGui import QMovie
 from PySide6.QtWidgets import (
     QGraphicsOpacityEffect,
@@ -27,7 +35,7 @@ class AnimationLabel(QLabel):
         self.effect = QGraphicsOpacityEffect()
         self.effect.setOpacity(0)
         self.setGraphicsEffect(self.effect)
-        self.animation = QPropertyAnimation(self.effect, b"opacity")
+        self.animation = QPropertyAnimation(self.effect, QByteArray(b"opacity"))
         self.timer = QTimer()
         self.timer.setInterval(1000)
         self.timer.setSingleShot(True)

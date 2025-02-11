@@ -1,5 +1,5 @@
+#!/usr/bin/env python3
 # Compilation mode
-# nuitka-project: --standalone
 # nuitka-project: --assume-yes-for-downloads
 # nuitka-project: --output-filename=RimSort
 # nuitka-project: --output-dir={MAIN_DIRECTORY}/../build/
@@ -13,10 +13,12 @@
 # The PySide6 plugin covers qt-plugins
 # nuitka-project: --enable-plugin=pyside6
 
-# Mac-Specific options
+# OS-Specific options
 # nuitka-project-if: {OS} == "Darwin":
-#   nuitka-project: --macos-create-app-bundle
+#   nuitka-project: --mode=app
 #   nuitka-project: --macos-app-icon={MAIN_DIRECTORY}/../themes/default-icons/AppIcon_a.icns
+# nuitka-project-else:
+#   nuitka-project: --mode=standalone
 
 # nuitka-project-if: os.path.exists("{MAIN_DIRECTORY}/../version.xml"):
 #   nuitka-project: --include-data-file={MAIN_DIRECTORY}/../version.xml=version.xml
@@ -208,5 +210,5 @@ if __name__ == "__main__":
 
         logger.debug("Running using Nuitka bundle")
 
-    logger.debug("Initializing RimSort application")
+    logger.info(f"Initializing RimSort application: {AppInfo().app_version}")
     main_thread()

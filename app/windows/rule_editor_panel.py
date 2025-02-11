@@ -665,7 +665,7 @@ class RuleEditor(QWidget):
         label.setObjectName("ListItemLabel")
         # Set the size hint of the item to be the size of the label
         item.setSizeHint(label.sizeHint())
-        # add to our list
+        # Add to our list
         _list.addItem(item)
         _list.setItemWidget(item, label)
 

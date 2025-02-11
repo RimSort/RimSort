@@ -20,7 +20,11 @@ from app.utils.app_info import AppInfo
 from app.utils.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetPublishedFileDetails,
 )
-from app.views.dialogue import show_dialogue_conditional, show_dialogue_file
+from app.views.dialogue import (
+    BinaryChoiceDialog,
+    show_dialogue_conditional,
+    show_dialogue_file,
+)
 
 
 class RunnerPanel(QWidget):
@@ -404,3 +408,11 @@ class RunnerPanel(QWidget):
 
         # Cleanup process
         self.process.terminate()
+        diag = BinaryChoiceDialog(
+            title="Process Complete",
+            text="Process complete, you can close the window.",
+            positive_text="Close Window",
+            negative_text="Ok",
+        )
+        if diag.exec_is_positive():
+            self.close()

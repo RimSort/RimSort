@@ -121,7 +121,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@main
         with:
-          python-version: "3.11"
+          python-version: "3.12"
           architecture: "x64" # optional x64 or x86. Defaults to x64 if not specified
           cache: "pip"
           cache-dependency-path: |
@@ -150,7 +150,7 @@ jobs:
         with:
           nuitka-version: main
           script-name: app/__main__.py
-          onefile: false
+          mode: ${{ runner.os == 'macos' && 'app' || 'standalone' }}
           static-libpython: auto
           product-version: >-
             ${{ steps.sem_version.outputs.major }}.
@@ -174,13 +174,13 @@ jobs:
       - name: Find Executable
         id: find_executable
         run: |
-          executable=$(find . -name "${{ matrix.env.Executable }}")
+          executable=$(find . -name "${{ matrix.env.Executable }}" | head -n 1)
           echo "EXECUTABLE=$executable" >> "$GITHUB_OUTPUT"
           echo "Executable found at $executable"
         shell: bash
 
       - name: Generate executable attestations
-        uses: actions/attest-build-provenance@v1.4.3
+        uses: actions/attest-build-provenance@v2.2.0
         if: ${{ inputs.attest }}
         with:
           subject-path: ${{ steps.find_executable.outputs.EXECUTABLE }}
@@ -194,7 +194,7 @@ jobs:
         shell: bash
 
       - name: Generate artifact attestation
-        uses: actions/attest-build-provenance@v1.4.3
+        uses: actions/attest-build-provenance@v2.2.0
         if: ${{ inputs.attest }}
         with:
           subject-path: ./build/${{ steps.filename.outputs.FILENAME }}.tar
