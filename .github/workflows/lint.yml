@@ -31,7 +31,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@main
         with:
-          python-version: "3.11"
+          python-version: "3.12"
           architecture: "x64" # optional x64 or x86. Defaults to x64 if not specified
           cache: "pip"
           cache-dependency-path: |
@@ -51,13 +51,13 @@ jobs:
         run: echo "python-version=$(cut -d '.' -f 1,2 .python-version)" >> "$GITHUB_OUTPUT"
 
       - name: Super-linter
-        uses: super-linter/super-linter/slim@v7.1.0 # x-release-please-version
+        uses: super-linter/super-linter/slim@v7.2.1 # x-release-please-version
         env:
           # To report GitHub Actions status checks
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LINTER_RULES_PATH: .
           PYTHONPATH: "/github/workspace/:\
-            /github/workflow/.venv/lib/python3.11/site-packages"
+            /github/workflow/.venv/lib/python3.12/site-packages"
           VALIDATE_PYTHON_MYPY: true
           VALIDATE_PYTHON_RUFF: true
           VALIDATE_GITHUB_ACTIONS: true
@@ -67,12 +67,10 @@ jobs:
           VALIDATE_BASH: true
           VALIDATE_CHECKOV: true
           VALIDATE_JSCPD: true
-          VALIDATE_MARKDOWN: true
           VALIDATE_VALIDATE_NATURAL_LANGUAGE: true
           # Linter not up to date
           GITHUB_ACTIONS_COMMAND_ARGS: >-
             -ignore 'unknown permission scope "attestations"'
-            -ignore '"ubuntu-24.04" is unknown'
           PYTHON_RUFF_CONFIG_FILE: pyproject.toml
           PYTHON_MYPY_CONFIG_FILE: pyproject.toml
           FILTER_REGEX_EXCLUDE: "LICENSE.md"

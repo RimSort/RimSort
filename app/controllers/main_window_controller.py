@@ -52,7 +52,7 @@ class MainWindowController(QObject):
         EventBus().refresh_started.connect(self.on_refresh_started)
         EventBus().refresh_finished.connect(self.on_refresh_finished)
 
-    @Slot()
+    # @Slot() # TODO: fix @slot() related MYPY errors once bug is fixed in https://bugreports.qt.io/browse/PYSIDE-2942
     def on_button_animation(self, button: QPushButton) -> None:
         button.setObjectName(
             "%s" % ("" if button.objectName() == "indicator" else "indicator")

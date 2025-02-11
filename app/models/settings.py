@@ -6,6 +6,7 @@ from shutil import copytree, rmtree
 from time import time
 from typing import Any, Dict
 
+import msgspec
 from loguru import logger
 from PySide6.QtCore import QObject
 
@@ -62,14 +63,21 @@ class Settings(QObject):
         self.todds_dry_run: bool = False
         self.todds_overwrite: bool = False
 
+        # Theme
+        self.enable_themes: bool = True
+        self.theme_name: str = "RimPy"
+
         # Advanced
         self.debug_logging_enabled: bool = False
         self.watchdog_toggle: bool = True
         self.mod_type_filter_toggle: bool = True
+        self.hide_invalid_mods_when_filtering_toggle: bool = False
         self.duplicate_mods_warning: bool = False
         self.steam_mods_update_check: bool = False
         self.try_download_missing_mods: bool = False
         self.render_unity_rich_text: bool = True
+
+        self.rentry_auth_code: str = ""
 
         self.github_username: str = ""
         self.github_token: str = ""
@@ -237,7 +245,7 @@ class Settings(QObject):
                 if isinstance(instance_data, Instance):
                     instances[instance_name] = instance_data
                 elif isinstance(instance_data, dict):
-                    instances[instance_name] = Instance(**instance_data)
+                    instances[instance_name] = msgspec.convert(instance_data, Instance)
                 else:
                     logger.warning(
                         f"Instance data for {instance_name} is not a valid type: {type(instance_data)}"

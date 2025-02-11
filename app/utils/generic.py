@@ -6,7 +6,7 @@ import sys
 import webbrowser
 from errno import EACCES
 from pathlib import Path
-from re import sub
+from re import search, sub
 from stat import S_IRWXG, S_IRWXO, S_IRWXU
 from typing import Any, Callable, Generator
 
@@ -363,6 +363,19 @@ def extract_git_user_or_org(url: str) -> str:
     :return: a string that is the organization name of the git repository
     """
     return url.rstrip("/").rsplit("/", maxsplit=2)[-2].removesuffix(".git")
+
+
+def extract_page_title_steam_browser(title: str) -> str | None:
+    """
+    Function to extract the page title from the current Workshop Browser page
+
+    :param title: a string that is the current title of the page
+    :return str | None: an optional string that is the page title of the current page
+    """
+    if match := search(r"Steam (?:Community|Workshop)::(.*)", title):
+        return match.group(1)
+    else:
+        return None
 
 
 def check_valid_http_git_url(url: str) -> bool:

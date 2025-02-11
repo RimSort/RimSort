@@ -81,6 +81,8 @@ class AppInfo:
 
         self._databases_folder: Path = self._app_storage_folder / "dbs"
         self._aux_metadata_db: Path = self._databases_folder / "aux_metadata.db"
+        self._saved_modlists_folder: Path = self._app_storage_folder / "modlists"
+        self._theme_storage_folder: Path = self._app_storage_folder / "themes"
         self._theme_data_folder: Path = self._application_folder / "themes"
         self._settings_file: Path = self._app_storage_folder / "settings.json"
         self._user_rules_file = self.databases_folder / "userRules.json"
@@ -89,8 +91,10 @@ class AppInfo:
 
         self._app_storage_folder.mkdir(parents=True, exist_ok=True)
         self._user_log_folder.mkdir(parents=True, exist_ok=True)
+        self._saved_modlists_folder.mkdir(parents=True, exist_ok=True)
 
         self._databases_folder.mkdir(parents=True, exist_ok=True)
+        self._theme_storage_folder.mkdir(parents=True, exist_ok=True)
 
         self._is_initialized: bool = True
 
@@ -147,6 +151,18 @@ class AppInfo:
         return self._app_storage_folder
 
     @property
+    def saved_modlists_folder(self) -> Path:
+        """
+        Get the path to the folder where user modlists are saved.
+
+        This directory is determined using platform-specific conventions.
+
+        Returns:
+            Path: The path to the saved modlists folder.
+        """
+        return self._saved_modlists_folder
+
+    @property
     def app_settings_file(self) -> Path:
         """
         Get the path to the file where user-specific data for the application is stored.
@@ -182,9 +198,16 @@ class AppInfo:
     @property
     def theme_data_folder(self) -> Path:
         """
-        Get the path to the folder where application-specific data is stored.
+        Get the path to the folder where application Themes / Stylesheets are stored.
         """
         return self._theme_data_folder
+
+    @property
+    def theme_storage_folder(self) -> Path:
+        """
+        Get the path to the user folder where Themes / Stylesheets are stored.
+        """
+        return self._theme_storage_folder
 
     @property
     def databases_folder(self) -> Path:
