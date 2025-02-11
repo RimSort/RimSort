@@ -10,16 +10,6 @@ class CustomListWidgetItemMetadata:
     """
     A class to store metadata for CustomListWidgetItem.
 
-    Attributes:
-        uuid: str, the uuid of the mod which corresponds to a mod's metadata
-        errors_warnings: str, a string of errors and warnings
-        errors: str, a string of errors for the notification tooltip
-        warnings: str, a string of warnings for the notification tooltip
-        warning_toggled: bool, representing if the warning/error icons are toggled off
-        filtered: bool, representing whether the widget's item is filtered
-        invalid: bool, representing whether the widget's item is an invalid mod
-        mismatch: bool, representing whether the widget's item has a version mismatch
-        mod_color: QColor, the color of the mod's text/background in the modlist
     """
 
     def __init__(
