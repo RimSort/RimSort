@@ -47,6 +47,7 @@ class Settings(QObject):
 
         # Sorting
         self.sorting_algorithm: SortMethod = SortMethod.TOPOLOGICAL
+        self.dependency_for_sorting: bool = False
 
         # DB Builder
         self.db_builder_include: str = "all_mods"
