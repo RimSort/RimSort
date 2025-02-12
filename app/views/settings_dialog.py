@@ -32,7 +32,7 @@ class SettingsDialog(QDialog):
 
         self.setWindowTitle("Settings")
         self.setObjectName("settingsPanel")
-        self.resize(800, 600)
+        self.resize(900, 600)
 
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
@@ -49,6 +49,7 @@ class SettingsDialog(QDialog):
         self._do_db_builder_tab()
         self._do_steamcmd_tab()
         self._do_todds_tab()
+        self._do_themes_tab()
         self._do_advanced_tab()
 
         # Bottom buttons layout
@@ -726,6 +727,62 @@ class SettingsDialog(QDialog):
         )
         group_layout.addWidget(self.todds_overwrite_checkbox)
 
+    def _do_themes_tab(self) -> None:
+        tab = QWidget()
+        self.tab_widget.addTab(tab, "Theme")
+
+        tab_layout = QVBoxLayout(tab)
+        tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        group_box = QGroupBox()
+        tab_layout.addWidget(group_box)
+
+        group_layout = QHBoxLayout()
+        group_box.setLayout(group_layout)
+        group_box.setFont(GUIInfo().emphasis_font)
+
+        self.enable_themes_checkbox = QCheckBox(
+            "Enable to use theme / stylesheet instead of system Theme"
+        )
+        self.enable_themes_checkbox.setToolTip(
+            "To add your own theme / stylesheet \n\n"
+            "1) Create a new-folder in 'themes' folder in your 'RimSort' config folder \n"
+            "2) Using the default 'RimPy' theme copy it to the folder you created \n"
+            "3) Edit the copied 'style.qss' as per your imagination \n"
+            "4) Start 'RimSort' and select your theme from dropdown \n"
+            "5) Click 'ok' to save settings and apply the selected theme \n\n"
+            "NOTE \n"
+            "Name of folder will be used as name of the theme and any invalid theme will be ignored \n"
+        )
+        group_layout.addWidget(self.enable_themes_checkbox)
+
+        self.themes_combobox = QComboBox()
+        self.themes_combobox.setSizePolicy(
+            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred
+        )
+        group_layout.addWidget(self.themes_combobox)
+
+        self.theme_location_open_button = QToolButton()
+        self.theme_location_open_button.setText("Open Theme Location")
+        group_layout.addWidget(self.theme_location_open_button)
+
+        if self.enable_themes_checkbox.isChecked():
+            self.enable_themes_checkbox.stateChanged.connect(
+                self.connect_populate_themes_combobox
+            )
+        else:
+            self.themes_combobox.clear()
+
+    def connect_populate_themes_combobox(self) -> None:
+        """Populate the themes combobox with available themes."""
+        from app.controllers.theme_controller import ThemeController
+
+        if self.enable_themes_checkbox.isChecked():
+            theme_controller = ThemeController()
+            theme_controller.populate_themes_combobox
+        else:
+            self.themes_combobox.clear()
+
     def _do_advanced_tab(self) -> None:
         tab = QWidget()
         self.tab_widget.addTab(tab, "Advanced")
@@ -885,6 +942,7 @@ class SettingsDialog(QDialog):
         if index and index != -1:
             self.tab_widget.setCurrentIndex(index)
 
-    def showEvent(self, event: QShowEvent) -> None:
-        super().showEvent(event)
+    def showEvent(self, arg__1: QShowEvent) -> None:
+        """Using arg__1 instead of event to avoid name conflict"""
+        super().showEvent(arg__1)
         self.global_ok_button.setFocus()
