@@ -95,7 +95,7 @@ class MissingModsPrompt(BaseModsPanel):
             QStandardItem(),
         ]
         self._add_row(items)
-        combo_box_index = items[5].index()
+        combo_box_index = items[4].index()
         combo_box = QComboBox()
         combo_box.setEditable(True)
         combo_box.setObjectName("missing_mods_variant_cb")
