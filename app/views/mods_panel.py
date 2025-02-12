@@ -31,6 +31,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QListWidget,
     QMenu,
+    QPushButton,
     QToolButton,
     QVBoxLayout,
     QWidget,
@@ -2399,9 +2400,12 @@ class ModsPanel(QWidget):
         # Active mods list Errors/warnings widgets
         self.errors_summary_frame: QFrame = QFrame()
         self.errors_summary_frame.setObjectName("errorFrame")
-        self.errors_summary_layout = QHBoxLayout()
+        self.errors_summary_layout = QVBoxLayout()
         self.errors_summary_layout.setContentsMargins(0, 0, 0, 0)
         self.errors_summary_layout.setSpacing(2)
+        # Create horizontal layout for warnings and errors
+        self.warnings_errors_layout = QHBoxLayout()
+        self.warnings_errors_layout.setSpacing(2)
         self.warnings_icon: QLabel = QLabel()
         self.warnings_icon.setPixmap(ModListIcons.warning_icon().pixmap(QSize(20, 20)))
         self.warnings_text: AdvancedClickableQLabel = AdvancedClickableQLabel(
@@ -2420,8 +2424,20 @@ class ModsPanel(QWidget):
         self.errors_layout = QHBoxLayout()
         self.errors_layout.addWidget(self.errors_icon, 1)
         self.errors_layout.addWidget(self.errors_text, 99)
-        self.errors_summary_layout.addLayout(self.warnings_layout, 50)
-        self.errors_summary_layout.addLayout(self.errors_layout, 50)
+        self.warnings_errors_layout.addLayout(self.warnings_layout, 50)
+        self.warnings_errors_layout.addLayout(self.errors_layout, 50)
+
+        # Add warnings/errors layout to main vertical layout
+        self.errors_summary_layout.addLayout(self.warnings_errors_layout)
+
+        self.use_this_instead_button = QPushButton('Check "Use This Instead" Database')
+        self.use_this_instead_button.setObjectName("useThisInsteadButton")
+        self.use_this_instead_button.clicked.connect(
+            EventBus().use_this_instead_clicked.emit
+        )
+        self.errors_summary_layout.addWidget(self.use_this_instead_button)
+
+        # Add to the outer frame
         self.errors_summary_frame.setLayout(self.errors_summary_layout)
         self.errors_summary_frame.setHidden(True)
 

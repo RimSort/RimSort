@@ -1,6 +1,7 @@
 import json
 import os
 import traceback
+from functools import lru_cache
 from pathlib import Path
 from re import match
 from time import localtime, strftime, time
@@ -37,6 +38,13 @@ from app.views.dialogue import (
 # Locally installed mod metadata
 
 
+class ModReplacement:
+    def __init__(self, name: str, author: str, pfid: str):
+        self.name = name
+        self.author = author
+        self.pfid = pfid
+
+
 class MetadataManager(QObject):
     _instance: "None | MetadataManager" = None
     mod_created_signal = Signal(str)
@@ -70,6 +78,7 @@ class MetadataManager(QObject):
             self.external_community_rules_path: str | None = None
             self.external_no_version_warning: list[str] | None = None
             self.external_no_version_warning_path: str | None = None
+            # self.external_use_this_instead_replacements: dict[str, ModReplacement] | None = None
             self.external_user_rules: dict[str, Any] | None = None
             self.external_user_rules_path: str = str(
                 AppInfo().databases_folder / "userRules.json"
@@ -108,7 +117,9 @@ class MetadataManager(QObject):
         return cls._instance
 
     def __refresh_external_metadata(self) -> None:
-        def validate_db_path(path: str, db_type: str) -> bool:
+        def validate_db_path(
+            path: str, db_type: str, expect_directory: bool = False
+        ) -> bool:
             if not os.path.exists(path):
                 self.show_warning_signal.emit(
                     f"{db_type} DB is missing",
@@ -119,10 +130,10 @@ class MetadataManager(QObject):
                 )
                 return False
 
-            if os.path.isdir(path):
+            if os.path.isdir(path) == (not expect_directory):
                 self.show_warning_signal.emit(
                     f"{db_type} DB is missing",
-                    f"Configured {db_type} DB path is a directory! Expected a file path.",
+                    f"Configured {db_type} DB path is {'not' if expect_directory else ''} a directory! Expected a {'directory' if expect_directory else 'file'} path.",
                     f"Unable to initialize external metadata. There is no external {db_type} metadata being factored!\n"
                     + "\nPlease make sure your Database location settings are correct.",
                     f"{path}",
@@ -1112,6 +1123,10 @@ class MetadataManager(QObject):
             logger.info(
                 "No User Rules database supplied from external metadata. skipping."
             )
+
+        # logger.info("Flagging obsoleted mods from the Use This Instead database")
+        # if self.settings_controller.settings.external_use_this_instead_metadata_source != "None":
+
         logger.info("Finished compiling internal metadata with external metadata")
 
     def is_version_mismatch(self, uuid: str) -> bool:
@@ -1171,7 +1186,8 @@ class MetadataManager(QObject):
         # Return result
         return result
 
-    def has_alternative_mod(self, uuid: str) -> str | None:
+    @lru_cache
+    def has_alternative_mod(self, uuid: str) -> ModReplacement | None:
         """
         If the use has configured a "Use This Instead" database, this function checks if a given mod has
         a recommended alternative.
@@ -1212,16 +1228,19 @@ class MetadataManager(QObject):
 
         # At this point, path points to a directory of xml files, each named for a mod.
         mod_data = self.internal_local_metadata.get(uuid, False)
-        if not mod_data:
+        if not mod_data or "publishedfileid" not in mod_data:
             return None
 
         check_path = path / Path(mod_data["publishedfileid"] + ".xml")
         if not check_path.exists():
             return None
         replacement_data = xml_path_to_json(str(check_path))["ModReplacement"]
-        replacement_tt = f"{replacement_data['ReplacementName']} ({replacement_data['ReplacementSteamId']}) by {replacement_data['ReplacementAuthor']}"
 
-        return replacement_tt
+        return ModReplacement(
+            name=replacement_data["ReplacementName"],
+            author=replacement_data["ReplacementAuthor"],
+            pfid=replacement_data["ReplacementSteamId"],
+        )
 
     def process_batch(
         self,

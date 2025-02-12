@@ -538,6 +538,7 @@ class SettingsController(QObject):
         self.settings_dialog.no_version_warning_db_github_url.setCursorPosition(0)
 
         if self.settings.external_use_this_instead_metadata_source == "None":
+            EventBus().reset_use_this_instead_cache.emit()
             self.settings_dialog.use_this_instead_db_none_radio.setChecked(True)
             self.settings_dialog.use_this_instead_db_github_url.setEnabled(False)
             self.settings_dialog.use_this_instead_db_github_download_button.setEnabled(
@@ -551,6 +552,7 @@ class SettingsController(QObject):
             self.settings.external_use_this_instead_metadata_source
             == "Configured git repository"
         ):
+            EventBus().reset_use_this_instead_cache.emit()
             self.settings_dialog.use_this_instead_db_github_radio.setChecked(True)
             self.settings_dialog.use_this_instead_db_github_url.setEnabled(True)
             self.settings_dialog.use_this_instead_db_github_download_button.setEnabled(
@@ -564,6 +566,7 @@ class SettingsController(QObject):
             self.settings.external_use_this_instead_metadata_source
             == "Configured file path"
         ):
+            EventBus().reset_use_this_instead_cache.emit()
             self.settings_dialog.use_this_instead_db_local_file_radio.setChecked(True)
             self.settings_dialog.use_this_instead_db_github_url.setEnabled(False)
             self.settings_dialog.use_this_instead_db_github_download_button.setEnabled(

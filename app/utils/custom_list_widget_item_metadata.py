@@ -112,7 +112,11 @@ class CustomListWidgetItemMetadata:
         """
         metadata_manager = MetadataManager.instance()
         try:
-            return metadata_manager.has_alternative_mod(uuid)
+            mr = metadata_manager.has_alternative_mod(uuid)
+            if mr is None:
+                return None
+            return f"{mr.name} ({mr.pfid}) by {mr.author}"
+
         except KeyError:
             logger.info(f"UUID {uuid} not found in metadata - probably non-steam mod")
             return None

@@ -87,6 +87,7 @@ from app.views.mods_panel import ModListWidget, ModsPanel, ModsPanelSortKey
 from app.windows.missing_mods_panel import MissingModsPrompt
 from app.windows.rule_editor_panel import RuleEditor
 from app.windows.runner_panel import RunnerPanel
+from app.windows.use_this_instead_panel import UseThisInsteadPanel
 from app.windows.workshop_mod_updater_panel import ModUpdaterPrompt
 
 
@@ -333,6 +334,9 @@ class MainContent(QObject):
             )
             self.mods_panel.active_mods_list.refresh_signal.connect(self._do_refresh)
             self.mods_panel.inactive_mods_list.refresh_signal.connect(self._do_refresh)
+
+            EventBus().use_this_instead_clicked.connect(self._use_this_instead_clicked)
+
             # Restore cache initially set to empty
             self.active_mods_uuids_last_save: list[str] = []
             self.active_mods_uuids_restore_state: list[str] = []
@@ -2274,7 +2278,9 @@ class MainContent(QObject):
 
                         # If not, add it to safe directories
                         if repo_path not in safe_directories:
-                            repo.git.config("--global", "--add", "safe.directory", repo_path)
+                            repo.git.config(
+                                "--global", "--add", "safe.directory", repo_path
+                            )
 
                         # Fetch the latest changes from the remote
                         origin = repo.remote(name="origin")
@@ -3336,7 +3342,9 @@ class MainContent(QObject):
     def _on_do_upload_no_version_warning_db_to_github(self) -> None:
         self._do_upload_db_to_repo(
             repo_url=self.settings_controller.settings.external_no_version_warning_repo_path,
-            file_name= str(Path(f"{self.metadata_manager.game_version[:3]}/ModIdsToFix.xml")),
+            file_name=str(
+                Path(f"{self.metadata_manager.game_version[:3]}/ModIdsToFix.xml")
+            ),
         )
 
     @Slot()
@@ -3353,7 +3361,7 @@ class MainContent(QObject):
     def _on_do_upload_use_this_instead_db_to_github(self) -> None:
         self._do_upload_db_to_repo(
             repo_url=self.settings_controller.settings.external_use_this_instead_repo_path,
-            file_name= "*",
+            file_name="*",
         )
 
     @Slot()
@@ -3413,3 +3421,20 @@ class MainContent(QObject):
 
         # Launch independent game process without Steamworks API
         launch_game_process(game_install_path=game_install_path, args=run_args)
+
+    @Slot()
+    def _use_this_instead_clicked(self) -> None:
+        """
+        When clicked, opens the Use This Instead panel.
+        """
+        self.use_this_instead_dialog = UseThisInsteadPanel(
+            mod_metadata=self.metadata_manager.internal_local_metadata
+        )
+        self.use_this_instead_dialog.steamcmd_downloader_signal.connect(
+            self._do_download_mods_with_steamcmd
+        )
+        self.use_this_instead_dialog.steamworks_subscription_signal.connect(
+            self._do_steamworks_api_call_animated
+        )
+        self.use_this_instead_dialog._populate_from_metadata()
+        self.use_this_instead_dialog.show()
