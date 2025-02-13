@@ -35,6 +35,7 @@ class BaseModsPanel(QWidget):
         title_text: str,
         details_text: str,
         additional_columns: list[HeaderColumn],
+        minimum_size: QSize = QSize(800, 600),
     ):
         super().__init__()
         self.installEventFilter(self)
@@ -126,7 +127,7 @@ class BaseModsPanel(QWidget):
         # Put it all together
         self.setWindowTitle(window_title)
         self.setLayout(layout)
-        self.setMinimumSize(QSize(900, 600))
+        self.setMinimumSize(minimum_size)
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if event.type() == QEvent.Type.KeyPress and event.type() == Qt.Key.Key_Escape:
@@ -160,7 +161,9 @@ class BaseModsPanel(QWidget):
                 assert isinstance(checkbox, QCheckBox)
                 checkbox.setChecked(value)
 
-    def _update_mods_from_table(self, pfid_column: int, mode: str | int) -> None:
+    def _update_mods_from_table(
+        self, pfid_column: int, mode: str | int, steamworks_cmd: str = "resubscribe"
+    ) -> None:
         steamcmd_publishedfileids = []
         steam_publishedfileids = []
         # Iterate through the editor's rows
@@ -196,7 +199,7 @@ class BaseModsPanel(QWidget):
         if len(steam_publishedfileids) > 0:
             self.steamworks_subscription_signal.emit(
                 [
-                    "resubscribe",
+                    steamworks_cmd,
                     [eval(str_pfid) for str_pfid in steam_publishedfileids],
                 ]
             )

@@ -2,6 +2,7 @@ from functools import partial
 from typing import Any, Dict
 
 from loguru import logger
+from PySide6.QtCore import QSize
 from PySide6.QtGui import QStandardItem
 from PySide6.QtWidgets import QPushButton
 
@@ -35,21 +36,35 @@ class UseThisInsteadPanel(BaseModsPanel):
                 "Replacement Author",
                 "Replacement Workshop Page",
             ],
+            minimum_size=QSize(1000, 600),
         )
 
-        self.editor_update_mods_button = QPushButton("Update mods")
+        self.editor_unsub_mods_button = QPushButton("Unsubscribe outdated")
+        self.editor_unsub_mods_button.clicked.connect(
+            partial(self._update_mods_from_table, 6, "Steam", "unsubscribe")
+        )
+        self.editor_unsub_all_mods_button = QPushButton("Unsubscribe all outdated")
+        self.editor_unsub_all_mods_button.clicked.connect(
+            partial(self._update_all, "unsubscribe")
+        )
+
+        self.editor_update_mods_button = QPushButton("Subscribe replacements")
         self.editor_update_mods_button.clicked.connect(
             partial(self._update_mods_from_table, 6, "Steam")
         )
-        self.editor_update_all_button = QPushButton("Update all")
+        self.editor_update_all_button = QPushButton("Subscribe all replacements")
         self.editor_update_all_button.clicked.connect(partial(self._update_all))
 
+        self.editor_actions_layout.addSpacing(25)
+        self.editor_actions_layout.addWidget(self.editor_unsub_mods_button)
+        self.editor_actions_layout.addWidget(self.editor_unsub_all_mods_button)
+        self.editor_actions_layout.addSpacing(25)
         self.editor_actions_layout.addWidget(self.editor_update_mods_button)
         self.editor_actions_layout.addWidget(self.editor_update_all_button)
 
-    def _update_all(self) -> None:
+    def _update_all(self, steamworks_cmd: str = "resubscribe") -> None:
         self._set_all_checkbox_rows(True)
-        self._update_mods_from_table(6, "Steam")
+        self._update_mods_from_table(6, "Steam", steamworks_cmd)
 
     def _populate_from_metadata(self) -> None:
         """
