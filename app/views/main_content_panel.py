@@ -87,6 +87,7 @@ from app.views.mods_panel import ModListWidget, ModsPanel, ModsPanelSortKey
 from app.windows.missing_mods_panel import MissingModsPrompt
 from app.windows.rule_editor_panel import RuleEditor
 from app.windows.runner_panel import RunnerPanel
+from app.windows.use_this_instead_panel import UseThisInsteadPanel
 from app.windows.workshop_mod_updater_panel import ModUpdaterPrompt
 
 
@@ -150,6 +151,18 @@ class MainContent(QObject):
             )
             EventBus().do_download_steam_workshop_db_from_github.connect(
                 self._on_do_download_steam_workshop_db_from_github
+            )
+            EventBus().do_upload_no_version_warning_db_to_github.connect(
+                self._on_do_upload_no_version_warning_db_to_github
+            )
+            EventBus().do_download_no_version_warning_db_from_github.connect(
+                self._on_do_download_no_version_warning_db_from_github
+            )
+            EventBus().do_upload_use_this_instead_db_to_github.connect(
+                self._on_do_upload_use_this_instead_db_to_github
+            )
+            EventBus().do_download_use_this_instead_db_from_github.connect(
+                self._on_do_download_use_this_instead_db_from_github
             )
             EventBus().do_upload_rimsort_log.connect(self._on_do_upload_rimsort_log)
             EventBus().do_upload_rimsort_old_log.connect(
@@ -321,6 +334,9 @@ class MainContent(QObject):
             )
             self.mods_panel.active_mods_list.refresh_signal.connect(self._do_refresh)
             self.mods_panel.inactive_mods_list.refresh_signal.connect(self._do_refresh)
+
+            EventBus().use_this_instead_clicked.connect(self._use_this_instead_clicked)
+
             # Restore cache initially set to empty
             self.active_mods_uuids_last_save: list[str] = []
             self.active_mods_uuids_restore_state: list[str] = []
@@ -3318,10 +3334,47 @@ class MainContent(QObject):
 
     @Slot()
     def _on_do_download_steam_workshop_db_from_github(self) -> None:
+        logger.warning("HIT AT ALL")
         self._do_clone_repo_to_path(
             base_path=str(AppInfo().databases_folder),
             repo_url=self.settings_controller.settings.external_steam_metadata_repo,
         )
+
+    @Slot()
+    def _on_do_upload_no_version_warning_db_to_github(self) -> None:
+        self._do_upload_db_to_repo(
+            repo_url=self.settings_controller.settings.external_no_version_warning_repo_path,
+            file_name=str(
+                Path(f"{self.metadata_manager.game_version[:3]}/ModIdsToFix.xml")
+            ),
+        )
+
+    @Slot()
+    def _on_do_download_no_version_warning_db_from_github(self) -> None:
+        if GIT_EXISTS:
+            self._do_clone_repo_to_path(
+                base_path=str(AppInfo().databases_folder),
+                repo_url=self.settings_controller.settings.external_no_version_warning_repo_path,
+            )
+        else:
+            self._do_notify_no_git()
+
+    @Slot()
+    def _on_do_upload_use_this_instead_db_to_github(self) -> None:
+        self._do_upload_db_to_repo(
+            repo_url=self.settings_controller.settings.external_use_this_instead_repo_path,
+            file_name="*",
+        )
+
+    @Slot()
+    def _on_do_download_use_this_instead_db_from_github(self) -> None:
+        if GIT_EXISTS:
+            self._do_clone_repo_to_path(
+                base_path=str(AppInfo().databases_folder),
+                repo_url=self.settings_controller.settings.external_use_this_instead_repo_path,
+            )
+        else:
+            self._do_notify_no_git()
 
     @Slot()
     def _on_do_upload_log(self) -> None:
@@ -3370,3 +3423,20 @@ class MainContent(QObject):
 
         # Launch independent game process without Steamworks API
         launch_game_process(game_install_path=game_install_path, args=run_args)
+
+    @Slot()
+    def _use_this_instead_clicked(self) -> None:
+        """
+        When clicked, opens the Use This Instead panel.
+        """
+        self.use_this_instead_dialog = UseThisInsteadPanel(
+            mod_metadata=self.metadata_manager.internal_local_metadata
+        )
+        self.use_this_instead_dialog.steamcmd_downloader_signal.connect(
+            self._do_download_mods_with_steamcmd
+        )
+        self.use_this_instead_dialog.steamworks_subscription_signal.connect(
+            self._do_steamworks_api_call_animated
+        )
+        self.use_this_instead_dialog._populate_from_metadata()
+        self.use_this_instead_dialog.show()

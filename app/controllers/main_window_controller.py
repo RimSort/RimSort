@@ -51,6 +51,9 @@ class MainWindowController(QObject):
         )  # Save btn animation
         EventBus().refresh_started.connect(self.on_refresh_started)
         EventBus().refresh_finished.connect(self.on_refresh_finished)
+        EventBus().reset_use_this_instead_cache.connect(
+            self.on_reset_use_this_instead_cache
+        )
 
     # @Slot() # TODO: fix @slot() related MYPY errors once bug is fixed in https://bugreports.qt.io/browse/PYSIDE-2942
     def on_button_animation(self, button: QPushButton) -> None:
@@ -101,3 +104,10 @@ class MainWindowController(QObject):
     def set_buttons_enabled(self, enabled: bool) -> None:
         for btn in self.buttons:
             btn.setEnabled(enabled)
+
+    @Slot()
+    def on_reset_use_this_instead_cache(self) -> None:
+        logger.warning(
+            'Resetting "Use This Instead" cache - performance may be impacted until xml is re-cached'
+        )
+        MetadataManager.instance().has_alternative_mod.cache_clear()
