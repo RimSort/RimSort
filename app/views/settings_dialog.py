@@ -775,6 +775,11 @@ class SettingsDialog(QDialog):
         )
         group_layout.addWidget(self.hide_invalid_mods_when_filtering_checkbox)
 
+        self.color_background_instead_of_text_checkbox = QCheckBox(
+            "Apply mod coloring to background instead of text"
+        )
+        group_layout.addWidget(self.color_background_instead_of_text_checkbox)
+
         self.show_duplicate_mods_warning_checkbox = QCheckBox(
             "Show duplicate mods warning"
         )
