@@ -7,6 +7,7 @@ import pytest
 from app.controllers.metadata_controller import MetadataController
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
+from app.models.metadata.metadata_structure import AboutXmlMod
 from app.models.settings import Settings
 from app.utils.app_info import AppInfo
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
@@ -123,7 +124,7 @@ def test_metadata_controller_get_metadata_with_path(
     rimworld_core_path = Path("tests/data/mod_examples/RimWorld/Data/Core")
     mod, aux_metadata = metadata_controller_p.get_metadata_with_path(rimworld_core_path)
 
-    assert mod is not None
+    assert isinstance(mod, AboutXmlMod)
     assert aux_metadata is not None
     assert aux_metadata.type == "ModType.LUDEON"
 
@@ -132,7 +133,9 @@ def test_metadata_controller_get_metadata_with_path(
     assert mod.steam_app_id == 294100
 
     steamcmd_mod_1_path = Path("tests/data/mod_examples/Local/steamcmd_mod_1")
-    mod, aux_metadata = metadata_controller_p.get_metadata_with_path(steamcmd_mod_1_path)
+    mod, aux_metadata = metadata_controller_p.get_metadata_with_path(
+        steamcmd_mod_1_path
+    )
 
     assert mod is not None
     assert aux_metadata is not None

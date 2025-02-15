@@ -124,6 +124,17 @@ class AuxMetadataController(MetadataDbController):
             session.add_all(item)
         session.commit()
 
+    @staticmethod
+    def delete(session: Session, *paths: Path) -> None:
+        """Delete mod(s) from database."""
+
+        for path in paths:
+            session.query(AuxMetadataEntry).filter(
+                AuxMetadataEntry.path == str(path)
+            ).delete()
+
+        session.commit()
+
     def reset(self) -> None:
         """Reset the database by dropping all tables and recreating them."""
         Base.metadata.drop_all(self.engine)
@@ -152,9 +163,9 @@ class AuxMetadataController(MetadataDbController):
 
         workshop_items = {
             published_file_id: data
-            for published_file_id, data in acf_data.get("AppWorkshop", {}).get(
-                "WorkshopItemDetails", {}
-            ).items()
+            for published_file_id, data in acf_data.get("AppWorkshop", {})
+            .get("WorkshopItemDetails", {})
+            .items()
         }
 
         entries = (

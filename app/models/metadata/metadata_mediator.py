@@ -65,6 +65,13 @@ class MetadataMediator:
 
     @property
     def mods_metadata(self) -> dict[str, ListedMod]:
+        """Mods_metadata is a dict representation of all the listedmods, where the key is
+        the path to the mod.
+
+        :raises ValueError: Raised when mods_metadata has not been initated
+        :return: A dict represented of ListedMods, where the key is the path to the mod.
+        :rtype: dict[str, ListedMod]
+        """
         if hasattr(self, "_mods_metadata") is False or self._mods_metadata is None:
             raise ValueError("Mods metadata have not been initiated")
 
