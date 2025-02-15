@@ -95,7 +95,7 @@ class MetadataController(QObject):
         self.metadata_mediator.game_path = game_path
 
     def get_metadata_with_path(
-        self, path: Path
+        self, path: str | Path
     ) -> tuple[ListedMod, AuxMetadataEntry] | tuple[None, None]:
         mod_data = self.metadata_mediator.mods_metadata.get(str(path), None)
         if mod_data is None:
@@ -107,10 +107,15 @@ class MetadataController(QObject):
         return mod_data, entry
 
     @Slot(str)
-    def delete_mod(self, uuid: str) -> None:
-        """Delete a mod from the metadata.
+    def delete_mod(self, *path: Path) -> None:
+        """Delete a mod from the metadata, and aux metadata
+        Does not remove the mod from disk.
 
-        :param uuid: The UUID of the mod to delete.
-        :type uuid: str | list[str]
+        :param path:
+        :type Path: Path
         """
-        pass
+        with self.metadata_db_controller.Session() as session:
+            self.metadata_db_controller.delete(session, *path)
+
+        for p in path:
+            self.metadata_mediator.mods_metadata.pop(str(p), None)
