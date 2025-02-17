@@ -5,10 +5,18 @@ from re import match
 from loguru import logger
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout
+from PySide6.QtWidgets import (
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QSizePolicy,
+    QTextEdit,
+    QVBoxLayout,
+)
 
 from app.models.image_label import ImageLabel
 from app.utils.app_info import AppInfo
+from app.utils.custom_list_widget_item import CustomListWidgetItem
 from app.utils.metadata import MetadataManager
 from app.views.description_widget import DescriptionWidget
 
@@ -28,6 +36,10 @@ class ModInfo:
         # Cache MetadataManager instance
         self.metadata_manager = MetadataManager.instance()
 
+        # Used to keep track of which mod items notes we are viewing/editing
+        # This is set when a mod is clicked on
+        self.current_mod_item: CustomListWidgetItem | None = None
+
         # Base layout type
         self.panel = QVBoxLayout()
         self.info_panel_frame = QFrame()
@@ -45,10 +57,12 @@ class ModInfo:
         self.mod_info_supported_versions = QHBoxLayout()
         self.mod_info_path = QHBoxLayout()
         self.description_layout = QHBoxLayout()
+        self.notes_layout = QHBoxLayout()
 
         # Add child layouts to base
-        self.info_layout.addLayout(self.image_layout, 50)
+        self.info_layout.addLayout(self.image_layout, 35)
         self.info_layout.addLayout(self.mod_info_layout, 20)
+        self.info_layout.addLayout(self.notes_layout, 15)
         self.info_layout.addLayout(self.description_layout, 30)
         self.info_panel_frame.setLayout(self.info_layout)
         self.panel.addWidget(self.info_panel_frame)
@@ -132,6 +146,11 @@ class ModInfo:
         self.description.setText(
             "<br><br><br><center><h3>Welcome to RimSort!</h3></center>", convert=False
         )
+        self.notes = QTextEdit()  # TODO: Use custom QTextEdit - Allow markdown?
+        self.notes.setObjectName("userModNotes")
+        self.notes.setPlaceholderText("Put your personal mod notes here!")
+        self.notes.textChanged.connect(self.update_notes)
+        self.notes.setVisible(False)  # Only shows when a mod is selected
         # Add widgets to child layouts
         self.image_layout.addWidget(self.preview_picture)
         self.mod_info_name.addWidget(self.mod_info_name_label, 20)
@@ -159,6 +178,7 @@ class ModInfo:
         self.mod_info_layout.addLayout(self.mod_info_mod_version)
         self.mod_info_layout.addLayout(self.mod_info_supported_versions)
         self.mod_info_layout.addLayout(self.mod_info_path)
+        self.notes_layout.addWidget(self.notes)
         self.description_layout.addWidget(self.description)
 
         # Hide label/value by default
@@ -194,6 +214,23 @@ class ModInfo:
             widget.hide()
 
         logger.debug("Finished ModInfo initialization")
+
+    def update_notes(self) -> None:
+        # TODO: Add logger
+        if self.current_mod_item is None:
+            return
+        new_notes = self.notes.toPlainText()
+        mod_data = self.current_mod_item.data(Qt.ItemDataRole.UserRole)
+        mod_data["user_notes"] = new_notes
+
+    def show_mod_notes(self, item: CustomListWidgetItem) -> None:
+        #  TODO: Add logger
+        # Only show notes tab when a mod is clicked
+        self.notes.setVisible(True)
+        self.current_mod_item = item
+        mod_data = item.data(Qt.ItemDataRole.UserRole)
+        mod_notes = mod_data["user_notes"]
+        self.notes.setText(mod_notes)
 
     def display_mod_info(self, uuid: str, render_unity_rt: bool) -> None:
         """
