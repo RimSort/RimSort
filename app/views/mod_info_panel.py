@@ -146,10 +146,10 @@ class ModInfo:
         self.description.setText(
             "<br><br><br><center><h3>Welcome to RimSort!</h3></center>", convert=False
         )
-        self.notes = QTextEdit()  # TODO: Use custom QTextEdit - Allow markdown?
+        self.notes = QTextEdit()  # TODO: Custom QTextEdit to show hyperlinks?
         self.notes.setObjectName("userModNotes")
         self.notes.setPlaceholderText("Put your personal mod notes here!")
-        self.notes.textChanged.connect(self.update_notes)
+        self.notes.textChanged.connect(self.update_user_mod_notes)
         self.notes.setVisible(False)  # Only shows when a mod is selected
         # Add widgets to child layouts
         self.image_layout.addWidget(self.preview_picture)
@@ -215,22 +215,22 @@ class ModInfo:
 
         logger.debug("Finished ModInfo initialization")
 
-    def update_notes(self) -> None:
-        # TODO: Add logger
+    def update_user_mod_notes(self) -> None:
         if self.current_mod_item is None:
             return
         new_notes = self.notes.toPlainText()
         mod_data = self.current_mod_item.data(Qt.ItemDataRole.UserRole)
         mod_data["user_notes"] = new_notes
+        logger.debug(f"Finished updating notes for UUID: {mod_data["uuid"]}")
 
-    def show_mod_notes(self, item: CustomListWidgetItem) -> None:
-        #  TODO: Add logger
-        # Only show notes tab when a mod is clicked
+    def show_user_mod_notes(self, item: CustomListWidgetItem) -> None:
+        # Only show notes tab when a mod is selected
         self.notes.setVisible(True)
         self.current_mod_item = item
         mod_data = item.data(Qt.ItemDataRole.UserRole)
         mod_notes = mod_data["user_notes"]
         self.notes.setText(mod_notes)
+        logger.debug(f"Finished setting notes for UUID: {mod_data["uuid"]}")
 
     def display_mod_info(self, uuid: str, render_unity_rt: bool) -> None:
         """

@@ -596,7 +596,7 @@ class MainContent(QObject):
             uuid=uuid,
             render_unity_rt=self.settings_controller.settings.render_unity_rich_text,
         )
-        self.mod_info_panel.show_mod_notes(item)
+        self.mod_info_panel.show_user_mod_notes(item)
 
     def __repopulate_lists(self, is_initial: bool = False) -> None:
         """
