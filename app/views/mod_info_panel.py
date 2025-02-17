@@ -146,7 +146,7 @@ class ModInfo:
         self.description.setText(
             "<br><br><br><center><h3>Welcome to RimSort!</h3></center>", convert=False
         )
-        self.notes = QTextEdit()  # TODO: Custom QTextEdit to show hyperlinks?
+        self.notes = QTextEdit()  # TODO: Custom QTextEdit to allow clickable hyperlinks?
         self.notes.setObjectName("userModNotes")
         self.notes.setPlaceholderText("Put your personal mod notes here!")
         self.notes.textChanged.connect(self.update_user_mod_notes)
