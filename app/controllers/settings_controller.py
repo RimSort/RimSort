@@ -125,12 +125,12 @@ class SettingsController(QObject):
         self.settings_dialog.local_mods_folder_location_open_button.clicked.connect(
             self._on_local_mods_folder_location_open_button_clicked
         )
-        self.settings_dialog.local_mods_folder_location_choose_button.clicked.connect(
+        """self.settings_dialog.local_mods_folder_location_choose_button.clicked.connect(
             self._on_local_mods_folder_location_choose_button_clicked
         )
         self.settings_dialog.local_mods_folder_location_clear_button.clicked.connect(
             self._on_local_mods_folder_location_clear_button_clicked
-        )
+        )"""  # Disable button connections for now
 
         self.settings_dialog.locations_clear_button.clicked.connect(
             self._on_locations_clear_button_clicked
@@ -752,8 +752,11 @@ class SettingsController(QObject):
 
     @Slot()
     def _on_game_location_text_changed(self) -> None:
-        self.settings_dialog.game_location_open_button.setEnabled(
-            self.settings_dialog.game_location.text() != ""
+        game_folder = self.settings_dialog.game_location.text()
+        self.settings_dialog.game_location_open_button.setEnabled(game_folder != "")
+        # Automatically set local folder from game folder
+        self.settings_dialog.local_mods_folder_location.setText(
+            str(Path(game_folder) / "Mods") if game_folder else ""
         )
 
     @Slot()
