@@ -1329,9 +1329,7 @@ class ModListWidget(QListWidget):
                 elif (
                     action == remove_from_steamdb_blacklist_action
                 ):  # ACTION: Blacklist workshop mod in SteamDB
-                    self.remove_mod_from_steamdb_blacklist(
-                        steamdb_add_blacklist, steamdb_remove_blacklist
-                    )
+                    self.remove_mod_from_steamdb_blacklist(steamdb_remove_blacklist)
                     return True
                 elif action == delete_mod_action:  # ACTION: Delete mods action
                     answer = show_dialogue_conditional(
@@ -1351,7 +1349,7 @@ class ModListWidget(QListWidget):
                         + "\nDo you want to proceed?",
                     )
                     if answer == "&Yes":
-                        self.delete_mods_keep_dds()
+                        self.delete_mods_keep_dds(selected_items, steamcmd_acf_pfid_purge)
                     return True
                 elif action == delete_mod_dds_only_action:  # ACTION: Delete mod dds only action
                     answer = show_dialogue_conditional(
