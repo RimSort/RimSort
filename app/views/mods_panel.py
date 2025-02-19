@@ -1359,30 +1359,7 @@ class ModListWidget(QListWidget):
                         + "\nDo you want to proceed?",
                     )
                     if answer == "&Yes":
-                        for source_item in selected_items:
-                            if type(source_item) is CustomListWidgetItem:
-                                item_data = source_item.data(Qt.ItemDataRole.UserRole)
-                                uuid = item_data["uuid"]
-                                mod_metadata = (
-                                    self.metadata_manager.internal_local_metadata[uuid]
-                                )
-                                if mod_metadata[
-                                    "data_source"  # Disallow Official Expansions
-                                ] != "expansion" or not mod_metadata[
-                                    "packageid"
-                                ].startswith("ludeon.rimworld"):
-                                    data = source_item.data(Qt.ItemDataRole.UserRole)
-                                    self.uuids.remove(data["uuid"])
-                                    delete_files_only_extension(
-                                        directory=mod_metadata["path"],
-                                        extension=".dds",
-                                    )
-                                    if mod_metadata.get("steamcmd"):
-                                        steamcmd_acf_pfid_purge.add(
-                                            mod_metadata["publishedfileid"]
-                                        )
-                    # Purge any deleted SteamCMD mods from acf metadata
-                    self.purge_steamcmd_mods_from_acf(steamcmd_acf_pfid_purge)
+                        self.delete_dds_textures_only(selected_items, steamcmd_acf_pfid_purge)
                     return True
                 # Execute action for each selected mod
                 for source_item in selected_items:
@@ -2131,7 +2108,7 @@ class ModListWidget(QListWidget):
         steamcmd_acf_pfid_purge: set[str],
     ) -> None:
         """
-        Given a list of mods, delete them locally but keep theri dds textures.
+        Given a list of mods, delete them locally but keep their dds textures.
 
         Also purge any deleted SteamCMD mods from acf metadata.
 
@@ -2167,6 +2144,44 @@ class ModListWidget(QListWidget):
         # TODO: Find out if we can delete mod(s) and update everything WITHOUT refreshing.
         # Alternatively find a way to avoid 'missing mods' warning.
         self.refresh_signal.emit()
+
+    def delete_dds_textures_only(
+        self,
+        selected_items: list[CustomListWidgetItem],
+        steamcmd_acf_pfid_purge: set[str],
+    ) -> None:
+        """
+        Given a list of mods, delete their dds textures only.
+
+        Also purge any deleted SteamCMD mods from acf metadata.
+
+        :param selected_items: List of mods, to delete their dds textures.
+        :param steam_acf_pfid_purge: Set that tracks SteamCMD pfids to purge from acf data
+        """
+        for source_item in selected_items:
+            if type(source_item) is CustomListWidgetItem:
+                item_data = source_item.data(Qt.ItemDataRole.UserRole)
+                uuid = item_data["uuid"]
+                mod_metadata = (
+                    self.metadata_manager.internal_local_metadata[uuid]
+                )
+                if mod_metadata[
+                    "data_source"  # Disallow Official Expansions
+                ] != "expansion" or not mod_metadata[
+                    "packageid"
+                ].startswith("ludeon.rimworld"):
+                    data = source_item.data(Qt.ItemDataRole.UserRole)
+                    self.uuids.remove(data["uuid"])
+                    delete_files_only_extension(
+                        directory=mod_metadata["path"],
+                        extension=".dds",
+                    )
+                    if mod_metadata.get("steamcmd"):
+                        steamcmd_acf_pfid_purge.add(
+                            mod_metadata["publishedfileid"]
+                        )
+        # Purge any deleted SteamCMD mods from acf metadata
+        self.purge_steamcmd_mods_from_acf(steamcmd_acf_pfid_purge)
 
     def convert_steam_mods_to_local(
             self, 
