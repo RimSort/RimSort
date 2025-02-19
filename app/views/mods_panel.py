@@ -1192,38 +1192,7 @@ class ModListWidget(QListWidget):
                     action == convert_steamcmd_local_action
                     and len(steamcmd_publishedfileid_to_name) > 0
                 ):
-                    local_folder = self.settings_controller.settings.instances[
-                        self.settings_controller.settings.current_instance
-                    ].local_folder
-                    for (
-                        publishedfileid,
-                        mod_name,
-                    ) in steamcmd_publishedfileid_to_name.items():
-                        mod_name = (
-                            sanitize_filename(mod_name)
-                            if mod_name
-                            else f"{publishedfileid}_local"
-                        )
-                        original_mod_path = str((Path(local_folder) / publishedfileid))
-                        renamed_mod_path = str((Path(local_folder) / mod_name))
-                        if os.path.exists(original_mod_path):
-                            if not os.path.exists(renamed_mod_path):
-                                try:
-                                    os.rename(original_mod_path, renamed_mod_path)
-                                    logger.debug(
-                                        f'Successfully "converted" SteamCMD mod by renaming from {publishedfileid} -> {mod_name}'
-                                    )
-                                except Exception as e:
-                                    stacktrace = format_exc()
-                                    logger.error(
-                                        f"Failed to convert mod: {original_mod_path} - {e}"
-                                    )
-                                    logger.error(stacktrace)
-                            else:
-                                logger.warning(
-                                    f"Failed to convert mod! Destination already exists: {renamed_mod_path}"
-                                )
-                    self.refresh_signal.emit()
+                    self.convert_steamcmd_mods_to_local(steamcmd_publishedfileid_to_name)
                     return True
                 elif (  # ACTION: Re-download SteamCMD mod(s)
                     action == re_steamcmd_action
@@ -2182,6 +2151,44 @@ class ModListWidget(QListWidget):
                         )
         # Purge any deleted SteamCMD mods from acf metadata
         self.purge_steamcmd_mods_from_acf(steamcmd_acf_pfid_purge)
+
+    def convert_steamcmd_mods_to_local(self, steamcmd_publishedfileid_to_name: dict[str, str]) -> None:
+        """
+        Convert SteamCMD mods to local mods.
+
+        :param steamcmd_publishedfileid_to_name: Dict of SteamCMD publishedfileid to mod name.
+        """
+        local_folder = self.settings_controller.settings.instances[
+            self.settings_controller.settings.current_instance
+        ].local_folder
+        for (
+            publishedfileid,
+            mod_name,
+        ) in steamcmd_publishedfileid_to_name.items():
+            mod_name = (
+                sanitize_filename(mod_name)
+                if mod_name
+                else f"{publishedfileid}_local"
+            )
+            original_mod_path = str((Path(local_folder) / publishedfileid))
+            renamed_mod_path = str((Path(local_folder) / mod_name))
+            if os.path.exists(original_mod_path):
+                if not os.path.exists(renamed_mod_path):
+                    try:
+                        os.rename(original_mod_path, renamed_mod_path)
+                        logger.debug(
+                            f'Successfully "converted" SteamCMD mod by renaming from {publishedfileid} -> {mod_name}'
+                        )
+                    except Exception as e:
+                        stacktrace = format_exc()
+                        logger.error(
+                            f"Failed to convert mod: {original_mod_path} - {e}"
+                        )
+                        logger.error(stacktrace)
+                else:
+                    logger.warning(
+                        f"Failed to convert mod! Destination already exists: {renamed_mod_path}"
+                    )
 
     def convert_steam_mods_to_local(
             self, 
