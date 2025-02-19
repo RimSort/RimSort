@@ -49,18 +49,32 @@ class EditableDelegate(QItemDelegate):
             column3_value = model.index(
                 index.row(), 2
             ).data()  # Get the value of the 3rd column
+
+            # Add detailed logging for debugging
+            logger.debug(
+                f"Attempting to create editor for row {index.row()}, column {index.column()}"
+            )
+            logger.debug(f"Column 3 value: {column3_value}")
+
             if column3_value in [
                 "Community Rules",
                 "User Rules",
             ]:  # Only create an editor if the condition is met
                 editor = super().createEditor(parent, option, index)
                 return editor
-        logger.critical(
-            "Editor creation failed! One or more of the conditions were not met."
-        )
-        raise Exception(
-            "Editor creation failed! One or more of the conditions were not met."
-        )
+
+            # Provide more informative error message
+            error_msg = (
+                f"Editor creation failed! Column 3 value '{column3_value}' "
+                f"is not 'Community Rules' or 'User Rules'"
+            )
+            logger.warning(error_msg)
+            return QLineEdit(parent, readOnly=True)  # Return a basic editor as fallback
+
+        # Handle case where wrong column is being edited
+        error_msg = f"Editor creation failed! Column {index.column()} is not editable"
+        logger.warning(error_msg)
+        return QLineEdit(parent, readOnly=True)  # Return a basic editor as fallback
 
     def setEditorData(
         self, editor: QWidget, index: QModelIndex | QPersistentModelIndex
