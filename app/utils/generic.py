@@ -100,15 +100,15 @@ def rmtree(path: str | Path, **kwargs: Any) -> bool:
 
 def delete_files_with_condition(
     directory: Path | str, condition: Callable[[str], bool]
-) -> None:
+) -> bool:
     for root, dirs, files in os.walk(directory):
         for file in files:
             if condition(file):
                 file_path = str((Path(root) / file))
                 try:
                     os.remove(file_path)
-                except OSError:
-                    handle_remove_read_only(os.remove, file_path, sys.exc_info())
+                except OSError as e:
+                    attempt_chmod(os.remove, file_path, e)
                 finally:
                     logger.debug(f"Deleted: {file_path}")
 
@@ -119,24 +119,29 @@ def delete_files_with_condition(
                 shutil.rmtree(
                     dir_path,
                     ignore_errors=False,
-                    onerror=handle_remove_read_only,
+                    onexc=attempt_chmod,
                 )
                 logger.debug(f"Deleted: {dir_path}")
     if not os.listdir(directory):
         shutil.rmtree(
             directory,
             ignore_errors=False,
-            onerror=handle_remove_read_only,
+            onexc=attempt_chmod,
         )
         logger.debug(f"Deleted: {directory}")
+        return True
+    else:
+        return False
 
 
-def delete_files_except_extension(directory: Path | str, extension: str) -> None:
-    delete_files_with_condition(directory, lambda file: not file.endswith(extension))
+def delete_files_except_extension(directory: Path | str, extension: str) -> bool:
+    return delete_files_with_condition(
+        directory, lambda file: not file.endswith(extension)
+    )
 
 
-def delete_files_only_extension(directory: Path | str, extension: str) -> None:
-    delete_files_with_condition(directory, lambda file: file.endswith(extension))
+def delete_files_only_extension(directory: Path | str, extension: str) -> bool:
+    return delete_files_with_condition(directory, lambda file: file.endswith(extension))
 
 
 def directories(mods_path: Path | str) -> list[str]:
@@ -148,6 +153,29 @@ def directories(mods_path: Path | str) -> list[str]:
         return []
 
 
+def attempt_chmod(
+    func: Callable[[str], Any], path: str, excinfo: BaseException
+) -> bool:
+    if excinfo is not None and isinstance(excinfo, OSError):
+        if (
+            func in (os.rmdir, os.remove, os.unlink, os.listdir)
+            and excinfo.errno == EACCES
+        ):
+            os.chmod(path, S_IRWXU | S_IRWXG | S_IRWXO)  # 0777
+            try:
+                func(path)
+                return True
+            except Exception as e:
+                logger.warning(
+                    f"attempt_chmod for {func.__name__} double failure at {path}: {e}"
+                )
+                return False
+
+    return False
+
+
+# TODO: This function signature corresponds to the depreciated onerror param of shutil.rmtree
+# in general, new code should use attempt_chmod instead
 def handle_remove_read_only(
     func: Callable[[str], Any],
     path: str,

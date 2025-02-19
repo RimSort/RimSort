@@ -98,6 +98,8 @@ class EventBus(QObject):
     do_sort_active_mods_list = Signal()
     do_save_active_mods_list = Signal()
     do_run_game = Signal()
+    do_steamworks_api_call = Signal(list)
+    do_steamcmd_download = Signal(list)
 
     refresh_started = Signal()
     refresh_finished = Signal()

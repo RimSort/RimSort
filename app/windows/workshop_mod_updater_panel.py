@@ -46,8 +46,8 @@ class ModUpdaterPrompt(BaseModsPanel):
         self.editor_update_all_button = QPushButton("Update all")
         self.editor_update_all_button.clicked.connect(partial(self._update_all))
 
-        self.editor_actions_layout.addWidget(self.editor_update_mods_button)
-        self.editor_actions_layout.addWidget(self.editor_update_all_button)
+        self.editor_main_actions_layout.addWidget(self.editor_update_mods_button)
+        self.editor_main_actions_layout.addWidget(self.editor_update_all_button)
 
     def _update_all(self) -> None:
         self._set_all_checkbox_rows(True)

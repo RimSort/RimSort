@@ -223,6 +223,14 @@ class MainContent(QObject):
                 self._do_open_steam_mods_directory
             )
 
+            EventBus().do_steamcmd_download.connect(
+                self._do_download_mods_with_steamcmd
+            )
+
+            EventBus().do_steamworks_api_call.connect(
+                self._do_steamworks_api_call_animated
+            )
+
             # Edit Menu bar Eventbus
             EventBus().do_rule_editor.connect(
                 lambda: self.actions_slot("open_community_rules_with_rule_editor")
@@ -313,9 +321,6 @@ class MainContent(QObject):
             )
             self.mods_panel.inactive_mods_list.update_git_mods_signal.connect(
                 self._check_git_repos_for_update
-            )
-            self.mods_panel.active_mods_list.steamcmd_downloader_signal.connect(
-                self._do_download_mods_with_steamcmd
             )
             self.mods_panel.inactive_mods_list.steamcmd_downloader_signal.connect(
                 self._do_download_mods_with_steamcmd
@@ -574,12 +579,6 @@ class MainContent(QObject):
                 steam_workshop_metadata=self.metadata_manager.external_steam_metadata,
             )
             self.missing_mods_prompt._populate_from_metadata()
-            self.missing_mods_prompt.steamcmd_downloader_signal.connect(
-                self._do_download_mods_with_steamcmd
-            )
-            self.missing_mods_prompt.steamworks_subscription_signal.connect(
-                self._do_steamworks_api_call_animated
-            )
             self.missing_mods_prompt.setWindowModality(
                 Qt.WindowModality.ApplicationModal
             )
@@ -1965,12 +1964,6 @@ class MainContent(QObject):
         workshop_mod_updater._populate_from_metadata()
         if workshop_mod_updater.updates_found:
             logger.debug("Displaying potential Workshop mod updates")
-            workshop_mod_updater.steamcmd_downloader_signal.connect(
-                self._do_download_mods_with_steamcmd
-            )
-            workshop_mod_updater.steamworks_subscription_signal.connect(
-                self._do_steamworks_api_call_animated
-            )
             workshop_mod_updater.show()
         else:
             self.status_signal.emit("All Workshop mods appear to be up to date!")
@@ -3431,12 +3424,6 @@ class MainContent(QObject):
         """
         self.use_this_instead_dialog = UseThisInsteadPanel(
             mod_metadata=self.metadata_manager.internal_local_metadata
-        )
-        self.use_this_instead_dialog.steamcmd_downloader_signal.connect(
-            self._do_download_mods_with_steamcmd
-        )
-        self.use_this_instead_dialog.steamworks_subscription_signal.connect(
-            self._do_steamworks_api_call_animated
         )
         self.use_this_instead_dialog._populate_from_metadata()
         self.use_this_instead_dialog.show()

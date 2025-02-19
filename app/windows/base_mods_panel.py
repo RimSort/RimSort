@@ -1,6 +1,7 @@
 from functools import partial
+from typing import Callable, TypeVar
 
-from PySide6.QtCore import QEvent, QObject, QSize, Qt, Signal
+from PySide6.QtCore import QEvent, QObject, QSize, Qt
 from PySide6.QtGui import QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -9,11 +10,14 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QHeaderView,
     QLabel,
+    QLayout,
     QPushButton,
     QTableView,
     QVBoxLayout,
     QWidget,
 )
+
+from app.utils.event_bus import EventBus
 
 # By default, we assume Stretch for all columns.
 # Tuples should be used if this should be overridden
@@ -24,9 +28,6 @@ class BaseModsPanel(QWidget):
     """
     Base class used for multiple panels that display a list of mods.
     """
-
-    steamcmd_downloader_signal = Signal(list)
-    steamworks_subscription_signal = Signal(list)
 
     def __init__(
         self,
@@ -54,6 +55,15 @@ class BaseModsPanel(QWidget):
         self.details_layout = QVBoxLayout()
         self.editor_layout = QVBoxLayout()
         self.editor_actions_layout = QHBoxLayout()
+        self.editor_checkbox_actions_layout = QHBoxLayout()
+        self.editor_main_actions_layout = QHBoxLayout()
+        self.editor_exit_actions_layout = QHBoxLayout()
+
+        self.editor_actions_layout.addLayout(self.editor_checkbox_actions_layout)
+        self.editor_actions_layout.addStretch(25)
+        self.editor_actions_layout.addLayout(self.editor_main_actions_layout)
+        self.editor_actions_layout.addStretch(25)
+        self.editor_actions_layout.addLayout(self.editor_exit_actions_layout)
 
         # DETAILS WIDGETS
         self.details_label = QLabel(details_text)
@@ -94,19 +104,17 @@ class BaseModsPanel(QWidget):
         self.editor_deselect_all_button.clicked.connect(
             partial(self._set_all_checkbox_rows, False)
         )
-        self.editor_actions_layout.addWidget(self.editor_deselect_all_button)
+        self.editor_checkbox_actions_layout.addWidget(self.editor_deselect_all_button)
 
         self.editor_select_all_button = QPushButton("Select all")
         self.editor_select_all_button.clicked.connect(
             partial(self._set_all_checkbox_rows, True)
         )
-        self.editor_actions_layout.addWidget(self.editor_select_all_button)
-
-        self.editor_actions_layout.insertStretch(2, 100)
+        self.editor_checkbox_actions_layout.addWidget(self.editor_select_all_button)
 
         self.editor_cancel_button = QPushButton("Do nothing and exit")
         self.editor_cancel_button.clicked.connect(self.close)
-        self.editor_actions_layout.addWidget(self.editor_cancel_button)
+        self.editor_exit_actions_layout.addWidget(self.editor_cancel_button)
 
         # Build the details layout
         self.details_layout.addWidget(self.details_label)
@@ -166,41 +174,70 @@ class BaseModsPanel(QWidget):
     ) -> None:
         steamcmd_publishedfileids = []
         steam_publishedfileids = []
-        # Iterate through the editor's rows
-        for row in range(self.editor_model.rowCount()):
-            if self.editor_model.item(row):  # If there is a row at current index
-                # If an existing row is found, is it selected?
-                checkbox = self.editor_table_view.indexWidget(
-                    self.editor_model.item(row, 0).index()
-                )
-                assert isinstance(checkbox, QCheckBox)
-                if checkbox.isChecked():
-                    combo_box = self.editor_table_view.indexWidget(
-                        self.editor_model.item(row, pfid_column).index()
-                    )
-                    if not isinstance(combo_box, QComboBox):
-                        publishedfileid = self.editor_model.item(
-                            row, pfid_column
-                        ).text()
-                    else:
-                        publishedfileid = combo_box.currentText()
+        pfids: list[tuple[str, str]]
+        pfid_fn = self._get_selected_text_by_column(pfid_column)
+        if isinstance(mode, str):
+            pfids = [(pfid, mode) for pfid in self._run_for_selected_rows(pfid_fn)]
+        elif isinstance(mode, int):
+            mode_fn = self._get_selected_text_by_column(mode)
+            pfids = self._run_for_selected_rows(
+                lambda row: (pfid_fn(row), mode_fn(row))
+            )
 
-                    if isinstance(mode, int):
-                        mode = self.editor_model.item(row, mode).text()
-                    if mode == "SteamCMD":
-                        steamcmd_publishedfileids.append(publishedfileid)
-                    elif mode == "Steam":
-                        steam_publishedfileids.append(publishedfileid)
+        for publishedfileid, mode in pfids:
+            if mode == "SteamCMD":
+                steamcmd_publishedfileids.append(publishedfileid)
+            elif mode == "Steam":
+                steam_publishedfileids.append(publishedfileid)
 
         # If we have any SteamCMD mods designated to be updated
         if len(steamcmd_publishedfileids) > 0:
-            self.steamcmd_downloader_signal.emit(steamcmd_publishedfileids)
+            EventBus().do_steamcmd_download.emit(steamcmd_publishedfileids)
         # If we have any Steam mods designated to be updated
         if len(steam_publishedfileids) > 0:
-            self.steamworks_subscription_signal.emit(
+            EventBus().do_steamworks_api_call.emit(
                 [
                     steamworks_cmd,
                     [eval(str_pfid) for str_pfid in steam_publishedfileids],
                 ]
             )
         self.close()
+
+    def _update_all(
+        self, pfid_column: int, steamworks_cmd: str = "resubscribe"
+    ) -> None:
+        self._set_all_checkbox_rows(True)
+        self._update_mods_from_table(pfid_column, "Steam", steamworks_cmd)
+
+    def clear_layout(self, layout: QLayout) -> None:
+        while layout.count():
+            child = layout.takeAt(0)
+            if child.widget():
+                child.widget().setParent(None)
+
+    def _row_is_checked(self, row: int) -> bool:
+        checkbox = self.editor_table_view.indexWidget(
+            self.editor_model.item(row, 0).index()
+        )
+        return isinstance(checkbox, QCheckBox) and checkbox.isChecked()
+
+    T = TypeVar("T")
+
+    def _run_for_selected_rows(self, fn: Callable[[int], T]) -> list[T]:
+        ret = []
+        for row in range(self.editor_model.rowCount()):
+            if self._row_is_checked(row):
+                ret.append(fn(row))
+        return ret
+
+    def _get_selected_text_by_column(self, column: int) -> Callable[[int], str]:
+        def __selected_text_by_column(row: int) -> str:
+            combo_box = self.editor_table_view.indexWidget(
+                self.editor_model.item(row, column).index()
+            )
+            if not isinstance(combo_box, QComboBox):
+                return self.editor_model.item(row, column).text()
+            else:
+                return combo_box.currentText()
+
+        return __selected_text_by_column

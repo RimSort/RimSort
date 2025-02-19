@@ -64,8 +64,10 @@ class MissingModsPrompt(BaseModsPanel):
                 mode="Steam",
             )
         )
-        self.editor_actions_layout.addWidget(self.editor_download_steamcmd_button)
-        self.editor_actions_layout.addWidget(self.editor_download_steamworks_button)
+        self.editor_main_actions_layout.addWidget(self.editor_download_steamcmd_button)
+        self.editor_main_actions_layout.addWidget(
+            self.editor_download_steamworks_button
+        )
 
     def _mm_add_row(
         self,

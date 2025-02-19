@@ -3,8 +3,8 @@ from typing import Any, Dict
 
 from loguru import logger
 from PySide6.QtCore import QSize
-from PySide6.QtGui import QStandardItem
-from PySide6.QtWidgets import QPushButton
+from PySide6.QtGui import QAction, QStandardItem
+from PySide6.QtWidgets import QMenu, QPushButton, QToolButton
 
 from app.utils.generic import platform_specific_open
 from app.utils.metadata import MetadataManager
@@ -39,32 +39,46 @@ class UseThisInsteadPanel(BaseModsPanel):
             minimum_size=QSize(1000, 600),
         )
 
-        self.editor_unsub_mods_button = QPushButton("Unsubscribe outdated")
-        self.editor_unsub_mods_button.clicked.connect(
-            partial(self._update_mods_from_table, 6, "Steam", "unsubscribe")
-        )
-        self.editor_unsub_all_mods_button = QPushButton("Unsubscribe all outdated")
-        self.editor_unsub_all_mods_button.clicked.connect(
-            partial(self._update_all, "unsubscribe")
-        )
+        # self.editor_unsub_mods_button = QPushButton("Unsubscribe outdated")
+        # self.editor_unsub_mods_button.clicked.connect(
+        #     partial(self._update_mods_from_table, 6, "Steam", "unsubscribe")
+        # )
+        # self.editor_unsub_all_mods_button = QPushButton("Unsubscribe all outdated")
+        # self.editor_unsub_all_mods_button.clicked.connect(
+        #     partial(self._update_all, "unsubscribe")
+        # )
 
         self.editor_update_mods_button = QPushButton("Subscribe replacements")
         self.editor_update_mods_button.clicked.connect(
             partial(self._update_mods_from_table, 6, "Steam")
         )
         self.editor_update_all_button = QPushButton("Subscribe all replacements")
-        self.editor_update_all_button.clicked.connect(partial(self._update_all))
+        self.editor_update_all_button.clicked.connect(partial(self._update_all, 6))
 
-        self.editor_actions_layout.addSpacing(25)
-        self.editor_actions_layout.addWidget(self.editor_unsub_mods_button)
-        self.editor_actions_layout.addWidget(self.editor_unsub_all_mods_button)
-        self.editor_actions_layout.addSpacing(25)
-        self.editor_actions_layout.addWidget(self.editor_update_mods_button)
-        self.editor_actions_layout.addWidget(self.editor_update_all_button)
+        self.editor_tool_button = QToolButton()
+        self.editor_tool_button.setText("More Options")
+        # self.editor_tool_button.setIcon(
+        #     QApplication.style().standardIcon(
+        #         QStyle.StandardPixmap.SP_TitleBarMenuButton
+        #     )
+        # )
+        self.editor_tool_menu = QMenu(self.editor_tool_button)
 
-    def _update_all(self, steamworks_cmd: str = "resubscribe") -> None:
-        self._set_all_checkbox_rows(True)
-        self._update_mods_from_table(6, "Steam", steamworks_cmd)
+        action_one = QAction("Action One", self)
+        action_two = QAction("Action Two", self)
+
+        self.editor_tool_menu.addAction(action_one)
+        self.editor_tool_menu.addAction(action_two)
+
+        self.editor_tool_button.setMenu(self.editor_tool_menu)
+        # When clicked, show menu immediately
+        self.editor_tool_button.setPopupMode(
+            QToolButton.ToolButtonPopupMode.InstantPopup
+        )
+
+        self.editor_main_actions_layout.addWidget(self.editor_update_mods_button)
+        self.editor_main_actions_layout.addWidget(self.editor_update_all_button)
+        self.editor_main_actions_layout.addWidget(self.editor_tool_button)
 
     def _populate_from_metadata(self) -> None:
         """
