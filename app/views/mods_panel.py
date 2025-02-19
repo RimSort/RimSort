@@ -2317,7 +2317,7 @@ class ModListWidget(QListWidget):
         return True
     
     def add_mod_to_steamdb_blacklist(
-        self, steamdb_add_blacklist: list[str], steamdb_remove_blacklist: list[str]
+        self, steamdb_add_blacklist: Any | None, steamdb_remove_blacklist: Any | None
     ) -> bool:
         """
         Blacklist workshop mods in steamDB.
@@ -2360,7 +2360,7 @@ class ModListWidget(QListWidget):
             return False
         
     def remove_mod_from_steamdb_blacklist(
-        self, steamdb_remove_blacklist: list[str]
+        self, steamdb_remove_blacklist: Any | None
     ) -> bool:
         """
         Remove a workshop mod from the steamDB blacklist.
