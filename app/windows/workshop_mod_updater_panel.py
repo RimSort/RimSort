@@ -232,7 +232,7 @@ class ModUpdaterPrompt(QWidget):
             )
             show_information(
                 title="Finished Updating Steam Mods",
-                text="Updates may require a Steam and RimSort restart or running Steam Validation to be reflected.",
+                text="Updates may require running Steam Validation to be reflected.",
             )
         self.close()
 

@@ -17,6 +17,7 @@ from PySide6.QtCore import (
     QObject,
     QRectF,
     QSize,
+    QTimer,
     Qt,
     Signal,
 )
@@ -1272,10 +1273,18 @@ class ModListWidget(QListWidget):
                     answer = show_dialogue_conditional(
                         title="Are you sure?",
                         text=f"You have selected {len(publishedfileids)} mods for unsubscribe + re-subscribe.",
-                        information="\nThis operation will potentially delete .dds textures leftover. Steam is unreliable for this. Do you want to proceed?",
+                        information="\nThis operation will potentially delete .dds textures. Steam is unreliable for this. After re-subscribing, Steam validation is recommended. Do you want to proceed?",
                     )
                     if answer == "&Yes":
-                        self.resubscribe_to_steam_mods(publishedfileids, steam_mod_paths)
+                        resubscribed = self.resubscribe_to_steam_mods(publishedfileids, steam_mod_paths)
+                        if resubscribed:
+                            answer = show_dialogue_conditional(
+                                title="Steam Validation",
+                                text="After re-subscribe, steam validation is recommended. You can do this now or later. (It takes a while...)",
+                                information="\nTo run steam validation later you can use Help -> Validate Steam Client mods. Do you want to run steam vaildation now?",
+                            )
+                            if answer == "&Yes":
+                                EventBus().do_validate_steam_client.emit()
                     return True
                 elif (  # ACTION: Unsubscribe & delete mod(s) with steam
                     action == unsubscribe_mod_steam_action
@@ -2309,10 +2318,6 @@ class ModListWidget(QListWidget):
         logger.debug(
             f"Unsubscribing + re-subscribing to {len(publishedfileids)} mod(s)"
         )
-        for path in steam_mod_paths:
-            delete_files_except_extension(
-                directory=path, extension=".dds"
-            )
         self.steamworks_subscription_signal.emit(
             [
                 "resubscribe",
