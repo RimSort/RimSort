@@ -17,7 +17,6 @@ from PySide6.QtCore import (
     QObject,
     QRectF,
     QSize,
-    QTimer,
     Qt,
     Signal,
 )
@@ -1276,7 +1275,7 @@ class ModListWidget(QListWidget):
                         information="\nThis operation will potentially delete .dds textures. Steam is unreliable for this. After re-subscribing, Steam validation is recommended. Do you want to proceed?",
                     )
                     if answer == "&Yes":
-                        resubscribed = self.resubscribe_to_steam_mods(publishedfileids, steam_mod_paths)
+                        resubscribed = self.resubscribe_to_steam_mods(publishedfileids)
                         if resubscribed:
                             answer = show_dialogue_conditional(
                                 title="Steam Validation",
@@ -1323,65 +1322,16 @@ class ModListWidget(QListWidget):
                 elif (
                     action == add_to_steamdb_blacklist_action
                 ):  # ACTION: Blacklist workshop mod in SteamDB
-                    if (
-                        self.metadata_manager.external_steam_metadata is None
-                        or steamdb_add_blacklist is None
-                    ):
-                        logger.error(
-                            f"Unable to add mod to SteamDB blacklist: {steamdb_remove_blacklist}"
-                        )
-                        show_warning(
-                            "Warning",
-                            "Unable to add mod to SteamDB blacklist",
-                            "Metadata manager or steamdb_add_blacklist was None type",
-                            parent=self,
-                        )
-                        return False
-
-                    args, ok = show_dialogue_input(
-                        title="Add comment",
-                        label="Enter a comment providing your reasoning for wanting to blacklist this mod: "
-                        + f'{self.metadata_manager.external_steam_metadata.get(steamdb_add_blacklist, {}).get("steamName", steamdb_add_blacklist)}',
+                    self.add_mod_to_steamdb_blacklist(
+                        steamdb_add_blacklist, steamdb_remove_blacklist
                     )
-                    if ok:
-                        self.steamdb_blacklist_signal.emit(
-                            [steamdb_add_blacklist, True, args]
-                        )
-                    else:
-                        show_warning(
-                            title="Unable to add to blacklist",
-                            text="Comment was not provided or entry was cancelled. Comments are REQUIRED for this action!",
-                        )
                     return True
                 elif (
                     action == remove_from_steamdb_blacklist_action
                 ):  # ACTION: Blacklist workshop mod in SteamDB
-                    if (
-                        self.metadata_manager.external_steam_metadata is None
-                        or steamdb_remove_blacklist is None
-                    ):
-                        logger.error(
-                            f"Unable to remove mod from SteamDB blacklist: {steamdb_remove_blacklist}"
-                        )
-                        show_warning(
-                            "Warning",
-                            "Unable to remove mod from SteamDB blacklist",
-                            "Metadata manager or steamdb_remove_blacklist was None type",
-                            parent=self,
-                        )
-                        return False
-
-                    answer = show_dialogue_conditional(
-                        title="Are you sure?",
-                        text="This will remove the selected mod, "
-                        + f'{self.metadata_manager.external_steam_metadata.get(steamdb_remove_blacklist, {}).get("steamName", steamdb_remove_blacklist)}, '
-                        + "from your configured Steam DB blacklist."
-                        + "\nDo you want to proceed?",
+                    self.remove_mod_from_steamdb_blacklist(
+                        steamdb_add_blacklist, steamdb_remove_blacklist
                     )
-                    if answer == "&Yes":
-                        self.steamdb_blacklist_signal.emit(
-                            [steamdb_remove_blacklist, False]
-                        )
                     return True
                 elif action == delete_mod_action:  # ACTION: Delete mods action
                     answer = show_dialogue_conditional(
@@ -2297,12 +2247,11 @@ class ModListWidget(QListWidget):
         # TODO: Find a way to catch any exception/failure to unsubscribe and return False...
         return True
 
-    def resubscribe_to_steam_mods(self, publishedfileids: KeysView[Any], steam_mod_paths: list[str]) -> bool:
+    def resubscribe_to_steam_mods(self, publishedfileids: KeysView[Any]) -> bool:
         """
         Resubscribe to Steam mods.
 
         :param publishedfileids: List of publishedfileids to resubscribe to.
-        :param steam_mod_paths: List of paths to Steam mods.
 
         :return: True if successful, False otherwise.
         """
@@ -2326,6 +2275,86 @@ class ModListWidget(QListWidget):
         )
         # TODO: Find a way to catch any exception/failure to resubscribe and return False...
         return True
+    
+    def add_mod_to_steamdb_blacklist(
+        self, steamdb_add_blacklist: list[str], steamdb_remove_blacklist: list[str]
+    ) -> bool:
+        """
+        Blacklist workshop mods in steamDB.
+
+        :param steamdb_add_blacklist: A list to track any publishedfileids we want to blacklist.
+        :param steamdb_remove_blacklist: A list to track any publishedfileids we want to remove from blacklist.
+        """
+        if (
+            self.metadata_manager.external_steam_metadata is None
+            or steamdb_add_blacklist is None
+        ):
+            logger.error(
+                f"Unable to add mod to SteamDB blacklist: {steamdb_remove_blacklist}"
+            )
+            show_warning(
+                "Warning",
+                "Unable to add mod to SteamDB blacklist",
+                "Metadata manager or steamdb_add_blacklist was None type",
+                parent=self,
+            )
+            return False
+
+        args, ok = show_dialogue_input(
+            title="Add comment",
+            label="Enter a comment providing your reasoning for wanting to blacklist this mod: "
+            + f'{self.metadata_manager.external_steam_metadata.get(steamdb_add_blacklist, {}).get("steamName", steamdb_add_blacklist)}',
+        )
+        if ok:
+            self.steamdb_blacklist_signal.emit(
+                [steamdb_add_blacklist, True, args]
+            )
+            return True
+        else:
+            show_warning(
+                title="Unable to add to blacklist",
+                text="Comment was not provided or entry was cancelled. Comments are REQUIRED for this action!",
+            )
+            return False
+        
+    def remove_mod_from_steamdb_blacklist(
+        self, steamdb_remove_blacklist: list[str]
+    ) -> bool:
+        """
+        Remove a workshop mod from the steamDB blacklist.
+
+        :param steamdb_remove_blacklist: A list to track any publishedfileids we want to remove from blacklist.
+        """
+        
+        if (
+            self.metadata_manager.external_steam_metadata is None
+            or steamdb_remove_blacklist is None
+        ):
+            logger.error(
+                f"Unable to remove mod from SteamDB blacklist: {steamdb_remove_blacklist}"
+            )
+            show_warning(
+                "Warning",
+                "Unable to remove mod from SteamDB blacklist",
+                "Metadata manager or steamdb_remove_blacklist was None type",
+                parent=self,
+            )
+            return False
+
+        answer = show_dialogue_conditional(
+            title="Are you sure?",
+            text="This will remove the selected mod, "
+            + f'{self.metadata_manager.external_steam_metadata.get(steamdb_remove_blacklist, {}).get("steamName", steamdb_remove_blacklist)}, '
+            + "from your configured Steam DB blacklist."
+            + "\nDo you want to proceed?",
+        )
+        if answer == "&Yes":
+            self.steamdb_blacklist_signal.emit(
+                [steamdb_remove_blacklist, False]
+            )
+            return True
+        
+        return False
 
 class ModsPanel(QWidget):
     """
