@@ -93,6 +93,7 @@ class ModsPanelController(QObject):
                     mod.setHidden(True)
                 elif not mod_data["hidden_by_filter"]:
                     mod.setHidden(False)
+        self.mods_panel.update_count("Active")
         logger.debug("Finished hiding mods without warnings.")
 
     @Slot()
@@ -119,4 +120,5 @@ class ModsPanelController(QObject):
                     mod.setHidden(True)
                 elif not mod_data["hidden_by_filter"]:
                     mod.setHidden(False)
+        self.mods_panel.update_count("Active")
         logger.debug("Finished hiding mods without errors.")
