@@ -2,6 +2,7 @@
 title: Sorting Algorithms
 nav_order: 6
 parent: User Guide
+permalink: user-guide/sorting-algorithms
 ---
 # Sorting Algorithms
 RimSort exposes two sorting algorithms by default for sorting the active mod list. The default as of `v1.0.10` is [topological](#topological-sorting).
