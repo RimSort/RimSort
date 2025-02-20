@@ -1149,7 +1149,7 @@ class ModListWidget(QListWidget):
                     # Prompt user
                     answer = show_dialogue_conditional(
                         title="Are you sure?",
-                        text=f"You have selected {len(git_paths)} git mods to be updated.",
+                        text=f"You have selected {len(git_paths)} git mod(s) to be updated.",
                         information="Do you want to proceed?",
                     )
                     if answer == "&Yes":
@@ -1202,7 +1202,7 @@ class ModListWidget(QListWidget):
                     # Prompt user
                     answer = show_dialogue_conditional(
                         title="Are you sure?",
-                        text=f"You have selected {len(steamcmd_publishedfileid_to_name.keys())} mods for deletion + re-download.",
+                        text=f"You have selected {len(steamcmd_publishedfileid_to_name.keys())} mod(s) for deletion + re-download.",
                         information="\nThis operation will recursively delete all mod files, except for .dds textures found, "
                         + "and attempt to re-download the mods via SteamCMD. Do you want to proceed?",
                     )
@@ -1235,7 +1235,7 @@ class ModListWidget(QListWidget):
                     # Prompt User
                     answer = show_dialogue_conditional(
                         title="Are you sure?",
-                        text=f"You have selected {len(publishedfileids)} mods for make local copy and unsubscribe on Steam.",
+                        text=f"You have selected {len(publishedfileids)} mod(s) for make local copy and unsubscribe on Steam.",
                         information="\nDo you want to proceed?",
                     )
                     if answer == "&Yes":
@@ -1251,7 +1251,7 @@ class ModListWidget(QListWidget):
                     # Prompt user
                     answer = show_dialogue_conditional(
                         title="Are you sure?",
-                        text=f"You have selected {len(publishedfileids)} mods for unsubscribe + re-subscribe.",
+                        text=f"You have selected {len(publishedfileids)} mod(s) for unsubscribe + re-subscribe.",
                         information="\nThis operation will potentially delete .dds textures. Steam is unreliable for this. After re-subscribing, Steam validation is recommended. Do you want to proceed?",
                     )
                     if answer == "&Yes":
@@ -1273,7 +1273,7 @@ class ModListWidget(QListWidget):
                     # Prompt user
                     answer = show_dialogue_conditional(
                         title="Are you sure?",
-                        text=f"You have selected {len(publishedfileids)} mods for unsubscribe and delete.",
+                        text=f"You have selected {len(publishedfileids)} mod(s) for unsubscribe and delete.",
                         information="\nDo you want to proceed?",
                     )
                     if answer == "&Yes":
@@ -1303,7 +1303,7 @@ class ModListWidget(QListWidget):
                 elif action == delete_mod_action:  # ACTION: Delete mods action
                     answer = show_dialogue_conditional(
                         title="Are you sure?",
-                        text=f"You have selected {len(selected_items)} mods for deletion.",
+                        text=f"You have selected {len(selected_items)} mod(s) for deletion.",
                         information="\nThis operation delete a mod's directory from the filesystem."
                         + "\nDo you want to proceed?",
                     )
@@ -1313,7 +1313,7 @@ class ModListWidget(QListWidget):
                 elif action == delete_mod_keep_dds_action:  # ACTION: Delete mods, keep dds action
                     answer = show_dialogue_conditional(
                         title="Are you sure?",
-                        text=f"You have selected {len(selected_items)} mods for deletion.",
+                        text=f"You have selected {len(selected_items)} mod(s) for deletion.",
                         information="\nThis operation will recursively delete all mod files, except for .dds textures found."
                         + "\nDo you want to proceed?",
                     )
@@ -1323,7 +1323,7 @@ class ModListWidget(QListWidget):
                 elif action == delete_mod_dds_only_action:  # ACTION: Delete mod dds only action
                     answer = show_dialogue_conditional(
                         title="Are you sure?",
-                        text=f"You have selected {len(selected_items)} mods to Delete optimized textures (.dds files only)",
+                        text=f"You have selected {len(selected_items)} mod(s) to Delete optimized textures (.dds files only)",
                         information="\nThis operation will only delete optimized textures (.dds files only) from mod files."
                         + "\nDo you want to proceed?",
                     )
