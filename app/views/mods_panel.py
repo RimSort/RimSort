@@ -2012,7 +2012,7 @@ class ModListWidget(QListWidget):
         steamcmd_acf_pfid_purge: set[str],
         ) -> None:
         """
-        Given a list of mods, delete them locally.
+        Given a list of mods, delete them locally. (Including their .dds textures)
 
         Also purge any deleted SteamCMD mods from acf metadata.
 
