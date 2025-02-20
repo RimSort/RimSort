@@ -2016,7 +2016,7 @@ class ModListWidget(QListWidget):
 
         Also purge any deleted SteamCMD mods from acf metadata.
 
-        Refresh modlists when done.
+        Saves new modlist and refreshes when done.
 
         :param selected_items: List of items to delete.
         :param steam_acf_pfid_purge: Set that tracks SteamCMD pfids to purge from acf data
@@ -2082,7 +2082,7 @@ class ModListWidget(QListWidget):
 
         Also purge any deleted SteamCMD mods from acf metadata.
 
-        Refresh modlists when done.
+        Saves new modlist and refreshes when done.
 
         :param selected_items: List of items to delete.
         :param steam_acf_pfid_purge: Set that tracks SteamCMD pfids to purge from acf data
