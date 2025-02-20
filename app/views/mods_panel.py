@@ -2299,7 +2299,7 @@ class ModListWidget(QListWidget):
         """
         # Check if steam is running
         if not check_if_steam_running():
-            logger.warning("Steam is not running. Cannot unsubscribe from Steam mods.")
+            logger.warning("Steam is not running. Cannot resubscribe from Steam mods.")
             show_warning(
                 title="Steam not running",
                 text="Unable to resubscribe to Steam mods. Ensure Steam is running and try again.",
