@@ -1273,7 +1273,7 @@ class ModListWidget(QListWidget):
                     # Prompt user
                     answer = show_dialogue_conditional(
                         title="Are you sure?",
-                        text=f"You have selected {len(publishedfileids)} mod(s) for unsubscribe and delete.",
+                        text=f"You have selected {len(publishedfileids)} mod(s) for unsubscribe. This also deletes the mod(s) and their dds textures.",
                         information="\nDo you want to proceed?",
                     )
                     if answer == "&Yes":
