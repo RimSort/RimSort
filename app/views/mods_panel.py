@@ -2021,6 +2021,7 @@ class ModListWidget(QListWidget):
         :param selected_items: List of items to delete.
         :param steam_acf_pfid_purge: Set that tracks SteamCMD pfids to purge from acf data
         """
+        deleted_mods_uuids: set[str] = set()
         for source_item in selected_items:
             if type(source_item) is CustomListWidgetItem:
                 item_data = source_item.data(Qt.ItemDataRole.UserRole)
@@ -2040,6 +2041,7 @@ class ModListWidget(QListWidget):
                         logger.debug("Deleted mod: " + mod_metadata["name"] + ", uuid: " + str(uuid))
                         if mod_metadata.get("steamcmd"):
                             steamcmd_acf_pfid_purge.add(mod_metadata["publishedfileid"])
+                        deleted_mods_uuids.add(uuid)
                     except FileNotFoundError:
                         logger.warning(
                             f"Unable to delete mod. Path does not exist: {mod_metadata['path']}"
@@ -2067,9 +2069,8 @@ class ModListWidget(QListWidget):
 
         # Purge any deleted SteamCMD mods from acf metadata
         self.purge_steamcmd_mods_from_acf(steamcmd_acf_pfid_purge)
-        # TODO: Find out if we can delete mod(s) and update everything WITHOUT refreshing. 
-        # Alternatively find a way to avoid 'missing mods' warning.
-        # self.refresh_signal.emit()
+        EventBus().do_save_active_mods_list_excluding.emit(deleted_mods_uuids)
+        self.refresh_signal.emit()
 
     def delete_mods_keep_dds(
         self,
@@ -2086,6 +2087,7 @@ class ModListWidget(QListWidget):
         :param selected_items: List of items to delete.
         :param steam_acf_pfid_purge: Set that tracks SteamCMD pfids to purge from acf data
         """
+        deleted_mods_uuids: set[str] = set()
         for source_item in selected_items:
             if type(source_item) is CustomListWidgetItem:
                 item_data = source_item.data(Qt.ItemDataRole.UserRole)
@@ -2100,6 +2102,7 @@ class ModListWidget(QListWidget):
                 ].startswith("ludeon.rimworld"):
                     data = source_item.data(Qt.ItemDataRole.UserRole)
                     self.uuids.remove(data["uuid"])
+                    deleted_mods_uuids.add(data["uuid"])
                     delete_files_except_extension(
                         directory=mod_metadata["path"],
                         extension=".dds",
@@ -2110,9 +2113,8 @@ class ModListWidget(QListWidget):
                         )
         # Purge any deleted SteamCMD mods from acf metadata
         self.purge_steamcmd_mods_from_acf(steamcmd_acf_pfid_purge)
-        # TODO: Find out if we can delete mod(s) and update everything WITHOUT refreshing.
-        # Alternatively find a way to avoid 'missing mods' warning.
-        # self.refresh_signal.emit()
+        EventBus().do_save_active_mods_list_excluding.emit(deleted_mods_uuids)
+        self.refresh_signal.emit()
 
     def delete_dds_textures_only(
         self,

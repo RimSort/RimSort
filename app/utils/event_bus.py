@@ -93,6 +93,7 @@ class EventBus(QObject):
     do_restore_active_mods_list = Signal()
     do_sort_active_mods_list = Signal()
     do_save_active_mods_list = Signal()
+    do_save_active_mods_list_excluding = Signal(set)  # Able to exclude mods from being saved
     do_run_game = Signal()
 
     refresh_started = Signal()
