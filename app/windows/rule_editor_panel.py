@@ -622,7 +622,21 @@ class RuleEditor(QWidget):
             QStandardItem(rule_type),
             QStandardItem(comment),
         ]
+        # Show tooltip for the items
         items[0].setToolTip(name)
+        if rule_source == "About.xml":
+            tooltip_comment = "Rules from mods's About.xml cannot be modified. Only 'Community Rules' and 'User Rules' are allowed."
+            items[1].setToolTip(tooltip_comment)
+            items[2].setToolTip(tooltip_comment)
+            items[3].setToolTip(tooltip_comment)
+            items[4].setToolTip(tooltip_comment)
+        else:
+            tooltip_comment = "Rules can be Modified"
+            items[1].setToolTip(tooltip_comment)
+            items[2].setToolTip(tooltip_comment)
+            items[3].setToolTip(tooltip_comment)
+            items[4].setToolTip(tooltip_comment)
+
         # Set the items as a new row in the model
         self.editor_model.appendRow(items)
 
