@@ -17,6 +17,8 @@ from PySide6.QtWidgets import (
 )
 
 from app.utils.constants import RIMWORLD_DLC_METADATA
+from app.utils.generic import check_if_steam_running
+from app.views.dialogue import show_warning
 
 
 class MissingModsPrompt(QWidget):
@@ -213,6 +215,14 @@ class MissingModsPrompt(QWidget):
         if mode == "steamcmd":
             self.steamcmd_downloader_signal.emit(publishedfileids)
         elif mode == "steamworks":
+            # Check if steam is running
+            if not check_if_steam_running():
+                logger.warning("Steam is not running. Cannot subscribe to mods using Steam.")
+                show_warning(
+                    title="Steam not running",
+                    text="Unable to subscribe to Steam mods. Ensure Steam is running and try again.",
+                )
+                return
             self.steamworks_subscription_signal.emit(
                 [
                     "subscribe",
