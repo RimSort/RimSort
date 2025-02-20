@@ -63,17 +63,14 @@ class EditableDelegate(QItemDelegate):
                 editor = super().createEditor(parent, option, index)
                 return editor
 
-            # Provide more informative error message
-            error_msg = (
-                f"Editor creation failed! Column 3 value '{column3_value}' "
-                f"is not 'Community Rules' or 'User Rules'"
-            )
-            logger.warning(error_msg)
-            return QLineEdit(parent, readOnly=True)  # Return a basic editor as fallback
+            # Provide more informative error message if editor creation fails
+            if column3_value not in ["About.xml"]:
+                error_msg = (
+                    f"Editor creation failed! for Column 3 value '{column3_value}' "
+                )
+                logger.error(error_msg)
 
         # Handle case where wrong column is being edited
-        error_msg = f"Editor creation failed! Column {index.column()} is not editable"
-        logger.warning(error_msg)
         return QLineEdit(parent, readOnly=True)  # Return a basic editor as fallback
 
     def setEditorData(
