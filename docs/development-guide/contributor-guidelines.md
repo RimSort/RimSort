@@ -3,6 +3,7 @@ title: Contributor Guidelines
 nav_order: 2
 layout: default
 parent: Development Guide
+permalink: development-guide/contributor-guidelines
 ---
 
 
