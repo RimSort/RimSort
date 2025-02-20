@@ -3,7 +3,7 @@ title: SteamCMD 与创意工坊浏览器
 nav_order: 5
 parent: 用户指南
 permalink: user-guide/steamcmd-browser
-lang: zh
+lang: zh-cn
 ---
 # SteamCMD 与创意工坊浏览器
 {: .no_toc}

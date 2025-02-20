@@ -3,7 +3,7 @@ title: 下载和安装
 parent: 用户指南
 nav_order: 1
 permalink: user-guide/downloading-and-installing
-lang: zh
+lang: zh-cn
 ---
 
 # 下载和安装

@@ -3,7 +3,7 @@ title: 数据库
 parent: 用户指南
 nav_order: 7
 permalink: user-guide/databases
-lang: zh
+lang: zh-cn
 ---
 
 # 数据库

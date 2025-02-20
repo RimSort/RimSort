@@ -4,7 +4,7 @@ nav_order: 3
 layout: default
 parent: 开发指南
 permalink: development-guide/documentation-guidelines
-lang: zh
+lang: zh-cn
 ---
 
 # 文档指南

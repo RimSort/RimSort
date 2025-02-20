@@ -4,7 +4,7 @@ nav_order: 1
 layout: default
 parent: 开发指南
 permalink: development-guide/development-setup
-lang: zh
+lang: zh-cn
 ---
 # 开发配置和构建
 {: .no_toc }

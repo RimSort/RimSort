@@ -2,7 +2,7 @@
 title: 用户指南
 nav_order: 3
 permalink: user-guide/
-lang: zh
+lang: zh-cn
 ---
 
 # 用户指南

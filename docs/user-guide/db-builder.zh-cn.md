@@ -4,7 +4,7 @@ nav_order: 3
 layout: default
 parent: 用户指南
 permalink: user-guide/db-builder
-lang: zh
+lang: zh-cn
 ---
 # Steam 数据库构建器
 {: .no_toc}

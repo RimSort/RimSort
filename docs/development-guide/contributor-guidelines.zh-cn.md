@@ -4,7 +4,7 @@ nav_order: 2
 layout: default
 parent: 开发指南
 permalink: development-guide/contributor-guidelines
-lang: zh
+lang: zh-cn
 ---
 
 

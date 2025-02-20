@@ -3,7 +3,7 @@ title: 规则编辑器
 nav_order: 4
 parent: 用户指南
 permalink: user-guide/rule-editor
-lang: zh
+lang: zh-cn
 ---
 
 # 规则编辑器

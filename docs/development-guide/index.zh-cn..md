@@ -3,7 +3,7 @@ title: 开发指南
 
 nav_order: 4
 permalink: development-guide/
-lang: zh
+lang: zh-cn
 ---
 
 # 开发指南

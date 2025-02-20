@@ -3,7 +3,7 @@ description: A collection of guides, tutorials, and documentation for RimSort, a
 theme: just-the-docs
 repository: RimSort/RimSort
 
-languages: ["en", "zh"]
+languages: ["en", "zh-cn"]
 default_lang: "en"
 exclude_from_localization: ["javascript", "images", "css", "public", "sitemap"]
 parallel_localization: true

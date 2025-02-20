@@ -3,7 +3,7 @@ title: 排序算法
 nav_order: 6
 parent: 用户指南
 permalink: user-guide/sorting-algorithms
-lang: zh
+lang: zh-cn
 ---
 # Sorting Algorithms
 RimSort 默认提供两种排序算法来对激活的 Mod 列表排序。自 `v1.0.10` 起，默认使用 [拓扑排序](#拓扑排序)。

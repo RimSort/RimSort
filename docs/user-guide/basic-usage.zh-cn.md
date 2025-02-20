@@ -4,7 +4,7 @@ nav_order: 2
 layout: default
 parent: 用户指南
 permalink: user-guide/basic-usage
-lang: zh
+lang: zh-cn
 ---
 # 基本用法
 {: .no_toc}

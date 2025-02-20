@@ -4,7 +4,7 @@ nav_order: 2
 description: "常见问题"
 layout: default
 permalink: faq/
-lang: zh
+lang: zh-cn
 ---
 # 常见问题
 {: .no_toc }

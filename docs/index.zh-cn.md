@@ -4,7 +4,7 @@ layout: home
 nav_order: 1
 description: "RimSort 是一款免费且开源的多平台 RimWorld 模组管理器。"
 permalink: /
-lang: zh
+lang: zh-cn
 ---
 
 {: .fs-9 }
