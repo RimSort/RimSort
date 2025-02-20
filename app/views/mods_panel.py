@@ -895,7 +895,7 @@ class ModListWidget(QListWidget):
                             # Convert steam mods -> local + Unsubscribe
                             make_local_copy_of_workshop_mod_action = QAction()
                             make_local_copy_of_workshop_mod_action.setText(
-                                "Convert Steam mod to local + Unsubscribe"
+                                "Make local copy"
                             )
                     # SteamDB blacklist options
                     if (
@@ -974,7 +974,7 @@ class ModListWidget(QListWidget):
                                 if not convert_local_steamcmd_action:
                                     convert_local_steamcmd_action = QAction()
                                     convert_local_steamcmd_action.setText(
-                                        "Convert local mod(s) to SteamCMD"
+                                        "Convert local mods to SteamCMD"
                                     )
                             if mod_metadata.get("steamcmd"):
                                 steamcmd_mod_paths.append(mod_folder_path)
@@ -985,13 +985,13 @@ class ModListWidget(QListWidget):
                                 if not convert_steamcmd_local_action:
                                     convert_steamcmd_local_action = QAction()
                                     convert_steamcmd_local_action.setText(
-                                        "Convert SteamCMD mod(s) to local"
+                                        "Convert SteamCMD mods to local"
                                     )
                                 # Re-download steamcmd mods
                                 if not re_steamcmd_action:
                                     re_steamcmd_action = QAction()
                                     re_steamcmd_action.setText(
-                                        "Re-download mod(s) with SteamCMD"
+                                        "Re-download mods with SteamCMD"
                                     )
                             # Update git mods if local mod with git repo, but not steamcmd
                             if not mod_metadata.get("steamcmd") and mod_metadata.get(
@@ -1019,7 +1019,7 @@ class ModListWidget(QListWidget):
                             if not convert_workshop_local_action:
                                 convert_workshop_local_action = QAction()
                                 convert_workshop_local_action.setText(
-                                    "Convert Steam mod(s) to local"
+                                    "Convert Steam mods to local"
                                 )
                             # Only enable subscription actions if user has enabled Steam client integration
                             if self.settings_controller.settings.instances[
@@ -1029,31 +1029,31 @@ class ModListWidget(QListWidget):
                                 if not re_steam_action:
                                     re_steam_action = QAction()
                                     re_steam_action.setText(
-                                        "Re-subscribe mod(s) with Steam"
+                                        "Re-subscribe mods with Steam"
                                     )
                                 # Unsubscribe steam mods
                                 if not unsubscribe_mod_steam_action:
                                     unsubscribe_mod_steam_action = QAction()
                                     unsubscribe_mod_steam_action.setText(
-                                        "Unsubscribe mod(s) with Steam"
+                                        "Unsubscribe mods with Steam"
                                     )
-                                # Convert steam mods -> local + Unsubscribe
+                                # Make local copy of Steam mod(s)
                                 if not make_local_copy_of_workshop_mod_action:
                                     make_local_copy_of_workshop_mod_action = QAction()
                                     make_local_copy_of_workshop_mod_action.setText(
-                                        "Convert Steam mod(s) to local + Unsubscribe"
+                                        "Make local copies"
                                     )
                         # No SteamDB blacklist options when multiple selected
                         # Prohibit deletion of game files
                         if not delete_mod_action:
                             delete_mod_action = QAction()
                             # Delete mod action text
-                            delete_mod_action.setText("Delete mod(s)")
+                            delete_mod_action.setText("Delete mods")
                         if not delete_mod_keep_dds_action:
                             delete_mod_keep_dds_action = QAction()
                             # Delete mod action text
                             delete_mod_keep_dds_action.setText(
-                                "Delete mod(s) (keep .dds)"
+                                "Delete mods (keep .dds)"
                             )
                         if not delete_mod_dds_only_action:
                             delete_mod_dds_only_action = QAction()
