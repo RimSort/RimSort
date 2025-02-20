@@ -2069,7 +2069,7 @@ class ModListWidget(QListWidget):
         self.purge_steamcmd_mods_from_acf(steamcmd_acf_pfid_purge)
         # TODO: Find out if we can delete mod(s) and update everything WITHOUT refreshing. 
         # Alternatively find a way to avoid 'missing mods' warning.
-        self.refresh_signal.emit()
+        # self.refresh_signal.emit()
 
     def delete_mods_keep_dds(
         self,
@@ -2112,7 +2112,7 @@ class ModListWidget(QListWidget):
         self.purge_steamcmd_mods_from_acf(steamcmd_acf_pfid_purge)
         # TODO: Find out if we can delete mod(s) and update everything WITHOUT refreshing.
         # Alternatively find a way to avoid 'missing mods' warning.
-        self.refresh_signal.emit()
+        # self.refresh_signal.emit()
 
     def delete_dds_textures_only(
         self,
