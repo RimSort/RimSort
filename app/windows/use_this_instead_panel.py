@@ -42,7 +42,7 @@ class UseThisInsteadPanel(BaseModsPanel):
             minimum_size=QSize(1100, 600),
         )
 
-        def __subscribe_cb(self):
+        def __subscribe_cb(_: UseThisInsteadPanel) -> None:
             dialogue.show_information(
                 "Use This Instead",
                 "Succesfully subscribed to replacement mods",
@@ -68,7 +68,7 @@ class UseThisInsteadPanel(BaseModsPanel):
         refresh_table_action = QAction("Refresh Table", self)
         refresh_table_action.triggered.connect(self._populate_from_metadata)
 
-        def __unsubscribe_cb(self):
+        def __unsubscribe_cb(_: UseThisInsteadPanel) -> None:
             dialogue.show_information(
                 "Use This Instead",
                 "Succesfully unsubscribed to original mods",
