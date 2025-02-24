@@ -977,9 +977,9 @@ class ModListWidget(QListWidget):
                         open_folder_action.setText("Open folder(s)")
                         # Change mod color action
                         change_mod_color_action = QAction()
-                        change_mod_color_action.setText("Change mod color(s)")
+                        change_mod_color_action.setText("Change mod colors")
                         reset_mod_color_action = QAction()
-                        reset_mod_color_action.setText("Reset mod color(s)")
+                        reset_mod_color_action.setText("Reset mod colors")
                         # If we have a "url" or "steam_url"
                         if mod_metadata.get("url") or mod_metadata.get("steam_url"):
                             open_url_browser_action = QAction()
