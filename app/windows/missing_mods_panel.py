@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Any, Dict
+from typing import Any
 
 from loguru import logger
 from PySide6.QtGui import QStandardItem
@@ -20,7 +20,6 @@ class MissingModsPrompt(BaseModsPanel):
     def __init__(
         self,
         packageids: list[str],
-        steam_workshop_metadata: Dict[str, Any],
     ):
         logger.debug("Initializing MissingModsPrompt")
 
@@ -44,7 +43,6 @@ class MissingModsPrompt(BaseModsPanel):
         self.data_by_variants: dict[str, Any] = {}
         self.DEPENDENCY_TAG = "_-_DEPENDENCY_-_"
         self.packageids = packageids
-        self.steam_workshop_metadata = steam_workshop_metadata
 
         self.editor_download_steamcmd_button = QPushButton("Download with SteamCMD")
         self.editor_download_steamcmd_button.clicked.connect(
@@ -89,8 +87,10 @@ class MissingModsPrompt(BaseModsPanel):
                 combo_box.addItem(publishedfileid)
                 return  # Return here to exit function
         # If we're still here, we need to actually create a new row
+        name_item = QStandardItem(name)
+        name_item.setToolTip(name)
         items = [
-            QStandardItem(name),
+            name_item,
             QStandardItem(packageid),
             QStandardItem(str(game_versions)),
             QStandardItem(mod_variants if publishedfileid != "" else "0"),
@@ -109,13 +109,11 @@ class MissingModsPrompt(BaseModsPanel):
 
     def _populate_from_metadata(self) -> None:
         # Build a dict of missing mod variant(s)
-        if (
-            self.steam_workshop_metadata
-            and len(self.steam_workshop_metadata.keys()) > 0
-        ):
+        steam_metadata = self.metadata_manager.external_steam_metadata
+        if steam_metadata and len(steam_metadata.keys()) > 0:
             # Generate a list of all missing mods + any missing mod dependencies listed
             # in the user-configured Steam metadata.
-            for publishedfileid, metadata in self.steam_workshop_metadata.items():
+            for publishedfileid, metadata in steam_metadata.items():
                 name = metadata.get("steamName", metadata.get("name", "Not found"))
                 packageid = metadata.get("packageId", "None").lower()
                 game_versions = metadata.get("gameVersions", ["None listed"])

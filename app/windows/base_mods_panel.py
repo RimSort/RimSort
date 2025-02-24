@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Callable, TypeVar
+from typing import Callable, Self, TypeVar
 
 from PySide6.QtCore import QEvent, QObject, QSize, Qt
 from PySide6.QtGui import QStandardItem, QStandardItemModel
@@ -18,10 +18,20 @@ from PySide6.QtWidgets import (
 )
 
 from app.utils.event_bus import EventBus
+from app.utils.metadata import MetadataManager
 
 # By default, we assume Stretch for all columns.
 # Tuples should be used if this should be overridden
 HeaderColumn = str | tuple[str, QHeaderView.ResizeMode]
+
+
+# class BaseModPanelCheckbox(QStandardItem):
+#     def __init__(self, uuid: str, default_checkbox_state: bool = False) -> None:
+#         super().__init__()
+#         self.uuid = uuid
+#         self.checkbox = QCheckBox()
+#         self.checkbox.setObjectName("selectCheckbox")
+#         self.checkbox.setChecked(default_checkbox_state)
 
 
 class BaseModsPanel(QWidget):
@@ -39,6 +49,10 @@ class BaseModsPanel(QWidget):
         minimum_size: QSize = QSize(800, 600),
     ):
         super().__init__()
+        # Utility and Setup
+        self.metadata_manager = MetadataManager.instance()
+
+        # Start of UI
         self.installEventFilter(self)
         self.setObjectName(object_name)
         self.title = QLabel(title_text)
@@ -145,7 +159,9 @@ class BaseModsPanel(QWidget):
         return super().eventFilter(watched, event)
 
     def _add_row(
-        self, items: list[QStandardItem], defaultCheckboxState: bool = False
+        self,
+        items: list[QStandardItem],
+        defaultCheckboxState: bool = False,
     ) -> None:
         items = [
             QStandardItem(),
@@ -169,8 +185,15 @@ class BaseModsPanel(QWidget):
                 assert isinstance(checkbox, QCheckBox)
                 checkbox.setChecked(value)
 
+    def _row_count(self) -> int:
+        return self.editor_model.rowCount()
+
     def _update_mods_from_table(
-        self, pfid_column: int, mode: str | int, steamworks_cmd: str = "resubscribe"
+        self,
+        pfid_column: int,
+        mode: str | int,
+        steamworks_cmd: str = "resubscribe",
+        completed: Callable[[Self], None] = lambda self: (self.close(), None)[1],
     ) -> None:
         steamcmd_publishedfileids = []
         steam_publishedfileids = []
@@ -201,13 +224,16 @@ class BaseModsPanel(QWidget):
                     [eval(str_pfid) for str_pfid in steam_publishedfileids],
                 ]
             )
-        self.close()
+        completed(self)
 
-    def _update_all(
-        self, pfid_column: int, steamworks_cmd: str = "resubscribe"
+    def _steamworks_cmd_for_all(
+        self,
+        pfid_column: int,
+        steamworks_cmd: str = "resubscribe",
+        completed: Callable[[Self], None] = lambda self: (self.close(), None)[1],
     ) -> None:
         self._set_all_checkbox_rows(True)
-        self._update_mods_from_table(pfid_column, "Steam", steamworks_cmd)
+        self._update_mods_from_table(pfid_column, "Steam", steamworks_cmd, completed)
 
     def clear_layout(self, layout: QLayout) -> None:
         while layout.count():

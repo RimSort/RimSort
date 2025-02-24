@@ -1,6 +1,5 @@
 from functools import partial
 from time import localtime, strftime
-from typing import Any, Dict
 
 from loguru import logger
 from PySide6.QtGui import QStandardItem
@@ -16,7 +15,7 @@ class ModUpdaterPrompt(BaseModsPanel):
     A generic panel used to prompt a user to update eligible Workshop mods
     """
 
-    def __init__(self, internal_mod_metadata: Dict[str, Any]):
+    def __init__(self) -> None:
         logger.debug("Initializing ModUpdaterPrompt")
 
         super().__init__(
@@ -34,9 +33,6 @@ class ModUpdaterPrompt(BaseModsPanel):
             ],
         )
 
-        self.updates_found = False
-        self.internal_mod_metadata = internal_mod_metadata
-
         # EDITOR WIDGETS
 
         self.editor_update_mods_button = QPushButton("Update mods")
@@ -44,18 +40,18 @@ class ModUpdaterPrompt(BaseModsPanel):
             partial(self._update_mods_from_table, 2, 3)
         )
         self.editor_update_all_button = QPushButton("Update all")
-        self.editor_update_all_button.clicked.connect(partial(self._update_all))
+        self.editor_update_all_button.clicked.connect(partial(self._update_all_mods))
 
         self.editor_main_actions_layout.addWidget(self.editor_update_mods_button)
         self.editor_main_actions_layout.addWidget(self.editor_update_all_button)
 
-    def _update_all(self) -> None:
+    def _update_all_mods(self) -> None:
         self._set_all_checkbox_rows(True)
         self._update_mods_from_table(2, 3)
 
     def _populate_from_metadata(self) -> None:
         # Check our metadata for available updates, append row if found by data source
-        for metadata in self.internal_mod_metadata.values():
+        for metadata in self.metadata_manager.internal_local_metadata.values():
             if (
                 (metadata.get("steamcmd") or metadata.get("data_source") == "workshop")
                 and metadata.get("internal_time_touched")
@@ -63,8 +59,6 @@ class ModUpdaterPrompt(BaseModsPanel):
                 and metadata["external_time_updated"]
                 > metadata["internal_time_touched"]
             ):
-                if not self.updates_found:
-                    self.updates_found = True
                 # Retrieve values from metadata
                 name = metadata.get("name")
                 publishedfileid = metadata.get("publishedfileid")
@@ -77,8 +71,10 @@ class ModUpdaterPrompt(BaseModsPanel):
                     "%Y-%m-%d %H:%M:%S",
                     localtime(metadata["external_time_updated"]),
                 )
+                name_item = QStandardItem(name)
+                name_item.setToolTip(name)
                 items = [
-                    QStandardItem(name),
+                    name_item,
                     QStandardItem(publishedfileid),
                     QStandardItem(mod_source),
                     QStandardItem(internal_time_touched),

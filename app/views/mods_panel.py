@@ -1,11 +1,9 @@
 import json
 import os
-import sys
 from enum import Enum
-from errno import ENOTEMPTY
 from functools import partial
 from pathlib import Path
-from shutil import copy2, copytree, rmtree
+from shutil import copy2, copytree
 from traceback import format_exc
 from typing import cast
 
@@ -50,14 +48,13 @@ from app.utils.event_bus import EventBus
 from app.utils.generic import (
     copy_to_clipboard_safely,
     delete_files_except_extension,
-    delete_files_only_extension,
     flatten_to_list,
-    handle_remove_read_only,
     open_url_browser,
     platform_specific_open,
     sanitize_filename,
 )
-from app.utils.metadata import MetadataManager
+from app.utils.metadata import MetadataManager, ModMetadata
+from app.views.deletion_menu import ModDeletionMenu
 from app.views.dialogue import (
     show_dialogue_conditional,
     show_dialogue_input,
@@ -637,7 +634,12 @@ class ModListWidget(QListWidget):
         # into widgets. Used for an optimization strategy for `handle_rows_inserted`
         self.uuids: list[str] = []
         self.ignore_warning_list: list[str] = []
-        logger.debug("Finished ModListWidget initialization")
+
+        self.deletion_sub_menu = ModDeletionMenu(
+            self._get_selected_metadata,
+            self.uuids,
+        )  # TDOD: should we enable items conditionally? For now use all
+        logger.debug("Finished ModListW`idget initialization")
 
     def item(self, row: int) -> CustomListWidgetItem:
         """
@@ -687,6 +689,17 @@ class ModListWidget(QListWidget):
         # Only emit "drop" signal if a mod was dragged and dropped within the same modlist
         if source_widget == self:
             self.list_update_signal.emit("drop")
+
+    def _get_selected_metadata(self) -> list[ModMetadata]:
+        selected_items = self.selectedItems()
+        metadata: list[ModMetadata] = []
+        for source_item in selected_items:
+            if type(source_item) is CustomListWidgetItem:
+                item_data = source_item.data(Qt.ItemDataRole.UserRole)
+                metadata.append(
+                    self.metadata_manager.internal_local_metadata[item_data["uuid"]]
+                )
+        return metadata
 
     def eventFilter(self, object: QObject, event: QEvent) -> bool:
         """
@@ -769,12 +782,6 @@ class ModListWidget(QListWidget):
             re_steam_action = None
             # Unsubscribe + delete mod
             unsubscribe_mod_steam_action = None
-            # Delete mod
-            delete_mod_action = None
-            # Delete mod (keep .dds)
-            delete_mod_keep_dds_action = None
-            # Delete optimized textures (.dds files only)
-            delete_mod_dds_only_action = None
 
             # Get all selected CustomListWidgetItems
             selected_items = self.selectedItems()
@@ -907,15 +914,6 @@ class ModListWidget(QListWidget):
                     # Ignore error action
                     toggle_warning_action = QAction()
                     toggle_warning_action.setText("Toggle warning")
-                    # Mod deletion actions
-                    delete_mod_action = QAction()
-                    delete_mod_action.setText("Delete mod")
-                    delete_mod_keep_dds_action = QAction()
-                    delete_mod_keep_dds_action.setText("Delete mod (keep .dds)")
-                    delete_mod_dds_only_action = QAction()
-                    delete_mod_dds_only_action.setText(
-                        "Delete optimized textures (.dds files only)"
-                    )
             # Multiple items selected
             elif len(selected_items) > 1:  # Multiple items selected
                 for source_item in selected_items:
@@ -1017,23 +1015,6 @@ class ModListWidget(QListWidget):
                                         "Unsubscribe mod(s) with Steam"
                                     )
                         # No SteamDB blacklist options when multiple selected
-                        # Prohibit deletion of game files
-                        if not delete_mod_action:
-                            delete_mod_action = QAction()
-                            # Delete mod action text
-                            delete_mod_action.setText("Delete mod(s)")
-                        if not delete_mod_keep_dds_action:
-                            delete_mod_keep_dds_action = QAction()
-                            # Delete mod action text
-                            delete_mod_keep_dds_action.setText(
-                                "Delete mod(s) (keep .dds)"
-                            )
-                        if not delete_mod_dds_only_action:
-                            delete_mod_dds_only_action = QAction()
-                            # Delete mod action text
-                            delete_mod_dds_only_action.setText(
-                                "Delete optimized textures (.dds files only)"
-                            )
             # Put together our contextMenu
             if open_folder_action:
                 context_menu.addAction(open_folder_action)
@@ -1043,19 +1024,8 @@ class ModListWidget(QListWidget):
                 context_menu.addAction(open_mod_steam_action)
             if toggle_warning_action:
                 context_menu.addAction(toggle_warning_action)
-            if (
-                delete_mod_action
-                or delete_mod_keep_dds_action
-                or delete_mod_dds_only_action
-            ):
-                deletion_options_menu = QMenu(title="Deletion options")
-                if delete_mod_action:
-                    deletion_options_menu.addAction(delete_mod_action)
-                if delete_mod_keep_dds_action:
-                    deletion_options_menu.addAction(delete_mod_keep_dds_action)
-                if delete_mod_dds_only_action:
-                    deletion_options_menu.addAction(delete_mod_dds_only_action)
-                context_menu.addMenu(deletion_options_menu)
+
+            context_menu.addMenu(self.deletion_sub_menu)
             context_menu.addSeparator()
             if (
                 copy_packageid_to_clipboard_action
@@ -1396,138 +1366,6 @@ class ModListWidget(QListWidget):
                     if answer == "&Yes":
                         self.steamdb_blacklist_signal.emit(
                             [steamdb_remove_blacklist, False]
-                        )
-                    return True
-                elif action == delete_mod_action:  # ACTION: Delete mods action
-                    answer = show_dialogue_conditional(
-                        title="Are you sure?",
-                        text=f"You have selected {len(selected_items)} mods for deletion.",
-                        information="\nThis operation delete a mod's directory from the filesystem."
-                        + "\nDo you want to proceed?",
-                    )
-                    if answer == "&Yes":
-                        for source_item in selected_items:
-                            if type(source_item) is CustomListWidgetItem:
-                                item_data = source_item.data(Qt.ItemDataRole.UserRole)
-                                uuid = item_data["uuid"]
-                                mod_metadata = (
-                                    self.metadata_manager.internal_local_metadata[uuid]
-                                )
-                                if mod_metadata[
-                                    "data_source"  # Disallow Official Expansions
-                                ] != "expansion" or not mod_metadata[
-                                    "packageid"
-                                ].startswith("ludeon.rimworld"):
-                                    try:
-                                        rmtree(
-                                            mod_metadata["path"],
-                                            ignore_errors=False,
-                                            onerror=handle_remove_read_only,
-                                        )
-                                        if mod_metadata.get("steamcmd"):
-                                            steamcmd_acf_pfid_purge.add(
-                                                mod_metadata["publishedfileid"]
-                                            )
-                                    except FileNotFoundError:
-                                        logger.debug(
-                                            f"Unable to delete mod. Path does not exist: {mod_metadata['path']}"
-                                        )
-                                        pass
-                                    except OSError as e:
-                                        if sys.platform == "win32":
-                                            error_code = e.winerror
-                                        else:
-                                            error_code = e.errno
-                                        if e.errno == ENOTEMPTY:
-                                            warning_text = "Mod directory was not empty. Please close all programs accessing files or subfolders in the directory (including your file manager) and try again."
-                                        else:
-                                            warning_text = "An OSError occurred while deleting mod."
-
-                                        logger.warning(
-                                            f"Unable to delete mod located at the path: {mod_metadata['path']}"
-                                        )
-                                        show_warning(
-                                            title="Unable to delete mod",
-                                            text=warning_text,
-                                            information=f"{e.strerror} occurred at {e.filename} with error code {error_code}.",
-                                        )
-                                        continue
-                    # Purge any deleted SteamCMD mods from acf metadata
-                    if steamcmd_acf_pfid_purge:
-                        self.metadata_manager.steamcmd_purge_mods(
-                            publishedfileids=steamcmd_acf_pfid_purge
-                        )
-                    return True
-                elif action == delete_mod_keep_dds_action:  # ACTION: Delete mods action
-                    answer = show_dialogue_conditional(
-                        title="Are you sure?",
-                        text=f"You have selected {len(selected_items)} mods for deletion.",
-                        information="\nThis operation will recursively delete all mod files, except for .dds textures found."
-                        + "\nDo you want to proceed?",
-                    )
-                    if answer == "&Yes":
-                        for source_item in selected_items:
-                            if type(source_item) is CustomListWidgetItem:
-                                item_data = source_item.data(Qt.ItemDataRole.UserRole)
-                                uuid = item_data["uuid"]
-                                mod_metadata = (
-                                    self.metadata_manager.internal_local_metadata[uuid]
-                                )
-                                if mod_metadata[
-                                    "data_source"  # Disallow Official Expansions
-                                ] != "expansion" or not mod_metadata[
-                                    "packageid"
-                                ].startswith("ludeon.rimworld"):
-                                    data = source_item.data(Qt.ItemDataRole.UserRole)
-                                    self.uuids.remove(data["uuid"])
-                                    delete_files_except_extension(
-                                        directory=mod_metadata["path"],
-                                        extension=".dds",
-                                    )
-                                    if mod_metadata.get("steamcmd"):
-                                        steamcmd_acf_pfid_purge.add(
-                                            mod_metadata["publishedfileid"]
-                                        )
-                    # Purge any deleted SteamCMD mods from acf metadata
-                    if steamcmd_acf_pfid_purge:
-                        self.metadata_manager.steamcmd_purge_mods(
-                            publishedfileids=steamcmd_acf_pfid_purge
-                        )
-                    return True
-                elif action == delete_mod_dds_only_action:  # ACTION: Delete mods action
-                    answer = show_dialogue_conditional(
-                        title="Are you sure?",
-                        text=f"You have selected {len(selected_items)} mods to Delete optimized textures (.dds files only)",
-                        information="\nThis operation will only delete optimized textures (.dds files only) from mod files."
-                        + "\nDo you want to proceed?",
-                    )
-                    if answer == "&Yes":
-                        for source_item in selected_items:
-                            if type(source_item) is CustomListWidgetItem:
-                                item_data = source_item.data(Qt.ItemDataRole.UserRole)
-                                uuid = item_data["uuid"]
-                                mod_metadata = (
-                                    self.metadata_manager.internal_local_metadata[uuid]
-                                )
-                                if mod_metadata[
-                                    "data_source"  # Disallow Official Expansions
-                                ] != "expansion" or not mod_metadata[
-                                    "packageid"
-                                ].startswith("ludeon.rimworld"):
-                                    data = source_item.data(Qt.ItemDataRole.UserRole)
-                                    self.uuids.remove(data["uuid"])
-                                    delete_files_only_extension(
-                                        directory=mod_metadata["path"],
-                                        extension=".dds",
-                                    )
-                                    if mod_metadata.get("steamcmd"):
-                                        steamcmd_acf_pfid_purge.add(
-                                            mod_metadata["publishedfileid"]
-                                        )
-                    # Purge any deleted SteamCMD mods from acf metadata
-                    if steamcmd_acf_pfid_purge:
-                        self.metadata_manager.steamcmd_purge_mods(
-                            publishedfileids=steamcmd_acf_pfid_purge
                         )
                     return True
                 # Execute action for each selected mod

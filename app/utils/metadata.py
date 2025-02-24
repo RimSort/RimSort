@@ -45,6 +45,11 @@ class ModReplacement:
         self.pfid = pfid
 
 
+# TODO: Someday, it is probably worth typing out the keys
+# For now, I'm creating this alias to make it clear in new code what this represents.
+ModMetadata = dict[str, Any]
+
+
 class MetadataManager(QObject):
     _instance: "None | MetadataManager" = None
     mod_created_signal = Signal(str)

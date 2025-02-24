@@ -12,9 +12,10 @@ from app.utils.generic import (
     delete_files_except_extension,
     delete_files_only_extension,
 )
-from app.utils.metadata import MetadataManager
+from app.utils.metadata import MetadataManager, ModMetadata
 from app.views.dialogue import (
     show_dialogue_conditional,
+    show_information,
     show_warning,
 )
 
@@ -22,40 +23,63 @@ from app.views.dialogue import (
 class ModDeletionMenu(QMenu):
     def __init__(
         self,
-        uuids: list[str],
-        get_selected_uuids: Callable[[], list[str]],
+        get_selected_mod_metadata: Callable[[], list[ModMetadata]],
+        remove_from_uuids: list[str] | None,
+        menu_title: str = "Deletion options",
         delete_mod: bool = True,
         delete_both: bool = True,
         delete_dds: bool = True,
     ):
-        super().__init__(title="Deletion options")
-        self.uuids = uuids
-        self.get_selected_uuids = get_selected_uuids
+        super().__init__(title=menu_title)
+        self.remove_from_uuids = remove_from_uuids
+        self.get_selected_mod_metadata = get_selected_mod_metadata
         self.metadata_manager = MetadataManager.instance()
+        self.delete_actions: list[tuple[QAction, Callable[[], None]]] = []
         if delete_mod:
-            dma = QAction("Delete mod")
-            dma.triggered.connect(self.delete_mod_keep_dds)
-            self.addAction(dma)
-        if delete_both:
-            dba = QAction("Delete mod (keep .dds)")
-            dba.triggered.connect(self.delete_both)
-            self.addAction(dba)
-        if delete_dds:
-            dda = QAction("Delete optimized textures (.dds files only)")
-            dda.triggered.connect(self.delete_dds)
-            self.addAction(dda)
+            self.delete_actions.append((QAction("Delete mod"), self.delete_both))
 
-    def _delete_mods(self, fn: Callable, uuids: list[str]):
+        if delete_both:
+            self.delete_actions.append(
+                (QAction("Delete mod (keep .dds)"), self.delete_mod_keep_dds)
+            )
+        if delete_dds:
+            self.delete_actions.append(
+                (
+                    QAction("Delete optimized textures (.dds files only)"),
+                    self.delete_dds,
+                )
+            )
+
+        self.aboutToShow.connect(self._refresh_actions)
+        self._refresh_actions()
+
+    def _refresh_actions(self) -> None:
+        self.clear()
+        for q_action, fn in self.delete_actions:
+            q_action.triggered.connect(fn)
+            self.addAction(q_action)
+
+    def _iterate_mods(
+        self, fn: Callable[[ModMetadata], bool], mods: list[ModMetadata]
+    ) -> None:
         steamcmd_acf_pfid_purge: set[str] = set()
-        for uuid in uuids:
-            mod_metadata = self.metadata_manager.internal_local_metadata[uuid]
+
+        count = 0
+        for mod_metadata in mods:
             if mod_metadata[
                 "data_source"  # Disallow Official Expansions
             ] != "expansion" or not mod_metadata["packageid"].startswith(
                 "ludeon.rimworld"
             ):
                 if fn(mod_metadata):
-                    self.uuids.remove(uuid)
+                    count = count + 1
+                    if (
+                        self.remove_from_uuids is not None
+                        and "uuid" in mod_metadata
+                        and mod_metadata["uuid"] in self.remove_from_uuids
+                    ):
+                        self.remove_from_uuids.remove(mod_metadata["uuid"])
+
                     if mod_metadata.get("steamcmd"):
                         steamcmd_acf_pfid_purge.add(mod_metadata["publishedfileid"])
 
@@ -65,7 +89,11 @@ class ModDeletionMenu(QMenu):
                 publishedfileids=steamcmd_acf_pfid_purge
             )
 
-    def delete_both(self):
+        show_information(
+            title="RimSort", text=f"Successfully deleted {count} seleted mods."
+        )
+
+    def delete_both(self) -> None:
         def _inner_delete_both(mod_metadata: dict[str, Any]) -> bool:
             try:
                 rmtree(
@@ -99,7 +127,7 @@ class ModDeletionMenu(QMenu):
                 )
             return False
 
-        uuids = self.get_selected_uuids()
+        uuids = self.get_selected_mod_metadata()
         answer = show_dialogue_conditional(
             title="Are you sure?",
             text=f"You have selected {len(uuids)} mods for deletion.",
@@ -107,42 +135,40 @@ class ModDeletionMenu(QMenu):
             + "\nDo you want to proceed?",
         )
         if answer == "&Yes":
-            self._delete_mods(_inner_delete_both, uuids)
+            self._iterate_mods(_inner_delete_both, uuids)
 
-    def delete_dds(self, uuids: list[str]):
+    def delete_dds(self) -> None:
+        mod_metadata = self.get_selected_mod_metadata()
         answer = show_dialogue_conditional(
             title="Are you sure?",
-            text=f"You have selected {len(uuids)} mods to Delete optimized textures (.dds files only)",
+            text=f"You have selected {len(mod_metadata)} mods to Delete optimized textures (.dds files only)",
             information="\nThis operation will only delete optimized textures (.dds files only) from mod files."
             + "\nDo you want to proceed?",
         )
         if answer == "&Yes":
-            self._delete_mods(
+            self._iterate_mods(
                 lambda mod_metadata: (
                     delete_files_only_extension(
-                        directory=mod_metadata["path"],
+                        directory=str(mod_metadata["path"]),
                         extension=".dds",
-                    ),
-                    True,
-                )[1],
-                uuids,
+                    )
+                ),
+                mod_metadata,
             )
 
-    def delete_mod_keep_dds(self, uuids: list[str]):
+    def delete_mod_keep_dds(self) -> None:
+        mod_metadata = self.get_selected_mod_metadata()
         answer = show_dialogue_conditional(
             title="Are you sure?",
-            text=f"You have selected {len(uuids)} mods for deletion.",
+            text=f"You have selected {len(mod_metadata)} mods for deletion.",
             information="\nThis operation will recursively delete all mod files, except for .dds textures found."
             + "\nDo you want to proceed?",
         )
         if answer == "&Yes":
-            self._delete_mods(
-                lambda mod_metadata: (
-                    delete_files_except_extension(
-                        directory=mod_metadata["path"],
-                        extension=".dds",
-                    ),
-                    True,
-                )[1],
-                uuids,
+            self._iterate_mods(
+                lambda mod_metadata: delete_files_except_extension(
+                    directory=mod_metadata["path"],
+                    extension=".dds",
+                ),
+                mod_metadata,
             )

@@ -576,7 +576,6 @@ class MainContent(QObject):
         ):  # Do we even have metadata to lookup...?
             self.missing_mods_prompt = MissingModsPrompt(
                 packageids=self.missing_mods,
-                steam_workshop_metadata=self.metadata_manager.external_steam_metadata,
             )
             self.missing_mods_prompt._populate_from_metadata()
             self.missing_mods_prompt.setWindowModality(
@@ -1958,11 +1957,9 @@ class MainContent(QObject):
                 information="Are you connected to the Internet?",
             )
             return
-        workshop_mod_updater = ModUpdaterPrompt(
-            internal_mod_metadata=self.metadata_manager.internal_local_metadata
-        )
+        workshop_mod_updater = ModUpdaterPrompt()
         workshop_mod_updater._populate_from_metadata()
-        if workshop_mod_updater.updates_found:
+        if workshop_mod_updater._row_count() > 0:
             logger.debug("Displaying potential Workshop mod updates")
             workshop_mod_updater.show()
         else:
@@ -3426,4 +3423,10 @@ class MainContent(QObject):
             mod_metadata=self.metadata_manager.internal_local_metadata
         )
         self.use_this_instead_dialog._populate_from_metadata()
-        self.use_this_instead_dialog.show()
+        if self.use_this_instead_dialog.editor_model.rowCount() > 0:
+            self.use_this_instead_dialog.show()
+        else:
+            dialogue.show_information(
+                title="Use This Instead",
+                text='No suggestions were found in the "Use This Instead" database.',
+            )
