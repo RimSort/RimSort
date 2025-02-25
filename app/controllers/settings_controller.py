@@ -1240,10 +1240,6 @@ class SettingsController(QObject):
             tuple[Path, Path, Path]: game_folder, config_folder, steam_mods_folder
         """
         if sys.platform == "win32":
-            common_steam_mods_paths = set()
-            for drive in "DEFGHIJKLMNOPQRSTUVWXYZ":
-                common_steam_mods_paths.add(f"{drive}:/SteamLibrary/steamapps/workshop/content/294100")
-
             user_home = Path.home()
             from app.utils.win_find_steam import find_steam_folder
 
