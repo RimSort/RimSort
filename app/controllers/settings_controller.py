@@ -363,6 +363,13 @@ class SettingsController(QObject):
         self.settings_dialog.local_mods_folder_location_open_button.setEnabled(
             self.settings_dialog.local_mods_folder_location.text() != ""
         )
+        game_folder = self.settings.instances[
+            self.settings.current_instance
+        ].game_folder  # Automatically set local folder from game folder
+        if game_folder != "":
+            self.settings_dialog.local_mods_folder_location.setText(
+                str(Path(game_folder) / "Mods")
+            )
 
         # Databases tab
         if self.settings.external_community_rules_metadata_source == "None":
