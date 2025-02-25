@@ -223,11 +223,6 @@ class SettingsDialog(QDialog):
         self.local_mods_folder_location_open_button.setText("Open…")
         header_layout.addWidget(self.local_mods_folder_location_open_button)
 
-        # Disable the buttons for now
-        """self.local_mods_folder_location_clear_button = QToolButton()
-        self.local_mods_folder_location_clear_button.setText("Clear…")
-        header_layout.addWidget(self.local_mods_folder_location_clear_button)"""
-
         self.local_mods_folder_location = QLineEdit(readOnly=True)
         self.local_mods_folder_location.setTextMargins(GUIInfo().text_field_margins)
         self.local_mods_folder_location.setFixedHeight(
