@@ -125,10 +125,7 @@ class SettingsController(QObject):
         self.settings_dialog.local_mods_folder_location_open_button.clicked.connect(
             self._on_local_mods_folder_location_open_button_clicked
         )
-        """self.settings_dialog.local_mods_folder_location_choose_button.clicked.connect(
-            self._on_local_mods_folder_location_choose_button_clicked
-        )
-        self.settings_dialog.local_mods_folder_location_clear_button.clicked.connect(
+        """self.settings_dialog.local_mods_folder_location_clear_button.clicked.connect(
             self._on_local_mods_folder_location_clear_button_clicked
         )"""  # Disable button connections for now
 
@@ -880,24 +877,6 @@ class SettingsController(QObject):
     @Slot()
     def _on_local_mods_folder_location_open_button_clicked(self) -> None:
         platform_specific_open(self.settings_dialog.local_mods_folder_location.text())
-
-    @Slot()
-    def _on_local_mods_folder_location_choose_button_clicked(self) -> None:
-        """
-        Open a directory dialog to select the local mods folder and handle the result.
-        """
-        local_mods_folder_location = show_dialogue_file(
-            mode="open_dir",
-            caption="Select Local Mods Folder",
-            _dir=str(self._last_file_dialog_path),
-        )
-        if not local_mods_folder_location:
-            return
-
-        self.settings_dialog.local_mods_folder_location.setText(
-            local_mods_folder_location
-        )
-        self._last_file_dialog_path = str(Path(local_mods_folder_location).parent)
 
     @Slot()
     def _on_local_mods_folder_location_clear_button_clicked(self) -> None:
