@@ -1,3 +1,4 @@
+import os
 import sys
 from dataclasses import dataclass
 from json import JSONDecodeError
@@ -1236,6 +1237,12 @@ class SettingsController(QObject):
             tuple[Path, Path, Path]: game_folder, config_folder, steam_mods_folder
         """
         if sys.platform == "win32":
+            common_rimworld_paths = set()
+            common_steam_mods_paths = set()
+            for drive in "DEFGHIJKLMNOPQRSTUVWXYZ":
+                common_rimworld_paths.add(f"{drive}:/SteamLibrary/steamapps/common/RimWorld")
+                common_steam_mods_paths.add(f"{drive}:/SteamLibrary/steamapps/workshop/content/294100")
+
             user_home = Path.home()
             steam_folder = "C:/Program Files (x86)/Steam"
             from app.utils.win_find_steam import find_steam_folder
@@ -1248,13 +1255,29 @@ class SettingsController(QObject):
                 )
                 steam_folder = "C:/Program Files (x86)/Steam"
 
+            # Fallback game folder
             game_folder = Path(f"{steam_folder}/steamapps/common/Rimworld")
+            
+            # Try to find game folder
+            for path in common_rimworld_paths:
+                if os.path.exists(path):
+                    game_folder = Path(path)
+                    break
+
             config_folder = Path(
                 f"{user_home}/AppData/LocalLow/Ludeon Studios/RimWorld by Ludeon Studios/Config"
             )
+
+            # Fallback steam mods path
             steam_mods_folder = Path(
                 f"{steam_folder}/steamapps/workshop/content/294100"
             )
+
+            # Try to find steam mods path
+            for path in common_steam_mods_paths:
+                if os.path.exists(path):
+                    steam_mods_folder = Path(path)
+                    break
 
             return game_folder, config_folder, steam_mods_folder
         else:
