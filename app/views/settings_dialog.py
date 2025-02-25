@@ -228,6 +228,9 @@ class SettingsDialog(QDialog):
         self.local_mods_folder_location.setFixedHeight(
             GUIInfo().default_font_line_height * 2
         )
+        self.local_mods_folder_location.setPlaceholderText(
+            "Game location sets local mods location."
+        )
         group_layout.addWidget(self.local_mods_folder_location)
 
     def _do_databases_tab(self) -> None:
