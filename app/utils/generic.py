@@ -11,6 +11,7 @@ from stat import S_IRWXG, S_IRWXO, S_IRWXU
 from typing import Any, Callable, Generator
 
 import requests
+import vdf  # type: ignore
 from loguru import logger
 from pyperclip import (  # type: ignore # Stubs don't exist for pyperclip
     copy as copy_to_clipboard,
@@ -442,3 +443,72 @@ def check_valid_http_git_url(url: str) -> bool:
     :return: a boolean indicating whether the url is a valid git url
     """
     return url and url != "" and url.startswith("http://") or url.startswith("https://")
+
+
+def get_path_up_to_string(path: Path, stop_string: str, exclude: bool = False) -> Path | str:
+    """
+    Returns a Path up to the stop_string.
+
+    :param path: Path to search
+    :param stop_string: str that path is returned up to.
+    :param exclude: bool, decides if stop_string is excluded from returned path
+    :return: Path up to stop_string or empty str if stop_string is not present
+    """
+    parts = path.parts
+
+    try:
+        stop_idx = parts.index(stop_string)
+        if exclude:
+            return Path(*parts[:stop_idx])
+        else:
+            return Path(*parts[:stop_idx + 1])
+    except ValueError:
+        # Stop string is not present
+        return ""
+
+
+def find_steam_rimworld(steam_folder: Path | str) -> str:
+    """
+    This should be compatible cross-platform.
+
+    Given a steam installation path, find and read the libraryfolders.vdf
+    and from this file retrieve the RimWorld steam isntallation path.
+
+    :param steam_folder: Path to steam installation
+    :return: Rimworld Path if found, blank str otherwise
+    """
+    rimworld_path = ""
+    steam_folder = Path(steam_folder)
+    # TODO: I am unable to actually confirm which one is the primary one...
+    primary_library = "config/libraryfolders.vdf"
+    backup_library = "steamapps/libraryfolders.vdf"
+
+    if os.path.exists(steam_folder / primary_library):
+        logger.debug(f"Attempting to get RimWorld path from {primary_library}")
+        with open(steam_folder / primary_library, "r") as f:
+            data = vdf.load(f)
+            library_folders = data["libraryfolders"]
+
+            # Find 294100 (RimWorld)
+            for dict in library_folders.items():
+                if "294100" in dict[1]["apps"]:
+                    rimworld_path = dict[1]["path"]
+
+    elif os.path.exists(steam_folder / backup_library):
+        logger.debug(f"Attempting to get RimWorld path from {backup_library}")
+        with open(steam_folder / backup_library, "r") as f:
+            data = vdf.load(f)
+            library_folders = data["libraryfolders"]
+
+            # Find 294100 (RimWorld)
+            for dict in library_folders.items():
+                if "294100" in dict[1]["apps"]:
+                    rimworld_path = dict[1]["path"]
+
+    else:
+        logger.warning("Failed retrieving RimWorld path from libraryfolders.vdf")
+        return rimworld_path
+
+    full_rimworld_path = Path(rimworld_path) / "steamapps/common/RimWorld"
+
+    return full_rimworld_path.__str__() if rimworld_path else rimworld_path
