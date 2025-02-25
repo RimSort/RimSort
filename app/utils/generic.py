@@ -5,6 +5,7 @@ import subprocess
 import sys
 import webbrowser
 from errno import EACCES
+from io import TextIOWrapper
 from pathlib import Path
 from re import search, sub
 from stat import S_IRWXG, S_IRWXO, S_IRWXU
@@ -477,6 +478,21 @@ def find_steam_rimworld(steam_folder: Path | str) -> str:
     :param steam_folder: Path to steam installation
     :return: Rimworld Path if found, blank str otherwise
     """
+    def __load_data(f: TextIOWrapper) -> str:
+        """
+        Helper function that returns RimWorld path if found, empty string otherwise.
+        """
+        rimworld_path = ""
+        data = vdf.load(f)
+        library_folders = data["libraryfolders"]
+
+        # Find 294100 (RimWorld)
+        for dict in library_folders.items():
+            if "294100" in dict[1]["apps"]:
+                rimworld_path = dict[1]["path"]
+
+        return rimworld_path
+
     rimworld_path = ""
     steam_folder = Path(steam_folder)
     # TODO: I am unable to actually confirm which one is the primary one...
@@ -486,24 +502,12 @@ def find_steam_rimworld(steam_folder: Path | str) -> str:
     if os.path.exists(steam_folder / primary_library):
         logger.debug(f"Attempting to get RimWorld path from {primary_library}")
         with open(steam_folder / primary_library, "r") as f:
-            data = vdf.load(f)
-            library_folders = data["libraryfolders"]
-
-            # Find 294100 (RimWorld)
-            for dict in library_folders.items():
-                if "294100" in dict[1]["apps"]:
-                    rimworld_path = dict[1]["path"]
+            rimworld_path = __load_data(f)
 
     elif os.path.exists(steam_folder / backup_library):
         logger.debug(f"Attempting to get RimWorld path from {backup_library}")
         with open(steam_folder / backup_library, "r") as f:
-            data = vdf.load(f)
-            library_folders = data["libraryfolders"]
-
-            # Find 294100 (RimWorld)
-            for dict in library_folders.items():
-                if "294100" in dict[1]["apps"]:
-                    rimworld_path = dict[1]["path"]
+            rimworld_path = __load_data(f)
 
     else:
         logger.warning("Failed retrieving RimWorld path from libraryfolders.vdf")
