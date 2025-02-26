@@ -918,9 +918,11 @@ class SettingsDialog(QDialog):
         )
         self.global_font_size_spin_box = QDoubleSpinBox()
         self.global_font_size_spin_box.setMinimum(
-            rimsort_boot_config.MOD_ITEM_TEXT_DEFAULT_FONT_SIZE - 1
+            rimsort_boot_config.MOD_ITEM_TEXT_DEFAULT_FONT_SIZE - 1  # Arbitrary min
         )
-        self.global_font_size_spin_box.setMaximum(20)
+        self.global_font_size_spin_box.setMaximum(
+            rimsort_boot_config.MOD_ITEM_TEXT_DEFAULT_FONT_SIZE + 11  # Arbitrary max
+        )
         modlist_options_layout.addWidget(
             self.global_font_size_spin_box, 0, 1, alignment=Qt.AlignmentFlag.AlignLeft
         )
