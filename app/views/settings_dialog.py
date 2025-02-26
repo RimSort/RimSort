@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.utils.constants import MOD_ITEM_TEXT_DEFAULT_FONT_SIZE
 from app.utils.gui_info import GUIInfo
 
 
@@ -904,7 +905,9 @@ class SettingsDialog(QDialog):
         modlist_options_layout = QGridLayout()
         modlist_options_group.setLayout(modlist_options_layout)
 
-        modlist_item_font_size_label = QLabel("Modlist item and text size (Default: 9):")
+        modlist_item_font_size_label = QLabel(
+            f"Modlist item and text size (Default: {MOD_ITEM_TEXT_DEFAULT_FONT_SIZE}):"
+        )
         modlist_options_layout.addWidget(
             modlist_item_font_size_label, 0, 0, alignment=Qt.AlignmentFlag.AlignLeft
         )
@@ -912,6 +915,12 @@ class SettingsDialog(QDialog):
         self.mod_item_font_size_spin_box.setMinimum(8)
         modlist_options_layout.addWidget(
             self.mod_item_font_size_spin_box, 0, 1, alignment=Qt.AlignmentFlag.AlignLeft
+        )
+        self.reset_mod_item_font_size_button = QPushButton()
+        self.reset_mod_item_font_size_button.setText("Reset")
+        self.reset_mod_item_font_size_button.setToolTip("Default: " + str(MOD_ITEM_TEXT_DEFAULT_FONT_SIZE))
+        modlist_options_layout.addWidget(
+            self.reset_mod_item_font_size_button, 0, 1, alignment=Qt.AlignmentFlag.AlignRight
         )
 
     def _find_tab_index(self, tab_name: str) -> int:

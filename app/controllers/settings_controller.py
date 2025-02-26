@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QApplication, QLineEdit, QMessageBox
 
 from app.controllers.theme_controller import ThemeController
 from app.models.settings import Instance, Settings
-from app.utils.constants import SortMethod
+from app.utils.constants import MOD_ITEM_TEXT_DEFAULT_FONT_SIZE, SortMethod
 from app.utils.event_bus import EventBus
 from app.utils.generic import platform_specific_open
 from app.utils.system_info import SystemInfo
@@ -210,6 +210,11 @@ class SettingsController(QObject):
         # Theme tab
         self.settings_dialog.theme_location_open_button.clicked.connect(
             self._on_theme_location_open_button_clicked
+        )
+
+        # Accessibility tab
+        self.settings_dialog.reset_mod_item_font_size_button.clicked.connect(
+            self._on_reset_mod_item_font_size_button_clicked
         )
 
         # Connect signals from dialogs
@@ -1348,3 +1353,12 @@ class SettingsController(QObject):
             logger.warning(
                 f"Failed to open theme location: {stylesheet_path} not found or does not exist"
             )
+
+    @Slot()
+    def _on_reset_mod_item_font_size_button_clicked(self) -> None:
+        """
+        Reset mod item font size to default.
+        """
+        self.settings_dialog.mod_item_font_size_spin_box.setValue(
+            MOD_ITEM_TEXT_DEFAULT_FONT_SIZE
+        )
