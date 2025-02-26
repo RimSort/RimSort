@@ -27,7 +27,7 @@ class AppController(QObject):
         self.set_config_variables()
 
         self.initialize_user_rules()
-        self.initialize_settings()  ###
+        self.initialize_settings()
         self.initialize_theme_controller()
         self.initialize_steamcmd_interface()
         self.initialize_metadata_manager()
@@ -39,7 +39,7 @@ class AppController(QObject):
             self.settings.theme_name,
         )
 
-        self.app.setWindowIcon(GUIInfo().app_icon)  ###
+        self.app.setWindowIcon(GUIInfo().app_icon)
 
         # Set global font size after main window is loaded
         self.set_global_font_size(self.global_font)
