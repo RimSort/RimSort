@@ -49,7 +49,7 @@ class AppController(QObject):
         font.setPointSizeF(new_size)
         self.app.setFont(font)
         # TODO: If we want to apply changes without RimSort restart
-        # self.update_global_font
+        # self.reload_ui
 
     def set_config_variables(self) -> None:
         rimsort_boot_config.MOD_ITEM_TEXT_DEFAULT_FONT_SIZE = QFont().pointSize()
