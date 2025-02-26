@@ -110,17 +110,13 @@ class Settings(QObject):
         """
         Used to only load critical data required at app boot.
         """
-        if self._debug_file.exists() and self._debug_file.is_file():
-            self.debug_logging_enabled = True
-        else:
-            self.debug_logging_enabled = False
-
         try:
             with open(str(self._settings_file), "r") as file:
                 data = json.load(file)
                 self.global_font_size = data["global_font_size"]
         except FileNotFoundError:
-            pass
+            logger.error("Failed to load critical settings, settings file not found.")
+            logger.debug("Using default values for critical settings.")
         except JSONDecodeError:
             raise
 

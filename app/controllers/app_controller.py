@@ -52,6 +52,7 @@ class AppController(QObject):
         # self.reload_ui
 
     def set_config_variables(self) -> None:
+        """Set variables required at app boot."""
         rimsort_boot_config.MOD_ITEM_TEXT_DEFAULT_FONT_SIZE = QFont().pointSize()
         rimsort_boot_config.MOD_ITEM_ICON_DEFAULT_SIZE = (
             20 - rimsort_boot_config.MOD_ITEM_TEXT_DEFAULT_FONT_SIZE
