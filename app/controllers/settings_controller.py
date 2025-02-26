@@ -9,7 +9,8 @@ from PySide6.QtWidgets import QApplication, QLineEdit, QMessageBox
 
 from app.controllers.theme_controller import ThemeController
 from app.models.settings import Instance, Settings
-from app.utils.constants import MOD_ITEM_TEXT_DEFAULT_FONT_SIZE, SortMethod
+from app.utils import rimsort_boot_config
+from app.utils.constants import SortMethod
 from app.utils.event_bus import EventBus
 from app.utils.generic import platform_specific_open
 from app.utils.system_info import SystemInfo
@@ -213,8 +214,8 @@ class SettingsController(QObject):
         )
 
         # Accessibility tab
-        self.settings_dialog.reset_mod_item_font_size_button.clicked.connect(
-            self._on_reset_mod_item_font_size_button_clicked
+        self.settings_dialog.reset_global_font_size_button.clicked.connect(
+            self._on_reset_global_font_size_button_clicked
         )
 
         # Connect signals from dialogs
@@ -573,8 +574,8 @@ class SettingsController(QObject):
         )
 
         # Accessibility tab
-        self.settings_dialog.mod_item_font_size_spin_box.setValue(
-            self.settings.mod_item_font_size
+        self.settings_dialog.global_font_size_spin_box.setValue(
+            self.settings.global_font_size
         )
 
     def _update_model_from_view(self) -> None:
@@ -723,8 +724,8 @@ class SettingsController(QObject):
         self.settings_dialog.run_args.setText(run_args_str)
 
         # Accessibility tab
-        self.settings.mod_item_font_size = (
-            self.settings_dialog.mod_item_font_size_spin_box.value()
+        self.settings.global_font_size = (
+            self.settings_dialog.global_font_size_spin_box.value()
         )
 
     @Slot()
@@ -1355,10 +1356,10 @@ class SettingsController(QObject):
             )
 
     @Slot()
-    def _on_reset_mod_item_font_size_button_clicked(self) -> None:
+    def _on_reset_global_font_size_button_clicked(self) -> None:
         """
         Reset mod item font size to default.
         """
-        self.settings_dialog.mod_item_font_size_spin_box.setValue(
-            MOD_ITEM_TEXT_DEFAULT_FONT_SIZE
+        self.settings_dialog.global_font_size_spin_box.setValue(
+            rimsort_boot_config.MOD_ITEM_TEXT_DEFAULT_FONT_SIZE
         )

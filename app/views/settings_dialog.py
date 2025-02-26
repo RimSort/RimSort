@@ -5,6 +5,7 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QDialog,
+    QDoubleSpinBox,
     QGridLayout,
     QGroupBox,
     QHBoxLayout,
@@ -13,14 +14,13 @@ from PySide6.QtWidgets import (
     QPushButton,
     QRadioButton,
     QSizePolicy,
-    QSpinBox,
     QTabWidget,
     QToolButton,
     QVBoxLayout,
     QWidget,
 )
 
-from app.utils.constants import MOD_ITEM_TEXT_DEFAULT_FONT_SIZE
+from app.utils import rimsort_boot_config
 from app.utils.gui_info import GUIInfo
 
 
@@ -899,6 +899,11 @@ class SettingsDialog(QDialog):
         group_layout = QVBoxLayout()
         group_box.setLayout(group_layout)
 
+        user_note = QLabel("RimSort restart required for some settings")
+        user_note.setFont(GUIInfo().emphasis_font)
+        user_note.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        group_layout.addWidget(user_note)
+
         modlist_options_group = QGroupBox()
         group_layout.addWidget(modlist_options_group)
 
@@ -906,21 +911,26 @@ class SettingsDialog(QDialog):
         modlist_options_group.setLayout(modlist_options_layout)
 
         modlist_item_font_size_label = QLabel(
-            f"Modlist item and text size (Default: {MOD_ITEM_TEXT_DEFAULT_FONT_SIZE}):"
+            f"Modlist item and text size (Default: {rimsort_boot_config.MOD_ITEM_TEXT_DEFAULT_FONT_SIZE}):"
         )
         modlist_options_layout.addWidget(
             modlist_item_font_size_label, 0, 0, alignment=Qt.AlignmentFlag.AlignLeft
         )
-        self.mod_item_font_size_spin_box = QSpinBox()
-        self.mod_item_font_size_spin_box.setMinimum(8)
-        modlist_options_layout.addWidget(
-            self.mod_item_font_size_spin_box, 0, 1, alignment=Qt.AlignmentFlag.AlignLeft
+        self.global_font_size_spin_box = QDoubleSpinBox()
+        self.global_font_size_spin_box.setMinimum(
+            rimsort_boot_config.MOD_ITEM_TEXT_DEFAULT_FONT_SIZE - 1
         )
-        self.reset_mod_item_font_size_button = QPushButton()
-        self.reset_mod_item_font_size_button.setText("Reset")
-        self.reset_mod_item_font_size_button.setToolTip("Default: " + str(MOD_ITEM_TEXT_DEFAULT_FONT_SIZE))
+        self.global_font_size_spin_box.setMaximum(20)
         modlist_options_layout.addWidget(
-            self.reset_mod_item_font_size_button, 0, 1, alignment=Qt.AlignmentFlag.AlignRight
+            self.global_font_size_spin_box, 0, 1, alignment=Qt.AlignmentFlag.AlignLeft
+        )
+        self.reset_global_font_size_button = QPushButton()
+        self.reset_global_font_size_button.setText("Reset")
+        self.reset_global_font_size_button.setToolTip(
+            "Default: " + str(rimsort_boot_config.MOD_ITEM_TEXT_DEFAULT_FONT_SIZE)
+        )
+        modlist_options_layout.addWidget(
+            self.reset_global_font_size_button, 0, 1, alignment=Qt.AlignmentFlag.AlignRight,
         )
 
     def _find_tab_index(self, tab_name: str) -> int:

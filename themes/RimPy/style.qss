@@ -176,9 +176,6 @@ QMenu::item:disabled:selected {
 QMenu::item:selected:disabled {
     color: #999999;
 }
-QMenu::item:hover {
-    background-color: #37414f;
-}
 QMenu::item:checked {
     background-color: #54687a;
 }
