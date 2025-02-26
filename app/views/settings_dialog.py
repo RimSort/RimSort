@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QRadioButton,
     QSizePolicy,
+    QSpinBox,
     QTabWidget,
     QToolButton,
     QVBoxLayout,
@@ -50,6 +51,7 @@ class SettingsDialog(QDialog):
         self._do_todds_tab()
         self._do_themes_tab()
         self._do_advanced_tab()
+        self._do_accessibility_tab()
 
         # Bottom buttons layout
         button_layout = QHBoxLayout()
@@ -882,6 +884,35 @@ class SettingsDialog(QDialog):
         run_args_layout.addWidget(self.run_args, 1, 1)
 
         self.setTabOrder(self.run_args_info_label, self.run_args)
+
+    def _do_accessibility_tab(self) -> None:
+        tab = QWidget()
+        self.tab_widget.addTab(tab, "Accessibility")
+
+        tab_layout = QVBoxLayout(tab)
+        tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        group_box = QGroupBox()
+        tab_layout.addWidget(group_box)
+
+        group_layout = QVBoxLayout()
+        group_box.setLayout(group_layout)
+
+        modlist_options_group = QGroupBox()
+        group_layout.addWidget(modlist_options_group)
+
+        modlist_options_layout = QGridLayout()
+        modlist_options_group.setLayout(modlist_options_layout)
+
+        modlist_item_font_size_label = QLabel("Modlist item and text size (Default: 9):")
+        modlist_options_layout.addWidget(
+            modlist_item_font_size_label, 0, 0, alignment=Qt.AlignmentFlag.AlignLeft
+        )
+        self.mod_item_font_size_spin_box = QSpinBox()
+        self.mod_item_font_size_spin_box.setMinimum(8)
+        modlist_options_layout.addWidget(
+            self.mod_item_font_size_spin_box, 0, 1, alignment=Qt.AlignmentFlag.AlignLeft
+        )
 
     def _find_tab_index(self, tab_name: str) -> int:
         for i in range(self.tab_widget.count()):

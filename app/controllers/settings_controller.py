@@ -567,6 +567,11 @@ class SettingsController(QObject):
             self._on_run_args_text_changed
         )
 
+        # Accessibility tab
+        self.settings_dialog.mod_item_font_size_spin_box.setValue(
+            self.settings.mod_item_font_size
+        )
+
     def _update_model_from_view(self) -> None:
         """
         Update the settings model from the view.
@@ -711,6 +716,11 @@ class SettingsController(QObject):
             self.settings.instances[self.settings.current_instance].run_args
         )
         self.settings_dialog.run_args.setText(run_args_str)
+
+        # Accessibility tab
+        self.settings.mod_item_font_size = (
+            self.settings_dialog.mod_item_font_size_spin_box.value()
+        )
 
     @Slot()
     def _on_global_reset_to_defaults_button_clicked(self) -> None:

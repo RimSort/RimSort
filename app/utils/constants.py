@@ -72,3 +72,4 @@ KNOWN_MOD_REPLACEMENTS = {
  "brrainz.harmony": {"zetrith.prepatcher"},
  "aoba.motorization.engine": {"rimthunder.core"}
 }
+MOD_ITEM_TEXT_DEFAULT_FONT_SIZE = 9

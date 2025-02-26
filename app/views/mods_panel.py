@@ -40,6 +40,7 @@ from app.controllers.settings_controller import SettingsController
 from app.utils.app_info import AppInfo
 from app.utils.constants import (
     KNOWN_MOD_REPLACEMENTS,
+    MOD_ITEM_TEXT_DEFAULT_FONT_SIZE,
     SEARCH_DATA_SOURCE_FILTER_INDEXES,
 )
 from app.utils.custom_list_widget_item import CustomListWidgetItem
@@ -175,6 +176,12 @@ class ModListItemInner(QWidget):
             or "METADATA ERROR"
         )
         self.main_label = QLabel()
+
+        # Set font size based on settings
+        font_size = self.settings_controller.settings.mod_item_font_size
+        label_font = self.font()
+        label_font.setPointSize(font_size)
+        self.main_label.setFont(label_font)
 
         # Visuals
         self.setToolTip(self.get_tool_tip_text())
@@ -1724,6 +1731,14 @@ class ModListWidget(QListWidget):
             widget.toggle_warning_signal.connect(self.toggle_warning)
             widget.toggle_error_signal.connect(self.toggle_warning)
             item.setSizeHint(widget.sizeHint())
+            # Handle setting widget size based on font size from settings
+            font_size = self.settings_controller.settings.mod_item_font_size
+            font_increase = font_size - MOD_ITEM_TEXT_DEFAULT_FONT_SIZE
+            if font_increase != 0:
+                old_height = item.sizeHint().height()
+                new_size = item.sizeHint()
+                new_size.setHeight(old_height + font_increase)
+                item.setSizeHint(new_size)
             self.setItemWidget(item, widget)
 
     def check_widgets_visible(self) -> None:

@@ -12,7 +12,7 @@ from PySide6.QtCore import QObject
 
 from app.models.instance import Instance
 from app.utils.app_info import AppInfo
-from app.utils.constants import SortMethod
+from app.utils.constants import MOD_ITEM_TEXT_DEFAULT_FONT_SIZE, SortMethod
 from app.utils.event_bus import EventBus
 from app.utils.generic import handle_remove_read_only
 
@@ -81,6 +81,9 @@ class Settings(QObject):
 
         self.github_username: str = ""
         self.github_token: str = ""
+
+        # Accessibility
+        self.mod_item_font_size: int = MOD_ITEM_TEXT_DEFAULT_FONT_SIZE
 
         # Instances
         self.current_instance: str = "Default"
