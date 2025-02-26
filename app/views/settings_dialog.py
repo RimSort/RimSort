@@ -224,18 +224,13 @@ class SettingsDialog(QDialog):
         self.local_mods_folder_location_open_button.setText("Open…")
         header_layout.addWidget(self.local_mods_folder_location_open_button)
 
-        self.local_mods_folder_location_choose_button = QToolButton()
-        self.local_mods_folder_location_choose_button.setText("Choose…")
-        header_layout.addWidget(self.local_mods_folder_location_choose_button)
-
-        self.local_mods_folder_location_clear_button = QToolButton()
-        self.local_mods_folder_location_clear_button.setText("Clear…")
-        header_layout.addWidget(self.local_mods_folder_location_clear_button)
-
-        self.local_mods_folder_location = QLineEdit()
+        self.local_mods_folder_location = QLineEdit(readOnly=True)
         self.local_mods_folder_location.setTextMargins(GUIInfo().text_field_margins)
         self.local_mods_folder_location.setFixedHeight(
             GUIInfo().default_font_line_height * 2
+        )
+        self.local_mods_folder_location.setPlaceholderText(
+            "Game location sets local mods location."
         )
         group_layout.addWidget(self.local_mods_folder_location)
 
