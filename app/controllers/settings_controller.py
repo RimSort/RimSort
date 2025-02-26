@@ -1255,7 +1255,7 @@ class SettingsController(QObject):
 
             # Fallback game folder
             if game_folder == "":
-                game_folder = f"{steam_folder}/steamapps/common/Rimworld"
+                game_folder = f"{steam_folder}/steamapps/common/RimWorld"
             game_folder = Path(game_folder)
 
             config_folder = Path(
