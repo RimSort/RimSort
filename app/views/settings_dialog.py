@@ -904,17 +904,17 @@ class SettingsDialog(QDialog):
         user_note.setAlignment(Qt.AlignmentFlag.AlignCenter)
         group_layout.addWidget(user_note)
 
-        modlist_options_group = QGroupBox()
-        group_layout.addWidget(modlist_options_group)
+        global_options_group = QGroupBox()
+        group_layout.addWidget(global_options_group)
 
-        modlist_options_layout = QGridLayout()
-        modlist_options_group.setLayout(modlist_options_layout)
+        global_options_layout = QGridLayout()
+        global_options_group.setLayout(global_options_layout)
 
-        modlist_item_font_size_label = QLabel(
-            f"Modlist item and text size (Default: {rimsort_boot_config.MOD_ITEM_TEXT_DEFAULT_FONT_SIZE}):"
+        global_font_size_label = QLabel(
+            f"Global font size (Default: {rimsort_boot_config.MOD_ITEM_TEXT_DEFAULT_FONT_SIZE}):"
         )
-        modlist_options_layout.addWidget(
-            modlist_item_font_size_label, 0, 0, alignment=Qt.AlignmentFlag.AlignLeft
+        global_options_layout.addWidget(
+            global_font_size_label, 0, 0, alignment=Qt.AlignmentFlag.AlignLeft
         )
         self.global_font_size_spin_box = QDoubleSpinBox()
         self.global_font_size_spin_box.setMinimum(
@@ -923,7 +923,7 @@ class SettingsDialog(QDialog):
         self.global_font_size_spin_box.setMaximum(
             rimsort_boot_config.MOD_ITEM_TEXT_DEFAULT_FONT_SIZE + 11  # Arbitrary max
         )
-        modlist_options_layout.addWidget(
+        global_options_layout.addWidget(
             self.global_font_size_spin_box, 0, 1, alignment=Qt.AlignmentFlag.AlignLeft
         )
         self.reset_global_font_size_button = QPushButton()
@@ -931,7 +931,7 @@ class SettingsDialog(QDialog):
         self.reset_global_font_size_button.setToolTip(
             "Default: " + str(rimsort_boot_config.MOD_ITEM_TEXT_DEFAULT_FONT_SIZE)
         )
-        modlist_options_layout.addWidget(
+        global_options_layout.addWidget(
             self.reset_global_font_size_button, 0, 1, alignment=Qt.AlignmentFlag.AlignRight,
         )
 
