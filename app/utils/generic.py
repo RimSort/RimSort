@@ -480,17 +480,16 @@ def find_steam_rimworld(steam_folder: Path | str) -> str:
     """
     def __load_data(f: TextIOWrapper) -> str:
         """
-        Helper function that returns RimWorld path if found, empty string otherwise.
+        Helper function that returns RimWorld path from libraryfolders.vdf
+        if found inside, empty string otherwise.
         """
         rimworld_path = ""
         data = vdf.load(f)
         library_folders = data["libraryfolders"]
-
         # Find 294100 (RimWorld)
         for dict in library_folders.items():
             if "294100" in dict[1]["apps"]:
                 rimworld_path = dict[1]["path"]
-
         return rimworld_path
 
     rimworld_path = ""

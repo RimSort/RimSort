@@ -1263,13 +1263,13 @@ class SettingsController(QObject):
             )
 
             steam_mods_folder = get_path_up_to_string(game_folder, "common", exclude=True)
-            if isinstance(steam_mods_folder, str):
+            if steam_mods_folder == "":
                 # Fallback steam mods path
                 steam_mods_folder = Path(
                     f"{steam_folder}/steamapps/workshop/content/294100"
                 )
             else:
-                steam_mods_folder = steam_mods_folder / "workshop/content/294100"
+                steam_mods_folder = Path(steam_mods_folder) / "workshop/content/294100"
 
             return game_folder, config_folder, steam_mods_folder
         else:
