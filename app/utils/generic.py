@@ -512,4 +512,4 @@ def find_steam_rimworld(steam_folder: Path | str) -> str:
 
     full_rimworld_path = Path(rimworld_path) / "steamapps/common/RimWorld"
 
-    return full_rimworld_path.__str__() if rimworld_path else rimworld_path
+    return str(full_rimworld_path) if rimworld_path else rimworld_path
