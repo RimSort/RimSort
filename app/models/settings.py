@@ -11,6 +11,7 @@ from loguru import logger
 from PySide6.QtCore import QObject
 
 from app.models.instance import Instance
+from app.utils import rimsort_boot_config
 from app.utils.app_info import AppInfo
 from app.utils.constants import SortMethod
 from app.utils.event_bus import EventBus
@@ -82,9 +83,17 @@ class Settings(QObject):
         self.github_username: str = ""
         self.github_token: str = ""
 
+        # Accessibility
+        self.global_font_size: float = (
+            rimsort_boot_config.MOD_ITEM_TEXT_DEFAULT_FONT_SIZE
+        )
+
         # Instances
         self.current_instance: str = "Default"
         self.instances: dict[str, Instance] = {"Default": Instance()}
+
+        # Load critical settings needed at app boot
+        self.load_critical_settings()
 
     def __setattr__(self, key: str, value: Any) -> None:
         # If private attribute, set it normally
@@ -96,6 +105,26 @@ class Settings(QObject):
             return
         super().__setattr__(key, value)
         EventBus().settings_have_changed.emit()
+
+    def load_critical_settings(self) -> None:
+        """
+        Used to only load critical data required at app boot.
+        """
+        try:
+            with open(str(self._settings_file), "r") as file:
+                data = json.load(file)
+                self.global_font_size = data["global_font_size"]
+        except FileNotFoundError:
+            logger.error(
+                "Failed to load critical settings, settings file not found.\nUsing default values for critical settings."
+            )
+        except JSONDecodeError:
+            raise
+        except KeyError:
+            # Probably users first time/after update booting, and they don't have certain settings in settings.json yet
+            logger.warning(
+                "Failed to load critical settings, KeyError.\nUsing default values for critical settings."
+            )
 
     def load(self) -> None:
         if self._debug_file.exists() and self._debug_file.is_file():
