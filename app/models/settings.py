@@ -115,10 +115,16 @@ class Settings(QObject):
                 data = json.load(file)
                 self.global_font_size = data["global_font_size"]
         except FileNotFoundError:
-            logger.error("Failed to load critical settings, settings file not found.")
-            logger.debug("Using default values for critical settings.")
+            logger.error(
+                "Failed to load critical settings, settings file not found.\nUsing default values for critical settings."
+            )
         except JSONDecodeError:
             raise
+        except KeyError:
+            # Probably users first time/after update booting, and they don't have certain settings in settings.json yet
+            logger.warning(
+                "Failed to load critical settings, KeyError.\nUsing default values for critical settings."
+            )
 
     def load(self) -> None:
         if self._debug_file.exists() and self._debug_file.is_file():
