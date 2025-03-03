@@ -93,6 +93,7 @@ class EventBus(QObject):
     do_restore_active_mods_list = Signal()
     do_sort_active_mods_list = Signal()
     do_save_active_mods_list = Signal()
+    do_save_active_mods_list_excluding = Signal(set)  # Able to exclude mods from being saved
     do_run_game = Signal()
 
     refresh_started = Signal()
@@ -104,7 +105,7 @@ class EventBus(QObject):
     # ModsPanel signals
     list_updated_signal = Signal()  # count, list_type
     filters_changed_in_active_modlist = Signal()
-    filters_changed_in_inactive_modlist = Signal()    
+    filters_changed_in_inactive_modlist = Signal()
     
 
     def __new__(cls) -> "EventBus":
