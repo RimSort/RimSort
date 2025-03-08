@@ -8,16 +8,6 @@ from app.utils.metadata import MetadataManager
 class CustomListWidgetItemMetadata:
     """
     A class to store metadata for CustomListWidgetItem.
-
-    Attributes:
-        uuid: str, the uuid of the mod which corresponds to a mod's metadata
-        errors_warnings: str, a string of errors and warnings
-        errors: str, a string of errors for the notification tooltip
-        warnings: str, a string of warnings for the notification tooltip
-        warning_toggled: bool, representing if the warning/error icons are toggled off
-        filtered: bool, representing whether the widget's item is filtered
-        invalid: bool, representing whether the widget's item is an invalid mod
-        mismatch: bool, representing whether the widget's item has a version mismatch
     """
 
     def __init__(
@@ -31,6 +21,7 @@ class CustomListWidgetItemMetadata:
         hidden_by_filter: bool = False,
         invalid: Optional[bool] = None,
         mismatch: Optional[bool] = None,
+        user_notes: str = "",
     ) -> None:
         """
         Must provide a uuid, the rest is optional.
@@ -45,6 +36,7 @@ class CustomListWidgetItemMetadata:
         :param filtered: a bool representing whether the widget's item is filtered
         :param hidden_by_filter: a bool representing whether the widget's item is hidden because of a filter (Search, or Mod Type (C#, Xml, Local Mod, Steam Mod etc.)
         :param invalid: a bool representing whether the widget's item is an invalid mod
+        :param user_notes: str, representing the users own notes for this mod
         """
         # Do not cache the metadata manager, it will cause freezes/crashes when dragging mods.
         # self.metatadata_manager = MetadataManager.instance()
@@ -66,6 +58,7 @@ class CustomListWidgetItemMetadata:
         logger.debug(
             f"Finished initializing CustomListWidgetItemMetadata for uuid: {uuid}"
         )
+        self.user_notes = user_notes
 
     def get_invalid_by_uuid(self, uuid: str) -> bool:
         """
