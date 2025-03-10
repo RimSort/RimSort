@@ -408,6 +408,9 @@ class RunnerPanel(QWidget):
 
         # Cleanup process
         self.process.terminate()
+        self.process_complete()
+
+    def process_complete(self) -> None:
         diag = BinaryChoiceDialog(
             title="Process Complete",
             text="Process complete, you can close the window.",
