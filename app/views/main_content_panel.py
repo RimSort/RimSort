@@ -2025,6 +2025,7 @@ class MainContent(QObject):
                 False,
                 self.steamcmd_runner,
             )
+            RunnerPanel().process_complete()
         else:
             dialogue.show_warning(
                 title="RimSort - SteamCMD setup",
