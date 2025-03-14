@@ -44,6 +44,7 @@ class SettingsDialog(QDialog):
         # Initialize the tabs
         self._do_locations_tab()
         self._do_databases_tab()
+        self._do_cross_version_databases_tab()
         self._do_sorting_tab()
         self._do_db_builder_tab()
         self._do_steamcmd_tab()
@@ -223,18 +224,13 @@ class SettingsDialog(QDialog):
         self.local_mods_folder_location_open_button.setText("Open…")
         header_layout.addWidget(self.local_mods_folder_location_open_button)
 
-        self.local_mods_folder_location_choose_button = QToolButton()
-        self.local_mods_folder_location_choose_button.setText("Choose…")
-        header_layout.addWidget(self.local_mods_folder_location_choose_button)
-
-        self.local_mods_folder_location_clear_button = QToolButton()
-        self.local_mods_folder_location_clear_button.setText("Clear…")
-        header_layout.addWidget(self.local_mods_folder_location_clear_button)
-
-        self.local_mods_folder_location = QLineEdit()
+        self.local_mods_folder_location = QLineEdit(readOnly=True)
         self.local_mods_folder_location.setTextMargins(GUIInfo().text_field_margins)
         self.local_mods_folder_location.setFixedHeight(
             GUIInfo().default_font_line_height * 2
+        )
+        self.local_mods_folder_location.setPlaceholderText(
+            "Game location sets local mods location."
         )
         group_layout.addWidget(self.local_mods_folder_location)
 
@@ -398,7 +394,6 @@ class SettingsDialog(QDialog):
             self.steam_workshop_db_local_file,
             self.steam_workshop_db_local_file_choose_button,
         ) = self.__create_db_group(section_lbl, none_lbl, tab_layout)
-
         database_expiry_label = QLabel(
             "Steam Workshop database expiry in Epoch Time (Use 0 to Disable Notification. Default is 7 Days)"
         )
@@ -408,6 +403,46 @@ class SettingsDialog(QDialog):
         self.database_expiry.setTextMargins(GUIInfo().text_field_margins)
         self.database_expiry.setFixedHeight(GUIInfo().default_font_line_height * 2)
         group_layout.addWidget(self.database_expiry)
+
+    def _do_cross_version_databases_tab(self) -> None:
+        tab = QWidget()
+        self.tab_widget.addTab(tab, "Cross Version Databases")
+
+        tab_layout = QVBoxLayout()
+        tab.setLayout(tab_layout)
+
+        self._do_no_version_warning_db_group(tab_layout)
+        self._do_use_this_instead_db_group(tab_layout)
+
+    def _do_no_version_warning_db_group(self, tab_layout: QBoxLayout) -> None:
+        section_lbl = '"No Version Warning" Database'
+        none_lbl = '"No Version Warning" Database'
+        (
+            _,
+            self.no_version_warning_db_none_radio,
+            self.no_version_warning_db_github_radio,
+            self.no_version_warning_db_github_url,
+            self.no_version_warning_db_github_upload_button,
+            self.no_version_warning_db_github_download_button,
+            self.no_version_warning_db_local_file_radio,
+            self.no_version_warning_db_local_file,
+            self.no_version_warning_db_local_file_choose_button,
+        ) = self.__create_db_group(section_lbl, none_lbl, tab_layout)
+
+    def _do_use_this_instead_db_group(self, tab_layout: QBoxLayout) -> None:
+        section_lbl = '"Use This Instead" Database'
+        none_lbl = '"Use This Instead" Database'
+        (
+            _,
+            self.use_this_instead_db_none_radio,
+            self.use_this_instead_db_github_radio,
+            self.use_this_instead_db_github_url,
+            self.use_this_instead_db_github_upload_button,
+            self.use_this_instead_db_github_download_button,
+            self.use_this_instead_db_local_file_radio,
+            self.use_this_instead_db_local_file,
+            self.use_this_instead_db_local_file_choose_button,
+        ) = self.__create_db_group(section_lbl, none_lbl, tab_layout)
 
     def _do_sorting_tab(self) -> None:
         tab = QWidget()
