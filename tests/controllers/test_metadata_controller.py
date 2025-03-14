@@ -143,3 +143,49 @@ def test_metadata_controller_get_metadata_with_path(
     assert aux_metadata.published_file_id == 1111
     assert aux_metadata.acf_time_updated > 0
     assert aux_metadata.acf_time_touched > 0
+
+
+def test_metadata_controller_delete_mod(
+    metadata_controller_p: MetadataController,
+) -> None:
+    metadata_controller_p.refresh_metadata()
+
+    steam_mod_1_path = Path("tests/data/mod_examples/Steam/steam_mod_1")
+    local_mod_2_path = Path("tests/data/mod_examples/Local/local_mod_2")
+    mod_1, aux_metadata_1 = metadata_controller_p.get_metadata_with_path(
+        steam_mod_1_path
+    )
+    mod_2, aux_metadata_2 = metadata_controller_p.get_metadata_with_path(
+        local_mod_2_path
+    )
+
+    assert mod_1 is not None
+    assert aux_metadata_1 is not None
+
+    assert mod_2 is not None
+    assert aux_metadata_2 is not None
+
+    # Ensure mod_1 is deleted but not mod_2
+    metadata_controller_p.delete_mod(steam_mod_1_path)
+
+    mod_1, aux_metadata_1 = metadata_controller_p.get_metadata_with_path(
+        steam_mod_1_path
+    )
+    mod_2, aux_metadata_2 = metadata_controller_p.get_metadata_with_path(
+        local_mod_2_path
+    )
+
+    assert mod_1 is None
+    assert aux_metadata_1 is None
+
+    assert mod_2 is not None
+    assert aux_metadata_2 is not None
+
+    # Ensure mod_2 is deleted
+    metadata_controller_p.delete_mod(str(local_mod_2_path))
+    mod_2, aux_metadata_2 = metadata_controller_p.get_metadata_with_path(
+        local_mod_2_path
+    )
+
+    assert mod_2 is None
+    assert aux_metadata_2 is None
