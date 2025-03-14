@@ -48,7 +48,7 @@ class MissingModsPrompt(BaseModsPanel):
         self.editor_download_steamcmd_button.clicked.connect(
             partial(
                 self._update_mods_from_table,
-                pfid_column=4,
+                pfid_column=5,
                 mode="SteamCMD",
             )
         )
@@ -58,7 +58,7 @@ class MissingModsPrompt(BaseModsPanel):
         self.editor_download_steamworks_button.clicked.connect(
             partial(
                 self._update_mods_from_table,
-                pfid_column=4,
+                pfid_column=5,
                 mode="Steam",
             )
         )
