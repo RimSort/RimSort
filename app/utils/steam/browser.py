@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
 
 from app.models.image_label import ImageLabel
 from app.utils.app_info import AppInfo
+from app.utils.generic import extract_page_title_steam_browser
 from app.utils.metadata import MetadataManager
 from app.utils.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetCollectionDetails,
@@ -284,8 +285,12 @@ class SteamBrowser(QWidget):
         publishedfileid: str,
         title: str | None = None,
     ) -> None:
-        # Get the name from the page title
-        page_title = self.current_title.split("Steam Workshop::", 1)[1]
+        # Try to extract the mod name from the page title, fallback to current_title
+        extracted_page_title = extract_page_title_steam_browser(self.current_title)
+        page_title = (
+            extracted_page_title if extracted_page_title else self.current_title
+        )
+        # Check if the mod is already in the list
         if publishedfileid not in self.downloader_list_mods_tracking:
             # Add pfid to tracking list
             logger.debug(f"Tracking PublishedFileId for download: {publishedfileid}")
@@ -419,6 +424,13 @@ class SteamBrowser(QWidget):
             self.web_view.page().runJavaScript(
                 change_target_a_script, 0, lambda result: None
             )
+            # Remove "Login" button
+            # login_button_removal_script = """
+            # var elements = document.getElementsByClassName("global_action_link");
+            # while (elements.length > 0) {
+            #     elements[0].parentNode.removeChild(elements[0]);
+            # }
+            # """
 
             if (
                 self.url_prefix_sharedfiles in self.current_url
@@ -435,12 +447,9 @@ class SteamBrowser(QWidget):
                     )[1]
                 if self.searchtext_string in publishedfileid:
                     publishedfileid = publishedfileid.split(self.searchtext_string)[0]
-
                 # check if mod is installed
                 is_installed = self._is_mod_installed(publishedfileid)
-
-                # remove area that shows "Subscribe to download" and "Subscribe"/"Unsubscribe" button for mods
-                # it doesnt show in rimsort if user is not logged in
+                # Remove area that shows "Subscribe to download" and "Subscribe"/"Unsubscribe" button for mods
                 mod_subscribe_area_removal_script = """
                 var elements = document.getElementsByClassName("game_area_purchase_game");
                 while (elements.length > 0) {
@@ -470,7 +479,6 @@ class SteamBrowser(QWidget):
                 self.web_view.page().runJavaScript(
                     subscribe_buttons_removal_script, 0, lambda result: None
                 )
-
                 # add buttons for collection items
                 add_collection_buttons_script = """
                 // find all collection items
@@ -533,24 +541,20 @@ class SteamBrowser(QWidget):
                     }
                 }
                 """
-
                 # Get list of installed mod IDs and inject into page
                 installed_mods = []
                 for metadata in self.metadata_manager.internal_local_metadata.values():
                     if metadata.get("publishedfileid"):
                         installed_mods.append(metadata["publishedfileid"])
-
                 inject_installed_mods_script = f"""
                 window.installedMods = {installed_mods};
                 """
-
                 self.web_view.page().runJavaScript(
                     inject_installed_mods_script, 0, lambda result: None
                 )
                 self.web_view.page().runJavaScript(
                     add_collection_buttons_script, 0, lambda result: None
                 )
-
                 # add installed indicator if mod is installed
                 if is_installed:
                     add_installed_indicator_script = """
@@ -564,7 +568,6 @@ class SteamBrowser(QWidget):
                     installedDiv.style.textAlign = 'center';
                     installedDiv.style.fontWeight = 'bold';
                     installedDiv.innerHTML = '✓ Already Installed';
-
                     // Insert it at the top of the page content
                     var contentDiv = document.querySelector('.workshopItemDetailsHeader');
                     if (contentDiv) {
@@ -574,7 +577,7 @@ class SteamBrowser(QWidget):
                     self.web_view.page().runJavaScript(
                         add_installed_indicator_script, 0, lambda result: None
                     )
-
+                # Show the add_to_list_button
                 self.nav_bar.addAction(self.add_to_list_button)
             else:
                 self.nav_bar.removeAction(self.add_to_list_button)

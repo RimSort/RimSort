@@ -49,18 +49,29 @@ class EditableDelegate(QItemDelegate):
             column3_value = model.index(
                 index.row(), 2
             ).data()  # Get the value of the 3rd column
+
+            # Add detailed logging for debugging
+            logger.debug(
+                f"Attempting to create editor for row {index.row()}, column {index.column()}"
+            )
+            logger.debug(f"Column 3 value: {column3_value}")
+
             if column3_value in [
                 "Community Rules",
                 "User Rules",
             ]:  # Only create an editor if the condition is met
                 editor = super().createEditor(parent, option, index)
                 return editor
-        logger.critical(
-            "Editor creation failed! One or more of the conditions were not met."
-        )
-        raise Exception(
-            "Editor creation failed! One or more of the conditions were not met."
-        )
+
+            # Provide more informative error message if editor creation fails
+            if column3_value not in ["About.xml"]:
+                error_msg = (
+                    f"Editor creation failed! for Column 3 value '{column3_value}' "
+                )
+                logger.error(error_msg)
+
+        # Handle case where wrong column is being edited
+        return QLineEdit(parent, readOnly=True)  # Return a basic editor as fallback
 
     def setEditorData(
         self, editor: QWidget, index: QModelIndex | QPersistentModelIndex
@@ -608,7 +619,21 @@ class RuleEditor(QWidget):
             QStandardItem(rule_type),
             QStandardItem(comment),
         ]
+        # Show tooltip for the items
         items[0].setToolTip(name)
+        if rule_source == "About.xml":
+            tooltip_comment = "Rules from mods's About.xml cannot be modified. Only 'Community Rules' and 'User Rules' are allowed."
+            items[1].setToolTip(tooltip_comment)
+            items[2].setToolTip(tooltip_comment)
+            items[3].setToolTip(tooltip_comment)
+            items[4].setToolTip(tooltip_comment)
+        else:
+            tooltip_comment = "Rules can be Modified"
+            items[1].setToolTip(tooltip_comment)
+            items[2].setToolTip(tooltip_comment)
+            items[3].setToolTip(tooltip_comment)
+            items[4].setToolTip(tooltip_comment)
+
         # Set the items as a new row in the model
         self.editor_model.appendRow(items)
 
@@ -665,7 +690,7 @@ class RuleEditor(QWidget):
         label.setObjectName("ListItemLabel")
         # Set the size hint of the item to be the size of the label
         item.setSizeHint(label.sizeHint())
-        # add to our list
+        # Add to our list
         _list.addItem(item)
         _list.setItemWidget(item, label)
 

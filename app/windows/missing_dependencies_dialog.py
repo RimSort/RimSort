@@ -173,7 +173,7 @@ class MissingDependenciesDialog(QDialog):
             item = self.scroll_layout.itemAt(i)
             if item and item.widget():
                 mod_group = item.widget()
-                for child in mod_group.findChildren(QCheckBox):  # type: QCheckBox
+                for child in mod_group.findChildren(QCheckBox):  # type: ignore
                     child.setChecked(True)
 
     def toggle_mod_selection(self, state: int, mod_id: str) -> None:

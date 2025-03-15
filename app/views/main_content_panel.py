@@ -88,6 +88,7 @@ from app.windows.missing_dependencies_dialog import MissingDependenciesDialog
 from app.windows.missing_mods_panel import MissingModsPrompt
 from app.windows.rule_editor_panel import RuleEditor
 from app.windows.runner_panel import RunnerPanel
+from app.windows.use_this_instead_panel import UseThisInsteadPanel
 from app.windows.workshop_mod_updater_panel import ModUpdaterPrompt
 
 if TYPE_CHECKING:
@@ -156,6 +157,18 @@ class MainContent(QObject):
             EventBus().do_download_steam_workshop_db_from_github.connect(
                 self._on_do_download_steam_workshop_db_from_github
             )
+            EventBus().do_upload_no_version_warning_db_to_github.connect(
+                self._on_do_upload_no_version_warning_db_to_github
+            )
+            EventBus().do_download_no_version_warning_db_from_github.connect(
+                self._on_do_download_no_version_warning_db_from_github
+            )
+            EventBus().do_upload_use_this_instead_db_to_github.connect(
+                self._on_do_upload_use_this_instead_db_to_github
+            )
+            EventBus().do_download_use_this_instead_db_from_github.connect(
+                self._on_do_download_use_this_instead_db_from_github
+            )
             EventBus().do_upload_rimsort_log.connect(self._on_do_upload_rimsort_log)
             EventBus().do_upload_rimsort_old_log.connect(
                 self._on_do_upload_rimsort_old_log
@@ -199,8 +212,28 @@ class MainContent(QObject):
             EventBus().do_open_rimsort_logs_directory.connect(
                 self._do_open_rimsort_logs_directory
             )
+            EventBus().do_open_rimworld_directory.connect(
+                self._do_open_rimworld_directory
+            )
+            EventBus().do_open_rimworld_config_directory.connect(
+                self._do_open_rimworld_config_directory
+            )
             EventBus().do_open_rimworld_logs_directory.connect(
                 self._do_open_rimworld_logs_directory
+            )
+            EventBus().do_open_local_mods_directory.connect(
+                self._do_open_local_mods_directory
+            )
+            EventBus().do_open_steam_mods_directory.connect(
+                self._do_open_steam_mods_directory
+            )
+
+            EventBus().do_steamcmd_download.connect(
+                self._do_download_mods_with_steamcmd
+            )
+
+            EventBus().do_steamworks_api_call.connect(
+                self._do_steamworks_api_call_animated
             )
 
             # Edit Menu bar Eventbus
@@ -294,9 +327,6 @@ class MainContent(QObject):
             self.mods_panel.inactive_mods_list.update_git_mods_signal.connect(
                 self._check_git_repos_for_update
             )
-            self.mods_panel.active_mods_list.steamcmd_downloader_signal.connect(
-                self._do_download_mods_with_steamcmd
-            )
             self.mods_panel.inactive_mods_list.steamcmd_downloader_signal.connect(
                 self._do_download_mods_with_steamcmd
             )
@@ -314,6 +344,9 @@ class MainContent(QObject):
             )
             self.mods_panel.active_mods_list.refresh_signal.connect(self._do_refresh)
             self.mods_panel.inactive_mods_list.refresh_signal.connect(self._do_refresh)
+
+            EventBus().use_this_instead_clicked.connect(self._use_this_instead_clicked)
+
             # Restore cache initially set to empty
             self.active_mods_uuids_last_save: list[str] = []
             self.active_mods_uuids_restore_state: list[str] = []
@@ -442,8 +475,7 @@ class MainContent(QObject):
                 for item in items_to_move:
                     iml.insertItem(count, item)
                     count += 1
-            self.mods_panel.active_mods_list.recalculate_warnings_signal.emit()
-            self.mods_panel.inactive_mods_list.recalculate_warnings_signal.emit()
+        # List error/warnings are automatically recalculated when a mod is inserted/removed from a list
 
     def __handle_inactive_mod_key_press(self, key: str) -> None:
         """
@@ -496,8 +528,7 @@ class MainContent(QObject):
                 for item in items_to_move:
                     aml.insertItem(count, item)
                     count += 1
-            self.mods_panel.active_mods_list.recalculate_warnings_signal.emit()
-            self.mods_panel.inactive_mods_list.recalculate_warnings_signal.emit()
+        # List error/warnings are automatically recalculated when a mod is inserted/removed from a list
 
     def __insert_data_into_lists(
         self, active_mods_uuids: list[str], inactive_mods_uuids: list[str]
@@ -550,15 +581,8 @@ class MainContent(QObject):
         ):  # Do we even have metadata to lookup...?
             self.missing_mods_prompt = MissingModsPrompt(
                 packageids=self.missing_mods,
-                steam_workshop_metadata=self.metadata_manager.external_steam_metadata,
             )
             self.missing_mods_prompt._populate_from_metadata()
-            self.missing_mods_prompt.steamcmd_downloader_signal.connect(
-                self._do_download_mods_with_steamcmd
-            )
-            self.missing_mods_prompt.steamworks_subscription_signal.connect(
-                self._do_steamworks_api_call_animated
-            )
             self.missing_mods_prompt.setWindowModality(
                 Qt.WindowModality.ApplicationModal
             )
@@ -666,7 +690,9 @@ class MainContent(QObject):
                 ].workshop_folder
                 if workshop_mods_target and workshop_mods_target != "":
                     with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
-                        todds_txt_file.write(os.path.abspath(local_mods_target) + "\n")
+                        todds_txt_file.write(
+                            os.path.abspath(workshop_mods_target) + "\n"
+                        )
             else:
                 with open(todds_txt_path, "a", encoding="utf-8") as todds_txt_file:
                     for uuid in self.mods_panel.active_mods_list.uuids:
@@ -1011,20 +1037,24 @@ class MainContent(QObject):
         EventBus().do_save_button_animation_stop.emit()
         # If we are refreshing cache from user action
         if not is_initial:
-            try:
-                # Reset the data source filters to default and clear searches
-                self.mods_panel.active_mods_filter_data_source_index = len(
-                    self.mods_panel.data_source_filter_icons
-                )
-                self.mods_panel.signal_clear_search(list_type="Active")
-                self.mods_panel.inactive_mods_filter_data_source_index = len(
-                    self.mods_panel.data_source_filter_icons
-                )
-                self.mods_panel.signal_clear_search(list_type="Inactive")
-            except Exception as e:
-                logger.warning(f"Error clearing search filters: {str(e)}")
-                # Continue with refresh even if filter clear fails
-
+            # Reset the data source filters to default and clear searches
+            # Avoid recalculating warnings/errors when clearing search
+            # Recalculation for each list will be triggered by mods being reinserted into inactive and active lists automatically
+            self.mods_panel.active_mods_filter_data_source_index = len(
+                self.mods_panel.data_source_filter_icons
+            )
+            self.mods_panel.signal_clear_search(
+                list_type="Active", recalculate_list_errors_warnings=False
+            )
+            self.mods_panel.inactive_mods_filter_data_source_index = len(
+                self.mods_panel.data_source_filter_icons
+            )
+            self.mods_panel.signal_clear_search(
+                list_type="Inactive", recalculate_list_errors_warnings=False
+            )
+            self.mods_panel.active_mods_filter_data_source_index = len(
+                self.mods_panel.data_source_filter_icons
+            )
         # Check if paths are set
         if self.check_if_essential_paths_are_set(prompt=is_initial):
             # Run expensive calculations to set cache data
@@ -1352,7 +1382,7 @@ class MainContent(QObject):
 
     def _do_import_list_rentry(self) -> None:
         # Create an instance of RentryImport
-        rentry_import = RentryImport()
+        rentry_import = RentryImport(self.settings_controller)
         # Exit if user cancels or no package IDs
         if not rentry_import.package_ids:
             logger.debug("USER ACTION: pressed cancel or no package IDs, passing")
@@ -1673,7 +1703,7 @@ class MainContent(QObject):
     def _do_open_app_directory(self) -> None:
         app_directory = os.getcwd()
         logger.info(f"Opening app directory: {app_directory}")
-        platform_specific_open(os.getcwd())
+        platform_specific_open(app_directory)
 
     def _do_open_settings_directory(self) -> None:
         settings_directory = AppInfo().app_storage_folder
@@ -1685,27 +1715,63 @@ class MainContent(QObject):
         logger.info(f"Opening RimSort logs directory: {logs_directory}")
         platform_specific_open(logs_directory)
 
+    def _do_open_rimworld_directory(self) -> None:
+        self._open_directory("RimWorld game", "game_folder")
+
+    def _do_open_rimworld_config_directory(self) -> None:
+        self._open_directory("RimWorld config", "config_folder")
+
     def _do_open_rimworld_logs_directory(self) -> None:
         user_home = Path.home()
         logs_directory = None
         if SystemInfo().operating_system == SystemInfo.OperatingSystem.MACOS:
             logs_directory = (
-                f"/{user_home}/Library/Logs/Ludeon Studios/RimWorld by Ludeon Studios"
+                user_home / "Library/Logs/Ludeon Studios/RimWorld by Ludeon Studios"
             )
-            platform_specific_open(Path(logs_directory))
         elif SystemInfo().operating_system == SystemInfo.OperatingSystem.LINUX:
             logs_directory = (
-                f"{user_home}/.config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios"
+                user_home / ".config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios"
             )
-            platform_specific_open(Path(logs_directory))
         elif SystemInfo().operating_system == SystemInfo.OperatingSystem.WINDOWS:
-            logs_directory = f"{user_home}/AppData/LocalLow/Ludeon Studios/RimWorld by Ludeon Studios"
-            platform_specific_open(Path(logs_directory).resolve())
+            logs_directory = (
+                user_home / "AppData/LocalLow/Ludeon Studios/RimWorld by Ludeon Studios"
+            )
 
-        if logs_directory:
+        if logs_directory and logs_directory.exists():
             logger.info(f"Opening RimWorld logs directory: {logs_directory}")
+            platform_specific_open(logs_directory)
         else:
-            logger.error("Could not open RimWorld logs directory on an unknown system")
+            self.show_dialog_specify_paths("RimWorld logs")
+
+    def _do_open_local_mods_directory(self) -> None:
+        self._open_directory("Local mods", "local_folder")
+
+    def _do_open_steam_mods_directory(self) -> None:
+        self._open_directory("Steam mods", "workshop_folder")
+
+    def _open_directory(self, directory_name: str, attribute: str) -> None:
+        current_instance = self.settings_controller.settings.current_instance
+        directory = getattr(
+            self.settings_controller.settings.instances[current_instance],
+            attribute,
+            None,
+        )
+        if directory and os.path.exists(directory):
+            logger.info(f"Opening {directory_name} directory: {directory}")
+            platform_specific_open(directory)
+        else:
+            self.show_dialog_specify_paths(directory_name)
+
+    def show_dialog_specify_paths(self, directory_name: str) -> None:
+        logger.error(f"Could not open {directory_name} directory")
+        answer = dialogue.show_dialogue_conditional(
+            title="Could not open directory",
+            text=f"{directory_name} path does not exist or is not set.",
+            information="Would you like to set the path now?",
+            button_text_override=["Open settings"],
+        )
+        if "settings" in answer:
+            self.settings_controller.show_settings_dialog()
 
     @Slot()
     def _on_do_upload_rimsort_log(self) -> None:
@@ -1924,18 +1990,10 @@ class MainContent(QObject):
                 information="Are you connected to the Internet?",
             )
             return
-        workshop_mod_updater = ModUpdaterPrompt(
-            internal_mod_metadata=self.metadata_manager.internal_local_metadata
-        )
+        workshop_mod_updater = ModUpdaterPrompt()
         workshop_mod_updater._populate_from_metadata()
-        if workshop_mod_updater.updates_found:
+        if workshop_mod_updater._row_count() > 0:
             logger.debug("Displaying potential Workshop mod updates")
-            workshop_mod_updater.steamcmd_downloader_signal.connect(
-                self._do_download_mods_with_steamcmd
-            )
-            workshop_mod_updater.steamworks_subscription_signal.connect(
-                self._do_steamworks_api_call_animated
-            )
             workshop_mod_updater.show()
         else:
             self.status_signal.emit("All Workshop mods appear to be up to date!")
@@ -2225,13 +2283,37 @@ class MainContent(QObject):
                 if os.path.exists(repo_path):
                     repo = Repo(repo_path)
                     try:
+                        # Check if directory has been added to safe directories
+                        """
+                        This is only necessary when a git repo was cloned by a different user.
+
+                        Eg. I download repo on 'D' hard drive on old laptop. Then I put the 'D' drive in new laptop.
+                        When trying to perform an operation on that repo from the new laptop, you get the dubious ownership error.
+
+                        TODO: Include in PyGit2 migration.
+                        NOTE: Try-Except needed because GitPython does not handle it well when no safe directories exist... PyGit2 might be better at it.
+                        """
+                        try:
+                            safe_directories = repo.git.config(
+                                "--global", "--get-all", "safe.directory"
+                            ).splitlines()
+                        except GitCommandError:
+                            logger.debug("No safe directories present")
+                            safe_directories = []  # Allows code below to execute
+
+                        # If not, add it to safe directories
+                        if repo_path not in safe_directories:
+                            repo.git.config(
+                                "--global", "--add", "safe.directory", repo_path
+                            )
+
                         # Fetch the latest changes from the remote
                         origin = repo.remote(name="origin")
                         origin.fetch()
 
                         # Get the local and remote refs
                         local_ref = repo.head.reference
-                        remote_ref = repo.refs[f"origin/{local_ref.name}"]  # type: ignore
+                        remote_ref = repo.refs[f"origin/{local_ref.name}"]
 
                         # Check if the local branch is behind the remote branch
                         if local_ref.commit != remote_ref.commit:
@@ -3275,10 +3357,47 @@ class MainContent(QObject):
 
     @Slot()
     def _on_do_download_steam_workshop_db_from_github(self) -> None:
+        logger.warning("HIT AT ALL")
         self._do_clone_repo_to_path(
             base_path=str(AppInfo().databases_folder),
             repo_url=self.settings_controller.settings.external_steam_metadata_repo,
         )
+
+    @Slot()
+    def _on_do_upload_no_version_warning_db_to_github(self) -> None:
+        self._do_upload_db_to_repo(
+            repo_url=self.settings_controller.settings.external_no_version_warning_repo_path,
+            file_name=str(
+                Path(f"{self.metadata_manager.game_version[:3]}/ModIdsToFix.xml")
+            ),
+        )
+
+    @Slot()
+    def _on_do_download_no_version_warning_db_from_github(self) -> None:
+        if GIT_EXISTS:
+            self._do_clone_repo_to_path(
+                base_path=str(AppInfo().databases_folder),
+                repo_url=self.settings_controller.settings.external_no_version_warning_repo_path,
+            )
+        else:
+            self._do_notify_no_git()
+
+    @Slot()
+    def _on_do_upload_use_this_instead_db_to_github(self) -> None:
+        self._do_upload_db_to_repo(
+            repo_url=self.settings_controller.settings.external_use_this_instead_repo_path,
+            file_name="*",
+        )
+
+    @Slot()
+    def _on_do_download_use_this_instead_db_from_github(self) -> None:
+        if GIT_EXISTS:
+            self._do_clone_repo_to_path(
+                base_path=str(AppInfo().databases_folder),
+                repo_url=self.settings_controller.settings.external_use_this_instead_repo_path,
+            )
+        else:
+            self._do_notify_no_git()
 
     @Slot()
     def _on_do_upload_log(self) -> None:
@@ -3327,6 +3446,23 @@ class MainContent(QObject):
 
         # Launch independent game process without Steamworks API
         launch_game_process(game_install_path=game_install_path, args=run_args)
+
+    @Slot()
+    def _use_this_instead_clicked(self) -> None:
+        """
+        When clicked, opens the Use This Instead panel.
+        """
+        self.use_this_instead_dialog = UseThisInsteadPanel(
+            mod_metadata=self.metadata_manager.internal_local_metadata
+        )
+        self.use_this_instead_dialog._populate_from_metadata()
+        if self.use_this_instead_dialog.editor_model.rowCount() > 0:
+            self.use_this_instead_dialog.show()
+        else:
+            dialogue.show_information(
+                title="Use This Instead",
+                text='No suggestions were found in the "Use This Instead" database.',
+            )
 
     def set_main_window(self, main_window: "MainWindow") -> None:
         """Set the main window reference for this content panel.

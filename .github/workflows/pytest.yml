@@ -33,7 +33,7 @@ jobs:
           export QT_DEBUG_PLUGINS=1
           pytest --doctest-modules --junitxml=junit/test-results.xml --cov=app --cov-report=xml --cov-report=html -s --no-qt-log
       - name: Upload pytest test results
-        uses: actions/upload-artifact@v4.5.0
+        uses: actions/upload-artifact@v4.6.1
         with:
           name: pytest-results
           path: junit/test-results.xml

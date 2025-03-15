@@ -1,5 +1,6 @@
 import os
 
+from loguru import logger
 from PySide6.QtCore import QObject, Slot
 from PySide6.QtWidgets import QDialog, QPushButton
 
@@ -59,6 +60,9 @@ class MainWindowController(QObject):
         )  # Save btn animation
         EventBus().refresh_started.connect(self.on_refresh_started)
         EventBus().refresh_finished.connect(self.on_refresh_finished)
+        EventBus().reset_use_this_instead_cache.connect(
+            self.on_reset_use_this_instead_cache
+        )
 
     def check_dependencies(self) -> None:
         # Get the active mods list
@@ -302,12 +306,16 @@ class MainWindowController(QObject):
 
     @Slot()
     def on_save_button_animation_start(self) -> None:
+        logger.debug(
+            "Active mods list has been updated. Managing save button animation state."
+        )
         if (
             # Compare current active list with last save to see if the list has changed
             self.main_window.main_content_panel.mods_panel.active_mods_list.uuids
             != self.main_window.main_content_panel.active_mods_uuids_last_save
         ):
             if not self.main_window.save_button_flashing_animation.isActive():
+                logger.debug("Starting save button animation")
                 self.main_window.save_button_flashing_animation.start(
                     500
                 )  # Blink every 500 milliseconds
@@ -326,3 +334,10 @@ class MainWindowController(QObject):
     def set_buttons_enabled(self, enabled: bool) -> None:
         for btn in self.buttons:
             btn.setEnabled(enabled)
+
+    @Slot()
+    def on_reset_use_this_instead_cache(self) -> None:
+        logger.warning(
+            'Resetting "Use This Instead" cache - performance may be impacted until xml is re-cached'
+        )
+        MetadataManager.instance().has_alternative_mod.cache_clear()
