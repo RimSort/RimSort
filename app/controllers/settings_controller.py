@@ -599,6 +599,10 @@ class SettingsController(QObject):
         elif self.settings.sorting_algorithm == SortMethod.TOPOLOGICAL:
             self.settings_dialog.sorting_topological_radio.setChecked(True)
 
+        # Use dependencies for sorting checkbox
+        if self.settings.use_dependency_for_sorting:
+            (self.settings_dialog.use_dependency_for_sorting_checkbox.setChecked(True))
+
         # Set dependencies checkbox
         self.settings_dialog.check_deps_checkbox.setChecked(
             self.settings.check_dependencies_on_sort
@@ -800,6 +804,11 @@ class SettingsController(QObject):
             self.settings.sorting_algorithm = SortMethod.ALPHABETICAL
         elif self.settings_dialog.sorting_topological_radio.isChecked():
             self.settings.sorting_algorithm = SortMethod.TOPOLOGICAL
+
+        # Use dependencies for sorting checkbox
+        self.settings.use_dependency_for_sorting = (
+            self.settings_dialog.use_dependency_for_sorting_checkbox.isChecked()
+        )
 
         # Set dependencies checkbox
         self.settings.check_dependencies_on_sort = (
