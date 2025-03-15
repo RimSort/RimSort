@@ -1424,6 +1424,44 @@ class MetadataManager(QObject):
                 except Exception as e:
                     logger.error(e)
 
+    def get_mod_name_from_package_id(self, package_id: str) -> str:
+        """Get a mod's name from its package ID"""
+        for mod_data in self.internal_local_metadata.values():
+            if mod_data.get("packageid") == package_id:
+                return mod_data.get("name", package_id)
+        return package_id
+
+    def get_missing_dependencies(
+        self, active_mods_uuids: set[str]
+    ) -> dict[str, set[str]]:
+        """
+        Check for missing dependencies among active mods
+        Returns a dict mapping mod package IDs to sets of missing dependency package IDs
+        """
+        missing_deps = {}
+        active_mod_ids = {
+            self.internal_local_metadata[uuid]["packageid"]
+            for uuid in active_mods_uuids
+        }
+
+        # check each active mod's dependencies
+        for uuid in active_mods_uuids:
+            mod_data = self.internal_local_metadata[uuid]
+            mod_id = mod_data["packageid"]
+
+            # get mod's dependencies
+            if mod_data.get("dependencies"):
+                # check which dependencies are missing
+                missing = {
+                    dep_id
+                    for dep_id in mod_data["dependencies"]
+                    if dep_id not in active_mod_ids
+                }
+                if missing:
+                    missing_deps[mod_id] = missing
+
+        return missing_deps
+
 
 class ModParser(QRunnable):
     mod_metadata_updated_signal = Signal(str)

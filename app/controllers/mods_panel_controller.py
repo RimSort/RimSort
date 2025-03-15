@@ -13,7 +13,10 @@ class ModsPanelController(QObject):
 
         self.mods_panel = view
 
-        # Only one label can be active at a time, these are used only in the active modlist
+        self.reset_warnings_signal.connect(self._on_menu_bar_reset_warnings_triggered)
+
+        # Only one label can be active at a time; these are used only in the active modlist.
+
         self.warnings_label_active = False
         self.errors_label_active = False
 
@@ -33,9 +36,8 @@ class ModsPanelController(QObject):
 
     @Slot()
     def _on_filters_changed_in_active_modlist(self) -> None:
-        """
-        When filters are changed in the active modlist.
-        """
+        """When filters are changed in the active modlist."""
+
         # On filter change, disable warning/error label if active
         if self.warnings_label_active:
             self.mods_panel.warnings_text.clicked.emit()
@@ -44,15 +46,18 @@ class ModsPanelController(QObject):
 
     @Slot()
     def _on_filters_changed_in_inactive_modlist(self) -> None:
-        """
-        When filters are changed in the inactive modlist.
-        """
+        """When filters are changed in the inactive modlist."""
+
+        # On filter change, disable warning/error label if active
+        if self.warnings_label_active:
+            self.mods_panel.warnings_text.clicked.emit()
+        elif self.errors_label_active:
+            self.mods_panel.errors_text.clicked.emit()
 
     @Slot()
     def _on_menu_bar_reset_warnings_triggered(self) -> None:
-        """
-        Resets all warning and error toggles for active and inactive mods.
-        """
+        """Resets all warning and error toggles for active and inactive mods."""
+
         active_mods = (
             self.mods_panel.active_mods_list.get_all_loaded_and_toggled_mod_list_items()
         )
@@ -83,13 +88,12 @@ class ModsPanelController(QObject):
 
     @Slot()
     def _change_visibility_of_mods_with_warnings(self) -> None:
-        """
-        When on, shows only mods that have warnings.
+        """When on, shows only mods that have warnings.
 
         When off, shows all mods.
 
-        Works with filters, meaning it wont show mods with warnings if they don't match the filters. etc.
-        """
+        Works with filters, meaning it won't show mods with warnings if they don't match the filters."""
+
         # If the other label is active, disable it
         if self.errors_label_active:
             self.mods_panel.errors_text.clicked.emit()
@@ -110,13 +114,12 @@ class ModsPanelController(QObject):
 
     @Slot()
     def _change_visibility_of_mods_with_errors(self) -> None:
-        """
-        When on, shows only mods that have errors.
+        """When on, shows only mods that have errors.
 
         When off, shows all mods.
 
-        Works with filters, meaning it wont show mods with errors if they don't match the filters. etc.
-        """
+        Works with filters, meaning it won't show mods with errors if they don't match the filters."""
+
         # If the other label is active, disable it
         if self.warnings_label_active:
             self.mods_panel.warnings_text.clicked.emit()

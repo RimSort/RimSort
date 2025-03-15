@@ -2059,6 +2059,7 @@ class ModsPanel(QWidget):
 
     list_updated_signal = Signal()
     save_btn_animation_signal = Signal()
+    check_dependencies_signal = Signal()
 
     def __init__(self, settings_controller: SettingsController) -> None:
         """
@@ -2268,12 +2269,21 @@ class ModsPanel(QWidget):
         # Add warnings/errors layout to main vertical layout
         self.errors_summary_layout.addLayout(self.warnings_errors_layout)
 
+        # Create and add Use This Instead button
         self.use_this_instead_button = QPushButton('Check "Use This Instead" Database')
         self.use_this_instead_button.setObjectName("useThisInsteadButton")
         self.use_this_instead_button.clicked.connect(
             EventBus().use_this_instead_clicked.emit
         )
         self.errors_summary_layout.addWidget(self.use_this_instead_button)
+
+        # Create and add Check Dependencies button
+        self.check_dependencies_button: QPushButton = QPushButton("Check Dependencies")
+        self.check_dependencies_button.setObjectName("MainUI")
+        self.errors_summary_layout.addWidget(self.check_dependencies_button)
+        self.check_dependencies_button.clicked.connect(
+            self.check_dependencies_signal.emit
+        )
 
         # Add to the outer frame
         self.errors_summary_frame.setLayout(self.errors_summary_layout)
