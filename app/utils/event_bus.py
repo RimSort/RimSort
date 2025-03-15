@@ -70,6 +70,10 @@ class EventBus(QObject):
     do_download_community_rules_db_from_github = Signal()
     do_upload_steam_workshop_db_to_github = Signal()
     do_download_steam_workshop_db_from_github = Signal()
+    do_upload_no_version_warning_db_to_github = Signal()
+    do_download_no_version_warning_db_from_github = Signal()
+    do_upload_use_this_instead_db_to_github = Signal()
+    do_download_use_this_instead_db_from_github = Signal()
     do_upload_rimsort_log = Signal()
     do_upload_rimsort_old_log = Signal()
     do_upload_rimworld_log = Signal()
@@ -93,6 +97,8 @@ class EventBus(QObject):
     do_sort_active_mods_list = Signal()
     do_save_active_mods_list = Signal()
     do_run_game = Signal()
+    do_steamworks_api_call = Signal(list)
+    do_steamcmd_download = Signal(list)
 
     refresh_started = Signal()
     refresh_finished = Signal()
@@ -103,8 +109,9 @@ class EventBus(QObject):
     # ModsPanel signals
     list_updated_signal = Signal()  # count, list_type
     filters_changed_in_active_modlist = Signal()
-    filters_changed_in_inactive_modlist = Signal()    
-    
+    filters_changed_in_inactive_modlist = Signal()
+    use_this_instead_clicked = Signal()
+    reset_use_this_instead_cache = Signal()
 
     # Help Menu bar signals
     do_check_for_application_update = Signal()

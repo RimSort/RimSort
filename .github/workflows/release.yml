@@ -101,13 +101,13 @@ jobs:
 
       - name: Download artifacts - Current Flow
         if: ${{ inputs.skip_build == false }}
-        uses: actions/download-artifact@v4.1.8
+        uses: actions/download-artifact@v4.1.9
         with:
           path: artifacts
 
       - name: Download artifacts - Previous Flow
         if: ${{ inputs.skip_build == true}}
-        uses: actions/download-artifact@v4.1.8
+        uses: actions/download-artifact@v4.1.9
         with:
           path: artifacts
           run-id: ${{ github.event.inputs.run_id }}
@@ -172,7 +172,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create Release
-        uses: ncipollo/release-action@v1.15.0
+        uses: ncipollo/release-action@v1.16.0
         id: release
         with:
           artifacts: artifacts/*
