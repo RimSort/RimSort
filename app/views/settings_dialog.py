@@ -32,7 +32,7 @@ class SettingsDialog(QDialog):
 
         self.setWindowTitle("Settings")
         self.setObjectName("settingsPanel")
-        self.resize(800, 600)
+        self.resize(900, 600)
 
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
@@ -44,10 +44,12 @@ class SettingsDialog(QDialog):
         # Initialize the tabs
         self._do_locations_tab()
         self._do_databases_tab()
+        self._do_cross_version_databases_tab()
         self._do_sorting_tab()
         self._do_db_builder_tab()
         self._do_steamcmd_tab()
         self._do_todds_tab()
+        self._do_themes_tab()
         self._do_advanced_tab()
 
         # Bottom buttons layout
@@ -222,18 +224,13 @@ class SettingsDialog(QDialog):
         self.local_mods_folder_location_open_button.setText("Open…")
         header_layout.addWidget(self.local_mods_folder_location_open_button)
 
-        self.local_mods_folder_location_choose_button = QToolButton()
-        self.local_mods_folder_location_choose_button.setText("Choose…")
-        header_layout.addWidget(self.local_mods_folder_location_choose_button)
-
-        self.local_mods_folder_location_clear_button = QToolButton()
-        self.local_mods_folder_location_clear_button.setText("Clear…")
-        header_layout.addWidget(self.local_mods_folder_location_clear_button)
-
-        self.local_mods_folder_location = QLineEdit()
+        self.local_mods_folder_location = QLineEdit(readOnly=True)
         self.local_mods_folder_location.setTextMargins(GUIInfo().text_field_margins)
         self.local_mods_folder_location.setFixedHeight(
             GUIInfo().default_font_line_height * 2
+        )
+        self.local_mods_folder_location.setPlaceholderText(
+            "Game location sets local mods location."
         )
         group_layout.addWidget(self.local_mods_folder_location)
 
@@ -397,7 +394,6 @@ class SettingsDialog(QDialog):
             self.steam_workshop_db_local_file,
             self.steam_workshop_db_local_file_choose_button,
         ) = self.__create_db_group(section_lbl, none_lbl, tab_layout)
-
         database_expiry_label = QLabel(
             "Steam Workshop database expiry in Epoch Time (Use 0 to Disable Notification. Default is 7 Days)"
         )
@@ -408,6 +404,46 @@ class SettingsDialog(QDialog):
         self.database_expiry.setFixedHeight(GUIInfo().default_font_line_height * 2)
         group_layout.addWidget(self.database_expiry)
 
+    def _do_cross_version_databases_tab(self) -> None:
+        tab = QWidget()
+        self.tab_widget.addTab(tab, "Cross Version Databases")
+
+        tab_layout = QVBoxLayout()
+        tab.setLayout(tab_layout)
+
+        self._do_no_version_warning_db_group(tab_layout)
+        self._do_use_this_instead_db_group(tab_layout)
+
+    def _do_no_version_warning_db_group(self, tab_layout: QBoxLayout) -> None:
+        section_lbl = '"No Version Warning" Database'
+        none_lbl = '"No Version Warning" Database'
+        (
+            _,
+            self.no_version_warning_db_none_radio,
+            self.no_version_warning_db_github_radio,
+            self.no_version_warning_db_github_url,
+            self.no_version_warning_db_github_upload_button,
+            self.no_version_warning_db_github_download_button,
+            self.no_version_warning_db_local_file_radio,
+            self.no_version_warning_db_local_file,
+            self.no_version_warning_db_local_file_choose_button,
+        ) = self.__create_db_group(section_lbl, none_lbl, tab_layout)
+
+    def _do_use_this_instead_db_group(self, tab_layout: QBoxLayout) -> None:
+        section_lbl = '"Use This Instead" Database'
+        none_lbl = '"Use This Instead" Database'
+        (
+            _,
+            self.use_this_instead_db_none_radio,
+            self.use_this_instead_db_github_radio,
+            self.use_this_instead_db_github_url,
+            self.use_this_instead_db_github_upload_button,
+            self.use_this_instead_db_github_download_button,
+            self.use_this_instead_db_local_file_radio,
+            self.use_this_instead_db_local_file,
+            self.use_this_instead_db_local_file_choose_button,
+        ) = self.__create_db_group(section_lbl, none_lbl, tab_layout)
+
     def _do_sorting_tab(self) -> None:
         tab = QWidget()
         self.tab_widget.addTab(tab, "Sorting")
@@ -415,21 +451,34 @@ class SettingsDialog(QDialog):
         tab_layout = QVBoxLayout(tab)
         tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        group_box = QGroupBox()
-        tab_layout.addWidget(group_box)
+        # Sort mods group
+        sort_group_box = QGroupBox()
+        tab_layout.addWidget(sort_group_box)
 
-        group_box_layout = QVBoxLayout()
-        group_box.setLayout(group_box_layout)
+        sort_group_box_layout = QVBoxLayout()
+        sort_group_box.setLayout(sort_group_box_layout)
 
         sorting_label = QLabel("Sort mods")
         sorting_label.setFont(GUIInfo().emphasis_font)
-        group_box_layout.addWidget(sorting_label)
+        sort_group_box_layout.addWidget(sorting_label)
 
         self.sorting_alphabetical_radio = QRadioButton("Alphabetically")
-        group_box_layout.addWidget(self.sorting_alphabetical_radio)
+        sort_group_box_layout.addWidget(self.sorting_alphabetical_radio)
 
         self.sorting_topological_radio = QRadioButton("Topologically")
-        group_box_layout.addWidget(self.sorting_topological_radio)
+        sort_group_box_layout.addWidget(self.sorting_topological_radio)
+
+        # Dependencies group
+        deps_group_box = QGroupBox("Sort Dependencies")
+        tab_layout.addWidget(deps_group_box)
+
+        deps_group_box_layout = QVBoxLayout()
+        deps_group_box.setLayout(deps_group_box_layout)
+
+        self.check_deps_checkbox = QCheckBox(
+            "Prompt user to download dependencies when click in Sort"
+        )
+        deps_group_box_layout.addWidget(self.check_deps_checkbox)
 
         tab_layout.addStretch()
 
@@ -686,6 +735,62 @@ class SettingsDialog(QDialog):
         )
         group_layout.addWidget(self.todds_overwrite_checkbox)
 
+    def _do_themes_tab(self) -> None:
+        tab = QWidget()
+        self.tab_widget.addTab(tab, "Theme")
+
+        tab_layout = QVBoxLayout(tab)
+        tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        group_box = QGroupBox()
+        tab_layout.addWidget(group_box)
+
+        group_layout = QHBoxLayout()
+        group_box.setLayout(group_layout)
+        group_box.setFont(GUIInfo().emphasis_font)
+
+        self.enable_themes_checkbox = QCheckBox(
+            "Enable to use theme / stylesheet instead of system Theme"
+        )
+        self.enable_themes_checkbox.setToolTip(
+            "To add your own theme / stylesheet \n\n"
+            "1) Create a new-folder in 'themes' folder in your 'RimSort' config folder \n"
+            "2) Using the default 'RimPy' theme copy it to the folder you created \n"
+            "3) Edit the copied 'style.qss' as per your imagination \n"
+            "4) Start 'RimSort' and select your theme from dropdown \n"
+            "5) Click 'ok' to save settings and apply the selected theme \n\n"
+            "NOTE \n"
+            "Name of folder will be used as name of the theme and any invalid theme will be ignored \n"
+        )
+        group_layout.addWidget(self.enable_themes_checkbox)
+
+        self.themes_combobox = QComboBox()
+        self.themes_combobox.setSizePolicy(
+            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred
+        )
+        group_layout.addWidget(self.themes_combobox)
+
+        self.theme_location_open_button = QToolButton()
+        self.theme_location_open_button.setText("Open Theme Location")
+        group_layout.addWidget(self.theme_location_open_button)
+
+        if self.enable_themes_checkbox.isChecked():
+            self.enable_themes_checkbox.stateChanged.connect(
+                self.connect_populate_themes_combobox
+            )
+        else:
+            self.themes_combobox.clear()
+
+    def connect_populate_themes_combobox(self) -> None:
+        """Populate the themes combobox with available themes."""
+        from app.controllers.theme_controller import ThemeController
+
+        if self.enable_themes_checkbox.isChecked():
+            theme_controller = ThemeController()
+            theme_controller.populate_themes_combobox
+        else:
+            self.themes_combobox.clear()
+
     def _do_advanced_tab(self) -> None:
         tab = QWidget()
         self.tab_widget.addTab(tab, "Advanced")
@@ -713,7 +818,9 @@ class SettingsDialog(QDialog):
         self.mod_type_filter_checkbox = QCheckBox("Enable mod type filter")
         group_layout.addWidget(self.mod_type_filter_checkbox)
 
-        self.hide_invalid_mods_when_filtering_checkbox = QCheckBox("Hide invalid mods when filtering")
+        self.hide_invalid_mods_when_filtering_checkbox = QCheckBox(
+            "Hide invalid mods when filtering"
+        )
         group_layout.addWidget(self.hide_invalid_mods_when_filtering_checkbox)
 
         self.show_duplicate_mods_warning_checkbox = QCheckBox(
@@ -843,6 +950,7 @@ class SettingsDialog(QDialog):
         if index and index != -1:
             self.tab_widget.setCurrentIndex(index)
 
-    def showEvent(self, event: QShowEvent) -> None:
-        super().showEvent(event)
+    def showEvent(self, arg__1: QShowEvent) -> None:
+        """Using arg__1 instead of event to avoid name conflict"""
+        super().showEvent(arg__1)
         self.global_ok_button.setFocus()
