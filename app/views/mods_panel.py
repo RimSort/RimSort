@@ -1785,6 +1785,8 @@ class ModListWidget(QListWidget):
         for uuid, mod_errors in package_id_to_errors.items():
             current_mod_index = self.uuids.index(uuid)
             current_item = self.item(current_mod_index)
+            if current_item is None:
+                continue
             current_item_data = current_item.data(Qt.ItemDataRole.UserRole)
             current_item_data["mismatch"] = False
             current_item_data["errors"] = ""
@@ -2656,6 +2658,8 @@ class ModsPanel(QWidget):
                 if list_type == "Active"
                 else self.inactive_mods_list.item(uuids.index(uuid))
             )
+            if item is None:
+                continue
             item_data = item.data(Qt.ItemDataRole.UserRole)
             metadata = self.metadata_manager.internal_local_metadata[uuid]
             if pattern != "":
@@ -2831,6 +2835,8 @@ class ModsPanel(QWidget):
                 if list_type == "Active"
                 else self.inactive_mods_list.item(uuids.index(uuid))
             )
+            if item is None:
+                continue
             item_data = item.data(Qt.ItemDataRole.UserRole)
             item_filtered = item_data["filtered"]
 
