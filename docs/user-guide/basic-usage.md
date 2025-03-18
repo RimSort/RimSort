@@ -41,7 +41,7 @@ Certain errors/warnings are produced based on dependency presence, incompatibili
 ## External Metadata
 
 {: .note}
-> RimSort releases do not come with this additional external metadata. For information on the optional but highly recommended databases that provide the additional external metadata and how to get them, see the [Databases page](user-guide/databases).
+> RimSort releases do not come with this additional external metadata. For information on the optional but highly recommended databases that provide the additional external metadata and how to get them, see the [Databases page](/user-guide/databases).
 
 RimSort uses external metadata in order to enhance its functionality. The metadata provides it with additional information beyond the information present in a downloaded mod's `About.xml` file. External Metadata in RimSort is designed to be highly user extendable and sharable.
 

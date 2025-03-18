@@ -89,7 +89,7 @@ Linux
 
 {: .important }
 
-> 我们目前仅提供适用于 Ubuntu 的预编译版本。如果你使用其他 Linux 发行版或特殊定制版本，可能会遇到预期外的问题。如果所有预构建版本都无法在你的系统上运行，你可能需要 [从源代码自行构建 RimSort 或通过 Python 解释器运行](development-guide/development-setup)。
+> 我们目前仅提供适用于 Ubuntu 的预编译版本。如果你使用其他 Linux 发行版或特殊定制版本，可能会遇到预期外的问题。如果所有预构建版本都无法在你的系统上运行，你可能需要 [从源代码自行构建 RimSort 或通过 Python 解释器运行](/development-guide/development-setup)。
 
 
 

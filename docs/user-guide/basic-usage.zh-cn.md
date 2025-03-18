@@ -83,7 +83,7 @@ Steam 创意工坊元数据
   这两个数据库都采用与 Paladin RimPy Mod 管理器的社区规则数据库（communityRules.json）兼容的格式。
 
   {: .note}
-  > 虽然你可以直接修改这些纯文本格式的数据库，但建议使用 RimSort 内置的 [规则编辑器](user-guide/rule-editor) 来编辑其中定义的规则。
+  > 虽然你可以直接修改这些纯文本格式的数据库，但建议使用 RimSort 内置的 [规则编辑器](/user-guide/rule-editor) 来编辑其中定义的规则。
 
   > 为什么需要这个？
 

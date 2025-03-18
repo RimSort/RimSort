@@ -11,6 +11,6 @@ RimSort is open source under a copy-left license. We welcome all forms of contri
 
 The source code is fully available and RimSort can be run using a Python interpreter or self-compiled.
 
-Contributions should follow [our Code of Conduct](https://github.com/RimSort/RimSort/tree/main/CODE_OF_CONDUCT.md) and [Contributor Guidelines](development-guide/contributor-guidelines).
+Contributions should follow [our Code of Conduct](https://github.com/RimSort/RimSort/tree/main/CODE_OF_CONDUCT.md) and [Contributor Guidelines](/development-guide/contributor-guidelines).
 
 [Issues]: https://github.com/RimSort/RimSort/issues

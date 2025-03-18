@@ -40,7 +40,7 @@ RimSort 不是恶意软件，可以安全使用。你可以放心忽略任何杀
 
 ## Steam 创意工坊数据库有什么用？
 
-RimSort 使用 Steam 创意工坊数据库（Steam DB）来加载 Steam 平台提供的 Mod 依赖数据（指工坊中「必需物品」部分）。尽管 Mod 作者应尽量在其 Mod 的 about.xml 文件中也明确指定这些数据，但通过 Steam DB，RimSort 可以同时利用 Mod 的 Steam 数据和 about.xml 文件中的信息。有关详细信息，请参阅 [用户指南](user-guide/databases)。
+RimSort 使用 Steam 创意工坊数据库（Steam DB）来加载 Steam 平台提供的 Mod 依赖数据（指工坊中「必需物品」部分）。尽管 Mod 作者应尽量在其 Mod 的 about.xml 文件中也明确指定这些数据，但通过 Steam DB，RimSort 可以同时利用 Mod 的 Steam 数据和 about.xml 文件中的信息。有关详细信息，请参阅 [用户指南](/user-guide/databases)。
 
 ## 社区规则数据库有什么作用？
 

@@ -38,11 +38,11 @@ Game paths and other location settings are located in the settings panel under `
 
 ## What is the Steam Workshop Database used for?
 
-RimSort uses the Steam Workshop Database (Steam DB) for loading mod dependency data that is only available on Steam (the "required items" section). While modders should strive to specify this data also in their mods about.xml, the Steam DB allows RimSort to use a mods Steam data, in addition to its about.xml. For details, see the [user guide](user-guide/databases)
+RimSort uses the Steam Workshop Database (Steam DB) for loading mod dependency data that is only available on Steam (the "required items" section). While modders should strive to specify this data also in their mods about.xml, the Steam DB allows RimSort to use a mods Steam data, in addition to its about.xml. For details, see the [user guide](/user-guide/databases)
 
 ## What is the Community Rules Database used for?
 
-The Community Rules Database (Community Rules DB / CR DB) is used for getting RimSort to place mods in the correct load order. These rules are found and submitted by the community and then collected for shared use in the CR DB. You can contribute to the CR DB by submitting pull requests on GitHub. For details about the DB, see the [user guide](user-guide/databases).
+The Community Rules Database (Community Rules DB / CR DB) is used for getting RimSort to place mods in the correct load order. These rules are found and submitted by the community and then collected for shared use in the CR DB. You can contribute to the CR DB by submitting pull requests on GitHub. For details about the DB, see the [user guide](/user-guide/databases).
 
 ## How do I enable Steam client integration features like `Open mod in Steam` if I have Steam installed?
 
