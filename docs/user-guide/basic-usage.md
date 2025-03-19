@@ -53,7 +53,7 @@ Steam Workshop Metadata
 
   Contains metadata queried from Steam WebAPI + Steamworks API, utilizing the schema defined by Paladin's RimPy Mod Manager Database db.json
 
-  To build the Steam Workshop Database yourself, use the [SteamDB Builder]({% link user-guide/db-builder.md %}).
+  To build the Steam Workshop Database yourself, use the [SteamDB Builder](/user-guide/db-builder).
   > Why is this necessary?
   
   - Dependency metadata that is available on Steam - mod developers list DLC dependencies as well as additional mod dependencies on Steam.
@@ -73,7 +73,7 @@ Rules Metadata
   Both of these databases uses a schema compatible with Paladin's RimPy Mod Manager Database communityRules.json.
 
   {: .note}
-  > While you can modify the databases directly as they are plain text files, it is recommended to use RimSort's built in [Rule Editor]({% link user-guide/rule-editor.md %}) utility to edit the rules defined in these databases.
+  > While you can modify the databases directly as they are plain text files, it is recommended to use RimSort's built in [Rule Editor](/user-guide/rule-editor) utility to edit the rules defined in these databases.
 
   > Why is this necessary?
   
