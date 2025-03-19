@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <packageId>Ludeon.RimWorld.Biotech</packageId>
+  <author>Ludeon Studios</author>
+  <steamAppId>1826140</steamAppId>
+  <supportedVersions>
+  	<li>1.5</li>
+  </supportedVersions>
+  <loadAfter>
+    <li>Ludeon.RimWorld</li>
+  </loadAfter>
+  <forceLoadAfter>
+    <li>Ludeon.RimWorld.Royalty</li>
+    <li>Ludeon.RimWorld.Ideology</li>
+  </forceLoadAfter>
+  <forceLoadBefore>
+    <li>Ludeon.RimWorld.Anomaly</li>
+  </forceLoadBefore>
+</ModMetaData>
