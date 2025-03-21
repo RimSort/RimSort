@@ -67,6 +67,7 @@ class Settings(QObject):
         self.check_dependencies_on_sort: bool = (
             True  # Whether to check for missing dependencies when sorting
         )
+        self.use_dependency_for_sorting: bool = False
 
         # DB Builder
         self.db_builder_include: str = "all_mods"
