@@ -46,6 +46,9 @@ class MainWindowController(QObject):
             button.clicked.connect(signal.emit)
 
         # Connect check dependencies signal from mods panel
+        self.main_window.main_content_panel.check_dependencies_signal.connect(
+            self.check_dependencies
+        )
         self.main_window.main_content_panel.mods_panel.check_dependencies_signal.connect(
             self.check_dependencies
         )
