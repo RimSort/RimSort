@@ -84,7 +84,6 @@ from app.utils.todds.wrapper import ToddsInterface
 from app.utils.xml import json_to_xml_write
 from app.views.mod_info_panel import ModInfo
 from app.views.mods_panel import ModListWidget, ModsPanel, ModsPanelSortKey
-from app.windows.missing_dependencies_dialog import MissingDependenciesDialog
 from app.windows.missing_mods_panel import MissingModsPrompt
 from app.windows.rule_editor_panel import RuleEditor
 from app.windows.runner_panel import RunnerPanel
@@ -106,6 +105,7 @@ class MainContent(QObject):
 
     _instance: Self | None = None
 
+    check_dependencies_signal = Signal()
     disable_enable_widgets_signal = Signal(bool)
     status_signal = Signal(str)
     stop_watchdog_signal = Signal()
@@ -1190,26 +1190,8 @@ class MainContent(QObject):
 
         # Check for missing dependencies if enabled in settings and check_deps is True
         if check_deps and self.settings_controller.settings.check_dependencies_on_sort:
-            missing_deps = self.metadata_manager.get_missing_dependencies(active_mods)
-            if missing_deps:
-                dialog = MissingDependenciesDialog(self.main_window)
-                dialog.show_missing_dependencies(missing_deps)
-
-                result = dialog.exec()
-                if result:  # Dialog accepted
-                    # User clicked "Add Selected & Sort"
-                    selected_mods = dialog.get_selected_mods()
-                    if selected_mods:
-                        # Add selected mods to active mods
-                        for mod_id in selected_mods:
-                            # Find the UUID for this package ID
-                            for (
-                                uuid,
-                                mod_data,
-                            ) in self.metadata_manager.internal_local_metadata.items():
-                                if mod_data.get("packageid") == mod_id:
-                                    active_mods.add(uuid)
-                                    break
+            logger.debug("Checking dependencies before sorting")
+            self.check_dependencies_signal.emit()  # This signal calls the check_dependencies method.
 
         # Get package IDs for active mods
         active_package_ids = set()
