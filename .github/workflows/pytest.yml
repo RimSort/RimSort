@@ -21,6 +21,15 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+      - name: Install special python dependencies
+        shell: bash
+        run: |
+          set -e
+          python distribute.py \
+          --skip-pip \
+          --skip-build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Install missing Linux libs for gui tests
         run: |
           sudo apt-get update
@@ -33,7 +42,7 @@ jobs:
           export QT_DEBUG_PLUGINS=1
           pytest --doctest-modules --junitxml=junit/test-results.xml --cov=app --cov-report=xml --cov-report=html -s --no-qt-log
       - name: Upload pytest test results
-        uses: actions/upload-artifact@v4.6.1
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: pytest-results
           path: junit/test-results.xml

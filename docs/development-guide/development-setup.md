@@ -3,6 +3,7 @@ title: Development Setup & Building
 nav_order: 1
 layout: default
 parent: Development Guide
+permalink: development-guide/development-setup
 ---
 # Development Setup & Building
 {: .no_toc }
