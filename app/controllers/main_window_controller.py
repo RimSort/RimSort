@@ -49,6 +49,10 @@ class MainWindowController(QObject):
         self.main_window.main_content_panel.mods_panel.check_dependencies_signal.connect(
             self.check_dependencies
         )
+        # Connect check dependencies signal from main content panel
+        self.main_window.main_content_panel.check_dependencies_signal.connect(
+            self.check_dependencies
+        )
 
         # Connect EventBus signals to slots
         EventBus().do_button_animation.connect(self.on_button_animation)
