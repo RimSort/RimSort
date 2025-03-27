@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+	<name>Fishery - Modding Library</name>
+	<packageId>bs.fishery</packageId>
+	<supportedVersions>
+		<li>1.2</li>
+		<li>1.3</li>
+		<li>1.4</li>
+		<li>1.5</li>
+	</supportedVersions>
+	<author>bradson</author>
+	<modIconPath IgnoreIfNoMatchingField="True">FisheryLib/ModIcon</modIconPath>
+	<url>https://github.com/bbradson/fishery</url>
+	<loadBefore>
+		<li>Ludeon.RimWorld</li>
+		<li>me.samboycoding.betterloading</li>
+	</loadBefore>
+	<loadAfter>
+		<li>brrainz.harmony</li>
+	</loadAfter>
+	<modDependencies>
+		<li>
+			<packageId>brrainz.harmony</packageId>
+			<displayName>Harmony</displayName>
+			<steamWorkshopUrl>steam://url/CommunityFilePage/2009463077</steamWorkshopUrl>
+			<downloadUrl>https://github.com/pardeike/HarmonyRimWorld/releases/latest</downloadUrl>
+		</li>
+	</modDependencies>
+	<description>Additions for Harmony to simplify otherwise complex patch operations</description>
+</ModMetaData>
