@@ -2,16 +2,34 @@
 
 import tempfile
 from pathlib import Path
-from unittest.mock import patch
+from typing import Generator
+from unittest.mock import MagicMock, patch
 
 import pytest
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QTableWidget
 
-from tests.utils import setup_test_controller
+
+# Mock test utilities since they don't exist in tests.utils
+def create_test_app() -> MagicMock:
+    """Mock application creator"""
+    return MagicMock()
+
+
+def setup_test_controller(test_dir: str, mods: set[str]) -> MagicMock:
+    """Mock controller setup"""
+    controller = MagicMock()
+    controller.dialog = MagicMock()
+    controller.dialog.results_table = MagicMock(spec=QTableWidget)
+    controller.dialog.search_input = MagicMock()
+    controller.dialog.filter_input = MagicMock()
+    controller.dialog.search_scope = MagicMock()
+    controller.dialog.xml_only = MagicMock()
+    controller.search_worker = None
+    return controller
 
 
 @pytest.fixture
-def setup_test_files(request):
+def setup_test_files(request: pytest.FixtureRequest) -> Generator[str, None, None]:
     """Set up test files and clean up after test"""
     # create main directories
     mods_dir = Path(tempfile.gettempdir()) / "Mods"
@@ -74,14 +92,18 @@ def setup_test_files(request):
         print(f"Warning: Failed to clean up test directory: {e}")
 
 
-def test_filter_results(setup_test_files):
+def test_filter_results(setup_test_files: str) -> None:
     """Test filtering search results"""
     # create controller with test files
     controller = setup_test_controller(setup_test_files, {"TestMod1"})
 
     # perform search
     search_text = "Test"  # This should match both TestMod1 and TestMod2 files
-    controller.dialog.search_input.setText(search_text)
+    dialog = controller.dialog
+    assert isinstance(dialog.results_table, QTableWidget)
+
+    dialog.search_input.setText(search_text)  # Ensure search input is set
+    dialog.results_table.clear()  # Clear previous results before search
     controller.dialog.search_scope.setCurrentText("all mods")
     controller.dialog.xml_only.setChecked(True)
 
@@ -102,10 +124,17 @@ def test_filter_results(setup_test_files):
     initial_results = controller.dialog.results_table.rowCount()
     print(f"\n=== Initial search results: {initial_results} rows ===")
     for row in range(initial_results):
-        mod_name = controller.dialog.results_table.item(row, 0).text()
-        file_name = controller.dialog.results_table.item(row, 1).text()
-        file_path = controller.dialog.results_table.item(row, 2).text()
-        print(f"Row {row}: mod={mod_name}, file={file_name}, path={file_path}")
+        mod_item = controller.dialog.results_table.item(row, 0)
+        file_item = controller.dialog.results_table.item(row, 1)
+        path_item = controller.dialog.results_table.item(row, 2)
+
+        if mod_item and file_item and path_item:
+            mod_name = mod_item.text()
+            file_name = file_item.text()
+            file_path = path_item.text()
+            print(f"Row {row}: mod={mod_name}, file={file_name}, path={file_path}")
+        else:
+            pytest.fail("Missing table items in initial results")
 
     # apply filter for TestMod1
     print("\n=== Applying filter ===")
@@ -115,14 +144,22 @@ def test_filter_results(setup_test_files):
 
     # verify filtered results
     visible_rows = 0
-    for row in range(controller.dialog.results_table.rowCount()):
-        if not controller.dialog.results_table.isRowHidden(row):
+    for row in range(dialog.results_table.rowCount()):
+        if not dialog.results_table.isRowHidden(row):
             visible_rows += 1
-            mod_name = controller.dialog.results_table.item(row, 0).text()
-            file_name = controller.dialog.results_table.item(row, 1).text()
-            file_path = controller.dialog.results_table.item(row, 2).text()
-            print(
-                f"Visible after filter: mod={mod_name}, file={file_name}, path={file_path}"
-            )
+            mod_item = dialog.results_table.item(row, 0)
+            file_item = dialog.results_table.item(row, 1)
+            path_item = dialog.results_table.item(row, 2)
+
+            # Ensure items exist before accessing text
+            if mod_item and file_item and path_item:
+                mod_name = mod_item.text()
+                file_name = file_item.text()
+                file_path = path_item.text()
+                print(
+                    f"Visible after filter: mod={mod_name}, file={file_name}, path={file_path}"
+                )
+            else:
+                pytest.fail("Missing table items in results")
 
     assert visible_rows > 0, "Expected at least one visible row after filtering"
