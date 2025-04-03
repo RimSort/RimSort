@@ -1,6 +1,6 @@
 """Common test utilities and imports"""
 
-from typing import Optional, Set
+from typing import Optional
 
 from PySide6.QtWidgets import QApplication
 
@@ -14,12 +14,14 @@ def create_test_app() -> QApplication:
     app = QApplication.instance()
     if app is None:
         app = QApplication([])
+    elif not isinstance(app, QApplication):
+        raise RuntimeError("Expected QApplication instance, got QCoreApplication.")
     return app
 
 
 def setup_test_controller(
     mods_path: str,
-    active_mod_ids: Optional[Set[str]] = None,
+    active_mod_ids: Optional[set[str]] = None,
     scope: str = "all mods",
 ) -> FileSearchController:
     """Set up a FileSearchController for testing"""
@@ -28,11 +30,14 @@ def setup_test_controller(
     dialog = FileSearchDialog()
     settings = Settings()
 
-    class TestInstance:
-        def __init__(self, local_folder: str):
+    from app.models.instance import Instance
+
+    class TestInstance(Instance):
+        def __init__(self, local_folder: str) -> None:
+            super().__init__()
             self.local_folder = local_folder
-            self.workshop_folder = None
-            self.config_folder = None
+            self.workshop_folder = ""
+            self.config_folder = ""
 
     settings.instances = {"test": TestInstance(mods_path)}
     settings.current_instance = "test"
