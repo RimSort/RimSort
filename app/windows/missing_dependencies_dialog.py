@@ -4,6 +4,7 @@ from PySide6.QtWidgets import (
     QDialog,
     QHBoxLayout,
     QLabel,
+    QLayoutItem,
     QPushButton,
     QScrollArea,
     QVBoxLayout,
@@ -23,7 +24,7 @@ class MissingDependenciesDialog(QDialog):
     def init_ui(self) -> None:
         # set window title and size
         self.setWindowTitle("Dependency Manager")
-        self.resize(700, 500)
+        self.resize(800, 600)
 
         # create main layout
         layout = QVBoxLayout()
@@ -75,9 +76,10 @@ class MissingDependenciesDialog(QDialog):
         Display missing dependencies in the dialog
         missing_deps: dict mapping mod package IDs to sets of missing dependency package IDs
         """
-        # clear previous content
+        # clear previous content from the display.
         while self.scroll_layout.count():
-            child = self.scroll_layout.takeAt(0)
+            child: QLayoutItem = self.scroll_layout.takeAt(0)
+            # Ensure the child widget exists before deleting it
             if child.widget():
                 child.widget().deleteLater()
 
@@ -87,7 +89,7 @@ class MissingDependenciesDialog(QDialog):
             self.scroll_layout.addWidget(label)
             return
 
-        # Group dependencies by their package ID
+        # Group dependencies by their package ID.
         local_deps: dict[
             str, list[str]
         ] = {}  # deps that exist locally but aren't active
@@ -173,8 +175,10 @@ class MissingDependenciesDialog(QDialog):
             item = self.scroll_layout.itemAt(i)
             if item and item.widget():
                 mod_group = item.widget()
-                for child in mod_group.findChildren(QCheckBox):  # type: ignore
-                    child.setChecked(True)
+                checkbox = mod_group.findChild(QCheckBox)
+                # Correctly find the checkbox
+                if checkbox:
+                    checkbox.setChecked(True)
 
     def toggle_mod_selection(self, state: int, mod_id: str) -> None:
         """Toggle a mod's selection state"""

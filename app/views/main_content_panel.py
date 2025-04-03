@@ -106,6 +106,7 @@ class MainContent(QObject):
 
     _instance: Self | None = None
 
+    check_dependencies_signal = Signal()
     disable_enable_widgets_signal = Signal(bool)
     status_signal = Signal(str)
     stop_watchdog_signal = Signal()
@@ -1191,6 +1192,8 @@ class MainContent(QObject):
 
         # Check for missing dependencies if enabled in settings and check_deps is True
         if check_deps and self.settings_controller.settings.check_dependencies_on_sort:
+            # Check for missing dependencies
+            # self.check_dependencies_signal.emit() # TODO: Working but disabled for now due to longer sorting time
             missing_deps = self.metadata_manager.get_missing_dependencies(active_mods)
             if missing_deps:
                 dialog = MissingDependenciesDialog(self.main_window)
