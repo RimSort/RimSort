@@ -1,11 +1,9 @@
 import json
 import os
-import sys
 from enum import Enum
-from errno import ENOTEMPTY
 from functools import partial
 from pathlib import Path
-from shutil import copy2, copytree, rmtree
+from shutil import copy2, copytree
 from traceback import format_exc
 from typing import Any, KeysView, cast
 
@@ -40,6 +38,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QListWidget,
     QMenu,
+    QPushButton,
     QToolButton,
     QVBoxLayout,
     QWidget,
@@ -59,14 +58,13 @@ from app.utils.generic import (
     check_if_steam_running,
     copy_to_clipboard_safely,
     delete_files_except_extension,
-    delete_files_only_extension,
     flatten_to_list,
-    handle_remove_read_only,
     open_url_browser,
     platform_specific_open,
     sanitize_filename,
 )
-from app.utils.metadata import MetadataManager
+from app.utils.metadata import MetadataManager, ModMetadata
+from app.views.deletion_menu import ModDeletionMenu
 from app.views.dialogue import (
     show_dialogue_conditional,
     show_dialogue_input,
@@ -139,6 +137,7 @@ class ModListItemInner(QWidget):
         filtered: bool,
         invalid: bool,
         mismatch: bool,
+        alternative: bool,
         settings_controller: SettingsController,
         uuid: str,
     ) -> None:
@@ -154,6 +153,8 @@ class ModListItemInner(QWidget):
         :param warnings: a string of warnings for the notification tooltip
         :param filtered: a bool representing whether the widget's item is filtered
         :param invalid: a bool representing whether the widget's item is an invalid mod
+        :param mismatch: a bool representing whether the widget's item has a version mismatch
+        :param alternative: a bool representing whether the widget's item has a recommended alternative mod
         :param settings_controller: an instance of SettingsController for accessing settings
         :param uuid: str, the uuid of the mod which corresponds to a mod's metadata
         """
@@ -172,6 +173,8 @@ class ModListItemInner(QWidget):
         self.invalid = invalid
         # Cache mismatch state of widget's item - used to determine warning icon visibility
         self.mismatch = mismatch
+        # Cache alternative state of widget's item - used to determine warning icon visibility
+        self.alternative = alternative
         # Cache SettingsManager instance
         self.settings_controller = settings_controller
 
@@ -641,7 +644,12 @@ class ModListWidget(QListWidget):
         # into widgets. Used for an optimization strategy for `handle_rows_inserted`
         self.uuids: list[str] = []
         self.ignore_warning_list: list[str] = []
-        logger.debug("Finished ModListWidget initialization")
+
+        self.deletion_sub_menu = ModDeletionMenu(
+            self._get_selected_metadata,
+            self.uuids,
+        )  # TDOD: should we enable items conditionally? For now use all
+        logger.debug("Finished ModListW`idget initialization")
 
     def item(self, row: int) -> CustomListWidgetItem:
         """
@@ -701,6 +709,17 @@ class ModListWidget(QListWidget):
         # Only emit "drop" signal if a mod was dragged and dropped within the same modlist
         if source_widget == self:
             self.list_update_signal.emit("drop")
+
+    def _get_selected_metadata(self) -> list[ModMetadata]:
+        selected_items = self.selectedItems()
+        metadata: list[ModMetadata] = []
+        for source_item in selected_items:
+            if type(source_item) is CustomListWidgetItem:
+                item_data = source_item.data(Qt.ItemDataRole.UserRole)
+                metadata.append(
+                    self.metadata_manager.internal_local_metadata[item_data["uuid"]]
+                )
+        return metadata
 
     def eventFilter(self, object: QObject, event: QEvent) -> bool:
         """
@@ -928,15 +947,6 @@ class ModListWidget(QListWidget):
                     # Ignore error action
                     toggle_warning_action = QAction()
                     toggle_warning_action.setText("Toggle warning")
-                    # Mod deletion actions
-                    delete_mod_action = QAction()
-                    delete_mod_action.setText("Delete mod")
-                    delete_mod_keep_dds_action = QAction()
-                    delete_mod_keep_dds_action.setText("Delete mod (keep .dds)")
-                    delete_mod_dds_only_action = QAction()
-                    delete_mod_dds_only_action.setText(
-                        "Delete optimized textures (.dds files only)"
-                    )
             # Multiple items selected
             elif len(selected_items) > 1:  # Multiple items selected
                 for source_item in selected_items:
@@ -1061,6 +1071,7 @@ class ModListWidget(QListWidget):
                             delete_mod_dds_only_action.setText(
                                 "Delete optimized textures (.dds files only)"
                             )
+
             # Put together our contextMenu
             if open_folder_action:
                 context_menu.addAction(open_folder_action)
@@ -1070,19 +1081,8 @@ class ModListWidget(QListWidget):
                 context_menu.addAction(open_mod_steam_action)
             if toggle_warning_action:
                 context_menu.addAction(toggle_warning_action)
-            if (
-                delete_mod_action
-                or delete_mod_keep_dds_action
-                or delete_mod_dds_only_action
-            ):
-                deletion_options_menu = QMenu(title="Deletion options")
-                if delete_mod_action:
-                    deletion_options_menu.addAction(delete_mod_action)
-                if delete_mod_keep_dds_action:
-                    deletion_options_menu.addAction(delete_mod_keep_dds_action)
-                if delete_mod_dds_only_action:
-                    deletion_options_menu.addAction(delete_mod_dds_only_action)
-                context_menu.addMenu(deletion_options_menu)
+
+            context_menu.addMenu(self.deletion_sub_menu)
             context_menu.addSeparator()
             if (
                 copy_packageid_to_clipboard_action
@@ -1515,6 +1515,7 @@ class ModListWidget(QListWidget):
         filtered = data["filtered"]
         invalid = data["invalid"]
         mismatch = data["mismatch"]
+        alternative = data["alternative"]
         uuid = data["uuid"]
         if uuid:
             widget = ModListItemInner(
@@ -1524,6 +1525,7 @@ class ModListWidget(QListWidget):
                 filtered=filtered,
                 invalid=invalid,
                 mismatch=mismatch,
+                alternative=alternative,
                 settings_controller=self.settings_controller,
                 uuid=uuid,
             )
@@ -1718,6 +1720,10 @@ class ModListWidget(QListWidget):
                 "load_before_violations": set() if self.list_type == "Active" else None,
                 "load_after_violations": set() if self.list_type == "Active" else None,
                 "version_mismatch": True,
+                "use_this_instead": set()
+                if self.settings_controller.settings.external_use_this_instead_metadata_source
+                != "None"
+                else None,
             }
             for uuid in self.uuids
         }
@@ -1849,6 +1855,12 @@ class ModListWidget(QListWidget):
             ):
                 # Add tool tip to indicate mod and game version mismatch
                 tool_tip_text += "\nMod and Game Version Mismatch"
+            # Handle "use this instead" behavior
+            if (
+                current_item_data["alternative"]
+                and mod_data["packageid"] not in self.ignore_warning_list
+            ):
+                tool_tip_text += f"\nAn alternative updated mod is recommended:\n{current_item_data['alternative']}"
             # Add to error summary if any missing dependencies or incompatibilities
             if self.list_type == "Active" and any(
                 [
@@ -1877,6 +1889,7 @@ class ModListWidget(QListWidget):
                             "load_before_violations",
                             "load_after_violations",
                             "version_mismatch",
+                            "use_this_instead",
                         ]
                     ]
                 )
@@ -2412,6 +2425,7 @@ class ModsPanel(QWidget):
 
     list_updated_signal = Signal()
     save_btn_animation_signal = Signal()
+    check_dependencies_signal = Signal()
 
     def __init__(self, settings_controller: SettingsController) -> None:
         """
@@ -2591,12 +2605,17 @@ class ModsPanel(QWidget):
         # Active mods list Errors/warnings widgets
         self.errors_summary_frame: QFrame = QFrame()
         self.errors_summary_frame.setObjectName("errorFrame")
-        self.errors_summary_layout = QHBoxLayout()
+        self.errors_summary_layout = QVBoxLayout()
         self.errors_summary_layout.setContentsMargins(0, 0, 0, 0)
         self.errors_summary_layout.setSpacing(2)
+        # Create horizontal layout for warnings and errors
+        self.warnings_errors_layout = QHBoxLayout()
+        self.warnings_errors_layout.setSpacing(2)
         self.warnings_icon: QLabel = QLabel()
         self.warnings_icon.setPixmap(ModListIcons.warning_icon().pixmap(QSize(20, 20)))
-        self.warnings_text: AdvancedClickableQLabel = AdvancedClickableQLabel("0 warnings")
+        self.warnings_text: AdvancedClickableQLabel = AdvancedClickableQLabel(
+            "0 warnings"
+        )
         self.warnings_text.setObjectName("summaryValue")
         self.warnings_text.setToolTip("Click to only show mods with warnings")
         self.errors_icon: QLabel = QLabel()
@@ -2610,8 +2629,29 @@ class ModsPanel(QWidget):
         self.errors_layout = QHBoxLayout()
         self.errors_layout.addWidget(self.errors_icon, 1)
         self.errors_layout.addWidget(self.errors_text, 99)
-        self.errors_summary_layout.addLayout(self.warnings_layout, 50)
-        self.errors_summary_layout.addLayout(self.errors_layout, 50)
+        self.warnings_errors_layout.addLayout(self.warnings_layout, 50)
+        self.warnings_errors_layout.addLayout(self.errors_layout, 50)
+
+        # Add warnings/errors layout to main vertical layout
+        self.errors_summary_layout.addLayout(self.warnings_errors_layout)
+
+        # Create and add Use This Instead button
+        self.use_this_instead_button = QPushButton('Check "Use This Instead" Database')
+        self.use_this_instead_button.setObjectName("useThisInsteadButton")
+        self.use_this_instead_button.clicked.connect(
+            EventBus().use_this_instead_clicked.emit
+        )
+        self.errors_summary_layout.addWidget(self.use_this_instead_button)
+
+        # Create and add Check Dependencies button
+        self.check_dependencies_button: QPushButton = QPushButton("Check Dependencies")
+        self.check_dependencies_button.setObjectName("MainUI")
+        self.errors_summary_layout.addWidget(self.check_dependencies_button)
+        self.check_dependencies_button.clicked.connect(
+            self.check_dependencies_signal.emit
+        )
+
+        # Add to the outer frame
         self.errors_summary_frame.setLayout(self.errors_summary_layout)
         self.errors_summary_frame.setHidden(True)
 
@@ -3157,8 +3197,10 @@ class ModsPanel(QWidget):
             label.setText(
                 f"{list_type} [{num_unfiltered}/{num_filtered + num_unfiltered}]"
             )
-        elif  num_filtered > 0:
+        elif num_filtered > 0:
             # If any filter is active, show how many mods are displayed out of total
-            label.setText(f"{list_type} [{num_unfiltered}/{num_filtered + num_unfiltered}]")
+            label.setText(
+                f"{list_type} [{num_unfiltered}/{num_filtered + num_unfiltered}]"
+            )
         else:
             label.setText(f"{list_type} [{num_filtered + num_unfiltered}]")
