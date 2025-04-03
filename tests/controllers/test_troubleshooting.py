@@ -6,21 +6,24 @@ import pytest
 from PySide6.QtWidgets import QApplication
 
 from app.controllers.troubleshooting_controller import TroubleshootingController
+from app.models.instance import Instance
 from app.models.settings import Settings
 from app.views.troubleshooting_dialog import TroubleshootingDialog
 
 
 @pytest.fixture(scope="session")
-def qapp():
+def qapp() -> QApplication:
     """qt app instance for tests"""
     app = QApplication.instance()
     if app is None:
         app = QApplication([])
+    elif not isinstance(app, QApplication):
+        raise RuntimeError("Expected QApplication instance, got QCoreApplication.")
     return app
 
 
 @pytest.fixture
-def setup_test_environment(tmp_path):
+def setup_test_environment(tmp_path: Path) -> tuple[Path, Path, Path]:
     # setup temp dirs for testing
     game_dir = tmp_path / "game"
     config_dir = tmp_path / "config"
@@ -39,16 +42,22 @@ def setup_test_environment(tmp_path):
 
 
 @pytest.fixture
-def troubleshooting_controller(qapp, setup_test_environment):
+def troubleshooting_controller(
+    qapp: QApplication, setup_test_environment: tuple[Path, Path, Path]
+) -> tuple[TroubleshootingController, Path, Path, Path]:
     # setup controller with mock settings
     game_dir, config_dir, steam_mods_dir = setup_test_environment
 
     settings = Settings()
-    settings.instances = [settings]  # mock instance list
-    settings.current_instance = 0  # set current instance
-    settings.instances[0].game_folder = str(game_dir)
-    settings.instances[0].config_folder = str(config_dir)
-    settings.instances[0].workshop_folder = str(steam_mods_dir)
+    # Create properly typed mock instance
+    mock_instance = Instance()
+    mock_instance.game_folder = str(game_dir)
+    mock_instance.config_folder = str(config_dir)
+    mock_instance.workshop_folder = str(steam_mods_dir)
+
+    # Set up instances dict with string key
+    settings.instances = {"default": mock_instance}
+    settings.current_instance = "default"
 
     dialog = TroubleshootingDialog()
     controller = TroubleshootingController(settings, dialog)
@@ -56,7 +65,9 @@ def troubleshooting_controller(qapp, setup_test_environment):
     return controller, game_dir, config_dir, steam_mods_dir
 
 
-def test_game_files_recovery_preserves_local_mods(troubleshooting_controller):
+def test_game_files_recovery_preserves_local_mods(
+    troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
+) -> None:
     # verify game files deletion preserves mods folder
     controller, game_dir, _, _ = troubleshooting_controller
 
@@ -75,7 +86,9 @@ def test_game_files_recovery_preserves_local_mods(troubleshooting_controller):
         assert not (game_dir / "test.txt").exists()  # other files should be deleted
 
 
-def test_steam_mods_recovery(troubleshooting_controller):
+def test_steam_mods_recovery(
+    troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
+) -> None:
     # verify steam workshop mods can be deleted
     controller, _, _, steam_mods_dir = troubleshooting_controller
 
@@ -88,7 +101,9 @@ def test_steam_mods_recovery(troubleshooting_controller):
         assert not test_mod.exists()  # workshop mod should be deleted
 
 
-def test_config_recovery(troubleshooting_controller):
+def test_config_recovery(
+    troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
+) -> None:
     # verify mod config deletion preserves core files
     controller, _, config_dir, _ = troubleshooting_controller
 
@@ -102,7 +117,9 @@ def test_config_recovery(troubleshooting_controller):
     assert not (config_dir / "test.xml").exists()  # other configs deleted
 
 
-def test_game_config_recovery(troubleshooting_controller):
+def test_game_config_recovery(
+    troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
+) -> None:
     # verify game config files can be deleted
     controller, _, config_dir, _ = troubleshooting_controller
 
@@ -116,7 +133,9 @@ def test_game_config_recovery(troubleshooting_controller):
     assert not (config_dir / "KeyPrefs.xml").exists()
 
 
-def test_cancel_button_clears_checkboxes(troubleshooting_controller):
+def test_cancel_button_clears_checkboxes(
+    troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
+) -> None:
     # verify cancel button resets ui state
     controller, _, _, _ = troubleshooting_controller
 
@@ -134,7 +153,9 @@ def test_cancel_button_clears_checkboxes(troubleshooting_controller):
     assert not controller.dialog.integrity_delete_game_configs.isChecked()
 
 
-def test_clear_mods(troubleshooting_controller):
+def test_clear_mods(
+    troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
+) -> None:
     # verify clear mods functionality
     controller, game_dir, config_dir, _ = troubleshooting_controller
 
@@ -175,7 +196,9 @@ def test_clear_mods(troubleshooting_controller):
         mock_event_bus_instance.emit.assert_called_once()
 
 
-def test_apply_button_executes_selected_operations(troubleshooting_controller):
+def test_apply_button_executes_selected_operations(
+    troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
+) -> None:
     # verify apply button executes only selected operations
     controller, game_dir, config_dir, steam_mods_dir = troubleshooting_controller
 
@@ -207,7 +230,9 @@ def test_apply_button_executes_selected_operations(troubleshooting_controller):
         assert (config_dir / "ModsConfig.xml").exists()  # game configs preserved
 
 
-def test_apply_button_cancelled(troubleshooting_controller):
+def test_apply_button_cancelled(
+    troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
+) -> None:
     # verify nothing happens when apply is cancelled
     controller, game_dir, config_dir, steam_mods_dir = troubleshooting_controller
 
@@ -231,7 +256,9 @@ def test_apply_button_cancelled(troubleshooting_controller):
         assert test_mod.exists()
 
 
-def test_steam_utility_buttons(troubleshooting_controller):
+def test_steam_utility_buttons(
+    troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
+) -> None:
     # verify steam utility buttons work correctly
     controller, _, _, steam_mods_dir = troubleshooting_controller
 
@@ -267,7 +294,7 @@ def test_steam_utility_buttons(troubleshooting_controller):
         mock_rmtree.side_effect = None  # reset error
         mock_dialog.reset_mock()
 
-        def exists_side_effect(p):
+        def exists_side_effect(p: Path) -> bool:
             # Return True for Steam path, False for downloading folder
             if p == steam_path:
                 return True
@@ -294,7 +321,9 @@ def test_steam_utility_buttons(troubleshooting_controller):
             ]
 
 
-def test_missing_directories(troubleshooting_controller):
+def test_missing_directories(
+    troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
+) -> None:
     # verify operations handle missing directories gracefully
     controller, game_dir, config_dir, steam_mods_dir = troubleshooting_controller
 
