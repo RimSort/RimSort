@@ -2,7 +2,8 @@ import os
 import re
 import xml.etree.ElementTree as ET
 from collections import Counter
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
+from xml.etree.ElementTree import ParseError
 
 
 def find_xml_files(mods_path: str) -> List[str]:
@@ -34,13 +35,13 @@ def extract_text_from_xml(file_path: str) -> List[str]:
                     texts.extend(re.findall(r"\w+", attr))
 
         return texts
-    except Exception as e:
+    except (ParseError, PermissionError, OSError) as e:
         print(f"Error processing {file_path}: {e}")
         return []
 
 
 def analyze_terms(
-    mods_path: str, sample_size: int = 100
+    mods_path: str, sample_size: Optional[int] = 100
 ) -> Tuple[Dict[str, int], List[str], List[str]]:
     """analyze xml files to find common and rare terms"""
     # get list of xml files
@@ -55,7 +56,7 @@ def analyze_terms(
         print(f"Sampling {sample_size} files for analysis")
 
     # collect all terms
-    term_counter = Counter()
+    term_counter: Counter[str] = Counter()
     for file in xml_files:
         terms = extract_text_from_xml(file)
         # only count terms with 4 or more characters
@@ -71,8 +72,23 @@ def analyze_terms(
     return dict(term_counter), common_terms, rare_terms
 
 
-def main():
-    mods_path = r"D:\Games\Rimworld\Mods"
+def main() -> None:
+    from unittest.mock import MagicMock
+
+    from app.controllers.settings_controller import SettingsController
+    from app.models.settings import Settings
+
+    # Initialize settings with mock model and view
+    mock_model = Settings()
+    mock_view = MagicMock()
+    settings = SettingsController(model=mock_model, view=mock_view)
+    mock_model.load()
+    current_instance = settings.settings.current_instance
+    mods_path = settings.settings.instances[current_instance].local_folder
+
+    if not mods_path:
+        print("Error: No local mods folder configured in settings")
+        return
 
     print("Analyzing XML files for search terms...")
     term_counts, common_terms, rare_terms = analyze_terms(mods_path)
