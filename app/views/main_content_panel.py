@@ -14,7 +14,7 @@ from math import ceil
 from multiprocessing import Pool, cpu_count
 from pathlib import Path
 from tempfile import gettempdir
-from typing import Any, Callable, Self
+from typing import TYPE_CHECKING, Any, Callable, Self
 from urllib.parse import urlparse
 from zipfile import ZipFile
 
@@ -84,10 +84,15 @@ from app.utils.todds.wrapper import ToddsInterface
 from app.utils.xml import json_to_xml_write
 from app.views.mod_info_panel import ModInfo
 from app.views.mods_panel import ModListWidget, ModsPanel, ModsPanelSortKey
+from app.windows.missing_dependencies_dialog import MissingDependenciesDialog
 from app.windows.missing_mods_panel import MissingModsPrompt
 from app.windows.rule_editor_panel import RuleEditor
 from app.windows.runner_panel import RunnerPanel
+from app.windows.use_this_instead_panel import UseThisInsteadPanel
 from app.windows.workshop_mod_updater_panel import ModUpdaterPrompt
+
+if TYPE_CHECKING:
+    from app.views.main_window import MainWindow
 
 
 class MainContent(QObject):
@@ -121,6 +126,7 @@ class MainContent(QObject):
             logger.debug("Initializing MainContent")
 
             self.settings_controller = settings_controller
+            self.main_window = None  # Will be set by set_main_window
 
             EventBus().settings_have_changed.connect(self._on_settings_have_changed)
             EventBus().do_check_for_application_update.connect(
@@ -150,6 +156,18 @@ class MainContent(QObject):
             )
             EventBus().do_download_steam_workshop_db_from_github.connect(
                 self._on_do_download_steam_workshop_db_from_github
+            )
+            EventBus().do_upload_no_version_warning_db_to_github.connect(
+                self._on_do_upload_no_version_warning_db_to_github
+            )
+            EventBus().do_download_no_version_warning_db_from_github.connect(
+                self._on_do_download_no_version_warning_db_from_github
+            )
+            EventBus().do_upload_use_this_instead_db_to_github.connect(
+                self._on_do_upload_use_this_instead_db_to_github
+            )
+            EventBus().do_download_use_this_instead_db_from_github.connect(
+                self._on_do_download_use_this_instead_db_from_github
             )
             EventBus().do_upload_rimsort_log.connect(self._on_do_upload_rimsort_log)
             EventBus().do_upload_rimsort_old_log.connect(
@@ -208,6 +226,14 @@ class MainContent(QObject):
             )
             EventBus().do_open_steam_mods_directory.connect(
                 self._do_open_steam_mods_directory
+            )
+
+            EventBus().do_steamcmd_download.connect(
+                self._do_download_mods_with_steamcmd
+            )
+
+            EventBus().do_steamworks_api_call.connect(
+                self._do_steamworks_api_call_animated
             )
 
             # Edit Menu bar Eventbus
@@ -301,9 +327,6 @@ class MainContent(QObject):
             self.mods_panel.inactive_mods_list.update_git_mods_signal.connect(
                 self._check_git_repos_for_update
             )
-            self.mods_panel.active_mods_list.steamcmd_downloader_signal.connect(
-                self._do_download_mods_with_steamcmd
-            )
             self.mods_panel.inactive_mods_list.steamcmd_downloader_signal.connect(
                 self._do_download_mods_with_steamcmd
             )
@@ -321,6 +344,9 @@ class MainContent(QObject):
             )
             self.mods_panel.active_mods_list.refresh_signal.connect(self._do_refresh)
             self.mods_panel.inactive_mods_list.refresh_signal.connect(self._do_refresh)
+
+            EventBus().use_this_instead_clicked.connect(self._use_this_instead_clicked)
+
             # Restore cache initially set to empty
             self.active_mods_uuids_last_save: list[str] = []
             self.active_mods_uuids_restore_state: list[str] = []
@@ -555,15 +581,8 @@ class MainContent(QObject):
         ):  # Do we even have metadata to lookup...?
             self.missing_mods_prompt = MissingModsPrompt(
                 packageids=self.missing_mods,
-                steam_workshop_metadata=self.metadata_manager.external_steam_metadata,
             )
             self.missing_mods_prompt._populate_from_metadata()
-            self.missing_mods_prompt.steamcmd_downloader_signal.connect(
-                self._do_download_mods_with_steamcmd
-            )
-            self.missing_mods_prompt.steamworks_subscription_signal.connect(
-                self._do_steamworks_api_call_animated
-            )
             self.missing_mods_prompt.setWindowModality(
                 Qt.WindowModality.ApplicationModal
             )
@@ -1148,7 +1167,7 @@ class MainContent(QObject):
         # Re-enable widgets after inserting
         self.disable_enable_widgets_signal.emit(True)
 
-    def _do_sort(self) -> None:
+    def _do_sort(self, check_deps: bool = True) -> None:
         """
         Trigger sorting of all active mods using user-configured algorithm
         & all available & configured metadata
@@ -1166,19 +1185,47 @@ class MainContent(QObject):
             self.mods_panel.data_source_filter_icons
         )
         self.mods_panel.on_inactive_mods_search_data_source_filter()
+
+        # Get active mods
+        active_mods = set(self.mods_panel.active_mods_list.uuids)
+
+        # Check for missing dependencies if enabled in settings and check_deps is True
+        if check_deps and self.settings_controller.settings.check_dependencies_on_sort:
+            missing_deps = self.metadata_manager.get_missing_dependencies(active_mods)
+            if missing_deps:
+                dialog = MissingDependenciesDialog(self.main_window)
+                dialog.show_missing_dependencies(missing_deps)
+
+                result = dialog.exec()
+                if result:  # Dialog accepted
+                    # User clicked "Add Selected & Sort"
+                    selected_mods = dialog.get_selected_mods()
+                    if selected_mods:
+                        # Add selected mods to active mods
+                        for mod_id in selected_mods:
+                            # Find the UUID for this package ID
+                            for (
+                                uuid,
+                                mod_data,
+                            ) in self.metadata_manager.internal_local_metadata.items():
+                                if mod_data.get("packageid") == mod_id:
+                                    active_mods.add(uuid)
+                                    break
+
+        # Get package IDs for active mods
         active_package_ids = set()
-        for uuid in self.mods_panel.active_mods_list.uuids:
+        for uuid in active_mods:
             active_package_ids.add(
                 self.metadata_manager.internal_local_metadata[uuid]["packageid"]
             )
 
         # Get the current order of active mods list
-        current_order = self.mods_panel.active_mods_list.uuids.copy()
+        current_order = list(active_mods)
         try:
             sorter = Sorter(
                 self.settings_controller.settings.sorting_algorithm,
                 active_package_ids=active_package_ids,
-                active_uuids=set(self.mods_panel.active_mods_list.uuids),
+                active_uuids=active_mods,
             )
         except NotImplementedError as e:
             dialogue.show_warning(
@@ -1946,18 +1993,10 @@ class MainContent(QObject):
                 information="Are you connected to the Internet?",
             )
             return
-        workshop_mod_updater = ModUpdaterPrompt(
-            internal_mod_metadata=self.metadata_manager.internal_local_metadata
-        )
+        workshop_mod_updater = ModUpdaterPrompt()
         workshop_mod_updater._populate_from_metadata()
-        if workshop_mod_updater.updates_found:
+        if workshop_mod_updater._row_count() > 0:
             logger.debug("Displaying potential Workshop mod updates")
-            workshop_mod_updater.steamcmd_downloader_signal.connect(
-                self._do_download_mods_with_steamcmd
-            )
-            workshop_mod_updater.steamworks_subscription_signal.connect(
-                self._do_steamworks_api_call_animated
-            )
             workshop_mod_updater.show()
         else:
             self.status_signal.emit("All Workshop mods appear to be up to date!")
@@ -3321,10 +3360,47 @@ class MainContent(QObject):
 
     @Slot()
     def _on_do_download_steam_workshop_db_from_github(self) -> None:
+        logger.warning("HIT AT ALL")
         self._do_clone_repo_to_path(
             base_path=str(AppInfo().databases_folder),
             repo_url=self.settings_controller.settings.external_steam_metadata_repo,
         )
+
+    @Slot()
+    def _on_do_upload_no_version_warning_db_to_github(self) -> None:
+        self._do_upload_db_to_repo(
+            repo_url=self.settings_controller.settings.external_no_version_warning_repo_path,
+            file_name=str(
+                Path(f"{self.metadata_manager.game_version[:3]}/ModIdsToFix.xml")
+            ),
+        )
+
+    @Slot()
+    def _on_do_download_no_version_warning_db_from_github(self) -> None:
+        if GIT_EXISTS:
+            self._do_clone_repo_to_path(
+                base_path=str(AppInfo().databases_folder),
+                repo_url=self.settings_controller.settings.external_no_version_warning_repo_path,
+            )
+        else:
+            self._do_notify_no_git()
+
+    @Slot()
+    def _on_do_upload_use_this_instead_db_to_github(self) -> None:
+        self._do_upload_db_to_repo(
+            repo_url=self.settings_controller.settings.external_use_this_instead_repo_path,
+            file_name="*",
+        )
+
+    @Slot()
+    def _on_do_download_use_this_instead_db_from_github(self) -> None:
+        if GIT_EXISTS:
+            self._do_clone_repo_to_path(
+                base_path=str(AppInfo().databases_folder),
+                repo_url=self.settings_controller.settings.external_use_this_instead_repo_path,
+            )
+        else:
+            self._do_notify_no_git()
 
     @Slot()
     def _on_do_upload_log(self) -> None:
@@ -3373,3 +3449,28 @@ class MainContent(QObject):
 
         # Launch independent game process without Steamworks API
         launch_game_process(game_install_path=game_install_path, args=run_args)
+
+    @Slot()
+    def _use_this_instead_clicked(self) -> None:
+        """
+        When clicked, opens the Use This Instead panel.
+        """
+        self.use_this_instead_dialog = UseThisInsteadPanel(
+            mod_metadata=self.metadata_manager.internal_local_metadata
+        )
+        self.use_this_instead_dialog._populate_from_metadata()
+        if self.use_this_instead_dialog.editor_model.rowCount() > 0:
+            self.use_this_instead_dialog.show()
+        else:
+            dialogue.show_information(
+                title="Use This Instead",
+                text='No suggestions were found in the "Use This Instead" database.',
+            )
+
+    def set_main_window(self, main_window: "MainWindow") -> None:
+        """Set the main window reference for this content panel.
+
+        Args:
+            main_window: The main window instance to set
+        """
+        self.main_window = main_window

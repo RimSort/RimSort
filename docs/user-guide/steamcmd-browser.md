@@ -2,6 +2,7 @@
 title: SteamCMD & Workshop Browser
 nav_order: 5
 parent: User Guide
+permalink: user-guide/steamcmd-browser
 ---
 # SteamCMD and Workshop Browser
 {: .no_toc}

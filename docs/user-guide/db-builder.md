@@ -3,6 +3,7 @@ title: DB Builder
 nav_order: 3
 layout: default
 parent: User Guide
+permalink: user-guide/db-builder
 ---
 # Steam Database Builder
 {: .no_toc}

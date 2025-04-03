@@ -119,17 +119,8 @@ class SettingsController(QObject):
             self._on_steam_mods_folder_location_clear_button_clicked
         )
 
-        self.settings_dialog.local_mods_folder_location.textChanged.connect(
-            self._on_local_mods_folder_location_text_changed
-        )
         self.settings_dialog.local_mods_folder_location_open_button.clicked.connect(
             self._on_local_mods_folder_location_open_button_clicked
-        )
-        self.settings_dialog.local_mods_folder_location_choose_button.clicked.connect(
-            self._on_local_mods_folder_location_choose_button_clicked
-        )
-        self.settings_dialog.local_mods_folder_location_clear_button.clicked.connect(
-            self._on_local_mods_folder_location_clear_button_clicked
         )
 
         self.settings_dialog.locations_clear_button.clicked.connect(
@@ -180,6 +171,47 @@ class SettingsController(QObject):
         )
         self.settings_dialog.steam_workshop_db_github_download_button.clicked.connect(
             EventBus().do_download_steam_workshop_db_from_github
+        )
+
+        # Cross Version DB tab
+        self.settings_dialog.no_version_warning_db_none_radio.clicked.connect(
+            self._on_no_version_warning_db_radio_clicked
+        )
+        self.settings_dialog.no_version_warning_db_github_radio.clicked.connect(
+            self._on_no_version_warning_db_radio_clicked
+        )
+        self.settings_dialog.no_version_warning_db_local_file_radio.clicked.connect(
+            self._on_no_version_warning_db_radio_clicked
+        )
+
+        self.settings_dialog.no_version_warning_db_local_file_choose_button.clicked.connect(
+            self._on_no_version_warning_db_local_file_choose_button_clicked
+        )
+        self.settings_dialog.no_version_warning_db_github_upload_button.clicked.connect(
+            EventBus().do_upload_no_version_warning_db_to_github
+        )
+        self.settings_dialog.no_version_warning_db_github_download_button.clicked.connect(
+            EventBus().do_download_no_version_warning_db_from_github
+        )
+
+        self.settings_dialog.use_this_instead_db_none_radio.clicked.connect(
+            self._on_use_this_instead_db_radio_clicked
+        )
+        self.settings_dialog.use_this_instead_db_github_radio.clicked.connect(
+            self._on_use_this_instead_db_radio_clicked
+        )
+        self.settings_dialog.use_this_instead_db_local_file_radio.clicked.connect(
+            self._on_use_this_instead_db_radio_clicked
+        )
+
+        self.settings_dialog.use_this_instead_db_local_file_choose_button.clicked.connect(
+            self._on_use_this_instead_db_local_file_choose_button_clicked
+        )
+        self.settings_dialog.use_this_instead_db_github_upload_button.clicked.connect(
+            EventBus().do_upload_use_this_instead_db_to_github
+        )
+        self.settings_dialog.use_this_instead_db_github_download_button.clicked.connect(
+            EventBus().do_download_use_this_instead_db_from_github
         )
 
         # Build DB tab
@@ -372,6 +404,13 @@ class SettingsController(QObject):
         self.settings_dialog.local_mods_folder_location_open_button.setEnabled(
             self.settings_dialog.local_mods_folder_location.text() != ""
         )
+        game_folder = self.settings.instances[
+            self.settings.current_instance
+        ].game_folder  # Automatically set local folder from game folder
+        if game_folder != "":
+            self.settings_dialog.local_mods_folder_location.setText(
+                str(Path(game_folder) / "Mods")
+            )
 
         # Databases tab
         if self.settings.external_community_rules_metadata_source == "None":
@@ -417,7 +456,7 @@ class SettingsController(QObject):
         self.settings_dialog.community_rules_db_github_url.setText(
             self.settings.external_community_rules_repo
         )
-        self.settings_dialog.community_rules_db_github_url.setCursorPosition(0)
+
         if self.settings.external_steam_metadata_source == "None":
             self.settings_dialog.steam_workshop_db_none_radio.setChecked(True)
             self.settings_dialog.steam_workshop_db_github_url.setEnabled(False)
@@ -460,11 +499,110 @@ class SettingsController(QObject):
         self.settings_dialog.steam_workshop_db_github_url.setCursorPosition(0)
         self.settings_dialog.database_expiry.setText(str(self.settings.database_expiry))
 
+        # Cross Version DB Tab
+        if self.settings.external_no_version_warning_metadata_source == "None":
+            self.settings_dialog.no_version_warning_db_none_radio.setChecked(True)
+            self.settings_dialog.no_version_warning_db_github_url.setEnabled(False)
+            self.settings_dialog.no_version_warning_db_github_download_button.setEnabled(
+                False
+            )
+            self.settings_dialog.no_version_warning_db_local_file.setEnabled(False)
+            self.settings_dialog.no_version_warning_db_local_file_choose_button.setEnabled(
+                False
+            )
+        elif (
+            self.settings.external_no_version_warning_metadata_source
+            == "Configured git repository"
+        ):
+            self.settings_dialog.no_version_warning_db_github_radio.setChecked(True)
+            self.settings_dialog.no_version_warning_db_github_url.setEnabled(True)
+            self.settings_dialog.no_version_warning_db_github_download_button.setEnabled(
+                True
+            )
+            self.settings_dialog.no_version_warning_db_local_file.setEnabled(False)
+            self.settings_dialog.no_version_warning_db_local_file_choose_button.setEnabled(
+                False
+            )
+        elif (
+            self.settings.external_no_version_warning_metadata_source
+            == "Configured file path"
+        ):
+            self.settings_dialog.no_version_warning_db_local_file_radio.setChecked(True)
+            self.settings_dialog.no_version_warning_db_github_url.setEnabled(False)
+            self.settings_dialog.no_version_warning_db_github_download_button.setEnabled(
+                False
+            )
+            self.settings_dialog.no_version_warning_db_local_file.setEnabled(True)
+            self.settings_dialog.no_version_warning_db_local_file_choose_button.setEnabled(
+                True
+            )
+        self.settings_dialog.no_version_warning_db_local_file.setText(
+            self.settings.external_no_version_warning_file_path
+        )
+        self.settings_dialog.no_version_warning_db_local_file.setCursorPosition(0)
+        self.settings_dialog.no_version_warning_db_github_url.setText(
+            self.settings.external_no_version_warning_repo_path
+        )
+        self.settings_dialog.no_version_warning_db_github_url.setCursorPosition(0)
+
+        if self.settings.external_use_this_instead_metadata_source == "None":
+            EventBus().reset_use_this_instead_cache.emit()
+            self.settings_dialog.use_this_instead_db_none_radio.setChecked(True)
+            self.settings_dialog.use_this_instead_db_github_url.setEnabled(False)
+            self.settings_dialog.use_this_instead_db_github_download_button.setEnabled(
+                False
+            )
+            self.settings_dialog.use_this_instead_db_local_file.setEnabled(False)
+            self.settings_dialog.use_this_instead_db_local_file_choose_button.setEnabled(
+                False
+            )
+        elif (
+            self.settings.external_use_this_instead_metadata_source
+            == "Configured git repository"
+        ):
+            EventBus().reset_use_this_instead_cache.emit()
+            self.settings_dialog.use_this_instead_db_github_radio.setChecked(True)
+            self.settings_dialog.use_this_instead_db_github_url.setEnabled(True)
+            self.settings_dialog.use_this_instead_db_github_download_button.setEnabled(
+                True
+            )
+            self.settings_dialog.use_this_instead_db_local_file.setEnabled(False)
+            self.settings_dialog.use_this_instead_db_local_file_choose_button.setEnabled(
+                False
+            )
+        elif (
+            self.settings.external_use_this_instead_metadata_source
+            == "Configured file path"
+        ):
+            EventBus().reset_use_this_instead_cache.emit()
+            self.settings_dialog.use_this_instead_db_local_file_radio.setChecked(True)
+            self.settings_dialog.use_this_instead_db_github_url.setEnabled(False)
+            self.settings_dialog.use_this_instead_db_github_download_button.setEnabled(
+                False
+            )
+            self.settings_dialog.use_this_instead_db_local_file.setEnabled(True)
+            self.settings_dialog.use_this_instead_db_local_file_choose_button.setEnabled(
+                True
+            )
+        self.settings_dialog.use_this_instead_db_local_file.setText(
+            self.settings.external_use_this_instead_file_path
+        )
+        self.settings_dialog.use_this_instead_db_local_file.setCursorPosition(0)
+        self.settings_dialog.use_this_instead_db_github_url.setText(
+            self.settings.external_use_this_instead_repo_path
+        )
+        self.settings_dialog.use_this_instead_db_github_url.setCursorPosition(0)
+
         # Sorting tab
         if self.settings.sorting_algorithm == SortMethod.ALPHABETICAL:
             self.settings_dialog.sorting_alphabetical_radio.setChecked(True)
         elif self.settings.sorting_algorithm == SortMethod.TOPOLOGICAL:
             self.settings_dialog.sorting_topological_radio.setChecked(True)
+
+        # Set dependencies checkbox
+        self.settings_dialog.check_deps_checkbox.setChecked(
+            self.settings.check_dependencies_on_sort
+        )
 
         # Database Builder tab
         if self.settings.db_builder_include == "all_mods":
@@ -625,11 +763,51 @@ class SettingsController(QObject):
         )
         self.settings.database_expiry = int(self.settings_dialog.database_expiry.text())
 
+        # Cross Version Databases Tab
+        if self.settings_dialog.no_version_warning_db_none_radio.isChecked():
+            self.settings.external_no_version_warning_metadata_source = "None"
+        elif self.settings_dialog.no_version_warning_db_local_file_radio.isChecked():
+            self.settings.external_no_version_warning_metadata_source = (
+                "Configured file path"
+            )
+        elif self.settings_dialog.no_version_warning_db_github_radio.isChecked():
+            self.settings.external_no_version_warning_metadata_source = (
+                "Configured git repository"
+            )
+        self.settings.external_no_version_warning_file_path = (
+            self.settings_dialog.no_version_warning_db_local_file.text()
+        )
+        self.settings.external_no_version_warning_repo_path = (
+            self.settings_dialog.no_version_warning_db_github_url.text()
+        )
+
+        if self.settings_dialog.use_this_instead_db_none_radio.isChecked():
+            self.settings.external_use_this_instead_metadata_source = "None"
+        elif self.settings_dialog.use_this_instead_db_local_file_radio.isChecked():
+            self.settings.external_use_this_instead_metadata_source = (
+                "Configured file path"
+            )
+        elif self.settings_dialog.use_this_instead_db_github_radio.isChecked():
+            self.settings.external_use_this_instead_metadata_source = (
+                "Configured git repository"
+            )
+        self.settings.external_use_this_instead_file_path = (
+            self.settings_dialog.use_this_instead_db_local_file.text()
+        )
+        self.settings.external_use_this_instead_repo_path = (
+            self.settings_dialog.use_this_instead_db_github_url.text()
+        )
+
         # Sorting tab
         if self.settings_dialog.sorting_alphabetical_radio.isChecked():
             self.settings.sorting_algorithm = SortMethod.ALPHABETICAL
         elif self.settings_dialog.sorting_topological_radio.isChecked():
             self.settings.sorting_algorithm = SortMethod.TOPOLOGICAL
+
+        # Set dependencies checkbox
+        self.settings.check_dependencies_on_sort = (
+            self.settings_dialog.check_deps_checkbox.isChecked()
+        )
 
         # Database Builder tab
         if self.settings_dialog.db_builder_include_all_radio.isChecked():
@@ -758,9 +936,19 @@ class SettingsController(QObject):
 
     @Slot()
     def _on_game_location_text_changed(self) -> None:
-        self.settings_dialog.game_location_open_button.setEnabled(
-            self.settings_dialog.game_location.text() != ""
-        )
+        game_folder = self.settings_dialog.game_location.text()
+        self.settings_dialog.game_location_open_button.setEnabled(game_folder != "")
+        # Automatically set local folder from game folder
+        if game_folder:
+            self.settings_dialog.local_mods_folder_location.setText(
+                str(Path(game_folder) / "Mods")
+            )
+            self.settings_dialog.local_mods_folder_location_open_button.setEnabled(True)
+        else:  # Reset local mods folder location
+            self.settings_dialog.local_mods_folder_location.setText("")
+            self.settings_dialog.local_mods_folder_location_open_button.setEnabled(
+                False
+            )
 
     @Slot()
     def _on_game_location_open_button_clicked(self) -> None:
@@ -811,6 +999,7 @@ class SettingsController(QObject):
     @Slot()
     def _on_game_location_clear_button_clicked(self) -> None:
         self.settings_dialog.game_location.setText("")
+        self.settings_dialog.local_mods_folder_location.setText("")
 
     @Slot()
     def _on_config_folder_location_text_changed(self) -> None:
@@ -875,36 +1064,8 @@ class SettingsController(QObject):
         self.settings_dialog.steam_mods_folder_location.setText("")
 
     @Slot()
-    def _on_local_mods_folder_location_text_changed(self) -> None:
-        self.settings_dialog.local_mods_folder_location_open_button.setEnabled(
-            self.settings_dialog.local_mods_folder_location.text() != ""
-        )
-
-    @Slot()
     def _on_local_mods_folder_location_open_button_clicked(self) -> None:
         platform_specific_open(self.settings_dialog.local_mods_folder_location.text())
-
-    @Slot()
-    def _on_local_mods_folder_location_choose_button_clicked(self) -> None:
-        """
-        Open a directory dialog to select the local mods folder and handle the result.
-        """
-        local_mods_folder_location = show_dialogue_file(
-            mode="open_dir",
-            caption="Select Local Mods Folder",
-            _dir=str(self._last_file_dialog_path),
-        )
-        if not local_mods_folder_location:
-            return
-
-        self.settings_dialog.local_mods_folder_location.setText(
-            local_mods_folder_location
-        )
-        self._last_file_dialog_path = str(Path(local_mods_folder_location).parent)
-
-    @Slot()
-    def _on_local_mods_folder_location_clear_button_clicked(self) -> None:
-        self.settings_dialog.local_mods_folder_location.setText("")
 
     @Slot()
     def _on_locations_clear_button_clicked(
@@ -1204,6 +1365,152 @@ class SettingsController(QObject):
             steam_workshop_db_location
         )
         self._last_file_dialog_path = str(Path(steam_workshop_db_location).parent)
+
+    @Slot(bool)
+    def _on_no_version_warning_db_radio_clicked(self, checked: bool = True) -> None:
+        """
+        This function handles the "No Version Warning" db radio buttons. Clicking one button
+        enables the associated widgets and disables the other widgets.
+        """
+        if (
+            self.sender() == self.settings_dialog.no_version_warning_db_none_radio
+            and checked
+        ):
+            self.settings_dialog.no_version_warning_db_github_url.setEnabled(False)
+            self.settings_dialog.no_version_warning_db_github_download_button.setEnabled(
+                False
+            )
+            self.settings_dialog.no_version_warning_db_local_file.setEnabled(False)
+            self.settings_dialog.no_version_warning_db_local_file_choose_button.setEnabled(
+                False
+            )
+            app_instance = QApplication.instance()
+            if isinstance(app_instance, QApplication):
+                focused_widget = app_instance.focusWidget()
+                if focused_widget is not None:
+                    focused_widget.clearFocus()
+            return
+
+        if (
+            self.sender() == self.settings_dialog.no_version_warning_db_github_radio
+            and checked
+        ):
+            self.settings_dialog.no_version_warning_db_github_url.setEnabled(True)
+            self.settings_dialog.no_version_warning_db_github_download_button.setEnabled(
+                True
+            )
+            self.settings_dialog.no_version_warning_db_local_file.setEnabled(False)
+            self.settings_dialog.no_version_warning_db_local_file_choose_button.setEnabled(
+                False
+            )
+            self.settings_dialog.no_version_warning_db_github_url.setFocus()
+            return
+
+        if (
+            self.sender() == self.settings_dialog.no_version_warning_db_local_file_radio
+            and checked
+        ):
+            self.settings_dialog.no_version_warning_db_github_url.setEnabled(False)
+            self.settings_dialog.no_version_warning_db_github_download_button.setEnabled(
+                False
+            )
+            self.settings_dialog.no_version_warning_db_local_file.setEnabled(True)
+            self.settings_dialog.no_version_warning_db_local_file_choose_button.setEnabled(
+                True
+            )
+            self.settings_dialog.no_version_warning_db_local_file.setFocus()
+            return
+
+    @Slot()
+    def _on_no_version_warning_db_local_file_choose_button_clicked(self) -> None:
+        """
+        Open a file dialog to select the "No Version Warning" xml file and handle the result.
+        """
+        no_version_warning_db_location = show_dialogue_file(
+            mode="open",
+            caption="Select No Version Warning XML File",
+            _dir=str(self._last_file_dialog_path),
+        )
+        if not no_version_warning_db_location:
+            return
+
+        self.settings_dialog.no_version_warning_db_local_file.setText(
+            no_version_warning_db_location
+        )
+        self._last_file_dialog_path = str(Path(no_version_warning_db_location).parent)
+
+    @Slot(bool)
+    def _on_use_this_instead_db_radio_clicked(self, checked: bool = True) -> None:
+        """
+        This function handles the "Use This Instead" db radio buttons. Clicking one button
+        enables the associated widgets and disables the other widgets.
+        """
+        if (
+            self.sender() == self.settings_dialog.use_this_instead_db_none_radio
+            and checked
+        ):
+            self.settings_dialog.use_this_instead_db_github_url.setEnabled(False)
+            self.settings_dialog.use_this_instead_db_github_download_button.setEnabled(
+                False
+            )
+            self.settings_dialog.use_this_instead_db_local_file.setEnabled(False)
+            self.settings_dialog.use_this_instead_db_local_file_choose_button.setEnabled(
+                False
+            )
+            app_instance = QApplication.instance()
+            if isinstance(app_instance, QApplication):
+                focused_widget = app_instance.focusWidget()
+                if focused_widget is not None:
+                    focused_widget.clearFocus()
+            return
+
+        if (
+            self.sender() == self.settings_dialog.use_this_instead_db_github_radio
+            and checked
+        ):
+            self.settings_dialog.use_this_instead_db_github_url.setEnabled(True)
+            self.settings_dialog.use_this_instead_db_github_download_button.setEnabled(
+                True
+            )
+            self.settings_dialog.use_this_instead_db_local_file.setEnabled(False)
+            self.settings_dialog.use_this_instead_db_local_file_choose_button.setEnabled(
+                False
+            )
+            self.settings_dialog.use_this_instead_db_github_url.setFocus()
+            return
+
+        if (
+            self.sender() == self.settings_dialog.use_this_instead_db_local_file_radio
+            and checked
+        ):
+            self.settings_dialog.use_this_instead_db_github_url.setEnabled(False)
+            self.settings_dialog.use_this_instead_db_github_download_button.setEnabled(
+                False
+            )
+            self.settings_dialog.use_this_instead_db_local_file.setEnabled(True)
+            self.settings_dialog.use_this_instead_db_local_file_choose_button.setEnabled(
+                True
+            )
+            self.settings_dialog.use_this_instead_db_local_file.setFocus()
+            return
+
+    @Slot()
+    def _on_use_this_instead_db_local_file_choose_button_clicked(self) -> None:
+        """
+        Open a file dialog to select the "Use This Instead" folder and handle the result.
+        """
+        use_this_instead_db_location = show_dialogue_file(
+            mode="open",
+            caption='Select "Use This Instead" Folder',
+            _dir=str(self._last_file_dialog_path),
+        )
+        if not use_this_instead_db_location:
+            return
+
+        self.settings_dialog.use_this_instead_db_local_file.setText(
+            use_this_instead_db_location
+        )
+        self._last_file_dialog_path = str(Path(use_this_instead_db_location).parent)
 
     @Slot()
     def _on_steamcmd_install_location_choose_button_clicked(self) -> None:

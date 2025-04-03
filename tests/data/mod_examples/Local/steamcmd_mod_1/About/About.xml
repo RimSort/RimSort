@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ModMetaData>
+    <name>steamcmd mod 1</name>
+    <author>steamcmd mod 1 author</author>
+    <packageId>steamcmd.mod1</packageId>
+    <supportedVersions>
+        <li>
+            1.5
+        </li>
+    </supportedVersions>
+    <description>
+        This is steamcmd mod 1 description
+    </description>
+    <modDependencies>
+    </modDependencies>
+</ModMetaData>
