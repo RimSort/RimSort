@@ -64,10 +64,8 @@
     "virtualenv",
     "webapi"
   ],
-  "isort.args": [
-    "--profile",
-    "black"
-  ],
+  "cSpell.ignorePaths": ["**test**"],
+  "isort.args": ["--profile", "black"],
   "[python]": {
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
@@ -99,9 +97,7 @@
   "yaml.schemas": {
     "https://json.schemastore.org/github-issue-config.json": "file:///c%3A/Code%20Repos/RimSort/.github/ISSUE_TEMPLATE/config.yml"
   },
-  "python.testing.pytestArgs": [
-    "."
-  ],
+  "python.testing.pytestArgs": ["."],
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true
 }

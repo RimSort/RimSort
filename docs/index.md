@@ -14,8 +14,17 @@ permalink: /
 
 A free and open source, multi-platform mod manager for RimWorld.
 
-[Get started now]({% link user-guide/index.md%}){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 .mr-2 }
+[Get started now](user-guide){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [Get Releases on GitHub][Releases]{: .btn .fs-5 .mb-4 .mb-md-0 }
+
+
+{% assign lang = site.active_lang %}
+
+<p>
+  {% for tongue in site.languages %}
+  <a {% if tongue == site.active_lang %}style="font-weight: bold;"{% endif %} {% static_href %}href="{% if tongue == site.default_lang %}{{site.baseurl}}{{page.url}}{% else %}{{site.baseurl}}/{{ tongue }}{{page.url}}{% endif %}"{% endstatic_href %} >{{ tongue }}</a>{%- if forloop.last == false -%}{{" "}}{{ site.langsep }}{%- endif -%}
+  {% endfor %}
+</p>
 
 ---
 

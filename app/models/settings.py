@@ -44,10 +44,30 @@ class Settings(QObject):
         self.external_community_rules_repo: str = (
             "https://github.com/RimSort/Community-Rules-Database"
         )
+
         self.database_expiry: int = 604800  # 7 days
+
+        self.external_no_version_warning_metadata_source: str = "None"
+        self.external_no_version_warning_file_path: str = str(
+            AppInfo().app_storage_folder / "ModIdsToFix.xml"
+        )
+        self.external_no_version_warning_repo_path: str = (
+            "https://github.com/emipa606/NoVersionWarning"
+        )
+
+        self.external_use_this_instead_metadata_source: str = "None"
+        self.external_use_this_instead_file_path: str = str(
+            AppInfo().app_storage_folder / "UseThisInstead"
+        )
+        self.external_use_this_instead_repo_path: str = (
+            "https://github.com/emipa606/UseThisInstead"
+        )
 
         # Sorting
         self.sorting_algorithm: SortMethod = SortMethod.TOPOLOGICAL
+        self.check_dependencies_on_sort: bool = (
+            True  # Whether to check for missing dependencies when sorting
+        )
 
         # DB Builder
         self.db_builder_include: str = "all_mods"
