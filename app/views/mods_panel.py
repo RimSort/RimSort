@@ -5,10 +5,19 @@ from functools import partial
 from pathlib import Path
 from shutil import copy2, copytree
 from traceback import format_exc
-from typing import cast
+from typing import Any, KeysView, cast
 
 from loguru import logger
-from PySide6.QtCore import QEvent, QModelIndex, QObject, QRectF, QSize, Qt, Signal
+from PySide6.QtCore import (
+    QEvent,
+    QEventLoop,
+    QModelIndex,
+    QObject,
+    QRectF,
+    QSize,
+    Qt,
+    Signal,
+)
 from PySide6.QtGui import (
     QAction,
     QCursor,
@@ -46,6 +55,7 @@ from app.utils.custom_list_widget_item_metadata import CustomListWidgetItemMetad
 from app.utils.custom_qlabels import AdvancedClickableQLabel, ClickableQLabel
 from app.utils.event_bus import EventBus
 from app.utils.generic import (
+    check_if_steam_running,
     copy_to_clipboard_safely,
     delete_files_except_extension,
     flatten_to_list,
@@ -653,6 +663,16 @@ class ModListWidget(QListWidget):
         # * This is handled in dropEvent directly and it converts this item to CustomListWidgetItem.
         return cast(CustomListWidgetItem, widget)
 
+    def selectedItems(self) -> list[CustomListWidgetItem]:  # type: ignore  # Ignore mypy type error for this line
+        """
+        Return the currently selected items.
+
+        It should always be a list of CustomListWidgetItem.
+        """
+        # TODO: Not sure why mypy kept complaining about this method overriding the return type...?
+        widgets = super().selectedItems()
+        return cast(list[CustomListWidgetItem], widgets)
+
     def dropEvent(self, event: QDropEvent) -> None:
         super().dropEvent(event)
         # Find the newly dropped items and convert to CustomListWidgetItem
@@ -774,7 +794,7 @@ class ModListWidget(QListWidget):
             convert_steamcmd_local_action = None
             # Convert local -> SteamCMD
             convert_local_steamcmd_action = None
-            # Convert Workshop -> local
+            # Convert Workshop -> local + unsubscribe
             convert_workshop_local_action = None
             # Update/Re-download/re-subscribe git/steamcmd/steam mods
             re_git_action = None
@@ -782,6 +802,14 @@ class ModListWidget(QListWidget):
             re_steam_action = None
             # Unsubscribe + delete mod
             unsubscribe_mod_steam_action = None
+            # Make local copy of Workshop mod
+            make_local_copy_of_workshop_mod_action = None
+            # Delete mod
+            delete_mod_action = None
+            # Delete mod (keep .dds)
+            delete_mod_keep_dds_action = None
+            # Delete optimized textures (.dds files only)
+            delete_mod_dds_only_action = None
 
             # Get all selected CustomListWidgetItems
             selected_items = self.selectedItems()
@@ -883,6 +911,11 @@ class ModListWidget(QListWidget):
                             unsubscribe_mod_steam_action.setText(
                                 "Unsubscribe mod with Steam"
                             )
+                            # Convert steam mods -> local + Unsubscribe
+                            make_local_copy_of_workshop_mod_action = QAction()
+                            make_local_copy_of_workshop_mod_action.setText(
+                                "Make local copy"
+                            )
                     # SteamDB blacklist options
                     if (
                         self.metadata_manager.external_steam_metadata
@@ -951,7 +984,7 @@ class ModListWidget(QListWidget):
                                 if not convert_local_steamcmd_action:
                                     convert_local_steamcmd_action = QAction()
                                     convert_local_steamcmd_action.setText(
-                                        "Convert local mod(s) to SteamCMD"
+                                        "Convert local mods to SteamCMD"
                                     )
                             if mod_metadata.get("steamcmd"):
                                 steamcmd_mod_paths.append(mod_folder_path)
@@ -962,13 +995,13 @@ class ModListWidget(QListWidget):
                                 if not convert_steamcmd_local_action:
                                     convert_steamcmd_local_action = QAction()
                                     convert_steamcmd_local_action.setText(
-                                        "Convert SteamCMD mod(s) to local"
+                                        "Convert SteamCMD mods to local"
                                     )
                                 # Re-download steamcmd mods
                                 if not re_steamcmd_action:
                                     re_steamcmd_action = QAction()
                                     re_steamcmd_action.setText(
-                                        "Re-download mod(s) with SteamCMD"
+                                        "Re-download mods with SteamCMD"
                                     )
                             # Update git mods if local mod with git repo, but not steamcmd
                             if not mod_metadata.get("steamcmd") and mod_metadata.get(
@@ -996,7 +1029,7 @@ class ModListWidget(QListWidget):
                             if not convert_workshop_local_action:
                                 convert_workshop_local_action = QAction()
                                 convert_workshop_local_action.setText(
-                                    "Convert Steam mod(s) to local"
+                                    "Convert Steam mods to local"
                                 )
                             # Only enable subscription actions if user has enabled Steam client integration
                             if self.settings_controller.settings.instances[
@@ -1006,15 +1039,39 @@ class ModListWidget(QListWidget):
                                 if not re_steam_action:
                                     re_steam_action = QAction()
                                     re_steam_action.setText(
-                                        "Re-subscribe mod(s) with Steam"
+                                        "Re-subscribe mods with Steam"
                                     )
                                 # Unsubscribe steam mods
                                 if not unsubscribe_mod_steam_action:
                                     unsubscribe_mod_steam_action = QAction()
                                     unsubscribe_mod_steam_action.setText(
-                                        "Unsubscribe mod(s) with Steam"
+                                        "Unsubscribe mods with Steam"
+                                    )
+                                # Make local copy of Steam mod(s)
+                                if not make_local_copy_of_workshop_mod_action:
+                                    make_local_copy_of_workshop_mod_action = QAction()
+                                    make_local_copy_of_workshop_mod_action.setText(
+                                        "Make local copies"
                                     )
                         # No SteamDB blacklist options when multiple selected
+                        # Prohibit deletion of game files
+                        if not delete_mod_action:
+                            delete_mod_action = QAction()
+                            # Delete mod action text
+                            delete_mod_action.setText("Delete mods")
+                        if not delete_mod_keep_dds_action:
+                            delete_mod_keep_dds_action = QAction()
+                            # Delete mod action text
+                            delete_mod_keep_dds_action.setText(
+                                "Delete mods (keep .dds)"
+                            )
+                        if not delete_mod_dds_only_action:
+                            delete_mod_dds_only_action = QAction()
+                            # Delete mod action text
+                            delete_mod_dds_only_action.setText(
+                                "Delete optimized textures (.dds files only)"
+                            )
+
             # Put together our contextMenu
             if open_folder_action:
                 context_menu.addAction(open_folder_action)
@@ -1071,6 +1128,8 @@ class ModListWidget(QListWidget):
                     workshop_actions_menu.addAction(re_steam_action)
                 if unsubscribe_mod_steam_action:
                     workshop_actions_menu.addAction(unsubscribe_mod_steam_action)
+                if make_local_copy_of_workshop_mod_action:
+                    workshop_actions_menu.addAction(make_local_copy_of_workshop_mod_action)
                 if (
                     add_to_steamdb_blacklist_action
                     or remove_from_steamdb_blacklist_action
@@ -1079,9 +1138,7 @@ class ModListWidget(QListWidget):
                 if add_to_steamdb_blacklist_action:
                     workshop_actions_menu.addAction(add_to_steamdb_blacklist_action)
                 if remove_from_steamdb_blacklist_action:
-                    workshop_actions_menu.addAction(
-                        remove_from_steamdb_blacklist_action
-                    )
+                    workshop_actions_menu.addAction(remove_from_steamdb_blacklist_action)
                 context_menu.addMenu(workshop_actions_menu)
             # Execute QMenu and return it's ACTION
             action = context_menu.exec_(self.mapToGlobal(pos_local))
@@ -1092,7 +1149,7 @@ class ModListWidget(QListWidget):
                     # Prompt user
                     answer = show_dialogue_conditional(
                         title="Are you sure?",
-                        text=f"You have selected {len(git_paths)} git mods to be updated.",
+                        text=f"You have selected {len(git_paths)} git mod(s) to be updated.",
                         information="Do you want to proceed?",
                     )
                     if answer == "&Yes":
@@ -1135,38 +1192,7 @@ class ModListWidget(QListWidget):
                     action == convert_steamcmd_local_action
                     and len(steamcmd_publishedfileid_to_name) > 0
                 ):
-                    local_folder = self.settings_controller.settings.instances[
-                        self.settings_controller.settings.current_instance
-                    ].local_folder
-                    for (
-                        publishedfileid,
-                        mod_name,
-                    ) in steamcmd_publishedfileid_to_name.items():
-                        mod_name = (
-                            sanitize_filename(mod_name)
-                            if mod_name
-                            else f"{publishedfileid}_local"
-                        )
-                        original_mod_path = str((Path(local_folder) / publishedfileid))
-                        renamed_mod_path = str((Path(local_folder) / mod_name))
-                        if os.path.exists(original_mod_path):
-                            if not os.path.exists(renamed_mod_path):
-                                try:
-                                    os.rename(original_mod_path, renamed_mod_path)
-                                    logger.debug(
-                                        f'Successfully "converted" SteamCMD mod by renaming from {publishedfileid} -> {mod_name}'
-                                    )
-                                except Exception as e:
-                                    stacktrace = format_exc()
-                                    logger.error(
-                                        f"Failed to convert mod: {original_mod_path} - {e}"
-                                    )
-                                    logger.error(stacktrace)
-                            else:
-                                logger.warning(
-                                    f"Failed to convert mod! Destination already exists: {renamed_mod_path}"
-                                )
-                    self.refresh_signal.emit()
+                    self.convert_steamcmd_mods_to_local(steamcmd_publishedfileid_to_name)
                     return True
                 elif (  # ACTION: Re-download SteamCMD mod(s)
                     action == re_steamcmd_action
@@ -1176,7 +1202,7 @@ class ModListWidget(QListWidget):
                     # Prompt user
                     answer = show_dialogue_conditional(
                         title="Are you sure?",
-                        text=f"You have selected {len(steamcmd_publishedfileid_to_name.keys())} mods for deletion + re-download.",
+                        text=f"You have selected {len(steamcmd_publishedfileid_to_name.keys())} mod(s) for deletion + re-download.",
                         information="\nThis operation will recursively delete all mod files, except for .dds textures found, "
                         + "and attempt to re-download the mods via SteamCMD. Do you want to proceed?",
                     )
@@ -1194,69 +1220,29 @@ class ModListWidget(QListWidget):
                                 steamcmd_publishedfileid_to_name.keys()
                             )
                         # Purge any deleted SteamCMD mods from acf metadata
-                        if steamcmd_acf_pfid_purge:
-                            self.metadata_manager.steamcmd_purge_mods(
-                                publishedfileids=steamcmd_acf_pfid_purge
-                            )
+                        self.purge_steamcmd_mods_from_acf(steamcmd_acf_pfid_purge)
                         # Emit signal to steamcmd downloader to re-download
                         self.steamcmd_downloader_signal.emit(
                             list(steamcmd_publishedfileid_to_name.keys())
                         )
                     return True
-                elif (  # ACTION: Convert Steam mod(s) -> local
+                elif (  # ACTION: Convert Steam mod(s) -> local + unsubscribe
                     action == convert_workshop_local_action
                     and len(steam_mod_paths) > 0
                     and len(steam_publishedfileid_to_name) > 0
                 ):
-                    for path in steam_mod_paths:
-                        publishedfileid_from_folder_name = os.path.split(path)[1]
-                        mod_name = steam_publishedfileid_to_name.get(
-                            publishedfileid_from_folder_name
-                        )
-                        if mod_name:
-                            mod_name = sanitize_filename(mod_name)
-                        renamed_mod_path = str(
-                            (
-                                Path(
-                                    self.settings_controller.settings.instances[
-                                        self.settings_controller.settings.current_instance
-                                    ].local_folder
-                                )
-                                / (
-                                    mod_name
-                                    if mod_name
-                                    else publishedfileid_from_folder_name
-                                )
-                            )
-                        )
-                        if os.path.exists(path):
-                            try:
-                                if os.path.exists(renamed_mod_path):
-                                    logger.warning(
-                                        "Destination exists. Removing all files except for .dds textures first..."
-                                    )
-                                    delete_files_except_extension(
-                                        directory=renamed_mod_path, extension=".dds"
-                                    )
-                                try:
-                                    copytree(path, renamed_mod_path)
-                                except FileExistsError:
-                                    for root, dirs, files in os.walk(path):
-                                        dest_dir = root.replace(path, renamed_mod_path)
-                                        if not os.path.isdir(dest_dir):
-                                            os.makedirs(dest_dir)
-                                        for file in files:
-                                            src_file = os.path.join(root, file)
-                                            dst_file = os.path.join(dest_dir, file)
-                                            copy2(src_file, dst_file)
-                                logger.debug(
-                                    f'Successfully "converted" Steam mod by copying {publishedfileid_from_folder_name} -> {mod_name} and migrating mod to local mods directory'
-                                )
-                            except Exception as e:
-                                stacktrace = format_exc()
-                                logger.error(f"Failed to convert mod: {path} - {e}")
-                                logger.error(stacktrace)
-                    self.refresh_signal.emit()
+                    publishedfileids = steam_publishedfileid_to_name.keys()
+                    # Prompt User
+                    answer = show_dialogue_conditional(
+                        title="Are you sure?",
+                        text=f"You have selected {len(publishedfileids)} mod(s) for make local copy and unsubscribe on Steam.",
+                        information="\nDo you want to proceed?",
+                    )
+                    if answer == "&Yes":
+                        self.make_local_copy_of_steam_mod(steam_mod_paths, steam_publishedfileid_to_name)
+                        unsubscribed = self.unsubscribe_from_steam_mods(publishedfileids)
+                        if unsubscribed:
+                            self.delete_mods(selected_items, steamcmd_acf_pfid_purge)
                     return True
                 elif (  # ACTION: Re-subscribe to mod(s) with Steam
                     action == re_steam_action and len(steam_publishedfileid_to_name) > 0
@@ -1265,23 +1251,19 @@ class ModListWidget(QListWidget):
                     # Prompt user
                     answer = show_dialogue_conditional(
                         title="Are you sure?",
-                        text=f"You have selected {len(publishedfileids)} mods for unsubscribe + re-subscribe.",
-                        information="\nThis operation will potentially delete .dds textures leftover. Steam is unreliable for this. Do you want to proceed?",
+                        text=f"You have selected {len(publishedfileids)} mod(s) for unsubscribe + re-subscribe.",
+                        information="\nThis operation will potentially delete .dds textures. Steam is unreliable for this. After re-subscribing, Steam validation is recommended. Do you want to proceed?",
                     )
                     if answer == "&Yes":
-                        logger.debug(
-                            f"Unsubscribing + re-subscribing to {len(publishedfileids)} mod(s)"
-                        )
-                        for path in steam_mod_paths:
-                            delete_files_except_extension(
-                                directory=path, extension=".dds"
+                        resubscribed = self.resubscribe_to_steam_mods(publishedfileids)
+                        if resubscribed:
+                            answer = show_dialogue_conditional(
+                                title="Steam Validation",
+                                text="After re-subscribe, steam validation is recommended. You can do this now or later. (It takes a while...)",
+                                information="\nTo run steam validation later you can use Help -> Validate Steam Client mods. Do you want to run steam vaildation now?",
                             )
-                        self.steamworks_subscription_signal.emit(
-                            [
-                                "resubscribe",
-                                [eval(str_pfid) for str_pfid in publishedfileids],
-                            ]
-                        )
+                            if answer == "&Yes":
+                                EventBus().do_validate_steam_client.emit()
                     return True
                 elif (  # ACTION: Unsubscribe & delete mod(s) with steam
                     action == unsubscribe_mod_steam_action
@@ -1291,82 +1273,62 @@ class ModListWidget(QListWidget):
                     # Prompt user
                     answer = show_dialogue_conditional(
                         title="Are you sure?",
-                        text=f"You have selected {len(publishedfileids)} mods for unsubscribe.",
+                        text=f"You have selected {len(publishedfileids)} mod(s) for unsubscribe. This also deletes the mod(s) and their dds textures.",
                         information="\nDo you want to proceed?",
                     )
                     if answer == "&Yes":
-                        logger.debug(
-                            f"Unsubscribing from {len(publishedfileids)} mod(s)"
-                        )
-                        self.steamworks_subscription_signal.emit(
-                            [
-                                "unsubscribe",
-                                [eval(str_pfid) for str_pfid in publishedfileids],
-                            ]
-                        )
+                        unsubscribed = self.unsubscribe_from_steam_mods(publishedfileids)
+                        if unsubscribed:
+                            self.delete_mods(selected_items, steamcmd_acf_pfid_purge)
+                    return True
+                elif (  # ACTION: Make local copy of workshop mod
+                    action == make_local_copy_of_workshop_mod_action
+                    and len(steam_mod_paths) > 0
+                    and len(steam_publishedfileid_to_name) > 0
+                ):
+                    self.make_local_copy_of_steam_mod(steam_mod_paths, steam_publishedfileid_to_name)
                     return True
                 elif (
                     action == add_to_steamdb_blacklist_action
                 ):  # ACTION: Blacklist workshop mod in SteamDB
-                    if (
-                        self.metadata_manager.external_steam_metadata is None
-                        or steamdb_add_blacklist is None
-                    ):
-                        logger.error(
-                            f"Unable to add mod to SteamDB blacklist: {steamdb_remove_blacklist}"
-                        )
-                        show_warning(
-                            "Warning",
-                            "Unable to add mod to SteamDB blacklist",
-                            "Metadata manager or steamdb_add_blacklist was None type",
-                            parent=self,
-                        )
-                        return False
-
-                    args, ok = show_dialogue_input(
-                        title="Add comment",
-                        label="Enter a comment providing your reasoning for wanting to blacklist this mod: "
-                        + f"{self.metadata_manager.external_steam_metadata.get(steamdb_add_blacklist, {}).get('steamName', steamdb_add_blacklist)}",
+                    self.add_mod_to_steamdb_blacklist(
+                        steamdb_add_blacklist, steamdb_remove_blacklist
                     )
-                    if ok:
-                        self.steamdb_blacklist_signal.emit(
-                            [steamdb_add_blacklist, True, args]
-                        )
-                    else:
-                        show_warning(
-                            title="Unable to add to blacklist",
-                            text="Comment was not provided or entry was cancelled. Comments are REQUIRED for this action!",
-                        )
                     return True
                 elif (
                     action == remove_from_steamdb_blacklist_action
                 ):  # ACTION: Blacklist workshop mod in SteamDB
-                    if (
-                        self.metadata_manager.external_steam_metadata is None
-                        or steamdb_remove_blacklist is None
-                    ):
-                        logger.error(
-                            f"Unable to remove mod from SteamDB blacklist: {steamdb_remove_blacklist}"
-                        )
-                        show_warning(
-                            "Warning",
-                            "Unable to remove mod from SteamDB blacklist",
-                            "Metadata manager or steamdb_remove_blacklist was None type",
-                            parent=self,
-                        )
-                        return False
-
+                    self.remove_mod_from_steamdb_blacklist(steamdb_remove_blacklist)
+                    return True
+                elif action == delete_mod_action:  # ACTION: Delete mods action
                     answer = show_dialogue_conditional(
                         title="Are you sure?",
-                        text="This will remove the selected mod, "
-                        + f"{self.metadata_manager.external_steam_metadata.get(steamdb_remove_blacklist, {}).get('steamName', steamdb_remove_blacklist)}, "
-                        + "from your configured Steam DB blacklist."
+                        text=f"You have selected {len(selected_items)} mod(s) for deletion.",
+                        information="\nThis operation delete a mod's directory from the filesystem."
                         + "\nDo you want to proceed?",
                     )
                     if answer == "&Yes":
-                        self.steamdb_blacklist_signal.emit(
-                            [steamdb_remove_blacklist, False]
-                        )
+                        self.delete_mods(selected_items, steamcmd_acf_pfid_purge)
+                        return True
+                elif action == delete_mod_keep_dds_action:  # ACTION: Delete mods, keep dds action
+                    answer = show_dialogue_conditional(
+                        title="Are you sure?",
+                        text=f"You have selected {len(selected_items)} mod(s) for deletion.",
+                        information="\nThis operation will recursively delete all mod files, except for .dds textures found."
+                        + "\nDo you want to proceed?",
+                    )
+                    if answer == "&Yes":
+                        self.delete_mods_keep_dds(selected_items, steamcmd_acf_pfid_purge)
+                    return True
+                elif action == delete_mod_dds_only_action:  # ACTION: Delete mod dds only action
+                    answer = show_dialogue_conditional(
+                        title="Are you sure?",
+                        text=f"You have selected {len(selected_items)} mod(s) to Delete optimized textures (.dds files only)",
+                        information="\nThis operation will only delete optimized textures (.dds files only) from mod files."
+                        + "\nDo you want to proceed?",
+                    )
+                    if answer == "&Yes":
+                        self.delete_dds_textures_only(selected_items, steamcmd_acf_pfid_purge)
                     return True
                 # Execute action for each selected mod
                 for source_item in selected_items:
@@ -2050,6 +2012,410 @@ class ModListWidget(QListWidget):
             self.handle_rows_inserted, Qt.ConnectionType.QueuedConnection
         )
 
+    def purge_steamcmd_mods_from_acf(self, steamcmd_acf_pfid_purge: set[str]) -> None:
+        """ Purge any deleted SteamCMD mods from acf metadata """
+        if steamcmd_acf_pfid_purge:
+            self.metadata_manager.steamcmd_purge_mods(
+                publishedfileids=steamcmd_acf_pfid_purge
+            )
+
+    def delete_mods(
+        self,
+        selected_items: list[CustomListWidgetItem],
+        steamcmd_acf_pfid_purge: set[str],
+        ) -> None:
+        """
+        Given a list of mods, delete them locally. (Including their .dds textures)
+
+        Also purge any deleted SteamCMD mods from acf metadata.
+
+        Saves new modlist and refreshes when done.
+
+        :param selected_items: List of items to delete.
+        :param steam_acf_pfid_purge: Set that tracks SteamCMD pfids to purge from acf data
+        """
+        deleted_mods_uuids: set[str] = set()
+        for source_item in selected_items:
+            if type(source_item) is CustomListWidgetItem:
+                item_data = source_item.data(Qt.ItemDataRole.UserRole)
+                uuid = item_data["uuid"]
+                mod_metadata = self.metadata_manager.internal_local_metadata[uuid]
+                if mod_metadata[
+                    "data_source"  # Disallow Official Expansions
+                ] != "expansion" or not mod_metadata["packageid"].startswith(
+                    "ludeon.rimworld"
+                ):
+                    try:
+                        rmtree(
+                            mod_metadata["path"],
+                            ignore_errors=False,
+                            onerror=handle_remove_read_only,
+                        )
+                        logger.debug("Deleted mod: " + mod_metadata["name"] + ", uuid: " + str(uuid))
+                        if mod_metadata.get("steamcmd"):
+                            steamcmd_acf_pfid_purge.add(mod_metadata["publishedfileid"])
+                        deleted_mods_uuids.add(uuid)
+                    except FileNotFoundError:
+                        logger.warning(
+                            f"Unable to delete mod. Path does not exist: {mod_metadata['path']}"
+                        )
+                        pass
+                    except OSError as e:
+                        if sys.platform == "win32":
+                            error_code = e.winerror
+                        else:
+                            error_code = e.errno
+                        if e.errno == ENOTEMPTY:
+                            warning_text = "Mod directory was not empty. Please close all programs accessing files or subfolders in the directory (including your file manager) and try again."
+                        else:
+                            warning_text = "An OSError occurred while deleting mod."
+
+                        logger.warning(
+                            f"Unable to delete mod located at the path: {mod_metadata['path']}"
+                        )
+                        show_warning(
+                            title="Unable to delete mod",
+                            text=warning_text,
+                            information=f"{e.strerror} occurred at {e.filename} with error code {error_code}.",
+                        )
+                        continue
+
+        # Purge any deleted SteamCMD mods from acf metadata
+        self.purge_steamcmd_mods_from_acf(steamcmd_acf_pfid_purge)
+        EventBus().do_save_active_mods_list_excluding.emit(deleted_mods_uuids)
+        self.refresh_signal.emit()
+
+    def delete_mods_keep_dds(
+        self,
+        selected_items: list[CustomListWidgetItem],
+        steamcmd_acf_pfid_purge: set[str],
+    ) -> None:
+        """
+        Given a list of mods, delete them locally but keep their dds textures.
+
+        Also purge any deleted SteamCMD mods from acf metadata.
+
+        Saves new modlist and refreshes when done.
+
+        :param selected_items: List of items to delete.
+        :param steam_acf_pfid_purge: Set that tracks SteamCMD pfids to purge from acf data
+        """
+        deleted_mods_uuids: set[str] = set()
+        for source_item in selected_items:
+            if type(source_item) is CustomListWidgetItem:
+                item_data = source_item.data(Qt.ItemDataRole.UserRole)
+                uuid = item_data["uuid"]
+                mod_metadata = (
+                    self.metadata_manager.internal_local_metadata[uuid]
+                )
+                if mod_metadata[
+                    "data_source"  # Disallow Official Expansions
+                ] != "expansion" or not mod_metadata[
+                    "packageid"
+                ].startswith("ludeon.rimworld"):
+                    data = source_item.data(Qt.ItemDataRole.UserRole)
+                    self.uuids.remove(data["uuid"])
+                    deleted_mods_uuids.add(data["uuid"])
+                    delete_files_except_extension(
+                        directory=mod_metadata["path"],
+                        extension=".dds",
+                    )
+                    if mod_metadata.get("steamcmd"):
+                        steamcmd_acf_pfid_purge.add(
+                            mod_metadata["publishedfileid"]
+                        )
+        # Purge any deleted SteamCMD mods from acf metadata
+        self.purge_steamcmd_mods_from_acf(steamcmd_acf_pfid_purge)
+        EventBus().do_save_active_mods_list_excluding.emit(deleted_mods_uuids)
+        self.refresh_signal.emit()
+
+    def delete_dds_textures_only(
+        self,
+        selected_items: list[CustomListWidgetItem],
+        steamcmd_acf_pfid_purge: set[str],
+    ) -> None:
+        """
+        Given a list of mods, delete their dds textures only.
+
+        Also purge any deleted SteamCMD mods from acf metadata.
+
+        :param selected_items: List of mods, to delete their dds textures.
+        :param steam_acf_pfid_purge: Set that tracks SteamCMD pfids to purge from acf data
+        """
+        for source_item in selected_items:
+            if type(source_item) is CustomListWidgetItem:
+                item_data = source_item.data(Qt.ItemDataRole.UserRole)
+                uuid = item_data["uuid"]
+                mod_metadata = (
+                    self.metadata_manager.internal_local_metadata[uuid]
+                )
+                if mod_metadata[
+                    "data_source"  # Disallow Official Expansions
+                ] != "expansion" or not mod_metadata[
+                    "packageid"
+                ].startswith("ludeon.rimworld"):
+                    data = source_item.data(Qt.ItemDataRole.UserRole)
+                    self.uuids.remove(data["uuid"])
+                    delete_files_only_extension(
+                        directory=mod_metadata["path"],
+                        extension=".dds",
+                    )
+                    if mod_metadata.get("steamcmd"):
+                        steamcmd_acf_pfid_purge.add(
+                            mod_metadata["publishedfileid"]
+                        )
+        # Purge any deleted SteamCMD mods from acf metadata
+        self.purge_steamcmd_mods_from_acf(steamcmd_acf_pfid_purge)
+
+    def convert_steamcmd_mods_to_local(self, steamcmd_publishedfileid_to_name: dict[str, str]) -> None:
+        """
+        Convert SteamCMD mods to local mods.
+
+        :param steamcmd_publishedfileid_to_name: Dict of SteamCMD publishedfileid to mod name.
+        """
+        local_folder = self.settings_controller.settings.instances[
+            self.settings_controller.settings.current_instance
+        ].local_folder
+        for (
+            publishedfileid,
+            mod_name,
+        ) in steamcmd_publishedfileid_to_name.items():
+            mod_name = (
+                sanitize_filename(mod_name)
+                if mod_name
+                else f"{publishedfileid}_local"
+            )
+            original_mod_path = str((Path(local_folder) / publishedfileid))
+            renamed_mod_path = str((Path(local_folder) / mod_name))
+            if os.path.exists(original_mod_path):
+                if not os.path.exists(renamed_mod_path):
+                    try:
+                        os.rename(original_mod_path, renamed_mod_path)
+                        logger.debug(
+                            f'Successfully "converted" SteamCMD mod by renaming from {publishedfileid} -> {mod_name}'
+                        )
+                    except Exception as e:
+                        stacktrace = format_exc()
+                        logger.error(
+                            f"Failed to convert mod: {original_mod_path} - {e}"
+                        )
+                        logger.error(stacktrace)
+                else:
+                    logger.warning(
+                        f"Failed to convert mod! Destination already exists: {renamed_mod_path}"
+                    )
+
+    def make_local_copy_of_steam_mod(
+            self, 
+            steam_mod_paths: list[str], 
+            steam_publishedfileid_to_name: dict[str, str],
+        ) -> None:
+        """
+        Makes local copy of Steam mod.
+
+        Does NOT unsubscribe/delete the Steam mod.
+
+        :param steam_mod_paths: List of paths to Steam mods.
+        :param steam_publishedfileid_to_name: Dict of Steam publishedfileid to mod name.
+        """
+        for path in steam_mod_paths:
+            publishedfileid_from_folder_name = os.path.split(path)[1]
+            mod_name = steam_publishedfileid_to_name.get(
+                publishedfileid_from_folder_name
+            )
+            if mod_name:
+                mod_name = sanitize_filename(mod_name)
+            renamed_mod_path = str(
+                (
+                    Path(
+                        self.settings_controller.settings.instances[
+                            self.settings_controller.settings.current_instance
+                        ].local_folder
+                    )
+                    / (
+                        mod_name
+                        if mod_name
+                        else publishedfileid_from_folder_name
+                    )
+                )
+            )
+            if os.path.exists(path):
+                try:
+                    if os.path.exists(renamed_mod_path):
+                        logger.warning(
+                            "Destination exists. Removing all files except for .dds textures first..."
+                        )
+                        delete_files_except_extension(
+                            directory=renamed_mod_path, extension=".dds"
+                        )
+                    try:
+                        copytree(path, renamed_mod_path)
+                    except FileExistsError:
+                        for root, dirs, files in os.walk(path):
+                            dest_dir = root.replace(path, renamed_mod_path)
+                            if not os.path.isdir(dest_dir):
+                                os.makedirs(dest_dir)
+                            for file in files:
+                                src_file = os.path.join(root, file)
+                                dst_file = os.path.join(dest_dir, file)
+                                copy2(src_file, dst_file)
+                    logger.debug(
+                        f'Successfully "converted" Steam mod by copying {publishedfileid_from_folder_name} -> {mod_name} and migrating mod to local mods directory'
+                    )
+                    # Wait until handle_rows_inserted is triggered through rowsInserted signal
+                    # This makes sure lists have all uuids up to date and prevents any crashes/weirdness when executing other actions immediately after converting a mod
+                    loop = QEventLoop()
+                    self.model().rowsInserted.connect(loop.quit)
+                    loop.exec_()
+                    self.model().rowsInserted.disconnect(loop.quit)
+                except Exception as e:
+                    stacktrace = format_exc()
+                    logger.error(f"Failed to convert mod: {path} - {e}")
+                    logger.error(stacktrace)
+
+    def unsubscribe_from_steam_mods(self, publishedfileids: KeysView[Any]) -> bool:
+        """ 
+        Unsubscribe from Steam mods.
+
+        Does NOT delete the mods.
+
+        :param publishedfileids: List of publishedfileids to unsubscribe from.
+
+        :return: True if successful, False otherwise.
+        """
+        # Check if steam is running
+        if not check_if_steam_running():
+            logger.warning("Steam is not running. Cannot unsubscribe from Steam mods.")
+            show_warning(
+                title="Steam not running",
+                text="Unable to unsubscribe from Steam mods. Ensure Steam is running and try again.",
+            )
+            return False
+
+        logger.debug(
+            f"Unsubscribing from {len(publishedfileids)} mod(s)"
+        )
+        self.steamworks_subscription_signal.emit(
+            [
+                "unsubscribe",
+                [eval(str_pfid) for str_pfid in publishedfileids],
+            ]
+        )
+        # TODO: Find a way to catch any exception/failure to unsubscribe and return False...
+        return True
+
+    def resubscribe_to_steam_mods(self, publishedfileids: KeysView[Any]) -> bool:
+        """
+        Resubscribe to Steam mods.
+
+        :param publishedfileids: List of publishedfileids to resubscribe to.
+
+        :return: True if successful, False otherwise.
+        """
+        # Check if steam is running
+        if not check_if_steam_running():
+            logger.warning("Steam is not running. Cannot resubscribe from Steam mods.")
+            show_warning(
+                title="Steam not running",
+                text="Unable to resubscribe to Steam mods. Ensure Steam is running and try again.",
+            )
+            return False
+
+        logger.debug(
+            f"Unsubscribing + re-subscribing to {len(publishedfileids)} mod(s)"
+        )
+        self.steamworks_subscription_signal.emit(
+            [
+                "resubscribe",
+                [eval(str_pfid) for str_pfid in publishedfileids],
+            ]
+        )
+        # TODO: Find a way to catch any exception/failure to resubscribe and return False...
+        return True
+    
+    def add_mod_to_steamdb_blacklist(
+        self, steamdb_add_blacklist: Any | None, steamdb_remove_blacklist: Any | None
+    ) -> bool:
+        """
+        Blacklist workshop mods in steamDB.
+
+        :param steamdb_add_blacklist: A list to track any publishedfileids we want to blacklist.
+        :param steamdb_remove_blacklist: A list to track any publishedfileids we want to remove from blacklist.
+
+        :return: True if successful, False otherwise.
+        """
+        if (
+            self.metadata_manager.external_steam_metadata is None
+            or steamdb_add_blacklist is None
+        ):
+            logger.error(
+                f"Unable to add mod to SteamDB blacklist: {steamdb_remove_blacklist}"
+            )
+            show_warning(
+                "Warning",
+                "Unable to add mod to SteamDB blacklist",
+                "Metadata manager or steamdb_add_blacklist was None type",
+                parent=self,
+            )
+            return False
+
+        args, ok = show_dialogue_input(
+            title="Add comment",
+            label="Enter a comment providing your reasoning for wanting to blacklist this mod: "
+            + f'{self.metadata_manager.external_steam_metadata.get(steamdb_add_blacklist, {}).get("steamName", steamdb_add_blacklist)}',
+        )
+        if ok:
+            self.steamdb_blacklist_signal.emit(
+                [steamdb_add_blacklist, True, args]
+            )
+            return True
+        else:
+            show_warning(
+                title="Unable to add to blacklist",
+                text="Comment was not provided or entry was cancelled. Comments are REQUIRED for this action!",
+            )
+            return False
+        
+    def remove_mod_from_steamdb_blacklist(
+        self, steamdb_remove_blacklist: Any | None
+    ) -> bool:
+        """
+        Remove a workshop mod from the steamDB blacklist.
+
+        :param steamdb_remove_blacklist: A list to track any publishedfileids we want to remove from blacklist.
+
+        :return: True if successful, False otherwise.
+        """
+        
+        if (
+            self.metadata_manager.external_steam_metadata is None
+            or steamdb_remove_blacklist is None
+        ):
+            logger.error(
+                f"Unable to remove mod from SteamDB blacklist: {steamdb_remove_blacklist}"
+            )
+            show_warning(
+                "Warning",
+                "Unable to remove mod from SteamDB blacklist",
+                "Metadata manager or steamdb_remove_blacklist was None type",
+                parent=self,
+            )
+            return False
+
+        answer = show_dialogue_conditional(
+            title="Are you sure?",
+            text="This will remove the selected mod, "
+            + f'{self.metadata_manager.external_steam_metadata.get(steamdb_remove_blacklist, {}).get("steamName", steamdb_remove_blacklist)}, '
+            + "from your configured Steam DB blacklist."
+            + "\nDo you want to proceed?",
+        )
+        if answer == "&Yes":
+            self.steamdb_blacklist_signal.emit(
+                [steamdb_remove_blacklist, False]
+            )
+            return True
+        
+        return False
 
 class ModsPanel(QWidget):
     """

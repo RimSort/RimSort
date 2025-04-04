@@ -107,7 +107,6 @@ class MainContent(QObject):
     _instance: Self | None = None
 
     disable_enable_widgets_signal = Signal(bool)
-    status_signal = Signal(str)
     stop_watchdog_signal = Signal()
 
     def __new__(cls, *args: Any, **kwargs: Any) -> "MainContent":
@@ -202,6 +201,7 @@ class MainContent(QObject):
             EventBus().do_restore_active_mods_list.connect(self._do_restore)
             EventBus().do_sort_active_mods_list.connect(self._do_sort)
             EventBus().do_save_active_mods_list.connect(self._do_save)
+            EventBus().do_save_active_mods_list_excluding.connect(self._do_save)
             EventBus().do_run_game.connect(self._do_run_game)
 
             # Shortcuts submenu Eventbus
@@ -1824,13 +1824,17 @@ class MainContent(QObject):
                 information=ret,
             )
 
-    def _do_save(self) -> None:
+    def _do_save(self, excluded: set[str] = set()) -> None:
         """
         Method to save the current list of active mods to the selected ModsConfig.xml
+
+        :param excluded: list of mods to exclude from saving
         """
         logger.info("Saving current active mods to ModsConfig.xml")
         active_mods = []
         for uuid in self.mods_panel.active_mods_list.uuids:
+            if uuid in excluded:
+                continue
             package_id = self.metadata_manager.internal_local_metadata[uuid][
                 "packageid"
             ]
@@ -1996,7 +2000,10 @@ class MainContent(QObject):
             logger.debug("Displaying potential Workshop mod updates")
             workshop_mod_updater.show()
         else:
-            self.status_signal.emit("All Workshop mods appear to be up to date!")
+            dialogue.show_information(
+                title="Finished Checking Updates",
+                text="All Workshop mods appear to be up to date!",
+            )
 
     def _do_setup_steamcmd(self) -> None:
         if (
