@@ -36,6 +36,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.controllers.settings_controller import SettingsController
+from app.utils import rimsort_boot_config
 from app.utils.app_info import AppInfo
 from app.utils.constants import (
     KNOWN_MOD_REPLACEMENTS,
@@ -179,6 +180,10 @@ class ModListItemInner(QWidget):
         )
         self.main_label = QLabel()
 
+        # Set font and icon size based on settings
+        font_size = self.settings_controller.settings.global_font_size
+        self.icon_size = int(rimsort_boot_config.MOD_ITEM_ICON_DEFAULT_SIZE + font_size)
+
         # Visuals
         self.setToolTip(self.get_tool_tip_text())
         self.main_item_layout = QHBoxLayout()
@@ -197,14 +202,20 @@ class ModListItemInner(QWidget):
             ) is not None:
                 self.csharp_icon = QLabel()
                 self.csharp_icon.setPixmap(
-                    ModListIcons.csharp_icon().pixmap(QSize(20, 20))
+                    ModListIcons.csharp_icon().pixmap(
+                        QSize(self.icon_size, self.icon_size)
+                    )
                 )
                 self.csharp_icon.setToolTip(
                     "Contains custom C# assemblies (custom code)"
                 )
             else:
                 self.xml_icon = QLabel()
-                self.xml_icon.setPixmap(ModListIcons.xml_icon().pixmap(QSize(20, 20)))
+                self.xml_icon.setPixmap(
+                    ModListIcons.xml_icon().pixmap(
+                        QSize(self.icon_size, self.icon_size)
+                    )
+                )
                 self.xml_icon.setToolTip("Contains custom content (textures / XML)")
         self.git_icon = None
         if (
@@ -216,7 +227,9 @@ class ModListItemInner(QWidget):
             )
         ):
             self.git_icon = QLabel()
-            self.git_icon.setPixmap(ModListIcons.git_icon().pixmap(QSize(20, 20)))
+            self.git_icon.setPixmap(
+                ModListIcons.git_icon().pixmap(QSize(self.icon_size, self.icon_size))
+            )
             self.git_icon.setToolTip("Local mod that contains a git repository")
         self.steamcmd_icon = None
         if self.metadata_manager.internal_local_metadata[self.uuid][
@@ -226,7 +239,9 @@ class ModListItemInner(QWidget):
         ):
             self.steamcmd_icon = QLabel()
             self.steamcmd_icon.setPixmap(
-                ModListIcons.steamcmd_icon().pixmap(QSize(20, 20))
+                ModListIcons.steamcmd_icon().pixmap(
+                    QSize(self.icon_size, self.icon_size)
+                )
             )
             self.steamcmd_icon.setToolTip("Local mod that can be used with SteamCMD")
         # Warning icon hidden by default
@@ -239,7 +254,7 @@ class ModListItemInner(QWidget):
             )
         )
         self.warning_icon_label.setPixmap(
-            ModListIcons.warning_icon().pixmap(QSize(20, 20))
+            ModListIcons.warning_icon().pixmap(QSize(self.icon_size, self.icon_size))
         )
         # Default to hidden to avoid showing early
         self.warning_icon_label.setHidden(True)
@@ -252,14 +267,18 @@ class ModListItemInner(QWidget):
                 self.uuid,
             )
         )
-        self.error_icon_label.setPixmap(ModListIcons.error_icon().pixmap(QSize(20, 20)))
+        self.error_icon_label.setPixmap(
+            ModListIcons.error_icon().pixmap(QSize(self.icon_size, self.icon_size))
+        )
         # Default to hidden to avoid showing early
         self.error_icon_label.setHidden(True)
         # Icons by mod source
         self.mod_source_icon = None
         if not self.git_icon and not self.steamcmd_icon:
             self.mod_source_icon = QLabel()
-            self.mod_source_icon.setPixmap(self.get_icon().pixmap(QSize(20, 20)))
+            self.mod_source_icon.setPixmap(
+                self.get_icon().pixmap(QSize(self.icon_size, self.icon_size))
+            )
             # Set tooltip based on mod source
             data_source = self.metadata_manager.internal_local_metadata[self.uuid].get(
                 "data_source"
@@ -2074,6 +2093,10 @@ class ModsPanel(QWidget):
         self.metadata_manager = MetadataManager.instance()
         self.settings_controller = settings_controller
 
+        # Set font and icon size based on settings
+        font_size = self.settings_controller.settings.global_font_size
+        self.icon_size = int(rimsort_boot_config.MOD_ITEM_ICON_DEFAULT_SIZE + font_size)
+
         # Base layout horizontal, sub-layouts vertical
         self.panel = QHBoxLayout()
         self.active_panel = QVBoxLayout()
@@ -2246,14 +2269,18 @@ class ModsPanel(QWidget):
         self.warnings_errors_layout = QHBoxLayout()
         self.warnings_errors_layout.setSpacing(2)
         self.warnings_icon: QLabel = QLabel()
-        self.warnings_icon.setPixmap(ModListIcons.warning_icon().pixmap(QSize(20, 20)))
+        self.warnings_icon.setPixmap(
+            ModListIcons.warning_icon().pixmap(QSize(self.icon_size, self.icon_size))
+        )
         self.warnings_text: AdvancedClickableQLabel = AdvancedClickableQLabel(
             "0 warnings"
         )
         self.warnings_text.setObjectName("summaryValue")
         self.warnings_text.setToolTip("Click to only show mods with warnings")
         self.errors_icon: QLabel = QLabel()
-        self.errors_icon.setPixmap(ModListIcons.error_icon().pixmap(QSize(20, 20)))
+        self.errors_icon.setPixmap(
+            ModListIcons.error_icon().pixmap(QSize(self.icon_size, self.icon_size))
+        )
         self.errors_text: AdvancedClickableQLabel = AdvancedClickableQLabel("0 errors")
         self.errors_text.setObjectName("summaryValue")
         self.errors_text.setToolTip("Click to only show mods with errors")

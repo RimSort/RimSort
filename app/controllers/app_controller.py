@@ -2,8 +2,10 @@ import json
 import sys
 
 from PySide6.QtCore import QObject
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication
 
+import app.utils.rimsort_boot_config as rimsort_boot_config
 from app.controllers.main_window_controller import MainWindowController
 from app.controllers.settings_controller import SettingsController
 from app.controllers.theme_controller import ThemeController
@@ -22,7 +24,7 @@ class AppController(QObject):
         super().__init__()
 
         self.app = QApplication(sys.argv)
-        self.app.setWindowIcon(GUIInfo().app_icon)
+        self.set_config_variables()
 
         self.initialize_user_rules()
         self.initialize_settings()
@@ -37,6 +39,25 @@ class AppController(QObject):
             self.settings.theme_name,
         )
 
+        self.app.setWindowIcon(GUIInfo().app_icon)
+
+        # Set global font size after main window is loaded
+        self.set_global_font_size(self.global_font)
+
+    def set_global_font_size(self, new_size: float) -> None:
+        font = QFont()
+        font.setPointSizeF(new_size)
+        self.app.setFont(font)
+        # TODO: If we want to apply changes without RimSort restart
+        # self.reload_ui
+
+    def set_config_variables(self) -> None:
+        """Set variables required at app boot."""
+        rimsort_boot_config.MOD_ITEM_TEXT_DEFAULT_FONT_SIZE = QFont().pointSize()
+        rimsort_boot_config.MOD_ITEM_ICON_DEFAULT_SIZE = (
+            20 - rimsort_boot_config.MOD_ITEM_TEXT_DEFAULT_FONT_SIZE
+        )
+
     def initialize_user_rules(self) -> None:
         """Initializes userRules.json if it does not exist."""
         user_rules_path = AppInfo().user_rules_file
@@ -48,10 +69,16 @@ class AppController(QObject):
     def initialize_settings(self) -> None:
         """Initializes the settings model, view, and controller."""
         self.settings = Settings()
+        self.apply_initial_settings()
         self.settings_dialog = SettingsDialog()
         self.settings_controller = SettingsController(
             model=self.settings, view=self.settings_dialog
         )
+
+    def apply_initial_settings(self) -> None:
+        """Applies critical settings required at app boot."""
+        self.global_font = self.settings.global_font_size
+        self.set_global_font_size(self.global_font)
 
     def initialize_theme_controller(self) -> None:
         """Initializes the ThemeController."""
