@@ -519,8 +519,6 @@ class SubExternalBoolRule(msgspec.Struct, omit_defaults=True):
 class ExternalRule(msgspec.Struct, omit_defaults=True):
     loadAfter: dict[str, SubExternalRule] = {}
     loadBefore: dict[str, SubExternalRule] = {}
-    incompatibleWith: dict[str, SubExternalRule] = {}
-    compatibleWith: dict[str, SubExternalRule] = {}
     loadTop: SubExternalBoolRule = msgspec.field(default_factory=SubExternalBoolRule)
     loadBottom: SubExternalBoolRule = msgspec.field(default_factory=SubExternalBoolRule)
 
