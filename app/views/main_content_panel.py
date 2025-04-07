@@ -327,6 +327,9 @@ class MainContent(QObject):
             self.mods_panel.inactive_mods_list.update_git_mods_signal.connect(
                 self._check_git_repos_for_update
             )
+            self.mods_panel.active_mods_list.steamcmd_downloader_signal.connect(
+                self._do_download_mods_with_steamcmd
+            )
             self.mods_panel.inactive_mods_list.steamcmd_downloader_signal.connect(
                 self._do_download_mods_with_steamcmd
             )
