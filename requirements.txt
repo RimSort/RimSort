@@ -14,6 +14,7 @@ PyGithub==2.6.1
 pyperclip==1.9.0
 PySide6
 PySide6==6.9.0; sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'
+rapidfuzz==3.13.0
 requests==2.32.3
 SQLAlchemy==2.0.40
 steam==1.4.4
