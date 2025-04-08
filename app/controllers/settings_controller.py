@@ -934,21 +934,19 @@ class SettingsController(QObject):
     def _on_game_location_text_changed(self) -> None:
         game_folder = self.settings_dialog.game_location.text()
         version_file = str(game_folder / Path("Version.txt"))
-        if game_folder != "" and os.path.exists(version_file):
+        if game_folder and os.path.exists(version_file):
             self.settings_dialog.game_location_open_button.setEnabled(True)
             # Automatically set local folder from game folder
             self.settings_dialog.local_mods_folder_location.setText(
                 str(Path(game_folder) / "Mods")
             )
             self.settings_dialog.local_mods_folder_location_open_button.setEnabled(True)
-        elif game_folder != "" and not os.path.exists(version_file):
+        elif game_folder and not os.path.exists(version_file):
             show_warning(
                 title="Invalid Game Location",
                 text="Set your game path correctly.",
                 information=f"RimSort did not find Version.txt file in [{game_folder}].",
             )
-            # Open the game location dialog if invalid game location
-            self._on_game_location_choose_button_clicked()
             # Reset game and mods folder location
             self.settings_dialog.game_location.setText("")
             self.settings_dialog.local_mods_folder_location.setText("")
