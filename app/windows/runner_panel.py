@@ -1,6 +1,6 @@
 import os
 from platform import system
-from re import compile, search
+from re import compile, findall, search
 from typing import Any, Sequence
 
 import psutil
@@ -276,13 +276,14 @@ class RunnerPanel(QWidget):
             elif ") quit" in line:
                 line = line.replace(") quit", ")\n\nquit")
             # Progress bar output support
-            if (
-                self.steamcmd_current_pfid
-                and "Success. Downloaded item " in line
-                and self.steamcmd_current_pfid in self.steamcmd_download_tracking
-            ):
-                self.steamcmd_download_tracking.remove(self.steamcmd_current_pfid)
-                self.progress_bar.setValue(self.progress_bar.value() + 1)
+            success_matches = findall(
+                r"Success. Downloaded item (\d+)", line
+            )  # Handle all success messages in the line
+            if success_matches:
+                for success_pfid in success_matches:
+                    if success_pfid in self.steamcmd_download_tracking:
+                        self.steamcmd_download_tracking.remove(success_pfid)
+                        self.progress_bar.setValue(self.progress_bar.value() + 1)
             elif "ERROR! Download item " in line:
                 self.change_progress_bar_color("warn")
                 self.progress_bar.setValue(self.progress_bar.value() + 1)
