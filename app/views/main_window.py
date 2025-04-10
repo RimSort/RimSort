@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QMainWindow,
     QPushButton,
+    QTabWidget,
     QVBoxLayout,
     QWidget,
 )
@@ -39,6 +40,7 @@ from app.views.dialogue import (
     show_fatal_error,
     show_warning,
 )
+from app.views.log_reader import LogReader
 from app.views.main_content_panel import MainContent
 from app.views.menu_bar import MenuBar
 from app.views.status_panel import Status
@@ -79,6 +81,10 @@ class MainWindow(QMainWindow):
         app_layout.setContentsMargins(0, 0, 0, 0)  # Space from main layout to border
         app_layout.setSpacing(0)  # Space between widgets
 
+        # Create a tab widget
+        self.tab_widget = QTabWidget()
+        app_layout.addWidget(self.tab_widget)
+
         # Create various panels on the application GUI
         self.main_content_panel = MainContent(
             settings_controller=self.settings_controller
@@ -88,13 +94,17 @@ class MainWindow(QMainWindow):
         )
         self.bottom_panel = Status()
 
-        # Arrange all panels vertically on the main window layout
-        app_layout.addWidget(self.main_content_panel.main_layout_frame)
+        # Create and add the Main Content panel tab
+        self.main_content_tab = QWidget()
+        self.main_content_layout = QVBoxLayout()
+        self.main_content_tab.setLayout(self.main_content_layout)
 
+        # Add the MainContent panel to the tab
+        self.main_content_layout.addWidget(self.main_content_panel.main_layout_frame)
+
+        # Create button layout and add it to the main content layout
         button_layout = QHBoxLayout()
-        button_layout.setContentsMargins(12, 12, 12, 12)
-        button_layout.setSpacing(12)
-        app_layout.addLayout(button_layout)
+        self.main_content_layout.addLayout(button_layout)
 
         self.game_version_label = QLabel()
         self.game_version_label.setFont(GUIInfo().smaller_font)
@@ -123,6 +133,19 @@ class MainWindow(QMainWindow):
         for button in buttons:
             button.setMinimumWidth(100)
             button_layout.addWidget(button)
+
+        self.tab_widget.addTab(self.main_content_tab, "Main Content")
+
+        # Create and add the ACF Data tab
+        self.log_reader_tab = QWidget()
+        self.log_reader_layout = QVBoxLayout()
+        self.log_reader_tab.setLayout(self.log_reader_layout)
+
+        # Instantiate the AcfDataWindow and add it to the tab
+        self.log_reader = LogReader()
+        self.log_reader_layout.addWidget(self.log_reader)
+
+        self.tab_widget.addTab(self.log_reader_tab, "Log Reader")
 
         # Save button flashing animation
         self.save_button_flashing_animation = QTimer()
