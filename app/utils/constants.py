@@ -69,6 +69,6 @@ SEARCH_DATA_SOURCE_FILTER_INDEXES = [
     "xml",
 ]
 KNOWN_MOD_REPLACEMENTS = {
- "brrainz.harmony": {"zetrith.prepatcher"},
- "aoba.motorization.engine": {"rimthunder.core"}
+    "brrainz.harmony": {"zetrith.prepatcher"},
+    "aoba.motorization.engine": {"rimthunder.core"},
 }
