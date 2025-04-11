@@ -1379,7 +1379,18 @@ class MetadataManager(QObject):
         """
         # Parse the SteamCMD workshop .acf metadata file
         acf_path = self.steamcmd_wrapper.steamcmd_appworkshop_acf_path
-        acf_metadata = acf_to_dict(path=acf_path)
+        if not os.path.exists(acf_path):
+            logger.warning(
+                f"SteamCMD ACF file not found at: {acf_path}, Skipping removing mods from ACF."
+            )
+            return
+
+        try:
+            acf_metadata = acf_to_dict(path=acf_path)
+        except Exception as e:
+            logger.error(f"Failed to parse SteamCMD ACF file: {e}")
+            return
+
         depotcache_path = self.steamcmd_wrapper.steamcmd_depotcache_path
         # WorkshopItemsInstalled
         workshop_items_installed = acf_metadata.get("AppWorkshop", {}).get(
