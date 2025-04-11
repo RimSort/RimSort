@@ -213,7 +213,9 @@ class RentryImport:
             raw_url = (
                 rentry_link if rentry_link.endswith("/raw") else f"{rentry_link}/raw"
             )
-            response = requests.get(raw_url, headers=_HEADERS)  # Fetch the content from the raw URL
+            response = requests.get(
+                raw_url, headers=_HEADERS
+            )  # Fetch the content from the raw URL
 
             if response.status_code == 200:
                 # Decode the content using UTF-8
@@ -229,7 +231,9 @@ class RentryImport:
                     if match[0] or match[1]
                 ]
                 logger.info("Parsed package_ids successfully.")
-                logger.debug(f"Number of package_ids found: {str(len(self.package_ids))}")
+                logger.debug(
+                    f"Number of package_ids found: {str(len(self.package_ids))}"
+                )
             else:
                 # Handle non-200 responses
                 RentryError().show_response_error(response)
@@ -311,7 +315,7 @@ class RentryError:
             details=f"{str(e)}",
         )
         return None  # Return None to indicate failure
-    
+
     def show_missing_rentry_auth_warning(self) -> None:
         """Show a warning for missing Rentry Auth code."""
         logger.warning("Rentry Auth code not found in user settings.")
