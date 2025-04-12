@@ -1,10 +1,9 @@
 from functools import partial
+from typing import Any, Literal
 
 from loguru import logger
 from PySide6.QtCore import QSize, Qt, Signal
-from PySide6.QtGui import (
-    QIcon,
-)
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QComboBox,
     QFrame,
@@ -27,6 +26,129 @@ from app.utils.event_bus import EventBus
 from app.utils.metadata import MetadataManager
 from app.views.mods_panel_icons import ModListIcons
 from app.views.mods_panel_list_widget import ModListWidget
+
+
+class ModSearchFilter:
+    """Helper class to encapsulate search and filter functionality for mod lists."""
+
+    def __init__(
+        self,
+        list_type: Literal["Active", "Inactive"],
+        settings_controller: SettingsController,
+        metadata_manager: MetadataManager,
+        data_source_filter_icons: list[QIcon],
+        data_source_filter_tooltips: list[str],
+        data_source_filter_type_icons: list[QIcon],
+        data_source_filter_type_tooltips: list[str],
+        mode_filter_icon: QIcon,
+        mode_filter_tooltip: str,
+        mode_nofilter_icon: QIcon,
+        mode_nofilter_tooltip: str,
+    ) -> None:
+        self.list_type = list_type
+        self.settings_controller = settings_controller
+        self.metadata_manager = metadata_manager
+
+        # Filter icons and tooltips
+        self.data_source_filter_icons = data_source_filter_icons
+        self.data_source_filter_tooltips = data_source_filter_tooltips
+        self.data_source_filter_type_icons = data_source_filter_type_icons
+        self.data_source_filter_type_tooltips = data_source_filter_type_tooltips
+        self.mode_filter_icon = mode_filter_icon
+        self.mode_filter_tooltip = mode_filter_tooltip
+        self.mode_nofilter_icon = mode_nofilter_icon
+        self.mode_nofilter_tooltip = mode_nofilter_tooltip
+
+        # Filter states
+        self.filter_data_source_index = 0
+        self.data_source_filter_type_index = 0
+        self.search_filter_state = True
+
+    def apply_search_and_filters(
+        self,
+        pattern: str,
+        search_filter: QComboBox,
+        mod_list: ModListWidget,
+        filters_active: bool = False,
+    ) -> None:
+        """Apply search pattern and filters to the mod list."""
+        search_filter_text = search_filter.currentText().lower()
+        filter_key = {
+            "name": "name",
+            "packageid": "packageid",
+            "author(s)": "authors",
+            "publishedfileid": "publishedfileid",
+        }.get(search_filter_text, "name")
+
+        for uuid in mod_list.uuids:
+            item = mod_list.item(mod_list.uuids.index(uuid))
+            item_data = item.data(Qt.ItemDataRole.UserRole)
+            metadata = self.metadata_manager.internal_local_metadata[uuid]
+
+            # Apply filters based on current state
+            should_filter = self._should_filter_item(
+                item_data, metadata, pattern, filter_key, filters_active
+            )
+
+            # Update item visibility based on filter state
+            if self.search_filter_state:
+                item.setHidden(should_filter)
+                item_data["hidden_by_filter"] = should_filter
+            else:
+                if should_filter and item.isHidden():
+                    item.setHidden(False)
+                    item_data["hidden_by_filter"] = False
+
+            item_data["filtered"] = should_filter
+            item.setData(Qt.ItemDataRole.UserRole, item_data)
+
+    def _should_filter_item(
+        self,
+        item_data: dict[str, Any],
+        metadata: dict[str, Any],
+        pattern: str,
+        filter_key: str,
+        filters_active: bool,
+    ) -> bool:
+        """Determine if an item should be filtered based on current criteria."""
+        # Filter invalid items if enabled in settings
+        if (
+            self.settings_controller.settings.hide_invalid_mods_when_filtering_toggle
+            and item_data["invalid"]
+            and filters_active
+        ):
+            return True
+
+        # Apply search pattern filter
+        if pattern and metadata.get(filter_key):
+            if pattern.lower() not in str(metadata.get(filter_key)).lower():
+                return True
+
+        # Apply data source filter
+        if self.filter_data_source_index > 0:  # Not "All Mods"
+            data_source = self._get_data_source_filter()
+            if data_source != metadata.get("data_source"):
+                return True
+
+        # Apply mod type filter
+        if self.data_source_filter_type_index > 0:  # Not "All Types"
+            mod_type = self._get_mod_type_filter()
+            if mod_type == "csharp" and not metadata.get("csharp"):
+                return True
+            if mod_type == "xml" and metadata.get("csharp"):
+                return True
+
+        return False
+
+    def _get_data_source_filter(self) -> str:
+        """Get current data source filter based on index."""
+        sources = ["all", "git_repo", "steamcmd"]
+        return sources[self.filter_data_source_index % len(sources)]
+
+    def _get_mod_type_filter(self) -> str:
+        """Get current mod type filter based on index."""
+        types = ["all", "csharp", "xml"]
+        return types[self.data_source_filter_type_index % len(types)]
 
 
 class ModsPanel(QWidget):
@@ -109,12 +231,14 @@ class ModsPanel(QWidget):
         self.active_mods_search_layout = QHBoxLayout()
         self.initialize_active_mods_search_widgets()
 
+        self.errors_summary_layout = QVBoxLayout()
+        self.errors_summary_layout.setContentsMargins(0, 0, 0, 0)
+        self.errors_summary_layout.setSpacing(2)
+
         # Add active mods widgets to layout
         self.active_panel.addWidget(self.active_mods_label)
         self.active_panel.addLayout(self.active_mods_search_layout)
         self.active_panel.addWidget(self.active_mods_list)
-
-        # Add the errors summary frame below the active mods list
         self.active_panel.addWidget(self.errors_summary_frame)
 
         # Initialize inactive mods widgets
@@ -142,6 +266,10 @@ class ModsPanel(QWidget):
 
     def initialize_active_mods_search_widgets(self) -> None:
         """Initialize widgets for active mods search layout."""
+        # Initialize errors summary frame first
+        self.errors_summary_frame = QFrame()
+        self.errors_summary_frame.setObjectName("errorFrame")
+
         self.active_mods_filter_data_source_index = 0
         self.active_mods_data_source_filter = SEARCH_DATA_SOURCE_FILTER_INDEXES[
             self.active_mods_filter_data_source_index
@@ -215,8 +343,6 @@ class ModsPanel(QWidget):
         self.active_mods_search_layout.addWidget(self.active_mods_search, 45)
         self.active_mods_search_layout.addWidget(self.active_mods_search_filter, 70)
         # Active mods list Errors/warnings widgets
-        self.errors_summary_frame: QFrame = QFrame()
-        self.errors_summary_frame.setObjectName("errorFrame")
         self.errors_summary_layout = QVBoxLayout()
         self.errors_summary_layout.setContentsMargins(0, 0, 0, 0)
         self.errors_summary_layout.setSpacing(2)
@@ -386,12 +512,19 @@ class ModsPanel(QWidget):
         self.mod_list_updated(count=count, list_type="Active")
 
     def on_active_mods_search(self, pattern: str) -> None:
+        """Handle text changes in the active mods search field.
+
+        Args:
+            pattern: The current search pattern text
+        """
         self.signal_search_and_filters(list_type="Active", pattern=pattern)
 
-    def on_active_mods_search_clear(self) -> None:
+    def on_active_mods_search_clear(self: "ModsPanel") -> None:
+        """Clear the active mods search field and reset filters."""
         self.signal_clear_search(list_type="Active")
 
-    def on_active_mods_search_data_source_filter(self) -> None:
+    def on_active_mods_search_data_source_filter(self: "ModsPanel") -> None:
+        """Handle data source filter button click for active mods."""
         self.signal_search_source_filter(list_type="Active")
 
     def on_active_mods_search_data_source_filter_type(self) -> None:
@@ -404,12 +537,19 @@ class ModsPanel(QWidget):
         self.mod_list_updated(count=count, list_type="Inactive")
 
     def on_inactive_mods_search(self, pattern: str) -> None:
+        """Handle text changes in the inactive mods search field.
+
+        Args:
+            pattern: The current search pattern text
+        """
         self.signal_search_and_filters(list_type="Inactive", pattern=pattern)
 
-    def on_inactive_mods_search_clear(self) -> None:
+    def on_inactive_mods_search_clear(self: "ModsPanel") -> None:
+        """Clear the inactive mods search field and reset filters."""
         self.signal_clear_search(list_type="Inactive")
 
-    def on_inactive_mods_search_data_source_filter(self) -> None:
+    def on_inactive_mods_search_data_source_filter(self: "ModsPanel") -> None:
+        """Handle data source filter button click for inactive mods."""
         self.signal_search_source_filter(list_type="Inactive")
 
     def on_inactive_mods_search_data_source_filter_type(self) -> None:
@@ -422,11 +562,15 @@ class ModsPanel(QWidget):
         self.inactive_mods_list.append_new_item(uuid)
 
     def apply_mods_filter_type(self, list_type: str) -> None:
+        if list_type not in ["Active", "Inactive"]:
+            raise ValueError(f"Invalid list type: {list_type}")
+
         # Define the mod types
         mod_types = ["csharp", "xml"]
         source_filter_index: int = (
             self.active_data_source_filter_type_index
-            or self.inactive_data_source_filter_type_index
+            if list_type == "Active"
+            else self.inactive_data_source_filter_type_index
         )
 
         if list_type == "Active":
@@ -572,6 +716,11 @@ class ModsPanel(QWidget):
         filters_active: bool = False,
         recalculate_list_errors_warnings: bool = True,
     ) -> None:
+        if list_type not in ["Active", "Inactive"]:
+            raise ValueError(f"Invalid list type: {list_type}")
+
+        if not isinstance(pattern, str):
+            pattern = str(pattern)
         """
         Performs a search and/or applies filters based on the given parameters.
 
