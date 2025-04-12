@@ -2,7 +2,8 @@ from loguru import logger
 from PySide6.QtCore import QObject, Qt, Signal, Slot
 
 from app.utils.event_bus import EventBus
-from app.views.mods_panel import ModListWidget, ModsPanel
+from app.views.mods_panel import ModsPanel
+from app.views.mods_panel_list_widget import ModListWidget
 
 
 class ModsPanelController(QObject):
