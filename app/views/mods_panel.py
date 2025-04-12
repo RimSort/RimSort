@@ -772,6 +772,8 @@ class ModsPanel(QWidget):
                 if list_type == "Active"
                 else self.inactive_mods_list.item(uuids.index(uuid))
             )
+            if item is None:
+                continue
             item_data = item.data(Qt.ItemDataRole.UserRole)
             metadata = self.metadata_manager.internal_local_metadata[uuid]
             if pattern != "":
@@ -947,6 +949,8 @@ class ModsPanel(QWidget):
                 if list_type == "Active"
                 else self.inactive_mods_list.item(uuids.index(uuid))
             )
+            if item is None:
+                continue
             item_data = item.data(Qt.ItemDataRole.UserRole)
             item_filtered = item_data["filtered"]
 
