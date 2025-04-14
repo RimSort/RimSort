@@ -9,6 +9,7 @@ from PySide6.QtWidgets import QApplication, QLineEdit, QMessageBox
 
 from app.controllers.theme_controller import ThemeController
 from app.models.settings import Instance, Settings
+from app.utils import rimsort_boot_config
 from app.utils.constants import SortMethod
 from app.utils.event_bus import EventBus
 from app.utils.generic import platform_specific_open
@@ -251,6 +252,11 @@ class SettingsController(QObject):
         # Theme tab
         self.settings_dialog.theme_location_open_button.clicked.connect(
             self._on_theme_location_open_button_clicked
+        )
+
+        # Accessibility tab
+        self.settings_dialog.reset_global_font_size_button.clicked.connect(
+            self._on_reset_global_font_size_button_clicked
         )
 
         # Connect signals from dialogs
@@ -707,6 +713,11 @@ class SettingsController(QObject):
             self._on_run_args_text_changed
         )
 
+        # Accessibility tab
+        self.settings_dialog.global_font_size_spin_box.setValue(
+            self.settings.global_font_size
+        )
+
     def _update_model_from_view(self) -> None:
         """
         Update the settings model from the view.
@@ -891,6 +902,11 @@ class SettingsController(QObject):
             self.settings.instances[self.settings.current_instance].run_args
         )
         self.settings_dialog.run_args.setText(run_args_str)
+
+        # Accessibility tab
+        self.settings.global_font_size = (
+            self.settings_dialog.global_font_size_spin_box.value()
+        )
 
     @Slot()
     def _on_global_reset_to_defaults_button_clicked(self) -> None:
@@ -1664,3 +1680,12 @@ class SettingsController(QObject):
             logger.warning(
                 f"Failed to open theme location: {stylesheet_path} not found or does not exist"
             )
+
+    @Slot()
+    def _on_reset_global_font_size_button_clicked(self) -> None:
+        """
+        Reset mod item font size to default.
+        """
+        self.settings_dialog.global_font_size_spin_box.setValue(
+            rimsort_boot_config.MOD_ITEM_TEXT_DEFAULT_FONT_SIZE
+        )

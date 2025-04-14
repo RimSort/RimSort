@@ -5,6 +5,7 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QDialog,
+    QDoubleSpinBox,
     QGridLayout,
     QGroupBox,
     QHBoxLayout,
@@ -19,6 +20,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.utils import rimsort_boot_config
 from app.utils.gui_info import GUIInfo
 
 
@@ -51,6 +53,7 @@ class SettingsDialog(QDialog):
         self._do_todds_tab()
         self._do_themes_tab()
         self._do_advanced_tab()
+        self._do_accessibility_tab()
 
         # Bottom buttons layout
         button_layout = QHBoxLayout()
@@ -935,6 +938,55 @@ class SettingsDialog(QDialog):
         run_args_layout.addWidget(self.run_args, 1, 1)
 
         self.setTabOrder(self.run_args_info_label, self.run_args)
+
+    def _do_accessibility_tab(self) -> None:
+        tab = QWidget()
+        self.tab_widget.addTab(tab, "Accessibility")
+
+        tab_layout = QVBoxLayout(tab)
+        tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        group_box = QGroupBox()
+        tab_layout.addWidget(group_box)
+
+        group_layout = QVBoxLayout()
+        group_box.setLayout(group_layout)
+
+        user_note = QLabel("RimSort restart required for some settings")
+        user_note.setFont(GUIInfo().emphasis_font)
+        user_note.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        group_layout.addWidget(user_note)
+
+        global_options_group = QGroupBox()
+        group_layout.addWidget(global_options_group)
+
+        global_options_layout = QGridLayout()
+        global_options_group.setLayout(global_options_layout)
+
+        global_font_size_label = QLabel(
+            f"Global font size (Default: {rimsort_boot_config.MOD_ITEM_TEXT_DEFAULT_FONT_SIZE}):"
+        )
+        global_options_layout.addWidget(
+            global_font_size_label, 0, 0, alignment=Qt.AlignmentFlag.AlignLeft
+        )
+        self.global_font_size_spin_box = QDoubleSpinBox()
+        self.global_font_size_spin_box.setMinimum(
+            rimsort_boot_config.MOD_ITEM_TEXT_DEFAULT_FONT_SIZE - 1  # Arbitrary min
+        )
+        self.global_font_size_spin_box.setMaximum(
+            rimsort_boot_config.MOD_ITEM_TEXT_DEFAULT_FONT_SIZE + 11  # Arbitrary max
+        )
+        global_options_layout.addWidget(
+            self.global_font_size_spin_box, 0, 1, alignment=Qt.AlignmentFlag.AlignLeft
+        )
+        self.reset_global_font_size_button = QPushButton()
+        self.reset_global_font_size_button.setText("Reset")
+        self.reset_global_font_size_button.setToolTip(
+            "Default: " + str(rimsort_boot_config.MOD_ITEM_TEXT_DEFAULT_FONT_SIZE)
+        )
+        global_options_layout.addWidget(
+            self.reset_global_font_size_button, 0, 1, alignment=Qt.AlignmentFlag.AlignRight,
+        )
 
     def _find_tab_index(self, tab_name: str) -> int:
         for i in range(self.tab_widget.count()):
