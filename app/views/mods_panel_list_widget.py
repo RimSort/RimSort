@@ -137,6 +137,22 @@ class ModListWidget(QListWidget):
         )  # TDOD: should we enable items conditionally? For now use all
         logger.debug("Finished ModListW`idget initialization")
 
+    def get_item_by_uuid(self, uuid: str) -> CustomListWidgetItem | None:
+        """
+        Retrieve an item from the list based on its UUID.
+
+        Args:
+            uuid (str): The UUID of the mod.
+
+        Returns:
+            CustomListWidgetItem | None: The corresponding item if found, otherwise None.
+        """
+        for index in range(self.count()):
+            item = self.item(index)
+            if item.data(Qt.ItemDataRole.UserRole)["uuid"] == uuid:
+                return item
+        return None
+
     def item(self, row: int) -> CustomListWidgetItem:
         """
         Return the currently selected item.
