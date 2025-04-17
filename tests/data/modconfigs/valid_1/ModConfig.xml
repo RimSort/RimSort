@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModsConfigData>
+    <version>1.5.4104 rev435</version>
+    <activeMods>
+        <li>zetrith.prepatcher</li>
+        <li>brrainz.harmony</li>
+        <li>taranchuk.fastergameloading</li>
+        <li>bs.fishery</li>
+        <li>ludeon.rimworld</li>
+        <li>dubwise.dubsperformanceanalyzer.steam</li>
+        <li>krkr.rocketman</li>
+    </activeMods>
+    <knownExpansions>
+        <li>ludeon.rimworld.royalty</li>
+        <li>ludeon.rimworld.ideology</li>
+        <li>ludeon.rimworld.biotech</li>
+        <li>ludeon.rimworld.anomaly</li>
+    </knownExpansions>
+</ModsConfigData>

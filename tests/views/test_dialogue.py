@@ -4,14 +4,19 @@ from unittest.mock import MagicMock, patch
 import pytest
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QMessageBox, QWidget
-from pytestqt import qtbot  # type: ignore #pytestqt is untyped and has no stubs
+from pytestqt.qtbot import QtBot  # type: ignore #pytestqt is untyped and has no stubs
 
 from app.views.dialogue import BinaryChoiceDialog
 
 
 @pytest.fixture(scope="module")
 def app() -> Generator[QApplication, None, None]:
-    app = QApplication([])
+    """Yield QApplication instance."""
+    app = QApplication.instance()
+    if app is None:
+        app = QApplication([])
+    elif not isinstance(app, QApplication):
+        raise RuntimeError("Expected QApplication instance, got QCoreApplication.")
     yield app
     app.quit()
 
@@ -174,7 +179,7 @@ class TestBinaryChoiceDialog:
         assert dialogue_1.button(dialogue_1.positive_btn).text() == "Close"
         assert dialogue_1.button(dialogue_1.negative_btn).text() == "Cancel"
 
-    def test_click(self, qtbot: qtbot) -> None:
+    def test_click(self, qtbot: QtBot) -> None:
         dialog1 = BinaryChoiceDialog()
         qtbot.addWidget(dialog1)
         qtbot.mouseClick(
@@ -190,7 +195,7 @@ class TestBinaryChoiceDialog:
         assert dialog2.result() == dialog2.negative_btn
 
     @patch.object(BinaryChoiceDialog, "exec")
-    def test_exec_is_positive(self, mock_exec: MagicMock, qtbot: qtbot) -> None:
+    def test_exec_is_positive(self, mock_exec: MagicMock, qtbot: QtBot) -> None:
         def _test_exec_is_positive(
             dialog: BinaryChoiceDialog, positive_clicked: bool
         ) -> None:

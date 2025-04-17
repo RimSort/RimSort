@@ -4,6 +4,7 @@ networkx-stubs
 pytest
 pytest-qt
 ruff
+types-beautifulsoup4
 types-lxml
 types-networkx
 types-psutil

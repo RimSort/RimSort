@@ -25,7 +25,6 @@ class EventBus(QObject):
 
     # Menu bar signals
     do_check_for_application_update = Signal()
-    do_validate_steam_client = Signal()
     do_open_mod_list = Signal()
     do_save_mod_list_as = Signal()
     do_import_mod_list_from_rentry = Signal()
@@ -113,6 +112,10 @@ class EventBus(QObject):
     filters_changed_in_inactive_modlist = Signal()
     use_this_instead_clicked = Signal()
     reset_use_this_instead_cache = Signal()
+
+    # Help Menu bar signals
+    do_check_for_application_update = Signal()
+    do_check_for_update_startup = Signal()
 
     def __new__(cls) -> "EventBus":
         """

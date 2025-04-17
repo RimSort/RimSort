@@ -181,8 +181,12 @@ class RuleEditor(QWidget):
         # local metadata
         self.local_metadata_loadAfter_label = QLabel("About.xml (loadAfter)")
         self.local_metadata_loadBefore_label = QLabel("About.xml (loadBefore)")
+        self.local_metadata_incompatibilities_label = QLabel(
+            "About.xml (incompatibilities)"
+        )
         self.local_metadata_loadAfter_list = QListWidget()
         self.local_metadata_loadBefore_list = QListWidget()
+        self.local_metadata_incompatibilities_list = QListWidget()
 
         # community rules
         self.external_community_rules_loadAfter_label = QLabel(
@@ -389,6 +393,12 @@ class RuleEditor(QWidget):
         )
         self.internal_local_metadata_layout.addWidget(
             self.local_metadata_loadBefore_list
+        )
+        self.internal_local_metadata_layout.addWidget(
+            self.local_metadata_incompatibilities_label
+        )
+        self.internal_local_metadata_layout.addWidget(
+            self.local_metadata_incompatibilities_list
         )
         self.external_community_rules_layout.addWidget(
             self.external_community_rules_loadAfter_label
@@ -648,6 +658,7 @@ class RuleEditor(QWidget):
         self.mods_list.clear()
         self.local_metadata_loadAfter_list.clear()
         self.local_metadata_loadBefore_list.clear()
+        self.local_metadata_incompatibilities_list.clear()
         self.external_community_rules_loadAfter_list.clear()
         self.external_community_rules_loadBefore_list.clear()
         self.external_user_rules_loadAfter_list.clear()
@@ -725,6 +736,7 @@ class RuleEditor(QWidget):
                     rule_types = {
                         "loadafter": self.local_metadata_loadAfter_list,
                         "loadbefore": self.local_metadata_loadBefore_list,
+                        "incompatiblewith": self.local_metadata_incompatibilities_list,
                     }
 
                     for rule_type, _list in rule_types.items():
@@ -753,6 +765,7 @@ class RuleEditor(QWidget):
                         metadata=metadata.get("packageid"),
                     )
 
+        # TODO: Not able to handle user/community incompatible with rules yet.
         def _parse_rules(
             rules: dict[str, Any],
             loadAfter_list: QListWidget,
