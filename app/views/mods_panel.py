@@ -768,9 +768,9 @@ class ModsPanel(QWidget):
         # Filter the list using any search and filter state
         for uuid in uuids:
             item = (
-                self.active_mods_list.item(uuids.index(uuid))
+                self.active_mods_list.get_item_by_uuid(uuid)
                 if list_type == "Active"
-                else self.inactive_mods_list.item(uuids.index(uuid))
+                else self.inactive_mods_list.get_item_by_uuid(uuid)
             )
             if item is None:
                 continue
@@ -945,9 +945,9 @@ class ModsPanel(QWidget):
         num_unfiltered = 0
         for uuid in uuids:
             item = (
-                self.active_mods_list.item(uuids.index(uuid))
+                self.active_mods_list.get_item_by_uuid(uuid)
                 if list_type == "Active"
-                else self.inactive_mods_list.item(uuids.index(uuid))
+                else self.inactive_mods_list.get_item_by_uuid(uuid)
             )
             if item is None:
                 continue
