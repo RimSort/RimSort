@@ -83,7 +83,6 @@ class MainWindow(QMainWindow):
         self.main_content_panel = MainContent(
             settings_controller=self.settings_controller
         )
-        self.main_content_panel.set_main_window(self)
         self.main_content_panel.disable_enable_widgets_signal.connect(
             self.__disable_enable_widgets
         )
@@ -821,7 +820,7 @@ class MainWindow(QMainWindow):
                     generated_instance_run_args = [
                         "-logfile",
                         str(Path(instance_path) / "RimWorld.log"),
-                        f'-savedatafolder={str(Path(instance_path) / "InstanceData")}',
+                        f"-savedatafolder={str(Path(instance_path) / 'InstanceData')}",
                     ]
                 run_args.extend(generated_instance_run_args)
                 run_args.extend(instance_data.get("run_args", []))
