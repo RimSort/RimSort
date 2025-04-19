@@ -1,5 +1,7 @@
 import csv
+import os
 import re
+import shutil
 import webbrowser
 from datetime import datetime
 from pathlib import Path
@@ -25,7 +27,7 @@ from app.utils.event_bus import EventBus
 from app.utils.metadata import MetadataManager
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.steam.steamfiles.wrapper import acf_to_dict
-from app.views.dialogue import show_warning
+from app.views.dialogue import show_fatal_error, show_information, show_warning
 
 
 class LogReader(QDialog):
@@ -97,6 +99,11 @@ class LogReader(QDialog):
         self.import_acf_btn = QPushButton("Import ACF Data")
         self.import_acf_btn.clicked.connect(self.import_acf_data)
         controls_layout.addWidget(self.import_acf_btn)
+
+        # Export ACF Data button
+        self.export_acf_btn = QPushButton("Export ACF Data")
+        self.export_acf_btn.clicked.connect(self.export_acf_data)
+        controls_layout.addWidget(self.export_acf_btn)
 
         # Export button
         self.export_btn = QPushButton("Export to CSV")
@@ -583,3 +590,62 @@ class LogReader(QDialog):
     def import_acf_data(self) -> None:
         EventBus().do_import_acf.emit()
         self.load_acf_data()
+
+    def export_acf_data(self) -> None:
+        """
+        Export the raw ACF file to a user-defined location by copying the file.
+
+        Shows status messages and error handling for file not found or permission errors.
+        """
+
+        steamcmd = SteamcmdInterface.instance()
+        if not steamcmd or not hasattr(steamcmd, "steamcmd_appworkshop_acf_path"):
+            logger.warning("Export failed: SteamCMD interface not properly initialized")
+            show_warning(
+                title="Export Error",
+                text="SteamCMD interface not properly initialized",
+            )
+            return
+
+        acf_path = steamcmd.steamcmd_appworkshop_acf_path
+        if not os.path.isfile(acf_path):
+            self.status_bar.showMessage(f"ACF file not found: {acf_path}")
+            logger.error(f"Export failed: ACF file not found: {acf_path}")
+            show_warning(
+                title="Export Error", text=f"ACF file not found at: {acf_path}"
+            )
+            return
+
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export ACF File",
+            "appworkshop_294100.acf",
+            "ACF Files (*.acf);;All Files (*)",
+        )
+        if not file_path:
+            show_warning(
+                title="Export Error",
+                text="Invalid file path provided for export: {file_path}",
+            )
+            return
+
+        try:
+            shutil.copy(acf_path, file_path)
+            self.status_bar.showMessage(f"Successfully exported ACF to {file_path}")
+            logger.debug(f"Successfully exported ACF to {file_path}")
+            show_information(
+                title="Export Success",
+                text=f"Successfully exported ACF to {file_path}",
+            )
+        except PermissionError:
+            error_msg = "Export failed: Permission denied - check file permissions"
+            logger.error(f"Export failed due to Permission: {error_msg}")
+            show_warning(title="Export Error", text=error_msg)
+        except Exception as e:
+            error_msg = f"Export failed: {str(e)}"
+            logger.error(f"Export failed {error_msg}")
+            show_fatal_error(
+                title="Export failed",
+                text="Exportfailed unknown exception occurred",
+                details=error_msg,
+            )
