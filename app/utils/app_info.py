@@ -173,7 +173,7 @@ class AppInfo:
             Path: The path to the user-specific data file.
         """
         return self._settings_file
-    
+
     @property
     def user_rules_file(self) -> Path:
         """
@@ -215,7 +215,7 @@ class AppInfo:
         Get the path to the folder where application databases are stored.
         """
         return self._databases_folder
-    
+
     @property
     def aux_metadata_db(self) -> Path:
         """
