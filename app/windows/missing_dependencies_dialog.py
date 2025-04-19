@@ -1,3 +1,5 @@
+from functools import partial
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -14,175 +16,213 @@ from app.utils.metadata import MetadataManager
 
 
 class MissingDependenciesDialog(QDialog):
+    """
+    Dialog to display missing mod dependencies and allow user to select which to add.
+    """
+
     def __init__(self, parent: QWidget | None = None) -> None:
+        """
+        Initialize the MissingDependenciesDialog.
+        """
         super().__init__(parent)
         self.metadata_manager = MetadataManager.instance()
         self.selected_mods: set[str] = set()
-        self.init_ui()
+        self.checkboxes: dict[str, QCheckBox] = {}
+        self._setup_ui()
 
-    def init_ui(self) -> None:
-        # set window title and size
+    def _setup_ui(self) -> None:
+        """
+        Set up the UI components of the dialog.
+        """
         self.setWindowTitle("Dependency Manager")
         self.resize(700, 500)
 
-        # create main layout
-        layout = QVBoxLayout()
+        main_layout = QVBoxLayout(self)
 
-        # add description
         description = QLabel(
             "Some mods in your active list require other mods to work properly.\n"
-            "You can select which missing dependencies to add to your active mods list."
+            "Select which missing dependencies to add to your active mods list."
         )
         description.setWordWrap(True)
         description.setStyleSheet("font-size: 10pt; margin-bottom: 10px;")
-        layout.addWidget(description)
+        main_layout.addWidget(description)
 
-        # create scroll area for dependencies
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
+        self.scroll_area = QScrollArea()
+        self.scroll_area.setWidgetResizable(True)
         scroll_content = QWidget()
         self.scroll_layout = QVBoxLayout(scroll_content)
-        scroll.setWidget(scroll_content)
-        layout.addWidget(scroll)
+        self.scroll_area.setWidget(scroll_content)
+        main_layout.addWidget(self.scroll_area)
 
-        # create buttons
         button_layout = QHBoxLayout()
 
-        # add select all button
         select_all_button = QPushButton("Select All")
         select_all_button.clicked.connect(self.select_all)
         button_layout.addWidget(select_all_button)
 
-        # add spacer
         button_layout.addStretch()
 
-        # add main action buttons
-        apply_button = QPushButton("Add Selected && Sort")
-        apply_button.clicked.connect(self.accept)
-        apply_button.setDefault(True)
+        add_button = QPushButton("Add Selected && Sort")
+        add_button.clicked.connect(self.accept)
+        add_button.setDefault(True)
+        add_button.setShortcut("Return")  # Enter key
+        button_layout.addWidget(add_button)
 
         ignore_button = QPushButton("Sort Without Adding")
         ignore_button.clicked.connect(self.reject)
-
-        button_layout.addWidget(apply_button)
+        ignore_button.setShortcut("Escape")  # Esc key
         button_layout.addWidget(ignore_button)
 
-        layout.addLayout(button_layout)
-        self.setLayout(layout)
+        main_layout.addLayout(button_layout)
 
-    def show_missing_dependencies(self, missing_deps: dict[str, set[str]]) -> None:
+    def show_dialog(self, missing_deps: dict[str, set[str]]) -> set[str]:
         """
-        Display missing dependencies in the dialog
-        missing_deps: dict mapping mod package IDs to sets of missing dependency package IDs
-        """
-        # clear previous content
-        while self.scroll_layout.count():
-            child = self.scroll_layout.takeAt(0)
-            if child.widget():
-                child.widget().deleteLater()
+        Show the dialog with missing dependencies and return selected mods.
 
+        Args:
+            missing_deps: dict mapping mod package IDs to sets of missing dependency package IDs
+
+        Returns:
+            Set of selected mod package IDs if user accepted, empty set otherwise.
+        """
         if not missing_deps:
-            label = QLabel("All dependencies are satisfied!")
-            label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.scroll_layout.addWidget(label)
-            return
+            return set()
 
-        # Group dependencies by their package ID
-        local_deps: dict[
-            str, list[str]
-        ] = {}  # deps that exist locally but aren't active
-        download_deps: dict[str, list[str]] = {}  # deps that need to be downloaded
+        self._populate_dependencies(missing_deps)
+
+        result = self.exec()
+        if result == QDialog.DialogCode.Accepted:
+            return self.get_selected_mods()
+        else:
+            return set()
+
+    def _populate_dependencies(self, missing_deps: dict[str, set[str]]) -> None:
+        """
+        Populate the dialog with missing dependencies grouped by local and download.
+
+        Args:
+            missing_deps: dict mapping mod package IDs to sets of missing dependency package IDs
+        """
+        self.clear_dependencies()
+
+        local_deps, download_deps = self._classify_dependencies(missing_deps)
+
+        if local_deps:
+            local_label = QLabel("Local mods (available but not active):")
+            local_label.setStyleSheet("font-weight: bold; color: green;")
+            self.scroll_layout.addWidget(local_label)
+
+            for dep_id, requiring_mods in local_deps.items():
+                self._add_dependency_group(dep_id, requiring_mods)
+
+            self.scroll_layout.addSpacing(20)
+
+        if download_deps:
+            download_label = QLabel("Mods that need to be downloaded:")
+            download_label.setStyleSheet("font-weight: bold; color: orange;")
+            self.scroll_layout.addWidget(download_label)
+
+            for dep_id, requiring_mods in download_deps.items():
+                self._add_dependency_group(dep_id, requiring_mods)
+
+        self.scroll_layout.addStretch()
+
+    def _classify_dependencies(
+        self, missing_deps: dict[str, set[str]]
+    ) -> tuple[dict[str, list[str]], dict[str, list[str]]]:
+        """
+        Classify missing dependencies into local and download groups.
+
+        Args:
+            missing_deps: dict mapping mod package IDs to sets of missing dependency package IDs
+
+        Returns:
+            Tuple of two dicts:
+            - local_deps: dependencies that exist locally but aren't active
+            - download_deps: dependencies that need to be downloaded
+        """
+        local_deps: dict[str, list[str]] = {}
+        download_deps: dict[str, list[str]] = {}
 
         for mod_id, deps in missing_deps.items():
             mod_name = self.metadata_manager.get_mod_name_from_package_id(mod_id)
             for dep_id in deps:
-                # Check if the mod exists locally but isn't active
-                exists_locally = False
-                for mod_data in self.metadata_manager.internal_local_metadata.values():
-                    if mod_data.get("packageid") == dep_id:
-                        exists_locally = True
-                        break
-
+                exists_locally = any(
+                    mod_data.get("packageid") == dep_id
+                    for mod_data in self.metadata_manager.internal_local_metadata.values()
+                )
                 target_dict = local_deps if exists_locally else download_deps
                 if dep_id not in target_dict:
                     target_dict[dep_id] = []
                 target_dict[dep_id].append(mod_name)
 
-        # log the mod IDs
-        if local_deps:
-            for dep_id in local_deps.keys():
-                mod_name = self.metadata_manager.get_mod_name_from_package_id(dep_id)
+        return local_deps, download_deps
 
-        if download_deps:
-            for dep_id in download_deps.keys():
-                mod_name = self.metadata_manager.get_mod_name_from_package_id(dep_id)
-
-        # add section for local mods
-        if local_deps:
-            section_label = QLabel("Local mods (available but not active):")
-            section_label.setStyleSheet("font-weight: bold; color: green;")
-            self.scroll_layout.addWidget(section_label)
-
-            for dep_id, requiring_mods in local_deps.items():
-                self._add_dependency_group(dep_id, requiring_mods)
-
-            # add spacing between sections
-            self.scroll_layout.addSpacing(20)
-
-        # add section for mods that need downloading
-        if download_deps:
-            section_label = QLabel("Mods that need to be downloaded:")
-            section_label.setStyleSheet("font-weight: bold; color: orange;")
-            self.scroll_layout.addWidget(section_label)
-
-            for dep_id, requiring_mods in download_deps.items():
-                self._add_dependency_group(dep_id, requiring_mods)
-
-        # add spacer at the bottom
-        self.scroll_layout.addStretch()
+    def clear_dependencies(self) -> None:
+        """
+        Clear all dependency widgets and reset selections.
+        """
+        while self.scroll_layout.count():
+            child = self.scroll_layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+        self.checkboxes.clear()
+        self.selected_mods.clear()
 
     def _add_dependency_group(self, dep_id: str, requiring_mods: list[str]) -> None:
-        """Helper method to add a dependency group to the dialog"""
-        # create group for this dependency
-        dep_group = QWidget()
-        dep_layout = QVBoxLayout(dep_group)
+        """
+        Add a dependency group widget to the dialog.
 
-        # add dependency checkbox and name
+        Args:
+            dep_id: The package ID of the dependency.
+            requiring_mods: List of mod names that require this dependency.
+        """
+        group_widget = QWidget()
+        group_layout = QVBoxLayout(group_widget)
+
         dep_name = self.metadata_manager.get_mod_name_from_package_id(dep_id)
-        checkbox = QCheckBox(f"{dep_name}")
+        checkbox = QCheckBox(dep_name)
         checkbox.setToolTip(f"Package ID: {dep_id}")
         checkbox.stateChanged.connect(
-            lambda state, d=dep_id: self.toggle_mod_selection(state, d)
+            partial(self._toggle_mod_selection, mod_id=dep_id)
         )
-        dep_layout.addWidget(checkbox)
+        group_layout.addWidget(checkbox)
+        self.checkboxes[dep_id] = checkbox
 
-        # add indented list of mods that require this dependency
-        mods_label = QLabel("Required by:\n  • " + "\n  • ".join(requiring_mods))
-        mods_label.setStyleSheet("color: gray; margin-left: 20px;")
-        mods_label.setWordWrap(True)
-        dep_layout.addWidget(mods_label)
+        requiring_label = QLabel("Required by:\n  • " + "\n  • ".join(requiring_mods))
+        requiring_label.setStyleSheet("color: gray; margin-left: 20px;")
+        requiring_label.setWordWrap(True)
+        group_layout.addWidget(requiring_label)
 
-        # add some spacing between dependency groups
-        dep_layout.addSpacing(10)
+        group_layout.addSpacing(10)
 
-        self.scroll_layout.addWidget(dep_group)
+        self.scroll_layout.addWidget(group_widget)
 
     def select_all(self) -> None:
-        """Select all dependency checkboxes"""
-        for i in range(self.scroll_layout.count()):
-            item = self.scroll_layout.itemAt(i)
-            if item and item.widget():
-                mod_group = item.widget()
-                for child in mod_group.findChildren(QCheckBox):
-                    child.setChecked(True)
+        """
+        Select all dependency checkboxes.
+        """
+        for checkbox in self.checkboxes.values():
+            checkbox.setChecked(True)
 
-    def toggle_mod_selection(self, state: int, mod_id: str) -> None:
-        """Toggle a mod's selection state"""
+    def _toggle_mod_selection(self, state: int, mod_id: str) -> None:
+        """
+        Toggle a mod's selection state.
+
+        Args:
+            state: The state of the checkbox.
+            mod_id: The package ID of the mod.
+        """
         if state == Qt.CheckState.Checked.value:
             self.selected_mods.add(mod_id)
         else:
             self.selected_mods.discard(mod_id)
 
     def get_selected_mods(self) -> set[str]:
-        """Return the set of selected mod IDs"""
+        """
+        Return the set of selected mod IDs.
+
+        Returns:
+            Set of selected mod package IDs.
+        """
         return self.selected_mods
