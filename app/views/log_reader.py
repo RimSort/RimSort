@@ -1,4 +1,5 @@
 import csv
+import re
 import webbrowser
 from datetime import datetime
 from pathlib import Path
@@ -12,6 +13,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLineEdit,
     QMenu,
+    QProgressDialog,
     QPushButton,
     QStatusBar,
     QTableWidget,
@@ -111,7 +113,14 @@ class LogReader(QDialog):
         self.load_acf_data()
 
     def load_acf_data(self) -> None:
-        """Load workshop item data from SteamCMD ACF file."""
+        """
+        Load workshop item data from SteamCMD ACF file.
+
+        Raises:
+            RuntimeError: If SteamCMD interface is not initialized or data format is invalid.
+            FileNotFoundError: If the ACF file does not exist.
+            Exception: For other errors during loading or parsing.
+        """
         self.status_bar.showMessage("Loading ACF data...")
         try:
             steamcmd = SteamcmdInterface.instance()
@@ -136,8 +145,8 @@ class LogReader(QDialog):
             if not isinstance(workshop_items, dict):
                 raise RuntimeError("Invalid workshop items data format")
 
-            entries = []
-            self.timeupdated_data = {}
+            entries: list[dict[str, Union[str, int, None]]] = []
+            self.timeupdated_data: dict[str, Union[int, None]] = {}
 
             for pfid, item in workshop_items.items():
                 if not isinstance(item, dict):
@@ -171,19 +180,26 @@ class LogReader(QDialog):
 
     def filter_table(self) -> None:
         """
-        Filter table rows based on search text with performance optimizations.
+        Filter table rows based on search text with regex and multi-column support.
 
-        Only searches visible columns (PFID, Mod Name, Mod Path) for better performance.
-        Case-insensitive matching is performed on the search text.
-
+        Searches visible columns (PFID, Mod Name, Mod Path) using case-insensitive regex.
+        If regex is invalid, falls back to simple substring search.
         If search text is empty, all rows are shown.
         """
-        search_text = self.search_box.text().lower()
+        search_text = self.search_box.text()
         if not search_text:
             # Show all rows if search is empty
             for row in range(self.table_widget.rowCount()):
                 self.table_widget.setRowHidden(row, False)
             return
+
+        # Compile regex pattern for case-insensitive search
+        try:
+            pattern = re.compile(search_text, re.IGNORECASE)
+            use_regex = True
+        except re.error:
+            pattern = None
+            use_regex = False
 
         # Only search visible columns that are likely to contain searchable text
         search_columns = {self.COL_PFID, self.COL_MOD_NAME, self.COL_MOD_PATH}
@@ -194,9 +210,14 @@ class LogReader(QDialog):
                 item = self.table_widget.item(row, col)
                 if item and isinstance(item, QTableWidgetItem):
                     item_text = item.text() or ""
-                    if search_text in item_text.lower():
-                        match = True
-                        break
+                    if use_regex and pattern is not None:
+                        if pattern.search(item_text):
+                            match = True
+                            break
+                    else:
+                        if search_text.lower() in item_text.lower():
+                            match = True
+                            break
             self.table_widget.setRowHidden(row, not match)
 
     def export_to_csv(self) -> None:
@@ -246,6 +267,12 @@ class LogReader(QDialog):
         try:
             self.status_bar.showMessage("Exporting to CSV...")
 
+            progress = QProgressDialog(
+                "Exporting rows...", "Cancel", 0, self.table_widget.rowCount(), self
+            )
+            progress.setWindowModality(Qt.WindowModality.WindowModal)
+            progress.show()
+
             with open(file_path, "w", newline="", encoding="utf-8") as csvfile:
                 writer = csv.writer(csvfile)
 
@@ -275,6 +302,10 @@ class LogReader(QDialog):
 
                 # Write data rows with progress feedback
                 for row in range(self.table_widget.rowCount()):
+                    if progress.wasCanceled():
+                        self.status_bar.showMessage("Export canceled by user.")
+                        return
+
                     row_data = []
                     for col in range(self.table_widget.columnCount()):
                         item = self.table_widget.item(row, col)
@@ -282,10 +313,12 @@ class LogReader(QDialog):
                     writer.writerow(row_data)
 
                     if row % 50 == 0:  # Update progress every 50 rows
+                        progress.setValue(row)
                         self.status_bar.showMessage(
                             f"Exporting row {row + 1} of {self.table_widget.rowCount()}..."
                         )
 
+            progress.setValue(self.table_widget.rowCount())
             self.status_bar.showMessage(
                 f"Successfully exported {self.table_widget.rowCount()} items to {file_path}"
             )
