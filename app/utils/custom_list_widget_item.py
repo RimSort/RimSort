@@ -1,7 +1,10 @@
 from typing import Any
 
 from loguru import logger
-from PySide6.QtCore import QObject
+from PySide6.QtCore import (
+    QObject,
+    Qt,
+)
 from PySide6.QtWidgets import QListWidgetItem
 
 
@@ -41,3 +44,12 @@ class CustomListWidgetItem(QListWidgetItem):
             logger.warning(
                 "Could not emit itemChanged signal from CustomListWidgetItem, listWidget is None."
             )
+
+    def toggle_warning(self) -> None:
+        """
+        Toggles the warning state for this mod item.
+        """
+        data = self.data(Qt.ItemDataRole.UserRole)
+        if data:
+            data["warning_toggled"] = not data.get("warning_toggled", False)
+            self.setData(Qt.ItemDataRole.UserRole, data)
