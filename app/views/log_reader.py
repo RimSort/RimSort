@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from app.utils.event_bus import EventBus
 from app.utils.metadata import MetadataManager
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.steam.steamfiles.wrapper import acf_to_dict
@@ -91,6 +92,11 @@ class LogReader(QDialog):
         self.refresh_btn = QPushButton("Refresh")
         self.refresh_btn.clicked.connect(self.load_acf_data)
         controls_layout.addWidget(self.refresh_btn)
+
+        # Import ACF Data button
+        self.import_acf_btn = QPushButton("Import ACF Data")
+        self.import_acf_btn.clicked.connect(self.import_acf_data)
+        controls_layout.addWidget(self.import_acf_btn)
 
         # Export button
         self.export_btn = QPushButton("Export to CSV")
@@ -573,3 +579,7 @@ class LogReader(QDialog):
             self.table_widget.resizeColumnsToContents()
         finally:
             self.table_widget.setUpdatesEnabled(True)
+
+    def import_acf_data(self) -> None:
+        EventBus().do_import_acf.emit()
+        self.load_acf_data()
