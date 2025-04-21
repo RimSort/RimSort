@@ -93,18 +93,18 @@ class ModSearchFilter:
             # Update item visibility based on filter state
             if self.search_filter_state:
                 item.setHidden(should_filter)
-                item_data["hidden_by_filter"] = should_filter
+                item_data.hidden_by_filter = should_filter
             else:
                 if should_filter and item.isHidden():
                     item.setHidden(False)
-                    item_data["hidden_by_filter"] = False
+                    item_data.hidden_by_filter = False
 
-            item_data["filtered"] = should_filter
+            item_data.filtered = should_filter
             item.setData(Qt.ItemDataRole.UserRole, item_data)
 
     def _should_filter_item(
         self,
-        item_data: dict[str, Any],
+        item_data: Any,
         metadata: dict[str, Any],
         pattern: str,
         filter_key: str,
@@ -114,7 +114,7 @@ class ModSearchFilter:
         # Filter invalid items if enabled in settings
         if (
             self.settings_controller.settings.hide_invalid_mods_when_filtering_toggle
-            and item_data["invalid"]
+            and item_data.invalid
             and filters_active
         ):
             return True
@@ -716,123 +716,140 @@ class ModsPanel(QWidget):
         filters_active: bool = False,
         recalculate_list_errors_warnings: bool = True,
     ) -> None:
+        """
+        Perform search and filter operations on the mod list.
+
+        This method updates the visibility and filtered state of each mod item
+        based on the search pattern, filter settings, and other criteria.
+
+        Args:
+            list_type (str): Either "Active" or "Inactive" to specify which mod list to operate on.
+            pattern (str): The search pattern to filter mod items.
+            filters_active (bool): Whether filters are currently active.
+            recalculate_list_errors_warnings (bool): Whether to recalculate errors and warnings after filtering.
+
+        Raises:
+            ValueError: If list_type is not "Active" or "Inactive".
+            NotImplementedError: If list_type is unknown.
+        """
         if list_type not in ["Active", "Inactive"]:
             raise ValueError(f"Invalid list type: {list_type}")
 
         if not isinstance(pattern, str):
             pattern = str(pattern)
-        """
-        Performs a search and/or applies filters based on the given parameters.
 
-        Called anytime the search bar text changes or the filters change.
-
-        Args:
-            list_type (str): The type of list to search within (Active or Inactive).
-            pattern (str): The pattern to search for.
-            filters_active (bool): If any filter is active (inc. pattern search).
-            recalculate_list_errors_warnings (bool): If the list errors and warnings should be recalculated, defaults to True.
-        """
-
-        _filter = None
-        filter_state = None  # The 'Hide Filter' state
-        source_filter = None
-        uuids = None
         # Notify controller when search bar text or any filters change
         if list_type == "Active":
             EventBus().filters_changed_in_active_modlist.emit()
-        elif list_type == "Inactive":
-            EventBus().filters_changed_in_inactive_modlist.emit()
-        # Determine which list to filter
-        if list_type == "Active":
             _filter = self.active_mods_search_filter
             filter_state = self.active_mods_search_filter_state
             source_filter = self.active_mods_data_source_filter
-            uuids = self.active_mods_list.uuids
+            mod_list = self.active_mods_list
+            type_filter_index = self.active_data_source_filter_type_index
         elif list_type == "Inactive":
+            EventBus().filters_changed_in_inactive_modlist.emit()
             _filter = self.inactive_mods_search_filter
             filter_state = self.inactive_mods_search_filter_state
             source_filter = self.inactive_mods_data_source_filter
-            uuids = self.inactive_mods_list.uuids
+            mod_list = self.inactive_mods_list
+            type_filter_index = self.inactive_data_source_filter_type_index
         else:
             raise NotImplementedError(f"Unknown list type: {list_type}")
+
         # Evaluate the search filter state for the list
         search_filter = None
-        if _filter.currentText() == "Name":
+        current_text = _filter.currentText()
+        if current_text == "Name":
             search_filter = "name"
-        elif _filter.currentText() == "PackageId":
+        elif current_text == "PackageId":
             search_filter = "packageid"
-        elif _filter.currentText() == "Author(s)":
+        elif current_text == "Author(s)":
             search_filter = "authors"
-        elif _filter.currentText() == "PublishedFileId":
+        elif current_text == "PublishedFileId":
             search_filter = "publishedfileid"
-        # Filter the list using any search and filter state
-        for uuid in uuids:
-            item = (
-                self.active_mods_list.get_item_by_uuid(uuid)
-                if list_type == "Active"
-                else self.inactive_mods_list.get_item_by_uuid(uuid)
-            )
+
+        if pattern != "":
+            filters_active = True
+
+        # Cache metadata for all uuids once to avoid repeated lookups
+        uuids = mod_list.uuids
+        metadata_cache = {
+            uuid: self.metadata_manager.internal_local_metadata.get(uuid, {})
+            for uuid in uuids
+        }
+
+        # Cache lowercase pattern once
+        pattern_lower = pattern.lower()
+
+        # Disable updates to batch UI changes
+        mod_list.setUpdatesEnabled(False)
+
+        for index, uuid in enumerate(uuids):
+            item = mod_list.item(index)
             if item is None:
                 continue
             item_data = item.data(Qt.ItemDataRole.UserRole)
-            metadata = self.metadata_manager.internal_local_metadata[uuid]
-            if pattern != "":
-                filters_active = True
+            metadata = metadata_cache.get(uuid, {})
+
             # Hide invalid items if enabled in settings
             if self.settings_controller.settings.hide_invalid_mods_when_filtering_toggle:
-                invalid = item_data["invalid"]
-                # TODO: I dont think filtered should be set at all for invalid items... I misunderstood what it represents
+                invalid = item_data.invalid
                 if invalid and filters_active:
-                    item_data["filtered"] = True
-                    item.setHidden(True)
+                    if not item_data.filtered or not item.isHidden():
+                        item_data.filtered = True
+                        item.setHidden(True)
                     continue
                 elif invalid and not filters_active:
-                    item_data["filtered"] = False
-                    item.setHidden(False)
+                    if item_data.filtered or item.isHidden():
+                        item_data.filtered = False
+                        item.setHidden(False)
+
             # Check if the item is filtered
-            item_filtered = item_data["filtered"]
+            item_filtered = item_data.filtered
+
             # Check if the item should be filtered or not based on search filter
             if (
                 pattern
                 and metadata.get(search_filter)
-                and pattern.lower() not in str(metadata.get(search_filter)).lower()
+                and pattern_lower not in str(metadata.get(search_filter)).lower()
             ):
                 item_filtered = True
             elif source_filter == "all":  # or data source
                 item_filtered = False
             elif source_filter == "git_repo":
-                item_filtered = not metadata.get("git_repo")
+                item_filtered = not metadata.get("git_repo", False)
             elif source_filter == "steamcmd":
-                item_filtered = not metadata.get("steamcmd")
+                item_filtered = not metadata.get("steamcmd", False)
             elif source_filter != metadata.get("data_source"):
                 item_filtered = True
 
-            type_filter_index = (
-                self.active_data_source_filter_type_index
-                if list_type == "Active"
-                else self.inactive_data_source_filter_type_index
-            )
-
-            if type_filter_index == 1 and not metadata.get("csharp"):
+            if type_filter_index == 1 and not metadata.get("csharp", False):
                 item_filtered = True
-            elif type_filter_index == 2 and metadata.get("csharp"):
+            elif type_filter_index == 2 and metadata.get("csharp", False):
                 item_filtered = True
 
             # Check if the item should be filtered or hidden based on filter state
             if filter_state:
-                item.setHidden(item_filtered)
+                if item.isHidden() != item_filtered:
+                    item.setHidden(item_filtered)
                 if item_filtered:
-                    item_data["hidden_by_filter"] = True
+                    item_data.hidden_by_filter = True
                     item_filtered = False
                 else:
-                    item_data["hidden_by_filter"] = False
+                    item_data.hidden_by_filter = False
             else:
                 if item_filtered and item.isHidden():
                     item.setHidden(False)
-                    item_data["hidden_by_filter"] = False
-            # Update item data
-            item_data["filtered"] = item_filtered
-            item.setData(Qt.ItemDataRole.UserRole, item_data)
+                    item_data.hidden_by_filter = False
+
+            # Update item data only if changed
+            if item_data.filtered != item_filtered:
+                item_data.filtered = item_filtered
+                item.setData(Qt.ItemDataRole.UserRole, item_data)
+
+        # Re-enable updates after batch changes
+        mod_list.setUpdatesEnabled(True)
+
         self.mod_list_updated(
             str(len(uuids)),
             list_type,
@@ -952,7 +969,7 @@ class ModsPanel(QWidget):
             if item is None:
                 continue
             item_data = item.data(Qt.ItemDataRole.UserRole)
-            item_filtered = item_data["filtered"]
+            item_filtered = item_data.filtered
 
             if item.isHidden() or item_filtered:
                 num_filtered += 1
