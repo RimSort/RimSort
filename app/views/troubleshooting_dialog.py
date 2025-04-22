@@ -1,5 +1,4 @@
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QShowEvent
 from PySide6.QtWidgets import (
     QCheckBox,
     QDialog,
@@ -261,17 +260,3 @@ class TroubleshootingDialog(QDialog):
         button_layout = QHBoxLayout()
         main_layout.addLayout(button_layout)
         button_layout.addStretch()
-
-        self.close_button = QPushButton("Close")
-        self.close_button.setStyleSheet("""
-            QPushButton {
-                padding: 8px 20px;
-                border-radius: 3px;
-            }
-        """)
-        self.close_button.clicked.connect(self.close)
-        button_layout.addWidget(self.close_button)
-
-    def showEvent(self, event: QShowEvent) -> None:
-        super().showEvent(event)
-        self.close_button.setFocus()
