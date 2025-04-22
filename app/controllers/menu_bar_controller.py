@@ -24,7 +24,6 @@ class MenuBarController(QObject):
         self.menu_bar = view
         self.settings_controller = settings_controller
         self.mods_panel_controller = mods_panel_controller
-        self._troubleshooting_controller = None  # store controller instance
         self._file_search_controller = None  # store controller instance
 
         # Application menu
@@ -151,9 +150,6 @@ class MenuBarController(QObject):
         )
         # Help menu
         self.menu_bar.wiki_action.triggered.connect(self._on_menu_bar_wiki_triggered)
-        self.menu_bar.troubleshooting_action.triggered.connect(
-            self._on_menu_bar_troubleshooting_triggered
-        )
         self.menu_bar.file_search_action.triggered.connect(
             self._on_menu_bar_file_search_triggered
         )
@@ -237,17 +233,6 @@ class MenuBarController(QObject):
     @Slot()
     def _on_menu_bar_wiki_triggered(self) -> None:
         open_url_browser("https://rimsort.github.io/RimSort/")
-
-    @Slot()
-    def _on_menu_bar_troubleshooting_triggered(self) -> None:
-        from app.controllers.troubleshooting_controller import TroubleshootingController
-        from app.views.troubleshooting_dialog import TroubleshootingDialog
-
-        dialog = TroubleshootingDialog()
-        self._troubleshooting_controller = TroubleshootingController(
-            self.settings_controller.settings, dialog
-        )
-        dialog.exec()
 
     @Slot()
     def _on_refresh_started(self) -> None:

@@ -56,7 +56,6 @@ class MenuBar(QObject):
         self.wiki_action: QAction
         self.check_for_updates_action: QAction
         self.check_for_updates_on_startup_action: QAction
-        self.troubleshooting_action: QAction
         self.file_search_action: QAction
 
         self.import_submenu: QMenu
@@ -274,8 +273,6 @@ class MenuBar(QObject):
         """
         help_menu = self.menu_bar.addMenu("Help")
         self.wiki_action = self._add_action(help_menu, "RimSort Wiki…")
-        help_menu.addSeparator()
-        self.troubleshooting_action = self._add_action(help_menu, "Troubleshooting…")
         help_menu.addSeparator()
         # TODO: updates not implemented yet
         # self.check_for_updates_action = self._add_action(
