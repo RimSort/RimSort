@@ -83,9 +83,16 @@ class TroubleshootingController:
 
     def _delete_game_files(self) -> None:
         """Delete game files while preserving local mods."""
+        # Avoid Deleteing Game files if not Steam user
+        if not self.steam_mods_location:
+            logger.warning("Steam user Check failed, skipping deleteing game files.")
+            self.show_steam_user_warning()
+            return None
+
+        # Check if game location is set
         if not self.game_location:
             logger.warning("Game location not set, skipping delete game files.")
-            self.show_location_warning()
+            self.show_steam_user_warning()
             return
 
         game_dir = Path(self.game_location)
@@ -138,13 +145,13 @@ class TroubleshootingController:
         """Delete all Steam Workshop mods and trigger redownload."""
         if not self.steam_mods_location:
             logger.warning("Steam mods location not set, skipping deleting steam mods.")
-            self.show_location_warning()
-            return
+            self.show_steam_user_warning()
+            return None
 
         steam_mods_dir = Path(self.steam_mods_location)
         if not steam_mods_dir.exists():
             logger.warning("Steam mods directory does not exist, skipping.")
-            self.show_location_warning()
+            self.show_steam_user_warning()
             return
 
         # get list of mod IDs before deleting
@@ -157,6 +164,11 @@ class TroubleshootingController:
 
         # delete all files and folders
         self._delete_files_in_directory(steam_mods_dir)
+        logger.info("Deleted all files in the Steam mods directory.")
+        show_information(
+            title="Process complete",
+            text="Deleted all files in the Steam mods directory.\n\n Trying to restart Steam to trigger automatic redownload of subscribed mods.",
+        )
 
         # try to trigger redownload for each mod
         try:
@@ -193,13 +205,29 @@ class TroubleshootingController:
             return
 
         protected_files = ["ModsConfig.xml", "Prefs.xml"]
+        deleted_any = False
         for item in config_dir.iterdir():
             if item.is_file() and item.name not in protected_files:
                 try:
+                    print(f"Deleting {item}...")
                     item.unlink()
+                    deleted_any = True
+                    logger.info(f"Deleted {item} successfully.")
                 except Exception as e:
                     logger.error(f"Failed to delete config file {item}: {e}")
                     self.show_failed_warning(item, e)
+
+        if deleted_any:
+            show_information(
+                title="Process complete",
+                text=f"Deleted all files in the {config_dir} successfully.",
+            )
+        else:
+            logger.info(f"No files found in {config_dir} for deletion.")
+            show_information(
+                title="Process complete",
+                text=f"No files found in {config_dir} for deletion.",
+            )
 
     def _delete_game_configs(self) -> None:
         """Delete game configuration files."""
@@ -217,11 +245,16 @@ class TroubleshootingController:
         config_files = ["ModsConfig.xml", "Prefs.xml", "KeyPrefs.xml"]
         for filename in config_files:
             config_file = config_dir / filename
-            if config_file.exists():
+            item = config_file
+            if item.exists():
                 try:
-                    config_file.unlink()
+                    item.unlink()
+                    logger.info(f"Deleted {item} successfully.")
+                    show_information(
+                        title="Process complete",
+                        text=f"Deleted {item} successfully.",
+                    )
                 except Exception as e:
-                    item = config_file
                     logger.error(f"Failed to delete game config file {item}: {e}")
                     self.show_failed_warning(item, e)
 
@@ -303,6 +336,13 @@ class TroubleshootingController:
   </knownExpansions>
 </ModsConfigData>"""
                 mods_config.write_text(vanilla_content)
+                logger.info(
+                    "Successfully deleted all mods and resetting ModsConfig.xml to vanilla state."
+                )
+                show_information(
+                    title="Process complete",
+                    text="Successfully deleted all mods and resetting ModsConfig.xml to vanilla state.",
+                )
             except Exception as e:
                 logger.error(f"Failed to reset ModsConfig.xml: {e}")
                 show_dialogue_conditional(
@@ -488,6 +528,8 @@ class TroubleshootingController:
     def _get_steam_root_from_workshop(self) -> Optional[Path]:
         """Get Steam root directory from configured workshop folder path."""
         if not self.steam_mods_location:
+            logger.warning("Steam mods location not set, skipping getting steam root.")
+            self.show_steam_user_warning()
             return None
 
         # workshop path is typically: Steam/steamapps/workshop/content/294100
@@ -640,4 +682,10 @@ class TroubleshootingController:
             title="Process failed",
             text=f"Could not process: {item}",
             information=f"Failed to process item: {item} due to the following error: {e}",
+        )
+
+    def show_steam_user_warning(self) -> None:
+        show_warning(
+            title="Steam user Check failed",
+            text="You are not a Steam user, or Path not set, Please check settings and try again.",
         )
