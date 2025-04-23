@@ -26,6 +26,7 @@ from app.controllers.instance_controller import (
 from app.controllers.menu_bar_controller import MenuBarController
 from app.controllers.mods_panel_controller import ModsPanelController
 from app.controllers.settings_controller import SettingsController
+from app.controllers.troubleshooting_controller import TroubleshootingController
 from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 from app.utils.generic import handle_remove_read_only
@@ -44,6 +45,7 @@ from app.views.log_reader import LogReader
 from app.views.main_content_panel import MainContent
 from app.views.menu_bar import MenuBar
 from app.views.status_panel import Status
+from app.views.troubleshooting_dialog import TroubleshootingDialog
 
 
 class MainWindow(QMainWindow):
@@ -146,6 +148,20 @@ class MainWindow(QMainWindow):
         self.log_reader_layout.addWidget(self.log_reader)
 
         self.tab_widget.addTab(self.log_reader_tab, "Log Reader")
+
+        # Create and add the Troubleshooting tab
+        self.troubleshooting_tab = QWidget()
+        self.troubleshooting_layout = QVBoxLayout()
+        self.troubleshooting_tab.setLayout(self.troubleshooting_layout)
+
+        # Instantiate the TroubleshootingDialog and add it to the tab
+        self.troubleshooting_dialog = TroubleshootingDialog()
+        self.troubleshooting_controller = TroubleshootingController(
+            settings=self.settings_controller.settings,
+            dialog=self.troubleshooting_dialog,
+        )
+        self.troubleshooting_layout.addWidget(self.troubleshooting_dialog)
+        self.tab_widget.addTab(self.troubleshooting_tab, "Troubleshooting")
 
         # Save button flashing animation
         self.save_button_flashing_animation = QTimer()
