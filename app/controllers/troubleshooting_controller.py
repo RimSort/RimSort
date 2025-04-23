@@ -8,7 +8,11 @@ from typing import List, Optional
 from loguru import logger
 
 from app.models.settings import Settings
-from app.utils.gui_info import show_dialogue_conditional, show_dialogue_file
+from app.utils.gui_info import (
+    show_dialogue_conditional,
+    show_dialogue_file,
+)
+from app.views.dialogue import show_information, show_warning
 from app.views.troubleshooting_dialog import TroubleshootingDialog
 
 
@@ -75,11 +79,13 @@ class TroubleshootingController:
                     rmtree(item)
             except Exception as e:
                 logger.error(f"Failed to delete {item}: {e}")
+                self.show_failed_warning(item, e)
 
     def _delete_game_files(self) -> None:
         """Delete game files while preserving local mods."""
         if not self.game_location:
             logger.warning("Game location not set, skipping delete game files.")
+            self.show_location_warning()
             return
 
         game_dir = Path(self.game_location)
@@ -91,7 +97,9 @@ class TroubleshootingController:
             try:
                 mods_dir.rename(temp_mods)
             except Exception as e:
-                logger.error(f"Failed to rename Mods folder: {e}")
+                item = temp_mods
+                logger.error(f"Failed to rename {item} folder: {e}")
+                self.show_failed_warning(item, e)
                 return
 
         # Delete all files except Mods_temp
@@ -103,13 +111,21 @@ class TroubleshootingController:
             try:
                 temp_mods.rename(mods_dir)
             except Exception as e:
-                logger.error(f"Failed to restore Mods folder: {e}")
+                item = temp_mods
+                logger.error(f"Failed to restore {item} folder: {e}")
+                self.show_failed_warning(item, e)
+                return
 
         # Try to trigger Steam installation
         try:
             from app.utils.generic import platform_specific_open
 
-            platform_specific_open("steam://install/294100")  # RimWorld's Steam ID
+            platform_specific_open("steam://install/294100")  # RimWorld's Steam
+            logger.info("Triggered Steam installation for game ID 294100.")
+            show_information(
+                title="Process complete",
+                text="Process complete, wait for steam to complete further process.",
+            )
         except Exception as e:
             logger.error(f"Failed to launch Steam installation: {e}")
             show_dialogue_conditional(
@@ -121,12 +137,14 @@ class TroubleshootingController:
     def _delete_steam_mods(self) -> None:
         """Delete all Steam Workshop mods and trigger redownload."""
         if not self.steam_mods_location:
-            logger.warning("Steam mods location not set, skipping delete steam mods.")
+            logger.warning("Steam mods location not set, skipping deleting steam mods.")
+            self.show_location_warning()
             return
 
         steam_mods_dir = Path(self.steam_mods_location)
         if not steam_mods_dir.exists():
             logger.warning("Steam mods directory does not exist, skipping.")
+            self.show_location_warning()
             return
 
         # get list of mod IDs before deleting
@@ -152,6 +170,7 @@ class TroubleshootingController:
                 platform_specific_open(
                     f"steam://workshop_download_item/294100/{mod_id}"
                 )
+                logger.info(f"opening: steam://workshop_download_item/294100/{mod_id}")
         except Exception as e:
             logger.error(f"Failed to trigger Steam workshop redownload: {e}")
             show_dialogue_conditional(
@@ -164,11 +183,13 @@ class TroubleshootingController:
         """Delete mod configuration files while preserving ModsConfig.xml and Prefs.xml."""
         if not self.config_location:
             logger.warning("Config location not set, skipping delete mod configs.")
+            self.show_location_warning()
             return
 
         config_dir = Path(self.config_location)
         if not config_dir.exists():
             logger.warning("Config directory does not exist, skipping.")
+            self.show_location_warning()
             return
 
         protected_files = ["ModsConfig.xml", "Prefs.xml"]
@@ -178,16 +199,19 @@ class TroubleshootingController:
                     item.unlink()
                 except Exception as e:
                     logger.error(f"Failed to delete config file {item}: {e}")
+                    self.show_failed_warning(item, e)
 
     def _delete_game_configs(self) -> None:
         """Delete game configuration files."""
         if not self.config_location:
             logger.warning("Config location not set, skipping delete game configs.")
+            self.show_location_warning()
             return
 
         config_dir = Path(self.config_location)
         if not config_dir.exists():
             logger.warning("Config directory does not exist, skipping.")
+            self.show_location_warning()
             return
 
         config_files = ["ModsConfig.xml", "Prefs.xml", "KeyPrefs.xml"]
@@ -197,9 +221,9 @@ class TroubleshootingController:
                 try:
                     config_file.unlink()
                 except Exception as e:
-                    logger.error(
-                        f"Failed to delete game config file {config_file}: {e}"
-                    )
+                    item = config_file
+                    logger.error(f"Failed to delete game config file {item}: {e}")
+                    self.show_failed_warning(item, e)
 
     def _on_integrity_apply_button_clicked(self) -> None:
         """Handle clicking the Apply button in the integrity check section."""
@@ -236,6 +260,7 @@ class TroubleshootingController:
         """Clear all mods and reset to vanilla state."""
         if not self.config_location or not self.game_location:
             logger.warning("Config or game location not set, skipping clear mods.")
+            self.show_location_warning()
             return
 
         if not show_dialogue_conditional(
@@ -253,12 +278,9 @@ class TroubleshootingController:
                 rmtree(mods_dir)
                 mods_dir.mkdir()  # recreate empty Mods folder
             except Exception as e:
-                logger.error(f"Failed to clear mods folder: {e}")
-                show_dialogue_conditional(
-                    title="Error",
-                    text="Failed to clear Mods folder.",
-                    icon="warning",
-                )
+                item = mods_dir
+                logger.error(f"Failed to clear {item} folder: {e}")
+                self.show_failed_warning(item, e)
                 return
 
         # reset ModsConfig.xml to vanilla state
@@ -299,12 +321,17 @@ class TroubleshootingController:
         """Backup current mod list to a file."""
         if not self.config_location:
             logger.warning("Config location not set, skipping mod export.")
+            self.show_location_warning()
             return
 
         config_dir = Path(self.config_location)
         mods_config = config_dir / "ModsConfig.xml"
         if not mods_config.exists():
-            logger.warning("ModsConfig.xml does not exist, skipping mod export.")
+            logger.warning(f"{mods_config} does not exist, skipping mod export.")
+            show_warning(
+                title="Export failed",
+                text=f"{mods_config} does not exist, skipping mod export.",
+            )
             return
 
         # let user select save location
@@ -316,6 +343,11 @@ class TroubleshootingController:
             is_save=True,
         )
         if not save_path:
+            logger.error(f"Failed to save to Location: {save_path}.")
+            show_warning(
+                title="Location Error",
+                text=f"Failed to get Location: {save_path}.",
+            )
             return
 
         # ensure .xml extension
@@ -384,12 +416,17 @@ class TroubleshootingController:
         """Import mod list from a file."""
         if not self.config_location:
             logger.warning("Config location not set, skipping mod import.")
+            self.show_location_warning()
             return
 
         config_dir = Path(self.config_location)
         mods_config = config_dir / "ModsConfig.xml"
         if not mods_config.exists():
-            logger.warning("ModsConfig.xml does not exist, skipping mod import.")
+            logger.warning(f"{mods_config} does not exist, skipping mod import.")
+            show_warning(
+                title="Import failed",
+                text=f"{mods_config} does not exist, skipping mod import.",
+            )
             return
 
         # let user select file to import
@@ -455,8 +492,8 @@ class TroubleshootingController:
 
         # workshop path is typically: Steam/steamapps/workshop/content/294100
         # So we go up 4 levels to get steam root
+        workshop_path = Path(self.steam_mods_location)
         try:
-            workshop_path = Path(self.steam_mods_location)
             if "steamapps" in str(workshop_path):
                 steam_root = workshop_path
                 while (
@@ -467,7 +504,9 @@ class TroubleshootingController:
                 if steam_root.name.lower() == "steam":
                     return steam_root
         except Exception as e:
-            logger.error(f"Failed to get steam root from workshop path: {e}")
+            item = workshop_path
+            logger.error(f"Failed to get steam root from {item} : {e}")
+            self.show_failed_warning(item, e)
         return None
 
     def _find_steam_path(self) -> Path:
@@ -488,7 +527,7 @@ class TroubleshootingController:
                     break
 
         if not steam_path:
-            raise Exception("Steam installation not found")
+            raise Exception(f"Steam installation not found: {steam_path}")
 
         return steam_path
 
@@ -543,7 +582,7 @@ class TroubleshootingController:
         steam_path = self._find_steam_path()
         library_file = steam_path / "steamapps" / "libraryfolders.vdf"
         if not library_file.exists():
-            raise Exception("Steam library file not found")
+            raise Exception(f"Steam library file not found: {library_file}")
         return library_file
 
     def _on_steam_repair_library_clicked(self) -> None:
@@ -589,3 +628,16 @@ class TroubleshootingController:
                 text=f"Could not repair Steam library.\nPlease verify your games manually through Steam.\nDetails: {str(e)}",
                 icon="warning",
             )
+
+    def show_location_warning(self) -> None:
+        show_information(
+            title="Location Error",
+            text="Path not set, Please check your settings and Try again.",
+        )
+
+    def show_failed_warning(self, item: Path | str, e: Exception) -> None:
+        show_warning(
+            title="Process failed",
+            text=f"Could not process: {item}",
+            information=f"Failed to process item: {item} due to the following error: {e}",
+        )

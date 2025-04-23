@@ -73,7 +73,7 @@ class TroubleshootingDialog(QDialog):
             }
         """
 
-        # game files recovery section
+        # Game files recovery section
         group_box = QGroupBox("Game Files Recovery")
         group_box.setStyleSheet(self._group_box_style)
         main_layout.addWidget(group_box)
@@ -82,7 +82,7 @@ class TroubleshootingDialog(QDialog):
         group_layout.setSpacing(8)
         group_box.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        # warning label with icon
+        # Warning label with icon
         warning_layout = QVBoxLayout()
         warning_label = QLabel(
             "⚠️ Warning: These operations will delete selected files permanently!"
@@ -93,7 +93,7 @@ class TroubleshootingDialog(QDialog):
         warning_layout.addStretch()
         group_layout.addLayout(warning_layout)
 
-        # info label
+        # Info label
         info_label = QLabel(
             "If you're experiencing issues with your game, you can try the following recovery options. "
             "Steam will automatically redownload any deleted files on next launch."
@@ -102,7 +102,7 @@ class TroubleshootingDialog(QDialog):
         info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         group_layout.addWidget(info_label)
 
-        # checkboxes for integrity options with tooltips
+        # Checkboxes for integrity options with tooltips
         self.integrity_delete_game_files = QCheckBox(
             "Reset game files (Preserves local mods, deletes and redownloads game files)"
         )
@@ -139,7 +139,7 @@ class TroubleshootingDialog(QDialog):
         )
         group_layout.addWidget(self.integrity_delete_game_configs)
 
-        # note about ModsConfig.xml
+        # Note about ModsConfig.xml
         note_label = QLabel(
             "After resetting game configurations, launch the game directly through Steam to regenerate ModsConfig.xml, then restart RimSort."
         )
@@ -147,7 +147,7 @@ class TroubleshootingDialog(QDialog):
         note_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         group_layout.addWidget(note_label)
 
-        # buttons layout
+        # Buttons layout
         button_layout: QHBoxLayout = QHBoxLayout()
         group_layout.addLayout(button_layout)
 
@@ -156,6 +156,7 @@ class TroubleshootingDialog(QDialog):
         self.integrity_apply_button.setStyleSheet(self._button_style_danger)
         self.integrity_apply_button.setShortcut("Ctrl+R")
         self.integrity_apply_button.setToolTip("Apply the selected recovery options")
+
         # Cancel button
         self.integrity_cancel_button = QPushButton("Cancel")
         self.integrity_cancel_button.setStyleSheet(self._button_style_base)
@@ -167,7 +168,7 @@ class TroubleshootingDialog(QDialog):
         button_layout.addWidget(self.integrity_cancel_button)
         button_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        # mod configuration options section
+        # Mod configuration options section
         mod_config_group = QGroupBox("Mod Configuration Options")
         mod_config_group.setStyleSheet(self._group_box_style)
         main_layout.addWidget(mod_config_group)
@@ -175,7 +176,7 @@ class TroubleshootingDialog(QDialog):
         mod_config_group.setLayout(mod_config_layout)
         mod_config_layout.setSpacing(8)
 
-        # info label for mod configuration
+        # Info label for mod configuration
         mod_config_info = QLabel(
             "Manage your mod configurations and load order. These options help you organize and share your mod setup."
         )
@@ -185,7 +186,7 @@ class TroubleshootingDialog(QDialog):
         mod_config_info.setAlignment(Qt.AlignmentFlag.AlignCenter)
         mod_config_layout.addWidget(mod_config_info)
 
-        # mod list import/export section
+        # Mod list import/export section
         mod_list_layout = QHBoxLayout()
         mod_config_layout.addLayout(mod_list_layout)
         mod_list_layout.setSpacing(8)
@@ -248,7 +249,7 @@ class TroubleshootingDialog(QDialog):
             self.clear_mods_button, alignment=Qt.AlignmentFlag.AlignCenter
         )
 
-        # steam tools section
+        # Steam tools section
         steam_group = QGroupBox("Steam Utilities")
         steam_group.setStyleSheet(self._group_box_style)
         main_layout.addWidget(steam_group)
@@ -262,7 +263,7 @@ class TroubleshootingDialog(QDialog):
         self.steam_verify_game_button = QPushButton("✓ Verify Game Files")
         self.steam_repair_library_button = QPushButton("🔧 Repair Steam library")
 
-        # steam buttons with icons and descriptions
+        # Steam buttons with icons and descriptions
         steam_buttons = [
             (
                 self.steam_clear_cache_button,
