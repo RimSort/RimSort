@@ -7,68 +7,37 @@ from pathlib import Path
 from typing import (
     Any,
     Callable,
+    Dict,
     Generator,
-    Literal,
+    List,
     Optional,
     Tuple,
     TypeAlias,
-    Union,
     cast,
 )
-
-from loguru import logger
-from rapidfuzz import fuzz  # for fuzzy search
-from typing_extensions import TypedDict
-
-# Type definitions
-SearchScope = Literal["all mods", "active mods", "not active mods"]
-FileContent = str
-FileEncoding = str
-
-
-class SearchOptions(TypedDict, total=False):
-    """Typed dictionary for search options"""
-
-    case_sensitive: bool
-    xml_only: bool
-    skip_translations: bool
-    active_mod_ids: set[str]
-    scope: SearchScope
-    max_file_size: int  # in bytes
-    fuzzy_threshold: int  # 0-100 match percentage
-    fuzzy_enabled: bool
 
 
 @dataclass
 class SearchParams:
-    """Common parameters for all search operations"""
+    """common parameters for all search operations"""
 
     search_text: str
-    root_paths: list[str]
-    options: SearchOptions
+    root_paths: List[str]
+    options: Dict[str, Any]
     result_callback: Optional[Callable[[str, str, str, str], None]] = None
     is_pattern_search: bool = False
-    search_type: Literal["text", "pattern"] = "text"
+    search_type: str = "text"
 
 
 SearchResult: TypeAlias = Generator[Tuple[str, str, str], None, None]
 SearchCallback: TypeAlias = Optional[Callable[[str, str, str, str], None]]
 SearchMethod: TypeAlias = Callable[
-    ["FileSearch", str, list[str], SearchOptions, SearchCallback], SearchResult
+    ["FileSearch", str, List[str], Dict[str, Any], SearchCallback], SearchResult
 ]
 
 
-class FileSearchResult(TypedDict):
-    mod_name: str
-    file_name: str
-    file_path: str
-    content: str
-
-
 def search_method(
-    is_pattern: bool = False,
-    search_type: Literal["text", "pattern"] = "text",
-    parallel: bool = False,
+    is_pattern: bool = False, search_type: str = "text", parallel: bool = False
 ) -> Callable[[SearchMethod], SearchMethod]:
     """decorator for search methods to handle common parameters"""
 
@@ -77,26 +46,14 @@ def search_method(
         def wrapper(
             self: "FileSearch",
             text: str,
-            paths: list[str],
-            opts: Union[dict[str, Any], SearchOptions],
+            paths: List[str],
+            opts: Dict[str, Any],
             callback: SearchCallback = None,
         ) -> SearchResult:
-            # Convert dict to SearchOptions if needed
-            options: SearchOptions = {
-                "case_sensitive": opts.get("case_sensitive", False),
-                "xml_only": opts.get("xml_only", False),
-                "skip_translations": opts.get("skip_translations", False),
-                "active_mod_ids": set(opts.get("active_mod_ids", set())),
-                "scope": opts.get("scope", "all mods"),
-                "max_file_size": opts.get("max_file_size", self.MAX_FILE_SIZE),
-                "fuzzy_enabled": opts.get("fuzzy_enabled", False),
-                "fuzzy_threshold": opts.get("fuzzy_threshold", 70),
-            }
-
             params = SearchParams(
                 text,
                 paths,
-                options,
+                opts,
                 callback,
                 is_pattern_search=is_pattern,
                 search_type=search_type,
@@ -115,12 +72,12 @@ class FileSearch:
     MAX_FILE_SIZE: int = 10 * 1024 * 1024
 
     def __init__(self) -> None:
-        """Initialize file search"""
+        """initialize file search"""
         self.active_mod_ids: set[str] = set()
-        self.search_scope: SearchScope = "all mods"
+        self.search_scope: str = ""
         self.stop_requested: bool = False
-        self._file_index: dict[str, FileContent] = {}
-        self.file_paths: list[Path] = []
+        self._file_index: Dict[str, str] = {}
+        self.file_paths: List[Path] = []
 
     def stop_search(self) -> None:
         """stop current search operation"""
@@ -130,53 +87,35 @@ class FileSearch:
         """reset searcher state"""
         self.stop_requested = False
         self.active_mod_ids = set()
-        self.search_scope = "all mods"
+        self.search_scope = ""
 
-    def set_active_mods(self, active_mod_ids: set[str], scope: SearchScope) -> None:
+    def set_active_mods(self, active_mod_ids: set[str], scope: str) -> None:
         """set active mod IDs and search scope"""
         self.active_mod_ids = active_mod_ids
-        self.search_scope = (
-            scope
-            if scope in ["all mods", "active mods", "not active mods"]
-            else "all mods"
-        )
+        self.search_scope = scope
 
     def _get_mod_name(self, file_path: str) -> str:
-        """Extract mod name from file path
-
-        Args:
-            file_path: Path to the file
-
-        Returns:
-            Name of the mod containing the file
-        """
+        """extract mod name from file path"""
         path_parts = os.path.normpath(file_path).split(os.sep)
         try:
-            # Find the Mods folder in the path and get the next folder name
+            # find the Mods folder in the path and get the next folder name
             mods_index = path_parts.index("Mods")
             if mods_index + 1 < len(path_parts):
                 return path_parts[mods_index + 1]
         except ValueError:
-            logger.debug(f"No 'Mods' folder found in path: {file_path}")
+            pass
         return os.path.basename(os.path.dirname(file_path))
 
-    def _should_process_file(self, file_path: str, options: SearchOptions) -> bool:
-        """Check if file should be processed based on options
-
-        Args:
-            file_path: Path to the file to check
-            options: Search options dictionary
-
-        Returns:
-            bool: True if file should be processed, False otherwise
-        """
+    def _should_process_file(self, file_path: str, options: Dict[str, Any]) -> bool:
+        """check if file should be processed based on options"""
         if self.stop_requested:
-            logger.debug(f"Search stopped, skipping: {file_path}")
+            print(f"Search stopped, skipping: {file_path}")
             return False
 
-        # Get file extension
+        # get file extension
         _, ext = os.path.splitext(file_path.lower())
-        logger.debug(f"Checking file: {file_path} (ext: {ext})")
+        print(f"\nChecking if should process: {file_path}")
+        print(f"File extension: {ext}")
 
         # list of text file extensions we want to search
         text_extensions = {
@@ -292,7 +231,7 @@ class FileSearch:
 
     def _build_file_index(
         self,
-        root_paths: list[str],
+        root_paths: List[str],
         result_callback: Optional[Callable[[str, str, str, str], None]] = None,
     ) -> None:
         """build index of files for faster searching"""
@@ -328,8 +267,8 @@ class FileSearch:
                         continue
 
     def _init_search(
-        self, search_text: str, root_paths: list[str], options: SearchOptions
-    ) -> list[Tuple[str, str]]:
+        self, search_text: str, root_paths: List[str], options: Dict[str, Any]
+    ) -> List[Tuple[str, str]]:
         """initialize search parameters and logging"""
         active_mod_ids = options.get("active_mod_ids", set())
         scope = options.get("scope", "all mods")
@@ -374,26 +313,12 @@ class FileSearch:
             return None
 
     def _check_content_match(
-        self, search_text: str, content: str, options: SearchOptions
+        self, search_text: str, content: str, case_sensitive: bool
     ) -> bool:
         """check if content matches search text"""
-        case_sensitive = options.get("case_sensitive", False)
-        fuzzy_enabled = options.get("fuzzy_enabled", False)
-        fuzzy_threshold = options.get("fuzzy_threshold", 70)
-
-        if fuzzy_enabled:
-            # Use rapidfuzz for fuzzy matching
-            if case_sensitive:
-                return fuzz.partial_ratio(search_text, content) >= fuzzy_threshold
-            return (
-                fuzz.partial_ratio(search_text.lower(), content.lower())
-                >= fuzzy_threshold
-            )
-        else:
-            # Standard exact match
-            if case_sensitive:
-                return search_text in content
-            return search_text.lower() in content.lower()
+        if case_sensitive:
+            return search_text in content
+        return search_text.lower() in content.lower()
 
     def _read_file_content(self, file_path: str) -> Optional[str]:
         """Read file content with error handling"""
@@ -409,7 +334,7 @@ class FileSearch:
         full_path: str,
         mod_name: str,
         file_name: str,
-        options: SearchOptions,
+        options: Dict[str, Any],
         result_callback: Optional[Callable[[str, str, str, str], None]] = None,
     ) -> Optional[str]:
         """Handle common file checking logic"""
@@ -446,7 +371,7 @@ class FileSearch:
         self,
         full_path: str,
         search_text: str,
-        options: SearchOptions,
+        options: Dict[str, Any],
         result_callback: Optional[Callable[[str, str, str, str], None]] = None,
         is_pattern_search: bool = False,
     ) -> Optional[Tuple[str, str, str, str]]:
@@ -469,7 +394,9 @@ class FileSearch:
             ):
                 return (mod_name, file_name, full_path, content)
         else:
-            if self._check_content_match(search_text, content, options):
+            if self._check_content_match(
+                search_text, content, options.get("case_sensitive", False)
+            ):
                 return (mod_name, file_name, full_path, content)
 
         self._process_search_result(mod_name, file_name, "", "", result_callback, False)
@@ -488,7 +415,7 @@ class FileSearch:
         return None
 
     def _process_files(
-        self, params: SearchParams, files: list[Tuple[str, str]], parallel: bool = False
+        self, params: SearchParams, files: List[Tuple[str, str]], parallel: bool = False
     ) -> Generator[Tuple[str, str, str], None, None]:
         """process files either sequentially or in parallel"""
         if parallel:
@@ -543,8 +470,8 @@ class FileSearch:
     def simple_search(
         self,
         text: str,
-        paths: list[str],
-        opts: SearchOptions,
+        paths: List[str],
+        opts: Dict[str, Any],
         callback: SearchCallback = None,
     ) -> SearchResult:
         """search for files containing text"""
@@ -554,8 +481,8 @@ class FileSearch:
     def pattern_search(
         self,
         text: str,
-        paths: list[str],
-        opts: SearchOptions,
+        paths: List[str],
+        opts: Dict[str, Any],
         callback: SearchCallback = None,
     ) -> SearchResult:
         """search for files matching regex pattern"""
@@ -565,8 +492,8 @@ class FileSearch:
     def parallel_search(
         self,
         text: str,
-        paths: list[str],
-        opts: SearchOptions,
+        paths: List[str],
+        opts: Dict[str, Any],
         callback: SearchCallback = None,
     ) -> SearchResult:
         """search files in parallel using thread pool"""

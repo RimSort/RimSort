@@ -1,14 +1,15 @@
+import logging
 import os
-from typing import Optional
+from typing import Any, Dict, List, Optional, Set
 
-from loguru import logger
 from PySide6.QtCore import QObject, QThread, Signal
-from typing_extensions import Literal
 
 from app.models.search_result import SearchResult
 from app.models.settings import Settings
-from app.utils.file_search import FileSearch, SearchOptions
+from app.utils.file_search import FileSearch
 from app.views.file_search_dialog import FileSearchDialog
+
+logger = logging.getLogger(__name__)
 
 
 class SearchWorker(QThread):
@@ -22,11 +23,11 @@ class SearchWorker(QThread):
 
     def __init__(
         self,
-        root_paths: list[str],
+        root_paths: List[str],
         pattern: str,
-        options: SearchOptions,
-        active_mod_ids: Optional[set[str]] = None,
-        scope: Literal["all mods", "active mods", "not active mods"] = "all mods",
+        options: Dict[str, Any],
+        active_mod_ids: Optional[Set[str]] = None,
+        scope: str = "all mods",
     ) -> None:
         super().__init__()
         self.root_paths = root_paths
@@ -112,30 +113,8 @@ class SearchWorker(QThread):
 
                         for file in files:
                             file_path = os.path.join(root, file)
-                            search_options: SearchOptions = {
-                                "case_sensitive": self.options.get(
-                                    "case_sensitive", False
-                                ),
-                                "xml_only": self.options.get("xml_only", False),
-                                "skip_translations": self.options.get(
-                                    "skip_translations", False
-                                ),
-                                "active_mod_ids": set(
-                                    self.options.get("active_mod_ids", set())
-                                ),
-                                "scope": self.options.get("scope", "all mods"),
-                                "max_file_size": self.options.get(
-                                    "max_file_size", self.searcher.MAX_FILE_SIZE
-                                ),
-                                "fuzzy_enabled": self.options.get(
-                                    "fuzzy_enabled", False
-                                ),
-                                "fuzzy_threshold": self.options.get(
-                                    "fuzzy_threshold", 70
-                                ),
-                            }
                             if self.searcher._should_process_file(
-                                file_path, search_options
+                                file_path, self.options
                             ):
                                 try:
                                     self.total_files += 1
@@ -156,9 +135,9 @@ class SearchWorker(QThread):
             )
 
             # get search method based on selected algorithm
-            algorithm = str(self.options.get("algorithm", "simple search"))
+            algorithm = self.options.get("algorithm", "simple search")
             try:
-                search_method = getattr(self.searcher, algorithm.replace(" ", "_"))
+                search_method = getattr(self.searcher, f"{algorithm.replace(' ', '_')}")
                 logger.info(f"Using search method: {algorithm}")
             except AttributeError:
                 logger.error(f"Invalid search algorithm: {algorithm}")
@@ -222,25 +201,16 @@ class FileSearchController(QObject):
         self,
         settings: Settings,
         dialog: FileSearchDialog,
-        active_mod_ids: Optional[set[str]] = None,
+        active_mod_ids: Optional[Set[str]] = None,
     ) -> None:
         """initialize controller"""
         super().__init__()
         self.settings = settings
         self.dialog = dialog
         self.active_mod_ids = active_mod_ids or set()
-        self.search_results: list[SearchResult] = []
+        self.search_results: List[SearchResult] = []
         self.search_worker: Optional[SearchWorker] = None
         self.searcher = FileSearch()
-
-        # Default search parameters
-        self.fuzzy_threshold = 70  # Match threshold (0-100)
-        self.fuzzy_enabled = False
-
-        # Set default search options
-        self.dialog.search_scope.setCurrentText("active mods")
-        self.dialog.xml_only.setChecked(True)
-        self.dialog.skip_translations.setChecked(True)
 
         # connect signals
         self.dialog.search_button.clicked.connect(self._on_search_clicked)
@@ -253,11 +223,11 @@ class FileSearchController(QObject):
         if instance.local_folder:
             self.dialog.set_search_paths([instance.local_folder])
 
-    def set_active_mod_ids(self, active_mod_ids: set[str]) -> None:
+    def set_active_mod_ids(self, active_mod_ids: Set[str]) -> None:
         """update the list of active mod IDs"""
         self.active_mod_ids = active_mod_ids
 
-    def get_search_paths(self) -> list[str]:
+    def get_search_paths(self) -> List[str]:
         """get search paths from dialog"""
         return self.dialog.get_search_options().get("paths", [])
 
@@ -276,11 +246,11 @@ class FileSearchController(QObject):
 
     def _setup_search_worker(
         self,
-        root_paths: list[str],
+        root_paths: List[str],
         pattern: str,
-        options: SearchOptions,
-        active_mod_ids: Optional[set[str]] = None,
-        scope: Literal["all mods", "active mods", "not active mods"] = "all mods",
+        options: Dict[str, Any],
+        active_mod_ids: Optional[Set[str]] = None,
+        scope: str = "all mods",
     ) -> SearchWorker:
         """Set up and configure a new search worker"""
         if self.search_worker is not None:
@@ -297,11 +267,11 @@ class FileSearchController(QObject):
 
     def _start_search_worker(
         self,
-        root_paths: list[str],
+        root_paths: List[str],
         search_text: str,
-        options: SearchOptions,
-        active_mod_ids: Optional[set[str]] = None,
-        scope: Literal["all mods", "active mods", "not active mods"] = "all mods",
+        options: Dict[str, Any],
+        active_mod_ids: Optional[Set[str]] = None,
+        scope: str = "all mods",
     ) -> None:
         """Start a new search worker"""
         self.searcher = FileSearch()
@@ -321,37 +291,16 @@ class FileSearchController(QObject):
         self.dialog.search_button.setEnabled(False)
         self.dialog.stop_button.setEnabled(True)
 
-        dialog_options = self.dialog.get_search_options()
-        root_paths = dialog_options.get("paths", [])
+        options = self.dialog.get_search_options()
+        root_paths = options.get("paths", [])
         search_text = self.dialog.search_input.text()
 
-        # Convert scope to literal type
-        scope = dialog_options.get("scope", "all mods")
-        if scope not in ("all mods", "active mods", "not active mods"):
-            scope = "all mods"
-
-        search_options: SearchOptions = {
-            "case_sensitive": bool(dialog_options.get("case_sensitive", False)),
-            "xml_only": bool(dialog_options.get("xml_only", False)),
-            "skip_translations": bool(dialog_options.get("skip_translations", False)),
-            "active_mod_ids": set(dialog_options.get("active_mod_ids", set())),
-            "scope": scope,
-            "max_file_size": int(
-                dialog_options.get("max_file_size", self.searcher.MAX_FILE_SIZE)
-            ),
-            "fuzzy_enabled": bool(dialog_options.get("fuzzy_enabled", False)),
-            "fuzzy_threshold": int(dialog_options.get("fuzzy_threshold", 70)),
-        }
-
-        self._start_search_worker(
-            root_paths, search_text, search_options, self.active_mod_ids
-        )
+        self._start_search_worker(root_paths, search_text, options, self.active_mod_ids)
 
     def _on_stop_clicked(self) -> None:
-        """handle stop button click - immediately terminate search"""
+        """handle stop button click"""
         if self.search_worker and self.search_worker.isRunning():
             self.searcher.stop_search()
-            self.search_worker.terminate()
             self.search_worker.wait()
         self._on_search_finished()
 
