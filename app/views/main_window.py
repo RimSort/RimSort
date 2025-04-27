@@ -144,7 +144,7 @@ class MainWindow(QMainWindow):
         self.log_reader_tab.setLayout(self.log_reader_layout)
 
         # Instantiate the AcfDataWindow and add it to the tab
-        self.log_reader = LogReader()
+        self.log_reader = LogReader(settings_controller)
         self.log_reader_layout.addWidget(self.log_reader)
 
         self.tab_widget.addTab(self.log_reader_tab, "Log Reader")
