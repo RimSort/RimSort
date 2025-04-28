@@ -23,11 +23,17 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from app.controllers.settings_controller import SettingsController
 from app.utils.event_bus import EventBus
 from app.utils.metadata import MetadataManager
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.steam.steamfiles.wrapper import acf_to_dict
-from app.views.dialogue import show_fatal_error, show_information, show_warning
+from app.views.dialogue import (
+    show_dialogue_conditional,
+    show_fatal_error,
+    show_information,
+    show_warning,
+)
 
 
 class LogReader(QDialog):
@@ -63,10 +69,10 @@ class LogReader(QDialog):
     COL_MOD_NAME = TableColumn.MOD_NAME
     COL_MOD_PATH = TableColumn.MOD_PATH
 
-    def __init__(self) -> None:
+    def __init__(self, settings_controller: SettingsController) -> None:
         super().__init__()
         self.setWindowTitle("Log Reader")
-        self.setMinimumSize(800, 600)
+        self.settings_controller = settings_controller
         self._metadata_cache: dict[str, dict[str, Any]] = {}
 
         # Setup auto-refresh timer
@@ -127,32 +133,82 @@ class LogReader(QDialog):
 
     def load_acf_data(self) -> None:
         """
-        Load workshop item data from SteamCMD ACF file.
+        Load workshop item data from SteamCMD and Steam ACF files, then populate the table.
 
         Raises:
-            RuntimeError: If SteamCMD interface is not initialized or data format is invalid.
-            FileNotFoundError: If the ACF file does not exist.
+            RuntimeError: If neither ACF file can be loaded or data format is invalid.
+            FileNotFoundError: If the ACF files do not exist.
             Exception: For other errors during loading or parsing.
         """
         self.status_bar.showMessage("Loading ACF data...")
-        try:
-            steamcmd = SteamcmdInterface.instance()
-            if not steamcmd or not hasattr(steamcmd, "steamcmd_appworkshop_acf_path"):
-                raise RuntimeError("SteamCMD interface not properly initialized")
 
-            acf_path = Path(steamcmd.steamcmd_appworkshop_acf_path)
-            if not acf_path.exists():
-                raise FileNotFoundError(
-                    f"ACF file not found at: {acf_path}\n"
-                    f"Ensure SteamCMD is properly installed and configured"
+        try:
+            combined_acf_data: dict[str, Any] = {}
+
+            # Load SteamCMD ACF data
+            steamcmd = SteamcmdInterface.instance()
+            steamcmd_acf_path = None
+            steamcmd_acf_data = {}
+            if steamcmd and hasattr(steamcmd, "steamcmd_appworkshop_acf_path"):
+                steamcmd_acf_path = Path(steamcmd.steamcmd_appworkshop_acf_path)
+                if steamcmd_acf_path.exists():
+                    try:
+                        steamcmd_acf_data = acf_to_dict(str(steamcmd_acf_path))
+                    except Exception as e:
+                        logger.error(
+                            f"Failed to parse ACF file at {steamcmd_acf_path}: {str(e)}"
+                        )
+                else:
+                    logger.warning(f"ACF file not found at: {steamcmd_acf_path}")
+                self._log_acf_load_result(
+                    "SteamCMD", steamcmd_acf_path, steamcmd_acf_data
+                )
+            else:
+                logger.warning("SteamCMD interface not properly initialized")
+
+            # Load Steam ACF data
+            current_instance = self.settings_controller.settings.current_instance
+            workshop_acf_path = (
+                Path(
+                    self.settings_controller.settings.instances[
+                        current_instance
+                    ].workshop_folder
+                ).parent.parent
+                / "appworkshop_294100.acf"
+            )
+            steam_acf_data = {}
+            if workshop_acf_path.exists():
+                try:
+                    steam_acf_data = acf_to_dict(str(workshop_acf_path))
+                except Exception as e:
+                    logger.error(
+                        f"Failed to parse ACF file at {workshop_acf_path}: {str(e)}"
+                    )
+            else:
+                logger.warning(f"ACF file not found at: {workshop_acf_path}")
+            self._log_acf_load_result("Steam", workshop_acf_path, steam_acf_data)
+
+            # Merge AppWorkshop data carefully to avoid overwriting
+            combined_acf_data = {}
+            for source_data in (steamcmd_acf_data, steam_acf_data):
+                for key, value in source_data.items():
+                    if key == "AppWorkshop" and key in combined_acf_data:
+                        # Merge WorkshopItemsInstalled dictionaries
+                        existing_items = combined_acf_data[key].get(
+                            "WorkshopItemsInstalled", {}
+                        )
+                        new_items = value.get("WorkshopItemsInstalled", {})
+                        merged_items = {**existing_items, **new_items}
+                        combined_acf_data[key]["WorkshopItemsInstalled"] = merged_items
+                    else:
+                        combined_acf_data[key] = value
+
+            if not combined_acf_data:
+                raise RuntimeError(
+                    "Failed to load any ACF data from SteamCMD or Steam paths"
                 )
 
-            try:
-                acf_data = acf_to_dict(str(acf_path))
-            except Exception as e:
-                raise RuntimeError(f"Failed to parse ACF file: {str(e)}") from e
-
-            workshop_items = acf_data.get("AppWorkshop", {}).get(
+            workshop_items = combined_acf_data.get("AppWorkshop", {}).get(
                 "WorkshopItemsInstalled", {}
             )
             if not isinstance(workshop_items, dict):
@@ -190,6 +246,14 @@ class LogReader(QDialog):
             logger.error(f"Error loading ACF data: {str(e)}")
             error_msg = f"{str(e)}"
             self.status_bar.showMessage(error_msg)
+
+    def _log_acf_load_result(
+        self, source_name: str, path: Path, data: dict[str, Any]
+    ) -> None:
+        if data:
+            logger.info(f"Loaded ACF data from {source_name} at {path}")
+        else:
+            logger.warning(f"No ACF data loaded from {source_name} at {path}")
 
     def filter_table(self) -> None:
         """
@@ -588,8 +652,18 @@ class LogReader(QDialog):
             self.table_widget.setUpdatesEnabled(True)
 
     def import_acf_data(self) -> None:
-        EventBus().do_import_acf.emit()
-        self.load_acf_data()
+        answer = show_dialogue_conditional(
+            title="Conform acf import",
+            text="This will replace your current steamcmd .acf file",
+            information="Are you sure you want to import .acf? THis only works for steamcmd",
+            button_text_override=[
+                "Import .acf",
+            ],
+        )
+        # Import .acf if user wants to import
+        if "Import" in answer:
+            EventBus().do_import_acf.emit()
+            self.load_acf_data()
 
     def export_acf_data(self) -> None:
         """
