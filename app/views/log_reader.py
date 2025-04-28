@@ -28,7 +28,12 @@ from app.utils.event_bus import EventBus
 from app.utils.metadata import MetadataManager
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.steam.steamfiles.wrapper import acf_to_dict
-from app.views.dialogue import show_fatal_error, show_information, show_warning
+from app.views.dialogue import (
+    show_dialogue_conditional,
+    show_fatal_error,
+    show_information,
+    show_warning,
+)
 
 
 class LogReader(QDialog):
@@ -647,8 +652,18 @@ class LogReader(QDialog):
             self.table_widget.setUpdatesEnabled(True)
 
     def import_acf_data(self) -> None:
-        EventBus().do_import_acf.emit()
-        self.load_acf_data()
+        answer = show_dialogue_conditional(
+            title="Conform acf import",
+            text="This will replace your current steamcmd .acf file",
+            information="Are you sure you want to import .acf? THis only works for steamcmd",
+            button_text_override=[
+                "Import .acf",
+            ],
+        )
+        # Import .acf if user wants to import
+        if "Import" in answer:
+            EventBus().do_import_acf.emit()
+            self.load_acf_data()
 
     def export_acf_data(self) -> None:
         """
