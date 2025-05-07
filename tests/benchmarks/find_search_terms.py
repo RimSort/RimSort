@@ -2,11 +2,11 @@ import os
 import re
 import xml.etree.ElementTree as ET
 from collections import Counter
-from typing import Dict, List, Optional, Tuple
+from typing import Optional, Tuple
 from xml.etree.ElementTree import ParseError
 
 
-def find_xml_files(mods_path: str) -> List[str]:
+def find_xml_files(mods_path: str) -> list[str]:
     """find all xml files in mods directory"""
     xml_files = []
     for root, _, files in os.walk(mods_path):
@@ -16,7 +16,7 @@ def find_xml_files(mods_path: str) -> List[str]:
     return xml_files
 
 
-def extract_text_from_xml(file_path: str) -> List[str]:
+def extract_text_from_xml(file_path: str) -> list[str]:
     """extract text content and attribute values from xml file"""
     try:
         tree = ET.parse(file_path)
@@ -42,7 +42,7 @@ def extract_text_from_xml(file_path: str) -> List[str]:
 
 def analyze_terms(
     mods_path: str, sample_size: Optional[int] = 100
-) -> Tuple[Dict[str, int], List[str], List[str]]:
+) -> Tuple[dict[str, int], list[str], list[str]]:
     """analyze xml files to find common and rare terms"""
     # get list of xml files
     xml_files = find_xml_files(mods_path)
