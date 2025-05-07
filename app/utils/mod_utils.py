@@ -48,6 +48,64 @@ def get_mod_name_from_pfid(pfid: Union[str, int, None]) -> str:
     return f"Invalid ID: {pfid_str}"
 
 
+def get_mod_path_from_pfid(pfid: Union[str, int, None]) -> str:
+    """
+    Get a mod's filesystem path from its PublishedFileID.
+
+    Args:
+        pfid (Union[str, int, None]): The PublishedFileID to lookup (str, int or None)
+
+    Returns:
+        str: The mod path or "Unknown path" if not found
+
+    Examples:
+        >>> get_mod_path_from_pfid("123456789")
+        '/path/to/mod'
+        >>> get_mod_path_from_pfid(None)
+        'Unknown path'
+        >>> get_mod_path_from_pfid("invalid_id")
+        'Unknown path (invalid_id)'
+    """
+    if not pfid:
+        return "Unknown path"
+
+    pfid_str = str(pfid)
+    metadata_manager = MetadataManager.instance()
+
+    try:
+        # Check internal local metadata
+        if hasattr(metadata_manager, "internal_local_metadata"):
+            for metadata in metadata_manager.internal_local_metadata.values():
+                if (
+                    metadata
+                    and isinstance(metadata, dict)
+                    and metadata.get("publishedfileid") == pfid_str
+                ):
+                    logger.debug(
+                        f"Found match in internal metadata for PFID {pfid_str}"
+                    )
+                    path = metadata.get("path")
+                    if path:
+                        return path
+
+        # Check external steam metadata if available
+        if hasattr(metadata_manager, "external_steam_metadata"):
+            steam_metadata = getattr(metadata_manager, "external_steam_metadata", {})
+            if isinstance(steam_metadata, dict):
+                match = steam_metadata.get(pfid_str, {})
+                if match and "path" in match:
+                    logger.debug(
+                        f"Found match in external metadata for PFID {pfid_str}"
+                    )
+                    return match["path"]
+
+        logger.debug(f"No path found for PFID: {pfid_str}")
+        return f"Unknown path ({pfid_str})"
+    except Exception as e:
+        logger.error(f"Error retrieving path for PFID {pfid_str}: {str(e)}")
+        return f"Unknown path ({pfid_str})"
+
+
 def get_mod_paths_from_uuids(uuids: list[str]) -> list[str]:
     """
     Utility function to get direct paths to mod folders from a list of mod UUIDs.
