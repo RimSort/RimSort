@@ -30,7 +30,7 @@ class FileSearch:
         root_paths: list[str],
         options: dict[str, Any],
         result_callback: Optional[Callable[[str, str, str], None]] = None,
-    ) -> Generator[dict[str, str] | Tuple[str, str, str], None, None]:
+    ) -> Generator[dict[str, str], None, None]:
         """
         Perform a search for files containing the specified text.
 
@@ -43,47 +43,38 @@ class FileSearch:
         Yields:
             Dict[str, str]: A dictionary containing file path and preview of the match.
         """
-        yield from self._search_files_common(
-            search_text,
-            root_paths,
-            options,
-            result_callback,
-            preview=True,
-            return_dict=True,
-        )
+        # Set default options for the search method
+        search_options = options.copy()
+        search_options["preview"] = True
+        search_options["return_dict"] = True
 
-    def _search_files_common(
+        for result in self._generic_search(
+            search_text, root_paths, search_options, result_callback
+        ):
+            if isinstance(result, dict):
+                yield result
+
+    def _generic_search(
         self,
         search_text: str,
         root_paths: list[str],
         options: dict[str, Any],
-        result_callback: Optional[Callable[..., None]],
-        preview: bool = False,
-        return_dict: bool = False,
+        result_callback: Optional[Callable[..., None]] = None,
     ) -> Generator[dict[str, str] | Tuple[str, str, str], None, None]:
         """
-        Common method to search files with options to return preview or tuple results.
-        """
-        yield from self._search_files_helper(
-            search_text,
-            root_paths,
-            options,
-            result_callback,
-            preview=preview,
-            return_dict=return_dict,
-        )
+        Generic search method that handles all search types.
 
-    def _search_files_helper(
-        self,
-        search_text: str,
-        root_paths: list[str],
-        options: dict[str, Any],
-        result_callback: Optional[Callable[..., None]],
-        preview: bool = False,
-        return_dict: bool = False,
-    ) -> Generator[dict[str, str] | Tuple[str, str, str], None, None]:
-        """
-        Helper method to perform file search with common logic to reduce duplication.
+        Args:
+            search_text (str): The text to search for.
+            root_paths (List[str]): List of root directories to search in.
+            options (Dict[str, Any]): Search options including:
+                - file_extensions (List[str]): File extensions to include
+                - ignore_extensions (List[str]): File extensions to ignore
+                - case_sensitive (bool): Whether the search is case-sensitive
+                - use_regex (bool): Whether to use regex for matching
+                - preview (bool): Whether to include a preview of the match
+                - return_dict (bool): Whether to return a dictionary or tuple
+            result_callback (Optional[Callable]): Callback for each result.
 
         Yields:
             Dict or Tuple depending on return_dict flag.
@@ -92,6 +83,8 @@ class FileSearch:
         ignore_extensions = options.get("ignore_extensions", [])
         case_sensitive = options.get("case_sensitive", False)
         use_regex = options.get("use_regex", False)
+        preview = options.get("preview", False)
+        return_dict = options.get("return_dict", False)
 
         for root_path in root_paths:
             for dirpath, _, filenames in os.walk(root_path):
@@ -104,8 +97,10 @@ class FileSearch:
                     if any(filename.endswith(ext) for ext in ignore_extensions):
                         continue
 
+                    # Only process files with specified extensions if provided
                     if file_extensions and not any(
-                        filename.endswith(ext) for ext in file_extensions
+                        filename.lower().endswith(ext.lower())
+                        for ext in file_extensions
                     ):
                         continue
 
@@ -145,8 +140,6 @@ class FileSearch:
                     except Exception as e:
                         logger.error(f"Error reading file {file_path}: {e}")
 
-    # Removed duplicate method definitions below to fix redefinition errors
-
     def _read_file_in_chunks(
         self, file_path: str, chunk_size: int = 1024 * 1024
     ) -> Generator[str, None, None]:
@@ -171,124 +164,50 @@ class FileSearch:
         except Exception as e:
             logger.error(f"Failed to read file {file_path} in chunks: {e}")
 
-    def _search_files(
-        self,
-        search_text: str,
-        root_paths: list[str],
-        options: dict[str, Any],
-        result_callback: Optional[Callable[[str, str, str], None]] = None,
-    ) -> Generator[Tuple[str, str, str], None, None]:
+    def _create_search_method(
+        self, search_type: str
+    ) -> Callable[
+        [str, list[str], dict[str, Any], Optional[Callable[[str, str, str], None]]],
+        Generator[Tuple[str, str, str], None, None],
+    ]:
         """
-        Common method to search files.
-        """
-        for root_path in root_paths:
-            for dirpath, _, filenames in os.walk(root_path):
-                if self.stop_requested:
-                    logger.info("Search stopped by user.")
-                    return
-
-                for filename in filenames:
-                    # Ensure only files with the specified extensions are processed
-                    if options.get("file_extensions"):
-                        allowed_extensions = options["file_extensions"]
-                        if not any(
-                            filename.lower().endswith(ext.lower())
-                            for ext in allowed_extensions
-                        ):
-                            continue
-
-                    file_path = os.path.join(dirpath, filename)
-                    try:
-                        for content_chunk in self._read_file_in_chunks(file_path):
-                            if self._matches(
-                                content_chunk,
-                                search_text,
-                                options.get("case_sensitive", False),
-                                options.get("use_regex", False),
-                            ):
-                                # Extract pfid (publishedfileid) from file_path or root_path
-                                pfid = os.path.basename(root_path)
-                                # use the folder name as pfid (publishedfileid) and match it to get mod name
-                                mod_name = get_mod_name_from_pfid(pfid)
-                                result = (
-                                    mod_name,
-                                    filename,
-                                    file_path,
-                                )
-                                if result_callback:
-                                    result_callback(*result)
-                                yield result
-                                break
-                    except Exception as e:
-                        logger.error(f"Error reading file {file_path}: {e}")
-
-    def _generic_search(
-        self,
-        search_text: str,
-        root_paths: list[str],
-        options: dict[str, Any],
-        result_callback: Optional[Callable[[str, str, str], None]] = None,
-    ) -> Generator[Tuple[str, str, str], None, None]:
-        """
-        Perform a generic search for files based on the provided options.
+        Factory method to create specialized search methods.
 
         Args:
-            search_text (str): The text or pattern to search for.
-            root_paths (List[str]): List of root directories to search in.
-            options (Dict[str, Any]): Search options (e.g., case sensitivity, file types).
-            result_callback (Optional[Callable[[str, str, str], None]]): Callback for each result.
+            search_type (str): Type of search to create ("standard", "xml", "pattern")
 
-        Yields:
-            Tuple[str, str, str]: A tuple containing mod_name, file_name, and file_path.
+        Returns:
+            A method that performs the specified type of search
         """
-        yield from self._search_files(search_text, root_paths, options, result_callback)
 
-    def xml_search(
-        self,
-        search_text: str,
-        root_paths: list[str],
-        options: dict[str, Any],
-        result_callback: Optional[Callable[[str, str, str], None]] = None,
-    ) -> Generator[Tuple[str, str, str], None, None]:
-        """
-        Perform an optimized search for XML files.
-        """
-        options = {
-            **options,
-            "file_extensions": [".xml"],
-        }  # Restrict to .xml files only
-        yield from self._generic_search(
-            search_text, root_paths, options, result_callback
-        )
+        def search_method(
+            search_text: str,
+            root_paths: list[str],
+            options: dict[str, Any],
+            result_callback: Optional[Callable[[str, str, str], None]] = None,
+        ) -> Generator[Tuple[str, str, str], None, None]:
+            # Apply search-type specific options
+            search_options = options.copy()
+            search_options["return_dict"] = False
 
-    def standard_search(
-        self,
-        search_text: str,
-        root_paths: list[str],
-        options: dict[str, Any],
-        result_callback: Optional[Callable[[str, str, str], None]] = None,
-    ) -> Generator[Tuple[str, str, str], None, None]:
-        """
-        Perform a standard search.
-        """
-        yield from self._generic_search(
-            search_text, root_paths, options, result_callback
-        )
+            if search_type == "xml":
+                search_options["file_extensions"] = [".xml"]
+            elif search_type == "pattern":
+                search_options["use_regex"] = True
 
-    def pattern_search(
-        self,
-        search_text: str,
-        root_paths: list[str],
-        options: dict[str, Any],
-        result_callback: Optional[Callable[[str, str, str], None]] = None,
-    ) -> Generator[Tuple[str, str, str], None, None]:
-        """
-        Perform a regex-based search.
-        """
-        options = {**options, "use_regex": True}
-        yield from self._generic_search(
-            search_text, root_paths, options, result_callback
-        )
+            # Use a generator expression to ensure we only yield tuples
+            for result in self._generic_search(
+                search_text, root_paths, search_options, result_callback
+            ):
+                if isinstance(result, tuple):
+                    yield result
+
+        return search_method
+
+    # Create specialized search methods using the factory
+    xml_search = property(lambda self: self._create_search_method("xml"))
+    standard_search = property(lambda self: self._create_search_method("standard"))
+    pattern_search = property(lambda self: self._create_search_method("pattern"))
 
     def _matches(
         self, content: str, search_text: str, case_sensitive: bool, use_regex: bool
