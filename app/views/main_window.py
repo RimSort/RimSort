@@ -160,6 +160,7 @@ class MainWindow(QMainWindow):
         self.file_search_dialog = FileSearchDialog()
         self.file_search_controller = FileSearchController(
             settings=self.settings_controller.settings,
+            settings_controller=self.settings_controller,
             dialog=self.file_search_dialog,
         )
         self.file_search_layout.addWidget(self.file_search_dialog)

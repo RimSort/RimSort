@@ -1,6 +1,6 @@
 git+https://github.com/RimSort/steamfiles
-pygit2==1.16.0
 beautifulsoup4==4.13.4
+chardet==5.2.0
 GitPython==3.1.44
 imageio==2.37.0
 loguru==0.7.3
@@ -10,6 +10,7 @@ natsort==8.4.0
 networkx==3.4.2
 platformdirs==4.3.7
 psutil==7.0.0
+pygit2==1.16.0
 PyGithub==2.6.1
 pyperclip==1.9.0
 PySide6
