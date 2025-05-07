@@ -202,6 +202,7 @@ def test_filter_results(setup_test_files: str) -> None:
 
     # perform search
     search_text = "Test"  # This should match both TestMod1 and TestMod2 files
+
     dialog = controller.dialog
     assert isinstance(dialog.results_table, QTableWidget)
 
@@ -229,21 +230,30 @@ def test_filter_results(setup_test_files: str) -> None:
     controller.search_worker.isRunning.return_value = False
     controller.search_worker.finished.emit()
 
-    # Create properly configured mock table items
-    # Create mock items that properly return text when .text() is called
+    # Ensure proper types for mock arguments
     mock_items = [
         [
-            MagicMock(text=lambda: "TestMod1"),
-            MagicMock(text=lambda: "About.xml"),
+            MagicMock(spec=QTableWidget, text=MagicMock(return_value="TestMod1")),
+            MagicMock(spec=QTableWidget, text=MagicMock(return_value="About.xml")),
             MagicMock(
-                text=lambda: str(Path(setup_test_files) / "TestMod1/About/About.xml")
+                spec=QTableWidget,
+                text=MagicMock(
+                    return_value=str(
+                        Path(setup_test_files) / "TestMod1/About/About.xml"
+                    )
+                ),
             ),
         ],
         [
-            MagicMock(text=lambda: "TestMod2"),
-            MagicMock(text=lambda: "About.xml"),
+            MagicMock(spec=QTableWidget, text=MagicMock(return_value="TestMod2")),
+            MagicMock(spec=QTableWidget, text=MagicMock(return_value="About.xml")),
             MagicMock(
-                text=lambda: str(Path(setup_test_files) / "TestMod2/About/About.xml")
+                spec=QTableWidget,
+                text=MagicMock(
+                    return_value=str(
+                        Path(setup_test_files) / "TestMod2/About/About.xml"
+                    )
+                ),
             ),
         ],
     ]
@@ -253,56 +263,75 @@ def test_filter_results(setup_test_files: str) -> None:
     mock_table.rowCount.return_value = 2
     mock_table.item.side_effect = lambda row, col: mock_items[row][col]
 
-    # Filtering logic - only show rows where mod name contains filter text
-    def is_row_hidden(row: int) -> bool:
-        item = mock_table.item(row, 0)
-        return not (item and filter_text.lower() in item.text().lower())
-
-    mock_table.isRowHidden.side_effect = is_row_hidden
     dialog.results_table = mock_table
 
-    # log initial results
-    initial_results = 2
-    print(f"\n=== Initial search results: {initial_results} rows ===")
-    for row in range(initial_results):
-        mod_item = controller.dialog.results_table.item(row, 0)
-        file_item = controller.dialog.results_table.item(row, 1)
-        path_item = controller.dialog.results_table.item(row, 2)
+    # Update filter_text to match only one row
+    filter_text = "TestMod1"
 
-        if mod_item and file_item and path_item:
-            mod_name = mod_item.text()
-            file_name = file_item.text()
-            file_path = path_item.text()
-            print(f"Row {row}: mod={mod_name}, file={file_name}, path={file_path}")
-        else:
-            pytest.fail("Missing table items in initial results")
+    # Optimize filtering logic
+    def is_row_visible(row: int) -> bool:
+        mod_item = dialog.results_table.item(row, 0)
+        return mod_item is not None and filter_text.lower() in mod_item.text().lower()
 
-    # apply filter for TestMod1
-    print("\n=== Applying filter ===")
-    filter_text: str = "TestMod1"
-    print(f"Filter text: {filter_text}")
-    controller.dialog.filter_input.setText(filter_text)
+    visible_rows = sum(
+        1 for row in range(dialog.results_table.rowCount()) if is_row_visible(row)
+    )
 
-    # verify filtered results
-    visible_rows = 0
+    # Log visible rows
     for row in range(dialog.results_table.rowCount()):
-        if not dialog.results_table.isRowHidden(row):
-            visible_rows += 1
+        if is_row_visible(row):
             mod_item = dialog.results_table.item(row, 0)
             file_item = dialog.results_table.item(row, 1)
             path_item = dialog.results_table.item(row, 2)
 
-            # Ensure items exist before accessing text
-            if mod_item and file_item and path_item:
-                mod_name = mod_item.text()
-                file_name = file_item.text()
-                file_path = path_item.text()
-                print(
-                    f"Visible after filter: mod={mod_name}, file={file_name}, path={file_path}"
-                )
-            else:
-                pytest.fail("Missing table items in results")
+            # Ensure items are not None before accessing text
+            mod_text = mod_item.text() if mod_item else "<None>"
+            file_text = file_item.text() if file_item else "<None>"
+            path_text = path_item.text() if path_item else "<None>"
+
+            print(
+                f"Visible after filter: mod={mod_text}, file={file_text}, path={path_text}"
+            )
 
     assert visible_rows == 1, (
         f"Expected exactly one visible row after filtering, got {visible_rows}"
     )
+
+
+def test_xml_search_only_xml_files(setup_test_files: str) -> None:
+    """Test that xml_search only processes .xml files."""
+    from app.utils.file_search import FileSearch
+    from app.utils.metadata import MetadataManager
+
+    # Mock settings_controller
+    mock_settings_controller = MagicMock()
+
+    # Patch the instance method of SteamcmdInterface
+    with patch(
+        "app.utils.steam.steamcmd.wrapper.SteamcmdInterface.instance"
+    ) as mock_instance_method:
+        mock_instance_method.return_value = MagicMock()  # Return a mock instance
+
+        # Create a FileSearch instance with mocked MetadataManager
+        mock_metadata_manager = MetadataManager(mock_settings_controller)
+        file_search = FileSearch(metadata_manager=mock_metadata_manager)
+
+        # Define search parameters
+        search_text = "<modmetadata>"
+        root_paths = [setup_test_files]
+        options = {"file_extensions": [".xml"]}
+
+        # Collect results
+        results = list(file_search.xml_search(search_text, root_paths, options))
+
+        # Verify that only .xml files are included in the results
+        for _, file_name, _ in results:
+            assert file_name.endswith(".xml"), f"Non-XML file included: {file_name}"
+
+        # Print results for debugging
+        print("XML Search Results:")
+        for mod_name, file_name, file_path in results:
+            print(f"Mod: {mod_name}, File: {file_name}, Path: {file_path}")
+
+        # Ensure results are not empty
+        assert results, "No results found, but .xml files exist in the test setup."

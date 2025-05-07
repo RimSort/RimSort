@@ -1,6 +1,6 @@
 git+https://github.com/RimSort/steamfiles
-pygit2==1.16.0
 beautifulsoup4==4.13.4
+chardet==5.2.0
 GitPython==3.1.44
 imageio==2.37.0
 loguru==0.7.3
@@ -10,11 +10,11 @@ natsort==8.4.0
 networkx==3.4.2
 platformdirs==4.3.7
 psutil==7.0.0
+pygit2==1.16.0
 PyGithub==2.6.1
 pyperclip==1.9.0
 PySide6
 PySide6==6.8.2.1; sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'
-rapidfuzz==3.13.0
 requests==2.32.3
 SQLAlchemy==2.0.40
 steam==1.4.4

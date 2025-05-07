@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.controllers.file_search_controller import FileSearchController
 from app.controllers.instance_controller import (
     InstanceController,
     InvalidArchivePathError,
@@ -41,6 +42,7 @@ from app.views.dialogue import (
     show_fatal_error,
     show_warning,
 )
+from app.views.file_search_dialog import FileSearchDialog
 from app.views.log_reader import LogReader
 from app.views.main_content_panel import MainContent
 from app.views.menu_bar import MenuBar
@@ -148,6 +150,22 @@ class MainWindow(QMainWindow):
         self.log_reader_layout.addWidget(self.log_reader)
 
         self.tab_widget.addTab(self.log_reader_tab, "Log Reader")
+
+        # Create and add the Search tab
+        self.file_search_tab = QWidget()
+        self.file_search_layout = QVBoxLayout()
+        self.file_search_tab.setLayout(self.file_search_layout)
+
+        # Instantiate the SearchWindow and add it to the tab
+        self.file_search_dialog = FileSearchDialog()
+        self.file_search_controller = FileSearchController(
+            settings=self.settings_controller.settings,
+            settings_controller=self.settings_controller,
+            dialog=self.file_search_dialog,
+        )
+        self.file_search_layout.addWidget(self.file_search_dialog)
+
+        self.tab_widget.addTab(self.file_search_tab, "File Search")
 
         # Create and add the Troubleshooting tab
         self.troubleshooting_tab = QWidget()

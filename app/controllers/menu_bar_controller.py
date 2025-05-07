@@ -4,7 +4,6 @@ from PySide6.QtCore import QObject, Slot
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QApplication, QLineEdit, QPlainTextEdit, QTextEdit
 
-from app.controllers.file_search_controller import FileSearchController
 from app.controllers.mods_panel_controller import ModsPanelController
 from app.controllers.settings_controller import SettingsController
 from app.utils.event_bus import EventBus
@@ -24,7 +23,6 @@ class MenuBarController(QObject):
         self.menu_bar = view
         self.settings_controller = settings_controller
         self.mods_panel_controller = mods_panel_controller
-        self._file_search_controller = None  # store controller instance
 
         # Application menu
         instance = QApplication.instance()
@@ -150,9 +148,6 @@ class MenuBarController(QObject):
         )
         # Help menu
         self.menu_bar.wiki_action.triggered.connect(self._on_menu_bar_wiki_triggered)
-        self.menu_bar.file_search_action.triggered.connect(
-            self._on_menu_bar_file_search_triggered
-        )
 
         # External signals
         EventBus().refresh_started.connect(self._on_refresh_started)
@@ -249,14 +244,3 @@ class MenuBarController(QObject):
         """
         for action in self.menu_bar.menu_bar.actions():
             action.setEnabled(True)
-
-    @Slot()
-    def _on_menu_bar_file_search_triggered(self) -> None:
-        """handle file search action"""
-        from app.views.file_search_dialog import FileSearchDialog
-
-        dialog = FileSearchDialog()
-        self._file_search_controller = FileSearchController(
-            self.settings_controller.settings, dialog
-        )
-        dialog.exec()
