@@ -8,7 +8,7 @@ lxml==5.4.0
 msgspec==0.19.0 
 natsort==8.4.0
 networkx==3.4.2
-platformdirs==4.3.7
+platformdirs==4.3.8
 psutil==7.0.0
 pygit2==1.16.0
 PyGithub==2.6.1
