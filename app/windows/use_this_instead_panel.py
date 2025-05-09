@@ -153,12 +153,32 @@ class UseThisInsteadPanel(BaseModsPanel):
                 )
             )
 
-            original_name_item = QStandardItem(mv["name"])
+            name = mv.get("name")
+            if name is None:
+                logger.error(f"Missing 'name' key in metadata for mod: {mod}")
+                name = "Unknown Name"
+            elif not isinstance(name, str):
+                # Convert list or dict name to string representation
+                if isinstance(name, list):
+                    name = ", ".join(str(n) for n in name)
+                else:
+                    name = str(name)
+            original_name_item = QStandardItem(name)
             original_name_item.setData(mv, Qt.ItemDataRole.UserRole)
-            original_name_item.setToolTip(mv["name"])
+            original_name_item.setToolTip(name)
 
-            original_authors_item = QStandardItem(mv["authors"])
-            original_authors_item.setToolTip(mv["authors"])
+            authors = mv.get("authors")
+            if authors is None:
+                logger.error(f"Missing 'authors' key in metadata for mod: {mod}")
+                authors = "Unknown Author"
+            elif not isinstance(authors, str):
+                # Convert list or dict authors to string representation
+                if isinstance(authors, list):
+                    authors = ", ".join(str(a) for a in authors)
+                else:
+                    authors = str(authors)
+            original_authors_item = QStandardItem(authors)
+            original_authors_item.setToolTip(authors)
 
             replacement_name_item = QStandardItem(mr.name)
             replacement_name_item.setToolTip(mr.name)

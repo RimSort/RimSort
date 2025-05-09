@@ -18,29 +18,8 @@ from typing import TYPE_CHECKING, Any, Callable, Self
 from urllib.parse import urlparse
 from zipfile import ZipFile
 
-from loguru import logger
-
-from app.utils.generic import (
-    check_valid_http_git_url,
-    extract_git_dir_name,
-    extract_git_user_or_org,
-    platform_specific_open,
-)
-from app.utils.system_info import SystemInfo
-
-# GitPython depends on git executable being available in PATH
-try:
-    from git import Repo
-    from git.exc import GitCommandError
-
-    GIT_EXISTS = True
-except ImportError:
-    logger.warning(
-        "git not detected in your PATH! Do you have git installed...? git integration will be disabled! You may need to restart the app if you installed it."
-    )
-    GIT_EXISTS = False
-
 from github import Github
+from loguru import logger
 from PySide6.QtCore import (
     QEventLoop,
     QObject,
@@ -60,11 +39,15 @@ from app.models.animations import LoadingAnimation
 from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 from app.utils.generic import (
+    check_valid_http_git_url,
     chunks,
     copy_to_clipboard_safely,
     delete_files_except_extension,
+    extract_git_dir_name,
+    extract_git_user_or_org,
     launch_game_process,
     open_url_browser,
+    platform_specific_open,
     upload_data_to_0x0_st,
 )
 from app.utils.metadata import MetadataManager, SettingsController
@@ -80,6 +63,7 @@ from app.utils.steam.webapi.wrapper import (
     CollectionImport,
     ISteamRemoteStorage_GetPublishedFileDetails,
 )
+from app.utils.system_info import SystemInfo
 from app.utils.todds.wrapper import ToddsInterface
 from app.utils.xml import json_to_xml_write
 from app.views.mod_info_panel import ModInfo
@@ -91,8 +75,21 @@ from app.windows.runner_panel import RunnerPanel
 from app.windows.use_this_instead_panel import UseThisInsteadPanel
 from app.windows.workshop_mod_updater_panel import ModUpdaterPrompt
 
-if TYPE_CHECKING:
-    from app.views.main_window import MainWindow
+# GitPython depends on git executable being available in PATH
+try:
+    from git import Repo
+    from git.exc import GitCommandError
+
+    GIT_EXISTS = True
+except ImportError:
+    logger.warning(
+        "git not detected in your PATH! Do you have git installed...? git integration will be disabled! You may need to restart the app if you installed it."
+    )
+    GIT_EXISTS = False
+    # Using TYPE_CHECKING to avoid unbound issues when git is not available
+    if TYPE_CHECKING:
+        from git import Repo
+        from git.exc import GitCommandError
 
 
 class MainContent(QObject):
@@ -132,7 +129,6 @@ class MainContent(QObject):
             EventBus().do_check_for_application_update.connect(
                 self._do_check_for_update
             )
-            EventBus().do_validate_steam_client.connect(self._do_validate_steam_client)
             EventBus().do_open_mod_list.connect(self._do_import_list_file_xml)
             EventBus().do_import_mod_list_from_rentry.connect(
                 self._do_import_list_rentry
@@ -326,6 +322,9 @@ class MainContent(QObject):
             )
             self.mods_panel.inactive_mods_list.update_git_mods_signal.connect(
                 self._check_git_repos_for_update
+            )
+            self.mods_panel.active_mods_list.steamcmd_downloader_signal.connect(
+                self._do_download_mods_with_steamcmd
             )
             self.mods_panel.inactive_mods_list.steamcmd_downloader_signal.connect(
                 self._do_download_mods_with_steamcmd
@@ -800,8 +799,7 @@ class MainContent(QObject):
     # GAME CONFIGURATION PANEL
 
     def _do_check_for_update(self) -> None:
-        logger.debug("Skipping update check...")
-        return
+        logger.debug("Checking for RimSort update...")
         # NOT NUITKA
         if "__compiled__" not in globals():
             logger.debug(
@@ -815,7 +813,7 @@ class MainContent(QObject):
             return
         # NUITKA
         logger.debug("Checking for RimSort update...")
-        current_version = self.metadata_manager.game_version
+        current_version = AppInfo().app_version
         try:
             json_response = self.__do_get_github_release_info()
         except Exception as e:
@@ -835,6 +833,10 @@ class MainContent(QObject):
                 information=f"You are running RimSort {current_version}\nDo you want to update now?",
             )
             if answer == "&Yes":
+                logger.debug("User selected to update RimSort")
+                open_url_browser("https://github.com/RimSort/RimSort/releases")
+                return  # Remove this and above line to enable auto-update
+                # TODO : Implement auto-update currenty disabled since it has issues on linux
                 # Setup environment
                 ARCH = platform.architecture()[0]
                 CWD = os.getcwd()
@@ -975,9 +977,6 @@ class MainContent(QObject):
                 title="RimSort is up to date!",
                 text=f"You are already running the latest release: {tag_name}",
             )
-
-    def _do_validate_steam_client(self) -> None:
-        platform_specific_open("steam://validate/294100")
 
     def __do_download_extract_release_to_tempdir(self, url: str) -> None:
         with ZipFile(BytesIO(requests_get(url).content)) as zipobj:
@@ -1193,24 +1192,21 @@ class MainContent(QObject):
         if check_deps and self.settings_controller.settings.check_dependencies_on_sort:
             missing_deps = self.metadata_manager.get_missing_dependencies(active_mods)
             if missing_deps:
-                dialog = MissingDependenciesDialog(self.main_window)
-                dialog.show_missing_dependencies(missing_deps)
+                dialog = MissingDependenciesDialog()
+                selected_deps = dialog.show_dialog(missing_deps)
 
-                result = dialog.exec()
-                if result:  # Dialog accepted
-                    # User clicked "Add Selected & Sort"
-                    selected_mods = dialog.get_selected_mods()
-                    if selected_mods:
-                        # Add selected mods to active mods
-                        for mod_id in selected_mods:
-                            # Find the UUID for this package ID
-                            for (
-                                uuid,
-                                mod_data,
-                            ) in self.metadata_manager.internal_local_metadata.items():
-                                if mod_data.get("packageid") == mod_id:
+                if selected_deps:
+                    # Add selected mods to active mods
+                    for mod_id in selected_deps:
+                        # Find the UUID for this package ID
+                        for (
+                            uuid,
+                            mod_data,
+                        ) in self.metadata_manager.internal_local_metadata.items():
+                            if mod_data.get("packageid") == mod_id:
+                                if uuid not in active_mods:
                                     active_mods.add(uuid)
-                                    break
+                                break
 
         # Get package IDs for active mods
         active_package_ids = set()
@@ -2025,6 +2021,7 @@ class MainContent(QObject):
                 False,
                 self.steamcmd_runner,
             )
+            RunnerPanel().process_complete()
         else:
             dialogue.show_warning(
                 title="RimSort - SteamCMD setup",
@@ -3463,11 +3460,3 @@ class MainContent(QObject):
                 title="Use This Instead",
                 text='No suggestions were found in the "Use This Instead" database.',
             )
-
-    def set_main_window(self, main_window: "MainWindow") -> None:
-        """Set the main window reference for this content panel.
-
-        Args:
-            main_window: The main window instance to set
-        """
-        self.main_window = main_window
