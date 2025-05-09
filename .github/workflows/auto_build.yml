@@ -2,6 +2,7 @@
 # Not recommended to release these builds due to versioning.
 
 name: Auto Build
+
 on:
   pull_request:
     types: [opened, synchronize]
@@ -27,8 +28,55 @@ jobs:
     with:
       format_only: true
 
+  cleanup:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Enhanced Cleanup
+        shell: bash
+        run: |
+          TARGET_DIR="build/__main__.app/Contents/Resources/qtwebengine_locales"
+          if [ -d "$TARGET_DIR" ]; then
+            echo "Attempting to remove directory..."
+            # Check for open files and terminate processes if needed
+            lsof +D "$TARGET_DIR" || echo "No processes using the directory."
+            lsof +D "$TARGET_DIR" | awk '{print $2}' | xargs -r kill -9 || echo "Failed to terminate some processes."
+            
+            # Set write permissions and attempt deletion
+            chmod -R u+w "$TARGET_DIR" || echo "Failed to set write permissions."
+            rm -rf "$TARGET_DIR" || echo "Failed to delete directory."
+
+            # Retry mechanism
+            for i in {1..3}; do
+              if [ -d "$TARGET_DIR" ]; then
+                echo "Retrying directory cleanup (Attempt $i)..."
+                chmod -R u+w "$TARGET_DIR"
+                rm -rf "$TARGET_DIR"
+                sleep 5
+              else
+                break
+              fi
+            done
+
+            # Final check
+            if [ -d "$TARGET_DIR" ]; then
+              echo "Directory cleanup failed after retries. Exiting."
+              exit 1
+            else
+              echo "Directory successfully removed."
+            fi
+          else
+            echo "Directory does not exist; no cleanup needed."
+          fi
+
+      - name: Debug Directory State
+        shell: bash
+        run: ls -la build/__main__.app/Contents/Resources/qtwebengine_locales || echo "Directory does not exist"
+
   attested-build:
-    needs: pre-build
+    needs: [pre-build, cleanup]
     if: github.event_name != 'pull_request'
     permissions:
       id-token: write
@@ -41,7 +89,7 @@ jobs:
       attest: true
 
   non-attested-build:
-    needs: pre-build
+    needs: [pre-build, cleanup]
     if: github.event_name == 'pull_request'
     permissions:
       id-token: write

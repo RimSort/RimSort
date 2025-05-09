@@ -1,4 +1,5 @@
 name: Build
+
 on:
   workflow_call:
     inputs:
@@ -71,6 +72,7 @@ jobs:
             env:
               BUILD_OUTPUT: "__main__.dist"
               Executable: RimSort.exe
+
     steps:
       - name: Check-out repository
         uses: actions/checkout@main
@@ -93,6 +95,15 @@ jobs:
           brew remove --force --ignore-dependencies openssl@3
           brew cleanup openssl@3
         if: runner.os == 'macos' && matrix.arch == 'i386'
+
+      - name: Pre-Build Enhanced Cleanup
+        run: |
+          TARGET_DIR="build/__main__.app/Contents/Resources/qtwebengine_locales"
+          if [ -d "$TARGET_DIR" ]; then
+            echo "Cleaning up residual directories..."
+            chmod -R u+w "$TARGET_DIR"
+            rm -rf "$TARGET_DIR"
+          fi
 
       - name: Get semantic version
         id: sem_version
@@ -199,7 +210,6 @@ jobs:
         with:
           subject-path: ./build/${{ steps.filename.outputs.FILENAME }}.tar
 
-        # Upload folder as artifact
       - name: Upload folder as artifact
         uses: actions/upload-artifact@main
         with:
