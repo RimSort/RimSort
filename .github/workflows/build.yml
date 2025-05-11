@@ -148,7 +148,7 @@ jobs:
         uses: Nuitka/Nuitka-Action@main
         if: true
         with:
-          nuitka-version: develop
+          nuitka-version: factory
           script-name: app/__main__.py
           mode: ${{ runner.os == 'macos' && 'app' || 'standalone' }}
           static-libpython: auto
