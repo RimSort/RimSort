@@ -820,8 +820,34 @@ class MainContent(QObject):
             logger.warning(
                 f"Unable to retrieve latest release information due to exception: {e.__class__}"
             )
+            dialogue.show_warning(
+                title="Unable to retrieve latest release information",
+                text=f"Unable to retrieve latest release information due to exception: {e.__class__}",
+            )
             return
+
+        # Check if response is a dictionary and if 'tag_name' exists in the response
+        if not isinstance(json_response, dict):
+            logger.warning(
+                f"Unexpected response type from GitHub API: {type(json_response)}"
+            )
+            logger.debug(f"Response received: {json_response}")
+            self.show_update_error()
+            return
+
+        if "tag_name" not in json_response:
+            logger.warning(
+                "Unable to retrieve latest release information: 'tag_name' not found in response"
+            )
+            logger.debug(f"Response received: {json_response}")
+            self.show_update_error()
+            return
+
         tag_name = json_response["tag_name"]
+        if tag_name is None:
+            logger.warning("Unable to retrieve latest release information")
+            self.show_update_error()
+            return
         tag_name_updated = tag_name.replace("alpha", "Alpha")
         install_path = os.getcwd()
         logger.debug(f"Current RimSort release found: {tag_name}")
@@ -978,16 +1004,41 @@ class MainContent(QObject):
                 text=f"You are already running the latest release: {tag_name}",
             )
 
+    def show_update_error(self) -> None:
+        dialogue.show_warning(
+            title="Unable to retrieve latest release information",
+            text="Please check your internet connection and try again, You can also check 'https://github.com/RimSort/RimSort/releases' directly.",
+        )
+
     def __do_download_extract_release_to_tempdir(self, url: str) -> None:
         with ZipFile(BytesIO(requests_get(url).content)) as zipobj:
             zipobj.extractall(gettempdir())
 
     def __do_get_github_release_info(self) -> dict[str, Any]:
         # Parse latest release
-        raw = requests_get(
-            "https://api.github.com/repos/RimSort/RimSort/releases/latest"
-        )
-        return raw.json()
+        url = "https://api.github.com/repos/RimSort/RimSort/releases/latest"
+        logger.debug(f"Requesting GitHub release info from: {url}")
+
+        raw = requests_get(url, timeout=10)
+
+        # Check for HTTP errors
+        if raw.status_code != 200:
+            logger.warning(f"GitHub API returned status code {raw.status_code}")
+            if raw.status_code == 403:
+                logger.warning("Possible rate limiting by GitHub API")
+            raise Exception(
+                f"GitHub API returned status code {raw.status_code}: {raw.text}"
+            )
+
+        # Try to parse JSON response
+        try:
+            response_json = raw.json()
+            logger.debug("Successfully parsed GitHub API response")
+            return response_json
+        except Exception as e:
+            logger.error(f"Failed to parse GitHub API response: {e}")
+            logger.debug(f"Raw response: {raw.text}")
+            raise
 
     # INFO PANEL ANIMATIONS
 
