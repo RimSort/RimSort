@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
     QTabWidget,
     QToolButton,
     QVBoxLayout,
-    QWidget, QFontComboBox, QSpinBox,
+    QWidget, QFontComboBox, QSpinBox, QApplication,
 )
 
 from app.utils.gui_info import GUIInfo
@@ -806,12 +806,28 @@ class SettingsDialog(QDialog):
         )
         font_size_layout.addWidget(self.font_size_spinbox)
 
+        reset_button = QPushButton(self.tr("Reset"))
+        reset_button.setSizePolicy(
+            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred
+        )
+
+        reset_button_layout = QHBoxLayout()
+        reset_button_layout.addStretch(1)
+        reset_button_layout.addWidget(reset_button)
+        font_layout.addLayout(reset_button_layout)
+        reset_button.clicked.connect(self.reset_font_settings)
+
         if self.enable_themes_checkbox.isChecked():
             self.enable_themes_checkbox.stateChanged.connect(
                 self.connect_populate_themes_combobox
             )
         else:
             self.themes_combobox.clear()
+
+    def reset_font_settings(self):
+        default_font = QApplication.font()
+        self.font_family_combobox.setCurrentFont(default_font)
+        self.font_size_spinbox.setValue(12)
 
     def connect_populate_themes_combobox(self) -> None:
         """Populate the themes combobox with available themes."""
