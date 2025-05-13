@@ -9,6 +9,7 @@ from typing import Any, Dict
 import msgspec
 from loguru import logger
 from PySide6.QtCore import QObject
+from PySide6.QtWidgets import QApplication
 
 from app.models.instance import Instance
 from app.utils.app_info import AppInfo
@@ -86,6 +87,9 @@ class Settings(QObject):
         # Theme
         self.enable_themes: bool = True
         self.theme_name: str = "RimPy"
+
+        self.font_family: str = QApplication.font().family()
+        self.font_size: int = 12
 
         # Advanced
         self.debug_logging_enabled: bool = False

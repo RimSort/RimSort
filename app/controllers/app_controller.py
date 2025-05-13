@@ -32,6 +32,10 @@ class AppController(QObject):
         self.initialize_main_window()
 
         self.app.setStyle("Fusion")
+        self.theme_controller.set_font(
+            self.settings.font_family,
+            self.settings.font_size,
+        )
         self.theme_controller.apply_selected_theme(
             self.settings.enable_themes,
             self.settings.theme_name,
