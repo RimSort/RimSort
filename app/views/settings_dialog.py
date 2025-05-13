@@ -1,10 +1,12 @@
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QShowEvent
 from PySide6.QtWidgets import (
+    QApplication,
     QBoxLayout,
     QCheckBox,
     QComboBox,
     QDialog,
+    QFontComboBox,
     QGridLayout,
     QGroupBox,
     QHBoxLayout,
@@ -13,10 +15,11 @@ from PySide6.QtWidgets import (
     QPushButton,
     QRadioButton,
     QSizePolicy,
+    QSpinBox,
     QTabWidget,
     QToolButton,
     QVBoxLayout,
-    QWidget, QFontComboBox, QSpinBox, QApplication,
+    QWidget,
 )
 
 from app.utils.gui_info import GUIInfo

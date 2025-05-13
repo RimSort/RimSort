@@ -105,7 +105,7 @@ class ThemeController:
             return self.load_theme(self.default_theme)
         return None
 
-    def set_font(self, family, size) -> None:
+    def set_font(self, family: str, size: int) -> None:
         self.font_family = family
         self.font_size = size
 
@@ -206,7 +206,7 @@ class ThemeController:
             current_font_family = settings.font_family
             current_font_size = settings.font_size
             current_font_family_index = settings_dialog.font_family_combobox.findText(current_font_family)
-            settings_dialog.font_size_spinbox.setValue(settings.font_size)
+            settings_dialog.font_size_spinbox.setValue(current_font_size)
             if current_font_family_index != -1:
                 settings_dialog.font_family_combobox.setCurrentIndex(current_font_family_index)
             else:

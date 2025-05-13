@@ -2,7 +2,6 @@ import json
 import sys
 
 from PySide6.QtCore import QObject
-from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication
 
 from app.controllers.main_window_controller import MainWindowController
