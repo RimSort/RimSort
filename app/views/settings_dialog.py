@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
     QTabWidget,
     QToolButton,
     QVBoxLayout,
-    QWidget,
+    QWidget, QFontComboBox, QSpinBox,
 )
 
 from app.utils.gui_info import GUIInfo
@@ -773,6 +773,38 @@ class SettingsDialog(QDialog):
         self.theme_location_open_button = QToolButton()
         self.theme_location_open_button.setText("Open Theme Location")
         group_layout.addWidget(self.theme_location_open_button)
+
+        font_group = QGroupBox("Font Settings")
+        font_group.setFont(GUIInfo().emphasis_font)
+        tab_layout.addWidget(font_group)
+
+        font_layout = QVBoxLayout(font_group)
+
+        font_family_layout = QHBoxLayout()
+        font_layout.addLayout(font_family_layout)
+
+        font_family_label = QLabel(self.tr("Font Family"))
+        font_family_layout.addWidget(font_family_label)
+
+        self.font_family_combobox = QFontComboBox()
+        self.font_family_combobox.setSizePolicy(
+            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred
+        )
+        font_family_layout.addWidget(self.font_family_combobox)
+
+        font_size_layout = QHBoxLayout()
+        font_layout.addLayout(font_size_layout)
+
+        font_size_label = QLabel(self.tr("Font Size"))
+        font_size_layout.addWidget(font_size_label)
+
+        self.font_size_spinbox = QSpinBox()
+        self.font_size_spinbox.setRange(8,20)
+        self.font_size_spinbox.setValue(12)
+        self.font_size_spinbox.setSizePolicy(
+            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred
+        )
+        font_size_layout.addWidget(self.font_size_spinbox)
 
         if self.enable_themes_checkbox.isChecked():
             self.enable_themes_checkbox.stateChanged.connect(

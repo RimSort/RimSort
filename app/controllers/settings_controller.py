@@ -854,6 +854,10 @@ class SettingsController(QObject):
         )
         self.settings.theme_name = self.settings_dialog.themes_combobox.currentText()
 
+        self.settings.font_family = self.settings_dialog.font_family_combobox.currentText()
+
+        self.settings.font_size = self.settings_dialog.font_size_spinbox.value()
+
         # Advanced tab
         self.settings.debug_logging_enabled = (
             self.settings_dialog.debug_logging_checkbox.isChecked()
@@ -923,6 +927,10 @@ class SettingsController(QObject):
         self.settings_dialog.close()
         self._update_model_from_view()
         self.settings.save()
+        self.theme_controller.set_font(
+            self.settings.font_family,
+            self.settings.font_size,
+        )
         self.theme_controller.apply_selected_theme(
             self.settings.enable_themes,
             self.settings.theme_name,

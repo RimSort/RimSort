@@ -2,6 +2,7 @@ import json
 import sys
 
 from PySide6.QtCore import QObject
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication
 
 from app.controllers.main_window_controller import MainWindowController
@@ -32,6 +33,10 @@ class AppController(QObject):
         self.initialize_main_window()
 
         self.app.setStyle("Fusion")
+        self.theme_controller.set_font(
+            self.settings.font_family,
+            self.settings.font_size,
+        )
         self.theme_controller.apply_selected_theme(
             self.settings.enable_themes,
             self.settings.theme_name,
