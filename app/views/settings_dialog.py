@@ -827,7 +827,7 @@ class SettingsDialog(QDialog):
         else:
             self.themes_combobox.clear()
 
-    def reset_font_settings(self):
+    def reset_font_settings(self) -> None:
         default_font = QApplication.font()
         self.font_family_combobox.setCurrentFont(default_font)
         self.font_size_spinbox.setValue(12)

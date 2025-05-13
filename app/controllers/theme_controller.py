@@ -28,7 +28,7 @@ class ThemeController:
             self.app_info.theme_data_folder,
         ]
         self.font_family = "Tahoma"
-        self.font_size = "12"
+        self.font_size = 12
 
     def _get_supported_themes(self) -> set[str]:
         """Retrieves a set of supported themes from the theme data and storage folders."""
