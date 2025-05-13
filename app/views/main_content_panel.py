@@ -18,29 +18,8 @@ from typing import TYPE_CHECKING, Any, Callable, Self
 from urllib.parse import urlparse
 from zipfile import ZipFile
 
-from loguru import logger
-
-from app.utils.generic import (
-    check_valid_http_git_url,
-    extract_git_dir_name,
-    extract_git_user_or_org,
-    platform_specific_open,
-)
-from app.utils.system_info import SystemInfo
-
-# GitPython depends on git executable being available in PATH
-try:
-    from git import Repo
-    from git.exc import GitCommandError
-
-    GIT_EXISTS = True
-except ImportError:
-    logger.warning(
-        "git not detected in your PATH! Do you have git installed...? git integration will be disabled! You may need to restart the app if you installed it."
-    )
-    GIT_EXISTS = False
-
 from github import Github
+from loguru import logger
 from PySide6.QtCore import (
     QEventLoop,
     QObject,
@@ -60,11 +39,15 @@ from app.models.animations import LoadingAnimation
 from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 from app.utils.generic import (
+    check_valid_http_git_url,
     chunks,
     copy_to_clipboard_safely,
     delete_files_except_extension,
+    extract_git_dir_name,
+    extract_git_user_or_org,
     launch_game_process,
     open_url_browser,
+    platform_specific_open,
     upload_data_to_0x0_st,
 )
 from app.utils.metadata import MetadataManager, SettingsController
@@ -80,6 +63,7 @@ from app.utils.steam.webapi.wrapper import (
     CollectionImport,
     ISteamRemoteStorage_GetPublishedFileDetails,
 )
+from app.utils.system_info import SystemInfo
 from app.utils.todds.wrapper import ToddsInterface
 from app.utils.xml import json_to_xml_write
 from app.views.mod_info_panel import ModInfo
@@ -91,8 +75,21 @@ from app.windows.runner_panel import RunnerPanel
 from app.windows.use_this_instead_panel import UseThisInsteadPanel
 from app.windows.workshop_mod_updater_panel import ModUpdaterPrompt
 
-if TYPE_CHECKING:
-    from app.views.main_window import MainWindow
+# GitPython depends on git executable being available in PATH
+try:
+    from git import Repo
+    from git.exc import GitCommandError
+
+    GIT_EXISTS = True
+except ImportError:
+    logger.warning(
+        "git not detected in your PATH! Do you have git installed...? git integration will be disabled! You may need to restart the app if you installed it."
+    )
+    GIT_EXISTS = False
+    # Using TYPE_CHECKING to avoid unbound issues when git is not available
+    if TYPE_CHECKING:
+        from git import Repo
+        from git.exc import GitCommandError
 
 
 class MainContent(QObject):
@@ -802,8 +799,7 @@ class MainContent(QObject):
     # GAME CONFIGURATION PANEL
 
     def _do_check_for_update(self) -> None:
-        logger.debug("Skipping update check...")
-        return
+        logger.debug("Checking for RimSort update...")
         # NOT NUITKA
         if "__compiled__" not in globals():
             logger.debug(
@@ -817,15 +813,41 @@ class MainContent(QObject):
             return
         # NUITKA
         logger.debug("Checking for RimSort update...")
-        current_version = self.metadata_manager.game_version
+        current_version = AppInfo().app_version
         try:
             json_response = self.__do_get_github_release_info()
         except Exception as e:
             logger.warning(
                 f"Unable to retrieve latest release information due to exception: {e.__class__}"
             )
+            dialogue.show_warning(
+                title="Unable to retrieve latest release information",
+                text=f"Unable to retrieve latest release information due to exception: {e.__class__}",
+            )
             return
+
+        # Check if response is a dictionary and if 'tag_name' exists in the response
+        if not isinstance(json_response, dict):
+            logger.warning(
+                f"Unexpected response type from GitHub API: {type(json_response)}"
+            )
+            logger.debug(f"Response received: {json_response}")
+            self.show_update_error()
+            return
+
+        if "tag_name" not in json_response:
+            logger.warning(
+                "Unable to retrieve latest release information: 'tag_name' not found in response"
+            )
+            logger.debug(f"Response received: {json_response}")
+            self.show_update_error()
+            return
+
         tag_name = json_response["tag_name"]
+        if tag_name is None:
+            logger.warning("Unable to retrieve latest release information")
+            self.show_update_error()
+            return
         tag_name_updated = tag_name.replace("alpha", "Alpha")
         install_path = os.getcwd()
         logger.debug(f"Current RimSort release found: {tag_name}")
@@ -837,6 +859,10 @@ class MainContent(QObject):
                 information=f"You are running RimSort {current_version}\nDo you want to update now?",
             )
             if answer == "&Yes":
+                logger.debug("User selected to update RimSort")
+                open_url_browser("https://github.com/RimSort/RimSort/releases")
+                return  # Remove this and above line to enable auto-update
+                # TODO : Implement auto-update currenty disabled since it has issues on linux
                 # Setup environment
                 ARCH = platform.architecture()[0]
                 CWD = os.getcwd()
@@ -978,16 +1004,41 @@ class MainContent(QObject):
                 text=f"You are already running the latest release: {tag_name}",
             )
 
+    def show_update_error(self) -> None:
+        dialogue.show_warning(
+            title="Unable to retrieve latest release information",
+            text="Please check your internet connection and try again, You can also check 'https://github.com/RimSort/RimSort/releases' directly.",
+        )
+
     def __do_download_extract_release_to_tempdir(self, url: str) -> None:
         with ZipFile(BytesIO(requests_get(url).content)) as zipobj:
             zipobj.extractall(gettempdir())
 
     def __do_get_github_release_info(self) -> dict[str, Any]:
         # Parse latest release
-        raw = requests_get(
-            "https://api.github.com/repos/RimSort/RimSort/releases/latest"
-        )
-        return raw.json()
+        url = "https://api.github.com/repos/RimSort/RimSort/releases/latest"
+        logger.debug(f"Requesting GitHub release info from: {url}")
+
+        raw = requests_get(url, timeout=10)
+
+        # Check for HTTP errors
+        if raw.status_code != 200:
+            logger.warning(f"GitHub API returned status code {raw.status_code}")
+            if raw.status_code == 403:
+                logger.warning("Possible rate limiting by GitHub API")
+            raise Exception(
+                f"GitHub API returned status code {raw.status_code}: {raw.text}"
+            )
+
+        # Try to parse JSON response
+        try:
+            response_json = raw.json()
+            logger.debug("Successfully parsed GitHub API response")
+            return response_json
+        except Exception as e:
+            logger.error(f"Failed to parse GitHub API response: {e}")
+            logger.debug(f"Raw response: {raw.text}")
+            raise
 
     # INFO PANEL ANIMATIONS
 
@@ -1192,24 +1243,21 @@ class MainContent(QObject):
         if check_deps and self.settings_controller.settings.check_dependencies_on_sort:
             missing_deps = self.metadata_manager.get_missing_dependencies(active_mods)
             if missing_deps:
-                dialog = MissingDependenciesDialog(self.main_window)
-                dialog.show_missing_dependencies(missing_deps)
+                dialog = MissingDependenciesDialog()
+                selected_deps = dialog.show_dialog(missing_deps)
 
-                result = dialog.exec()
-                if result:  # Dialog accepted
-                    # User clicked "Add Selected & Sort"
-                    selected_mods = dialog.get_selected_mods()
-                    if selected_mods:
-                        # Add selected mods to active mods
-                        for mod_id in selected_mods:
-                            # Find the UUID for this package ID
-                            for (
-                                uuid,
-                                mod_data,
-                            ) in self.metadata_manager.internal_local_metadata.items():
-                                if mod_data.get("packageid") == mod_id:
+                if selected_deps:
+                    # Add selected mods to active mods
+                    for mod_id in selected_deps:
+                        # Find the UUID for this package ID
+                        for (
+                            uuid,
+                            mod_data,
+                        ) in self.metadata_manager.internal_local_metadata.items():
+                            if mod_data.get("packageid") == mod_id:
+                                if uuid not in active_mods:
                                     active_mods.add(uuid)
-                                    break
+                                break
 
         # Get package IDs for active mods
         active_package_ids = set()
@@ -3463,11 +3511,3 @@ class MainContent(QObject):
                 title="Use This Instead",
                 text='No suggestions were found in the "Use This Instead" database.',
             )
-
-    def set_main_window(self, main_window: "MainWindow") -> None:
-        """Set the main window reference for this content panel.
-
-        Args:
-            main_window: The main window instance to set
-        """
-        self.main_window = main_window

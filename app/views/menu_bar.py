@@ -56,8 +56,6 @@ class MenuBar(QObject):
         self.wiki_action: QAction
         self.check_for_updates_action: QAction
         self.check_for_updates_on_startup_action: QAction
-        self.troubleshooting_action: QAction
-        self.file_search_action: QAction
 
         self.import_submenu: QMenu
         self.export_submenu: QMenu
@@ -128,10 +126,6 @@ class MenuBar(QObject):
         )
         self.export_to_rentry_action = self._add_action(
             self.export_submenu, "To Rentry.co…"
-        )
-        file_menu.addSeparator()
-        self.file_search_action = self._add_action(
-            file_menu, "File Search…", "Ctrl+Shift+F"
         )
         file_menu.addSeparator()
         self.upload_submenu = QMenu("Upload Log")
@@ -265,6 +259,17 @@ class MenuBar(QObject):
         )
         return texture_menu
 
+    def _create_update_menu(self) -> QMenu:
+        update_menu = self.menu_bar.addMenu("Update")
+        self.check_for_updates_action = self._add_action(
+            update_menu, "Check for Updates…"
+        )
+        self.check_for_updates_on_startup_action = self._add_action(
+            update_menu, "Check for Updates on Startup", checkable=True
+        )
+        update_menu.addSeparator()
+        return update_menu
+
     def _create_help_menu(self) -> QMenu:
         """
         Create the "Help" menu and add its actions.
@@ -275,16 +280,6 @@ class MenuBar(QObject):
         help_menu = self.menu_bar.addMenu("Help")
         self.wiki_action = self._add_action(help_menu, "RimSort Wiki…")
         help_menu.addSeparator()
-        self.troubleshooting_action = self._add_action(help_menu, "Troubleshooting…")
-        help_menu.addSeparator()
-        # TODO: updates not implemented yet
-        # self.check_for_updates_action = self._add_action(
-        #     help_menu, "Check for Updates…"
-        # )
-        # self.check_for_updates_on_startup_action = self._add_action(
-        #     help_menu, "Check for Updates on Startup", checkable=True
-        # )
-        # help_menu.addSeparator()
         return help_menu
 
     def _create_menu_bar(self) -> None:
@@ -307,4 +302,5 @@ class MenuBar(QObject):
         self._create_download_menu()
         self._create_instances_menu()
         self._create_texture_menu()
+        self._create_update_menu()
         self._create_help_menu()

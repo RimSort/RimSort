@@ -217,7 +217,7 @@ def launch_game_process(game_install_path: Path, args: list[str]) -> None:
         else:
             logger.error("Unable to launch the game on an unknown system")
             return
-        
+
         logger.info(f"Path to game executable generated: {executable_path}")
         if os.path.exists(executable_path):
             logger.info(

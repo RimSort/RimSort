@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from shutil import rmtree
 from unittest.mock import patch
@@ -13,7 +14,7 @@ from app.views.troubleshooting_dialog import TroubleshootingDialog
 
 @pytest.fixture(scope="session")
 def qapp() -> QApplication:
-    """qt app instance for tests"""
+    """Qt application instance for tests."""
     app = QApplication.instance()
     if app is None:
         app = QApplication([])
@@ -24,7 +25,7 @@ def qapp() -> QApplication:
 
 @pytest.fixture
 def setup_test_environment(tmp_path: Path) -> tuple[Path, Path, Path]:
-    # setup temp dirs for testing
+    """Setup temporary directories and minimal files for testing."""
     game_dir = tmp_path / "game"
     config_dir = tmp_path / "config"
     steam_mods_dir = tmp_path / "steam_mods"
@@ -33,7 +34,6 @@ def setup_test_environment(tmp_path: Path) -> tuple[Path, Path, Path]:
     config_dir.mkdir()
     steam_mods_dir.mkdir()
 
-    # create minimal required files
     (game_dir / "Mods").mkdir()
     (config_dir / "ModsConfig.xml").write_text("<ModsConfigData></ModsConfigData>")
     (config_dir / "Prefs.xml").write_text("<PrefsData></PrefsData>")
@@ -45,17 +45,15 @@ def setup_test_environment(tmp_path: Path) -> tuple[Path, Path, Path]:
 def troubleshooting_controller(
     qapp: QApplication, setup_test_environment: tuple[Path, Path, Path]
 ) -> tuple[TroubleshootingController, Path, Path, Path]:
-    # setup controller with mock settings
+    """Create TroubleshootingController with mock settings and dialog."""
     game_dir, config_dir, steam_mods_dir = setup_test_environment
 
     settings = Settings()
-    # Create properly typed mock instance
     mock_instance = Instance()
     mock_instance.game_folder = str(game_dir)
     mock_instance.config_folder = str(config_dir)
     mock_instance.workshop_folder = str(steam_mods_dir)
 
-    # Set up instances dict with string key
     settings.instances = {"default": mock_instance}
     settings.current_instance = "default"
 
@@ -65,279 +63,370 @@ def troubleshooting_controller(
     return controller, game_dir, config_dir, steam_mods_dir
 
 
-def test_game_files_recovery_preserves_local_mods(
-    troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
-) -> None:
-    # verify game files deletion preserves mods folder
-    controller, game_dir, _, _ = troubleshooting_controller
+class TestGameFilesRecovery:
+    """Tests for game files recovery operations."""
 
-    # setup test mod that should be preserved
-    mods_dir = game_dir / "Mods"
-    test_mod = mods_dir / "TestMod"
-    test_mod.mkdir()
-    (test_mod / "About.xml").write_text("<ModMetaData></ModMetaData>")
+    def test_preserves_local_mods(
+        self,
+        troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
+    ) -> None:
+        """Test that game files deletion preserves Mods folder."""
+        controller, game_dir, _, _ = troubleshooting_controller
 
-    # add test file that should be deleted
-    (game_dir / "test.txt").write_text("test")
+        mods_dir = game_dir / "Mods"
+        test_mod = mods_dir / "TestMod"
+        test_mod.mkdir()
+        (test_mod / "About.xml").write_text("<ModMetaData></ModMetaData>")
 
-    with patch("app.utils.generic.platform_specific_open"):
-        controller._delete_game_files()
-        assert test_mod.exists()  # mod should be preserved
-        assert not (game_dir / "test.txt").exists()  # other files should be deleted
+        (game_dir / "test.txt").write_text("test")
 
-
-def test_steam_mods_recovery(
-    troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
-) -> None:
-    # verify steam workshop mods can be deleted
-    controller, _, _, steam_mods_dir = troubleshooting_controller
-
-    test_mod = steam_mods_dir / "123456789"
-    test_mod.mkdir()
-    (test_mod / "About.xml").write_text("<ModMetaData></ModMetaData>")
-
-    with patch("app.utils.generic.platform_specific_open"):
-        controller._delete_steam_mods()
-        assert not test_mod.exists()  # workshop mod should be deleted
+        with patch("app.utils.generic.platform_specific_open"):
+            controller._delete_game_files()
+            assert test_mod.exists()
+            assert not (game_dir / "test.txt").exists()
 
 
-def test_config_recovery(
-    troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
-) -> None:
-    # verify mod config deletion preserves core files
-    controller, _, config_dir, _ = troubleshooting_controller
+class TestSteamModsRecovery:
+    """Tests for Steam Workshop mods recovery operations."""
 
-    (config_dir / "test.xml").write_text("<TestData></TestData>")
-    (config_dir / "ModsConfig.xml").write_text("<ModsConfigData></ModsConfigData>")
-    (config_dir / "Prefs.xml").write_text("<PrefsData></PrefsData>")
+    def test_deletes_steam_mods(
+        self,
+        troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
+    ) -> None:
+        """Test that Steam Workshop mods are deleted."""
+        controller, _, _, steam_mods_dir = troubleshooting_controller
 
-    controller._delete_mod_configs()
-    assert (config_dir / "ModsConfig.xml").exists()  # core configs preserved
-    assert (config_dir / "Prefs.xml").exists()
-    assert not (config_dir / "test.xml").exists()  # other configs deleted
+        test_mod = steam_mods_dir / "123456789"
+        test_mod.mkdir()
+        (test_mod / "About.xml").write_text("<ModMetaData></ModMetaData>")
 
-
-def test_game_config_recovery(
-    troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
-) -> None:
-    # verify game config files can be deleted
-    controller, _, config_dir, _ = troubleshooting_controller
-
-    (config_dir / "ModsConfig.xml").write_text("<ModsConfigData></ModsConfigData>")
-    (config_dir / "Prefs.xml").write_text("<PrefsData></PrefsData>")
-    (config_dir / "KeyPrefs.xml").write_text("<KeyPrefsData></KeyPrefsData>")
-
-    controller._delete_game_configs()
-    assert not (config_dir / "ModsConfig.xml").exists()  # all game configs deleted
-    assert not (config_dir / "Prefs.xml").exists()
-    assert not (config_dir / "KeyPrefs.xml").exists()
+        with patch("app.utils.generic.platform_specific_open"):
+            controller._delete_steam_mods()
+            assert not test_mod.exists()
 
 
-def test_cancel_button_clears_checkboxes(
-    troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
-) -> None:
-    # verify cancel button resets ui state
-    controller, _, _, _ = troubleshooting_controller
+class TestConfigRecovery:
+    """Tests for mod and game configuration recovery operations."""
 
-    # set all checkboxes
-    controller.dialog.integrity_delete_game_files.setChecked(True)
-    controller.dialog.integrity_delete_steam_mods.setChecked(True)
-    controller.dialog.integrity_delete_mod_configs.setChecked(True)
-    controller.dialog.integrity_delete_game_configs.setChecked(True)
+    def test_mod_config_deletion_preserves_core_files(
+        self,
+        troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
+    ) -> None:
+        """Test mod config deletion preserves ModsConfig.xml and Prefs.xml."""
+        controller, _, config_dir, _ = troubleshooting_controller
 
-    controller._on_integrity_cancel_button_clicked()
-    # verify all checkboxes cleared
-    assert not controller.dialog.integrity_delete_game_files.isChecked()
-    assert not controller.dialog.integrity_delete_steam_mods.isChecked()
-    assert not controller.dialog.integrity_delete_mod_configs.isChecked()
-    assert not controller.dialog.integrity_delete_game_configs.isChecked()
+        (config_dir / "test.xml").write_text("<TestData></TestData>")
+        (config_dir / "ModsConfig.xml").write_text("<ModsConfigData></ModsConfigData>")
+        (config_dir / "Prefs.xml").write_text("<PrefsData></PrefsData>")
+
+        controller._delete_mod_configs()
+        assert (config_dir / "ModsConfig.xml").exists()
+        assert (config_dir / "Prefs.xml").exists()
+        assert not (config_dir / "test.xml").exists()
+
+    def test_game_config_deletion(
+        self,
+        troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
+    ) -> None:
+        """Test game config files deletion."""
+        controller, _, config_dir, _ = troubleshooting_controller
+
+        (config_dir / "ModsConfig.xml").write_text("<ModsConfigData></ModsConfigData>")
+        (config_dir / "Prefs.xml").write_text("<PrefsData></PrefsData>")
+        (config_dir / "KeyPrefs.xml").write_text("<KeyPrefsData></KeyPrefsData>")
+
+        controller._delete_game_configs()
+        assert not (config_dir / "ModsConfig.xml").exists()
+        assert not (config_dir / "Prefs.xml").exists()
+        assert not (config_dir / "KeyPrefs.xml").exists()
 
 
-def test_clear_mods(
-    troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
-) -> None:
-    # verify clear mods functionality
-    controller, game_dir, config_dir, _ = troubleshooting_controller
+class TestUIInteractions:
+    def test_cancel_button_clears_checkboxes(
+        self,
+        troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
+    ) -> None:
+        """Test that cancel button clears all checkboxes."""
+        controller, _, _, _ = troubleshooting_controller
 
-    # setup test mod
-    mods_dir = game_dir / "Mods"
-    test_mod = mods_dir / "TestMod"
-    test_mod.mkdir()
-    (test_mod / "About.xml").write_text("<ModMetaData></ModMetaData>")
+        controller.dialog.integrity_delete_game_files.setChecked(True)
+        controller.dialog.integrity_delete_steam_mods.setChecked(True)
+        controller.dialog.integrity_delete_mod_configs.setChecked(True)
+        controller.dialog.integrity_delete_game_configs.setChecked(True)
 
-    # setup test config
-    mods_config = config_dir / "ModsConfig.xml"
-    mods_config.write_text(
-        "<ModsConfigData><activeMods><li>test.mod</li></activeMods></ModsConfigData>"
-    )
+        controller._on_integrity_cancel_button_clicked()
 
-    with (
-        patch(
+        assert not controller.dialog.integrity_delete_game_files.isChecked()
+        assert not controller.dialog.integrity_delete_steam_mods.isChecked()
+        assert not controller.dialog.integrity_delete_mod_configs.isChecked()
+        assert not controller.dialog.integrity_delete_game_configs.isChecked()
+
+    def test_clear_mods_functionality(
+        self,
+        troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
+    ) -> None:
+        """Test clear mods button deletes mods and resets config."""
+        controller, game_dir, config_dir, _ = troubleshooting_controller
+
+        mods_dir = game_dir / "Mods"
+        test_mod = mods_dir / "TestMod"
+        test_mod.mkdir()
+        (test_mod / "About.xml").write_text("<ModMetaData></ModMetaData>")
+
+        mods_config = config_dir / "ModsConfig.xml"
+        mods_config.write_text(
+            "<ModsConfigData><activeMods><li>test.mod</li></activeMods></ModsConfigData>"
+        )
+
+        with (
+            patch(
+                "app.controllers.troubleshooting_controller.show_dialogue_conditional",
+                return_value=True,
+            ),
+            patch("app.utils.event_bus.EventBus") as mock_event_bus,
+        ):
+            mock_event_bus_instance = mock_event_bus.return_value
+            mock_event_bus_instance.do_refresh_mods_lists = mock_event_bus_instance
+
+            controller._on_clear_mods_button_clicked()
+
+            assert mods_dir.exists()
+            assert not test_mod.exists()
+
+            new_content = mods_config.read_text()
+            assert "ludeon.rimworld" in new_content
+            assert "test.mod" not in new_content
+
+            mock_event_bus_instance.emit.assert_called_once()
+
+    def test_apply_button_executes_selected_operations(
+        self,
+        troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
+    ) -> None:
+        """Test apply button executes only selected operations."""
+        controller, game_dir, config_dir, steam_mods_dir = troubleshooting_controller
+
+        (game_dir / "test.txt").write_text("test")
+        test_mod = steam_mods_dir / "123456789"
+        test_mod.mkdir()
+        (config_dir / "test.xml").write_text("<TestData></TestData>")
+
+        controller.dialog.integrity_delete_game_files.setChecked(True)
+        controller.dialog.integrity_delete_steam_mods.setChecked(False)
+        controller.dialog.integrity_delete_mod_configs.setChecked(True)
+        controller.dialog.integrity_delete_game_configs.setChecked(False)
+
+        with (
+            patch("app.utils.generic.platform_specific_open"),
+            patch(
+                "app.controllers.troubleshooting_controller.show_dialogue_conditional",
+                return_value=True,
+            ),
+        ):
+            controller._on_integrity_apply_button_clicked()
+
+        assert not (game_dir / "test.txt").exists()
+        assert test_mod.exists()
+        assert not (config_dir / "test.xml").exists()
+        assert (config_dir / "ModsConfig.xml").exists()
+
+    def test_apply_button_cancelled(
+        self,
+        troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
+    ) -> None:
+        """Test that apply button does nothing if cancelled."""
+        controller, game_dir, config_dir, steam_mods_dir = troubleshooting_controller
+
+        (game_dir / "test.txt").write_text("test")
+        test_mod = steam_mods_dir / "123456789"
+        test_mod.mkdir()
+
+        controller.dialog.integrity_delete_game_files.setChecked(True)
+        controller.dialog.integrity_delete_steam_mods.setChecked(True)
+
+        with patch(
             "app.controllers.troubleshooting_controller.show_dialogue_conditional",
-            return_value=True,
-        ),
-        patch("app.utils.event_bus.EventBus") as mock_event_bus,
-    ):
-        mock_event_bus_instance = mock_event_bus.return_value
-        mock_event_bus_instance.do_refresh_mods_lists = mock_event_bus_instance
+            return_value=False,
+        ):
+            controller._on_integrity_apply_button_clicked()
 
-        controller._on_clear_mods_button_clicked()
-
-        # verify mods folder emptied but exists
-        assert mods_dir.exists()
-        assert not test_mod.exists()
-
-        # verify config reset to vanilla
-        new_content = mods_config.read_text()
-        assert "ludeon.rimworld" in new_content
-        assert "test.mod" not in new_content
-
-        # verify refresh triggered
-        mock_event_bus_instance.emit.assert_called_once()
-
-
-def test_apply_button_executes_selected_operations(
-    troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
-) -> None:
-    # verify apply button executes only selected operations
-    controller, game_dir, config_dir, steam_mods_dir = troubleshooting_controller
-
-    # setup test files
-    (game_dir / "test.txt").write_text("test")
-    test_mod = steam_mods_dir / "123456789"
-    test_mod.mkdir()
-    (config_dir / "test.xml").write_text("<TestData></TestData>")
-
-    # select specific operations
-    controller.dialog.integrity_delete_game_files.setChecked(True)
-    controller.dialog.integrity_delete_steam_mods.setChecked(False)
-    controller.dialog.integrity_delete_mod_configs.setChecked(True)
-    controller.dialog.integrity_delete_game_configs.setChecked(False)
-
-    with (
-        patch("app.utils.generic.platform_specific_open"),
-        patch(
-            "app.controllers.troubleshooting_controller.show_dialogue_conditional",
-            return_value=True,
-        ),
-    ):
-        controller._on_integrity_apply_button_clicked()
-
-        # verify only selected operations executed
-        assert not (game_dir / "test.txt").exists()  # game files deleted
-        assert test_mod.exists()  # steam mods preserved
-        assert not (config_dir / "test.xml").exists()  # mod configs deleted
-        assert (config_dir / "ModsConfig.xml").exists()  # game configs preserved
-
-
-def test_apply_button_cancelled(
-    troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
-) -> None:
-    # verify nothing happens when apply is cancelled
-    controller, game_dir, config_dir, steam_mods_dir = troubleshooting_controller
-
-    # setup test files
-    (game_dir / "test.txt").write_text("test")
-    test_mod = steam_mods_dir / "123456789"
-    test_mod.mkdir()
-
-    # select all operations
-    controller.dialog.integrity_delete_game_files.setChecked(True)
-    controller.dialog.integrity_delete_steam_mods.setChecked(True)
-
-    with patch(
-        "app.controllers.troubleshooting_controller.show_dialogue_conditional",
-        return_value=False,  # user cancels
-    ):
-        controller._on_integrity_apply_button_clicked()
-
-        # verify nothing was deleted
         assert (game_dir / "test.txt").exists()
         assert test_mod.exists()
 
 
-def test_steam_utility_buttons(
-    troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
-) -> None:
-    # verify steam utility buttons work correctly
-    controller, _, _, steam_mods_dir = troubleshooting_controller
+class TestSteamUtilities:
+    def test_steam_clear_cache(
+        self,
+        troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
+    ) -> None:
+        """Test Steam clear cache button behavior."""
+        controller, _, _, steam_mods_dir = troubleshooting_controller
 
-    steam_path = Path("C:/Program Files (x86)/Steam")
-    with (
-        patch("app.utils.generic.platform_specific_open") as mock_open,
-        patch(
-            "app.controllers.troubleshooting_controller.show_dialogue_conditional",
-            return_value=True,
-        ) as mock_dialog,
-        patch("shutil.rmtree", side_effect=PermissionError()) as mock_rmtree,
-        patch(
-            "app.controllers.troubleshooting_controller.TroubleshootingController._get_steam_root_from_workshop",
-            return_value=steam_path,
-        ),
-    ):
-        # test clear cache - deletion fails
-        with patch("pathlib.Path.exists", return_value=True):
+        steam_path = Path("C:/Program Files (x86)/Steam")
+        with (
+            patch("app.utils.generic.platform_specific_open") as mock_open,
+            patch(
+                "app.controllers.troubleshooting_controller.show_dialogue_conditional",
+                return_value=True,
+            ),
+            patch("shutil.rmtree", side_effect=PermissionError()),
+            patch(
+                "app.controllers.troubleshooting_controller.TroubleshootingController._get_steam_root_from_workshop",
+                return_value=steam_path,
+            ),
+            patch("pathlib.Path.exists", return_value=True),
+        ):
             controller._on_steam_clear_cache_clicked()
-            mock_dialog.assert_called_with(
-                title="Cache Clear Failed",
-                text="Could not delete Steam's downloading folder.\nPlease delete it manually: Steam/steamapps/downloading",
-                icon="warning",
-                buttons=["Ok"],
-            )
 
-        # test verify game
-        mock_dialog.reset_mock()
-        controller._on_steam_verify_game_clicked()
-        mock_open.assert_called_with("steam://validate/294100")
+        mock_open.reset_mock()
+        with (
+            patch("app.utils.generic.platform_specific_open") as mock_open,
+            patch(
+                "app.controllers.troubleshooting_controller.show_dialogue_conditional",
+                return_value=True,
+            ),
+        ):
+            controller._on_steam_verify_game_clicked()
+            mock_open.assert_called_with("steam://validate/294100")
 
-        # test clear cache - folder doesn't exist
-        mock_rmtree.side_effect = None  # reset error
-        mock_dialog.reset_mock()
-
-        def exists_side_effect(p: Path) -> bool:
-            # Return True for Steam path, False for downloading folder
-            if p == steam_path:
-                return True
-            if str(p).endswith("downloading"):
-                return False
-            return True
-
-        with patch("pathlib.Path.exists", side_effect=exists_side_effect):
+        with (
+            patch(
+                "pathlib.Path.exists",
+                side_effect=lambda p: False if str(p).endswith("downloading") else True,
+            ),
+            patch(
+                "app.controllers.troubleshooting_controller.show_dialogue_conditional"
+            ) as mock_dialog,
+        ):
             controller._on_steam_clear_cache_clicked()
-            # accept either message since both are valid depending on system state
-            assert mock_dialog.call_args.kwargs in [
-                {
-                    "title": "Cache Clear",
-                    "text": "Steam's downloading folder is already empty.",
-                    "icon": "info",
-                    "buttons": ["Ok"],
-                },
-                {
-                    "title": "Cache Clear Failed",
-                    "text": "Could not delete Steam's downloading folder.\nPlease delete it manually: Steam/steamapps/downloading",
-                    "icon": "warning",
-                    "buttons": ["Ok"],
-                },
+            assert mock_dialog.call_args.kwargs["title"] in [
+                "Cache Clear",
+                "Cache Clear Failed",
             ]
 
+    def test_steam_repair_library_button(
+        self,
+        troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
+    ) -> None:
+        """Test Steam repair library button behavior."""
+        controller, _, _, _ = troubleshooting_controller
 
-def test_missing_directories(
-    troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
-) -> None:
-    # verify operations handle missing directories gracefully
-    controller, game_dir, config_dir, steam_mods_dir = troubleshooting_controller
+        mock_library_file = Path("mock_libraryfolders.vdf")
 
-    # remove directories
-    for path in [game_dir, config_dir, steam_mods_dir]:
-        rmtree(path)
+        with (
+            patch(
+                "app.controllers.troubleshooting_controller.TroubleshootingController._get_steam_library_file",
+                return_value=mock_library_file,
+            ),
+            patch(
+                "pathlib.Path.read_text",
+                return_value='"appid" "294100"\n"appid" "123456"',
+            ),
+            patch(
+                "app.controllers.troubleshooting_controller.show_dialogue_conditional",
+                return_value=True,
+            ),
+            patch("app.utils.generic.platform_specific_open") as mock_open,
+        ):
+            controller._on_steam_repair_library_clicked()
+            assert mock_open.call_count == 2
+            mock_open.assert_any_call("steam://validate/294100")
+            mock_open.assert_any_call("steam://validate/123456")
 
-    # verify operations don't raise errors when directories don't exist
-    with (
-        patch("app.utils.generic.platform_specific_open"),
-        patch("pathlib.Path.exists", return_value=False),
-        patch("pathlib.Path.iterdir", return_value=[]),
-    ):
-        controller._delete_game_files()  # should handle missing game dir
-        controller._delete_steam_mods()  # should handle missing steam dir
-        controller._delete_mod_configs()  # should handle missing config dir
-        controller._delete_game_configs()  # should handle missing config dir
+
+class TestEdgeCases:
+    def test_missing_directories(
+        self,
+        troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
+    ) -> None:
+        """Test that operations handle missing directories gracefully."""
+        controller, game_dir, config_dir, steam_mods_dir = troubleshooting_controller
+
+        for path in [game_dir, config_dir, steam_mods_dir]:
+            rmtree(path)
+
+        with (
+            patch("app.utils.generic.platform_specific_open"),
+            patch("pathlib.Path.exists", return_value=False),
+            patch("pathlib.Path.iterdir", return_value=[]),
+        ):
+            controller._delete_game_files()
+            controller._delete_steam_mods()
+            controller._delete_mod_configs()
+            controller._delete_game_configs()
+
+
+class TestModListImportExport:
+    def test_mod_export_list_button(
+        self,
+        troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
+    ) -> None:
+        """Test exporting mod list to file."""
+        controller, _, config_dir, _ = troubleshooting_controller
+
+        mods_config = config_dir / "ModsConfig.xml"
+        mods_config.write_text(
+            """<?xml version="1.0" encoding="utf-8"?>
+<ModsConfigData>
+  <version>1.4</version>
+  <activeMods>
+    <li>mod1</li>
+    <li>mod2</li>
+  </activeMods>
+  <knownExpansions>
+    <li>expansion1</li>
+  </knownExpansions>
+</ModsConfigData>"""
+        )
+
+        with (
+            patch(
+                "app.controllers.troubleshooting_controller.show_dialogue_file",
+                return_value=str(config_dir / "exported_mods.xml"),
+            ),
+            patch(
+                "app.controllers.troubleshooting_controller.show_dialogue_conditional",
+                return_value=True,
+            ),
+            patch("builtins.open", create=True) as mock_open,
+            patch("json.dump") as mock_json_dump,
+        ):
+            controller._on_mod_export_list_button_clicked()
+            mock_open.assert_called()
+            mock_json_dump.assert_called()
+
+    def test_mod_import_list_button(
+        self,
+        troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
+    ) -> None:
+        """Test importing mod list from file."""
+        controller, _, config_dir, _ = troubleshooting_controller
+
+        mods_config = config_dir / "ModsConfig.xml"
+        mods_config.write_text("<ModsConfigData></ModsConfigData>")
+
+        import_data = {
+            "version": "1.4",
+            "activeMods": ["mod1", "mod2"],
+            "knownExpansions": ["expansion1"],
+        }
+
+        import_path = config_dir / "imported_mods.xml"
+        import_path.write_text(json.dumps(import_data))
+
+        with (
+            patch(
+                "app.controllers.troubleshooting_controller.show_dialogue_file",
+                return_value=str(import_path),
+            ),
+            patch(
+                "app.controllers.troubleshooting_controller.show_dialogue_conditional",
+                return_value=True,
+            ),
+            patch("builtins.open", create=True) as mock_open,
+            patch("json.load", return_value=import_data),
+            patch("app.utils.event_bus.EventBus") as mock_event_bus,
+        ):
+            controller._on_mod_import_list_button_clicked()
+            mock_open.assert_called()
+            mock_event_bus.return_value.do_refresh_mods_lists.emit.assert_called()

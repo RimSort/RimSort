@@ -24,8 +24,8 @@ class Settings(QObject):
         self._settings_file = AppInfo().app_settings_file
         self._debug_file = AppInfo().app_storage_folder / "DEBUG"
 
-        # Other
-        self.check_for_update_startup: bool = False
+        # RimSort Update check
+        self.check_for_update_startup: bool = True
 
         # Databases
         self.external_steam_metadata_source: str = "None"

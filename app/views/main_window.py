@@ -14,10 +14,12 @@ from PySide6.QtWidgets import (
     QLabel,
     QMainWindow,
     QPushButton,
+    QTabWidget,
     QVBoxLayout,
     QWidget,
 )
 
+from app.controllers.file_search_controller import FileSearchController
 from app.controllers.instance_controller import (
     InstanceController,
     InvalidArchivePathError,
@@ -25,6 +27,7 @@ from app.controllers.instance_controller import (
 from app.controllers.menu_bar_controller import MenuBarController
 from app.controllers.mods_panel_controller import ModsPanelController
 from app.controllers.settings_controller import SettingsController
+from app.controllers.troubleshooting_controller import TroubleshootingController
 from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 from app.utils.generic import handle_remove_read_only
@@ -39,9 +42,12 @@ from app.views.dialogue import (
     show_fatal_error,
     show_warning,
 )
+from app.views.file_search_dialog import FileSearchDialog
+from app.views.log_reader import LogReader
 from app.views.main_content_panel import MainContent
 from app.views.menu_bar import MenuBar
 from app.views.status_panel import Status
+from app.views.troubleshooting_dialog import TroubleshootingDialog
 
 
 class MainWindow(QMainWindow):
@@ -79,23 +85,30 @@ class MainWindow(QMainWindow):
         app_layout.setContentsMargins(0, 0, 0, 0)  # Space from main layout to border
         app_layout.setSpacing(0)  # Space between widgets
 
+        # Create a tab widget
+        self.tab_widget = QTabWidget()
+        app_layout.addWidget(self.tab_widget)
+
         # Create various panels on the application GUI
         self.main_content_panel = MainContent(
             settings_controller=self.settings_controller
         )
-        self.main_content_panel.set_main_window(self)
         self.main_content_panel.disable_enable_widgets_signal.connect(
             self.__disable_enable_widgets
         )
         self.bottom_panel = Status()
 
-        # Arrange all panels vertically on the main window layout
-        app_layout.addWidget(self.main_content_panel.main_layout_frame)
+        # Create and add the Main Content panel tab
+        self.main_content_tab = QWidget()
+        self.main_content_layout = QVBoxLayout()
+        self.main_content_tab.setLayout(self.main_content_layout)
 
+        # Add the MainContent panel to the tab
+        self.main_content_layout.addWidget(self.main_content_panel.main_layout_frame)
+
+        # Create button layout and add it to the main content layout
         button_layout = QHBoxLayout()
-        button_layout.setContentsMargins(12, 12, 12, 12)
-        button_layout.setSpacing(12)
-        app_layout.addLayout(button_layout)
+        self.main_content_layout.addLayout(button_layout)
 
         self.game_version_label = QLabel()
         self.game_version_label.setFont(GUIInfo().smaller_font)
@@ -124,6 +137,49 @@ class MainWindow(QMainWindow):
         for button in buttons:
             button.setMinimumWidth(100)
             button_layout.addWidget(button)
+
+        self.tab_widget.addTab(self.main_content_tab, "Main Content")
+
+        # Create and add the ACF Data tab
+        self.log_reader_tab = QWidget()
+        self.log_reader_layout = QVBoxLayout()
+        self.log_reader_tab.setLayout(self.log_reader_layout)
+
+        # Instantiate the AcfDataWindow and add it to the tab
+        self.log_reader = LogReader(settings_controller)
+        self.log_reader_layout.addWidget(self.log_reader)
+
+        self.tab_widget.addTab(self.log_reader_tab, "Log Reader")
+
+        # Create and add the Search tab
+        self.file_search_tab = QWidget()
+        self.file_search_layout = QVBoxLayout()
+        self.file_search_tab.setLayout(self.file_search_layout)
+
+        # Instantiate the SearchWindow and add it to the tab
+        self.file_search_dialog = FileSearchDialog()
+        self.file_search_controller = FileSearchController(
+            settings=self.settings_controller.settings,
+            settings_controller=self.settings_controller,
+            dialog=self.file_search_dialog,
+        )
+        self.file_search_layout.addWidget(self.file_search_dialog)
+
+        self.tab_widget.addTab(self.file_search_tab, "File Search")
+
+        # Create and add the Troubleshooting tab
+        self.troubleshooting_tab = QWidget()
+        self.troubleshooting_layout = QVBoxLayout()
+        self.troubleshooting_tab.setLayout(self.troubleshooting_layout)
+
+        # Instantiate the TroubleshootingDialog and add it to the tab
+        self.troubleshooting_dialog = TroubleshootingDialog()
+        self.troubleshooting_controller = TroubleshootingController(
+            settings=self.settings_controller.settings,
+            dialog=self.troubleshooting_dialog,
+        )
+        self.troubleshooting_layout.addWidget(self.troubleshooting_dialog)
+        self.tab_widget.addTab(self.troubleshooting_tab, "Troubleshooting")
 
         # Save button flashing animation
         self.save_button_flashing_animation = QTimer()
@@ -821,7 +877,7 @@ class MainWindow(QMainWindow):
                     generated_instance_run_args = [
                         "-logfile",
                         str(Path(instance_path) / "RimWorld.log"),
-                        f'-savedatafolder={str(Path(instance_path) / "InstanceData")}',
+                        f"-savedatafolder={str(Path(instance_path) / 'InstanceData')}",
                     ]
                 run_args.extend(generated_instance_run_args)
                 run_args.extend(instance_data.get("run_args", []))
