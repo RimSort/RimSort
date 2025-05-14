@@ -238,9 +238,6 @@ class MainWindow(QMainWindow):
         self.menu_bar_controller._on_set_current_instance(
             self.settings_controller.settings.current_instance
         )
-        # IF CHECK FOR UPDATE ON STARTUP...
-        if self.settings_controller.settings.check_for_update_startup:
-            self.main_content_panel.actions_slot("check_for_update")
         # REFRESH CONFIGURED METADATA
         self.main_content_panel._do_refresh(is_initial=is_initial)
         # CHECK FOR STEAMCMD SETUP
@@ -266,6 +263,9 @@ class MainWindow(QMainWindow):
         if self.settings_controller.active_instance.initial_setup:
             self.settings_controller.active_instance.initial_setup = False
             self.settings_controller.settings.save()
+        # IF CHECK FOR UPDATE ON STARTUP...
+        if self.settings_controller.settings.check_for_update_startup:
+            self.main_content_panel.actions_slot("check_for_update")
 
     def __check_steam_integration(self) -> None:
         """Ask the user if they would like to enable Steam Client Integration for the active instance if it is the first time they are setting up RimSort."""
