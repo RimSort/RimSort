@@ -850,8 +850,8 @@ class MainContent(QObject):
             return
         tag_name_updated = tag_name.replace("alpha", "Alpha")
         install_path = os.getcwd()
-        logger.debug(f"Current RimSort release found: {tag_name}")
-        logger.debug(f"Current RimSort version found: {current_version}")
+        logger.debug(f"Current RimSort github release found: {tag_name}")
+        logger.debug(f"Current RimSort installed version found: {current_version}")
         if current_version != tag_name:
             answer = dialogue.show_dialogue_conditional(
                 title=self.tr("RimSort update found"),
