@@ -91,6 +91,9 @@ class Settings(QObject):
         self.font_family: str = QApplication.font().family()
         self.font_size: int = 12
 
+        # Language
+        self.language = "en_US"
+
         # Advanced
         self.debug_logging_enabled: bool = False
         self.watchdog_toggle: bool = True
