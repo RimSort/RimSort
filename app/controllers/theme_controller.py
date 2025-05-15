@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Optional
 
 from loguru import logger
+from PySide6.QtCore import QCoreApplication
 from PySide6.QtWidgets import QApplication, QComboBox
 
 from app.models.settings import Settings
@@ -130,8 +131,8 @@ class ThemeController:
                 return potential_path
         logger.error(f"Stylesheet path does not exist for theme '{theme_name}'")
         dialogue.show_warning(
-            title="Theme path Error",
-            text=f"Stylesheet path does not exist for theme '{theme_name}' Resetting to default theme '{self.default_theme}'.",
+            title=QCoreApplication.translate("ThemeController","Theme path Error"),
+            text=QCoreApplication.translate("ThemeController","Stylesheet path does not exist for theme '{theme_name}' Resetting to default theme '{default_theme}'.").format(theme_name=theme_name,default_theme=self.default_theme,),
         )
         return None
 
@@ -159,9 +160,9 @@ class ThemeController:
                     f"Resetting to default theme: {self.default_theme}"
                 )
                 dialogue.show_warning(
-                    title="Theme Error",
-                    text=f"Failed to apply theme: {selected_theme_name},"
-                    f"Resetting to default theme: {self.default_theme}",
+                    title=QCoreApplication.translate("ThemeController","Theme Error"),
+                    text=QCoreApplication.translate("ThemeController","Failed to apply theme: {selected_theme_name},"
+                    "Resetting to default theme: {self.default_theme}").format(selected_theme_name=selected_theme_name,default_theme=self.default_theme,),
                 )
                 self.reset_to_default_theme()
         else:

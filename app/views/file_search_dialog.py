@@ -72,17 +72,17 @@ class FileSearchDialog(QDialog):
         search_input_layout = QHBoxLayout()
         search_input_layout.setSpacing(5)
 
-        search_label = QLabel("Search for:")
+        search_label = QLabel(self.tr("Search for:"))
         search_label.setFixedWidth(80)
         search_input_layout.addWidget(search_label)
 
         self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText("Enter text to search for in files")
+        self.search_input.setPlaceholderText(self.tr("Enter text to search for in files"))
         search_input_layout.addWidget(self.search_input)
 
         self.recent_searches_button = QPushButton("▼")
         self.recent_searches_button.setFixedWidth(25)
-        self.recent_searches_button.setToolTip("Recent Searches")
+        self.recent_searches_button.setToolTip(self.tr("Recent Searches"))
         self.recent_searches_button.clicked.connect(self._show_recent_searches)
         search_input_layout.addWidget(self.recent_searches_button)
 
@@ -93,14 +93,15 @@ class FileSearchDialog(QDialog):
         scope_layout = QHBoxLayout()
         scope_layout.setSpacing(5)
 
-        scope_label = QLabel("Search in:")
+        scope_label = QLabel(self.tr("Search in:"))
         scope_label.setFixedWidth(80)
         scope_layout.addWidget(scope_label)
 
         self.search_scope = QComboBox()
-        self.search_scope.addItems(
-            ["active mods", "inactive mods", "all mods", "configs folder"]
-        )
+        self.search_scope.addItem(self.tr("active mods"), "active mods")
+        self.search_scope.addItem(self.tr("inactive mods"), "inactive mods")
+        self.search_scope.addItem(self.tr("all mods"), "all mods")
+        self.search_scope.addItem(self.tr("configs folder"), "configs folder")
         scope_layout.addWidget(self.search_scope)
 
         # Add scope to the row (takes 2/5 of the width)
@@ -118,27 +119,27 @@ class FileSearchDialog(QDialog):
         search_options_column = QHBoxLayout()
         search_options_column.setSpacing(8)
 
-        search_options_label = QLabel("Search Options:")
+        search_options_label = QLabel(self.tr("Search Options:"))
         search_options_label.setStyleSheet("font-weight: bold;")
         search_options_column.addWidget(search_options_label)
 
-        self.case_sensitive = QCheckBox("Case sensitive")
-        self.case_sensitive.setToolTip("Match exact case when searching")
+        self.case_sensitive = QCheckBox(self.tr("Case sensitive"))
+        self.case_sensitive.setToolTip(self.tr("Match exact case when searching"))
 
-        self.use_regex = QCheckBox("Use regex (pattern search)")
+        self.use_regex = QCheckBox(self.tr("Use regex (pattern search)"))
         self.use_regex.setToolTip(
-            "Enable to use regular expressions in search\n"
+            self.tr("Enable to use regular expressions in search\n"
             "Examples:\n"
             "- 'def.*\\(' to find function definitions\n"
             "- '<[^>]+>' to find XML tags\n"
-            "- '\\d+\\.\\d+(\\.\\d+)?' to find version numbers"
+            "- '\\d+\\.\\d+(\\.\\d+)?' to find version numbers")
         )
 
         # XML only checkbox (moved from scope section)
-        self.xml_only = QCheckBox("XML files only")
+        self.xml_only = QCheckBox(self.tr("XML files only"))
         self.xml_only.setToolTip(
-            "When checked, search only XML files and use optimized XML search.\n"
-            "When unchecked, search all file types with standard search."
+            self.tr("When checked, search only XML files and use optimized XML search.\n"
+            "When unchecked, search all file types with standard search.")
         )
         self.xml_only.setChecked(True)
 
@@ -160,27 +161,27 @@ class FileSearchDialog(QDialog):
         skip_options_column = QHBoxLayout()
         skip_options_column.setSpacing(8)
 
-        skip_options_label = QLabel("Exclude from Search:")
+        skip_options_label = QLabel(self.tr("Exclude from Search:"))
         skip_options_label.setStyleSheet("font-weight: bold;")
         skip_options_column.addWidget(skip_options_label)
 
-        self.skip_translations = QCheckBox("Skip translations")
+        self.skip_translations = QCheckBox(self.tr("Skip translations"))
         self.skip_translations.setChecked(True)
         self.skip_translations.setToolTip(
-            "Skip translation files to improve search speed"
+            self.tr("Skip translation files to improve search speed")
         )
 
-        self.skip_git = QCheckBox("Skip .git folder")
+        self.skip_git = QCheckBox(self.tr("Skip .git folder"))
         self.skip_git.setChecked(True)
-        self.skip_git.setToolTip("Skip Git repository folders")
+        self.skip_git.setToolTip(self.tr("Skip Git repository folders"))
 
-        self.skip_source = QCheckBox("Skip Source folder")
+        self.skip_source = QCheckBox(self.tr("Skip Source folder"))
         self.skip_source.setChecked(True)
-        self.skip_source.setToolTip("Skip Source folders containing C# code")
+        self.skip_source.setToolTip(self.tr("Skip Source folders containing C# code"))
 
-        self.skip_textures = QCheckBox("Skip Textures folder")
+        self.skip_textures = QCheckBox(self.tr("Skip Textures folder"))
         self.skip_textures.setChecked(True)
-        self.skip_textures.setToolTip("Skip Textures folders containing images")
+        self.skip_textures.setToolTip(self.tr("Skip Textures folders containing images"))
 
         skip_options_column.addWidget(self.skip_translations)
         skip_options_column.addWidget(self.skip_git)
@@ -201,19 +202,19 @@ class FileSearchDialog(QDialog):
 
         # Add a note about search method
         search_method_info = QLabel(
-            "Search method is automatically selected based on options"
+            self.tr("Search method is automatically selected based on options")
         )
         buttons_layout.addWidget(search_method_info)
 
         # Add spacer to push buttons to the right
         buttons_layout.addStretch()
 
-        self.search_button = QPushButton("Search")
+        self.search_button = QPushButton(self.tr("Search"))
         self.search_button.setMinimumWidth(100)
         self.search_button.setEnabled(True)
         self.search_button.setStyleSheet("font-weight: bold; background-color: green;")
 
-        self.stop_button = QPushButton("Stop")
+        self.stop_button = QPushButton(self.tr("Stop"))
         self.stop_button.setMinimumWidth(100)
         self.stop_button.setEnabled(False)
         self.stop_button.setStyleSheet("font-weight: bold; background-color: normal;")
@@ -249,7 +250,7 @@ class FileSearchDialog(QDialog):
         status_row.setSpacing(10)
 
         # Statistics
-        self.stats_label = QLabel("Ready to search")
+        self.stats_label = QLabel(self.tr("Ready to search"))
         self.stats_label.setAlignment(
             Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
         )
@@ -265,13 +266,13 @@ class FileSearchDialog(QDialog):
         filter_layout.setContentsMargins(0, 0, 0, 0)
         filter_layout.setSpacing(10)
 
-        filter_label = QLabel("Filter results:")
+        filter_label = QLabel(self.tr("Filter results:"))
         filter_label.setFixedWidth(80)
         filter_layout.addWidget(filter_label)
 
         self.filter_input = QLineEdit()
         self.filter_input.setPlaceholderText(
-            "Filter results by mod name, file name, or path"
+            self.tr("Filter results by mod name, file name, or path")
         )
         filter_layout.addWidget(self.filter_input)
 
@@ -284,12 +285,12 @@ class FileSearchDialog(QDialog):
         results_table_layout.setSpacing(5)
 
         results_header = QHBoxLayout()
-        results_label = QLabel("Search Results:")
+        results_label = QLabel(self.tr("Search Results:"))
         results_label.setStyleSheet("font-weight: bold;")
         results_header.addWidget(results_label)
 
         # Add a right-aligned label with instructions
-        results_help = QLabel("Double-click a result to open the file")
+        results_help = QLabel(self.tr("Double-click a result to open the file"))
         results_help.setAlignment(Qt.AlignmentFlag.AlignRight)
         results_header.addWidget(results_help)
 
@@ -298,7 +299,7 @@ class FileSearchDialog(QDialog):
         self.results_table = QTableWidget()
         self.results_table.setColumnCount(4)
         self.results_table.setHorizontalHeaderLabels(
-            ["Mod Name", "File Name", "Path", "Preview"]
+            [self.tr("Mod Name"), self.tr("File Name"), self.tr("Path"), self.tr("Preview")]
         )
 
         # Set table properties for better appearance
@@ -387,9 +388,9 @@ class FileSearchDialog(QDialog):
         result_count = self.results_table.rowCount()
 
         if result_count > 0:
-            self.stats_label.setText(f"Found {result_count} results")
+            self.stats_label.setText(self.tr("Found {result_count} results").format(result_count=result_count))
         else:
-            self.stats_label.setText("No results found")
+            self.stats_label.setText(self.tr("No results found"))
 
         # Reset buttons
         self.search_button.setEnabled(True)
@@ -429,23 +430,23 @@ class FileSearchDialog(QDialog):
         path = path_item.text()
 
         # Create actions with keyboard shortcuts
-        open_file = menu.addAction("Open File (Enter)")
+        open_file = menu.addAction(self.tr("Open File (Enter)"))
         open_file.setShortcut("Return")
 
-        open_folder = menu.addAction("Open Containing Folder (Ctrl+O)")
+        open_folder = menu.addAction(self.tr("Open Containing Folder (Ctrl+O)"))
         open_folder.setShortcut("Ctrl+O")
 
-        copy_path = menu.addAction("Copy Path (Ctrl+C)")
+        copy_path = menu.addAction(self.tr("Copy Path (Ctrl+C)"))
         copy_path.setShortcut("Ctrl+C")
 
         # Add a separator and more actions
         menu.addSeparator()
 
         # Add "Open With" submenu
-        open_with_menu = menu.addMenu("Open With...")
-        open_with_notepad = open_with_menu.addAction("Notepad")
-        open_with_vscode = open_with_menu.addAction("VS Code")
-        open_with_default = open_with_menu.addAction("Default Editor")
+        open_with_menu = menu.addMenu(self.tr("Open With..."))
+        open_with_notepad = open_with_menu.addAction(self.tr("Notepad"))
+        open_with_vscode = open_with_menu.addAction(self.tr("VS Code"))
+        open_with_default = open_with_menu.addAction(self.tr("Default Editor"))
 
         # connect actions
         open_file.triggered.connect(lambda: self._open_file(path))
@@ -564,7 +565,7 @@ class FileSearchDialog(QDialog):
         }
 
         return {
-            "scope": self.search_scope.currentText(),
+            "scope": self.search_scope.currentData(),
             "algorithm": algorithm,
             "case_sensitive": self.case_sensitive.isChecked(),
             "use_regex": self.use_regex.isChecked(),
@@ -636,7 +637,7 @@ class FileSearchDialog(QDialog):
             mod_item.setToolTip(f"Mod: {mod_name}")
             file_item.setToolTip(f"File: {file_name}")
             path_item.setToolTip(f"Path: {path}")
-            preview_item.setToolTip("Double-click to open file")
+            preview_item.setToolTip(self.tr("Double-click to open file"))
             preview_item.setFont(QFont("Courier New", 9))
             preview_item.setFlags(preview_item.flags() ^ Qt.ItemFlag.ItemIsEditable)
 
@@ -687,7 +688,7 @@ class FileSearchDialog(QDialog):
         # Add a separator and clear action
         if self._recent_searches:
             menu.addSeparator()
-            clear_action = menu.addAction("Clear Recent Searches")
+            clear_action = menu.addAction(self.tr("Clear Recent Searches"))
             clear_action.triggered.connect(self._clear_recent_searches)
 
         # Show menu below the button
@@ -768,8 +769,8 @@ class FileSearchDialog(QDialog):
 
         # Update the stats label to show filter results
         if text:
-            self.update_stats(f"Filter: {visible_rows} of {total_rows} results visible")
+            self.update_stats(self.tr("Filter: {visible_rows} of {total_rows} results visible").format(visible_rows=visible_rows, total_rows=total_rows))
         elif total_rows > 0:
-            self.update_stats(f"Found {total_rows} results")
+            self.update_stats(self.tr("Found {total_rows} results").format(total_rows=total_rows))
         else:
-            self.update_stats("Ready to search")
+            self.update_stats(self.tr("Ready to search"))

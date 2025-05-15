@@ -40,8 +40,8 @@ class MissingDependenciesDialog(QDialog):
         main_layout = QVBoxLayout(self)
 
         description = QLabel(
-            "Some mods in your active list require other mods to work properly.\n"
-            "Select which missing dependencies to add to your active mods list."
+            self.tr("Some mods in your active list require other mods to work properly.\n"
+            "Select which missing dependencies to add to your active mods list.")
         )
         description.setWordWrap(True)
         description.setStyleSheet("font-size: 10pt; margin-bottom: 10px;")
@@ -56,19 +56,19 @@ class MissingDependenciesDialog(QDialog):
 
         button_layout = QHBoxLayout()
 
-        select_all_button = QPushButton("Select All")
+        select_all_button = QPushButton(self.tr("Select All"))
         select_all_button.clicked.connect(self.select_all)
         button_layout.addWidget(select_all_button)
 
         button_layout.addStretch()
 
-        add_button = QPushButton("Add Selected && Sort")
+        add_button = QPushButton(self.tr("Add Selected && Sort"))
         add_button.clicked.connect(self.accept)
         add_button.setDefault(True)
         add_button.setShortcut("Return")  # Enter key
         button_layout.addWidget(add_button)
 
-        ignore_button = QPushButton("Sort Without Adding")
+        ignore_button = QPushButton(self.tr("Sort Without Adding"))
         ignore_button.clicked.connect(self.reject)
         ignore_button.setShortcut("Escape")  # Esc key
         button_layout.addWidget(ignore_button)
@@ -108,7 +108,7 @@ class MissingDependenciesDialog(QDialog):
         local_deps, download_deps = self._classify_dependencies(missing_deps)
 
         if local_deps:
-            local_label = QLabel("Local mods (available but not active):")
+            local_label = QLabel(self.tr("Local mods (available but not active):"))
             local_label.setStyleSheet("font-weight: bold; color: green;")
             self.scroll_layout.addWidget(local_label)
 
@@ -118,7 +118,7 @@ class MissingDependenciesDialog(QDialog):
             self.scroll_layout.addSpacing(20)
 
         if download_deps:
-            download_label = QLabel("Mods that need to be downloaded:")
+            download_label = QLabel(self.tr("Mods that need to be downloaded:"))
             download_label.setStyleSheet("font-weight: bold; color: orange;")
             self.scroll_layout.addWidget(download_label)
 
@@ -182,14 +182,14 @@ class MissingDependenciesDialog(QDialog):
 
         dep_name = self.metadata_manager.get_mod_name_from_package_id(dep_id)
         checkbox = QCheckBox(dep_name)
-        checkbox.setToolTip(f"Package ID: {dep_id}")
+        checkbox.setToolTip(self.tr("Package ID: {dep_id}").format(dep_id=dep_id))
         checkbox.stateChanged.connect(
             partial(self._toggle_mod_selection, mod_id=dep_id)
         )
         group_layout.addWidget(checkbox)
         self.checkboxes[dep_id] = checkbox
 
-        requiring_label = QLabel("Required by:\n  • " + "\n  • ".join(requiring_mods))
+        requiring_label = QLabel(self.tr("Required by:\n  • ") + "\n  • ".join(requiring_mods))
         requiring_label.setStyleSheet("color: gray; margin-left: 20px;")
         requiring_label.setWordWrap(True)
         group_layout.addWidget(requiring_label)

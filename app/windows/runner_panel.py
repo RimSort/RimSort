@@ -88,7 +88,7 @@ class RunnerPanel(QWidget):
         self.clear_runner_button.setIcon(self.clear_runner_icon)
         self.clear_runner_button.clicked.connect(self._do_clear_runner)
         self.clear_runner_button.setToolTip(
-            "Clear the text currently displayed by the runner"
+            self.tr("Clear the text currently displayed by the runner")
         )
         # Restart btn
         self.restart_process_icon = QIcon(
@@ -98,7 +98,7 @@ class RunnerPanel(QWidget):
         self.restart_process_button.setIcon(self.restart_process_icon)
         self.restart_process_button.clicked.connect(self._do_restart_process)
         self.restart_process_button.setToolTip(
-            "Re-run the process last used by the runner"
+            self.tr("Re-run the process last used by the runner")
         )
         self.restart_process_button.hide()  # Hide this by default - it will be enabled if self.execute()
         # Kill btn
@@ -109,7 +109,7 @@ class RunnerPanel(QWidget):
         self.kill_process_button.setIcon(self.kill_process_icon)
         self.kill_process_button.clicked.connect(self._do_kill_process)
         self.kill_process_button.setToolTip(
-            "Kill a process currently being executed by the runner"
+            self.tr("Kill a process currently being executed by the runner")
         )
         self.kill_process_button.hide()  # Hide this by default - it will be enabled if self.execute()
         # Save process output btn
@@ -389,8 +389,8 @@ class RunnerPanel(QWidget):
                     # Prompt user for action on failed mods
                     if (
                         show_dialogue_conditional(
-                            title="SteamCMD downloader",
-                            text="SteamCMD failed to download mod(s)! Would you like to retry download of the mods that failed?\n\nClick 'Show Details' to see a list of mods that failed.",
+                            title=self.tr("SteamCMD downloader"),
+                            text=self.tr("SteamCMD failed to download mod(s)! Would you like to retry download of the mods that failed?\n\nClick 'Show Details' to see a list of mods that failed."),
                             details=details,
                         )
                         == "&Yes"
@@ -413,8 +413,8 @@ class RunnerPanel(QWidget):
 
     def process_complete(self) -> None:
         diag = BinaryChoiceDialog(
-            title="Process Complete",
-            text="Process complete, you can close the window.",
+            title=self.tr("Process Complete"),
+            text=self.tr("Process complete, you can close the window."),
             positive_text="Close Window",
             negative_text="Ok",
         )

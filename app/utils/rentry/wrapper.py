@@ -5,6 +5,7 @@ from typing import Any
 
 import requests
 from loguru import logger
+from PySide6.QtCore import QCoreApplication
 from PySide6.QtWidgets import QMessageBox
 
 from app.controllers.settings_controller import SettingsController
@@ -22,6 +23,8 @@ _HEADERS = {
     "Referer": BASE_URL,
     "rentry-auth": "",  # This header allows access to /raw endpoint. Updated with auth code from user settings
 }
+
+translate = QCoreApplication.translate
 
 
 class HttpClient:
@@ -105,8 +108,8 @@ class RentryUpload:
                 f"An error occurred while Uploading rentry.co content: {str(e)}"
             )
             show_fatal_error(
-                title="Error",
-                text=f"An error occurred: {str(e)}",
+                title=translate("RentryUpload","Error"),
+                text=translate("RentryUpload","An error occurred: {e}").format(e=str(e)),
             )
 
     def handle_response(self, response: dict[str, Any]) -> None:
@@ -172,8 +175,8 @@ class RentryImport:
     def input_dialog(self) -> None:
         """Initialize the UI for entering Rentry.co links."""
         self.link_input = show_dialogue_input(
-            title="Enter Rentry.co link",
-            label="Enter the Rentry.co link:",
+            title=translate("RentryImport", "Enter Rentry.co link"),
+            label=translate("RentryImport", "Enter the Rentry.co link:"),
         )
         logger.info("Rentry link Input UI initialized successfully!")
         if self.link_input[1]:
@@ -203,8 +206,8 @@ class RentryImport:
             logger.warning("Invalid Rentry link. Please enter a valid Rentry link.")
             # Show warning if rentry link is invalid
             show_warning(
-                title="Invalid Rentry Link",
-                text="Invalid Rentry link, Please enter a valid Rentry link.",
+                title=translate("RentryImport", "Invalid Rentry Link"),
+                text=translate("RentryImport", "Invalid Rentry link, Please enter a valid Rentry link."),
             )
             return self.input_dialog()  # Re-initialize the UI for new input
 
@@ -247,8 +250,8 @@ class RentryImport:
                 f"An error occurred while fetching rentry.co content: {str(e)}"
             )
             show_fatal_error(
-                title="Error",
-                text=f"An error occurred: {str(e)}",
+                title=translate("RentryImport", "Error"),
+                text=translate("RentryImport", "An error occurred: {e}").format(e=str(e)),
             )
 
 
@@ -294,9 +297,9 @@ class RentryError:
             f"Rentry returned status code: {response.status_code}. Reason: {response.reason}"
         )
         InformationBox(
-            title="Failed to fetch Rentry Content",
-            text=f"Rentry returned status code: {response.status_code}",
-            information="RimSort failed to fetch the content from the provided Rentry link. This may be due to an invalid link, your internet connection, or Rentry.co being down. It may also be the result of a captcha. Please try again later.",
+            title=translate("RentryError", "Failed to fetch Rentry Content"),
+            text=translate("RentryError", "Rentry returned status code: {code}").format(code=response.status_code),
+            information=translate("RentryError","RimSort failed to fetch the content from the provided Rentry link. This may be due to an invalid link, your internet connection, or Rentry.co being down. It may also be the result of a captcha. Please try again later."),
             details=response.reason,
             icon=QMessageBox.Icon.Warning,
         ).exec()
@@ -310,8 +313,8 @@ class RentryError:
         """
         logger.error(f"A network error occurred while processing Rentry: {str(e)}")
         show_warning(
-            title="Network Error",
-            text="Network error occurred while processing Rentry, Please check your internet connection.",
+            title=translate("RentryError", "Network Error"),
+            text=translate("RentryError", "Network error occurred while processing Rentry, Please check your internet connection."),
             details=f"{str(e)}",
         )
         return None  # Return None to indicate failure
@@ -320,8 +323,8 @@ class RentryError:
         """Show a warning for missing Rentry Auth code."""
         logger.warning("Rentry Auth code not found in user settings.")
         show_warning(
-            title="Rentry Auth Code Not Found",
-            text="You need to email support@rentry.co and request an auth code. Then paste it into Settings -> Advanced -> Rentry Auth.",
+            title=translate("RentryError", "Rentry Auth Code Not Found"),
+            text=translate("RentryError", "You need to email support@rentry.co and request an auth code. Then paste it into Settings -> Advanced -> Rentry Auth."),
         )
 
 

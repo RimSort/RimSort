@@ -93,34 +93,34 @@ class LogReader(QDialog):
 
         # Status bar
         self.status_bar = QStatusBar()
-        self.status_bar.showMessage("Ready")
+        self.status_bar.showMessage(self.tr("Ready"))
 
         # Top controls layout
         controls_layout = QHBoxLayout()
 
         # Search box
         self.search_box = QLineEdit()
-        self.search_box.setPlaceholderText("Search...")
+        self.search_box.setPlaceholderText(self.tr("Search..."))
         self.search_box.textChanged.connect(self._debounced_filter_table)
         controls_layout.addWidget(self.search_box)
 
         # Refresh button
-        self.refresh_btn = QPushButton("Refresh")
+        self.refresh_btn = QPushButton(self.tr("Refresh"))
         self.refresh_btn.clicked.connect(self._on_refresh_clicked)
         controls_layout.addWidget(self.refresh_btn)
 
         # Import ACF Data button
-        self.import_acf_btn = QPushButton("Import ACF Data")
+        self.import_acf_btn = QPushButton(self.tr("Import ACF Data"))
         self.import_acf_btn.clicked.connect(self._on_import_acf_clicked)
         controls_layout.addWidget(self.import_acf_btn)
 
         # Export ACF Data button
-        self.export_acf_btn = QPushButton("Export ACF Data")
+        self.export_acf_btn = QPushButton(self.tr("Export ACF Data"))
         self.export_acf_btn.clicked.connect(self._on_export_acf_clicked)
         controls_layout.addWidget(self.export_acf_btn)
 
         # Export button
-        self.export_btn = QPushButton("Export to CSV")
+        self.export_btn = QPushButton(self.tr("Export to CSV"))
         self.export_btn.clicked.connect(self._on_export_to_csv_clicked)
         controls_layout.addWidget(self.export_btn)
 
@@ -237,7 +237,7 @@ class LogReader(QDialog):
                 if hasattr(self, "entries") and isinstance(self.entries, list):
                     count = len(self.entries)
                 self.status_bar.showMessage(
-                    f"Loaded {count} items | Last updated: {datetime.now().strftime('%H:%M:%S')}"
+                    self.tr("Loaded {count} items | Last updated: {time}").format(count=count,time=datetime.now().strftime("%H:%M:%S"),)
                 )
                 return
 
@@ -329,8 +329,7 @@ class LogReader(QDialog):
 
             self.populate_table(entries)
             self.status_bar.showMessage(
-                f"Loaded {len(entries)} items | Last updated: {datetime.now().strftime('%H:%M:%S')}"
-            )
+                self.tr("Loaded {count} items | Last updated: {time}").format(count=len(entries),time=datetime.now().strftime("%H:%M:%S"),))
             self.entries = entries
 
             if not self.refresh_timer.isActive():
@@ -419,7 +418,7 @@ class LogReader(QDialog):
             "CSV Files (*.csv)",
         )
         if not file_path:
-            self.status_bar.showMessage("Export canceled by user.")
+            self.status_bar.showMessage(self.tr("Export canceled by user."))
             self._set_buttons_enabled(True)
             return
 
@@ -428,38 +427,38 @@ class LogReader(QDialog):
             with open(file_path, "w", newline="", encoding="utf-8"):
                 pass  # Just testing file opening, no need for the file object
         except PermissionError as e:
-            error_msg = "Export failed: Permission denied - check file permissions"
+            error_msg = self.tr("Export failed: Permission denied - check file permissions")
             self.status_bar.showMessage(error_msg)
             logger.error(f"Export permission error: {str(e)} - file: {file_path}")
             show_warning(
-                title="Export Error",
-                text="Export failed: Permission denied - check file permissions",
+                title=self.tr("Export Error"),
+                text=self.tr("Export failed: Permission denied - check file permissions"),
                 information=f"{error_msg}",
             )
             self._set_buttons_enabled(True)
             return
         except OSError as e:
-            error_msg = f"Export failed: File system error - {str(e)}"
+            error_msg = self.tr("Export failed: File system error - {e}").format(e=str(e))
             self.status_bar.showMessage(error_msg)
             logger.error(f"Export filesystem error: {str(e)} - file: {file_path}")
             show_warning(
-                title="Export Error",
-                text="Export failed: File system error",
+                title=self.tr("Export Error"),
+                text=self.tr("Export failed: File system error"),
                 information=f"{error_msg}",
             )
             self._set_buttons_enabled(True)
             return
 
         try:
-            self.status_bar.showMessage("Exporting to CSV...")
+            self.status_bar.showMessage(self.tr("Exporting to CSV..."))
 
             progress = QProgressDialog(
-                "Exporting rows...", "Cancel", 0, self.table_widget.rowCount(), self
+                self.tr("Exporting rows..."), self.tr("Cancel"), 0, self.table_widget.rowCount(),
             )
             progress.setWindowModality(Qt.WindowModality.WindowModal)
             progress.show()
 
-            with open(file_path, "w", newline="", encoding="utf-8") as csvfile:
+            with open(file_path, "w", newline="", encoding="utf-8-sig") as csvfile:
                 writer = csv.writer(csvfile)
 
                 # Enhanced metadata header
@@ -489,7 +488,7 @@ class LogReader(QDialog):
                 # Write data rows with progress feedback
                 for row in range(self.table_widget.rowCount()):
                     if progress.wasCanceled():
-                        self.status_bar.showMessage("Export canceled by user.")
+                        self.status_bar.showMessage(self.tr("Export canceled by user."))
                         self._set_buttons_enabled(True)
                         return
 
@@ -514,8 +513,8 @@ class LogReader(QDialog):
             self.status_bar.showMessage(error_msg)
             logger.error(f"Export error: {str(e)}", exc_info=True)
             show_warning(
-                title="Export Error",
-                text="Export failed due to an unknown error",
+                title=self.tr("Export Error"),
+                text=self.tr("Export failed due to an unknown error"),
                 information=f"{error_msg}",
             )
         finally:
@@ -603,12 +602,12 @@ class LogReader(QDialog):
             self.table_widget.setColumnCount(6)
             self.table_widget.setHorizontalHeaderLabels(
                 [
-                    "Published File ID",
-                    "Last Updated",
-                    "Relative Time",
-                    "Type",
-                    "Mod Name",
-                    "Mod Path",
+                    self.tr("Published File ID"),
+                    self.tr("Last Updated"),
+                    self.tr("Relative Time"),
+                    self.tr("Type"),
+                    self.tr("Mod Name"),
+                    self.tr("Mod Path"),
                 ]
             )
 
@@ -674,9 +673,9 @@ class LogReader(QDialog):
 
     def import_acf_data(self) -> None:
         answer = show_dialogue_conditional(
-            title="Conform acf import",
-            text="This will replace your current steamcmd .acf file",
-            information="Are you sure you want to import .acf? THis only works for steamcmd",
+            title=self.tr("Conform acf import"),
+            text=self.tr("This will replace your current steamcmd .acf file"),
+            information=self.tr("Are you sure you want to import .acf? THis only works for steamcmd"),
             button_text_override=[
                 "Import .acf",
             ],
@@ -697,17 +696,17 @@ class LogReader(QDialog):
         if not steamcmd or not hasattr(steamcmd, "steamcmd_appworkshop_acf_path"):
             logger.warning("Export failed: SteamCMD interface not properly initialized")
             show_warning(
-                title="Export Error",
-                text="SteamCMD interface not properly initialized",
+                title=self.tr("Export Error"),
+                text=self.tr("SteamCMD interface not properly initialized"),
             )
             return
 
         acf_path = steamcmd.steamcmd_appworkshop_acf_path
         if not os.path.isfile(acf_path):
-            self.status_bar.showMessage(f"ACF file not found: {acf_path}")
+            self.status_bar.showMessage(self.tr("ACF file not found: {acf_path}").format(acf_path=acf_path))
             logger.error(f"Export failed: ACF file not found: {acf_path}")
             show_warning(
-                title="Export Error", text=f"ACF file not found at: {acf_path}"
+                title=self.tr("Export Error"), text=self.tr("ACF file not found at: {acf_path}").format(acf_path=acf_path)
             )
             return
 
@@ -719,28 +718,28 @@ class LogReader(QDialog):
         )
         if not file_path:
             show_warning(
-                title="Export Error",
-                text="Invalid file path provided for export: {file_path}",
+                title=self.tr("Export Error"),
+                text=self.tr("Invalid file path provided for export: {file_path}").format(file_path=file_path),
             )
             return
 
         try:
             shutil.copy(acf_path, file_path)
-            self.status_bar.showMessage(f"Successfully exported ACF to {file_path}")
+            self.status_bar.showMessage(self.tr("Successfully exported ACF to {file_path}").format(file_path=file_path))
             logger.debug(f"Successfully exported ACF to {file_path}")
             show_information(
-                title="Export Success",
-                text=f"Successfully exported ACF to {file_path}",
+                title=self.tr("Export Success"),
+                text=self.tr("Successfully exported ACF to {file_path}").format(file_path=file_path),
             )
         except PermissionError:
-            error_msg = "Export failed: Permission denied - check file permissions"
+            error_msg = self.tr("Export failed: Permission denied - check file permissions")
             logger.error(f"Export failed due to Permission: {error_msg}")
-            show_warning(title="Export Error", text=error_msg)
+            show_warning(title=self.tr("Export Error"), text=error_msg)
         except Exception as e:
-            error_msg = f"Export failed: {str(e)}"
+            error_msg = self.tr("Export failed: {e}").format(e=str(e))
             logger.error(f"Export failed {error_msg}")
             show_fatal_error(
-                title="Export failed",
-                text="Exportfailed unknown exception occurred",
+                title=self.tr("Export failed"),
+                text=self.tr("Exportfailed unknown exception occurred"),
                 details=error_msg,
             )

@@ -77,7 +77,7 @@ class ModInfo:
                 self.preview_picture.size(), Qt.AspectRatioMode.KeepAspectRatio
             )
         )
-        self.mod_info_name_label = QLabel("Name:")
+        self.mod_info_name_label = QLabel(self.tr("Name:"))
         self.mod_info_name_label.setObjectName("summaryLabel")
         self.mod_info_name_value = QLabel()
         self.mod_info_name_value.setObjectName("summaryValue")
@@ -85,14 +85,14 @@ class ModInfo:
             Qt.TextInteractionFlag.TextSelectableByMouse
         )
         self.mod_info_name_value.setWordWrap(True)
-        self.scenario_info_summary_label = QLabel("Summary:")
+        self.scenario_info_summary_label = QLabel(self.tr("Summary:"))
         self.scenario_info_summary_label.setObjectName("summaryLabel")
         self.scenario_info_summary_value = QLabel()
         self.scenario_info_summary_value.setTextInteractionFlags(
             Qt.TextInteractionFlag.TextSelectableByMouse
         )
         self.scenario_info_summary_value.setWordWrap(True)
-        self.mod_info_package_id_label = QLabel("PackageID:")
+        self.mod_info_package_id_label = QLabel(self.tr("PackageID:"))
         self.mod_info_package_id_label.setObjectName("summaryLabel")
         self.mod_info_package_id_value = QLabel()
         self.mod_info_package_id_value.setObjectName("summaryValue")
@@ -100,7 +100,7 @@ class ModInfo:
             Qt.TextInteractionFlag.TextSelectableByMouse
         )
         self.mod_info_package_id_value.setWordWrap(True)
-        self.mod_info_author_label = QLabel("Authors:")
+        self.mod_info_author_label = QLabel(self.tr("Authors:"))
         self.mod_info_author_label.setObjectName("summaryLabel")
         self.mod_info_author_value = QLabel()
         self.mod_info_author_value.setObjectName("summaryValue")
@@ -108,7 +108,7 @@ class ModInfo:
             Qt.TextInteractionFlag.TextSelectableByMouse
         )
         self.mod_info_author_value.setWordWrap(True)
-        self.mod_info_mod_version_label = QLabel("Mod Version:")
+        self.mod_info_mod_version_label = QLabel(self.tr("Mod Version:"))
         self.mod_info_mod_version_label.setObjectName("summaryLabel")
         self.mod_info_mod_version_value = QLabel()
         self.mod_info_mod_version_value.setObjectName("summaryValue")
@@ -116,11 +116,11 @@ class ModInfo:
             Qt.TextInteractionFlag.TextSelectableByMouse
         )
         self.mod_info_mod_version_value.setWordWrap(True)
-        self.mod_info_supported_versions_label = QLabel("Supported Version:")
+        self.mod_info_supported_versions_label = QLabel(self.tr("Supported Version:"))
         self.mod_info_supported_versions_label.setObjectName("summaryLabel")
         self.mod_info_supported_versions_value = QLabel()
         self.mod_info_supported_versions_value.setObjectName("summaryValue")
-        self.mod_info_path_label = QLabel("Path:")
+        self.mod_info_path_label = QLabel(self.tr("Path:"))
         self.mod_info_path_label.setObjectName("summaryLabel")
         self.mod_info_path_value = QLabel()
         self.mod_info_path_value.setObjectName("summaryValue")
@@ -129,8 +129,9 @@ class ModInfo:
         )
         self.mod_info_path_value.setWordWrap(True)
         self.description = DescriptionWidget()
+        self.description_text = self.tr("Welcome to RimSort!")
         self.description.setText(
-            "<br><br><br><center><h3>Welcome to RimSort!</h3></center>", convert=False
+            f'<br><br><br><center>{self.description_text}<h3></h3></center>', convert=False
         )
         # Add widgets to child layouts
         self.image_layout.addWidget(self.preview_picture)
@@ -194,6 +195,12 @@ class ModInfo:
             widget.hide()
 
         logger.debug("Finished ModInfo initialization")
+
+    @staticmethod
+    def tr(text: str) -> str:
+        from PySide6.QtCore import QCoreApplication
+        return QCoreApplication.translate("ModInfo", text)
+
 
     def display_mod_info(self, uuid: str, render_unity_rt: bool) -> None:
         """

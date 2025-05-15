@@ -652,14 +652,14 @@ class SearchWorker(QThread):
 
             # Perform the search
             for root_path in self.root_paths:
-                self.stats.emit(f"Searching in: {root_path}")
+                self.stats.emit(self.tr("Searching in: {root_path}").format(root_path=root_path))
                 for result in search_method(self.pattern, [root_path], self.options):
                     mod_name, file_name, path = result
                     preview = self._get_file_preview(path)
                     self.result_found.emit(mod_name, file_name, path, preview)
 
             self.finished.emit()
-            self.stats.emit("Search complete")
+            self.stats.emit(self.tr("Search complete"))
 
         except Exception as e:
             logger.error(f"Unexpected error during search: {e}")
@@ -804,7 +804,7 @@ class FileSearchController(QObject):
         worker.error.connect(self._on_search_error)
 
         # Update UI to show search is starting
-        self.dialog.update_stats("Preparing search...")
+        self.dialog.update_stats(self.tr("Preparing search..."))
 
         return worker
 
@@ -812,7 +812,7 @@ class FileSearchController(QObject):
         """Clear filter and reset UI when a new search starts."""
         self.dialog.filter_input.clear()  # Clear the filter input
         self.dialog.clear_results()  # Clear previous results
-        self.dialog.update_stats("Starting new search...")
+        self.dialog.update_stats(self.tr("Starting new search..."))
 
     def _on_search_clicked(self) -> None:
         """
@@ -881,8 +881,8 @@ class FileSearchController(QObject):
             if not root_paths:
                 # Show error if no active mods found
                 show_warning(
-                    title="Active Mods Error",
-                    text="No active mods found",
+                    title=self.tr("Active Mods Error"),
+                    text=self.tr("No active mods found"),
                 )
                 return self._on_search_finished()
         elif scope == "inactive mods":
@@ -893,8 +893,8 @@ class FileSearchController(QObject):
             if not root_paths:
                 # Show error if no inactive mods found
                 show_warning(
-                    title="Inactive Mods Error",
-                    text="No inactive mods found",
+                    title=self.tr("Inactive Mods Error"),
+                    text=self.tr("No inactive mods found"),
                 )
                 return self._on_search_finished()
         elif scope == "configs folder" and instance.config_folder:
@@ -1076,7 +1076,7 @@ class FileSearchController(QObject):
             self.dialog.stop_button.setEnabled(False)
 
             # Update the UI to show search is stopping
-            self.dialog.update_stats("Stopping search...")
+            self.dialog.update_stats(self.tr("Stopping search..."))
 
             # Set the stop flag in the searcher
             self.searcher.stop_search()
@@ -1085,7 +1085,7 @@ class FileSearchController(QObject):
             self.search_worker.terminate()
 
             # Update the UI to show search has stopped
-            self.dialog.update_stats("Search stopped by user")
+            self.dialog.update_stats(self.tr("Search stopped by user"))
 
         # Reset the UI
         self._on_search_finished()
@@ -1119,31 +1119,31 @@ class FileSearchController(QObject):
         # Check for common error patterns and provide helpful messages
         if "regex" in error_msg.lower():
             show_warning(
-                title="Regular Expression Error",
-                text="There was an error with your regular expression pattern.",
-                information=f"{error_msg}\n\nTry simplifying your pattern or check for syntax errors.",
+                title=self.tr("Regular Expression Error"),
+                text=self.tr("There was an error with your regular expression pattern."),
+                information=self.tr("{error_msg}\n\nTry simplifying your pattern or check for syntax errors.").format(error_msg=error_msg),
             )
         elif "permission" in error_msg.lower() or "access" in error_msg.lower():
             show_warning(
-                title="File Access Error",
-                text="RimSort doesn't have permission to access some files.",
-                information=f"{error_msg}\n\nTry running RimSort with administrator privileges or check folder permissions.",
+                title=self.tr("File Access Error"),
+                text=self.tr("RimSort doesn't have permission to access some files."),
+                information=self.tr("{error_msg}\n\nTry running RimSort with administrator privileges or check folder permissions.").format(error_msg=error_msg),
             )
         elif "memory" in error_msg.lower():
             show_warning(
-                title="Memory Error",
-                text="RimSort ran out of memory while searching.",
-                information=f"{error_msg}\n\nTry searching in smaller batches or use the 'streaming search' method for very large files.",
+                title=self.tr("Memory Error"),
+                text=self.tr("RimSort ran out of memory while searching."),
+                information=self.tr("{error_msg}\n\nTry searching in smaller batches or use the 'streaming search' method for very large files.").format(error_msg=error_msg),
             )
         else:
             show_warning(
-                title="Search Error",
-                text="An error occurred during the search.",
-                information=f"{error_msg}\n\nPlease check your settings and try again.",
+                title=self.tr("Search Error"),
+                text=self.tr("An error occurred during the search."),
+                information=self.tr("{error_msg}\n\nPlease check your settings and try again.").format(error_msg=error_msg),
             )
 
         # Update the stats label to show the error
-        self.dialog.update_stats(f"Search failed: {error_msg[:100]}...")
+        self.dialog.update_stats(self.tr("Search failed: {error_msg[:100]}...").format(error_msg=error_msg))
 
         # Reset the UI
         self._on_search_finished()
@@ -1192,7 +1192,7 @@ class FileSearchController(QObject):
 
         # Update the stats label to show filter results
         self.dialog.update_stats(
-            f"Filter: {visible_rows} of {self.dialog.results_table.rowCount()} results visible"
+            self.tr("Filter: {visible_rows} of {rowCount} results visible").format(visible_rows=visible_rows,rowCount=self.dialog.results_table.rowCount())
         )
 
         logger.debug(
@@ -1206,6 +1206,6 @@ class FileSearchController(QObject):
         Displays a warning dialog informing the user to configure game folders in settings.
         """
         show_warning(
-            title="Location Not Set",
-            text="No valid search location is available for the selected scope. Please configure your game folders in the settings.",
+            title=self.tr("Location Not Set"),
+            text=self.tr("No valid search location is available for the selected scope. Please configure your game folders in the settings."),
         )
