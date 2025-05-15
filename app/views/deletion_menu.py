@@ -30,22 +30,22 @@ class ModDeletionMenu(QMenu):
         delete_both: bool = True,
         delete_dds: bool = True,
     ):
-        super().__init__(title=menu_title)
+        super().__init__(title=self.tr("Deletion options"))
         self.remove_from_uuids = remove_from_uuids
         self.get_selected_mod_metadata = get_selected_mod_metadata
         self.metadata_manager = MetadataManager.instance()
         self.delete_actions: list[tuple[QAction, Callable[[], None]]] = []
         if delete_mod:
-            self.delete_actions.append((QAction("Delete mod"), self.delete_both))
+            self.delete_actions.append((QAction(self.tr("Delete mod")), self.delete_both))
 
         if delete_both:
             self.delete_actions.append(
-                (QAction("Delete mod (keep .dds)"), self.delete_mod_keep_dds)
+                (QAction(self.tr("Delete mod (keep .dds)")), self.delete_mod_keep_dds)
             )
         if delete_dds:
             self.delete_actions.append(
                 (
-                    QAction("Delete optimized textures (.dds files only)"),
+                    QAction(self.tr("Delete optimized textures (.dds files only)")),
                     self.delete_dds,
                 )
             )
@@ -90,7 +90,7 @@ class ModDeletionMenu(QMenu):
             )
 
         show_information(
-            title="RimSort", text=f"Successfully deleted {count} seleted mods."
+            title=self.tr("RimSort"), text=self.tr("Successfully deleted {count} seleted mods.").format(count=count)
         )
 
     def delete_both(self) -> None:
@@ -113,26 +113,26 @@ class ModDeletionMenu(QMenu):
                 else:
                     error_code = e.errno
                 if e.errno == ENOTEMPTY:
-                    warning_text = "Mod directory was not empty. Please close all programs accessing files or subfolders in the directory (including your file manager) and try again."
+                    warning_text = self.tr("Mod directory was not empty. Please close all programs accessing files or subfolders in the directory (including your file manager) and try again.")
                 else:
-                    warning_text = "An OSError occurred while deleting mod."
+                    warning_text = self.tr("An OSError occurred while deleting mod.")
 
                 logger.warning(
                     f"Unable to delete mod located at the path: {mod_metadata['path']}"
                 )
                 show_warning(
-                    title="Unable to delete mod",
+                    title=self.tr("Unable to delete mod"),
                     text=warning_text,
-                    information=f"{e.strerror} occurred at {e.filename} with error code {error_code}.",
+                    information=self.tr("{e.strerror} occurred at {e.filename} with error code {error_code}.").format(e=e, error_code=error_code),
                 )
             return False
 
         uuids = self.get_selected_mod_metadata()
         answer = show_dialogue_conditional(
-            title="Are you sure?",
-            text=f"You have selected {len(uuids)} mods for deletion.",
-            information="\nThis operation delete a mod's directory from the filesystem."
-            + "\nDo you want to proceed?",
+            title=self.tr("Are you sure?"),
+            text=self.tr("You have selected {len} mods for deletion.").format(len=len(uuids)),
+            information=self.tr("\nThis operation delete a mod's directory from the filesystem."
+            + "\nDo you want to proceed?"),
         )
         if answer == "&Yes":
             self._iterate_mods(_inner_delete_both, uuids)
@@ -140,10 +140,10 @@ class ModDeletionMenu(QMenu):
     def delete_dds(self) -> None:
         mod_metadata = self.get_selected_mod_metadata()
         answer = show_dialogue_conditional(
-            title="Are you sure?",
-            text=f"You have selected {len(mod_metadata)} mods to Delete optimized textures (.dds files only)",
-            information="\nThis operation will only delete optimized textures (.dds files only) from mod files."
-            + "\nDo you want to proceed?",
+            title=self.tr("Are you sure?"),
+            text=self.tr("You have selected {len} mods to Delete optimized textures (.dds files only)").format(len=len(mod_metadata)),
+            information=self.tr("\nThis operation will only delete optimized textures (.dds files only) from mod files."
+            + "\nDo you want to proceed?"),
         )
         if answer == "&Yes":
             self._iterate_mods(
@@ -159,10 +159,10 @@ class ModDeletionMenu(QMenu):
     def delete_mod_keep_dds(self) -> None:
         mod_metadata = self.get_selected_mod_metadata()
         answer = show_dialogue_conditional(
-            title="Are you sure?",
-            text=f"You have selected {len(mod_metadata)} mods for deletion.",
-            information="\nThis operation will recursively delete all mod files, except for .dds textures found."
-            + "\nDo you want to proceed?",
+            title=self.tr("Are you sure?"),
+            text=self.tr("You have selected {len} mods for deletion.").format(len=len(mod_metadata)),
+            information=self.tr("\nThis operation will recursively delete all mod files, except for .dds textures found."
+            + "\nDo you want to proceed?"),
         )
         if answer == "&Yes":
             self._iterate_mods(

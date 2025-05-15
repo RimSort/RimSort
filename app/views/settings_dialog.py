@@ -33,7 +33,7 @@ class SettingsDialog(QDialog):
 
         self.setWindowModality(Qt.WindowModality.ApplicationModal)
 
-        self.setWindowTitle("Settings")
+        self.setWindowTitle(self.tr("Settings"))
         self.setObjectName("settingsPanel")
         self.resize(900, 600)
 
@@ -60,23 +60,23 @@ class SettingsDialog(QDialog):
         main_layout.addLayout(button_layout)
 
         # Reset to defaults button
-        self.global_reset_to_defaults_button = QPushButton("Reset to Defaults", self)
+        self.global_reset_to_defaults_button = QPushButton(self.tr("Reset to Defaults"), self)
         button_layout.addWidget(self.global_reset_to_defaults_button)
 
         button_layout.addStretch()
 
         # Cancel button
-        self.global_cancel_button = QPushButton("Cancel", self)
+        self.global_cancel_button = QPushButton(self.tr("Cancel"), self)
         button_layout.addWidget(self.global_cancel_button)
 
         # OK button
-        self.global_ok_button = QPushButton("OK", self)
+        self.global_ok_button = QPushButton(self.tr("OK"), self)
         self.global_ok_button.setDefault(True)
         button_layout.addWidget(self.global_ok_button)
 
     def _do_locations_tab(self) -> None:
         tab = QWidget()
-        self.tab_widget.addTab(tab, "Locations")
+        self.tab_widget.addTab(tab, self.tr("Locations"))
 
         tab_layout = QVBoxLayout(tab)
         tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -105,13 +105,14 @@ class SettingsDialog(QDialog):
         buttons_layout.addStretch()
 
         # "Clear" button"
-        self.locations_clear_button = QPushButton("Clear All Locations", tab)
+        self.locations_clear_button = QPushButton(self.tr("Clear All Locations"), tab)
         buttons_layout.addWidget(self.locations_clear_button)
 
         # "Autodetect" button
-        self.locations_autodetect_button = QPushButton("Autodetect", tab)
+        self.locations_autodetect_button = QPushButton(self.tr("Autodetect"), tab)
         buttons_layout.addWidget(self.locations_autodetect_button)
 
+    # jscpd:ignore-start
     def _do_game_location_area(self, tab_layout: QVBoxLayout) -> None:
         group_box = QGroupBox()
         tab_layout.addWidget(group_box)
@@ -122,20 +123,20 @@ class SettingsDialog(QDialog):
         header_layout = QHBoxLayout()
         group_layout.addLayout(header_layout)
 
-        section_label = QLabel("Game location")
+        section_label = QLabel(self.tr("Game location"))
         section_label.setFont(GUIInfo().emphasis_font)
         header_layout.addWidget(section_label)
 
         self.game_location_open_button = QToolButton()
-        self.game_location_open_button.setText("Open…")
+        self.game_location_open_button.setText(self.tr("Open…"))
         header_layout.addWidget(self.game_location_open_button)
 
         self.game_location_choose_button = QToolButton()
-        self.game_location_choose_button.setText("Choose…")
+        self.game_location_choose_button.setText(self.tr("Choose…"))
         header_layout.addWidget(self.game_location_choose_button)
 
         self.game_location_clear_button = QToolButton()
-        self.game_location_clear_button.setText("Clear…")
+        self.game_location_clear_button.setText(self.tr("Clear…"))
         header_layout.addWidget(self.game_location_clear_button)
 
         self.game_location = QLineEdit()
@@ -153,20 +154,20 @@ class SettingsDialog(QDialog):
         header_layout = QHBoxLayout()
         group_layout.addLayout(header_layout)
 
-        section_label = QLabel("Config location")
+        section_label = QLabel(self.tr("Config location"))
         section_label.setFont(GUIInfo().emphasis_font)
         header_layout.addWidget(section_label)
 
         self.config_folder_location_open_button = QToolButton()
-        self.config_folder_location_open_button.setText("Open…")
+        self.config_folder_location_open_button.setText(self.tr("Open…"))
         header_layout.addWidget(self.config_folder_location_open_button)
 
         self.config_folder_location_choose_button = QToolButton()
-        self.config_folder_location_choose_button.setText("Choose…")
+        self.config_folder_location_choose_button.setText(self.tr("Choose…"))
         header_layout.addWidget(self.config_folder_location_choose_button)
 
         self.config_folder_location_clear_button = QToolButton()
-        self.config_folder_location_clear_button.setText("Clear…")
+        self.config_folder_location_clear_button.setText(self.tr("Clear…"))
         header_layout.addWidget(self.config_folder_location_clear_button)
 
         self.config_folder_location = QLineEdit()
@@ -186,20 +187,20 @@ class SettingsDialog(QDialog):
         header_layout = QHBoxLayout()
         group_layout.addLayout(header_layout)
 
-        section_label = QLabel("Steam mods location")
+        section_label = QLabel(self.tr("Steam mods location"))
         section_label.setFont(GUIInfo().emphasis_font)
         header_layout.addWidget(section_label)
 
         self.steam_mods_folder_location_open_button = QToolButton()
-        self.steam_mods_folder_location_open_button.setText("Open…")
+        self.steam_mods_folder_location_open_button.setText(self.tr("Open…"))
         header_layout.addWidget(self.steam_mods_folder_location_open_button)
 
         self.steam_mods_folder_location_choose_button = QToolButton()
-        self.steam_mods_folder_location_choose_button.setText("Choose…")
+        self.steam_mods_folder_location_choose_button.setText(self.tr("Choose…"))
         header_layout.addWidget(self.steam_mods_folder_location_choose_button)
 
         self.steam_mods_folder_location_clear_button = QToolButton()
-        self.steam_mods_folder_location_clear_button.setText("Clear…")
+        self.steam_mods_folder_location_clear_button.setText(self.tr("Clear…"))
         header_layout.addWidget(self.steam_mods_folder_location_clear_button)
 
         self.steam_mods_folder_location = QLineEdit()
@@ -219,12 +220,12 @@ class SettingsDialog(QDialog):
         header_layout = QHBoxLayout()
         group_layout.addLayout(header_layout)
 
-        section_label = QLabel("Local mods location")
+        section_label = QLabel(self.tr("Local mods location"))
         section_label.setFont(GUIInfo().emphasis_font)
         header_layout.addWidget(section_label)
 
         self.local_mods_folder_location_open_button = QToolButton()
-        self.local_mods_folder_location_open_button.setText("Open…")
+        self.local_mods_folder_location_open_button.setText(self.tr("Open…"))
         header_layout.addWidget(self.local_mods_folder_location_open_button)
 
         self.local_mods_folder_location = QLineEdit(readOnly=True)
@@ -233,13 +234,14 @@ class SettingsDialog(QDialog):
             GUIInfo().default_font_line_height * 2
         )
         self.local_mods_folder_location.setPlaceholderText(
-            "Game location sets local mods location."
+            self.tr("Game location sets local mods location.")
         )
         group_layout.addWidget(self.local_mods_folder_location)
+    # jscpd:ignore-end
 
     def _do_databases_tab(self) -> None:
         tab = QWidget()
-        self.tab_widget.addTab(tab, "Databases")
+        self.tab_widget.addTab(tab, self.tr("Databases"))
 
         tab_layout = QVBoxLayout()
         tab.setLayout(tab_layout)
@@ -281,12 +283,12 @@ class SettingsDialog(QDialog):
         item_layout = QHBoxLayout()
         section_layout.addLayout(item_layout, stretch=1)
 
-        none_radio = QRadioButton("None")
+        none_radio = QRadioButton(self.tr("None"))
         none_radio.setMinimumSize(0, GUIInfo().default_font_line_height * 2)
         none_radio.setChecked(True)
         item_layout.addWidget(none_radio, stretch=2)
 
-        label = QLabel(f"No {none_lbl} will be used.")
+        label = QLabel(self.tr("No {none_lbl} will be used.").format(none_lbl=none_lbl))
         label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         label.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         label.setEnabled(False)
@@ -295,7 +297,7 @@ class SettingsDialog(QDialog):
         item_layout = QHBoxLayout()
         section_layout.addLayout(item_layout, stretch=1)
 
-        github_radio = QRadioButton("GitHub")
+        github_radio = QRadioButton(self.tr("GitHub"))
         github_radio.setMinimumSize(0, GUIInfo().default_font_line_height * 2)
         item_layout.addWidget(github_radio, stretch=2)
 
@@ -311,18 +313,18 @@ class SettingsDialog(QDialog):
         row_layout.addWidget(github_url)
 
         github_upload_button = QToolButton()
-        github_upload_button.setText("Upload…")
+        github_upload_button.setText(self.tr("Upload…"))
         github_upload_button.setEnabled(False)
         row_layout.addWidget(github_upload_button)
 
         github_download_button = QToolButton()
-        github_download_button.setText("Download…")
+        github_download_button.setText(self.tr("Download…"))
         github_download_button.setEnabled(False)
         row_layout.addWidget(github_download_button)
 
         item_layout = QHBoxLayout()
         section_layout.addLayout(item_layout, stretch=1)
-        local_file_radio = QRadioButton("Local File")
+        local_file_radio = QRadioButton(self.tr("Local File"))
         local_file_radio.setMinimumSize(0, GUIInfo().default_font_line_height * 2)
         item_layout.addWidget(local_file_radio, stretch=2)
 
@@ -338,7 +340,7 @@ class SettingsDialog(QDialog):
         row_layout.addWidget(local_file)
 
         local_file_choose_button = QToolButton()
-        local_file_choose_button.setText("Choose…")
+        local_file_choose_button.setText(self.tr("Choose…"))
         local_file_choose_button.setEnabled(False)
         local_file_choose_button.setFixedWidth(
             github_download_button.sizeHint().width()
@@ -367,8 +369,8 @@ class SettingsDialog(QDialog):
         )
 
     def _do_community_rules_db_group(self, tab_layout: QBoxLayout) -> None:
-        section_lbl = "Community Rules database"
-        none_lbl = "community rules database"
+        section_lbl = self.tr("Community Rules database")
+        none_lbl = self.tr("community rules database")
 
         (
             _,
@@ -383,8 +385,8 @@ class SettingsDialog(QDialog):
         ) = self.__create_db_group(section_lbl, none_lbl, tab_layout)
 
     def _do_steam_workshop_db_group(self, tab_layout: QBoxLayout) -> None:
-        section_lbl = "Steam Workshop database"
-        none_lbl = "Steam Workshop database"
+        section_lbl = self.tr("Steam Workshop database")
+        none_lbl = self.tr("Steam Workshop database")
 
         (
             group_layout,
@@ -398,7 +400,7 @@ class SettingsDialog(QDialog):
             self.steam_workshop_db_local_file_choose_button,
         ) = self.__create_db_group(section_lbl, none_lbl, tab_layout)
         database_expiry_label = QLabel(
-            "Steam Workshop database expiry in Epoch Time (Use 0 to Disable Notification. Default is 7 Days)"
+            self.tr("Steam Workshop database expiry in Epoch Time (Use 0 to Disable Notification. Default is 7 Days)")
         )
         group_layout.addWidget(database_expiry_label)
 
@@ -409,7 +411,7 @@ class SettingsDialog(QDialog):
 
     def _do_cross_version_databases_tab(self) -> None:
         tab = QWidget()
-        self.tab_widget.addTab(tab, "Cross Version Databases")
+        self.tab_widget.addTab(tab, self.tr("Cross Version Databases"))
 
         tab_layout = QVBoxLayout()
         tab.setLayout(tab_layout)
@@ -418,8 +420,8 @@ class SettingsDialog(QDialog):
         self._do_use_this_instead_db_group(tab_layout)
 
     def _do_no_version_warning_db_group(self, tab_layout: QBoxLayout) -> None:
-        section_lbl = '"No Version Warning" Database'
-        none_lbl = '"No Version Warning" Database'
+        section_lbl = self.tr('"No Version Warning" Database')
+        none_lbl = self.tr('"No Version Warning" Database')
         (
             _,
             self.no_version_warning_db_none_radio,
@@ -433,8 +435,8 @@ class SettingsDialog(QDialog):
         ) = self.__create_db_group(section_lbl, none_lbl, tab_layout)
 
     def _do_use_this_instead_db_group(self, tab_layout: QBoxLayout) -> None:
-        section_lbl = '"Use This Instead" Database'
-        none_lbl = '"Use This Instead" Database'
+        section_lbl = self.tr('"Use This Instead" Database')
+        none_lbl = self.tr('"Use This Instead" Database')
         (
             _,
             self.use_this_instead_db_none_radio,
@@ -449,7 +451,7 @@ class SettingsDialog(QDialog):
 
     def _do_sorting_tab(self) -> None:
         tab = QWidget()
-        self.tab_widget.addTab(tab, "Sorting")
+        self.tab_widget.addTab(tab, self.tr("Sorting"))
 
         tab_layout = QVBoxLayout(tab)
         tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -461,25 +463,25 @@ class SettingsDialog(QDialog):
         sort_group_box_layout = QVBoxLayout()
         sort_group_box.setLayout(sort_group_box_layout)
 
-        sorting_label = QLabel("Sort mods")
+        sorting_label = QLabel(self.tr("Sort mods"))
         sorting_label.setFont(GUIInfo().emphasis_font)
         sort_group_box_layout.addWidget(sorting_label)
 
-        self.sorting_alphabetical_radio = QRadioButton("Alphabetically")
+        self.sorting_alphabetical_radio = QRadioButton(self.tr("Alphabetically"))
         sort_group_box_layout.addWidget(self.sorting_alphabetical_radio)
 
-        self.sorting_topological_radio = QRadioButton("Topologically")
+        self.sorting_topological_radio = QRadioButton(self.tr("Topologically"))
         sort_group_box_layout.addWidget(self.sorting_topological_radio)
 
         # Dependencies group
-        deps_group_box = QGroupBox("Sort Dependencies")
+        deps_group_box = QGroupBox(self.tr("Sort Dependencies"))
         tab_layout.addWidget(deps_group_box)
 
         deps_group_box_layout = QVBoxLayout()
         deps_group_box.setLayout(deps_group_box_layout)
 
         self.check_deps_checkbox = QCheckBox(
-            "Prompt user to download dependencies when click in Sort"
+            self.tr("Prompt user to download dependencies when click in Sort")
         )
         deps_group_box_layout.addWidget(self.check_deps_checkbox)
 
@@ -492,7 +494,7 @@ class SettingsDialog(QDialog):
 
     def _do_db_builder_tab(self) -> None:
         tab = QWidget()
-        self.tab_widget.addTab(tab, "DB Builder")
+        self.tab_widget.addTab(tab, self.tr("DB Builder"))
 
         tab_layout = QVBoxLayout(tab)
         tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -504,29 +506,29 @@ class SettingsDialog(QDialog):
         group_layout = QVBoxLayout()
         group_box.setLayout(group_layout)
 
-        when_building_database_label = QLabel("When building the database:")
+        when_building_database_label = QLabel(self.tr("When building the database:"))
         when_building_database_label.setFont(GUIInfo().emphasis_font)
         group_layout.addWidget(when_building_database_label)
 
         self.db_builder_include_all_radio = QRadioButton(
-            "Get PublishedFileIDs from locally installed mods."
+            self.tr("Get PublishedFileIDs from locally installed mods.")
         )
         group_layout.addWidget(self.db_builder_include_all_radio)
 
         explanatory_label = QLabel(
-            "Mods you wish to update must be installed, "
-            "as the initial DB is built including data from mods' About.xml files."
+            self.tr("Mods you wish to update must be installed, "
+            "as the initial DB is built including data from mods' About.xml files.")
         )
         group_layout.addWidget(explanatory_label)
 
         self.db_builder_include_no_local_radio = QRadioButton(
-            "Get PublishedFileIDs from the Steam Workshop."
+            self.tr("Get PublishedFileIDs from the Steam Workshop.")
         )
         group_layout.addWidget(self.db_builder_include_no_local_radio)
 
         explanatory_label = QLabel(
-            "Mods to be updated don't have to be installed, "
-            "as the initial DB is built by scraping the Steam Workshop."
+            self.tr("Mods to be updated don't have to be installed, "
+            "as the initial DB is built by scraping the Steam Workshop.")
         )
         group_layout.addWidget(explanatory_label)
 
@@ -538,12 +540,12 @@ class SettingsDialog(QDialog):
         group_box.setLayout(group_layout)
 
         self.db_builder_query_dlc_checkbox = QCheckBox(
-            "Query DLC dependency data with Steamworks API"
+            self.tr("Query DLC dependency data with Steamworks API")
         )
         group_layout.addWidget(self.db_builder_query_dlc_checkbox)
 
         self.db_builder_update_instead_of_overwriting_checkbox = QCheckBox(
-            "Update database instead of overwriting"
+            self.tr("Update database instead of overwriting")
         )
         group_layout.addWidget(self.db_builder_update_instead_of_overwriting_checkbox)
 
@@ -554,7 +556,7 @@ class SettingsDialog(QDialog):
         grid_group_layout = QGridLayout()
         group_box.setLayout(grid_group_layout)
 
-        steam_api_key_label = QLabel("Steam API key:")
+        steam_api_key_label = QLabel(self.tr("Steam API key:"))
         grid_group_layout.addWidget(steam_api_key_label, 1, 0)
 
         self.db_builder_steam_api_key = QLineEdit()
@@ -576,13 +578,13 @@ class SettingsDialog(QDialog):
 
         item_layout.addStretch()
 
-        item_label = QLabel("Download all published Workshop mods via:")
+        item_label = QLabel(self.tr("Download all published Workshop mods via:"))
         item_layout.addWidget(item_label)
 
-        self.db_builder_download_all_mods_via_steamcmd_button = QPushButton("SteamCMD")
+        self.db_builder_download_all_mods_via_steamcmd_button = QPushButton(self.tr("SteamCMD"))
         item_layout.addWidget(self.db_builder_download_all_mods_via_steamcmd_button)
 
-        self.db_builder_download_all_mods_via_steam_button = QPushButton("Steam")
+        self.db_builder_download_all_mods_via_steam_button = QPushButton(self.tr("Steam"))
         self.db_builder_download_all_mods_via_steam_button.setFixedWidth(
             self.db_builder_download_all_mods_via_steamcmd_button.sizeHint().width()
         )
@@ -594,16 +596,16 @@ class SettingsDialog(QDialog):
 
         item_layout.addStretch()
 
-        self.db_builder_compare_databases_button = QPushButton("Compare Databases")
+        self.db_builder_compare_databases_button = QPushButton(self.tr("Compare Databases"))
         item_layout.addWidget(self.db_builder_compare_databases_button)
 
-        self.db_builder_merge_databases_button = QPushButton("Merge Databases")
+        self.db_builder_merge_databases_button = QPushButton(self.tr("Merge Databases"))
         self.db_builder_merge_databases_button.setFixedWidth(
             self.db_builder_compare_databases_button.sizeHint().width()
         )
         item_layout.addWidget(self.db_builder_merge_databases_button)
 
-        self.db_builder_build_database_button = QPushButton("Build Database")
+        self.db_builder_build_database_button = QPushButton(self.tr("Build Database"))
         self.db_builder_build_database_button.setFixedWidth(
             self.db_builder_compare_databases_button.sizeHint().width()
         )
@@ -611,7 +613,7 @@ class SettingsDialog(QDialog):
 
     def _do_steamcmd_tab(self) -> None:
         tab = QWidget()
-        self.tab_widget.addTab(tab, "SteamCMD")
+        self.tab_widget.addTab(tab, self.tr("SteamCMD"))
 
         tab_layout = QVBoxLayout(tab)
         tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -623,17 +625,17 @@ class SettingsDialog(QDialog):
         group_box.setLayout(group_layout)
 
         self.steamcmd_validate_downloads_checkbox = QCheckBox(
-            "Validate downloaded mods"
+            self.tr("Validate downloaded mods")
         )
         group_layout.addWidget(self.steamcmd_validate_downloads_checkbox)
 
         self.steamcmd_auto_clear_depot_cache_checkbox = QCheckBox(
-            "Automatically clear depot cache"
+            self.tr("Automatically clear depot cache")
         )
         self.steamcmd_auto_clear_depot_cache_checkbox.setToolTip(
             (
-                "Automatically clear the depot cache before downloading mods through SteamCMD.\n"
-                "This may potentially prevent some issues with downloading mods such as download failures and deleted mods repopulating."
+                self.tr("Automatically clear the depot cache before downloading mods through SteamCMD.\n"
+                "This may potentially prevent some issues with downloading mods such as download failures and deleted mods repopulating.")
             )
         )
         group_layout.addWidget(self.steamcmd_auto_clear_depot_cache_checkbox)
@@ -647,12 +649,12 @@ class SettingsDialog(QDialog):
         header_layout = QHBoxLayout()
         group_layout.addLayout(header_layout)
 
-        section_label = QLabel("SteamCMD installation location")
+        section_label = QLabel(self.tr("SteamCMD installation location"))
         section_label.setFont(GUIInfo().emphasis_font)
         header_layout.addWidget(section_label)
 
         self.steamcmd_install_location_choose_button = QToolButton()
-        self.steamcmd_install_location_choose_button.setText("Choose…")
+        self.steamcmd_install_location_choose_button.setText(self.tr("Choose…"))
         header_layout.addWidget(self.steamcmd_install_location_choose_button)
 
         self.steamcmd_install_location = QLineEdit()
@@ -669,24 +671,24 @@ class SettingsDialog(QDialog):
 
         button_layout.addStretch()
 
-        self.steamcmd_clear_depot_cache_button = QPushButton("Clear depot cache")
+        self.steamcmd_clear_depot_cache_button = QPushButton(self.tr("Clear depot cache"))
         self.steamcmd_clear_depot_cache_button.setToolTip(
-            "Clear the depot cache manually. This may be useful if you encounter issues with downloading mods through SteamCMD."
+            self.tr("Clear the depot cache manually. This may be useful if you encounter issues with downloading mods through SteamCMD.")
         )
         button_layout.addWidget(self.steamcmd_clear_depot_cache_button)
 
-        self.steamcmd_import_acf_button = QPushButton("Import .acf")
+        self.steamcmd_import_acf_button = QPushButton(self.tr("Import .acf"))
         button_layout.addWidget(self.steamcmd_import_acf_button)
 
-        self.steamcmd_delete_acf_button = QPushButton("Delete .acf")
+        self.steamcmd_delete_acf_button = QPushButton(self.tr("Delete .acf"))
         button_layout.addWidget(self.steamcmd_delete_acf_button)
 
-        self.steamcmd_install_button = QPushButton("Install SteamCMD")
+        self.steamcmd_install_button = QPushButton(self.tr("Install SteamCMD"))
         button_layout.addWidget(self.steamcmd_install_button)
 
     def _do_todds_tab(self) -> None:
         tab = QWidget()
-        self.tab_widget.addTab(tab, "todds")
+        self.tab_widget.addTab(tab, self.tr("todds"))
 
         tab_layout = QVBoxLayout(tab)
         tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -697,7 +699,7 @@ class SettingsDialog(QDialog):
         group_layout = QVBoxLayout()
         group_box.setLayout(group_layout)
 
-        quality_preset_label = QLabel("Quality preset")
+        quality_preset_label = QLabel(self.tr("Quality preset"))
         quality_preset_label.setFont(GUIInfo().emphasis_font)
         group_layout.addWidget(quality_preset_label)
 
@@ -705,7 +707,7 @@ class SettingsDialog(QDialog):
         self.todds_preset_combobox.setSizePolicy(
             QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred
         )
-        self.todds_preset_combobox.addItem("Optimized - Recommended for RimWorld")
+        self.todds_preset_combobox.addItem(self.tr("Optimized - Recommended for RimWorld"))
         group_layout.addWidget(self.todds_preset_combobox)
 
         group_box = QGroupBox()
@@ -714,14 +716,14 @@ class SettingsDialog(QDialog):
         group_layout = QVBoxLayout()
         group_box.setLayout(group_layout)
 
-        when_optimizing_label = QLabel("When optimizing textures")
+        when_optimizing_label = QLabel(self.tr("When optimizing textures"))
         when_optimizing_label.setFont(GUIInfo().emphasis_font)
         group_layout.addWidget(when_optimizing_label)
 
-        self.todds_active_mods_only_radio = QRadioButton("Optimize active mods only")
+        self.todds_active_mods_only_radio = QRadioButton(self.tr("Optimize active mods only"))
         group_layout.addWidget(self.todds_active_mods_only_radio)
 
-        self.todds_all_mods_radio = QRadioButton("Optimize all mods")
+        self.todds_all_mods_radio = QRadioButton(self.tr("Optimize all mods"))
         group_layout.addWidget(self.todds_all_mods_radio)
 
         group_box = QGroupBox()
@@ -730,17 +732,17 @@ class SettingsDialog(QDialog):
         group_layout = QVBoxLayout()
         group_box.setLayout(group_layout)
 
-        self.todds_dry_run_checkbox = QCheckBox("Enable dry-run mode")
+        self.todds_dry_run_checkbox = QCheckBox(self.tr("Enable dry-run mode"))
         group_layout.addWidget(self.todds_dry_run_checkbox)
 
         self.todds_overwrite_checkbox = QCheckBox(
-            "Overwrite existing optimized textures"
+            self.tr("Overwrite existing optimized textures")
         )
         group_layout.addWidget(self.todds_overwrite_checkbox)
 
     def _do_themes_tab(self) -> None:
         tab = QWidget()
-        self.tab_widget.addTab(tab, "Theme")
+        self.tab_widget.addTab(tab, self.tr("Theme"))
 
         tab_layout = QVBoxLayout(tab)
         tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -753,9 +755,10 @@ class SettingsDialog(QDialog):
         group_box.setFont(GUIInfo().emphasis_font)
 
         self.enable_themes_checkbox = QCheckBox(
-            "Enable to use theme / stylesheet instead of system Theme"
+            self.tr("Enable to use theme / stylesheet instead of system Theme")
         )
         self.enable_themes_checkbox.setToolTip(
+            self.tr(
             "To add your own theme / stylesheet \n\n"
             "1) Create a new-folder in 'themes' folder in your 'RimSort' config folder \n"
             "2) Using the default 'RimPy' theme copy it to the folder you created \n"
@@ -764,6 +767,7 @@ class SettingsDialog(QDialog):
             "5) Click 'ok' to save settings and apply the selected theme \n\n"
             "NOTE \n"
             "Name of folder will be used as name of the theme and any invalid theme will be ignored \n"
+            )
         )
         group_layout.addWidget(self.enable_themes_checkbox)
 
@@ -774,10 +778,10 @@ class SettingsDialog(QDialog):
         group_layout.addWidget(self.themes_combobox)
 
         self.theme_location_open_button = QToolButton()
-        self.theme_location_open_button.setText("Open Theme Location")
+        self.theme_location_open_button.setText(self.tr("Open Theme Location"))
         group_layout.addWidget(self.theme_location_open_button)
 
-        font_group = QGroupBox("Font Settings")
+        font_group = QGroupBox(self.tr("Font Settings"))
         font_group.setFont(GUIInfo().emphasis_font)
         tab_layout.addWidget(font_group)
 
@@ -827,6 +831,27 @@ class SettingsDialog(QDialog):
         else:
             self.themes_combobox.clear()
 
+        # temporarily added here
+        language_group_box = QGroupBox(self.tr("Language Setting"))
+        tab_layout.addWidget(language_group_box)
+
+        language_group_layout = QHBoxLayout()
+        language_group_box.setLayout(language_group_layout)
+        language_group_box.setFont(GUIInfo().emphasis_font)
+
+        language_label = QLabel(self.tr("Select Language (Restart required to apply changes)"))
+        language_group_layout.addWidget(language_label)
+
+        self.language_combobox = QComboBox()
+        self.language_combobox.setSizePolicy(
+            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred
+        )
+
+        language_group_layout.addWidget(self.language_combobox)
+
+        self.connect_populate_languages_combobox()
+
+
     def reset_font_settings(self) -> None:
         default_font = QApplication.font()
         self.font_family_combobox.setCurrentFont(default_font)
@@ -842,9 +867,15 @@ class SettingsDialog(QDialog):
         else:
             self.themes_combobox.clear()
 
+    def connect_populate_languages_combobox(self) -> None:
+        from app.controllers.language_controller import LanguageController
+
+        language_controller = LanguageController()
+        language_controller.populate_languages_combobox
+
     def _do_advanced_tab(self) -> None:
         tab = QWidget()
-        self.tab_widget.addTab(tab, "Advanced")
+        self.tab_widget.addTab(tab, self.tr("Advanced"))
 
         tab_layout = QVBoxLayout(tab)
         tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -855,48 +886,48 @@ class SettingsDialog(QDialog):
         group_layout = QVBoxLayout()
         group_box.setLayout(group_layout)
 
-        user_note = QLabel("RimSort restart required for some settings")
+        user_note = QLabel(self.tr("RimSort restart required for some settings"))
         user_note.setFont(GUIInfo().emphasis_font)
         user_note.setAlignment(Qt.AlignmentFlag.AlignCenter)
         group_layout.addWidget(user_note)
 
-        self.debug_logging_checkbox = QCheckBox("Enable debug logging")
+        self.debug_logging_checkbox = QCheckBox(self.tr("Enable debug logging"))
         group_layout.addWidget(self.debug_logging_checkbox)
 
-        self.watchdog_checkbox = QCheckBox("Enable watchdog file monitor daemon")
+        self.watchdog_checkbox = QCheckBox(self.tr("Enable watchdog file monitor daemon"))
         group_layout.addWidget(self.watchdog_checkbox)
 
-        self.mod_type_filter_checkbox = QCheckBox("Enable mod type filter")
+        self.mod_type_filter_checkbox = QCheckBox(self.tr("Enable mod type filter"))
         group_layout.addWidget(self.mod_type_filter_checkbox)
 
         self.hide_invalid_mods_when_filtering_checkbox = QCheckBox(
-            "Hide invalid mods when filtering"
+            self.tr("Hide invalid mods when filtering")
         )
         group_layout.addWidget(self.hide_invalid_mods_when_filtering_checkbox)
 
         self.show_duplicate_mods_warning_checkbox = QCheckBox(
-            "Show duplicate mods warning"
+            self.tr("Show duplicate mods warning")
         )
         group_layout.addWidget(self.show_duplicate_mods_warning_checkbox)
 
-        self.show_mod_updates_checkbox = QCheckBox("Check for mod updates on refresh")
+        self.show_mod_updates_checkbox = QCheckBox(self.tr("Check for mod updates on refresh"))
         group_layout.addWidget(self.show_mod_updates_checkbox)
 
         self.steam_client_integration_checkbox = QCheckBox(
-            "Enable Steam client integration"
+            self.tr("Enable Steam client integration")
         )
         group_layout.addWidget(self.steam_client_integration_checkbox)
 
         self.download_missing_mods_checkbox = QCheckBox(
-            "Download missing mods automatically"
+            self.tr("Download missing mods automatically")
         )
         group_layout.addWidget(self.download_missing_mods_checkbox)
 
         self.render_unity_rich_text_checkbox = QCheckBox(
-            "Render Unity Rich Text in mod descriptions"
+            self.tr("Render Unity Rich Text in mod descriptions")
         )
         self.render_unity_rich_text_checkbox.setToolTip(
-            "Enable this option to render Unity Rich Text in mod descriptions. Images will not be displayed."
+            self.tr("Enable this option to render Unity Rich Text in mod descriptions. Images will not be displayed.")
         )
         group_layout.addWidget(self.render_unity_rich_text_checkbox)
 
@@ -906,7 +937,7 @@ class SettingsDialog(QDialog):
         auth_group_layout = QGridLayout()
         auth_group.setLayout(auth_group_layout)
 
-        rentry_auth_label = QLabel("Rentry Auth:")
+        rentry_auth_label = QLabel(self.tr("Rentry Auth:"))
         auth_group_layout.addWidget(
             rentry_auth_label, 0, 0, alignment=Qt.AlignmentFlag.AlignRight
         )
@@ -915,7 +946,7 @@ class SettingsDialog(QDialog):
         self.rentry_auth_code.setTextMargins(GUIInfo().text_field_margins)
         self.rentry_auth_code.setFixedHeight(GUIInfo().default_font_line_height * 2)
         self.rentry_auth_code.setPlaceholderText(
-            "Obtain rentry auth code by emailing: support@rentry.co"
+            self.tr("Obtain rentry auth code by emailing: support@rentry.co")
         )
         # TODO: If we add a rentry auth code with builds, we should change placeholder to clarify this code will be used instead of the provided one
         auth_group_layout.addWidget(self.rentry_auth_code, 0, 1)
@@ -926,7 +957,7 @@ class SettingsDialog(QDialog):
         github_identity_layout = QGridLayout()
         github_identity_group.setLayout(github_identity_layout)
 
-        github_username_label = QLabel("GitHub username:")
+        github_username_label = QLabel(self.tr("GitHub username:"))
         github_identity_layout.addWidget(
             github_username_label, 0, 0, alignment=Qt.AlignmentFlag.AlignRight
         )
@@ -936,7 +967,7 @@ class SettingsDialog(QDialog):
         self.github_username.setFixedHeight(GUIInfo().default_font_line_height * 2)
         github_identity_layout.addWidget(self.github_username, 0, 1)
 
-        github_token_label = QLabel("GitHub personal access token:")
+        github_token_label = QLabel(self.tr("GitHub personal access token:"))
         github_identity_layout.addWidget(
             github_token_label, 1, 0, alignment=Qt.AlignmentFlag.AlignRight
         )
@@ -965,9 +996,11 @@ class SettingsDialog(QDialog):
         run_args_info_layout = QHBoxLayout()
 
         self.run_args_info_label = QLabel(
+            self.tr(
             "Enter a comma separated list of arguments to pass to the Rimworld executable \n"
             "\n Examples : \n"
             "\n -logfile,/path/to/file.log,-savedatafolder=/path/to/savedata,-popupwindow \n"
+            )
         )
         self.run_args_info_label.setFixedHeight(GUIInfo().default_font_line_height * 6)
         run_args_info_layout.addWidget(self.run_args_info_label, 0)
@@ -975,7 +1008,7 @@ class SettingsDialog(QDialog):
 
         run_args_layout.addLayout(run_args_info_layout, 0, 0, 1, 2)
 
-        run_args_label = QLabel("Edit Game Run Arguments:")
+        run_args_label = QLabel(self.tr("Edit Game Run Arguments:"))
         run_args_layout.addWidget(
             run_args_label, 1, 0, alignment=Qt.AlignmentFlag.AlignRight
         )

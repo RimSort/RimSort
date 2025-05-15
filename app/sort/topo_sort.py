@@ -1,5 +1,6 @@
 import networkx as nx
 from loguru import logger
+from PySide6.QtCore import QCoreApplication
 from toposort import CircularDependencyError, toposort
 
 from app.utils.metadata import MetadataManager
@@ -62,8 +63,8 @@ def find_circular_dependencies(dependency_graph: dict[str, set[str]]) -> None:
         logger.info("No circular dependencies found.")
 
     show_warning(
-        title="Unable to Sort",
-        text="Unable to Sort",
-        information="RimSort found circular dependencies in your mods list. Please see the details for dependency loops.",
+        title=QCoreApplication.translate("do_topo_sort","Unable to Sort"),
+        text=QCoreApplication.translate("do_topo_sort","Unable to Sort"),
+        information=QCoreApplication.translate("do_topo_sort","RimSort found circular dependencies in your mods list. Please see the details for dependency loops."),
         details="\n\n".join(cycle_strings),
     )

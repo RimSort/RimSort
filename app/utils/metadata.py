@@ -127,20 +127,20 @@ class MetadataManager(QObject):
         ) -> bool:
             if not os.path.exists(path):
                 self.show_warning_signal.emit(
-                    f"{db_type} DB is missing",
-                    f"Configured {db_type} DB not found!",
-                    f"Unable to initialize external metadata. There is no external {db_type} metadata being factored!\n"
-                    + "\nPlease make sure your Database location settings are correct.",
+                    self.tr("{db_type} DB is missing").format(db_type=db_type),
+                    self.tr("Configured {db_type} DB not found!").format(db_type=db_type),
+                    self.tr("Unable to initialize external metadata. There is no external {db_type} metadata being factored!\n"
+                    + "\nPlease make sure your Database location settings are correct.").format(db_type=db_type),
                     f"{path}",
                 )
                 return False
 
             if os.path.isdir(path) == (not expect_directory):
                 self.show_warning_signal.emit(
-                    f"{db_type} DB is missing",
-                    f"Configured {db_type} DB path is {'not' if expect_directory else ''} a directory! Expected a {'directory' if expect_directory else 'file'} path.",
-                    f"Unable to initialize external metadata. There is no external {db_type} metadata being factored!\n"
-                    + "\nPlease make sure your Database location settings are correct.",
+                    self.tr("{db_type} DB is missing").format(db_type=db_type),
+                    self.tr("Configured {db_type} DB path is {not_dir} a directory! Expected a {file_dir} path.").format(db_type=db_type,not_dir="not" if expect_directory else "",file_dir="directory" if expect_directory else "file",),
+                    self.tr("Unable to initialize external metadata. There is no external {db_type} metadata being factored!\n"
+                    + "\nPlease make sure your Database location settings are correct.").format(db_type=db_type),
                     f"{path}",
                 )
                 return False
@@ -183,10 +183,10 @@ class MetadataManager(QObject):
                     # Fallback to the expired metadata
                     if life != 0:  # Disable Notification if value is 0
                         self.show_warning_signal.emit(
-                            "Steam DB metadata expired",
-                            "Steam DB is expired! Consider updating!\n",
-                            f"Steam DB last updated: {strftime('%Y-%m-%d %H:%M:%S', localtime(db_data['version'] - life))}\n\n"
-                            + "Falling back to cached, but EXPIRED Steam Database...",
+                            self.tr("Steam DB metadata expired"),
+                            self.tr("Steam DB is expired! Consider updating!\n"),
+                            self.tr("Steam DB last updated: {last_updated}\n\n"
+                          + "Falling back to cached, but EXPIRED Steam Database...").format(last_updated=strftime('%Y-%m-%d %H:%M:%S', localtime(db_data['version'] - life))),
                             "",
                         )
                     db_json_data = db_data[
@@ -469,9 +469,9 @@ class MetadataManager(QObject):
                 f"The provided Version.txt path does not exist: {version_file_path}"
             )
             self.show_warning_signal.emit(
-                "Missing Version.txt",
-                f"RimSort is unable to get the game version at the expected path: [{version_file_path}].",
-                f"\nIs your game path [{self.settings_controller.settings.instances[self.settings_controller.settings.current_instance].game_folder}] set correctly? There should be a Version.txt file in the game install directory.",
+                self.tr("Missing Version.txt"),
+                self.tr("RimSort is unable to get the game version at the expected path: [{version_file_path}].").format(version_file_path=version_file_path),
+                self.tr("\nIs your game path {folder} set correctly? There should be a Version.txt file in the game install directory.").format(folder=self.settings_controller.settings.instances[self.settings_controller.settings.current_instance].game_folder),
                 "",
             )
         # Get and cache installed base game / DLC data

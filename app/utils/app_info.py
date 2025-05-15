@@ -86,6 +86,7 @@ class AppInfo:
         self._theme_data_folder: Path = self._application_folder / "themes"
         self._settings_file: Path = self._app_storage_folder / "settings.json"
         self._user_rules_file = self.databases_folder / "userRules.json"
+        self._language_data_folder: Path = self._application_folder / "locales"
 
         # Make sure important directories exist
 

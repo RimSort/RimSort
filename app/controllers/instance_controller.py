@@ -7,7 +7,7 @@ from zipfile import ZipFile
 
 import msgspec
 from loguru import logger
-from PySide6.QtCore import QObject
+from PySide6.QtCore import QCoreApplication, QObject
 
 from app.models.instance import Instance
 from app.utils.app_info import AppInfo
@@ -43,9 +43,9 @@ class InstanceController(QObject):
             if not cls._validate_archive_path(instance):
                 logger.error(f"Invalid archive path: {instance}")
                 show_warning(
-                    title="Invalid archive path",
-                    text="The provided archive path is invalid.",
-                    information="Please provide a valid archive path.",
+                    title=QCoreApplication.translate("__new__","Invalid archive path"),
+                    text=QCoreApplication.translate("__new__","The provided archive path is invalid."),
+                    information=QCoreApplication.translate("__new__","Please provide a valid archive path."),
                 )
 
                 raise InvalidArchivePathError("Invalid archive path")
@@ -65,8 +65,8 @@ class InstanceController(QObject):
         except Exception as e:
             logger.error(f"An error occurred while reading instance archive: {e}")
             show_fatal_error(
-                title="Error restoring instance",
-                text=f"An error occurred while reading instance archive: {e}",
+                title=self.tr("Error restoring instance"),
+                text=self.tr("An error occurred while reading instance archive: {e}").format(e=e),
                 details=format_exc(),
             )
 

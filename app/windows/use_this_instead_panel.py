@@ -28,37 +28,37 @@ class UseThisInsteadPanel(BaseModsPanel):
 
         super().__init__(
             object_name="useThisInsteadModsPanel",
-            window_title="RimSort - Replacements found for Workshop mods",
-            title_text="There are replacements available for Workshop mods!",
-            details_text='\nThe following table displays Workshop mods with suggested replacements according to the "Use This Instead" database',
+            window_title=self.tr("RimSort - Replacements found for Workshop mods"),
+            title_text=self.tr("There are replacements available for Workshop mods!"),
+            details_text=self.tr('\nThe following table displays Workshop mods with suggested replacements according to the "Use This Instead" database'),
             additional_columns=[
-                "Original Mod Name",
-                "Original Author",
-                "Original Workshop Page",
-                "Replacement Mod Name",
-                "Replacement Author",
-                "Replacement Workshop Page",
+                self.tr("Original Mod Name"),
+                self.tr("Original Author"),
+                self.tr("Original Workshop Page"),
+                self.tr("Replacement Mod Name"),
+                self.tr("Replacement Author"),
+                self.tr("Replacement Workshop Page"),
             ],
             minimum_size=QSize(1100, 600),
         )
 
         def __subscribe_cb(_: UseThisInsteadPanel) -> None:
             dialogue.show_information(
-                "Use This Instead",
-                "Succesfully subscribed to replacement mods",
+                self.tr("Use This Instead"),
+                self.tr("Succesfully subscribed to replacement mods"),
             )
 
-        self.editor_update_mods_button = QPushButton("Subscribe replacements")
+        self.editor_update_mods_button = QPushButton(self.tr("Subscribe replacements"))
         self.editor_update_mods_button.clicked.connect(
             partial(self._update_mods_from_table, 6, "Steam", completed=__subscribe_cb)
         )
-        self.editor_update_all_button = QPushButton("Subscribe all replacements")
+        self.editor_update_all_button = QPushButton(self.tr("Subscribe all replacements"))
         self.editor_update_all_button.clicked.connect(
             partial(self._steamworks_cmd_for_all, 6, completed=__subscribe_cb)
         )
 
         self.editor_tool_button = QToolButton()
-        self.editor_tool_button.setText("More Options")
+        self.editor_tool_button.setText(self.tr("More Options"))
 
         self.editor_tool_menu = QMenu(self.editor_tool_button)
 
@@ -70,8 +70,8 @@ class UseThisInsteadPanel(BaseModsPanel):
 
         def __unsubscribe_cb(_: UseThisInsteadPanel) -> None:
             dialogue.show_information(
-                "Use This Instead",
-                "Succesfully unsubscribed to original mods",
+                self.tr("Use This Instead"),
+                self.tr("Succesfully unsubscribed to original mods"),
             )
 
         unsub_action = QAction("Unsubscribe outdated", self)
@@ -134,7 +134,7 @@ class UseThisInsteadPanel(BaseModsPanel):
                 original_pfid_btn_item = QStandardItem(mv["publishedfileid"])
                 original_pfid_btn = QPushButton()
                 original_pfid_btn.setObjectName("originalPFIDButton")
-                original_pfid_btn.setText("Open Workshop Page")
+                original_pfid_btn.setText(self.tr("Open Workshop Page"))
                 original_pfid_btn.clicked.connect(
                     partial(platform_specific_open, mv["steam_uri"])
                 )
@@ -145,7 +145,7 @@ class UseThisInsteadPanel(BaseModsPanel):
 
             replacement_pfid_btn = QPushButton()
             replacement_pfid_btn.setObjectName("replacementPFIDButton")
-            replacement_pfid_btn.setText("Open Workshop Page")
+            replacement_pfid_btn.setText(self.tr("Open Workshop Page"))
             replacement_pfid_btn.clicked.connect(
                 partial(
                     platform_specific_open,
