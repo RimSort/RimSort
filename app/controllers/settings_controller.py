@@ -606,6 +606,10 @@ class SettingsController(QObject):
         self.settings_dialog.check_deps_checkbox.setChecked(
             self.settings.check_dependencies_on_sort
         )
+        # Set About dependencies checkbox
+        self.settings_dialog.use_about_dependencies_checkbox.setChecked(
+            self.settings.use_about_dependencies_for_sorting
+        )
 
         # Database Builder tab
         if self.settings.db_builder_include == "all_mods":
@@ -812,6 +816,11 @@ class SettingsController(QObject):
         elif self.settings_dialog.sorting_topological_radio.isChecked():
             self.settings.sorting_algorithm = SortMethod.TOPOLOGICAL
 
+        # Set About dependencies checkbox
+        self.settings.use_about_dependencies_for_sorting = (
+            self.settings_dialog.use_about_dependencies_checkbox.isChecked()
+        )
+
         # Set dependencies checkbox
         self.settings.check_dependencies_on_sort = (
             self.settings_dialog.check_deps_checkbox.isChecked()
@@ -865,7 +874,9 @@ class SettingsController(QObject):
         )
         self.settings.theme_name = self.settings_dialog.themes_combobox.currentText()
 
-        self.settings.font_family = self.settings_dialog.font_family_combobox.currentText()
+        self.settings.font_family = (
+            self.settings_dialog.font_family_combobox.currentText()
+        )
 
         self.settings.font_size = self.settings_dialog.font_size_spinbox.value()
 
@@ -916,7 +927,9 @@ class SettingsController(QObject):
         """
         answer = BinaryChoiceDialog(
             title=self.tr("Reset to defaults"),
-            text=self.tr("Are you sure you want to reset all settings to their default values?"),
+            text=self.tr(
+                "Are you sure you want to reset all settings to their default values?"
+            ),
         )
         if not answer.exec_is_positive():
             return
@@ -1643,9 +1656,11 @@ class SettingsController(QObject):
             title=self.tr("Confirm Build Database"),
             text=self.tr("Are you sure you want to build the Steam Workshop database?"),
             information=(
-                self.tr("For most users this is not necessary as the GitHub SteamDB is adequate. Building the database may take a long time. "
-                "Depending on your settings, it may also crawl through the entirety of the steam workshop via the webAPI. "
-                "This can be a large amount of data and take a long time. Are you sure you want to continue?")
+                self.tr(
+                    "For most users this is not necessary as the GitHub SteamDB is adequate. Building the database may take a long time. "
+                    "Depending on your settings, it may also crawl through the entirety of the steam workshop via the webAPI. "
+                    "This can be a large amount of data and take a long time. Are you sure you want to continue?"
+                )
             ),
             icon=QMessageBox.Icon.Warning,
         )

@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Optional
 
 from loguru import logger
 
@@ -9,6 +9,11 @@ from app.utils.constants import SortMethod
 
 
 class Sorter:
+    """
+    Controller class to handle sorting of mods using different sorting methods
+    and dependency graph generation.
+    """
+
     sort_method: Callable[[dict[str, set[str]], set[str]], list[str]]
 
     def __init__(
@@ -17,6 +22,13 @@ class Sorter:
         active_package_ids: set[str],
         active_uuids: set[str],
     ):
+        """
+        Initialize the Sorter instance.
+
+        :param sort_method: Sorting method to use (alphabetical, topological, or custom callable)
+        :param active_package_ids: Set of active package IDs
+        :param active_uuids: Set of active UUIDs
+        """
         self.active_package_ids = active_package_ids.copy()
         self.active_uuids = active_uuids.copy()
 
@@ -38,13 +50,22 @@ class Sorter:
 
     def generate_dependency_graphs(
         self,
+        use_about_dependencies: bool = False,
     ) -> list[dict[str, set[str]]]:
+        """
+        Generate dependency graphs for the active mods, divided into tiers.
+
+        :return: List of dependency graphs for tier one, two, and three mods
+        """
         logger.info("Generating dependency graphs")
+        active_package_ids_list = list(self.active_package_ids)
         dependencies_graph = sort_deps.gen_deps_graph(
-            self.active_uuids, list(self.active_package_ids)
+            self.active_uuids,
+            active_package_ids_list,
+            use_about_dependencies=use_about_dependencies,
         )
         reverse_dependencies_graph = sort_deps.gen_rev_deps_graph(
-            self.active_uuids, list(self.active_package_ids)
+            self.active_uuids, active_package_ids_list
         )
 
         tier_one_graph, tier_one_mods = sort_deps.gen_tier_one_deps_graph(
@@ -59,7 +80,7 @@ class Sorter:
 
         tier_two_graph = sort_deps.gen_tier_two_deps_graph(
             self.active_uuids,
-            list(self.active_package_ids),
+            active_package_ids_list,
             tier_one_mods,
             tier_three_mods,
         )
@@ -67,17 +88,20 @@ class Sorter:
         return [tier_one_graph, tier_two_graph, tier_three_graph]
 
     def sort(
-        self, dependency_graphs: list[dict[str, set[str]]] | None = None
+        self,
+        dependency_graphs: Optional[list[dict[str, set[str]]]] = None,
+        use_about_dependencies: bool = False,
     ) -> tuple[bool, list[str]]:
-        """Sorts the given dependency graph using the controller's sort method.
+        """
+        Sort the given dependency graphs using the selected sort method.
 
-        :param dependency_graphs: The dependency graph to be sorted, defaults to None
-        :type dependency_graphs: list[dict[str, set[str]]] | None, optional
-        :return: True and the sorted list of UUIDs if the sort was successful, False and an empty list otherwise
-        :rtype: tuple[bool, list[str]]
+        :param dependency_graphs: Optional list of dependency graphs to sort
+        :return: Tuple of success flag and sorted list of UUIDs
         """
         if dependency_graphs is None:
-            dependency_graphs = self.generate_dependency_graphs()
+            dependency_graphs = self.generate_dependency_graphs(
+                use_about_dependencies=use_about_dependencies
+            )
 
         sorted_uuids = []
         try:

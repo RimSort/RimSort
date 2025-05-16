@@ -4,7 +4,9 @@ from app.utils.metadata import MetadataManager
 
 
 def gen_deps_graph(
-    active_mods_uuids: set[str], active_mod_ids: list[str]
+    active_mods_uuids: set[str],
+    active_mod_ids: list[str],
+    use_about_dependencies: bool = False,
 ) -> dict[str, set[str]]:
     """
     Get dependencies
@@ -17,23 +19,52 @@ def gen_deps_graph(
     for uuid in active_mods_uuids:
         package_id = metadata_manager.internal_local_metadata[uuid]["packageid"]
         dependencies_graph[package_id] = set()
-        if metadata_manager.internal_local_metadata[uuid].get(
-            "loadTheseBefore"
-        ):  # Will either be None, or a set
+        # Load order rules
+        if metadata_manager.internal_local_metadata[uuid].get("loadTheseBefore"):
             for dependency in metadata_manager.internal_local_metadata[uuid][
                 "loadTheseBefore"
             ]:
-                # Only add a dependency if dependency exists in active_mods. Recall
-                # that dependencies exist for all_mods, but not all of these will be
-                # in active mods. Also note that dependencies here refers to load order
-                # rules. Also note that dependency[0] is required as dependency is a tuple
-                # of package_id, explicit_bool
                 if not isinstance(dependency, tuple):
                     logger.error(
                         f"Expected load order rule to be a tuple: [{dependency}]"
                     )
                 if dependency[0] in active_mod_ids:
                     dependencies_graph[package_id].add(dependency[0])
+        # About.xml dependencies (moddependencies, moddependenciesbyversion)
+        if use_about_dependencies:
+            deps = set()
+            moddata = metadata_manager.internal_local_metadata[uuid]
+            # moddependencies
+            if moddata.get("moddependencies"):
+                if isinstance(moddata["moddependencies"], dict):
+                    li = moddata["moddependencies"].get("li")
+                    if isinstance(li, list):
+                        for dep in li:
+                            if isinstance(dep, dict) and dep.get("packageId"):
+                                depid = dep["packageId"].lower()
+                                if depid in active_mod_ids:
+                                    deps.add(depid)
+                elif isinstance(moddata["moddependencies"], list):
+                    for entry in moddata["moddependencies"]:
+                        if isinstance(entry, dict) and entry.get("li"):
+                            for dep in entry["li"]:
+                                if isinstance(dep, dict) and dep.get("packageId"):
+                                    depid = dep["packageId"].lower()
+                                    if depid in active_mod_ids:
+                                        deps.add(depid)
+            # moddependenciesbyversion
+            if moddata.get("moddependenciesbyversion"):
+                game_version = getattr(metadata_manager, "game_version", "")
+                if game_version:
+                    major_minor = ".".join(game_version.split(".")[:2])
+                    for version, depver in moddata["moddependenciesbyversion"].items():
+                        if major_minor in version and depver.get("li"):
+                            for dep in depver["li"]:
+                                if isinstance(dep, dict) and dep.get("packageId"):
+                                    depid = dep["packageId"].lower()
+                                    if depid in active_mod_ids:
+                                        deps.add(depid)
+            dependencies_graph[package_id].update(deps)
     logger.info(
         f"Finished generating dependencies graph of {len(dependencies_graph)} items"
     )
