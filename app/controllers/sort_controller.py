@@ -9,6 +9,11 @@ from app.utils.constants import SortMethod
 
 
 class Sorter:
+    """
+    Controller class to handle sorting of mods using different sorting methods
+    and dependency graph generation.
+    """
+
     sort_method: Callable[[dict[str, set[str]], set[str]], list[str]]
 
     def __init__(
@@ -18,6 +23,13 @@ class Sorter:
         active_uuids: set[str],
         use_moddependencies_as_loadTheseBefore: bool = False,
     ):
+        """
+        Initialize the Sorter instance.
+
+        :param sort_method: Sorting method to use (alphabetical, topological, or custom callable)
+        :param active_package_ids: Set of active package IDs
+        :param active_uuids: Set of active UUIDs
+        """
         self.active_package_ids = active_package_ids.copy()
         self.active_uuids = active_uuids.copy()
         self.use_moddependencies_as_loadTheseBefore = (
@@ -43,12 +55,18 @@ class Sorter:
     def generate_dependency_graphs(
         self,
     ) -> list[dict[str, set[str]]]:
+        """
+        Generate dependency graphs for the active mods, divided into tiers.
+
+        :return: List of dependency graphs for tier one, two, and three mods
+        """
         logger.info("Generating dependency graphs")
+        active_package_ids_list = list(self.active_package_ids)
         dependencies_graph = sort_deps.gen_deps_graph(
-            self.active_uuids, list(self.active_package_ids)
+            self.active_uuids, active_package_ids_list
         )
         reverse_dependencies_graph = sort_deps.gen_rev_deps_graph(
-            self.active_uuids, list(self.active_package_ids)
+            self.active_uuids, active_package_ids_list
         )
 
         tier_one_graph, tier_one_mods = sort_deps.gen_tier_one_deps_graph(
@@ -63,10 +81,10 @@ class Sorter:
 
         tier_two_graph = sort_deps.gen_tier_two_deps_graph(
             self.active_uuids,
-            list(self.active_package_ids),
+            active_package_ids_list,
             tier_one_mods,
             tier_three_mods,
-            use_moddependencies_as_loadTheseBefore = self.use_moddependencies_as_loadTheseBefore,
+            use_moddependencies_as_loadTheseBefore=self.use_moddependencies_as_loadTheseBefore,
         )
 
         return [tier_one_graph, tier_two_graph, tier_three_graph]
@@ -74,7 +92,9 @@ class Sorter:
     def sort(
         self, dependency_graphs: list[dict[str, set[str]]] | None = None
     ) -> tuple[bool, list[str]]:
-        """Sorts the given dependency graph using the controller's sort method.
+        """
+        Sorts the given dependency graph using the controller's sort method.
+
 
         :param dependency_graphs: The dependency graph to be sorted, defaults to None
         :type dependency_graphs: list[dict[str, set[str]]] | None, optional
