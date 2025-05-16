@@ -3239,7 +3239,7 @@ class MainContent(QObject):
         logger.info("Opening file dialog to specify input file B")
         input_path_b = dialogue.show_dialogue_file(
             mode="open",
-            caption='Input "to-be-updated" database, input A',
+            caption='Input "update source" database, input B',
             _dir=str(AppInfo().app_storage_folder),
             _filter="JSON (*.json)",
         )
