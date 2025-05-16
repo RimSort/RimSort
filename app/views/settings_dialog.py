@@ -60,7 +60,9 @@ class SettingsDialog(QDialog):
         main_layout.addLayout(button_layout)
 
         # Reset to defaults button
-        self.global_reset_to_defaults_button = QPushButton(self.tr("Reset to Defaults"), self)
+        self.global_reset_to_defaults_button = QPushButton(
+            self.tr("Reset to Defaults"), self
+        )
         button_layout.addWidget(self.global_reset_to_defaults_button)
 
         button_layout.addStretch()
@@ -78,8 +80,8 @@ class SettingsDialog(QDialog):
         tab = QWidget()
         self.tab_widget.addTab(tab, self.tr("Locations"))
 
-        tab_layout = QVBoxLayout(tab)
-        tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        tab_layout = QVBoxLayout()
+        tab.setLayout(tab_layout)
 
         self._do_game_location_area(tab_layout)
         self._do_config_folder_location_area(tab_layout)
@@ -237,6 +239,7 @@ class SettingsDialog(QDialog):
             self.tr("Game location sets local mods location.")
         )
         group_layout.addWidget(self.local_mods_folder_location)
+
     # jscpd:ignore-end
 
     def _do_databases_tab(self) -> None:
@@ -400,7 +403,9 @@ class SettingsDialog(QDialog):
             self.steam_workshop_db_local_file_choose_button,
         ) = self.__create_db_group(section_lbl, none_lbl, tab_layout)
         database_expiry_label = QLabel(
-            self.tr("Steam Workshop database expiry in Epoch Time (Use 0 to Disable Notification. Default is 7 Days)")
+            self.tr(
+                "Steam Workshop database expiry in Epoch Time (Use 0 to Disable Notification. Default is 7 Days)"
+            )
         )
         group_layout.addWidget(database_expiry_label)
 
@@ -473,6 +478,12 @@ class SettingsDialog(QDialog):
         self.sorting_topological_radio = QRadioButton(self.tr("Topologically"))
         sort_group_box_layout.addWidget(self.sorting_topological_radio)
 
+        # New: Use About.xml dependencies for sorting
+        self.use_about_dependencies_checkbox = QCheckBox(
+            self.tr("Use dependencies in mods About files for sorting")
+        )
+        sort_group_box_layout.addWidget(self.use_about_dependencies_checkbox)
+
         # Dependencies group
         deps_group_box = QGroupBox(self.tr("Sort Dependencies"))
         tab_layout.addWidget(deps_group_box)
@@ -516,8 +527,10 @@ class SettingsDialog(QDialog):
         group_layout.addWidget(self.db_builder_include_all_radio)
 
         explanatory_label = QLabel(
-            self.tr("Mods you wish to update must be installed, "
-            "as the initial DB is built including data from mods' About.xml files.")
+            self.tr(
+                "Mods you wish to update must be installed, "
+                "as the initial DB is built including data from mods' About.xml files."
+            )
         )
         group_layout.addWidget(explanatory_label)
 
@@ -527,8 +540,10 @@ class SettingsDialog(QDialog):
         group_layout.addWidget(self.db_builder_include_no_local_radio)
 
         explanatory_label = QLabel(
-            self.tr("Mods to be updated don't have to be installed, "
-            "as the initial DB is built by scraping the Steam Workshop.")
+            self.tr(
+                "Mods to be updated don't have to be installed, "
+                "as the initial DB is built by scraping the Steam Workshop."
+            )
         )
         group_layout.addWidget(explanatory_label)
 
@@ -581,10 +596,14 @@ class SettingsDialog(QDialog):
         item_label = QLabel(self.tr("Download all published Workshop mods via:"))
         item_layout.addWidget(item_label)
 
-        self.db_builder_download_all_mods_via_steamcmd_button = QPushButton(self.tr("SteamCMD"))
+        self.db_builder_download_all_mods_via_steamcmd_button = QPushButton(
+            self.tr("SteamCMD")
+        )
         item_layout.addWidget(self.db_builder_download_all_mods_via_steamcmd_button)
 
-        self.db_builder_download_all_mods_via_steam_button = QPushButton(self.tr("Steam"))
+        self.db_builder_download_all_mods_via_steam_button = QPushButton(
+            self.tr("Steam")
+        )
         self.db_builder_download_all_mods_via_steam_button.setFixedWidth(
             self.db_builder_download_all_mods_via_steamcmd_button.sizeHint().width()
         )
@@ -596,7 +615,9 @@ class SettingsDialog(QDialog):
 
         item_layout.addStretch()
 
-        self.db_builder_compare_databases_button = QPushButton(self.tr("Compare Databases"))
+        self.db_builder_compare_databases_button = QPushButton(
+            self.tr("Compare Databases")
+        )
         item_layout.addWidget(self.db_builder_compare_databases_button)
 
         self.db_builder_merge_databases_button = QPushButton(self.tr("Merge Databases"))
@@ -634,8 +655,10 @@ class SettingsDialog(QDialog):
         )
         self.steamcmd_auto_clear_depot_cache_checkbox.setToolTip(
             (
-                self.tr("Automatically clear the depot cache before downloading mods through SteamCMD.\n"
-                "This may potentially prevent some issues with downloading mods such as download failures and deleted mods repopulating.")
+                self.tr(
+                    "Automatically clear the depot cache before downloading mods through SteamCMD.\n"
+                    "This may potentially prevent some issues with downloading mods such as download failures and deleted mods repopulating."
+                )
             )
         )
         group_layout.addWidget(self.steamcmd_auto_clear_depot_cache_checkbox)
@@ -671,9 +694,13 @@ class SettingsDialog(QDialog):
 
         button_layout.addStretch()
 
-        self.steamcmd_clear_depot_cache_button = QPushButton(self.tr("Clear depot cache"))
+        self.steamcmd_clear_depot_cache_button = QPushButton(
+            self.tr("Clear depot cache")
+        )
         self.steamcmd_clear_depot_cache_button.setToolTip(
-            self.tr("Clear the depot cache manually. This may be useful if you encounter issues with downloading mods through SteamCMD.")
+            self.tr(
+                "Clear the depot cache manually. This may be useful if you encounter issues with downloading mods through SteamCMD."
+            )
         )
         button_layout.addWidget(self.steamcmd_clear_depot_cache_button)
 
@@ -707,7 +734,9 @@ class SettingsDialog(QDialog):
         self.todds_preset_combobox.setSizePolicy(
             QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred
         )
-        self.todds_preset_combobox.addItem(self.tr("Optimized - Recommended for RimWorld"))
+        self.todds_preset_combobox.addItem(
+            self.tr("Optimized - Recommended for RimWorld")
+        )
         group_layout.addWidget(self.todds_preset_combobox)
 
         group_box = QGroupBox()
@@ -720,7 +749,9 @@ class SettingsDialog(QDialog):
         when_optimizing_label.setFont(GUIInfo().emphasis_font)
         group_layout.addWidget(when_optimizing_label)
 
-        self.todds_active_mods_only_radio = QRadioButton(self.tr("Optimize active mods only"))
+        self.todds_active_mods_only_radio = QRadioButton(
+            self.tr("Optimize active mods only")
+        )
         group_layout.addWidget(self.todds_active_mods_only_radio)
 
         self.todds_all_mods_radio = QRadioButton(self.tr("Optimize all mods"))
@@ -759,14 +790,14 @@ class SettingsDialog(QDialog):
         )
         self.enable_themes_checkbox.setToolTip(
             self.tr(
-            "To add your own theme / stylesheet \n\n"
-            "1) Create a new-folder in 'themes' folder in your 'RimSort' config folder \n"
-            "2) Using the default 'RimPy' theme copy it to the folder you created \n"
-            "3) Edit the copied 'style.qss' as per your imagination \n"
-            "4) Start 'RimSort' and select your theme from dropdown \n"
-            "5) Click 'ok' to save settings and apply the selected theme \n\n"
-            "NOTE \n"
-            "Name of folder will be used as name of the theme and any invalid theme will be ignored \n"
+                "To add your own theme / stylesheet \n\n"
+                "1) Create a new-folder in 'themes' folder in your 'RimSort' config folder \n"
+                "2) Using the default 'RimPy' theme copy it to the folder you created \n"
+                "3) Edit the copied 'style.qss' as per your imagination \n"
+                "4) Start 'RimSort' and select your theme from dropdown \n"
+                "5) Click 'ok' to save settings and apply the selected theme \n\n"
+                "NOTE \n"
+                "Name of folder will be used as name of the theme and any invalid theme will be ignored \n"
             )
         )
         group_layout.addWidget(self.enable_themes_checkbox)
@@ -806,7 +837,7 @@ class SettingsDialog(QDialog):
         font_size_layout.addWidget(font_size_label)
 
         self.font_size_spinbox = QSpinBox()
-        self.font_size_spinbox.setRange(8,20)
+        self.font_size_spinbox.setRange(8, 20)
         self.font_size_spinbox.setValue(12)
         self.font_size_spinbox.setSizePolicy(
             QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred
@@ -839,7 +870,9 @@ class SettingsDialog(QDialog):
         language_group_box.setLayout(language_group_layout)
         language_group_box.setFont(GUIInfo().emphasis_font)
 
-        language_label = QLabel(self.tr("Select Language (Restart required to apply changes)"))
+        language_label = QLabel(
+            self.tr("Select Language (Restart required to apply changes)")
+        )
         language_group_layout.addWidget(language_label)
 
         self.language_combobox = QComboBox()
@@ -850,7 +883,6 @@ class SettingsDialog(QDialog):
         language_group_layout.addWidget(self.language_combobox)
 
         self.connect_populate_languages_combobox()
-
 
     def reset_font_settings(self) -> None:
         default_font = QApplication.font()
@@ -894,7 +926,9 @@ class SettingsDialog(QDialog):
         self.debug_logging_checkbox = QCheckBox(self.tr("Enable debug logging"))
         group_layout.addWidget(self.debug_logging_checkbox)
 
-        self.watchdog_checkbox = QCheckBox(self.tr("Enable watchdog file monitor daemon"))
+        self.watchdog_checkbox = QCheckBox(
+            self.tr("Enable watchdog file monitor daemon")
+        )
         group_layout.addWidget(self.watchdog_checkbox)
 
         self.mod_type_filter_checkbox = QCheckBox(self.tr("Enable mod type filter"))
@@ -910,7 +944,9 @@ class SettingsDialog(QDialog):
         )
         group_layout.addWidget(self.show_duplicate_mods_warning_checkbox)
 
-        self.show_mod_updates_checkbox = QCheckBox(self.tr("Check for mod updates on refresh"))
+        self.show_mod_updates_checkbox = QCheckBox(
+            self.tr("Check for mod updates on refresh")
+        )
         group_layout.addWidget(self.show_mod_updates_checkbox)
 
         self.steam_client_integration_checkbox = QCheckBox(
@@ -927,7 +963,9 @@ class SettingsDialog(QDialog):
             self.tr("Render Unity Rich Text in mod descriptions")
         )
         self.render_unity_rich_text_checkbox.setToolTip(
-            self.tr("Enable this option to render Unity Rich Text in mod descriptions. Images will not be displayed.")
+            self.tr(
+                "Enable this option to render Unity Rich Text in mod descriptions. Images will not be displayed."
+            )
         )
         group_layout.addWidget(self.render_unity_rich_text_checkbox)
 
@@ -997,9 +1035,9 @@ class SettingsDialog(QDialog):
 
         self.run_args_info_label = QLabel(
             self.tr(
-            "Enter a comma separated list of arguments to pass to the Rimworld executable \n"
-            "\n Examples : \n"
-            "\n -logfile,/path/to/file.log,-savedatafolder=/path/to/savedata,-popupwindow \n"
+                "Enter a comma separated list of arguments to pass to the Rimworld executable \n"
+                "\n Examples : \n"
+                "\n -logfile,/path/to/file.log,-savedatafolder=/path/to/savedata,-popupwindow \n"
             )
         )
         self.run_args_info_label.setFixedHeight(GUIInfo().default_font_line_height * 6)

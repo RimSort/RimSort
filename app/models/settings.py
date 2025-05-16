@@ -68,6 +68,9 @@ class Settings(QObject):
         self.check_dependencies_on_sort: bool = (
             True  # Whether to check for missing dependencies when sorting
         )
+        self.use_about_dependencies_for_sorting: bool = (
+            False  # New: Use About.xml dependencies for sorting
+        )
 
         # DB Builder
         self.db_builder_include: str = "all_mods"
