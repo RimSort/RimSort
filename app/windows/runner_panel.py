@@ -390,7 +390,9 @@ class RunnerPanel(QWidget):
                     if (
                         show_dialogue_conditional(
                             title=self.tr("SteamCMD downloader"),
-                            text=self.tr("SteamCMD failed to download mod(s)! Would you like to retry download of the mods that failed?\n\nClick 'Show Details' to see a list of mods that failed."),
+                            text=self.tr(
+                                "SteamCMD failed to download mod(s)! Would you like to retry download of the mods that failed?\n\nClick 'Show Details' to see a list of mods that failed."
+                            ),
                             details=details,
                         )
                         == "&Yes"
@@ -415,8 +417,8 @@ class RunnerPanel(QWidget):
         diag = BinaryChoiceDialog(
             title=self.tr("Process Complete"),
             text=self.tr("Process complete, you can close the window."),
-            positive_text="Close Window",
-            negative_text="Ok",
+            positive_text=self.tr("Close Window"),
+            negative_text=self.tr("Ok"),
         )
         if diag.exec_is_positive():
             self.close()
