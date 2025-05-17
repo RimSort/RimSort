@@ -4,7 +4,15 @@ from pathlib import Path
 from typing import Tuple
 
 from loguru import logger
-from PySide6.QtCore import QEvent, QRunnable, Qt, QThreadPool, Signal, Slot
+from PySide6.QtCore import (
+    QCoreApplication,
+    QEvent,
+    QRunnable,
+    Qt,
+    QThreadPool,
+    Signal,
+    Slot,
+)
 from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
@@ -58,6 +66,9 @@ def show_dialogue_conditional(
     if button_text_override:
         # Remove standard buttons
         dialogue.setStandardButtons(QMessageBox.StandardButton.Cancel)
+        dialogue.button(QMessageBox.StandardButton.Cancel).setText(
+            QCoreApplication.translate("show_dialogue_conditional", "Cancel")
+        )
 
         # Add custom buttons
         custom_btns = []
@@ -148,6 +159,10 @@ def show_information(
     info_message_box.setTextFormat(Qt.TextFormat.RichText)
     info_message_box.setIcon(QMessageBox.Icon.Information)
     info_message_box.setObjectName("dialogue")
+    info_message_box.setStandardButtons(QMessageBox.StandardButton.Ok)
+    info_message_box.button(QMessageBox.StandardButton.Ok).setText(
+        QCoreApplication.translate("show_dialogue_information", "OK")
+    )
     if title:
         info_message_box.setWindowTitle(title)
     else:
@@ -200,6 +215,11 @@ def show_warning(
         warning_message_box.setWindowTitle(title)
     else:
         warning_message_box.setWindowTitle(DEFAULT_TITLE)
+
+    warning_message_box.setStandardButtons(QMessageBox.StandardButton.Ok)
+    warning_message_box.button(QMessageBox.StandardButton.Ok).setText(
+        QCoreApplication.translate("show_warning", "OK")
+    )
 
     # Add data
     if text:
@@ -595,7 +615,9 @@ class _UploadLogDialog(QDialog):
                 generic.copy_to_clipboard_safely(url)
                 show_information(
                     title=self.tr("Log Upload Successful"),
-                    text=self.tr("Log file uploaded successfully! Copied URL to clipboard."),
+                    text=self.tr(
+                        "Log file uploaded successfully! Copied URL to clipboard."
+                    ),
                     information=f"URL: <a href='{url}'>{url}</a>",
                     parent=parent,
                 )
@@ -603,7 +625,9 @@ class _UploadLogDialog(QDialog):
                 show_warning(
                     title=self.tr("Log Upload Failed"),
                     text=self.tr("Log file upload failed!"),
-                    information=self.tr("Please check your internet connection and try again."),
+                    information=self.tr(
+                        "Please check your internet connection and try again."
+                    ),
                     parent=parent,
                 )
 
@@ -684,7 +708,9 @@ class SettingsFailureDialog(QDialog):
         )
 
         # Add data
-        self.text = self.tr("Your RimSort settings file is corrupt.\nPlease choose one of the following options to proceed.")
+        self.text = self.tr(
+            "Your RimSort settings file is corrupt.\nPlease choose one of the following options to proceed."
+        )
 
         # Buttons
         self.open_settings_file_btn = QPushButton(self.tr("Open Settings"))

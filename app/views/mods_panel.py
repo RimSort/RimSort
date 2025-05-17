@@ -205,7 +205,9 @@ class ModListItemInner(QWidget):
             else:
                 self.xml_icon = QLabel()
                 self.xml_icon.setPixmap(ModListIcons.xml_icon().pixmap(QSize(20, 20)))
-                self.xml_icon.setToolTip(self.tr("Contains custom content (textures / XML)"))
+                self.xml_icon.setToolTip(
+                    self.tr("Contains custom content (textures / XML)")
+                )
         self.git_icon = None
         if (
             self.metadata_manager.internal_local_metadata[self.uuid]["data_source"]
@@ -217,7 +219,9 @@ class ModListItemInner(QWidget):
         ):
             self.git_icon = QLabel()
             self.git_icon.setPixmap(ModListIcons.git_icon().pixmap(QSize(20, 20)))
-            self.git_icon.setToolTip(self.tr("Local mod that contains a git repository"))
+            self.git_icon.setToolTip(
+                self.tr("Local mod that contains a git repository")
+            )
         self.steamcmd_icon = None
         if self.metadata_manager.internal_local_metadata[self.uuid][
             "data_source"
@@ -228,7 +232,9 @@ class ModListItemInner(QWidget):
             self.steamcmd_icon.setPixmap(
                 ModListIcons.steamcmd_icon().pixmap(QSize(20, 20))
             )
-            self.steamcmd_icon.setToolTip(self.tr("Local mod that can be used with SteamCMD"))
+            self.steamcmd_icon.setToolTip(
+                self.tr("Local mod that can be used with SteamCMD")
+            )
         # Warning icon hidden by default
         self.warning_icon_label = ClickableQLabel()
         self.warning_icon_label.clicked.connect(
@@ -803,7 +809,9 @@ class ModListWidget(QListWidget):
                         open_url_browser_action = QAction()
                         open_url_browser_action.setText(self.tr("Open URL in browser"))
                         copy_url_to_clipboard_action = QAction()
-                        copy_url_to_clipboard_action.setText(self.tr("Copy URL to clipboard"))
+                        copy_url_to_clipboard_action.setText(
+                            self.tr("Copy URL to clipboard")
+                        )
                     # If we have a "steam_uri"
                     if (
                         mod_metadata.get("steam_uri")
@@ -849,7 +857,9 @@ class ModListWidget(QListWidget):
                             )
                             # Re-download steamcmd mods
                             re_steamcmd_action = QAction()
-                            re_steamcmd_action.setText(self.tr("Re-download mod with SteamCMD"))
+                            re_steamcmd_action.setText(
+                                self.tr("Re-download mod with SteamCMD")
+                            )
                         # Update local mods that contain git repos that are not steamcmd mods
                         if not mod_metadata.get("steamcmd") and mod_metadata.get(
                             "git_repo"
@@ -877,7 +887,9 @@ class ModListWidget(QListWidget):
                         ].steam_client_integration:
                             # Re-subscribe steam mods
                             re_steam_action = QAction()
-                            re_steam_action.setText(self.tr("Re-subscribe mod with Steam"))
+                            re_steam_action.setText(
+                                self.tr("Re-subscribe mod with Steam")
+                            )
                             # Unsubscribe steam mods
                             unsubscribe_mod_steam_action = QAction()
                             unsubscribe_mod_steam_action.setText(
@@ -931,7 +943,9 @@ class ModListWidget(QListWidget):
                         # If we have a "url" or "steam_url"
                         if mod_metadata.get("url") or mod_metadata.get("steam_url"):
                             open_url_browser_action = QAction()
-                            open_url_browser_action.setText(self.tr("Open URL(s) in browser"))
+                            open_url_browser_action.setText(
+                                self.tr("Open URL(s) in browser")
+                            )
                         # Conversion options (local <-> SteamCMD)
                         if mod_data_source == "local":
                             mod_name = mod_metadata.get("name")
@@ -977,7 +991,9 @@ class ModListWidget(QListWidget):
                                 git_paths.append(mod_folder_path)
                                 if not re_git_action:
                                     re_git_action = QAction()
-                                    re_git_action.setText(self.tr("Update mod(s) with git"))
+                                    re_git_action.setText(
+                                        self.tr("Update mod(s) with git")
+                                    )
                         # No "Edit mod rules" when multiple selected
                         # Toggle warning
                         if not toggle_warning_action:
@@ -1092,7 +1108,9 @@ class ModListWidget(QListWidget):
                     # Prompt user
                     answer = show_dialogue_conditional(
                         title=self.tr("Are you sure?"),
-                        text=self.tr("You have selected {len} git mods to be updated.").format(len=len(git_paths)),
+                        text=self.tr(
+                            "You have selected {len} git mods to be updated."
+                        ).format(len=len(git_paths)),
                         information=self.tr("Do you want to proceed?"),
                     )
                     if answer == "&Yes":
@@ -1184,9 +1202,13 @@ class ModListWidget(QListWidget):
                     # Prompt user
                     answer = show_dialogue_conditional(
                         title=self.tr("Are you sure?"),
-                        text=self.tr("You have selected {len} mods for deletion + re-download.").format(len=len(steamcmd_publishedfileid_to_redownload)),
-                        information=self.tr("\nThis operation will recursively delete all mod files, except for .dds textures found, "
-                        + "and attempt to re-download the mods via SteamCMD. Do you want to proceed?"),
+                        text=self.tr(
+                            "You have selected {len} mods for deletion + re-download."
+                        ).format(len=len(steamcmd_publishedfileid_to_redownload)),
+                        information=self.tr(
+                            "\nThis operation will recursively delete all mod files, except for .dds textures found, "
+                            + "and attempt to re-download the mods via SteamCMD. Do you want to proceed?"
+                        ),
                     )
                     if answer == "&Yes":
                         logger.debug(
@@ -1276,8 +1298,12 @@ class ModListWidget(QListWidget):
                     # Prompt user
                     answer = show_dialogue_conditional(
                         title=self.tr("Are you sure?"),
-                        text=self.tr("You have selected {len} mods for unsubscribe + re-subscribe.").format(len=len(publishedfileids)),
-                        information=self.tr("\nThis operation will potentially delete .dds textures leftover. Steam is unreliable for this. Do you want to proceed?"),
+                        text=self.tr(
+                            "You have selected {len} mods for unsubscribe + re-subscribe."
+                        ).format(len=len(publishedfileids)),
+                        information=self.tr(
+                            "\nThis operation will potentially delete .dds textures leftover. Steam is unreliable for this. Do you want to proceed?"
+                        ),
                     )
                     if answer == "&Yes":
                         logger.debug(
@@ -1302,7 +1328,9 @@ class ModListWidget(QListWidget):
                     # Prompt user
                     answer = show_dialogue_conditional(
                         title=self.tr("Are you sure?"),
-                        text=self.tr("You have selected {len} mods for unsubscribe.").format(len=len(publishedfileids)),
+                        text=self.tr(
+                            "You have selected {len} mods for unsubscribe."
+                        ).format(len=len(publishedfileids)),
                         information=self.tr("\nDo you want to proceed?"),
                     )
                     if answer == "&Yes":
@@ -1336,7 +1364,9 @@ class ModListWidget(QListWidget):
 
                     args, ok = show_dialogue_input(
                         title=self.tr("Add comment"),
-                        label=self.tr("Enter a comment providing your reasoning for wanting to blacklist this mod: ")
+                        label=self.tr(
+                            "Enter a comment providing your reasoning for wanting to blacklist this mod: "
+                        )
                         + f"{self.metadata_manager.external_steam_metadata.get(steamdb_add_blacklist, {}).get('steamName', steamdb_add_blacklist)}",
                     )
                     if ok:
@@ -1346,7 +1376,9 @@ class ModListWidget(QListWidget):
                     else:
                         show_warning(
                             title=self.tr("Unable to add to blacklist"),
-                            text=self.tr("Comment was not provided or entry was cancelled. Comments are REQUIRED for this action!"),
+                            text=self.tr(
+                                "Comment was not provided or entry was cancelled. Comments are REQUIRED for this action!"
+                            ),
                         )
                     return True
                 elif (
@@ -1862,7 +1894,7 @@ class ModListWidget(QListWidget):
             tool_tip_text = ""
             for error_type, tooltip_header in [
                 ("missing_dependencies", self.tr("\nMissing Dependencies:")),
-                ("conflicting_incompatibilities", self.tr("\nIncompatibilities:"))
+                ("conflicting_incompatibilities", self.tr("\nIncompatibilities:")),
             ]:
                 if mod_errors[error_type]:
                     tool_tip_text += tooltip_header
@@ -1882,8 +1914,8 @@ class ModListWidget(QListWidget):
             current_item_data["errors"] = tool_tip_text
             # Calculate any needed string for warnings
             for error_type, tooltip_header in [
-                ("load_before_violations", "\nShould be Loaded After:"),
-                ("load_after_violations", "\nShould be Loaded Before:"),
+                ("load_before_violations", "\n应加载在以下模组之后:"),
+                ("load_after_violations", "\n应加载在以下模组之前:"),
             ]:
                 if mod_errors[error_type]:
                     tool_tip_text += tooltip_header
@@ -1905,13 +1937,13 @@ class ModListWidget(QListWidget):
                 and mod_data["packageid"] not in self.ignore_warning_list
             ):
                 # Add tool tip to indicate mod and game version mismatch
-                tool_tip_text += "\nMod and Game Version Mismatch"
+                tool_tip_text += "\n模组与游戏版本不匹配"
             # Handle "use this instead" behavior
             if (
                 current_item_data["alternative"]
                 and mod_data["packageid"] not in self.ignore_warning_list
             ):
-                tool_tip_text += f"\nAn alternative updated mod is recommended:\n{current_item_data['alternative']}"
+                tool_tip_text += f"\n推荐使用替代的更新模组：\n{current_item_data['alternative']}"
             # Add to error summary if any missing dependencies or incompatibilities
             if self.list_type == "Active" and any(
                 [
@@ -2105,12 +2137,12 @@ class ModsPanel(QWidget):
             ModListIcons.steam_icon(),
         ]
         self.data_source_filter_tooltips = [
-            "Showing All Mods",
-            "Showing Core and DLC",
-            "Showing Local Mods",
-            "Showing Git Mods",
-            "Showing SteamCMD Mods",
-            "Showing Steam Mods",
+            self.tr("Showing All Mods"),
+            self.tr("Showing Core and DLC"),
+            self.tr("Showing Local Mods"),
+            self.tr("Showing Git Mods"),
+            self.tr("Showing SteamCMD Mods"),
+            self.tr("Showing Steam Mods"),
         ]
         self.data_source_filter_type_icons = [
             QIcon(str(AppInfo().theme_data_folder / "default-icons" / "AppIcon_b.png")),
@@ -2118,19 +2150,19 @@ class ModsPanel(QWidget):
             ModListIcons.xml_icon(),
         ]
         self.data_source_filter_type_tooltips = [
-            "Showing All Mod Types",
-            "Showing C# Mods",
-            "Showing XML Mods",
+            self.tr("Showing All Mod Types"),
+            self.tr("Showing C# Mods"),
+            self.tr("Showing XML Mods"),
         ]
 
         self.mode_filter_icon = QIcon(
             str(AppInfo().theme_data_folder / "default-icons" / "filter.png")
         )
-        self.mode_filter_tooltip = "Hide Filter Disabled"
+        self.mode_filter_tooltip = self.tr("Hide Filter Disabled")
         self.mode_nofilter_icon = QIcon(
             str(AppInfo().theme_data_folder / "default-icons" / "nofilter.png")
         )
-        self.mode_nofilter_tooltip = "Hide Filter Enabled"
+        self.mode_nofilter_tooltip = self.tr("Hide Filter Enabled")
 
         # ACTIVE mod list widget
         self.active_mods_label = QLabel(self.tr("Active [0]"))
@@ -2234,7 +2266,12 @@ class ModsPanel(QWidget):
         self.active_mods_search_filter.setObjectName("MainUI")
         self.active_mods_search_filter.setMaximumWidth(125)
         self.active_mods_search_filter.addItems(
-            [self.tr("Name"), self.tr("PackageId"), self.tr("Author(s)"), self.tr("PublishedFileId")]
+            [
+                self.tr("Name"),
+                self.tr("PackageId"),
+                self.tr("Author(s)"),
+                self.tr("PublishedFileId"),
+            ]
         )
         # Active mods search layouts
         self.active_mods_search_layout.addWidget(
@@ -2283,7 +2320,9 @@ class ModsPanel(QWidget):
         self.errors_summary_layout.addLayout(self.warnings_errors_layout)
 
         # Create and add Use This Instead button
-        self.use_this_instead_button = QPushButton(self.tr('Check "Use This Instead" Database'))
+        self.use_this_instead_button = QPushButton(
+            self.tr('Check "Use This Instead" Database')
+        )
         self.use_this_instead_button.setObjectName("useThisInsteadButton")
         self.use_this_instead_button.clicked.connect(
             EventBus().use_this_instead_clicked.emit
@@ -2291,7 +2330,9 @@ class ModsPanel(QWidget):
         self.errors_summary_layout.addWidget(self.use_this_instead_button)
 
         # Create and add Check Dependencies button
-        self.check_dependencies_button: QPushButton = QPushButton(self.tr("Check Dependencies"))
+        self.check_dependencies_button: QPushButton = QPushButton(
+            self.tr("Check Dependencies")
+        )
         self.check_dependencies_button.setObjectName("MainUI")
         self.errors_summary_layout.addWidget(self.check_dependencies_button)
         self.check_dependencies_button.clicked.connect(
@@ -2367,7 +2408,12 @@ class ModsPanel(QWidget):
         self.inactive_mods_search_filter.setObjectName("MainUI")
         self.inactive_mods_search_filter.setMaximumWidth(140)
         self.inactive_mods_search_filter.addItems(
-            [self.tr("Name"), self.tr("PackageId"), self.tr("Author(s)"), self.tr("PublishedFileId")]
+            [
+                self.tr("Name"),
+                self.tr("PackageId"),
+                self.tr("Author(s)"),
+                self.tr("PublishedFileId"),
+            ]
         )
         self.inactive_mods_search_layout.addWidget(
             self.inactive_mods_filter_data_source_button
@@ -2558,9 +2604,15 @@ class ModsPanel(QWidget):
                 self.errors_summary_frame.setHidden(False)
                 padding = " "
                 self.warnings_text.setText(
-                    self.tr("{padding}{num_warnings} warning(s)").format(padding=padding, num_warnings=num_warnings))
+                    self.tr("{padding}{num_warnings} warning(s)").format(
+                        padding=padding, num_warnings=num_warnings
+                    )
+                )
                 self.errors_text.setText(
-                    self.tr("{padding}{num_errors} error(s)").format(padding=padding, num_errors=num_errors))
+                    self.tr("{padding}{num_errors} error(s)").format(
+                        padding=padding, num_errors=num_errors
+                    )
+                )
                 self.errors_icon.setToolTip(
                     total_error_text.lstrip() if total_error_text else ""
                 )
@@ -2815,7 +2867,9 @@ class ModsPanel(QWidget):
 
     def update_count(self, list_type: str) -> None:
         # Calculate filtered items
-        list_type_label = self.tr("Active") if list_type == "Active" else self.tr("Inactive")
+        list_type_label = (
+            self.tr("Active") if list_type == "Active" else self.tr("Inactive")
+        )
         label = (
             self.active_mods_label
             if list_type == "Active"
