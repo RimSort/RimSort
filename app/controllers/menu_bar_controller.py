@@ -114,6 +114,9 @@ class MenuBarController(QObject):
         self.menu_bar.add_git_mod_action.triggered.connect(
             EventBus().do_add_git_mod.emit
         )
+        self.menu_bar.add_zip_mod_action.triggered.connect(
+            EventBus().do_add_zip_mod.emit
+        )
         self.menu_bar.browse_workshop_action.triggered.connect(
             EventBus().do_browse_workshop
         )
@@ -178,7 +181,11 @@ class MenuBarController(QObject):
     def _on_set_current_instance(
         self, current_instance: str, initialize: bool = False
     ) -> None:
-        self.menu_bar.instances_submenu.setTitle(self.tr("Current: {current_instance}").format(current_instance=current_instance))
+        self.menu_bar.instances_submenu.setTitle(
+            self.tr("Current: {current_instance}").format(
+                current_instance=current_instance
+            )
+        )
         self.menu_bar.instances_submenu.setActiveAction(
             next(
                 (
