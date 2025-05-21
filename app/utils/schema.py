@@ -8,6 +8,7 @@ from app.views.dialogue import show_warning
 
 translate = QCoreApplication.translate
 
+
 def generate_rimworld_mods_list(
     game_version: str, packageids: list[str], dlc_ids: list[str] = RIMWORLD_PACKAGE_IDS
 ) -> dict[str, Any]:
@@ -76,9 +77,15 @@ def validate_rimworld_mods_list(
         logger.error(f"Error trying to validate data: {e}")
         show_warning(
             title=translate("validate_rimworld_mods_list", "Unable to read data"),
-            text=translate("validate_rimworld_mods_list", "RimSort was unable to read the supplied mods list."),
-            information=translate("validate_rimworld_mods_list","The supplied mods list may be missing or invalid. "
-            + "If you just (re)installed RimWorld, you may need to run it once to generate the mods list."),
+            text=translate(
+                "validate_rimworld_mods_list",
+                "RimSort was unable to read the supplied mods list.",
+            ),
+            information=translate(
+                "validate_rimworld_mods_list",
+                "The supplied mods list may be missing or invalid. "
+                + "If you just (re)installed RimWorld, you may need to run it once to generate the mods list.",
+            ),
             details=str(e),
         )
     else:
@@ -86,7 +93,10 @@ def validate_rimworld_mods_list(
         show_warning(
             title=translate("validate_rimworld_mods_list", "Unable to read data"),
             text=(
-                translate("validate_rimworld_mods_list","RimSort was unable to read the supplied mods list because it may be invalid or missing.")
+                translate(
+                    "validate_rimworld_mods_list",
+                    "RimSort was unable to read the supplied mods list because it may be invalid or missing.",
+                )
             ),
         )
 

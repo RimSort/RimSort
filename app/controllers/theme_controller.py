@@ -110,7 +110,6 @@ class ThemeController:
         self.font_family = family
         self.font_size = size
 
-
     def get_theme_stylesheet_path(self, theme_name: str) -> Optional[Path]:
         """Returns the path to the stylesheet for the specified theme.
 
@@ -131,8 +130,14 @@ class ThemeController:
                 return potential_path
         logger.error(f"Stylesheet path does not exist for theme '{theme_name}'")
         dialogue.show_warning(
-            title=QCoreApplication.translate("ThemeController","Theme path Error"),
-            text=QCoreApplication.translate("ThemeController","Stylesheet path does not exist for theme '{theme_name}' Resetting to default theme '{default_theme}'.").format(theme_name=theme_name,default_theme=self.default_theme,),
+            title=QCoreApplication.translate("ThemeController", "Theme path Error"),
+            text=QCoreApplication.translate(
+                "ThemeController",
+                "Stylesheet path does not exist for theme '{theme_name}' Resetting to default theme '{default_theme}'.",
+            ).format(
+                theme_name=theme_name,
+                default_theme=self.default_theme,
+            ),
         )
         return None
 
@@ -160,9 +165,15 @@ class ThemeController:
                     f"Resetting to default theme: {self.default_theme}"
                 )
                 dialogue.show_warning(
-                    title=QCoreApplication.translate("ThemeController","Theme Error"),
-                    text=QCoreApplication.translate("ThemeController","Failed to apply theme: {selected_theme_name},"
-                    "Resetting to default theme: {self.default_theme}").format(selected_theme_name=selected_theme_name,default_theme=self.default_theme,),
+                    title=QCoreApplication.translate("ThemeController", "Theme Error"),
+                    text=QCoreApplication.translate(
+                        "ThemeController",
+                        "Failed to apply theme: {selected_theme_name},"
+                        "Resetting to default theme: {self.default_theme}",
+                    ).format(
+                        selected_theme_name=selected_theme_name,
+                        default_theme=self.default_theme,
+                    ),
                 )
                 self.reset_to_default_theme()
         else:
@@ -206,10 +217,14 @@ class ThemeController:
             current_index = settings_dialog.themes_combobox.findText(current_theme_name)
             current_font_family = settings.font_family
             current_font_size = settings.font_size
-            current_font_family_index = settings_dialog.font_family_combobox.findText(current_font_family)
+            current_font_family_index = settings_dialog.font_family_combobox.findText(
+                current_font_family
+            )
             settings_dialog.font_size_spinbox.setValue(current_font_size)
             if current_font_family_index != -1:
-                settings_dialog.font_family_combobox.setCurrentIndex(current_font_family_index)
+                settings_dialog.font_family_combobox.setCurrentIndex(
+                    current_font_family_index
+                )
             else:
                 settings_dialog.font_family_combobox.setCurrentIndex(-1)
             if current_index != -1:

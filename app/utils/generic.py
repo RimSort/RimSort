@@ -45,8 +45,11 @@ def copy_to_clipboard_safely(text: str) -> None:
     except Exception as e:
         logger.error(f"Failed to copy to clipboard: {e}")
         dialogue.show_fatal_error(
-            title=translate("copy_to_clipboard_safely","Failed to copy to clipboard."),
-            text=translate("copy_to_clipboard_safely","RimSort failed to copy the text to your clipboard. Please copy it manually."),
+            title=translate("copy_to_clipboard_safely", "Failed to copy to clipboard."),
+            text=translate(
+                "copy_to_clipboard_safely",
+                "RimSort failed to copy the text to your clipboard. Please copy it manually.",
+            ),
             details=str(e),
         )
 
@@ -67,18 +70,26 @@ def rmtree(path: str | Path, **kwargs: Any) -> bool:
     if not path.exists():
         logger.error(f"Tried to delete directory that does not exist: {path}")
         dialogue.show_warning(
-            title=translate("rmtree","Failed to remove directory"),
-            text=translate("rmtree","RimSort tried to remove a directory that does not exist."),
-            details=translate("rmtree","Directory does not exist: {path}").format(path=path),
+            title=translate("rmtree", "Failed to remove directory"),
+            text=translate(
+                "rmtree", "RimSort tried to remove a directory that does not exist."
+            ),
+            details=translate("rmtree", "Directory does not exist: {path}").format(
+                path=path
+            ),
         )
         return False
 
     if not path.is_dir():
         logger.error(f"rmtree path is not a directory: {path}")
         dialogue.show_warning(
-            title=translate("rmtree","Failed to remove directory"),
-            text=translate("rmtree","RimSort tried to remove a directory that is not a directory."),
-            details=translate("rmtree","Path is not a directory: {path}").format(path=path),
+            title=translate("rmtree", "Failed to remove directory"),
+            text=translate(
+                "rmtree", "RimSort tried to remove a directory that is not a directory."
+            ),
+            details=translate("rmtree", "Path is not a directory: {path}").format(
+                path=path
+            ),
         )
         return False
 
@@ -91,9 +102,17 @@ def rmtree(path: str | Path, **kwargs: Any) -> bool:
             error_code = e.errno
         logger.error(f"Failed to remove directory: {e}")
         dialogue.show_warning(
-            title=translate("rmtree","Failed to remove directory"),
-            text=translate("rmtree","An OSError occurred while trying to remove a directory."),
-            information=translate("rmtree","{e.strerror} occurred at {e.filename} with error code {error_code}.").format(e=e,error_code=error_code,),
+            title=translate("rmtree", "Failed to remove directory"),
+            text=translate(
+                "rmtree", "An OSError occurred while trying to remove a directory."
+            ),
+            information=translate(
+                "rmtree",
+                "{e.strerror} occurred at {e.filename} with error code {error_code}.",
+            ).format(
+                e=e,
+                error_code=error_code,
+            ),
             details=str(e),
         )
         return False
@@ -258,23 +277,29 @@ def launch_game_process(game_install_path: Path, args: list[str]) -> None:
         else:
             logger.debug("The game executable path does not exist")
             dialogue.show_warning(
-                title=translate("launch_game_process","File not found"),
-                text=translate("launch_game_process","Unable to launch game process"),
+                title=translate("launch_game_process", "File not found"),
+                text=translate("launch_game_process", "Unable to launch game process"),
                 information=(
-                    translate("launch_game_process","RimSort could not start RimWorld as the game executable does "
-                    "not exist at the specified path: {executable_path}. Please check "
-                    "that this directory is correct and the RimWorld game executable "
-                    "exists in it.").format(executable_path=executable_path)
+                    translate(
+                        "launch_game_process",
+                        "RimSort could not start RimWorld as the game executable does "
+                        "not exist at the specified path: {executable_path}. Please check "
+                        "that this directory is correct and the RimWorld game executable "
+                        "exists in it.",
+                    ).format(executable_path=executable_path)
                 ),
             )
     else:
         logger.error("The path to the game folder is empty")
         dialogue.show_warning(
-            title=translate("launch_game_process","Game launch failed"),
-            text=translate("launch_game_process","Unable to launch RimWorld"),
+            title=translate("launch_game_process", "Game launch failed"),
+            text=translate("launch_game_process", "Unable to launch RimWorld"),
             information=(
-                translate("launch_game_process","RimSort could not start RimWorld as the game folder is empty or invalid: [{game_install_path}] "
-                "Please check that the game folder is properly set and that the RimWorld executable exists in it.").format(game_install_path=game_install_path)
+                translate(
+                    "launch_game_process",
+                    "RimSort could not start RimWorld as the game folder is empty or invalid: [{game_install_path}] "
+                    "Please check that the game folder is properly set and that the RimWorld executable exists in it.",
+                ).format(game_install_path=game_install_path)
             ),
         )
 

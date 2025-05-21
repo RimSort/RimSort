@@ -27,9 +27,11 @@ class MissingModsPrompt(BaseModsPanel):
             object_name="missingModsPanel",
             window_title=self.tr("RimSort - Missing mods found"),
             title_text=self.tr("There are mods missing from the active mods list!"),
-            details_text=self.tr("\nUser-configured SteamDB database was queried. The following table displays mods available for download from Steam. "
-            + '\n\nRimworld mods on Steam Workshop that share a packageId are "variants". Please keep this in mind before downloading. '
-            + "\n\nPlease select your preferred mod variant in the table below. You can also open each variant in Steam/Web browser to verify."),
+            details_text=self.tr(
+                "\nUser-configured SteamDB database was queried. The following table displays mods available for download from Steam. "
+                + '\n\nRimworld mods on Steam Workshop that share a packageId are "variants". Please keep this in mind before downloading. '
+                + "\n\nPlease select your preferred mod variant in the table below. You can also open each variant in Steam/Web browser to verify."
+            ),
             additional_columns=[
                 self.tr("Name"),
                 self.tr("PackageId"),
@@ -44,7 +46,9 @@ class MissingModsPrompt(BaseModsPanel):
         self.DEPENDENCY_TAG = "_-_DEPENDENCY_-_"
         self.packageids = packageids
 
-        self.editor_download_steamcmd_button = QPushButton(self.tr("Download with SteamCMD"))
+        self.editor_download_steamcmd_button = QPushButton(
+            self.tr("Download with SteamCMD")
+        )
         self.editor_download_steamcmd_button.clicked.connect(
             partial(
                 self._update_mods_from_table,

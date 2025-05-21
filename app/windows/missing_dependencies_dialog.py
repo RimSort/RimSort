@@ -40,8 +40,10 @@ class MissingDependenciesDialog(QDialog):
         main_layout = QVBoxLayout(self)
 
         description = QLabel(
-            self.tr("Some mods in your active list require other mods to work properly.\n"
-            "Select which missing dependencies to add to your active mods list.")
+            self.tr(
+                "Some mods in your active list require other mods to work properly.\n"
+                "Select which missing dependencies to add to your active mods list."
+            )
         )
         description.setWordWrap(True)
         description.setStyleSheet("font-size: 10pt; margin-bottom: 10px;")
@@ -189,7 +191,9 @@ class MissingDependenciesDialog(QDialog):
         group_layout.addWidget(checkbox)
         self.checkboxes[dep_id] = checkbox
 
-        requiring_label = QLabel(self.tr("Required by:\n  • ") + "\n  • ".join(requiring_mods))
+        requiring_label = QLabel(
+            self.tr("Required by:\n  • ") + "\n  • ".join(requiring_mods)
+        )
         requiring_label.setStyleSheet("color: gray; margin-left: 20px;")
         requiring_label.setWordWrap(True)
         group_layout.addWidget(requiring_label)

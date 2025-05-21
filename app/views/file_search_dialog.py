@@ -77,7 +77,9 @@ class FileSearchDialog(QDialog):
         search_input_layout.addWidget(search_label)
 
         self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText(self.tr("Enter text to search for in files"))
+        self.search_input.setPlaceholderText(
+            self.tr("Enter text to search for in files")
+        )
         search_input_layout.addWidget(self.search_input)
 
         self.recent_searches_button = QPushButton("▼")
@@ -128,18 +130,22 @@ class FileSearchDialog(QDialog):
 
         self.use_regex = QCheckBox(self.tr("Use regex (pattern search)"))
         self.use_regex.setToolTip(
-            self.tr("Enable to use regular expressions in search\n"
-            "Examples:\n"
-            "- 'def.*\\(' to find function definitions\n"
-            "- '<[^>]+>' to find XML tags\n"
-            "- '\\d+\\.\\d+(\\.\\d+)?' to find version numbers")
+            self.tr(
+                "Enable to use regular expressions in search\n"
+                "Examples:\n"
+                "- 'def.*\\(' to find function definitions\n"
+                "- '<[^>]+>' to find XML tags\n"
+                "- '\\d+\\.\\d+(\\.\\d+)?' to find version numbers"
+            )
         )
 
         # XML only checkbox (moved from scope section)
         self.xml_only = QCheckBox(self.tr("XML files only"))
         self.xml_only.setToolTip(
-            self.tr("When checked, search only XML files and use optimized XML search.\n"
-            "When unchecked, search all file types with standard search.")
+            self.tr(
+                "When checked, search only XML files and use optimized XML search.\n"
+                "When unchecked, search all file types with standard search."
+            )
         )
         self.xml_only.setChecked(True)
 
@@ -181,7 +187,9 @@ class FileSearchDialog(QDialog):
 
         self.skip_textures = QCheckBox(self.tr("Skip Textures folder"))
         self.skip_textures.setChecked(True)
-        self.skip_textures.setToolTip(self.tr("Skip Textures folders containing images"))
+        self.skip_textures.setToolTip(
+            self.tr("Skip Textures folders containing images")
+        )
 
         skip_options_column.addWidget(self.skip_translations)
         skip_options_column.addWidget(self.skip_git)
@@ -299,7 +307,12 @@ class FileSearchDialog(QDialog):
         self.results_table = QTableWidget()
         self.results_table.setColumnCount(4)
         self.results_table.setHorizontalHeaderLabels(
-            [self.tr("Mod Name"), self.tr("File Name"), self.tr("Path"), self.tr("Preview")]
+            [
+                self.tr("Mod Name"),
+                self.tr("File Name"),
+                self.tr("Path"),
+                self.tr("Preview"),
+            ]
         )
 
         # Set table properties for better appearance
@@ -388,7 +401,11 @@ class FileSearchDialog(QDialog):
         result_count = self.results_table.rowCount()
 
         if result_count > 0:
-            self.stats_label.setText(self.tr("Found {result_count} results").format(result_count=result_count))
+            self.stats_label.setText(
+                self.tr("Found {result_count} results").format(
+                    result_count=result_count
+                )
+            )
         else:
             self.stats_label.setText(self.tr("No results found"))
 
@@ -769,8 +786,14 @@ class FileSearchDialog(QDialog):
 
         # Update the stats label to show filter results
         if text:
-            self.update_stats(self.tr("Filter: {visible_rows} of {total_rows} results visible").format(visible_rows=visible_rows, total_rows=total_rows))
+            self.update_stats(
+                self.tr(
+                    "Filter: {visible_rows} of {total_rows} results visible"
+                ).format(visible_rows=visible_rows, total_rows=total_rows)
+            )
         elif total_rows > 0:
-            self.update_stats(self.tr("Found {total_rows} results").format(total_rows=total_rows))
+            self.update_stats(
+                self.tr("Found {total_rows} results").format(total_rows=total_rows)
+            )
         else:
             self.update_stats(self.tr("Ready to search"))

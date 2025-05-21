@@ -131,7 +131,8 @@ class ModInfo:
         self.description = DescriptionWidget()
         self.description_text = self.tr("Welcome to RimSort!")
         self.description.setText(
-            f'<br><br><br><center>{self.description_text}<h3></h3></center>', convert=False
+            f"<br><br><br><center>{self.description_text}<h3></h3></center>",
+            convert=False,
         )
         # Add widgets to child layouts
         self.image_layout.addWidget(self.preview_picture)
@@ -199,8 +200,8 @@ class ModInfo:
     @staticmethod
     def tr(text: str) -> str:
         from PySide6.QtCore import QCoreApplication
-        return QCoreApplication.translate("ModInfo", text)
 
+        return QCoreApplication.translate("ModInfo", text)
 
     def display_mod_info(self, uuid: str, render_unity_rt: bool) -> None:
         """

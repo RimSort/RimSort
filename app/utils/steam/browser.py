@@ -94,13 +94,17 @@ class SteamBrowser(QWidget):
         self.clear_list_button = QPushButton(self.tr("Clear List"))
         self.clear_list_button.setObjectName("browserPanelClearList")
         self.clear_list_button.clicked.connect(self._clear_downloader_list)
-        self.download_steamcmd_button = QPushButton(self.tr("Download mod(s) (SteamCMD)"))
+        self.download_steamcmd_button = QPushButton(
+            self.tr("Download mod(s) (SteamCMD)")
+        )
         self.download_steamcmd_button.clicked.connect(
             partial(
                 self.steamcmd_downloader_signal.emit, self.downloader_list_mods_tracking
             )
         )
-        self.download_steamworks_button = QPushButton(self.tr("Download mod(s) (Steam app)"))
+        self.download_steamworks_button = QPushButton(
+            self.tr("Download mod(s) (Steam app)")
+        )
         self.download_steamworks_button.clicked.connect(
             self._subscribe_to_mods_from_list
         )
@@ -124,7 +128,7 @@ class SteamBrowser(QWidget):
         self.web_view.loadFinished.connect(self._web_view_load_finished)
         self.web_view.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
         self.web_view.load(self.startpage)
-        
+
         #  QWebEngineProfile.defaultProfile().setHttpAcceptLanguages
 
         # Location box
@@ -194,7 +198,9 @@ class SteamBrowser(QWidget):
             )
             show_warning(
                 title=self.tr("No publishedfileid found"),
-                text=self.tr("Unable to parse publishedfileid from url, Please check if url is in the correct format"),
+                text=self.tr(
+                    "Unable to parse publishedfileid from url, Please check if url is in the correct format"
+                ),
                 information=f"Url: {self.current_url}",
             )
             return None
@@ -216,8 +222,13 @@ class SteamBrowser(QWidget):
                 answer = show_dialogue_conditional(
                     title=self.tr("Add Collection"),
                     text=self.tr("How would you like to add the collection?"),
-                    information=self.tr("You can choose to add all mods from the collection or only the ones you don't have installed."),
-                    button_text_override=[self.tr("Add All Mods"), self.tr("Add Missing Mods")],
+                    information=self.tr(
+                        "You can choose to add all mods from the collection or only the ones you don't have installed."
+                    ),
+                    button_text_override=[
+                        self.tr("Add All Mods"),
+                        self.tr("Add Missing Mods"),
+                    ],
                 )
 
                 if answer == self.tr("Add All Mods"):
@@ -235,8 +246,12 @@ class SteamBrowser(QWidget):
                 )
                 show_warning(
                     title=self.tr("SteamCMD downloader"),
-                    text=self.tr("Empty list of mods returned, unable to add collection to list!"),
-                    information=self.tr("Please reach out to us on Github Issues page or\n#rimsort-testing on the Rocketman/CAI discord"),
+                    text=self.tr(
+                        "Empty list of mods returned, unable to add collection to list!"
+                    ),
+                    information=self.tr(
+                        "Please reach out to us on Github Issues page or\n#rimsort-testing on the Rocketman/CAI discord"
+                    ),
                 )
         if len(self.downloader_list_dupe_tracking.keys()) > 0:
             # Build a report from our dict
@@ -247,7 +262,9 @@ class SteamBrowser(QWidget):
             show_warning(
                 title=self.tr("SteamCMD downloader"),
                 text=self.tr("You already have these mods in your download list!"),
-                information=self.tr("Skipping the following mods which are already present in your download list!"),
+                information=self.tr(
+                    "Skipping the following mods which are already present in your download list!"
+                ),
                 details=dupe_report,
             )
             self.downloader_list_dupe_tracking = {}

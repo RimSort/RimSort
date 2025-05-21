@@ -43,9 +43,13 @@ class InstanceController(QObject):
             if not cls._validate_archive_path(instance):
                 logger.error(f"Invalid archive path: {instance}")
                 show_warning(
-                    title=QCoreApplication.translate("__new__","Invalid archive path"),
-                    text=QCoreApplication.translate("__new__","The provided archive path is invalid."),
-                    information=QCoreApplication.translate("__new__","Please provide a valid archive path."),
+                    title=QCoreApplication.translate("__new__", "Invalid archive path"),
+                    text=QCoreApplication.translate(
+                        "__new__", "The provided archive path is invalid."
+                    ),
+                    information=QCoreApplication.translate(
+                        "__new__", "Please provide a valid archive path."
+                    ),
                 )
 
                 raise InvalidArchivePathError("Invalid archive path")
@@ -66,7 +70,9 @@ class InstanceController(QObject):
             logger.error(f"An error occurred while reading instance archive: {e}")
             show_fatal_error(
                 title=self.tr("Error restoring instance"),
-                text=self.tr("An error occurred while reading instance archive: {e}").format(e=e),
+                text=self.tr(
+                    "An error occurred while reading instance archive: {e}"
+                ).format(e=e),
                 details=format_exc(),
             )
 

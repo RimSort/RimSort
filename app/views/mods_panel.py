@@ -1943,7 +1943,9 @@ class ModListWidget(QListWidget):
                 current_item_data["alternative"]
                 and mod_data["packageid"] not in self.ignore_warning_list
             ):
-                tool_tip_text += f"\n推荐使用替代的更新模组：\n{current_item_data['alternative']}"
+                tool_tip_text += (
+                    f"\n推荐使用替代的更新模组：\n{current_item_data['alternative']}"
+                )
             # Add to error summary if any missing dependencies or incompatibilities
             if self.list_type == "Active" and any(
                 [
