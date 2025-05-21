@@ -237,7 +237,10 @@ class LogReader(QDialog):
                 if hasattr(self, "entries") and isinstance(self.entries, list):
                     count = len(self.entries)
                 self.status_bar.showMessage(
-                    self.tr("Loaded {count} items | Last updated: {time}").format(count=count,time=datetime.now().strftime("%H:%M:%S"),)
+                    self.tr("Loaded {count} items | Last updated: {time}").format(
+                        count=count,
+                        time=datetime.now().strftime("%H:%M:%S"),
+                    )
                 )
                 return
 
@@ -329,7 +332,11 @@ class LogReader(QDialog):
 
             self.populate_table(entries)
             self.status_bar.showMessage(
-                self.tr("Loaded {count} items | Last updated: {time}").format(count=len(entries),time=datetime.now().strftime("%H:%M:%S"),))
+                self.tr("Loaded {count} items | Last updated: {time}").format(
+                    count=len(entries),
+                    time=datetime.now().strftime("%H:%M:%S"),
+                )
+            )
             self.entries = entries
 
             if not self.refresh_timer.isActive():
@@ -427,18 +434,24 @@ class LogReader(QDialog):
             with open(file_path, "w", newline="", encoding="utf-8"):
                 pass  # Just testing file opening, no need for the file object
         except PermissionError as e:
-            error_msg = self.tr("Export failed: Permission denied - check file permissions")
+            error_msg = self.tr(
+                "Export failed: Permission denied - check file permissions"
+            )
             self.status_bar.showMessage(error_msg)
             logger.error(f"Export permission error: {str(e)} - file: {file_path}")
             show_warning(
                 title=self.tr("Export Error"),
-                text=self.tr("Export failed: Permission denied - check file permissions"),
+                text=self.tr(
+                    "Export failed: Permission denied - check file permissions"
+                ),
                 information=f"{error_msg}",
             )
             self._set_buttons_enabled(True)
             return
         except OSError as e:
-            error_msg = self.tr("Export failed: File system error - {e}").format(e=str(e))
+            error_msg = self.tr("Export failed: File system error - {e}").format(
+                e=str(e)
+            )
             self.status_bar.showMessage(error_msg)
             logger.error(f"Export filesystem error: {str(e)} - file: {file_path}")
             show_warning(
@@ -453,7 +466,10 @@ class LogReader(QDialog):
             self.status_bar.showMessage(self.tr("Exporting to CSV..."))
 
             progress = QProgressDialog(
-                self.tr("Exporting rows..."), self.tr("Cancel"), 0, self.table_widget.rowCount(),
+                self.tr("Exporting rows..."),
+                self.tr("Cancel"),
+                0,
+                self.table_widget.rowCount(),
             )
             progress.setWindowModality(Qt.WindowModality.WindowModal)
             progress.show()
@@ -566,7 +582,7 @@ class LogReader(QDialog):
 
             if pfid:
                 # Add view in Steam action
-                view_in_steam = menu.addAction("View in Steam Workshop")
+                view_in_steam = menu.addAction(self.tr("View in Steam Workshop"))
                 view_in_steam.triggered.connect(
                     lambda: webbrowser.open(
                         f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
@@ -577,7 +593,7 @@ class LogReader(QDialog):
                 path_item = self.table_widget.item(selected_row, 5)
                 mod_path = path_item.text() if path_item else None
                 if mod_path and Path(mod_path).exists():
-                    open_folder = menu.addAction("Open Mod Folder")
+                    open_folder = menu.addAction(self.tr("Open Mod Folder"))
                     open_folder.triggered.connect(
                         lambda: webbrowser.open(f"file://{mod_path}")
                     )
@@ -675,7 +691,9 @@ class LogReader(QDialog):
         answer = show_dialogue_conditional(
             title=self.tr("Conform acf import"),
             text=self.tr("This will replace your current steamcmd .acf file"),
-            information=self.tr("Are you sure you want to import .acf? THis only works for steamcmd"),
+            information=self.tr(
+                "Are you sure you want to import .acf? THis only works for steamcmd"
+            ),
             button_text_override=[
                 "Import .acf",
             ],
@@ -703,10 +721,15 @@ class LogReader(QDialog):
 
         acf_path = steamcmd.steamcmd_appworkshop_acf_path
         if not os.path.isfile(acf_path):
-            self.status_bar.showMessage(self.tr("ACF file not found: {acf_path}").format(acf_path=acf_path))
+            self.status_bar.showMessage(
+                self.tr("ACF file not found: {acf_path}").format(acf_path=acf_path)
+            )
             logger.error(f"Export failed: ACF file not found: {acf_path}")
             show_warning(
-                title=self.tr("Export Error"), text=self.tr("ACF file not found at: {acf_path}").format(acf_path=acf_path)
+                title=self.tr("Export Error"),
+                text=self.tr("ACF file not found at: {acf_path}").format(
+                    acf_path=acf_path
+                ),
             )
             return
 
@@ -719,20 +742,30 @@ class LogReader(QDialog):
         if not file_path:
             show_warning(
                 title=self.tr("Export Error"),
-                text=self.tr("Invalid file path provided for export: {file_path}").format(file_path=file_path),
+                text=self.tr(
+                    "Invalid file path provided for export: {file_path}"
+                ).format(file_path=file_path),
             )
             return
 
         try:
             shutil.copy(acf_path, file_path)
-            self.status_bar.showMessage(self.tr("Successfully exported ACF to {file_path}").format(file_path=file_path))
+            self.status_bar.showMessage(
+                self.tr("Successfully exported ACF to {file_path}").format(
+                    file_path=file_path
+                )
+            )
             logger.debug(f"Successfully exported ACF to {file_path}")
             show_information(
                 title=self.tr("Export Success"),
-                text=self.tr("Successfully exported ACF to {file_path}").format(file_path=file_path),
+                text=self.tr("Successfully exported ACF to {file_path}").format(
+                    file_path=file_path
+                ),
             )
         except PermissionError:
-            error_msg = self.tr("Export failed: Permission denied - check file permissions")
+            error_msg = self.tr(
+                "Export failed: Permission denied - check file permissions"
+            )
             logger.error(f"Export failed due to Permission: {error_msg}")
             show_warning(title=self.tr("Export Error"), text=error_msg)
         except Exception as e:

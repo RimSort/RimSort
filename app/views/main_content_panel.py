@@ -2641,19 +2641,19 @@ class MainContent(QObject):
                         + "\n2) Update existing repository (in-place force-update)"
                     ).format(repo_path=repo_path),
                     button_text_override=[
-                        "Clone new",
-                        "Update existing",
+                        self.tr("Clone new"),
+                        self.tr("Update existing"),
                     ],
                 )
-                if answer == "Cancel":
+                if answer == self.tr("Cancel"):
                     logger.debug(
                         f"User cancelled prompt. Skipping any {repo_folder_name} repository actions."
                     )
                     return
-                elif answer == "Clone new":
+                elif answer == self.tr("Clone new"):
                     logger.info(f"Deleting local git repo at: {repo_path}")
                     delete_files_except_extension(directory=repo_path, extension=".dds")
-                elif answer == "Update existing":
+                elif answer == self.tr("Update existing"):
                     self._do_force_update_existing_repo(
                         base_path=base_path, repo_url=repo_url
                     )

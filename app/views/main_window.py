@@ -274,7 +274,9 @@ class MainWindow(QMainWindow):
         if instance.initial_setup and not instance.steam_client_integration:
             diag = BinaryChoiceDialog(
                 title=self.tr("Steam Client Integration"),
-                text=self.tr("<h3>Would you like to enable Steam Client Integration for this instance?</h3>"),
+                text=self.tr(
+                    "<h3>Would you like to enable Steam Client Integration for this instance?</h3>"
+                ),
                 information=self.tr("""This will allow you to use RimSort features that require the Steam Client. This includes, among other things, unsubscribing from workshop mods and opening workshop links via the Steam Client. 
                 <br><br>
                 You can change this in the settings under the Advanced tab."""),
@@ -289,7 +291,9 @@ class MainWindow(QMainWindow):
     def __ask_for_new_instance_name(self) -> str | None:
         instance_name, ok = show_dialogue_input(
             title=self.tr("Create new instance"),
-            label=self.tr("Input a unique name of new instance that is not already used:"),
+            label=self.tr(
+                "Input a unique name of new instance that is not already used:"
+            ),
         )
         return instance_name.strip() if ok else None
 
@@ -297,7 +301,9 @@ class MainWindow(QMainWindow):
         while True:
             instance_name, ok = show_dialogue_input(
                 title=self.tr("Provide instance name"),
-                label=self.tr('Input a unique name for the backed up instance that is not "Default"'),
+                label=self.tr(
+                    'Input a unique name for the backed up instance that is not "Default"'
+                ),
             )
             if ok and instance_name.lower() != "default":
                 return instance_name
@@ -308,16 +314,24 @@ class MainWindow(QMainWindow):
         self, existing_instance_name: str, existing_instance_workshop_folder: str
     ) -> str:
         answer = show_dialogue_conditional(
-            title=self.tr("Clone instance [{existing_instance_name}]").format(existing_instance_name=existing_instance_name),
+            title=self.tr("Clone instance [{existing_instance_name}]").format(
+                existing_instance_name=existing_instance_name
+            ),
             text=(
-                self.tr("What would you like to do with the configured Workshop mods folder?")
+                self.tr(
+                    "What would you like to do with the configured Workshop mods folder?"
+                )
             ),
             information=(
-                self.tr("Workshop folder: {existing_instance_workshop_folder}\n\n"
-                + "RimSort can copy all of your Workshop mods to the new instance's local mods folder. This will effectively "
-                + " convert any existing Steam client mods to SteamCMD mods that you can then  manage inside the new instance.\n\n"
-                + "Alternatively, you may keep your old Steam workshop folder preference. You can always change this later in the settings.\n\n"
-                + "How would you like to proceed?").format(existing_instance_workshop_folder=existing_instance_workshop_folder)
+                self.tr(
+                    "Workshop folder: {existing_instance_workshop_folder}\n\n"
+                    + "RimSort can copy all of your Workshop mods to the new instance's local mods folder. This will effectively "
+                    + " convert any existing Steam client mods to SteamCMD mods that you can then  manage inside the new instance.\n\n"
+                    + "Alternatively, you may keep your old Steam workshop folder preference. You can always change this later in the settings.\n\n"
+                    + "How would you like to proceed?"
+                ).format(
+                    existing_instance_workshop_folder=existing_instance_workshop_folder
+                )
             ),
             button_text_override=[
                 "Convert to SteamCMD",
@@ -362,12 +376,16 @@ class MainWindow(QMainWindow):
                         instance_controller.compress_to_archive,
                         output_path,
                     ),
-                    text=self.tr("Compressing [{instance_name}] instance folder to archive...").format(instance_name=instance_name),
+                    text=self.tr(
+                        "Compressing [{instance_name}] instance folder to archive..."
+                    ).format(instance_name=instance_name),
                 )
             except Exception as e:
                 show_fatal_error(
                     title=self.tr("Error compressing instance"),
-                    text=self.tr("An error occurred while compressing instance folder: {e}").format(e=e),
+                    text=self.tr(
+                        "An error occurred while compressing instance folder: {e}"
+                    ).format(e=e),
                     information=self.tr("Please check the logs for more information."),
                     details=format_exc(),
                 )
@@ -393,7 +411,9 @@ class MainWindow(QMainWindow):
             logger.error(f"Archive not found at path: {input_path}")
             show_warning(
                 title=self.tr("Error restoring instance"),
-                text=self.tr("Archive not found at path: {input_path}").format(input_path=input_path),
+                text=self.tr("Archive not found at path: {input_path}").format(
+                    input_path=input_path
+                ),
             )
             return
 
@@ -415,8 +435,12 @@ class MainWindow(QMainWindow):
         if os.path.exists(instance_controller.instance_folder_path):
             answer = show_dialogue_conditional(
                 title=self.tr("Instance folder exists"),
-                text=self.tr("Instance folder already exists: {instance_folder_path}").format(instance_folder_path=instance_controller.instance_folder_path),
-                information=self.tr("Do you want to continue and replace the existing instance folder?"),
+                text=self.tr(
+                    "Instance folder already exists: {instance_folder_path}"
+                ).format(instance_folder_path=instance_controller.instance_folder_path),
+                information=self.tr(
+                    "Do you want to continue and replace the existing instance folder?"
+                ),
                 button_text_override=[
                     self.tr("Replace"),
                 ],
@@ -432,7 +456,9 @@ class MainWindow(QMainWindow):
                 input_path,
             ),
             gif_path=str(AppInfo().theme_data_folder / "default-icons" / "rimsort.gif"),
-            text=self.tr("Restoring instance [{name}] from archive...").format(name=instance_controller.instance.name),
+            text=self.tr("Restoring instance [{name}] from archive...").format(
+                name=instance_controller.instance.name
+            ),
         )
 
         # Check that the instance folder exists. If it does, update Settings with the instance data
@@ -445,8 +471,12 @@ class MainWindow(QMainWindow):
                 show_warning(
                     title=self.tr("Invalid instance folder paths"),
                     text=self.tr("Invalid instance folder paths"),
-                    information=self.tr("Some folder paths from the restored instance are invalid and were cleared. Please reconfigure them in the settings"),
-                    details=self.tr("Invalid paths: {path}").format(path=", ".join(cleared_paths)),
+                    information=self.tr(
+                        "Some folder paths from the restored instance are invalid and were cleared. Please reconfigure them in the settings"
+                    ),
+                    details=self.tr("Invalid paths: {path}").format(
+                        path=", ".join(cleared_paths)
+                    ),
                 )
 
             steamcmd_link_path = str(
@@ -475,7 +505,9 @@ class MainWindow(QMainWindow):
                 show_warning(
                     title=self.tr("Couldn't restore steamcmd symlink/junction"),
                     text=self.tr("Couldn't restore steamcmd symlink/junction"),
-                    information=self.tr("The steamcmd symlink/junction could not be restored as the local folder is not set or invalid. The symlink/junction will need to be manually recreated."),
+                    information=self.tr(
+                        "The steamcmd symlink/junction could not be restored as the local folder is not set or invalid. The symlink/junction will need to be manually recreated."
+                    ),
                 )
                 logger.warning(
                     "Skipping steamcmd symlink restoration: Local folder not set. The symlink will need to be manually updated."
@@ -486,8 +518,12 @@ class MainWindow(QMainWindow):
         else:
             show_warning(
                 title=self.tr("Error restoring instance"),
-                text=self.tr("An error occurred while restoring instance [{instance_controller.instance.name}]."),
-                information=self.tr("The instance folder was not found after extracting the archive. Perhaps the archive is corrupt or the instance name is invalid."),
+                text=self.tr(
+                    "An error occurred while restoring instance [{instance_controller.instance.name}]."
+                ),
+                information=self.tr(
+                    "The instance folder was not found after extracting the archive. Perhaps the archive is corrupt or the instance name is invalid."
+                ),
             )
 
             logger.warning(
@@ -737,7 +773,11 @@ class MainWindow(QMainWindow):
                         else:
                             show_warning(
                                 title=self.tr("Workshop mods not found"),
-                                text=self.tr("Workshop mods folder at [{existing_instance_workshop_folder}] not found.").format(existing_instance_workshop_folder=existing_instance_workshop_folder),
+                                text=self.tr(
+                                    "Workshop mods folder at [{existing_instance_workshop_folder}] not found."
+                                ).format(
+                                    existing_instance_workshop_folder=existing_instance_workshop_folder
+                                ),
                             )
                     elif answer == "Keep Workshop Folder":
                         target_workshop_folder = str(existing_instance_workshop_folder)
@@ -833,7 +873,9 @@ class MainWindow(QMainWindow):
             show_warning(
                 title=self.tr("Error cloning instance"),
                 text=self.tr("Unable to clone instance."),
-                information=self.tr("Please enter a valid, unique instance name. It cannot be 'Default' or empty."),
+                information=self.tr(
+                    "Please enter a valid, unique instance name. It cannot be 'Default' or empty."
+                ),
             )
         else:
             logger.debug("User cancelled clone operation")
@@ -869,8 +911,12 @@ class MainWindow(QMainWindow):
                 # Prompt the user if they would like to automatically generate run args for the instance
                 answer = show_dialogue_conditional(
                     title=self.tr("Create new instance [{instance_name}]"),
-                    text=self.tr("Would you like to automatically generate run args for the new instance?"),
-                    information=self.tr("This will try to generate run args for the new instance based on the configured Game/Config folders."),
+                    text=self.tr(
+                        "Would you like to automatically generate run args for the new instance?"
+                    ),
+                    information=self.tr(
+                        "This will try to generate run args for the new instance based on the configured Game/Config folders."
+                    ),
                 )
                 if answer == "&Yes":
                     # Append new run args to the existing run args
@@ -903,14 +949,18 @@ class MainWindow(QMainWindow):
             show_warning(
                 title=self.tr("Error creating instance"),
                 text=self.tr("Unable to create new instance."),
-                information=self.tr("Please enter a valid, unique instance name. It cannot be 'Default' or empty."),
+                information=self.tr(
+                    "Please enter a valid, unique instance name. It cannot be 'Default' or empty."
+                ),
             )
 
     def __delete_current_instance(self) -> None:
         if self.settings_controller.settings.current_instance == "Default":
             show_warning(
                 title=self.tr("Problem deleting instance"),
-                text=self.tr("Unable to delete instance {current_instance}.").format(current_instance=self.settings_controller.settings.current_instance),
+                text=self.tr("Unable to delete instance {current_instance}.").format(
+                    current_instance=self.settings_controller.settings.current_instance
+                ),
                 information=self.tr("The default instance cannot be deleted."),
             )
             return
@@ -919,14 +969,20 @@ class MainWindow(QMainWindow):
         ):
             show_fatal_error(
                 title=self.tr("Error deleting instance"),
-                text=self.tr("Unable to delete instance {current_instance}.").format(current_instance=self.settings_controller.settings.current_instance),
+                text=self.tr("Unable to delete instance {current_instance}.").format(
+                    current_instance=self.settings_controller.settings.current_instance
+                ),
                 information=self.tr("The selected instance does not exist."),
             )
             return
         else:
             answer = BinaryChoiceDialog(
-                title=self.tr("Delete instance {current_instance}").format(current_instance=self.settings_controller.settings.current_instance),
-                text=self.tr("Are you sure you want to delete the selected instance and all of its data?"),
+                title=self.tr("Delete instance {current_instance}").format(
+                    current_instance=self.settings_controller.settings.current_instance
+                ),
+                text=self.tr(
+                    "Are you sure you want to delete the selected instance and all of its data?"
+                ),
                 information=self.tr("This action cannot be undone."),
             )
             if answer.exec_is_positive():
