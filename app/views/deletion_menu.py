@@ -36,7 +36,9 @@ class ModDeletionMenu(QMenu):
         self.metadata_manager = MetadataManager.instance()
         self.delete_actions: list[tuple[QAction, Callable[[], None]]] = []
         if delete_mod:
-            self.delete_actions.append((QAction(self.tr("Delete mod")), self.delete_both))
+            self.delete_actions.append(
+                (QAction(self.tr("Delete mod")), self.delete_both)
+            )
 
         if delete_both:
             self.delete_actions.append(
@@ -90,7 +92,10 @@ class ModDeletionMenu(QMenu):
             )
 
         show_information(
-            title=self.tr("RimSort"), text=self.tr("Successfully deleted {count} seleted mods.").format(count=count)
+            title=self.tr("RimSort"),
+            text=self.tr("Successfully deleted {count} seleted mods.").format(
+                count=count
+            ),
         )
 
     def delete_both(self) -> None:
@@ -113,7 +118,9 @@ class ModDeletionMenu(QMenu):
                 else:
                     error_code = e.errno
                 if e.errno == ENOTEMPTY:
-                    warning_text = self.tr("Mod directory was not empty. Please close all programs accessing files or subfolders in the directory (including your file manager) and try again.")
+                    warning_text = self.tr(
+                        "Mod directory was not empty. Please close all programs accessing files or subfolders in the directory (including your file manager) and try again."
+                    )
                 else:
                     warning_text = self.tr("An OSError occurred while deleting mod.")
 
@@ -123,16 +130,22 @@ class ModDeletionMenu(QMenu):
                 show_warning(
                     title=self.tr("Unable to delete mod"),
                     text=warning_text,
-                    information=self.tr("{e.strerror} occurred at {e.filename} with error code {error_code}.").format(e=e, error_code=error_code),
+                    information=self.tr(
+                        "{e.strerror} occurred at {e.filename} with error code {error_code}."
+                    ).format(e=e, error_code=error_code),
                 )
             return False
 
         uuids = self.get_selected_mod_metadata()
         answer = show_dialogue_conditional(
             title=self.tr("Are you sure?"),
-            text=self.tr("You have selected {len} mods for deletion.").format(len=len(uuids)),
-            information=self.tr("\nThis operation delete a mod's directory from the filesystem."
-            + "\nDo you want to proceed?"),
+            text=self.tr("You have selected {len} mods for deletion.").format(
+                len=len(uuids)
+            ),
+            information=self.tr(
+                "\nThis operation delete a mod's directory from the filesystem."
+                + "\nDo you want to proceed?"
+            ),
         )
         if answer == "&Yes":
             self._iterate_mods(_inner_delete_both, uuids)
@@ -141,9 +154,13 @@ class ModDeletionMenu(QMenu):
         mod_metadata = self.get_selected_mod_metadata()
         answer = show_dialogue_conditional(
             title=self.tr("Are you sure?"),
-            text=self.tr("You have selected {len} mods to Delete optimized textures (.dds files only)").format(len=len(mod_metadata)),
-            information=self.tr("\nThis operation will only delete optimized textures (.dds files only) from mod files."
-            + "\nDo you want to proceed?"),
+            text=self.tr(
+                "You have selected {len} mods to Delete optimized textures (.dds files only)"
+            ).format(len=len(mod_metadata)),
+            information=self.tr(
+                "\nThis operation will only delete optimized textures (.dds files only) from mod files."
+                + "\nDo you want to proceed?"
+            ),
         )
         if answer == "&Yes":
             self._iterate_mods(
@@ -160,9 +177,13 @@ class ModDeletionMenu(QMenu):
         mod_metadata = self.get_selected_mod_metadata()
         answer = show_dialogue_conditional(
             title=self.tr("Are you sure?"),
-            text=self.tr("You have selected {len} mods for deletion.").format(len=len(mod_metadata)),
-            information=self.tr("\nThis operation will recursively delete all mod files, except for .dds textures found."
-            + "\nDo you want to proceed?"),
+            text=self.tr("You have selected {len} mods for deletion.").format(
+                len=len(mod_metadata)
+            ),
+            information=self.tr(
+                "\nThis operation will recursively delete all mod files, except for .dds textures found."
+                + "\nDo you want to proceed?"
+            ),
         )
         if answer == "&Yes":
             self._iterate_mods(

@@ -33,7 +33,7 @@ class LanguageController:
         )
 
         return language_names
-    
+
     def _get_language_names_from_folder(self, folder: Path) -> set[str]:
         """Helper method to get language names from a specified folder.
 
@@ -51,7 +51,7 @@ class LanguageController:
                     supported_languages.add(language_name)
                     logger.info(f"Found language: {language_name} in {folder}")
         return supported_languages
-    
+
     def populate_languages_combobox(self, combox: QComboBox) -> None:
         """Populate a QComboBox with supported languages."""
         combox.clear()

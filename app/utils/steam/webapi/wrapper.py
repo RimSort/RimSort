@@ -99,7 +99,10 @@ class CollectionImport:
             # Show warning message box
             show_warning(
                 title=self.translate("CollectionImport", "Invalid Link"),
-                text=self.translate("CollectionImport", "Invalid Workshop collection link. Please enter a valid Workshop collection link."),
+                text=self.translate(
+                    "CollectionImport",
+                    "Invalid Workshop collection link. Please enter a valid Workshop collection link.",
+                ),
             )
             return
 
@@ -111,7 +114,10 @@ class CollectionImport:
             # Show warning message box
             show_warning(
                 title=self.translate("CollectionImport", "Invalid Database"),
-                text=self.translate("CollectionImport", "Cannot import collection without SteamDB supplied! Please configure Steam Workshop Database in settings."),
+                text=self.translate(
+                    "CollectionImport",
+                    "Cannot import collection without SteamDB supplied! Please configure Steam Workshop Database in settings.",
+                ),
             )
             return
 

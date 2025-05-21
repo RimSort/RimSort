@@ -108,8 +108,10 @@ class RentryUpload:
                 f"An error occurred while Uploading rentry.co content: {str(e)}"
             )
             show_fatal_error(
-                title=translate("RentryUpload","Error"),
-                text=translate("RentryUpload","An error occurred: {e}").format(e=str(e)),
+                title=translate("RentryUpload", "Error"),
+                text=translate("RentryUpload", "An error occurred: {e}").format(
+                    e=str(e)
+                ),
             )
 
     def handle_response(self, response: dict[str, Any]) -> None:
@@ -207,7 +209,10 @@ class RentryImport:
             # Show warning if rentry link is invalid
             show_warning(
                 title=translate("RentryImport", "Invalid Rentry Link"),
-                text=translate("RentryImport", "Invalid Rentry link, Please enter a valid Rentry link."),
+                text=translate(
+                    "RentryImport",
+                    "Invalid Rentry link, Please enter a valid Rentry link.",
+                ),
             )
             return self.input_dialog()  # Re-initialize the UI for new input
 
@@ -251,7 +256,9 @@ class RentryImport:
             )
             show_fatal_error(
                 title=translate("RentryImport", "Error"),
-                text=translate("RentryImport", "An error occurred: {e}").format(e=str(e)),
+                text=translate("RentryImport", "An error occurred: {e}").format(
+                    e=str(e)
+                ),
             )
 
 
@@ -298,8 +305,13 @@ class RentryError:
         )
         InformationBox(
             title=translate("RentryError", "Failed to fetch Rentry Content"),
-            text=translate("RentryError", "Rentry returned status code: {code}").format(code=response.status_code),
-            information=translate("RentryError","RimSort failed to fetch the content from the provided Rentry link. This may be due to an invalid link, your internet connection, or Rentry.co being down. It may also be the result of a captcha. Please try again later."),
+            text=translate("RentryError", "Rentry returned status code: {code}").format(
+                code=response.status_code
+            ),
+            information=translate(
+                "RentryError",
+                "RimSort failed to fetch the content from the provided Rentry link. This may be due to an invalid link, your internet connection, or Rentry.co being down. It may also be the result of a captcha. Please try again later.",
+            ),
             details=response.reason,
             icon=QMessageBox.Icon.Warning,
         ).exec()
@@ -314,7 +326,10 @@ class RentryError:
         logger.error(f"A network error occurred while processing Rentry: {str(e)}")
         show_warning(
             title=translate("RentryError", "Network Error"),
-            text=translate("RentryError", "Network error occurred while processing Rentry, Please check your internet connection."),
+            text=translate(
+                "RentryError",
+                "Network error occurred while processing Rentry, Please check your internet connection.",
+            ),
             details=f"{str(e)}",
         )
         return None  # Return None to indicate failure
@@ -324,7 +339,10 @@ class RentryError:
         logger.warning("Rentry Auth code not found in user settings.")
         show_warning(
             title=translate("RentryError", "Rentry Auth Code Not Found"),
-            text=translate("RentryError", "You need to email support@rentry.co and request an auth code. Then paste it into Settings -> Advanced -> Rentry Auth."),
+            text=translate(
+                "RentryError",
+                "You need to email support@rentry.co and request an auth code. Then paste it into Settings -> Advanced -> Rentry Auth.",
+            ),
         )
 
 

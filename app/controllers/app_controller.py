@@ -26,7 +26,6 @@ class AppController(QObject):
         self.app = QApplication(sys.argv)
         self.app.setWindowIcon(GUIInfo().app_icon)
 
-
         self.initialize_user_rules()
         self.initialize_settings()
         self.initialize_theme_controller()

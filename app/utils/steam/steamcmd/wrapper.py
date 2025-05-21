@@ -354,9 +354,12 @@ class SteamcmdInterface:
 
         answer = show_dialogue_conditional(
             title=self.translate("SteamcmdInterface", "RimSort - SteamCMD setup"),
-            text=self.translate("SteamcmdInterface","RimSort was unable to find SteamCMD installed in the configured prefix:\n"),
+            text=self.translate(
+                "SteamcmdInterface",
+                "RimSort was unable to find SteamCMD installed in the configured prefix:\n",
+            ),
             information=f"{self.steamcmd_prefix if self.steamcmd_prefix else '<None>'}\n\n"
-            + self.translate("SteamcmdInterface","Do you want to setup SteamCMD?"),
+            + self.translate("SteamcmdInterface", "Do you want to setup SteamCMD?"),
             button_text_override=btn_text,
         )
         if answer == "&Yes":
@@ -403,7 +406,9 @@ class SteamcmdInterface:
             else:
                 InformationBox(
                     title=self.translate("SteamcmdInterface", "Depot Cache Cleared"),
-                    text=self.translate("SteamcmdInterface","SteamCMD depot cache was already cleared."),
+                    text=self.translate(
+                        "SteamcmdInterface", "SteamCMD depot cache was already cleared."
+                    ),
                 ).exec()
             return False
 
@@ -414,7 +419,9 @@ class SteamcmdInterface:
             else:
                 InformationBox(
                     title=self.translate("SteamcmdInterface", "Depot Cache Cleared"),
-                    text=self.translate("SteamcmdInterface","SteamCMD depot cache has been cleared."),
+                    text=self.translate(
+                        "SteamcmdInterface", "SteamCMD depot cache has been cleared."
+                    ),
                 ).exec()
             return True
 
@@ -502,13 +509,26 @@ class SteamcmdInterface:
                 )
                 answer = show_dialogue_conditional(
                     self.translate("SteamcmdInterface", "Re-create Symlink?"),
-                    self.translate("SteamcmdInterface", "An existing symlink already exists."
-                    " Would you like to delete and re-create the symlink?"),
-                    self.translate("SteamcmdInterface", "The symlink makes SteamCMD download mods to the local mods folder"
-                    + " and is required for SteamCMD mod downloads to work correctly."),
-                    self.translate("SteamcmdInterface", "Existing symlink: {symlink_destination_path}"
-                    "\n\nNew symlink:"
-                    "\n[{symlink_source_path}] -> ").format(symlink_source_path=symlink_source_path,symlink_destination_path=symlink_destination_path) + symlink_destination_path,
+                    self.translate(
+                        "SteamcmdInterface",
+                        "An existing symlink already exists."
+                        " Would you like to delete and re-create the symlink?",
+                    ),
+                    self.translate(
+                        "SteamcmdInterface",
+                        "The symlink makes SteamCMD download mods to the local mods folder"
+                        + " and is required for SteamCMD mod downloads to work correctly.",
+                    ),
+                    self.translate(
+                        "SteamcmdInterface",
+                        "Existing symlink: {symlink_destination_path}"
+                        "\n\nNew symlink:"
+                        "\n[{symlink_source_path}] -> ",
+                    ).format(
+                        symlink_source_path=symlink_source_path,
+                        symlink_destination_path=symlink_destination_path,
+                    )
+                    + symlink_destination_path,
                 )
                 if answer == "&Yes":  # Re-create symlink
                     self.setup = self.create_symlink(
@@ -522,13 +542,26 @@ class SteamcmdInterface:
                 )
                 answer = show_dialogue_conditional(
                     self.translate("SteamcmdInterface", "Re-create Symlink?"),
-                    self.translate("SteamcmdInterface", "The symlink destination path already exists."
-                    " Would you like to remove the existing destination and create a new symlink in it's place?"),
-                    self.translate("SteamcmdInterface", "The symlink makes SteamCMD download mods to the local mods folder"
-                    + " and is required for SteamCMD mod downloads to work correctly."),
-                    self.translate("SteamcmdInterface", "Existing destination: {symlink_destination_path}"
-                    "\n\nNew symlink:"
-                    "\n[{symlink_source_path}] -> ").format(symlink_source_path=symlink_source_path,symlink_destination_path=symlink_destination_path) + symlink_destination_path,
+                    self.translate(
+                        "SteamcmdInterface",
+                        "The symlink destination path already exists."
+                        " Would you like to remove the existing destination and create a new symlink in it's place?",
+                    ),
+                    self.translate(
+                        "SteamcmdInterface",
+                        "The symlink makes SteamCMD download mods to the local mods folder"
+                        + " and is required for SteamCMD mod downloads to work correctly.",
+                    ),
+                    self.translate(
+                        "SteamcmdInterface",
+                        "Existing destination: {symlink_destination_path}"
+                        "\n\nNew symlink:"
+                        "\n[{symlink_source_path}] -> ",
+                    ).format(
+                        symlink_source_path=symlink_source_path,
+                        symlink_destination_path=symlink_destination_path,
+                    )
+                    + symlink_destination_path,
                 )
                 if answer == "&Yes":  # Re-create symlink/junction
                     self.setup = self.create_symlink(
@@ -537,11 +570,20 @@ class SteamcmdInterface:
             else:  # Symlink/junction does not exist
                 answer = show_dialogue_conditional(
                     self.translate("SteamcmdInterface", "Create Symlink?"),
-                    self.translate("SteamcmdInterface", "Do you want to create a symlink?"),
-                    self.translate("SteamcmdInterface","The symlink makes SteamCMD download mods to the local mods folder"
-                    + " and is required for SteamCMD mod downloads to work correctly."),
-                    self.translate("SteamcmdInterface", "New symlink:"
-                    "\n[{symlink_source_path}] -> ").format(symlink_source_path=symlink_source_path,) + symlink_destination_path,
+                    self.translate(
+                        "SteamcmdInterface", "Do you want to create a symlink?"
+                    ),
+                    self.translate(
+                        "SteamcmdInterface",
+                        "The symlink makes SteamCMD download mods to the local mods folder"
+                        + " and is required for SteamCMD mod downloads to work correctly.",
+                    ),
+                    self.translate(
+                        "SteamcmdInterface", "New symlink:\n[{symlink_source_path}] -> "
+                    ).format(
+                        symlink_source_path=symlink_source_path,
+                    )
+                    + symlink_destination_path,
                 )
                 if answer == "&Yes":
                     self.setup = self.create_symlink(

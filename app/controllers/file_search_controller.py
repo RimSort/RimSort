@@ -652,7 +652,9 @@ class SearchWorker(QThread):
 
             # Perform the search
             for root_path in self.root_paths:
-                self.stats.emit(self.tr("Searching in: {root_path}").format(root_path=root_path))
+                self.stats.emit(
+                    self.tr("Searching in: {root_path}").format(root_path=root_path)
+                )
                 for result in search_method(self.pattern, [root_path], self.options):
                     mod_name, file_name, path = result
                     preview = self._get_file_preview(path)
@@ -1120,30 +1122,42 @@ class FileSearchController(QObject):
         if "regex" in error_msg.lower():
             show_warning(
                 title=self.tr("Regular Expression Error"),
-                text=self.tr("There was an error with your regular expression pattern."),
-                information=self.tr("{error_msg}\n\nTry simplifying your pattern or check for syntax errors.").format(error_msg=error_msg),
+                text=self.tr(
+                    "There was an error with your regular expression pattern."
+                ),
+                information=self.tr(
+                    "{error_msg}\n\nTry simplifying your pattern or check for syntax errors."
+                ).format(error_msg=error_msg),
             )
         elif "permission" in error_msg.lower() or "access" in error_msg.lower():
             show_warning(
                 title=self.tr("File Access Error"),
                 text=self.tr("RimSort doesn't have permission to access some files."),
-                information=self.tr("{error_msg}\n\nTry running RimSort with administrator privileges or check folder permissions.").format(error_msg=error_msg),
+                information=self.tr(
+                    "{error_msg}\n\nTry running RimSort with administrator privileges or check folder permissions."
+                ).format(error_msg=error_msg),
             )
         elif "memory" in error_msg.lower():
             show_warning(
                 title=self.tr("Memory Error"),
                 text=self.tr("RimSort ran out of memory while searching."),
-                information=self.tr("{error_msg}\n\nTry searching in smaller batches or use the 'streaming search' method for very large files.").format(error_msg=error_msg),
+                information=self.tr(
+                    "{error_msg}\n\nTry searching in smaller batches or use the 'streaming search' method for very large files."
+                ).format(error_msg=error_msg),
             )
         else:
             show_warning(
                 title=self.tr("Search Error"),
                 text=self.tr("An error occurred during the search."),
-                information=self.tr("{error_msg}\n\nPlease check your settings and try again.").format(error_msg=error_msg),
+                information=self.tr(
+                    "{error_msg}\n\nPlease check your settings and try again."
+                ).format(error_msg=error_msg),
             )
 
         # Update the stats label to show the error
-        self.dialog.update_stats(self.tr("Search failed: {error_msg[:100]}...").format(error_msg=error_msg))
+        self.dialog.update_stats(
+            self.tr("Search failed: {error_msg[:100]}...").format(error_msg=error_msg)
+        )
 
         # Reset the UI
         self._on_search_finished()
@@ -1192,7 +1206,9 @@ class FileSearchController(QObject):
 
         # Update the stats label to show filter results
         self.dialog.update_stats(
-            self.tr("Filter: {visible_rows} of {rowCount} results visible").format(visible_rows=visible_rows,rowCount=self.dialog.results_table.rowCount())
+            self.tr("Filter: {visible_rows} of {rowCount} results visible").format(
+                visible_rows=visible_rows, rowCount=self.dialog.results_table.rowCount()
+            )
         )
 
         logger.debug(
@@ -1207,5 +1223,7 @@ class FileSearchController(QObject):
         """
         show_warning(
             title=self.tr("Location Not Set"),
-            text=self.tr("No valid search location is available for the selected scope. Please configure your game folders in the settings."),
+            text=self.tr(
+                "No valid search location is available for the selected scope. Please configure your game folders in the settings."
+            ),
         )
