@@ -94,6 +94,12 @@ class Settings(QObject):
         # Language
         self.language = "en_US"
 
+        # Window size configuration
+        self.window_x: int = 0
+        self.window_y: int = 0
+        self.window_width: int = 0
+        self.window_height: int = 0
+
         # Advanced
         self.debug_logging_enabled: bool = False
         self.watchdog_toggle: bool = True
