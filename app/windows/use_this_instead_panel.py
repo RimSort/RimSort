@@ -2,7 +2,7 @@ from functools import partial
 from typing import Any, Dict
 
 from loguru import logger
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction, QStandardItem
 from PySide6.QtWidgets import QMenu, QPushButton, QToolButton
 
@@ -41,7 +41,6 @@ class UseThisInsteadPanel(BaseModsPanel):
                 self.tr("Replacement Author"),
                 self.tr("Replacement Workshop Page"),
             ],
-            minimum_size=QSize(1100, 600),
         )
 
         def __subscribe_cb(_: UseThisInsteadPanel) -> None:

@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.utils.gui_info import GUIInfo
 from app.utils.metadata import MetadataManager
 
 
@@ -35,7 +36,8 @@ class MissingDependenciesDialog(QDialog):
         Set up the UI components of the dialog.
         """
         self.setWindowTitle("Dependency Manager")
-        self.resize(700, 500)
+        # Use GUIInfo to set the window size and position from settings
+        self.setGeometry(*GUIInfo().get_window_geometry())
 
         main_layout = QVBoxLayout(self)
 

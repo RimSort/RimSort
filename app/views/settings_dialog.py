@@ -35,7 +35,8 @@ class SettingsDialog(QDialog):
 
         self.setWindowTitle(self.tr("Settings"))
         self.setObjectName("settingsPanel")
-        self.resize(900, 600)
+        # Use GUIInfo to set the window size and position from settings
+        self.setGeometry(*GUIInfo().get_window_geometry())
 
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
@@ -777,6 +778,7 @@ class SettingsDialog(QDialog):
         tab_layout = QVBoxLayout(tab)
         tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
+        # Theme settings group
         theme_group_label = QLabel(self.tr("Theme Settings"))
         theme_group_label.setFont(GUIInfo().emphasis_font)
         tab_layout.addWidget(theme_group_label)
@@ -814,6 +816,7 @@ class SettingsDialog(QDialog):
         self.theme_location_open_button.setText(self.tr("Open Theme Location"))
         theme_layout.addWidget(self.theme_location_open_button)
 
+        # Font settings group
         font_group_label = QLabel(self.tr("Font Settings"))
         font_group_label.setFont(GUIInfo().emphasis_font)
         tab_layout.addWidget(font_group_label)
@@ -867,7 +870,7 @@ class SettingsDialog(QDialog):
         else:
             self.themes_combobox.clear()
 
-        # temporarily added here
+        # Language configuration group
         language_group_label = QLabel(self.tr("Language Setting"))
         language_group_label.setFont(GUIInfo().emphasis_font)
         tab_layout.addWidget(language_group_label)
@@ -891,6 +894,37 @@ class SettingsDialog(QDialog):
         language_group_layout.addWidget(self.language_combobox)
 
         self.connect_populate_languages_combobox()
+
+        # Window size configuration group
+        window_size_group = QGroupBox(self.tr("Window Size Configuration"))
+        tab_layout.addWidget(window_size_group)
+
+        window_size_layout = QGridLayout()
+        window_size_group.setLayout(window_size_layout)
+
+        window_x_label = QLabel(self.tr("Window X Position:"))
+        window_size_layout.addWidget(window_x_label, 0, 0)
+        self.window_x_spinbox = QSpinBox()
+        self.window_x_spinbox.setRange(0, 900)
+        window_size_layout.addWidget(self.window_x_spinbox, 0, 1)
+
+        window_y_label = QLabel(self.tr("Window Y Position:"))
+        window_size_layout.addWidget(window_y_label, 1, 0)
+        self.window_y_spinbox = QSpinBox()
+        self.window_y_spinbox.setRange(30, 250)
+        window_size_layout.addWidget(self.window_y_spinbox, 1, 1)
+
+        window_width_label = QLabel(self.tr("Window Width:"))
+        window_size_layout.addWidget(window_width_label, 2, 0)
+        self.window_width_spinbox = QSpinBox()
+        self.window_width_spinbox.setRange(900, 1200)
+        window_size_layout.addWidget(self.window_width_spinbox, 2, 1)
+
+        window_height_label = QLabel(self.tr("Window Height:"))
+        window_size_layout.addWidget(window_height_label, 3, 0)
+        self.window_height_spinbox = QSpinBox()
+        self.window_height_spinbox.setRange(600, 900)
+        window_size_layout.addWidget(self.window_height_spinbox, 3, 1)
 
     def reset_font_settings(self) -> None:
         default_font = QApplication.font()
@@ -1084,3 +1118,11 @@ class SettingsDialog(QDialog):
         """Using arg__1 instead of event to avoid name conflict"""
         super().showEvent(arg__1)
         self.global_ok_button.setFocus()
+
+    def apply_window_geometry_from_spinboxes(self) -> None:
+        """Set the dialog geometry to match the values in the window size spinboxes."""
+        x = self.window_x_spinbox.value()
+        y = self.window_y_spinbox.value()
+        w = self.window_width_spinbox.value()
+        h = self.window_height_spinbox.value()
+        self.setGeometry(x, y, w, h)
