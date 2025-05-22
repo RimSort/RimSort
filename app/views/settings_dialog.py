@@ -907,7 +907,11 @@ class SettingsDialog(QDialog):
         self.connect_populate_languages_combobox()
 
         # Window size configuration group
-        window_size_group = QGroupBox(self.tr("Window Size Configuration"))
+        windows_size_group_label = QLabel(self.tr("Window Size Configuration"))
+        windows_size_group_label.setFont(GUIInfo().emphasis_font)
+        tab_layout.addWidget(windows_size_group_label)
+
+        window_size_group = QGroupBox()
         tab_layout.addWidget(window_size_group)
 
         window_size_layout = QGridLayout()
