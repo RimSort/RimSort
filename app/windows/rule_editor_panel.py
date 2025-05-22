@@ -7,7 +7,6 @@ from PySide6.QtCore import (
     QModelIndex,
     QPersistentModelIndex,
     QPoint,
-    QSize,
     Qt,
     Signal,
 )
@@ -31,6 +30,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.utils.app_info import AppInfo
+from app.utils.gui_info import GUIInfo
 from app.utils.metadata import MetadataManager
 from app.views.dialogue import show_dialogue_input, show_warning
 
@@ -508,7 +508,8 @@ class RuleEditor(QWidget):
         # Setup the window
         self.setWindowTitle("RimSort - Rule Editor")
         self.setLayout(layout)
-        self.setMinimumSize(QSize(800, 600))
+        # Use GUIInfo to set the window size and position from settings
+        self.setGeometry(*GUIInfo().get_window_geometry())
 
     def createDropEvent(
         self, destination_list: QListWidget

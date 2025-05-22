@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.utils.app_info import AppInfo
+from app.utils.gui_info import GUIInfo
 from app.utils.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetPublishedFileDetails,
 )
@@ -140,7 +141,8 @@ class RunnerPanel(QWidget):
         self.main_layout.addLayout(self.actions_bar_layout)
         # WINDOW
         self.setLayout(self.main_layout)
-        self.resize(800, 600)
+        # Use GUIInfo to set the window size and position from settings
+        self.setGeometry(*GUIInfo().get_window_geometry())
 
         self._do_clear_runner()
 

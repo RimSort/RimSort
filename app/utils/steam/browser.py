@@ -4,7 +4,7 @@ from functools import partial
 from typing import Any
 
 from loguru import logger
-from PySide6.QtCore import QPoint, QSize, Qt, QUrl, Signal
+from PySide6.QtCore import QPoint, Qt, QUrl, Signal
 from PySide6.QtGui import QAction, QPixmap
 from PySide6.QtWebEngineCore import QWebEnginePage
 from PySide6.QtWebEngineWidgets import QWebEngineView
@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
 from app.models.image_label import ImageLabel
 from app.utils.app_info import AppInfo
 from app.utils.generic import extract_page_title_steam_browser
+from app.utils.gui_info import GUIInfo
 from app.utils.metadata import MetadataManager
 from app.utils.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetCollectionDetails,
@@ -179,7 +180,8 @@ class SteamBrowser(QWidget):
         # Put it all together
         self.setWindowTitle(self.current_title)
         self.setLayout(self.window_layout)
-        self.setMinimumSize(QSize(800, 600))
+        # Use GUIInfo to set the window size and position from settings
+        self.setGeometry(*GUIInfo().get_window_geometry())
 
     def __browse_to_location(self) -> None:
         url = QUrl(self.location.text())

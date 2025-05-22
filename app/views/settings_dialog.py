@@ -35,6 +35,7 @@ class SettingsDialog(QDialog):
 
         self.setWindowTitle(self.tr("Settings"))
         self.setObjectName("settingsPanel")
+        # Use GUIInfo to set the window size and position from settings
         self.setGeometry(*GUIInfo().get_window_geometry())
 
         main_layout = QVBoxLayout()

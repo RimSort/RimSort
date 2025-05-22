@@ -6,7 +6,7 @@ from traceback import format_exc
 from typing import Any
 
 from loguru import logger
-from PySide6.QtCore import QSize, QTimer
+from PySide6.QtCore import QTimer
 from PySide6.QtGui import QShowEvent
 from PySide6.QtWidgets import (
     QApplication,
@@ -78,7 +78,9 @@ class MainWindow(QMainWindow):
         # Set up the window
         current_instance = self.settings_controller.settings.current_instance
         self.__set_window_title(current_instance)
-        self.setMinimumSize(QSize(1024, 768))
+        # Use GUIInfo to set the window size and position from settings
+        self.setGeometry(*GUIInfo().get_window_geometry())
+        print(f"Window geometry: {self.geometry()}")
 
         # Create the window layout
         app_layout = QVBoxLayout()
@@ -214,8 +216,6 @@ class MainWindow(QMainWindow):
         EventBus().do_restore_instance_from_archive.connect(
             self.__restore_instance_from_archive
         )
-
-        self.setGeometry(100, 100, 1024, 768)
         logger.debug("Finished MainWindow initialization")
 
     def __disable_enable_widgets(self, enable: bool) -> None:
