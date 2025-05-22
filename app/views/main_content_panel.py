@@ -1312,6 +1312,7 @@ class MainContent(QObject):
                 self.settings_controller.settings.sorting_algorithm,
                 active_package_ids=active_package_ids,
                 active_uuids=active_mods,
+                use_moddependencies_as_loadTheseBefore=self.settings_controller.settings.use_moddependencies_as_loadTheseBefore,
             )
         except NotImplementedError as e:
             dialogue.show_warning(

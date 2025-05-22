@@ -480,6 +480,17 @@ class SettingsDialog(QDialog):
         self.sorting_topological_radio = QRadioButton(self.tr("Topologically"))
         sort_group_box_layout.addWidget(self.sorting_topological_radio)
 
+        # Use dependencies for sorting checkbox
+        self.use_moddependencies_as_loadTheseBefore = QCheckBox(
+            self.tr("Use dependency rules for sorting.")
+        )
+        self.use_moddependencies_as_loadTheseBefore.setToolTip(
+            self.tr(
+                "If enabled, also uses moddependencies as loadTheseBefore, and mods will be sorted such that dependencies are loaded before the dependent mod."
+            )
+        )
+        sort_group_box_layout.addWidget(self.use_moddependencies_as_loadTheseBefore)
+
         # Dependencies group
         deps_group_box = QGroupBox()
         tab_layout.addWidget(deps_group_box)
