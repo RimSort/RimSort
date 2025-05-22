@@ -5,6 +5,8 @@ from PySide6.QtCore import QMargins
 from PySide6.QtGui import QFont, QFontMetrics, QPixmap
 from PySide6.QtWidgets import QApplication, QFileDialog, QMessageBox
 
+from app.models.settings import Settings
+
 
 class GUIInfo:
     """
@@ -63,6 +65,49 @@ class GUIInfo:
             self._app_icon = QPixmap(icon_path)
         else:
             self._app_icon = QPixmap()
+
+    def set_window_size(self) -> tuple[int, int, int, int]:
+        """
+        Calculate the recommended window size and position.
+
+        Returns:
+            tuple[int, int, int, int]: The x position, y position, width, and height for the window.
+        """
+        # Get the screen size and calculate window dimensions based on it
+        screen = QApplication.primaryScreen()
+        screen_geometry = screen.geometry()
+        window_width = int(screen_geometry.width() * 0.5)
+        window_height = int(screen_geometry.height() * 0.5)
+
+        # Calculate position to center the window on screen
+        x_position = int((screen_geometry.width() - window_width) / 2.5)
+        y_position = int((screen_geometry.height() - window_height) / 5)
+
+        # Return values for setGeometry (x, y, width, height)
+        return x_position, y_position, window_width, window_height
+
+    def get_window_geometry(self) -> tuple[int, int, int, int]:
+        """
+        Get window geometry (x, y, width, height) using saved settings if valid,
+        else fallback to default window size.
+        Always reloads settings from disk to ensure up-to-date values.
+        """
+        settings = Settings()
+        settings.load()  # Ensure settings are reloaded from disk
+        if (
+            settings.window_width > 900
+            or settings.window_height > 600
+            or settings.window_x > 0
+            or settings.window_y > 30
+        ):
+            return (
+                settings.window_x,
+                settings.window_y,
+                settings.window_width,
+                settings.window_height,
+            )
+        else:
+            return self.set_window_size()
 
     @property
     def default_font(self) -> QFont:
