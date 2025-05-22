@@ -3020,7 +3020,7 @@ class MainContent(QObject):
                     try:
                         # Push the changes to the remote repository and create a pull request from new_branch
                         origin = local_repo.remote()
-                        origin.push(new_branch)
+                        origin.push(new_branch_name)
                     except Exception:
                         stacktrace = traceback.format_exc()
                         dialogue.show_warning(
