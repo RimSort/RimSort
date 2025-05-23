@@ -1914,8 +1914,8 @@ class ModListWidget(QListWidget):
             current_item_data["errors"] = tool_tip_text
             # Calculate any needed string for warnings
             for error_type, tooltip_header in [
-                ("load_before_violations", "\n应加载在以下模组之后:"),
-                ("load_after_violations", "\n应加载在以下模组之前:"),
+                ("load_before_violations", "\nShould be Loaded After:"),
+                ("load_after_violations", "\nShould be Loaded Before:"),
             ]:
                 if mod_errors[error_type]:
                     tool_tip_text += tooltip_header
@@ -1937,14 +1937,14 @@ class ModListWidget(QListWidget):
                 and mod_data["packageid"] not in self.ignore_warning_list
             ):
                 # Add tool tip to indicate mod and game version mismatch
-                tool_tip_text += "\n模组与游戏版本不匹配"
+                tool_tip_text += "\nMod and Game Version Mismatch"
             # Handle "use this instead" behavior
             if (
                 current_item_data["alternative"]
                 and mod_data["packageid"] not in self.ignore_warning_list
             ):
                 tool_tip_text += (
-                    f"\n推荐使用替代的更新模组：\n{current_item_data['alternative']}"
+                    f"\nAn alternative updated mod is recommended:\n{current_item_data['alternative']}"
                 )
             # Add to error summary if any missing dependencies or incompatibilities
             if self.list_type == "Active" and any(
