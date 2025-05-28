@@ -66,7 +66,7 @@ class GUIInfo:
         else:
             self._app_icon = QPixmap()
 
-    def set_window_size(self) -> tuple[int, int, int, int]:
+    def set_window_size(self, settings: Settings) -> tuple[int, int, int, int]:
         """
         Calculate the recommended window size and position.
 
@@ -82,6 +82,15 @@ class GUIInfo:
         # Calculate position to center the window on screen
         x_position = int((screen_geometry.width() - window_width) / 2.5)
         y_position = int((screen_geometry.height() - window_height) / 5)
+
+        # Update settings with calculated values
+        settings.window_x = x_position
+        settings.window_y = y_position
+        settings.window_width = window_width
+        settings.window_height = window_height
+
+        # Save the settings to disk
+        settings.save()
 
         # Return values for setGeometry (x, y, width, height)
         return x_position, y_position, window_width, window_height
@@ -107,7 +116,7 @@ class GUIInfo:
                 settings.window_height,
             )
         else:
-            return self.set_window_size()
+            return self.set_window_size(settings)
 
     @property
     def default_font(self) -> QFont:
