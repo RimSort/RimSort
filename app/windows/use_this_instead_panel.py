@@ -60,6 +60,13 @@ class UseThisInsteadPanel(BaseModsPanel):
             partial(self._steamworks_cmd_for_all, 6, completed=__subscribe_cb)
         )
 
+        self.editor_steamcmd_download_button = QPushButton(
+            self.tr("Download with SteamCMD")
+        )
+        self.editor_steamcmd_download_button.clicked.connect(
+            partial(self._update_mods_from_table, 6, "SteamCMD")
+        )
+
         self.editor_tool_button = QToolButton()
         self.editor_tool_button.setText(self.tr("More Options"))
 
@@ -112,6 +119,7 @@ class UseThisInsteadPanel(BaseModsPanel):
 
         self.editor_main_actions_layout.addWidget(self.editor_update_mods_button)
         self.editor_main_actions_layout.addWidget(self.editor_update_all_button)
+        self.editor_main_actions_layout.addWidget(self.editor_steamcmd_download_button)
         self.editor_main_actions_layout.addWidget(self.editor_tool_button)
 
     def _populate_from_metadata(self) -> None:
