@@ -2,11 +2,14 @@ import datetime
 import json
 import os
 import platform
+import shutil
 import subprocess
 import sys
+import tempfile
 import time
 import traceback
 import webbrowser
+import zipfile
 from functools import partial
 from gc import collect
 from io import BytesIO
@@ -18,6 +21,7 @@ from typing import TYPE_CHECKING, Any, Callable, Self
 from urllib.parse import urlparse
 from zipfile import ZipFile
 
+import requests
 from github import Github
 from loguru import logger
 from PySide6.QtCore import (
@@ -25,11 +29,19 @@ from PySide6.QtCore import (
     QObject,
     QProcess,
     Qt,
+    QThread,
     Signal,
     Slot,
 )
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel
-from requests import get as requests_get
+from PySide6.QtWidgets import (
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QProgressBar,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
 
 import app.utils.constants as app_constants
 import app.utils.metadata as metadata
@@ -66,6 +78,7 @@ from app.utils.steam.webapi.wrapper import (
 from app.utils.system_info import SystemInfo
 from app.utils.todds.wrapper import ToddsInterface
 from app.utils.xml import json_to_xml_write
+from app.views.dialogue import show_information
 from app.views.mod_info_panel import ModInfo
 from app.views.mods_panel import ModListWidget, ModsPanel, ModsPanelSortKey
 from app.windows.missing_dependencies_dialog import MissingDependenciesDialog
@@ -239,6 +252,7 @@ class MainContent(QObject):
 
             # Download Menu bar Eventbus
             EventBus().do_add_git_mod.connect(self._do_add_git_mod)
+            EventBus().do_add_zip_mod.connect(self._do_add_zip_mod)
             EventBus().do_browse_workshop.connect(self._do_browse_workshop)
             EventBus().do_check_for_workshop_updates.connect(
                 self._do_check_for_workshop_updates
@@ -363,6 +377,9 @@ class MainContent(QObject):
             # Instantiate todds runner
             self.todds_runner: RunnerPanel | None = None
 
+            self.progress_window: ProgressWindow = ProgressWindow()
+            self._extract_thread: ZipExtractThread | None = None
+
             logger.info("Finished MainContent initialization")
             self.initialized = True
 
@@ -401,13 +418,15 @@ class MainContent(QObject):
         else:
             logger.warning("Essential path(s) are invalid or not set!")
             answer = dialogue.show_dialogue_conditional(
-                title="Essential path(s)",
-                text="Essential path(s) are invalid or not set!\n",
+                title=self.tr("Essential path(s)"),
+                text=self.tr("Essential path(s) are invalid or not set!\n"),
                 information=(
-                    "RimSort requires, at the minimum, for the game install folder and the "
-                    "config folder paths to be set, and that the paths both exist. Please set "
-                    "both of these manually or by using the autodetect functionality.\n\n"
-                    "Would you like to configure them now?"
+                    self.tr(
+                        "RimSort requires, at the minimum, for the game install folder and the "
+                        "config folder paths to be set, and that the paths both exist. Please set "
+                        "both of these manually or by using the autodetect functionality.\n\n"
+                        "Would you like to configure them now?"
+                    )
                 ),
             )
             if answer == "&Yes":
@@ -561,13 +580,17 @@ class MainContent(QObject):
             [f"* {mod}" for mod in self.duplicate_mods.keys()]
         )
         dialogue.show_warning(
-            title="Duplicate mod(s) found",
-            text="Duplicate mods(s) found for package ID(s) in your ModsConfig.xml (active mods list)",
+            title=self.tr("Duplicate mod(s) found"),
+            text=self.tr(
+                "Duplicate mods(s) found for package ID(s) in your ModsConfig.xml (active mods list)"
+            ),
             information=(
-                "The following list of mods were set active in your ModsConfig.xml and "
-                "duplicate instances were found of these mods in your mod data sources. "
-                "The vanilla game will use the first 'local mod' of a particular package ID "
-                "that is found - so RimSort will also adhere to this logic."
+                self.tr(
+                    "The following list of mods were set active in your ModsConfig.xml and "
+                    "duplicate instances were found of these mods in your mod data sources. "
+                    "The vanilla game will use the first 'local mod' of a particular package ID "
+                    "that is found - so RimSort will also adhere to this logic."
+                )
             ),
             details=list_of_duplicate_mods,
         )
@@ -589,11 +612,13 @@ class MainContent(QObject):
         else:
             list_of_missing_mods = "\n".join([f"* {mod}" for mod in self.missing_mods])
             dialogue.show_information(
-                text="Could not find data for some mods!",
+                text=self.tr("Could not find data for some mods!"),
                 information=(
-                    "The following list of mods were set active in your mods list but "
-                    "no data could be found for these mods in local/workshop mod paths. "
-                    "\n\nAre your game configuration paths correct?"
+                    self.tr(
+                        "The following list of mods were set active in your mods list but "
+                        "no data could be found for these mods in local/workshop mod paths. "
+                        "\n\nAre your game configuration paths correct?"
+                    )
                 ),
                 details=list_of_missing_mods,
             )
@@ -806,9 +831,9 @@ class MainContent(QObject):
                 "You are running from Python interpreter. Skipping update check..."
             )
             dialogue.show_warning(
-                title="Update skipped",
-                text="You are running from Python interpreter.",
-                information="Skipping update check...",
+                title=self.tr("Update skipped"),
+                text=self.tr("You are running from Python interpreter."),
+                information=self.tr("Skipping update check..."),
             )
             return
         # NUITKA
@@ -821,8 +846,10 @@ class MainContent(QObject):
                 f"Unable to retrieve latest release information due to exception: {e.__class__}"
             )
             dialogue.show_warning(
-                title="Unable to retrieve latest release information",
-                text=f"Unable to retrieve latest release information due to exception: {e.__class__}",
+                title=self.tr("Unable to retrieve latest release information"),
+                text=self.tr(
+                    "Unable to retrieve latest release information due to exception: {e.__class__}"
+                ).format(e=e),
             )
             return
 
@@ -850,13 +877,17 @@ class MainContent(QObject):
             return
         tag_name_updated = tag_name.replace("alpha", "Alpha")
         install_path = os.getcwd()
-        logger.debug(f"Current RimSort release found: {tag_name}")
-        logger.debug(f"Current RimSort version found: {current_version}")
+        logger.debug(f"Current RimSort github release found: {tag_name}")
+        logger.debug(f"Current RimSort installed version found: {current_version}")
         if current_version != tag_name:
             answer = dialogue.show_dialogue_conditional(
-                title="RimSort update found",
-                text=f"An update to RimSort has been released: {tag_name}",
-                information=f"You are running RimSort {current_version}\nDo you want to update now?",
+                title=self.tr("RimSort update found"),
+                text=self.tr(
+                    "An update to RimSort has been released: {tag_name}"
+                ).format(tag_name=tag_name),
+                information=self.tr(
+                    "You are running RimSort {current_version}\nDo you want to update now?"
+                ).format(current_version=current_version),
             )
             if answer == "&Yes":
                 logger.debug("User selected to update RimSort")
@@ -914,8 +945,10 @@ class MainContent(QObject):
                 # If we don't have it from our query...
                 if "browser_download_url" not in locals():
                     dialogue.show_warning(
-                        title="Unable to complete update",
-                        text=f"Failed to find valid RimSort release for {SYSTEM} {ARCH} {PROCESSOR}",
+                        title=self.tr("Unable to complete update"),
+                        text=self.tr(
+                            "Failed to find valid RimSort release for {SYSTEM} {ARCH} {PROCESSOR}"
+                        ).format(SYSTEM=SYSTEM, ARCH=ARCH, PROCESSOR=PROCESSOR),
                     )
                     return
                 target_archive_extracted = target_archive.replace(".zip", "")
@@ -933,12 +966,14 @@ class MainContent(QObject):
                             self.__do_download_extract_release_to_tempdir,
                             url=browser_download_url,
                         ),
-                        text=f"RimSort update found. Downloading RimSort {tag_name_updated} release...",
+                        text=self.tr(
+                            "RimSort update found. Downloading RimSort {tag_name_updated} release..."
+                        ).format(tag_name_updated=tag_name_updated),
                     )
                     temp_dir = "RimSort" if SYSTEM != "Darwin" else "RimSort.app"
                     answer = dialogue.show_dialogue_conditional(
-                        title="Update downloaded",
-                        text="Do you want to proceed with the update?",
+                        title=self.tr("Update downloaded"),
+                        text=self.tr("Do you want to proceed with the update?"),
                         information=f"\nSuccessfully retrieved latest release. The update will be installed from: {os.path.join(gettempdir(), temp_dir)}",
                     )
                     if answer != "&Yes":
@@ -946,8 +981,8 @@ class MainContent(QObject):
                 except Exception:
                     stacktrace = traceback.format_exc()
                     dialogue.show_warning(
-                        title="Failed to download update",
-                        text="Failed to download latest RimSort release!",
+                        title=self.tr("Failed to download update"),
+                        text=self.tr("Failed to download latest RimSort release!"),
                         information="Did the file/url change? "
                         + "Does your environment have access to the Internet?\n"
                         + f"URL: {browser_download_url}",
@@ -1000,18 +1035,22 @@ class MainContent(QObject):
         else:
             logger.debug("Up to date!")
             dialogue.show_information(
-                title="RimSort is up to date!",
-                text=f"You are already running the latest release: {tag_name}",
+                title=self.tr("RimSort is up to date!"),
+                text=self.tr(
+                    "You are already running the latest release: {tag_name}"
+                ).format(tag_name=tag_name),
             )
 
     def show_update_error(self) -> None:
         dialogue.show_warning(
-            title="Unable to retrieve latest release information",
-            text="Please check your internet connection and try again, You can also check 'https://github.com/RimSort/RimSort/releases' directly.",
+            title=self.tr("Unable to retrieve latest release information"),
+            text=self.tr(
+                "Please check your internet connection and try again, You can also check 'https://github.com/RimSort/RimSort/releases' directly."
+            ),
         )
 
     def __do_download_extract_release_to_tempdir(self, url: str) -> None:
-        with ZipFile(BytesIO(requests_get(url).content)) as zipobj:
+        with ZipFile(BytesIO(requests.get(url).content)) as zipobj:
             zipobj.extractall(gettempdir())
 
     def __do_get_github_release_info(self) -> dict[str, Any]:
@@ -1019,7 +1058,7 @@ class MainContent(QObject):
         url = "https://api.github.com/repos/RimSort/RimSort/releases/latest"
         logger.debug(f"Requesting GitHub release info from: {url}")
 
-        raw = requests_get(url, timeout=10)
+        raw = requests.get(url, timeout=10)
 
         # Check for HTTP errors
         if raw.status_code != 200:
@@ -1115,7 +1154,7 @@ class MainContent(QObject):
                 target=partial(
                     self.metadata_manager.refresh_cache, is_initial=is_initial
                 ),
-                text="Scanning mod sources and populating metadata...",
+                text=self.tr("Scanning mod sources and populating metadata..."),
             )
 
             # Insert mod data into list
@@ -1273,15 +1312,18 @@ class MainContent(QObject):
                 self.settings_controller.settings.sorting_algorithm,
                 active_package_ids=active_package_ids,
                 active_uuids=active_mods,
+                use_moddependencies_as_loadTheseBefore=self.settings_controller.settings.use_moddependencies_as_loadTheseBefore,
             )
         except NotImplementedError as e:
             dialogue.show_warning(
-                title="Sorting algorithm not implemented",
-                text="The selected sorting algorithm is not implemented",
+                title=self.tr("Sorting algorithm not implemented"),
+                text=self.tr("The selected sorting algorithm is not implemented"),
                 information=(
-                    "This may be caused by malformed settings or improper migration between versions or different mod manager. "
-                    "Try resetting your settings, selecting a different sorting algorithm, or "
-                    "deleting your settings file. If the issue persists, please report it the developers."
+                    self.tr(
+                        "This may be caused by malformed settings or improper migration between versions or different mod manager. "
+                        "Try resetting your settings, selecting a different sorting algorithm, or "
+                        "deleting your settings file. If the issue persists, please report it the developers."
+                    )
                 ),
                 details=str(e),
             )
@@ -1419,8 +1461,8 @@ class MainContent(QObject):
                     json_to_xml_write(mods_config_data, file_path)
             except Exception:
                 dialogue.show_fatal_error(
-                    title="Failed to export to file",
-                    text="Failed to export active mods to file:",
+                    title=self.tr("Failed to export to file"),
+                    text=self.tr("Failed to export active mods to file:"),
                     information=f"{file_path}",
                     details=traceback.format_exc(),
                 )
@@ -1581,9 +1623,9 @@ class MainContent(QObject):
             )
         # Copy report to clipboard
         dialogue.show_information(
-            title="Export active mod list",
-            text="Copied active mod list report to clipboard...",
-            information='Click "Show Details" to see the full report!',
+            title=self.tr("Export active mod list"),
+            text=self.tr("Copied active mod list report to clipboard..."),
+            information=self.tr('Click "Show Details" to see the full report!'),
             details=f"{active_mods_clipboard_report}",
         )
         copy_to_clipboard_safely(active_mods_clipboard_report)
@@ -1736,15 +1778,17 @@ class MainContent(QObject):
         if rentry_uploader.url and host and host.endswith("rentry.co"):
             copy_to_clipboard_safely(rentry_uploader.url)
             dialogue.show_information(
-                title="Uploaded active mod list",
-                text=f"Uploaded active mod list report to Rentry.co! The URL has been copied to your clipboard:\n\n{rentry_uploader.url}",
-                information='Click "Show Details" to see the full report!',
+                title=self.tr("Uploaded active mod list"),
+                text=self.tr(
+                    "Uploaded active mod list report to Rentry.co! The URL has been copied to your clipboard:\n\n{rentry_uploader.url}"
+                ).format(rentry_uploader=rentry_uploader),
+                information=self.tr('Click "Show Details" to see the full report!'),
                 details=f"{active_mods_rentry_report}",
             )
         else:
             dialogue.show_warning(
-                title="Failed to upload",
-                text="Failed to upload exported active mod list to Rentry.co",
+                title=self.tr("Failed to upload"),
+                text=self.tr("Failed to upload exported active mod list to Rentry.co"),
             )
 
     def _do_open_app_directory(self) -> None:
@@ -1812,10 +1856,12 @@ class MainContent(QObject):
     def show_dialog_specify_paths(self, directory_name: str) -> None:
         logger.error(f"Could not open {directory_name} directory")
         answer = dialogue.show_dialogue_conditional(
-            title="Could not open directory",
-            text=f"{directory_name} path does not exist or is not set.",
-            information="Would you like to set the path now?",
-            button_text_override=["Open settings"],
+            title=self.tr("Could not open directory"),
+            text=self.tr("{directory_name} path does not exist or is not set.").format(
+                directory_name=directory_name
+            ),
+            information=self.tr("Would you like to set the path now?"),
+            button_text_override=[self.tr("Open settings")],
         )
         if "settings" in answer:
             self.settings_controller.show_settings_dialog()
@@ -1844,30 +1890,34 @@ class MainContent(QObject):
     def _upload_log(self, path: Path) -> None:
         if not os.path.exists(path):
             dialogue.show_warning(
-                title="File not found",
-                text="The file you are trying to upload does not exist.",
-                information=f"File: {path}",
+                title=self.tr("File not found"),
+                text=self.tr("The file you are trying to upload does not exist."),
+                information=self.tr("File: {path}").format(path=path),
             )
             return
 
         success, ret = self.do_threaded_loading_animation(
             gif_path=str(AppInfo().theme_data_folder / "default-icons" / "rimsort.gif"),
             target=partial(upload_data_to_0x0_st, str(path)),
-            text=f"Uploading {path.name} to 0x0.st...",
+            text=self.tr("Uploading {path.name} to 0x0.st...").format(path=path),
         )
 
         if success:
             copy_to_clipboard_safely(ret)
             dialogue.show_information(
-                title="Uploaded file",
-                text=f"Uploaded {path.name} to http://0x0.st/",
-                information=f"The URL has been copied to your clipboard:\n\n{ret}",
+                title=self.tr("Uploaded file"),
+                text=self.tr("Uploaded {path.name} to http://0x0.st/").format(
+                    path=path
+                ),
+                information=self.tr(
+                    "The URL has been copied to your clipboard:\n\n{ret}"
+                ).format(ret=ret),
             )
             webbrowser.open(ret)
         else:
             dialogue.show_warning(
-                title="Failed to upload file.",
-                text="Failed to upload the file to 0x0.st",
+                title=self.tr("Failed to upload file."),
+                text=self.tr("Failed to upload the file to 0x0.st"),
                 information=ret,
             )
 
@@ -1921,8 +1971,8 @@ class MainContent(QObject):
         except Exception:
             logger.error("Could not save active mods")
             dialogue.show_fatal_error(
-                title="Could not save active mods",
-                text="Failed to save active mods to file:",
+                title=self.tr("Could not save active mods"),
+                text=self.tr("Failed to save active mods to file:"),
                 information=f"{mods_config_path}",
                 details=traceback.format_exc(),
             )
@@ -2027,14 +2077,16 @@ class MainContent(QObject):
                 metadata.query_workshop_update_data,
                 mods=self.metadata_manager.internal_local_metadata,
             ),
-            text="Checking Steam Workshop mods for updates...",
+            text=self.tr("Checking Steam Workshop mods for updates..."),
         )
         # If we failed to check for updates, skip the comparison(s) & UI prompt
         if updates_checked == "failed":
             dialogue.show_warning(
-                title="Unable to check for updates",
-                text="RimSort was unable to query Steam WebAPI for update information!\n",
-                information="Are you connected to the Internet?",
+                title=self.tr("Unable to check for updates"),
+                text=self.tr(
+                    "RimSort was unable to query Steam WebAPI for update information!\n"
+                ),
+                information=self.tr("Are you connected to the Internet?"),
             )
             return
         workshop_mod_updater = ModUpdaterPrompt()
@@ -2043,7 +2095,9 @@ class MainContent(QObject):
             logger.debug("Displaying potential Workshop mod updates")
             workshop_mod_updater.show()
         else:
-            self.status_signal.emit("All Workshop mods appear to be up to date!")
+            self.status_signal.emit(
+                self.tr("All Workshop mods appear to be up to date!")
+            )
 
     def _do_setup_steamcmd(self) -> None:
         if (
@@ -2052,9 +2106,9 @@ class MainContent(QObject):
             and self.steamcmd_runner.process.state() == QProcess.ProcessState.Running
         ):
             dialogue.show_warning(
-                title="RimSort - SteamCMD setup",
-                text="Unable to create SteamCMD runner!",
-                information="There is an active process already running!",
+                title=self.tr("RimSort - SteamCMD setup"),
+                text=self.tr("Unable to create SteamCMD runner!"),
+                information=self.tr("There is an active process already running!"),
                 details=f"PID {self.steamcmd_runner.process.processId()} : "
                 + self.steamcmd_runner.process.program(),
             )
@@ -2075,9 +2129,13 @@ class MainContent(QObject):
             RunnerPanel().process_complete()
         else:
             dialogue.show_warning(
-                title="RimSort - SteamCMD setup",
-                text="Unable to initiate SteamCMD installation. Local mods path not set!",
-                information="Please configure local mods path in Settings before attempting to install.",
+                title=self.tr("RimSort - SteamCMD setup"),
+                text=self.tr(
+                    "Unable to initiate SteamCMD installation. Local mods path not set!"
+                ),
+                information=self.tr(
+                    "Please configure local mods path in Settings before attempting to install."
+                ),
             )
 
     def _do_download_mods_with_steamcmd(self, publishedfileids: list[str]) -> None:
@@ -2093,9 +2151,11 @@ class MainContent(QObject):
         # No empty publishedfileids
         if len(publishedfileids) == 0:
             dialogue.show_warning(
-                title="RimSort",
-                text="No PublishedFileIds were supplied in operation.",
-                information="Please add mods to list before attempting to download.",
+                title=self.tr("RimSort"),
+                text=self.tr("No PublishedFileIds were supplied in operation."),
+                information=self.tr(
+                    "Please add mods to list before attempting to download."
+                ),
             )
             return
         # Check for existing steamcmd_runner process
@@ -2105,9 +2165,9 @@ class MainContent(QObject):
             and self.steamcmd_runner.process.state() == QProcess.ProcessState.Running
         ):
             dialogue.show_warning(
-                title="RimSort",
-                text="Unable to create SteamCMD runner!",
-                information="There is an active process already running!",
+                title=self.tr("RimSort"),
+                text=self.tr("Unable to create SteamCMD runner!"),
+                information=self.tr("There is an active process already running!"),
                 details=f"PID {self.steamcmd_runner.process.processId()} : "
                 + self.steamcmd_runner.process.program(),
             )
@@ -2143,9 +2203,11 @@ class MainContent(QObject):
             )
         else:
             dialogue.show_warning(
-                title="SteamCMD not found",
-                text="SteamCMD executable was not found.",
-                information='Please setup an existing SteamCMD prefix, or setup a new prefix with "Setup SteamCMD".',
+                title=self.tr("SteamCMD not found"),
+                text=self.tr("SteamCMD executable was not found."),
+                information=self.tr(
+                    'Please setup an existing SteamCMD prefix, or setup a new prefix with "Setup SteamCMD".'
+                ),
             )
 
     def _do_steamworks_api_call(self, instruction: list[Any]) -> None:
@@ -2248,9 +2310,11 @@ class MainContent(QObject):
         # No empty publishedfileids
         if len(publishedfileids) == 0:
             dialogue.show_warning(
-                title="RimSort",
-                text="No PublishedFileIds were supplied in operation.",
-                information="Please add mods to list before attempting to download.",
+                title=self.tr("RimSort"),
+                text=self.tr("No PublishedFileIds were supplied in operation."),
+                information=self.tr(
+                    "Please add mods to list before attempting to download."
+                ),
             )
             return
         # Close browser if open
@@ -2260,7 +2324,9 @@ class MainContent(QObject):
         self.do_threaded_loading_animation(
             gif_path=str(AppInfo().theme_data_folder / "default-icons" / "steam.gif"),
             target=partial(self._do_steamworks_api_call, instruction=instruction),
-            text="Processing Steam subscription action(s) via Steamworks API...",
+            text=self.tr(
+                "Processing Steam subscription action(s) via Steamworks API..."
+            ),
         )
         # self._do_refresh()
 
@@ -2272,8 +2338,10 @@ class MainContent(QObject):
         that are configured to be passed to the Rimworld executable
         """
         args, ok = dialogue.show_dialogue_input(
-            title="Enter git repo",
-            label="Enter a git repository url (http/https) to clone to local mods:",
+            title=self.tr("Enter git repo"),
+            label=self.tr(
+                "Enter a git repository url (http/https) to clone to local mods:"
+            ),
         )
         if ok:
             self._do_clone_repo_to_path(
@@ -2285,6 +2353,115 @@ class MainContent(QObject):
         else:
             logger.debug("Cancelling operation.")
 
+    def _do_add_zip_mod(self) -> None:
+        """
+        Opens a QDialogInput that allows the user to select a ZIP file to add to the local mods directory.
+        If the user selects "Download", the user will be prompted to enter a URL to download the ZIP file from.
+        If the user selects "Select from local", the user will be prompted to select a ZIP file from their local machine.
+        The selected ZIP file will be processed and added to the local mods directory.
+        """
+
+        # download or select from local
+        answer = dialogue.show_dialogue_conditional(
+            title=self.tr("Download or select from local"),
+            text=self.tr(
+                "Please select a ZIP file to add to the local mods directory."
+            ),
+            information=self.tr(
+                "You can download a ZIP file from the internet, or select a file from your local machine."
+            ),
+            button_text_override=[
+                "Download",
+                "Select from local",
+            ],
+        )
+
+        if answer == "Download":
+            url, ok = dialogue.show_dialogue_input(
+                title=self.tr("Enter zip file url"),
+                label=self.tr(
+                    "Enter a zip file url (http/https) to download to local mods:"
+                ),
+            )
+            if url and ok:
+                fd, temp_path = tempfile.mkstemp(suffix=".zip")
+                os.close(fd)
+
+                try:
+                    logger.info(f"Downloading {url} to {temp_path}")
+                    response = requests.get(url, stream=True)
+                    response.raise_for_status()
+
+                    with open(temp_path, "wb") as f:
+                        for chunk in response.iter_content(chunk_size=8192):
+                            if chunk:
+                                f.write(chunk)
+
+                    self._extract_zip_file(temp_path, delete=True)
+
+                except Exception as e:
+                    logger.error(f"Failed to download zip file: {e}")
+                    dialogue.show_warning(
+                        title=self.tr("Failed to download zip file"),
+                        text=self.tr("The zip file could not be downloaded."),
+                        information=self.tr("File: {file_path}\nError: {e}").format(
+                            file_path=temp_path, e=e
+                        ),
+                    )
+        elif answer == "Select from local":
+            file_path = dialogue.show_dialogue_file(
+                mode="open",
+                caption="Choose Zip File",
+                _dir=str(AppInfo().app_storage_folder),
+                _filter="Zip file (*.zip)",
+            )
+            if file_path:
+                self._extract_zip_file(file_path)
+
+    def _extract_zip_file(self, file_path: str, delete: bool = False) -> None:
+        logger.info(f"Selected path: {file_path}")
+        if not file_path:
+            logger.debug("USER ACTION: cancelled selection!")
+            return
+
+        if not os.path.isfile(file_path):
+            logger.error(f"ZIP file does not exist: {file_path}")
+            dialogue.show_warning(
+                title=self.tr("File not found"),
+                text=self.tr("The selected file does not exist."),
+                information=self.tr("File: {file_path}").format(file_path=file_path),
+            )
+            return
+
+        base_path = str(
+            self.settings_controller.settings.instances[
+                self.settings_controller.settings.current_instance
+            ].local_folder
+        )
+
+        try:
+            self._do_extract_zip_to_path(base_path, file_path, delete)
+        except NotImplementedError as e:
+            logger.error(f"Unsupported compression method: {e}")
+            dialogue.show_warning(
+                title=self.tr("Unsupported Compression Method"),
+                text=self.tr(
+                    "This ZIP file uses a compression method that is not supported by this version."
+                ),
+                information=self.tr("File: {file_path}\nError: {e}").format(
+                    file_path=file_path, e=e
+                ),
+            )
+        except (zipfile.BadZipfile, ValueError, PermissionError, OSError) as e:
+            logger.error(f"Failed to extract zip file: {e}")
+            dialogue.show_warning(
+                title=self.tr("Failed to extract zip file"),
+                text=self.tr("The zip file could not be extracted."),
+                information=self.tr("File: {file_path}\nError: {e}").format(
+                    file_path=file_path, e=e
+                ),
+            )
+
     # EXTERNAL METADATA ACTIONS
 
     def _do_configure_github_identity(self) -> None:
@@ -2294,8 +2471,8 @@ class MainContent(QObject):
         "Github mod" related actions
         """
         args, ok = dialogue.show_dialogue_input(
-            title="Edit username",
-            label="Enter your Github username:",
+            title=self.tr("Edit username"),
+            label=self.tr("Enter your Github username:"),
             text=self.settings_controller.settings.github_username,
         )
         if ok:
@@ -2305,8 +2482,8 @@ class MainContent(QObject):
             logger.debug("USER ACTION: cancelled input!")
             return
         args, ok = dialogue.show_dialogue_input(
-            title="Edit token",
-            label="Enter your Github personal access token here (ghp_*):",
+            title=self.tr("Edit token"),
+            label=self.tr("Enter your Github personal access token here (ghp_*):"),
             text=self.settings_controller.settings.github_token,
         )
         if ok:
@@ -2389,10 +2566,12 @@ class MainContent(QObject):
                     except GitCommandError:
                         stacktrace = traceback.format_exc()
                         dialogue.show_warning(
-                            title="Failed to update repo!",
-                            text=f"The repository supplied at [{repo_path}] failed to update!\n"
-                            + "Are you connected to the Internet? "
-                            + "Is the repo valid?",
+                            title=self.tr("Failed to update repo!"),
+                            text=self.tr(
+                                "The repository supplied at [{repo_path}] failed to update!\n"
+                                + "Are you connected to the Internet? "
+                                + "Is the repo valid?"
+                            ).format(repo_path=repo_path),
                             information=(
                                 f"Supplied repository: {repo.remotes.origin.url}"
                                 if repo
@@ -2418,15 +2597,17 @@ class MainContent(QObject):
                     ]
                 )
                 dialogue.show_information(
-                    title="Git repo(s) updated",
-                    text="The following repo(s) had updates pulled from the remote:",
+                    title=self.tr("Git repo(s) updated"),
+                    text=self.tr(
+                        "The following repo(s) had updates pulled from the remote:"
+                    ),
                     information=repos_updated,
                     details=updates_summarized,
                 )
             else:
                 dialogue.show_information(
-                    title="Git repo(s) not updated",
-                    text="No updates were found.",
+                    title=self.tr("Git repo(s) not updated"),
+                    text=self.tr("No updates were found."),
                 )
         else:
             self._do_notify_no_git()
@@ -2450,28 +2631,30 @@ class MainContent(QObject):
             if os.path.exists(repo_path):  # If local repo does exist
                 # Prompt to user to handle
                 answer = dialogue.show_dialogue_conditional(
-                    title="Existing repository found",
-                    text="An existing local repo that matches this repository was found:",
-                    information=(
-                        f"{repo_path}\n\n"
+                    title=self.tr("Existing repository found"),
+                    text=self.tr(
+                        "An existing local repo that matches this repository was found:"
+                    ),
+                    information=self.tr(
+                        "{repo_path}\n\n"
                         + "How would you like to handle? Choose option:\n"
                         + "\n1) Clone new repository (deletes existing and replaces)"
                         + "\n2) Update existing repository (in-place force-update)"
-                    ),
+                    ).format(repo_path=repo_path),
                     button_text_override=[
-                        "Clone new",
-                        "Update existing",
+                        self.tr("Clone new"),
+                        self.tr("Update existing"),
                     ],
                 )
-                if answer == "Cancel":
+                if answer == self.tr("Cancel"):
                     logger.debug(
                         f"User cancelled prompt. Skipping any {repo_folder_name} repository actions."
                     )
                     return
-                elif answer == "Clone new":
+                elif answer == self.tr("Clone new"):
                     logger.info(f"Deleting local git repo at: {repo_path}")
                     delete_files_except_extension(directory=repo_path, extension=".dds")
-                elif answer == "Update existing":
+                elif answer == self.tr("Update existing"):
                     self._do_force_update_existing_repo(
                         base_path=base_path, repo_url=repo_url
                     )
@@ -2481,8 +2664,8 @@ class MainContent(QObject):
             try:
                 Repo.clone_from(repo_url, repo_path)
                 dialogue.show_information(
-                    title="Repo retrieved",
-                    text="The configured repository was cloned!",
+                    title=self.tr("Repo retrieved"),
+                    text=self.tr("The configured repository was cloned!"),
                     information=f'<a href="{repo_url}">{repo_url}</a>  ->\n'
                     + f"{repo_path}",
                 )
@@ -2510,30 +2693,132 @@ class MainContent(QObject):
                         # Handle the case when the target branch is not found
                         logger.warning("Target branch not found.")
                     dialogue.show_information(
-                        title="Repo retrieved",
-                        text="The configured repository was reinitialized with existing files! (likely leftover .dds textures)",
+                        title=self.tr("Repo retrieved"),
+                        text=self.tr(
+                            "The configured repository was reinitialized with existing files! (likely leftover .dds textures)"
+                        ),
                         information=f"{repo_url} ->\n" + f"{repo_path}",
                     )
                 except GitCommandError:
                     stacktrace = traceback.format_exc()
                     dialogue.show_warning(
-                        title="Failed to clone repo!",
-                        text="The configured repo failed to clone/initialize! "
+                        title=self.tr("Failed to clone repo!"),
+                        text=self.tr("The configured repo failed to clone/initialize! ")
                         + "Are you connected to the Internet? "
                         + "Is your configured repo valid?",
-                        information=f"Configured repository: {repo_url}",
+                        information=self.tr("Configured repository: {repo_url}").format(
+                            repo_url=repo_url
+                        ),
                         details=stacktrace,
                     )
         else:
             # Warn the user so they know to configure in settings
             dialogue.show_warning(
-                title="Invalid repository",
-                text="An invalid repository was detected!",
-                information="Please check your repository URL!\n"
-                + "A valid repository is a repository URL which is not\n"
-                + 'empty and is prefixed with "http://" or "https://"',
-                details=f"Invalid repository: {repo_url}",
+                title=self.tr("Invalid repository"),
+                text=self.tr("An invalid repository was detected!"),
+                information=self.tr(
+                    "Please check your repository URL!\n"
+                    + "A valid repository is a repository URL which is not\n"
+                    + 'empty and is prefixed with "http://" or "https://"'
+                ),
+                details=self.tr("Invalid repository: {repo_url}").format(
+                    repo_url=repo_url
+                ),
             )
+
+    def _do_extract_zip_to_path(
+        self, base_path: str, file_path: str, delete: bool = False
+    ) -> None:
+        with ZipFile(file_path) as zipobj:
+            zip_contents = zipobj.namelist()
+            conflicts = []
+            non_conflicts = []
+
+            top_level_dirs = set(p.split("/")[0] for p in zip_contents if "/" in p)
+            is_bare_mod = "About" in top_level_dirs and not all(
+                p.startswith(tuple(top_level_dirs - {"About"})) for p in zip_contents
+            )
+
+            if is_bare_mod or len(top_level_dirs) == 0:
+                folder_name = Path(file_path).stem
+                base_path = os.path.join(base_path, folder_name)
+                os.makedirs(base_path, exist_ok=True)
+
+            for item in zip_contents:
+                target_path = os.path.join(base_path, item)
+                if os.path.exists(target_path):
+                    conflicts.append(item)
+                else:
+                    non_conflicts.append(item)
+
+            overwrite = True
+            if conflicts and not non_conflicts:
+                answer = dialogue.show_dialogue_conditional(
+                    title=self.tr("Existing files or directories found"),
+                    text=self.tr(
+                        "All files in the archive already exist in the target path."
+                    ),
+                    information=self.tr(
+                        "How would you like to proceed?\n\n"
+                        "1) Overwrite All — Replace all existing files and directories.\n"
+                        "2) Cancel — Abort the operation."
+                    ),
+                    button_text_override=["Overwrite All"],
+                )
+                if answer != "Overwrite All":
+                    return
+                overwrite = True
+            elif conflicts:
+                answer = dialogue.show_dialogue_conditional(
+                    title=self.tr("Existing files or directories found"),
+                    text=self.tr(
+                        "The following files or directories already exist in the target path:"
+                    ),
+                    information=self.tr(
+                        "{conflicts_list}\n\n"
+                        "How would you like to proceed?\n\n"
+                        "1) Overwrite All — Replace all existing files and directories.\n"
+                        "2) Skip Existing — Extract only new files and leave existing ones untouched.\n"
+                        "3) Cancel — Abort the extraction."
+                    ).format(
+                        conflicts_list="<br/>".join(conflicts[:5])
+                        + ("<br/>...<br/>" if len(conflicts) > 5 else "")
+                    ),
+                    button_text_override=["Overwrite All", "Skip Existing"],
+                )
+                if answer == "Cancel":
+                    return
+                overwrite = answer == "Overwrite All"
+
+        self._extract_thread = ZipExtractThread(
+            file_path, base_path, overwrite_all=overwrite, delete=delete
+        )
+        self._extract_thread.progress.connect(self._on_extract_progress)
+        self._extract_thread.finished.connect(self._on_extract_finished)
+
+        self.progress_window.progressBar.setValue(0)
+        self.progress_window.cancel_button.clicked.connect(self._extract_thread.stop)
+
+        self._extract_thread.start()
+
+    def _on_extract_progress(self, percent: int) -> None:
+        self.progress_window.setVisible(True)
+        self.progress_window.progressBar.setValue(percent)
+
+    def _on_extract_finished(self, success: bool, message: str) -> None:
+        if success:
+            show_information(
+                title=self.tr("Extraction completed"),
+                text=self.tr("The ZIP file was successfully extracted!"),
+                information=message,
+            )
+        else:
+            dialogue.show_warning(
+                title=self.tr("Extraction failed"),
+                text=self.tr("An error occurred during extraction."),
+                information=message,
+            )
+        self.progress_window.setVisible(False)
 
     def _do_force_update_existing_repo(self, base_path: str, repo_url: str) -> None:
         """
@@ -2571,28 +2856,42 @@ class MainContent(QObject):
                     origin.pull(rebase=True)
                     # Notify user
                     dialogue.show_information(
-                        title="Repo force updated",
-                        text="The configured repository was updated!",
-                        information=f"{repo_path} ->\n "
-                        + f"Latest Commit: {repo.head.commit.message.decode() if isinstance(repo.head.commit.message, bytes) else repo.head.commit.message}",
+                        title=self.tr("Repo force updated"),
+                        text=self.tr("The configured repository was updated!"),
+                        information=self.tr(
+                            "{repo_path} ->\n " + "Latest Commit: {commit}"
+                        ).format(
+                            repo_path=repo_path,
+                            commit=repo.head.commit.message.decode()
+                            if isinstance(repo.head.commit.message, bytes)
+                            else repo.head.commit.message,
+                        ),
                     )
                     # Cleanup
                     self._do_cleanup_gitpython(repo=repo)
                 except GitCommandError:
                     stacktrace = traceback.format_exc()
                     dialogue.show_warning(
-                        title="Failed to update repo!",
-                        text="The configured repo failed to update! "
-                        + "Are you connected to the Internet? "
-                        + "Is your configured repo valid?",
-                        information=f"Configured repository: {repo_url}",
+                        title=self.tr("Failed to update repo!"),
+                        text=self.tr(
+                            "The configured repo failed to update! "
+                            + "Are you connected to the Internet? "
+                            + "Is your configured repo valid?"
+                        ),
+                        information=self.tr("Configured repository: {repo_url}").format(
+                            repo_url=repo_url
+                        ),
                         details=stacktrace,
                     )
             else:
                 answer = dialogue.show_dialogue_conditional(
-                    title="Repository does not exist",
-                    text="Tried to update a git repository that does not exist!",
-                    information="Would you like to clone a new copy of this repository?",
+                    title=self.tr("Repository does not exist"),
+                    text=self.tr(
+                        "Tried to update a git repository that does not exist!"
+                    ),
+                    information=self.tr(
+                        "Would you like to clone a new copy of this repository?"
+                    ),
                 )
                 if answer == "&Yes":
                     if GIT_EXISTS:
@@ -2605,11 +2904,13 @@ class MainContent(QObject):
         else:
             # Warn the user so they know to configure in settings
             dialogue.show_warning(
-                title="Invalid repository",
-                text="An invalid repository was detected!",
-                information="Please reconfigure a repository in settings!\n"
-                + "A valid repository is a repository URL which is not\n"
-                + 'empty and is prefixed with "http://" or "https://"',
+                title=self.tr("Invalid repository"),
+                text=self.tr("An invalid repository was detected!"),
+                information=self.tr(
+                    "Please reconfigure a repository in settings!\n"
+                    + "A valid repository is a repository URL which is not\n"
+                    + 'empty and is prefixed with "http://" or "https://"'
+                ),
             )
 
     def _do_upload_db_to_repo(self, repo_url: str, file_name: str) -> None:
@@ -2654,9 +2955,11 @@ class MainContent(QObject):
                                 "Unable to parse version or timestamp from database. Cancelling upload."
                             )
                             dialogue.show_warning(
-                                title="Failed to upload database!",
-                                text="The database file does not contain a version or timestamp!",
-                                information=f"File: {file_full_path}",
+                                title=self.tr("Failed to upload database!"),
+                                text=self.tr(
+                                    "The database file does not contain a version or timestamp!"
+                                ),
+                                information=self.tr("File: {file_full_path}"),
                             )
                             return
                         # Get the abbreviated timezone
@@ -2673,9 +2976,13 @@ class MainContent(QObject):
                         )
                     else:
                         dialogue.show_warning(
-                            title="File does not exist",
-                            text="Please ensure the file exists and then try to upload again!",
-                            information=f"File not found:\n{file_full_path}\nRepository:\n{repo_url}",
+                            title=self.tr("File does not exist"),
+                            text=self.tr(
+                                "Please ensure the file exists and then try to upload again!"
+                            ),
+                            information=self.tr(
+                                "File not found:\n{file_full_path}\nRepository:\n{repo_url}"
+                            ).format(file_full_path=file_full_path, repo_url=repo_url),
                         )
                         return
 
@@ -2714,14 +3021,21 @@ class MainContent(QObject):
                     try:
                         # Push the changes to the remote repository and create a pull request from new_branch
                         origin = local_repo.remote()
-                        origin.push(new_branch)
+                        origin.push(new_branch_name)
                     except Exception:
                         stacktrace = traceback.format_exc()
                         dialogue.show_warning(
-                            title="Failed to push new branch to repo!",
-                            text=f"Failed to push a new branch {new_branch_name} to {repo_folder_name}! Try to see "
-                            + "if you can manually push + Pull Request. Otherwise, checkout main and try again!",
-                            information=f"Configured repository: {repo_url}",
+                            title=self.tr("Failed to push new branch to repo!"),
+                            text=self.tr(
+                                "Failed to push a new branch {new_branch_name} to {repo_folder_name}! Try to see "
+                                + "if you can manually push + Pull Request. Otherwise, checkout main and try again!"
+                            ).format(
+                                new_branch_name=new_branch_name,
+                                repo_folder_name=repo_folder_name,
+                            ),
+                            information=self.tr(
+                                "Configured repository: {repo_url}"
+                            ).format(repo_url=repo_url),
                             details=stacktrace,
                         )
                     try:
@@ -2736,11 +3050,17 @@ class MainContent(QObject):
                     except Exception:
                         stacktrace = traceback.format_exc()
                         dialogue.show_warning(
-                            title="Failed to create pull request!",
-                            text=f"Failed to create a pull request for branch {base_branch} <- {new_branch_name}!\n"
-                            + "The branch should be pushed. Check on Github to see if you can manually"
-                            + " make a Pull Request there! Otherwise, checkout main and try again!",
-                            information=f"Configured repository: {repo_url}",
+                            title=self.tr("Failed to create pull request!"),
+                            text=self.tr(
+                                "Failed to create a pull request for branch {base_branch} <- {new_branch_name}!\n"
+                                + "The branch should be pushed. Check on Github to see if you can manually"
+                                + " make a Pull Request there! Otherwise, checkout main and try again!"
+                            ).format(
+                                base_branch=base_branch, new_branch_name=new_branch_name
+                            ),
+                            information=self.tr(
+                                "Configured repository: {repo_url}"
+                            ).format(repo_url=repo_url),
                             details=stacktrace,
                         )
                         self._do_cleanup_gitpython(repo=local_repo)
@@ -2749,10 +3069,14 @@ class MainContent(QObject):
                     self._do_cleanup_gitpython(repo=local_repo)
                     # Notify the pull request URL
                     answer = dialogue.show_dialogue_conditional(
-                        title="Pull request created",
-                        text="Successfully created pull request!",
-                        information="Do you want to try to open it in your web browser?\n\n"
-                        + f"URL: {pull_request_url}",
+                        title=self.tr("Pull request created"),
+                        text=self.tr("Successfully created pull request!"),
+                        information=self.tr(
+                            "Do you want to try to open it in your web browser?\n\n"
+                            + "URL: {pull_request_url}"
+                        ).format(
+                            pull_request_url=pull_request_url,
+                        ),
                     )
                     if answer == "&Yes":
                         # Open the url in user's web browser
@@ -2760,16 +3084,24 @@ class MainContent(QObject):
                 except Exception:
                     stacktrace = traceback.format_exc()
                     dialogue.show_warning(
-                        title="Failed to update repo!",
-                        text=f"The configured repo failed to update!\nFile name: {file_name}",
-                        information=f"Configured repository: {repo_url}",
+                        title=self.tr("Failed to update repo!"),
+                        text=self.tr(
+                            "The configured repo failed to update!\nFile name: {file_name}"
+                        ).format(file_name=file_name),
+                        information=self.tr("Configured repository: {repo_url}").format(
+                            repo_url=repo_url
+                        ),
                         details=stacktrace,
                     )
             else:
                 answer = dialogue.show_dialogue_conditional(
-                    title="Repository does not exist",
-                    text="Tried to update a git repository that does not exist!",
-                    information="Would you like to clone a new copy of this repository?",
+                    title=self.tr("Repository does not exist"),
+                    text=self.tr(
+                        "Tried to update a git repository that does not exist!"
+                    ),
+                    information=self.tr(
+                        "Would you like to clone a new copy of this repository?"
+                    ),
                 )
                 if answer == "&Yes":
                     if GIT_EXISTS:
@@ -2782,19 +3114,23 @@ class MainContent(QObject):
         else:
             # Warn the user so they know to configure in settings
             dialogue.show_warning(
-                title="Invalid repository",
-                text="An invalid repository was detected!",
-                information="Please reconfigure a repository in settings!\n"
-                + 'A valid repository is a repository URL which is not empty and is prefixed with "http://" or "https://"',
+                title=self.tr("Invalid repository"),
+                text=self.tr("An invalid repository was detected!"),
+                information=self.tr(
+                    "Please reconfigure a repository in settings!\n"
+                    + 'A valid repository is a repository URL which is not empty and is prefixed with "http://" or "https://"'
+                ),
             )
 
     def _do_notify_no_git(self) -> None:
         answer = dialogue.show_dialogue_conditional(  # We import last so we can use gui + utils
-            title="git not found",
-            text="git executable was not found in $PATH!",
+            title=self.tr("git not found"),
+            text=self.tr("git executable was not found in $PATH!"),
             information=(
-                "Git integration will not work without Git installed! Do you want to open download page for Git?\n\n"
-                "If you just installed Git, please restart RimSort for the PATH changes to take effect."
+                self.tr(
+                    "Git integration will not work without Git installed! Do you want to open download page for Git?\n\n"
+                    "If you just installed Git, please restart RimSort for the PATH changes to take effect."
+                )
             ),
         )
         if answer == "&Yes":
@@ -2858,8 +3194,8 @@ class MainContent(QObject):
         This URL is used for Steam DB repo related actions.
         """
         args, ok = dialogue.show_dialogue_input(
-            title="Edit Steam DB repo",
-            label="Enter URL (https://github.com/AccountName/RepositoryName):",
+            title=self.tr("Edit Steam DB repo"),
+            label=self.tr("Enter URL (https://github.com/AccountName/RepositoryName):"),
             text=self.settings_controller.settings.external_steam_metadata_repo,
         )
         if ok:
@@ -2872,8 +3208,8 @@ class MainContent(QObject):
         DB repo. This URL is used for Steam DB repo related actions.
         """
         args, ok = dialogue.show_dialogue_input(
-            title="Edit Community Rules DB repo",
-            label="Enter URL (https://github.com/AccountName/RepositoryName):",
+            title=self.tr("Edit Community Rules DB repo"),
+            label=self.tr("Enter URL (https://github.com/AccountName/RepositoryName):"),
             text=self.settings_controller.settings.external_community_rules_repo,
         )
         if ok:
@@ -3015,10 +3351,12 @@ class MainContent(QObject):
         loop.exec_()
         if len(self.db_builder.publishedfileids) == 0:
             dialogue.show_warning(
-                title="No PublishedFileIDs",
-                text="DB Builder query did not return any PublishedFileIDs!",
-                information="This is typically caused by invalid/missing Steam WebAPI key, or a connectivity issue to the Steam WebAPI.\n"
-                + "PublishedFileIDs are needed to retrieve mods from Steam!",
+                title=self.tr("No PublishedFileIDs"),
+                text=self.tr("DB Builder query did not return any PublishedFileIDs!"),
+                information=self.tr(
+                    "This is typically caused by invalid/missing Steam WebAPI key, or a connectivity issue to the Steam WebAPI.\n"
+                    + "PublishedFileIDs are needed to retrieve mods from Steam!"
+                ),
             )
         else:
             self.query_runner.close()
@@ -3039,13 +3377,15 @@ class MainContent(QObject):
                 self._do_download_mods_with_steamcmd(self.db_builder.publishedfileids)
             elif "steamworks" in action:
                 answer = dialogue.show_dialogue_conditional(
-                    title="Are you sure?",
-                    text="Here be dragons.",
-                    information="WARNING: It is NOT recommended to subscribe to this many mods at once via Steam. "
-                    + "Steam has limitations in place seemingly intentionally and unintentionally for API subscriptions. "
-                    + "It is highly recommended that you instead download these mods to a SteamCMD prefix by using SteamCMD. "
-                    + "This can take longer due to rate limits, but you can also re-use the script generated by RimSort with "
-                    + "a separate, authenticated instance of SteamCMD, if you do not want to anonymously download via RimSort.",
+                    title=self.tr("Are you sure?"),
+                    text=self.tr("Here be dragons."),
+                    information=self.tr(
+                        "WARNING: It is NOT recommended to subscribe to this many mods at once via Steam. "
+                        + "Steam has limitations in place seemingly intentionally and unintentionally for API subscriptions. "
+                        + "It is highly recommended that you instead download these mods to a SteamCMD prefix by using SteamCMD. "
+                        + "This can take longer due to rate limits, but you can also re-use the script generated by RimSort with "
+                        + "a separate, authenticated instance of SteamCMD, if you do not want to anonymously download via RimSort."
+                    ),
                 )
                 if answer == "&Yes":
                     for (
@@ -3078,8 +3418,8 @@ class MainContent(QObject):
         the Steam Workshop metadata needed for sorting
         """
         args, ok = dialogue.show_dialogue_input(
-            title="Edit Steam WebAPI key",
-            label="Enter your personal 32 character Steam WebAPI key here:",
+            title=self.tr("Edit Steam WebAPI key"),
+            label=self.tr("Enter your personal 32 character Steam WebAPI key here:"),
             text=self.settings_controller.settings.steam_apikey,
         )
         if ok:
@@ -3097,12 +3437,16 @@ class MainContent(QObject):
         database_b_deps: dict[str, Any] = {}
         # Notify user
         dialogue.show_information(
-            title="Steam DB Builder",
-            text="This operation will compare 2 databases, A & B, by checking dependencies from A with dependencies from B.",
-            information="- This will produce an accurate comparison of dependency data between 2 Steam DBs.\n"
-            + "A report of discrepancies is generated. You will be prompted for these paths in order:\n"
-            + "\n\t1) Select input A"
-            + "\n\t2) Select input B",
+            title=self.tr("Steam DB Builder"),
+            text=self.tr(
+                "This operation will compare 2 databases, A & B, by checking dependencies from A with dependencies from B."
+            ),
+            information=self.tr(
+                "- This will produce an accurate comparison of dependency data between 2 Steam DBs.\n"
+                + "A report of discrepancies is generated. You will be prompted for these paths in order:\n"
+                + "\n\t1) Select input A"
+                + "\n\t2) Select input B",
+            ),
         )
         # Input A
         logger.info("Opening file dialog to specify input file A")
@@ -3197,25 +3541,33 @@ class MainContent(QObject):
             f"Comparison skipped for {len(comparison_skipped)} unpublished mods: {comparison_skipped}"
         )
         dialogue.show_information(
-            title="Steam DB Builder",
-            text=f"Steam DB comparison report: {len(discrepancies)} found",
-            information="Click 'Show Details' to see the full report!",
+            title=self.tr("Steam DB Builder"),
+            text=self.tr("Steam DB comparison report: {len} found").format(
+                len=len(discrepancies)
+            ),
+            information=self.tr("Click 'Show Details' to see the full report!"),
             details=report,
         )
 
     def _do_merge_databases(self) -> None:
         # Notify user
         dialogue.show_information(
-            title="Steam DB Builder",
-            text="This operation will merge 2 databases, A & B, by recursively updating A with B, barring exceptions.",
-            information="- This will effectively recursively overwrite A's key/value with B's key/value to the resultant database.\n"
-            + "- Exceptions will not be recursively updated. Instead, they will be overwritten with B's key entirely.\n"
-            + "- The following exceptions will be made:\n"
-            + f"\n\t{app_constants.DB_BUILDER_RECURSE_EXCEPTIONS}\n\n"
-            + "The resultant database, C, is saved to a user-specified path. You will be prompted for these paths in order:\n"
-            + "\n\t1) Select input A (db to-be-updated)"
-            + "\n\t2) Select input B (update source)"
-            + "\n\t3) Select output C (resultant db)",
+            title=self.tr("Steam DB Builder"),
+            text=self.tr(
+                "This operation will merge 2 databases, A & B, by recursively updating A with B, barring exceptions."
+            ),
+            information=self.tr(
+                "- This will effectively recursively overwrite A's key/value with B's key/value to the resultant database.\n"
+                + "- Exceptions will not be recursively updated. Instead, they will be overwritten with B's key entirely.\n"
+                + "- The following exceptions will be made:\n"
+                + "\n\t{DB_BUILDER_RECURSE_EXCEPTIONS}\n\n"
+                + "The resultant database, C, is saved to a user-specified path. You will be prompted for these paths in order:\n"
+                + "\n\t1) Select input A (db to-be-updated)"
+                + "\n\t2) Select input B (update source)"
+                + "\n\t3) Select output C (resultant db)"
+            ).format(
+                DB_BUILDER_RECURSE_EXCEPTIONS=app_constants.DB_BUILDER_RECURSE_EXCEPTIONS
+            ),
         )
         # Input A
         logger.info("Opening file dialog to specify input file A")
@@ -3239,7 +3591,7 @@ class MainContent(QObject):
         logger.info("Opening file dialog to specify input file B")
         input_path_b = dialogue.show_dialogue_file(
             mode="open",
-            caption='Input "to-be-updated" database, input A',
+            caption='Input "update source" database, input B',
             _dir=str(AppInfo().app_storage_folder),
             _filter="JSON (*.json)",
         )
@@ -3310,9 +3662,9 @@ class MainContent(QObject):
         except Exception:
             logger.error("Failed to read info from existing database")
             dialogue.show_warning(
-                title="Failed to read existing database",
-                text="Failed to read the existing database!",
-                information=f"Path: {path}",
+                title=self.tr("Failed to read existing database"),
+                text=self.tr("Failed to read the existing database!"),
+                information=self.tr("Path: {path}").format(path=path),
             )
             return
         db_input_b = {"timestamp": int(time.time()), "rules": rules_data}
@@ -3326,9 +3678,11 @@ class MainContent(QObject):
         )
         # Overwrite rules database
         answer = dialogue.show_dialogue_conditional(
-            title="RimSort - DB Builder",
-            text="Do you want to continue?",
-            information=f"This operation will overwrite the {rules_source} database located at the following path:\n\n{path}",
+            title=self.tr("RimSort - DB Builder"),
+            text=self.tr("Do you want to continue?"),
+            information=self.tr(
+                "This operation will overwrite the {rules_source} database located at the following path:\n\n{path}"
+            ).format(rules_source=rules_source, path=path),
         )
         if answer == "&Yes":
             with open(path, "w", encoding="utf-8") as output:
@@ -3343,8 +3697,10 @@ class MainContent(QObject):
         WebAPI Query Expiry (in seconds)
         """
         args, ok = dialogue.show_dialogue_input(
-            title="Edit SteamDB expiry:",
-            label="Enter your preferred expiry duration in seconds (default 1 week/604800 sec):",
+            title=self.tr("Edit SteamDB expiry:"),
+            label=self.tr(
+                "Enter your preferred expiry duration in seconds (default 1 week/604800 sec):"
+            ),
             text=str(self.settings_controller.settings.database_expiry),
         )
         if ok:
@@ -3353,8 +3709,12 @@ class MainContent(QObject):
                 self.settings_controller.settings.save()
             except ValueError:
                 dialogue.show_warning(
-                    "Tried configuring Dynamic Query with a value that is not an integer.",
-                    "Please reconfigure the expiry value with an integer in terms of the seconds from epoch you would like your query to expire.",
+                    self.tr(
+                        "Tried configuring Dynamic Query with a value that is not an integer."
+                    ),
+                    self.tr(
+                        "Please reconfigure the expiry value with an integer in terms of the seconds from epoch you would like your query to expire."
+                    ),
                 )
 
     @Slot()
@@ -3508,6 +3868,87 @@ class MainContent(QObject):
             self.use_this_instead_dialog.show()
         else:
             dialogue.show_information(
-                title="Use This Instead",
-                text='No suggestions were found in the "Use This Instead" database.',
+                title=self.tr("Use This Instead"),
+                text=self.tr(
+                    'No suggestions were found in the "Use This Instead" database.'
+                ),
             )
+
+
+class ZipExtractThread(QThread):
+    progress = Signal(int)
+    finished = Signal(bool, str)
+
+    def __init__(
+        self,
+        zip_path: str,
+        target_path: str,
+        overwrite_all: bool = True,
+        delete: bool = False,
+    ):
+        super().__init__()
+        self.zip_path = zip_path
+        self.target_path = target_path
+        self.overwrite_all = overwrite_all
+        self.delete = delete
+        self._should_abort = False
+
+    def run(self) -> None:
+        start = time.perf_counter()
+
+        with ZipFile(self.zip_path) as zipobj:
+            file_list = zipobj.infolist()
+            total_files = len(file_list)
+            update_interval = max(1, total_files // 100)
+
+            for i, zip_info in enumerate(file_list):
+                if self._should_abort:
+                    self.finished.emit(False, "Operation aborted")
+                    return
+                filename = zip_info.filename
+                dst = os.path.join(self.target_path, filename)
+                os.makedirs(os.path.dirname(dst), exist_ok=True)
+
+                if zip_info.is_dir():
+                    os.makedirs(dst, exist_ok=True)
+                else:
+                    if os.path.exists(dst) and not self.overwrite_all:
+                        continue
+
+                    with zipobj.open(zip_info) as src, open(dst, "wb") as out_file:
+                        shutil.copyfileobj(src, out_file)
+
+                if i % update_interval == 0 or i == total_files - 1:
+                    self.progress.emit(int((i + 1) / total_files * 100))
+
+        end = time.perf_counter()
+        elapsed = end - start
+        self.finished.emit(
+            True,
+            f"{self.zip_path} → {self.target_path}\nTime elapsed: {elapsed:.2f} seconds",
+        )
+        if self.delete:
+            os.remove(self.zip_path)
+
+    def stop(self) -> None:
+        self._should_abort = True
+
+
+class ProgressWindow(QWidget):
+    def __init__(self) -> None:
+        super().__init__()
+        self.setWindowTitle("Extract Zip")
+        self.resize(300, 100)
+
+        self.progressBar = QProgressBar()
+        self.progressBar.setMinimum(0)
+        self.progressBar.setMaximum(100)
+        self.progressBar.setValue(0)
+        self.progressBar.setVisible(True)
+
+        self.cancel_button = QPushButton("Cancel")
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.progressBar)
+        self.setLayout(layout)
+        layout.addWidget(self.cancel_button)

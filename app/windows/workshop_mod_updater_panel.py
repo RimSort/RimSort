@@ -35,11 +35,11 @@ class ModUpdaterPrompt(BaseModsPanel):
 
         # EDITOR WIDGETS
 
-        self.editor_update_mods_button = QPushButton("Update mods")
+        self.editor_update_mods_button = QPushButton(self.tr("Update mods"))
         self.editor_update_mods_button.clicked.connect(
             partial(self._update_mods_from_table, 2, 3)
         )
-        self.editor_update_all_button = QPushButton("Update all")
+        self.editor_update_all_button = QPushButton(self.tr("Update all"))
         self.editor_update_all_button.clicked.connect(partial(self._update_all_mods))
 
         self.editor_main_actions_layout.addWidget(self.editor_update_mods_button)

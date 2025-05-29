@@ -1,9 +1,12 @@
 from typing import Any
 
 from loguru import logger
+from PySide6.QtCore import QCoreApplication
 
 from app.utils.constants import RIMWORLD_PACKAGE_IDS
 from app.views.dialogue import show_warning
+
+translate = QCoreApplication.translate
 
 
 def generate_rimworld_mods_list(
@@ -73,18 +76,27 @@ def validate_rimworld_mods_list(
     except Exception as e:
         logger.error(f"Error trying to validate data: {e}")
         show_warning(
-            title="Unable to read data",
-            text=("RimSort was unable to read the supplied mods list."),
-            information="The supplied mods list may be missing or invalid. "
-            + "If you just (re)installed RimWorld, you may need to run it once to generate the mods list.",
+            title=translate("validate_rimworld_mods_list", "Unable to read data"),
+            text=translate(
+                "validate_rimworld_mods_list",
+                "RimSort was unable to read the supplied mods list.",
+            ),
+            information=translate(
+                "validate_rimworld_mods_list",
+                "The supplied mods list may be missing or invalid. "
+                + "If you just (re)installed RimWorld, you may need to run it once to generate the mods list.",
+            ),
             details=str(e),
         )
     else:
         logger.error(f"Invalid format: {mods_config_data}")
         show_warning(
-            title="Unable to read data",
+            title=translate("validate_rimworld_mods_list", "Unable to read data"),
             text=(
-                "RimSort was unable to read the supplied mods list because it may be invalid or missing."
+                translate(
+                    "validate_rimworld_mods_list",
+                    "RimSort was unable to read the supplied mods list because it may be invalid or missing.",
+                )
             ),
         )
 

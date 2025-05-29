@@ -206,7 +206,21 @@ def gen_tier_two_deps_graph(
     active_mod_ids: list[str],
     tier_one_mods: set[str],
     tier_three_mods: set[str],
+    use_moddependencies_as_loadTheseBefore: bool = False,
 ) -> dict[str, set[str]]:
+    """
+    Generate the dependency graph for tier two mods, optionally treating About.xml dependencies as loadTheseBefore rules.
+
+    Args:
+        active_mods_uuids: Set of UUIDs for active mods.
+        active_mod_ids: List of package IDs for active mods.
+        tier_one_mods: Set of package IDs for tier one mods.
+        tier_three_mods: Set of package IDs for tier three mods.
+        use_moddependencies_as_loadTheseBefore: If True, treat About.xml dependencies as loadTheseBefore rules.
+
+    Returns:
+        Dependency graph for tier two mods.
+    """
     # Now, sort the rest of the mods while removing references to mods in tier one and tier three
     # First, get the dependency graph for tier two mods, minus all references to tier one
     # and tier three mods
@@ -220,18 +234,60 @@ def gen_tier_two_deps_graph(
     for uuid in active_mods_uuids:
         package_id = metadata_manager.internal_local_metadata[uuid]["packageid"]
         if package_id not in tier_one_mods and package_id not in tier_three_mods:
-            dependencies = metadata_manager.internal_local_metadata[uuid].get(
-                "loadTheseBefore"
-            )
+            dependencies = set()
+            if use_moddependencies_as_loadTheseBefore:
+                # Use processed About.xml dependencies and loadTheseBefore
+                about_dependencies = metadata_manager.internal_local_metadata[uuid].get(
+                    "dependencies"
+                )
+                loadTheseBefore = metadata_manager.internal_local_metadata[uuid].get(
+                    "loadTheseBefore"
+                )
+                # dependencies: set of strings or tuples, loadTheseBefore: set/list of tuples
+                if about_dependencies and isinstance(about_dependencies, (set, list)):
+                    for dep in about_dependencies:
+                        # Accept both str and tuple for about_dependencies
+                        if isinstance(dep, str) and dep in active_mod_ids:
+                            dependencies.add((dep, True))
+                        elif isinstance(dep, tuple):
+                            dependencies.add(dep)
+                        else:
+                            logger.error(
+                                f"About.xml dependency is not a string or tuple: [{dep}]"
+                            )
+                if loadTheseBefore and isinstance(loadTheseBefore, (set, list)):
+                    for dep in loadTheseBefore:
+                        if isinstance(dep, tuple):
+                            dependencies.add(dep)
+                        else:
+                            logger.error(
+                                f"loadTheseBefore entry is not a tuple: [{dep}]"
+                            )
+                logger.debug(
+                    f"Combined About.xml dependencies and loadTheseBefore for {package_id}"
+                )
+            else:
+                loadTheseBefore = metadata_manager.internal_local_metadata[uuid].get(
+                    "loadTheseBefore"
+                )
+                if loadTheseBefore and isinstance(loadTheseBefore, (set, list)):
+                    for dep in loadTheseBefore:
+                        if isinstance(dep, tuple):
+                            dependencies.add(dep)
+                        else:
+                            logger.error(
+                                f"loadTheseBefore entry is not a tuple: [{dep}]"
+                            )
             stripped_dependencies = set()
             if dependencies:
                 for dependency_id in dependencies:
-                    # Remember, dependencies from all_mods can reference non-active mods
-                    # Dependent[0] is required here as as dependency is a tuple of package_id, explicit_bool
+                    # Only process if tuple
                     if not isinstance(dependency_id, tuple):
                         logger.error(
                             f"Expected load order rule to be a tuple: [{dependency_id}]"
                         )
+                        continue
+                    # Now we can safely access dependency_id[0]
                     if (
                         dependency_id[0] not in tier_one_mods
                         and dependency_id[0] not in tier_three_mods

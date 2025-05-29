@@ -4,7 +4,7 @@ from functools import partial
 from typing import Any
 
 from loguru import logger
-from PySide6.QtCore import QPoint, QSize, Qt, QUrl, Signal
+from PySide6.QtCore import QPoint, Qt, QUrl, Signal
 from PySide6.QtGui import QAction, QPixmap
 from PySide6.QtWebEngineCore import QWebEnginePage
 from PySide6.QtWebEngineWidgets import QWebEngineView
@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
 from app.models.image_label import ImageLabel
 from app.utils.app_info import AppInfo
 from app.utils.generic import extract_page_title_steam_browser
+from app.utils.gui_info import GUIInfo
 from app.utils.metadata import MetadataManager
 from app.utils.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetCollectionDetails,
@@ -80,7 +81,7 @@ class SteamBrowser(QWidget):
         self.downloader_layout = QVBoxLayout()
 
         # DOWNLOADER WIDGETS
-        self.downloader_label = QLabel("Mod Downloader")
+        self.downloader_label = QLabel(self.tr("Mod Downloader"))
         self.downloader_label.setObjectName("browserPaneldownloader_label")
         self.downloader_list = QListWidget()
         self.downloader_list.setFixedWidth(200)
@@ -91,16 +92,20 @@ class SteamBrowser(QWidget):
         self.downloader_list.customContextMenuRequested.connect(
             self._downloader_item_contextmenu_event
         )
-        self.clear_list_button = QPushButton("Clear List")
+        self.clear_list_button = QPushButton(self.tr("Clear List"))
         self.clear_list_button.setObjectName("browserPanelClearList")
         self.clear_list_button.clicked.connect(self._clear_downloader_list)
-        self.download_steamcmd_button = QPushButton("Download mod(s) (SteamCMD)")
+        self.download_steamcmd_button = QPushButton(
+            self.tr("Download mod(s) (SteamCMD)")
+        )
         self.download_steamcmd_button.clicked.connect(
             partial(
                 self.steamcmd_downloader_signal.emit, self.downloader_list_mods_tracking
             )
         )
-        self.download_steamworks_button = QPushButton("Download mod(s) (Steam app)")
+        self.download_steamworks_button = QPushButton(
+            self.tr("Download mod(s) (Steam app)")
+        )
         self.download_steamworks_button.clicked.connect(
             self._subscribe_to_mods_from_list
         )
@@ -125,6 +130,8 @@ class SteamBrowser(QWidget):
         self.web_view.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
         self.web_view.load(self.startpage)
 
+        #  QWebEngineProfile.defaultProfile().setHttpAcceptLanguages
+
         # Location box
         self.location = QLineEdit()
         self.location.setSizePolicy(
@@ -134,7 +141,7 @@ class SteamBrowser(QWidget):
         self.location.returnPressed.connect(self.__browse_to_location)
 
         # Nav bar
-        self.add_to_list_button = QAction("Add to list")
+        self.add_to_list_button = QAction(self.tr("Add to list"))
         self.add_to_list_button.triggered.connect(self._add_collection_or_mod_to_list)
         self.nav_bar = QToolBar()
         self.nav_bar.setObjectName("browserPanelnav_bar")
@@ -173,7 +180,8 @@ class SteamBrowser(QWidget):
         # Put it all together
         self.setWindowTitle(self.current_title)
         self.setLayout(self.window_layout)
-        self.setMinimumSize(QSize(800, 600))
+        # Use GUIInfo to set the window size and position from settings
+        self.setGeometry(*GUIInfo().get_window_geometry())
 
     def __browse_to_location(self) -> None:
         url = QUrl(self.location.text())
@@ -191,8 +199,10 @@ class SteamBrowser(QWidget):
                 f"Unable to parse publishedfileid from url: {self.current_url}"
             )
             show_warning(
-                title="No publishedfileid found",
-                text="Unable to parse publishedfileid from url, Please check if url is in the correct format",
+                title=self.tr("No publishedfileid found"),
+                text=self.tr(
+                    "Unable to parse publishedfileid from url, Please check if url is in the correct format"
+                ),
                 information=f"Url: {self.current_url}",
             )
             return None
@@ -212,17 +222,22 @@ class SteamBrowser(QWidget):
                 from app.views.dialogue import show_dialogue_conditional
 
                 answer = show_dialogue_conditional(
-                    title="Add Collection",
-                    text="How would you like to add the collection?",
-                    information="You can choose to add all mods from the collection or only the ones you don't have installed.",
-                    button_text_override=["Add All Mods", "Add Missing Mods"],
+                    title=self.tr("Add Collection"),
+                    text=self.tr("How would you like to add the collection?"),
+                    information=self.tr(
+                        "You can choose to add all mods from the collection or only the ones you don't have installed."
+                    ),
+                    button_text_override=[
+                        self.tr("Add All Mods"),
+                        self.tr("Add Missing Mods"),
+                    ],
                 )
 
-                if answer == "Add All Mods":
+                if answer == self.tr("Add All Mods"):
                     # add all mods
                     for pfid, title in collection_mods_pfid_to_title.items():
                         self._add_mod_to_list(publishedfileid=pfid, title=title)
-                elif answer == "Add Missing Mods":
+                elif answer == self.tr("Add Missing Mods"):
                     # add only mods that aren't installed
                     for pfid, title in collection_mods_pfid_to_title.items():
                         if not self._is_mod_installed(pfid):
@@ -232,9 +247,13 @@ class SteamBrowser(QWidget):
                     "Empty list of mods returned, unable to add collection to list!"
                 )
                 show_warning(
-                    title="SteamCMD downloader",
-                    text="Empty list of mods returned, unable to add collection to list!",
-                    information="Please reach out to us on Github Issues page or\n#rimsort-testing on the Rocketman/CAI discord",
+                    title=self.tr("SteamCMD downloader"),
+                    text=self.tr(
+                        "Empty list of mods returned, unable to add collection to list!"
+                    ),
+                    information=self.tr(
+                        "Please reach out to us on Github Issues page or\n#rimsort-testing on the Rocketman/CAI discord"
+                    ),
                 )
         if len(self.downloader_list_dupe_tracking.keys()) > 0:
             # Build a report from our dict
@@ -243,9 +262,11 @@ class SteamBrowser(QWidget):
                 dupe_report = dupe_report + f"{name} | {pfid}\n"
             # Notify the user
             show_warning(
-                title="SteamCMD downloader",
-                text="You already have these mods in your download list!",
-                information="Skipping the following mods which are already present in your download list!",
+                title=self.tr("SteamCMD downloader"),
+                text=self.tr("You already have these mods in your download list!"),
+                information=self.tr(
+                    "Skipping the following mods which are already present in your download list!"
+                ),
                 details=dupe_report,
             )
             self.downloader_list_dupe_tracking = {}
@@ -332,7 +353,7 @@ class SteamBrowser(QWidget):
 
         if context_item:  # Check if the right-clicked point corresponds to an item
             context_menu = QMenu(self)  # Downloader item context menu event
-            remove_item = context_menu.addAction("Remove mod from list")
+            remove_item = context_menu.addAction(self.tr("Remove mod from list"))
             remove_item.triggered.connect(
                 partial(self._remove_mod_from_list, context_item)
             )
