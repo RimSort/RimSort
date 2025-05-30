@@ -108,6 +108,12 @@ class RuleEditor(QWidget):
 
     update_database_signal = Signal(list)
 
+    # Type annotations for class variables
+    mods_list: QListWidget
+    local_metadata_button: QPushButton
+    community_rules_button: QPushButton
+    user_rules_button: QPushButton
+
     def __init__(
         self,
         initial_mode: str,
@@ -766,9 +772,11 @@ class RuleEditor(QWidget):
                                     name = self.steam_workshop_metadata_packageids_to_name.get(
                                         rule.lower(), rule
                                     )
-                                    self._create_list_item(_list=_list, title=name)
+                                    # Ensure name is a string
+                                    name_str = str(name) if name is not None else rule
+                                    self._create_list_item(_list=_list, title=name_str)
                                     self._add_rule_to_table(
-                                        name=name,
+                                        name=name_str,
                                         packageid=rule,
                                         rule_source="About.xml",
                                         rule_type=rule_type,
