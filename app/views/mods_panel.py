@@ -2255,8 +2255,9 @@ class ModsPanel(QWidget):
         self.active_mods_search.textChanged.connect(self.on_active_mods_search)
         self.active_mods_search.inputRejected.connect(self.on_active_mods_search_clear)
         self.active_mods_search.setPlaceholderText(self.tr("Search by..."))
-        self.active_mods_search_clear_button = self.active_mods_search.findChild(
-            QToolButton
+        # Add explicit type annotation to help mypy
+        self.active_mods_search_clear_button = cast(
+            QToolButton, self.active_mods_search.findChild(QToolButton)
         )
         if not isinstance(self.active_mods_search_clear_button, QToolButton):
             raise TypeError("Could not find QToolButton in QLineEdit")
@@ -2397,8 +2398,9 @@ class ModsPanel(QWidget):
             self.on_inactive_mods_search_clear
         )
         self.inactive_mods_search.setPlaceholderText(self.tr("Search by..."))
-        self.inactive_mods_search_clear_button = self.inactive_mods_search.findChild(
-            QToolButton
+        # Add explicit type annotation to help mypy
+        self.inactive_mods_search_clear_button = cast(
+            QToolButton, self.inactive_mods_search.findChild(QToolButton)
         )
         if not isinstance(self.inactive_mods_search_clear_button, QToolButton):
             raise TypeError("Could not find QToolButton in QLineEdit")
