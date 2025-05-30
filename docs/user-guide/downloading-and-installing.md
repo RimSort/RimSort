@@ -41,7 +41,7 @@ Windows
 - Download and extract the `Windows x86-64` release
 - Run the executable: `RimSort.exe`
 
-![](../../assets/images/previews/windows_preview.png)
+![](../assets/images/previews/windows_preview.png)
 
 ## macOS
 {: .d-inline-block}
