@@ -66,7 +66,7 @@ class Sorter:
             list(self.active_package_ids),
             tier_one_mods,
             tier_three_mods,
-            use_moddependencies_as_loadTheseBefore = self.use_moddependencies_as_loadTheseBefore,
+            use_moddependencies_as_loadTheseBefore=self.use_moddependencies_as_loadTheseBefore,
         )
 
         return [tier_one_graph, tier_two_graph, tier_three_graph]
