@@ -1,5 +1,6 @@
 import os
 import platform
+import re
 from functools import partial
 from typing import Any
 
@@ -217,6 +218,11 @@ class SteamBrowser(QWidget):
             collection_mods_pfid_to_title = self.__compile_collection_datas(
                 publishedfileid
             )
+            if len(collection_mods_pfid_to_title) == 0:
+                # Fallback to scraping HTML if WebAPI returns empty
+                collection_mods_pfid_to_title = self.__scrape_collection_mods_from_html(
+                    self.current_html
+                )
             if len(collection_mods_pfid_to_title) > 0:
                 # ask user whether to add all mods or only missing ones
                 from app.views.dialogue import show_dialogue_conditional
@@ -279,7 +285,7 @@ class SteamBrowser(QWidget):
         collection_pfids = []
 
         if collection_webapi_result is not None and len(collection_webapi_result) > 0:
-            for mod in collection_webapi_result[0]["children"]:
+            for mod in collection_webapi_result[0].get("children", []):
                 if mod.get("publishedfileid"):
                     collection_pfids.append(mod["publishedfileid"])
             if len(collection_pfids) > 0:
@@ -299,6 +305,29 @@ class SteamBrowser(QWidget):
                     collection_mods_pfid_to_title[pfid] = metadata["title"]
                 else:
                     collection_mods_pfid_to_title[pfid] = metadata["publishedfileid"]
+        return collection_mods_pfid_to_title
+
+    def __scrape_collection_mods_from_html(self, html: str) -> dict[str, Any]:
+        # Fallback method to scrape collection mod IDs and titles from HTML
+        # This is used if the WebAPI call fails or returns empty
+        collection_mods_pfid_to_title: dict[str, Any] = {}
+        # Regex pattern to find mod IDs and titles in the HTML
+        pattern = re.compile(
+            r'<div[^>]+id="sharedfile_(\d+)"[^>]*class="[^"]*collectionItem[^"]*"[^>]*>.*?<a[^>]+href="https://steamcommunity.com/sharedfiles/filedetails/\?id=\1"[^>]*>.*?<div[^>]+class="[^"]*workshopItemTitle[^"]*"[^>]*>([^<]+)</div>',
+            re.DOTALL | re.IGNORECASE,
+        )
+        matches = pattern.findall(html)
+        logger.debug(
+            f"Found {len(matches)} matches in fallback HTML scraping for collection mods"
+        )
+        if matches:
+            for pfid, title in matches:
+                logger.debug(f"Scraped mod: {pfid} - {title}")
+                collection_mods_pfid_to_title[pfid] = title
+        else:
+            logger.warning(
+                "No matches found in fallback HTML scraping for collection mods"
+            )
         return collection_mods_pfid_to_title
 
     def _add_mod_to_list(
