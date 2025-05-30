@@ -26,7 +26,7 @@ RimSort 使用外部数据库来增强排序和依赖项处理等功能。这些
 ## Steam 创意工坊数据库
 
 {: .note}
-> 关于如何构建或更新 Steam 创意工坊数据库，请参阅 [此页面](/user-guide/db-builder)
+> 关于如何构建或更新 Steam 创意工坊数据库，请参阅 [此页面](../user-guide/db-builder.zh-cn)
 
 Steam 创意工坊数据库（Steam DB）主要用于提供额外的依赖项数据。这些信息需要通过抓取 Steam 创意工坊并下载 Mod 来解析获取。通过静态数据库，用户无需实际下载 Mod 即可访问这些信息。
 
