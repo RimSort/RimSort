@@ -176,7 +176,7 @@ def git_clone(
 
     try:
         return pygit2.clone_repository(
-            repo_url, repo_path, checkout_branch=checkout_branch, depth=depth
+            repo_url, str(repo_path), checkout_branch=checkout_branch, depth=depth
         ), GitCloneResult.CLONED
     except pygit2.GitError as e:
         logger.error(f"Failed to clone repository: {repo_url} to {repo_path}")

@@ -713,8 +713,6 @@ class MainContent(QObject):
                 self._do_optimize_textures(todds_txt_path)
             if action == "delete_textures":
                 self._do_delete_dds_textures(todds_txt_path)
-        if action == "add_git_mod":
-            self._do_add_git_mod()
         if action == "browse_workshop":
             self._do_browse_workshop()
         if action == "import_steamcmd_acf_data":
