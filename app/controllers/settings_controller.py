@@ -604,7 +604,11 @@ class SettingsController(QObject):
 
         # Use dependencies for sorting checkbox
         if self.settings.use_moddependencies_as_loadTheseBefore:
-            (self.settings_dialog.use_moddependencies_as_loadTheseBefore.setChecked(True))
+            (
+                self.settings_dialog.use_moddependencies_as_loadTheseBefore.setChecked(
+                    True
+                )
+            )
 
         # Set dependencies checkbox
         self.settings_dialog.check_deps_checkbox.setChecked(

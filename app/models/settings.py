@@ -68,7 +68,9 @@ class Settings(QObject):
         self.check_dependencies_on_sort: bool = (
             True  # Whether to check for missing dependencies when sorting
         )
-        self.use_moddependencies_as_loadTheseBefore: bool = False  # Whether to use moddependencies as loadTheseBefore
+        self.use_moddependencies_as_loadTheseBefore: bool = (
+            False  # Whether to use moddependencies as loadTheseBefore
+        )
 
         # DB Builder
         self.db_builder_include: str = "all_mods"
