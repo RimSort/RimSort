@@ -9,7 +9,7 @@ from pygit2.enums import CheckoutStrategy, ResetMode, SortMode
 from pygit2.repository import Repository
 from PySide6.QtWidgets import QMessageBox
 
-from app.utils.generic import rmtree
+from app.utils.generic import delete_files_with_condition
 from app.views.dialogue import InformationBox
 
 
@@ -166,7 +166,10 @@ def git_clone(
             logger.warning(
                 f"Force cloning repository by deleting the local directory: {full_repo_path}"
             )
-            success = rmtree(full_repo_path)
+            success = delete_files_with_condition(
+                full_repo_path, lambda file: not file.endswith(".dds")
+            )
+            repo_path = full_repo_path
             if not success:
                 logger.error(f"Failed to delete the local directory: {full_repo_path}")
                 return None, GitCloneResult.PATH_DELETE_ERROR
