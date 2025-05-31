@@ -1,7 +1,10 @@
 """This module contains a collection of utility functions for working with git repositories."""
 
+from contextlib import contextmanager
+from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
+from typing import Generator, Optional, Protocol
 
 import pygit2
 from loguru import logger
@@ -12,6 +15,74 @@ from PySide6.QtWidgets import QMessageBox
 
 from app.utils.generic import delete_files_with_condition
 from app.views.dialogue import InformationBox
+
+
+class GitError(Exception):
+    """Base exception for git operations."""
+
+    pass
+
+
+class GitNotificationHandler(Protocol):
+    """Protocol for handling git operation notifications."""
+
+    def show_error(
+        self, title: str, message: str, details: Optional[str] = None
+    ) -> None:
+        """Show error notification to user."""
+        ...
+
+
+class DefaultNotificationHandler:
+    """Default implementation using QMessageBox for notifications."""
+
+    def show_error(
+        self, title: str, message: str, details: Optional[str] = None
+    ) -> None:
+        """Show error notification using InformationBox."""
+        InformationBox(
+            title=title,
+            text=message,
+            icon=QMessageBox.Icon.Critical,
+            details=details,
+        ).exec()
+
+
+@dataclass
+class GitOperationConfig:
+    """Configuration for git operations."""
+
+    notify_errors: bool = True
+    notification_handler: Optional[GitNotificationHandler] = None
+
+    def __post_init__(self) -> None:
+        if self.notification_handler is None:
+            self.notification_handler = DefaultNotificationHandler()
+
+    def get_handler(self) -> GitNotificationHandler:
+        """Get the notification handler, ensuring it's not None."""
+        return self.notification_handler or DefaultNotificationHandler()
+
+
+@contextmanager
+def git_repository(
+    path: str | Path, config: Optional[GitOperationConfig] = None
+) -> Generator[Optional[Repository], None, None]:
+    """Context manager for automatic repository cleanup.
+
+    Args:
+        path: Path to the git repository.
+        config: Configuration for the operation.
+
+    Yields:
+        Repository object if found, otherwise None.
+    """
+    repo = git_discover(path, config)
+    try:
+        yield repo
+    finally:
+        if repo is not None:
+            git_cleanup(repo)
 
 
 class GitCloneResult(Enum):
@@ -49,41 +120,42 @@ class GitPullResult(Enum):
         return self.value
 
 
-def git_discover(path: str | Path, notify_errors: bool = True) -> Repository | None:
-    """Helper function to discover a git repository at a given path.
-    :param path: The path to discover the git repository.
-    :type path: str | Path
-    :param notify_errors: Whether to notify the user of any errors, defaults to True
-    :type notify_errors: bool, optional
-    :return: The repository object if found, otherwise None.
-    :rtype: pygit2.repository.Repository | None
+def git_discover(
+    path: str | Path, config: Optional[GitOperationConfig] = None
+) -> Optional[Repository]:
+    """Discover a git repository at a given path.
+
+    Args:
+        path: The path to discover the git repository.
+        config: Configuration for the operation.
+
+    Returns:
+        The repository object if found, otherwise None.
     """
+    if config is None:
+        config = GitOperationConfig()
+
     logger.info(f"Attempting to discover git repository at: {path}")
-    if not isinstance(path, str):
-        path = str(path)
+    path_str = str(path)
 
     try:
-        repo_path = pygit2.discover_repository(path)
-
+        repo_path = pygit2.discover_repository(path_str)
         if repo_path is None:
             logger.info(f"No git repository found at: {path}")
             return None
 
         logger.info(f"Git repository found at: {repo_path}")
         return Repository(repo_path)
+
     except pygit2.GitError as e:
-        logger.error(f"Failed to discover git repository at: {path}")
-        logger.error(e)
-
-        if notify_errors:
-            InformationBox(
+        logger.error(f"Failed to discover git repository at: {path}: {e}")
+        if config.notify_errors:
+            config.get_handler().show_error(
                 title="Git Repository Discovery Error",
-                text=f"Failed to discover git repository at: {path}",
-                icon=QMessageBox.Icon.Critical,
+                message=f"Failed to discover git repository at: {path}",
                 details=str(e),
-            ).exec()
-
-    return None
+            )
+        return None
 
 
 def git_get_repo_name(repo_url: str) -> str:
@@ -103,58 +175,58 @@ def git_get_repo_name(repo_url: str) -> str:
 def git_clone(
     repo_url: str,
     repo_path: str | Path,
-    checkout_branch: str | None = None,
+    checkout_branch: Optional[str] = None,
     depth: int = 1,
     force: bool = False,
-    notify_errors: bool = True,
-) -> tuple[Repository | None, GitCloneResult]:
-    """Helper function to clone a git repository.
-    :param repo_url: The URL of the repository to clone.
-    :type repo_url: str
-    :param repo_path: The path to clone the repository to.
-    :type repo_path: str | Path
-    :param checkout_branch: The branch to checkout if any, defaults to None
-    :type checkout_branch: str | None, optional
-    :param depth: The clone depth, defaults to 1
-    :type depth: int, optional
-    :param force: Whether to force the clone operation, even if the path is not empty, defaults to False
-    :type force: bool, optional
-    :param notify_errors: Whether to notify the user of any errors, defaults to True
-    :type notify_errors: bool, optional
-    :return: The cloned repository object if successful, otherwise None.
-    :rtype: pygit2.repository.Repository | None
+    config: Optional[GitOperationConfig] = None,
+) -> tuple[Optional[Repository], GitCloneResult]:
+    """Clone a git repository.
+
+    Args:
+        repo_url: The URL of the repository to clone.
+        repo_path: The path to clone the repository to.
+        checkout_branch: The branch to checkout if any.
+        depth: The clone depth.
+        force: Whether to force the clone operation, even if the path is not empty.
+        config: Configuration for the operation.
+
+    Returns:
+        Tuple of (repository object if successful, result enum).
     """
+    if config is None:
+        config = GitOperationConfig()
+
     logger.info(f"Attempting git cloning: {repo_url} to {repo_path}")
-    if not isinstance(repo_path, str):
-        repo_path = str(repo_path)
+    repo_path_str = str(repo_path)
+    repo_path_obj = Path(repo_path_str)
 
-    # Ensure the path is a directory if it does exist
-    if Path(repo_path).exists() and not Path(repo_path).is_dir():
-        logger.error(f"Failed to clone repository: {repo_url} to {repo_path}")
-        logger.error("The path is not a directory.")
-
-        if notify_errors:
-            InformationBox(
+    # Validate path
+    if repo_path_obj.exists() and not repo_path_obj.is_dir():
+        error_msg = "The path is not a directory."
+        logger.error(
+            f"Failed to clone repository: {repo_url} to {repo_path} - {error_msg}"
+        )
+        if config.notify_errors:
+            config.get_handler().show_error(
                 title="Git Clone Error",
-                text=f"Failed to clone repository: {repo_url} to {repo_path}",
-                information="The path is not a directory.",
-                icon=QMessageBox.Icon.Critical,
-            ).exec()
+                message=f"Failed to clone repository: {repo_url} to {repo_path}",
+                details=error_msg,
+            )
         return None, GitCloneResult.PATH_NOT_DIR
-    elif Path(repo_path).exists() and len(list(Path(repo_path).iterdir())) > 0:
-        # Directory is not empty
 
+    # Check if directory is empty
+    if repo_path_obj.exists() and any(repo_path_obj.iterdir()):
         if not force:
-            logger.error(f"Failed to clone repository: {repo_url} to {repo_path}")
-            logger.error("The path is not empty.")
-
-            if notify_errors:
-                InformationBox(
+            error_msg = f"The path is not empty: {repo_path}"
+            logger.error(
+                f"Failed to clone repository: {repo_url} to {repo_path} - {error_msg}"
+            )
+            if config.notify_errors:
+                config.get_handler().show_error(
                     title="Git Clone Error",
-                    text=f"Failed to clone repository: {repo_url} to {repo_path}",
-                    icon=QMessageBox.Icon.Critical,
-                    details=f"The path is not empty: {repo_path}",
-                ).exec()
+                    message=f"Failed to clone repository: {repo_url} to {repo_path}",
+                    details=error_msg,
+                )
             return None, GitCloneResult.PATH_NOT_EMPTY
         else:
             # Force the clone operation by deleting the directory
@@ -162,41 +234,43 @@ def git_clone(
                 f"Force cloning repository by deleting the local directory: {repo_path}"
             )
             success = delete_files_with_condition(
-                repo_path, lambda file: not file.endswith(".dds")
+                repo_path_str, lambda file: not file.endswith(".dds")
             )
             if not success:
                 logger.error(f"Failed to delete the local directory: {repo_path}")
                 return None, GitCloneResult.PATH_DELETE_ERROR
 
     try:
-        return pygit2.clone_repository(
-            repo_url, str(repo_path), checkout_branch=checkout_branch, depth=depth
-        ), GitCloneResult.CLONED
+        repo = pygit2.clone_repository(
+            repo_url, repo_path_str, checkout_branch=checkout_branch, depth=depth
+        )
+        return repo, GitCloneResult.CLONED
     except pygit2.GitError as e:
-        logger.error(f"Failed to clone repository: {repo_url} to {repo_path}")
-        logger.error(e)
-
-        if notify_errors:
-            InformationBox(
+        logger.error(f"Failed to clone repository: {repo_url} to {repo_path}: {e}")
+        if config.notify_errors:
+            config.get_handler().show_error(
                 title="Git Clone Error",
-                text=f"Failed to clone repository: {repo_url} to {repo_path}",
-                icon=QMessageBox.Icon.Critical,
+                message=f"Failed to clone repository: {repo_url} to {repo_path}",
                 details=str(e),
-            ).exec()
-    return None, GitCloneResult.GIT_ERROR
+            )
+        return None, GitCloneResult.GIT_ERROR
 
 
 def git_check_updates(
-    repo: Repository, notify_errors: bool = True
-) -> pygit2.Walker | None:
-    """Helper function to check for updates in a git repository in the current branch.
+    repo: Repository, config: Optional[GitOperationConfig] = None
+) -> Optional[pygit2.Walker]:
+    """Check for updates in a git repository in the current branch.
 
-    :param repo: The repository to check for updates in.
-    :type repo: Repository
-    :param notify_errors: Whether to notify the user of any errors, defaults to True
-    :type notify_errors: bool, optional
-    :return: A walker object if updates are found, otherwise None.
+    Args:
+        repo: The repository to check for updates in.
+        config: Configuration for the operation.
+
+    Returns:
+        A walker object if updates are found, otherwise None.
     """
+    if config is None:
+        config = GitOperationConfig()
+
     logger.info(f"Checking for updates in git repository: {repo.path}")
     try:
         remote = repo.remotes["origin"]
@@ -214,42 +288,40 @@ def git_check_updates(
         walker = repo.walk(remote_oid, SortMode.TOPOLOGICAL)
         walker.hide(local_oid)
         return walker
-    except pygit2.GitError as e:
-        logger.error(f"Failed to check for updates in the repository: {repo.path}")
-        logger.error(e)
 
-        if notify_errors:
+    except pygit2.GitError as e:
+        logger.error(f"Failed to check for updates in the repository: {repo.path}: {e}")
+        if config.notify_errors:
             logger.error(
                 "An error occurred while checking for updates in the repository."
             )
         raise
 
-    return None
-
 
 def git_pull(
     repo: Repository,
     remote_name: str = "origin",
-    branch: str | None = None,
+    branch: Optional[str] = None,
     reset_working_tree: bool = True,
     force: bool = False,
-    notify_errors: bool = True,
+    config: Optional[GitOperationConfig] = None,
 ) -> GitPullResult:
-    """Helper function to pull updates from a git repository.
+    """Pull updates from a git repository.
 
-    :param repo: The repository to pull updates from.
-    :type repo: Repository
-    :param remote_name: The name of the remote to pull from, defaults to "origin"
-    :type remote_name: str, optional
-    :param branch: The branch to pull from, defaults to None
-    :type branch: str | None, optional
-    :param reset_working_tree: Whether to discard uncommitted changes, defaults to True
-    :type reset_working_tree: bool, optional
-    :param force: Whether to force the pull operation via forced checkout, defaults to False
-    :type force: bool, optional
-    :param notify_errors: Whether to notify the user of any errors, defaults to True
-    :type notify_errors: bool, optional
-    :return: Whether the pull operation was successful, including if the repo was already up to date."""
+    Args:
+        repo: The repository to pull updates from.
+        remote_name: The name of the remote to pull from.
+        branch: The branch to pull from.
+        reset_working_tree: Whether to discard uncommitted changes.
+        force: Whether to force the pull operation via forced checkout.
+        config: Configuration for the operation.
+
+    Returns:
+        Result of the pull operation.
+    """
+    if config is None:
+        config = GitOperationConfig()
+
     logger.info(f"Pulling updates from git repository: {repo.path}")
 
     if branch is None:
@@ -278,7 +350,6 @@ def git_pull(
 
             if force:
                 logger.debug("Forcing merge operation.")
-
                 repo.checkout_tree(repo_get, strategy=CheckoutStrategy.FORCE)  # type: ignore[no-untyped-call]
                 repo.head.set_target(remote_master_id)
                 logger.info("Repository updated successfully with force merge.")
@@ -299,16 +370,29 @@ def git_pull(
 
                 if repo.index.conflicts is not None:
                     logger.warning("Conflicts encountered during merge.")
-
                     for conflict in repo.index.conflicts:
-                        logger.warning(f"Conflict found in: {conflict[0].path}")
+                        try:
+                            if conflict and len(conflict) > 0 and conflict[0]:
+                                conflict_file = conflict[0]
+                                if (
+                                    hasattr(conflict_file, "path")
+                                    and conflict_file.path
+                                ):
+                                    logger.warning(
+                                        f"Conflict found in: {conflict_file.path}"
+                                    )
+                                else:
+                                    logger.warning("Conflict found in unknown file")
+                            else:
+                                logger.warning("Conflict found in unknown file")
+                        except (IndexError, AttributeError):
+                            logger.warning("Conflict found in unknown file")
 
-                    if notify_errors:
-                        InformationBox(
+                    if config.notify_errors:
+                        config.get_handler().show_error(
                             title="Git Merge Conflict",
-                            text="Conflicts encountered during merge.",
-                            icon=QMessageBox.Icon.Critical,
-                        ).exec()
+                            message="Conflicts encountered during merge.",
+                        )
 
                     return GitPullResult.CONFLICT
                 else:
@@ -331,22 +415,31 @@ def git_pull(
                 logger.error("Unknown merge analysis result.")
                 return GitPullResult.UNKNOWN
         except pygit2.GitError as e:
-            logger.error(f"Failed to pull updates from the repository: {repo.path}")
-            logger.error(e)
+            logger.error(
+                f"Failed to pull updates from the repository: {repo.path}: {e}"
+            )
             raise
 
     logger.error(f"Remote not found in the repository: {repo.path}")
     return GitPullResult.UNKNOWN_REMOTE
 
 
-def git_push(remote: Remote, refname: str, notify_errors: bool = True) -> bool:
-    """Helper function to push updates to a git repository.
+def git_push(
+    remote: Remote, refname: str, config: Optional[GitOperationConfig] = None
+) -> bool:
+    """Push updates to a git repository.
 
-    :param remote: The remote to push updates to.
-    :type remote: pygit2.Remote
-    :param notify_errors: Whether to notify the user of any errors, defaults to True
-    :type notify_errors: bool, optional
-    :return: Whether the push operation was successful."""
+    Args:
+        remote: The remote to push updates to.
+        refname: The reference name to push.
+        config: Configuration for the operation.
+
+    Returns:
+        Whether the push operation was successful.
+    """
+    if config is None:
+        config = GitOperationConfig()
+
     logger.debug(f"Pushing updates to git repository: {remote.url}")
 
     try:
@@ -354,39 +447,40 @@ def git_push(remote: Remote, refname: str, notify_errors: bool = True) -> bool:
         logger.info(f"Updates pushed to the repository: {remote.url}")
         return True
     except pygit2.GitError as e:
-        logger.error(f"Failed to push updates to the repository: {remote.url}")
-        logger.error(e)
-
-        if notify_errors:
-            InformationBox(
+        logger.error(f"Failed to push updates to the repository: {remote.url}: {e}")
+        if config.notify_errors:
+            config.get_handler().show_error(
                 title="Git Push Error",
-                text=f"Failed to push updates to the repository: {remote.url}",
-                icon=QMessageBox.Icon.Critical,
+                message=f"Failed to push updates to the repository: {remote.url}",
                 details=str(e),
-            ).exec()
+            )
         return False
 
 
 def git_stage_commit(
     repo: Repository,
     message: str,
-    paths: list[str] = [],
+    paths: Optional[list[str]] = None,
     all: bool = False,
-    notify_errors: bool = True,
+    config: Optional[GitOperationConfig] = None,
 ) -> bool:
-    """Helper function to stage and commit changes in a git repository.
+    """Stage and commit changes in a git repository.
 
-    :param repo: The repository to stage and commit changes in.
-    :type repo: Repository
-    :param message: The commit message.
-    :type message: str
-    :param paths: The paths to stage, defaults to []
-    :type paths: list[str], optional
-    :param all: Whether to stage all changes, defaults to False
-    :type all: bool, optional
-    :param notify_errors: Whether to notify the user of any errors, defaults to True
-    :type notify_errors: bool, optional
-    :return: Whether the stage and commit operation was successful."""
+    Args:
+        repo: The repository to stage and commit changes in.
+        message: The commit message.
+        paths: The paths to stage.
+        all: Whether to stage all changes.
+        config: Configuration for the operation.
+
+    Returns:
+        Whether the stage and commit operation was successful.
+    """
+    if config is None:
+        config = GitOperationConfig()
+    if paths is None:
+        paths = []
+
     logger.debug(f"Staging and committing changes in git repository: {repo.path}")
 
     try:
@@ -407,17 +501,14 @@ def git_stage_commit(
         return True
     except pygit2.GitError as e:
         logger.error(
-            f"Failed to stage and commit changes in the repository: {repo.path}"
+            f"Failed to stage and commit changes in the repository: {repo.path}: {e}"
         )
-        logger.error(e)
-
-        if notify_errors:
-            InformationBox(
+        if config.notify_errors:
+            config.get_handler().show_error(
                 title="Git Stage and Commit Error",
-                text=f"Failed to stage and commit changes in the repository: {repo.path}",
-                icon=QMessageBox.Icon.Critical,
+                message=f"Failed to stage and commit changes in the repository: {repo.path}",
                 details=str(e),
-            ).exec()
+            )
         return False
 
 

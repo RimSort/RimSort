@@ -9,6 +9,7 @@ from app.controllers.settings_controller import SettingsController
 from app.utils import git_utils
 from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
+from app.utils.git_utils import GitOperationConfig
 from app.utils.git_worker import (
     GitBatchUpdateResults,
     GitBatchUpdateWorker,
@@ -254,11 +255,12 @@ class MainContentController(QObject):
                 pass
             self._git_clone_worker = None
 
+        config = GitOperationConfig(notify_errors=False)
         self._git_clone_worker = GitCloneWorker(
             repo_url=repo_url,
             repo_path=base_path,
             force=force,
-            notify_errors=False,
+            config=config,
         )
         self._git_clone_worker.finished.connect(self._on_git_clone_finished)
         self._git_clone_worker.progress.connect(self._on_git_clone_progress)

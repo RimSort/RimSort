@@ -5,7 +5,7 @@ from loguru import logger
 from PySide6.QtCore import QObject, QRunnable, QThread, Signal, Slot
 
 from app.utils import git_utils
-from app.utils.git_utils import GitCloneResult
+from app.utils.git_utils import GitCloneResult, GitOperationConfig
 
 
 class GitCloneWorker(QThread):
@@ -23,7 +23,7 @@ class GitCloneWorker(QThread):
         checkout_branch: Optional[str] = None,
         depth: int = 1,
         force: bool = False,
-        notify_errors: bool = False,
+        config: Optional[GitOperationConfig] = None,
     ):
         super().__init__()
         self.repo_url = repo_url
@@ -31,7 +31,7 @@ class GitCloneWorker(QThread):
         self.checkout_branch = checkout_branch
         self.depth = depth
         self.force = force
-        self.notify_errors = notify_errors
+        self.config = config or GitOperationConfig(notify_errors=False)
 
     def run(self) -> None:
         """Execute the git clone operation in background"""
@@ -50,7 +50,7 @@ class GitCloneWorker(QThread):
                 checkout_branch=self.checkout_branch,
                 depth=self.depth,
                 force=self.force,
-                notify_errors=self.notify_errors,
+                config=self.config,
             )
 
             # Clean up repository object if successful
@@ -61,11 +61,11 @@ class GitCloneWorker(QThread):
             if result == GitCloneResult.CLONED:
                 success_msg = f"Repository cloned successfully to: {self.repo_path}"
                 logger.info(success_msg)
-                self.finished.emit(True, success_msg, self.repo_path)
+                self.finished.emit(True, success_msg, str(self.repo_path))
             else:
                 error_msg = f"Clone failed: {result}"
                 logger.error(error_msg)
-                self.error.emit(False, error_msg, self.repo_path)
+                self.error.emit(error_msg)
 
         except Exception as e:
             error_msg = f"Unexpected error during clone: {str(e)}"
@@ -90,9 +90,12 @@ class GitCheckResults:
 class GitCheckUpdatesWorker(QRunnable):
     """Worker to check multiple git repositories for updates in parallel."""
 
-    def __init__(self, repos_paths: List[Path]):
+    def __init__(
+        self, repos_paths: List[Path], config: Optional[GitOperationConfig] = None
+    ):
         super().__init__()
         self.repos_paths = repos_paths
+        self.config = config or GitOperationConfig(notify_errors=False)
         # Signals via a QObject for thread-safe emit
         self.signals = GitCheckUpdatesWorker.Signals()
 
@@ -113,21 +116,20 @@ class GitCheckUpdatesWorker(QRunnable):
         errors: Dict[Path, str] = {}
 
         for repo_path in self.repos_paths:
-            repo = git_utils.git_discover(repo_path)
-            if repo is None:
-                logger.warning(f"Invalid git repository: {repo_path}")
-                invalid_paths.append(repo_path)
-                continue
             try:
-                walker = git_utils.git_check_updates(repo)
-                if walker is not None:
-                    commit_msgs = [commit.message for commit in walker]
-                    updates[repo_path] = commit_msgs
+                with git_utils.git_repository(repo_path, self.config) as repo:
+                    if repo is None:
+                        logger.warning(f"Invalid git repository: {repo_path}")
+                        invalid_paths.append(repo_path)
+                        continue
+
+                    walker = git_utils.git_check_updates(repo, self.config)
+                    if walker is not None:
+                        commit_msgs = [commit.message for commit in walker]
+                        updates[repo_path] = commit_msgs
             except Exception as e:
                 logger.error(f"Error checking updates for {repo_path}: {e}")
                 errors[repo_path] = str(e)
-            finally:
-                repo.free()
 
         results = GitCheckResults(
             updates=updates, invalid_paths=invalid_paths, error=errors
@@ -150,9 +152,12 @@ class GitBatchUpdateResults:
 class GitBatchUpdateWorker(QRunnable):
     """Worker to pull (update) multiple git repositories in parallel."""
 
-    def __init__(self, repos_paths: List[Path]):
+    def __init__(
+        self, repos_paths: List[Path], config: Optional[GitOperationConfig] = None
+    ):
         super().__init__()
         self.repos_paths = repos_paths
+        self.config = config or GitOperationConfig(notify_errors=False)
         self.signals = GitBatchUpdateWorker.Signals()
 
     class Signals(QObject):
@@ -171,20 +176,28 @@ class GitBatchUpdateWorker(QRunnable):
         failed: List[Tuple[Path, str]] = []
 
         for repo_path in self.repos_paths:
-            repo = git_utils.git_discover(repo_path)
-            if repo is None:
-                logger.warning(f"Invalid git repository for pull: {repo_path}")
-                failed.append((repo_path, "Invalid git repository"))
-                continue
             try:
-                git_utils.git_pull(repo)
-                successful.append(repo_path)
+                with git_utils.git_repository(repo_path, self.config) as repo:
+                    if repo is None:
+                        logger.warning(f"Invalid git repository for pull: {repo_path}")
+                        failed.append((repo_path, "Invalid git repository"))
+                        continue
+
+                    result = git_utils.git_pull(repo, config=self.config)
+                    # Check if pull was successful based on result
+                    if result in [
+                        git_utils.GitPullResult.UP_TO_DATE,
+                        git_utils.GitPullResult.FAST_FORWARD,
+                        git_utils.GitPullResult.FORCE_CHECKOUT,
+                        git_utils.GitPullResult.MERGE,
+                    ]:
+                        successful.append(repo_path)
+                    else:
+                        failed.append((repo_path, str(result)))
             except Exception as e:
                 error_msg = str(e)
                 logger.error(f"Failed pulling {repo_path}: {error_msg}")
                 failed.append((repo_path, error_msg))
-            finally:
-                repo.free()
 
         results = GitBatchUpdateResults(successful=successful, failed=failed)
         self.signals.finished.emit(results)
