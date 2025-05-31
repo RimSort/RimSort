@@ -189,9 +189,17 @@ class MainContentController(QObject):
                 details=str(full_repo_path),
             )
             if answer == self.tr("Clone new"):
-                repo, _ = git_utils.git_clone(repo_url, base_path, force=True)
+                repo, result = git_utils.git_clone(repo_url, base_path, force=True)
                 if repo is not None:
                     git_utils.git_cleanup(repo)
+                    if result == git_utils.GitCloneResult.CLONED:
+                        InformationBox(
+                            title=self.tr("Clone Successful"),
+                            text=self.tr("Repository cloned successfully!"),
+                            information=self.tr(
+                                "The repository has been cloned to: {path}"
+                            ).format(path=str(full_repo_path)),
+                        ).exec()
                 return
             elif answer == self.tr("Update existing"):
                 self._do_git_updates([full_repo_path])
@@ -200,9 +208,17 @@ class MainContentController(QObject):
                 logger.debug("User cancelled git clone operation.")
                 return
         else:
-            repo, _ = git_utils.git_clone(repo_url, full_repo_path)
+            repo, result = git_utils.git_clone(repo_url, full_repo_path)
             if repo is not None:
                 git_utils.git_cleanup(repo)
+                if result == git_utils.GitCloneResult.CLONED:
+                    InformationBox(
+                        title=self.tr("Clone Successful"),
+                        text=self.tr("Repository cloned successfully!"),
+                        information=self.tr(
+                            "The repository has been cloned to: {path}"
+                        ).format(path=str(full_repo_path)),
+                    ).exec()
             return
 
     def _do_git_push(self, repo_path: Path) -> None:
