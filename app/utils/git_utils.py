@@ -308,7 +308,6 @@ def git_pull(
                             title="Git Merge Conflict",
                             text="Conflicts encountered during merge.",
                             icon=QMessageBox.Icon.Critical,
-                            details=str(repo.index.conflicts),
                         ).exec()
 
                     return GitPullResult.CONFLICT
@@ -334,8 +333,7 @@ def git_pull(
         except pygit2.GitError as e:
             logger.error(f"Failed to pull updates from the repository: {repo.path}")
             logger.error(e)
-
-            return GitPullResult.GIT_ERROR
+            raise
 
     logger.error(f"Remote not found in the repository: {repo.path}")
     return GitPullResult.UNKNOWN_REMOTE
