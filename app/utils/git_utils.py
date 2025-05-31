@@ -384,13 +384,13 @@ def git_pull(
                 logger.info("Repository is already up to date.")
                 return GitPullResult.UP_TO_DATE
 
-            repo_get = repo.get(remote_master_id)  # type: ignore[no-untyped-call]
+            repo_get = repo.get(remote_master_id)
             if repo_get is None:
                 raise pygit2.GitError("Failed to get remote master id.")
 
             if force:
                 logger.debug("Forcing merge operation.")
-                repo.checkout_tree(repo_get, strategy=CheckoutStrategy.FORCE)  # type: ignore[no-untyped-call]
+                repo.checkout_tree(repo_get, strategy=CheckoutStrategy.FORCE)
                 repo.head.set_target(remote_master_id)
                 logger.info("Repository updated successfully with force merge.")
                 return GitPullResult.FORCE_CHECKOUT
@@ -400,7 +400,7 @@ def git_pull(
                 repo.reset(repo.head.target, ResetMode.HARD)
 
             if merge_result & pygit2.enums.MergeAnalysis.FASTFORWARD:
-                repo.checkout_tree(repo_get)  # type: ignore[no-untyped-call]
+                repo.checkout_tree(repo_get)
                 repo.head.set_target(remote_master_id)
                 logger.info("Repository updated successfully with fast-forward merge.")
                 return GitPullResult.FAST_FORWARD
@@ -443,7 +443,7 @@ def git_pull(
                     )
                     logger.info("Repository updated successfully with merge.")
 
-                repo.state_cleanup()  # type: ignore[no-untyped-call]
+                repo.state_cleanup()
                 return GitPullResult.MERGE
             else:
                 logger.error("Unknown merge analysis result.")
@@ -477,7 +477,7 @@ def git_push(
     logger.debug(f"Pushing updates to git repository: {remote.url}")
 
     try:
-        remote.push([refname])  # type: ignore[no-untyped-call]
+        remote.push([refname])
         logger.info(f"Updates pushed to the repository: {remote.url}")
         return True
     except pygit2.GitError as e:
@@ -552,6 +552,6 @@ def git_cleanup(repo: Repository) -> None:
     :param repo: The repository to cleanup.
     :type repo: Repository
     """
-    repo.state_cleanup()  # type: ignore[no-untyped-call]
+    repo.state_cleanup()
     repo.free()
     logger.debug(f"Git repository cleaned up: {repo.path}")
