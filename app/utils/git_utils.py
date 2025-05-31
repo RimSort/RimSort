@@ -413,21 +413,13 @@ def git_pull(
 
                     for conflict in repo.index.conflicts:
                         try:
-                            if conflict and len(conflict) > 0 and conflict[0]:
-                                conflict_file = conflict[0]
-                                if hasattr(conflict_file, "path"):
-                                    path_attr = getattr(conflict_file, "path", None)
-                                    if path_attr:
-                                        logger.warning(
-                                            f"Conflict found in: {path_attr}"
-                                        )
-                                    else:
-                                        logger.warning("Conflict found in unknown file")
-                                else:
-                                    logger.warning("Conflict found in unknown file")
+                            conflict_file = conflict[0]
+                            path_value = getattr(conflict_file, "path", None)
+                            if path_value:
+                                logger.warning(f"Conflict found in: {path_value}")
                             else:
                                 logger.warning("Conflict found in unknown file")
-                        except (IndexError, AttributeError):
+                        except Exception:
                             logger.warning("Conflict found in unknown file")
 
                     if config.notify_errors:
