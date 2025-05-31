@@ -6,6 +6,7 @@ from pathlib import Path
 import pygit2
 from loguru import logger
 from pygit2.enums import CheckoutStrategy, ResetMode, SortMode
+from pygit2.remotes import Remote
 from pygit2.repository import Repository
 from PySide6.QtWidgets import QMessageBox
 
@@ -127,12 +128,8 @@ def git_clone(
     if not isinstance(repo_path, str):
         repo_path = str(repo_path)
 
-    repo_folder = git_get_repo_name(repo_url)
-    full_repo_path = Path(repo_path) / repo_folder
-    logger.debug(f"Inferred full local repository path: {full_repo_path}")
-
     # Ensure the path is a directory if it does exist
-    if Path(full_repo_path).exists() and not Path(full_repo_path).is_dir():
+    if Path(repo_path).exists() and not Path(repo_path).is_dir():
         logger.error(f"Failed to clone repository: {repo_url} to {repo_path}")
         logger.error("The path is not a directory.")
 
@@ -144,9 +141,7 @@ def git_clone(
                 icon=QMessageBox.Icon.Critical,
             ).exec()
         return None, GitCloneResult.PATH_NOT_DIR
-    elif (
-        Path(full_repo_path).exists() and len(list(Path(full_repo_path).iterdir())) > 0
-    ):
+    elif Path(repo_path).exists() and len(list(Path(repo_path).iterdir())) > 0:
         # Directory is not empty
 
         if not force:
@@ -158,20 +153,19 @@ def git_clone(
                     title="Git Clone Error",
                     text=f"Failed to clone repository: {repo_url} to {repo_path}",
                     icon=QMessageBox.Icon.Critical,
-                    details=f"The path is not empty: {full_repo_path}",
+                    details=f"The path is not empty: {repo_path}",
                 ).exec()
             return None, GitCloneResult.PATH_NOT_EMPTY
         else:
             # Force the clone operation by deleting the directory
             logger.warning(
-                f"Force cloning repository by deleting the local directory: {full_repo_path}"
+                f"Force cloning repository by deleting the local directory: {repo_path}"
             )
             success = delete_files_with_condition(
-                full_repo_path, lambda file: not file.endswith(".dds")
+                repo_path, lambda file: not file.endswith(".dds")
             )
-            repo_path = full_repo_path
             if not success:
-                logger.error(f"Failed to delete the local directory: {full_repo_path}")
+                logger.error(f"Failed to delete the local directory: {repo_path}")
                 return None, GitCloneResult.PATH_DELETE_ERROR
 
     try:
@@ -217,19 +211,18 @@ def git_check_updates(
             return None
 
         logger.info("Updates found in the repository.")
-        walker = repo.walk(local_oid, SortMode.TOPOLOGICAL)
+        walker = repo.walk(remote_oid, SortMode.TOPOLOGICAL)
+        walker.hide(local_oid)
         return walker
     except pygit2.GitError as e:
         logger.error(f"Failed to check for updates in the repository: {repo.path}")
         logger.error(e)
 
         if notify_errors:
-            InformationBox(
-                title="Git Update Check Error",
-                text=f"Failed to check for updates in the repository: {repo.path}",
-                icon=QMessageBox.Icon.Critical,
-                details=str(e),
-            ).exec()
+            logger.error(
+                "An error occurred while checking for updates in the repository."
+            )
+        raise
 
     return None
 
@@ -275,18 +268,18 @@ def git_pull(
 
             merge_result, _ = repo.merge_analysis(remote_master_id)
 
-            if merge_result & pygit2.GIT_MERGE_ANALYSIS_UP_TO_DATE:
+            if merge_result & pygit2.enums.MergeAnalysis.UP_TO_DATE:
                 logger.info("Repository is already up to date.")
                 return GitPullResult.UP_TO_DATE
 
-            repo_get = repo.get(remote_master_id)
+            repo_get = repo.get(remote_master_id)  # type: ignore[no-untyped-call]
             if repo_get is None:
                 raise pygit2.GitError("Failed to get remote master id.")
 
             if force:
                 logger.debug("Forcing merge operation.")
 
-                repo.checkout_tree(repo_get, strategy=CheckoutStrategy.FORCE)
+                repo.checkout_tree(repo_get, strategy=CheckoutStrategy.FORCE)  # type: ignore[no-untyped-call]
                 repo.head.set_target(remote_master_id)
                 logger.info("Repository updated successfully with force merge.")
                 return GitPullResult.FORCE_CHECKOUT
@@ -295,13 +288,13 @@ def git_pull(
                 logger.info("Resetting working tree.")
                 repo.reset(repo.head.target, ResetMode.HARD)
 
-            if merge_result & pygit2.GIT_MERGE_ANALYSIS_FASTFORWARD:
-                repo.checkout_tree(repo_get)
+            if merge_result & pygit2.enums.MergeAnalysis.FASTFORWARD:
+                repo.checkout_tree(repo_get)  # type: ignore[no-untyped-call]
                 repo.head.set_target(remote_master_id)
                 logger.info("Repository updated successfully with fast-forward merge.")
                 return GitPullResult.FAST_FORWARD
 
-            elif merge_result & pygit2.GIT_MERGE_ANALYSIS_NORMAL:
+            elif merge_result & pygit2.enums.MergeAnalysis.NORMAL:
                 repo.merge(remote_master_id)
 
                 if repo.index.conflicts is not None:
@@ -333,7 +326,7 @@ def git_pull(
                     )
                     logger.info("Repository updated successfully with merge.")
 
-                repo.state_cleanup()
+                repo.state_cleanup()  # type: ignore[no-untyped-call]
                 return GitPullResult.MERGE
             else:
                 logger.error("Unknown merge analysis result.")
@@ -342,21 +335,13 @@ def git_pull(
             logger.error(f"Failed to pull updates from the repository: {repo.path}")
             logger.error(e)
 
-            if notify_errors:
-                InformationBox(
-                    title="Git Pull Error",
-                    text=f"Failed to pull updates from the repository: {repo.path}",
-                    icon=QMessageBox.Icon.Critical,
-                    details=str(e),
-                ).exec()
-
             return GitPullResult.GIT_ERROR
 
     logger.error(f"Remote not found in the repository: {repo.path}")
     return GitPullResult.UNKNOWN_REMOTE
 
 
-def git_push(remote: pygit2.Remote, refname: str, notify_errors: bool = True) -> bool:
+def git_push(remote: Remote, refname: str, notify_errors: bool = True) -> bool:
     """Helper function to push updates to a git repository.
 
     :param remote: The remote to push updates to.
@@ -367,7 +352,7 @@ def git_push(remote: pygit2.Remote, refname: str, notify_errors: bool = True) ->
     logger.debug(f"Pushing updates to git repository: {remote.url}")
 
     try:
-        remote.push([refname])
+        remote.push([refname])  # type: ignore[no-untyped-call]
         logger.info(f"Updates pushed to the repository: {remote.url}")
         return True
     except pygit2.GitError as e:
@@ -444,6 +429,6 @@ def git_cleanup(repo: Repository) -> None:
     :param repo: The repository to cleanup.
     :type repo: Repository
     """
-    repo.state_cleanup()
+    repo.state_cleanup()  # type: ignore[no-untyped-call]
     repo.free()
     logger.debug(f"Git repository cleaned up: {repo.path}")
