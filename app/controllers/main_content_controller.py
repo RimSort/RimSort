@@ -134,17 +134,19 @@ class MainContentController(QObject):
         if binary_diag.exec_is_positive():
             self._do_git_updates(list(updates.keys()))
         else:
-            logger.debug("User declined git update operation.")    @Slot(object)
+            logger.debug("User declined git update operation.")
+
+    @Slot(object)
     def _do_git_updates(self, repos_paths: list[Path]) -> None:
         """Update the git repositories in the list."""
         logger.debug(f"Updating {len(repos_paths)} repositories.")
-        
+
         successful_updates = []
         failed_updates = []
-        
+
         for i, repo_path in enumerate(repos_paths, 1):
             logger.info(f"Updating repository {i}/{len(repos_paths)}: {repo_path.name}")
-            
+
             repo = git_utils.git_discover(repo_path)
             if repo is None:
                 logger.warning(f"Could not find valid git repository in {repo_path}")
@@ -165,19 +167,21 @@ class MainContentController(QObject):
         # Show completion notification
         self._show_update_completion_notification(successful_updates, failed_updates)
         logger.debug("Git update operation completed.")
-    
-    def _show_update_completion_notification(self, successful_updates: list[Path], failed_updates: list[tuple[Path, str]]) -> None:
+
+    def _show_update_completion_notification(
+        self, successful_updates: list[Path], failed_updates: list[tuple[Path, str]]
+    ) -> None:
         """Show notification about the update operation results."""
         total_repos = len(successful_updates) + len(failed_updates)
-        
+
         if len(failed_updates) == 0:
             # All updates successful
             InformationBox(
                 title=self.tr("Updates Completed"),
                 text=self.tr("All repositories updated successfully!"),
-                information=self.tr("{count} repositories were updated successfully.").format(
-                    count=len(successful_updates)
-                ),
+                information=self.tr(
+                    "{count} repositories were updated successfully."
+                ).format(count=len(successful_updates)),
                 details="\n".join([str(repo.name) for repo in successful_updates]),
             ).exec()
         elif len(successful_updates) == 0:
@@ -185,13 +189,13 @@ class MainContentController(QObject):
             details_msg = ""
             for repo_path, error in failed_updates:
                 details_msg += f"{repo_path.name}: {error}\n"
-            
+
             InformationBox(
                 title=self.tr("Update Failed"),
                 text=self.tr("Failed to update repositories"),
-                information=self.tr("All {count} repositories failed to update.").format(
-                    count=len(failed_updates)
-                ),
+                information=self.tr(
+                    "All {count} repositories failed to update."
+                ).format(count=len(failed_updates)),
                 details=details_msg,
             ).exec()
         else:
@@ -199,18 +203,20 @@ class MainContentController(QObject):
             details_msg = self.tr("Successful updates:\n")
             for repo in successful_updates:
                 details_msg += f"  ✓ {repo.name}\n"
-            
+
             details_msg += f"\n{self.tr('Failed updates:')}\n"
             for repo_path, error in failed_updates:
                 details_msg += f"  ✗ {repo_path.name}: {error}\n"
-            
+
             InformationBox(
                 title=self.tr("Updates Partially Completed"),
                 text=self.tr("Some repositories updated successfully"),
-                information=self.tr("{success} successful, {failed} failed out of {total} repositories.").format(
+                information=self.tr(
+                    "{success} successful, {failed} failed out of {total} repositories."
+                ).format(
                     success=len(successful_updates),
                     failed=len(failed_updates),
-                    total=total_repos
+                    total=total_repos,
                 ),
                 details=details_msg,
             ).exec()
