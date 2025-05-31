@@ -93,11 +93,11 @@ class MainContentController(QObject):
                 information=self.tr("Please select at least one repository to check."),
             ).exec()
             return
-
         logger.debug(
             f"Scheduling concurrent check for {len(repos_paths)} repositories."
         )
-        worker = GitCheckUpdatesWorker(repos_paths)
+        config = GitOperationConfig(notify_errors=True)
+        worker = GitCheckUpdatesWorker(repos_paths, config=config)
         worker.signals.finished.connect(self._handle_check_updates_results)
         self.thread_pool.start(worker)
 
@@ -151,7 +151,6 @@ class MainContentController(QObject):
             positive_text=self.tr("Update All"),
             negative_text=self.tr("Cancel"),
         )
-
         if binary_diag.exec_is_positive():
             self._on_update_repos(list(updates.keys()))
         else:
@@ -162,7 +161,8 @@ class MainContentController(QObject):
         logger.debug(
             f"Scheduling concurrent update for {len(repos_paths)} repositories."
         )
-        worker = GitBatchUpdateWorker(repos_paths)
+        config = GitOperationConfig(notify_errors=True)
+        worker = GitBatchUpdateWorker(repos_paths, config=config)
         worker.signals.finished.connect(self._handle_batch_update_results)
         self.thread_pool.start(worker)
 

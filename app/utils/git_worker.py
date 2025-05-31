@@ -5,7 +5,7 @@ from loguru import logger
 from PySide6.QtCore import QObject, QRunnable, QThread, Signal, Slot
 
 from app.utils import git_utils
-from app.utils.git_utils import GitCloneResult, GitOperationConfig
+from app.utils.git_utils import GitOperationConfig
 
 
 class GitCloneWorker(QThread):
@@ -31,7 +31,7 @@ class GitCloneWorker(QThread):
         self.checkout_branch = checkout_branch
         self.depth = depth
         self.force = force
-        self.config = config or GitOperationConfig(notify_errors=False)
+        self.config = config or GitOperationConfig.create_silent()
 
     def run(self) -> None:
         """Execute the git clone operation in background"""
@@ -58,7 +58,7 @@ class GitCloneWorker(QThread):
                 git_utils.git_cleanup(repo)
 
             # Emit results based on clone result
-            if result == GitCloneResult.CLONED:
+            if result.is_successful():
                 success_msg = f"Repository cloned successfully to: {self.repo_path}"
                 logger.info(success_msg)
                 self.finished.emit(True, success_msg, str(self.repo_path))
@@ -95,7 +95,7 @@ class GitCheckUpdatesWorker(QRunnable):
     ):
         super().__init__()
         self.repos_paths = repos_paths
-        self.config = config or GitOperationConfig(notify_errors=False)
+        self.config = config or GitOperationConfig.create_silent()
         # Signals via a QObject for thread-safe emit
         self.signals = GitCheckUpdatesWorker.Signals()
 
@@ -157,7 +157,7 @@ class GitBatchUpdateWorker(QRunnable):
     ):
         super().__init__()
         self.repos_paths = repos_paths
-        self.config = config or GitOperationConfig(notify_errors=False)
+        self.config = config or GitOperationConfig.create_silent()
         self.signals = GitBatchUpdateWorker.Signals()
 
     class Signals(QObject):
@@ -185,12 +185,7 @@ class GitBatchUpdateWorker(QRunnable):
 
                     result = git_utils.git_pull(repo, config=self.config)
                     # Check if pull was successful based on result
-                    if result in [
-                        git_utils.GitPullResult.UP_TO_DATE,
-                        git_utils.GitPullResult.FAST_FORWARD,
-                        git_utils.GitPullResult.FORCE_CHECKOUT,
-                        git_utils.GitPullResult.MERGE,
-                    ]:
+                    if result.is_successful():
                         successful.append(repo_path)
                     else:
                         failed.append((repo_path, str(result)))

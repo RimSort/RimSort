@@ -63,6 +63,18 @@ class GitOperationConfig:
         """Get the notification handler, ensuring it's not None."""
         return self.notification_handler or DefaultNotificationHandler()
 
+    @classmethod
+    def create_silent(cls) -> "GitOperationConfig":
+        """Create a config that suppresses error notifications."""
+        return cls(notify_errors=False)
+
+    @classmethod
+    def create_with_handler(
+        cls, handler: GitNotificationHandler
+    ) -> "GitOperationConfig":
+        """Create a config with a specific notification handler."""
+        return cls(notify_errors=True, notification_handler=handler)
+
 
 @contextmanager
 def git_repository(
@@ -100,6 +112,14 @@ class GitCloneResult(Enum):
     def __repr__(self) -> str:
         return self.value
 
+    def is_successful(self) -> bool:
+        """Check if the clone result indicates a successful operation."""
+        return self == GitCloneResult.CLONED
+
+    def is_error(self) -> bool:
+        """Check if the clone result indicates an error."""
+        return not self.is_successful()
+
 
 class GitPullResult(Enum):
     """Enumeration of possible results of a git pull operation."""
@@ -118,6 +138,24 @@ class GitPullResult(Enum):
 
     def __repr__(self) -> str:
         return self.value
+
+    def is_successful(self) -> bool:
+        """Check if the pull result indicates a successful operation."""
+        return self in {
+            GitPullResult.UP_TO_DATE,
+            GitPullResult.FAST_FORWARD,
+            GitPullResult.FORCE_CHECKOUT,
+            GitPullResult.MERGE,
+        }
+
+    def is_error(self) -> bool:
+        """Check if the pull result indicates an error."""
+        return self in {
+            GitPullResult.CONFLICT,
+            GitPullResult.UNKNOWN,
+            GitPullResult.UNKNOWN_REMOTE,
+            GitPullResult.GIT_ERROR,
+        }
 
 
 def git_discover(
@@ -292,10 +330,12 @@ def git_check_updates(
     except pygit2.GitError as e:
         logger.error(f"Failed to check for updates in the repository: {repo.path}: {e}")
         if config.notify_errors:
-            logger.error(
-                "An error occurred while checking for updates in the repository."
+            config.get_handler().show_error(
+                title="Git Update Check Error",
+                message=f"Failed to check for updates in repository: {repo.path}",
+                details=str(e),
             )
-        raise
+        return None
 
 
 def git_pull(
@@ -370,17 +410,19 @@ def git_pull(
 
                 if repo.index.conflicts is not None:
                     logger.warning("Conflicts encountered during merge.")
+
                     for conflict in repo.index.conflicts:
                         try:
                             if conflict and len(conflict) > 0 and conflict[0]:
                                 conflict_file = conflict[0]
-                                if (
-                                    hasattr(conflict_file, "path")
-                                    and conflict_file.path
-                                ):
-                                    logger.warning(
-                                        f"Conflict found in: {conflict_file.path}"
-                                    )
+                                if hasattr(conflict_file, "path"):
+                                    path_attr = getattr(conflict_file, "path", None)
+                                    if path_attr:
+                                        logger.warning(
+                                            f"Conflict found in: {path_attr}"
+                                        )
+                                    else:
+                                        logger.warning("Conflict found in unknown file")
                                 else:
                                     logger.warning("Conflict found in unknown file")
                             else:
