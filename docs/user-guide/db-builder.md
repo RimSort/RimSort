@@ -10,7 +10,7 @@ permalink: user-guide/db-builder
 
 The Steam Database Builder is a special tool used to create and update your local copy of a steam workshop metadata database.
 
-![DB Builder settings preview](/assets/images/previews/settings/db_builder.png)
+![DB Builder settings preview](../assets/images/previews/settings/db_builder.png)
 
 ## Table of Contents
 {: .no_toc .text-delta }
