@@ -282,6 +282,8 @@ def git_clone(
         repo = pygit2.clone_repository(
             repo_url, repo_path_str, checkout_branch=checkout_branch, depth=depth
         )
+        # Wrap the returned repo in the Python wrapper class for type consistency
+        repo = Repository(repo_path_str)
         return repo, GitCloneResult.CLONED
     except pygit2.GitError as e:
         logger.error(f"Failed to clone repository: {repo_url} to {repo_path}: {e}")
