@@ -160,7 +160,9 @@ class RentryUpload:
 class RentryImport:
     """Class to handle importing Rentry.co links and extracting package IDs."""
 
-    def __init__(self, settings_controller: SettingsController) -> None:
+    def __init__(
+        self, settings_controller: SettingsController, rentry_auth_code: bool = False
+    ) -> None:
         """Initialize the Rentry Import instance and prompt for a link."""
         self.package_ids: list[
             str
@@ -169,13 +171,20 @@ class RentryImport:
             str
         ] = []  # Initialize an empty list for publishedfileids
         self.settings_controller = settings_controller
-        # If user does not have an auth code, show a warning and do not proceed
+        self.rentry_auth_code = rentry_auth_code
+
+        # If user does not have an auth code, show a warning
         if settings_controller.settings.rentry_auth_code == "":
+            self.rentry_auth_code = False
             RentryError().show_missing_rentry_auth_warning()
-            return
-        # Retrieve auth code from user settings
-        _HEADERS.update({"rentry-auth": settings_controller.settings.rentry_auth_code})
-        self.input_dialog()  # Call the input_dialog method to set up the UI
+            self.input_dialog()  # Call the input_dialog method to set up the UI
+        else:
+            # Retrieve auth code from user settings
+            _HEADERS.update(
+                {"rentry-auth": settings_controller.settings.rentry_auth_code}
+            )
+            self.rentry_auth_code = True
+            self.input_dialog()  # Call the input_dialog method to set up the UI
 
     def input_dialog(self) -> None:
         """Initialize the UI for entering Rentry.co links."""
@@ -221,12 +230,24 @@ class RentryImport:
 
         try:
             # Determine the raw URL based on the provided link
-            raw_url = (
-                rentry_link if rentry_link.endswith("/raw") else f"{rentry_link}/raw"
-            )
-            response = requests.get(
-                raw_url, headers=_HEADERS
-            )  # Fetch the content from the raw URL
+            if self.rentry_auth_code:
+                logger.debug("Using rentry-auth code to fetch rentry.co content.")
+                raw_url = (
+                    rentry_link
+                    if rentry_link.endswith("/raw")
+                    else f"{rentry_link}/raw"
+                )
+                response = requests.get(
+                    raw_url, headers=_HEADERS
+                )  # Fetch the content from the raw URL
+            else:
+                logger.debug("Fetching rentry.co content without rentry-auth.")
+                raw_url = (
+                    rentry_link
+                    if rentry_link.endswith("/edit")
+                    else f"{rentry_link}/edit"
+                )
+                response = requests.get(raw_url)  # Fetch the content from the edit URL
 
             if response.status_code == 200:
                 # Decode the content using UTF-8
@@ -236,7 +257,9 @@ class RentryImport:
                 )
 
                 # Define regex pattern for both variations of 'packageid' and 'packageId'
-                packageid_pattern = r"(?i){packageid:\s*([\w.]+)\}|packageid:\s*([\w.]+)"
+                packageid_pattern = (
+                    r"(?i){packageid:\s*([\w.]+)\}|packageid:\s*([\w.]+)"
+                )
                 matches = re.findall(packageid_pattern, page_content)
                 # Find all matches in the content
                 self.package_ids = [
@@ -352,12 +375,14 @@ class RentryError:
 
     def show_missing_rentry_auth_warning(self) -> None:
         """Show a warning for missing Rentry Auth code."""
-        logger.warning("Rentry Auth code not found in user settings.")
+        logger.info("Rentry Auth code not found in user settings.")
         show_warning(
             title=translate("RentryError", "Rentry Auth Code Not Found"),
             text=translate(
-                "RentryError",
-                "You need to email support@rentry.co and request an auth code. Then paste it into Settings -> Advanced -> Rentry Auth.",
+                "Rentry Auth Code Not Found ",
+                "RimSort can work without rentry auth code. But "
+                "To enable full functionality of renry.co you need to email support@rentry.co and request an auth code. "
+                "Then paste it into Settings -> Advanced -> Rentry Auth.",
             ),
         )
 
