@@ -1470,6 +1470,20 @@ class MainContent(QObject):
             logger.debug("USER ACTION: pressed cancel, passing")
 
     def _do_import_list_rentry(self) -> None:
+        """
+        Import a mod list from a Rentry.co link.
+
+        This method:
+        - Clears search and filter states on the mod lists.
+        - Prompts the user to enter a Rentry.co link and fetches package IDs and publishedfileids.
+        - Filters out publishedfileids that are already present locally.
+        - If there are any missing mods, they will be downloaded automatically using publishfieldid
+        - Use publishfieldid to download mods using Steamworks API or SteamCMD based on user settings.
+        - Generates UUIDs based on existing mods, calculates duplicates, and missing mods.
+        - Imports mods from package IDs if no downloads are needed.
+        - Inserts active and inactive mods into the mod lists using package IDs.
+        - If Prompts the user about duplicate or missing mods.
+        """
         # Create an instance of RentryImport
         rentry_import = RentryImport(self.settings_controller)
         # Exit if user cancels or no package IDs
@@ -1487,6 +1501,72 @@ class MainContent(QObject):
             self.mods_panel.data_source_filter_icons
         )
         self.mods_panel.signal_search_source_filter(list_type="Inactive")
+
+        if rentry_import.publishedfileids:
+            # Get set of publishedfileids already present locally
+            existing_publishedfileids = {
+                mod_data.get("publishedfileid")
+                for mod_data in self.metadata_manager.internal_local_metadata.values()
+                if mod_data.get("publishedfileid") is not None
+            }
+            # Filter out publishedfileids that already exist locally
+            filtered_publishedfileids = list(
+                {
+                    pfid
+                    for pfid in rentry_import.publishedfileids
+                    if pfid not in existing_publishedfileids
+                }
+            )
+
+            def notify_user() -> None:
+                """Notify user to redo Rentry Import after downloads complete."""
+                dialogue.show_information(
+                    title="Important",
+                    text="You will need to Redo Rentry Import again after downloads complete. \n\n"
+                    "You may get missing mods panel, if there missing mods after download completes.",
+                )
+
+            if filtered_publishedfileids:
+                logger.info(
+                    f"Trying to download {len(filtered_publishedfileids)} mods using publishedfileid: {filtered_publishedfileids}"
+                )
+                current_instance = self.settings_controller.settings.current_instance
+                steam_client_integration = self.settings_controller.settings.instances[
+                    current_instance
+                ].steam_client_integration
+
+                if steam_client_integration:
+                    logger.info("Using Steamworks API to download mods")
+                    self._do_steamworks_api_call_animated(
+                        list(filtered_publishedfileids)
+                    )
+                    # Notify user to redo Rentry Import
+                    notify_user()
+                    # do not process and wait for download to finish
+                    return
+                else:
+                    logger.info("Checking if SteamCMD is set up")
+                    steamcmd_wrapper = self.steamcmd_wrapper
+
+                    if not steamcmd_wrapper.setup:
+                        # Setup SteamCMD if not already set up
+                        self._do_setup_steamcmd()
+                        if steamcmd_wrapper.setup:
+                            logger.info("Using SteamCMD to download mods")
+                            self._do_download_mods_with_steamcmd(
+                                filtered_publishedfileids
+                            )
+                            # Notify user to redo Rentry Import
+                            notify_user()
+                            # do not process and wait for download to finish
+                            return
+                    else:
+                        # SteamCMD is already set up, proceed with download
+                        self._do_download_mods_with_steamcmd(filtered_publishedfileids)
+                        # Notify user to redo Rentry Import
+                        notify_user()
+                        # do not process and wait for download to finish
+                        return
 
         # Log the attempt to import mods list from Rentry.co
         logger.info(
