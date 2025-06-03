@@ -165,6 +165,9 @@ class RentryImport:
         self.package_ids: list[
             str
         ] = []  # Initialize an empty list to store package IDs
+        self.publishedfileids: list[
+            str
+        ] = []  # Initialize an empty list for publishedfileids
         self.settings_controller = settings_controller
         # If user does not have an auth code, show a warning and do not proceed
         if settings_controller.settings.rentry_auth_code == "":
@@ -228,10 +231,13 @@ class RentryImport:
             if response.status_code == 200:
                 # Decode the content using UTF-8
                 page_content = response.content.decode("utf-8")
+                logger.debug(
+                    f"Fetched rentry.co content successfully. Content: {page_content}"
+                )
 
                 # Define regex pattern for both variations of 'packageid' and 'packageId'
-                pattern = r"(?i){packageid:\s*([\w.]+)\}|packageid:\s*([\w.]+)"
-                matches = re.findall(pattern, page_content)
+                packageid_pattern = r"(?i){packageid:\s*([\w.]+)\}|packageid:\s*([\w.]+)"
+                matches = re.findall(packageid_pattern, page_content)
                 # Find all matches in the content
                 self.package_ids = [
                     match[0] if match[0] else match[1]
@@ -241,6 +247,16 @@ class RentryImport:
                 logger.info("Parsed package_ids successfully.")
                 logger.debug(
                     f"Number of package_ids found: {str(len(self.package_ids))}"
+                )
+                # Define regex pattern for publishedfileid in format '?id=digits'
+                publishedfileid_pattern = r"\?id=(\d+)"
+                # Find all publishedfileid matches in the content
+                self.publishedfileids = re.findall(
+                    publishedfileid_pattern, page_content
+                )
+                logger.info("Parsed publishedfileid successfully.")
+                logger.debug(
+                    f"Number of publishedfileid found: {str(len(self.publishedfileids))}"
                 )
             else:
                 # Handle non-200 responses
