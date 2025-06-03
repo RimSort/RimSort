@@ -78,7 +78,6 @@ from app.utils.steam.webapi.wrapper import (
 from app.utils.system_info import SystemInfo
 from app.utils.todds.wrapper import ToddsInterface
 from app.utils.xml import json_to_xml_write
-from app.views.dialogue import show_information
 from app.views.mod_info_panel import ModInfo
 from app.views.mods_panel import ModListWidget, ModsPanel, ModsPanelSortKey
 from app.windows.missing_dependencies_dialog import MissingDependenciesDialog
@@ -2923,7 +2922,7 @@ class MainContent(QObject):
 
     def _on_extract_finished(self, success: bool, message: str) -> None:
         if success:
-            show_information(
+            dialogue.show_information(
                 title=self.tr("Extraction completed"),
                 text=self.tr("The ZIP file was successfully extracted!"),
                 information=message,
