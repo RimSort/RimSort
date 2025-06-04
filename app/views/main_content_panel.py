@@ -78,7 +78,6 @@ from app.utils.steam.webapi.wrapper import (
 from app.utils.system_info import SystemInfo
 from app.utils.todds.wrapper import ToddsInterface
 from app.utils.xml import json_to_xml_write
-from app.views.dialogue import show_information
 from app.views.mod_info_panel import ModInfo
 from app.views.mods_panel import ModListWidget, ModsPanel, ModsPanelSortKey
 from app.windows.missing_dependencies_dialog import MissingDependenciesDialog
@@ -1470,6 +1469,20 @@ class MainContent(QObject):
             logger.debug("USER ACTION: pressed cancel, passing")
 
     def _do_import_list_rentry(self) -> None:
+        """
+        Import a mod list from a Rentry.co link.
+
+        This method:
+        - Clears search and filter states on the mod lists.
+        - Prompts the user to enter a Rentry.co link and fetches package IDs and publishedfileids.
+        - Filters out publishedfileids that are already present locally.
+        - If there are any missing mods, user will be asked to choose download method.
+        - Use publishfieldid to download mods using Steamworks API or SteamCMD based on user selection.
+        - Generates UUIDs based on existing mods, calculates duplicates, and missing mods.
+        - Imports mods from package IDs if no downloads are needed.
+        - Inserts active and inactive mods into the mod lists using package IDs.
+        - If Prompts the user about duplicate or missing mods.
+        """
         # Create an instance of RentryImport
         rentry_import = RentryImport(self.settings_controller)
         # Exit if user cancels or no package IDs
@@ -1487,6 +1500,108 @@ class MainContent(QObject):
             self.mods_panel.data_source_filter_icons
         )
         self.mods_panel.signal_search_source_filter(list_type="Inactive")
+
+        if rentry_import.publishedfileids:
+            # Get set of publishedfileids already present locally
+            existing_publishedfileids = {
+                mod_data.get("publishedfileid")
+                for mod_data in self.metadata_manager.internal_local_metadata.values()
+                if mod_data.get("publishedfileid") is not None
+            }
+            # Filter out publishedfileids that already exist locally
+            filtered_publishedfileids = list(
+                {
+                    pfid
+                    for pfid in rentry_import.publishedfileids
+                    if pfid not in existing_publishedfileids
+                }
+            )
+
+            def notify_user() -> None:
+                """Notify user to redo Rentry Import after downloads complete."""
+                dialogue.show_information(
+                    title=self.tr("Important"),
+                    text=self.tr(
+                        "You will need to redo Rentry import again after downloads complete. "
+                        "If there missing mods after download completes, they will be shown inside the missing mods panel. "
+                        "If RimSort is still not able to download some mods, "
+                        "It's due to the mod data not being available in both Rentry link and steam database."
+                    ),
+                )
+
+            def dowmload_using_steamcmd() -> None:
+                logger.info("Checking if SteamCMD is set up")
+                steamcmd_wrapper = self.steamcmd_wrapper
+
+                if not steamcmd_wrapper.setup:
+                    # Setup SteamCMD if not already set up
+                    self._do_setup_steamcmd()
+                    if steamcmd_wrapper.setup:
+                        logger.info("Using SteamCMD to download mods")
+                        self._do_download_mods_with_steamcmd(filtered_publishedfileids)
+                        # Notify user to redo Rentry Import
+                        notify_user()
+                else:
+                    # SteamCMD is already set up, proceed with download
+                    self._do_download_mods_with_steamcmd(filtered_publishedfileids)
+                    # Notify user to redo Rentry Import
+                    notify_user()
+
+            def dowmload_using_steam() -> None:
+                current_instance = self.settings_controller.settings.current_instance
+                steam_client_integration = self.settings_controller.settings.instances[
+                    current_instance
+                ].steam_client_integration
+
+                if steam_client_integration:
+                    logger.info("Using Steamworks API to download mods")
+                    self._do_steamworks_api_call_animated(
+                        [
+                            "subscribe",
+                            [eval(str_pfid) for str_pfid in filtered_publishedfileids],
+                        ]
+                    )
+                    # Notify user to redo Rentry Import
+                    notify_user()
+                    # do not process and wait for download to finish
+                    return
+                else:
+                    # Steam Client Integration is not set up, proceed with download
+                    dialogue.show_warning(
+                        title=self.tr("Steam client integration not set up"),
+                        text=self.tr(
+                            "Steam client integration is not set up. Please set it up to download mods using Steam"
+                        ),
+                    )
+
+            if filtered_publishedfileids:
+                logger.info(
+                    f"Trying to download {len(filtered_publishedfileids)} mods using publishedfileid: {filtered_publishedfileids}"
+                )
+                # Ask user how to download mods
+                answer = dialogue.show_dialogue_conditional(
+                    title=self.tr("Download Rentry Mods"),
+                    text=self.tr("Please select a download method."),
+                    information=self.tr(
+                        "Select which method you want to use to download missing Rentry mods."
+                    ),
+                    button_text_override=[
+                        "Steam",
+                        "SteamCMD",
+                    ],
+                )
+                if answer == "Steam":
+                    # Download mods using Steamworks API
+                    dowmload_using_steam()
+                    # do not process and wait for download to finish
+                    return
+                if answer == "SteamCMD":
+                    # Download mods using SteamCMD
+                    dowmload_using_steamcmd()
+                    # do not process and wait for download to finish
+                    return
+                if answer == "Cancel":
+                    return
 
         # Log the attempt to import mods list from Rentry.co
         logger.info(
@@ -2807,7 +2922,7 @@ class MainContent(QObject):
 
     def _on_extract_finished(self, success: bool, message: str) -> None:
         if success:
-            show_information(
+            dialogue.show_information(
                 title=self.tr("Extraction completed"),
                 text=self.tr("The ZIP file was successfully extracted!"),
                 information=message,
