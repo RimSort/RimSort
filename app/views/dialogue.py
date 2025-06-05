@@ -105,7 +105,8 @@ def show_dialogue_input(
     text: str = "",
     parent: QWidget | None = None,
 ) -> Tuple[str, bool]:
-    return QInputDialog().getText(parent, title, label, text=text)  # type: ignore # Is okay to set parent to None
+    actual_parent = parent if parent is not None else QWidget()
+    return QInputDialog().getText(actual_parent, title, label, text=text)
 
 
 def show_dialogue_file(
