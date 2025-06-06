@@ -103,7 +103,7 @@ class MainContentController(QObject):
             self._on_do_upload_community_db_to_github
         )
 
-    @Slot(list)  # type: ignore #TODO : Fix type hinting
+    @Slot(list)
     def _on_check_updates_requested(self, repos_paths: List[Path]) -> None:
         """Schedule concurrent update checks for given repositories."""
         if not repos_paths:
@@ -121,7 +121,7 @@ class MainContentController(QObject):
         worker.signals.finished.connect(self._handle_check_updates_results)
         self.thread_pool.start(worker)
 
-    @Slot(object)  # type: ignore #TODO : Fix type hinting
+    @Slot(object)
     def _handle_check_updates_results(self, results: GitCheckResults) -> None:
         """Process results from GitCheckUpdatesWorker."""
         # Handle invalid paths
@@ -186,7 +186,7 @@ class MainContentController(QObject):
         worker.signals.finished.connect(self._handle_batch_update_results)
         self.thread_pool.start(worker)
 
-    @Slot(object)  # type: ignore #TODO : Fix type hinting
+    @Slot(object)
     def _handle_batch_update_results(self, results: GitBatchUpdateResults) -> None:
         """Process results from GitBatchUpdateWorker."""
         successful = results.successful
@@ -232,7 +232,7 @@ class MainContentController(QObject):
                 details=details_msg,
             ).exec()
 
-    @Slot(list)  # type: ignore #TODO : Fix type hinting
+    @Slot(list)
     def _on_push_requested(self, repos_paths: List[Path]) -> None:
         """Handle push request for multiple repositories."""
         if not repos_paths:
@@ -295,7 +295,7 @@ class MainContentController(QObject):
         worker.signals.finished.connect(self._handle_batch_push_results)
         self.thread_pool.start(worker)
 
-    @Slot(object)  # type: ignore #TODO : Fix type hinting
+    @Slot(object)
     def _handle_batch_push_results(self, results: GitBatchPushResults) -> None:
         """Process results from GitBatchPushWorker."""
         successful = results.successful
@@ -341,7 +341,7 @@ class MainContentController(QObject):
                 details=details_msg,
             ).exec()
 
-    @Slot(str, str)  # type: ignore #TODO : Fix type hinting
+    @Slot(str, str)
     def _do_git_clone(self, base_path: str, repo_url: str) -> None:
         """Handle clone request: if exists, prompt overwrite or pull, else start clone."""
         repo_folder = git_utils.git_get_repo_name(repo_url)
@@ -399,11 +399,11 @@ class MainContentController(QObject):
         logger.info(f"Starting git clone worker for: {repo_url}")
         self._git_clone_worker.start()
 
-    @Slot(str)  # type: ignore #TODO : Fix type hinting
+    @Slot(str)
     def _on_git_clone_progress(self, message: str) -> None:
         logger.debug(f"Git clone progress: {message}")
 
-    @Slot(bool, str, str)  # type: ignore #TODO : Fix type hinting
+    @Slot(bool, str, str)
     def _on_git_clone_finished(self, success: bool, message: str, path: str) -> None:
         logger.info(
             f"Git clone finished: success={success}, message={message}, path={path}"
@@ -423,7 +423,7 @@ class MainContentController(QObject):
                 pass
             self._git_clone_worker = None
 
-    @Slot(str)  # type: ignore #TODO : Fix type hinting
+    @Slot(str)
     def _on_git_clone_error(self, error_message: str) -> None:
         logger.error(f"Git clone error: {error_message}")
         InformationBox(
@@ -456,7 +456,7 @@ class MainContentController(QObject):
         else:
             logger.debug("Cancelled git install mod.")
 
-    @Slot(str, str)  # type: ignore #TODO : Fix type hinting
+    @Slot(str, str)
     def _do_upload_db_to_repo(self, repo_url: str, file_name: str) -> None:
         """
         Modern implementation of database upload to repository using git_utils and workers.
