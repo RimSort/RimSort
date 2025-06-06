@@ -24,6 +24,7 @@ from app.controllers.instance_controller import (
     InstanceController,
     InvalidArchivePathError,
 )
+from app.controllers.main_content_controller import MainContentController
 from app.controllers.menu_bar_controller import MenuBarController
 from app.controllers.mods_panel_controller import ModsPanelController
 from app.controllers.settings_controller import SettingsController
@@ -207,6 +208,12 @@ class MainWindow(QMainWindow):
             settings_controller=self.settings_controller,
             mods_panel_controller=self.mods_panel_controller,
         )
+
+        self.main_content_controller = MainContentController(
+            view=self.main_content_panel,
+            settings_controller=self.settings_controller,
+        )
+
         # Connect Instances Menu Bar signals
         EventBus().do_activate_current_instance.connect(self.__switch_to_instance)
         EventBus().do_backup_existing_instance.connect(self.__backup_existing_instance)
