@@ -588,7 +588,7 @@ class SettingsController(QObject):
                 True
             )
         self.settings_dialog.use_this_instead_db_local_file.setText(
-            self.settings.external_use_this_instead_file_path
+            self.settings.external_use_this_instead_folder_path
         )
         self.settings_dialog.use_this_instead_db_local_file.setCursorPosition(0)
         self.settings_dialog.use_this_instead_db_github_url.setText(
@@ -810,7 +810,7 @@ class SettingsController(QObject):
             self.settings.external_use_this_instead_metadata_source = (
                 "Configured git repository"
             )
-        self.settings.external_use_this_instead_file_path = (
+        self.settings.external_use_this_instead_folder_path = (
             self.settings_dialog.use_this_instead_db_local_file.text()
         )
         self.settings.external_use_this_instead_repo_path = (
