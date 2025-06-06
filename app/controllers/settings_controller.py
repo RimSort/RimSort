@@ -1538,7 +1538,7 @@ class SettingsController(QObject):
         Open a file dialog to select the "Use This Instead" folder and handle the result.
         """
         use_this_instead_db_location = show_dialogue_file(
-            mode="open",
+            mode="open_dir",
             caption='Select "Use This Instead" Folder',
             _dir=str(self._last_file_dialog_path),
         )

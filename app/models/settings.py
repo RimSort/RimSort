@@ -57,7 +57,7 @@ class Settings(QObject):
 
         self.external_use_this_instead_metadata_source: str = "None"
         self.external_use_this_instead_file_path: str = str(
-            AppInfo().app_storage_folder / "UseThisInstead"
+            AppInfo().app_storage_folder / "UseThisInstead" / "Replacements"
         )
         self.external_use_this_instead_repo_path: str = (
             "https://github.com/emipa606/UseThisInstead"
