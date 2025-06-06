@@ -1,4 +1,6 @@
+lxml-stubs
 mypy
+networkx-stubs
 pytest
 pytest-qt
 ruff

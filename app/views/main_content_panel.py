@@ -153,29 +153,11 @@ class MainContent(QObject):
                 self._do_export_list_clipboard
             )
             EventBus().do_export_mod_list_to_rentry.connect(self._do_upload_list_rentry)
-            EventBus().do_upload_community_rules_db_to_github.connect(
-                self._on_do_upload_community_db_to_github
-            )
-            EventBus().do_download_community_rules_db_from_github.connect(
-                self._on_do_download_community_db_from_github
-            )
-            EventBus().do_upload_steam_workshop_db_to_github.connect(
-                self._on_do_upload_steam_workshop_db_to_github
-            )
-            EventBus().do_download_steam_workshop_db_from_github.connect(
-                self._on_do_download_steam_workshop_db_from_github
-            )
             EventBus().do_upload_no_version_warning_db_to_github.connect(
                 self._on_do_upload_no_version_warning_db_to_github
             )
-            EventBus().do_download_no_version_warning_db_from_github.connect(
-                self._on_do_download_no_version_warning_db_from_github
-            )
             EventBus().do_upload_use_this_instead_db_to_github.connect(
                 self._on_do_upload_use_this_instead_db_to_github
-            )
-            EventBus().do_download_use_this_instead_db_from_github.connect(
-                self._on_do_download_use_this_instead_db_from_github
             )
             EventBus().do_upload_rimsort_log.connect(self._on_do_upload_rimsort_log)
             EventBus().do_upload_rimsort_old_log.connect(
@@ -250,7 +232,6 @@ class MainContent(QObject):
             )
 
             # Download Menu bar Eventbus
-            EventBus().do_add_git_mod.connect(self._do_add_git_mod)
             EventBus().do_add_zip_mod.connect(self._do_add_zip_mod)
             EventBus().do_browse_workshop.connect(self._do_browse_workshop)
             EventBus().do_check_for_workshop_updates.connect(
@@ -329,12 +310,6 @@ class MainContent(QObject):
             )
             self.mods_panel.inactive_mods_list.edit_rules_signal.connect(
                 self._do_open_rule_editor
-            )
-            self.mods_panel.active_mods_list.update_git_mods_signal.connect(
-                self._check_git_repos_for_update
-            )
-            self.mods_panel.inactive_mods_list.update_git_mods_signal.connect(
-                self._check_git_repos_for_update
             )
             self.mods_panel.active_mods_list.steamcmd_downloader_signal.connect(
                 self._do_download_mods_with_steamcmd
@@ -731,8 +706,6 @@ class MainContent(QObject):
                 self._do_optimize_textures(todds_txt_path)
             if action == "delete_textures":
                 self._do_delete_dds_textures(todds_txt_path)
-        if action == "add_git_mod":
-            self._do_add_git_mod()
         if action == "browse_workshop":
             self._do_browse_workshop()
         if action == "import_steamcmd_acf_data":
@@ -2447,27 +2420,6 @@ class MainContent(QObject):
 
     # GIT MOD ACTIONS
 
-    def _do_add_git_mod(self) -> None:
-        """
-        Opens a QDialogInput that allows the user to edit the run args
-        that are configured to be passed to the Rimworld executable
-        """
-        args, ok = dialogue.show_dialogue_input(
-            title=self.tr("Enter git repo"),
-            label=self.tr(
-                "Enter a git repository url (http/https) to clone to local mods:"
-            ),
-        )
-        if ok:
-            self._do_clone_repo_to_path(
-                base_path=self.settings_controller.settings.instances[
-                    self.settings_controller.settings.current_instance
-                ].local_folder,
-                repo_url=args,
-            )
-        else:
-            logger.debug("Cancelling operation.")
-
     def _do_add_zip_mod(self) -> None:
         """
         Opens a QDialogInput that allows the user to select a ZIP file to add to the local mods directory.
@@ -3862,28 +3814,10 @@ class MainContent(QObject):
         )
 
     @Slot()
-    def _on_do_download_community_db_from_github(self) -> None:
-        if GIT_EXISTS:
-            self._do_clone_repo_to_path(
-                base_path=str(AppInfo().databases_folder),
-                repo_url=self.settings_controller.settings.external_community_rules_repo,
-            )
-        else:
-            self._do_notify_no_git()
-
-    @Slot()
     def _on_do_upload_steam_workshop_db_to_github(self) -> None:
         self._do_upload_db_to_repo(
             repo_url=self.settings_controller.settings.external_steam_metadata_repo,
             file_name="steamDB.json",
-        )
-
-    @Slot()
-    def _on_do_download_steam_workshop_db_from_github(self) -> None:
-        logger.warning("HIT AT ALL")
-        self._do_clone_repo_to_path(
-            base_path=str(AppInfo().databases_folder),
-            repo_url=self.settings_controller.settings.external_steam_metadata_repo,
         )
 
     @Slot()
@@ -3896,31 +3830,11 @@ class MainContent(QObject):
         )
 
     @Slot()
-    def _on_do_download_no_version_warning_db_from_github(self) -> None:
-        if GIT_EXISTS:
-            self._do_clone_repo_to_path(
-                base_path=str(AppInfo().databases_folder),
-                repo_url=self.settings_controller.settings.external_no_version_warning_repo_path,
-            )
-        else:
-            self._do_notify_no_git()
-
-    @Slot()
     def _on_do_upload_use_this_instead_db_to_github(self) -> None:
         self._do_upload_db_to_repo(
             repo_url=self.settings_controller.settings.external_use_this_instead_repo_path,
             file_name="*",
         )
-
-    @Slot()
-    def _on_do_download_use_this_instead_db_from_github(self) -> None:
-        if GIT_EXISTS:
-            self._do_clone_repo_to_path(
-                base_path=str(AppInfo().databases_folder),
-                repo_url=self.settings_controller.settings.external_use_this_instead_repo_path,
-            )
-        else:
-            self._do_notify_no_git()
 
     @Slot()
     def _on_do_upload_log(self) -> None:
