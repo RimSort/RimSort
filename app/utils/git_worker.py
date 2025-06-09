@@ -199,6 +199,7 @@ class GitCloneWorker(BaseGitWorker):
 
     def run(self) -> None:
         """Execute the git clone operation in background"""
+        repo: Optional[Any] = None  # Initialize repo to None
         try:
             logger.info(
                 f"Starting git clone in thread: {self.repo_url} to {self.repo_path}"
@@ -219,13 +220,20 @@ class GitCloneWorker(BaseGitWorker):
                     f"Repository cloned successfully to: {self.repo_path}"
                 )
 
-                if repo is not None:
-                    git_utils.git_cleanup(repo)
             else:
                 self.emit_error(f"Clone failed: {result}")
 
         except Exception as e:
             self.handle_exception("clone", e)
+        finally:
+            if repo is not None:
+                git_utils.git_cleanup(repo)
+                try:
+                    import gc
+
+                    gc.collect()
+                except Exception:
+                    pass
 
 
 class GitPushWorker(BaseGitWorker):
