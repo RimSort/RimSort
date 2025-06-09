@@ -214,13 +214,13 @@ class GitCloneWorker(BaseGitWorker):
                 config=self.config,
             )
 
-            if repo is not None:
-                git_utils.git_cleanup(repo)
-
             if result.is_successful():
                 self.emit_success(
                     f"Repository cloned successfully to: {self.repo_path}"
                 )
+
+                if repo is not None:
+                    git_utils.git_cleanup(repo)
             else:
                 self.emit_error(f"Clone failed: {result}")
 
