@@ -197,10 +197,12 @@ class MainContentController(QObject):
             InformationBox(
                 title=self.tr("Updates Completed"),
                 text=self.tr("All repositories updated successfully!"),
-                information=self.tr("{count} repositories were updated.").format(
-                    count=len(successful)
+                information=self.tr(
+                    "{count} repositories were updated:<br/>{repos}"
+                ).format(
+                    count=len(successful),
+                    repos="<br/>".join([Path(p).name for p in successful]),
                 ),
-                details="\n".join([Path(p).name for p in successful]),
             ).exec()
         elif not successful:
             details_msg = ""
@@ -208,7 +210,7 @@ class MainContentController(QObject):
                 details_msg += f"{Path(repo_path).name}: {err}\n"
 
             InformationBox(
-                title=self.tr("Update Failed"),
+                title=self.tr("Failed to update repo!"),
                 text=self.tr("All pull operations failed."),
                 information=self.tr(
                     "{count} repositories could not be updated."
@@ -360,7 +362,6 @@ class MainContentController(QObject):
                     + "<br/>2) Update existing repository (in-place force-update)"
                 ).format(repo_folder=full_repo_path.name),
                 button_text_override=[self.tr("Clone new"), self.tr("Update existing")],
-                details=str(full_repo_path),
             )
             if answer == self.tr("Clone new"):
                 self._start_git_clone_worker(repo_url, str(full_repo_path), force=True)
