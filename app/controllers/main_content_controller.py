@@ -345,9 +345,23 @@ class MainContentController(QObject):
 
     @Slot(str, str)
     def _do_git_clone(self, base_path: str, repo_url: str) -> None:
-        """Handle clone request: if exists, prompt overwrite or pull, else start clone."""
+        """Handle clone request: ask user before starting."""
         repo_folder = git_utils.git_get_repo_name(repo_url)
         full_repo_path = Path(base_path) / repo_folder
+
+        # Always ask user before starting clone
+        binary_diag = BinaryChoiceDialog(
+            title=self.tr("Clone Repository"),
+            text=self.tr("Do you want to clone this repository?"),
+            information=self.tr("Repository: {repo_url}\nDestination: {dest}").format(
+                repo_url=repo_url, dest=str(full_repo_path)
+            ),
+            positive_text=self.tr("Clone"),
+            negative_text=self.tr("Cancel"),
+        )
+        if not binary_diag.exec_is_positive():
+            logger.debug("User cancelled clone operation.")
+            return
 
         if full_repo_path.exists():
             answer = show_dialogue_conditional(
