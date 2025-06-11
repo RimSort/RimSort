@@ -3241,36 +3241,6 @@ class MainContent(QObject):
         )
 
     @Slot()
-    def _on_do_upload_community_db_to_github(self) -> None:
-        self._do_upload_db_to_repo(
-            repo_url=self.settings_controller.settings.external_community_rules_repo,
-            file_name="communityRules.json",
-        )
-
-    @Slot()
-    def _on_do_upload_steam_workshop_db_to_github(self) -> None:
-        self._do_upload_db_to_repo(
-            repo_url=self.settings_controller.settings.external_steam_metadata_repo,
-            file_name="steamDB.json",
-        )
-
-    @Slot()
-    def _on_do_upload_no_version_warning_db_to_github(self) -> None:
-        self._do_upload_db_to_repo(
-            repo_url=self.settings_controller.settings.external_no_version_warning_repo_path,
-            file_name=str(
-                Path(f"{self.metadata_manager.game_version[:3]}/ModIdsToFix.xml")
-            ),
-        )
-
-    @Slot()
-    def _on_do_upload_use_this_instead_db_to_github(self) -> None:
-        self._do_upload_db_to_repo(
-            repo_url=self.settings_controller.settings.external_use_this_instead_repo_path,
-            file_name="*",
-        )
-
-    @Slot()
     def _on_do_upload_log(self) -> None:
         self._upload_log(AppInfo().user_log_folder / (AppInfo().app_name + ".log"))
 
