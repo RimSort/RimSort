@@ -2560,12 +2560,6 @@ class MainContent(QObject):
             logger.debug("USER ACTION: cancelled input!")
             return
 
-    def _do_cleanup_gitpython(self, repo: "Repo") -> None:
-        # Cleanup GitPython
-        collect()
-        repo.git.clear_cache()
-        del repo
-
     def _do_extract_zip_to_path(
         self, base_path: str, file_path: str, delete: bool = False
     ) -> None:
