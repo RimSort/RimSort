@@ -730,50 +730,16 @@ class MainContent(QObject):
         if action == "save":
             self._do_save()
         # settings panel actions
-        if action == "configure_github_identity":
-            self._do_configure_github_identity()
         if action == "configure_steam_database_path":
             self._do_configure_steam_db_file_path()
         if action == "configure_steam_database_repo":
             self._do_configure_steam_database_repo()
-        if action == "download_steam_database":
-            if GIT_EXISTS:
-                self._do_clone_repo_to_path(
-                    base_path=str(AppInfo().databases_folder),
-                    repo_url=self.settings_controller.settings.external_steam_metadata_repo,
-                )
-            else:
-                self._do_notify_no_git()
-        if action == "upload_steam_database":
-            if GIT_EXISTS:
-                self._do_upload_db_to_repo(
-                    repo_url=self.settings_controller.settings.external_steam_metadata_repo,
-                    file_name="steamDB.json",
-                )
-            else:
-                self._do_notify_no_git()
         if action == "configure_community_rules_db_path":
             self._do_configure_community_rules_db_file_path()
         if action == "configure_community_rules_db_repo":
             self._do_configure_community_rules_db_repo()
-        if action == "download_community_rules_database":
-            if GIT_EXISTS:
-                self._do_clone_repo_to_path(
-                    base_path=str(AppInfo().databases_folder),
-                    repo_url=self.settings_controller.settings.external_community_rules_repo,
-                )
-            else:
-                self._do_notify_no_git()
         if action == "open_community_rules_with_rule_editor":
             self._do_open_rule_editor(compact=False, initial_mode="community_rules")
-        if action == "upload_community_rules_database":
-            if GIT_EXISTS:
-                self._do_upload_db_to_repo(
-                    repo_url=self.settings_controller.settings.external_community_rules_repo,
-                    file_name="communityRules.json",
-                )
-            else:
-                self._do_notify_no_git()
         if action == "build_steam_database_thread":
             self._do_build_database_thread()
         if "download_entire_workshop" in action:
