@@ -153,12 +153,6 @@ class MainContent(QObject):
                 self._do_export_list_clipboard
             )
             EventBus().do_export_mod_list_to_rentry.connect(self._do_upload_list_rentry)
-            EventBus().do_upload_no_version_warning_db_to_github.connect(
-                self._on_do_upload_no_version_warning_db_to_github
-            )
-            EventBus().do_upload_use_this_instead_db_to_github.connect(
-                self._on_do_upload_use_this_instead_db_to_github
-            )
             EventBus().do_upload_rimsort_log.connect(self._on_do_upload_rimsort_log)
             EventBus().do_upload_rimsort_old_log.connect(
                 self._on_do_upload_rimsort_old_log
