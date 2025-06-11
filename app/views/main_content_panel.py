@@ -2529,37 +2529,6 @@ class MainContent(QObject):
                 ),
             )
 
-    # EXTERNAL METADATA ACTIONS
-
-    def _do_configure_github_identity(self) -> None:
-        """
-        Opens a QDialogInput that allows user to edit their Github token
-        This token is used for DB repo related actions, as well as any
-        "Github mod" related actions
-        """
-        args, ok = dialogue.show_dialogue_input(
-            title=self.tr("Edit username"),
-            label=self.tr("Enter your Github username:"),
-            text=self.settings_controller.settings.github_username,
-        )
-        if ok:
-            self.settings_controller.settings.github_username = args
-            self.settings_controller.settings.save()
-        else:
-            logger.debug("USER ACTION: cancelled input!")
-            return
-        args, ok = dialogue.show_dialogue_input(
-            title=self.tr("Edit token"),
-            label=self.tr("Enter your Github personal access token here (ghp_*):"),
-            text=self.settings_controller.settings.github_token,
-        )
-        if ok:
-            self.settings_controller.settings.github_token = args
-            self.settings_controller.settings.save()
-        else:
-            logger.debug("USER ACTION: cancelled input!")
-            return
-
     def _do_extract_zip_to_path(
         self, base_path: str, file_path: str, delete: bool = False
     ) -> None:
