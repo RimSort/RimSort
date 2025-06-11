@@ -68,6 +68,10 @@ class MainWindow(QMainWindow):
 
         self.settings_controller = settings_controller
 
+        from app.startup.migration_startup import check_and_run_migration
+
+        check_and_run_migration(settings_controller)
+
         # Create the main application window
         self.DEBUG_MODE = debug_mode
         # SteamCMDInterface

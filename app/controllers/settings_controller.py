@@ -259,7 +259,27 @@ class SettingsController(QObject):
         # Connect signals from dialogs
         EventBus().reset_settings_file.connect(self._do_reset_settings_file)
 
+        from app.controllers.secure_settings_controller import SecureSettingsController
+
+        self.secure_settings_controller = SecureSettingsController(
+            self.settings, self.settings_dialog.security_widget
+        )
+
+        # Connect secure settings signals
+        self.secure_settings_controller.secrets_cleared.connect(
+            self._on_secrets_cleared
+        )
+
         self._load_settings()
+
+    @Slot()
+    def _on_secrets_cleared(self) -> None:
+        """Handle when secrets are cleared from secure storage."""
+        # Update the view to reflect cleared secrets
+        self._update_view_from_model()
+
+        # Optionally show a notification
+        logger.info("All secrets have been cleared from secure storage")
 
     def _load_settings(self) -> None:
         logger.info("Attempting to load settings from settings file")
