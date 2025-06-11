@@ -1,4 +1,3 @@
-import datetime
 import json
 import os
 import platform
@@ -11,18 +10,16 @@ import traceback
 import webbrowser
 import zipfile
 from functools import partial
-from gc import collect
 from io import BytesIO
 from math import ceil
 from multiprocessing import Pool, cpu_count
 from pathlib import Path
 from tempfile import gettempdir
-from typing import TYPE_CHECKING, Any, Callable, Self
+from typing import Any, Callable, Self
 from urllib.parse import urlparse
 from zipfile import ZipFile
 
 import requests
-from github import Github
 from loguru import logger
 from PySide6.QtCore import (
     QEventLoop,
@@ -51,12 +48,8 @@ from app.models.animations import LoadingAnimation
 from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 from app.utils.generic import (
-    check_valid_http_git_url,
     chunks,
     copy_to_clipboard_safely,
-    delete_files_except_extension,
-    extract_git_dir_name,
-    extract_git_user_or_org,
     launch_game_process,
     open_url_browser,
     platform_specific_open,
@@ -86,22 +79,6 @@ from app.windows.rule_editor_panel import RuleEditor
 from app.windows.runner_panel import RunnerPanel
 from app.windows.use_this_instead_panel import UseThisInsteadPanel
 from app.windows.workshop_mod_updater_panel import ModUpdaterPrompt
-
-# GitPython depends on git executable being available in PATH
-try:
-    from git import Repo
-    from git.exc import GitCommandError
-
-    GIT_EXISTS = True
-except ImportError:
-    logger.warning(
-        "git not detected in your PATH! Do you have git installed...? git integration will be disabled! You may need to restart the app if you installed it."
-    )
-    GIT_EXISTS = False
-    # Using TYPE_CHECKING to avoid unbound issues when git is not available
-    if TYPE_CHECKING:
-        from git import Repo
-        from git.exc import GitCommandError
 
 
 class MainContent(QObject):
