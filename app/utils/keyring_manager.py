@@ -43,7 +43,16 @@ class KeyringManager:
                 # Test if keyring is working by getting the backend
 
                 backend = keyring.get_keyring()
-                logger.info(f"Using keyring backend: {backend.__class__.__name__}")
+                logger.warning(f"Using keyring backend: {backend.__class__.__name__}")
+                logger.warning("Keyring backend:", keyring.get_keyring())
+                logger.warning(f"Backend type: {type(backend)}")
+                try:
+                    keyring.set_password("test_service", "test_user", "test_password")
+                    logger.warning("Set password succeeded")
+                    pw = keyring.get_password("test_service", "test_user")
+                    logger.warning(f"Got password: {pw}")
+                except Exception as e:
+                    logger.warning(f"Keyring operation failed: {e}")
             except Exception as e:
                 logger.warning(f"Keyring backend not working: {e}")
                 self._available = False
