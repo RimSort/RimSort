@@ -77,16 +77,13 @@ class KeyringManager:
             True if successfully stored, False otherwise
         """
         if not self._available:
-            logger.debug(f"Keyring not available, cannot store {secret_type}")
             return False
 
         try:
             service_name = f"{self.SERVICE_NAME}_{secret_type}"
             keyring.set_password(service_name, username, secret)
-            logger.debug(f"Successfully stored {secret_type} for {username}")
             return True
-        except Exception as e:
-            logger.error(f"Failed to store {secret_type} for {username}: {e}")
+        except Exception:
             return False
 
     def get_secret(self, secret_type: str, username: str) -> Optional[str]:
@@ -101,19 +98,13 @@ class KeyringManager:
             The secret value if found, None otherwise
         """
         if not self._available:
-            logger.debug(f"Keyring not available, cannot retrieve {secret_type}")
             return None
 
         try:
             service_name = f"{self.SERVICE_NAME}_{secret_type}"
             secret = keyring.get_password(service_name, username)
-            if secret:
-                logger.debug(f"Successfully retrieved {secret_type} for {username}")
-            else:
-                logger.debug(f"No {secret_type} found for {username}")
             return secret
-        except Exception as e:
-            logger.error(f"Failed to retrieve {secret_type} for {username}: {e}")
+        except Exception:
             return None
 
     def delete_secret(self, secret_type: str, username: str) -> bool:
@@ -128,16 +119,13 @@ class KeyringManager:
             True if successfully deleted, False otherwise
         """
         if not self._available:
-            logger.debug(f"Keyring not available, cannot delete {secret_type}")
             return False
 
         try:
             service_name = f"{self.SERVICE_NAME}_{secret_type}"
             keyring.delete_password(service_name, username)
-            logger.debug(f"Successfully deleted {secret_type} for {username}")
             return True
-        except Exception as e:
-            logger.error(f"Failed to delete {secret_type} for {username}: {e}")
+        except Exception:
             return False
 
     def migrate_from_plaintext(
@@ -158,9 +146,6 @@ class KeyringManager:
             return False
 
         if self.store_secret(secret_type, username, plaintext_value):
-            logger.info(
-                f"Successfully migrated {secret_type} for {username} to keyring"
-            )
             return True
         return False
 
