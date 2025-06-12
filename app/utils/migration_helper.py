@@ -120,7 +120,6 @@ class MigrationHelper:
         for secret in secrets_to_remove:
             if secret in data:
                 del data[secret]
-                logger.debug(f"Removed {secret} from plaintext settings")
 
     def rollback_migration(self) -> bool:
         """
