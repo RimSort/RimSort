@@ -65,3 +65,13 @@
         macos_bundle: "yes"
         macos_bundle_as_onefile: "no"
         when: "macos"
+
+- module-name: "keyring"
+  implicit-imports:
+    depends:
+      - "keyring.backends.Windows"
+      - "keyring.backends.macOS"
+      - "keyring.backends.SecretService"
+      - "keyring.backends.kwallet"
+      - "pywin32"
+  when: "any"
