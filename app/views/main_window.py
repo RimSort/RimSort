@@ -48,6 +48,7 @@ from app.views.dialogue import (
 from app.views.file_search_dialog import FileSearchDialog
 from app.views.main_content_panel import MainContent
 from app.views.menu_bar import MenuBar
+from app.views.rimworld_log_reader import RimWorldLogReader
 from app.views.status_panel import Status
 from app.views.troubleshooting_dialog import TroubleshootingDialog
 
@@ -157,6 +158,16 @@ class MainWindow(QMainWindow):
         self.acf_log_reader_layout.addWidget(self.acf_log_reader)
 
         self.tab_widget.addTab(self.acf_log_reader_tab, self.tr("ACF Log Reader"))
+
+        # Create and add the RimWorld Log tab
+        self.rimworld_log_tab = QWidget()
+        self.rimworld_log_layout = QVBoxLayout()
+        self.rimworld_log_tab.setLayout(self.rimworld_log_layout)
+
+        self.rimworld_log_reader = RimWorldLogReader()
+        self.rimworld_log_layout.addWidget(self.rimworld_log_reader)
+
+        self.tab_widget.addTab(self.rimworld_log_tab, self.tr("RimWorld Log"))
 
         # Create and add the Search tab
         self.file_search_tab = QWidget()
