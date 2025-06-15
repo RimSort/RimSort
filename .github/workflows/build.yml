@@ -152,6 +152,10 @@ jobs:
           script-name: app/__main__.py
           mode: ${{ runner.os == 'macos' && 'app' || 'standalone' }}
           static-libpython: auto
+          enable-plugins: "pyside6"
+          include-package-data: |
+              certifi
+              requests
           product-version: >-
             ${{ steps.sem_version.outputs.major }}.
             ${{ steps.sem_version.outputs.minor }}.
