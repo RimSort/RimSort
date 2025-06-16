@@ -2272,6 +2272,7 @@ class ModsPanel(QWidget):
                 self.tr("PackageId"),
                 self.tr("Author(s)"),
                 self.tr("PublishedFileId"),
+                self.tr("Version"),
             ]
         )
         # Active mods search layouts
@@ -2415,6 +2416,7 @@ class ModsPanel(QWidget):
                 self.tr("PackageId"),
                 self.tr("Author(s)"),
                 self.tr("PublishedFileId"),
+                self.tr("Version"),
             ]
         )
         self.inactive_mods_search_layout.addWidget(
@@ -2708,6 +2710,8 @@ class ModsPanel(QWidget):
             search_filter = "authors"
         elif _filter.currentText() == self.tr("PublishedFileId"):
             search_filter = "publishedfileid"
+        elif _filter.currentText() == self.tr("Version"):
+            search_filter = "version"
         # Filter the list using any search and filter state
         for uuid in uuids:
             item = (
@@ -2735,7 +2739,15 @@ class ModsPanel(QWidget):
             # Check if the item is filtered
             item_filtered = item_data["filtered"]
             # Check if the item should be filtered or not based on search filter
-            if (
+            if search_filter == "version" and pattern:
+                versions = metadata.get("supportedversions", {}).get("li", [])
+                if isinstance(versions, str):
+                    versions = [versions]
+                if not versions or not any(
+                    pattern.lower() in v.lower() for v in versions
+                ):
+                    item_filtered = True
+            elif (
                 pattern
                 and metadata.get(search_filter)
                 and pattern.lower() not in str(metadata.get(search_filter)).lower()
