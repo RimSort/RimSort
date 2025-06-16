@@ -16,7 +16,6 @@ from pyperclip import (  # type: ignore # Stubs don't exist for pyperclip
     copy as copy_to_clipboard,
 )
 from PySide6.QtCore import QCoreApplication
-from requests import post as requests_post
 
 import app.views.dialogue as dialogue
 
@@ -383,7 +382,7 @@ def upload_data_to_0x0_st(path: str) -> tuple[bool, str]:
     """
     logger.info(f"Uploading data to http://0x0.st/: {path}")
     try:
-        request = requests_post(
+        request = requests.post(
             url="http://0x0.st/", files={"file": (path, open(path, "rb"))}
         )
     except requests.exceptions.ConnectionError as e:
