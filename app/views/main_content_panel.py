@@ -1214,8 +1214,8 @@ class MainContent(QObject):
                 self.metadata_manager.internal_local_metadata[uuid]["packageid"]
             )
 
-        # Get the current order of active mods list
-        current_order = list(active_mods)
+        # Get the current order of active mods list and create a copy for comparison
+        current_order = active_mods
         try:
             sorter = Sorter(
                 self.settings_controller.settings.sorting_algorithm,
@@ -1241,12 +1241,10 @@ class MainContent(QObject):
 
         success, new_order = sorter.sort()
 
-        # Check if the order has changed
-        if success and new_order == current_order:
-            logger.info(
-                "The order of mods in List has not changed. Skipping insertion."
-            )
-        elif success:
+        # Log the sort result and the order
+        logger.debug(f"Sort result: {success}, new order: {new_order}, current order: {current_order}")
+        # Check if successful and orders differ
+        if success and new_order != current_order:
             logger.info(
                 "Finished combining all tiers of mods. Inserting into mod lists!"
             )
@@ -1263,6 +1261,11 @@ class MainContent(QObject):
             )
             # Enable widgets again after inserting
             self.disable_enable_widgets_signal.emit(True)
+            logger.info("Insertion finished!")
+        elif success and new_order == current_order:
+            logger.info(
+                "Sort completed, but the order of mods has not changed. No insertion needed."
+            )
         elif not success:
             logger.warning("Failed to sort mods. Skipping insertion.")
         else:
