@@ -3216,14 +3216,20 @@ class MainContent(QObject):
         # If integration is enabled, check for file called "steam_appid.txt" in game folder.
         # in the game folder. If not, create one and add the Steam App ID to it.
         # The Steam App ID is "294100" for RimWorld.
-        steam_appid_file_exists = os.path.exists(game_install_path / "steam_appid.txt")
-        if steam_client_integration and not steam_appid_file_exists:
+        steam_appid_path = (
+            # Checks if the platform is darwin(macOS) and moves us up one directory to get out of the app bundle.
+            game_install_path.parent / "steam_appid.txt"
+            if sys.platform == "darwin"
+            # Else we go directly to the game install path.
+            else game_install_path / "steam_appid.txt"
+        )
+        if steam_client_integration and not steam_appid_path.exists():
             with open(
-                game_install_path / "steam_appid.txt", "w", encoding="utf-8"
+                steam_appid_path, "w", encoding="utf-8"
             ) as f:
                 f.write("294100")
-        elif not steam_client_integration and steam_appid_file_exists:
-            os.remove(game_install_path / "steam_appid.txt")
+        elif not steam_client_integration and steam_appid_path.exists():
+            os.remove(steam_appid_path)
 
         # Launch independent game process without Steamworks API
         launch_game_process(game_install_path=game_install_path, args=run_args)
