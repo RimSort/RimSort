@@ -3229,7 +3229,7 @@ class MainContent(QObject):
             ) as f:
                 f.write("294100")
         elif not steam_client_integration and steam_appid_path.exists():
-            os.remove(steam_appid_path)
+            steam_appid_path.unlink()
 
         # Launch independent game process without Steamworks API
         launch_game_process(game_install_path=game_install_path, args=run_args)
