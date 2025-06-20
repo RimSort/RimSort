@@ -237,6 +237,65 @@ class MainWindow(QMainWindow):
         # Call the original showEvent handler
         super().showEvent(event)
 
+    def _update_databases_on_startup_if_enabled_silent(self) -> None:
+        """
+        Silently update databases on startup if enabled.
+        Directly calls MainContentController methods instead of emitting signals.
+        """
+        if not self.settings_controller.settings.update_databases_on_startup:
+            logger.info("Update databases on startup is disabled.")
+            return
+
+        from app.utils.app_info import AppInfo
+
+        # Community Rules database
+        if (
+            self.settings_controller.settings.external_community_rules_metadata_source
+            == "Configured git repository"
+            and self.settings_controller.settings.external_community_rules_repo
+        ):
+            logger.info("Auto-updating Community Rules database from GitHub.")
+            self.main_content_controller._do_auto_database_update(
+                str(AppInfo().databases_folder),
+                self.settings_controller.settings.external_community_rules_repo,
+            )
+
+        # Steam Workshop database
+        if (
+            self.settings_controller.settings.external_steam_metadata_source
+            == "Configured git repository"
+            and self.settings_controller.settings.external_steam_metadata_repo
+        ):
+            logger.info("Auto-updating Steam Workshop database from GitHub.")
+            self.main_content_controller._do_auto_database_update(
+                str(AppInfo().databases_folder),
+                self.settings_controller.settings.external_steam_metadata_repo,
+            )
+
+        # No Version Warning database
+        if (
+            self.settings_controller.settings.external_no_version_warning_metadata_source
+            == "Configured git repository"
+            and self.settings_controller.settings.external_no_version_warning_repo_path
+        ):
+            logger.info('Auto-updating "No Version Warning" database from GitHub.')
+            self.main_content_controller._do_auto_database_update(
+                str(AppInfo().databases_folder),
+                self.settings_controller.settings.external_no_version_warning_repo_path,
+            )
+
+        # Use This Instead database (Cross Version Databases)
+        if (
+            self.settings_controller.settings.external_use_this_instead_metadata_source
+            == "Configured git repository"
+            and self.settings_controller.settings.external_use_this_instead_repo_path
+        ):
+            logger.info('Auto-updating "Use This Instead" database from GitHub.')
+            self.main_content_controller._do_auto_database_update(
+                str(AppInfo().databases_folder),
+                self.settings_controller.settings.external_use_this_instead_repo_path,
+            )
+
     def initialize_content(self, is_initial: bool = True) -> None:
         # POPULATE INSTANCES SUBMENU
         self.menu_bar_controller._on_instances_submenu_population(
@@ -263,7 +322,7 @@ class MainWindow(QMainWindow):
         # UPDATE DATABASES ON STARTUP IF ENABLED
         # This is called here after all controllers are initialized and signals are connected
         if is_initial:
-            self.settings_controller.update_databases_on_startup_if_enabled()
+            self._update_databases_on_startup_if_enabled_silent()
 
         # CHECK USER PREFERENCE FOR WATCHDOG
         if self.settings_controller.settings.watchdog_toggle:

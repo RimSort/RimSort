@@ -269,56 +269,6 @@ class SettingsController(QObject):
             logger.error("Unable to parse settings file")
             show_settings_error()
 
-        # After loading settings, update databases if enabled
-        # Note: This is commented out because it needs to be called after MainContentController is initialized
-        # self.update_databases_on_startup_if_enabled()
-
-    def update_databases_on_startup_if_enabled(self) -> None:
-        """
-        If update_databases_on_startup is enabled and databases are configured with GitHub links,
-        emit signals to download the databases from GitHub automatically.
-        """
-        if not self.settings.update_databases_on_startup:
-            logger.info("Update databases on startup is disabled.")
-            return
-
-        event_bus = EventBus()
-
-        # Community Rules database
-        if (
-            self.settings.external_community_rules_metadata_source
-            == "Configured git repository"
-            and self.settings.external_community_rules_repo
-        ):
-            logger.info("Auto-updating Community Rules database from GitHub.")
-            event_bus.do_download_community_rules_db_from_github.emit()
-
-        # Steam Workshop database
-        if (
-            self.settings.external_steam_metadata_source == "Configured git repository"
-            and self.settings.external_steam_metadata_repo
-        ):
-            logger.info("Auto-updating Steam Workshop database from GitHub.")
-            event_bus.do_download_steam_workshop_db_from_github.emit()
-
-        # No Version Warning database
-        if (
-            self.settings.external_no_version_warning_metadata_source
-            == "Configured git repository"
-            and self.settings.external_no_version_warning_repo_path
-        ):
-            logger.info('Auto-updating "No Version Warning" database from GitHub.')
-            event_bus.do_download_no_version_warning_db_from_github.emit()
-
-        # Use This Instead database (Cross Version Databases)
-        if (
-            self.settings.external_use_this_instead_metadata_source
-            == "Configured git repository"
-            and self.settings.external_use_this_instead_repo_path
-        ):
-            logger.info('Auto-updating "Use This Instead" database from GitHub.')
-            event_bus.do_download_use_this_instead_db_from_github.emit()
-
     def get_mod_paths(self) -> list[str]:
         """
         Get the mod paths for the current instance. Return the Default instance if the current instance is not found.

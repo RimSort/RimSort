@@ -386,6 +386,21 @@ class MainContentController(QObject):
         else:
             self._start_git_clone_worker(repo_url, str(full_repo_path), force=False)
 
+    def _do_auto_database_update(self, base_path: str, repo_url: str) -> None:
+        """Handle automatic database update: silently update existing or clone new."""
+        logger.info(f"Starting automatic database update: {repo_url}")
+        repo_folder = git_utils.git_get_repo_name(repo_url)
+        full_repo_path = Path(base_path) / repo_folder
+
+        if full_repo_path.exists():
+            # For existing repositories, update them silently (default behavior)
+            logger.info(f"Updating existing database repository: {full_repo_path}")
+            self._on_update_repos_silent([full_repo_path])
+        else:
+            # For new repositories, clone them silently
+            logger.info(f"Cloning new database repository to: {full_repo_path}")
+            self._start_git_clone_worker(repo_url, str(full_repo_path), force=False)
+
     def _start_git_clone_worker(
         self, repo_url: str, base_path: str, force: bool
     ) -> None:
@@ -1199,3 +1214,31 @@ class MainContentController(QObject):
             )
         else:
             logger.debug("User cancelled Community Rules database upload.")
+
+    def _on_update_repos_silent(self, repos_paths: List[Path]) -> None:
+        """Schedule concurrent batch pull for multiple repositories silently."""
+        logger.debug(
+            f"Scheduling silent concurrent update for {len(repos_paths)} repositories."
+        )
+        config = GitOperationConfig(notify_errors=False)
+        worker = GitBatchUpdateWorker(repos_paths, config=config)
+        worker.signals.finished.connect(self._handle_batch_update_results_silent)
+        self.thread_pool.start(worker)
+
+    @Slot(object)
+    def _handle_batch_update_results_silent(
+        self, results: GitBatchUpdateResults
+    ) -> None:
+        """Process results from GitBatchUpdateWorker silently."""
+        successful = results.successful
+        failed = results.failed
+
+        if successful:
+            logger.info(
+                f"Silently updated {len(successful)} database repositories successfully"
+            )
+
+        if failed:
+            logger.warning(
+                f"Failed to update {len(failed)} database repositories: {[str(p) for p, e in failed]}"
+            )
