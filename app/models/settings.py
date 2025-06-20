@@ -4,7 +4,7 @@ from os import path, rename
 from pathlib import Path
 from shutil import copytree, rmtree
 from time import time
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import msgspec
 from loguru import logger
@@ -12,6 +12,7 @@ from PySide6.QtCore import QObject
 from PySide6.QtWidgets import QApplication
 
 from app.models.instance import Instance
+from app.models.secure_settings import SecureSettings
 from app.utils.app_info import AppInfo
 from app.utils.constants import SortMethod
 from app.utils.event_bus import EventBus
@@ -24,6 +25,9 @@ class Settings(QObject):
 
         self._settings_file = AppInfo().app_settings_file
         self._debug_file = AppInfo().app_storage_folder / "DEBUG"
+
+        # Initialize secure settings manager
+        self._secure_settings = SecureSettings()
 
         # RimSort Update check
         self.check_for_update_startup: bool = True
@@ -76,7 +80,8 @@ class Settings(QObject):
         self.db_builder_include: str = "all_mods"
         self.build_steam_database_dlc_data: bool = True
         self.build_steam_database_update_toggle: bool = False
-        self.steam_apikey: str = ""
+        # DEPRECATED: steam_apikey - now stored securely
+        self._steam_apikey_deprecated: str = ""
 
         # SteamCMD
         self.steamcmd_validate_downloads: bool = True
@@ -114,10 +119,10 @@ class Settings(QObject):
         self.render_unity_rich_text: bool = True
         self.update_databases_on_startup: bool = True
 
-        self.rentry_auth_code: str = ""
-
-        self.github_username: str = ""
-        self.github_token: str = ""
+        # DEPRECATED: These are now stored securely
+        self._rentry_auth_code_deprecated: str = ""
+        self._github_username_deprecated: str = ""
+        self._github_token_deprecated: str = ""
 
         # Instances
         self.current_instance: str = "Default"
@@ -134,6 +139,65 @@ class Settings(QObject):
         super().__setattr__(key, value)
         EventBus().settings_have_changed.emit()
 
+    # Secure settings properties
+    @property
+    def steam_apikey(self) -> str:
+        """Get Steam API key from secure storage."""
+        return self._secure_settings.get_steam_api_key() or ""
+
+    @steam_apikey.setter
+    def steam_apikey(self, value: str) -> None:
+        """Store Steam API key in secure storage."""
+        if value:
+            self._secure_settings.set_steam_api_key(value)
+        else:
+            self._secure_settings.delete_steam_api_key()
+
+    @property
+    def github_token(self) -> str:
+        """Get GitHub token from secure storage."""
+        return self._secure_settings.get_github_token(self.github_username) or ""
+
+    @github_token.setter
+    def github_token(self, value: str) -> None:
+        """Store GitHub token in secure storage."""
+        if value:
+            self._secure_settings.set_github_token(self.github_username, value)
+        else:
+            self._secure_settings.delete_github_token(self.github_username)
+
+    @property
+    def github_username(self) -> str:
+        """Get GitHub username (stored in plaintext for user identification)."""
+        return getattr(self, "_github_username_value", "")
+
+    @github_username.setter
+    def github_username(self, value: str) -> None:
+        """Set GitHub username."""
+        self._github_username_value = value
+        EventBus().settings_have_changed.emit()
+
+    @property
+    def rentry_auth_code(self) -> str:
+        """Get Rentry auth code from secure storage."""
+        return self._secure_settings.get_rentry_auth_code() or ""
+
+    @rentry_auth_code.setter
+    def rentry_auth_code(self, value: str) -> None:
+        """Store Rentry auth code in secure storage."""
+        if value:
+            self._secure_settings.set_rentry_auth_code(value)
+        else:
+            self._secure_settings.delete_rentry_auth_code()
+
+    def is_secure_storage_available(self) -> bool:
+        """Check if secure storage is available."""
+        return self._secure_settings.is_keyring_available()
+
+    def get_storage_info(self) -> dict[str, Any]:
+        """Get information about current storage backend."""
+        return self._secure_settings.get_storage_info()
+
     def load(self) -> None:
         if self._debug_file.exists() and self._debug_file.is_file():
             self.debug_logging_enabled = True
@@ -146,6 +210,10 @@ class Settings(QObject):
                 mitigations = (
                     True  # Assume there are mitigations unless we reach else block
                 )
+
+                # Migrate secrets to secure storage if available
+                self._migrate_secrets_to_secure_storage(data)
+
                 # Mitigate issues when "instances" key is not parsed, but the old path attributes are present
                 if not data.get("instances"):
                     logger.debug(
@@ -256,6 +324,28 @@ class Settings(QObject):
         except JSONDecodeError:
             raise
 
+    def _migrate_secrets_to_secure_storage(self, data: Dict[str, Any]) -> None:
+        """Migrate secrets from plaintext to secure storage."""
+        if not self._secure_settings.is_keyring_available():
+            logger.debug("Keyring not available, skipping secret migration")
+            return
+
+        migrated_any = False
+
+        # Migrate and remove secrets from data dict
+        if self._secure_settings.migrate_from_plaintext_settings(data):
+            # Remove migrated secrets from the data to be saved
+            secrets_to_remove = ["steam_apikey", "github_token", "rentry_auth_code"]
+            for secret in secrets_to_remove:
+                if secret in data:
+                    del data[secret]
+                    migrated_any = True
+
+            if migrated_any:
+                logger.info(
+                    "Migrated secrets to secure storage and removed from plaintext settings"
+                )
+
     def save(self) -> None:
         if self.debug_logging_enabled:
             self._debug_file.touch(exist_ok=True)
@@ -267,11 +357,21 @@ class Settings(QObject):
 
     def _from_dict(self, data: Dict[str, Any]) -> None:
         special_attributes = ["instances"]
+        # Don't load deprecated/migrated secrets from file
+        deprecated_secrets = ["steam_apikey", "github_token", "rentry_auth_code"]
 
         for key, value in data.items():
             if key in special_attributes:
                 continue
+            if key in deprecated_secrets:
+                # Store deprecated values for potential fallback
+                setattr(self, f"_{key}_deprecated", value)
+                continue
             if not hasattr(self, key):
+                continue
+            # Special handling for github_username
+            if key == "github_username":
+                self._github_username_value = value
                 continue
             setattr(self, key, value)
 
@@ -291,7 +391,9 @@ class Settings(QObject):
 
     def _to_dict(self, skip_private: bool = True) -> Dict[str, Any]:
         special_attributes = ["instances"]
-        skip_attributes = ["destroyed", "objectNameChanged"]
+        skip_attributes = ["destroyed", "objectNameChanged", "_secure_settings"]
+        # Don't save deprecated/migrated secrets to file
+        deprecated_secrets = ["steam_apikey", "github_token", "rentry_auth_code"]
 
         data = {}
 
@@ -302,9 +404,24 @@ class Settings(QObject):
                 continue
             if skip_private and key.startswith("_"):
                 continue
+            if key in deprecated_secrets:
+                continue
             data[key] = value
+
+        # Add github_username if it exists
+        if hasattr(self, "_github_username_value"):
+            data["github_username"] = self._github_username_value
 
         data["instances"] = {
             name: instance.as_dict() for name, instance in self.instances.items()
         }
         return data
+
+    def get_fallback_secret(self, secret_type: str) -> Optional[str]:
+        """Get fallback secret from deprecated storage for backwards compatibility."""
+        deprecated_attr = f"_{secret_type}_deprecated"
+        return (
+            getattr(self, deprecated_attr, "")
+            if hasattr(self, deprecated_attr)
+            else None
+        )
