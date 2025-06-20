@@ -234,7 +234,13 @@ def launch_game_process(game_install_path: Path, args: list[str]) -> None:
             executable_path = str((game_install_path / "RimWorldLinux"))
         elif system_name == "Windows":
             # Windows
-            executable_path = str((game_install_path / "RimWorldWin64.exe"))
+            path64 = game_install_path / "RimWorldWin64.exe"
+            path32 = game_install_path / "RimWorldWin.exe"
+            
+            executable_path = str(path64) # default to 64-bit executable 
+            if not path64.exists() and path32.exists(): # look for and set path to 86x executable only if default doesn't exist 
+                executable_path = str(path32)
+                
         else:
             logger.error("Unable to launch the game on an unknown system")
             return
