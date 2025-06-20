@@ -1026,6 +1026,17 @@ class SettingsDialog(QDialog):
         )
         group_layout.addWidget(self.render_unity_rich_text_checkbox)
 
+        self.update_databases_on_startup_checkbox = QCheckBox(
+            self.tr("Update databases on startup")
+        )
+        self.update_databases_on_startup_checkbox.setToolTip(
+            self.tr(
+                "Enable this option to automatically update enabled databases when RimSort starts. "
+                "This will check for updates and download them if available."
+            )
+        )
+        group_layout.addWidget(self.update_databases_on_startup_checkbox)
+
         auth_group = QGroupBox()
         tab_layout.addWidget(auth_group)
 

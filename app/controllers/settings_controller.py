@@ -713,6 +713,9 @@ class SettingsController(QObject):
         self.settings_dialog.render_unity_rich_text_checkbox.setChecked(
             self.settings.render_unity_rich_text
         )
+        self.settings_dialog.update_databases_on_startup_checkbox.setChecked(
+            self.settings.update_databases_on_startup
+        )
         self.settings_dialog.rentry_auth_code.setText(self.settings.rentry_auth_code)
         self.settings_dialog.rentry_auth_code.setCursorPosition(0)
         self.settings_dialog.github_username.setText(self.settings.github_username)
@@ -920,6 +923,9 @@ class SettingsController(QObject):
         )
         self.settings.render_unity_rich_text = (
             self.settings_dialog.render_unity_rich_text_checkbox.isChecked()
+        )
+        self.settings.update_databases_on_startup = (
+            self.settings_dialog.update_databases_on_startup_checkbox.isChecked()
         )
         self.settings.rentry_auth_code = self.settings_dialog.rentry_auth_code.text()
         self.settings.github_username = self.settings_dialog.github_username.text()

@@ -259,6 +259,12 @@ class MainWindow(QMainWindow):
                 )
         else:
             self.steamcmd_wrapper.setup = True
+
+        # UPDATE DATABASES ON STARTUP IF ENABLED
+        # This is called here after all controllers are initialized and signals are connected
+        if is_initial:
+            self.main_content_controller._update_databases_on_startup_if_enabled_silent()
+
         # CHECK USER PREFERENCE FOR WATCHDOG
         if self.settings_controller.settings.watchdog_toggle:
             # Setup watchdog
