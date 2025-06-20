@@ -386,6 +386,63 @@ class MainContentController(QObject):
         else:
             self._start_git_clone_worker(repo_url, str(full_repo_path), force=False)
 
+    def _update_databases_on_startup_if_enabled_silent(self) -> None:
+        """
+        Silently update databases on startup if enabled.
+        Directly calls MainContentController methods instead of emitting signals.
+        """
+        if not self.settings_controller.settings.update_databases_on_startup:
+            logger.info("Update databases on startup is disabled.")
+            return
+
+        # Community Rules database
+        if (
+            self.settings_controller.settings.external_community_rules_metadata_source
+            == "Configured git repository"
+            and self.settings_controller.settings.external_community_rules_repo
+        ):
+            logger.info("Auto-updating Community Rules database from GitHub.")
+            self._do_auto_database_update(
+                str(AppInfo().databases_folder),
+                self.settings_controller.settings.external_community_rules_repo,
+            )
+
+        # Steam Workshop database
+        if (
+            self.settings_controller.settings.external_steam_metadata_source
+            == "Configured git repository"
+            and self.settings_controller.settings.external_steam_metadata_repo
+        ):
+            logger.info("Auto-updating Steam Workshop database from GitHub.")
+            self._do_auto_database_update(
+                str(AppInfo().databases_folder),
+                self.settings_controller.settings.external_steam_metadata_repo,
+            )
+
+        # No Version Warning database
+        if (
+            self.settings_controller.settings.external_no_version_warning_metadata_source
+            == "Configured git repository"
+            and self.settings_controller.settings.external_no_version_warning_repo_path
+        ):
+            logger.info('Auto-updating "No Version Warning" database from GitHub.')
+            self._do_auto_database_update(
+                str(AppInfo().databases_folder),
+                self.settings_controller.settings.external_no_version_warning_repo_path,
+            )
+
+        # Use This Instead database (Cross Version Databases)
+        if (
+            self.settings_controller.settings.external_use_this_instead_metadata_source
+            == "Configured git repository"
+            and self.settings_controller.settings.external_use_this_instead_repo_path
+        ):
+            logger.info('Auto-updating "Use This Instead" database from GitHub.')
+            self._do_auto_database_update(
+                str(AppInfo().databases_folder),
+                self.settings_controller.settings.external_use_this_instead_repo_path,
+            )
+
     def _do_auto_database_update(self, base_path: str, repo_url: str) -> None:
         """Handle automatic database update: silently update existing or clone new."""
         logger.info(f"Starting automatic database update: {repo_url}")
@@ -400,6 +457,16 @@ class MainContentController(QObject):
             # For new repositories, clone them silently
             logger.info(f"Cloning new database repository to: {full_repo_path}")
             self._start_git_clone_worker(repo_url, str(full_repo_path), force=False)
+
+    def _on_update_repos_silent(self, repos_paths: List[Path]) -> None:
+        """Schedule concurrent batch pull for multiple repositories silently."""
+        logger.debug(
+            f"Scheduling silent concurrent update for {len(repos_paths)} repositories."
+        )
+        config = GitOperationConfig(notify_errors=False)
+        worker = GitBatchUpdateWorker(repos_paths, config=config)
+        worker.signals.finished.connect(self._handle_batch_update_results_silent)
+        self.thread_pool.start(worker)
 
     def _start_git_clone_worker(
         self, repo_url: str, base_path: str, force: bool
@@ -1214,16 +1281,6 @@ class MainContentController(QObject):
             )
         else:
             logger.debug("User cancelled Community Rules database upload.")
-
-    def _on_update_repos_silent(self, repos_paths: List[Path]) -> None:
-        """Schedule concurrent batch pull for multiple repositories silently."""
-        logger.debug(
-            f"Scheduling silent concurrent update for {len(repos_paths)} repositories."
-        )
-        config = GitOperationConfig(notify_errors=False)
-        worker = GitBatchUpdateWorker(repos_paths, config=config)
-        worker.signals.finished.connect(self._handle_batch_update_results_silent)
-        self.thread_pool.start(worker)
 
     @Slot(object)
     def _handle_batch_update_results_silent(
