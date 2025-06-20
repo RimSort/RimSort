@@ -270,7 +270,8 @@ class SettingsController(QObject):
             show_settings_error()
 
         # After loading settings, update databases if enabled
-        self.update_databases_on_startup_if_enabled()
+        # Note: This is commented out because it needs to be called after MainContentController is initialized
+        # self.update_databases_on_startup_if_enabled()
 
     def update_databases_on_startup_if_enabled(self) -> None:
         """
