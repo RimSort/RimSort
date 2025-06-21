@@ -405,300 +405,306 @@ When unchecked, search all file types with standard search.</source>
     <name>LogReader</name>
     <message>
         <source>Ready</source>
-        <translation type="unfinished"></translation>
+        <translation>Готово</translation>
     </message>
     <message>
         <source>Search...</source>
-        <translation type="unfinished"></translation>
+        <translation>Поиск...</translation>
     </message>
     <message>
         <source>Refresh</source>
-        <translation type="unfinished"></translation>
+        <translation>Обновить</translation>
     </message>
     <message>
         <source>Import ACF Data</source>
-        <translation type="unfinished"></translation>
+        <translation>Импортировать данные ACF</translation>
     </message>
     <message>
         <source>Export ACF Data</source>
-        <translation type="unfinished"></translation>
+        <translation>Экспортировать данные ACF</translation>
     </message>
     <message>
         <source>Export to CSV</source>
-        <translation type="unfinished"></translation>
+        <translation>Экспортировать в CSV</translation>
     </message>
     <message>
         <source>Loaded {count} items | Last updated: {time}</source>
-        <translation type="unfinished"></translation>
+        <translation>Загружено {count} элементов | Последнее обновление: {time}</translation>
     </message>
     <message>
         <source>Export canceled by user.</source>
-        <translation type="unfinished"></translation>
+        <translation>Экспорт отменен пользователем.</translation>
     </message>
     <message>
         <source>Export failed: Permission denied - check file permissions</source>
-        <translation type="unfinished"></translation>
+        <translation>Экспорт не удался: Доступ запрещен - проверьте права доступа к файлам</translation>
     </message>
     <message>
         <source>Export Error</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибка экспорта</translation>
     </message>
     <message>
         <source>Export failed: File system error - {e}</source>
-        <translation type="unfinished"></translation>
+        <translation>Экспорт не удался: Ошибка файловой системы - {e}</translation>
     </message>
     <message>
         <source>Export failed: File system error</source>
-        <translation type="unfinished"></translation>
+        <translation>Экспорт не удался: Ошибка файловой системы</translation>
     </message>
     <message>
         <source>Exporting to CSV...</source>
-        <translation type="unfinished"></translation>
+        <translation>Экспорт в CSV...</translation>
     </message>
     <message>
         <source>Exporting rows...</source>
-        <translation type="unfinished"></translation>
+        <translation>Экспорт строк...</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Отмена</translation>
     </message>
     <message>
         <source>Export failed due to an unknown error</source>
-        <translation type="unfinished"></translation>
+        <translation>Экспорт не удался из-за неизвестной ошибки</translation>
     </message>
     <message>
         <source>View in Steam Workshop</source>
-        <translation type="unfinished"></translation>
+        <translation>Просмотреть в Steam Workshop</translation>
     </message>
     <message>
         <source>Open Mod Folder</source>
-        <translation type="unfinished"></translation>
+        <translation>Открыть папку мода</translation>
     </message>
     <message>
         <source>Published File ID</source>
-        <translation type="unfinished"></translation>
+        <translation>ID опубликованного файла</translation>
     </message>
     <message>
         <source>Last Updated</source>
-        <translation type="unfinished"></translation>
+        <translation>Последнее обновление</translation>
     </message>
     <message>
         <source>Relative Time</source>
-        <translation type="unfinished"></translation>
+        <translation>Относительное время</translation>
     </message>
     <message>
         <source>Type</source>
-        <translation type="unfinished"></translation>
+        <translation>Тип</translation>
     </message>
     <message>
         <source>Mod Name</source>
-        <translation type="unfinished"></translation>
+        <translation>Название мода</translation>
     </message>
     <message>
         <source>Mod Path</source>
-        <translation type="unfinished"></translation>
+        <translation>Путь к моду</translation>
     </message>
     <message>
         <source>Conform acf import</source>
-        <translation type="unfinished"></translation>
+        <translation>Соответствовать импорту acf</translation>
     </message>
     <message>
         <source>This will replace your current steamcmd .acf file</source>
-        <translation type="unfinished"></translation>
+        <translation>Это заменит ваш текущий файл .acf steamcmd</translation>
     </message>
     <message>
         <source>Are you sure you want to import .acf? THis only works for steamcmd</source>
-        <translation type="unfinished"></translation>
+        <translation>Вы уверены, что хотите импортировать .acf? Это работает только для steamcmd</translation>
     </message>
     <message>
         <source>SteamCMD interface not properly initialized</source>
-        <translation type="unfinished"></translation>
+        <translation>Интерфейс SteamCMD не инициализирован должным образом</translation>
     </message>
     <message>
         <source>ACF file not found: {acf_path}</source>
-        <translation type="unfinished"></translation>
+        <translation>Файл ACF не найден: {acf_path}</translation>
     </message>
     <message>
         <source>ACF file not found at: {acf_path}</source>
-        <translation type="unfinished"></translation>
+        <translation>Файл ACF не найден по адресу: {acf_path}</translation>
     </message>
     <message>
         <source>Invalid file path provided for export: {file_path}</source>
-        <translation type="unfinished"></translation>
+        <translation>Предоставлен недопустимый путь к файлу для экспорта: {file_path}</translation>
     </message>
     <message>
         <source>Successfully exported ACF to {file_path}</source>
-        <translation type="unfinished"></translation>
+        <translation>Успешно экспортирован ACF в {file_path}</translation>
     </message>
     <message>
         <source>Export Success</source>
-        <translation type="unfinished"></translation>
+        <translation>Экспорт успешен</translation>
     </message>
     <message>
         <source>Export failed: {e}</source>
-        <translation type="unfinished"></translation>
+        <translation>Экспорт не удался: {e}</translation>
     </message>
     <message>
         <source>Export failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Экспорт не удался</translation>
     </message>
     <message>
         <source>Exportfailed unknown exception occurred</source>
-        <translation type="unfinished"></translation>
+        <translation>Экспорт не удался: произошла неизвестная ошибка</translation>
     </message>
 </context>
 <context>
     <name>MainContent</name>
     <message>
         <source>Essential path(s)</source>
-        <translation type="unfinished"></translation>
+        <translation>Необходимые пути</translation>
     </message>
     <message>
         <source>Essential path(s) are invalid or not set!
 </source>
-        <translation type="unfinished"></translation>
+        <translation>Необходимые пути недействительны или не установлены!
+</translation>
     </message>
     <message>
         <source>RimSort requires, at the minimum, for the game install folder and the config folder paths to be set, and that the paths both exist. Please set both of these manually or by using the autodetect functionality.
 
 Would you like to configure them now?</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSort требует, чтобы как минимум были установлены пути к папке установки игры и папке конфигурации, и чтобы оба пути существовали. Пожалуйста, установите оба этих пути вручную или с помощью функции автоматического определения.
+
+Хотите настроить их сейчас?</translation>
     </message>
     <message>
         <source>Duplicate mod(s) found</source>
-        <translation type="unfinished"></translation>
+        <translation>Обнаружены дублирующиеся моды</translation>
     </message>
     <message>
         <source>Duplicate mods(s) found for package ID(s) in your ModsConfig.xml (active mods list)</source>
-        <translation type="unfinished"></translation>
+        <translation>Обнаружены дублирующиеся моды для ID пакета в вашем ModsConfig.xml (список активных модов)</translation>
     </message>
     <message>
         <source>The following list of mods were set active in your ModsConfig.xml and duplicate instances were found of these mods in your mod data sources. The vanilla game will use the first &apos;local mod&apos; of a particular package ID that is found - so RimSort will also adhere to this logic.</source>
-        <translation type="unfinished"></translation>
+        <translation>Следующий список модов был активирован в вашем ModsConfig.xml, и были найдены дублирующиеся экземпляры этих модов в ваших источниках данных модов. Обычная игра будет использовать первый &apos;локальный мод&apos; определенного ID пакета, который будет найден, поэтому RimSort также будет следовать этой логике.</translation>
     </message>
     <message>
         <source>Could not find data for some mods!</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось найти данные для некоторых модов!</translation>
     </message>
     <message>
         <source>The following list of mods were set active in your mods list but no data could be found for these mods in local/workshop mod paths. 
 
 Are your game configuration paths correct?</source>
-        <translation type="unfinished"></translation>
+        <translation>Следующий список модов был активирован в вашем списке модов, но для этих модов не удалось найти данные в локальных/рабочих путях модов.
+
+Правильны ли ваши пути конфигурации игры?</translation>
     </message>
     <message>
         <source>Update skipped</source>
-        <translation type="unfinished"></translation>
+        <translation>Обновление пропущено</translation>
     </message>
     <message>
         <source>You are running from Python interpreter.</source>
-        <translation type="unfinished"></translation>
+        <translation>Вы работаете из интерпретатора Python.</translation>
     </message>
     <message>
         <source>Skipping update check...</source>
-        <translation type="unfinished"></translation>
+        <translation>Проверка обновлений пропущена...</translation>
     </message>
     <message>
         <source>Unable to retrieve latest release information</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось получить информацию о последнем релизе</translation>
     </message>
     <message>
         <source>Unable to retrieve latest release information due to exception: {e.__class__}</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось получить информацию о последнем релизе из-за исключения: {e.__class__}</translation>
     </message>
     <message>
         <source>RimSort update found</source>
-        <translation type="unfinished"></translation>
+        <translation>Обнаружено обновление RimSort</translation>
     </message>
     <message>
         <source>An update to RimSort has been released: {tag_name}</source>
-        <translation type="unfinished"></translation>
+        <translation>Выпущено обновление для RimSort: {tag_name}</translation>
     </message>
     <message>
         <source>You are running RimSort {current_version}
 Do you want to update now?</source>
-        <translation type="unfinished"></translation>
+        <translation>Вы используете RimSort {current_version}
+Хотите обновить сейчас?</translation>
     </message>
     <message>
         <source>Unable to complete update</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось завершить обновление</translation>
     </message>
     <message>
         <source>Failed to find valid RimSort release for {SYSTEM} {ARCH} {PROCESSOR}</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось найти действительный релиз RimSort для {SYSTEM} {ARCH} {PROCESSOR}</translation>
     </message>
     <message>
         <source>RimSort update found. Downloading RimSort {tag_name_updated} release...</source>
-        <translation type="unfinished"></translation>
+        <translation>Обнаружено обновление RimSort. Загружается релиз RimSort {tag_name_updated}...</translation>
     </message>
     <message>
         <source>Update downloaded</source>
-        <translation type="unfinished"></translation>
+        <translation>Обновление загружено</translation>
     </message>
     <message>
         <source>Do you want to proceed with the update?</source>
-        <translation type="unfinished"></translation>
+        <translation>Хотите продолжить обновление?</translation>
     </message>
     <message>
         <source>Failed to download update</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось загрузить обновление</translation>
     </message>
     <message>
         <source>Failed to download latest RimSort release!</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось загрузить последнюю версию RimSort!</translation>
     </message>
     <message>
         <source>RimSort is up to date!</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSort обновлен до последней версии!</translation>
     </message>
     <message>
         <source>You are already running the latest release: {tag_name}</source>
-        <translation type="unfinished"></translation>
+        <translation>Вы уже используете последнюю версию: {tag_name}</translation>
     </message>
     <message>
         <source>Please check your internet connection and try again, You can also check &apos;https://github.com/RimSort/RimSort/releases&apos; directly.</source>
-        <translation type="unfinished"></translation>
+        <translation>Пожалуйста, проверьте ваше интернет-соединение и попробуйте снова. Вы также можете проверить &apos;https://github.com/RimSort/RimSort/releases&apos; напрямую.</translation>
     </message>
     <message>
         <source>Scanning mod sources and populating metadata...</source>
-        <translation type="unfinished"></translation>
+        <translation>Сканирование источников модов и заполнение метаданных...</translation>
     </message>
     <message>
         <source>Sorting algorithm not implemented</source>
-        <translation type="unfinished"></translation>
+        <translation>Алгоритм сортировки не реализован</translation>
     </message>
     <message>
         <source>The selected sorting algorithm is not implemented</source>
-        <translation type="unfinished"></translation>
+        <translation>Выбранный алгоритм сортировки не реализован</translation>
     </message>
     <message>
         <source>This may be caused by malformed settings or improper migration between versions or different mod manager. Try resetting your settings, selecting a different sorting algorithm, or deleting your settings file. If the issue persists, please report it the developers.</source>
-        <translation type="unfinished"></translation>
+        <translation>Это может быть вызвано неправильно оформленными настройками или неправильной миграцией между версиями или различными менеджерами модов. Попробуйте сбросить настройки, выбрать другой алгоритм сортировки или удалить файл настроек. Если проблема не исчезнет, пожалуйста, сообщите об этом разработчикам.</translation>
     </message>
     <message>
         <source>Failed to export to file</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось экспортировать в файл</translation>
     </message>
     <message>
         <source>Failed to export active mods to file:</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось экспортировать активные моды в файл:</translation>
     </message>
     <message>
         <source>Important</source>
-        <translation type="unfinished"></translation>
+        <translation>Важно</translation>
     </message>
     <message>
         <source>You will need to redo Rentry import again after downloads complete. If there missing mods after download completes, they will be shown inside the missing mods panel. If RimSort is still not able to download some mods, It&apos;s due to the mod data not being available in both Rentry link and steam database.</source>
-        <translation type="unfinished"></translation>
+        <translation>Вам нужно будет повторно выполнить импорт Rentry после завершения загрузки. Если после завершения загрузки будут отсутствовать моды, они будут показаны в панели отсутствующих модов. Если RimSort все еще не может загрузить некоторые моды, это связано с тем, что данные модов недоступны как по ссылке Rentry, так и в базе данных Steam.</translation>
     </message>
     <message>
         <source>Steam client integration not set up</source>
-        <translation type="unfinished"></translation>
+        <translation>Интеграция с клиентом Steam не настроена</translation>
     </message>
     <message>
         <source>Steam client integration is not set up. Please set it up to download mods using Steam</source>
-        <translation type="unfinished"></translation>
+        <translation>Интеграция с клиентом Steam не настроена. Пожалуйста, настройте ее, чтобы загружать моды с помощью Steam</translation>
     </message>
     <message>
         <source>Download Rentry Mods</source>
@@ -1687,81 +1693,83 @@ Error: {error}</source>
     <name>MainWindow</name>
     <message>
         <source>Refresh</source>
-        <translation type="unfinished"></translation>
+        <translation>Обновить</translation>
     </message>
     <message>
         <source>Clear</source>
-        <translation type="unfinished"></translation>
+        <translation>Очистить</translation>
     </message>
     <message>
         <source>Restore</source>
-        <translation type="unfinished"></translation>
+        <translation>Восстановить</translation>
     </message>
     <message>
         <source>Sort</source>
-        <translation type="unfinished"></translation>
+        <translation>Сортировать</translation>
     </message>
     <message>
         <source>Save</source>
-        <translation type="unfinished"></translation>
+        <translation>Сохранить</translation>
     </message>
     <message>
         <source>Run</source>
-        <translation type="unfinished"></translation>
+        <translation>Запустить</translation>
     </message>
     <message>
         <source>Main Content</source>
-        <translation type="unfinished"></translation>
+        <translation>Основной контент</translation>
     </message>
     <message>
         <source>Log Reader</source>
-        <translation type="unfinished"></translation>
+        <translation>Читатель журналов</translation>
     </message>
     <message>
         <source>File Search</source>
-        <translation type="unfinished"></translation>
+        <translation>Поиск файлов</translation>
     </message>
     <message>
         <source>Troubleshooting</source>
-        <translation type="unfinished"></translation>
+        <translation>Устранение неполадок</translation>
     </message>
     <message>
         <source>Steam Client Integration</source>
-        <translation type="unfinished"></translation>
+        <translation>Интеграция с клиентом Steam</translation>
     </message>
     <message>
         <source>&lt;h3&gt;Would you like to enable Steam Client Integration for this instance?&lt;/h3&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;h3&gt;Хотите включить интеграцию с клиентом Steam для этого инстанса?&lt;/h3&gt;</translation>
     </message>
     <message>
         <source>This will allow you to use RimSort features that require the Steam Client. This includes, among other things, unsubscribing from workshop mods and opening workshop links via the Steam Client. 
                 &lt;br&gt;&lt;br&gt;
                 You can change this in the settings under the Advanced tab.</source>
-        <translation type="unfinished"></translation>
+        <translation>Это позволит вам использовать функции RimSort, которые требуют клиента Steam. Сюда входит, среди прочего, отмена подписки на моды Workshop и открытие ссылок Workshop через клиент Steam.
+                &lt;br&gt;&lt;br&gt;
+                Вы можете изменить это в настройках на вкладке Дополнительно.</translation>
     </message>
     <message>
         <source>Create new instance</source>
-        <translation type="unfinished"></translation>
+        <translation>Создать новый инстанс</translation>
     </message>
     <message>
         <source>Input a unique name of new instance that is not already used:</source>
-        <translation type="unfinished"></translation>
+        <translation>Введите уникальное имя нового инстанса, которое еще не используется:</translation>
     </message>
     <message>
         <source>Provide instance name</source>
-        <translation type="unfinished"></translation>
+        <translation>Укажите имя инстанса</translation>
     </message>
     <message>
         <source>Input a unique name for the backed up instance that is not &quot;Default&quot;</source>
-        <translation type="unfinished"></translation>
+        <translation>Введите уникальное имя для резервной копии инстанса, которое не является &quot;По умолчанию&quot;</translation>
     </message>
     <message>
         <source>Clone instance [{existing_instance_name}]</source>
-        <translation type="unfinished"></translation>
+        <translation>Клонировать инстанс [{existing_instance_name}]</translation>
     </message>
     <message>
         <source>What would you like to do with the configured Workshop mods folder?</source>
-        <translation type="unfinished"></translation>
+        <translation>Что вы хотите сделать с настроенной папкой модов Workshop?</translation>
     </message>
     <message>
         <source>Workshop folder: {existing_instance_workshop_folder}
@@ -1771,349 +1779,355 @@ RimSort can copy all of your Workshop mods to the new instance&apos;s local mods
 Alternatively, you may keep your old Steam workshop folder preference. You can always change this later in the settings.
 
 How would you like to proceed?</source>
-        <translation type="unfinished"></translation>
+        <translation>Папка модов Workshop: {existing_instance_workshop_folder}
+
+RimSort может скопировать все ваши моды Workshop в локальную папку модов нового инстанса. Это эффективно преобразует любые существующие моды клиента Steam в моды SteamCMD, которые вы затем сможете управлять внутри нового инстанса.
+
+В качестве альтернативы вы можете сохранить свои старые настройки папки модов Steam Workshop. Вы всегда можете изменить это позже в настройках.
+
+Как вы хотите продолжить?</translation>
     </message>
     <message>
         <source>Compressing [{instance_name}] instance folder to archive...</source>
-        <translation type="unfinished"></translation>
+        <translation>Сжатие папки инстанса [{instance_name}] в архив...</translation>
     </message>
     <message>
         <source>Error compressing instance</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибка сжатия инстанса</translation>
     </message>
     <message>
         <source>An error occurred while compressing instance folder: {e}</source>
-        <translation type="unfinished"></translation>
+        <translation>Произошла ошибка при сжатии папки инстанса: {e}</translation>
     </message>
     <message>
         <source>Please check the logs for more information.</source>
-        <translation type="unfinished"></translation>
+        <translation>Пожалуйста, проверьте журналы для получения дополнительной информации.</translation>
     </message>
     <message>
         <source>Error restoring instance</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибка восстановления инстанса</translation>
     </message>
     <message>
         <source>Archive not found at path: {input_path}</source>
-        <translation type="unfinished"></translation>
+        <translation>Архив не найден по пути: {input_path}</translation>
     </message>
     <message>
         <source>An error occurred while reading instance archive: {e}</source>
-        <translation type="unfinished"></translation>
+        <translation>Произошла ошибка при чтении архива инстанса: {e}</translation>
     </message>
     <message>
         <source>Instance folder exists</source>
-        <translation type="unfinished"></translation>
+        <translation>Папка инстанса существует</translation>
     </message>
     <message>
         <source>Instance folder already exists: {instance_folder_path}</source>
-        <translation type="unfinished"></translation>
+        <translation>Папка инстанса уже существует: {instance_folder_path}</translation>
     </message>
     <message>
         <source>Do you want to continue and replace the existing instance folder?</source>
-        <translation type="unfinished"></translation>
+        <translation>Вы хотите продолжить и заменить существующую папку инстанса?</translation>
     </message>
     <message>
         <source>Replace</source>
-        <translation type="unfinished"></translation>
+        <translation>Заменить</translation>
     </message>
     <message>
         <source>Restoring instance [{name}] from archive...</source>
-        <translation type="unfinished"></translation>
+        <translation>Восстановление инстанса [{name}] из архива...</translation>
     </message>
     <message>
         <source>Invalid instance folder paths</source>
-        <translation type="unfinished"></translation>
+        <translation>Недопустимые пути папок инстанса</translation>
     </message>
     <message>
         <source>Some folder paths from the restored instance are invalid and were cleared. Please reconfigure them in the settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Некоторые пути папок восстановленного инстанса недопустимы и были очищены. Пожалуйста, перенастройте их в настройках</translation>
     </message>
     <message>
         <source>Invalid paths: {path}</source>
-        <translation type="unfinished"></translation>
+        <translation>Недопустимые пути: {path}</translation>
     </message>
     <message>
         <source>Couldn&apos;t restore steamcmd symlink/junction</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось восстановить символическую ссылку/связь steamcmd</translation>
     </message>
     <message>
         <source>The steamcmd symlink/junction could not be restored as the local folder is not set or invalid. The symlink/junction will need to be manually recreated.</source>
-        <translation type="unfinished"></translation>
+        <translation>Символическая ссылка/связь steamcmd не может быть восстановлена, так как локальная папка не установлена или недействительна. Символическая ссылка/связь должна быть воссоздана вручную.</translation>
     </message>
     <message>
         <source>An error occurred while restoring instance [{instance_controller.instance.name}].</source>
-        <translation type="unfinished"></translation>
+        <translation>Произошла ошибка при восстановлении инстанса [{instance_controller.instance.name}].</translation>
     </message>
     <message>
         <source>The instance folder was not found after extracting the archive. Perhaps the archive is corrupt or the instance name is invalid.</source>
-        <translation type="unfinished"></translation>
+        <translation>Папка инстанса не была найдена после извлечения архива. Возможно, архив поврежден или имя инстанса недействительно.</translation>
     </message>
     <message>
         <source>Workshop mods not found</source>
-        <translation type="unfinished"></translation>
+        <translation>Моды Workshop не найдены</translation>
     </message>
     <message>
         <source>Workshop mods folder at [{existing_instance_workshop_folder}] not found.</source>
-        <translation type="unfinished"></translation>
+        <translation>Папка модов Workshop по адресу [{existing_instance_workshop_folder}] не найдена.</translation>
     </message>
     <message>
         <source>Error cloning instance</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибка клонирования инстанса</translation>
     </message>
     <message>
         <source>Unable to clone instance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось клонировать инстанс.</translation>
     </message>
     <message>
         <source>Please enter a valid, unique instance name. It cannot be &apos;Default&apos; or empty.</source>
-        <translation type="unfinished"></translation>
+        <translation>Пожалуйста, введите допустимое, уникальное имя инстанса. Оно не может быть &apos;По умолчанию&apos; или пустым.</translation>
     </message>
     <message>
         <source>Create new instance [{instance_name}]</source>
-        <translation type="unfinished"></translation>
+        <translation>Создать новый инстанс [{instance_name}]</translation>
     </message>
     <message>
         <source>Would you like to automatically generate run args for the new instance?</source>
-        <translation type="unfinished"></translation>
+        <translation>Хотите ли вы автоматически сгенерировать аргументы запуска для нового инстанса?</translation>
     </message>
     <message>
         <source>This will try to generate run args for the new instance based on the configured Game/Config folders.</source>
-        <translation type="unfinished"></translation>
+        <translation>Это попытается сгенерировать аргументы запуска для нового инстанса на основе настроенных папок Game/Config.</translation>
     </message>
     <message>
         <source>Error creating instance</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибка создания инстанса</translation>
     </message>
     <message>
         <source>Unable to create new instance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось создать новый инстанс.</translation>
     </message>
     <message>
         <source>Problem deleting instance</source>
-        <translation type="unfinished"></translation>
+        <translation>Проблема при удалении инстанса</translation>
     </message>
     <message>
         <source>Unable to delete instance {current_instance}.</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось удалить инстанс {current_instance}.</translation>
     </message>
     <message>
         <source>The default instance cannot be deleted.</source>
-        <translation type="unfinished"></translation>
+        <translation>Инстанс по умолчанию не может быть удален.</translation>
     </message>
     <message>
         <source>Error deleting instance</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибка удаления инстанса</translation>
     </message>
     <message>
         <source>The selected instance does not exist.</source>
-        <translation type="unfinished"></translation>
+        <translation>Выбранный инстанс не существует.</translation>
     </message>
     <message>
         <source>Delete instance {current_instance}</source>
-        <translation type="unfinished"></translation>
+        <translation>Удалить инстанс {current_instance}</translation>
     </message>
     <message>
         <source>Are you sure you want to delete the selected instance and all of its data?</source>
-        <translation type="unfinished"></translation>
+        <translation>Вы уверены, что хотите удалить выбранный инстанс и все его данные?</translation>
     </message>
     <message>
         <source>This action cannot be undone.</source>
-        <translation type="unfinished"></translation>
+        <translation>Это действие нельзя отменить.</translation>
     </message>
 </context>
 <context>
     <name>MenuBar</name>
     <message>
         <source>File</source>
-        <translation type="unfinished"></translation>
+        <translation>Файл</translation>
     </message>
     <message>
         <source>Open Mod List…</source>
-        <translation type="unfinished"></translation>
+        <translation>Открыть список модов…</translation>
     </message>
     <message>
         <source>Save Mod List As…</source>
-        <translation type="unfinished"></translation>
+        <translation>Сохранить список модов как…</translation>
     </message>
     <message>
         <source>Import</source>
-        <translation type="unfinished"></translation>
+        <translation>Импортировать</translation>
     </message>
     <message>
         <source>From Rentry.co</source>
-        <translation type="unfinished"></translation>
+        <translation>Из Rentry.co</translation>
     </message>
     <message>
         <source>From Workshop collection</source>
-        <translation type="unfinished"></translation>
+        <translation>Из коллекции Workshop</translation>
     </message>
     <message>
         <source>Export</source>
-        <translation type="unfinished"></translation>
+        <translation>Экспортировать</translation>
     </message>
     <message>
         <source>To Clipboard…</source>
-        <translation type="unfinished"></translation>
+        <translation>В буфер обмена…</translation>
     </message>
     <message>
         <source>To Rentry.co…</source>
-        <translation type="unfinished"></translation>
+        <translation>В Rentry.co…</translation>
     </message>
     <message>
         <source>Upload Log</source>
-        <translation type="unfinished"></translation>
+        <translation>Загрузить журнал</translation>
     </message>
     <message>
         <source>Open...</source>
-        <translation type="unfinished"></translation>
+        <translation>Открыть...</translation>
     </message>
     <message>
         <source>RimSort</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSort</translation>
     </message>
     <message>
         <source>RimWorld</source>
-        <translation type="unfinished"></translation>
+        <translation>RimWorld</translation>
     </message>
     <message>
         <source>Root Directory</source>
-        <translation type="unfinished"></translation>
+        <translation>Корневая директория</translation>
     </message>
     <message>
         <source>Config Directory</source>
-        <translation type="unfinished"></translation>
+        <translation>Директория конфигурации</translation>
     </message>
     <message>
         <source>Logs Directory</source>
-        <translation type="unfinished"></translation>
+        <translation>Директория журналов</translation>
     </message>
     <message>
         <source>Local Mods Directory</source>
-        <translation type="unfinished"></translation>
+        <translation>Директория локальных модов</translation>
     </message>
     <message>
         <source>Steam Mods Directory</source>
-        <translation type="unfinished"></translation>
+        <translation>Директория модов Steam</translation>
     </message>
     <message>
         <source>Settings…</source>
-        <translation type="unfinished"></translation>
+        <translation>Настройки…</translation>
     </message>
     <message>
         <source>Exit</source>
-        <translation type="unfinished"></translation>
+        <translation>Выход</translation>
     </message>
     <message>
         <source>Edit</source>
-        <translation type="unfinished"></translation>
+        <translation>Правка</translation>
     </message>
     <message>
         <source>Cut</source>
-        <translation type="unfinished"></translation>
+        <translation>Вырезать</translation>
     </message>
     <message>
         <source>Copy</source>
-        <translation type="unfinished"></translation>
+        <translation>Копировать</translation>
     </message>
     <message>
         <source>Paste</source>
-        <translation type="unfinished"></translation>
+        <translation>Вставить</translation>
     </message>
     <message>
         <source>Rule Editor…</source>
-        <translation type="unfinished"></translation>
+        <translation>Редактор правил…</translation>
     </message>
     <message>
         <source>Reset Warning Toggles</source>
-        <translation type="unfinished"></translation>
+        <translation>Сбросить предупреждения</translation>
     </message>
     <message>
         <source>Download</source>
-        <translation type="unfinished"></translation>
+        <translation>Скачать</translation>
     </message>
     <message>
         <source>Add Git Mod</source>
-        <translation type="unfinished"></translation>
+        <translation>Добавить Git мод</translation>
     </message>
     <message>
         <source>Add Zip Mod</source>
-        <translation type="unfinished"></translation>
+        <translation>Добавить Zip мод</translation>
     </message>
     <message>
         <source>Browse Workshop</source>
-        <translation type="unfinished"></translation>
+        <translation>Просмотреть Workshop</translation>
     </message>
     <message>
         <source>Update Workshop Mods</source>
-        <translation type="unfinished"></translation>
+        <translation>Обновить моды Workshop</translation>
     </message>
     <message>
         <source>Instances</source>
-        <translation type="unfinished"></translation>
+        <translation>Инстансы</translation>
     </message>
     <message>
         <source>Current: &quot;Default&quot;</source>
-        <translation type="unfinished"></translation>
+        <translation>Текущий: &quot;По умолчанию&quot;</translation>
     </message>
     <message>
         <source>Backup Instance…</source>
-        <translation type="unfinished"></translation>
+        <translation>Резервное копирование инстанса…</translation>
     </message>
     <message>
         <source>Restore Instance…</source>
-        <translation type="unfinished"></translation>
+        <translation>Восстановить инстанс…</translation>
     </message>
     <message>
         <source>Clone Instance…</source>
-        <translation type="unfinished"></translation>
+        <translation>Клонировать инстанс…</translation>
     </message>
     <message>
         <source>Create Instance…</source>
-        <translation type="unfinished"></translation>
+        <translation>Создать инстанс…</translation>
     </message>
     <message>
         <source>Delete Instance…</source>
-        <translation type="unfinished"></translation>
+        <translation>Удалить инстанс…</translation>
     </message>
     <message>
         <source>Textures</source>
-        <translation type="unfinished"></translation>
+        <translation>Текстуры</translation>
     </message>
     <message>
         <source>Optimize Textures</source>
-        <translation type="unfinished"></translation>
+        <translation>Оптимизировать текстуры</translation>
     </message>
     <message>
         <source>Delete .dds Textures</source>
-        <translation type="unfinished"></translation>
+        <translation>Удалить .dds текстуры</translation>
     </message>
     <message>
         <source>Update</source>
-        <translation type="unfinished"></translation>
+        <translation>Обновить</translation>
     </message>
     <message>
         <source>Check for Updates…</source>
-        <translation type="unfinished"></translation>
+        <translation>Проверить наличие обновлений…</translation>
     </message>
     <message>
         <source>Check for Updates on Startup</source>
-        <translation type="unfinished"></translation>
+        <translation>Проверять наличие обновлений при запуске</translation>
     </message>
     <message>
         <source>Help</source>
-        <translation type="unfinished"></translation>
+        <translation>Помощь</translation>
     </message>
     <message>
         <source>RimSort Wiki…</source>
-        <translation type="unfinished"></translation>
+        <translation>Вики RimSort…</translation>
     </message>
 </context>
 <context>
     <name>MenuBarController</name>
     <message>
         <source>Current: {current_instance}</source>
-        <translation type="unfinished"></translation>
+        <translation>Текущий: {current_instance}</translation>
     </message>
 </context>
 <context>
@@ -2991,323 +3005,324 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
     <name>SettingsController</name>
     <message>
         <source>Reset to defaults</source>
-        <translation type="unfinished"></translation>
+        <translation>Сбросить настройки по умолчанию</translation>
     </message>
     <message>
         <source>Are you sure you want to reset all settings to their default values?</source>
-        <translation type="unfinished"></translation>
+        <translation>Вы уверены, что хотите сбросить все настройки к значениям по умолчанию?</translation>
     </message>
     <message>
         <source>Clear all locations</source>
-        <translation type="unfinished"></translation>
+        <translation>Очистить все местоположения</translation>
     </message>
     <message>
         <source>Are you sure you want to clear all locations?</source>
-        <translation type="unfinished"></translation>
+        <translation>Вы уверены, что хотите очистить все местоположения?</translation>
     </message>
     <message>
         <source>Confirm Build Database</source>
-        <translation type="unfinished"></translation>
+        <translation>Подтвердите создание базы данных</translation>
     </message>
     <message>
         <source>Are you sure you want to build the Steam Workshop database?</source>
-        <translation type="unfinished"></translation>
+        <translation>Вы уверены, что хотите создать базу данных Steam Workshop?</translation>
     </message>
     <message>
         <source>For most users this is not necessary as the GitHub SteamDB is adequate. Building the database may take a long time. Depending on your settings, it may also crawl through the entirety of the steam workshop via the webAPI. This can be a large amount of data and take a long time. Are you sure you want to continue?</source>
-        <translation type="unfinished"></translation>
+        <translation>Для большинства пользователей это не обязательно, так как GitHub SteamDB является адекватным. Создание базы данных может занять много времени. В зависимости от ваших настроек, он также может просмотреть всю библиотеку модов Steam через webAPI. Это может быть большой объем данных и занять много времени. Вы уверены, что хотите продолжить?</translation>
     </message>
 </context>
 <context>
     <name>SettingsDialog</name>
     <message>
         <source>Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Настройки</translation>
     </message>
     <message>
         <source>Reset to Defaults</source>
-        <translation type="unfinished"></translation>
+        <translation>Сбросить настройки по умолчанию</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Отмена</translation>
     </message>
     <message>
         <source>OK</source>
-        <translation type="unfinished"></translation>
+        <translation>ОК</translation>
     </message>
     <message>
         <source>Locations</source>
-        <translation type="unfinished"></translation>
+        <translation>Местоположения</translation>
     </message>
     <message>
         <source>Clear All Locations</source>
-        <translation type="unfinished"></translation>
+        <translation>Очистить все местоположения</translation>
     </message>
     <message>
         <source>Autodetect</source>
-        <translation type="unfinished"></translation>
+        <translation>Автоопределение</translation>
     </message>
     <message>
         <source>Game location</source>
-        <translation type="unfinished"></translation>
+        <translation>Местоположение игры</translation>
     </message>
     <message>
         <source>Open…</source>
-        <translation type="unfinished"></translation>
+        <translation>Открыть…</translation>
     </message>
     <message>
         <source>Choose…</source>
-        <translation type="unfinished"></translation>
+        <translation>Выбрать…</translation>
     </message>
     <message>
         <source>Clear…</source>
-        <translation type="unfinished"></translation>
+        <translation>Очистить…</translation>
     </message>
     <message>
         <source>Config location</source>
-        <translation type="unfinished"></translation>
+        <translation>Местоположение конфигурации</translation>
     </message>
     <message>
         <source>Steam mods location</source>
-        <translation type="unfinished"></translation>
+        <translation>Местоположение модов Steam</translation>
     </message>
     <message>
         <source>Local mods location</source>
-        <translation type="unfinished"></translation>
+        <translation>Местоположение локальных модов</translation>
     </message>
     <message>
         <source>Game location sets local mods location.</source>
-        <translation type="unfinished"></translation>
+        <translation>Местоположение игры устанавливает местоположение локальных модов.</translation>
     </message>
     <message>
         <source>Databases</source>
-        <translation type="unfinished"></translation>
+        <translation>Базы данных</translation>
     </message>
     <message>
         <source>None</source>
-        <translation type="unfinished"></translation>
+        <translation>Нет</translation>
     </message>
     <message>
         <source>No {none_lbl} will be used.</source>
-        <translation type="unfinished"></translation>
+        <translation>Никакой {none_lbl} не будет использован.</translation>
     </message>
     <message>
         <source>GitHub</source>
-        <translation type="unfinished"></translation>
+        <translation>GitHub</translation>
     </message>
     <message>
         <source>Upload…</source>
-        <translation type="unfinished"></translation>
+        <translation>Загрузить…</translation>
     </message>
     <message>
         <source>Download…</source>
-        <translation type="unfinished"></translation>
+        <translation>Скачать…</translation>
     </message>
     <message>
         <source>Local File</source>
-        <translation type="unfinished"></translation>
+        <translation>Локальный файл</translation>
     </message>
     <message>
         <source>Community Rules database</source>
-        <translation type="unfinished"></translation>
+        <translation>База данных правил сообщества</translation>
     </message>
     <message>
         <source>community rules database</source>
-        <translation type="unfinished"></translation>
+        <translation>база данных правил сообщества</translation>
     </message>
     <message>
         <source>Steam Workshop database</source>
-        <translation type="unfinished"></translation>
+        <translation>База данных Steam Workshop</translation>
     </message>
     <message>
         <source>Steam Workshop database expiry in Epoch Time (Use 0 to Disable Notification. Default is 7 Days)</source>
-        <translation type="unfinished"></translation>
+        <translation>Срок действия базы данных Steam Workshop в эпохе времени (используйте 0, чтобы отключить уведомление. По умолчанию 7 дней)</translation>
     </message>
     <message>
         <source>Cross Version Databases</source>
-        <translation type="unfinished"></translation>
+        <translation>Базы данных для разных версий</translation>
     </message>
     <message>
         <source>&quot;No Version Warning&quot; Database</source>
-        <translation type="unfinished"></translation>
+        <translation>База данных &quot;Нет предупреждения о версии&quot;</translation>
     </message>
     <message>
         <source>&quot;Use This Instead&quot; Database</source>
-        <translation type="unfinished"></translation>
+        <translation>База данных &quot;Используйте это вместо&quot;</translation>
     </message>
     <message>
         <source>Sorting</source>
-        <translation type="unfinished"></translation>
+        <translation>Сортировка</translation>
     </message>
     <message>
         <source>Sort mods</source>
-        <translation type="unfinished"></translation>
+        <translation>Сортировать моды</translation>
     </message>
     <message>
         <source>Alphabetically</source>
-        <translation type="unfinished"></translation>
+        <translation>По алфавиту</translation>
     </message>
     <message>
         <source>Topologically</source>
-        <translation type="unfinished"></translation>
+        <translation>По топологии</translation>
     </message>
     <message>
         <source>Use dependency rules for sorting.</source>
-        <translation type="unfinished"></translation>
+        <translation>Использовать правила зависимостей для сортировки.</translation>
     </message>
     <message>
         <source>If enabled, also uses moddependencies as loadTheseBefore, and mods will be sorted such that dependencies are loaded before the dependent mod.</source>
-        <translation type="unfinished"></translation>
+        <translation>Если включено, также использует moddependencies как loadTheseBefore, и моды будут отсортированы так, чтобы зависимости загружались перед зависимым модом.</translation>
     </message>
     <message>
         <source>Sort Dependencies</source>
-        <translation type="unfinished"></translation>
+        <translation>Сортировать зависимости</translation>
     </message>
     <message>
         <source>Prompt user to download dependencies when click in Sort</source>
-        <translation type="unfinished"></translation>
+        <translation>Запрашивать у пользователя загрузку зависимостей при нажатии на Сортировать</translation>
     </message>
     <message>
         <source>DB Builder</source>
-        <translation type="unfinished"></translation>
+        <translation>Конструктор БД</translation>
     </message>
     <message>
         <source>When building the database:</source>
-        <translation type="unfinished"></translation>
+        <translation>При создании базы данных:</translation>
     </message>
     <message>
         <source>Get PublishedFileIDs from locally installed mods.</source>
-        <translation type="unfinished"></translation>
+        <translation>Получить PublishedFileIDs из локально установленных модов.</translation>
     </message>
     <message>
         <source>Mods you wish to update must be installed, as the initial DB is built including data from mods&apos; About.xml files.</source>
-        <translation type="unfinished"></translation>
+        <translation>Моды, которые вы хотите обновить, должны быть установлены, так как начальная база данных создается с учетом данных из файлов About.xml модов.</translation>
     </message>
     <message>
         <source>Get PublishedFileIDs from the Steam Workshop.</source>
-        <translation type="unfinished"></translation>
+        <translation>Получить PublishedFileIDs из Steam Workshop.</translation>
     </message>
     <message>
         <source>Mods to be updated don&apos;t have to be installed, as the initial DB is built by scraping the Steam Workshop.</source>
-        <translation type="unfinished"></translation>
+        <translation>Моды, которые нужно обновить, не обязательно должны быть установлены, так как начальная база данных создается путем сканирования Steam Workshop.</translation>
     </message>
     <message>
         <source>Query DLC dependency data with Steamworks API</source>
-        <translation type="unfinished"></translation>
+        <translation>Запросить данные о зависимостях DLC с помощью Steamworks API</translation>
     </message>
     <message>
         <source>Update database instead of overwriting</source>
-        <translation type="unfinished"></translation>
+        <translation>Обновить базу данных вместо перезаписи</translation>
     </message>
     <message>
         <source>Steam API key:</source>
-        <translation type="unfinished"></translation>
+        <translation>Ключ API Steam:</translation>
     </message>
     <message>
         <source>Download all published Workshop mods via:</source>
-        <translation type="unfinished"></translation>
+        <translation>Скачать все опубликованные моды Workshop через:</translation>
     </message>
     <message>
         <source>SteamCMD</source>
-        <translation type="unfinished"></translation>
+        <translation>SteamCMD</translation>
     </message>
     <message>
         <source>Steam</source>
-        <translation type="unfinished"></translation>
+        <translation>Steam</translation>
     </message>
     <message>
         <source>Compare Databases</source>
-        <translation type="unfinished"></translation>
+        <translation>Сравнить базы данных</translation>
     </message>
     <message>
         <source>Merge Databases</source>
-        <translation type="unfinished"></translation>
+        <translation>Объединить базы данных</translation>
     </message>
     <message>
         <source>Build Database</source>
-        <translation type="unfinished"></translation>
+        <translation>Создать базу данных</translation>
     </message>
     <message>
         <source>Validate downloaded mods</source>
-        <translation type="unfinished"></translation>
+        <translation>Проверить загруженные моды</translation>
     </message>
     <message>
         <source>Automatically clear depot cache</source>
-        <translation type="unfinished"></translation>
+        <translation>Автоматически очищать кэш депо</translation>
     </message>
     <message>
         <source>Automatically clear the depot cache before downloading mods through SteamCMD.
 This may potentially prevent some issues with downloading mods such as download failures and deleted mods repopulating.</source>
-        <translation type="unfinished"></translation>
+        <translation>Автоматически очищать кэш депо перед загрузкой модов через SteamCMD.
+Это может предотвратить некоторые проблемы с загрузкой модов, такие как сбои загрузки и повторное появление удаленных модов.</translation>
     </message>
     <message>
         <source>SteamCMD installation location</source>
-        <translation type="unfinished"></translation>
+        <translation>Расположение установки SteamCMD</translation>
     </message>
     <message>
         <source>Clear depot cache</source>
-        <translation type="unfinished"></translation>
+        <translation>Очистить кэш депо</translation>
     </message>
     <message>
         <source>Clear the depot cache manually. This may be useful if you encounter issues with downloading mods through SteamCMD.</source>
-        <translation type="unfinished"></translation>
+        <translation>Очистить кэш депо вручную. Это может быть полезно, если вы столкнулись с проблемами при загрузке модов через SteamCMD.</translation>
     </message>
     <message>
         <source>Import .acf</source>
-        <translation type="unfinished"></translation>
+        <translation>Импортировать .acf</translation>
     </message>
     <message>
         <source>Delete .acf</source>
-        <translation type="unfinished"></translation>
+        <translation>Удалить .acf</translation>
     </message>
     <message>
         <source>Install SteamCMD</source>
-        <translation type="unfinished"></translation>
+        <translation>Установить SteamCMD</translation>
     </message>
     <message>
         <source>todds</source>
-        <translation type="unfinished"></translation>
+        <translation>todds</translation>
     </message>
     <message>
         <source>Quality preset</source>
-        <translation type="unfinished"></translation>
+        <translation>Предустановка качества</translation>
     </message>
     <message>
         <source>Optimized - Recommended for RimWorld</source>
-        <translation type="unfinished"></translation>
+        <translation>Оптимизировано - Рекомендуется для RimWorld</translation>
     </message>
     <message>
         <source>When optimizing textures</source>
-        <translation type="unfinished"></translation>
+        <translation>При оптимизации текстур</translation>
     </message>
     <message>
         <source>Optimize active mods only</source>
-        <translation type="unfinished"></translation>
+        <translation>Оптимизировать только активные моды</translation>
     </message>
     <message>
         <source>Optimize all mods</source>
-        <translation type="unfinished"></translation>
+        <translation>Оптимизировать все моды</translation>
     </message>
     <message>
         <source>Enable dry-run mode</source>
-        <translation type="unfinished"></translation>
+        <translation>Включить режим пробного запуска</translation>
     </message>
     <message>
         <source>Overwrite existing optimized textures</source>
-        <translation type="unfinished"></translation>
+        <translation>Перезаписать существующие оптимизированные текстуры</translation>
     </message>
     <message>
         <source>Theme</source>
-        <translation type="unfinished"></translation>
+        <translation>Тема</translation>
     </message>
     <message>
         <source>Theme Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Настройки темы</translation>
     </message>
     <message>
         <source>Enable to use theme / stylesheet instead of system Theme</source>
-        <translation type="unfinished"></translation>
+        <translation>Включить использование темы / таблицы стилей вместо системной темы</translation>
     </message>
     <message>
         <source>To add your own theme / stylesheet 
@@ -3321,127 +3336,137 @@ This may potentially prevent some issues with downloading mods such as download 
 NOTE 
 Name of folder will be used as name of the theme and any invalid theme will be ignored 
 </source>
-        <translation type="unfinished"></translation>
+        <translation> Чтобы добавить свою собственную тему / таблицу стилей
+
+1) Создайте новую папку в папке &apos;themes&apos; в вашей конфигурационной папке &apos;RimSort&apos;
+2) Скопируйте тему по умолчанию &apos;RimPy&apos; в папку, которую вы создали
+3) Отредактируйте скопированный файл &apos;style.qss&apos; по своему усмотрению
+4) Запустите &apos;RimSort&apos; и выберите свою тему из выпадающего списка
+5) Нажмите &apos;ОК&apos;, чтобы сохранить настройки и применить выбранную тему
+
+ПРИМЕЧАНИЕ
+Имя папки будет использоваться как имя темы, и любая недействительная тема будет игнорироваться
+</translation>
     </message>
     <message>
         <source>Open Theme Location</source>
-        <translation type="unfinished"></translation>
+        <translation>Открыть расположение темы</translation>
     </message>
     <message>
         <source>Font Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Настройки шрифта</translation>
     </message>
     <message>
         <source>Font Family</source>
-        <translation type="unfinished"></translation>
+        <translation>Семейство шрифтов</translation>
     </message>
     <message>
         <source>Font Size</source>
-        <translation type="unfinished"></translation>
+        <translation>Размер шрифта</translation>
     </message>
     <message>
         <source>Reset</source>
-        <translation type="unfinished"></translation>
+        <translation>Сброс</translation>
     </message>
     <message>
         <source>Language Setting</source>
-        <translation type="unfinished"></translation>
+        <translation>Настройки языка</translation>
     </message>
     <message>
         <source>Select Language (Restart required to apply changes)</source>
-        <translation type="unfinished"></translation>
+        <translation>Выберите язык (требуется перезапуск для применения изменений)</translation>
     </message>
     <message>
         <source>Window Size Configuration</source>
-        <translation type="unfinished"></translation>
+        <translation>Конфигурация размера окна</translation>
     </message>
     <message>
         <source>Window X Position:</source>
-        <translation type="unfinished"></translation>
+        <translation>Позиция окна по оси X:</translation>
     </message>
     <message>
         <source>Window Y Position:</source>
-        <translation type="unfinished"></translation>
+        <translation>Позиция окна по оси Y:</translation>
     </message>
     <message>
         <source>Window Width:</source>
-        <translation type="unfinished"></translation>
+        <translation>Ширина окна:</translation>
     </message>
     <message>
         <source>Window Height:</source>
-        <translation type="unfinished"></translation>
+        <translation>Высота окна:</translation>
     </message>
     <message>
         <source>Advanced</source>
-        <translation type="unfinished"></translation>
+        <translation>Расширенные</translation>
     </message>
     <message>
         <source>RimSort restart required for some settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Требуется перезапуск RimSort для применения некоторых настроек</translation>
     </message>
     <message>
         <source>Enable debug logging</source>
-        <translation type="unfinished"></translation>
+        <translation>Включить отладочный логгирование</translation>
     </message>
     <message>
         <source>Enable watchdog file monitor daemon</source>
-        <translation type="unfinished"></translation>
+        <translation>Включить демон мониторинга файлов</translation>
     </message>
     <message>
         <source>Enable mod type filter</source>
-        <translation type="unfinished"></translation>
+        <translation>Включить фильтр по типу мода</translation>
     </message>
     <message>
         <source>Hide invalid mods when filtering</source>
-        <translation type="unfinished"></translation>
+        <translation>Скрыть недействительные моды при фильтрации</translation>
     </message>
     <message>
         <source>Show duplicate mods warning</source>
-        <translation type="unfinished"></translation>
+        <translation>Показать предупреждение о дублирующихся модах</translation>
     </message>
     <message>
         <source>Check for mod updates on refresh</source>
-        <translation type="unfinished"></translation>
+        <translation>Проверять обновления модов при обновлении</translation>
     </message>
     <message>
         <source>Enable Steam client integration</source>
-        <translation type="unfinished"></translation>
+        <translation>Включить интеграцию с клиентом Steam</translation>
     </message>
     <message>
         <source>Download missing mods automatically</source>
-        <translation type="unfinished"></translation>
+        <translation>Автоматически загружать недостающие моды</translation>
     </message>
     <message>
         <source>Render Unity Rich Text in mod descriptions</source>
-        <translation type="unfinished"></translation>
+        <translation>Отображать Unity Rich Text в описаниях модов</translation>
     </message>
     <message>
         <source>Enable this option to render Unity Rich Text in mod descriptions. Images will not be displayed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Включите эту опцию, чтобы отображать Unity Rich Text в описаниях модов. Изображения не будут отображаться.</translation>
     </message>
     <message>
         <source>Update databases on startup</source>
-        <translation type="unfinished"></translation>
+        <translation>Обновлять базы данных при запуске</translation>
     </message>
     <message>
         <source>Enable this option to automatically update enabled databases when RimSort starts. This will check for updates and download them if available.</source>
-        <translation type="unfinished"></translation>
+        <translation>Включите эту опцию, чтобы автоматически обновлять включенные базы данных при запуске RimSort. Это будет проверять наличие обновлений и загружать их, если они доступны.</translation>
     </message>
     <message>
         <source>Rentry Auth:</source>
-        <translation type="unfinished"></translation>
+        <translation>Rentry Auth:</translation>
     </message>
     <message>
         <source>Obtain rentry auth code by emailing: support@rentry.co</source>
-        <translation type="unfinished"></translation>
+        <translation>Получите код аутентификации rentry, отправив электронное письмо на адрес: support@rentry.co</translation>
     </message>
     <message>
         <source>GitHub username:</source>
-        <translation type="unfinished"></translation>
+        <translation>Имя пользователя GitHub:</translation>
     </message>
     <message>
         <source>GitHub personal access token:</source>
-        <translation type="unfinished"></translation>
+        <translation>Личный токен доступа GitHub:</translation>
     </message>
     <message>
         <source>Enter a comma separated list of arguments to pass to the Rimworld executable 
@@ -3450,11 +3475,16 @@ Name of folder will be used as name of the theme and any invalid theme will be i
 
  -logfile,/path/to/file.log,-savedatafolder=/path/to/savedata,-popupwindow 
 </source>
-        <translation type="unfinished"></translation>
+        <translation>Введите список аргументов, разделенных запятыми, для передачи в исполняемый файл Rimworld
+
+ Примеры :
+
+ -logfile,/path/to/file.log,-savedatafolder=/path/to/savedata,-popupwindow
+</translation>
     </message>
     <message>
         <source>Edit Game Run Arguments:</source>
-        <translation type="unfinished"></translation>
+        <translation>Редактировать аргументы запуска игры:</translation>
     </message>
 </context>
 <context>
@@ -3896,139 +3926,139 @@ Details: {e}</source>
     <name>TroubleshootingDialog</name>
     <message>
         <source>Game Files Recovery</source>
-        <translation type="unfinished"></translation>
+        <translation>Восстановление файлов игры</translation>
     </message>
     <message>
         <source>⚠️ Warning: These operations will delete selected files permanently!</source>
-        <translation type="unfinished"></translation>
+        <translation>⚠️ Внимание: Эти операции навсегда удалят выбранные файлы!</translation>
     </message>
     <message>
         <source>If you&apos;re experiencing issues with your game, you can try the following recovery options. Steam will automatically redownload any deleted files on next launch.</source>
-        <translation type="unfinished"></translation>
+        <translation>Если у вас возникли проблемы с игрой, вы можете попробовать следующие варианты восстановления. Steam автоматически заново загрузит все удаленные файлы при следующем запуске.</translation>
     </message>
     <message>
         <source>Reset game files (Preserves local mods, deletes and redownloads game files)</source>
-        <translation type="unfinished"></translation>
+        <translation>Сбросить файлы игры (Сохраняет локальные моды, удаляет и заново загружает файлы игры)</translation>
     </message>
     <message>
         <source>Deletes and redownloads game files but keeps your local mods intact.</source>
-        <translation type="unfinished"></translation>
+        <translation>Удаляет и заново загружает файлы игры, но сохраняет ваши локальные моды.</translation>
     </message>
     <message>
         <source>Reset Steam Workshop mods (Deletes and redownloads all Steam mods)</source>
-        <translation type="unfinished"></translation>
+        <translation>Сбросить моды Steam Workshop (Удаляет и заново загружает все моды Steam)</translation>
     </message>
     <message>
         <source>Deletes all Steam Workshop mods and triggers redownload.</source>
-        <translation type="unfinished"></translation>
+        <translation>Удаляет все моды Steam Workshop и инициирует повторную загрузку.</translation>
     </message>
     <message>
         <source>Reset mod configurations (Preserves ModsConfig.xml and Prefs.xml)</source>
-        <translation type="unfinished"></translation>
+        <translation>Сбросить конфигурации модов (Сохраняет ModsConfig.xml и Prefs.xml)</translation>
     </message>
     <message>
         <source>Deletes mod configuration files except ModsConfig.xml and Prefs.xml.</source>
-        <translation type="unfinished"></translation>
+        <translation>Удаляет файлы конфигурации модов, кроме ModsConfig.xml и Prefs.xml.</translation>
     </message>
     <message>
         <source>Reset game configurations (ModsConfig.xml, Prefs.xml, KeyPrefs.xml)*</source>
-        <translation type="unfinished"></translation>
+        <translation>Сбросить конфигурации игры (ModsConfig.xml, Prefs.xml, KeyPrefs.xml)*</translation>
     </message>
     <message>
         <source>Deletes game configuration files including ModsConfig.xml, Prefs.xml, and KeyPrefs.xml.</source>
-        <translation type="unfinished"></translation>
+        <translation>Удаляет файлы конфигурации игры, включая ModsConfig.xml, Prefs.xml и KeyPrefs.xml.</translation>
     </message>
     <message>
         <source>After resetting game configurations, launch the game directly through Steam to regenerate ModsConfig.xml, then restart RimSort.</source>
-        <translation type="unfinished"></translation>
+        <translation>После сброса конфигураций игры запустите игру напрямую через Steam, чтобы регенерировать ModsConfig.xml, затем перезапустите RimSort.</translation>
     </message>
     <message>
         <source>Apply Recovery</source>
-        <translation type="unfinished"></translation>
+        <translation>Применить восстановление</translation>
     </message>
     <message>
         <source>Apply the selected recovery options</source>
-        <translation type="unfinished"></translation>
+        <translation>Применить выбранные варианты восстановления</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Отмена</translation>
     </message>
     <message>
         <source>Cancel and clear selections</source>
-        <translation type="unfinished"></translation>
+        <translation>Отмена и очистка выборов</translation>
     </message>
     <message>
         <source>Mod Configuration Options</source>
-        <translation type="unfinished"></translation>
+        <translation>Опции конфигурации модов</translation>
     </message>
     <message>
         <source>Manage your mod configurations and load order. These options help you organize and share your mod setup.</source>
-        <translation type="unfinished"></translation>
+        <translation>Управляйте конфигурациями модов и порядком загрузки. Эти опции помогут вам организовать и поделиться вашей настройкой модов.</translation>
     </message>
     <message>
         <source>Save your current mod list to a .xml file to share with others.</source>
-        <translation type="unfinished"></translation>
+        <translation>Сохраните текущий список модов в файл .xml, чтобы поделиться им с другими.</translation>
     </message>
     <message>
         <source>Export Mod List</source>
-        <translation type="unfinished"></translation>
+        <translation>Экспортировать список модов</translation>
     </message>
     <message>
         <source>Export your current mod list to a file</source>
-        <translation type="unfinished"></translation>
+        <translation>Экспортировать текущий список модов в файл</translation>
     </message>
     <message>
         <source>Import a mod list in .xml format from another player</source>
-        <translation type="unfinished"></translation>
+        <translation>Импортировать список модов в формате .xml от другого игрока</translation>
     </message>
     <message>
         <source>Import Mod List</source>
-        <translation type="unfinished"></translation>
+        <translation>Импортировать список модов</translation>
     </message>
     <message>
         <source>Import a mod list from a file</source>
-        <translation type="unfinished"></translation>
+        <translation>Импортировать список модов из файла</translation>
     </message>
     <message>
         <source>⚠️ WARNING: This will delete all mods in your Mods folder and reset to vanilla state</source>
-        <translation type="unfinished"></translation>
+        <translation>⚠️ ВНИМАНИЕ: Это удалит все моды в вашей папке Mods и сбросит игру до состояния по умолчанию</translation>
     </message>
     <message>
         <source>Clear Mods</source>
-        <translation type="unfinished"></translation>
+        <translation>Очистить моды</translation>
     </message>
     <message>
         <source>Delete all mods and reset to vanilla state</source>
-        <translation type="unfinished"></translation>
+        <translation>Удалить все моды и сбросить до состояния по умолчанию</translation>
     </message>
     <message>
         <source>Steam Utilities</source>
-        <translation type="unfinished"></translation>
+        <translation>Утилиты Steam</translation>
     </message>
     <message>
         <source>🔄 Clear Download Cache</source>
-        <translation type="unfinished"></translation>
+        <translation>🔄 Очистить кэш загрузки</translation>
     </message>
     <message>
         <source>✓ Verify Game Files</source>
-        <translation type="unfinished"></translation>
+        <translation>✓ Проверить файлы игры</translation>
     </message>
     <message>
         <source>🔧 Repair Steam library</source>
-        <translation type="unfinished"></translation>
+        <translation>🔧 Восстановить библиотеку Steam</translation>
     </message>
     <message>
         <source>Delete Steam&apos;s downloading folder to fix download issues</source>
-        <translation type="unfinished"></translation>
+        <translation>Удалить папку загрузки Steam, чтобы исправить проблемы с загрузкой</translation>
     </message>
     <message>
         <source>Check and repair RimWorld game files</source>
-        <translation type="unfinished"></translation>
+        <translation>Проверить и восстановить файлы игры RimWorld</translation>
     </message>
     <message>
         <source>Verify integrity of all installed Steam games</source>
-        <translation type="unfinished"></translation>
+        <translation>Проверить целостность всех установленных игр Steam</translation>
     </message>
 </context>
 <context>
