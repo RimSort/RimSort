@@ -145,7 +145,7 @@ def run_lupdate(language: Optional[str] = None) -> bool:
             locales_dir = Path("locales")
             ts_files = list(locales_dir.glob("*.ts"))
             if ts_files:
-                cmd.extend(["-ts"] + [str(f) for f in ts_files])
+                cmd.extend(["-ts"] + [str(f) for f in ts_files] + ["-no-obsolete", "-locations", "none"])
             else:
                 print("⚠️ No .ts files found in locales/")
                 return False
