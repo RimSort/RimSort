@@ -2047,8 +2047,42 @@ class MainContent(QObject):
                 "Cached mod lists for restore function not set as client started improperly. Passing on restore"
             )
 
+    
+    def _check_and_warn_if_dds_mods_missing(self) -> bool:
+        """
+        Checks if crucial DDS support mods are active and warns if not.
+        Returns True if a warning was shown.
+        """
+        REQUIRED_PACKAGE_IDS = {"telefonmast.graphicssettings", "bs.performance"} # I could only find these two so far
+
+        try:
+            for uuid in self.mods_panel.active_mods_list.uuids:
+                package_id = self.metadata_manager.internal_local_metadata[uuid]["packageid"]
+                if package_id.lower() in REQUIRED_PACKAGE_IDS:
+                    return False
+                
+        except (AttributeError, KeyError) as e:
+            logger.error(f"Error accessing metadata during DDS mod check (short version): {e}. Warning user anyway.")
+            
+        # If loop completes without returning False.
+        dialogue.show_warning(
+            title=self.tr("DDS Support Mod Missing"),
+            text=self.tr(
+                "To load .dds textures, the game requires Graphic Settings+ or Performance fish."
+            ),
+            information=self.tr(
+                "The 'Optimize Textures' feature will convert images to .dds files. However, without one of the aforementioned mods active, the game will not be able to load these optimized .dds textures, and you may not see any performance improvement or visual change. Please ensure at least one of these mods is active."
+            ),
+        )
+        return True 
+    
+
     # TODDS ACTIONS
     def _do_optimize_textures(self, todds_txt_path: str) -> None:
+
+        # Check for dds support mods and warn if missing.
+        self._check_and_warn_if_dds_mods_missing()
+
         # Setup environment
         todds_interface = ToddsInterface(
             preset=self.settings_controller.settings.todds_preset,
