@@ -44,7 +44,7 @@ class KeyringManager:
 
                 backend = keyring.get_keyring()
                 logger.warning(f"Using keyring backend: {backend.__class__.__name__}")
-                logger.warning("Keyring backend:", keyring.get_keyring())
+                logger.warning(f"Keyring backend: {keyring.get_keyring()}")
                 logger.warning(f"Backend type: {type(backend)}")
                 try:
                     keyring.set_password("test_service", "test_user", "test_password")
