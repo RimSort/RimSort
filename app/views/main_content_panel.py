@@ -2045,7 +2045,59 @@ class MainContent(QObject):
         else:
             logger.warning(
                 "Cached mod lists for restore function not set as client started improperly. Passing on restore"
+            )  
+    
+    def _warn_missing_dds_mods(self) -> None:
+        """
+        Warns user if no known DDS-supporting mods are active, and offers to download one.
+        """
+        try:
+            active_check_ids = {
+                mod_data["package_id"]
+                for mod_data in app_constants.KNOWN_DDS_SUPPORT_MODS.values()
+            }
+            is_dds_mod_active = any(
+                self.metadata_manager.internal_local_metadata[uuid]["packageid"].lower() in active_check_ids
+                for uuid in self.mods_panel.active_mods_list.uuids
             )
+            if is_dds_mod_active:
+                return
+        except (AttributeError, KeyError) as e:
+            return
+
+        mod_choice = dialogue.show_dialogue_conditional(
+            title="Missing DDS Support Mod",
+            text="No DDS-supporting mod is currently active. Select one to download:",
+            information=(
+                "The Optimize Textures feature requires a DDS-supporting mod. "
+                "Without one, you may not see performance gains or visual changes."
+            ),
+            button_text_override=list(app_constants.KNOWN_DDS_SUPPORT_MODS.keys()),
+        )
+
+        if mod_choice not in app_constants.KNOWN_DDS_SUPPORT_MODS:
+            return
+
+        method_choice = dialogue.show_dialogue_conditional(
+            title="Choose Download Method",
+            text=f"Download {mod_choice} using:",
+            button_text_override=["Steam", "SteamCMD"],
+        )
+
+        if not method_choice:
+            return
+
+        selected_publish_id = app_constants.KNOWN_DDS_SUPPORT_MODS[mod_choice]["publish_id"]
+
+        if method_choice == "Steam":
+            self._do_steamworks_api_call_animated(["subscribe", [selected_publish_id]])
+
+        elif method_choice == "SteamCMD":
+            if not self.steamcmd_wrapper.setup:
+                self._do_setup_steamcmd()
+                return
+            self._do_download_mods_with_steamcmd(publishedfileids=[str(selected_publish_id)])
+
 
     
     def _warn_missing_dds_mods(self) -> None:

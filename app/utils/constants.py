@@ -69,6 +69,16 @@ SEARCH_DATA_SOURCE_FILTER_INDEXES = [
     "csharp",
     "xml",
 ]
+KNOWN_DDS_SUPPORT_MODS = {
+    "Graphic Settings+": {
+        "package_id": "telefonmast.graphicssettings",
+        "publish_id": 1678847247 
+    },
+    "Performance Fish": {
+        "package_id": "bs.performance",
+        "publish_id": 3357374652
+    }
+}
 KNOWN_MOD_REPLACEMENTS = {
     "brrainz.harmony": {"zetrith.prepatcher"},
     "aoba.motorization.engine": {"rimthunder.core"},
