@@ -2048,22 +2048,21 @@ class MainContent(QObject):
             )
 
     
-    def _warn_missing_dds_mods(self):
+    def _warn_missing_dds_mods(self) -> None:
         """
         Checks if crucial DDS support mods are active and warns if not, lets user select wether to download them
-        Returns True if a warning was shown.
         """
         
         try:
             for uuid in self.mods_panel.active_mods_list.uuids:
                 package_id = self.metadata_manager.internal_local_metadata[uuid]["packageid"]
                 if package_id.lower() in app_constants.KNOWN_DDS_SUPPORT_MODS:
-                    return False
+                    return 
                 
         except (AttributeError, KeyError) as e:
             logger.error(f"Error accessing metadata during DDS mod check : {e}")
+            return
             
-
         # Loop finished meaning no dds mods found
         # show option to download
         choice = dialogue.show_dialogue_conditional(
@@ -2081,9 +2080,8 @@ class MainContent(QObject):
                 self._do_setup_steamcmd()
             if steamcmd_wrapper.setup:
                         self._do_download_mods_with_steamcmd(publishedfileids=[1678847247]) # Downloading Graphic settings+
-
+        
     
-
     # TODDS ACTIONS
     def _do_optimize_textures(self, todds_txt_path: str) -> None:
 
