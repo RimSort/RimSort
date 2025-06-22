@@ -2097,41 +2097,6 @@ class MainContent(QObject):
                 self._do_setup_steamcmd()
                 return
             self._do_download_mods_with_steamcmd(publishedfileids=[str(selected_publish_id)])
-
-
-    
-    def _warn_missing_dds_mods(self) -> None:
-        """
-        Checks if crucial DDS support mods are active and warns if not, lets user select wether to download them
-        """
-        
-        try:
-            for uuid in self.mods_panel.active_mods_list.uuids:
-                package_id = self.metadata_manager.internal_local_metadata[uuid]["packageid"]
-                if package_id.lower() in app_constants.KNOWN_DDS_SUPPORT_MODS:
-                    return 
-                
-        except (AttributeError, KeyError) as e:
-            logger.error(f"Error accessing metadata during DDS mod check : {e}")
-            return
-            
-        # Loop finished meaning no dds mods found
-        # show option to download
-        choice = dialogue.show_dialogue_conditional(
-            title="Missing Graphic settings+",
-            text="You are missing the Graphic settings+ mod. Do you want to download it?",
-            information="The 'Optimize Textures' feature will convert images to .dds files. However, without one of the aforementioned mods active, the game will not be able to load these optimized .dds textures, and you may not see any performance improvement or visual change. Please ensure at least one of these mods is active.",
-            button_text_override=["Download"]
-            )
-        
-        if choice == "Download":
-            steamcmd_wrapper = (
-                    self.steamcmd_wrapper                    
-                    )
-            if not steamcmd_wrapper.setup:
-                self._do_setup_steamcmd()
-            if steamcmd_wrapper.setup:
-                        self._do_download_mods_with_steamcmd(publishedfileids=["1678847247"]) # Downloading Graphic settings+
         
     
     # TODDS ACTIONS
