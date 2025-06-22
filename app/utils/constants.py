@@ -58,6 +58,7 @@ RIMWORLD_DLC_METADATA = {
     },
 }
 RIMWORLD_PACKAGE_IDS = [v["packageid"] for v in RIMWORLD_DLC_METADATA.values()]
+KNOWN_DDS_SUPPORT_MODS = {"telefonmast.graphicssettings", "bs.performance"}
 SEARCH_DATA_SOURCE_FILTER_INDEXES = [
     "all",
     "expansion",
