@@ -58,7 +58,6 @@ RIMWORLD_DLC_METADATA = {
     },
 }
 RIMWORLD_PACKAGE_IDS = [v["packageid"] for v in RIMWORLD_DLC_METADATA.values()]
-KNOWN_DDS_SUPPORT_MODS = {"telefonmast.graphicssettings", "bs.performance"}
 SEARCH_DATA_SOURCE_FILTER_INDEXES = [
     "all",
     "expansion",
@@ -72,7 +71,7 @@ SEARCH_DATA_SOURCE_FILTER_INDEXES = [
 KNOWN_DDS_SUPPORT_MODS = {
     "Graphic Settings+": {
         "package_id": "telefonmast.graphicssettings",
-        "publish_id": 1678847247 
+        "publish_id": 1678847247
     },
     "Performance Fish": {
         "package_id": "bs.performance",
