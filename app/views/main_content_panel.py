@@ -2079,7 +2079,7 @@ class MainContent(QObject):
             if not steamcmd_wrapper.setup:
                 self._do_setup_steamcmd()
             if steamcmd_wrapper.setup:
-                        self._do_download_mods_with_steamcmd(publishedfileids=[1678847247]) # Downloading Graphic settings+
+                        self._do_download_mods_with_steamcmd(publishedfileids=["1678847247"]) # Downloading Graphic settings+
         
     
     # TODDS ACTIONS
