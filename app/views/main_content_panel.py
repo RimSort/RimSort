@@ -15,7 +15,7 @@ from math import ceil
 from multiprocessing import Pool, cpu_count
 from pathlib import Path
 from tempfile import gettempdir
-from typing import Any, Callable, Self
+from typing import Any, Callable, Self, cast
 from urllib.parse import urlparse
 from zipfile import ZipFile
 
@@ -2093,9 +2093,7 @@ class MainContent(QObject):
         selected_publish_id = app_constants.KNOWN_DDS_SUPPORT_MODS[mod_choice]["publish_id"]
 
         if method_choice == "Steam":
-            self._do_steamworks_api_call_animated(["subscribe", [selected_publish_id]]) 
-            # FIXME: The line uses # type: ignore due to MyPy expecting 'str' for selected_publish_id
-            # in the inner list, while the ctypes backend requires an 'int' otherwise it crashes.
+            self._do_steamworks_api_call_animated(["subscribe", cast(list[str],[selected_publish_id])]) # Testing cast
 
         elif method_choice == "SteamCMD":
             if not self.steamcmd_wrapper.setup:
