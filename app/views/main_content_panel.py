@@ -1243,7 +1243,9 @@ class MainContent(QObject):
         success, new_order = sorter.sort()
 
         # Log the sort result and the order
-        logger.debug(f"Sort result: {success}, new order: {new_order}, current order: {current_order}")
+        logger.debug(
+            f"Sort result: {success}, new order: {new_order}, current order: {current_order}"
+        )
         # Check if successful and orders differ
         if success and new_order != current_order:
             logger.info(
@@ -2396,6 +2398,10 @@ class MainContent(QObject):
                 ),
             )
             if url and ok:
+                # Check internet connection before attempting task
+                if not check_internet_connection():
+                    dialogue.show_internet_connection_error()
+                    return
                 fd, temp_path = tempfile.mkstemp(suffix=".zip")
                 os.close(fd)
 
@@ -3229,9 +3235,7 @@ class MainContent(QObject):
             else game_install_path / "steam_appid.txt"
         )
         if steam_client_integration and not steam_appid_path.exists():
-            with open(
-                steam_appid_path, "w", encoding="utf-8"
-            ) as f:
+            with open(steam_appid_path, "w", encoding="utf-8") as f:
                 f.write("294100")
         elif not steam_client_integration and steam_appid_path.exists():
             steam_appid_path.unlink()
