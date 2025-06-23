@@ -746,6 +746,10 @@ class MainContent(QObject):
                 information=self.tr("Skipping update check..."),
             )
             return
+        # Check internet connection before attempting task
+        if not check_internet_connection():
+            dialogue.show_internet_connection_error()
+            return
         # NUITKA
         logger.debug("Checking for RimSort update...")
         current_version = AppInfo().app_version
