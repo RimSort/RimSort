@@ -14,7 +14,11 @@ from app.controllers.settings_controller import SettingsController
 from app.utils import git_utils
 from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
-from app.utils.generic import extract_git_dir_name, extract_git_user_or_org
+from app.utils.generic import (
+    check_internet_connection,
+    extract_git_dir_name,
+    extract_git_user_or_org,
+)
 from app.utils.git_utils import GitOperationConfig
 from app.utils.git_worker import (
     GitBatchPushResults,
@@ -32,6 +36,7 @@ from app.views.dialogue import (
     BinaryChoiceDialog,
     InformationBox,
     show_dialogue_conditional,
+    show_internet_connection_error,
 )
 from app.views.main_content_panel import MainContent
 
@@ -346,6 +351,10 @@ class MainContentController(QObject):
     @Slot(str, str)
     def _do_git_clone(self, base_path: str, repo_url: str) -> None:
         """Handle clone request: ask user before starting."""
+        # Check internet connection before attempting task
+        if not check_internet_connection():
+            show_internet_connection_error()
+            return
         repo_folder = git_utils.git_get_repo_name(repo_url)
         full_repo_path = Path(base_path) / repo_folder
 
@@ -393,6 +402,11 @@ class MainContentController(QObject):
         """
         if not self.settings_controller.settings.update_databases_on_startup:
             logger.info("Update databases on startup is disabled.")
+            return
+
+        # Check internet connection before attempting task
+        if not check_internet_connection():
+            show_internet_connection_error()
             return
 
         # Community Rules database
@@ -563,6 +577,11 @@ class MainContentController(QObject):
             repo_url: The original repository URL to contribute to
             file_name: The database file name to upload
         """
+        # Check internet connection before attempting task
+        if not check_internet_connection():
+            show_internet_connection_error()
+            return
+
         if not repo_url or not repo_url.strip():
             InformationBox(
                 title=self.tr("Invalid repository"),
