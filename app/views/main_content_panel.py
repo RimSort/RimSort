@@ -1557,6 +1557,10 @@ class MainContent(QObject):
             self.__missing_mods_prompt()
 
     def _do_import_list_workshop_collection(self) -> None:
+        # Check internet connection before attempting task
+        if not check_internet_connection():
+            dialogue.show_internet_connection_error()
+            return
         # Create an instance of collection_import
         # This also triggers the import dialogue and gets result
         collection_import = CollectionImport(metadata_manager=self.metadata_manager)
