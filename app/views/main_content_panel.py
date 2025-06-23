@@ -48,6 +48,7 @@ from app.models.animations import LoadingAnimation
 from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 from app.utils.generic import (
+    check_internet_connection,
     chunks,
     copy_to_clipboard_safely,
     launch_game_process,
@@ -2096,6 +2097,10 @@ class MainContent(QObject):
         self.steam_browser.show()
 
     def _do_check_for_workshop_updates(self) -> None:
+        # Check internet connection before attempting task
+        if not check_internet_connection():
+            dialogue.show_internet_connection_error()
+            return
         # Query Workshop for update data
         updates_checked = self.do_threaded_loading_animation(
             gif_path=str(
