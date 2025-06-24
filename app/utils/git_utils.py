@@ -1,5 +1,7 @@
 """This module contains a collection of utility functions for working with git repositories."""
 
+import socket
+import threading
 from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import Enum
@@ -75,6 +77,8 @@ class GitOperationConfig:
 
     notify_errors: bool = True
     notification_handler: Optional[GitNotificationHandler] = None
+    fetch_timeout: int = 30  # Timeout for fetch operations in seconds
+    connection_timeout: int = 10  # Timeout for connection checks in seconds
 
     def __post_init__(self) -> None:
         if self.notification_handler is None:
@@ -95,6 +99,72 @@ class GitOperationConfig:
     ) -> "GitOperationConfig":
         """Create a config with a specific notification handler."""
         return cls(notify_errors=True, notification_handler=handler)
+
+    @classmethod
+    def create_with_timeout(
+        cls, fetch_timeout: int = 30, connection_timeout: int = 10
+    ) -> "GitOperationConfig":
+        """Create a config with custom timeout values."""
+        return cls(fetch_timeout=fetch_timeout, connection_timeout=connection_timeout)
+
+
+def _check_network_connectivity(
+    host: str = "8.8.8.8", port: int = 53, timeout: float = 3
+) -> bool:
+    """Check if network connectivity is available.
+
+    Args:
+        host: Host to check connectivity to.
+        port: Port to use for the check.
+        timeout: Timeout for the connection attempt.
+
+    Returns:
+        True if connectivity is available, False otherwise.
+    """
+    try:
+        socket.setdefaulttimeout(timeout)
+        socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
+        return True
+    except Exception:
+        return False
+
+
+def _fetch_with_timeout(remote: pygit2.Remote, timeout: int) -> bool:
+    """Fetch from remote with timeout handling.
+
+    Args:
+        remote: The pygit2 remote object.
+        timeout: Timeout in seconds.
+
+    Returns:
+        True if fetch was successful, False if timeout or error occurred.
+
+    Raises:
+        Exception: If the fetch operation fails with an error.
+    """
+    result: dict[str, Any] = {"success": False, "error": None}
+
+    def fetch_target() -> None:
+        try:
+            remote.fetch()
+            result["success"] = True
+        except Exception as e:
+            result["error"] = e
+
+    fetch_thread = threading.Thread(target=fetch_target)
+    fetch_thread.daemon = True
+    fetch_thread.start()
+    fetch_thread.join(timeout)
+
+    if fetch_thread.is_alive():
+        # Timeout occurred
+        logger.warning(f"Fetch operation timed out after {timeout} seconds")
+        return False
+
+    if result["error"]:
+        raise result["error"]
+
+    return bool(result["success"])
 
 
 def _handle_git_error(
@@ -309,7 +379,8 @@ class GitStashResult(Enum):
     def is_error(self) -> bool:
         """Check if the stash result indicates an error."""
         return self == GitStashResult.GIT_ERROR
-    
+
+
 def get_config(config: Optional[GitOperationConfig]) -> GitOperationConfig:
     """Helper to get or create a default GitOperationConfig."""
     if config is None:
@@ -507,10 +578,16 @@ def git_check_updates(
             remote = repo.remotes["origin"]
         except KeyError:
             logger.warning("No 'origin' remote found in repository")
+            return None  # Fetch updates from remote with timeout
+        try:
+            if not _fetch_with_timeout(remote, config.fetch_timeout):
+                logger.error(
+                    f"Fetch operation timed out after {config.fetch_timeout} seconds"
+                )
+                return None
+        except Exception as e:
+            logger.error(f"Fetch operation failed: {str(e)}")
             return None
-
-        # Fetch updates from remote
-        remote.fetch()
 
         # Get current branch
         current_branch = repo.head.shorthand
@@ -574,9 +651,7 @@ def git_pull(
             branch = repo.head.shorthand
         except pygit2.GitError:
             logger.error("No active branch found or repository is empty")
-            return GitPullResult.GIT_ERROR
-
-    # Find the specified remote
+            return GitPullResult.GIT_ERROR  # Find the specified remote
     remote = None
     for r in repo.remotes:
         if r.name == remote_name:
@@ -588,8 +663,21 @@ def git_pull(
         return GitPullResult.UNKNOWN_REMOTE
 
     try:
-        # Fetch updates from remote
-        remote.fetch()
+        # Check network connectivity first
+        if not _check_network_connectivity(timeout=config.connection_timeout):
+            logger.warning("No network connectivity detected")
+            return GitPullResult.GIT_ERROR
+
+        # Fetch updates from remote with timeout
+        try:
+            if not _fetch_with_timeout(remote, config.fetch_timeout):
+                logger.error(
+                    f"Fetch operation timed out after {config.fetch_timeout} seconds"
+                )
+                return GitPullResult.GIT_ERROR
+        except Exception as e:
+            logger.error(f"Fetch operation failed: {str(e)}")
+            return GitPullResult.GIT_ERROR
 
         # Get remote branch reference
         remote_ref = f"refs/remotes/{remote.name}/{branch}"
