@@ -26,9 +26,12 @@ from app.utils.gui_info import GUIInfo
 
 
 class SettingsDialog(QDialog):
-    def __init__(
-        self,
-    ) -> None:
+    """
+    Dialog for application settings, organized into tabs.
+    Provides UI elements for all settings categories.
+    """
+
+    def __init__(self) -> None:
         super().__init__()
 
         self.setWindowModality(Qt.WindowModality.ApplicationModal)
@@ -38,23 +41,12 @@ class SettingsDialog(QDialog):
         # Use GUIInfo to set the window size and position from settings
         self.setGeometry(*GUIInfo().get_window_geometry())
 
-        main_layout = QVBoxLayout()
-        self.setLayout(main_layout)
-
-        # Initialize the QTabWidget
+        main_layout = QVBoxLayout(self)
         self.tab_widget = QTabWidget()
         main_layout.addWidget(self.tab_widget)
 
         # Initialize the tabs
-        self._do_locations_tab()
-        self._do_databases_tab()
-        self._do_cross_version_databases_tab()
-        self._do_sorting_tab()
-        self._do_db_builder_tab()
-        self._do_steamcmd_tab()
-        self._do_todds_tab()
-        self._do_themes_tab()
-        self._do_advanced_tab()
+        self._init_tabs()
 
         # Bottom buttons layout
         button_layout = QHBoxLayout()
@@ -76,6 +68,17 @@ class SettingsDialog(QDialog):
         self.global_ok_button = QPushButton(self.tr("OK"), self)
         self.global_ok_button.setDefault(True)
         button_layout.addWidget(self.global_ok_button)
+
+    def _init_tabs(self) -> None:
+        """Initialize all tabs in the settings dialog."""
+        self._do_locations_tab()
+        self._do_databases_tab()
+        self._do_sorting_tab()
+        self._do_db_builder_tab()
+        self._do_steamcmd_tab()
+        self._do_todds_tab()
+        self._do_themes_tab()
+        self._do_advanced_tab()
 
     def _do_locations_tab(self) -> None:
         tab = QWidget()
@@ -115,13 +118,11 @@ class SettingsDialog(QDialog):
         self.locations_autodetect_button = QPushButton(self.tr("Autodetect"), tab)
         buttons_layout.addWidget(self.locations_autodetect_button)
 
-    # jscpd:ignore-start
     def _do_game_location_area(self, tab_layout: QVBoxLayout) -> None:
         group_box = QGroupBox()
         tab_layout.addWidget(group_box)
 
-        group_layout = QVBoxLayout()
-        group_box.setLayout(group_layout)
+        group_layout = QVBoxLayout(group_box)
 
         header_layout = QHBoxLayout()
         group_layout.addLayout(header_layout)
@@ -151,8 +152,7 @@ class SettingsDialog(QDialog):
         group_box = QGroupBox()
         tab_layout.addWidget(group_box)
 
-        group_layout = QVBoxLayout()
-        group_box.setLayout(group_layout)
+        group_layout = QVBoxLayout(group_box)
 
         header_layout = QHBoxLayout()
         group_layout.addLayout(header_layout)
@@ -184,8 +184,7 @@ class SettingsDialog(QDialog):
         group_box = QGroupBox()
         tab_layout.addWidget(group_box)
 
-        group_layout = QVBoxLayout()
-        group_box.setLayout(group_layout)
+        group_layout = QVBoxLayout(group_box)
 
         header_layout = QHBoxLayout()
         group_layout.addLayout(header_layout)
@@ -217,8 +216,7 @@ class SettingsDialog(QDialog):
         group_box = QGroupBox()
         tab_layout.addWidget(group_box)
 
-        group_layout = QVBoxLayout()
-        group_box.setLayout(group_layout)
+        group_layout = QVBoxLayout(group_box)
 
         header_layout = QHBoxLayout()
         group_layout.addLayout(header_layout)
@@ -241,8 +239,6 @@ class SettingsDialog(QDialog):
         )
         group_layout.addWidget(self.local_mods_folder_location)
 
-    # jscpd:ignore-end
-
     def _do_databases_tab(self) -> None:
         tab = QWidget()
         self.tab_widget.addTab(tab, self.tr("Databases"))
@@ -252,6 +248,8 @@ class SettingsDialog(QDialog):
 
         self._do_community_rules_db_group(tab_layout)
         self._do_steam_workshop_db_group(tab_layout)
+        self._do_no_version_warning_db_group(tab_layout)
+        self._do_use_this_instead_db_group(tab_layout)
 
     def __create_db_group(
         self, section_lbl: str, none_lbl: str, tab_layout: QBoxLayout
@@ -415,16 +413,6 @@ class SettingsDialog(QDialog):
         self.database_expiry.setTextMargins(GUIInfo().text_field_margins)
         self.database_expiry.setFixedHeight(GUIInfo().default_font_line_height * 2)
         group_layout.addWidget(self.database_expiry)
-
-    def _do_cross_version_databases_tab(self) -> None:
-        tab = QWidget()
-        self.tab_widget.addTab(tab, self.tr("Cross Version Databases"))
-
-        tab_layout = QVBoxLayout()
-        tab.setLayout(tab_layout)
-
-        self._do_no_version_warning_db_group(tab_layout)
-        self._do_use_this_instead_db_group(tab_layout)
 
     def _do_no_version_warning_db_group(self, tab_layout: QBoxLayout) -> None:
         section_lbl = self.tr('"No Version Warning" Database')
