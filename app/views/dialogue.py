@@ -259,6 +259,16 @@ def show_fatal_error(
     diag.exec_()
 
 
+def show_internet_connection_error() -> None:
+    """Show a warning dialog for no internet connection."""
+    logger.info("Showing no internet connection error dialog")
+    show_warning(
+        title="No Internet Connection",
+        text="Please check your internet connection.",
+        information="RimSort requires an active internet connection to perform this operation.",
+    )
+
+
 class _BaseDialogue(QDialog):
     """Base dialogue class for all custom dialogues."""
 

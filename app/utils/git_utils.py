@@ -309,6 +309,12 @@ class GitStashResult(Enum):
     def is_error(self) -> bool:
         """Check if the stash result indicates an error."""
         return self == GitStashResult.GIT_ERROR
+    
+def get_config(config: Optional[GitOperationConfig]) -> GitOperationConfig:
+    """Helper to get or create a default GitOperationConfig."""
+    if config is None:
+        return GitOperationConfig()
+    return config
 
 
 def git_discover(
@@ -323,8 +329,7 @@ def git_discover(
     Returns:
         The repository object if found, otherwise None.
     """
-    if config is None:
-        config = GitOperationConfig()
+    config = get_config(config)
 
     path_str = str(path)
     logger.info(f"Attempting to discover git repository at: {path_str}")
@@ -412,8 +417,7 @@ def git_clone(
     Returns:
         Tuple of (repository object if successful, result enum).
     """
-    if config is None:
-        config = GitOperationConfig()
+    config = get_config(config)
 
     logger.info(f"Attempting git cloning: {repo_url} to {repo_path}")
     repo_path_str = str(repo_path)
@@ -488,8 +492,7 @@ def git_check_updates(
     Returns:
         A walker object if updates are found, otherwise None.
     """
-    if config is None:
-        config = GitOperationConfig()
+    config = get_config(config)
 
     logger.info(f"Checking for updates in git repository: {repo.path}")
 
@@ -562,8 +565,7 @@ def git_pull(
     Returns:
         Result of the pull operation.
     """
-    if config is None:
-        config = GitOperationConfig()
+    config = get_config(config)
 
     logger.info(f"Pulling updates from git repository: {repo.path}")
 
@@ -708,8 +710,7 @@ def git_push(
     Returns:
         Result of the push operation.
     """
-    if config is None:
-        config = GitOperationConfig()
+    config = get_config(config)
 
     logger.info(f"Pushing updates to git repository: {repo.path}")
 
@@ -793,8 +794,7 @@ def git_stage_commit(
     Returns:
         Result of the stage and commit operation.
     """
-    if config is None:
-        config = GitOperationConfig()
+    config = get_config(config)
     if paths is None:
         paths = []
 
@@ -918,8 +918,7 @@ def git_get_status(
         }
         Returns None if error occurs.
     """
-    if config is None:
-        config = GitOperationConfig()
+    config = get_config(config)
 
     logger.debug(f"Getting status for git repository: {repo.path}")
 
@@ -996,8 +995,7 @@ def git_get_commit_info(
         }
         Returns None if error occurs.
     """
-    if config is None:
-        config = GitOperationConfig()
+    config = get_config(config)
 
     try:
         if commit_id is None:
@@ -1077,8 +1075,7 @@ def git_stash(
     Returns:
         Result of the stash operation.
     """
-    if config is None:
-        config = GitOperationConfig()
+    config = get_config(config)
 
     logger.info(f"Stashing changes in git repository: {repo.path}")
 
@@ -1153,8 +1150,7 @@ def git_stash_list(
     Returns:
         List of stash references.
     """
-    if config is None:
-        config = GitOperationConfig()
+    config = get_config(config)
 
     logger.info(f"Listing stashes in git repository: {repo.path}")
     try:
@@ -1190,8 +1186,7 @@ def git_stash_drop(
     Returns:
         Result of the drop operation.
     """
-    if config is None:
-        config = GitOperationConfig()
+    config = get_config(config)
 
     logger.info(f"Dropping stash {stash_index} from git repository: {repo.path}")
     try:
@@ -1222,8 +1217,7 @@ def git_has_uncommitted_changes(
     Returns:
         True if there are uncommitted changes (staged or unstaged), False otherwise.
     """
-    if config is None:
-        config = GitOperationConfig()
+    config = get_config(config)
 
     try:
         status = repo.status()
@@ -1291,8 +1285,7 @@ def git_get_current_branch(
     Returns:
         The current branch name, or None if HEAD is detached or on error.
     """
-    if config is None:
-        config = GitOperationConfig()
+    config = get_config(config)
 
     try:
         if repo.head_is_detached:
@@ -1325,8 +1318,7 @@ def git_get_remote_url(
     Returns:
         The remote URL, or None if not found.
     """
-    if config is None:
-        config = GitOperationConfig()
+    config = get_config(config)
 
     try:
         for remote in repo.remotes:
