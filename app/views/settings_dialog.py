@@ -54,6 +54,7 @@ class SettingsDialog(QDialog):
         self._do_steamcmd_tab()
         self._do_todds_tab()
         self._do_themes_tab()
+        self._do_security_tab()
         self._do_advanced_tab()
 
         # Bottom buttons layout
@@ -961,6 +962,15 @@ class SettingsDialog(QDialog):
 
         language_controller = LanguageController()
         language_controller.populate_languages_combobox
+
+    def _do_security_tab(self) -> None:
+        from app.views.secure_settings_widget import SecureSettingsWidget
+
+        # Create the security widget
+        self.security_widget = SecureSettingsWidget()
+
+        # Add it as a tab
+        self.tab_widget.addTab(self.security_widget, self.tr("Security"))
 
     def _do_advanced_tab(self) -> None:
         tab = QWidget()
