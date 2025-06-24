@@ -1,6 +1,5 @@
 """This module contains a collection of utility functions for working with git repositories."""
 
-import socket
 import threading
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -15,7 +14,7 @@ from pygit2.enums import CheckoutStrategy, ResetMode, SortMode
 from pygit2.repository import Repository
 from PySide6.QtWidgets import QMessageBox
 
-from app.utils.generic import delete_files_with_condition
+from app.utils.generic import check_internet_connection, delete_files_with_condition
 from app.views.dialogue import InformationBox
 
 
@@ -106,27 +105,6 @@ class GitOperationConfig:
     ) -> "GitOperationConfig":
         """Create a config with custom timeout values."""
         return cls(fetch_timeout=fetch_timeout, connection_timeout=connection_timeout)
-
-
-def _check_network_connectivity(
-    host: str = "8.8.8.8", port: int = 53, timeout: float = 3
-) -> bool:
-    """Check if network connectivity is available.
-
-    Args:
-        host: Host to check connectivity to.
-        port: Port to use for the check.
-        timeout: Timeout for the connection attempt.
-
-    Returns:
-        True if connectivity is available, False otherwise.
-    """
-    try:
-        socket.setdefaulttimeout(timeout)
-        socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
-        return True
-    except Exception:
-        return False
 
 
 def _fetch_with_timeout(remote: pygit2.Remote, timeout: int) -> bool:
@@ -664,7 +642,7 @@ def git_pull(
 
     try:
         # Check network connectivity first
-        if not _check_network_connectivity(timeout=config.connection_timeout):
+        if not check_internet_connection(timeout=config.connection_timeout):
             logger.warning("No network connectivity detected")
             return GitPullResult.GIT_ERROR
 
