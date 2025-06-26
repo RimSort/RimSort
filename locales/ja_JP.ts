@@ -3214,10 +3214,6 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
         <translation>Steamワークショップデータベースの有効期限（0を使用して通知を無効にします。デフォルトは7日）</translation>
     </message>
     <message>
-        <source>Cross Version Databases</source>
-        <translation>クロスバージョンデータベース</translation>
-    </message>
-    <message>
         <source>&quot;No Version Warning&quot; Database</source>
         <translation>&quot;バージョン警告なし&quot;データベース</translation>
     </message>

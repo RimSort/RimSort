@@ -310,7 +310,7 @@ When unchecked, search all file types with standard search.</source>
     </message>
     <message>
         <source>Mod Name</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Nom du mod</translation>
     </message>
     <message>
         <source>File Name</source>
@@ -392,11 +392,11 @@ When unchecked, search all file types with standard search.</source>
     <name>LogReader</name>
     <message>
         <source>Ready</source>
-        <translation type="unfinished"></translation>
+        <translation>Prêt</translation>
     </message>
     <message>
         <source>Search...</source>
-        <translation type="unfinished"></translation>
+        <translation>Recherche...</translation>
     </message>
     <message>
         <source>Refresh</source>
@@ -404,134 +404,134 @@ When unchecked, search all file types with standard search.</source>
     </message>
     <message>
         <source>Import ACF Data</source>
-        <translation type="unfinished"></translation>
+        <translation>Importer les données ACF</translation>
     </message>
     <message>
         <source>Export ACF Data</source>
-        <translation type="unfinished"></translation>
+        <translation>Exporter les données ACF</translation>
     </message>
     <message>
         <source>Export to CSV</source>
-        <translation type="unfinished"></translation>
+        <translation>Exporter vers CSV</translation>
     </message>
     <message>
         <source>Loaded {count} items | Last updated: {time}</source>
-        <translation type="unfinished"></translation>
+        <translation>Chargé {count} éléments | Dernière mise à jour : {time}</translation>
     </message>
     <message>
         <source>Export canceled by user.</source>
-        <translation type="unfinished"></translation>
+        <translation>Exportation annulée par l&apos;utilisateur.</translation>
     </message>
     <message>
         <source>Export failed: Permission denied - check file permissions</source>
-        <translation type="unfinished"></translation>
+        <translation>Échec de l&apos;exportation : Permission refusée - vérifiez les autorisations de fichier</translation>
     </message>
     <message>
         <source>Export Error</source>
-        <translation type="unfinished"></translation>
+        <translation>Erreur d&apos;exportation</translation>
     </message>
     <message>
         <source>Export failed: File system error - {e}</source>
-        <translation type="unfinished"></translation>
+        <translation>Échec de l&apos;exportation : Erreur du système de fichiers - {e}</translation>
     </message>
     <message>
         <source>Export failed: File system error</source>
-        <translation type="unfinished"></translation>
+        <translation>Échec de l&apos;exportation : Erreur du système de fichiers</translation>
     </message>
     <message>
         <source>Exporting to CSV...</source>
-        <translation type="unfinished"></translation>
+        <translation>Exportation vers CSV...</translation>
     </message>
     <message>
         <source>Exporting rows...</source>
-        <translation type="unfinished"></translation>
+        <translation>Exportation des lignes...</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Annuler</translation>
     </message>
     <message>
         <source>Export failed due to an unknown error</source>
-        <translation type="unfinished"></translation>
+        <translation>Échec de l&apos;exportation en raison d&apos;une erreur inconnue</translation>
     </message>
     <message>
         <source>View in Steam Workshop</source>
-        <translation type="unfinished"></translation>
+        <translation>Voir dans le Steam Workshop</translation>
     </message>
     <message>
         <source>Open Mod Folder</source>
-        <translation type="unfinished"></translation>
+        <translation>Ouvrir le dossier du mod</translation>
     </message>
     <message>
         <source>Published File ID</source>
-        <translation type="unfinished"></translation>
+        <translation>ID de fichier publié</translation>
     </message>
     <message>
         <source>Last Updated</source>
-        <translation type="unfinished"></translation>
+        <translation>Dernière mise à jour</translation>
     </message>
     <message>
         <source>Relative Time</source>
-        <translation type="unfinished"></translation>
+        <translation>Temps relatif</translation>
     </message>
     <message>
         <source>Type</source>
-        <translation type="unfinished"></translation>
+        <translation>Type</translation>
     </message>
     <message>
         <source>Mod Name</source>
-        <translation type="unfinished"></translation>
+        <translation>Nom du mod</translation>
     </message>
     <message>
         <source>Mod Path</source>
-        <translation type="unfinished"></translation>
+        <translation>Chemin du mod</translation>
     </message>
     <message>
         <source>Conform acf import</source>
-        <translation type="unfinished"></translation>
+        <translation>Conformer l&apos;importation ACF</translation>
     </message>
     <message>
         <source>This will replace your current steamcmd .acf file</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Are you sure you want to import .acf? THis only works for steamcmd</source>
-        <translation type="unfinished"></translation>
+        <translation>Cela remplacera votre fichier .acf steamcmd actuel</translation>
     </message>
     <message>
         <source>SteamCMD interface not properly initialized</source>
-        <translation type="unfinished"></translation>
+        <translation>Interface SteamCMD mal initialisée</translation>
     </message>
     <message>
         <source>ACF file not found: {acf_path}</source>
-        <translation type="unfinished"></translation>
+        <translation>Fichier ACF non trouvé : {acf_path}</translation>
     </message>
     <message>
         <source>ACF file not found at: {acf_path}</source>
-        <translation type="unfinished"></translation>
+        <translation>Fichier ACF non trouvé à : {acf_path}</translation>
     </message>
     <message>
         <source>Invalid file path provided for export: {file_path}</source>
-        <translation type="unfinished"></translation>
+        <translation>Chemin de fichier invalide fourni pour l&apos;exportation : {file_path}</translation>
     </message>
     <message>
         <source>Successfully exported ACF to {file_path}</source>
-        <translation type="unfinished"></translation>
+        <translation>ACF exporté avec succès vers {file_path}</translation>
     </message>
     <message>
         <source>Export Success</source>
-        <translation type="unfinished"></translation>
+        <translation>Exportation réussie</translation>
     </message>
     <message>
         <source>Export failed: {e}</source>
-        <translation type="unfinished"></translation>
+        <translation>Échec de l&apos;exportation : {e}</translation>
     </message>
     <message>
         <source>Export failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Échec de l&apos;exportation</translation>
     </message>
     <message>
         <source>Exportfailed unknown exception occurred</source>
+        <translation>Échec de l&apos;exportation : une exception inconnue s&apos;est produite</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to import .acf? THis only works for steamcmd</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -999,7 +999,7 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
     </message>
     <message>
         <source>RimSort</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">RimSort</translation>
     </message>
     <message>
         <source>No PublishedFileIds were supplied in operation.</source>
@@ -1179,7 +1179,7 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Annuler</translation>
     </message>
     <message>
         <source>Updates Completed</source>
@@ -1957,35 +1957,35 @@ How would you like to proceed?</source>
     </message>
     <message>
         <source>RimSort</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSort</translation>
     </message>
     <message>
         <source>RimWorld</source>
-        <translation type="unfinished"></translation>
+        <translation>RimWorld</translation>
     </message>
     <message>
         <source>Root Directory</source>
-        <translation type="unfinished"></translation>
+        <translation>Répertoire racine</translation>
     </message>
     <message>
         <source>Config Directory</source>
-        <translation type="unfinished"></translation>
+        <translation>Répertoire de configuration</translation>
     </message>
     <message>
         <source>Logs Directory</source>
-        <translation type="unfinished"></translation>
+        <translation>Répertoire des journaux</translation>
     </message>
     <message>
         <source>Local Mods Directory</source>
-        <translation type="unfinished"></translation>
+        <translation>Répertoire des mods locaux</translation>
     </message>
     <message>
         <source>Steam Mods Directory</source>
-        <translation type="unfinished"></translation>
+        <translation>Répertoire des mods Steam</translation>
     </message>
     <message>
         <source>Settings…</source>
-        <translation type="unfinished"></translation>
+        <translation>Paramètres…</translation>
     </message>
     <message>
         <source>Exit</source>
@@ -2025,7 +2025,7 @@ How would you like to proceed?</source>
     </message>
     <message>
         <source>Add Zip Mod</source>
-        <translation type="unfinished"></translation>
+        <translation>Ajouter un mod Zip</translation>
     </message>
     <message>
         <source>Browse Workshop</source>
@@ -2041,7 +2041,7 @@ How would you like to proceed?</source>
     </message>
     <message>
         <source>Current: &quot;Default&quot;</source>
-        <translation type="unfinished"></translation>
+        <translation>Actuel : &quot;Par défaut&quot;</translation>
     </message>
     <message>
         <source>Backup Instance…</source>
@@ -2253,7 +2253,7 @@ Please select your preferred mod variant in the table below. You can also open e
     </message>
     <message>
         <source>RimSort</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">RimSort</translation>
     </message>
     <message>
         <source>Successfully deleted {count} seleted mods.</source>
@@ -3017,7 +3017,7 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Annuler</translation>
     </message>
     <message>
         <source>OK</source>
@@ -3153,10 +3153,6 @@ Name of folder will be used as name of the theme and any invalid theme will be i
 
  -logfile,/path/to/file.log,-savedatafolder=/path/to/savedata,-popupwindow 
 </source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Cross Version Databases</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3721,7 +3717,7 @@ WARNING: This will permanently delete all mods in your Mods folder and reset to 
     </message>
     <message>
         <source>Export failed</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Échec de l&apos;exportation</translation>
     </message>
     <message>
         <source>{mods_config} does not exist, skipping mod export.</source>
@@ -3931,7 +3927,7 @@ Details: {e}</source>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Annuler</translation>
     </message>
     <message>
         <source>Cancel and clear selections</source>
@@ -4248,7 +4244,7 @@ The following table displays Workshop mods with suggested replacements according
     <name>show_dialogue_conditional</name>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Annuler</translation>
     </message>
 </context>
 <context>
