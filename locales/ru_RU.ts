@@ -1158,6 +1158,14 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
         <source>No suggestions were found in the &quot;Use This Instead&quot; database.</source>
         <translation>Не найдено ни одной подсказки в базе данных &quot;Используйте это вместо этого&quot;.</translation>
     </message>
+    <message>
+        <source>Failed to read existing database</source>
+        <translation>Не удалось прочитать существующую базу данных</translation>
+    </message>
+    <message>
+        <source>Failed to read the existing database!</source>
+        <translation>Не удалось прочитать существующую базу данных!</translation>
+    </message>
 </context>
 <context>
     <name>MainContentController</name>
@@ -3201,10 +3209,6 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
     <message>
         <source>Steam Workshop database expiry in Epoch Time (Use 0 to Disable Notification. Default is 7 Days)</source>
         <translation>Срок действия базы данных Steam Workshop в эпохе времени (используйте 0, чтобы отключить уведомление. По умолчанию 7 дней)</translation>
-    </message>
-    <message>
-        <source>Cross Version Databases</source>
-        <translation>Базы данных для разных версий</translation>
     </message>
     <message>
         <source>&quot;No Version Warning&quot; Database</source>

@@ -3219,10 +3219,6 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
         <translation>Steam 创意工坊数据库到期时间（使用 0 禁用通知，默认为 7 天）</translation>
     </message>
     <message>
-        <source>Cross Version Databases</source>
-        <translation>跨版本数据库</translation>
-    </message>
-    <message>
         <source>&quot;No Version Warning&quot; Database</source>
         <translation>&apos;&apos;无版本警告&apos;&apos; 数据库</translation>
     </message>
@@ -3526,11 +3522,11 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     </message>
     <message>
         <source>Update databases on startup</source>
-        <translation type="unfinished"></translation>
+        <translation>启动时更新数据库</translation>
     </message>
     <message>
         <source>Enable this option to automatically update enabled databases when RimSort starts. This will check for updates and download them if available.</source>
-        <translation type="unfinished"></translation>
+        <translation>启用此选项将在 RimSort 启动时自动更新启用的数据库。这将检查更新并在可用时下载它们。</translation>
     </message>
     <message>
         <source>Rentry Auth:</source>
