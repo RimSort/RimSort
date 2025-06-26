@@ -394,11 +394,11 @@ When unchecked, search all file types with standard search.</source>
     <name>InstanceController</name>
     <message>
         <source>Error restoring instance</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибка восстановления инстанса</translation>
     </message>
     <message>
         <source>An error occurred while reading instance archive: {e}</source>
-        <translation type="unfinished"></translation>
+        <translation>Произошла ошибка при чтении архива инстанса: {e}</translation>
     </message>
 </context>
 <context>
@@ -708,252 +708,261 @@ Do you want to update now?</source>
     </message>
     <message>
         <source>Download Rentry Mods</source>
-        <translation type="unfinished"></translation>
+        <translation>Скачать моды Rentry</translation>
     </message>
     <message>
         <source>Please select a download method.</source>
-        <translation type="unfinished"></translation>
+        <translation>Пожалуйста, выберите метод загрузки.</translation>
     </message>
     <message>
         <source>Select which method you want to use to download missing Rentry mods.</source>
-        <translation type="unfinished"></translation>
+        <translation>Выберите метод, который вы хотите использовать для загрузки отсутствующих модов Rentry.</translation>
     </message>
     <message>
         <source>Export active mod list</source>
-        <translation type="unfinished"></translation>
+        <translation>Экспортировать список активных модов</translation>
     </message>
     <message>
         <source>Copied active mod list report to clipboard...</source>
-        <translation type="unfinished"></translation>
+        <translation>Скопирован отчет о списке активных модов в буфер обмена...</translation>
     </message>
     <message>
         <source>Click &quot;Show Details&quot; to see the full report!</source>
-        <translation type="unfinished"></translation>
+        <translation>Нажмите &quot;Показать детали&quot;, чтобы увидеть полный отчет!</translation>
     </message>
     <message>
         <source>Uploaded active mod list</source>
-        <translation type="unfinished"></translation>
+        <translation>Загружен список активных модов</translation>
     </message>
     <message>
         <source>Uploaded active mod list report to Rentry.co! The URL has been copied to your clipboard:
 
 {rentry_uploader.url}</source>
-        <translation type="unfinished"></translation>
+        <translation>Отчет о списке активных модов загружен на Rentry.co! URL скопирован в буфер обмена:
+
+{rentry_uploader.url}</translation>
     </message>
     <message>
         <source>Failed to upload</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось загрузить</translation>
     </message>
     <message>
         <source>Failed to upload exported active mod list to Rentry.co</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось загрузить экспортированный список активных модов на Rentry.co</translation>
     </message>
     <message>
         <source>Could not open directory</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось открыть директорию</translation>
     </message>
     <message>
         <source>{directory_name} path does not exist or is not set.</source>
-        <translation type="unfinished"></translation>
+        <translation>{directory_name} путь не существует или не установлен.</translation>
     </message>
     <message>
         <source>Would you like to set the path now?</source>
-        <translation type="unfinished"></translation>
+        <translation>Хотите установить путь сейчас?</translation>
     </message>
     <message>
         <source>Open settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Открыть настройки</translation>
     </message>
     <message>
         <source>File not found</source>
-        <translation type="unfinished"></translation>
+        <translation>Файл не найден</translation>
     </message>
     <message>
         <source>The file you are trying to upload does not exist.</source>
-        <translation type="unfinished"></translation>
+        <translation>Файл, который вы пытаетесь загрузить, не существует.</translation>
     </message>
     <message>
         <source>File: {path}</source>
-        <translation type="unfinished"></translation>
+        <translation>Файл: {path}</translation>
     </message>
     <message>
         <source>Uploading {path.name} to 0x0.st...</source>
-        <translation type="unfinished"></translation>
+        <translation>Загрузка {path.name} на 0x0.st...</translation>
     </message>
     <message>
         <source>Uploaded file</source>
-        <translation type="unfinished"></translation>
+        <translation>Файл загружен</translation>
     </message>
     <message>
         <source>Uploaded {path.name} to http://0x0.st/</source>
-        <translation type="unfinished"></translation>
+        <translation>Загружен {path.name} на http://0x0.st/</translation>
     </message>
     <message>
         <source>The URL has been copied to your clipboard:
 
 {ret}</source>
-        <translation type="unfinished"></translation>
+        <translation>URL скопирован в буфер обмена:
+
+{ret}</translation>
     </message>
     <message>
         <source>Failed to upload file.</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось загрузить файл.</translation>
     </message>
     <message>
         <source>Failed to upload the file to 0x0.st</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось загрузить файл на 0x0.st</translation>
     </message>
     <message>
         <source>Could not save active mods</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось сохранить активные моды</translation>
     </message>
     <message>
         <source>Failed to save active mods to file:</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось сохранить активные моды в файл:</translation>
     </message>
     <message>
         <source>Checking Steam Workshop mods for updates...</source>
-        <translation type="unfinished"></translation>
+        <translation>Проверка модов Steam Workshop на наличие обновлений...</translation>
     </message>
     <message>
         <source>Unable to check for updates</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось проверить наличие обновлений</translation>
     </message>
     <message>
         <source>RimSort was unable to query Steam WebAPI for update information!
 </source>
-        <translation type="unfinished"></translation>
+        <translation>RimSort не удалось запросить Steam WebAPI для получения информации об обновлениях!
+</translation>
     </message>
     <message>
         <source>Are you connected to the Internet?</source>
-        <translation type="unfinished"></translation>
+        <translation>Вы подключены к Интернету?</translation>
     </message>
     <message>
         <source>All Workshop mods appear to be up to date!</source>
-        <translation type="unfinished"></translation>
+        <translation>Все моды Workshop, похоже, обновлены!</translation>
     </message>
     <message>
         <source>RimSort - SteamCMD setup</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSort - Настройка SteamCMD</translation>
     </message>
     <message>
         <source>Unable to create SteamCMD runner!</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось создать исполняемый файл SteamCMD!</translation>
     </message>
     <message>
         <source>There is an active process already running!</source>
-        <translation type="unfinished"></translation>
+        <translation>Уже запущен активный процесс!</translation>
     </message>
     <message>
         <source>Unable to initiate SteamCMD installation. Local mods path not set!</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось инициировать установку SteamCMD. Путь к локальным модам не установлен!</translation>
     </message>
     <message>
         <source>Please configure local mods path in Settings before attempting to install.</source>
-        <translation type="unfinished"></translation>
+        <translation>Пожалуйста, настройте путь к локальным модам в настройках перед попыткой установки.</translation>
     </message>
     <message>
         <source>RimSort</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSort</translation>
     </message>
     <message>
         <source>No PublishedFileIds were supplied in operation.</source>
-        <translation type="unfinished"></translation>
+        <translation>В операции не были предоставлены идентификаторы PublishedFileIds.</translation>
     </message>
     <message>
         <source>Please add mods to list before attempting to download.</source>
-        <translation type="unfinished"></translation>
+        <translation>Пожалуйста, добавьте моды в список перед попыткой загрузки.</translation>
     </message>
     <message>
         <source>SteamCMD not found</source>
-        <translation type="unfinished"></translation>
+        <translation>SteamCMD не найден</translation>
     </message>
     <message>
         <source>SteamCMD executable was not found.</source>
-        <translation type="unfinished"></translation>
+        <translation>Исполняемый файл SteamCMD не найден.</translation>
     </message>
     <message>
         <source>Please setup an existing SteamCMD prefix, or setup a new prefix with &quot;Setup SteamCMD&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>Пожалуйста, настройте существующий префикс SteamCMD или создайте новый префикс с помощью &quot;Настроить SteamCMD&quot;.</translation>
     </message>
     <message>
         <source>Processing Steam subscription action(s) via Steamworks API...</source>
-        <translation type="unfinished"></translation>
+        <translation>Обработка действий подписки Steam через Steamworks API...</translation>
     </message>
     <message>
         <source>Download or select from local</source>
-        <translation type="unfinished"></translation>
+        <translation>Скачать или выбрать из локального</translation>
     </message>
     <message>
         <source>Please select a ZIP file to add to the local mods directory.</source>
-        <translation type="unfinished"></translation>
+        <translation>Пожалуйста, выберите ZIP-файл для добавления в локальный каталог модов.</translation>
     </message>
     <message>
         <source>You can download a ZIP file from the internet, or select a file from your local machine.</source>
-        <translation type="unfinished"></translation>
+        <translation>Вы можете скачать ZIP-файл из Интернета или выбрать файл с вашего локального компьютера.</translation>
     </message>
     <message>
         <source>Enter zip file url</source>
-        <translation type="unfinished"></translation>
+        <translation>Введите URL ZIP-файла</translation>
     </message>
     <message>
         <source>Enter a zip file url (http/https) to download to local mods:</source>
-        <translation type="unfinished"></translation>
+        <translation>Введите URL ZIP-файла (http/https) для загрузки в локальные моды:</translation>
     </message>
     <message>
         <source>Failed to download zip file</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось загрузить ZIP-файл</translation>
     </message>
     <message>
         <source>The zip file could not be downloaded.</source>
-        <translation type="unfinished"></translation>
+        <translation>ZIP-файл не удалось загрузить.</translation>
     </message>
     <message>
         <source>File: {file_path}
 Error: {e}</source>
-        <translation type="unfinished"></translation>
+        <translation>Файл: {file_path}
+Ошибка: {e}</translation>
     </message>
     <message>
         <source>The selected file does not exist.</source>
-        <translation type="unfinished"></translation>
+        <translation>Выбранный файл не существует.</translation>
     </message>
     <message>
         <source>File: {file_path}</source>
-        <translation type="unfinished"></translation>
+        <translation>Файл: {file_path}</translation>
     </message>
     <message>
         <source>Unsupported Compression Method</source>
-        <translation type="unfinished"></translation>
+        <translation>Неподдерживаемый метод сжатия</translation>
     </message>
     <message>
         <source>This ZIP file uses a compression method that is not supported by this version.</source>
-        <translation type="unfinished"></translation>
+        <translation>Этот ZIP-файл использует метод сжатия, который не поддерживается этой версией.</translation>
     </message>
     <message>
         <source>Failed to extract zip file</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось извлечь ZIP-файл</translation>
     </message>
     <message>
         <source>The zip file could not be extracted.</source>
-        <translation type="unfinished"></translation>
+        <translation>ZIP-файл не удалось извлечь.</translation>
     </message>
     <message>
         <source>Existing files or directories found</source>
-        <translation type="unfinished"></translation>
+        <translation>Обнаружены существующие файлы или каталоги</translation>
     </message>
     <message>
         <source>All files in the archive already exist in the target path.</source>
-        <translation type="unfinished"></translation>
+        <translation>Все файлы в архиве уже существуют в целевом пути.</translation>
     </message>
     <message>
         <source>How would you like to proceed?
 
 1) Overwrite All — Replace all existing files and directories.
 2) Cancel — Abort the operation.</source>
-        <translation type="unfinished"></translation>
+        <translation>Как вы хотите продолжить?
+
+1) Перезаписать все — Заменить все существующие файлы и каталоги.
+2) Отменить — Прервать операцию.</translation>
     </message>
     <message>
         <source>The following files or directories already exist in the target path:</source>
-        <translation type="unfinished"></translation>
+        <translation>Следующие файлы или каталоги уже существуют в целевом пути:</translation>
     </message>
     <message>
         <source>{conflicts_list}
@@ -963,90 +972,99 @@ How would you like to proceed?
 1) Overwrite All — Replace all existing files and directories.
 2) Skip Existing — Extract only new files and leave existing ones untouched.
 3) Cancel — Abort the extraction.</source>
-        <translation type="unfinished"></translation>
+        <translation>{conflicts_list}
+
+Как вы хотите продолжить?
+
+1) Перезаписать все — Заменить все существующие файлы и каталоги.
+2) Пропустить существующие — Извлечь только новые файлы и оставить существующие без изменений.
+3) Отменить — Прервать извлечение.</translation>
     </message>
     <message>
         <source>Extraction completed</source>
-        <translation type="unfinished"></translation>
+        <translation>Извлечение завершено</translation>
     </message>
     <message>
         <source>The ZIP file was successfully extracted!</source>
-        <translation type="unfinished"></translation>
+        <translation>ZIP-файл был успешно извлечен!</translation>
     </message>
     <message>
         <source>Extraction failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось извлечь ZIP-файл</translation>
     </message>
     <message>
         <source>An error occurred during extraction.</source>
-        <translation type="unfinished"></translation>
+        <translation>Во время извлечения произошла ошибка.</translation>
     </message>
     <message>
         <source>git not found</source>
-        <translation type="unfinished"></translation>
+        <translation>git не найден</translation>
     </message>
     <message>
         <source>git executable was not found in $PATH!</source>
-        <translation type="unfinished"></translation>
+        <translation>Исполняемый файл git не найден в $PATH!</translation>
     </message>
     <message>
         <source>Git integration will not work without Git installed! Do you want to open download page for Git?
 
 If you just installed Git, please restart RimSort for the PATH changes to take effect.</source>
-        <translation type="unfinished"></translation>
+        <translation>Интеграция Git не будет работать без установленного Git! Вы хотите открыть страницу загрузки Git?
+
+Если вы только что установили Git, пожалуйста, перезапустите RimSort, чтобы изменения PATH вступили в силу.</translation>
     </message>
     <message>
         <source>Edit Steam DB repo</source>
-        <translation type="unfinished"></translation>
+        <translation>Редактировать репозиторий Steam DB</translation>
     </message>
     <message>
         <source>Enter URL (https://github.com/AccountName/RepositoryName):</source>
-        <translation type="unfinished"></translation>
+        <translation>Введите URL (https://github.com/AccountName/RepositoryName):</translation>
     </message>
     <message>
         <source>Edit Community Rules DB repo</source>
-        <translation type="unfinished"></translation>
+        <translation>Редактировать репозиторий правил сообщества</translation>
     </message>
     <message>
         <source>No PublishedFileIDs</source>
-        <translation type="unfinished"></translation>
+        <translation>Нет PublishedFileIDs</translation>
     </message>
     <message>
         <source>DB Builder query did not return any PublishedFileIDs!</source>
-        <translation type="unfinished"></translation>
+        <translation>Запрос DB Builder не вернул никаких PublishedFileIDs!</translation>
     </message>
     <message>
         <source>This is typically caused by invalid/missing Steam WebAPI key, or a connectivity issue to the Steam WebAPI.
 PublishedFileIDs are needed to retrieve mods from Steam!</source>
-        <translation type="unfinished"></translation>
+        <translation>Это обычно вызвано недействительным/отсутствующим ключом Steam WebAPI или проблемой с подключением к Steam WebAPI.
+PublishedFileIDs необходимы для получения модов из Steam!</translation>
     </message>
     <message>
         <source>Are you sure?</source>
-        <translation type="unfinished"></translation>
+        <translation>Вы уверены?</translation>
     </message>
     <message>
         <source>Here be dragons.</source>
-        <translation type="unfinished"></translation>
+        <translation>Здесь могут быть драконы.</translation>
     </message>
     <message>
         <source>WARNING: It is NOT recommended to subscribe to this many mods at once via Steam. Steam has limitations in place seemingly intentionally and unintentionally for API subscriptions. It is highly recommended that you instead download these mods to a SteamCMD prefix by using SteamCMD. This can take longer due to rate limits, but you can also re-use the script generated by RimSort with a separate, authenticated instance of SteamCMD, if you do not want to anonymously download via RimSort.</source>
-        <translation type="unfinished"></translation>
+        <translation>ПРЕДУПРЕЖДЕНИЕ: Не рекомендуется подписываться на так много модов одновременно через Steam. У Steam есть ограничения, которые, по-видимому, были установлены намеренно и ненамеренно для подписок API. Настоятельно рекомендуется вместо этого загрузить эти моды в префикс SteamCMD, используя SteamCMD. Это может занять больше времени из-за ограничений по скорости, но вы также можете повторно использовать скрипт, сгенерированный RimSort, с отдельным, аутентифицированным экземпляром SteamCMD, если не хотите анонимно загружать через RimSort.</translation>
     </message>
     <message>
         <source>Edit Steam WebAPI key</source>
-        <translation type="unfinished"></translation>
+        <translation>Редактировать ключ Steam WebAPI</translation>
     </message>
     <message>
         <source>Enter your personal 32 character Steam WebAPI key here:</source>
-        <translation type="unfinished"></translation>
+        <translation>Введите ваш личный 32-символьный ключ Steam WebAPI здесь:</translation>
     </message>
     <message>
         <source>Steam DB Builder</source>
-        <translation type="unfinished"></translation>
+        <translation>Строитель базы данных Steam</translation>
     </message>
     <message>
         <source>This operation will compare 2 databases, A &amp; B, by checking dependencies from A with dependencies from B.</source>
-        <translation type="unfinished"></translation>
+        <translation>Эта операция сравнит 2 базы данных, A и B, проверяя зависимости из A с зависимостями из B.</translation>
     </message>
     <message>
         <source>- This will produce an accurate comparison of dependency data between 2 Steam DBs.
@@ -1054,19 +1072,23 @@ A report of discrepancies is generated. You will be prompted for these paths in 
 
 	1) Select input A
 	2) Select input B</source>
-        <translation type="unfinished"></translation>
+        <translation>- Это создаст точное сравнение данных зависимостей между 2 базами данных Steam.
+Сгенерируется отчет о несоответствиях. Вам будет предложено ввести эти пути в следующем порядке:
+
+	1) Выберите вход A
+	2) Выберите вход B</translation>
     </message>
     <message>
         <source>Steam DB comparison report: {len} found</source>
-        <translation type="unfinished"></translation>
+        <translation>Отчет о сравнении баз данных Steam: найдено {len}</translation>
     </message>
     <message>
         <source>Click &apos;Show Details&apos; to see the full report!</source>
-        <translation type="unfinished"></translation>
+        <translation>Нажмите &apos;Показать детали&apos;, чтобы увидеть полный отчет!</translation>
     </message>
     <message>
         <source>This operation will merge 2 databases, A &amp; B, by recursively updating A with B, barring exceptions.</source>
-        <translation type="unfinished"></translation>
+        <translation>Эта операция объединит 2 базы данных, A и B, рекурсивно обновляя A с помощью B, за исключением некоторых случаев.</translation>
     </message>
     <message>
         <source>- This will effectively recursively overwrite A&apos;s key/value with B&apos;s key/value to the resultant database.
@@ -1080,581 +1102,598 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
 	1) Select input A (db to-be-updated)
 	2) Select input B (update source)
 	3) Select output C (resultant db)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Failed to read existing database</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Failed to read the existing database!</source>
-        <translation type="unfinished"></translation>
+        <translation>- Это эффективно рекурсивно перезапишет ключ/значение A ключом/значением B в результирующей базе данных.
+- Исключения не будут рекурсивно обновлены. Вместо этого они будут полностью перезаписаны ключом B.
+- Будут сделаны следующие исключения:
+
+	{DB_BUILDER_RECURSE_EXCEPTIONS}
+
+Результирующая база данных, C, сохраняется в указанном пользователем пути. Вам будет предложено ввести эти пути в следующем порядке:
+
+	1) Выберите вход A (база данных для обновления)
+    2) Выберите вход B (источник обновления)
+    3) Выберите выход C (результирующая база данных)</translation>
     </message>
     <message>
         <source>Path: {path}</source>
-        <translation type="unfinished"></translation>
+        <translation>Путь: {path}</translation>
     </message>
     <message>
         <source>RimSort - DB Builder</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSort - Строитель базы данных</translation>
     </message>
     <message>
         <source>Do you want to continue?</source>
-        <translation type="unfinished"></translation>
+        <translation>Вы хотите продолжить?</translation>
     </message>
     <message>
         <source>This operation will overwrite the {rules_source} database located at the following path:
 
 {path}</source>
-        <translation type="unfinished"></translation>
+        <translation>Эта операция перезапишет базу данных {rules_source}, расположенную по следующему пути:
+
+{path}</translation>
     </message>
     <message>
         <source>Edit SteamDB expiry:</source>
-        <translation type="unfinished"></translation>
+        <translation>Редактировать срок действия SteamDB:</translation>
     </message>
     <message>
         <source>Enter your preferred expiry duration in seconds (default 1 week/604800 sec):</source>
-        <translation type="unfinished"></translation>
+        <translation>Введите желаемую продолжительность действия в секундах (по умолчанию 1 неделя/604800 сек):</translation>
     </message>
     <message>
         <source>Tried configuring Dynamic Query with a value that is not an integer.</source>
-        <translation type="unfinished"></translation>
+        <translation>Попытка настроить динамический запрос с нецелочисленным значением.</translation>
     </message>
     <message>
         <source>Please reconfigure the expiry value with an integer in terms of the seconds from epoch you would like your query to expire.</source>
-        <translation type="unfinished"></translation>
+        <translation>Пожалуйста, перенастройте значение истечения срока действия с целым числом в секундах с начала эпохи, когда вы хотите, чтобы ваш запрос истек.</translation>
     </message>
     <message>
         <source>Use This Instead</source>
-        <translation type="unfinished"></translation>
+        <translation>Используйте это вместо этого</translation>
     </message>
     <message>
         <source>No suggestions were found in the &quot;Use This Instead&quot; database.</source>
-        <translation type="unfinished"></translation>
+        <translation>Не найдено ни одной подсказки в базе данных &quot;Используйте это вместо этого&quot;.</translation>
     </message>
 </context>
 <context>
     <name>MainContentController</name>
     <message>
         <source>No Repositories</source>
-        <translation type="unfinished"></translation>
+        <translation>Нет репозиториев</translation>
     </message>
     <message>
         <source>No repositories provided for update check.</source>
-        <translation type="unfinished"></translation>
+        <translation>Не предоставлено ни одного репозитория для проверки обновлений.</translation>
     </message>
     <message>
         <source>Please select at least one repository to check.</source>
-        <translation type="unfinished"></translation>
+        <translation>Пожалуйста, выберите хотя бы один репозиторий для проверки.</translation>
     </message>
     <message>
         <source>Invalid git repository</source>
-        <translation type="unfinished"></translation>
+        <translation>Недействительный git-репозиторий</translation>
     </message>
     <message>
         <source>Could not find a valid git repository.</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось найти действительный git-репозиторий.</translation>
     </message>
     <message>
         <source>Errors during update check</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибки во время проверки обновлений</translation>
     </message>
     <message>
         <source>Some repositories encountered errors.</source>
-        <translation type="unfinished"></translation>
+        <translation>Некоторые репозитории столкнулись с ошибками.</translation>
     </message>
     <message>
         <source>Errors occurred while checking for updates:
 {errors}</source>
-        <translation type="unfinished"></translation>
+        <translation>Произошли ошибки во время проверки обновлений:
+{errors}</translation>
     </message>
     <message>
         <source>No updates found</source>
-        <translation type="unfinished"></translation>
+        <translation>Обновления не найдены</translation>
     </message>
     <message>
         <source>All repositories are up to date.</source>
-        <translation type="unfinished"></translation>
+        <translation>Все репозитории обновлены.</translation>
     </message>
     <message>
         <source>No new commits were found on remote branches.</source>
-        <translation type="unfinished"></translation>
+        <translation>Новые коммиты не найдены в удаленных ветках.</translation>
     </message>
     <message>
         <source>Git Updates Found</source>
-        <translation type="unfinished"></translation>
+        <translation>Найдены обновления Git</translation>
     </message>
     <message>
         <source>{len} repositories have updates available.</source>
-        <translation type="unfinished"></translation>
+        <translation>В {len} репозиториях доступны обновления.</translation>
     </message>
     <message>
         <source>Would you like to update them now?</source>
-        <translation type="unfinished"></translation>
+        <translation>Хотите обновить их сейчас?</translation>
     </message>
     <message>
         <source>Update All</source>
-        <translation type="unfinished"></translation>
+        <translation>Обновить все</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Отмена</translation>
     </message>
     <message>
         <source>Updates Completed</source>
-        <translation type="unfinished"></translation>
+        <translation>Обновления завершены</translation>
     </message>
     <message>
         <source>All repositories updated successfully!</source>
-        <translation type="unfinished"></translation>
+        <translation>Все репозитории успешно обновлены!</translation>
     </message>
     <message>
         <source>{count} repositories were updated:&lt;br/&gt;{repos}</source>
-        <translation type="unfinished"></translation>
+        <translation>{count} репозиториев были обновлены:&lt;br/&gt;{repos}</translation>
     </message>
     <message>
         <source>Failed to update repo!</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось обновить репозиторий!</translation>
     </message>
     <message>
         <source>All pull operations failed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Все операции извлечения завершились неудачей.</translation>
     </message>
     <message>
         <source>{count} repositories could not be updated.</source>
-        <translation type="unfinished"></translation>
+        <translation>{count} репозиториев не удалось обновить.</translation>
     </message>
     <message>
         <source>Successful updates:
 </source>
-        <translation type="unfinished"></translation>
+        <translation>Успешные обновления:
+</translation>
     </message>
     <message>
         <source>Partial Updates Completed</source>
-        <translation type="unfinished"></translation>
+        <translation>Частичные обновления завершены</translation>
     </message>
     <message>
         <source>Some repositories updated successfully.</source>
-        <translation type="unfinished"></translation>
+        <translation>Некоторые репозитории были успешно обновлены.</translation>
     </message>
     <message>
         <source>{success} succeeded, {failed} failed out of {total}.</source>
-        <translation type="unfinished"></translation>
+        <translation>{success} успешно, {failed} не удалось из {total}.</translation>
     </message>
     <message>
         <source>No repositories provided for push operation.</source>
-        <translation type="unfinished"></translation>
+        <translation>Не предоставлено ни одного репозитория для операции отправки.</translation>
     </message>
     <message>
         <source>Please select at least one repository to push.</source>
-        <translation type="unfinished"></translation>
+        <translation>Пожалуйста, выберите хотя бы один репозиторий для отправки.</translation>
     </message>
     <message>
         <source>Push Options</source>
-        <translation type="unfinished"></translation>
+        <translation>Параметры отправки</translation>
     </message>
     <message>
         <source>Push changes to remote repositories?</source>
-        <translation type="unfinished"></translation>
+        <translation>Отправить изменения в удаленные репозитории?</translation>
     </message>
     <message>
         <source>This will push local commits to the remote repositories.</source>
-        <translation type="unfinished"></translation>
+        <translation>Это отправит локальные коммиты в удаленные репозитории.</translation>
     </message>
     <message>
         <source>Push</source>
-        <translation type="unfinished"></translation>
+        <translation>Отправить</translation>
     </message>
     <message>
         <source>Force Push</source>
-        <translation type="unfinished"></translation>
+        <translation>Принудительная отправка</translation>
     </message>
     <message>
         <source>Use force push?</source>
-        <translation type="unfinished"></translation>
+        <translation>Использовать принудительную отправку?</translation>
     </message>
     <message>
         <source>Force push will overwrite remote history. Use with caution!</source>
-        <translation type="unfinished"></translation>
+        <translation>Принудительная отправка перезапишет удаленную историю. Используйте с осторожностью!</translation>
     </message>
     <message>
         <source>Normal Push</source>
-        <translation type="unfinished"></translation>
+        <translation>Обычная отправка</translation>
     </message>
     <message>
         <source>Push Completed</source>
-        <translation type="unfinished"></translation>
+        <translation>Отправка завершена</translation>
     </message>
     <message>
         <source>All repositories pushed successfully!</source>
-        <translation type="unfinished"></translation>
+        <translation>Все репозитории успешно отправлены!</translation>
     </message>
     <message>
         <source>{count} repositories were pushed.</source>
-        <translation type="unfinished"></translation>
+        <translation>{count} репозиториев были отправлены.</translation>
     </message>
     <message>
         <source>Push Failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось отправить</translation>
     </message>
     <message>
         <source>All push operations failed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Все операции отправки завершились неудачей.</translation>
     </message>
     <message>
         <source>{count} repositories could not be pushed.</source>
-        <translation type="unfinished"></translation>
+        <translation>{count} репозиториев не удалось отправить.</translation>
     </message>
     <message>
         <source>Successful pushes:
 </source>
-        <translation type="unfinished"></translation>
+        <translation>Успешные отправки:
+</translation>
     </message>
     <message>
         <source>Partial Push Completed</source>
-        <translation type="unfinished"></translation>
+        <translation>Частичная отправка завершена</translation>
     </message>
     <message>
         <source>Some repositories pushed successfully.</source>
-        <translation type="unfinished"></translation>
+        <translation>Некоторые репозитории были успешно отправлены.</translation>
     </message>
     <message>
         <source>Clone Repository</source>
-        <translation type="unfinished"></translation>
+        <translation>Клонировать репозиторий</translation>
     </message>
     <message>
         <source>Do you want to clone this repository?</source>
-        <translation type="unfinished"></translation>
+        <translation>Вы хотите клонировать этот репозиторий?</translation>
     </message>
     <message>
         <source>Repository: {repo_url}
 Destination: {dest}</source>
-        <translation type="unfinished"></translation>
+        <translation>Репозиторий: {repo_url}
+Назначение: {dest}</translation>
     </message>
     <message>
         <source>Clone</source>
-        <translation type="unfinished"></translation>
+        <translation>Клонировать</translation>
     </message>
     <message>
         <source>Existing repository found</source>
-        <translation type="unfinished"></translation>
+        <translation>Найден существующий репозиторий</translation>
     </message>
     <message>
         <source>An existing local repo that matches this repository was found:</source>
-        <translation type="unfinished"></translation>
+        <translation>Найден существующий локальный репозиторий, соответствующий этому репозиторию:</translation>
     </message>
     <message>
         <source>{repo_folder}&lt;br/&gt;How would you like to handle? Choose option:&lt;br/&gt;&lt;br/&gt;1) Clone new repository (deletes existing and replaces)&lt;br/&gt;2) Update existing repository (in-place force-update)</source>
-        <translation type="unfinished"></translation>
+        <translation>{repo_folder}&lt;br/&gt;Как вы хотите поступить? Выберите вариант:&lt;br/&gt;&lt;br/&gt;1) Клонировать новый репозиторий (удаляет существующий и заменяет)&lt;br/&gt;2) Обновить существующий репозиторий (принудительное обновление на месте)</translation>
     </message>
     <message>
         <source>Clone new</source>
-        <translation type="unfinished"></translation>
+        <translation>Клонировать новый</translation>
     </message>
     <message>
         <source>Update existing</source>
-        <translation type="unfinished"></translation>
+        <translation>Обновить существующий</translation>
     </message>
     <message>
         <source>Repo retrieved</source>
-        <translation type="unfinished"></translation>
+        <translation>Репозиторий получен</translation>
     </message>
     <message>
         <source>The configured repository was cloned!</source>
-        <translation type="unfinished"></translation>
+        <translation>Настроенный репозиторий был клонирован!</translation>
     </message>
     <message>
         <source>Cloned to: {path}</source>
-        <translation type="unfinished"></translation>
+        <translation>Клонировано в: {path}</translation>
     </message>
     <message>
         <source>Failed to clone repo!</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось клонировать репозиторий!</translation>
     </message>
     <message>
         <source>The configured repo failed to clone/initialize! Are you connected to the Internet? Is your configured repo valid?</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось клонировать/инициализировать настроенный репозиторий! Вы подключены к Интернету? Ваш настроенный репозиторий действителен?</translation>
     </message>
     <message>
         <source>Enter git repo</source>
-        <translation type="unfinished"></translation>
+        <translation>Введите git репозиторий</translation>
     </message>
     <message>
         <source>Enter a git repository url (http/https) to clone to local mods:</source>
-        <translation type="unfinished"></translation>
+        <translation>Введите URL git репозитория (http/https), чтобы клонировать в локальные модификации:</translation>
     </message>
     <message>
         <source>Invalid repository</source>
-        <translation type="unfinished"></translation>
+        <translation>Недействительный репозиторий</translation>
     </message>
     <message>
         <source>Repository URL is empty or invalid.</source>
-        <translation type="unfinished"></translation>
+        <translation>URL репозитория пуст или недействителен.</translation>
     </message>
     <message>
         <source>Please configure a valid repository URL in settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>Пожалуйста, настройте действительный URL репозитория в настройках.</translation>
     </message>
     <message>
         <source>An invalid repository was detected!</source>
-        <translation type="unfinished"></translation>
+        <translation>Обнаружен недействительный репозиторий!</translation>
     </message>
     <message>
         <source>Please reconfigure a repository in settings!
 A valid repository is a repository URL which is not empty and is prefixed with &quot;http://&quot; or &quot;https://&quot;</source>
-        <translation type="unfinished"></translation>
+        <translation>Пожалуйста, перенастройте репозиторий в настройках!
+Действительный репозиторий - это URL-адрес репозитория, который не пуст и начинается с &quot;http://&quot; или &quot;https://&quot;</translation>
     </message>
     <message>
         <source>Invalid repository URL</source>
-        <translation type="unfinished"></translation>
+        <translation>Недействительный URL репозитория</translation>
     </message>
     <message>
         <source>Failed to parse repository information from URL.</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось разобрать информацию о репозитории из URL.</translation>
     </message>
     <message>
         <source>URL: {repo_url}
 Error: {error}</source>
-        <translation type="unfinished"></translation>
+        <translation>URL: {repo_url}
+Ошибка: {error}</translation>
     </message>
     <message>
         <source>GitHub credentials missing</source>
-        <translation type="unfinished"></translation>
+        <translation>Отсутствуют учетные данные GitHub</translation>
     </message>
     <message>
         <source>GitHub username and token are required for database upload.</source>
-        <translation type="unfinished"></translation>
+        <translation>Имя пользователя и токен GitHub необходимы для загрузки базы данных.</translation>
     </message>
     <message>
         <source>Please configure your GitHub credentials in settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>Пожалуйста, настройте свои учетные данные GitHub в настройках.</translation>
     </message>
     <message>
         <source>Repository not found</source>
-        <translation type="unfinished"></translation>
+        <translation>Репозиторий не найден</translation>
     </message>
     <message>
         <source>Local repository does not exist.</source>
-        <translation type="unfinished"></translation>
+        <translation>Локальный репозиторий не существует.</translation>
     </message>
     <message>
         <source>Would you like to clone the repository first?</source>
-        <translation type="unfinished"></translation>
+        <translation>Вы хотите сначала клонировать репозиторий?</translation>
     </message>
     <message>
         <source>File does not exist</source>
-        <translation type="unfinished"></translation>
+        <translation>Файл не существует</translation>
     </message>
     <message>
         <source>Please ensure the file exists and then try to upload again!</source>
-        <translation type="unfinished"></translation>
+        <translation>Пожалуйста, убедитесь, что файл существует, а затем попробуйте загрузить его снова!</translation>
     </message>
     <message>
         <source>File not found:
 {file_full_path}
 Repository:
 {repo_url}</source>
-        <translation type="unfinished"></translation>
+        <translation>Файл не найден:
+{file_full_path}
+Репозиторий:
+{repo_url}</translation>
     </message>
     <message>
         <source>Invalid database</source>
-        <translation type="unfinished"></translation>
+        <translation>Недействительная база данных</translation>
     </message>
     <message>
         <source>Database file does not contain version or timestamp.</source>
-        <translation type="unfinished"></translation>
+        <translation>Файл базы данных не содержит версии или временной метки.</translation>
     </message>
     <message>
         <source>File: {file_path}</source>
-        <translation type="unfinished"></translation>
+        <translation>Файл: {file_path}</translation>
     </message>
     <message>
         <source>Database parse error</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибка разбора базы данных</translation>
     </message>
     <message>
         <source>Failed to read or parse database file.</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось прочитать или разобрать файл базы данных.</translation>
     </message>
     <message>
         <source>GitHub API error</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибка GitHub API</translation>
     </message>
     <message>
         <source>Failed to connect to GitHub API.</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось подключиться к GitHub API.</translation>
     </message>
     <message>
         <source>Fork created</source>
-        <translation type="unfinished"></translation>
+        <translation>Форк создан</translation>
     </message>
     <message>
         <source>Created fork of repository.</source>
-        <translation type="unfinished"></translation>
+        <translation>Создан форк репозитория.</translation>
     </message>
     <message>
         <source>Fork: {fork_name}
 Please wait a moment for GitHub to set up the fork.</source>
-        <translation type="unfinished"></translation>
+        <translation>Форк: {fork_name}
+Пожалуйста, подождите немного, пока GitHub настраивает форк.</translation>
     </message>
     <message>
         <source>Fork creation failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось создать форк</translation>
     </message>
     <message>
         <source>Failed to create fork of repository.</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось создать форк репозитория.</translation>
     </message>
     <message>
         <source>Fork error</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибка форка</translation>
     </message>
     <message>
         <source>Could not access or create fork repository.</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось получить доступ или создать форк репозитория.</translation>
     </message>
     <message>
         <source>Git repository error</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибка git репозитория</translation>
     </message>
     <message>
         <source>Invalid git repository.</source>
-        <translation type="unfinished"></translation>
+        <translation>Недействительный git репозиторий.</translation>
     </message>
     <message>
         <source>Stash failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось сохранить изменения.</translation>
     </message>
     <message>
         <source>Failed to stash uncommitted changes before pull.</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось сохранить незакоммиченные изменения перед извлечением.</translation>
     </message>
     <message>
         <source>Pull conflict</source>
-        <translation type="unfinished"></translation>
+        <translation>Конфликт при извлечении</translation>
     </message>
     <message>
         <source>Merge conflicts encountered during pull operation.</source>
-        <translation type="unfinished"></translation>
+        <translation>Обнаружены конфликты слияния во время операции извлечения.</translation>
     </message>
     <message>
         <source>Please manually resolve conflicts and try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Пожалуйста, вручную разрешите конфликты и попробуйте снова.</translation>
     </message>
     <message>
         <source>Pull failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось извлечь изменения.</translation>
     </message>
     <message>
         <source>Failed to pull latest changes from remote.</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось извлечь последние изменения из удаленного репозитория.</translation>
     </message>
     <message>
         <source>Conflicts Auto-Resolved</source>
-        <translation type="unfinished"></translation>
+        <translation>Конфликты автоматически разрешены.</translation>
     </message>
     <message>
         <source>Merge conflicts were detected and automatically resolved.</source>
-        <translation type="unfinished"></translation>
+        <translation>Обнаружены конфликты слияния и автоматически разрешены.</translation>
     </message>
     <message>
         <source>Your local changes conflicted with remote changes. The repository has been reset to a clean state with the latest remote changes. Your original changes are preserved in the database file and will be committed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ваши локальные изменения конфликтовали с удаленными изменениями. Репозиторий был сброшен в чистое состояние с последними удаленными изменениями. Ваши оригинальные изменения сохранены в файле базы данных и будут зафиксированы.</translation>
     </message>
     <message>
         <source>Stash restore warning</source>
-        <translation type="unfinished"></translation>
+        <translation>Предупреждение о восстановлении сохраненных изменений</translation>
     </message>
     <message>
         <source>Failed to restore stashed changes, but no conflicts detected.</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось восстановить сохраненные изменения, но конфликты не обнаружены.</translation>
     </message>
     <message>
         <source>Continuing with current state. Your database changes should still be present.</source>
-        <translation type="unfinished"></translation>
+        <translation>Продолжаем с текущим состоянием. Ваши изменения в базе данных все еще должны быть доступны.</translation>
     </message>
     <message>
         <source>Branch creation failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось создать ветку</translation>
     </message>
     <message>
         <source>Failed to create new branch for upload.</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось создать новую ветку для загрузки.</translation>
     </message>
     <message>
         <source>Force push failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось выполнить принудительную отправку</translation>
     </message>
     <message>
         <source>Failed to force push changes to fork.</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось принудительно отправить изменения в форк.</translation>
     </message>
     <message>
         <source>Force push error</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибка принудительной отправки</translation>
     </message>
     <message>
         <source>Error occurred while force pushing to remote.</source>
-        <translation type="unfinished"></translation>
+        <translation>Произошла ошибка при принудительной отправке на удаленный репозиторий.</translation>
     </message>
     <message>
         <source>Push failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось выполнить отправку</translation>
     </message>
     <message>
         <source>Failed to push changes to fork.</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось отправить изменения в форк.</translation>
     </message>
     <message>
         <source>No changes</source>
-        <translation type="unfinished"></translation>
+        <translation>Нет изменений для отправки.</translation>
     </message>
     <message>
         <source>No changes detected in database file.</source>
-        <translation type="unfinished"></translation>
+        <translation>Изменения в файле базы данных не обнаружены.</translation>
     </message>
     <message>
         <source>The database appears to be up to date with the remote repository.</source>
-        <translation type="unfinished"></translation>
+        <translation>База данных, похоже, актуальна по сравнению с удаленным репозиторием.</translation>
     </message>
     <message>
         <source>Commit failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось зафиксировать изменения.</translation>
     </message>
     <message>
         <source>Failed to stage and commit changes.</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось подготовить и зафиксировать изменения.</translation>
     </message>
     <message>
         <source>Git operation error</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибка git операции</translation>
     </message>
     <message>
         <source>Failed to perform git operations.</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось выполнить операции git.</translation>
     </message>
     <message>
         <source>Pull request created</source>
-        <translation type="unfinished"></translation>
+        <translation>Создан запрос на извлечение</translation>
     </message>
     <message>
         <source>Successfully created pull request!</source>
-        <translation type="unfinished"></translation>
+        <translation>Запрос на извлечение успешно создан!</translation>
     </message>
     <message>
         <source>Pull request created successfully.
 Do you want to open it in your web browser?
 
 URL: {url}</source>
-        <translation type="unfinished"></translation>
+        <translation>Запрос на извлечение успешно создан.
+Вы хотите открыть его в веб-браузере?
+
+URL: {url}</translation>
     </message>
     <message>
         <source>Pull request failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось создать запрос на извлечение.</translation>
     </message>
     <message>
         <source>Failed to create pull request.</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось создать запрос на извлечение.</translation>
     </message>
     <message>
         <source>The changes were pushed to your fork successfully, but the pull request creation failed.
@@ -1662,31 +1701,35 @@ URL: {url}</source>
 You can manually create a pull request on GitHub.
 
 Error: {error}</source>
-        <translation type="unfinished"></translation>
+        <translation>Изменения были успешно отправлены в ваш форк, но создание запроса на извлечение не удалось.
+
+Вы можете вручную создать запрос на извлечение на GitHub.
+
+Ошибка: {error}</translation>
     </message>
     <message>
         <source>Upload Steam Workshop Database</source>
-        <translation type="unfinished"></translation>
+        <translation>Загрузить базу данных Steam Workshop</translation>
     </message>
     <message>
         <source>Are you sure you want to upload the Steam Workshop database to GitHub?</source>
-        <translation type="unfinished"></translation>
+        <translation>Вы уверены, что хотите загрузить базу данных Steam Workshop на GitHub?</translation>
     </message>
     <message>
         <source>This will create a pull request with your local database changes.</source>
-        <translation type="unfinished"></translation>
+        <translation>Это создаст запрос на извлечение с вашими локальными изменениями базы данных.</translation>
     </message>
     <message>
         <source>Upload</source>
-        <translation type="unfinished"></translation>
+        <translation>Загрузить</translation>
     </message>
     <message>
         <source>Upload Community Rules Database</source>
-        <translation type="unfinished"></translation>
+        <translation>Загрузить базу данных правил сообщества</translation>
     </message>
     <message>
         <source>Are you sure you want to upload the Community Rules database to GitHub?</source>
-        <translation type="unfinished"></translation>
+        <translation>Вы уверены, что хотите загрузить базу данных правил сообщества на GitHub?</translation>
     </message>
 </context>
 <context>
@@ -2134,49 +2177,54 @@ RimSort может скопировать все ваши моды Workshop в �
     <name>MetadataManager</name>
     <message>
         <source>{db_type} DB is missing</source>
-        <translation type="unfinished"></translation>
+        <translation>{db_type} БД отсутствует</translation>
     </message>
     <message>
         <source>Configured {db_type} DB not found!</source>
-        <translation type="unfinished"></translation>
+        <translation>Настроенная БД {db_type} не найдена!</translation>
     </message>
     <message>
         <source>Unable to initialize external metadata. There is no external {db_type} metadata being factored!
 
 Please make sure your Database location settings are correct.</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось инициализировать внешние метаданные. Внешние метаданные {db_type} не учитываются!
+
+Пожалуйста, убедитесь, что настройки расположения вашей базы данных верны.</translation>
     </message>
     <message>
         <source>Configured {db_type} DB path is {not_dir} a directory! Expected a {file_dir} path.</source>
-        <translation type="unfinished"></translation>
+        <translation>Настроенный путь к БД {db_type} не является директорией! Ожидался путь {file_dir}.</translation>
     </message>
     <message>
         <source>Steam DB metadata expired</source>
-        <translation type="unfinished"></translation>
+        <translation>Метаданные Steam DB устарели</translation>
     </message>
     <message>
         <source>Steam DB is expired! Consider updating!
 </source>
-        <translation type="unfinished"></translation>
+        <translation>Steam DB устарела! Рассмотрите возможность обновления!
+</translation>
     </message>
     <message>
         <source>Steam DB last updated: {last_updated}
 
 Falling back to cached, but EXPIRED Steam Database...</source>
-        <translation type="unfinished"></translation>
+        <translation>Steam DB последний раз обновлялась: {last_updated}
+
+Возврат к кэшированной, но УСТАРЕВШЕЙ базе данных Steam...</translation>
     </message>
     <message>
         <source>Missing Version.txt</source>
-        <translation type="unfinished"></translation>
+        <translation>Отсутствует Version.txt</translation>
     </message>
     <message>
         <source>RimSort is unable to get the game version at the expected path: [{version_file_path}].</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSort не может получить версию игры по ожидаемому пути: [{version_file_path}].</translation>
     </message>
     <message>
         <source>
 Is your game path {folder} set correctly? There should be a Version.txt file in the game install directory.</source>
-        <translation type="unfinished"></translation>
+        <translation>Правильно ли настроен путь к вашей игре {folder}? В каталоге установки игры должен находиться файл Version.txt.</translation>
     </message>
 </context>
 <context>
@@ -2184,47 +2232,49 @@ Is your game path {folder} set correctly? There should be a Version.txt file in 
     <message>
         <source>Some mods in your active list require other mods to work properly.
 Select which missing dependencies to add to your active mods list.</source>
-        <translation type="unfinished"></translation>
+        <translation>Некоторые моды в вашем активном списке требуют другие моды для правильной работы.
+Выберите, какие отсутствующие зависимости добавить в ваш активный список модов.</translation>
     </message>
     <message>
         <source>Select All</source>
-        <translation type="unfinished"></translation>
+        <translation>Выбрать все</translation>
     </message>
     <message>
         <source>Add Selected &amp;&amp; Sort</source>
-        <translation type="unfinished"></translation>
+        <translation>Добавить выбранные и отсортировать</translation>
     </message>
     <message>
         <source>Sort Without Adding</source>
-        <translation type="unfinished"></translation>
+        <translation>Отсортировать без добавления</translation>
     </message>
     <message>
         <source>Local mods (available but not active):</source>
-        <translation type="unfinished"></translation>
+        <translation>Локальные моды (доступны, но не активны):</translation>
     </message>
     <message>
         <source>Mods that need to be downloaded:</source>
-        <translation type="unfinished"></translation>
+        <translation>Моды, которые необходимо загрузить:</translation>
     </message>
     <message>
         <source>Package ID: {dep_id}</source>
-        <translation type="unfinished"></translation>
+        <translation>Идентификатор пакета: {dep_id}</translation>
     </message>
     <message>
         <source>Required by:
   • </source>
-        <translation type="unfinished"></translation>
+        <translation>Требуется для:
+  • </translation>
     </message>
 </context>
 <context>
     <name>MissingModsPrompt</name>
     <message>
         <source>RimSort - Missing mods found</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSort - Найдены отсутствующие моды</translation>
     </message>
     <message>
         <source>There are mods missing from the active mods list!</source>
-        <translation type="unfinished"></translation>
+        <translation>В списке активных модов отсутствуют моды!</translation>
     </message>
     <message>
         <source>
@@ -2233,772 +2283,786 @@ User-configured SteamDB database was queried. The following table displays mods 
 Rimworld mods on Steam Workshop that share a packageId are &quot;variants&quot;. Please keep this in mind before downloading. 
 
 Please select your preferred mod variant in the table below. You can also open each variant in Steam/Web browser to verify.</source>
-        <translation type="unfinished"></translation>
+        <translation>Была выполнена выборка настроенной базы данных SteamDB. В следующей таблице отображаются моды, доступные для загрузки из Steam.
+
+Моды Rimworld на Steam Workshop, которые имеют одинаковый packageId, являются &quot;вариантами&quot;. Пожалуйста, имейте это в виду перед загрузкой.
+
+Пожалуйста, выберите предпочитаемый вариант мода в таблице ниже. Вы также можете открыть каждый вариант в Steam/Web браузере для проверки.</translation>
     </message>
     <message>
         <source>Name</source>
-        <translation type="unfinished"></translation>
+        <translation>Название</translation>
     </message>
     <message>
         <source>PackageId</source>
-        <translation type="unfinished"></translation>
+        <translation>Идентификатор пакета</translation>
     </message>
     <message>
         <source>Game Versions</source>
-        <translation type="unfinished"></translation>
+        <translation>Версии игры</translation>
     </message>
     <message>
         <source># Variants</source>
-        <translation type="unfinished"></translation>
+        <translation>Количество вариантов</translation>
     </message>
     <message>
         <source>PublishedFileID</source>
-        <translation type="unfinished"></translation>
+        <translation>Идентификатор опубликованного файла</translation>
     </message>
     <message>
         <source>Download with SteamCMD</source>
-        <translation type="unfinished"></translation>
+        <translation>Скачать с помощью SteamCMD</translation>
     </message>
     <message>
         <source>Download with Steam client</source>
-        <translation type="unfinished"></translation>
+        <translation>Скачать с помощью клиента Steam</translation>
     </message>
 </context>
 <context>
     <name>ModDeletionMenu</name>
     <message>
         <source>Deletion options</source>
-        <translation type="unfinished"></translation>
+        <translation>Опции удаления</translation>
     </message>
     <message>
         <source>Delete mod</source>
-        <translation type="unfinished"></translation>
+        <translation>Удалить мод</translation>
     </message>
     <message>
         <source>Delete mod (keep .dds)</source>
-        <translation type="unfinished"></translation>
+        <translation>Удалить мод (сохранить .dds)</translation>
     </message>
     <message>
         <source>Delete optimized textures (.dds files only)</source>
-        <translation type="unfinished"></translation>
+        <translation>Удалить оптимизированные текстуры (.dds файлы только)</translation>
     </message>
     <message>
         <source>RimSort</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSort</translation>
     </message>
     <message>
         <source>Successfully deleted {count} seleted mods.</source>
-        <translation type="unfinished"></translation>
+        <translation>Успешно удалено {count} выбранных модов.</translation>
     </message>
     <message>
         <source>Mod directory was not empty. Please close all programs accessing files or subfolders in the directory (including your file manager) and try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Каталог мода не был пустым. Пожалуйста, закройте все программы, которые получают доступ к файлам или подпапкам в каталоге (включая ваш файловый менеджер), и попробуйте снова.</translation>
     </message>
     <message>
         <source>An OSError occurred while deleting mod.</source>
-        <translation type="unfinished"></translation>
+        <translation>Произошла ошибка OSError при удалении мода.</translation>
     </message>
     <message>
         <source>Unable to delete mod</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось удалить мод</translation>
     </message>
     <message>
         <source>{e.strerror} occurred at {e.filename} with error code {error_code}.</source>
-        <translation type="unfinished"></translation>
+        <translation>{e.strerror} произошла в {e.filename} с кодом ошибки {error_code}.</translation>
     </message>
     <message>
         <source>Are you sure?</source>
-        <translation type="unfinished"></translation>
+        <translation>Вы уверены?</translation>
     </message>
     <message>
         <source>You have selected {len} mods for deletion.</source>
-        <translation type="unfinished"></translation>
+        <translation>Вы выбрали {len} модов для удаления.</translation>
     </message>
     <message>
         <source>
 This operation delete a mod&apos;s directory from the filesystem.
 Do you want to proceed?</source>
-        <translation type="unfinished"></translation>
+        <translation>Эта операция удаляет каталог мода из файловой системы.
+Вы хотите продолжить?</translation>
     </message>
     <message>
         <source>You have selected {len} mods to Delete optimized textures (.dds files only)</source>
-        <translation type="unfinished"></translation>
+        <translation>Вы выбрали {len} модов для удаления оптимизированных текстур (.dds файлы только)</translation>
     </message>
     <message>
         <source>
 This operation will only delete optimized textures (.dds files only) from mod files.
 Do you want to proceed?</source>
-        <translation type="unfinished"></translation>
+        <translation>Эта операция удалит только оптимизированные текстуры (.dds файлы только) из файлов мода.
+Вы хотите продолжить?</translation>
     </message>
     <message>
         <source>
 This operation will recursively delete all mod files, except for .dds textures found.
 Do you want to proceed?</source>
-        <translation type="unfinished"></translation>
+        <translation>Эта операция рекурсивно удалит все файлы мода, за исключением найденных текстур .dds.
+Вы хотите продолжить?</translation>
     </message>
 </context>
 <context>
     <name>ModInfo</name>
     <message>
         <source>Name:</source>
-        <translation type="unfinished"></translation>
+        <translation>Название:</translation>
     </message>
     <message>
         <source>Summary:</source>
-        <translation type="unfinished"></translation>
+        <translation>Описание:</translation>
     </message>
     <message>
         <source>PackageID:</source>
-        <translation type="unfinished"></translation>
+        <translation>Идентификатор пакета:</translation>
     </message>
     <message>
         <source>Authors:</source>
-        <translation type="unfinished"></translation>
+        <translation>Авторы:</translation>
     </message>
     <message>
         <source>Mod Version:</source>
-        <translation type="unfinished"></translation>
+        <translation>Версия мода:</translation>
     </message>
     <message>
         <source>Supported Version:</source>
-        <translation type="unfinished"></translation>
+        <translation>Поддерживаемая версия:</translation>
     </message>
     <message>
         <source>Path:</source>
-        <translation type="unfinished"></translation>
+        <translation>Путь:</translation>
     </message>
     <message>
         <source>Welcome to RimSort!</source>
-        <translation type="unfinished"></translation>
+        <translation>Добро пожаловать в RimSort!</translation>
     </message>
 </context>
 <context>
     <name>ModListItemInner</name>
     <message>
         <source>Contains custom C# assemblies (custom code)</source>
-        <translation type="unfinished"></translation>
+        <translation>Содержит пользовательские сборки C# (пользовательский код)</translation>
     </message>
     <message>
         <source>Contains custom content (textures / XML)</source>
-        <translation type="unfinished"></translation>
+        <translation>Содержит пользовательский контент (текстуры / XML)</translation>
     </message>
     <message>
         <source>Local mod that contains a git repository</source>
-        <translation type="unfinished"></translation>
+        <translation>Локальный мод, который содержит репозиторий git</translation>
     </message>
     <message>
         <source>Local mod that can be used with SteamCMD</source>
-        <translation type="unfinished"></translation>
+        <translation>Локальный мод, который можно использовать с SteamCMD</translation>
     </message>
     <message>
         <source>Official RimWorld content by Ludeon Studios</source>
-        <translation type="unfinished"></translation>
+        <translation>Официальный контент RimWorld от Ludeon Studios</translation>
     </message>
     <message>
         <source>Installed locally</source>
-        <translation type="unfinished"></translation>
+        <translation>Установлено локально</translation>
     </message>
     <message>
         <source>Subscribed via Steam</source>
-        <translation type="unfinished"></translation>
+        <translation>Подписано через Steam</translation>
     </message>
 </context>
 <context>
     <name>ModListWidget</name>
     <message>
         <source>Open folder</source>
-        <translation type="unfinished"></translation>
+        <translation>Открыть папку</translation>
     </message>
     <message>
         <source>Open URL in browser</source>
-        <translation type="unfinished"></translation>
+        <translation>Открыть URL в браузере</translation>
     </message>
     <message>
         <source>Copy URL to clipboard</source>
-        <translation type="unfinished"></translation>
+        <translation>Скопировать URL в буфер обмена</translation>
     </message>
     <message>
         <source>Open mod in Steam</source>
-        <translation type="unfinished"></translation>
+        <translation>Открыть мод в Steam</translation>
     </message>
     <message>
         <source>Convert local mod to SteamCMD</source>
-        <translation type="unfinished"></translation>
+        <translation>Конвертировать локальный мод в SteamCMD</translation>
     </message>
     <message>
         <source>Convert SteamCMD mod to local</source>
-        <translation type="unfinished"></translation>
+        <translation>Конвертировать мод SteamCMD в локальный</translation>
     </message>
     <message>
         <source>Re-download mod with SteamCMD</source>
-        <translation type="unfinished"></translation>
+        <translation>Загрузить мод заново с помощью SteamCMD</translation>
     </message>
     <message>
         <source>Update mod with git</source>
-        <translation type="unfinished"></translation>
+        <translation>Обновить мод с помощью git</translation>
     </message>
     <message>
         <source>Convert Steam mod to local</source>
-        <translation type="unfinished"></translation>
+        <translation>Конвертировать мод Steam в локальный</translation>
     </message>
     <message>
         <source>Re-subscribe mod with Steam</source>
-        <translation type="unfinished"></translation>
+        <translation>Повторно подписаться на мод через Steam</translation>
     </message>
     <message>
         <source>Unsubscribe mod with Steam</source>
-        <translation type="unfinished"></translation>
+        <translation>Отменить подписку на мод через Steam</translation>
     </message>
     <message>
         <source>Remove mod from SteamDB blacklist</source>
-        <translation type="unfinished"></translation>
+        <translation>Удалить мод из черного списка SteamDB</translation>
     </message>
     <message>
         <source>Add mod to SteamDB blacklist</source>
-        <translation type="unfinished"></translation>
+        <translation>Добавить мод в черный список SteamDB</translation>
     </message>
     <message>
         <source>Copy packageId to clipboard</source>
-        <translation type="unfinished"></translation>
+        <translation>Скопировать packageId в буфер обмена</translation>
     </message>
     <message>
         <source>Edit mod with Rule Editor</source>
-        <translation type="unfinished"></translation>
+        <translation>Редактировать мод с помощью редактора правил</translation>
     </message>
     <message>
         <source>Toggle warning</source>
-        <translation type="unfinished"></translation>
+        <translation>Переключить предупреждение</translation>
     </message>
     <message>
         <source>Open folder(s)</source>
-        <translation type="unfinished"></translation>
+        <translation>Открыть папку(и)</translation>
     </message>
     <message>
         <source>Open URL(s) in browser</source>
-        <translation type="unfinished"></translation>
+        <translation>Открыть URL(ы) в браузере</translation>
     </message>
     <message>
         <source>Convert local mod(s) to SteamCMD</source>
-        <translation type="unfinished"></translation>
+        <translation>Конвертировать локальный мод(ы) в SteamCMD</translation>
     </message>
     <message>
         <source>Convert SteamCMD mod(s) to local</source>
-        <translation type="unfinished"></translation>
+        <translation>Конвертировать мод(ы) SteamCMD в локальный</translation>
     </message>
     <message>
         <source>Re-download mod(s) with SteamCMD</source>
-        <translation type="unfinished"></translation>
+        <translation>Загрузить мод(ы) заново с помощью SteamCMD</translation>
     </message>
     <message>
         <source>Update mod(s) with git</source>
-        <translation type="unfinished"></translation>
+        <translation>Обновить мод(ы) с помощью git</translation>
     </message>
     <message>
         <source>Toggle warning(s)</source>
-        <translation type="unfinished"></translation>
+        <translation>Переключить предупреждение(я)</translation>
     </message>
     <message>
         <source>Convert Steam mod(s) to local</source>
-        <translation type="unfinished"></translation>
+        <translation>Конвертировать мод(ы) Steam в локальный</translation>
     </message>
     <message>
         <source>Re-subscribe mod(s) with Steam</source>
-        <translation type="unfinished"></translation>
+        <translation>Повторно подписаться на мод(ы) через Steam</translation>
     </message>
     <message>
         <source>Unsubscribe mod(s) with Steam</source>
-        <translation type="unfinished"></translation>
+        <translation>Отменить подписку на мод(ы) через Steam</translation>
     </message>
     <message>
         <source>Miscellaneous options</source>
-        <translation type="unfinished"></translation>
+        <translation>Разные параметры</translation>
     </message>
     <message>
         <source>Clipboard options</source>
-        <translation type="unfinished"></translation>
+        <translation>Параметры буфера обмена</translation>
     </message>
     <message>
         <source>Workshop mods options</source>
-        <translation type="unfinished"></translation>
+        <translation>Параметры модов Workshop</translation>
     </message>
     <message>
         <source>Are you sure?</source>
-        <translation type="unfinished"></translation>
+        <translation>Вы уверены?</translation>
     </message>
     <message>
         <source>You have selected {len} git mods to be updated.</source>
-        <translation type="unfinished"></translation>
+        <translation>Вы выбрали {len} git модов для обновления.</translation>
     </message>
     <message>
         <source>Do you want to proceed?</source>
-        <translation type="unfinished"></translation>
+        <translation>Вы хотите продолжить?</translation>
     </message>
     <message>
         <source>You have selected {len} mods for deletion + re-download.</source>
-        <translation type="unfinished"></translation>
+        <translation>Вы выбрали {len} модов для удаления + повторной загрузки.</translation>
     </message>
     <message>
         <source>
 This operation will recursively delete all mod files, except for .dds textures found, and attempt to re-download the mods via SteamCMD. Do you want to proceed?</source>
-        <translation type="unfinished"></translation>
+        <translation>
+Эта операция рекурсивно удалит все файлы модов, за исключением найденных текстур .dds, и попытается повторно загрузить моды через SteamCMD. Вы хотите продолжить?</translation>
     </message>
     <message>
         <source>You have selected {len} mods for unsubscribe + re-subscribe.</source>
-        <translation type="unfinished"></translation>
+        <translation>Вы выбрали {len} модов для отмены подписки + повторной подписки.</translation>
     </message>
     <message>
         <source>
 This operation will potentially delete .dds textures leftover. Steam is unreliable for this. Do you want to proceed?</source>
-        <translation type="unfinished"></translation>
+        <translation>
+Эта операция потенциально удалит оставшиеся текстуры .dds. Steam ненадежен для этого. Вы хотите продолжить?</translation>
     </message>
     <message>
         <source>You have selected {len} mods for unsubscribe.</source>
-        <translation type="unfinished"></translation>
+        <translation>Вы выбрали {len} модов для отмены подписки.</translation>
     </message>
     <message>
         <source>
 Do you want to proceed?</source>
-        <translation type="unfinished"></translation>
+        <translation>Вы хотите продолжить?</translation>
     </message>
     <message>
         <source>Add comment</source>
-        <translation type="unfinished"></translation>
+        <translation>Добавить комментарий</translation>
     </message>
     <message>
         <source>Enter a comment providing your reasoning for wanting to blacklist this mod: </source>
-        <translation type="unfinished"></translation>
+        <translation>Введите комментарий, объясняющий ваше желание добавить этот мод в черный список:</translation>
     </message>
     <message>
         <source>Unable to add to blacklist</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось добавить в черный список</translation>
     </message>
     <message>
         <source>Comment was not provided or entry was cancelled. Comments are REQUIRED for this action!</source>
-        <translation type="unfinished"></translation>
+        <translation>Комментарий не был предоставлен или запись была отменена. Комментарии обязательны для этого действия!</translation>
     </message>
     <message>
         <source>This will remove the selected mod, </source>
-        <translation type="unfinished"></translation>
+        <translation>Это удалит выбранный мод, </translation>
     </message>
     <message>
         <source>
 Missing Dependencies:</source>
-        <translation type="unfinished"></translation>
+        <translation>
+Отсутствующие зависимости:</translation>
     </message>
     <message>
         <source>
 Incompatibilities:</source>
-        <translation type="unfinished"></translation>
+        <translation>
+Несовместимости:</translation>
     </message>
 </context>
 <context>
     <name>ModUpdaterPrompt</name>
     <message>
         <source>Update mods</source>
-        <translation type="unfinished"></translation>
+        <translation>Обновить моды</translation>
     </message>
     <message>
         <source>Update all</source>
-        <translation type="unfinished"></translation>
+        <translation>Обновить все</translation>
     </message>
 </context>
 <context>
     <name>ModsPanel</name>
     <message>
         <source>Showing All Mods</source>
-        <translation type="unfinished"></translation>
+        <translation>Показать все моды</translation>
     </message>
     <message>
         <source>Showing Core and DLC</source>
-        <translation type="unfinished"></translation>
+        <translation>Показать основные и DLC моды</translation>
     </message>
     <message>
         <source>Showing Local Mods</source>
-        <translation type="unfinished"></translation>
+        <translation>Показать локальные моды</translation>
     </message>
     <message>
         <source>Showing Git Mods</source>
-        <translation type="unfinished"></translation>
+        <translation>Показать git моды</translation>
     </message>
     <message>
         <source>Showing SteamCMD Mods</source>
-        <translation type="unfinished"></translation>
+        <translation>Показать SteamCMD моды</translation>
     </message>
     <message>
         <source>Showing Steam Mods</source>
-        <translation type="unfinished"></translation>
+        <translation>Показать Steam моды</translation>
     </message>
     <message>
         <source>Showing All Mod Types</source>
-        <translation type="unfinished"></translation>
+        <translation>Показать все типы модов</translation>
     </message>
     <message>
         <source>Showing C# Mods</source>
-        <translation type="unfinished"></translation>
+        <translation>Показать C# моды</translation>
     </message>
     <message>
         <source>Showing XML Mods</source>
-        <translation type="unfinished"></translation>
+        <translation>Показать XML моды</translation>
     </message>
     <message>
         <source>Hide Filter Disabled</source>
-        <translation type="unfinished"></translation>
+        <translation>Скрыть фильтр отключен</translation>
     </message>
     <message>
         <source>Hide Filter Enabled</source>
-        <translation type="unfinished"></translation>
+        <translation>Скрыть фильтр включен</translation>
     </message>
     <message>
         <source>Active [0]</source>
-        <translation type="unfinished"></translation>
+        <translation>Активные [0]</translation>
     </message>
     <message>
         <source>Inactive [0]</source>
-        <translation type="unfinished"></translation>
+        <translation>Неактивные [0]</translation>
     </message>
     <message>
         <source>Search by...</source>
-        <translation type="unfinished"></translation>
+        <translation>Поиск по...</translation>
     </message>
     <message>
         <source>Name</source>
-        <translation type="unfinished"></translation>
+        <translation>Имя</translation>
     </message>
     <message>
         <source>PackageId</source>
-        <translation type="unfinished"></translation>
+        <translation>Идентификатор пакета</translation>
     </message>
     <message>
         <source>Author(s)</source>
-        <translation type="unfinished"></translation>
+        <translation>Автор(ы)</translation>
     </message>
     <message>
         <source>PublishedFileId</source>
-        <translation type="unfinished"></translation>
+        <translation>Идентификатор опубликованного файла</translation>
     </message>
     <message>
         <source>Version</source>
-        <translation type="unfinished"></translation>
+        <translation>Версия</translation>
     </message>
     <message>
         <source>0 warnings</source>
-        <translation type="unfinished"></translation>
+        <translation>0 предупреждений</translation>
     </message>
     <message>
         <source>Click to only show mods with warnings</source>
-        <translation type="unfinished"></translation>
+        <translation>Нажмите, чтобы показать только моды с предупреждениями</translation>
     </message>
     <message>
         <source>Click to only show mods with errors</source>
-        <translation type="unfinished"></translation>
+        <translation>Нажмите, чтобы показать только моды с ошибками</translation>
     </message>
     <message>
         <source>Check &quot;Use This Instead&quot; Database</source>
-        <translation type="unfinished"></translation>
+        <translation>Проверьте базу данных &quot;Используйте это вместо&quot;</translation>
     </message>
     <message>
         <source>Check Dependencies</source>
-        <translation type="unfinished"></translation>
+        <translation>Проверьте зависимости</translation>
     </message>
     <message>
         <source>{padding}{num_warnings} warning(s)</source>
-        <translation type="unfinished"></translation>
+        <translation>{padding}{num_warnings} предупреждение(я)</translation>
     </message>
     <message>
         <source>{padding}{num_errors} error(s)</source>
-        <translation type="unfinished"></translation>
+        <translation>{padding}{num_errors} ошибка(и)</translation>
     </message>
     <message>
         <source>0 errors</source>
-        <translation type="unfinished"></translation>
+        <translation>0 ошибок</translation>
     </message>
     <message>
         <source>Active</source>
-        <translation type="unfinished"></translation>
+        <translation>Активный</translation>
     </message>
     <message>
         <source>Inactive</source>
-        <translation type="unfinished"></translation>
+        <translation>Неактивный</translation>
     </message>
 </context>
 <context>
     <name>Rentry Auth Code Not Found </name>
     <message>
         <source>RimSort can work without rentry auth code. But To enable full functionality of renry.co you need to email support@rentry.co and request an auth code. Then paste it into Settings -&gt; Advanced -&gt; Rentry Auth.</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSort может работать без кода аутентификации rentry. Но для включения полной функциональности rentry.co вам нужно отправить электронное письмо на адрес support@rentry.co и запросить код аутентификации. Затем вставьте его в Настройки -&gt; Дополнительно -&gt; Rentry Auth.</translation>
     </message>
 </context>
 <context>
     <name>RentryError</name>
     <message>
         <source>Failed to fetch Rentry Content</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось получить содержимое Rentry</translation>
     </message>
     <message>
         <source>Rentry returned status code: {code}</source>
-        <translation type="unfinished"></translation>
+        <translation>Rentry вернул код состояния: {code}</translation>
     </message>
     <message>
         <source>RimSort failed to fetch the content from the provided Rentry link. This may be due to an invalid link, your internet connection, or Rentry.co being down. It may also be the result of a captcha. Please try again later.</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSort не удалось получить содержимое по предоставленной ссылке Rentry. Это может быть связано с недействительной ссылкой, вашим интернет-соединением или с тем, что Rentry.co недоступен. Это также может быть результатом капчи. Пожалуйста, попробуйте еще раз позже.</translation>
     </message>
     <message>
         <source>Network Error</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибка сети</translation>
     </message>
     <message>
         <source>Network error occurred while processing Rentry, Please check your internet connection.</source>
-        <translation type="unfinished"></translation>
+        <translation>Произошла ошибка сети при обработке Rentry, пожалуйста, проверьте ваше интернет-соединение.</translation>
     </message>
     <message>
         <source>Rentry Auth Code Not Found</source>
-        <translation type="unfinished"></translation>
+        <translation>Код аутентификации Rentry не найден</translation>
     </message>
 </context>
 <context>
     <name>RentryImport</name>
     <message>
         <source>Enter Rentry.co link</source>
-        <translation type="unfinished"></translation>
+        <translation>Введите ссылку Rentry.co</translation>
     </message>
     <message>
         <source>Enter the Rentry.co link:</source>
-        <translation type="unfinished"></translation>
+        <translation>Введите ссылку Rentry.co:</translation>
     </message>
     <message>
         <source>Invalid Rentry Link</source>
-        <translation type="unfinished"></translation>
+        <translation>Недействительная ссылка Rentry</translation>
     </message>
     <message>
         <source>Invalid Rentry link, Please enter a valid Rentry link.</source>
-        <translation type="unfinished"></translation>
+        <translation>Недействительная ссылка Rentry, пожалуйста, введите действительную ссылку Rentry.</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибка</translation>
     </message>
     <message>
         <source>An error occurred: {e}</source>
-        <translation type="unfinished"></translation>
+        <translation>Произошла ошибка: {e}</translation>
     </message>
 </context>
 <context>
     <name>RentryUpload</name>
     <message>
         <source>Error</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибка</translation>
     </message>
     <message>
         <source>An error occurred: {e}</source>
-        <translation type="unfinished"></translation>
+        <translation>Произошла ошибка: {e}</translation>
     </message>
 </context>
 <context>
     <name>RuleEditor</name>
     <message>
         <source>No mod currently being edited</source>
-        <translation type="unfinished"></translation>
+        <translation>В данный момент не редактируется ни один мод</translation>
     </message>
     <message>
         <source>About.xml (loadAfter)</source>
-        <translation type="unfinished"></translation>
+        <translation>About.xml (loadAfter)</translation>
     </message>
     <message>
         <source>About.xml (loadBefore)</source>
-        <translation type="unfinished"></translation>
+        <translation>About.xml (loadBefore)</translation>
     </message>
     <message>
         <source>About.xml (incompatibilities)</source>
-        <translation type="unfinished"></translation>
+        <translation>About.xml (incompatibilities)</translation>
     </message>
     <message>
         <source>Community Rules (loadAfter)</source>
-        <translation type="unfinished"></translation>
+        <translation>Community Rules (loadAfter)</translation>
     </message>
     <message>
         <source>Community Rules (loadBefore)</source>
-        <translation type="unfinished"></translation>
+        <translation>Community Rules (loadBefore)</translation>
     </message>
     <message>
         <source>Force load at bottom of list</source>
-        <translation type="unfinished"></translation>
+        <translation>Принудительная загрузка внизу списка</translation>
     </message>
     <message>
         <source>User Rules (loadAfter)</source>
-        <translation type="unfinished"></translation>
+        <translation>Правила пользователя (loadAfter)</translation>
     </message>
     <message>
         <source>User Rules (loadBefore)</source>
-        <translation type="unfinished"></translation>
+        <translation>Правила пользователя (loadBefore)</translation>
     </message>
     <message>
         <source>Name</source>
-        <translation type="unfinished"></translation>
+        <translation>Имя</translation>
     </message>
     <message>
         <source>PackageId</source>
-        <translation type="unfinished"></translation>
+        <translation>Идентификатор пакета</translation>
     </message>
     <message>
         <source>Rule source</source>
-        <translation type="unfinished"></translation>
+        <translation>Источник правила</translation>
     </message>
     <message>
         <source>Rule type</source>
-        <translation type="unfinished"></translation>
+        <translation>Тип правила</translation>
     </message>
     <message>
         <source>Comment</source>
-        <translation type="unfinished"></translation>
+        <translation>Комментарий</translation>
     </message>
     <message>
         <source>Save rules to communityRules.json</source>
-        <translation type="unfinished"></translation>
+        <translation>Сохранить правила в communityRules.json</translation>
     </message>
     <message>
         <source>Save rules to userRules.json</source>
-        <translation type="unfinished"></translation>
+        <translation>Сохранить правила в userRules.json</translation>
     </message>
     <message>
         <source>Search mods by name</source>
-        <translation type="unfinished"></translation>
+        <translation>Поиск модов по имени</translation>
     </message>
     <message>
         <source>Duplicate rule</source>
-        <translation type="unfinished"></translation>
+        <translation>Дублировать правило</translation>
     </message>
     <message>
         <source>Tried to add duplicate rule.</source>
-        <translation type="unfinished"></translation>
+        <translation>Попытка добавить дублирующее правило.</translation>
     </message>
     <message>
         <source>Skipping creation of duplicate rule!</source>
-        <translation type="unfinished"></translation>
+        <translation>Пропуск создания дублирующего правила!</translation>
     </message>
     <message>
         <source>Enter comment</source>
-        <translation type="unfinished"></translation>
+        <translation>Введите комментарий</translation>
     </message>
     <message>
         <source>Enter a comment to annotate why this rule exists.
                       This is useful for your own records, as well as others.</source>
-        <translation type="unfinished"></translation>
+        <translation>Введите комментарий, чтобы аннотировать, почему это правило существует.
+                      Это полезно как для ваших собственных записей, так и для других.</translation>
     </message>
     <message>
         <source>Rules from mods&apos;s About.xml cannot be modified. Only &apos;Community Rules&apos; and &apos;User Rules&apos; are allowed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Правила из About.xml модов не могут быть изменены. Разрешены только &apos;Правила сообщества&apos; и &apos;Правила пользователя&apos;.</translation>
     </message>
     <message>
         <source>Rules can be Modified.</source>
-        <translation type="unfinished"></translation>
+        <translation>Правила могут быть изменены.</translation>
     </message>
     <message>
         <source>Editing rules for: {name}</source>
-        <translation type="unfinished"></translation>
+        <translation>Редактирование правил для: {name}</translation>
     </message>
     <message>
         <source>Show About.xml rules</source>
-        <translation type="unfinished"></translation>
+        <translation>Показать правила About.xml</translation>
     </message>
     <message>
         <source>Edit Community Rules</source>
-        <translation type="unfinished"></translation>
+        <translation>Редактировать правила сообщества</translation>
     </message>
     <message>
         <source>Edit User Rules</source>
-        <translation type="unfinished"></translation>
+        <translation>Редактировать правила пользователя</translation>
     </message>
     <message>
         <source>Hide About.xml rules</source>
-        <translation type="unfinished"></translation>
+        <translation>Скрыть правила About.xml</translation>
     </message>
     <message>
         <source>Lock Community Rules</source>
-        <translation type="unfinished"></translation>
+        <translation>Заблокировать правила сообщества</translation>
     </message>
     <message>
         <source>Lock User Rules</source>
-        <translation type="unfinished"></translation>
+        <translation>Заблокировать правила пользователя</translation>
     </message>
     <message>
         <source>Enter a comment to annotate why this rule exists.This is useful for your own records, as well as others.</source>
-        <translation type="unfinished"></translation>
+        <translation>Введите комментарий, чтобы аннотировать, почему это правило существует. Это полезно как для ваших собственных записей, так и для других.</translation>
     </message>
     <message>
         <source>Enter a comment to annotate why this rule exists. This is useful for your own records, as well as others.</source>
-        <translation type="unfinished"></translation>
+        <translation>Введите комментарий, чтобы аннотировать, почему это правило существует. Это полезно как для ваших собственных записей, так и для других.</translation>
     </message>
     <message>
         <source>Open this mod in the editor</source>
-        <translation type="unfinished"></translation>
+        <translation>Открыть этот мод в редакторе</translation>
     </message>
     <message>
         <source>Remove this rule</source>
-        <translation type="unfinished"></translation>
+        <translation>Удалить это правило</translation>
     </message>
 </context>
 <context>
     <name>RunnerPanel</name>
     <message>
         <source>Clear the text currently displayed by the runner</source>
-        <translation type="unfinished"></translation>
+        <translation>Очистить текст, в настоящее время отображаемый исполнителем</translation>
     </message>
     <message>
         <source>Re-run the process last used by the runner</source>
-        <translation type="unfinished"></translation>
+        <translation>Повторно запустить процесс, последний раз использованный исполнителем</translation>
     </message>
     <message>
         <source>Kill a process currently being executed by the runner</source>
-        <translation type="unfinished"></translation>
+        <translation>Убить процесс, в настоящее время выполняемый исполнителем</translation>
     </message>
     <message>
         <source>Save the current output to a file</source>
-        <translation type="unfinished"></translation>
+        <translation>Сохранить текущий вывод в файл</translation>
     </message>
     <message>
         <source>Save Runner Output</source>
-        <translation type="unfinished"></translation>
+        <translation>Сохранить вывод исполнителя</translation>
     </message>
     <message>
         <source>Text files (*.txt)</source>
-        <translation type="unfinished"></translation>
+        <translation>Текстовые файлы (*.txt)</translation>
     </message>
     <message>
         <source>SteamCMD downloader</source>
-        <translation type="unfinished"></translation>
+        <translation>Загрузчик SteamCMD</translation>
     </message>
     <message>
         <source>SteamCMD failed to download mod(s)! Would you like to retry download of the mods that failed?
 
 Click &apos;Show Details&apos; to see a list of mods that failed.</source>
-        <translation type="unfinished"></translation>
+        <translation>SteamCMD не удалось загрузить мод(ы)! Хотите ли вы повторить загрузку модов, которые не удалось загрузить?
+
+Нажмите &apos;Показать детали&apos;, чтобы увидеть список модов, которые не удалось загрузить.</translation>
     </message>
     <message>
         <source>Process Complete</source>
-        <translation type="unfinished"></translation>
+        <translation>Процесс завершен</translation>
     </message>
     <message>
         <source>Process complete, you can close the window.</source>
-        <translation type="unfinished"></translation>
+        <translation>Процесс завершен, вы можете закрыть окно.</translation>
     </message>
     <message>
         <source>Close Window</source>
-        <translation type="unfinished"></translation>
+        <translation>Закрыть окно</translation>
     </message>
     <message>
         <source>Ok</source>
-        <translation type="unfinished"></translation>
+        <translation>ОК</translation>
     </message>
 </context>
 <context>
     <name>SearchWorker</name>
     <message>
         <source>Searching in: {root_path}</source>
-        <translation type="unfinished"></translation>
+        <translation>Поиск в: {root_path}</translation>
     </message>
     <message>
         <source>Search complete</source>
-        <translation type="unfinished"></translation>
+        <translation>Поиск завершен</translation>
     </message>
 </context>
 <context>
@@ -3492,220 +3556,234 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     <message>
         <source>Your RimSort settings file is corrupt.
 Please choose one of the following options to proceed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ваш файл настроек RimSort поврежден.
+Пожалуйста, выберите один из следующих вариантов для продолжения.</translation>
     </message>
     <message>
         <source>Open Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Открыть настройки</translation>
     </message>
     <message>
         <source>Open Settings Folder</source>
-        <translation type="unfinished"></translation>
+        <translation>Открыть папку настроек</translation>
     </message>
     <message>
         <source>Reset Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Сбросить настройки</translation>
     </message>
     <message>
         <source>Exit RimSort</source>
-        <translation type="unfinished"></translation>
+        <translation>Выйти из RimSort</translation>
     </message>
 </context>
 <context>
     <name>SteamBrowser</name>
     <message>
         <source>Mod Downloader</source>
-        <translation type="unfinished"></translation>
+        <translation>Загрузчик модов</translation>
     </message>
     <message>
         <source>Clear List</source>
-        <translation type="unfinished"></translation>
+        <translation>Очистить список</translation>
     </message>
     <message>
         <source>Download mod(s) (SteamCMD)</source>
-        <translation type="unfinished"></translation>
+        <translation>Скачать мод(ы) (SteamCMD)</translation>
     </message>
     <message>
         <source>Download mod(s) (Steam app)</source>
-        <translation type="unfinished"></translation>
+        <translation>Скачать мод(ы) (Steam app)</translation>
     </message>
     <message>
         <source>Add to list</source>
-        <translation type="unfinished"></translation>
+        <translation>Добавить в список</translation>
     </message>
     <message>
         <source>No publishedfileid found</source>
-        <translation type="unfinished"></translation>
+        <translation>Не найден publishedfileid</translation>
     </message>
     <message>
         <source>Unable to parse publishedfileid from url, Please check if url is in the correct format</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось разобрать publishedfileid из url, пожалуйста, проверьте, правильно ли отформатирован url</translation>
     </message>
     <message>
         <source>Add Collection</source>
-        <translation type="unfinished"></translation>
+        <translation>Добавить коллекцию</translation>
     </message>
     <message>
         <source>How would you like to add the collection?</source>
-        <translation type="unfinished"></translation>
+        <translation>Как вы хотите добавить коллекцию?</translation>
     </message>
     <message>
         <source>You can choose to add all mods from the collection or only the ones you don&apos;t have installed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Вы можете выбрать, добавлять ли все моды из коллекции или только те, которые у вас не установлены.</translation>
     </message>
     <message>
         <source>Add All Mods</source>
-        <translation type="unfinished"></translation>
+        <translation>Добавить все моды</translation>
     </message>
     <message>
         <source>Add Missing Mods</source>
-        <translation type="unfinished"></translation>
+        <translation>Добавить отсутствующие моды</translation>
     </message>
     <message>
         <source>SteamCMD downloader</source>
-        <translation type="unfinished"></translation>
+        <translation>Загрузчик SteamCMD</translation>
     </message>
     <message>
         <source>Empty list of mods returned, unable to add collection to list!</source>
-        <translation type="unfinished"></translation>
+        <translation>Список модов пуст, невозможно добавить коллекцию в список!</translation>
     </message>
     <message>
         <source>Please reach out to us on Github Issues page or
 #rimsort-testing on the Rocketman/CAI discord</source>
-        <translation type="unfinished"></translation>
+        <translation>Пожалуйста, свяжитесь с нами на странице проблем Github или
+#rimsort-testing на Discord Rocketman/CAI</translation>
     </message>
     <message>
         <source>You already have these mods in your download list!</source>
-        <translation type="unfinished"></translation>
+        <translation>Эти моды уже есть в вашем списке загрузок!</translation>
     </message>
     <message>
         <source>Skipping the following mods which are already present in your download list!</source>
-        <translation type="unfinished"></translation>
+        <translation>Пропуск следующих модов, которые уже присутствуют в вашем списке загрузок!</translation>
     </message>
     <message>
         <source>Remove mod from list</source>
-        <translation type="unfinished"></translation>
+        <translation>Удалить мод из списка</translation>
     </message>
 </context>
 <context>
     <name>SteamcmdInterface</name>
     <message>
         <source>RimSort - SteamCMD setup</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSort - Настройка SteamCMD</translation>
     </message>
     <message>
         <source>RimSort was unable to find SteamCMD installed in the configured prefix:
 </source>
-        <translation type="unfinished"></translation>
+        <translation>RimSort не удалось найти установленный SteamCMD в сконфигурированном префиксе:
+</translation>
     </message>
     <message>
         <source>Do you want to setup SteamCMD?</source>
-        <translation type="unfinished"></translation>
+        <translation>Вы хотите настроить SteamCMD?</translation>
     </message>
     <message>
         <source>Depot Cache Cleared</source>
-        <translation type="unfinished"></translation>
+        <translation>Кэш депо очищен</translation>
     </message>
     <message>
         <source>SteamCMD depot cache was already cleared.</source>
-        <translation type="unfinished"></translation>
+        <translation>Кэш депо SteamCMD уже был очищен.</translation>
     </message>
     <message>
         <source>SteamCMD depot cache has been cleared.</source>
-        <translation type="unfinished"></translation>
+        <translation>Кэш депо SteamCMD был очищен.</translation>
     </message>
     <message>
         <source>Re-create Symlink?</source>
-        <translation type="unfinished"></translation>
+        <translation>Воссоздать символическую ссылку?</translation>
     </message>
     <message>
         <source>An existing symlink already exists. Would you like to delete and re-create the symlink?</source>
-        <translation type="unfinished"></translation>
+        <translation>Существующая символическая ссылка уже существует. Вы хотите удалить и воссоздать символическую ссылку?</translation>
     </message>
     <message>
         <source>The symlink makes SteamCMD download mods to the local mods folder and is required for SteamCMD mod downloads to work correctly.</source>
-        <translation type="unfinished"></translation>
+        <translation>Символическая ссылка позволяет SteamCMD загружать моды в локальную папку модов и необходима для корректной работы загрузки модов SteamCMD.</translation>
     </message>
     <message>
         <source>Existing symlink: {symlink_destination_path}
 
 New symlink:
 [{symlink_source_path}] -&gt; </source>
-        <translation type="unfinished"></translation>
+        <translation>Существующая символическая ссылка: {symlink_destination_path}
+
+Новая символическая ссылка:
+[{symlink_source_path}] -&gt; </translation>
     </message>
     <message>
         <source>The symlink destination path already exists. Would you like to remove the existing destination and create a new symlink in it&apos;s place?</source>
-        <translation type="unfinished"></translation>
+        <translation>Путь назначения символической ссылки уже существует. Вы хотите удалить существующее назначение и создать новую символическую ссылку на его месте?</translation>
     </message>
     <message>
         <source>Existing destination: {symlink_destination_path}
 
 New symlink:
 [{symlink_source_path}] -&gt; </source>
-        <translation type="unfinished"></translation>
+        <translation>Существующее назначение: {symlink_destination_path}
+
+Новая символическая ссылка:
+[{symlink_source_path}] -&gt; </translation>
     </message>
     <message>
         <source>Create Symlink?</source>
-        <translation type="unfinished"></translation>
+        <translation>Создать символическую ссылку?</translation>
     </message>
     <message>
         <source>Do you want to create a symlink?</source>
-        <translation type="unfinished"></translation>
+        <translation>Вы хотите создать символическую ссылку?</translation>
     </message>
     <message>
         <source>New symlink:
 [{symlink_source_path}] -&gt; </source>
-        <translation type="unfinished"></translation>
+        <translation>Новая символическая ссылка:
+[{symlink_source_path}] -&gt; </translation>
     </message>
 </context>
 <context>
     <name>ThemeController</name>
     <message>
         <source>Theme path Error</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибка пути темы</translation>
     </message>
     <message>
         <source>Stylesheet path does not exist for theme &apos;{theme_name}&apos; Resetting to default theme &apos;{default_theme}&apos;.</source>
-        <translation type="unfinished"></translation>
+        <translation>Путь к таблице стилей не существует для темы &apos;{theme_name}&apos;. Сбрасываю на тему по умолчанию &apos;{default_theme}&apos;.</translation>
     </message>
     <message>
         <source>Theme Error</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибка темы</translation>
     </message>
     <message>
         <source>Failed to apply theme: {selected_theme_name},Resetting to default theme: {self.default_theme}</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось применить тему: {selected_theme_name}, сброс на тему по умолчанию: {self.default_theme}</translation>
     </message>
 </context>
 <context>
     <name>TroubleshootingController</name>
     <message>
         <source>Process complete</source>
-        <translation type="unfinished"></translation>
+        <translation>Процесс завершен</translation>
     </message>
     <message>
         <source>Process complete, wait for steam to complete further process.</source>
-        <translation type="unfinished"></translation>
+        <translation>Процесс завершен, дождитесь завершения дальнейших процессов Steam.</translation>
     </message>
     <message>
         <source>Steam Launch Failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось запустить Steam</translation>
     </message>
     <message>
         <source>Could not automatically start game installation through Steam.
 
 Please manually verify/install the game through Steam.</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось автоматически запустить установку игры через Steam.
+
+Пожалуйста, вручную проверьте/установите игру через Steam.</translation>
     </message>
     <message>
         <source>Deleted all files in the Steam mods directory.
 
  Trying to restart Steam to trigger automatic redownload of subscribed mods.</source>
-        <translation type="unfinished"></translation>
+        <translation>Удалены все файлы в директории модов Steam.
+
+Попытка перезапуска Steam для автоматической повторной загрузки подписанных модов.</translation>
     </message>
     <message>
         <source>Steam Workshop Redownload</source>
-        <translation type="unfinished"></translation>
+        <translation>Повторная загрузка из Steam Workshop</translation>
     </message>
     <message>
         <source>Mods have been deleted. Please restart Steam to trigger automatic redownload of subscribed mods.
@@ -3714,212 +3792,230 @@ If mods don&apos;t download automatically, try:
 1. Restart Steam
 2. Verify game files in Steam
 3. Visit the Workshop page of each mod</source>
-        <translation type="unfinished"></translation>
+        <translation>Моды были удалены. Пожалуйста, перезапустите Steam, чтобы инициировать автоматическую повторную загрузку подписанных модов.
+
+Если моды не загружаются автоматически, попробуйте:
+1. Перезапустить Steam
+2. Проверить файлы игры в Steam
+3. Посетить страницу Workshop каждого мода</translation>
     </message>
     <message>
         <source>Deleted all files in the {config_dir} successfully.</source>
-        <translation type="unfinished"></translation>
+        <translation>Все файлы в {config_dir} успешно удалены.</translation>
     </message>
     <message>
         <source>No files found in {config_dir} for deletion.</source>
-        <translation type="unfinished"></translation>
+        <translation>В {config_dir} не найдено файлов для удаления.</translation>
     </message>
     <message>
         <source>Deleted {item} successfully.</source>
-        <translation type="unfinished"></translation>
+        <translation>Файл {item} успешно удален.</translation>
     </message>
     <message>
         <source>Confirm Changes</source>
-        <translation type="unfinished"></translation>
+        <translation>Подтвердить изменения</translation>
     </message>
     <message>
         <source>Are you sure you want to apply these changes? This cannot be undone.</source>
-        <translation type="unfinished"></translation>
+        <translation>Вы уверены, что хотите применить эти изменения? Это действие нельзя отменить.</translation>
     </message>
     <message>
         <source>This will delete the selected files. Make sure you have backups if needed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Это приведет к удалению выбранных файлов. Убедитесь, что у вас есть резервные копии, если это необходимо.</translation>
     </message>
     <message>
         <source>Confirm Clear</source>
-        <translation type="unfinished"></translation>
+        <translation>Подтвердить очистку</translation>
     </message>
     <message>
         <source>Are you sure you want to delete all mods?
 
 WARNING: This will permanently delete all mods in your Mods folder and reset to vanilla state.</source>
-        <translation type="unfinished"></translation>
+        <translation>Вы уверены, что хотите удалить все моды?
+
+ПРЕДУПРЕЖДЕНИЕ: Это приведет к безвозвратному удалению всех модов в вашей папке Mods и сбросу к состоянию по умолчанию.</translation>
     </message>
     <message>
         <source>Successfully deleted all mods and resetting ModsConfig.xml to vanilla state.</source>
-        <translation type="unfinished"></translation>
+        <translation>Все моды успешно удалены, а ModsConfig.xml сброшен к состоянию по умолчанию.</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибка</translation>
     </message>
     <message>
         <source>Failed to reset ModsConfig.xml.</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось сбросить ModsConfig.xml.</translation>
     </message>
     <message>
         <source>Export failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Экспорт не удался</translation>
     </message>
     <message>
         <source>{mods_config} does not exist, skipping mod export.</source>
-        <translation type="unfinished"></translation>
+        <translation>{mods_config} не существует, пропускаем экспорт мода.</translation>
     </message>
     <message>
         <source>Export Mod List</source>
-        <translation type="unfinished"></translation>
+        <translation>Экспортировать список модов</translation>
     </message>
     <message>
         <source>Location Error</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибка расположения</translation>
     </message>
     <message>
         <source>Failed to get Location: {save_path}.</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось получить расположение: {save_path}.</translation>
     </message>
     <message>
         <source>Confirm Export</source>
-        <translation type="unfinished"></translation>
+        <translation>Подтвердить экспорт</translation>
     </message>
     <message>
         <source>Export current mod list to file?</source>
-        <translation type="unfinished"></translation>
+        <translation>Экспортировать текущий список модов в файл?</translation>
     </message>
     <message>
         <source>Failed to export mod list.</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось экспортировать список модов.</translation>
     </message>
     <message>
         <source>Import failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось импортировать</translation>
     </message>
     <message>
         <source>{mods_config} does not exist, skipping mod import.</source>
-        <translation type="unfinished"></translation>
+        <translation>{mods_config} не существует, пропускаем импорт мода.</translation>
     </message>
     <message>
         <source>Import Mod List</source>
-        <translation type="unfinished"></translation>
+        <translation>Импортировать список модов</translation>
     </message>
     <message>
         <source>Confirm Import</source>
-        <translation type="unfinished"></translation>
+        <translation>Подтвердить импорт</translation>
     </message>
     <message>
         <source>Import mod list from file?</source>
-        <translation type="unfinished"></translation>
+        <translation>Импортировать список модов из файла?</translation>
     </message>
     <message>
         <source>This will overwrite your current mod list.</source>
-        <translation type="unfinished"></translation>
+        <translation>Это действие перезапишет ваш текущий список модов.</translation>
     </message>
     <message>
         <source>Failed to import mod list</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось импортировать список модов</translation>
     </message>
     <message>
         <source>The selected file is not a valid mod list file.
 Details: {e}</source>
-        <translation type="unfinished"></translation>
+        <translation>Выбранный файл не является допустимым файлом списка модов.
+Подробности: {e}</translation>
     </message>
     <message>
         <source>Cache Cleared</source>
-        <translation type="unfinished"></translation>
+        <translation>Кэш очищен</translation>
     </message>
     <message>
         <source>Successfully deleted Steam&apos;s downloading folder.
 Restart Steam for the changes to take effect.</source>
-        <translation type="unfinished"></translation>
+        <translation>Успешно удалена папка загрузки Steam.
+Перезапустите Steam, чтобы изменения вступили в силу.</translation>
     </message>
     <message>
         <source>Cache Clear</source>
-        <translation type="unfinished"></translation>
+        <translation>Очистка кэша</translation>
     </message>
     <message>
         <source>Steam&apos;s downloading folder is already empty.</source>
-        <translation type="unfinished"></translation>
+        <translation>Папка загрузки Steam уже пуста.</translation>
     </message>
     <message>
         <source>Cache Clear Failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось очистить кэш</translation>
     </message>
     <message>
         <source>Could not delete Steam&apos;s downloading folder.
 Please delete it manually: Steam/steamapps/downloading
 Details: {e}</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось удалить папку загрузки Steam.
+Пожалуйста, удалите ее вручную: Steam/steamapps/downloading
+Подробности: {e}</translation>
     </message>
     <message>
         <source>Steam Action Failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось выполнить действие Steam</translation>
     </message>
     <message>
         <source>Could not open Steam to verify game files.
 Please verify game files manually through Steam&apos;s game properties.
 Details: {e}</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось открыть Steam для проверки файлов игры.
+Пожалуйста, проверьте файлы игры вручную через свойства игры в Steam.
+Подробности: {e}</translation>
     </message>
     <message>
         <source>No Games Found</source>
-        <translation type="unfinished"></translation>
+        <translation>Игры не найдены</translation>
     </message>
     <message>
         <source>No installed games found in this Steam library folder.
 You may have games installed in a different Steam library folder or drive.</source>
-        <translation type="unfinished"></translation>
+        <translation>В этой папке библиотеки Steam не найдено установленных игр.
+Возможно, у вас есть игры, установленные в другой папке библиотеки Steam или на другом диске.</translation>
     </message>
     <message>
         <source>Confirm Library Repair</source>
-        <translation type="unfinished"></translation>
+        <translation>Подтвердить восстановление библиотеки</translation>
     </message>
     <message>
         <source>This will verify all {len} games in your Steam library.
 This may take a while. Continue?</source>
-        <translation type="unfinished"></translation>
+        <translation>Это действие проверит все {len} игр в вашей библиотеке Steam.
+Это может занять некоторое время. Продолжить?</translation>
     </message>
     <message>
         <source>Library Repair Started</source>
-        <translation type="unfinished"></translation>
+        <translation>Начато восстановление библиотеки</translation>
     </message>
     <message>
         <source>Steam will now verify {len} games.
 You can monitor progress in the Steam client.</source>
-        <translation type="unfinished"></translation>
+        <translation>Steam теперь будет проверять {len} игр.
+Вы можете отслеживать процесс в клиенте Steam.</translation>
     </message>
     <message>
         <source>Could not repair Steam library.
 Please verify your games manually through Steam.
 Details: {e}</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось восстановить библиотеку Steam.
+Пожалуйста, проверьте свои игры вручную через Steam.
+Подробности: {e}</translation>
     </message>
     <message>
         <source>Path not set, Please check your settings and Try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Путь не установлен, пожалуйста, проверьте свои настройки и попробуйте снова.</translation>
     </message>
     <message>
         <source>Process failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось выполнить процесс</translation>
     </message>
     <message>
         <source>Could not process: {item}</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось обработать: {item}</translation>
     </message>
     <message>
         <source>Failed to process item: {item} due to the following error: {e}</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось обработать элемент: {item} из-за следующей ошибки: {e}</translation>
     </message>
     <message>
         <source>Steam user Check failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось проверить пользователя Steam</translation>
     </message>
     <message>
         <source>You are not a Steam user, or Path not set, Please check settings and try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Вы не являетесь пользователем Steam, или путь не установлен, пожалуйста, проверьте настройки и попробуйте снова.</translation>
     </message>
 </context>
 <context>
@@ -4065,266 +4161,267 @@ Details: {e}</source>
     <name>UseThisInsteadPanel</name>
     <message>
         <source>RimSort - Replacements found for Workshop mods</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSort - Найдены замены для модов Workshop</translation>
     </message>
     <message>
         <source>There are replacements available for Workshop mods!</source>
-        <translation type="unfinished"></translation>
+        <translation>Доступны замены для модов Workshop!</translation>
     </message>
     <message>
         <source>
 The following table displays Workshop mods with suggested replacements according to the &quot;Use This Instead&quot; database</source>
-        <translation type="unfinished"></translation>
+        <translation>
+Следующая таблица отображает моды Workshop с предложенными заменами согласно базе данных &quot;Используйте это вместо&quot;</translation>
     </message>
     <message>
         <source>Original Mod Name</source>
-        <translation type="unfinished"></translation>
+        <translation>Имя оригинального мода</translation>
     </message>
     <message>
         <source>Original Author</source>
-        <translation type="unfinished"></translation>
+        <translation>Оригинальный автор</translation>
     </message>
     <message>
         <source>Original Workshop Page</source>
-        <translation type="unfinished"></translation>
+        <translation>Оригинальная страница Workshop</translation>
     </message>
     <message>
         <source>Replacement Mod Name</source>
-        <translation type="unfinished"></translation>
+        <translation>Имя заменяющего мода</translation>
     </message>
     <message>
         <source>Replacement Author</source>
-        <translation type="unfinished"></translation>
+        <translation>Автор заменяющего мода</translation>
     </message>
     <message>
         <source>Replacement Workshop Page</source>
-        <translation type="unfinished"></translation>
+        <translation>Страница Workshop заменяющего мода</translation>
     </message>
     <message>
         <source>Download with SteamCMD</source>
-        <translation type="unfinished"></translation>
+        <translation>Скачать с помощью SteamCMD</translation>
     </message>
     <message>
         <source>Subscribe</source>
-        <translation type="unfinished"></translation>
+        <translation>Подписаться</translation>
     </message>
     <message>
         <source>Subscribe replacements</source>
-        <translation type="unfinished"></translation>
+        <translation>Подписаться на замены</translation>
     </message>
     <message>
         <source>Subscribe all replacements</source>
-        <translation type="unfinished"></translation>
+        <translation>Подписаться на все замены</translation>
     </message>
     <message>
         <source>Unsubscribe</source>
-        <translation type="unfinished"></translation>
+        <translation>Отписаться</translation>
     </message>
     <message>
         <source>Unsubscribe outdated</source>
-        <translation type="unfinished"></translation>
+        <translation>Отписаться от устаревших</translation>
     </message>
     <message>
         <source>Unsubscribe all outdated</source>
-        <translation type="unfinished"></translation>
+        <translation>Отписаться от всех устаревших</translation>
     </message>
     <message>
         <source>Refresh</source>
-        <translation type="unfinished"></translation>
+        <translation>Обновить</translation>
     </message>
     <message>
         <source>Refresh Mod List</source>
-        <translation type="unfinished"></translation>
+        <translation>Обновить список модов</translation>
     </message>
     <message>
         <source>Refresh Table</source>
-        <translation type="unfinished"></translation>
+        <translation>Обновить таблицу</translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation type="unfinished"></translation>
+        <translation>Удалить</translation>
     </message>
     <message>
         <source>Delete Selected Original Mods...</source>
-        <translation type="unfinished"></translation>
+        <translation>Удалить выбранные оригинальные моды...</translation>
     </message>
     <message>
         <source>Use This Instead</source>
-        <translation type="unfinished"></translation>
+        <translation>Используйте это вместо</translation>
     </message>
     <message>
         <source>Successfully subscribed to replacement mods</source>
-        <translation type="unfinished"></translation>
+        <translation>Успешно подписались на заменяющие моды</translation>
     </message>
     <message>
         <source>Successfully unsubscribed to original mods</source>
-        <translation type="unfinished"></translation>
+        <translation>Успешно отписались от оригинальных модов</translation>
     </message>
     <message>
         <source>Open Workshop Page</source>
-        <translation type="unfinished"></translation>
+        <translation>Открыть страницу Workshop</translation>
     </message>
 </context>
 <context>
     <name>_UploadLogDialog</name>
     <message>
         <source>Uploading Log...</source>
-        <translation type="unfinished"></translation>
+        <translation>Загрузка лога...</translation>
     </message>
     <message>
         <source>Log Upload Successful</source>
-        <translation type="unfinished"></translation>
+        <translation>Загрузка лога прошла успешно</translation>
     </message>
     <message>
         <source>Log file uploaded successfully! Copied URL to clipboard.</source>
-        <translation type="unfinished"></translation>
+        <translation>Файл лога успешно загружен! Скопирована ссылка в буфер обмена.</translation>
     </message>
     <message>
         <source>Log Upload Failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибка загрузки лога</translation>
     </message>
     <message>
         <source>Log file upload failed!</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось загрузить файл лога!</translation>
     </message>
     <message>
         <source>Please check your internet connection and try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Пожалуйста, проверьте свое интернет-соединение и попробуйте снова.</translation>
     </message>
 </context>
 <context>
     <name>__new__</name>
     <message>
         <source>Invalid archive path</source>
-        <translation type="unfinished"></translation>
+        <translation>Недопустимый путь к архиву</translation>
     </message>
     <message>
         <source>The provided archive path is invalid.</source>
-        <translation type="unfinished"></translation>
+        <translation>Предоставленный путь к архиву недопустим.</translation>
     </message>
     <message>
         <source>Please provide a valid archive path.</source>
-        <translation type="unfinished"></translation>
+        <translation>Пожалуйста, предоставьте действительный путь к архиву.</translation>
     </message>
 </context>
 <context>
     <name>copy_to_clipboard_safely</name>
     <message>
         <source>Failed to copy to clipboard.</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось скопировать в буфер обмена.</translation>
     </message>
     <message>
         <source>RimSort failed to copy the text to your clipboard. Please copy it manually.</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSort не удалось скопировать текст в буфер обмена. Пожалуйста, скопируйте его вручную.</translation>
     </message>
 </context>
 <context>
     <name>find_circular_dependencies</name>
     <message>
         <source>Unable to Sort</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось отсортировать</translation>
     </message>
     <message>
         <source>RimSort found circular dependencies in your mods list. Please see the details for dependency loops.</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSort обнаружил циклические зависимости в вашем списке модов. Пожалуйста, посмотрите детали для циклов зависимостей.</translation>
     </message>
 </context>
 <context>
     <name>launch_game_process</name>
     <message>
         <source>File not found</source>
-        <translation type="unfinished"></translation>
+        <translation>Файл не найден</translation>
     </message>
     <message>
         <source>Unable to launch game process</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось запустить игровой процесс</translation>
     </message>
     <message>
         <source>RimSort could not start RimWorld as the game executable does not exist at the specified path: {executable_path}. Please check that this directory is correct and the RimWorld game executable exists in it.</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSort не удалось запустить RimWorld, так как исполняемый файл игры не существует по указанному пути: {executable_path}. Пожалуйста, проверьте, что этот каталог правильный и исполняемый файл RimWorld существует в нем.</translation>
     </message>
     <message>
         <source>Game launch failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось запустить игру</translation>
     </message>
     <message>
         <source>Unable to launch RimWorld</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось запустить RimWorld</translation>
     </message>
     <message>
         <source>RimSort could not start RimWorld as the game folder is empty or invalid: [{game_install_path}] Please check that the game folder is properly set and that the RimWorld executable exists in it.</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSort не удалось запустить RimWorld, так как папка игры пуста или недействительна: [{game_install_path}]. Пожалуйста, проверьте, что папка игры правильно настроена и что исполняемый файл RimWorld существует в ней.</translation>
     </message>
 </context>
 <context>
     <name>rmtree</name>
     <message>
         <source>Failed to remove directory</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось удалить каталог</translation>
     </message>
     <message>
         <source>RimSort tried to remove a directory that does not exist.</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSort попытался удалить каталог, который не существует.</translation>
     </message>
     <message>
         <source>Directory does not exist: {path}</source>
-        <translation type="unfinished"></translation>
+        <translation>Каталог не существует: {path}</translation>
     </message>
     <message>
         <source>RimSort tried to remove a directory that is not a directory.</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSort попытался удалить каталог, который не является каталогом.</translation>
     </message>
     <message>
         <source>Path is not a directory: {path}</source>
-        <translation type="unfinished"></translation>
+        <translation>Путь не является каталогом: {path}</translation>
     </message>
     <message>
         <source>An OSError occurred while trying to remove a directory.</source>
-        <translation type="unfinished"></translation>
+        <translation>Произошла ошибка OSError при попытке удалить каталог.</translation>
     </message>
     <message>
         <source>{e.strerror} occurred at {e.filename} with error code {error_code}.</source>
-        <translation type="unfinished"></translation>
+        <translation>{e.strerror} произошла в {e.filename} с кодом ошибки {error_code}.</translation>
     </message>
 </context>
 <context>
     <name>show_dialogue_conditional</name>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Отмена</translation>
     </message>
 </context>
 <context>
     <name>show_dialogue_information</name>
     <message>
         <source>OK</source>
-        <translation type="unfinished"></translation>
+        <translation>ОК</translation>
     </message>
 </context>
 <context>
     <name>show_warning</name>
     <message>
         <source>OK</source>
-        <translation type="unfinished"></translation>
+        <translation>ОК</translation>
     </message>
 </context>
 <context>
     <name>validate_rimworld_mods_list</name>
     <message>
         <source>Unable to read data</source>
-        <translation type="unfinished"></translation>
+        <translation>Не удалось прочитать данные</translation>
     </message>
     <message>
         <source>RimSort was unable to read the supplied mods list.</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSort не удалось прочитать предоставленный список модов.</translation>
     </message>
     <message>
         <source>The supplied mods list may be missing or invalid. If you just (re)installed RimWorld, you may need to run it once to generate the mods list.</source>
-        <translation type="unfinished"></translation>
+        <translation>Предоставленный список модов может отсутствовать или быть недействительным. Если вы только что (пере)установили RimWorld, вам может потребоваться запустить его один раз, чтобы сгенерировать список модов.</translation>
     </message>
     <message>
         <source>RimSort was unable to read the supplied mods list because it may be invalid or missing.</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSort не удалось прочитать предоставленный список модов, так как он может быть недействительным или отсутствовать.</translation>
     </message>
 </context>
 </TS>

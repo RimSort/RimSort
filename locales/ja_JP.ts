@@ -544,7 +544,7 @@ When unchecked, search all file types with standard search.</source>
     </message>
     <message>
         <source>Are you sure you want to import .acf? THis only works for steamcmd</source>
-        <translation type="unfinished"></translation>
+        <translation>本当に.acfをインポートしますか？これはsteamcmd専用です</translation>
     </message>
 </context>
 <context>
@@ -786,7 +786,7 @@ Do you want to update now?</source>
     </message>
     <message>
         <source>Uploaded {path.name} to http://0x0.st/</source>
-        <translation>ファイルをhttp://0x0.st/ にアップロードしました</translation>
+        <translation>{path.name}を http://0x0.st/ にアップロードしました</translation>
     </message>
     <message>
         <source>The URL has been copied to your clipboard:
@@ -1102,581 +1102,606 @@ The resultant database, C, is saved to a user-specified path. You will be prompt
 	1) Select input A (db to-be-updated)
 	2) Select input B (update source)
 	3) Select output C (resultant db)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Failed to read existing database</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Failed to read the existing database!</source>
-        <translation type="unfinished"></translation>
+        <translation>- これにより、Aのキー/値がBのキー/値で再帰的に上書きされ、結果のデータベースが生成されます。
+- 例外は再帰的に更新されません。代わりに、Bのキーで完全に上書きされます。
+- 次の例外が適用されます：
+
+	{DB_BUILDER_RECURSE_EXCEPTIONS}
+
+結果のデータベースCは、ユーザー指定のパスに保存されます。これらのパスを順番に指定するように求められます。
+
+	1) 入力Aを選択 (更新対象のDB)
+    2) 入力Bを選択 (更新元)
+    3) 出力Cを選択 (結果のDB)</translation>
     </message>
     <message>
         <source>Path: {path}</source>
-        <translation type="unfinished"></translation>
+        <translation>パス: {path}</translation>
     </message>
     <message>
         <source>RimSort - DB Builder</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSort - DBビルダー</translation>
     </message>
     <message>
         <source>Do you want to continue?</source>
-        <translation type="unfinished"></translation>
+        <translation>続行しますか？</translation>
     </message>
     <message>
         <source>This operation will overwrite the {rules_source} database located at the following path:
 
 {path}</source>
-        <translation type="unfinished"></translation>
+        <translation>この操作は、次のパスにある{rules_source}データベースを上書きします。
+
+{path}</translation>
     </message>
     <message>
         <source>Edit SteamDB expiry:</source>
-        <translation type="unfinished"></translation>
+        <translation>SteamDBの有効期限を編集:</translation>
     </message>
     <message>
         <source>Enter your preferred expiry duration in seconds (default 1 week/604800 sec):</source>
-        <translation type="unfinished"></translation>
+        <translation>希望する有効期限を秒単位で入力してください（デフォルトは1週間/604800秒）:</translation>
     </message>
     <message>
         <source>Tried configuring Dynamic Query with a value that is not an integer.</source>
-        <translation type="unfinished"></translation>
+        <translation>整数ではない値で動的クエリを構成しようとしました。</translation>
     </message>
     <message>
         <source>Please reconfigure the expiry value with an integer in terms of the seconds from epoch you would like your query to expire.</source>
-        <translation type="unfinished"></translation>
+        <translation>クエリの有効期限を切れるまでのエポックからの秒数を整数で再構成してください。</translation>
     </message>
     <message>
         <source>Use This Instead</source>
-        <translation type="unfinished"></translation>
+        <translation>これを代わりに使用</translation>
     </message>
     <message>
         <source>No suggestions were found in the &quot;Use This Instead&quot; database.</source>
-        <translation type="unfinished"></translation>
+        <translation>「これを代わりに使用」データベースに提案は見つかりませんでした。</translation>
+    </message>
+    <message>
+        <source>Failed to read existing database</source>
+        <translation>既存のデータベースの読み込みに失敗しました</translation>
+    </message>
+    <message>
+        <source>Failed to read the existing database!</source>
+        <translation>既存のデータベースの読み込みに失敗しました！</translation>
     </message>
 </context>
 <context>
     <name>MainContentController</name>
     <message>
         <source>No Repositories</source>
-        <translation type="unfinished"></translation>
+        <translation>リポジトリがありません</translation>
     </message>
     <message>
         <source>No repositories provided for update check.</source>
-        <translation type="unfinished"></translation>
+        <translation>更新チェックのためのリポジトリが提供されていません。</translation>
     </message>
     <message>
         <source>Please select at least one repository to check.</source>
-        <translation type="unfinished"></translation>
+        <translation>確認するリポジトリを少なくとも1つ選択してください。</translation>
     </message>
     <message>
         <source>Invalid git repository</source>
-        <translation type="unfinished"></translation>
+        <translation>無効なgitリポジトリ</translation>
     </message>
     <message>
         <source>Could not find a valid git repository.</source>
-        <translation type="unfinished"></translation>
+        <translation>有効なgitリポジトリが見つかりませんでした。</translation>
     </message>
     <message>
         <source>Errors during update check</source>
-        <translation type="unfinished"></translation>
+        <translation>更新チェック中にエラーが発生しました</translation>
     </message>
     <message>
         <source>Some repositories encountered errors.</source>
-        <translation type="unfinished"></translation>
+        <translation>一部のリポジトリでエラーが発生しました。</translation>
     </message>
     <message>
         <source>Errors occurred while checking for updates:
 {errors}</source>
-        <translation type="unfinished"></translation>
+        <translation>更新チェック中にエラーが発生しました:
+{errors}</translation>
     </message>
     <message>
         <source>No updates found</source>
-        <translation type="unfinished"></translation>
+        <translation>更新は見つかりませんでした</translation>
     </message>
     <message>
         <source>All repositories are up to date.</source>
-        <translation type="unfinished"></translation>
+        <translation>すべてのリポジトリは最新の状態です。</translation>
     </message>
     <message>
         <source>No new commits were found on remote branches.</source>
-        <translation type="unfinished"></translation>
+        <translation>リモートブランチに新しいコミットは見つかりませんでした。</translation>
     </message>
     <message>
         <source>Git Updates Found</source>
-        <translation type="unfinished"></translation>
+        <translation>Gitの更新が見つかりました</translation>
     </message>
     <message>
         <source>{len} repositories have updates available.</source>
-        <translation type="unfinished"></translation>
+        <translation>{len} のリポジトリに更新があります。</translation>
     </message>
     <message>
         <source>Would you like to update them now?</source>
-        <translation type="unfinished"></translation>
+        <translation>今すぐ更新しますか？</translation>
     </message>
     <message>
         <source>Update All</source>
-        <translation type="unfinished"></translation>
+        <translation>すべて更新</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished">キャンセル</translation>
+        <translation>キャンセル</translation>
     </message>
     <message>
         <source>Updates Completed</source>
-        <translation type="unfinished"></translation>
+        <translation>更新が完了しました</translation>
     </message>
     <message>
         <source>All repositories updated successfully!</source>
-        <translation type="unfinished"></translation>
+        <translation>すべてのリポジトリが正常に更新されました！</translation>
     </message>
     <message>
         <source>{count} repositories were updated:&lt;br/&gt;{repos}</source>
-        <translation type="unfinished"></translation>
+        <translation>{count} のリポジトリが更新されました:&lt;br/&gt;{repos}</translation>
     </message>
     <message>
         <source>Failed to update repo!</source>
-        <translation type="unfinished"></translation>
+        <translation>リポジトリの更新に失敗しました！</translation>
     </message>
     <message>
         <source>All pull operations failed.</source>
-        <translation type="unfinished"></translation>
+        <translation>すべてのプル操作が失敗しました。</translation>
     </message>
     <message>
         <source>{count} repositories could not be updated.</source>
-        <translation type="unfinished"></translation>
+        <translation>{count} のリポジトリが更新できませんでした。</translation>
     </message>
     <message>
         <source>Successful updates:
 </source>
-        <translation type="unfinished"></translation>
+        <translation>成功した更新:
+</translation>
     </message>
     <message>
         <source>Partial Updates Completed</source>
-        <translation type="unfinished"></translation>
+        <translation>部分的な更新が完了しました</translation>
     </message>
     <message>
         <source>Some repositories updated successfully.</source>
-        <translation type="unfinished"></translation>
+        <translation>一部のリポジトリが正常に更新されました。</translation>
     </message>
     <message>
         <source>{success} succeeded, {failed} failed out of {total}.</source>
-        <translation type="unfinished"></translation>
+        <translation>{success} の更新に成功し、{failed} の更新に失敗しました（合計 {total}）。</translation>
     </message>
     <message>
         <source>No repositories provided for push operation.</source>
-        <translation type="unfinished"></translation>
+        <translation>プッシュ操作のためのリポジトリが提供されていません。</translation>
     </message>
     <message>
         <source>Please select at least one repository to push.</source>
-        <translation type="unfinished"></translation>
+        <translation>プッシュするリポジトリを少なくとも1つ選択してください。</translation>
     </message>
     <message>
         <source>Push Options</source>
-        <translation type="unfinished"></translation>
+        <translation>プッシュオプション</translation>
     </message>
     <message>
         <source>Push changes to remote repositories?</source>
-        <translation type="unfinished"></translation>
+        <translation>リモートリポジトリに変更をプッシュしますか？</translation>
     </message>
     <message>
         <source>This will push local commits to the remote repositories.</source>
-        <translation type="unfinished"></translation>
+        <translation>これにより、ローカルコミットがリモートリポジトリにプッシュされます。</translation>
     </message>
     <message>
         <source>Push</source>
-        <translation type="unfinished"></translation>
+        <translation>プッシュ</translation>
     </message>
     <message>
         <source>Force Push</source>
-        <translation type="unfinished"></translation>
+        <translation>強制プッシュ</translation>
     </message>
     <message>
         <source>Use force push?</source>
-        <translation type="unfinished"></translation>
+        <translation>強制プッシュを使用しますか？</translation>
     </message>
     <message>
         <source>Force push will overwrite remote history. Use with caution!</source>
-        <translation type="unfinished"></translation>
+        <translation>強制プッシュはリモートの履歴を上書きします。注意して使用してください！</translation>
     </message>
     <message>
         <source>Normal Push</source>
-        <translation type="unfinished"></translation>
+        <translation>通常のプッシュ</translation>
     </message>
     <message>
         <source>Push Completed</source>
-        <translation type="unfinished"></translation>
+        <translation>プッシュが完了しました</translation>
     </message>
     <message>
         <source>All repositories pushed successfully!</source>
-        <translation type="unfinished"></translation>
+        <translation>すべてのリポジトリが正常にプッシュされました！</translation>
     </message>
     <message>
         <source>{count} repositories were pushed.</source>
-        <translation type="unfinished"></translation>
+        <translation>{count} のリポジトリがプッシュされました。</translation>
     </message>
     <message>
         <source>Push Failed</source>
-        <translation type="unfinished"></translation>
+        <translation>プッシュに失敗しました</translation>
     </message>
     <message>
         <source>All push operations failed.</source>
-        <translation type="unfinished"></translation>
+        <translation>すべてのプッシュ操作が失敗しました。</translation>
     </message>
     <message>
         <source>{count} repositories could not be pushed.</source>
-        <translation type="unfinished"></translation>
+        <translation>{count} のリポジトリがプッシュできませんでした。</translation>
     </message>
     <message>
         <source>Successful pushes:
 </source>
-        <translation type="unfinished"></translation>
+        <translation>成功したプッシュ:
+</translation>
     </message>
     <message>
         <source>Partial Push Completed</source>
-        <translation type="unfinished"></translation>
+        <translation>部分的なプッシュが完了しました</translation>
     </message>
     <message>
         <source>Some repositories pushed successfully.</source>
-        <translation type="unfinished"></translation>
+        <translation>一部のリポジトリが正常にプッシュされました。</translation>
     </message>
     <message>
         <source>Clone Repository</source>
-        <translation type="unfinished"></translation>
+        <translation>リポジトリをクローン</translation>
     </message>
     <message>
         <source>Do you want to clone this repository?</source>
-        <translation type="unfinished"></translation>
+        <translation>このリポジトリをクローンしますか？</translation>
     </message>
     <message>
         <source>Repository: {repo_url}
 Destination: {dest}</source>
-        <translation type="unfinished"></translation>
+        <translation>リポジトリ: {repo_url}
+宛先: {dest}</translation>
     </message>
     <message>
         <source>Clone</source>
-        <translation type="unfinished"></translation>
+        <translation>クローン</translation>
     </message>
     <message>
         <source>Existing repository found</source>
-        <translation type="unfinished"></translation>
+        <translation>既存のリポジトリが見つかりました</translation>
     </message>
     <message>
         <source>An existing local repo that matches this repository was found:</source>
-        <translation type="unfinished"></translation>
+        <translation>このリポジトリに一致する既存のローカルリポジトリが見つかりました:</translation>
     </message>
     <message>
         <source>{repo_folder}&lt;br/&gt;How would you like to handle? Choose option:&lt;br/&gt;&lt;br/&gt;1) Clone new repository (deletes existing and replaces)&lt;br/&gt;2) Update existing repository (in-place force-update)</source>
-        <translation type="unfinished"></translation>
+        <translation>{repo_folder}&lt;br/&gt;どのように処理しますか？オプションを選択してください:&lt;br/&gt;&lt;br/&gt;1) 新しいリポジトリをクローン（既存のものを削除して置き換え）&lt;br/&gt;2) 既存のリポジトリを更新（インプレース強制更新）</translation>
     </message>
     <message>
         <source>Clone new</source>
-        <translation type="unfinished"></translation>
+        <translation>新しいクローン</translation>
     </message>
     <message>
         <source>Update existing</source>
-        <translation type="unfinished"></translation>
+        <translation>既存の更新</translation>
     </message>
     <message>
         <source>Repo retrieved</source>
-        <translation type="unfinished"></translation>
+        <translation>リポジトリが取得されました</translation>
     </message>
     <message>
         <source>The configured repository was cloned!</source>
-        <translation type="unfinished"></translation>
+        <translation>設定されたリポジトリがクローンされました！</translation>
     </message>
     <message>
         <source>Cloned to: {path}</source>
-        <translation type="unfinished"></translation>
+        <translation>クローン先: {path}</translation>
     </message>
     <message>
         <source>Failed to clone repo!</source>
-        <translation type="unfinished"></translation>
+        <translation>リポジトリのクローンに失敗しました！</translation>
     </message>
     <message>
         <source>The configured repo failed to clone/initialize! Are you connected to the Internet? Is your configured repo valid?</source>
-        <translation type="unfinished"></translation>
+        <translation>設定されたリポジトリのクローン/初期化に失敗しました！インターネットに接続されていますか？設定されたリポジトリは有効ですか？</translation>
     </message>
     <message>
         <source>Enter git repo</source>
-        <translation type="unfinished"></translation>
+        <translation>gitリポジトリを入力してください</translation>
     </message>
     <message>
         <source>Enter a git repository url (http/https) to clone to local mods:</source>
-        <translation type="unfinished"></translation>
+        <translation>ローカルの変更にクローンするためのgitリポジトリURL（http/https）を入力してください:</translation>
     </message>
     <message>
         <source>Invalid repository</source>
-        <translation type="unfinished"></translation>
+        <translation>無効なリポジトリ</translation>
     </message>
     <message>
         <source>Repository URL is empty or invalid.</source>
-        <translation type="unfinished"></translation>
+        <translation>リポジトリURLが空または無効です。</translation>
     </message>
     <message>
         <source>Please configure a valid repository URL in settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>設定で有効なリポジトリURLを構成してください。</translation>
     </message>
     <message>
         <source>An invalid repository was detected!</source>
-        <translation type="unfinished"></translation>
+        <translation>無効なリポジトリが検出されました！</translation>
     </message>
     <message>
         <source>Please reconfigure a repository in settings!
 A valid repository is a repository URL which is not empty and is prefixed with &quot;http://&quot; or &quot;https://&quot;</source>
-        <translation type="unfinished"></translation>
+        <translation>設定でリポジトリを再構成してください！
+有効なリポジトリは、空でなく、&quot;http://&quot;または&quot;https://&quot;で始まるリポジトリURLです。</translation>
     </message>
     <message>
         <source>Invalid repository URL</source>
-        <translation type="unfinished"></translation>
+        <translation>無効なリポジトリURL</translation>
     </message>
     <message>
         <source>Failed to parse repository information from URL.</source>
-        <translation type="unfinished"></translation>
+        <translation>URLからリポジトリ情報を解析できませんでした。</translation>
     </message>
     <message>
         <source>URL: {repo_url}
 Error: {error}</source>
-        <translation type="unfinished"></translation>
+        <translation>URL: {repo_url}
+エラー: {error}</translation>
     </message>
     <message>
         <source>GitHub credentials missing</source>
-        <translation type="unfinished"></translation>
+        <translation>GitHubの認証情報が見つかりません</translation>
     </message>
     <message>
         <source>GitHub username and token are required for database upload.</source>
-        <translation type="unfinished"></translation>
+        <translation>データベースのアップロードにはGitHubのユーザー名とトークンが必要です。</translation>
     </message>
     <message>
         <source>Please configure your GitHub credentials in settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>設定でGitHubの認証情報を構成してください。</translation>
     </message>
     <message>
         <source>Repository not found</source>
-        <translation type="unfinished"></translation>
+        <translation>リポジトリが見つかりません</translation>
     </message>
     <message>
         <source>Local repository does not exist.</source>
-        <translation type="unfinished"></translation>
+        <translation>ローカルリポジトリが存在しません。</translation>
     </message>
     <message>
         <source>Would you like to clone the repository first?</source>
-        <translation type="unfinished"></translation>
+        <translation>最初にリポジトリをクローンしますか？</translation>
     </message>
     <message>
         <source>File does not exist</source>
-        <translation type="unfinished"></translation>
+        <translation>ファイルが存在しません</translation>
     </message>
     <message>
         <source>Please ensure the file exists and then try to upload again!</source>
-        <translation type="unfinished"></translation>
+        <translation>ファイルが存在することを確認し、再度アップロードを試みてください！</translation>
     </message>
     <message>
         <source>File not found:
 {file_full_path}
 Repository:
 {repo_url}</source>
-        <translation type="unfinished"></translation>
+        <translation>ファイルが見つかりませんでした:
+{file_full_path}
+リポジトリ:
+{repo_url}</translation>
     </message>
     <message>
         <source>Invalid database</source>
-        <translation type="unfinished"></translation>
+        <translation>無効なデータベース</translation>
     </message>
     <message>
         <source>Database file does not contain version or timestamp.</source>
-        <translation type="unfinished"></translation>
+        <translation>データベースファイルにバージョンまたはタイムスタンプが含まれていません。</translation>
     </message>
     <message>
         <source>File: {file_path}</source>
-        <translation type="unfinished">ファイル: {file_path}</translation>
+        <translation>ファイル: {file_path}</translation>
     </message>
     <message>
         <source>Database parse error</source>
-        <translation type="unfinished"></translation>
+        <translation>データベースの解析エラー</translation>
     </message>
     <message>
         <source>Failed to read or parse database file.</source>
-        <translation type="unfinished"></translation>
+        <translation>データベースファイルの読み取りまたは解析に失敗しました。</translation>
     </message>
     <message>
         <source>GitHub API error</source>
-        <translation type="unfinished"></translation>
+        <translation>GitHub APIエラー</translation>
     </message>
     <message>
         <source>Failed to connect to GitHub API.</source>
-        <translation type="unfinished"></translation>
+        <translation>GitHub APIへの接続に失敗しました。</translation>
     </message>
     <message>
         <source>Fork created</source>
-        <translation type="unfinished"></translation>
+        <translation>フォークが作成されました</translation>
     </message>
     <message>
         <source>Created fork of repository.</source>
-        <translation type="unfinished"></translation>
+        <translation>リポジトリのフォークが作成されました。</translation>
     </message>
     <message>
         <source>Fork: {fork_name}
 Please wait a moment for GitHub to set up the fork.</source>
-        <translation type="unfinished"></translation>
+        <translation>フォーク: {fork_name}
+GitHubがフォークを設定するまでお待ちください。</translation>
     </message>
     <message>
         <source>Fork creation failed</source>
-        <translation type="unfinished"></translation>
+        <translation>フォークの作成に失敗しました</translation>
     </message>
     <message>
         <source>Failed to create fork of repository.</source>
-        <translation type="unfinished"></translation>
+        <translation>リポジトリのフォークを作成できませんでした。</translation>
     </message>
     <message>
         <source>Fork error</source>
-        <translation type="unfinished"></translation>
+        <translation>フォークエラー</translation>
     </message>
     <message>
         <source>Could not access or create fork repository.</source>
-        <translation type="unfinished"></translation>
+        <translation>フォークリポジトリにアクセスできないか、作成できませんでした。</translation>
     </message>
     <message>
         <source>Git repository error</source>
-        <translation type="unfinished"></translation>
+        <translation>Gitリポジトリエラー</translation>
     </message>
     <message>
         <source>Invalid git repository.</source>
-        <translation type="unfinished"></translation>
+        <translation>無効なgitリポジトリです。</translation>
     </message>
     <message>
         <source>Stash failed</source>
-        <translation type="unfinished"></translation>
+        <translation>スタッシュに失敗しました</translation>
     </message>
     <message>
         <source>Failed to stash uncommitted changes before pull.</source>
-        <translation type="unfinished"></translation>
+        <translation>プルの前に未コミットの変更をスタッシュできませんでした。</translation>
     </message>
     <message>
         <source>Pull conflict</source>
-        <translation type="unfinished"></translation>
+        <translation>プルの競合</translation>
     </message>
     <message>
         <source>Merge conflicts encountered during pull operation.</source>
-        <translation type="unfinished"></translation>
+        <translation>プル操作中にマージ競合が発生しました。</translation>
     </message>
     <message>
         <source>Please manually resolve conflicts and try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>競合を手動で解決し、再試行してください。</translation>
     </message>
     <message>
         <source>Pull failed</source>
-        <translation type="unfinished"></translation>
+        <translation>プルに失敗しました</translation>
     </message>
     <message>
         <source>Failed to pull latest changes from remote.</source>
-        <translation type="unfinished"></translation>
+        <translation>リモートから最新の変更をプルできませんでした。</translation>
     </message>
     <message>
         <source>Conflicts Auto-Resolved</source>
-        <translation type="unfinished"></translation>
+        <translation>競合が自動的に解決されました</translation>
     </message>
     <message>
         <source>Merge conflicts were detected and automatically resolved.</source>
-        <translation type="unfinished"></translation>
+        <translation>マージ競合が検出され、自動的に解決されました。</translation>
     </message>
     <message>
         <source>Your local changes conflicted with remote changes. The repository has been reset to a clean state with the latest remote changes. Your original changes are preserved in the database file and will be committed.</source>
-        <translation type="unfinished"></translation>
+        <translation>ローカルの変更がリモートの変更と競合しました。リポジトリは最新のリモート変更でクリーンな状態にリセットされました。元の変更はデータベースファイルに保存され、コミットされます。</translation>
     </message>
     <message>
         <source>Stash restore warning</source>
-        <translation type="unfinished"></translation>
+        <translation>スタッシュの復元警告</translation>
     </message>
     <message>
         <source>Failed to restore stashed changes, but no conflicts detected.</source>
-        <translation type="unfinished"></translation>
+        <translation>スタッシュされた変更の復元に失敗しましたが、競合は検出されませんでした。</translation>
     </message>
     <message>
         <source>Continuing with current state. Your database changes should still be present.</source>
-        <translation type="unfinished"></translation>
+        <translation>現在の状態で続行します。データベースの変更はまだ存在するはずです。</translation>
     </message>
     <message>
         <source>Branch creation failed</source>
-        <translation type="unfinished"></translation>
+        <translation>ブランチの作成に失敗しました</translation>
     </message>
     <message>
         <source>Failed to create new branch for upload.</source>
-        <translation type="unfinished"></translation>
+        <translation>アップロード用の新しいブランチを作成できませんでした。</translation>
     </message>
     <message>
         <source>Force push failed</source>
-        <translation type="unfinished"></translation>
+        <translation>強制プッシュに失敗しました</translation>
     </message>
     <message>
         <source>Failed to force push changes to fork.</source>
-        <translation type="unfinished"></translation>
+        <translation>フォークへの変更の強制プッシュに失敗しました。</translation>
     </message>
     <message>
         <source>Force push error</source>
-        <translation type="unfinished"></translation>
+        <translation>強制プッシュエラー</translation>
     </message>
     <message>
         <source>Error occurred while force pushing to remote.</source>
-        <translation type="unfinished"></translation>
+        <translation>リモートへの強制プッシュ中にエラーが発生しました。</translation>
     </message>
     <message>
         <source>Push failed</source>
-        <translation type="unfinished"></translation>
+        <translation>プッシュに失敗しました</translation>
     </message>
     <message>
         <source>Failed to push changes to fork.</source>
-        <translation type="unfinished"></translation>
+        <translation>フォークへの変更のプッシュに失敗しました。</translation>
     </message>
     <message>
         <source>No changes</source>
-        <translation type="unfinished"></translation>
+        <translation>変更がありません</translation>
     </message>
     <message>
         <source>No changes detected in database file.</source>
-        <translation type="unfinished"></translation>
+        <translation>データベースファイルに変更が検出されませんでした。</translation>
     </message>
     <message>
         <source>The database appears to be up to date with the remote repository.</source>
-        <translation type="unfinished"></translation>
+        <translation>データベースはリモートリポジトリと最新の状態にあるようです。</translation>
     </message>
     <message>
         <source>Commit failed</source>
-        <translation type="unfinished"></translation>
+        <translation>コミットに失敗しました</translation>
     </message>
     <message>
         <source>Failed to stage and commit changes.</source>
-        <translation type="unfinished"></translation>
+        <translation>変更のステージングとコミットに失敗しました。</translation>
     </message>
     <message>
         <source>Git operation error</source>
-        <translation type="unfinished"></translation>
+        <translation>Git操作エラー</translation>
     </message>
     <message>
         <source>Failed to perform git operations.</source>
-        <translation type="unfinished"></translation>
+        <translation>Git操作の実行に失敗しました。</translation>
     </message>
     <message>
         <source>Pull request created</source>
-        <translation type="unfinished"></translation>
+        <translation>プルリクエストが作成されました</translation>
     </message>
     <message>
         <source>Successfully created pull request!</source>
-        <translation type="unfinished"></translation>
+        <translation>プルリクエストが正常に作成されました！</translation>
     </message>
     <message>
         <source>Pull request created successfully.
 Do you want to open it in your web browser?
 
 URL: {url}</source>
-        <translation type="unfinished"></translation>
+        <translation>プルリクエストが正常に作成されました。
+ウェブブラウザで開きますか？
+
+URL: {url}</translation>
     </message>
     <message>
         <source>Pull request failed</source>
-        <translation type="unfinished"></translation>
+        <translation>プルリクエストの作成に失敗しました</translation>
     </message>
     <message>
         <source>Failed to create pull request.</source>
-        <translation type="unfinished"></translation>
+        <translation>プルリクエストの作成に失敗しました。</translation>
     </message>
     <message>
         <source>The changes were pushed to your fork successfully, but the pull request creation failed.
@@ -1684,31 +1709,35 @@ URL: {url}</source>
 You can manually create a pull request on GitHub.
 
 Error: {error}</source>
-        <translation type="unfinished"></translation>
+        <translation>変更はフォークに正常にプッシュされましたが、プルリクエストの作成に失敗しました。
+
+GitHubで手動でプルリクエストを作成できます。
+
+エラー: {error}</translation>
     </message>
     <message>
         <source>Upload Steam Workshop Database</source>
-        <translation type="unfinished"></translation>
+        <translation>Steamワークショップデータベースをアップロード</translation>
     </message>
     <message>
         <source>Are you sure you want to upload the Steam Workshop database to GitHub?</source>
-        <translation type="unfinished"></translation>
+        <translation>SteamワークショップデータベースをGitHubにアップロードしてもよろしいですか？</translation>
     </message>
     <message>
         <source>This will create a pull request with your local database changes.</source>
-        <translation type="unfinished"></translation>
+        <translation>これにより、ローカルデータベースの変更を含むプルリクエストが作成されます。</translation>
     </message>
     <message>
         <source>Upload</source>
-        <translation type="unfinished"></translation>
+        <translation>アップロード</translation>
     </message>
     <message>
         <source>Upload Community Rules Database</source>
-        <translation type="unfinished"></translation>
+        <translation>コミュニティルールデータベースをアップロード</translation>
     </message>
     <message>
         <source>Are you sure you want to upload the Community Rules database to GitHub?</source>
-        <translation type="unfinished"></translation>
+        <translation>コミュニティルールデータベースをGitHubにアップロードしてもよろしいですか？</translation>
     </message>
 </context>
 <context>
@@ -1801,155 +1830,161 @@ RimSort can copy all of your Workshop mods to the new instance&apos;s local mods
 Alternatively, you may keep your old Steam workshop folder preference. You can always change this later in the settings.
 
 How would you like to proceed?</source>
-        <translation type="unfinished"></translation>
+        <translation>ワークショップフォルダー: {existing_instance_workshop_folder}
+
+RimSortは、すべてのワークショップMODを新しいインスタンスのローカルMODフォルダーにコピーできます。これにより、既存のSteamクライアントMODがSteamCMD MODに変換され、新しいインスタンス内で管理できるようになります。
+
+または、従来のSteamワークショップフォルダー設定を維持することもできます。これは後で設定からいつでも変更できます。
+
+どのように進めますか？</translation>
     </message>
     <message>
         <source>Compressing [{instance_name}] instance folder to archive...</source>
-        <translation type="unfinished"></translation>
+        <translation>インスタンスフォルダ [{instance_name}] をアーカイブに圧縮中...</translation>
     </message>
     <message>
         <source>Error compressing instance</source>
-        <translation type="unfinished"></translation>
+        <translation>インスタンスの圧縮中にエラーが発生しました</translation>
     </message>
     <message>
         <source>An error occurred while compressing instance folder: {e}</source>
-        <translation type="unfinished"></translation>
+        <translation>インスタンスフォルダの圧縮中にエラーが発生しました: {e}</translation>
     </message>
     <message>
         <source>Please check the logs for more information.</source>
-        <translation type="unfinished"></translation>
+        <translation>詳細についてはログを確認してください。</translation>
     </message>
     <message>
         <source>Error restoring instance</source>
-        <translation type="unfinished">インスタンスの復元中にエラーが発生しました</translation>
+        <translation>インスタンスの復元中にエラーが発生しました</translation>
     </message>
     <message>
         <source>Archive not found at path: {input_path}</source>
-        <translation type="unfinished"></translation>
+        <translation>パスにアーカイブが見つかりません: {input_path}</translation>
     </message>
     <message>
         <source>An error occurred while reading instance archive: {e}</source>
-        <translation type="unfinished">インスタンスアーカイブの読み取り中にエラーが発生しました: {e}</translation>
+        <translation>インスタンスアーカイブの読み取り中にエラーが発生しました: {e}</translation>
     </message>
     <message>
         <source>Instance folder exists</source>
-        <translation type="unfinished"></translation>
+        <translation>インスタンスフォルダが存在します</translation>
     </message>
     <message>
         <source>Instance folder already exists: {instance_folder_path}</source>
-        <translation type="unfinished"></translation>
+        <translation>インスタンスフォルダはすでに存在します: {instance_folder_path}</translation>
     </message>
     <message>
         <source>Do you want to continue and replace the existing instance folder?</source>
-        <translation type="unfinished"></translation>
+        <translation>既存のインスタンスフォルダを置き換えてもよろしいですか？</translation>
     </message>
     <message>
         <source>Replace</source>
-        <translation type="unfinished"></translation>
+        <translation>置き換え</translation>
     </message>
     <message>
         <source>Restoring instance [{name}] from archive...</source>
-        <translation type="unfinished"></translation>
+        <translation>アーカイブからインスタンス [{name}] を復元中...</translation>
     </message>
     <message>
         <source>Invalid instance folder paths</source>
-        <translation type="unfinished"></translation>
+        <translation>無効なインスタンスフォルダパス</translation>
     </message>
     <message>
         <source>Some folder paths from the restored instance are invalid and were cleared. Please reconfigure them in the settings</source>
-        <translation type="unfinished"></translation>
+        <translation>復元されたインスタンスの一部のフォルダパスが無効であり、クリアされました。設定で再構成してください。</translation>
     </message>
     <message>
         <source>Invalid paths: {path}</source>
-        <translation type="unfinished"></translation>
+        <translation>無効なパス: {path}</translation>
     </message>
     <message>
         <source>Couldn&apos;t restore steamcmd symlink/junction</source>
-        <translation type="unfinished"></translation>
+        <translation>steamcmdのシンボリックリンク/ジャンクションを復元できませんでした</translation>
     </message>
     <message>
         <source>The steamcmd symlink/junction could not be restored as the local folder is not set or invalid. The symlink/junction will need to be manually recreated.</source>
-        <translation type="unfinished"></translation>
+        <translation>steamcmdのシンボリックリンク/ジャンクションは、ローカルフォルダが設定されていないか無効であるため、復元できませんでした。シンボリックリンク/ジャンクションは手動で再作成する必要があります。</translation>
     </message>
     <message>
         <source>An error occurred while restoring instance [{instance_controller.instance.name}].</source>
-        <translation type="unfinished"></translation>
+        <translation>インスタンス [{instance_controller.instance.name}] の復元中にエラーが発生しました。</translation>
     </message>
     <message>
         <source>The instance folder was not found after extracting the archive. Perhaps the archive is corrupt or the instance name is invalid.</source>
-        <translation type="unfinished"></translation>
+        <translation>アーカイブを展開した後、インスタンスフォルダが見つかりませんでした。アーカイブが破損しているか、インスタンス名が無効である可能性があります。</translation>
     </message>
     <message>
         <source>Workshop mods not found</source>
-        <translation type="unfinished"></translation>
+        <translation>ワークショップMODが見つかりません</translation>
     </message>
     <message>
         <source>Workshop mods folder at [{existing_instance_workshop_folder}] not found.</source>
-        <translation type="unfinished"></translation>
+        <translation>ワークショップMODフォルダが見つかりません: [{existing_instance_workshop_folder}]</translation>
     </message>
     <message>
         <source>Error cloning instance</source>
-        <translation type="unfinished"></translation>
+        <translation>インスタンスのクローン中にエラーが発生しました</translation>
     </message>
     <message>
         <source>Unable to clone instance.</source>
-        <translation type="unfinished"></translation>
+        <translation>インスタンスをクローンできませんでした。</translation>
     </message>
     <message>
         <source>Please enter a valid, unique instance name. It cannot be &apos;Default&apos; or empty.</source>
-        <translation type="unfinished"></translation>
+        <translation>有効で一意のインスタンス名を入力してください。「Default」または空にすることはできません。</translation>
     </message>
     <message>
         <source>Create new instance [{instance_name}]</source>
-        <translation type="unfinished"></translation>
+        <translation>新しいインスタンス [{instance_name}] を作成</translation>
     </message>
     <message>
         <source>Would you like to automatically generate run args for the new instance?</source>
-        <translation type="unfinished"></translation>
+        <translation>新しいインスタンスの実行引数を自動的に生成しますか？</translation>
     </message>
     <message>
         <source>This will try to generate run args for the new instance based on the configured Game/Config folders.</source>
-        <translation type="unfinished"></translation>
+        <translation>これは、構成されたGame/Configフォルダに基づいて新しいインスタンスの実行引数を生成しようとします。</translation>
     </message>
     <message>
         <source>Error creating instance</source>
-        <translation type="unfinished"></translation>
+        <translation>インスタンスの作成中にエラーが発生しました</translation>
     </message>
     <message>
         <source>Unable to create new instance.</source>
-        <translation type="unfinished"></translation>
+        <translation>新しいインスタンスを作成できませんでした。</translation>
     </message>
     <message>
         <source>Problem deleting instance</source>
-        <translation type="unfinished"></translation>
+        <translation>インスタンスの削除中に問題が発生しました</translation>
     </message>
     <message>
         <source>Unable to delete instance {current_instance}.</source>
-        <translation type="unfinished"></translation>
+        <translation>インスタンス {current_instance} を削除できませんでした。</translation>
     </message>
     <message>
         <source>The default instance cannot be deleted.</source>
-        <translation type="unfinished"></translation>
+        <translation>デフォルトインスタンスは削除できません。</translation>
     </message>
     <message>
         <source>Error deleting instance</source>
-        <translation type="unfinished"></translation>
+        <translation>インスタンスの削除中にエラーが発生しました</translation>
     </message>
     <message>
         <source>The selected instance does not exist.</source>
-        <translation type="unfinished"></translation>
+        <translation>選択したインスタンスは存在しません。</translation>
     </message>
     <message>
         <source>Delete instance {current_instance}</source>
-        <translation type="unfinished"></translation>
+        <translation>インスタンス {current_instance} を削除</translation>
     </message>
     <message>
         <source>Are you sure you want to delete the selected instance and all of its data?</source>
-        <translation type="unfinished"></translation>
+        <translation>選択したインスタンスとそのすべてのデータを削除してもよろしいですか？</translation>
     </message>
     <message>
         <source>This action cannot be undone.</source>
-        <translation type="unfinished"></translation>
+        <translation>この操作は元に戻せません。</translation>
     </message>
 </context>
 <context>
@@ -2068,7 +2103,7 @@ How would you like to proceed?</source>
     </message>
     <message>
         <source>Add Zip Mod</source>
-        <translation type="unfinished"></translation>
+        <translation>Zipモッドを追加</translation>
     </message>
     <message>
         <source>Browse Workshop</source>
@@ -2150,49 +2185,53 @@ How would you like to proceed?</source>
     <name>MetadataManager</name>
     <message>
         <source>{db_type} DB is missing</source>
-        <translation type="unfinished"></translation>
+        <translation>{db_type} DB が見つかりません</translation>
     </message>
     <message>
         <source>Configured {db_type} DB not found!</source>
-        <translation type="unfinished"></translation>
+        <translation>構成された {db_type} DB が見つかりません！</translation>
     </message>
     <message>
         <source>Unable to initialize external metadata. There is no external {db_type} metadata being factored!
 
 Please make sure your Database location settings are correct.</source>
-        <translation type="unfinished"></translation>
+        <translation>外部メタデータを初期化できません。外部 {db_type} メタデータがファクタリングされていません！
+
+データベースの場所設定が正しいことを確認してください。</translation>
     </message>
     <message>
         <source>Configured {db_type} DB path is {not_dir} a directory! Expected a {file_dir} path.</source>
-        <translation type="unfinished"></translation>
+        <translation>構成された {db_type} DB パスは {not_dir} ディレクトリではありません！ {file_dir} パスが必要です。</translation>
     </message>
     <message>
         <source>Steam DB metadata expired</source>
-        <translation type="unfinished"></translation>
+        <translation>Steam DB メタデータの有効期限が切れました</translation>
     </message>
     <message>
         <source>Steam DB is expired! Consider updating!
 </source>
-        <translation type="unfinished"></translation>
+        <translation>Steam DB の有効期限が切れています！ 更新を検討してください！
+</translation>
     </message>
     <message>
         <source>Steam DB last updated: {last_updated}
 
 Falling back to cached, but EXPIRED Steam Database...</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <source>Missing Version.txt</source>
-        <translation type="unfinished"></translation>
+        <translation>Version.txt が見つかりません</translation>
     </message>
     <message>
         <source>RimSort is unable to get the game version at the expected path: [{version_file_path}].</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSort は、期待されるパス [{version_file_path}] でゲームバージョンを取得できません。</translation>
     </message>
     <message>
         <source>
 Is your game path {folder} set correctly? There should be a Version.txt file in the game install directory.</source>
-        <translation type="unfinished"></translation>
+        <translation>
+ゲームパス {folder} は正しく設定されていますか？ ゲームインストールディレクトリに Version.txt ファイルが存在するはずです。</translation>
     </message>
 </context>
 <context>
@@ -2200,47 +2239,49 @@ Is your game path {folder} set correctly? There should be a Version.txt file in 
     <message>
         <source>Some mods in your active list require other mods to work properly.
 Select which missing dependencies to add to your active mods list.</source>
-        <translation type="unfinished"></translation>
+        <translation>アクティブリスト内の一部のMODは、正常に動作するために他のMODを必要とします。
+不足している依存関係を選択して、アクティブMODリストに追加してください。</translation>
     </message>
     <message>
         <source>Select All</source>
-        <translation type="unfinished"></translation>
+        <translation>すべて選択</translation>
     </message>
     <message>
         <source>Add Selected &amp;&amp; Sort</source>
-        <translation type="unfinished"></translation>
+        <translation>選択したものを追加して並べ替え</translation>
     </message>
     <message>
         <source>Sort Without Adding</source>
-        <translation type="unfinished"></translation>
+        <translation>追加せずに並べ替え</translation>
     </message>
     <message>
         <source>Local mods (available but not active):</source>
-        <translation type="unfinished"></translation>
+        <translation>ローカルMOD（利用可能だが非アクティブ）:</translation>
     </message>
     <message>
         <source>Mods that need to be downloaded:</source>
-        <translation type="unfinished"></translation>
+        <translation>ダウンロードが必要なMOD:</translation>
     </message>
     <message>
         <source>Package ID: {dep_id}</source>
-        <translation type="unfinished"></translation>
+        <translation>パッケージID: {dep_id}</translation>
     </message>
     <message>
         <source>Required by:
   • </source>
-        <translation type="unfinished"></translation>
+        <translation>必要なもの:
+  • </translation>
     </message>
 </context>
 <context>
     <name>MissingModsPrompt</name>
     <message>
         <source>RimSort - Missing mods found</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSort - 不足しているMODが見つかりました</translation>
     </message>
     <message>
         <source>There are mods missing from the active mods list!</source>
-        <translation type="unfinished"></translation>
+        <translation>アクティブMODリストに不足しているMODがあります！</translation>
     </message>
     <message>
         <source>
@@ -2249,7 +2290,12 @@ User-configured SteamDB database was queried. The following table displays mods 
 Rimworld mods on Steam Workshop that share a packageId are &quot;variants&quot;. Please keep this in mind before downloading. 
 
 Please select your preferred mod variant in the table below. You can also open each variant in Steam/Web browser to verify.</source>
-        <translation type="unfinished"></translation>
+        <translation>
+ユーザーが構成したSteamDBデータベースがクエリされました。以下の表には、Steamからダウンロード可能なMODが表示されます。
+
+パッケージIDを共有するRimworldのSteamワークショップMODは「バリアント」と呼ばれます。ダウンロードする前にこれを考慮してください。
+
+以下の表から好みのMODバリアントを選択してください。また、各バリアントをSteam/Webブラウザで開いて確認することもできます。</translation>
     </message>
     <message>
         <source>Name</source>
@@ -2334,23 +2380,29 @@ Please select your preferred mod variant in the table below. You can also open e
         <source>
 This operation delete a mod&apos;s directory from the filesystem.
 Do you want to proceed?</source>
-        <translation type="unfinished"></translation>
+        <translation>
+この操作は、ファイルシステムからモッドのディレクトリを削除します。
+続行しますか？</translation>
     </message>
     <message>
         <source>You have selected {len} mods to Delete optimized textures (.dds files only)</source>
-        <translation type="unfinished"></translation>
+        <translation>最適化されたテクスチャ（.ddsファイルのみ）を削除するために{len}のモッドを選択しました。</translation>
     </message>
     <message>
         <source>
 This operation will only delete optimized textures (.dds files only) from mod files.
 Do you want to proceed?</source>
-        <translation type="unfinished"></translation>
+        <translation>
+この操作は、モッドファイルから最適化されたテクスチャ（.ddsファイルのみ）を削除します。
+続行しますか？</translation>
     </message>
     <message>
         <source>
 This operation will recursively delete all mod files, except for .dds textures found.
 Do you want to proceed?</source>
-        <translation type="unfinished"></translation>
+        <translation>
+この操作は、見つかった.ddsテクスチャを除いて、すべてのモッドファイルを再帰的に削除します。
+続行しますか？</translation>
     </message>
 </context>
 <context>
@@ -2392,31 +2444,31 @@ Do you want to proceed?</source>
     <name>ModListItemInner</name>
     <message>
         <source>Contains custom C# assemblies (custom code)</source>
-        <translation type="unfinished"></translation>
+        <translation>カスタムC#アセンブリ（カスタムコード）を含む</translation>
     </message>
     <message>
         <source>Contains custom content (textures / XML)</source>
-        <translation type="unfinished"></translation>
+        <translation>カスタムコンテンツ（テクスチャ/XML）を含む</translation>
     </message>
     <message>
         <source>Local mod that contains a git repository</source>
-        <translation type="unfinished"></translation>
+        <translation>Gitリポジトリを含むローカルMOD</translation>
     </message>
     <message>
         <source>Local mod that can be used with SteamCMD</source>
-        <translation type="unfinished"></translation>
+        <translation>SteamCMDで使用できるローカルMOD</translation>
     </message>
     <message>
         <source>Official RimWorld content by Ludeon Studios</source>
-        <translation type="unfinished"></translation>
+        <translation>Ludeon Studiosによる公式RimWorldコンテンツ</translation>
     </message>
     <message>
         <source>Installed locally</source>
-        <translation type="unfinished"></translation>
+        <translation>ローカルにインストール済み</translation>
     </message>
     <message>
         <source>Subscribed via Steam</source>
-        <translation type="unfinished"></translation>
+        <translation>Steamを通じて購読中</translation>
     </message>
 </context>
 <context>
@@ -2581,87 +2633,89 @@ Do you want to proceed?</source>
     </message>
     <message>
         <source>Add comment</source>
-        <translation type="unfinished"></translation>
+        <translation>コメントを追加</translation>
     </message>
     <message>
         <source>Enter a comment providing your reasoning for wanting to blacklist this mod: </source>
-        <translation type="unfinished"></translation>
+        <translation>このMODをブラックリストに追加したい理由をコメントとして入力してください：</translation>
     </message>
     <message>
         <source>Unable to add to blacklist</source>
-        <translation type="unfinished"></translation>
+        <translation>ブラックリストに追加できませんでした</translation>
     </message>
     <message>
         <source>Comment was not provided or entry was cancelled. Comments are REQUIRED for this action!</source>
-        <translation type="unfinished"></translation>
+        <translation>コメントが提供されていないか、エントリがキャンセルされました。このアクションにはコメントが必要です！</translation>
     </message>
     <message>
         <source>This will remove the selected mod, </source>
-        <translation type="unfinished"></translation>
+        <translation>これにより、選択したMODが削除されます。</translation>
     </message>
     <message>
         <source>
 Missing Dependencies:</source>
-        <translation type="unfinished"></translation>
+        <translation>
+不足している依存関係:</translation>
     </message>
     <message>
         <source>
 Incompatibilities:</source>
-        <translation type="unfinished"></translation>
+        <translation>
+非互換性:</translation>
     </message>
 </context>
 <context>
     <name>ModUpdaterPrompt</name>
     <message>
         <source>Update mods</source>
-        <translation type="unfinished"></translation>
+        <translation>MODを更新</translation>
     </message>
     <message>
         <source>Update all</source>
-        <translation type="unfinished"></translation>
+        <translation>すべてを更新</translation>
     </message>
 </context>
 <context>
     <name>ModsPanel</name>
     <message>
         <source>Showing All Mods</source>
-        <translation type="unfinished"></translation>
+        <translation>すべてのMODを表示</translation>
     </message>
     <message>
         <source>Showing Core and DLC</source>
-        <translation type="unfinished"></translation>
+        <translation>コアおよびDLCを表示</translation>
     </message>
     <message>
         <source>Showing Local Mods</source>
-        <translation type="unfinished"></translation>
+        <translation>ローカルMODを表示</translation>
     </message>
     <message>
         <source>Showing Git Mods</source>
-        <translation type="unfinished"></translation>
+        <translation>Git MODを表示</translation>
     </message>
     <message>
         <source>Showing SteamCMD Mods</source>
-        <translation type="unfinished"></translation>
+        <translation>SteamCMD MODを表示</translation>
     </message>
     <message>
         <source>Showing Steam Mods</source>
-        <translation type="unfinished"></translation>
+        <translation>Steam MODを表示</translation>
     </message>
     <message>
         <source>Showing All Mod Types</source>
-        <translation type="unfinished"></translation>
+        <translation>すべてのMODタイプを表示</translation>
     </message>
     <message>
         <source>Showing C# Mods</source>
-        <translation type="unfinished"></translation>
+        <translation>すべてのC# MODを表示</translation>
     </message>
     <message>
         <source>Showing XML Mods</source>
-        <translation type="unfinished"></translation>
+        <translation>すべてのXML MODを表示</translation>
     </message>
     <message>
         <source>Hide Filter Disabled</source>
-        <translation type="unfinished"></translation>
+        <translation>フィルターを非表示にする</translation>
     </message>
     <message>
         <source>Active [0]</source>
@@ -2669,7 +2723,7 @@ Incompatibilities:</source>
     </message>
     <message>
         <source>Hide Filter Enabled</source>
-        <translation type="unfinished"></translation>
+        <translation>フィルターを表示する</translation>
     </message>
     <message>
         <source>Inactive [0]</source>
@@ -2697,7 +2751,7 @@ Incompatibilities:</source>
     </message>
     <message>
         <source>Version</source>
-        <translation type="unfinished"></translation>
+        <translation>バージョン</translation>
     </message>
     <message>
         <source>0 warnings</source>
@@ -2744,14 +2798,14 @@ Incompatibilities:</source>
     <name>Rentry Auth Code Not Found </name>
     <message>
         <source>RimSort can work without rentry auth code. But To enable full functionality of renry.co you need to email support@rentry.co and request an auth code. Then paste it into Settings -&gt; Advanced -&gt; Rentry Auth.</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSortはrentry認証コードなしで動作します。ただし、renry.coの完全な機能を有効にするには、support@rentry.coにメールを送り、認証コードをリクエストする必要があります。その後、設定 -&gt; 詳細 -&gt; Rentry Authに貼り付けてください。</translation>
     </message>
 </context>
 <context>
     <name>RentryError</name>
     <message>
         <source>Failed to fetch Rentry Content</source>
-        <translation type="unfinished"></translation>
+        <translation>Rentryコンテンツの取得に失敗しました</translation>
     </message>
     <message>
         <source>Rentry returned status code: {code}</source>
@@ -2880,7 +2934,7 @@ Incompatibilities:</source>
     </message>
     <message>
         <source>Search mods by name</source>
-        <translation type="unfinished"></translation>
+        <translation>名前でMODを検索</translation>
     </message>
     <message>
         <source>Duplicate rule</source>
@@ -2905,11 +2959,11 @@ Incompatibilities:</source>
     </message>
     <message>
         <source>Rules from mods&apos;s About.xml cannot be modified. Only &apos;Community Rules&apos; and &apos;User Rules&apos; are allowed.</source>
-        <translation type="unfinished"></translation>
+        <translation>モッドのAbout.xmlからのルールは変更できません。「コミュニティルール」と「ユーザールール」のみが許可されています。</translation>
     </message>
     <message>
         <source>Rules can be Modified.</source>
-        <translation type="unfinished"></translation>
+        <translation>ルールを変更できます。</translation>
     </message>
     <message>
         <source>Editing rules for: {name}</source>
@@ -2953,7 +3007,7 @@ Incompatibilities:</source>
     </message>
     <message>
         <source>Remove this rule</source>
-        <translation type="unfinished"></translation>
+        <translation>このルールを削除</translation>
     </message>
 </context>
 <context>
@@ -2972,15 +3026,15 @@ Incompatibilities:</source>
     </message>
     <message>
         <source>Save the current output to a file</source>
-        <translation type="unfinished"></translation>
+        <translation>現在の出力をファイルに保存</translation>
     </message>
     <message>
         <source>Save Runner Output</source>
-        <translation type="unfinished"></translation>
+        <translation>実行者の出力を保存</translation>
     </message>
     <message>
         <source>Text files (*.txt)</source>
-        <translation type="unfinished"></translation>
+        <translation>テキストファイル (*.txt)</translation>
     </message>
     <message>
         <source>SteamCMD downloader</source>
@@ -3004,11 +3058,11 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
     </message>
     <message>
         <source>Close Window</source>
-        <translation type="unfinished"></translation>
+        <translation>ウィンドウを閉じる</translation>
     </message>
     <message>
         <source>Ok</source>
-        <translation type="unfinished"></translation>
+        <translation>OK</translation>
     </message>
 </context>
 <context>
@@ -3189,11 +3243,11 @@ Click &apos;Show Details&apos; to see a list of mods that failed.</source>
     </message>
     <message>
         <source>Use dependency rules for sorting.</source>
-        <translation type="unfinished"></translation>
+        <translation>依存関係ルールをソートに使用します。</translation>
     </message>
     <message>
         <source>If enabled, also uses moddependencies as loadTheseBefore, and mods will be sorted such that dependencies are loaded before the dependent mod.</source>
-        <translation type="unfinished"></translation>
+        <translation>有効にすると、moddependenciesをloadTheseBeforeとして使用し、依存関係が依存モッドの前に読み込まれるようにモッドがソートされます。</translation>
     </message>
     <message>
         <source>Sort Dependencies</source>
@@ -3338,7 +3392,7 @@ This may potentially prevent some issues with downloading mods such as download 
     </message>
     <message>
         <source>Theme Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>テーマ設定</translation>
     </message>
     <message>
         <source>Enable to use theme / stylesheet instead of system Theme</source>
@@ -3356,7 +3410,7 @@ This may potentially prevent some issues with downloading mods such as download 
 NOTE 
 Name of folder will be used as name of the theme and any invalid theme will be ignored 
 </source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <source>Open Theme Location</source>
@@ -3388,23 +3442,23 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     </message>
     <message>
         <source>Window Size Configuration</source>
-        <translation type="unfinished"></translation>
+        <translation>ウィンドウサイズ設定</translation>
     </message>
     <message>
         <source>Window X Position:</source>
-        <translation type="unfinished"></translation>
+        <translation>ウィンドウX位置:</translation>
     </message>
     <message>
         <source>Window Y Position:</source>
-        <translation type="unfinished"></translation>
+        <translation>ウィンドウY位置:</translation>
     </message>
     <message>
         <source>Window Width:</source>
-        <translation type="unfinished"></translation>
+        <translation>ウィンドウ幅:</translation>
     </message>
     <message>
         <source>Window Height:</source>
-        <translation type="unfinished"></translation>
+        <translation>ウィンドウ高さ:</translation>
     </message>
     <message>
         <source>Advanced</source>
@@ -3456,11 +3510,11 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     </message>
     <message>
         <source>Update databases on startup</source>
-        <translation type="unfinished"></translation>
+        <translation>起動時にデータベースを更新</translation>
     </message>
     <message>
         <source>Enable this option to automatically update enabled databases when RimSort starts. This will check for updates and download them if available.</source>
-        <translation type="unfinished"></translation>
+        <translation>このオプションを有効にすると、RimSortが起動したときに有効なデータベースが自動的に更新されます。これにより、更新がある場合はそれを確認し、ダウンロードします。</translation>
     </message>
     <message>
         <source>Rentry Auth:</source>
@@ -3485,7 +3539,12 @@ Name of folder will be used as name of the theme and any invalid theme will be i
 
  -logfile,/path/to/file.log,-savedatafolder=/path/to/savedata,-popupwindow 
 </source>
-        <translation type="unfinished"></translation>
+        <translation> Rimworld実行ファイルに渡す引数のカンマ区切りリストを入力してください
+
+例:
+
+-logfile,/path/to/file.log,-savedatafolder=/path/to/savedata,-popupwindow
+        </translation>
     </message>
     <message>
         <source>Edit Game Run Arguments:</source>
@@ -3497,220 +3556,234 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     <message>
         <source>Your RimSort settings file is corrupt.
 Please choose one of the following options to proceed.</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSortの設定ファイルが破損しています。
+次のオプションのいずれかを選択してください。</translation>
     </message>
     <message>
         <source>Open Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>設定を開く</translation>
     </message>
     <message>
         <source>Open Settings Folder</source>
-        <translation type="unfinished"></translation>
+        <translation>設定フォルダーを開く</translation>
     </message>
     <message>
         <source>Reset Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>設定をリセット</translation>
     </message>
     <message>
         <source>Exit RimSort</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSortを終了</translation>
     </message>
 </context>
 <context>
     <name>SteamBrowser</name>
     <message>
         <source>Mod Downloader</source>
-        <translation type="unfinished"></translation>
+        <translation>MODダウンローダー</translation>
     </message>
     <message>
         <source>Clear List</source>
-        <translation type="unfinished"></translation>
+        <translation>リストをクリア</translation>
     </message>
     <message>
         <source>Download mod(s) (SteamCMD)</source>
-        <translation type="unfinished"></translation>
+        <translation>MODをダウンロード（SteamCMD）</translation>
     </message>
     <message>
         <source>Download mod(s) (Steam app)</source>
-        <translation type="unfinished"></translation>
+        <translation>MODをダウンロード（Steamアプリ）</translation>
     </message>
     <message>
         <source>Add to list</source>
-        <translation type="unfinished"></translation>
+        <translation>リストに追加</translation>
     </message>
     <message>
         <source>No publishedfileid found</source>
-        <translation type="unfinished"></translation>
+        <translation>publishedfileidが見つかりません</translation>
     </message>
     <message>
         <source>Unable to parse publishedfileid from url, Please check if url is in the correct format</source>
-        <translation type="unfinished"></translation>
+        <translation>URLからpublishedfileidを解析できませんでした。URLが正しい形式であることを確認してください。</translation>
     </message>
     <message>
         <source>Add Collection</source>
-        <translation type="unfinished"></translation>
+        <translation>コレクションを追加</translation>
     </message>
     <message>
         <source>How would you like to add the collection?</source>
-        <translation type="unfinished"></translation>
+        <translation>コレクションをどのように追加しますか？</translation>
     </message>
     <message>
         <source>You can choose to add all mods from the collection or only the ones you don&apos;t have installed.</source>
-        <translation type="unfinished"></translation>
+        <translation>コレクションからすべてのMODを追加するか、インストールされていないMODのみを追加するかを選択できます。</translation>
     </message>
     <message>
         <source>Add All Mods</source>
-        <translation type="unfinished"></translation>
+        <translation>すべてのMODを追加</translation>
     </message>
     <message>
         <source>Add Missing Mods</source>
-        <translation type="unfinished"></translation>
+        <translation>欠落しているMODを追加</translation>
     </message>
     <message>
         <source>SteamCMD downloader</source>
-        <translation type="unfinished">SteamCMDダウンローダー</translation>
+        <translation>SteamCMDダウンローダー</translation>
     </message>
     <message>
         <source>Empty list of mods returned, unable to add collection to list!</source>
-        <translation type="unfinished"></translation>
+        <translation>MODの空のリストが返されました。コレクションをリストに追加できません！</translation>
     </message>
     <message>
         <source>Please reach out to us on Github Issues page or
 #rimsort-testing on the Rocketman/CAI discord</source>
-        <translation type="unfinished"></translation>
+        <translation>GithubのIssuesページまたは
+Rocketman/CAIのDiscordの#rimsort-testingでお問い合わせください。</translation>
     </message>
     <message>
         <source>You already have these mods in your download list!</source>
-        <translation type="unfinished"></translation>
+        <translation>これらのMODはすでにダウンロードリストにあります！</translation>
     </message>
     <message>
         <source>Skipping the following mods which are already present in your download list!</source>
-        <translation type="unfinished"></translation>
+        <translation>ダウンロードリストにすでに存在する以下のMODをスキップします！</translation>
     </message>
     <message>
         <source>Remove mod from list</source>
-        <translation type="unfinished"></translation>
+        <translation>リストからMODを削除</translation>
     </message>
 </context>
 <context>
     <name>SteamcmdInterface</name>
     <message>
         <source>RimSort - SteamCMD setup</source>
-        <translation type="unfinished">RimSort - SteamCMDの設定</translation>
+        <translation>RimSort - SteamCMDの設定</translation>
     </message>
     <message>
         <source>RimSort was unable to find SteamCMD installed in the configured prefix:
 </source>
-        <translation type="unfinished"></translation>
+        <translation>RimSortは、設定されたプレフィックスにインストールされたSteamCMDを見つけることができませんでした：
+</translation>
     </message>
     <message>
         <source>Do you want to setup SteamCMD?</source>
-        <translation type="unfinished"></translation>
+        <translation>SteamCMDを設定しますか？</translation>
     </message>
     <message>
         <source>Depot Cache Cleared</source>
-        <translation type="unfinished"></translation>
+        <translation>デポキャッシュがクリアされました</translation>
     </message>
     <message>
         <source>SteamCMD depot cache was already cleared.</source>
-        <translation type="unfinished"></translation>
+        <translation>SteamCMDのデポキャッシュはすでにクリアされています。</translation>
     </message>
     <message>
         <source>SteamCMD depot cache has been cleared.</source>
-        <translation type="unfinished"></translation>
+        <translation>SteamCMDのデポキャッシュがクリアされました。</translation>
     </message>
     <message>
         <source>Re-create Symlink?</source>
-        <translation type="unfinished"></translation>
+        <translation>シンボリックリンクを再作成しますか？</translation>
     </message>
     <message>
         <source>An existing symlink already exists. Would you like to delete and re-create the symlink?</source>
-        <translation type="unfinished"></translation>
+        <translation>既存のシンボリックリンクがすでに存在します。削除して再作成しますか？</translation>
     </message>
     <message>
         <source>The symlink makes SteamCMD download mods to the local mods folder and is required for SteamCMD mod downloads to work correctly.</source>
-        <translation type="unfinished"></translation>
+        <translation>このシンボリックリンクにより、SteamCMDはMODをローカルのMODフォルダーにダウンロードし、SteamCMDのMODダウンロードが正しく機能するために必要です。</translation>
     </message>
     <message>
         <source>Existing symlink: {symlink_destination_path}
 
 New symlink:
 [{symlink_source_path}] -&gt; </source>
-        <translation type="unfinished"></translation>
+        <translation>既存のシンボリックリンク: {symlink_destination_path}
+
+新しいシンボリックリンク:
+[{symlink_source_path}] -&gt; </translation>
     </message>
     <message>
         <source>The symlink destination path already exists. Would you like to remove the existing destination and create a new symlink in it&apos;s place?</source>
-        <translation type="unfinished"></translation>
+        <translation>シンボリックリンクの宛先パスはすでに存在します。既存の宛先を削除して、その場所に新しいシンボリックリンクを作成しますか？</translation>
     </message>
     <message>
         <source>Existing destination: {symlink_destination_path}
 
 New symlink:
 [{symlink_source_path}] -&gt; </source>
-        <translation type="unfinished"></translation>
+        <translation>既存の宛先: {symlink_destination_path}
+
+新しいシンボリックリンク:
+[{symlink_source_path}] -&gt; </translation>
     </message>
     <message>
         <source>Create Symlink?</source>
-        <translation type="unfinished"></translation>
+        <translation>シンボリックリンクを作成しますか？</translation>
     </message>
     <message>
         <source>Do you want to create a symlink?</source>
-        <translation type="unfinished"></translation>
+        <translation>シンボリックリンクを作成しますか？</translation>
     </message>
     <message>
         <source>New symlink:
 [{symlink_source_path}] -&gt; </source>
-        <translation type="unfinished"></translation>
+        <translation>新しいシンボリックリンク:
+[{symlink_source_path}] -&gt; </translation>
     </message>
 </context>
 <context>
     <name>ThemeController</name>
     <message>
         <source>Theme path Error</source>
-        <translation type="unfinished"></translation>
+        <translation>テーマパスエラー</translation>
     </message>
     <message>
         <source>Stylesheet path does not exist for theme &apos;{theme_name}&apos; Resetting to default theme &apos;{default_theme}&apos;.</source>
-        <translation type="unfinished"></translation>
+        <translation>テーマ&apos;{theme_name}&apos;のスタイルシートパスが存在しません。デフォルトテーマ&apos;{default_theme}&apos;にリセットします。</translation>
     </message>
     <message>
         <source>Theme Error</source>
-        <translation type="unfinished"></translation>
+        <translation>テーマエラー</translation>
     </message>
     <message>
         <source>Failed to apply theme: {selected_theme_name},Resetting to default theme: {self.default_theme}</source>
-        <translation type="unfinished"></translation>
+        <translation>テーマ&apos;{selected_theme_name}&apos;の適用に失敗しました。デフォルトテーマ&apos;{self.default_theme}&apos;にリセットします。</translation>
     </message>
 </context>
 <context>
     <name>TroubleshootingController</name>
     <message>
         <source>Process complete</source>
-        <translation type="unfinished"></translation>
+        <translation>プロセスが完了しました</translation>
     </message>
     <message>
         <source>Process complete, wait for steam to complete further process.</source>
-        <translation type="unfinished"></translation>
+        <translation>プロセスが完了しました。Steamがさらなるプロセスを完了するのを待ってください。</translation>
     </message>
     <message>
         <source>Steam Launch Failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Steamの起動に失敗しました</translation>
     </message>
     <message>
         <source>Could not automatically start game installation through Steam.
 
 Please manually verify/install the game through Steam.</source>
-        <translation type="unfinished"></translation>
+        <translation>Steamを通じてゲームのインストールを自動的に開始できませんでした。
+
+Steamを通じてゲームを手動で確認/インストールしてください。</translation>
     </message>
     <message>
         <source>Deleted all files in the Steam mods directory.
 
  Trying to restart Steam to trigger automatic redownload of subscribed mods.</source>
-        <translation type="unfinished"></translation>
+        <translation>SteamのMODディレクトリ内のすべてのファイルを削除しました。
+
+サブスクリプションされたMODの自動再ダウンロードをトリガーするために、Steamを再起動しようとしています。</translation>
     </message>
     <message>
         <source>Steam Workshop Redownload</source>
-        <translation type="unfinished"></translation>
+        <translation>Steamワークショップの再ダウンロード</translation>
     </message>
     <message>
         <source>Mods have been deleted. Please restart Steam to trigger automatic redownload of subscribed mods.
@@ -3719,31 +3792,36 @@ If mods don&apos;t download automatically, try:
 1. Restart Steam
 2. Verify game files in Steam
 3. Visit the Workshop page of each mod</source>
-        <translation type="unfinished"></translation>
+        <translation>MODが削除されました。Steamを再起動して、サブスクリプションされたMODの自動再ダウンロードをトリガーしてください。
+
+MODが自動的にダウンロードされない場合は、次の手順を試してください。
+1. Steamを再起動する
+2. Steamでゲームファイルを検証する
+3. 各MODのワークショップページを訪れる</translation>
     </message>
     <message>
         <source>Deleted all files in the {config_dir} successfully.</source>
-        <translation type="unfinished"></translation>
+        <translation>成功裏に{config_dir}内のすべてのファイルを削除しました。</translation>
     </message>
     <message>
         <source>No files found in {config_dir} for deletion.</source>
-        <translation type="unfinished"></translation>
+        <translation>{config_dir}内に削除するファイルが見つかりませんでした。</translation>
     </message>
     <message>
         <source>Deleted {item} successfully.</source>
-        <translation type="unfinished"></translation>
+        <translation>成功裏に{item}を削除しました。</translation>
     </message>
     <message>
         <source>Confirm Changes</source>
-        <translation type="unfinished"></translation>
+        <translation>変更を確認</translation>
     </message>
     <message>
         <source>Are you sure you want to apply these changes? This cannot be undone.</source>
-        <translation type="unfinished"></translation>
+        <translation>これらの変更を適用してもよろしいですか？元に戻すことはできません。</translation>
     </message>
     <message>
         <source>This will delete the selected files. Make sure you have backups if needed.</source>
-        <translation type="unfinished"></translation>
+        <translation>これにより、選択したファイルが削除されます。必要に応じてバックアップを取ってください。</translation>
     </message>
     <message>
         <source>Confirm Clear</source>
@@ -3917,7 +3995,7 @@ Details: {e}</source>
     </message>
     <message>
         <source>Path not set, Please check your settings and Try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>パスが設定されていません。設定を確認して再試行してください。</translation>
     </message>
     <message>
         <source>Process failed</source>
@@ -4084,266 +4162,267 @@ Details: {e}</source>
     <name>UseThisInsteadPanel</name>
     <message>
         <source>RimSort - Replacements found for Workshop mods</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSort - ワークショップMODの置き換えが見つかりました</translation>
     </message>
     <message>
         <source>There are replacements available for Workshop mods!</source>
-        <translation type="unfinished"></translation>
+        <translation>ワークショップMODの置き換えが利用可能です！</translation>
     </message>
     <message>
         <source>
 The following table displays Workshop mods with suggested replacements according to the &quot;Use This Instead&quot; database</source>
-        <translation type="unfinished"></translation>
+        <translation>
+以下の表は、「これを代わりに使用」データベースに従って、提案された置き換えを持つワークショップMODを表示します</translation>
     </message>
     <message>
         <source>Original Mod Name</source>
-        <translation type="unfinished"></translation>
+        <translation>オリジナルMOD名</translation>
     </message>
     <message>
         <source>Original Author</source>
-        <translation type="unfinished"></translation>
+        <translation>オリジナル作者</translation>
     </message>
     <message>
         <source>Original Workshop Page</source>
-        <translation type="unfinished"></translation>
+        <translation>オリジナルワークショップページ</translation>
     </message>
     <message>
         <source>Replacement Mod Name</source>
-        <translation type="unfinished"></translation>
+        <translation>置き換えMOD名</translation>
     </message>
     <message>
         <source>Replacement Author</source>
-        <translation type="unfinished"></translation>
+        <translation>置き換え作者</translation>
     </message>
     <message>
         <source>Replacement Workshop Page</source>
-        <translation type="unfinished"></translation>
+        <translation>置き換えワークショップページ</translation>
     </message>
     <message>
         <source>Download with SteamCMD</source>
-        <translation type="unfinished">SteamCMDでダウンロード</translation>
+        <translation>SteamCMDでダウンロード</translation>
     </message>
     <message>
         <source>Subscribe</source>
-        <translation type="unfinished"></translation>
+        <translation>サブスクライブ</translation>
     </message>
     <message>
         <source>Unsubscribe</source>
-        <translation type="unfinished"></translation>
+        <translation>サブスクライブ解除</translation>
     </message>
     <message>
         <source>Unsubscribe outdated</source>
-        <translation type="unfinished"></translation>
+        <translation>古いMODをサブスクライブ解除</translation>
     </message>
     <message>
         <source>Unsubscribe all outdated</source>
-        <translation type="unfinished"></translation>
+        <translation>すべての古いMODをサブスクライブ解除</translation>
     </message>
     <message>
         <source>Refresh</source>
-        <translation type="unfinished"></translation>
+        <translation>更新</translation>
     </message>
     <message>
         <source>Refresh Mod List</source>
-        <translation type="unfinished"></translation>
+        <translation>MODリストを更新</translation>
     </message>
     <message>
         <source>Refresh Table</source>
-        <translation type="unfinished"></translation>
+        <translation>テーブルを更新</translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation type="unfinished"></translation>
+        <translation>削除</translation>
     </message>
     <message>
         <source>Delete Selected Original Mods...</source>
-        <translation type="unfinished"></translation>
+        <translation>選択したオリジナルMODを削除...</translation>
     </message>
     <message>
         <source>Use This Instead</source>
-        <translation type="unfinished"></translation>
+        <translation>これを代わりに使用</translation>
     </message>
     <message>
         <source>Successfully subscribed to replacement mods</source>
-        <translation type="unfinished"></translation>
+        <translation>置き換えMODに正常にサブスクライブしました</translation>
     </message>
     <message>
         <source>Successfully unsubscribed to original mods</source>
-        <translation type="unfinished"></translation>
+        <translation>オリジナルMODのサブスクライブを正常に解除しました</translation>
     </message>
     <message>
         <source>Subscribe replacements</source>
-        <translation type="unfinished"></translation>
+        <translation>置き換えをサブスクライブ</translation>
     </message>
     <message>
         <source>Subscribe all replacements</source>
-        <translation type="unfinished"></translation>
+        <translation>すべての置き換えをサブスクライブ</translation>
     </message>
     <message>
         <source>Open Workshop Page</source>
-        <translation type="unfinished"></translation>
+        <translation>ワークショップページを開く</translation>
     </message>
 </context>
 <context>
     <name>_UploadLogDialog</name>
     <message>
         <source>Uploading Log...</source>
-        <translation type="unfinished"></translation>
+        <translation>ログをアップロード中...</translation>
     </message>
     <message>
         <source>Log Upload Successful</source>
-        <translation type="unfinished"></translation>
+        <translation>ログのアップロードに成功しました</translation>
     </message>
     <message>
         <source>Log file uploaded successfully! Copied URL to clipboard.</source>
-        <translation type="unfinished"></translation>
+        <translation>ログファイルが正常にアップロードされました！URLをクリップボードにコピーしました。</translation>
     </message>
     <message>
         <source>Log Upload Failed</source>
-        <translation type="unfinished"></translation>
+        <translation>ログのアップロードに失敗しました</translation>
     </message>
     <message>
         <source>Log file upload failed!</source>
-        <translation type="unfinished"></translation>
+        <translation>ログファイルのアップロードに失敗しました！</translation>
     </message>
     <message>
         <source>Please check your internet connection and try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>インターネット接続を確認し、再試行してください。</translation>
     </message>
 </context>
 <context>
     <name>__new__</name>
     <message>
         <source>Invalid archive path</source>
-        <translation type="unfinished"></translation>
+        <translation>無効なアーカイブパス</translation>
     </message>
     <message>
         <source>The provided archive path is invalid.</source>
-        <translation type="unfinished"></translation>
+        <translation>提供されたアーカイブパスは無効です。</translation>
     </message>
     <message>
         <source>Please provide a valid archive path.</source>
-        <translation type="unfinished"></translation>
+        <translation>有効なアーカイブパスを指定してください。</translation>
     </message>
 </context>
 <context>
     <name>copy_to_clipboard_safely</name>
     <message>
         <source>Failed to copy to clipboard.</source>
-        <translation type="unfinished"></translation>
+        <translation>クリップボードへのコピーに失敗しました。</translation>
     </message>
     <message>
         <source>RimSort failed to copy the text to your clipboard. Please copy it manually.</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSortはテキストをクリップボードにコピーできませんでした。手動でコピーしてください。</translation>
     </message>
 </context>
 <context>
     <name>find_circular_dependencies</name>
     <message>
         <source>Unable to Sort</source>
-        <translation type="unfinished"></translation>
+        <translation>ソートできません</translation>
     </message>
     <message>
         <source>RimSort found circular dependencies in your mods list. Please see the details for dependency loops.</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSortはMODリストに循環依存関係を見つけました。依存関係のループの詳細を確認してください。</translation>
     </message>
 </context>
 <context>
     <name>launch_game_process</name>
     <message>
         <source>File not found</source>
-        <translation type="unfinished">ファイルが見つかりません</translation>
+        <translation>ファイルが見つかりません</translation>
     </message>
     <message>
         <source>Unable to launch game process</source>
-        <translation type="unfinished"></translation>
+        <translation>ゲームプロセスを起動できません</translation>
     </message>
     <message>
         <source>RimSort could not start RimWorld as the game executable does not exist at the specified path: {executable_path}. Please check that this directory is correct and the RimWorld game executable exists in it.</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSortはRimWorldを起動できませんでした。指定されたパスにゲーム実行可能ファイルが存在しません: {executable_path}。このディレクトリが正しいことを確認し、RimWorldの実行可能ファイルが存在することを確認してください。</translation>
     </message>
     <message>
         <source>Game launch failed</source>
-        <translation type="unfinished"></translation>
+        <translation>ゲームの起動に失敗しました</translation>
     </message>
     <message>
         <source>Unable to launch RimWorld</source>
-        <translation type="unfinished"></translation>
+        <translation>RimWorldを起動できません</translation>
     </message>
     <message>
         <source>RimSort could not start RimWorld as the game folder is empty or invalid: [{game_install_path}] Please check that the game folder is properly set and that the RimWorld executable exists in it.</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSortはRimWorldを起動できませんでした。ゲームフォルダーが空であるか無効です: [{game_install_path}]。ゲームフォルダーが正しく設定されており、RimWorldの実行可能ファイルが存在することを確認してください。</translation>
     </message>
 </context>
 <context>
     <name>rmtree</name>
     <message>
         <source>Failed to remove directory</source>
-        <translation type="unfinished"></translation>
+        <translation>ディレクトリの削除に失敗しました</translation>
     </message>
     <message>
         <source>RimSort tried to remove a directory that does not exist.</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSortは存在しないディレクトリを削除しようとしました。</translation>
     </message>
     <message>
         <source>Directory does not exist: {path}</source>
-        <translation type="unfinished"></translation>
+        <translation>ディレクトリが存在しません: {path}</translation>
     </message>
     <message>
         <source>RimSort tried to remove a directory that is not a directory.</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSortはディレクトリではないものを削除しようとしました。</translation>
     </message>
     <message>
         <source>Path is not a directory: {path}</source>
-        <translation type="unfinished"></translation>
+        <translation>パスはディレクトリではありません: {path}</translation>
     </message>
     <message>
         <source>An OSError occurred while trying to remove a directory.</source>
-        <translation type="unfinished"></translation>
+        <translation>ディレクトリを削除しようとしたときにOSErrorが発生しました。</translation>
     </message>
     <message>
         <source>{e.strerror} occurred at {e.filename} with error code {error_code}.</source>
-        <translation type="unfinished">{e.strerror}が{e.filename}でエラーコード{error_code}で発生しました。</translation>
+        <translation>{e.strerror}が{e.filename}でエラーコード{error_code}で発生しました。</translation>
     </message>
 </context>
 <context>
     <name>show_dialogue_conditional</name>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished">キャンセル</translation>
+        <translation>キャンセル</translation>
     </message>
 </context>
 <context>
     <name>show_dialogue_information</name>
     <message>
         <source>OK</source>
-        <translation type="unfinished">OK</translation>
+        <translation>OK</translation>
     </message>
 </context>
 <context>
     <name>show_warning</name>
     <message>
         <source>OK</source>
-        <translation type="unfinished">OK</translation>
+        <translation>OK</translation>
     </message>
 </context>
 <context>
     <name>validate_rimworld_mods_list</name>
     <message>
         <source>Unable to read data</source>
-        <translation type="unfinished"></translation>
+        <translation>データを読み取れませんでした</translation>
     </message>
     <message>
         <source>RimSort was unable to read the supplied mods list.</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSortは提供されたMODリストを読み取れませんでした。</translation>
     </message>
     <message>
         <source>The supplied mods list may be missing or invalid. If you just (re)installed RimWorld, you may need to run it once to generate the mods list.</source>
-        <translation type="unfinished"></translation>
+        <translation>提供されたMODリストが見つからないか無効である可能性があります。RimWorldを再インストールしたばかりの場合は、MODリストを生成するために一度実行する必要があるかもしれません。</translation>
     </message>
     <message>
         <source>RimSort was unable to read the supplied mods list because it may be invalid or missing.</source>
-        <translation type="unfinished"></translation>
+        <translation>RimSortは提供されたMODリストを読み取れませんでした。無効であるか、見つからない可能性があります。</translation>
     </message>
 </context>
 </TS>
