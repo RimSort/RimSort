@@ -20,12 +20,14 @@ class PushConfig:
         force: bool = False,
         username: Optional[str] = None,
         token: Optional[str] = None,
+        timeout: int = 30,  # Add timeout configuration
     ):
         self.remote_name = remote_name
         self.branch = branch
         self.force = force
         self.username = username
         self.token = token
+        self.timeout = timeout
 
 
 class BaseWorkerSignals(QObject):
@@ -120,7 +122,10 @@ class BaseBatchWorker(QRunnable):
     ):
         super().__init__()
         self.repos_paths = repos_paths
-        self.config = config or GitOperationConfig.create_silent()
+        # Create config with reasonable timeouts for batch operations
+        self.config = config or GitOperationConfig.create_with_timeout(
+            fetch_timeout=30, connection_timeout=10
+        )
         self.signals = BaseBatchSignals()
 
     def execute_batch_operation(
@@ -157,26 +162,41 @@ class BaseGitWorker(QThread):
     ):
         super().__init__()
         self.repo_path = repo_path
-        self.config = config or GitOperationConfig.create_silent()
+        # Create config with reasonable timeouts
+        self.config = config or GitOperationConfig.create_with_timeout(
+            fetch_timeout=30, connection_timeout=10
+        )
+        self._is_cancelled = False
+
+    def cancel(self) -> None:
+        """Cancel the operation"""
+        self._is_cancelled = True
+        self.requestInterruption()
 
     def emit_progress(self, message: str) -> None:
         """Emit progress message"""
-        self.progress.emit(message)
+        if not self._is_cancelled:
+            self.progress.emit(message)
 
     def emit_success(self, message: str) -> None:
         """Emit success result"""
-        logger.info(message)
-        self.finished.emit(True, message, str(self.repo_path))
+        if not self._is_cancelled:
+            logger.info(message)
+            self.finished.emit(True, message, str(self.repo_path))
 
     def emit_error(self, message: str) -> None:
         """Emit error result"""
-        logger.error(message)
-        self.error.emit(message)
+        if not self._is_cancelled:
+            logger.error(message)
+            self.error.emit(message)
+            self.finished.emit(False, message, str(self.repo_path))
 
     def handle_exception(self, operation_name: str, e: Exception) -> None:
         """Handle exceptions with common error handling"""
-        error_msg = handle_worker_error(operation_name, str(self.repo_path), e)
-        self.error.emit(error_msg)
+        if not self._is_cancelled:
+            error_msg = handle_worker_error(operation_name, str(self.repo_path), e)
+            self.error.emit(error_msg)
+            self.finished.emit(False, error_msg, str(self.repo_path))
 
 
 class GitCloneWorker(BaseGitWorker):
@@ -204,6 +224,10 @@ class GitCloneWorker(BaseGitWorker):
             logger.info(
                 f"Starting git clone in thread: {self.repo_url} to {self.repo_path}"
             )
+
+            if self.isInterruptionRequested():
+                return
+
             self.emit_progress(f"Cloning repository: {self.repo_url}")
 
             repo, result = git_utils.git_clone(
@@ -215,16 +239,19 @@ class GitCloneWorker(BaseGitWorker):
                 config=self.config,
             )
 
+            if self.isInterruptionRequested():
+                return
+
             if result.is_successful():
                 self.emit_success(
                     f"Repository cloned successfully to: {self.repo_path}"
                 )
-
             else:
                 self.emit_error(f"Clone failed: {result}")
 
         except Exception as e:
-            self.handle_exception("clone", e)
+            if not self.isInterruptionRequested():
+                self.handle_exception("clone", e)
         finally:
             if repo is not None:
                 git_utils.git_cleanup(repo)
@@ -257,11 +284,18 @@ class GitPushWorker(BaseGitWorker):
         """Execute the git push operation in background"""
         try:
             logger.info(f"Starting git push in thread for: {self.repo_path}")
+
+            if self.isInterruptionRequested():
+                return
+
             self.emit_progress(f"Pushing changes from: {self.repo_path}")
 
             with git_utils.git_repository(self.repo_path, self.config) as repo:
                 if repo is None:
                     self.emit_error(f"Invalid git repository: {self.repo_path}")
+                    return
+
+                if self.isInterruptionRequested():
                     return
 
                 result = git_utils.git_push(
@@ -274,6 +308,9 @@ class GitPushWorker(BaseGitWorker):
                     token=self.token,
                 )
 
+                if self.isInterruptionRequested():
+                    return
+
                 if result.is_successful():
                     self.emit_success(
                         f"Changes pushed successfully from: {self.repo_path}"
@@ -282,7 +319,8 @@ class GitPushWorker(BaseGitWorker):
                     self.emit_error(f"Push failed: {result}")
 
         except Exception as e:
-            self.handle_exception("push", e)
+            if not self.isInterruptionRequested():
+                self.handle_exception("push", e)
 
 
 class GitStageCommitWorker(BaseGitWorker):
@@ -307,11 +345,18 @@ class GitStageCommitWorker(BaseGitWorker):
             logger.info(
                 f"Starting git stage and commit in thread for: {self.repo_path}"
             )
+
+            if self.isInterruptionRequested():
+                return
+
             self.emit_progress(f"Staging and committing changes in: {self.repo_path}")
 
             with git_utils.git_repository(self.repo_path, self.config) as repo:
                 if repo is None:
                     self.emit_error(f"Invalid git repository: {self.repo_path}")
+                    return
+
+                if self.isInterruptionRequested():
                     return
 
                 result = git_utils.git_stage_commit(
@@ -322,6 +367,9 @@ class GitStageCommitWorker(BaseGitWorker):
                     config=self.config,
                 )
 
+                if self.isInterruptionRequested():
+                    return
+
                 if result.is_successful():
                     self.emit_success(
                         f"Changes staged and committed successfully in: {self.repo_path}"
@@ -330,7 +378,8 @@ class GitStageCommitWorker(BaseGitWorker):
                     self.emit_error(f"Stage and commit failed: {result}")
 
         except Exception as e:
-            self.handle_exception("stage and commit", e)
+            if not self.isInterruptionRequested():
+                self.handle_exception("stage and commit", e)
 
 
 def check_repository_updates(
