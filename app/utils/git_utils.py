@@ -1,5 +1,6 @@
 """This module contains a collection of utility functions for working with git repositories."""
 
+import threading
 from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import Enum
@@ -13,7 +14,7 @@ from pygit2.enums import CheckoutStrategy, ResetMode, SortMode
 from pygit2.repository import Repository
 from PySide6.QtWidgets import QMessageBox
 
-from app.utils.generic import delete_files_with_condition
+from app.utils.generic import check_internet_connection, delete_files_with_condition
 from app.views.dialogue import InformationBox
 
 
@@ -75,6 +76,8 @@ class GitOperationConfig:
 
     notify_errors: bool = True
     notification_handler: Optional[GitNotificationHandler] = None
+    fetch_timeout: int = 30  # Timeout for fetch operations in seconds
+    connection_timeout: int = 10  # Timeout for connection checks in seconds
 
     def __post_init__(self) -> None:
         if self.notification_handler is None:
@@ -95,6 +98,51 @@ class GitOperationConfig:
     ) -> "GitOperationConfig":
         """Create a config with a specific notification handler."""
         return cls(notify_errors=True, notification_handler=handler)
+
+    @classmethod
+    def create_with_timeout(
+        cls, fetch_timeout: int = 30, connection_timeout: int = 10
+    ) -> "GitOperationConfig":
+        """Create a config with custom timeout values."""
+        return cls(fetch_timeout=fetch_timeout, connection_timeout=connection_timeout)
+
+
+def _fetch_with_timeout(remote: pygit2.Remote, timeout: int) -> bool:
+    """Fetch from remote with timeout handling.
+
+    Args:
+        remote: The pygit2 remote object.
+        timeout: Timeout in seconds.
+
+    Returns:
+        True if fetch was successful, False if timeout or error occurred.
+
+    Raises:
+        Exception: If the fetch operation fails with an error.
+    """
+    result: dict[str, Any] = {"success": False, "error": None}
+
+    def fetch_target() -> None:
+        try:
+            remote.fetch()
+            result["success"] = True
+        except Exception as e:
+            result["error"] = e
+
+    fetch_thread = threading.Thread(target=fetch_target)
+    fetch_thread.daemon = True
+    fetch_thread.start()
+    fetch_thread.join(timeout)
+
+    if fetch_thread.is_alive():
+        # Timeout occurred
+        logger.warning(f"Fetch operation timed out after {timeout} seconds")
+        return False
+
+    if result["error"]:
+        raise result["error"]
+
+    return bool(result["success"])
 
 
 def _handle_git_error(
@@ -311,6 +359,13 @@ class GitStashResult(Enum):
         return self == GitStashResult.GIT_ERROR
 
 
+def get_config(config: Optional[GitOperationConfig]) -> GitOperationConfig:
+    """Helper to get or create a default GitOperationConfig."""
+    if config is None:
+        return GitOperationConfig()
+    return config
+
+
 def git_discover(
     path: str | Path, config: Optional[GitOperationConfig] = None
 ) -> Optional[Repository]:
@@ -323,8 +378,7 @@ def git_discover(
     Returns:
         The repository object if found, otherwise None.
     """
-    if config is None:
-        config = GitOperationConfig()
+    config = get_config(config)
 
     path_str = str(path)
     logger.info(f"Attempting to discover git repository at: {path_str}")
@@ -412,8 +466,7 @@ def git_clone(
     Returns:
         Tuple of (repository object if successful, result enum).
     """
-    if config is None:
-        config = GitOperationConfig()
+    config = get_config(config)
 
     logger.info(f"Attempting git cloning: {repo_url} to {repo_path}")
     repo_path_str = str(repo_path)
@@ -488,8 +541,7 @@ def git_check_updates(
     Returns:
         A walker object if updates are found, otherwise None.
     """
-    if config is None:
-        config = GitOperationConfig()
+    config = get_config(config)
 
     logger.info(f"Checking for updates in git repository: {repo.path}")
 
@@ -504,10 +556,16 @@ def git_check_updates(
             remote = repo.remotes["origin"]
         except KeyError:
             logger.warning("No 'origin' remote found in repository")
+            return None  # Fetch updates from remote with timeout
+        try:
+            if not _fetch_with_timeout(remote, config.fetch_timeout):
+                logger.error(
+                    f"Fetch operation timed out after {config.fetch_timeout} seconds"
+                )
+                return None
+        except Exception as e:
+            logger.error(f"Fetch operation failed: {str(e)}")
             return None
-
-        # Fetch updates from remote
-        remote.fetch()
 
         # Get current branch
         current_branch = repo.head.shorthand
@@ -562,8 +620,7 @@ def git_pull(
     Returns:
         Result of the pull operation.
     """
-    if config is None:
-        config = GitOperationConfig()
+    config = get_config(config)
 
     logger.info(f"Pulling updates from git repository: {repo.path}")
 
@@ -572,9 +629,7 @@ def git_pull(
             branch = repo.head.shorthand
         except pygit2.GitError:
             logger.error("No active branch found or repository is empty")
-            return GitPullResult.GIT_ERROR
-
-    # Find the specified remote
+            return GitPullResult.GIT_ERROR  # Find the specified remote
     remote = None
     for r in repo.remotes:
         if r.name == remote_name:
@@ -586,8 +641,21 @@ def git_pull(
         return GitPullResult.UNKNOWN_REMOTE
 
     try:
-        # Fetch updates from remote
-        remote.fetch()
+        # Check network connectivity first
+        if not check_internet_connection(timeout=config.connection_timeout):
+            logger.warning("No network connectivity detected")
+            return GitPullResult.GIT_ERROR
+
+        # Fetch updates from remote with timeout
+        try:
+            if not _fetch_with_timeout(remote, config.fetch_timeout):
+                logger.error(
+                    f"Fetch operation timed out after {config.fetch_timeout} seconds"
+                )
+                return GitPullResult.GIT_ERROR
+        except Exception as e:
+            logger.error(f"Fetch operation failed: {str(e)}")
+            return GitPullResult.GIT_ERROR
 
         # Get remote branch reference
         remote_ref = f"refs/remotes/{remote.name}/{branch}"
@@ -708,8 +776,7 @@ def git_push(
     Returns:
         Result of the push operation.
     """
-    if config is None:
-        config = GitOperationConfig()
+    config = get_config(config)
 
     logger.info(f"Pushing updates to git repository: {repo.path}")
 
@@ -793,8 +860,7 @@ def git_stage_commit(
     Returns:
         Result of the stage and commit operation.
     """
-    if config is None:
-        config = GitOperationConfig()
+    config = get_config(config)
     if paths is None:
         paths = []
 
@@ -918,8 +984,7 @@ def git_get_status(
         }
         Returns None if error occurs.
     """
-    if config is None:
-        config = GitOperationConfig()
+    config = get_config(config)
 
     logger.debug(f"Getting status for git repository: {repo.path}")
 
@@ -996,8 +1061,7 @@ def git_get_commit_info(
         }
         Returns None if error occurs.
     """
-    if config is None:
-        config = GitOperationConfig()
+    config = get_config(config)
 
     try:
         if commit_id is None:
@@ -1077,8 +1141,7 @@ def git_stash(
     Returns:
         Result of the stash operation.
     """
-    if config is None:
-        config = GitOperationConfig()
+    config = get_config(config)
 
     logger.info(f"Stashing changes in git repository: {repo.path}")
 
@@ -1153,8 +1216,7 @@ def git_stash_list(
     Returns:
         List of stash references.
     """
-    if config is None:
-        config = GitOperationConfig()
+    config = get_config(config)
 
     logger.info(f"Listing stashes in git repository: {repo.path}")
     try:
@@ -1190,8 +1252,7 @@ def git_stash_drop(
     Returns:
         Result of the drop operation.
     """
-    if config is None:
-        config = GitOperationConfig()
+    config = get_config(config)
 
     logger.info(f"Dropping stash {stash_index} from git repository: {repo.path}")
     try:
@@ -1222,8 +1283,7 @@ def git_has_uncommitted_changes(
     Returns:
         True if there are uncommitted changes (staged or unstaged), False otherwise.
     """
-    if config is None:
-        config = GitOperationConfig()
+    config = get_config(config)
 
     try:
         status = repo.status()
@@ -1291,8 +1351,7 @@ def git_get_current_branch(
     Returns:
         The current branch name, or None if HEAD is detached or on error.
     """
-    if config is None:
-        config = GitOperationConfig()
+    config = get_config(config)
 
     try:
         if repo.head_is_detached:
@@ -1325,8 +1384,7 @@ def git_get_remote_url(
     Returns:
         The remote URL, or None if not found.
     """
-    if config is None:
-        config = GitOperationConfig()
+    config = get_config(config)
 
     try:
         for remote in repo.remotes:

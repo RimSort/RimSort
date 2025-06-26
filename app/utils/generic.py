@@ -1,6 +1,7 @@
 import os
 import platform
 import shutil
+import socket
 import subprocess
 import sys
 import webbrowser
@@ -236,11 +237,13 @@ def launch_game_process(game_install_path: Path, args: list[str]) -> None:
             # Windows
             path64 = game_install_path / "RimWorldWin64.exe"
             path32 = game_install_path / "RimWorldWin.exe"
-            
-            executable_path = str(path64) # default to 64-bit executable 
-            if not path64.exists() and path32.exists(): # look for and set path to 86x executable only if default doesn't exist 
+
+            executable_path = str(path64)  # default to 64-bit executable
+            if (
+                not path64.exists() and path32.exists()
+            ):  # look for and set path to 86x executable only if default doesn't exist
                 executable_path = str(path32)
-                
+
         else:
             logger.error("Unable to launch the game on an unknown system")
             return
@@ -447,3 +450,19 @@ def check_valid_http_git_url(url: str) -> bool:
     :return: a boolean indicating whether the url is a valid git url
     """
     return url and url != "" and url.startswith("http://") or url.startswith("https://")
+
+
+def check_internet_connection(
+    host: str = "8.8.8.8", port: int = 53, timeout: float = 3
+) -> bool:
+    """
+    Check if there is an active internet connection by attempting to connect to a known host.
+    Default is Google's public DNS server 8.8.8.8 on port 53.
+    """
+    try:
+        socket.setdefaulttimeout(timeout)
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.connect((host, port))
+        return True
+    except OSError:
+        return False
