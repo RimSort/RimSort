@@ -260,12 +260,23 @@ def show_fatal_error(
 
 
 def show_internet_connection_error() -> None:
-    """Show a warning dialog for no internet connection."""
+    """Show a warning dialog for no internet connection, with firewall info and user information for help."""
     logger.info("Showing no internet connection error dialog")
-    show_warning(
+    show_information(
         title="No Internet Connection",
-        text="Please check your internet connection.",
-        information="RimSort requires an active internet connection to perform this operation.",
+        text="RimSort requires an active internet connection to perform this operation.",
+        information=(
+            "If you are connected but still see this message, your firewall or security software may be blocking RimSort. \n"
+            "To resolve this issue: \n\n"
+            "Add RimSort to your firewall's allowed applications. \n"
+            "You may need to add RimSort to your firewall's allowed list."
+        ),
+        details=(
+            "On Windows: Open Windows Security > Firewall & network protection > Allow an app through firewall. \n"
+            "Find RimSort or add it manually if needed. \n"
+            "On other systems, check your firewall or security software settings. \n"
+            "If you need more help, Please reach out to us on Github Issues page or Discord server."
+        ),
     )
 
 
