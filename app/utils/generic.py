@@ -453,16 +453,27 @@ def check_valid_http_git_url(url: str) -> bool:
 
 
 def check_internet_connection(
-    host: str = "8.8.8.8", port: int = 53, timeout: float = 3
+    primary_host: str = "8.8.8.8",
+    fallback_host: str = "1.1.1.1",
+    port: int = 53,
+    timeout: float = 30,
 ) -> bool:
     """
     Check if there is an active internet connection by attempting to connect to a known host.
-    Default is Google's public DNS server 8.8.8.8 on port 53.
+    Default is Google's public DNS server 8.8.8.8 on port 53 with a fallback to Cloudflare's DNS server 1.1.1.1.
     """
-    try:
-        socket.setdefaulttimeout(timeout)
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            sock.connect((host, port))
+    socket.setdefaulttimeout(timeout)
+
+    def try_connect(host: str) -> bool:
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                sock.connect((host, port))
+            return True
+        except OSError:
+            return False
+
+    # Try connecting to the primary host first, then fallback if necessary
+    if try_connect(primary_host):
         return True
-    except OSError:
-        return False
+    else:
+        return try_connect(fallback_host)
