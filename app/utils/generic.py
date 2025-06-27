@@ -1,3 +1,4 @@
+import http.client
 import os
 import platform
 import shutil
@@ -456,11 +457,11 @@ def check_internet_connection(
     primary_host: str = "8.8.8.8",
     fallback_host: str = "1.1.1.1",
     port: int = 53,
-    timeout: float = 30,
+    timeout: float = 10,
 ) -> bool:
     """
-    Check if there is an active internet connection by attempting to connect to a known host.
-    Default is Google's public DNS server 8.8.8.8 on port 53 with a fallback to Cloudflare's DNS server 1.1.1.1.
+    Check if there is an active internet connection by attempting to connect to a known host (DNS),
+    As a fallback, try an HTTP request to a well-known google website.
     """
     socket.setdefaulttimeout(timeout)
 
@@ -469,11 +470,23 @@ def check_internet_connection(
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                 sock.connect((host, port))
             return True
-        except OSError:
+        except OSError as e:
+            logger.warning(f"Socket connection to {host}:{port} failed: {e}")
             return False
 
     # Try connecting to the primary host first, then fallback if necessary
-    if try_connect(primary_host):
+    if try_connect(primary_host) or try_connect(fallback_host):
         return True
-    else:
-        return try_connect(fallback_host)
+
+    # Fallback: try HTTP request to a well-known site
+    try:
+        conn = http.client.HTTPSConnection("www.google.com", timeout=timeout)
+        conn.request("HEAD", "/")
+        response = conn.getresponse()
+        if response.status < 500:
+            return True
+    except Exception as e:
+        logger.warning(f"HTTP connection to www.google.com failed: {e}")
+
+    logger.error("No internet connection detected.")
+    return False
