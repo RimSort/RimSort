@@ -422,13 +422,20 @@ class ModDeletionMenu(QMenu):
         Args:
             deleted_mods: List of successfully deleted mod metadata
         """
-        # Extract valid Steam Workshop IDs
-        publishedfileids = [
-            mod.get("publishedfileid")
-            for mod in deleted_mods
-            if mod.get("publishedfileid")
-            and isinstance(mod.get("publishedfileid"), str)
-        ]
+        # Extract valid Steam Workshop IDs and convert to integers
+        publishedfileids = []
+        for mod in deleted_mods:
+            pfid = mod.get("publishedfileid")
+            if pfid and isinstance(pfid, str):
+                try:
+                    # Convert string to integer as required by Steam API
+                    publishedfileids.append(int(pfid))
+                except ValueError:
+                    logger.warning(
+                        f"Invalid publishedfileid format: {pfid} for mod {mod.get('name', 'Unknown')}"
+                    )
+                    # Continue processing other mods even if one ID is invalid
+                    continue
 
         if not publishedfileids:
             logger.info("No Steam Workshop mods to unsubscribe from.")
