@@ -303,6 +303,7 @@ class ModDeletionMenu(QMenu):
 
     def delete_dds_files_only(self) -> None:
         """Delete only .dds texture files from selected mods."""
+
         selected_mods = self.get_selected_mod_metadata()
 
         if not selected_mods:
@@ -324,22 +325,22 @@ class ModDeletionMenu(QMenu):
         )
 
         if answer == DialogueResponse.YES.value:
-
-            def delete_dds_from_mod(mod_metadata: ModMetadata) -> bool:
-                """Delete .dds files from a specific mod."""
-                mod_path = mod_metadata.get("path")
-                if not mod_path:
-                    return False
-                return delete_files_only_extension(
-                    directory=str(mod_path),
-                    extension=self.DDS_EXTENSION,
-                )
-
-            result = self._iterate_mods(delete_dds_from_mod, selected_mods)
+            result = self._iterate_mods(self._delete_dds_from_mod, selected_mods)
             self._process_deletion_result(result)
+
+    def _delete_dds_from_mod(self, mod_metadata: ModMetadata) -> bool:
+        """Delete .dds files from a specific mod."""
+        mod_path = mod_metadata.get("path")
+        if not mod_path:
+            return False
+        return delete_files_only_extension(
+            directory=str(mod_path),
+            extension=self.DDS_EXTENSION,
+        )
 
     def delete_mod_keep_dds(self) -> None:
         """Delete mod files but keep .dds texture files."""
+
         selected_mods = self.get_selected_mod_metadata()
 
         if not selected_mods:
@@ -361,19 +362,18 @@ class ModDeletionMenu(QMenu):
         )
 
         if answer == DialogueResponse.YES.value:
-
-            def delete_except_dds(mod_metadata: ModMetadata) -> bool:
-                """Delete all files except .dds from a specific mod."""
-                mod_path = mod_metadata.get("path")
-                if not mod_path:
-                    return False
-                return delete_files_except_extension(
-                    directory=str(mod_path),
-                    extension=self.DDS_EXTENSION,
-                )
-
-            result = self._iterate_mods(delete_except_dds, selected_mods)
+            result = self._iterate_mods(self._delete_except_dds, selected_mods)
             self._process_deletion_result(result)
+
+    def _delete_except_dds(self, mod_metadata: ModMetadata) -> bool:
+        """Delete all files except .dds from a specific mod."""
+        mod_path = mod_metadata.get("path")
+        if not mod_path:
+            return False
+        return delete_files_except_extension(
+            directory=str(mod_path),
+            extension=self.DDS_EXTENSION,
+        )
 
     def delete_mod_and_unsubscribe(self) -> None:
         """
