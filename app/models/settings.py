@@ -111,7 +111,7 @@ class Settings(QObject):
         self.hide_invalid_mods_when_filtering_toggle: bool = False
         self.duplicate_mods_warning: bool = True
         self.steam_mods_update_check: bool = False
-        self.try_download_missing_mods: bool = False
+        self.try_download_missing_mods: bool = True
         self.render_unity_rich_text: bool = True
         self.update_databases_on_startup: bool = True
 
