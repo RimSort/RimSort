@@ -45,7 +45,8 @@ class Settings(QObject):
             "https://github.com/RimSort/Community-Rules-Database"
         )
 
-        self.database_expiry: int = 604800  # 7 days
+        # Disable by default previously this was 7 days "604800"
+        self.database_expiry: int = 0
 
         self.external_no_version_warning_metadata_source: str = "None"
         self.external_no_version_warning_file_path: str = str(
