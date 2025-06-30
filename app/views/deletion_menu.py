@@ -1,7 +1,7 @@
-import sys
+from enum import Enum
 from errno import ENOTEMPTY
 from shutil import rmtree
-from typing import Any, Callable
+from typing import Callable
 
 from loguru import logger
 from PySide6.QtGui import QAction
@@ -21,68 +21,172 @@ from app.views.dialogue import (
 )
 
 
+class DialogueResponse(Enum):
+    """Enumeration for dialogue response constants."""
+
+    YES = "&Yes"
+    NO = "&No"
+
+
+class DeletionResult:
+    """Class to track deletion operation results."""
+
+    def __init__(self) -> None:
+        self.success_count: int = 0
+        self.failed_count: int = 0
+        self.steamcmd_purge_ids: set[str] = set()
+        self.mods_for_unsubscribe: list[ModMetadata] = []
+
+
 class ModDeletionMenu(QMenu):
+    """Enhanced mod deletion menu with optimized operations and better error handling."""
+
+    # Constants for better maintainability
+    LUDEON_PACKAGE_PREFIX = "ludeon.rimworld"
+    EXPANSION_DATA_SOURCE = "expansion"
+    DDS_EXTENSION = ".dds"
+
     def __init__(
         self,
         get_selected_mod_metadata: Callable[[], list[ModMetadata]],
-        remove_from_uuids: list[str] | None,
+        remove_from_uuids: list[str] | None = None,
         menu_title: str = "Deletion options",
-        delete_mod: bool = True,
-        delete_both: bool = True,
-        delete_dds: bool = True,
-    ):
-        super().__init__(title=self.tr("Deletion options"))
+        enable_delete_mod: bool = True,
+        enable_delete_keep_dds: bool = True,
+        enable_delete_dds_only: bool = True,
+        enable_delete_and_unsubscribe: bool = True,
+    ) -> None:
+        super().__init__(title=self.tr(menu_title))
         self.remove_from_uuids = remove_from_uuids
         self.get_selected_mod_metadata = get_selected_mod_metadata
         self.metadata_manager = MetadataManager.instance()
-        self.delete_actions: list[tuple[QAction, Callable[[], None]]] = []
-        if delete_mod:
-            self.delete_actions.append(
-                (QAction(self.tr("Delete mod")), self.delete_both)
-            )
+        self._actions_initialized = False
 
-        if delete_both:
-            self.delete_actions.append(
-                (QAction(self.tr("Delete mod (keep .dds)")), self.delete_mod_keep_dds)
-            )
-        if delete_dds:
-            self.delete_actions.append(
-                (
-                    QAction(self.tr("Delete optimized textures (.dds files only)")),
-                    self.delete_dds,
-                )
-            )
-        # Add new action for delete mod and unsubscribe
-        self.delete_actions.append(
-            (
-                QAction(self.tr("Delete mod and unsubscribe")),
-                self.delete_mod_and_unsubscribe,
-            )
+        # Build actions based on enabled features
+        self.delete_actions: list[tuple[QAction, Callable[[], None]]] = []
+        self._build_actions(
+            enable_delete_mod,
+            enable_delete_keep_dds,
+            enable_delete_dds_only,
+            enable_delete_and_unsubscribe,
         )
 
         self.aboutToShow.connect(self._refresh_actions)
         self._refresh_actions()
 
+    def _build_actions(
+        self,
+        enable_delete_mod: bool,
+        enable_delete_keep_dds: bool,
+        enable_delete_dds_only: bool,
+        enable_delete_and_unsubscribe: bool,
+    ) -> None:
+        """Build the list of available deletion actions."""
+        if enable_delete_mod:
+            self.delete_actions.append(
+                (QAction(self.tr("Delete mod completely")), self.delete_mod_completely)
+            )
+
+        if enable_delete_keep_dds:
+            self.delete_actions.append(
+                (
+                    QAction(self.tr("Delete mod (keep .dds textures)")),
+                    self.delete_mod_keep_dds,
+                )
+            )
+
+        if enable_delete_dds_only:
+            self.delete_actions.append(
+                (
+                    QAction(self.tr("Delete optimized textures (.dds files only)")),
+                    self.delete_dds_files_only,
+                )
+            )
+
+        if enable_delete_and_unsubscribe:
+            self.delete_actions.append(
+                (
+                    QAction(self.tr("Delete mod and unsubscribe from Steam")),
+                    self.delete_mod_and_unsubscribe,
+                )
+            )
+
     def _refresh_actions(self) -> None:
-        self.clear()
-        for q_action, fn in self.delete_actions:
-            q_action.triggered.connect(fn)
-            self.addAction(q_action)
+        """Refresh menu actions, optimized to avoid unnecessary reconnections."""
+        if not self._actions_initialized:
+            self.clear()
+            for q_action, fn in self.delete_actions:
+                q_action.triggered.connect(fn)
+                self.addAction(q_action)
+            self._actions_initialized = True
+
+    def _is_official_expansion(self, mod_metadata: ModMetadata) -> bool:
+        """Check if the mod is an official expansion that should not be deleted."""
+        return mod_metadata.get(
+            "data_source"
+        ) == self.EXPANSION_DATA_SOURCE and mod_metadata.get(
+            "packageid", ""
+        ).startswith(self.LUDEON_PACKAGE_PREFIX)
+
+    def _process_deletion_result(self, result: DeletionResult) -> None:
+        """Process the results of a deletion operation."""
+        # Clean up UUIDs from the remove list
+        if self.remove_from_uuids is not None:
+            for mod in result.mods_for_unsubscribe:
+                if "uuid" in mod and mod["uuid"] in self.remove_from_uuids:
+                    self.remove_from_uuids.remove(mod["uuid"])
+
+        # Purge SteamCMD metadata for deleted mods
+        if result.steamcmd_purge_ids:
+            self.metadata_manager.steamcmd_purge_mods(
+                publishedfileids=result.steamcmd_purge_ids
+            )
+
+        # Show success message
+        if result.success_count > 0:
+            show_information(
+                title=self.tr("RimSort"),
+                text=self.tr("Successfully deleted {count} selected mods.").format(
+                    count=result.success_count
+                ),
+            )
 
     def _iterate_mods(
-        self, fn: Callable[[ModMetadata], bool], mods: list[ModMetadata]
-    ) -> None:
-        steamcmd_acf_pfid_purge: set[str] = set()
+        self,
+        deletion_fn: Callable[[ModMetadata], bool],
+        mods: list[ModMetadata],
+        collect_for_unsubscribe: bool = False,
+    ) -> DeletionResult:
+        """
+        Iterate through mods and apply the deletion function.
 
-        count = 0
+        Args:
+            deletion_fn: Function to apply to each mod
+            mods: List of mod metadata to process
+            collect_for_unsubscribe: Whether to collect successfully deleted mods for unsubscription
+
+        Returns:
+            DeletionResult containing operation statistics
+        """
+        result = DeletionResult()
+
         for mod_metadata in mods:
-            if mod_metadata[
-                "data_source"  # Disallow Official Expansions
-            ] != "expansion" or not mod_metadata["packageid"].startswith(
-                "ludeon.rimworld"
-            ):
-                if fn(mod_metadata):
-                    count = count + 1
+            # Skip official expansions
+            if self._is_official_expansion(mod_metadata):
+                logger.info(
+                    f"Skipping official expansion: {mod_metadata.get('name', 'Unknown')}"
+                )
+                continue
+
+            try:
+                if deletion_fn(mod_metadata):
+                    result.success_count += 1
+
+                    # Collect for Steam unsubscription if requested
+                    if collect_for_unsubscribe:
+                        result.mods_for_unsubscribe.append(mod_metadata)
+
+                    # Track UUIDs for removal
                     if (
                         self.remove_from_uuids is not None
                         and "uuid" in mod_metadata
@@ -90,210 +194,287 @@ class ModDeletionMenu(QMenu):
                     ):
                         self.remove_from_uuids.remove(mod_metadata["uuid"])
 
-                    if mod_metadata.get("steamcmd"):
-                        steamcmd_acf_pfid_purge.add(mod_metadata["publishedfileid"])
-
-        # Purge any deleted SteamCMD mods from acf metadata
-        if steamcmd_acf_pfid_purge:
-            self.metadata_manager.steamcmd_purge_mods(
-                publishedfileids=steamcmd_acf_pfid_purge
-            )
-
-        show_information(
-            title=self.tr("RimSort"),
-            text=self.tr("Successfully deleted {count} seleted mods.").format(
-                count=count
-            ),
-        )
-
-    def delete_both(self) -> None:
-        def _inner_delete_both(mod_metadata: dict[str, Any]) -> bool:
-            try:
-                rmtree(
-                    mod_metadata["path"],
-                    ignore_errors=False,
-                    onexc=attempt_chmod,
-                )
-                return True
-            except FileNotFoundError:
-                logger.debug(
-                    f"Unable to delete mod. Path does not exist: {mod_metadata['path']}"
-                )
-                return False
-            except OSError as e:
-                if sys.platform == "win32":
-                    error_code = e.winerror
+                    # Track SteamCMD mods for purging
+                    if (
+                        mod_metadata.get("steamcmd")
+                        and "publishedfileid" in mod_metadata
+                    ):
+                        result.steamcmd_purge_ids.add(mod_metadata["publishedfileid"])
                 else:
-                    error_code = e.errno
-                if e.errno == ENOTEMPTY:
-                    warning_text = self.tr(
-                        "Mod directory was not empty. Please close all programs accessing files or subfolders in the directory (including your file manager) and try again."
-                    )
-                else:
-                    warning_text = self.tr("An OSError occurred while deleting mod.")
+                    result.failed_count += 1
+            except Exception as e:
+                logger.error(
+                    f"Unexpected error processing mod {mod_metadata.get('name', 'Unknown')}: {e}"
+                )
+                result.failed_count += 1
 
-                logger.warning(
-                    f"Unable to delete mod located at the path: {mod_metadata['path']}"
-                )
-                show_warning(
-                    title=self.tr("Unable to delete mod"),
-                    text=warning_text,
-                    information=self.tr(
-                        "{e.strerror} occurred at {e.filename} with error code {error_code}."
-                    ).format(e=e, error_code=error_code),
-                )
+        return result
+
+    def _delete_mod_directory(self, mod_metadata: ModMetadata) -> bool:
+        """
+        Common method to delete a mod's directory completely.
+
+        Args:
+            mod_metadata: Metadata of the mod to delete
+
+        Returns:
+            bool: True if deletion was successful, False otherwise
+        """
+        mod_path = mod_metadata.get("path")
+        mod_name = mod_metadata.get("name", "Unknown")
+
+        if not mod_path:
+            logger.error(f"No path found for mod: {mod_name}")
             return False
 
-        uuids = self.get_selected_mod_metadata()
-        answer = show_dialogue_conditional(
-            title=self.tr("Are you sure?"),
-            text=self.tr("You have selected {len} mods for deletion.").format(
-                len=len(uuids)
-            ),
-            information=self.tr(
-                "\nThis operation delete a mod's directory from the filesystem."
-                + "\nDo you want to proceed?"
-            ),
-        )
-        if answer == "&Yes":
-            self._iterate_mods(_inner_delete_both, uuids)
+        try:
+            rmtree(mod_path, ignore_errors=False, onexc=attempt_chmod)
+            logger.info(f"Successfully deleted mod directory: {mod_path}")
+            return True
 
-    def delete_dds(self) -> None:
-        mod_metadata = self.get_selected_mod_metadata()
+        except FileNotFoundError:
+            logger.warning(f"Mod directory not found: {mod_path}")
+            return False
+
+        except OSError as e:
+            error_code = e.errno
+
+            if e.errno == ENOTEMPTY:
+                warning_text = self.tr(
+                    "Mod directory was not empty. Please close all programs accessing "
+                    "files or subfolders in the directory (including your file manager) "
+                    "and try again."
+                )
+            else:
+                warning_text = self.tr("An OS error occurred while deleting the mod.")
+
+            logger.error(f"Failed to delete mod at path: {mod_path} - {e}")
+
+            show_warning(
+                title=self.tr("Unable to delete mod"),
+                text=warning_text,
+                information=self.tr(
+                    "{error_msg} occurred at {filename} with error code {error_code}."
+                ).format(
+                    error_msg=e.strerror or "Unknown error",
+                    filename=e.filename or mod_path,
+                    error_code=error_code,
+                ),
+            )
+            return False
+
+    def delete_mod_completely(self) -> None:
+        """Delete selected mods completely from the filesystem."""
+        selected_mods = self.get_selected_mod_metadata()
+
+        if not selected_mods:
+            show_information(
+                title=self.tr("No mods selected"),
+                text=self.tr("Please select at least one mod to delete."),
+            )
+            return
+
         answer = show_dialogue_conditional(
-            title=self.tr("Are you sure?"),
+            title=self.tr("Confirm Complete Deletion"),
             text=self.tr(
-                "You have selected {len} mods to Delete optimized textures (.dds files only)"
-            ).format(len=len(mod_metadata)),
+                "You have selected {count} mod(s) for complete deletion."
+            ).format(count=len(selected_mods)),
             information=self.tr(
-                "\nThis operation will only delete optimized textures (.dds files only) from mod files."
-                + "\nDo you want to proceed?"
+                "\nThis operation will permanently delete the selected mod directories "
+                "from the filesystem.\n\nDo you want to proceed?"
             ),
         )
-        if answer == "&Yes":
-            self._iterate_mods(
-                lambda mod_metadata: (
-                    delete_files_only_extension(
-                        directory=str(mod_metadata["path"]),
-                        extension=".dds",
-                    )
-                ),
-                mod_metadata,
+
+        if answer == DialogueResponse.YES.value:
+            result = self._iterate_mods(self._delete_mod_directory, selected_mods)
+            self._process_deletion_result(result)
+
+    def delete_dds_files_only(self) -> None:
+        """Delete only .dds texture files from selected mods."""
+        selected_mods = self.get_selected_mod_metadata()
+
+        if not selected_mods:
+            show_information(
+                title=self.tr("No mods selected"),
+                text=self.tr("Please select at least one mod to process."),
             )
+            return
+
+        answer = show_dialogue_conditional(
+            title=self.tr("Confirm DDS Deletion"),
+            text=self.tr(
+                "You have selected {count} mod(s) for DDS texture deletion."
+            ).format(count=len(selected_mods)),
+            information=self.tr(
+                "\nThis operation will only delete optimized textures (.dds files) "
+                "from the selected mods.\n\nDo you want to proceed?"
+            ),
+        )
+
+        if answer == DialogueResponse.YES.value:
+
+            def delete_dds_from_mod(mod_metadata: ModMetadata) -> bool:
+                """Delete .dds files from a specific mod."""
+                mod_path = mod_metadata.get("path")
+                if not mod_path:
+                    return False
+                return delete_files_only_extension(
+                    directory=str(mod_path),
+                    extension=self.DDS_EXTENSION,
+                )
+
+            result = self._iterate_mods(delete_dds_from_mod, selected_mods)
+            self._process_deletion_result(result)
 
     def delete_mod_keep_dds(self) -> None:
-        mod_metadata = self.get_selected_mod_metadata()
+        """Delete mod files but keep .dds texture files."""
+        selected_mods = self.get_selected_mod_metadata()
+
+        if not selected_mods:
+            show_information(
+                title=self.tr("No mods selected"),
+                text=self.tr("Please select at least one mod to process."),
+            )
+            return
+
         answer = show_dialogue_conditional(
-            title=self.tr("Are you sure?"),
-            text=self.tr("You have selected {len} mods for deletion.").format(
-                len=len(mod_metadata)
-            ),
+            title=self.tr("Confirm Selective Deletion"),
+            text=self.tr(
+                "You have selected {count} mod(s) for selective deletion."
+            ).format(count=len(selected_mods)),
             information=self.tr(
-                "\nThis operation will recursively delete all mod files, except for .dds textures found."
-                + "\nDo you want to proceed?"
+                "\nThis operation will delete all mod files except for .dds texture files.\n"
+                "The .dds files will be preserved.\n\nDo you want to proceed?"
             ),
         )
-        if answer == "&Yes":
-            self._iterate_mods(
-                lambda mod_metadata: delete_files_except_extension(
-                    directory=mod_metadata["path"],
-                    extension=".dds",
-                ),
-                mod_metadata,
-            )
+
+        if answer == DialogueResponse.YES.value:
+
+            def delete_except_dds(mod_metadata: ModMetadata) -> bool:
+                """Delete all files except .dds from a specific mod."""
+                mod_path = mod_metadata.get("path")
+                if not mod_path:
+                    return False
+                return delete_files_except_extension(
+                    directory=str(mod_path),
+                    extension=self.DDS_EXTENSION,
+                )
+
+            result = self._iterate_mods(delete_except_dds, selected_mods)
+            self._process_deletion_result(result)
 
     def delete_mod_and_unsubscribe(self) -> None:
         """
-        Deletes selected mods and unsubscribes them from Steam Workshop.
-        This method reuses the delete_both deletion logic to avoid duplication,
-        collects only successfully deleted mods for unsubscription,
-        and improves user confirmation dialog clarity.
+        Delete selected mods and unsubscribe them from Steam Workshop.
+
+        This method combines deletion with Steam unsubscription for a streamlined workflow.
+        Only successfully deleted mods will be unsubscribed to maintain data consistency.
         """
+        selected_mods = self.get_selected_mod_metadata()
 
-        def _inner_delete(mod_metadata: dict[str, Any]) -> bool:
-            # Reuse the delete_both logic for deletion
-            try:
-                rmtree(
-                    mod_metadata["path"],
-                    ignore_errors=False,
-                    onexc=attempt_chmod,
-                )
-                return True
-            except FileNotFoundError:
-                logger.error(
-                    f"Unable to delete mod. Path does not exist: {mod_metadata['path']}"
-                )
-                return False
-            except OSError as e:
-                if sys.platform == "win32":
-                    error_code = e.winerror
-                else:
-                    error_code = e.errno
-                if e.errno == ENOTEMPTY:
-                    warning_text = self.tr(
-                        "Mod directory was not empty. Please close all programs accessing files or subfolders in the directory (including your file manager) and try again."
-                    )
-                else:
-                    warning_text = self.tr("An OSError occurred while deleting mod.")
+        if not selected_mods:
+            show_information(
+                title=self.tr("No mods selected"),
+                text=self.tr(
+                    "Please select at least one mod to delete and unsubscribe."
+                ),
+            )
+            return
 
-                logger.error(
-                    f"Unable to delete mod located at the path: {mod_metadata['path']}"
-                )
-                show_warning(
-                    title=self.tr("Unable to delete mod"),
-                    text=warning_text,
-                    information=self.tr(
-                        "{e.strerror} occurred at {e.filename} with error code {error_code}."
-                    ).format(e=e, error_code=error_code),
-                )
-            return False
+        # Filter mods that can be unsubscribed (have Steam Workshop IDs)
+        steam_mods = [
+            mod
+            for mod in selected_mods
+            if mod.get("publishedfileid")
+            and isinstance(mod.get("publishedfileid"), str)
+        ]
 
-        mods_to_unsubscribe: list[dict[str, Any]] = []
-
-        mods = self.get_selected_mod_metadata()
         answer = show_dialogue_conditional(
             title=self.tr("Confirm Deletion and Unsubscribe"),
             text=self.tr(
-                "You have selected {len} mods to delete and unsubscribe from Steam Workshop."
-            ).format(len=len(mods)),
+                "You have selected {total_count} mod(s) for deletion.\n"
+                "{steam_count} of these are Steam Workshop mods that will also be unsubscribed."
+            ).format(total_count=len(selected_mods), steam_count=len(steam_mods)),
             information=self.tr(
-                "\nThis operation will delete the mod directories and unsubscribe them from Steam Workshop."
-                + "\nDo you want to proceed?"
+                "\nThis operation will:\n"
+                "• Delete the selected mod directories from your filesystem\n"
+                "• Unsubscribe Steam Workshop mods from your Steam account\n\n"
+                "Do you want to proceed?"
             ),
         )
-        if answer == "&Yes":
 
-            def deletion_and_collect(mod_metadata: dict[str, Any]) -> bool:
-                success = _inner_delete(mod_metadata)
-                if success:
-                    mods_to_unsubscribe.append(mod_metadata)
-                return success
+        if answer == DialogueResponse.YES.value:
+            # Perform deletion and collect successfully deleted mods
+            result = self._iterate_mods(
+                self._delete_mod_directory, selected_mods, collect_for_unsubscribe=True
+            )
 
-            self._iterate_mods(deletion_and_collect, mods)
+            # Process regular deletion results
+            self._process_deletion_result(result)
 
-            publishedfileids = [
-                mod.get("publishedfileid")
-                for mod in mods_to_unsubscribe
-                if isinstance(mod.get("publishedfileid"), str)
-            ]
+            # Handle Steam unsubscription for successfully deleted mods
+            self._handle_steam_unsubscription(result.mods_for_unsubscribe)
 
-            if publishedfileids:
-                logger.info(
-                    f"Unsubscribing from {publishedfileids} mods on Steam Workshop."
-                )
-                count = len(publishedfileids)
-                logger.info(
-                    f"Successfully deleted {count} mods and collected them for unsubscription."
-                )
-                EventBus().do_steamworks_api_call.emit(
-                    [
-                        "unsubscribe",
-                        publishedfileids,
-                    ]
-                )
-                show_information(
-                    title=self.tr("Unsubscribed from mods"),
-                    text=self.tr(
-                        "Successfully unsubscribed from {count} mods on Steam Workshop."
-                    ).format(count=len(publishedfileids)),
-                )
+    def _handle_steam_unsubscription(self, deleted_mods: list[ModMetadata]) -> None:
+        """
+        Handle Steam Workshop unsubscription for successfully deleted mods.
+
+        Args:
+            deleted_mods: List of successfully deleted mod metadata
+        """
+        # Extract valid Steam Workshop IDs
+        publishedfileids = [
+            mod.get("publishedfileid")
+            for mod in deleted_mods
+            if mod.get("publishedfileid")
+            and isinstance(mod.get("publishedfileid"), str)
+        ]
+
+        if not publishedfileids:
+            logger.info("No Steam Workshop mods to unsubscribe from.")
+            return
+
+        try:
+            logger.info(
+                f"Unsubscribing from {len(publishedfileids)} Steam Workshop mods."
+            )
+
+            # Emit the Steam API call
+            EventBus().do_steamworks_api_call.emit(
+                [
+                    "unsubscribe",
+                    publishedfileids,
+                ]
+            )
+
+            # Show success message
+            show_information(
+                title=self.tr("Steam Unsubscription"),
+                text=self.tr(
+                    "Successfully initiated unsubscription from {count} Steam Workshop mod(s).\n"
+                    "The unsubscription process may take a few moments to complete."
+                ).format(count=len(publishedfileids)),
+            )
+
+            logger.info(
+                f"Successfully initiated unsubscription for {len(publishedfileids)} mods."
+            )
+
+        except Exception as e:
+            logger.error(f"Failed to initiate Steam unsubscription: {e}")
+            show_warning(
+                title=self.tr("Unsubscription Error"),
+                text=self.tr(
+                    "An error occurred while trying to unsubscribe from Steam Workshop mods."
+                ),
+                information=str(e),
+            )
+
+    # Backward compatibility aliases
+    def delete_both(self) -> None:
+        """Alias for delete_mod_completely for backward compatibility."""
+        self.delete_mod_completely()
+
+    def delete_dds(self) -> None:
+        """Alias for delete_dds_files_only for backward compatibility."""
+        self.delete_dds_files_only()
