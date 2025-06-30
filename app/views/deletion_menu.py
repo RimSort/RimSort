@@ -55,6 +55,7 @@ class ModDeletionMenu(QMenu):
         enable_delete_keep_dds: bool = True,
         enable_delete_dds_only: bool = True,
         enable_delete_and_unsubscribe: bool = True,
+        enable_delete_and_resubscribe: bool = True,
     ) -> None:
         super().__init__(title=self.tr(menu_title))
         self.remove_from_uuids = remove_from_uuids
@@ -69,6 +70,7 @@ class ModDeletionMenu(QMenu):
             enable_delete_keep_dds,
             enable_delete_dds_only,
             enable_delete_and_unsubscribe,
+            enable_delete_and_resubscribe,
         )
 
         self.aboutToShow.connect(self._refresh_actions)
@@ -80,6 +82,7 @@ class ModDeletionMenu(QMenu):
         enable_delete_keep_dds: bool,
         enable_delete_dds_only: bool,
         enable_delete_and_unsubscribe: bool,
+        enable_delete_and_resubscribe: bool,
     ) -> None:
         """Build the list of available deletion actions."""
         if enable_delete_mod:
@@ -108,6 +111,15 @@ class ModDeletionMenu(QMenu):
                 (
                     QAction(self.tr("Delete mod and unsubscribe from Steam")),
                     self.delete_mod_and_unsubscribe,
+                )
+            )
+
+        # Add new action for delete mod and resubscribe
+        if enable_delete_and_resubscribe:
+            self.delete_actions.append(
+                (
+                    QAction(self.tr("Delete mod and resubscribe using Steam")),
+                    self.delete_mod_and_resubscribe,
                 )
             )
 
@@ -473,6 +485,117 @@ class ModDeletionMenu(QMenu):
                 title=self.tr("Unsubscription Error"),
                 text=self.tr(
                     "An error occurred while trying to unsubscribe from Steam Workshop mods."
+                ),
+                information=str(e),
+            )
+
+    def delete_mod_and_resubscribe(self) -> None:
+        """
+        Delete selected mods, and resubscribe them from Steam Workshop.
+        """
+        selected_mods = self.get_selected_mod_metadata()
+
+        if not selected_mods:
+            show_information(
+                title=self.tr("No mods selected"),
+                text=self.tr(
+                    "Please select at least one mod to delete and resubscribe."
+                ),
+            )
+            return
+
+        # Filter mods that can be resubscribed (have Steam Workshop IDs)
+        steam_mods = [
+            mod
+            for mod in selected_mods
+            if mod.get("publishedfileid")
+            and isinstance(mod.get("publishedfileid"), str)
+        ]
+
+        answer = show_dialogue_conditional(
+            title=self.tr("Confirm Deletion and Resubscribe"),
+            text=self.tr(
+                "You have selected {total_count} mod(s) for deletion.\n"
+                "{steam_count} of these are Steam Workshop mods that will be resubscribed."
+            ).format(total_count=len(selected_mods), steam_count=len(steam_mods)),
+            information=self.tr(
+                "\nThis operation will:\n"
+                "• Delete the selected mod directories from your filesystem\n"
+                "• Resubscribe to the Steam Workshop mods\n\n"
+                "Do you want to proceed?"
+            ),
+        )
+
+        if answer == DialogueResponse.YES.value:
+            # Perform deletion and collect successfully deleted mods
+            result = self._iterate_mods(
+                self._delete_mod_directory, selected_mods, collect_for_unsubscribe=True
+            )
+
+            # Process regular deletion results
+            self._process_deletion_result(result)
+
+            # Handle Steam resubscription for successfully deleted mods
+            self._handle_steam_resubscription(result.mods_for_unsubscribe)
+
+    def _handle_steam_resubscription(self, deleted_mods: list[ModMetadata]) -> None:
+        """
+        Handle Steam Workshop resubscription for successfully deleted mods.
+
+        Args:
+            deleted_mods: List of successfully deleted mod metadata
+        """
+        # Extract valid Steam Workshop IDs and convert to integers
+        publishedfileids = []
+        for mod in deleted_mods:
+            pfid = mod.get("publishedfileid")
+            if pfid and isinstance(pfid, str):
+                try:
+                    # Convert string to integer as required by Steam API
+                    publishedfileids.append(int(pfid))
+                except ValueError:
+                    logger.warning(
+                        f"Invalid publishedfileid format: {pfid} for mod {mod.get('name', 'Unknown')}"
+                    )
+                    # Continue processing other mods even if one ID is invalid
+                    continue
+
+        if not publishedfileids:
+            logger.info("No Steam Workshop mods to resubscribe.")
+            return
+
+        try:
+            logger.info(
+                f"Resubscribing from {len(publishedfileids)} Steam Workshop mods."
+            )
+
+            # Emit the Steam API call to resubscribe
+            EventBus().do_steamworks_api_call.emit(
+                [
+                    "resubscribe",
+                    publishedfileids,
+                ]
+            )
+
+            # Show success message for resubscription
+            show_information(
+                title=self.tr("Steam Resubscription"),
+                text=self.tr(
+                    "Successfully initiated resubscription to {count} Steam Workshop mod(s).\n"
+                    "The resubscription process may take a few moments to complete."
+                ).format(count=len(publishedfileids)),
+            )
+
+            logger.info(
+                f"Successfully initiated resubscription for {len(publishedfileids)} mods."
+            )
+
+        except Exception as e:
+            logger.error(f"Failed to initiate Steam resubscription: {e}")
+            show_warning(
+                title=self.tr("Resubscription Error"),
+                text=self.tr(
+                    "An error occurred while trying to resubscribe from Steam Workshop mods."
                 ),
                 information=str(e),
             )
