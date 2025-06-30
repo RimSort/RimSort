@@ -7,6 +7,7 @@ from loguru import logger
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QMenu
 
+from app.utils.event_bus import EventBus
 from app.utils.generic import (
     attempt_chmod,
     delete_files_except_extension,
@@ -51,6 +52,13 @@ class ModDeletionMenu(QMenu):
                     self.delete_dds,
                 )
             )
+        # Add new action for delete mod and unsubscribe
+        self.delete_actions.append(
+            (
+                QAction(self.tr("Delete mod and unsubscribe")),
+                self.delete_mod_and_unsubscribe,
+            )
+        )
 
         self.aboutToShow.connect(self._refresh_actions)
         self._refresh_actions()
@@ -193,3 +201,99 @@ class ModDeletionMenu(QMenu):
                 ),
                 mod_metadata,
             )
+
+    def delete_mod_and_unsubscribe(self) -> None:
+        """
+        Deletes selected mods and unsubscribes them from Steam Workshop.
+        This method reuses the delete_both deletion logic to avoid duplication,
+        collects only successfully deleted mods for unsubscription,
+        and improves user confirmation dialog clarity.
+        """
+
+        def _inner_delete(mod_metadata: dict[str, Any]) -> bool:
+            # Reuse the delete_both logic for deletion
+            try:
+                rmtree(
+                    mod_metadata["path"],
+                    ignore_errors=False,
+                    onexc=attempt_chmod,
+                )
+                return True
+            except FileNotFoundError:
+                logger.error(
+                    f"Unable to delete mod. Path does not exist: {mod_metadata['path']}"
+                )
+                return False
+            except OSError as e:
+                if sys.platform == "win32":
+                    error_code = e.winerror
+                else:
+                    error_code = e.errno
+                if e.errno == ENOTEMPTY:
+                    warning_text = self.tr(
+                        "Mod directory was not empty. Please close all programs accessing files or subfolders in the directory (including your file manager) and try again."
+                    )
+                else:
+                    warning_text = self.tr("An OSError occurred while deleting mod.")
+
+                logger.error(
+                    f"Unable to delete mod located at the path: {mod_metadata['path']}"
+                )
+                show_warning(
+                    title=self.tr("Unable to delete mod"),
+                    text=warning_text,
+                    information=self.tr(
+                        "{e.strerror} occurred at {e.filename} with error code {error_code}."
+                    ).format(e=e, error_code=error_code),
+                )
+            return False
+
+        mods_to_unsubscribe: list[dict[str, Any]] = []
+
+        mods = self.get_selected_mod_metadata()
+        answer = show_dialogue_conditional(
+            title=self.tr("Confirm Deletion and Unsubscribe"),
+            text=self.tr(
+                "You have selected {len} mods to delete and unsubscribe from Steam Workshop."
+            ).format(len=len(mods)),
+            information=self.tr(
+                "\nThis operation will delete the mod directories and unsubscribe them from Steam Workshop."
+                + "\nDo you want to proceed?"
+            ),
+        )
+        if answer == "&Yes":
+
+            def deletion_and_collect(mod_metadata: dict[str, Any]) -> bool:
+                success = _inner_delete(mod_metadata)
+                if success:
+                    mods_to_unsubscribe.append(mod_metadata)
+                return success
+
+            self._iterate_mods(deletion_and_collect, mods)
+
+            publishedfileids = [
+                mod.get("publishedfileid")
+                for mod in mods_to_unsubscribe
+                if isinstance(mod.get("publishedfileid"), str)
+            ]
+
+            if publishedfileids:
+                logger.info(
+                    f"Unsubscribing from {publishedfileids} mods on Steam Workshop."
+                )
+                count = len(publishedfileids)
+                logger.info(
+                    f"Successfully deleted {count} mods and collected them for unsubscription."
+                )
+                EventBus().do_steamworks_api_call.emit(
+                    [
+                        "unsubscribe",
+                        publishedfileids,
+                    ]
+                )
+                show_information(
+                    title=self.tr("Unsubscribed from mods"),
+                    text=self.tr(
+                        "Successfully unsubscribed from {count} mods on Steam Workshop."
+                    ).format(count=len(publishedfileids)),
+                )
