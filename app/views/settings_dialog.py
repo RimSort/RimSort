@@ -1,5 +1,5 @@
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QShowEvent
+from PySide6.QtGui import QGuiApplication, QShowEvent
 from PySide6.QtWidgets import (
     QApplication,
     QBoxLayout,
@@ -915,29 +915,76 @@ class SettingsDialog(QDialog):
         window_size_layout = QGridLayout()
         window_size_group.setLayout(window_size_layout)
 
-        window_x_label = QLabel(self.tr("Window X Position:"))
+        screen = QGuiApplication.primaryScreen()
+        screen_geometry = screen.availableGeometry() if screen else None
+        max_width = screen_geometry.width() if screen_geometry else 1920
+        max_height = screen_geometry.height() if screen_geometry else 1080
+
+        window_x_label = QLabel(self.tr("Window X Position (px):"))
         window_size_layout.addWidget(window_x_label, 0, 0)
         self.window_x_spinbox = QSpinBox()
-        self.window_x_spinbox.setRange(0, 900)
+        self.window_x_spinbox.setRange(0, max_width)
         window_size_layout.addWidget(self.window_x_spinbox, 0, 1)
 
-        window_y_label = QLabel(self.tr("Window Y Position:"))
+        window_y_label = QLabel(self.tr("Window Y Position (px):"))
         window_size_layout.addWidget(window_y_label, 1, 0)
         self.window_y_spinbox = QSpinBox()
-        self.window_y_spinbox.setRange(30, 250)
+        self.window_y_spinbox.setRange(0, max_height)
         window_size_layout.addWidget(self.window_y_spinbox, 1, 1)
 
-        window_width_label = QLabel(self.tr("Window Width:"))
+        window_width_label = QLabel(self.tr("Window Width (px):"))
         window_size_layout.addWidget(window_width_label, 2, 0)
         self.window_width_spinbox = QSpinBox()
-        self.window_width_spinbox.setRange(900, 1200)
+        self.window_width_spinbox.setRange(800, max_width)
         window_size_layout.addWidget(self.window_width_spinbox, 2, 1)
 
-        window_height_label = QLabel(self.tr("Window Height:"))
+        window_height_label = QLabel(self.tr("Window Height (px):"))
         window_size_layout.addWidget(window_height_label, 3, 0)
         self.window_height_spinbox = QSpinBox()
-        self.window_height_spinbox.setRange(600, 900)
+        self.window_height_spinbox.setRange(540, max_height)
         window_size_layout.addWidget(self.window_height_spinbox, 3, 1)
+
+        # Reset to Default button
+        self.window_size_reset_button = QPushButton(self.tr("Reset to Default"))
+        window_size_layout.addWidget(self.window_size_reset_button, 4, 0, 1, 2)
+        self.window_size_reset_button.clicked.connect(
+            self._reset_window_size_to_default
+        )
+
+        # Warning label for out-of-bounds
+        self.window_size_warning_label = QLabel()
+        self.window_size_warning_label.setStyleSheet("color: orange;")
+        window_size_layout.addWidget(self.window_size_warning_label, 5, 0, 1, 2)
+
+        # Connect value changes to validation
+        self.window_x_spinbox.valueChanged.connect(self._validate_window_size)
+        self.window_y_spinbox.valueChanged.connect(self._validate_window_size)
+        self.window_width_spinbox.valueChanged.connect(self._validate_window_size)
+        self.window_height_spinbox.valueChanged.connect(self._validate_window_size)
+
+    def _reset_window_size_to_default(self) -> None:
+        from app.models.settings import Settings
+
+        geom = GUIInfo().set_window_size(Settings())
+        self.window_x_spinbox.setValue(geom[0])
+        self.window_y_spinbox.setValue(geom[1])
+        self.window_width_spinbox.setValue(geom[2])
+        self.window_height_spinbox.setValue(geom[3])
+        self._validate_window_size()
+
+    def _validate_window_size(self) -> None:
+        screen = QGuiApplication.primaryScreen()
+        screen_geometry = screen.availableGeometry() if screen else None
+        max_width = screen_geometry.width() if screen_geometry else 1920
+        max_height = screen_geometry.height() if screen_geometry else 1080
+        x = self.window_x_spinbox.value()
+        y = self.window_y_spinbox.value()
+        w = self.window_width_spinbox.value()
+        h = self.window_height_spinbox.value()
+        warning = ""
+        if x + w > max_width or y + h > max_height:
+            warning = self.tr("Warning: Window may not fit on the current screen!")
+        self.window_size_warning_label.setText(warning)
 
     def reset_font_settings(self) -> None:
         default_font = QApplication.font()
