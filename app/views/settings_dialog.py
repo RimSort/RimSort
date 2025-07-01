@@ -79,6 +79,7 @@ class SettingsDialog(QDialog):
         self._do_steamcmd_tab()
         self._do_todds_tab()
         self._do_themes_tab()
+        self._do_authentication_tab()
         self._do_advanced_tab()
 
     def _do_locations_tab(self) -> None:
@@ -959,6 +960,67 @@ class SettingsDialog(QDialog):
         language_controller = LanguageController()
         language_controller.populate_languages_combobox
 
+    def _do_authentication_tab(self) -> None:
+        tab = QWidget()
+        self.tab_widget.addTab(tab, self.tr("Authentication"))
+
+        tab_layout = QVBoxLayout(tab)
+        tab_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        auth_group = QGroupBox()
+        tab_layout.addWidget(auth_group)
+
+        auth_group_layout = QGridLayout()
+        auth_group.setLayout(auth_group_layout)
+
+        rentry_auth_label = QLabel(self.tr("Rentry Auth:"))
+        auth_group_layout.addWidget(
+            rentry_auth_label, 0, 0, alignment=Qt.AlignmentFlag.AlignRight
+        )
+
+        self.rentry_auth_code = QLineEdit()
+        self.rentry_auth_code.setTextMargins(GUIInfo().text_field_margins)
+        self.rentry_auth_code.setFixedHeight(GUIInfo().default_font_line_height * 2)
+        self.rentry_auth_code.setPlaceholderText(
+            self.tr("Obtain rentry auth code by emailing: support@rentry.co")
+        )
+        # TODO: If we add a rentry auth code with builds, we should change placeholder to clarify this code will be used instead of the provided one
+        auth_group_layout.addWidget(self.rentry_auth_code, 0, 1)
+
+        github_identity_group = QGroupBox()
+        tab_layout.addWidget(github_identity_group)
+
+        github_identity_layout = QGridLayout()
+        github_identity_group.setLayout(github_identity_layout)
+
+        github_username_label = QLabel(self.tr("GitHub username:"))
+        github_identity_layout.addWidget(
+            github_username_label, 0, 0, alignment=Qt.AlignmentFlag.AlignRight
+        )
+
+        self.github_username = QLineEdit()
+        self.github_username.setTextMargins(GUIInfo().text_field_margins)
+        self.github_username.setFixedHeight(GUIInfo().default_font_line_height * 2)
+        github_identity_layout.addWidget(self.github_username, 0, 1)
+
+        github_token_label = QLabel(self.tr("GitHub personal access token:"))
+        github_identity_layout.addWidget(
+            github_token_label, 1, 0, alignment=Qt.AlignmentFlag.AlignRight
+        )
+
+        self.github_token = QLineEdit()
+        self.github_token.setEchoMode(QLineEdit.EchoMode.Password)
+        self.github_token.setTextMargins(GUIInfo().text_field_margins)
+        self.github_token.setFixedHeight(GUIInfo().default_font_line_height * 2)
+        github_identity_layout.addWidget(self.github_token, 1, 1)
+
+        self.setTabOrder(self.github_username, self.github_token)
+
+        buttons_layout = QHBoxLayout()
+        tab_layout.addLayout(buttons_layout)
+
+        buttons_layout.addStretch()
+
     def _do_advanced_tab(self) -> None:
         tab = QWidget()
         self.tab_widget.addTab(tab, self.tr("Advanced"))
@@ -1033,62 +1095,6 @@ class SettingsDialog(QDialog):
             )
         )
         group_layout.addWidget(self.update_databases_on_startup_checkbox)
-
-        auth_group = QGroupBox()
-        tab_layout.addWidget(auth_group)
-
-        auth_group_layout = QGridLayout()
-        auth_group.setLayout(auth_group_layout)
-
-        rentry_auth_label = QLabel(self.tr("Rentry Auth:"))
-        auth_group_layout.addWidget(
-            rentry_auth_label, 0, 0, alignment=Qt.AlignmentFlag.AlignRight
-        )
-
-        self.rentry_auth_code = QLineEdit()
-        self.rentry_auth_code.setTextMargins(GUIInfo().text_field_margins)
-        self.rentry_auth_code.setFixedHeight(GUIInfo().default_font_line_height * 2)
-        self.rentry_auth_code.setPlaceholderText(
-            self.tr("Obtain rentry auth code by emailing: support@rentry.co")
-        )
-        # TODO: If we add a rentry auth code with builds, we should change placeholder to clarify this code will be used instead of the provided one
-        auth_group_layout.addWidget(self.rentry_auth_code, 0, 1)
-
-        github_identity_group = QGroupBox()
-        tab_layout.addWidget(github_identity_group)
-
-        github_identity_layout = QGridLayout()
-        github_identity_group.setLayout(github_identity_layout)
-
-        github_username_label = QLabel(self.tr("GitHub username:"))
-        github_identity_layout.addWidget(
-            github_username_label, 0, 0, alignment=Qt.AlignmentFlag.AlignRight
-        )
-
-        self.github_username = QLineEdit()
-        self.github_username.setTextMargins(GUIInfo().text_field_margins)
-        self.github_username.setFixedHeight(GUIInfo().default_font_line_height * 2)
-        github_identity_layout.addWidget(self.github_username, 0, 1)
-
-        github_token_label = QLabel(self.tr("GitHub personal access token:"))
-        github_identity_layout.addWidget(
-            github_token_label, 1, 0, alignment=Qt.AlignmentFlag.AlignRight
-        )
-
-        self.github_token = QLineEdit()
-        self.github_token.setEchoMode(QLineEdit.EchoMode.Password)
-        self.github_token.setTextMargins(GUIInfo().text_field_margins)
-        self.github_token.setFixedHeight(GUIInfo().default_font_line_height * 2)
-        github_identity_layout.addWidget(self.github_token, 1, 1)
-
-        self.setTabOrder(self.github_username, self.github_token)
-
-        tab_layout.addStretch(1)
-
-        buttons_layout = QHBoxLayout()
-        tab_layout.addLayout(buttons_layout)
-
-        buttons_layout.addStretch()
 
         run_args_group = QGroupBox()
         tab_layout.addWidget(run_args_group)
