@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QMessageBox, QWidget
-from pytestqt.qtbot import QtBot  # type: ignore #pytestqt is untyped and has no stubs
+from pytestqt.qtbot import QtBot
 
 from app.views.dialogue import BinaryChoiceDialog
 
